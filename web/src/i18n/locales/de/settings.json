@@ -63,7 +63,7 @@
       },
       "oidc": {
         "hint": "z. B. Authelia, Authentik, Keycloak",
-        "label": ""
+        "label": "OpenID Connect"
       }
     },
     "oidc": {
@@ -119,7 +119,7 @@
       "saveToTest": "Speichere mit ausgewähltem OpenID Connect, um es zu testen.",
       "scopes": {
         "hint": "Durch Leerzeichen getrennt.",
-        "label": ""
+        "label": "Scopes"
       },
       "snippetLabel": "{{provider}}-Konfiguration",
       "testSignIn": "Anmeldung testen"
@@ -145,7 +145,7 @@
     },
     "title": "Admin-Zugang",
     "totp": {
-      "code": "",
+      "code": "Code",
       "copySecret": "Secret kopieren",
       "off": "Deaktivieren",
       "offDescription": "Gib zur Bestätigung einen Code aus deiner Authenticator-App ein.",
@@ -154,7 +154,7 @@
       "onDescription": "Füge Encore zu deiner Authenticator-App hinzu und gib dann den angezeigten Code ein.",
       "onTitle": "Einmalcodes aktivieren",
       "openApp": "In einer Authenticator-App öffnen",
-      "secret": "",
+      "secret": "Secret",
       "turnedOff": "Einmalcodes deaktiviert.",
       "turnedOn": "Einmalcodes aktiviert."
     }
@@ -218,7 +218,7 @@
       "appearance": "Darstellung",
       "locale": "Gebietsschema",
       "logging": "Protokollierung",
-      "server": ""
+      "server": "Server"
     },
     "theme": {
       "dark": {
@@ -271,7 +271,7 @@
   },
   "storage": {
     "backend": {
-      "legend": "",
+      "legend": "Backend",
       "local": "Lokaler Datenträger",
       "localHint": "Das Volume /data (Standard)",
       "s3": "S3-kompatibel",
@@ -288,7 +288,7 @@
         "count_other": "{{count}} Backups",
         "label": "Aufbewahren"
       },
-      "label": "",
+      "label": "Backups",
       "last": {
         "label": "Letztes Backup",
         "never": "Nie",
@@ -311,7 +311,7 @@
     },
     "s3": {
       "accessKey": "Access Key",
-      "bucket": "",
+      "bucket": "Bucket",
       "caBundle": "CA-Zertifikat (PEM)",
       "customCa": "Eigenes CA-Zertifikat",
       "endpoint": {
@@ -320,7 +320,7 @@
       },
       "pathStyle": "Pfadbasierte Adressierung",
       "prefix": "Präfix",
-      "region": "",
+      "region": "Region",
       "secretKey": {
         "hint": "Verschlüsselt gespeichert.",
         "label": "Secret Key",
