@@ -33,7 +33,7 @@
       "password": {
         "change": "Cambia password…",
         "hint": "Salvata come hash argon2id.",
-        "label": ""
+        "label": "Password"
       },
       "session": {
         "days_one": "{{count}} giorno",
@@ -63,7 +63,7 @@
       },
       "oidc": {
         "hint": "ad es. Authelia, Authentik, Keycloak",
-        "label": ""
+        "label": "OpenID Connect"
       }
     },
     "oidc": {
@@ -91,7 +91,7 @@
       },
       "provider": {
         "hint": "Compila gli scope e il claim dei gruppi consueti e mostra qui sotto la configurazione lato provider.",
-        "label": "",
+        "label": "Provider",
         "other": "Altro"
       },
       "providers": {
@@ -154,7 +154,7 @@
       "onDescription": "Aggiungi Encore alla tua app di autenticazione, poi inserisci il codice che mostra.",
       "onTitle": "Attiva i codici monouso",
       "openApp": "Apri in un'app di autenticazione",
-      "secret": "",
+      "secret": "Secret",
       "turnedOff": "Codici monouso disattivati.",
       "turnedOn": "Codici monouso attivati."
     }
@@ -218,7 +218,7 @@
       "appearance": "Aspetto",
       "locale": "Impostazioni locali",
       "logging": "Registrazione",
-      "server": ""
+      "server": "Server"
     },
     "theme": {
       "dark": {
@@ -271,7 +271,7 @@
   },
   "storage": {
     "backend": {
-      "legend": "",
+      "legend": "Backend",
       "local": "Disco locale",
       "localHint": "Il volume /data (predefinito)",
       "s3": "Compatibile con S3",
@@ -284,7 +284,7 @@
       },
       "hint": "Database più esportazione della configurazione. I segreti sono esclusi.",
       "keep": {
-        "count_one": "",
+        "count_one": "{{count}} backup",
         "count_other": "{{count}} backup",
         "label": "Conserva"
       },
@@ -311,7 +311,7 @@
     },
     "s3": {
       "accessKey": "Chiave di accesso",
-      "bucket": "",
+      "bucket": "Bucket",
       "caBundle": "Certificato CA (PEM)",
       "customCa": "Certificato CA personalizzato",
       "endpoint": {
