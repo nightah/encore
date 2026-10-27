@@ -172,7 +172,7 @@
     },
     "name": {
       "hint": "Wie du sie nennst, z. B. Wohnzimmer",
-      "label": ""
+      "label": "Name"
     },
     "notFound": "In deinem Netzwerk hat kein Kodi geantwortet, gib die Adresse daher unten ein.",
     "password": {
@@ -216,7 +216,7 @@
     },
     "kodi": {
       "sub": "Finden und verbinden",
-      "title": ""
+      "title": "Kodi"
     }
   },
   "wizard": {
