@@ -1,5 +1,4 @@
-# German values for the custom slot types in model.yaml. IDs are what the handler acts on and match English; values and synonyms are what people say.
-
+# English values for the static custom slot types in model.yaml, translated on Crowdin. Each key is the value's ID, which is what the handler acts on; the first line is the value and any further lines its synonyms, which are what people say. The dynamic types' examples are in examples.yaml.
 LIBRARY_SECTION:
   albums: |-
     alben
@@ -60,7 +59,6 @@ LIBRARY_SECTION:
     sendungen
     meine serien
     t. v. serien
-
 LIBRARY_TYPE:
   music: |-
     musik
@@ -75,7 +73,6 @@ LIBRARY_TYPE:
     filme
     serien
     videobibliothek
-
 MEDIA_TYPE:
   album: |-
     album
@@ -135,7 +132,6 @@ MEDIA_TYPE:
     was zum gucken
     video
     videos
-
 NAV_ACTION:
   back: |-
     zurück
@@ -191,22 +187,11 @@ NAV_ACTION:
     hoch
     nach oben
     rauf
-
 NAV_DIRECTION:
-  down: |-
-    nach unten
-    runter
-  left: |-
-    nach links
-    links
-  right: |-
-    nach rechts
-    rechts
-  up: |-
-    nach oben
-    hoch
-    rauf
-
+  down: "nach unten\nrunter"
+  left: "nach links\nlinks"
+  right: "nach rechts\nrechts"
+  up: "nach oben\nhoch\nrauf"
 POWER_ACTION:
   hibernate: |-
     ruhezustand
@@ -229,7 +214,6 @@ POWER_ACTION:
     standby
     schlafen legen
     schlafmodus
-
 REPEAT_MODE:
   all: |-
     alles
@@ -250,7 +234,6 @@ REPEAT_MODE:
     diese folge
     das lied
     den titel
-
 ROTATE_DIRECTION:
   clockwise: |-
     im uhrzeigersinn
@@ -260,7 +243,6 @@ ROTATE_DIRECTION:
     gegen den uhrzeigersinn
     nach links
     linksherum
-
 SEEK_DIRECTION:
   back: |-
     zurück
@@ -271,7 +253,6 @@ SEEK_DIRECTION:
     vorwärts
     nach vorne
     weiter
-
 SEEK_SIZE:
   big: |-
     ein großes stück
@@ -288,7 +269,6 @@ SEEK_SIZE:
     etwas
     kurz
     ein stückchen
-
 STREAM_STEP:
   next: |-
     nächste
@@ -302,7 +282,6 @@ STREAM_STEP:
     vorige
     voriger
     letzte
-
 SUBTITLE_ACTION:
   download: |-
     herunterladen
@@ -337,16 +316,12 @@ SUBTITLE_ACTION:
     vorige
     voriger
     letzte
-
 TRANSPORT_COMMAND:
   next: |-
     nächster
     nächstes
     überspringen
-  pause: |-
-    pause
-    pausieren
-    anhalten
+  pause: "pause\npausieren\nanhalten"
   previous: |-
     vorheriger
     voriges
@@ -356,12 +331,7 @@ TRANSPORT_COMMAND:
     fortsetzen
     weiterspielen
     abspielen
-  stop: |-
-    stopp
-    stop
-    stoppen
-    beenden
-
+  stop: "stopp\nstop\nstoppen\nbeenden"
 ZOOM_ACTION:
   in: |-
     rein
