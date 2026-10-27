@@ -1,0 +1,100 @@
+{
+  "controlsKodi": "Steuert Kodi",
+  "dialog": {
+    "cancel": "Abbrechen",
+    "confirmForget": "Dieses Echo vergessen? Es taucht bei seiner nächsten Anfrage wieder auf, dann nicht verknüpft.",
+    "editEcho": "Echo bearbeiten",
+    "editTitle": "{{name}} bearbeiten",
+    "fields": {
+      "kodi": {
+        "hint": "Sag „…im Schlafzimmer“, um das für eine einzelne Anfrage zu ändern."
+      },
+      "name": {
+        "hint": "Alexa gibt keine Gerätenamen weiter, also benenne es hier.",
+        "label": "Name"
+      },
+      "room": {
+        "label": "Raum",
+        "none": "Kein Raum"
+      }
+    },
+    "forget": "Gerät vergessen",
+    "forgetEllipsis": "Gerät vergessen…",
+    "keep": "Behalten",
+    "save": "Speichern"
+  },
+  "notLinked": "Nicht verknüpft",
+  "page": {
+    "description": "Jedes Echo steuert standardmäßig ein Kodi. Sag „…im Schlafzimmer“, um das für eine einzelne Anfrage zu ändern.",
+    "title": "Echo-Geräte und Räume"
+  },
+  "rooms": {
+    "add": "Raum hinzufügen",
+    "card": {
+      "add": "Hinzufügen",
+      "addAliasButton": "Sprechnamen zu {{name}} hinzufügen",
+      "addAliasLabel": "Sprechnamen für {{name}} hinzufügen",
+      "addAliasPlaceholder": "Sprechnamen hinzufügen",
+      "aliases": "Sprechnamen für {{name}}",
+      "edit": "Raum {{name}} bearbeiten",
+      "kodi": "→ Kodi „{{name}}“",
+      "noKodi": "→ keine Kodi-Instanz",
+      "removeAlias": "Sprechnamen „{{alias}}“ entfernen"
+    },
+    "dialog": {
+      "addTitle": "Raum hinzufügen",
+      "cancel": "Abbrechen",
+      "confirmRemove": "{{name}} und seine Sprechnamen entfernen? Echos darin behalten ihre Kodi-Verknüpfung.",
+      "editTitle": "{{name}} bearbeiten",
+      "fields": {
+        "kodi": {
+          "hint": "Wo „…in der Küche“ abgespielt wird.",
+          "label": "Kodi-Instanz",
+          "none": "Keine"
+        },
+        "name": {
+          "label": "Name",
+          "placeholder": "Küche"
+        }
+      },
+      "keep": "Behalten",
+      "remove": "Raum entfernen",
+      "removeEllipsis": "Entfernen…",
+      "save": "Speichern"
+    },
+    "empty": "Noch keine Räume.",
+    "intro": "Diese Namen werden ins Interaktionsmodell des Skills aufgenommen, damit Alexa sie in „spiel Bluey <b>im Kinderzimmer</b>“ erkennt.",
+    "title": "Räume und Sprechnamen"
+  },
+  "table": {
+    "anUnnamedEcho": "einem unbenannten Echo",
+    "columns": {
+      "actions": "Aktionen",
+      "controls": "Steuert",
+      "lastRequest": "Letzte Anfrage",
+      "name": "Name",
+      "room": "Raum",
+      "today": "Heute"
+    },
+    "edit": "Bearbeiten",
+    "editNamed": "{{name}} bearbeiten",
+    "empty": "Noch keine Echos. Sie erscheinen hier nach ihrer ersten Anfrage an den Skill.",
+    "identified": "Mit diesem Echo hast du gerade gesprochen",
+    "identifyHint": "Du weißt nicht, welches Echo welches ist? Sag „Alexa, frag {{invocation}}, welches Gerät das ist“, und es wird hier hervorgehoben.",
+    "spokeTo": "Du hast gerade mit {{name}} gesprochen.",
+    "title": "Geräte"
+  },
+  "unlinked": {
+    "deviceName": "Gerätename",
+    "firstRequest": {
+      "other": "Erste Anfrage {{when}}{{heard}}. Gerät <mono>{{id}}</mono>",
+      "today": "Erste Anfrage heute um {{when}}{{heard}}. Gerät <mono>{{id}}</mono>"
+    },
+    "link": "Gerät verknüpfen",
+    "linked": "Echo verknüpft.",
+    "placeholder": "Küchen-Dot",
+    "title": "Neues Echo gehört: noch mit keinem Kodi verknüpft",
+    "titleIdentified": "Mit diesem Echo hast du gerade gesprochen: noch mit keinem Kodi verknüpft"
+  },
+  "unnamed": "Unbenanntes Echo"
+}

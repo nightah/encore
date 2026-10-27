@@ -1,0 +1,70 @@
+/* Encore's amber accent and slate greys, matching the web interface (web/src/styles/theme.css). */
+
+/* Dark theme (Starlight's default). */
+:root {
+  --sl-color-accent-low: #3b2405;
+  --sl-color-accent: #d97706;
+  --sl-color-accent-high: #fcd9a0;
+  --sl-color-white: #ffffff;
+  --sl-color-gray-1: #e6ebf1;
+  --sl-color-gray-2: #c3ccd6;
+  --sl-color-gray-3: #9aa7b6;
+  --sl-color-gray-4: #5b6673;
+  --sl-color-gray-5: #2a3542;
+  --sl-color-gray-6: #1e2836;
+  --sl-color-black: #161d26;
+}
+
+:root[data-theme="light"] {
+  --sl-color-accent-low: #fde7c4;
+  --sl-color-accent: #b45309;
+  --sl-color-accent-high: #6b3206;
+  --sl-color-white: #141a21;
+  --sl-color-gray-1: #1e2836;
+  --sl-color-gray-2: #2a3542;
+  --sl-color-gray-3: #5b6673;
+  --sl-color-gray-4: #8a95a2;
+  --sl-color-gray-5: #cbd2da;
+  --sl-color-gray-6: #eef1f4;
+  --sl-color-gray-7: #f4f6f8;
+  --sl-color-black: #ffffff;
+}
+
+/* The hero logo has its own dark tile, so give it room rather than a border. */
+.hero img {
+  border-radius: 1.5rem;
+}
+
+/* Wide screens: "On this page" sits against the right edge at a fixed width, and the page gets the rest. Starlight centres a 45rem column and splits the leftover space between it and the right sidebar. */
+@media (min-width: 72rem) {
+  :root {
+    --sl-content-width: 60rem;
+    --encore-toc-width: 16rem;
+  }
+
+  .right-sidebar-container {
+    width: var(--encore-toc-width);
+  }
+
+  [data-has-sidebar][data-has-toc] .main-pane {
+    --sl-content-margin-inline: auto;
+
+    width: calc(100% - var(--encore-toc-width));
+  }
+}
+
+/* Larger screens: the column grows with the space between the sidebars, keeping a 10rem gutter each side, up to 90rem. */
+@media (min-width: 120rem) {
+  :root {
+    --sl-content-width: min(
+      90rem,
+      calc(100vw - var(--sl-sidebar-width) - var(--encore-toc-width) - 20rem)
+    );
+  }
+}
+
+/* A table's first column names things (paths, hooks, keys); keep code there on one line rather than breaking it mid-word. */
+.sl-markdown-content td:first-child code {
+  overflow-wrap: normal;
+  white-space: nowrap;
+}

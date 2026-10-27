@@ -1,0 +1,122 @@
+{
+  "actions": {
+    "close": "Close",
+    "copied": "Copied",
+    "copy": "Copy",
+    "copyNamed": "Copy {{label}}",
+    "copyWithText": "{{label}}: {{text}}",
+    "dismiss": "Dismiss",
+    "tryAgain": "Try again"
+  },
+  "check": {
+    "auth": "Credentials",
+    "library": "Library",
+    "ping": "JSON-RPC over HTTP"
+  },
+  "error": {
+    "generic": "Something went wrong.",
+    "http": "Request failed with HTTP {{status}}.",
+    "lwaCredentials": "Save the Login with Amazon client ID and secret first.",
+    "noConnection": "The Encore server could not be reached.",
+    "pageFailed": "Something went wrong on this page",
+    "unreachable": "Encore isn't responding"
+  },
+  "field": {
+    "managed": "Managed by config",
+    "managedSuffix": ", Managed by config"
+  },
+  "heard": {
+    "quoted": "“{{text}}”",
+    "suffix": ": “{{text}}”"
+  },
+  "infoTip": {
+    "label": "About: {{label}}"
+  },
+  "instance": {
+    "asleep": "Asleep",
+    "connectedHttp": "Connected · HTTP only",
+    "connectedWebSocket": "Connected · WebSocket",
+    "httpOnly": "HTTP only",
+    "idle": "Idle",
+    "macSaved": "MAC saved",
+    "noMac": "No MAC address",
+    "offline": "Offline",
+    "paused": "Paused",
+    "playing": "Playing",
+    "versionUnknown": "Not known until Encore reaches Kodi"
+  },
+  "loading": "Loading…",
+  "nav": {
+    "alexaSkill": "Alexa skill",
+    "echoDevices": "Echo devices",
+    "kodi": "Kodi",
+    "label": "Primary",
+    "library": "Library",
+    "overview": "Overview",
+    "requestLog": "Request log",
+    "settings": "Settings"
+  },
+  "notFound": {
+    "back": "Back to the overview",
+    "title": "Page not found"
+  },
+  "outcome": {
+    "asked": "Asked which one",
+    "error": "Error",
+    "not_found": "Not found",
+    "ok": "Done",
+    "played": "Played",
+    "unlinked": "Device not linked"
+  },
+  "request": {
+    "simulator": "Amazon simulator",
+    "unnamedEcho": "Unnamed Echo"
+  },
+  "setupBanner": {
+    "continue": "Continue setup",
+    "message": "Setup isn't finished yet. You're on step {{step}} of 6."
+  },
+  "shell": {
+    "signedInAs": "Signed in as <name>{{name}}</name>",
+    "signOut": "Sign out",
+    "skipToContent": "Skip to content"
+  },
+  "theme": {
+    "toDark": "Switch to dark mode",
+    "toLight": "Switch to light mode"
+  },
+  "time": {
+    "hoursAgo": "{{value}} h ago",
+    "inHours": "in {{value}} h",
+    "inMinutes": "in {{value}} min",
+    "justNow": "just now",
+    "minutesAgo": "{{value}} min ago",
+    "never": "never",
+    "seconds": "{{value}} s",
+    "soon": "in a moment"
+  },
+  "toast": {
+    "aliasSaved": "Alias saved. It's added to the skill model on the next update.",
+    "amazonConnected": "Connected to Amazon.",
+    "amazonDisconnected": "Amazon tokens forgotten.",
+    "backupStarted": "Backup started.",
+    "defaultInstance": "Unlinked Echos now control this Kodi instance.",
+    "echoForgotten": "Echo forgotten. It reappears if it sends another request.",
+    "echoSaved": "Echo saved.",
+    "failed": "That didn't work",
+    "instanceAdded": "Kodi instance added.",
+    "instanceRemoved": "Kodi instance removed.",
+    "instanceSaved": "Kodi instance saved.",
+    "libraryGrouped": "Library shared. Encore now indexes these instances as one.",
+    "librarySource": "Library source changed.",
+    "librarySplit": "Library split. Encore now indexes each instance separately.",
+    "roomAdded": "Room added.",
+    "roomRemoved": "Room removed.",
+    "roomSaved": "Room saved.",
+    "secretsRotated": "Encryption key rotated. Stored secrets were re-encrypted.",
+    "settingsSaved": "Settings saved.",
+    "skillSaved": "Skill settings saved.",
+    "syncStarted": "Library sync started. Counts update when it finishes.",
+    "wakeSent": "Wake-on-LAN packet sent. Waiting for Kodi to answer."
+  }
+}

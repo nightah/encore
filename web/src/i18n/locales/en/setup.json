@@ -1,0 +1,234 @@
+{
+  "address": {
+    "check": "Check address",
+    "checkAgain": "Check again",
+    "checking": "Checking from outside your network…",
+    "heading": "Tell us your public address",
+    "intro": "Alexa calls Encore over HTTPS on port 443 through your reverse proxy or tunnel.",
+    "results": {
+      "label": "Reachability check results",
+      "title": "Reachability check (from outside your network)"
+    },
+    "unsupported": "This server can't check the address from outside yet. Continue, then confirm on the Overview that the public endpoint is reachable.",
+    "url": {
+      "hint": "For example {{url}}",
+      "label": "Public base URL"
+    }
+  },
+  "admin": {
+    "errors": {
+      "password": "Use at least 12 characters.",
+      "token": "Paste the setup token from Encore's log.",
+      "username": "Choose a username."
+    },
+    "exists": "The admin account exists.",
+    "existsSignedIn": "The admin account exists, and you're signed in as {{name}}.",
+    "heading": "Create the admin account",
+    "intro": "To prove you own this instance, paste the one-time setup token Encore printed in its log when it started. It expires once an admin account exists.",
+    "logs": {
+      "docker": "Running in Docker",
+      "systemd": "Running as a systemd service"
+    },
+    "password": {
+      "hint": "At least 12 characters. Stored as an argon2id hash.",
+      "label": "Password"
+    },
+    "sso": "Prefer single sign-on? You can switch to OIDC or trusted proxy headers in Settings after setup.",
+    "token": "Setup token",
+    "username": "Username"
+  },
+  "amazon": {
+    "authorize": "Authorise with Amazon",
+    "clientId": "Client ID",
+    "clientSecret": {
+      "hint": "Encrypted at rest. Used only to refresh the access token.",
+      "label": "Client secret"
+    },
+    "connected": "Connected to Amazon. Encore can deploy the skill now.",
+    "connectedVendor": "Connected to Amazon (vendor {{vendor}}). Encore can deploy the skill now.",
+    "copyReturnUrl": "Copy return URL",
+    "fallback": {
+      "connect": "Connect",
+      "label": "Fallback",
+      "redirectUrl": {
+        "hint": "After signing in, Amazon sends you to an address that doesn't load. Copy the whole address from the browser bar.",
+        "label": "Redirect URL",
+        "option": "Paste the redirect URL"
+      },
+      "refreshToken": {
+        "hint": "Starts with {{prefix}}.",
+        "label": "Refresh token",
+        "option": "Paste a refresh token"
+      },
+      "summaryHttp": "No HTTPS callback? Use “paste the redirect URL” instead, or paste a refresh token from <code>{{command}}</code>.",
+      "summaryHttps": "Can't sign in through the callback? Paste a refresh token from <code>{{command}}</code> instead."
+    },
+    "heading": "Connect your Amazon developer account",
+    "instructions": {
+      "credentials": "Paste the profile's Client ID and Client Secret below.",
+      "open": "Open the <link>Login with Amazon console</link> and create a security profile named “encore”.",
+      "returnUrls_one": "Under Web Settings, add this Allowed Return URL:",
+      "returnUrls_other": "Under Web Settings, add these Allowed Return URLs:"
+    },
+    "intro": "Encore deploys the skill with your own Login with Amazon security profile. You create it once, in about two minutes.",
+    "newTab": " (opens in a new tab)",
+    "reauthorise": "Amazon asked Encore to sign in again. Authorise once more to keep deploying.",
+    "redirectError": "Amazon didn't connect: {{error}}"
+  },
+  "check": {
+    "fail": "Failed: ",
+    "ok": "Passed: ",
+    "pending": "Checking: ",
+    "warn": "Warning: "
+  },
+  "content": {
+    "legend": "What it can play"
+  },
+  "deploy": {
+    "answer": {
+      "no": "No",
+      "noLabel": "{{question}}: no",
+      "yes": "Yes",
+      "yesLabel": "{{question}}: yes"
+    },
+    "connectFirst": "Connect your Amazon developer account first. Encore deploys the skill with it.",
+    "contentNote": "Leaving one out removes its voice commands from the skill.",
+    "deploy": "Deploy skill",
+    "deploying": "Deploying…",
+    "duration_one": "usually 2 to 3 minutes for one locale",
+    "duration_other": "usually 3 to 5 minutes for {{count}} locales",
+    "failed": "The deploy failed at “{{step}}”: {{message}}.",
+    "goToAmazon": "Go to Amazon account",
+    "heading": "Deploy the skill",
+    "invocation": {
+      "example": "“Alexa, ask {{name}} to…”",
+      "french": "French uses “kodi”, since “encore” means “again” in French.",
+      "label": "Invocation name"
+    },
+    "locales": {
+      "faster": "Fewer locales deploy faster.",
+      "legend": "Locales to deploy",
+      "match": "Each Echo's language must match one of these."
+    },
+    "noDetails": "no details",
+    "privacy": {
+      "allows_purchases": {
+        "about": "Whether people can buy anything through the skill: in-skill purchases, subscriptions or real-world goods. Encore sells nothing.",
+        "label": "The skill allows purchases"
+      },
+      "contains_ads": {
+        "about": "Whether the skill plays, speaks or shows advertising, including promotions for other products. Encore has no advertising.",
+        "label": "The skill contains advertising"
+      },
+      "is_child_directed": {
+        "about": "Whether the skill is designed for children under 13, as defined by the US Children's Online Privacy Protection Act (COPPA). It's about who the skill is made for, not whether a child might use it.",
+        "label": "The skill is directed at children under 13"
+      },
+      "is_export_compliant": {
+        "about": "You confirm the skill can be imported to and exported from the United States and every other country it's available in, without a licence, and that it complies with import and export laws, including those for software that uses encryption. Encore controls media playback and uses only standard HTTPS encryption.",
+        "label": "The skill is export compliant"
+      },
+      "legend": "Amazon's privacy questions (answer them yourself)",
+      "unanswered_one": "{{count}} question left to answer before deploying.",
+      "unanswered_other": "{{count}} questions left to answer before deploying.",
+      "uses_personal_info": {
+        "about": "Whether the skill collects personal details from the people using it, such as names, email addresses, phone numbers or location. Encore doesn't ask for any of these: it sees each Echo's device ID and what was asked of it, and keeps that on your own server.",
+        "label": "The skill collects personal information"
+      }
+    },
+    "progress": "Deploying, {{percent}} percent done",
+    "starting": "Starting",
+    "succeeded": "Deployed. The skill is enabled for testing on your Amazon account.",
+    "tryAgain": "Try again"
+  },
+  "hello": {
+    "alexaPlus": "On Alexa+ devices, enable the skill once from the Alexa app's Alexa+ Store if “ask {{invocation}}” isn't recognised.",
+    "echoName": {
+      "hint": "For example Lounge Echo Show",
+      "label": "Echo name"
+    },
+    "finish": "Finish",
+    "heading": "Say hello",
+    "intro": "On any Echo signed in to your Amazon account, say:",
+    "named": "Echo named.",
+    "phrase": "“Alexa, ask {{invocation}} what's playing.”",
+    "received": "Request received from {{device}} at {{time}}.",
+    "receivedNew": "Request received from a new Echo at {{time}}. Name it so you can link it to a Kodi:",
+    "waiting": "Waiting for the first request…"
+  },
+  "kodi": {
+    "addAnother": "Add another",
+    "added": "{{name}} was added. Encore is syncing its library now.",
+    "adding": "Adding {{name}}…",
+    "alreadyAdded": "Already added: {{names}}. Add another or continue.",
+    "contentNote": "Encore only syncs these from Kodi, and leaves the others' voice commands out of the skill.",
+    "fixLater": "You can fix this later on the Kodi page; voice control needs at least the HTTP checks to pass.",
+    "found": "We found these on your network.",
+    "heading": "Add your first Kodi",
+    "instance": "Kodi instance",
+    "manual": {
+      "hint": "For Kodi on another VLAN, or when discovery is blocked",
+      "label": "Enter an address manually"
+    },
+    "name": {
+      "hint": "How you'll refer to it, e.g. Lounge",
+      "label": "Name"
+    },
+    "notFound": "No Kodi answered on your network, so enter its address below.",
+    "password": {
+      "hint": "Encrypted at rest.",
+      "label": "Kodi password"
+    },
+    "remoteControl": "Kodi needs “Allow remote control via HTTP” and “from applications on other systems” enabled.",
+    "results": "Connection test results",
+    "rpc": "JSON-RPC address",
+    "searchAgain": "Search again",
+    "searching": "Looking for Kodi on your network.",
+    "submit": "Add and test",
+    "testFailed": "The connection test didn't run: {{error}}",
+    "username": "Kodi username"
+  },
+  "nav": {
+    "back": "Back",
+    "continue": "Continue",
+    "skip": "Skip for now"
+  },
+  "steps": {
+    "address": {
+      "sub": "Proxy and certificate check",
+      "title": "Public address"
+    },
+    "admin": {
+      "sub": "Setup token and password",
+      "title": "Admin account"
+    },
+    "amazon": {
+      "sub": "Login with Amazon profile",
+      "title": "Amazon account"
+    },
+    "deploy": {
+      "sub": "Build for each locale",
+      "title": "Deploy skill"
+    },
+    "hello": {
+      "sub": "Confirm the first request",
+      "title": "Say hello"
+    },
+    "kodi": {
+      "sub": "Discover and connect",
+      "title": "Kodi"
+    }
+  },
+  "wizard": {
+    "label": "Step {{step}}: {{title}}",
+    "progress": "Step {{step}} of {{total}}<sr>: {{title}}</sr>",
+    "skipped": "Skipped",
+    "state": {
+      "current": " (current step)",
+      "done": " (done)",
+      "skipped": " (skipped)"
+    },
+    "steps": "Setup steps",
+    "subtitle": "First-run setup"
+  }
+}

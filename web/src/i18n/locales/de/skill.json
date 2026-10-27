@@ -1,0 +1,121 @@
+{
+  "amazon": {
+    "connect": "Im Einrichtungsassistenten verbinden",
+    "disconnect": "Trennen",
+    "disconnectDialog": {
+      "cancel": "Abbrechen",
+      "confirm": "Trennen",
+      "description": "Encore vergisst seine Login with Amazon-Tokens. Der Skill funktioniert auf deinen Echos weiter, aber du kannst ihn erst wieder bereitstellen, wenn du Encore erneut autorisierst.",
+      "title": "Von Amazon trennen?"
+    },
+    "needsReauthorise": "Amazon akzeptiert das Token von Encore nicht mehr. Autorisiere Encore erneut, um den Skill weiter bereitstellen zu können.",
+    "notConnected": "Encore stellt den Skill mit deinem eigenen Login with Amazon-Sicherheitsprofil bereit. Verbinde es, um ihn bereitzustellen.",
+    "profile": "Sicherheitsprofil",
+    "reauthorise": "Erneut autorisieren",
+    "title": "Amazon-Entwicklerkonto",
+    "vendor": "Vendor-ID"
+  },
+  "content": {
+    "movies": "Filme",
+    "music": "Musik",
+    "musicHint": "Einschließlich Musikvideos",
+    "tv": "Serien"
+  },
+  "locales": {
+    "build": {
+      "failed": "Fehlgeschlagen",
+      "in_progress": "Wird erstellt",
+      "succeeded": "Erfolgreich"
+    },
+    "columns": {
+      "build": "Build",
+      "built": "Erstellt",
+      "locale": "Gebietsschema",
+      "size": "Größe (von {{limit}})",
+      "titles": "Titel aus der Mediathek"
+    },
+    "content": {
+      "hint": "Lässt du etwas weg, entfallen die zugehörigen Sprachbefehle im Skill. Musik umfasst auch Musikvideos.",
+      "keepOne": "Lass mindestens Filme, Serien oder Musik aktiviert.",
+      "legend": "Was der Skill abspielen kann"
+    },
+    "empty": "Noch nichts erstellt. Stelle den Skill bereit, um für jedes aktivierte Gebietsschema ein Modell zu erstellen.",
+    "enabled": {
+      "hint": "Nur aktivierte Gebietsschemas werden erstellt und bereitgestellt. Ein Echo kann den Skill nur nutzen, wenn seine Sprache zu einem davon passt. Änderungen gelten ab der nächsten Bereitstellung.",
+      "keepOne": "Lass mindestens ein Gebietsschema aktiviert.",
+      "legend": "Gebietsschemas"
+    },
+    "needsDeploy": {
+      "library": "Seit der letzten Bereitstellung sind neue Titel in der Mediathek. Encore findet sie bereits; stelle den Skill erneut bereit, um sie ins Skill-Modell aufzunehmen.",
+      "settings": "Die Einstellungen haben sich seit der letzten Bereitstellung geändert. Stelle den Skill erneut bereit, um sie zu übernehmen."
+    },
+    "saved": "Gebietsschemas gespeichert. Sie gelten ab der nächsten Bereitstellung.",
+    "sizeUsed": "{{locale}}: {{used}} von {{limit}} belegt",
+    "title": "Interaktionsmodell nach Gebietsschema"
+  },
+  "page": {
+    "deploy": {
+      "deploying": "Wird bereitgestellt…",
+      "failed": "Bereitstellung fehlgeschlagen: {{reason}}",
+      "failedStep": "den fehlgeschlagenen Schritt findest du in der Zeitleiste",
+      "progress": "Bereitstellung zu {{percent}} % abgeschlossen",
+      "redeploy": "Erneut bereitstellen",
+      "running": "Wird bereitgestellt: {{step}} ({{percent}} % abgeschlossen)",
+      "starting": "wird gestartet",
+      "succeeded": "Bereitstellung abgeschlossen. Der Skill ist auf deinen Echos zum Testen aktiviert."
+    },
+    "description": "Der private Skill „{{name}}“ in deinem Amazon-Entwicklerkonto. Entwicklungsphase: funktioniert auf Echos, die mit deinem Konto angemeldet sind.",
+    "export": "Skill-Paket exportieren",
+    "title": "Alexa-Skill"
+  },
+  "timeline": {
+    "amazon": {
+      "connected": "Verbunden",
+      "notConnected": "Nicht verbunden",
+      "reauthorise": "Erneut autorisieren, um weiter bereitzustellen",
+      "title": "Amazon-Konto",
+      "vendor": "Vendor {{vendor}} · verbunden"
+    },
+    "created": {
+      "creating": "Wird erstellt…",
+      "firstDeploy": "Wird bei der ersten Bereitstellung erstellt",
+      "title": "Skill erstellt"
+    },
+    "endpoint": {
+      "title": "Endpunkt"
+    },
+    "label": "Bereitstellungsstatus",
+    "models": {
+      "building": "{{locales}} wird erstellt…",
+      "built": "{{locales}} erstellt",
+      "failed": "Der letzte Build ist fehlgeschlagen",
+      "notBuilt": "Noch nicht erstellt",
+      "title": "Modelle"
+    },
+    "state": {
+      "busy": "läuft",
+      "fail": "erfordert Aufmerksamkeit",
+      "ok": "erledigt",
+      "pending": "nicht begonnen"
+    },
+    "testing": {
+      "failed": "Nicht aktiviert: Behebe den fehlgeschlagenen Schritt und stelle erneut bereit",
+      "firstDeploy": "Nach der ersten Bereitstellung",
+      "passed": "Smoke-Test bestanden {{time}}",
+      "title": "Zum Testen aktiviert",
+      "waiting": "Warte auf den Smoke-Test"
+    }
+  },
+  "titles": {
+    "empty": "Wird nach der ersten Bereitstellung angezeigt.",
+    "inModel_one": "<count>{{n}} Titel</count> im Modell (laufende und neueste zuerst)",
+    "inModel_other": "<count>{{n}} Titel</count> im Modell (laufende und neueste zuerst)",
+    "limit": "Das Modell jedes Gebietsschemas muss unter Amazons Grenze von {{limit}} bleiben.",
+    "serverOnly_one": "<count>{{n}} Titel</count> nur auf dem Server abgeglichen",
+    "serverOnly_other": "<count>{{n}} Titel</count> nur auf dem Server abgeglichen",
+    "title": "Titel im Modell"
+  },
+  "warnings": {
+    "title": "Warnungen aus der letzten Bereitstellung"
+  }
+}

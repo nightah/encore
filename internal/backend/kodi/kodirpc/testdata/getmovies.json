@@ -1,0 +1,45 @@
+{
+  "limits": {"end": 2, "start": 0, "total": 2},
+  "movies": [
+    {
+      "art": {
+        "fanart": "image://%2fmedia%2fmovies%2fBlade%20Runner%202049%20(2017)%2ffanart.jpg/",
+        "poster": "image://%2fmedia%2fmovies%2fBlade%20Runner%202049%20(2017)%2fposter.jpg/"
+      },
+      "cast": [
+        {"name": "Ryan Gosling", "order": 0, "role": "K", "thumbnail": "image://%2fmedia%2f.actors%2fRyan_Gosling.jpg/"},
+        {"name": "Harrison Ford", "order": 1, "role": "Rick Deckard"}
+      ],
+      "dateadded": "2024-03-02 21:14:07",
+      "file": "/media/movies/Blade Runner 2049 (2017)/Blade Runner 2049 (2017).mkv",
+      "genre": ["Science Fiction", "Drama"],
+      "label": "Blade Runner 2049",
+      "lastplayed": "2024-05-11 20:01:44",
+      "movieid": 12,
+      "playcount": 1,
+      "ratings": {
+        "imdb": {"default": false, "rating": 8.0, "votes": 690000},
+        "themoviedb": {"default": true, "rating": 7.5, "votes": 13000}
+      },
+      "resume": {"position": 3605.5, "total": 9840},
+      "runtime": 9840,
+      "streamdetails": {
+        "audio": [{"channels": 6, "codec": "eac3", "language": "eng"}],
+        "subtitle": [{"language": "eng"}],
+        "video": [{"aspect": 2.39, "codec": "hevc", "duration": 9840, "height": 1608, "width": 3840}]
+      },
+      "title": "Blade Runner 2049",
+      "uniqueid": {"imdb": "tt1856101", "tmdb": "335984"},
+      "year": 2017
+    },
+    {
+      "label": "Arrival",
+      "movieid": 7,
+      "title": "Arrival",
+      "year": 2016,
+      "genre": ["Drama", "Science Fiction"],
+      "runtime": 6960,
+      "file": "smb://nas/movies/Arrival (2016)/Arrival (2016).mkv"
+    }
+  ]
+}

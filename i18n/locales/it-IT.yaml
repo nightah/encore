@@ -1,0 +1,5 @@
+# it-IT inherits lang/it. "encore" is an Italian loanword (a concert encore) and no Alexa command, so the invocation stays "encore".
+
+invocation: encore
+language: it
+skill_name: Encore

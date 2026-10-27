@@ -1,0 +1,33 @@
+---
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+
+// Captured by `pnpm screenshots` in web/ (web/e2e/screenshots), one light and one dark image per page.
+const images = import.meta.glob<{ default: ImageMetadata }>("../assets/screenshots/*.png", {
+  eager: true,
+});
+
+interface Props {
+  name: string;
+  alt: string;
+}
+
+const { name, alt } = Astro.props;
+const find = (theme: string) => {
+  const image = images[`../assets/screenshots/${name}-${theme}.png`];
+  if (!image) throw new Error(`no ${theme} screenshot named ${name}; run pnpm screenshots in web/`);
+  return image.default;
+};
+---
+
+<figure class="screenshot">
+  <Image src={find("light")} alt={alt} class="dark:sl-hidden" widths={[720, 1440]} sizes="(min-width: 72rem) 48rem, 100vw" />
+  <Image src={find("dark")} alt={alt} class="light:sl-hidden" widths={[720, 1440]} sizes="(min-width: 72rem) 48rem, 100vw" />
+</figure>
+
+<style>
+  .screenshot img {
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 0.5rem;
+  }
+</style>

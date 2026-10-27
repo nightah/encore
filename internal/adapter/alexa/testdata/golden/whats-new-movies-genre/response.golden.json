@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "response": {
+    "outputSpeech": {
+      "type": "PlainText",
+      "text": "You have Dune: Part Two to watch."
+    },
+    "shouldEndSession": true
+  }
+}
+

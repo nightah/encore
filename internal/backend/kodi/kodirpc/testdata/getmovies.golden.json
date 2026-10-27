@@ -1,0 +1,94 @@
+{
+  "limits": {
+    "end": 2,
+    "total": 2
+  },
+  "movies": [
+    {
+      "label": "Blade Runner 2049",
+      "playcount": 1,
+      "art": {
+        "poster": "image://%2fmedia%2fmovies%2fBlade%20Runner%202049%20(2017)%2fposter.jpg/",
+        "fanart": "image://%2fmedia%2fmovies%2fBlade%20Runner%202049%20(2017)%2ffanart.jpg/"
+      },
+      "title": "Blade Runner 2049",
+      "file": "/media/movies/Blade Runner 2049 (2017)/Blade Runner 2049 (2017).mkv",
+      "lastplayed": "2024-05-11 20:01:44",
+      "dateadded": "2024-03-02 21:14:07",
+      "runtime": 9840,
+      "streamdetails": {
+        "audio": [
+          {
+            "codec": "eac3",
+            "language": "eng",
+            "channels": 6
+          }
+        ],
+        "video": [
+          {
+            "codec": "hevc",
+            "aspect": 2.39,
+            "width": 3840,
+            "height": 1608,
+            "duration": 9840
+          }
+        ],
+        "subtitle": [
+          {
+            "language": "eng"
+          }
+        ]
+      },
+      "resume": {
+        "position": 3605.5,
+        "total": 9840
+      },
+      "movieid": 12,
+      "genre": [
+        "Science Fiction",
+        "Drama"
+      ],
+      "year": 2017,
+      "cast": [
+        {
+          "name": "Ryan Gosling",
+          "role": "K",
+          "order": 0,
+          "thumbnail": "image://%2fmedia%2f.actors%2fRyan_Gosling.jpg/"
+        },
+        {
+          "name": "Harrison Ford",
+          "role": "Rick Deckard",
+          "order": 1
+        }
+      ],
+      "ratings": {
+        "imdb": {
+          "rating": 8,
+          "votes": 690000
+        },
+        "themoviedb": {
+          "rating": 7.5,
+          "votes": 13000,
+          "default": true
+        }
+      },
+      "uniqueid": {
+        "imdb": "tt1856101",
+        "tmdb": "335984"
+      }
+    },
+    {
+      "label": "Arrival",
+      "title": "Arrival",
+      "file": "smb://nas/movies/Arrival (2016)/Arrival (2016).mkv",
+      "runtime": 6960,
+      "movieid": 7,
+      "genre": [
+        "Drama",
+        "Science Fiction"
+      ],
+      "year": 2016
+    }
+  ]
+}

@@ -1,0 +1,311 @@
+---
+title: Exposing Encore to Alexa
+description: Publish the Alexa endpoint, or all of Encore, over HTTPS with Caddy, Traefik, SWAG/nginx, Cloudflare Tunnel or Tailscale Funnel.
+---
+
+import { Tabs, TabItem } from "@astrojs/starlight/components";
+
+Alexa sends every voice request to your Encore over the internet, so one route has to be public: `POST /api/v1/alexa`. Put a reverse proxy in front of Encore that terminates TLS and forwards at least that path.
+
+Encore checks every Alexa request itself (Amazon's signature, certificate chain and timestamp, and your skill ID), so the proxy needs no authentication on the Alexa route and must pass the request body through unchanged.
+
+## What to expose
+
+Each example comes in two versions; pick one and every example on this page follows it.
+
+- **Alexa only**: the proxy forwards `/api/v1/alexa` and answers everything else itself. You reach the web interface on your LAN, over a VPN, or through a second hostname that only answers local clients. This exposes the least to the internet.
+- **Everything**: the proxy forwards the whole of Encore, so the web interface works from anywhere. Every page and admin route still needs a sign-in, so give the admin a strong password and turn on a one-time code, or sign in through your [identity provider](/encore/guides/sign-in/). Failed sign-ins lock the account for a while (Settings → Access). List the proxy in [`server.trusted_proxies`](#servertrusted_proxies) so Encore marks the session cookie `Secure` and counts failed sign-ins per client rather than per proxy.
+
+## What Alexa requires
+
+- **HTTPS on port 443.** Alexa only calls `https://` endpoints on the standard port, and it doesn't follow redirects. The endpoint is `https://<your-host>/api/v1/alexa` (with [`server.base_path`](/encore/reference/configuration/#serverbase_path) in front if you set one).
+- **A certificate Alexa accepts**: one from a public certificate authority, such as Let's Encrypt, Google Trust Services (Cloudflare) or ZeroSSL, for the exact hostname or a wildcard that covers it (`*.example.net`). RSA and ECDSA both work. Encore declares the endpoint to Alexa as Wildcard, which Alexa accepts for exact-name and wildcard certificates alike, so there is nothing to choose. Self-signed certificates aren't supported.
+- **A complete chain** (leaf plus intermediates) and a certificate that hasn't expired. The setup wizard's public address check warns when the certificate expires soon.
+- **TLS 1.2.** Alexa connects with TLS 1.2 and nothing newer, so an endpoint that only accepts TLS 1.3 refuses it, and the Echo says "I'm unable to reach the requested skill". Proxies accept TLS 1.2 by default; behind Cloudflare, keep **Minimum TLS Version** (SSL/TLS, Edge Certificates) at 1.2 or lower.
+
+## The web interface
+
+With **Alexa only**, common ways to reach the web interface are:
+
+- Open Encore directly on the LAN at `http://<host>:8080/`.
+- Give it a second, internal-only hostname on the same proxy (examples below), which also gives the web interface HTTPS. Over HTTPS the Login with Amazon consent page can return straight to Encore; over plain HTTP you paste the redirect URL instead (see [deploying the skill](/encore/guides/deploy-skill/#connect-your-amazon-account)). The callback only has to be reachable from your browser, not from the internet.
+
+With **Everything**, the public hostname serves the web interface over HTTPS, along with the Swagger UI for the admin API at `/api/`.
+
+### `server.trusted_proxies`
+
+When the web interface is reached through a proxy, list the proxy's address or network in [`server.trusted_proxies`](/encore/reference/configuration/#servertrusted_proxies) (CIDRs, for example `172.18.0.0/16` for a Docker network or `192.168.1.5/32`). Only then does Encore trust the proxy's `X-Forwarded-Proto`, `X-Forwarded-Host` and `X-Forwarded-For` headers, which it uses to mark session cookies `Secure`, to build the Login with Amazon and OIDC callback URLs, and to rate-limit sign-in attempts by client address. [Trusted-header sign-in](/encore/guides/sign-in/#trusted-headers) needs it too. Those headers are stripped from requests that don't come from a trusted proxy.
+
+Loopback (`127.0.0.1/32` and `::1/128`) is trusted by default, for a proxy on the same host. A proxy on another machine or container needs its own address here. Set it under **Settings** → **Access** or in config; a value from config replaces the default and can't then be changed in the web interface. Only list addresses every request to Encore passes through: anything that can reach Encore from a trusted address can set these headers.
+
+```yaml title="encore.yml"
+server:
+  trusted_proxies:
+    - 172.18.0.0/16
+```
+
+Or `ENCORE_SERVER_TRUSTED_PROXIES=172.18.0.0/16` (comma-separated for several).
+
+### Serving under a sub-path
+
+To reach Encore at a path such as `https://example.net/encore/`, set **Base path** under **Settings** → **General**, or [`server.base_path`](/encore/reference/configuration/#serverbase_path) (`ENCORE_SERVER_BASE_PATH`). Encore answers both under the base path and at `/`, so the proxy may forward the path as it came in or strip the prefix, and a wrong value can't lock you out of the web interface: open it at `/` and fix it. The base path can't start with one of Encore's own routes, such as `/api`, `/kodi` or `/settings`. Changing it moves the Alexa endpoint, so deploy the skill again afterwards.
+
+## Caddy
+
+<Tabs syncKey="exposure">
+<TabItem label="Alexa only">
+
+```text title="Caddyfile"
+# Public: only the Alexa endpoint.
+encore.example.net {
+	handle /api/v1/alexa {
+		reverse_proxy encore:8080
+	}
+	handle {
+		respond 404
+	}
+}
+
+# Optional admin hostname, answered only for private addresses.
+encore.home.example.net {
+	@lan remote_ip private_ranges
+	handle @lan {
+		reverse_proxy encore:8080
+	}
+	respond 403
+}
+```
+
+</TabItem>
+<TabItem label="Everything">
+
+```text title="Caddyfile"
+# Public: all of Encore; the web interface needs a sign-in.
+encore.example.net {
+	reverse_proxy encore:8080
+}
+```
+
+</TabItem>
+</Tabs>
+
+Caddy obtains Let's Encrypt certificates on its own.
+
+## Traefik
+
+With the Docker provider:
+
+<Tabs syncKey="exposure">
+<TabItem label="Alexa only">
+
+A router that matches the hostname and the exact path; Traefik answers 404 for everything else on that host.
+
+```yaml title="compose.yaml (excerpt)"
+services:
+  encore:
+    image: ghcr.io/nightah/encore:latest
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.encore.loadbalancer.server.port=8080
+      # Public: only the Alexa endpoint.
+      - traefik.http.routers.encore-alexa.rule=Host(`encore.example.net`) && Path(`/api/v1/alexa`)
+      - traefik.http.routers.encore-alexa.entrypoints=websecure
+      - traefik.http.routers.encore-alexa.tls.certresolver=letsencrypt
+      - traefik.http.routers.encore-alexa.service=encore
+      # Optional admin hostname, limited to private addresses.
+      - traefik.http.routers.encore-admin.rule=Host(`encore.home.example.net`)
+      - traefik.http.routers.encore-admin.entrypoints=websecure
+      - traefik.http.routers.encore-admin.tls.certresolver=letsencrypt
+      - traefik.http.routers.encore-admin.service=encore
+      - traefik.http.routers.encore-admin.middlewares=encore-lan
+      - traefik.http.middlewares.encore-lan.ipallowlist.sourcerange=10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+```
+
+</TabItem>
+<TabItem label="Everything">
+
+One router for the whole hostname.
+
+```yaml title="compose.yaml (excerpt)"
+services:
+  encore:
+    image: ghcr.io/nightah/encore:latest
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.encore.loadbalancer.server.port=8080
+      # Public: all of Encore; the web interface needs a sign-in.
+      - traefik.http.routers.encore.rule=Host(`encore.example.net`)
+      - traefik.http.routers.encore.entrypoints=websecure
+      - traefik.http.routers.encore.tls.certresolver=letsencrypt
+      - traefik.http.routers.encore.service=encore
+```
+
+</TabItem>
+</Tabs>
+
+## SWAG (nginx)
+
+Save as `/config/nginx/proxy-confs/encore.subdomain.conf` in SWAG and restart it.
+
+<Tabs syncKey="exposure">
+<TabItem label="Alexa only">
+
+Only the exact Alexa path is proxied.
+
+```nginx title="encore.subdomain.conf"
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+
+    server_name encore.*;
+
+    include /config/nginx/ssl.conf;
+
+    location = /api/v1/alexa {
+        include /config/nginx/proxy.conf;
+        include /config/nginx/resolver.conf;
+        set $upstream_app encore;
+        set $upstream_port 8080;
+        set $upstream_proto http;
+        proxy_pass $upstream_proto://$upstream_app:$upstream_port;
+    }
+
+    location / {
+        return 404;
+    }
+}
+```
+
+With plain nginx, the same `location` block works with your own certificate directives and these headers:
+
+```nginx
+location = /api/v1/alexa {
+    proxy_pass http://127.0.0.1:8080;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+```
+
+</TabItem>
+<TabItem label="Everything">
+
+Everything is proxied; the web interface needs a sign-in.
+
+```nginx title="encore.subdomain.conf"
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+
+    server_name encore.*;
+
+    include /config/nginx/ssl.conf;
+
+    location / {
+        include /config/nginx/proxy.conf;
+        include /config/nginx/resolver.conf;
+        set $upstream_app encore;
+        set $upstream_port 8080;
+        set $upstream_proto http;
+        proxy_pass $upstream_proto://$upstream_app:$upstream_port;
+    }
+}
+```
+
+With plain nginx, the same `location` block works with your own certificate directives and these headers. The web interface's live updates need nothing extra: Encore turns off nginx's buffering for them and sends a heartbeat every 15 seconds.
+
+```nginx
+location / {
+    proxy_pass http://127.0.0.1:8080;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+```
+
+</TabItem>
+</Tabs>
+
+## Cloudflare Tunnel
+
+A tunnel needs no open port at home.
+
+<Tabs syncKey="exposure">
+<TabItem label="Alexa only">
+
+Route only the Alexa path to Encore and answer everything else with 404:
+
+```yaml title="cloudflared config.yml"
+tunnel: <tunnel-id>
+credentials-file: /etc/cloudflared/<tunnel-id>.json
+ingress:
+  - hostname: encore.example.net
+    path: ^/api/v1/alexa$
+    service: http://encore:8080
+  - hostname: encore.example.net
+    service: http_status:404
+  - service: http_status:404
+```
+
+In a dashboard-managed tunnel, add a public hostname with the path `^/api/v1/alexa$` and the service `http://encore:8080`.
+
+</TabItem>
+<TabItem label="Everything">
+
+Route the whole hostname to Encore:
+
+```yaml title="cloudflared config.yml"
+tunnel: <tunnel-id>
+credentials-file: /etc/cloudflared/<tunnel-id>.json
+ingress:
+  - hostname: encore.example.net
+    service: http://encore:8080
+  - service: http_status:404
+```
+
+In a dashboard-managed tunnel, add a public hostname with no path and the service `http://encore:8080`. If you put Cloudflare Access in front of the web interface, add a bypass for `/api/v1/alexa`: Alexa can't sign in.
+
+</TabItem>
+</Tabs>
+
+The tunnel serves Cloudflare's publicly trusted edge certificate, which Alexa accepts. Keep **Minimum TLS Version** at 1.2 or lower, and let nothing in front of the Alexa path challenge Alexa: Cloudflare Access, Bot Fight Mode or a WAF rule that serves a challenge page will break the skill.
+
+## Tailscale Funnel
+
+Funnel publishes a service on your tailnet at `https://<machine>.<tailnet>.ts.net` with a Let's Encrypt certificate. Alexa needs port 443, which is Funnel's default. Enable Funnel for the machine in your tailnet policy, then:
+
+<Tabs syncKey="exposure">
+<TabItem label="Alexa only">
+
+Publish only the Alexa path. The web interface stays reachable on your tailnet and LAN.
+
+```sh
+tailscale funnel --bg --set-path /api/v1/alexa http://127.0.0.1:8080/api/v1/alexa
+tailscale funnel status
+```
+
+</TabItem>
+<TabItem label="Everything">
+
+Publish all of Encore; the web interface needs a sign-in.
+
+```sh
+tailscale funnel --bg http://127.0.0.1:8080
+tailscale funnel status
+```
+
+</TabItem>
+</Tabs>
+
+Use `https://<machine>.<tailnet>.ts.net` as the public address.
+
+## Check it
+
+The setup wizard's **Public address** step (and the same check on the Alexa skill page) resolves your hostname through public DNS, so it connects where Alexa would even when your network resolves it to a LAN address (split DNS), and says so when the two differ. It sends an unsigned request and expects Encore's refusal, checks the certificate is trusted and that TLS 1.2 is accepted, fails if public DNS gives a private address, and tells you whether the web interface is reachable on the public address too. From any machine outside your network:
+
+```sh
+# encore refuses unsigned requests with 400: the route works.
+curl -s -o /dev/null -w '%{http_code}\n' -X POST https://encore.example.net/api/v1/alexa
+# Alexa only: 404 or 403 from the proxy. Everything: 401 from encore, which wants a sign-in.
+curl -s -o /dev/null -w '%{http_code}\n' https://encore.example.net/api/v1/settings
+```

@@ -1,0 +1,1 @@
+A tiny library for the nightly Kodi contract tests (`.github/workflows/nightly.yml`). The video files are empty: Kodi's bundled "Local information only" scraper reads each title from the `.nfo` beside it, so a scan needs no internet. Kodi can't play them, but it accepts the play request, which is what the tests check.

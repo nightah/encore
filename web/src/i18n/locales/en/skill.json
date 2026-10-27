@@ -1,0 +1,121 @@
+{
+  "amazon": {
+    "connect": "Connect in the setup wizard",
+    "disconnect": "Disconnect",
+    "disconnectDialog": {
+      "cancel": "Cancel",
+      "confirm": "Disconnect",
+      "description": "Encore forgets its Login with Amazon tokens. The skill keeps working on your Echos, but you can't redeploy until you re-authorise.",
+      "title": "Disconnect from Amazon?"
+    },
+    "needsReauthorise": "Amazon stopped accepting Encore's token. Re-authorise to keep deploying.",
+    "notConnected": "Encore deploys the skill with your own Login with Amazon security profile. Connect it to deploy.",
+    "profile": "Security profile",
+    "reauthorise": "Re-authorise",
+    "title": "Amazon developer account",
+    "vendor": "Vendor"
+  },
+  "content": {
+    "movies": "Movies",
+    "music": "Music",
+    "musicHint": "Includes music videos",
+    "tv": "TV shows"
+  },
+  "locales": {
+    "build": {
+      "failed": "Failed",
+      "in_progress": "Building",
+      "succeeded": "Succeeded"
+    },
+    "columns": {
+      "build": "Build",
+      "built": "Built",
+      "locale": "Locale",
+      "size": "Size (of {{limit}})",
+      "titles": "Library titles"
+    },
+    "content": {
+      "hint": "Leaving one out removes its voice commands from the skill. Music includes music videos.",
+      "keepOne": "Keep at least one of movies, TV shows or music.",
+      "legend": "What it can play"
+    },
+    "empty": "Nothing built yet. Deploy the skill to build a model for each enabled locale.",
+    "enabled": {
+      "hint": "Only enabled locales are built and deployed. An Echo can use the skill only if its language matches one of them. Changes apply on the next deploy.",
+      "keepOne": "Keep at least one locale enabled.",
+      "legend": "Locales"
+    },
+    "needsDeploy": {
+      "library": "New library titles since the last deploy. Encore already finds them; redeploy to add them to the skill model.",
+      "settings": "Settings changed since the last deploy. Redeploy to apply them."
+    },
+    "saved": "Locales saved. They apply on the next deploy.",
+    "sizeUsed": "{{locale}}: {{used}} of {{limit}} used",
+    "title": "Interaction model by locale"
+  },
+  "page": {
+    "deploy": {
+      "deploying": "Deploying…",
+      "failed": "Deploy failed: {{reason}}",
+      "failedStep": "see the timeline for the failed step",
+      "progress": "Deploy {{percent}}% done",
+      "redeploy": "Redeploy",
+      "running": "Deploying: {{step}} ({{percent}}% done)",
+      "starting": "starting",
+      "succeeded": "Deploy finished. The skill is enabled for testing on your Echos."
+    },
+    "description": "The private “{{name}}” skill in your Amazon developer account. Development stage: works on Echos signed in to your account.",
+    "export": "Export skill package",
+    "title": "Alexa skill"
+  },
+  "timeline": {
+    "amazon": {
+      "connected": "Connected",
+      "notConnected": "Not connected",
+      "reauthorise": "Re-authorise to keep deploying",
+      "title": "Amazon account",
+      "vendor": "Vendor {{vendor}} · connected"
+    },
+    "created": {
+      "creating": "Creating…",
+      "firstDeploy": "Created on the first deploy",
+      "title": "Skill created"
+    },
+    "endpoint": {
+      "title": "Endpoint"
+    },
+    "label": "Deployment status",
+    "models": {
+      "building": "Building {{locales}}…",
+      "built": "{{locales}} built",
+      "failed": "The last build failed",
+      "notBuilt": "Not built yet",
+      "title": "Models"
+    },
+    "state": {
+      "busy": "in progress",
+      "fail": "needs attention",
+      "ok": "done",
+      "pending": "not started"
+    },
+    "testing": {
+      "failed": "Not enabled: fix the failed step and redeploy",
+      "firstDeploy": "After the first deploy",
+      "passed": "Smoke test passed {{time}}",
+      "title": "Enabled for testing",
+      "waiting": "Waiting for the smoke test"
+    }
+  },
+  "titles": {
+    "empty": "Shown after the first deploy.",
+    "inModel_one": "<count>{{n}} title</count> in the model (in progress and recent first)",
+    "inModel_other": "<count>{{n}} titles</count> in the model (in progress and recent first)",
+    "limit": "Each locale's model must stay under Amazon's {{limit}} limit.",
+    "serverOnly_one": "<count>{{n}} title</count> matched on the server only",
+    "serverOnly_other": "<count>{{n}} titles</count> matched on the server only",
+    "title": "Titles in the model"
+  },
+  "warnings": {
+    "title": "Warnings from the last deploy"
+  }
+}

@@ -1,0 +1,195 @@
+/*
+ * Encore design tokens (light + dark), mapped into Tailwind v4 via @theme.
+ *
+ * The raw values live in --encore-* custom properties so [data-theme] on <html> can swap them. Tailwind utilities (bg-surface, text-ink, border-line, ...) resolve through `@theme inline` so they follow the active theme at runtime.
+ */
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+:root {
+  color-scheme: light;
+
+  --encore-bg: #f4f6f8;
+  --encore-surface: #ffffff;
+  --encore-soft: #f4f6f8;
+  --encore-ink: #141a21;
+  --encore-muted: #5b6673;
+  --encore-line: #e2e6eb;
+  --encore-accent: #b45309;
+  --encore-link: #9a4708;
+  --encore-primary: #141a21;
+  --encore-primary-ink: #ffffff;
+
+  --encore-ok: #166534;
+  --encore-ok-bg: #dcfce7;
+  --encore-warn: #92400e;
+  --encore-warn-bg: #fef3c7;
+  --encore-bad: #991b1b;
+  --encore-bad-bg: #fee2e2;
+  --encore-ask: #6b21a8;
+  --encore-ask-bg: #f3e8ff;
+
+  /* The nav rail stays navy in both themes, so its ink/accent are constant too. */
+  --encore-rail: #161d26;
+  --encore-rail-ink: #e6ebf1;
+  --encore-rail-muted: #9aa7b6;
+  --encore-rail-line: #2a3542;
+  --encore-rail-hover: rgb(255 255 255 / 0.06);
+  --encore-rail-active: rgb(245 158 11 / 0.14);
+  --encore-rail-accent: #f59e0b;
+
+  --encore-focus: #b45309;
+
+  --encore-line-soft: #eef1f4;
+  --encore-track: #e9edf1;
+  --encore-input-border: #cbd2da;
+  --encore-btn-border: #d5dbe2;
+  --encore-btn-hover: #f0f2f5;
+  --encore-primary-hover: #2a3542;
+  --encore-selected: #fef3e2;
+  --encore-info: #1e40af;
+  --encore-info-bg: #dbeafe;
+  --encore-neutral: #3f4a57;
+  --encore-neutral-bg: #e9edf1;
+  --encore-warn-soft: #fef3e2;
+  --encore-dot-ok: #16a34a;
+  --encore-dot-warn: #d97706;
+  --encore-slate: #64748b;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --encore-bg: #0e1319;
+  --encore-surface: #161d26;
+  --encore-soft: #1c2530;
+  --encore-ink: #e6ebf1;
+  --encore-muted: #9aa7b6;
+  --encore-line: #2a3542;
+  --encore-accent: #f59e0b;
+  --encore-link: #fbbf24;
+  --encore-primary: #f59e0b;
+  --encore-primary-ink: #141a21;
+
+  --encore-ok: #86efac;
+  --encore-ok-bg: #14361f;
+  --encore-warn: #fcd34d;
+  --encore-warn-bg: #3a2a12;
+  --encore-bad: #fca5a5;
+  --encore-bad-bg: #3b1a1a;
+  --encore-ask: #d8b4fe;
+  --encore-ask-bg: #2e1b47;
+
+  --encore-rail: #0a0e13;
+  --encore-rail-line: #1c2530;
+
+  --encore-focus: #f59e0b;
+
+  --encore-line-soft: #222b36;
+  --encore-track: #2a3542;
+  --encore-input-border: #3a4757;
+  --encore-btn-border: #334050;
+  --encore-btn-hover: #1f2833;
+  --encore-primary-hover: #fbbf24;
+  --encore-selected: #2c2214;
+  --encore-info: #93c5fd;
+  --encore-info-bg: #172b4d;
+  --encore-neutral: #c3ccd6;
+  --encore-neutral-bg: #2a3542;
+  --encore-warn-soft: #2c2214;
+}
+
+/* Before the theme store runs (or with JS disabled) follow the OS preference. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+
+    --encore-bg: #0e1319;
+    --encore-surface: #161d26;
+    --encore-soft: #1c2530;
+    --encore-ink: #e6ebf1;
+    --encore-muted: #9aa7b6;
+    --encore-line: #2a3542;
+    --encore-accent: #f59e0b;
+    --encore-link: #fbbf24;
+    --encore-primary: #f59e0b;
+    --encore-primary-ink: #141a21;
+    --encore-ok: #86efac;
+    --encore-ok-bg: #14361f;
+    --encore-warn: #fcd34d;
+    --encore-warn-bg: #3a2a12;
+    --encore-bad: #fca5a5;
+    --encore-bad-bg: #3b1a1a;
+    --encore-ask: #d8b4fe;
+    --encore-ask-bg: #2e1b47;
+    --encore-rail: #0a0e13;
+    --encore-rail-line: #1c2530;
+    --encore-focus: #f59e0b;
+    --encore-line-soft: #222b36;
+    --encore-track: #2a3542;
+    --encore-input-border: #3a4757;
+    --encore-btn-border: #334050;
+    --encore-btn-hover: #1f2833;
+    --encore-primary-hover: #fbbf24;
+    --encore-selected: #2c2214;
+    --encore-info: #93c5fd;
+    --encore-info-bg: #172b4d;
+    --encore-neutral: #c3ccd6;
+    --encore-neutral-bg: #2a3542;
+    --encore-warn-soft: #2c2214;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--encore-bg);
+  --color-surface: var(--encore-surface);
+  --color-soft: var(--encore-soft);
+  --color-ink: var(--encore-ink);
+  --color-muted: var(--encore-muted);
+  --color-line: var(--encore-line);
+  --color-accent: var(--encore-accent);
+  --color-link: var(--encore-link);
+  --color-primary: var(--encore-primary);
+  --color-primary-ink: var(--encore-primary-ink);
+
+  --color-ok: var(--encore-ok);
+  --color-ok-bg: var(--encore-ok-bg);
+  --color-warn: var(--encore-warn);
+  --color-warn-bg: var(--encore-warn-bg);
+  --color-bad: var(--encore-bad);
+  --color-bad-bg: var(--encore-bad-bg);
+  --color-ask: var(--encore-ask);
+  --color-ask-bg: var(--encore-ask-bg);
+
+  --color-rail: var(--encore-rail);
+  --color-rail-ink: var(--encore-rail-ink);
+  --color-rail-muted: var(--encore-rail-muted);
+  --color-rail-line: var(--encore-rail-line);
+  --color-rail-hover: var(--encore-rail-hover);
+  --color-rail-active: var(--encore-rail-active);
+  --color-rail-accent: var(--encore-rail-accent);
+
+  --color-focus: var(--encore-focus);
+
+  --color-line-soft: var(--encore-line-soft);
+  --color-track: var(--encore-track);
+  --color-input-border: var(--encore-input-border);
+  --color-btn-border: var(--encore-btn-border);
+  --color-btn-hover: var(--encore-btn-hover);
+  --color-primary-hover: var(--encore-primary-hover);
+  --color-selected: var(--encore-selected);
+  --color-info: var(--encore-info);
+  --color-info-bg: var(--encore-info-bg);
+  --color-neutral: var(--encore-neutral);
+  --color-neutral-bg: var(--encore-neutral-bg);
+  --color-warn-soft: var(--encore-warn-soft);
+  --color-dot-ok: var(--encore-dot-ok);
+  --color-dot-warn: var(--encore-dot-warn);
+  --color-slate: var(--encore-slate);
+}
+
+@theme {
+  --font-display: "Bricolage Grotesque Variable", "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "IBM Plex Sans Variable", "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}

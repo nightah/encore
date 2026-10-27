@@ -1,0 +1,113 @@
+package kodi
+
+import (
+	"fmt"
+	"net"
+	"net/url"
+	"strconv"
+)
+
+// ConfigFromURLs builds a Config from an HTTP JSON-RPC URL such as http://kodi:8080/jsonrpc and an optional WebSocket URL; credentials in the HTTP URL's userinfo are used for basic auth.
+func ConfigFromURLs(httpURL, wsURL string) (Config, error) {
+	u, err := url.Parse(httpURL)
+	if err != nil {
+		return Config{}, fmt.Errorf("parsing Kodi URL: %w", err)
+	}
+
+	cfg := Config{Scheme: u.Scheme, Host: u.Hostname(), Path: u.Path}
+
+	if cfg.Port, err = portOf(u, DefaultHTTPPort); err != nil {
+		return Config{}, err
+	}
+
+	if u.User != nil {
+		cfg.Username = u.User.Username()
+		cfg.Password, _ = u.User.Password()
+	}
+
+	if wsURL == "" {
+		return cfg.withDefaults(), nil
+	}
+
+	w, err := url.Parse(wsURL)
+	if err != nil {
+		return Config{}, fmt.Errorf("parsing Kodi WebSocket URL: %w", err)
+	}
+
+	if cfg.WebSocketPort, err = portOf(w, DefaultWebSocketPort); err != nil {
+		return Config{}, err
+	}
+
+	return cfg.withDefaults(), nil
+}
+
+func portOf(u *url.URL, fallback int) (int, error) {
+	if u.Port() == "" {
+		return fallback, nil
+	}
+
+	p, err := strconv.Atoi(u.Port())
+	if err != nil {
+		return 0, fmt.Errorf("invalid port in %q: %w", u.Redacted(), err)
+	}
+
+	return p, nil
+}
+
+func (c Config) withDefaults() Config {
+	if c.Scheme == "" {
+		c.Scheme = "http"
+	}
+
+	if c.Port == 0 {
+		c.Port = DefaultHTTPPort
+	}
+
+	if c.WebSocketPort == 0 {
+		c.WebSocketPort = DefaultWebSocketPort
+	}
+
+	if c.Path == "" {
+		c.Path = DefaultPath
+	}
+
+	if c.Timeout <= 0 {
+		c.Timeout = DefaultTimeout
+	}
+
+	if c.HeartbeatInterval <= 0 {
+		c.HeartbeatInterval = DefaultHeartbeatInterval
+	}
+
+	if c.ReconnectMin <= 0 {
+		c.ReconnectMin = DefaultReconnectMin
+	}
+
+	if c.ReconnectMax < c.ReconnectMin {
+		c.ReconnectMax = max(DefaultReconnectMax, c.ReconnectMin)
+	}
+
+	return c
+}
+
+// HTTPURL is the HTTP JSON-RPC endpoint, without credentials.
+func (c Config) HTTPURL() string {
+	c = c.withDefaults()
+	u := url.URL{Scheme: c.Scheme, Host: net.JoinHostPort(c.Host, strconv.Itoa(c.Port)), Path: c.Path}
+
+	return u.String()
+}
+
+// WebSocketURL is the WebSocket JSON-RPC endpoint.
+func (c Config) WebSocketURL() string {
+	c = c.withDefaults()
+
+	scheme := "ws"
+	if c.Scheme == "https" {
+		scheme = "wss"
+	}
+
+	u := url.URL{Scheme: scheme, Host: net.JoinHostPort(c.Host, strconv.Itoa(c.WebSocketPort)), Path: c.Path}
+
+	return u.String()
+}

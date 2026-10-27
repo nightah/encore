@@ -1,0 +1,7 @@
+(^|/)node_modules/
+(^|/)\.git/
+(^|/)\.scratch/
+(^|/)dist/
+(^|/)bin/
+(^|/)test-results/
+(^|/)\.astro/

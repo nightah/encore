@@ -1,0 +1,7 @@
+{
+  "bedroom": null,
+  "lounge": [
+    "Addons",
+    "ExecuteAddon script.globalsearch searchstring=dune"
+  ]
+}

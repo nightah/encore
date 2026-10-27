@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "response": {
+    "outputSpeech": {
+      "type": "PlainText",
+      "text": "This Echo has no name in Encore yet. Its device ID ends in S J Y."
+    },
+    "shouldEndSession": true
+  }
+}
+

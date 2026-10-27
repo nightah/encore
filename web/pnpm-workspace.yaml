@@ -1,0 +1,6 @@
+# Standalone pnpm project (not a monorepo workspace); this file only carries pnpm settings.
+# Build scripts we don't need: esbuild ships prebuilt platform binaries (only orval uses it), and msw's postinstall only copies the worker, which is committed in mocks/. lefthook's postinstall installs the repository's Git hooks (.lefthook.yml); it skips itself in CI.
+allowBuilds:
+  esbuild: false
+  lefthook: true
+  msw: false

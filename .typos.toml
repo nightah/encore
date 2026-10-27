@@ -1,0 +1,66 @@
+# typos (https://github.com/crate-ci/typos): run by the pre-commit hook and CI. Prose is checked as Australian English; code accepts any English spelling, since identifiers such as Authorization or color come from standards and libraries.
+[files]
+extend-exclude = [
+  # Translations, and the voice-command pages generated from them.
+  "i18n/lang/de/",
+  "i18n/lang/es/",
+  "i18n/lang/fr/",
+  "i18n/lang/it/",
+  "docs/src/content/docs/voice-commands/",
+  "web/src/i18n/locales/de/",
+  "web/src/i18n/locales/es/",
+  "web/src/i18n/locales/fr/",
+  "web/src/i18n/locales/it/",
+  # Vendored, pinned upstream or generated files.
+  "internal/server/apidocs/",
+  "tools/smapigen/spec/",
+  "tools/kodigen/schema/",
+  "*.gen.go",
+  "web/src/api/generated/",
+  "web/mocks/mockServiceWorker.js",
+  "pnpm-lock.yaml",
+  "go.sum",
+  "go.mod",
+  # Speech-recognition test data spells titles the way Alexa mishears them.
+  "internal/core/match/testdata/",
+]
+
+# Prose is Australian English.
+[type.md]
+extend-glob = ["*.md", "*.mdx"]
+locale = "en-au"
+
+[type.md.extend-words]
+# typos reads licence (the Australian noun) as a misspelling.
+licence = "licence"
+# HTML attributes, HTTP status names, Amazon's button labels and API field names keep their own spelling.
+center = "center"
+unauthorized = "unauthorized"
+authorize = "authorize"
+normalized = "normalized"
+# Encore's library catalog, as the code names it.
+catalog = "catalog"
+
+[default]
+locale = "en"
+
+[default.extend-words]
+# Language codes (ISO 639-2 fre), time zones (IST) and number words in the matcher's German, French, Spanish and Italian word lists.
+fre = "fre"
+ist = "ist"
+ein = "ein"
+als = "als"
+tre = "tre"
+quarante = "quarante"
+seconde = "seconde"
+capitulo = "capitulo"
+feld = "feld"
+ue = "ue"
+alikes = "alikes"
+# Short names in the fuzzy matcher (ba: the matched part of b) and deliberate misspellings in tests.
+ba = "ba"
+# in-toto, the attestation format of SLSA provenance (encore.intoto.jsonl).
+intoto = "intoto"
+abd = "abd"
+titel = "titel"
+invokation = "invokation"

@@ -1,0 +1,447 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# One run per ref; a new push to a PR cancels the superseded run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Least privilege by default; jobs widen only what they need.
+permissions:
+  contents: read
+
+env:
+  GOLANGCI_LINT_VERSION: v2.15.0
+
+jobs:
+  go:
+    name: Go
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read # check out the code
+      id-token: write # upload coverage to Codecov without a token (OIDC)
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: |
+            go.sum
+            tools/go.sum
+
+      - name: golangci-lint (root module)
+        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
+        with:
+          version: ${{ env.GOLANGCI_LINT_VERSION }}
+
+      # tools/ is a separate Go module, so golangci-lint run from the root does not descend into it. Lint it as its own module with the same config.
+      - name: golangci-lint (tools module)
+        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
+        with:
+          version: ${{ env.GOLANGCI_LINT_VERSION }}
+          working-directory: tools
+          args: --config=../.golangci.yml
+
+      - name: Check generated code is up to date
+        run: |
+          go generate ./...
+          if ! git diff --exit-code; then
+            echo "::error::Generated code is stale. Run 'make generate' and commit the result."
+            exit 1
+          fi
+          untracked="$(git status --porcelain --untracked-files=all)"
+          if [ -n "${untracked}" ]; then
+            echo "::error::go generate produced untracked files:"
+            echo "${untracked}"
+            exit 1
+          fi
+
+      - name: Test
+        # -coverpkg credits code to whichever package's tests run it, so code tested through its callers counts.
+        run: go test -race -coverpkg=./... -coverprofile=coverage.out -covermode=atomic ./...
+
+      - name: Coverage summary
+        if: always()
+        run: |
+          if [ -f coverage.out ]; then
+            {
+              echo "### Go coverage"
+              echo
+              echo '```'
+              go tool cover -func=coverage.out | tail -n 1
+              echo '```'
+              echo
+              echo "<details><summary>Per-function coverage</summary>"
+              echo
+              echo '```'
+              go tool cover -func=coverage.out
+              echo '```'
+              echo "</details>"
+            } >> "${GITHUB_STEP_SUMMARY}"
+          fi
+
+      # .codecov.yml leaves out generated code and test helpers. Forks' pull requests can't get an OIDC token, so a failed upload doesn't fail CI.
+      - name: Upload coverage to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          files: coverage.out
+          flags: go
+          use_oidc: true
+          fail_ci_if_error: false
+
+      - name: Lint interaction models
+        run: go run ./cmd/encore gen lint
+
+      - name: Build (noui)
+        run: go build -tags noui ./...
+
+  checks:
+    name: Repository checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: |
+            go.sum
+            tools/go.sum
+
+      # editorconfig-checker, actionlint and govulncheck run from the tools module, which pins their versions; the rest are pinned here.
+      - name: editorconfig-checker
+        run: git ls-files -z | xargs -0 go tool -modfile=tools/go.mod editorconfig-checker
+
+      - name: actionlint
+        run: go tool -modfile=tools/go.mod actionlint
+
+      - name: zizmor
+        run: pipx run zizmor==1.31.1 --no-progress --format github .github/workflows
+
+      - name: typos
+        run: pipx run typos==1.51.1 --format brief
+
+      - name: yamllint
+        run: pipx run yamllint==1.38.0 --strict --format github .
+
+      # Preinstalled on GitHub's Ubuntu runners.
+      - name: shellcheck
+        run: shellcheck --format=gcc docker/root/etc/s6-overlay/s6-rc.d/encore/run docker/root/etc/s6-overlay/scripts/adduser docker/root/etc/s6-overlay/scripts/encoresetup
+
+      - name: hadolint
+        run: |
+          for f in Dockerfile Dockerfile.goreleaser; do
+            docker run --rm -i hadolint/hadolint:v2.14.0 hadolint - < "$f"
+          done
+
+      - name: trufflehog
+        run: docker run --rm -v "$PWD:/repo:ro" -w /repo trufflesecurity/trufflehog:3.99.7 --fail --no-update --log-level=-1 filesystem -x .trufflehog .
+
+      - name: govulncheck
+        run: go tool -modfile=tools/go.mod govulncheck ./...
+
+      # Reads the pnpm version from the "packageManager" field.
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: web/package.json
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.x
+
+      # Only what ships: Encore's go.mod and the web interface's production dependencies. Build and test tooling is left out; see .osv-scanner.toml.
+      - name: osv-scanner
+        run: |
+          pnpm -C web sbom --sbom-format cyclonedx --prod --lockfile-only > "${RUNNER_TEMP}/web.cdx.json"
+          docker run --rm -v "$PWD:/repo:ro" -v "${RUNNER_TEMP}:/sbom:ro" -w /repo ghcr.io/google/osv-scanner:v2.7.0 \
+            scan source --config .osv-scanner.toml -L go.mod -L /sbom/web.cdx.json
+
+  tools:
+    name: Tools module
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: tools
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: tools/go.mod
+          cache-dependency-path: tools/go.sum
+
+      - name: Test
+        run: go test ./...
+
+  web:
+    name: Web
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read # check out the code
+      id-token: write # upload coverage to Codecov without a token (OIDC)
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Reads the pnpm version from the "packageManager" field.
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: web/package.json
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.x
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm -C web install --frozen-lockfile
+
+      - name: Check the generated API client is up to date
+        run: |
+          pnpm -C web generate:api
+          if ! git diff --exit-code -- web/src/api/generated; then
+            echo "::error::The API client is stale. Run 'pnpm -C web generate:api' and commit the result."
+            exit 1
+          fi
+          untracked="$(git status --porcelain --untracked-files=all -- web/src/api/generated)"
+          if [ -n "${untracked}" ]; then
+            echo "::error::generate:api produced untracked files:"
+            echo "${untracked}"
+            exit 1
+          fi
+
+      - name: Lint
+        run: pnpm -C web lint
+
+      - name: Typecheck
+        run: pnpm -C web typecheck
+
+      - name: Test
+        run: pnpm -C web test:coverage
+
+      - name: Upload coverage to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
+        with:
+          files: web/coverage/lcov.info
+          flags: web
+          use_oidc: true
+          fail_ci_if_error: false
+
+      - name: Build
+        run: pnpm -C web build
+
+      - name: Upload SPA bundle
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: web-dist
+          path: internal/server/dist
+          if-no-files-found: error
+          retention-days: 7
+
+  docs:
+    name: Docs
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The build generates the configuration, CLI and voice command reference pages from the Go code and i18n/ first.
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: docs/package.json
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.x
+          cache: pnpm
+          cache-dependency-path: docs/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm -C docs install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm -C docs lint
+
+      # Also validates every internal link and anchor (starlight-links-validator).
+      - name: Build
+        run: pnpm -C docs build
+
+  e2e:
+    name: E2E (Playwright)
+    needs: [go, web]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: web/package.json
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.x
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+
+      - name: Download SPA bundle
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: web-dist
+          path: internal/server/dist
+
+      - name: Build encore (with UI)
+        run: CGO_ENABLED=0 go build -trimpath -o bin/encore ./cmd/encore
+
+      - name: Install web dependencies
+        run: pnpm -C web install --frozen-lockfile
+
+      - name: Install Playwright (chromium only)
+        run: pnpm -C web exec playwright install --with-deps chromium
+
+      # Starts a fake Kodi and bin/encore on a fresh data directory (web/e2e/real/global-setup.ts).
+      - name: Run Playwright against the real server
+        env:
+          E2E_SERVER_LOG: "1"
+          # Use the binary built above rather than rebuilding it in the global setup.
+          E2E_ENCORE_BIN: bin/encore
+        run: pnpm -C web exec playwright test
+
+      - name: Run Playwright against the mock API
+        env:
+          E2E_MOCK: "1"
+        run: pnpm -C web exec playwright test
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: playwright-report
+          path: |
+            web/playwright-report
+            web/test-results
+          if-no-files-found: ignore
+          retention-days: 7
+
+  build:
+    name: Build ${{ matrix.platform }}
+    needs: [web]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            runner: ubuntu-24.04
+            goarch: amd64
+            goarm: ""
+          - platform: linux/arm64
+            runner: ubuntu-24.04-arm
+            goarch: arm64
+            goarm: ""
+          # No native armv7 runner; cross-compile from amd64 (pure Go, CGO off).
+          - platform: linux/arm/v7
+            runner: ubuntu-24.04
+            goarch: arm
+            goarm: "7"
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      - name: Download SPA bundle
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: web-dist
+          path: internal/server/dist
+
+      - name: Build
+        env:
+          CGO_ENABLED: "0"
+          GOOS: linux
+          GOARCH: ${{ matrix.goarch }}
+          GOARM: ${{ matrix.goarm }}
+        run: |
+          pkg=github.com/nightah/encore/internal/buildinfo
+          go build -trimpath \
+            -ldflags "-s -w -X ${pkg}.Version=0.0.0-ci -X ${pkg}.Commit=${GITHUB_SHA} -X ${pkg}.Date=$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            -o bin/encore ./cmd/encore
+          file bin/encore
+
+      - name: Smoke test (native only)
+        if: matrix.goarch != 'arm'
+        run: ./bin/encore version

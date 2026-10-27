@@ -1,0 +1,39 @@
+# systemd unit for the Encore binary. Install it as /etc/systemd/system/encore.service (with Encore at /usr/local/bin/encore), then: systemctl daemon-reload && systemctl enable --now encore
+# Settings go in /var/lib/encore/encore.yml or in Environment= lines below (ENCORE_*); see the configuration reference.
+
+[Unit]
+Description=Encore: Alexa voice control for Kodi
+Documentation=https://nightah.github.io/encore/
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/encore serve
+Restart=on-failure
+RestartSec=5s
+
+# systemd runs Encore as an unprivileged user of its own and creates /var/lib/encore for it, which becomes the data directory.
+DynamicUser=yes
+StateDirectory=encore
+StateDirectoryMode=0700
+Environment=ENCORE_DATA_DIR=%S/encore
+WorkingDirectory=%S/encore
+
+# Hardening. Encore needs the network (Kodi, Alexa, Amazon, storage) and nothing else from the host.
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+RestrictRealtime=yes
+SystemCallArchitectures=native
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+
+[Install]
+WantedBy=multi-user.target

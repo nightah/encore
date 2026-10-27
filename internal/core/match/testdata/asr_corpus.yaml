@@ -1,0 +1,399 @@
+# Labelled ASR corpus for the matcher. Each suite is one library in one language; each case is what Alexa heard and what should happen.
+#
+# want: play (with id), ask (optionally with among: ids that must all be in the top candidates), or not_found.
+# xfail documents a known miss: it counts against precision but doesn't fail the test, and the test fails if it starts passing.
+# kinds restricts the query like Query.Kinds.
+suites:
+  - name: english library
+    lang: en
+    library:
+      # Movies.
+      - {id: dune1984, kind: movie, title: "Dune", year: 1984}
+      - {id: dune2021, kind: movie, title: "Dune", year: 2021}
+      - {id: dune2, kind: movie, title: "Dune: Part Two", year: 2024}
+      - {id: rocky, kind: movie, title: "Rocky", year: 1976}
+      - {id: rocky2, kind: movie, title: "Rocky II", year: 1979}
+      - {id: rocky3, kind: movie, title: "Rocky III", year: 1982}
+      - {id: rocky4, kind: movie, title: "Rocky IV", year: 1985}
+      - {id: rocky5, kind: movie, title: "Rocky V", year: 1990}
+      - {id: toystory, kind: movie, title: "Toy Story", year: 1995}
+      - {id: toystory2, kind: movie, title: "Toy Story 2", year: 1999}
+      - {id: toystory3, kind: movie, title: "Toy Story 3", year: 2010}
+      - {id: sw4, kind: movie, title: "Star Wars: Episode IV - A New Hope", aliases: ["Star Wars"], year: 1977}
+      - {id: sw5, kind: movie, title: "Star Wars: Episode V - The Empire Strikes Back", year: 1980}
+      - {id: sw6, kind: movie, title: "Star Wars: Episode VI - Return of the Jedi", year: 1983}
+      - {id: hotfuzz, kind: movie, title: "Hot Fuzz", year: 2007}
+      - {id: amelie, kind: movie, title: "Amélie", aliases: ["Le Fabuleux Destin d'Amélie Poulain"], year: 2001}
+      - {id: lotr1, kind: movie, title: "The Lord of the Rings: The Fellowship of the Ring", year: 2001}
+      - {id: lotr2, kind: movie, title: "The Lord of the Rings: The Two Towers", year: 2002}
+      - {id: lotr3, kind: movie, title: "The Lord of the Rings: The Return of the King", year: 2003}
+      - {id: matrix, kind: movie, title: "The Matrix", year: 1999}
+      - {id: matrix2, kind: movie, title: "The Matrix Reloaded", year: 2003}
+      - {id: matrix3, kind: movie, title: "The Matrix Revolutions", year: 2003}
+      - {id: irobot, kind: movie, title: "I, Robot", year: 2004}
+      - {id: malcolmx, kind: movie, title: "Malcolm X", year: 1992}
+      - {id: oceans11, kind: movie, title: "Ocean's Eleven", year: 2001}
+      - {id: oceans12, kind: movie, title: "Ocean's Twelve", year: 2004}
+      - {id: et, kind: movie, title: "E.T. the Extra-Terrestrial", year: 1982}
+      - {id: nightmuseum, kind: movie, title: "Night at the Museum", year: 2006}
+      - {id: dalmatians, kind: movie, title: "101 Dalmatians", year: 1961}
+      - {id: odyssey, kind: movie, title: "2001: A Space Odyssey", year: 1968}
+      - {id: godfather, kind: movie, title: "The Godfather", year: 1972}
+      - {id: godfather2, kind: movie, title: "The Godfather Part II", year: 1974}
+      - {id: hp1, kind: movie, title: "Harry Potter and the Philosopher's Stone", aliases: ["Harry Potter and the Sorcerer's Stone"], year: 2001}
+      - {id: hp2, kind: movie, title: "Harry Potter and the Chamber of Secrets", year: 2002}
+      - {id: inception, kind: movie, title: "Inception", year: 2010}
+      - {id: interstellar, kind: movie, title: "Interstellar", year: 2014}
+      - {id: spiderverse, kind: movie, title: "Spider-Man: Into the Spider-Verse", year: 2018}
+      - {id: fastfurious, kind: movie, title: "Fast & Furious", year: 2009}
+      - {id: killbill1, kind: movie, title: "Kill Bill: Vol. 1", year: 2003}
+      - {id: killbill2, kind: movie, title: "Kill Bill: Vol. 2", year: 2004}
+      - {id: walle, kind: movie, title: "WALL·E", year: 2008}
+      - {id: pulpfiction, kind: movie, title: "Pulp Fiction", year: 1994}
+      - {id: shawshank, kind: movie, title: "The Shawshank Redemption", year: 1994}
+      - {id: lambs, kind: movie, title: "The Silence of the Lambs", year: 1991}
+      - {id: se7en, kind: movie, title: "Se7en", aliases: ["Seven"], year: 1995}
+      - {id: frozen, kind: movie, title: "Frozen", year: 2013}
+      - {id: frozen2, kind: movie, title: "Frozen II", year: 2019}
+      - {id: lionking1994, kind: movie, title: "The Lion King", year: 1994}
+      - {id: lionking2019, kind: movie, title: "The Lion King", year: 2019}
+      - {id: mi, kind: movie, title: "Mission: Impossible", year: 1996}
+      - {id: mifallout, kind: movie, title: "Mission: Impossible - Fallout", year: 2018}
+      - {id: bttf, kind: movie, title: "Back to the Future", year: 1985}
+      - {id: bttf2, kind: movie, title: "Back to the Future Part II", year: 1989}
+      - {id: jaws, kind: movie, title: "Jaws", year: 1975}
+      - {id: ghostbusters, kind: movie, title: "Ghostbusters", year: 1984}
+      - {id: bladerunner, kind: movie, title: "Blade Runner", year: 1982}
+      - {id: br2049, kind: movie, title: "Blade Runner 2049", year: 2017}
+      - {id: knivesout, kind: movie, title: "Knives Out", year: 2019}
+      - {id: budapest, kind: movie, title: "The Grand Budapest Hotel", year: 2014}
+      - {id: whiplash, kind: movie, title: "Whiplash", year: 2014}
+      - {id: angrymen, kind: movie, title: "12 Angry Men", year: 1957}
+      - {id: lalaland, kind: movie, title: "La La Land", year: 2016}
+      - {id: schindler, kind: movie, title: "Schindler's List", year: 1993}
+      - {id: avengers, kind: movie, title: "The Avengers", year: 2012}
+      - {id: infinitywar, kind: movie, title: "Avengers: Infinity War", year: 2018}
+      - {id: endgame, kind: movie, title: "Avengers: Endgame", year: 2019}
+      - {id: up, kind: movie, title: "Up", year: 2009}
+      - {id: coco, kind: movie, title: "Coco", year: 2017}
+      - {id: queenmovie, kind: movie, title: "The Queen", year: 2006}
+      - {id: moana, kind: movie, title: "Moana", year: 2016}
+      - {id: insideout, kind: movie, title: "Inside Out", year: 2015}
+      - {id: insideout2, kind: movie, title: "Inside Out 2", year: 2024}
+      - {id: hangover, kind: movie, title: "The Hangover", year: 2009}
+      - {id: hangover2, kind: movie, title: "The Hangover Part II", year: 2011}
+      - {id: johnwick, kind: movie, title: "John Wick", year: 2014}
+      - {id: johnwick4, kind: movie, title: "John Wick: Chapter 4", year: 2023}
+      - {id: shrek, kind: movie, title: "Shrek", year: 2001}
+      - {id: shrek2, kind: movie, title: "Shrek 2", year: 2004}
+      # TV shows.
+      - {id: seinfeld, kind: tvshow, title: "Seinfeld", year: 1989}
+      - {id: bluey, kind: tvshow, title: "Bluey", year: 2018}
+      - {id: officeus, kind: tvshow, title: "The Office (US)", year: 2005}
+      - {id: officeuk, kind: tvshow, title: "The Office (UK)", year: 2001}
+      - {id: breakingbad, kind: tvshow, title: "Breaking Bad", year: 2008}
+      - {id: got, kind: tvshow, title: "Game of Thrones", year: 2011}
+      - {id: strangerthings, kind: tvshow, title: "Stranger Things", year: 2016}
+      - {id: crown, kind: tvshow, title: "The Crown", year: 2016}
+      - {id: friends, kind: tvshow, title: "Friends", year: 1994}
+      - {id: simpsons, kind: tvshow, title: "The Simpsons", year: 1989}
+      - {id: mash, kind: tvshow, title: "M*A*S*H", year: 1972}
+      - {id: sherlock, kind: tvshow, title: "Sherlock", year: 2010}
+      - {id: westwing, kind: tvshow, title: "The West Wing", year: 1999}
+      - {id: curb, kind: tvshow, title: "Curb Your Enthusiasm", year: 2000}
+      - {id: bcs, kind: tvshow, title: "Better Call Saul", year: 2015}
+      - {id: mando, kind: tvshow, title: "The Mandalorian", year: 2019}
+      - {id: tedlasso, kind: tvshow, title: "Ted Lasso", year: 2020}
+      - {id: peppa, kind: tvshow, title: "Peppa Pig", year: 2004}
+      - {id: paw, kind: tvshow, title: "PAW Patrol", year: 2013}
+      - {id: house, kind: tvshow, title: "House", year: 2004}
+      - {id: who1963, kind: tvshow, title: "Doctor Who", year: 1963}
+      - {id: who2005, kind: tvshow, title: "Doctor Who", year: 2005}
+      - {id: bobsburgers, kind: tvshow, title: "Bob's Burgers", year: 2011}
+      - {id: brooklyn99, kind: tvshow, title: "Brooklyn Nine-Nine", year: 2013}
+      - {id: wire, kind: tvshow, title: "The Wire", year: 2002}
+      - {id: succession, kind: tvshow, title: "Succession", year: 2018}
+      - {id: fleabag, kind: tvshow, title: "Fleabag", year: 2016}
+      # Artists.
+      - {id: beatles, kind: artist, title: "The Beatles"}
+      - {id: acdc, kind: artist, title: "AC/DC"}
+      - {id: queen, kind: artist, title: "Queen"}
+      - {id: beyonce, kind: artist, title: "Beyoncé"}
+      - {id: sigurros, kind: artist, title: "Sigur Rós"}
+      - {id: ledzep, kind: artist, title: "Led Zeppelin"}
+      - {id: pinkfloyd, kind: artist, title: "Pink Floyd"}
+      - {id: taylor, kind: artist, title: "Taylor Swift"}
+      - {id: gnr, kind: artist, title: "Guns N' Roses"}
+      - {id: rhcp, kind: artist, title: "Red Hot Chili Peppers"}
+      - {id: florence, kind: artist, title: "Florence + the Machine"}
+      - {id: motley, kind: artist, title: "Mötley Crüe"}
+      - {id: weeknd, kind: artist, title: "The Weeknd"}
+      - {id: blink, kind: artist, title: "blink-182"}
+      - {id: coldplay, kind: artist, title: "Coldplay"}
+      - {id: daftpunk, kind: artist, title: "Daft Punk"}
+      - {id: abba, kind: artist, title: "ABBA"}
+      - {id: eminem, kind: artist, title: "Eminem"}
+      - {id: billie, kind: artist, title: "Billie Eilish"}
+      - {id: sade, kind: artist, title: "Sade"}
+    cases:
+      # ASR mishearings.
+      - {heard: "seinfield", want: play, id: seinfeld}
+      - {heard: "sign feld", want: play, id: seinfeld}
+      - {heard: "blue y", want: play, id: bluey}
+      - {heard: "blooey", want: play, id: bluey}
+      - {heard: "nite at the museum", want: play, id: nightmuseum}
+      - {heard: "hot fuzzy", want: play, id: hotfuzz}
+      - {heard: "hot fuss", want: play, id: hotfuzz}
+      - {heard: "inseption", want: play, id: inception}
+      - {heard: "inter stellar", want: play, id: interstellar}
+      - {heard: "pulp friction", want: play, id: pulpfiction}
+      - {heard: "ghost busters", want: play, id: ghostbusters}
+      - {heard: "nives out", want: play, id: knivesout}
+      - {heard: "braking bad", want: play, id: breakingbad}
+      - {heard: "game of throne", want: play, id: got}
+      - {heard: "curb you enthusiasm", want: play, id: curb}
+      - {heard: "better call sol", want: play, id: bcs}
+      - {heard: "the mandalorean", want: play, id: mando}
+      - {heard: "pepper pig", want: play, id: peppa}
+      - {heard: "beetles", want: play, id: beatles, kinds: [artist]}
+      - {heard: "led zepplin", want: play, id: ledzep}
+      - {heard: "tailor swift", want: play, id: taylor}
+      - {heard: "red hot chilli peppers", want: play, id: rhcp}
+      - {heard: "the weekend", want: play, id: weeknd, kinds: [artist]}
+      - {heard: "cold play", want: play, id: coldplay}
+      - {heard: "guns and roses", want: play, id: gnr}
+      - {heard: "florence and the machine", want: play, id: florence}
+      - {heard: "wall e", want: play, id: walle}
+      - {heard: "shawshank", want: play, id: shawshank}
+      - {heard: "silence of the lamb", want: play, id: lambs}
+      # Numbers, roman numerals and ordinals.
+      - {heard: "rocky", want: play, id: rocky}
+      - {heard: "rocky two", want: play, id: rocky2}
+      - {heard: "rocky second", want: play, id: rocky2}
+      - {heard: "rocky 2", want: play, id: rocky2}
+      - {heard: "rocky three", want: play, id: rocky3}
+      - {heard: "rocky four", want: play, id: rocky4}
+      - {heard: "rocky five", want: play, id: rocky5}
+      - {heard: "toy story", want: play, id: toystory}
+      - {heard: "toy story two", want: play, id: toystory2}
+      - {heard: "toy story three", want: play, id: toystory3}
+      - {heard: "star wars episode four", want: play, id: sw4}
+      - {heard: "star wars episode five", want: play, id: sw5}
+      - {heard: "the godfather part two", want: play, id: godfather2}
+      - {heard: "godfather two", want: play, id: godfather2}
+      - {heard: "the godfather", want: play, id: godfather}
+      - {heard: "back to the future part two", want: play, id: bttf2}
+      - {heard: "back to the future", want: play, id: bttf}
+      - {heard: "kill bill volume one", want: play, id: killbill1}
+      - {heard: "kill bill two", want: play, id: killbill2}
+      - {heard: "frozen two", want: play, id: frozen2}
+      - {heard: "frozen", want: play, id: frozen}
+      - {heard: "oceans eleven", want: play, id: oceans11}
+      - {heard: "ocean's 12", want: play, id: oceans12}
+      - {heard: "one hundred and one dalmatians", want: play, id: dalmatians}
+      - {heard: "two thousand and one a space odyssey", want: play, id: odyssey}
+      - {heard: "twelve angry men", want: play, id: angrymen}
+      - {heard: "blade runner twenty forty nine", want: play, id: br2049}
+      - {heard: "blade runner", want: play, id: bladerunner}
+      - {heard: "seven", want: play, id: se7en}
+      - {heard: "blink one eighty two", want: play, id: blink}
+      - {heard: "i robot", want: play, id: irobot}
+      - {heard: "malcolm x", want: play, id: malcolmx}
+      # Articles, diacritics and punctuation.
+      - {heard: "matrix", want: play, id: matrix}
+      - {heard: "the matrix reloaded", want: play, id: matrix2}
+      - {heard: "matrix revolutions", want: play, id: matrix3}
+      - {heard: "amelie", want: play, id: amelie}
+      - {heard: "le fabuleux destin d'amelie poulain", want: play, id: amelie}
+      - {heard: "beyonce", want: play, id: beyonce}
+      - {heard: "sigur ros", want: play, id: sigurros}
+      - {heard: "motley crue", want: play, id: motley}
+      - {heard: "ac dc", want: play, id: acdc}
+      - {heard: "a c d c", want: play, id: acdc}
+      - {heard: "mash", want: play, id: mash}
+      - {heard: "e t the extra terrestrial", want: play, id: et}
+      - {heard: "schindlers list", want: play, id: schindler}
+      - {heard: "fast and furious", want: play, id: fastfurious}
+      - {heard: "simpsons", want: play, id: simpsons}
+      - {heard: "la la land", want: play, id: lalaland}
+      # Subtitles, remakes and same-name shows.
+      - {heard: "dune", want: ask, among: [dune1984, dune2021]}
+      - {heard: "dune part two", want: play, id: dune2}
+      - {heard: "dune two", want: play, id: dune2}
+      - {heard: "dune twenty twenty one", want: play, id: dune2021}
+      - {heard: "dune nineteen eighty four", want: play, id: dune1984}
+      - {heard: "dune", want: ask, among: [dune1984, dune2021], kinds: [movie]}
+      - {heard: "the lion king", want: ask, among: [lionking1994, lionking2019]}
+      - {heard: "lion king 2019", want: play, id: lionking2019}
+      - {heard: "doctor who", want: ask, among: [who1963, who2005]}
+      - {heard: "the office", want: ask, among: [officeus, officeuk]}
+      - {heard: "the office us", want: play, id: officeus}
+      - {heard: "star wars a new hope", want: play, id: sw4}
+      - {heard: "empire strikes back", want: play, id: sw5}
+      - {heard: "return of the jedi", want: play, id: sw6}
+      - {heard: "mission impossible", want: play, id: mi}
+      - {heard: "mission impossible fallout", want: play, id: mifallout}
+      - {heard: "avengers", want: play, id: avengers}
+      - {heard: "avengers endgame", want: play, id: endgame}
+      - {heard: "endgame", want: play, id: endgame}
+      - {heard: "kill bill", want: ask, among: [killbill1, killbill2]}
+      - {heard: "harry potter", want: ask, among: [hp1, hp2]}
+      - {heard: "harry potter and the sorcerer's stone", want: play, id: hp1}
+      - {heard: "harry potter chamber of secrets", want: play, id: hp2}
+      - {heard: "spider man into the spider verse", want: play, id: spiderverse}
+      - {heard: "queen", want: play, id: queen, kinds: [artist]}
+      # Partial titles and reordering.
+      - {heard: "lord of the rings fellowship", want: play, id: lotr1}
+      - {heard: "fellowship of the ring", want: play, id: lotr1}
+      - {heard: "the two towers", want: play, id: lotr2}
+      - {heard: "return of the king", want: play, id: lotr3}
+      - {heard: "lord of the rings", want: ask, among: [lotr1, lotr2, lotr3]}
+      - {heard: "grand budapest hotel", want: play, id: budapest}
+      - {heard: "budapest hotel grand", want: play, id: budapest}
+      - {heard: "swift taylor", want: play, id: taylor}
+      - {heard: "into the spider verse", want: play, id: spiderverse}
+      # Short titles.
+      - {heard: "up", want: play, id: up}
+      - {heard: "coco", want: play, id: coco}
+      - {heard: "jaws", want: play, id: jaws}
+      - {heard: "house", want: play, id: house}
+      - {heard: "friends", want: play, id: friends}
+      # Nothing like it in the library.
+      - {heard: "jurassic park", want: not_found}
+      - {heard: "titanic", want: not_found}
+      - {heard: "weather forecast", want: not_found}
+      - {heard: "pirates of the caribbean", want: not_found}
+      - {heard: "the dark knight", want: not_found}
+      - {heard: "gladiator", want: not_found}
+      - {heard: "the sopranos", want: not_found}
+      - {heard: "metallica", want: not_found, kinds: [artist]}
+      - {heard: "avatar", want: not_found}
+      - {heard: "finding nemo", want: not_found}
+      # Held out: written after tuning on the cases above and not tuned against.
+      - {heard: "moana", want: play, id: moana}
+      - {heard: "mo ana", want: play, id: moana}
+      - {heard: "inside out two", want: play, id: insideout2}
+      - {heard: "inside out", want: play, id: insideout}
+      - {heard: "the hangover part two", want: play, id: hangover2}
+      - {heard: "hangover", want: play, id: hangover}
+      - {heard: "john wick chapter four", want: play, id: johnwick4}
+      - {heard: "john wick four", want: play, id: johnwick4}
+      - {heard: "john wick", want: play, id: johnwick}
+      - {heard: "shrek two", want: play, id: shrek2}
+      - {heard: "shriek", want: play, id: shrek}
+      - {heard: "bobs burgers", want: play, id: bobsburgers}
+      - {heard: "brooklyn nine nine", want: play, id: brooklyn99}
+      - {heard: "brooklyn ninety nine", want: play, id: brooklyn99}
+      - {heard: "the wire", want: play, id: wire}
+      - {heard: "sucession", want: play, id: succession}
+      - {heard: "flea bag", want: play, id: fleabag}
+      - {heard: "abba", want: play, id: abba}
+      - {heard: "aba", want: play, id: abba}
+      - {heard: "eminem", want: play, id: eminem}
+      - {heard: "billie eilish", want: play, id: billie}
+      - {heard: "billy eyelash", want: play, id: billie}
+      - {heard: "sade", want: play, id: sade}
+      - {heard: "stranger thing", want: play, id: strangerthings}
+      - {heard: "star wars return of the jedi", want: play, id: sw6}
+      - {heard: "lord of the rings two towers", want: play, id: lotr2}
+      - {heard: "lord of the rings return of the king", want: play, id: lotr3}
+      - {heard: "harry potter philosophers stone", want: play, id: hp1}
+      - {heard: "toy story four", want: ask}
+      - {heard: "rocky six", want: ask}
+      - {heard: "the matrix resurrections", want: ask, xfail: "missing sequel scores 0.53 against The Matrix, just under the ask threshold, so it reports not found"}
+      - {heard: "the godfather part three", want: ask}
+      - {heard: "mission impossible fall out", want: play, id: mifallout}
+      - {heard: "back to the future two", want: play, id: bttf2}
+      - {heard: "frozen 2", want: play, id: frozen2}
+      - {heard: "pulp", want: play, id: pulpfiction}
+      - {heard: "the lion king nineteen ninety four", want: play, id: lionking1994}
+      - {heard: "doctor who two thousand and five", want: play, id: who2005}
+      - {heard: "the office uk", want: play, id: officeuk}
+      - {heard: "office u s", want: play, id: officeus}
+      - {heard: "ted lassoo", want: play, id: tedlasso}
+      - {heard: "pink floid", want: play, id: pinkfloyd}
+      - {heard: "daft punks", want: play, id: daftpunk}
+      - {heard: "sigur ross", want: play, id: sigurros}
+      - {heard: "beyonce knowles", want: play, id: beyonce, xfail: "an extra word costs half its share of the score, leaving 0.63, so it asks despite a 0.42 lead"}
+      - {heard: "the departed", want: not_found}
+      - {heard: "toy soldiers", want: not_found}
+      - {heard: "stranger danger", want: not_found}
+
+  - name: german library
+    lang: de
+    library:
+      - {id: boot, kind: movie, title: "Das Boot", year: 1981}
+      - {id: manitu, kind: movie, title: "Der Schuh des Manitu", year: 2001}
+      - {id: lenin, kind: movie, title: "Good Bye, Lenin!", year: 2003}
+      - {id: lola, kind: movie, title: "Lola rennt", year: 1998}
+      - {id: anderen, kind: movie, title: "Das Leben der Anderen", year: 2006}
+      - {id: bruecke, kind: movie, title: "Die Brücke", year: 1959}
+      - {id: untergang, kind: movie, title: "Der Untergang", year: 2004}
+      - {id: geschichte, kind: movie, title: "Die unendliche Geschichte", year: 1984}
+      - {id: bern, kind: movie, title: "Das Wunder von Bern", year: 2003}
+      - {id: goehte1, kind: movie, title: "Fack ju Göhte", year: 2013}
+      - {id: goehte2, kind: movie, title: "Fack ju Göhte 2", year: 2015}
+      - {id: goehte3, kind: movie, title: "Fack ju Göhte 3", year: 2017}
+      - {id: keinohr, kind: movie, title: "Keinohrhasen", year: 2007}
+      - {id: zweiohr, kind: movie, title: "Zweiohrküken", year: 2009}
+      - {id: anfaenger, kind: movie, title: "Türkisch für Anfänger", year: 2012}
+      - {id: stirbt, kind: movie, title: "Wer früher stirbt ist länger tot", year: 2006}
+      - {id: westen1930, kind: movie, title: "Im Westen nichts Neues", year: 1930}
+      - {id: westen2022, kind: movie, title: "Im Westen nichts Neues", year: 2022}
+      - {id: tatort, kind: tvshow, title: "Tatort", year: 1970}
+      - {id: maus, kind: tvshow, title: "Die Sendung mit der Maus", year: 1971}
+      - {id: maja, kind: tvshow, title: "Die Biene Maja", year: 1975}
+      - {id: bibi, kind: tvshow, title: "Bibi & Tina", year: 2004}
+      - {id: dreifragezeichen, kind: artist, title: "Die drei ???", aliases: ["Die drei Fragezeichen"]}
+      - {id: aerzte, kind: artist, title: "Die Ärzte"}
+      - {id: fanta4, kind: artist, title: "Die Fantastischen Vier"}
+      - {id: rammstein, kind: artist, title: "Rammstein"}
+      - {id: groenemeyer, kind: artist, title: "Herbert Grönemeyer"}
+    cases:
+      - {heard: "das boot", want: play, id: boot}
+      - {heard: "der schuh des manitu", want: play, id: manitu}
+      - {heard: "schuh des manitou", want: play, id: manitu}
+      - {heard: "goodbye lenin", want: play, id: lenin}
+      - {heard: "lola rent", want: play, id: lola}
+      - {heard: "das leben der andern", want: play, id: anderen}
+      - {heard: "die brücke", want: play, id: bruecke}
+      - {heard: "die bruecke", want: play, id: bruecke}
+      - {heard: "tatord", want: play, id: tatort}
+      - {heard: "der untergang", want: play, id: untergang}
+      - {heard: "unendliche geschichte", want: play, id: geschichte}
+      - {heard: "wunder von bern", want: play, id: bern}
+      - {heard: "fack ju göhte", want: play, id: goehte1}
+      - {heard: "fack ju göhte zwei", want: play, id: goehte2}
+      - {heard: "fack ju goethe drei", want: play, id: goehte3}
+      - {heard: "fack ju göhte teil drei", want: play, id: goehte3}
+      - {heard: "kein ohr hasen", want: play, id: keinohr}
+      - {heard: "türkisch für anfänger", want: play, id: anfaenger}
+      - {heard: "tuerkisch fuer anfaenger", want: play, id: anfaenger}
+      - {heard: "wer früher stirbt ist länger tot", want: play, id: stirbt}
+      - {heard: "im westen nichts neues", want: ask, among: [westen1930, westen2022]}
+      - {heard: "sendung mit der maus", want: play, id: maus}
+      - {heard: "biene maja", want: play, id: maja}
+      - {heard: "bibi und tina", want: play, id: bibi}
+      - {heard: "die drei fragezeichen", want: play, id: dreifragezeichen}
+      - {heard: "die aerzte", want: play, id: aerzte}
+      - {heard: "die fantastischen 4", want: play, id: fanta4}
+      - {heard: "ramstein", want: play, id: rammstein}
+      - {heard: "herbert grönemeier", want: play, id: groenemeyer}
+      - {heard: "das parfum", want: not_found}
+      - {heard: "der schwarm", want: not_found}
+      - {heard: "die kleine hexe", want: not_found}
+      # Held out: written after tuning on the cases above and not tuned against.
+      - {heard: "boot", want: play, id: boot}
+      - {heard: "lola rennt", want: play, id: lola}
+      - {heard: "good bye lenin", want: play, id: lenin}
+      - {heard: "fack ju göhte eins", want: play, id: goehte1}
+      - {heard: "zwei ohr küken", want: play, id: zweiohr, xfail: "the spelled-out match rescues the word score but Jaro-Winkler, OSA and Cologne keys still see a digit, so it asks"}
+      - {heard: "drei fragezeichen", want: play, id: dreifragezeichen}
+      - {heard: "ärzte", want: play, id: aerzte}
+      - {heard: "grönemeyer", want: play, id: groenemeyer}
+      - {heard: "biene maya", want: play, id: maja}
+      - {heard: "die maus", want: play, id: maus, xfail: "one word out of a five-word title scores 0.78, so it asks"}
+      - {heard: "das wunder von bern", want: play, id: bern}
+      - {heard: "im westen nichts neues 2022", want: play, id: westen2022}
+      - {heard: "babylon berlin", want: not_found}
+      - {heard: "kommissar rex", want: not_found}

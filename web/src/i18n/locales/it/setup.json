@@ -1,0 +1,234 @@
+{
+  "address": {
+    "check": "Verifica indirizzo",
+    "checkAgain": "Verifica di nuovo",
+    "checking": "Verifica dall'esterno della tua rete…",
+    "heading": "Indica il tuo indirizzo pubblico",
+    "intro": "Alexa contatta Encore in HTTPS sulla porta 443 tramite il tuo reverse proxy o tunnel.",
+    "results": {
+      "label": "Risultati della verifica di raggiungibilità",
+      "title": "Verifica di raggiungibilità (dall'esterno della tua rete)"
+    },
+    "unsupported": "Questo server non può ancora verificare l'indirizzo dall'esterno. Continua, poi controlla nella Panoramica che l'endpoint pubblico sia raggiungibile.",
+    "url": {
+      "hint": "Ad esempio {{url}}",
+      "label": "URL di base pubblico"
+    }
+  },
+  "admin": {
+    "errors": {
+      "password": "Usa almeno 12 caratteri.",
+      "token": "Incolla il token di configurazione dal log di Encore.",
+      "username": "Scegli un nome utente."
+    },
+    "exists": "L'account amministratore esiste già.",
+    "existsSignedIn": "L'account amministratore esiste già e hai effettuato l'accesso come {{name}}.",
+    "heading": "Crea l'account amministratore",
+    "intro": "Per dimostrare che questa istanza è tua, incolla il token di configurazione monouso che Encore ha scritto nel suo log all'avvio. Scade non appena esiste un account amministratore.",
+    "logs": {
+      "docker": "In esecuzione in Docker",
+      "systemd": "In esecuzione come servizio systemd"
+    },
+    "password": {
+      "hint": "Almeno 12 caratteri. Salvata come hash argon2id.",
+      "label": "Password"
+    },
+    "sso": "Preferisci il Single Sign-On? Dopo la configurazione puoi passare a OIDC o agli header di un proxy attendibile nelle Impostazioni.",
+    "token": "Token di configurazione",
+    "username": "Nome utente"
+  },
+  "amazon": {
+    "authorize": "Autorizza con Amazon",
+    "clientId": "ID client",
+    "clientSecret": {
+      "hint": "Salvato cifrato. Usato solo per rinnovare il token di accesso.",
+      "label": "Client secret"
+    },
+    "connected": "Connesso ad Amazon. Encore ora può distribuire la skill.",
+    "connectedVendor": "Connesso ad Amazon (vendor {{vendor}}). Encore ora può distribuire la skill.",
+    "copyReturnUrl": "Copia URL di ritorno",
+    "fallback": {
+      "connect": "Connetti",
+      "label": "Alternativa",
+      "redirectUrl": {
+        "hint": "Dopo l'accesso, Amazon ti manda a un indirizzo che non si carica. Copia l'intero indirizzo dalla barra del browser.",
+        "label": "URL di reindirizzamento",
+        "option": "Incolla l'URL di reindirizzamento"
+      },
+      "refreshToken": {
+        "hint": "Inizia con {{prefix}}.",
+        "label": "Refresh token",
+        "option": "Incolla un refresh token"
+      },
+      "summaryHttp": "Nessun callback HTTPS? Usa invece «Incolla l'URL di reindirizzamento», oppure incolla un refresh token ottenuto con <code>{{command}}</code>.",
+      "summaryHttps": "Non riesci ad accedere tramite il callback? Incolla invece un refresh token ottenuto con <code>{{command}}</code>."
+    },
+    "heading": "Collega il tuo account sviluppatore Amazon",
+    "instructions": {
+      "credentials": "Incolla qui sotto il Client ID e il Client Secret del profilo.",
+      "open": "Apri la <link>console di Login with Amazon</link> e crea un profilo di sicurezza chiamato «encore».",
+      "returnUrls_one": "In «Web Settings», aggiungi questo «Allowed Return URL»:",
+      "returnUrls_other": "In «Web Settings», aggiungi questi «Allowed Return URLs»:"
+    },
+    "intro": "Encore distribuisce la skill con il tuo profilo di sicurezza Login with Amazon. Lo crei una sola volta, in circa due minuti.",
+    "newTab": " (si apre in una nuova scheda)",
+    "reauthorise": "Amazon ha chiesto a Encore di accedere di nuovo. Autorizza ancora una volta per continuare a distribuire.",
+    "redirectError": "Connessione ad Amazon non riuscita: {{error}}"
+  },
+  "check": {
+    "fail": "Non riuscito: ",
+    "ok": "Superato: ",
+    "pending": "Verifica in corso: ",
+    "warn": "Avviso: "
+  },
+  "content": {
+    "legend": "Cosa può riprodurre"
+  },
+  "deploy": {
+    "answer": {
+      "no": "No",
+      "noLabel": "{{question}}: no",
+      "yes": "Sì",
+      "yesLabel": "{{question}}: sì"
+    },
+    "connectFirst": "Collega prima il tuo account sviluppatore Amazon. Encore lo usa per distribuire la skill.",
+    "contentNote": "Se ne escludi uno, i suoi comandi vocali vengono rimossi dalla skill.",
+    "deploy": "Distribuisci skill",
+    "deploying": "Distribuzione in corso…",
+    "duration_one": "di solito da 2 a 3 minuti per una lingua",
+    "duration_other": "di solito da 3 a 5 minuti per {{count}} lingue",
+    "failed": "La distribuzione non è riuscita al passaggio «{{step}}»: {{message}}.",
+    "goToAmazon": "Vai all'account Amazon",
+    "heading": "Distribuisci la skill",
+    "invocation": {
+      "example": "«Alexa, chiedi a {{name}} di…»",
+      "french": "In francese si usa «kodi», perché «encore» in francese significa «ancora».",
+      "label": "Nome di invocazione"
+    },
+    "locales": {
+      "faster": "Meno lingue significano una distribuzione più rapida.",
+      "legend": "Lingue da distribuire",
+      "match": "La lingua di ogni Echo deve corrispondere a una di queste."
+    },
+    "noDetails": "nessun dettaglio",
+    "privacy": {
+      "allows_purchases": {
+        "about": "Se tramite la skill si può acquistare qualcosa: acquisti in-skill, abbonamenti o beni fisici. Encore non vende nulla.",
+        "label": "La skill consente acquisti"
+      },
+      "contains_ads": {
+        "about": "Se la skill riproduce, pronuncia o mostra pubblicità, comprese promozioni di altri prodotti. Encore non contiene pubblicità.",
+        "label": "La skill contiene pubblicità"
+      },
+      "is_child_directed": {
+        "about": "Se la skill è pensata per bambini sotto i 13 anni, come definito dalla legge statunitense Children's Online Privacy Protection Act (COPPA). Riguarda il pubblico a cui la skill è destinata, non la possibilità che un bambino la usi.",
+        "label": "La skill è rivolta a bambini sotto i 13 anni"
+      },
+      "is_export_compliant": {
+        "about": "Confermi che la skill può essere importata negli Stati Uniti e in ogni altro paese in cui è disponibile, ed esportata da essi, senza licenza, e che rispetta le leggi su importazione ed esportazione, comprese quelle sul software che usa la crittografia. Encore controlla la riproduzione multimediale e usa solo la crittografia HTTPS standard.",
+        "label": "La skill è conforme alle norme sull'esportazione"
+      },
+      "legend": "Domande di Amazon sulla privacy (rispondi tu)",
+      "unanswered_one": "Manca {{count}} risposta prima di poter distribuire.",
+      "unanswered_other": "Mancano {{count}} risposte prima di poter distribuire.",
+      "uses_personal_info": {
+        "about": "Se la skill raccoglie dati personali da chi la usa, come nomi, indirizzi email, numeri di telefono o posizione. Encore non chiede nessuno di questi dati: vede l'ID dispositivo di ogni Echo e cosa gli è stato chiesto, e conserva queste informazioni sul tuo server.",
+        "label": "La skill raccoglie informazioni personali"
+      }
+    },
+    "progress": "Distribuzione in corso, {{percent}} percento completato",
+    "starting": "Avvio",
+    "succeeded": "Distribuita. La skill è abilitata per i test sul tuo account Amazon.",
+    "tryAgain": "Riprova"
+  },
+  "hello": {
+    "alexaPlus": "Sui dispositivi Alexa+, abilita la skill una volta dall'Alexa+ Store nell'app Alexa se «chiedi a {{invocation}}» non viene riconosciuto.",
+    "echoName": {
+      "hint": "Ad esempio Echo Show soggiorno",
+      "label": "Nome dell'Echo"
+    },
+    "finish": "Fine",
+    "heading": "Saluta",
+    "intro": "Su qualsiasi Echo collegato al tuo account Amazon, di':",
+    "named": "Nome dell'Echo salvato.",
+    "phrase": "«Alexa, chiedi a {{invocation}} cosa sta suonando.»",
+    "received": "Richiesta ricevuta da {{device}} alle {{time}}.",
+    "receivedNew": "Richiesta ricevuta da un nuovo Echo alle {{time}}. Dagli un nome per poterlo collegare a un'istanza di Kodi:",
+    "waiting": "In attesa della prima richiesta…"
+  },
+  "kodi": {
+    "addAnother": "Aggiungine un'altra",
+    "added": "{{name}} è stata aggiunta. Encore sta sincronizzando la sua libreria.",
+    "adding": "Aggiunta di {{name}}…",
+    "alreadyAdded": "Già aggiunte: {{names}}. Aggiungine un'altra o continua.",
+    "contentNote": "Encore sincronizza da Kodi solo questi contenuti e lascia fuori dalla skill i comandi vocali degli altri.",
+    "fixLater": "Puoi risolvere più tardi nella pagina Kodi; il controllo vocale richiede che almeno le verifiche HTTP vadano a buon fine.",
+    "found": "Abbiamo trovato queste nella tua rete.",
+    "heading": "Aggiungi la tua prima istanza di Kodi",
+    "instance": "Istanza di Kodi",
+    "manual": {
+      "hint": "Per Kodi su un'altra VLAN, o quando il rilevamento è bloccato",
+      "label": "Inserisci un indirizzo manualmente"
+    },
+    "name": {
+      "hint": "Come la chiamerai, ad es. Soggiorno",
+      "label": "Nome"
+    },
+    "notFound": "Nessun Kodi ha risposto nella tua rete, quindi inserisci il suo indirizzo qui sotto.",
+    "password": {
+      "hint": "Salvata cifrata.",
+      "label": "Password di Kodi"
+    },
+    "remoteControl": "In Kodi devono essere attivate «Allow remote control via HTTP» e «from applications on other systems».",
+    "results": "Risultati del test di connessione",
+    "rpc": "Indirizzo JSON-RPC",
+    "searchAgain": "Cerca di nuovo",
+    "searching": "Ricerca di Kodi nella tua rete.",
+    "submit": "Aggiungi e verifica",
+    "testFailed": "Il test di connessione non è stato eseguito: {{error}}",
+    "username": "Nome utente di Kodi"
+  },
+  "nav": {
+    "back": "Indietro",
+    "continue": "Continua",
+    "skip": "Salta per ora"
+  },
+  "steps": {
+    "address": {
+      "sub": "Verifica di proxy e certificato",
+      "title": "Indirizzo pubblico"
+    },
+    "admin": {
+      "sub": "Token di configurazione e password",
+      "title": "Account amministratore"
+    },
+    "amazon": {
+      "sub": "Profilo Login with Amazon",
+      "title": "Account Amazon"
+    },
+    "deploy": {
+      "sub": "Build per ogni lingua",
+      "title": "Distribuisci skill"
+    },
+    "hello": {
+      "sub": "Conferma la prima richiesta",
+      "title": "Saluta"
+    },
+    "kodi": {
+      "sub": "Rileva e connetti",
+      "title": "Kodi"
+    }
+  },
+  "wizard": {
+    "label": "Passaggio {{step}}: {{title}}",
+    "progress": "Passaggio {{step}} di {{total}}<sr>: {{title}}</sr>",
+    "skipped": "Saltato",
+    "state": {
+      "current": " (passaggio attuale)",
+      "done": " (completato)",
+      "skipped": " (saltato)"
+    },
+    "steps": "Passaggi della configurazione",
+    "subtitle": "Prima configurazione"
+  }
+}

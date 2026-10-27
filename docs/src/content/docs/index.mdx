@@ -1,0 +1,34 @@
+---
+title: Encore
+description: Control Kodi with Alexa. Self-hosted, set up from a web interface.
+template: splash
+hero:
+  tagline: Control Kodi with Alexa. Self-hosted, set up from a web interface, deployed as a private skill in your own Amazon developer account.
+  image:
+    file: ../../../brand/logo.svg
+    alt: The Go gopher peeking over a couch, holding a TV remote
+  actions:
+    - text: Get started
+      link: /encore/getting-started/docker/
+      icon: right-arrow
+    - text: Why Encore
+      link: /encore/introduction/
+      variant: minimal
+---
+
+import { Card, CardGrid } from "@astrojs/starlight/components";
+
+<CardGrid>
+  <Card title="Everything Kanzi did" icon="rocket">
+    Play movies, shows, music and playlists by name, "next episode of…", recommendations, playback, volume and navigation, in nine locales.
+  </Card>
+  <Card title="Set up from a web interface" icon="setting">
+    Connect Kodi, link Echo devices to rooms, watch a live request log and test how titles are matched.
+  </Card>
+  <Card title="One-click deploy" icon="approve-check">
+    Encore creates and updates the private skill in your own Amazon developer account through the Skill Management API.
+  </Card>
+  <Card title="Finds new titles straight away" icon="magnifier">
+    Kodi's live events keep the library index current, so something added a minute ago is findable by voice.
+  </Card>
+</CardGrid>

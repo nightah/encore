@@ -1,0 +1,162 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": {
+          "level": "on",
+          "options": {
+            "groups": [
+              "react",
+              ":BLANK_LINE:",
+              [
+                ":NODE:",
+                ":PACKAGE:",
+                "!@api/**",
+                "!@components/**",
+                "!@dev/**",
+                "!@features/**",
+                "!@i18n/**",
+                "!@lib/**",
+                "!@mocks/**",
+                "!@routes/**",
+                "!@styles/**",
+                "!@test/**",
+                "!@theme/**",
+                "!@src/**",
+                "!@e2e/**"
+              ],
+              ":BLANK_LINE:",
+              [
+                "@api/**",
+                "@components/**",
+                "@dev/**",
+                "@features/**",
+                "@i18n/**",
+                "@lib/**",
+                "@mocks/**",
+                "@routes/**",
+                "@styles/**",
+                "@test/**",
+                "@theme/**",
+                "@src/**",
+                "@e2e/**"
+              ],
+              ":BLANK_LINE:",
+              ":PATH:"
+            ],
+            "identifierOrder": "lexicographic"
+          }
+        },
+        "useSortedKeys": "on"
+      }
+    },
+    "enabled": true
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
+  "files": {
+    "includes": [
+      "**",
+      "!src/routeTree.gen.ts",
+      "!public",
+      "!pnpm-lock.yaml",
+      "!mocks/mockServiceWorker.js",
+      "!test-results",
+      "!playwright-report"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 120
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "semicolons": "always",
+      "trailingCommas": "all"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "a11y": {
+        "preset": "recommended"
+      },
+      "correctness": {
+        "noNestedComponentDefinitions": "error",
+        "noUnusedImports": "error",
+        "noUnusedVariables": "error",
+        "useExhaustiveDependencies": "error"
+      },
+      "nursery": {
+        "noJsxLeakedDollar": "error",
+        "noJsxNamespace": "error",
+        "useReactCompiler": "error",
+        "useReactNamingConvention": "error"
+      },
+      "preset": "recommended",
+      "style": {
+        "noNonNullAssertion": "error",
+        "noRestrictedGlobals": {
+          "level": "error",
+          "options": {
+            "deniedGlobals": {
+              "event": "Use the event your handler receives.",
+              "fdescribe": "Don't commit a focused test."
+            }
+          }
+        },
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": {
+              "react": {
+                "importNames": ["default"],
+                "message": "The automatic JSX runtime doesn't need React in scope; import what you use by name."
+              }
+            },
+            "patterns": [
+              {
+                "group": ["./**", "../**"],
+                "message": "Import through the folder aliases (@api/\u2026, @components/\u2026, @src/\u2026) instead of a relative path."
+              }
+            ]
+          }
+        },
+        "useImportType": "error"
+      },
+      "suspicious": {
+        "noConsole": {
+          "level": "warn",
+          "options": {
+            "allow": ["error", "warn"]
+          }
+        },
+        "noReactForwardRef": "error"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["vite.config.ts", "src/api/generated/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": "off"
+          }
+        }
+      }
+    }
+  ],
+  "vcs": {
+    "clientKind": "git",
+    "enabled": true,
+    "useIgnoreFile": true
+  }
+}

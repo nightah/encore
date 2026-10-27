@@ -1,0 +1,192 @@
+{
+  "card": {
+    "address": "Indirizzo",
+    "and": " e ",
+    "defaultForUnlinked": "Predefinita per gli Echo non collegati",
+    "edit": "Modifica",
+    "editNamed": "Modifica {{name}}",
+    "failed": "Non riuscito:",
+    "hideTest": "Nascondi i risultati del test",
+    "httpOnly": {
+      "scheduled": "Il WebSocket è disattivato. Encore sincronizza la libreria a intervalli programmati invece che in tempo reale e non vede cosa c'è in riproduzione su {{name}} finché non attivi <b>Impostazioni › Servizi › Controllo › Consenti il controllo remoto da applicazioni su altri sistemi</b>.",
+      "theSource": "la sorgente della libreria",
+      "viaSource": "Il WebSocket è disattivato. Gli aggiornamenti della libreria arrivano comunque tramite {{source}} (la sorgente della libreria), ma Encore non vede cosa c'è in riproduzione su {{name}} finché non attivi <b>Impostazioni › Servizi › Controllo › Consenti il controllo remoto da applicazioni su altri sistemi</b>."
+    },
+    "library": {
+      "label": "Libreria",
+      "own": "Libreria propria",
+      "sharedWith": "Condivisa con {{names}}"
+    },
+    "mac": "MAC (Wake-on-LAN)",
+    "ms": "{{ms}} ms",
+    "notSet": "Non impostato",
+    "offline": "Encore non riesce a raggiungere {{name}}. Controlla che Kodi sia in esecuzione e che l'indirizzo qui sotto sia corretto.",
+    "passed": "Riuscito:",
+    "shared": "Libreria condivisa",
+    "sharedSource": "Libreria condivisa · sorgente",
+    "stats": {
+      "findable": "trovabile",
+      "lastEvent": "Ultimo evento di Kodi",
+      "movies_one": "{{count, number}} film",
+      "movies_other": "{{count, number}} film",
+      "newest": "Titolo più recente",
+      "noneYet": "Ancora nessuno",
+      "notFindable": "non ancora trovabile",
+      "resync": "Risincronizzazione di sicurezza",
+      "resyncEvery": "Ogni 15 min",
+      "resyncNext": "Ogni 15 min · prossima alle {{time}}",
+      "sharedWith": "condivisa con {{names}}",
+      "shows_one": "{{count, number}} serie",
+      "shows_other": "{{count, number}} serie"
+    },
+    "sync": "Sincronizza libreria",
+    "test": "Prova connessione",
+    "testing": "Test di {{name}} in corso…",
+    "testResults": "Risultati del test di connessione",
+    "useForUnlinked": "Usa per gli Echo non collegati",
+    "version": "Versione",
+    "wake": "Riattiva ora",
+    "wakeTimeout": {
+      "label": "Timeout di riattivazione",
+      "value": "60 s, poi “si sta ancora riattivando”"
+    },
+    "waking": "Riattivazione… (in attesa di Kodi)"
+  },
+  "dialog": {
+    "add": "Aggiungi istanza di Kodi",
+    "addTitle": "Aggiungi un'istanza di Kodi",
+    "cancel": "Annulla",
+    "close": "Chiudi",
+    "confirmRemove": "Rimuovere {{name}}? Gli Echo collegati smettono di funzionare finché non li ricolleghi.",
+    "description": "In Kodi devono essere attivi “Consenti il controllo remoto via HTTP” e “da applicazioni su altri sistemi”.",
+    "editTitle": "Modifica {{name}}",
+    "errors": {
+      "mac": "Inserisci un indirizzo MAC come DC:A6:32:4B:19:0E, oppure lascia vuoto.",
+      "name": "Dalle un nome, ad esempio la stanza in cui si trova.",
+      "url": "Inserisci un indirizzo http:// o https://, ad es. http://192.168.1.20:8080/jsonrpc.",
+      "websocketUrl": "Inserisci un indirizzo ws:// o wss://, oppure lascia vuoto."
+    },
+    "fields": {
+      "broadcast": {
+        "hint": "Solo se il Wake-on-LAN deve raggiungere una sottorete specifica.",
+        "label": "Indirizzo di broadcast"
+      },
+      "language": {
+        "hint": "Le regole usate per riconoscere i titoli pronunciati in questa libreria.",
+        "label": "Lingua dei titoli"
+      },
+      "mac": {
+        "hint": "Permette alle richieste vocali di riattivare questa istanza di Kodi quando è in standby.",
+        "label": "Indirizzo MAC (Wake-on-LAN)"
+      },
+      "name": {
+        "hint": "Mostrato sugli Echo e nel registro delle richieste.",
+        "label": "Nome"
+      },
+      "password": {
+        "hint": "Salvata in forma cifrata.",
+        "label": "Password di Kodi",
+        "saved": "Una password è salvata. Lascia vuoto per mantenerla."
+      },
+      "shutdown": {
+        "hint": "Cosa fa «Alexa, chiedi a encore di spegnere» su questa istanza di Kodi.",
+        "inherit": "Segui Impostazioni › Funzioni",
+        "label": "«Spegni»",
+        "power_off": "Spegni il dispositivo",
+        "quit": "Chiudi Kodi"
+      },
+      "timezone": {
+        "hint": "Dove si trova questa istanza di Kodi. Lascialo vuoto per ricavarlo dall’orologio di Kodi.",
+        "label": "Fuso orario"
+      },
+      "url": {
+        "label": "URL JSON-RPC"
+      },
+      "username": {
+        "label": "Nome utente di Kodi"
+      },
+      "websocketUrl": {
+        "hint": "Per gli aggiornamenti della libreria in tempo reale e la riproduzione in corso. Di solito la porta 9090.",
+        "label": "URL WebSocket"
+      }
+    },
+    "keep": "Mantieni",
+    "managed": "Questa istanza proviene da encore.yml o dalle variabili ENCORE_*. Modificala lì.",
+    "remove": "Rimuovi",
+    "removeEllipsis": "Rimuovi…",
+    "save": "Salva"
+  },
+  "discovered": {
+    "add": "Aggiungi",
+    "addNamed": "Aggiungi {{name}}",
+    "intro": "Rilevate con mDNS (<mono>{{service}}</mono>). Un Kodi su un'altra VLAN non compare qui; aggiungilo manualmente.",
+    "lastScan": "Ultima scansione {{when}} · scansione continua",
+    "none": "Nessuna novità.",
+    "scanning": "Scansione in corso…",
+    "searching": "Ricerca di Kodi con mDNS. Ci vuole qualche secondo.",
+    "title": "Trovate nella tua rete",
+    "unavailable": "Il rilevamento non è disponibile al momento.",
+    "version": "Kodi {{version}}"
+  },
+  "library": {
+    "explanation": {
+      "common": {
+        "many": "Encore mantiene un'unica libreria e un unico indice dei titoli per tutte, la sincronizza dalla sorgente della libreria e ascolta le modifiche da ciascuna.",
+        "two": "Encore mantiene un'unica libreria e un unico indice dei titoli per entrambe, la sincronizza dalla sorgente della libreria e ascolta le modifiche da tutte e due."
+      },
+      "confirmed": {
+        "many": "Queste istanze usano lo stesso database di Kodi: la riproduzione su una ha cambiato lo stato di visione e il punto di ripresa su tutte contemporaneamente.",
+        "two": "Queste istanze usano lo stesso database di Kodi: la riproduzione su una ha cambiato lo stato di visione e il punto di ripresa su entrambe contemporaneamente."
+      },
+      "likely": {
+        "check": {
+          "many": "La prossima volta che si riproduce qualcosa, Encore verifica che lo stato di visione e il punto di ripresa cambino su tutte le istanze contemporaneamente; se succede, lo stato diventa “Condivisione confermata”.",
+          "two": "La prossima volta che si riproduce qualcosa, Encore verifica che lo stato di visione e il punto di ripresa cambino su entrambe le istanze contemporaneamente; se succede, lo stato diventa “Condivisione confermata”."
+        },
+        "evidence": "Queste istanze sembrano usare lo stesso database di Kodi: {{evidence}}.",
+        "plain": "Queste istanze sembrano usare lo stesso database di Kodi."
+      },
+      "manual": "Hai raggruppato queste istanze a mano."
+    },
+    "fallback": "La sorgente non è raggiungibile, quindi Encore sta sincronizzando da {{name}}.",
+    "share": {
+      "add": "Aggiungi un'istanza",
+      "alreadyShared": "Condivide una libreria con {{names}}; selezionandola passa a questa.",
+      "cancel": "Annulla",
+      "confirm_one": "Condividi libreria",
+      "confirm_other": "Condividi libreria tra {{count}}",
+      "description": "Seleziona le istanze di Kodi che usano lo stesso database di Kodi, come MySQL. Encore terrà una sola libreria e un solo indice dei titoli per loro.",
+      "legend": "Istanze di Kodi",
+      "open": "Condividi una libreria",
+      "sourceHint": "La prima istanza selezionata diventa l'origine della libreria; puoi cambiarla in seguito.",
+      "title": "Condividi una libreria"
+    },
+    "source": "Sorgente della libreria",
+    "sourceHint": "Se la sorgente è in standby, Encore sincronizza da un'altra istanza attiva del gruppo. La riproduzione va comunque all'istanza controllata dall'Echo.",
+    "split": {
+      "cancel": "Annulla",
+      "confirm": "Separa",
+      "currentSource": "Sorgente attuale della libreria",
+      "description": "Scegli l'istanza che ha un proprio database di Kodi. Encore la sincronizzerà e indicizzerà separatamente.",
+      "legend": "Istanza con libreria propria",
+      "open": "Non condivisa? Separa",
+      "title": "Separa la libreria condivisa"
+    },
+    "state": {
+      "confirmed_shared": "Condivisione confermata",
+      "likely_shared": "Probabilmente condivisa",
+      "manual": "Raggruppata a mano",
+      "solo": "Libreria propria"
+    },
+    "title": "Libreria condivisa: {{name}}"
+  },
+  "page": {
+    "addManually": "Aggiungi Kodi manualmente",
+    "description": "Ogni Kodi che Encore può controllare. L'indice della libreria resta aggiornato grazie agli eventi WebSocket di Kodi.",
+    "empty": {
+      "body": "Aggiungine una trovata nella tua rete o inserisci il suo indirizzo. In Kodi deve essere attivo “Consenti il controllo remoto via HTTP”.",
+      "title": "Ancora nessuna istanza di Kodi"
+    },
+    "title": "Istanze di Kodi"
+  }
+}

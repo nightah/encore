@@ -1,0 +1,6 @@
+# fr-FR inherits lang/fr.
+# "encore" means "again" in French, so French uses "kodi" even when encore is chosen. "lecteur encore" was tried first, but Amazon's simulator never routed "ouvre lecteur encore" (or "lance", "démarre") to the skill.
+
+invocation: kodi
+language: fr
+skill_name: Encore

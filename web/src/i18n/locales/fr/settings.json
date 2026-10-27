@@ -1,0 +1,358 @@
+{
+  "access": {
+    "breakGlass": {
+      "hint": "Le nom d'utilisateur et le mot de passe fonctionnent toujours si votre fournisseur ou votre proxy tombe en panne. Si vous êtes bloqué avec cette option désactivée, définissez ENCORE_BREAK_GLASS=true.",
+      "label": "Conserver le mot de passe local comme connexion de secours",
+      "managed": "Défini par ENCORE_BREAK_GLASS ou encore.yml, donc non modifiable ici."
+    },
+    "cancel": "Annuler",
+    "header": {
+      "adminGroup": {
+        "label": "Groupe administrateur"
+      },
+      "groupsHeader": {
+        "label": "En-tête des groupes"
+      },
+      "strip": "Votre proxy doit supprimer ces en-têtes des requêtes entrantes.",
+      "trustedProxies": {
+        "hint": "Les en-têtes provenant de toute autre adresse sont ignorés. Séparez par des virgules.",
+        "label": "Adresses de proxy de confiance"
+      },
+      "userHeader": {
+        "label": "En-tête utilisateur",
+        "required": "Saisissez l'en-tête qui contient le nom d'utilisateur."
+      }
+    },
+    "local": {
+      "lockout": {
+        "5/15": "5 échecs, pendant 15 minutes",
+        "10/60": "10 échecs, pendant 1 heure",
+        "custom": "{{attempts}} échecs, pendant {{minutes}} minutes",
+        "label": "Bloquer après"
+      },
+      "password": {
+        "change": "Changer le mot de passe…",
+        "hint": "Stocké sous forme de hachage argon2id.",
+        "label": "Mot de passe"
+      },
+      "session": {
+        "days_one": "{{count}} jour",
+        "days_other": "{{count}} jours",
+        "hours_one": "{{count}} heure",
+        "hours_other": "{{count}} heures",
+        "label": "Durée de session"
+      },
+      "totp": {
+        "hint": "Utilisez une application d'authentification comme deuxième étape.",
+        "label": "Exiger un code à usage unique (TOTP)"
+      },
+      "username": {
+        "hint": "Défini lors de la création du compte administrateur.",
+        "label": "Nom d'utilisateur"
+      }
+    },
+    "mode": {
+      "header": {
+        "hint": "Remote-User depuis votre proxy forward-auth",
+        "label": "En-têtes de proxy de confiance"
+      },
+      "legend": "Méthode de connexion",
+      "local": {
+        "hint": "argon2id, tentatives limitées",
+        "label": "Mot de passe local"
+      },
+      "oidc": {
+        "hint": "p. ex. Authelia, Authentik, Keycloak",
+        "label": "OpenID Connect"
+      }
+    },
+    "oidc": {
+      "adminGroup": {
+        "hint": "Les utilisateurs sans cette valeur dans le claim de groupes sont refusés.",
+        "label": "Groupe administrateur"
+      },
+      "clientId": {
+        "label": "ID client",
+        "required": "Saisissez l'ID client."
+      },
+      "clientSecret": {
+        "empty": "Laissez vide pour un client public avec PKCE uniquement.",
+        "label": "Secret client",
+        "stored": "Un secret est enregistré. Saisissez-en un nouveau pour le remplacer."
+      },
+      "groupsClaim": {
+        "label": "Claim de groupes"
+      },
+      "issuer": {
+        "hint": "Encore y lit le document de découverte du fournisseur.",
+        "hintPreset": "{{shape}}. Encore y lit le document de découverte.",
+        "invalid": "Saisissez l'URL de l'émetteur, p. ex. https://auth.example.net.",
+        "label": "URL de l'émetteur"
+      },
+      "provider": {
+        "hint": "Remplit les scopes et le claim de groupes habituels, et affiche ci-dessous la configuration côté fournisseur.",
+        "label": "Fournisseur",
+        "other": "Autre"
+      },
+      "providers": {
+        "authelia": {
+          "digest": "Le condensé va ici ; le mot de passe aléatoire va dans le Secret client d'Encore.",
+          "generate": "Générez les deux moitiés avec :",
+          "issuerHint": "L'adresse d'Authelia, p. ex. https://auth.example.com",
+          "snippetTitle": "Ajoutez ce client sous identity_providers.oidc dans la configuration d'Authelia"
+        },
+        "authentik": {
+          "copySecret": "Copiez le Client Secret du fournisseur dans Encore. L'émetteur est\n{{issuer}} pour le slug ci-dessus.",
+          "issuerHint": "L'émetteur OpenID de l'application, p. ex. https://authentik.example.com/application/o/encore/",
+          "scopesNote": "(les valeurs par défaut ; profile contient les groupes)",
+          "snippetTitle": "Dans Authentik, allez dans Applications > Applications > Create with provider"
+        },
+        "keycloak": {
+          "issuerHint": "L'adresse du realm, p. ex. https://keycloak.example.com/realms/home",
+          "snippetTitle": "Dans Keycloak, collez ceci sous Clients > Import client, puis copiez le secret depuis son onglet Credentials dans Encore"
+        }
+      },
+      "redirectUri": {
+        "copy": "Copier l'URI de redirection",
+        "label": "URI de redirection à enregistrer auprès de votre fournisseur"
+      },
+      "saveToTest": "Enregistrez avec OpenID Connect sélectionné pour le tester.",
+      "scopes": {
+        "hint": "Séparés par des espaces.",
+        "label": "Scopes"
+      },
+      "snippetLabel": "Configuration de {{provider}}",
+      "testSignIn": "Tester la connexion"
+    },
+    "password": {
+      "changed": "Mot de passe modifié.",
+      "confirm": {
+        "label": "Confirmer le nouveau mot de passe",
+        "mismatch": "Les mots de passe ne correspondent pas."
+      },
+      "current": {
+        "label": "Mot de passe actuel",
+        "required": "Saisissez votre mot de passe actuel."
+      },
+      "description": "Vous restez connecté sur ce navigateur. Les autres sessions sont déconnectées.",
+      "new": {
+        "hint": "Au moins 12 caractères.",
+        "label": "Nouveau mot de passe",
+        "tooShort": "Utilisez au moins 12 caractères."
+      },
+      "submit": "Changer le mot de passe",
+      "title": "Changer le mot de passe"
+    },
+    "title": "Accès administrateur",
+    "totp": {
+      "code": "Code",
+      "copySecret": "Copier le secret",
+      "off": "Désactiver",
+      "offDescription": "Saisissez un code de votre application d'authentification pour confirmer.",
+      "offTitle": "Désactiver les codes à usage unique",
+      "on": "Activer",
+      "onDescription": "Ajoutez Encore à votre application d'authentification, puis saisissez le code affiché.",
+      "onTitle": "Activer les codes à usage unique",
+      "openApp": "Ouvrir dans une application d'authentification",
+      "secret": "Secret",
+      "turnedOff": "Codes à usage unique désactivés.",
+      "turnedOn": "Codes à usage unique activés."
+    }
+  },
+  "backup": {
+    "export": "Exporter la configuration",
+    "import": "Importer une configuration…",
+    "imported": "Importé : {{items}}.",
+    "importedNothing": "Rien n'a été importé.",
+    "importing": "Importation…",
+    "includeSecrets": {
+      "hint": "Seul un autre Encore disposant de la même clé de chiffrement peut les lire.",
+      "label": "Inclure les secrets (chiffrés)"
+    },
+    "intro": "Du YAML contenant les instances Kodi, les associations d'appareils, les pièces, les alias et les paramètres. Les secrets sont exclus, sauf si vous les incluez chiffrés.",
+    "skillPackage": "Télécharger le paquet de la skill",
+    "skipped": "Ignoré : {{items}}.",
+    "title": "Import et export"
+  },
+  "features": {
+    "confirm_sound": {
+      "hint": "Alexa émet un son bref après des commandes comme pause ou monter le volume, au lieu de rester silencieuse",
+      "title": "Confirmer les commandes par un son"
+    },
+    "deep_search": {
+      "hint": "Chercher dans tous les types de média quand le type n'est pas précisé",
+      "title": "Recherche approfondie pour « mets X »"
+    },
+    "queue_limit": {
+      "hint": "Le nombre maximal d’éléments qu’une lecture aléatoire ou une file lit à la fois, pour que les grandes bibliothèques restent réactives",
+      "title": "Limite de file"
+    },
+    "shutdown_quits": {
+      "hint": "Au lieu d'éteindre l'appareil",
+      "title": "« Éteindre » quitte Kodi"
+    },
+    "title": "Fonctionnalités facultatives"
+  },
+  "general": {
+    "basePath": {
+      "hint": "Pour un proxy qui sert Encore sous un sous-chemin, par ex. /encore. Encore répond toujours sur /. Redéployez la skill après l’avoir modifié.",
+      "label": "Chemin de base"
+    },
+    "defaultLocale": {
+      "label": "Langue régionale par défaut"
+    },
+    "language": {
+      "auto": "Comme le navigateur ({{language}})",
+      "hint": "Enregistrée dans ce navigateur uniquement.",
+      "label": "Langue"
+    },
+    "logLevel": {
+      "debug": "Débogage : tout, y compris chaque appel à Kodi",
+      "error": "Erreur : échecs uniquement",
+      "hint": "S'applique immédiatement, sans redémarrage.",
+      "info": "Info : ce que fait Encore (par défaut)",
+      "label": "Niveau de journalisation",
+      "warn": "Avertissement : problèmes uniquement"
+    },
+    "sections": {
+      "appearance": "Apparence",
+      "locale": "Paramètres régionaux",
+      "logging": "Journalisation",
+      "server": "Serveur"
+    },
+    "theme": {
+      "dark": {
+        "hint": "Bleu marine, plus reposant le soir",
+        "label": "Sombre"
+      },
+      "legend": "Thème",
+      "light": {
+        "hint": "Espace de travail gris froid",
+        "label": "Clair"
+      },
+      "note": "Enregistré dans ce navigateur uniquement. Le bouton soleil/lune en haut de chaque page change et enregistre immédiatement.",
+      "system": {
+        "hint": "Suit le réglage clair ou sombre de votre appareil",
+        "label": "Comme le système"
+      }
+    },
+    "timezone": {
+      "hint": "Utilisé pour « ce sera fini à 21 h 47 ».",
+      "label": "Fuseau horaire"
+    },
+    "title": "Général"
+  },
+  "page": {
+    "description": "Les champs marqués <badge/> proviennent de <code>encore.yml</code> ou de variables <code>ENCORE_*</code> et ne peuvent pas être modifiés ici.",
+    "save": "Enregistrer les modifications",
+    "sections": "Sections des paramètres",
+    "title": "Paramètres"
+  },
+  "secrets": {
+    "encrypted": "Chiffrés : jeton d'actualisation et secret client de Login with Amazon, mots de passe Kodi, identifiants de stockage.",
+    "keyId": {
+      "label": "ID de la clé active",
+      "rotated": "{{keyId}} (renouvelée le {{date}})"
+    },
+    "rotate": {
+      "button": "Renouveler la clé de chiffrement…",
+      "cancel": "Annuler",
+      "confirm": "Renouveler la clé",
+      "description": "Encore crée une nouvelle clé et rechiffre avec elle chaque secret enregistré. Les sauvegardes antérieures nécessitent toujours l'ancienne clé, qu'Encore conserve.",
+      "title": "Renouveler la clé de chiffrement ?"
+    },
+    "source": {
+      "config": "Définie dans encore.yml",
+      "file": "Lue depuis un fichier de clé (ENCORE_ENCRYPTION_KEY_FILE)",
+      "generated": "Générée par Encore et conservée dans le répertoire de données",
+      "label": "Source de la clé de chiffrement"
+    },
+    "title": "Secrets"
+  },
+  "storage": {
+    "backend": {
+      "legend": "Backend",
+      "local": "Disque local",
+      "localHint": "Le volume /data (par défaut)",
+      "s3": "Compatible S3",
+      "webdavHint": "Nextcloud, ownCloud et autres"
+    },
+    "backups": {
+      "folder": {
+        "hint": "Dans l'emplacement de stockage ci-dessus ; laissez vide pour la racine. Changer la destination des sauvegardes en lance une immédiatement.",
+        "label": "Dossier de sauvegarde"
+      },
+      "hint": "Base de données et export de la configuration. Les secrets sont exclus.",
+      "keep": {
+        "count_one": "{{count}} sauvegarde",
+        "count_other": "{{count}} sauvegardes",
+        "label": "Conserver"
+      },
+      "label": "Sauvegardes",
+      "last": {
+        "label": "Dernière sauvegarde",
+        "never": "Jamais",
+        "run": "Sauvegarder maintenant"
+      },
+      "schedules": {
+        "daily": "Tous les jours à 03:00",
+        "off": "Désactivées",
+        "weekly": "Toutes les semaines, le dimanche à 03:00"
+      },
+      "snapshot": {
+        "label": "Instantané de la bibliothèque",
+        "value": "Enregistré toutes les 15 min et après chaque synchronisation, pour un redémarrage rapide"
+      }
+    },
+    "intro": "L'endroit où Encore conserve les instantanés de bibliothèque, les sauvegardes et les paquets de skill exportés. Les requêtes vocales n'attendent jamais ce stockage : l'index actif reste en mémoire.",
+    "local": {
+      "hint": "Montez un volume ici pour que les instantanés survivent aux redémarrages du conteneur.",
+      "label": "Répertoire de données"
+    },
+    "s3": {
+      "accessKey": "Clé d'accès",
+      "bucket": "Bucket",
+      "caBundle": "Certificat d'AC (PEM)",
+      "customCa": "Certificat d'AC personnalisé",
+      "endpoint": {
+        "hint": "Laissez vide pour AWS S3. Fonctionne avec MinIO, Silo, Garage, Ceph RGW, SeaweedFS, R2, B2.",
+        "label": "URL du point de terminaison"
+      },
+      "pathStyle": "Adressage par chemin",
+      "prefix": "Préfixe",
+      "region": "Région",
+      "secretKey": {
+        "hint": "Chiffrée au repos.",
+        "label": "Clé secrète",
+        "stored": "Enregistrée, chiffrée avec la clé {{keyId}}. Saisissez-en une nouvelle pour la remplacer."
+      },
+      "sse": "Chiffrement côté serveur"
+    },
+    "test": {
+      "button": "Tester la connexion",
+      "failed": "L'objet de test n'a pas pu être écrit.",
+      "ok": "Objet de test écrit, lu et supprimé en {{ms}} ms",
+      "saveFirst": "Enregistrez les modifications pour les tester."
+    },
+    "title": "Stockage",
+    "webdav": {
+      "password": {
+        "hint": "Créez-en un sous Sécurité dans Nextcloud. Chiffré au repos.",
+        "label": "Mot de passe d'application"
+      },
+      "url": {
+        "hint": "Nextcloud, ownCloud ou tout serveur WebDAV.",
+        "label": "URL WebDAV"
+      },
+      "username": "Nom d'utilisateur"
+    }
+  },
+  "tabs": {
+    "access": "Accès",
+    "backup": "Import et export",
+    "features": "Fonctionnalités",
+    "general": "Général",
+    "secrets": "Secrets",
+    "storage": "Stockage"
+  }
+}

@@ -1,0 +1,27 @@
+# air rebuilds and restarts the Go server when its sources change; `make dev` runs it (go tool -modfile=tools/go.mod air) alongside the Vite dev server, which serves the UI.
+root = "."
+tmp_dir = "bin/air"
+
+[build]
+# Without the embedded UI: Vite serves it in development.
+cmd = "go build -tags noui -o bin/encore-dev ./cmd/encore"
+entrypoint = ["bin/encore-dev"]
+args_bin = ["serve"]
+# Go sources plus what's embedded in the binary: the interaction model (yaml), migrations (sql) and docs templates.
+include_ext = ["go", "yaml", "sql", "tmpl"]
+exclude_dir = [".git", ".claude", "bin", "web", "docs", "tools", "testdata", "internal/server/dist", "node_modules"]
+exclude_regex = ["_test\\.go$"]
+# Let a burst of saves settle into one rebuild.
+delay = 500
+# Keep serving the last good build when a change doesn't compile.
+stop_on_error = true
+# Stop the old server gracefully so it releases the data directory lock and closes the database; kill it after 5 s if it hasn't.
+send_interrupt = true
+kill_delay = 5000
+
+[log]
+main_only = false
+time = false
+
+[misc]
+clean_on_exit = true

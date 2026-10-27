@@ -1,0 +1,122 @@
+{
+  "actions": {
+    "close": "Schließen",
+    "copied": "Kopiert",
+    "copy": "Kopieren",
+    "copyNamed": "{{label}} kopieren",
+    "copyWithText": "{{label}}: {{text}}",
+    "dismiss": "Ausblenden",
+    "tryAgain": "Erneut versuchen"
+  },
+  "check": {
+    "auth": "Zugangsdaten",
+    "library": "Mediathek",
+    "ping": "JSON-RPC über HTTP"
+  },
+  "error": {
+    "generic": "Etwas ist schiefgelaufen.",
+    "http": "Anfrage mit HTTP {{status}} fehlgeschlagen.",
+    "lwaCredentials": "Speichere zuerst Client-ID und Secret für Login with Amazon.",
+    "noConnection": "Der Encore-Server ist nicht erreichbar.",
+    "pageFailed": "Auf dieser Seite ist etwas schiefgelaufen",
+    "unreachable": "Encore antwortet nicht"
+  },
+  "field": {
+    "managed": "Per Konfiguration verwaltet",
+    "managedSuffix": ", per Konfiguration verwaltet"
+  },
+  "heard": {
+    "quoted": "„{{text}}“",
+    "suffix": ": „{{text}}“"
+  },
+  "infoTip": {
+    "label": "Info: {{label}}"
+  },
+  "instance": {
+    "asleep": "Schläft",
+    "connectedHttp": "Verbunden · nur HTTP",
+    "connectedWebSocket": "Verbunden · WebSocket",
+    "httpOnly": "Nur HTTP",
+    "idle": "Bereit",
+    "macSaved": "MAC gespeichert",
+    "noMac": "Keine MAC-Adresse",
+    "offline": "Offline",
+    "paused": "Pausiert",
+    "playing": "Wiedergabe",
+    "versionUnknown": "Unbekannt, bis Encore Kodi erreicht"
+  },
+  "loading": "Wird geladen…",
+  "nav": {
+    "alexaSkill": "Alexa-Skill",
+    "echoDevices": "Echo-Geräte",
+    "kodi": "Kodi",
+    "label": "Hauptnavigation",
+    "library": "Mediathek",
+    "overview": "Übersicht",
+    "requestLog": "Anfragenprotokoll",
+    "settings": "Einstellungen"
+  },
+  "notFound": {
+    "back": "Zurück zur Übersicht",
+    "title": "Seite nicht gefunden"
+  },
+  "outcome": {
+    "asked": "Nachgefragt, welches",
+    "error": "Fehler",
+    "not_found": "Nicht gefunden",
+    "ok": "Erledigt",
+    "played": "Abgespielt",
+    "unlinked": "Gerät nicht verknüpft"
+  },
+  "request": {
+    "simulator": "Amazon-Simulator",
+    "unnamedEcho": "Unbenannter Echo"
+  },
+  "setupBanner": {
+    "continue": "Einrichtung fortsetzen",
+    "message": "Die Einrichtung ist noch nicht abgeschlossen. Du bist bei Schritt {{step}} von 6."
+  },
+  "shell": {
+    "signedInAs": "Angemeldet als <name>{{name}}</name>",
+    "signOut": "Abmelden",
+    "skipToContent": "Zum Inhalt springen"
+  },
+  "theme": {
+    "toDark": "Zum dunklen Modus wechseln",
+    "toLight": "Zum hellen Modus wechseln"
+  },
+  "time": {
+    "hoursAgo": "vor {{value}} Std.",
+    "inHours": "in {{value}} Std.",
+    "inMinutes": "in {{value}} Min.",
+    "justNow": "gerade eben",
+    "minutesAgo": "vor {{value}} Min.",
+    "never": "nie",
+    "seconds": "{{value}} s",
+    "soon": "gleich"
+  },
+  "toast": {
+    "aliasSaved": "Alias gespeichert. Er kommt beim nächsten Update ins Skill-Modell.",
+    "amazonConnected": "Mit Amazon verbunden.",
+    "amazonDisconnected": "Amazon-Tokens vergessen.",
+    "backupStarted": "Sicherung gestartet.",
+    "defaultInstance": "Nicht verknüpfte Echos steuern jetzt diese Kodi-Instanz.",
+    "echoForgotten": "Echo vergessen. Es erscheint wieder, sobald es eine Anfrage sendet.",
+    "echoSaved": "Echo gespeichert.",
+    "failed": "Das hat nicht geklappt",
+    "instanceAdded": "Kodi-Instanz hinzugefügt.",
+    "instanceRemoved": "Kodi-Instanz entfernt.",
+    "instanceSaved": "Kodi-Instanz gespeichert.",
+    "libraryGrouped": "Mediathek geteilt. Encore indiziert diese Instanzen jetzt gemeinsam.",
+    "librarySource": "Mediathek-Quelle geändert.",
+    "librarySplit": "Mediathek getrennt. Encore indiziert jetzt jede Instanz einzeln.",
+    "roomAdded": "Raum hinzugefügt.",
+    "roomRemoved": "Raum entfernt.",
+    "roomSaved": "Raum gespeichert.",
+    "secretsRotated": "Schlüssel erneuert. Gespeicherte Geheimnisse wurden neu verschlüsselt.",
+    "settingsSaved": "Einstellungen gespeichert.",
+    "skillSaved": "Skill-Einstellungen gespeichert.",
+    "syncStarted": "Mediathek-Sync gestartet. Die Zahlen aktualisieren sich, wenn er fertig ist.",
+    "wakeSent": "Wake-on-LAN-Paket gesendet. Warte auf Antwort von Kodi."
+  }
+}

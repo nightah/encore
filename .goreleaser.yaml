@@ -1,0 +1,108 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+# GoReleaser v2. Run from .github/workflows/release.yml when a vX.Y.Z tag is pushed. The web bundle is built once by the workflow and downloaded into internal/server/dist before this runs.
+version: 2
+
+project_name: encore
+
+before:
+  hooks:
+    # Fail fast if the embedded SPA bundle is missing (would ship a UI-less binary).
+    - test -f internal/server/dist/index.html
+
+builds:
+  - id: encore
+    main: ./cmd/encore
+    binary: encore
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    ldflags:
+      - -s -w
+      - -X github.com/nightah/encore/internal/buildinfo.Version={{ .Version }}
+      - -X github.com/nightah/encore/internal/buildinfo.Commit={{ .FullCommit }}
+      - -X github.com/nightah/encore/internal/buildinfo.Date={{ .CommitDate }}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64, arm]
+    goarm: ["7"]
+    ignore:
+      - goos: darwin
+        goarch: arm
+      - goos: windows
+        goarch: arm
+      - goos: windows
+        goarch: arm64
+
+archives:
+  - id: encore
+    ids: [encore]
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ with .Arm }}v{{ . }}{{ end }}
+    files:
+      - LICENSE
+      - README.md
+      - docs/brand/**/*
+      - packaging/systemd/encore.service
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
+
+sboms:
+  - id: archives
+    artifacts: archive
+    # syft is installed by the workflow (anchore/sbom-action/download-syft).
+
+dockers_v2:
+  - id: encore
+    ids: [encore]
+    dockerfile: Dockerfile.goreleaser
+    extra_files:
+      - docker/root
+    images:
+      - ghcr.io/nightah/encore
+    tags:
+      - "{{ .Version }}"
+      - "{{ if not .Prerelease }}{{ .Major }}.{{ .Minor }}{{ end }}"
+      - "{{ if and (not .Prerelease) (gt .Major 0) }}{{ .Major }}{{ end }}"
+      - "{{ if not .Prerelease }}latest{{ end }}"
+    platforms:
+      - linux/amd64
+      - linux/arm64
+      - linux/arm/v7
+    labels:
+      org.opencontainers.image.title: "{{ .ProjectName }}"
+      org.opencontainers.image.description: Self-hosted Alexa skill server for Kodi
+      org.opencontainers.image.url: https://github.com/nightah/encore
+      org.opencontainers.image.source: https://github.com/nightah/encore
+      org.opencontainers.image.documentation: https://github.com/nightah/encore#readme
+      org.opencontainers.image.licenses: Apache-2.0
+      org.opencontainers.image.version: "{{ .Version }}"
+      org.opencontainers.image.revision: "{{ .FullCommit }}"
+      org.opencontainers.image.created: "{{ .CommitDate }}"
+    annotations:
+      "index:org.opencontainers.image.description": Self-hosted Alexa skill server for Kodi
+      "index:org.opencontainers.image.source": https://github.com/nightah/encore
+      "index:org.opencontainers.image.licenses": Apache-2.0
+      "index:org.opencontainers.image.version": "{{ .Version }}"
+      "index:org.opencontainers.image.revision": "{{ .FullCommit }}"
+    sbom: true
+
+# .github/workflows/release.yml hands digests.txt (and checksums.txt) to slsa-github-generator, which generates SLSA Build Level 3 provenance for the images and archives. It's signed with Sigstore, so no separate cosign signatures are needed.
+docker_digest:
+  name_template: digests.txt
+
+release:
+  github:
+    owner: nightah
+    name: encore
+  prerelease: auto
+
+# GitHub writes the notes from the merged pull requests since the previous tag, grouped by their labels (.github/release.yml).
+changelog:
+  use: github-native

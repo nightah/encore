@@ -1,0 +1,5 @@
+# OSV-Scanner (CI) scans only what ships: Encore's go.mod and the web interface's production dependencies (pnpm sbom --prod). The tools module, the docs site and web's dev dependencies are build and test tooling, so they're left out.
+
+[[IgnoredVulns]]
+id = "GO-2026-5932"
+reason = "golang.org/x/crypto/openpgp is deprecated and never imported; govulncheck confirms Encore does not call it"

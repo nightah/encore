@@ -1,0 +1,84 @@
+name: Bug report
+description: Something in Encore is not working as expected.
+title: "bug: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Please **redact tokens, skill IDs, user IDs and IP addresses** from anything you paste.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you say / do, what did you expect, and what happened instead?
+      placeholder: |
+        "Alexa, ask encore to play The Expanse" -> expected playback on Kodi, Alexa replied "There was a problem with the requested skill's response".
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+  - type: input
+    id: encore-version
+    attributes:
+      label: Encore version
+      description: Output of `encore version` (or the image tag).
+      placeholder: v0.1.0 (commit abc1234)
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How do you run Encore?
+      options:
+        - Container image (ghcr.io/nightah/encore)
+        - Release binary
+        - Built from source
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: kodi-version
+    attributes:
+      label: Kodi version
+      description: Settings > System information, e.g. "21.3 Omega".
+      placeholder: 21.3 Omega
+    validations:
+      required: true
+  - type: input
+    id: echo
+    attributes:
+      label: Echo device model and locale
+      description: The device you spoke to and the Alexa language/locale it uses.
+      placeholder: Echo Dot (5th Gen), en-AU
+    validations:
+      required: true
+  - type: dropdown
+    id: assistant
+    attributes:
+      label: Alexa or Alexa+?
+      options:
+        - Alexa (classic)
+        - Alexa+
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: |
+        Relevant Encore logs, ideally with `ENCORE_LOG_LEVEL=debug`. **Redact access tokens, refresh tokens, skill/user IDs and IPs.**
+      render: shell
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Reverse proxy setup, network layout, screenshots, etc.

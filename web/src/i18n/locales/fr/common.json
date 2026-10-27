@@ -1,0 +1,122 @@
+{
+  "actions": {
+    "close": "Fermer",
+    "copied": "Copié",
+    "copy": "Copier",
+    "copyNamed": "Copier {{label}}",
+    "copyWithText": "{{label}} : {{text}}",
+    "dismiss": "Fermer la notification",
+    "tryAgain": "Réessayer"
+  },
+  "check": {
+    "auth": "Identifiants",
+    "library": "Médiathèque",
+    "ping": "JSON-RPC via HTTP"
+  },
+  "error": {
+    "generic": "Un problème est survenu.",
+    "http": "La requête a échoué avec HTTP {{status}}.",
+    "lwaCredentials": "Enregistrez d'abord l'ID client et le secret Login with Amazon.",
+    "noConnection": "Impossible de joindre le serveur Encore.",
+    "pageFailed": "Un problème est survenu sur cette page",
+    "unreachable": "Encore ne répond pas"
+  },
+  "field": {
+    "managed": "Géré par la configuration",
+    "managedSuffix": ", géré par la configuration"
+  },
+  "heard": {
+    "quoted": "« {{text}} »",
+    "suffix": " : « {{text}} »"
+  },
+  "infoTip": {
+    "label": "À propos : {{label}}"
+  },
+  "instance": {
+    "asleep": "En veille",
+    "connectedHttp": "Connectée · HTTP uniquement",
+    "connectedWebSocket": "Connectée · WebSocket",
+    "httpOnly": "HTTP uniquement",
+    "idle": "Inactive",
+    "macSaved": "MAC enregistrée",
+    "noMac": "Aucune adresse MAC",
+    "offline": "Hors ligne",
+    "paused": "En pause",
+    "playing": "Lecture en cours",
+    "versionUnknown": "Inconnue tant qu'Encore n'a pas joint Kodi"
+  },
+  "loading": "Chargement…",
+  "nav": {
+    "alexaSkill": "Skill Alexa",
+    "echoDevices": "Appareils Echo",
+    "kodi": "Kodi",
+    "label": "Navigation principale",
+    "library": "Médiathèque",
+    "overview": "Vue d'ensemble",
+    "requestLog": "Journal des requêtes",
+    "settings": "Paramètres"
+  },
+  "notFound": {
+    "back": "Retour à la vue d'ensemble",
+    "title": "Page introuvable"
+  },
+  "outcome": {
+    "asked": "A demandé lequel",
+    "error": "Erreur",
+    "not_found": "Introuvable",
+    "ok": "Terminé",
+    "played": "Lu",
+    "unlinked": "Appareil non associé"
+  },
+  "request": {
+    "simulator": "Simulateur Amazon",
+    "unnamedEcho": "Echo sans nom"
+  },
+  "setupBanner": {
+    "continue": "Reprendre la configuration",
+    "message": "La configuration n'est pas encore terminée. Vous en êtes à l'étape {{step}} sur 6."
+  },
+  "shell": {
+    "signedInAs": "Connecté en tant que <name>{{name}}</name>",
+    "signOut": "Se déconnecter",
+    "skipToContent": "Aller au contenu"
+  },
+  "theme": {
+    "toDark": "Passer en mode sombre",
+    "toLight": "Passer en mode clair"
+  },
+  "time": {
+    "hoursAgo": "il y a {{value}} h",
+    "inHours": "dans {{value}} h",
+    "inMinutes": "dans {{value}} min",
+    "justNow": "à l'instant",
+    "minutesAgo": "il y a {{value}} min",
+    "never": "jamais",
+    "seconds": "{{value}} s",
+    "soon": "dans un instant"
+  },
+  "toast": {
+    "aliasSaved": "Alias enregistré. Il sera ajouté au modèle de la skill à la prochaine mise à jour.",
+    "amazonConnected": "Connecté à Amazon.",
+    "amazonDisconnected": "Jetons Amazon oubliés.",
+    "backupStarted": "Sauvegarde lancée.",
+    "defaultInstance": "Les Echo non associés contrôlent désormais cette instance Kodi.",
+    "echoForgotten": "Echo oublié. Il réapparaîtra s'il envoie une autre requête.",
+    "echoSaved": "Echo enregistré.",
+    "failed": "Cela n'a pas fonctionné",
+    "instanceAdded": "Instance Kodi ajoutée.",
+    "instanceRemoved": "Instance Kodi supprimée.",
+    "instanceSaved": "Instance Kodi enregistrée.",
+    "libraryGrouped": "Bibliothèque partagée. Encore indexe désormais ces instances ensemble.",
+    "librarySource": "Source de la bibliothèque modifiée.",
+    "librarySplit": "Bibliothèque séparée. Encore indexe désormais chaque instance séparément.",
+    "roomAdded": "Pièce ajoutée.",
+    "roomRemoved": "Pièce supprimée.",
+    "roomSaved": "Pièce enregistrée.",
+    "secretsRotated": "Clé renouvelée. Les secrets enregistrés ont été rechiffrés.",
+    "settingsSaved": "Réglages enregistrés.",
+    "skillSaved": "Réglages de la skill enregistrés.",
+    "syncStarted": "Synchronisation de la bibliothèque lancée. Les nombres se mettent à jour à la fin.",
+    "wakeSent": "Paquet Wake-on-LAN envoyé. En attente de la réponse de Kodi."
+  }
+}

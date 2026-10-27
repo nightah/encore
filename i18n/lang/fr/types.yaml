@@ -1,0 +1,386 @@
+# French values for the custom slot types in model.yaml. IDs are what the handler acts on and match English; values and synonyms are what people say.
+#
+# Several types hold the verb itself (SEEK_DIRECTION "avance"/"recule", SUBTITLE_ACTION "active"/"désactive", POWER_ACTION "éteins") because French puts the action first: "avance de dix minutes", "désactive les sous-titres".
+
+LIBRARY_SECTION:
+  albums: |-
+    albums
+    disques
+  artists: |-
+    artistes
+    musiciens
+    groupes
+  favourites: |-
+    favoris
+    mes favoris
+  movies: |-
+    films
+    mes films
+    bibliothèque de films
+  music: |-
+    musique
+    ma musique
+    bibliothèque musicale
+    chansons
+  musicvideos: |-
+    clips
+    clips vidéo
+    mes clips
+  recentepisodes: |-
+    épisodes ajoutés récemment
+    nouveaux épisodes
+    derniers épisodes
+    épisodes récents
+    nouvelles séries
+  recentmovies: |-
+    films ajoutés récemment
+    nouveaux films
+    derniers films
+    films récents
+  recentmusic: |-
+    musique ajoutée récemment
+    nouvelle musique
+    nouveaux albums
+    derniers albums
+    albums récents
+    nouvelles chansons
+    chansons récentes
+  recentmusicvideos: |-
+    clips ajoutés récemment
+    nouveaux clips
+    derniers clips
+    clips récents
+  tvshows: |-
+    séries
+    séries télé
+    mes séries
+    émissions
+    télé
+
+LIBRARY_TYPE:
+  music: |-
+    musicale
+    musique
+    audio
+    de musique
+    chansons
+  video: |-
+    vidéo
+    vidéos
+    films
+    séries
+    télé
+    de films
+
+MEDIA_TYPE:
+  album: |-
+    album
+    albums
+    disque
+    disques
+  artist: |-
+    artiste
+    artistes
+    groupe
+    groupes
+    musicien
+    musiciens
+    chanteur
+    chanteuse
+  audio: |-
+    quelque chose à écouter
+    de la musique
+    musique
+  episode: |-
+    épisode
+    épisodes
+  movie: |-
+    film
+    films
+    long métrage
+  musicvideo: |-
+    clip
+    clips
+    clip vidéo
+    clips vidéo
+    vidéoclip
+  song: |-
+    chanson
+    chansons
+    morceau
+    morceaux
+    titre
+    titres
+  tvshow: |-
+    série
+    séries
+    série télé
+    séries télé
+    émission
+    émissions
+    programme
+  video: |-
+    quelque chose à regarder
+    quelque chose à voir
+    vidéo
+    vidéos
+
+NAV_ACTION:
+  back: |-
+    retour
+    en arrière
+    reviens
+  down: |-
+    en bas
+    bas
+    vers le bas
+    descends
+  home: |-
+    accueil
+    écran d'accueil
+    menu principal
+  info: |-
+    infos
+    informations
+    détails
+    plus d'infos
+  left: |-
+    à gauche
+    gauche
+    vers la gauche
+  menu: |-
+    menu
+    menu contextuel
+    options
+  osd: |-
+    contrôles
+    commandes de lecture
+    affichage à l'écran
+    o. s. d.
+  pagedown: |-
+    page suivante
+    page vers le bas
+    défile vers le bas
+    montre plus
+  pageup: |-
+    page précédente
+    page vers le haut
+    défile vers le haut
+  right: |-
+    à droite
+    droite
+    vers la droite
+  select: |-
+    sélectionner
+    sélectionne
+    ok
+    valide
+    entrée
+    choisis ça
+    clique
+  up: |-
+    en haut
+    haut
+    vers le haut
+    monte
+
+NAV_DIRECTION:
+  down: |-
+    vers le bas
+    en bas
+  left: |-
+    vers la gauche
+    à gauche
+  right: |-
+    vers la droite
+    à droite
+  up: |-
+    vers le haut
+    en haut
+
+# "arrête" and a bare "quitte" are deliberately absent: said alone they would steal the built-in stop.
+POWER_ACTION:
+  hibernate: |-
+    veille prolongée
+    mets en veille prolongée
+    hiberne
+    hibernation
+  quit: |-
+    quitte kodi
+    quitter kodi
+    ferme kodi
+    fermer kodi
+  reboot: |-
+    redémarre
+    redémarrer
+    relance
+    relancer
+  shutdown: |-
+    éteins
+    éteindre
+    mets hors tension
+    shutdown
+  suspend: |-
+    veille
+    mets en veille
+    mettre en veille
+    suspends
+
+REPEAT_MODE:
+  all: |-
+    tout
+    tous
+    toute la liste
+    la playlist
+    la file d'attente
+  "off": |-
+    désactivé
+    désactivée
+    rien
+    aucun
+    arrêt
+  one: |-
+    ce titre
+    celui-ci
+    cette chanson
+    ce morceau
+    cet épisode
+    la chanson
+    le morceau
+
+ROTATE_DIRECTION:
+  clockwise: |-
+    dans le sens des aiguilles d'une montre
+    sens horaire
+    vers la droite
+    à droite
+  counterclockwise: |-
+    dans le sens inverse des aiguilles d'une montre
+    sens antihoraire
+    sens inverse
+    vers la gauche
+    à gauche
+
+SEEK_DIRECTION:
+  back: |-
+    recule
+    reculer
+    en arrière
+    vers l'arrière
+    retour en arrière
+  forward: |-
+    avance
+    avancer
+    en avant
+    vers l'avant
+    avance rapide
+
+SEEK_SIZE:
+  big: |-
+    beaucoup
+    un grand saut
+    un grand pas
+    loin
+    grand
+    un bon coup
+  small: |-
+    un peu
+    un petit peu
+    légèrement
+    un petit saut
+    un petit pas
+    petit
+
+STREAM_STEP:
+  next: |-
+    suivante
+    suivant
+    autre
+    prochaine
+  previous: |-
+    précédente
+    précédent
+
+SUBTITLE_ACTION:
+  download: |-
+    télécharger
+    télécharge
+    cherche
+    chercher
+    trouve
+    trouver
+    recherche
+  next: |-
+    suivants
+    suivant
+    change
+    changer
+    autres
+  "off": |-
+    désactive
+    désactiver
+    enlève
+    enlever
+    cache
+    cacher
+    masque
+    masquer
+    retire
+    retirer
+    coupe
+    couper
+    désactivés
+  "on": |-
+    active
+    activer
+    affiche
+    afficher
+    mets
+    mettre
+    activés
+  previous: |-
+    précédents
+    précédent
+
+TRANSPORT_COMMAND:
+  next: |-
+    suivant
+    passe
+    passe au suivant
+    suivante
+  pause: |-
+    pause
+    mets en pause
+    mettre en pause
+  previous: |-
+    précédent
+    précédente
+    reviens en arrière
+  resume: |-
+    reprends
+    reprendre
+    relance
+    continue
+    lecture
+  stop: |-
+    arrête
+    arrêter
+    stop
+
+ZOOM_ACTION:
+  in: |-
+    avant
+    plus près
+    agrandis
+    rapproche
+  out: |-
+    arrière
+    plus loin
+    réduis
+    éloigne
+  reset: |-
+    normal
+    réinitialise
+    remets à zéro
+    désactive
+    annule

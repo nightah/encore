@@ -1,0 +1,8 @@
+Encore logo and mark (logo.svg, mark.svg, favicon.svg and the PNG icons)
+
+The gopher is an original rendition of the Go gopher, which was designed by Renee French and is licensed under the Creative Commons Attribution 4.0 License (CC BY 4.0): https://creativecommons.org/licenses/by/4.0/
+
+Encore logo: Go gopher by Renee French, CC BY 4.0. Gopher artwork adapted for Encore.
+
+The artwork does not use the Go logo/wordmark or any Kodi branding.
+Full notes: docs/brand/ATTRIBUTION.md in the Encore repository.

@@ -1,0 +1,192 @@
+{
+  "card": {
+    "address": "Adresse",
+    "and": " et ",
+    "defaultForUnlinked": "Par défaut pour les Echo non associés",
+    "edit": "Modifier",
+    "editNamed": "Modifier {{name}}",
+    "failed": "Échec :",
+    "hideTest": "Masquer les résultats du test",
+    "httpOnly": {
+      "scheduled": "Le WebSocket est désactivé. Encore synchronise la bibliothèque selon un calendrier plutôt qu'en direct, et ne peut pas voir ce qui passe sur {{name}} tant que vous n'activez pas <b>Paramètres › Services › Contrôle › Autoriser le contrôle à distance depuis des applications sur d'autres systèmes</b>.",
+      "theSource": "la source de la bibliothèque",
+      "viaSource": "Le WebSocket est désactivé. Les mises à jour de la bibliothèque arrivent toujours via {{source}} (la source de la bibliothèque), mais Encore ne peut pas voir ce qui passe sur {{name}} tant que vous n'activez pas <b>Paramètres › Services › Contrôle › Autoriser le contrôle à distance depuis des applications sur d'autres systèmes</b>."
+    },
+    "library": {
+      "label": "Bibliothèque",
+      "own": "Sa propre bibliothèque",
+      "sharedWith": "Partagée avec {{names}}"
+    },
+    "mac": "MAC (Wake-on-LAN)",
+    "ms": "{{ms}} ms",
+    "notSet": "Non définie",
+    "offline": "Encore ne parvient pas à joindre {{name}}. Vérifiez que Kodi est lancé et que l'adresse ci-dessous est correcte.",
+    "passed": "Réussi :",
+    "shared": "Bibliothèque partagée",
+    "sharedSource": "Bibliothèque partagée · source",
+    "stats": {
+      "findable": "trouvable",
+      "lastEvent": "Dernier événement Kodi",
+      "movies_one": "{{count, number}} film",
+      "movies_other": "{{count, number}} films",
+      "newest": "Titre le plus récent",
+      "noneYet": "Aucun pour l'instant",
+      "notFindable": "pas encore trouvable",
+      "resync": "Resynchronisation de secours",
+      "resyncEvery": "Toutes les 15 min",
+      "resyncNext": "Toutes les 15 min · prochaine à {{time}}",
+      "sharedWith": "partagée avec {{names}}",
+      "shows_one": "{{count, number}} série",
+      "shows_other": "{{count, number}} séries"
+    },
+    "sync": "Synchroniser la bibliothèque",
+    "test": "Tester la connexion",
+    "testing": "Test de {{name}}…",
+    "testResults": "Résultats du test de connexion",
+    "useForUnlinked": "Utiliser pour les Echo non associés",
+    "version": "Version",
+    "wake": "Réveiller",
+    "wakeTimeout": {
+      "label": "Délai de réveil",
+      "value": "60 s, puis « elle est encore en train de se réveiller »"
+    },
+    "waking": "Réveil… (en attente de Kodi)"
+  },
+  "dialog": {
+    "add": "Ajouter l'instance Kodi",
+    "addTitle": "Ajouter une instance Kodi",
+    "cancel": "Annuler",
+    "close": "Fermer",
+    "confirmRemove": "Supprimer {{name}} ? Les Echo qui y sont associés ne fonctionneront plus tant que vous ne les aurez pas associés à nouveau.",
+    "description": "Kodi doit avoir « Autoriser le contrôle à distance via HTTP » et « depuis des applications sur d'autres systèmes » activés.",
+    "editTitle": "Modifier {{name}}",
+    "errors": {
+      "mac": "Saisissez une adresse MAC comme DC:A6:32:4B:19:0E, ou laissez le champ vide.",
+      "name": "Donnez-lui un nom, par exemple celui de la pièce où elle se trouve.",
+      "url": "Saisissez une adresse http:// ou https://, par ex. http://192.168.1.20:8080/jsonrpc.",
+      "websocketUrl": "Saisissez une adresse ws:// ou wss://, ou laissez le champ vide."
+    },
+    "fields": {
+      "broadcast": {
+        "hint": "Uniquement si le Wake-on-LAN doit viser un sous-réseau précis.",
+        "label": "Adresse de diffusion"
+      },
+      "language": {
+        "hint": "Les règles utilisées pour reconnaître les titres prononcés dans cette bibliothèque.",
+        "label": "Langue des titres"
+      },
+      "mac": {
+        "hint": "Permet aux demandes vocales de réveiller cette instance Kodi lorsqu'elle est en veille.",
+        "label": "Adresse MAC (Wake-on-LAN)"
+      },
+      "name": {
+        "hint": "Affiché sur les Echo et dans le journal des demandes.",
+        "label": "Nom"
+      },
+      "password": {
+        "hint": "Chiffré au repos.",
+        "label": "Mot de passe Kodi",
+        "saved": "Un mot de passe est enregistré. Laissez ce champ vide pour le conserver."
+      },
+      "shutdown": {
+        "hint": "Ce que fait « Alexa, demande à kodi d’éteindre » sur cette instance Kodi.",
+        "inherit": "Suivre Réglages › Fonctions",
+        "label": "« Éteindre »",
+        "power_off": "Éteindre l’appareil",
+        "quit": "Quitter Kodi"
+      },
+      "timezone": {
+        "hint": "Là où se trouve cette instance Kodi. Laissez vide pour le déduire de l’horloge de Kodi.",
+        "label": "Fuseau horaire"
+      },
+      "url": {
+        "label": "URL JSON-RPC"
+      },
+      "username": {
+        "label": "Nom d'utilisateur Kodi"
+      },
+      "websocketUrl": {
+        "hint": "Pour les mises à jour en direct de la bibliothèque et la lecture en cours. Généralement le port 9090.",
+        "label": "URL WebSocket"
+      }
+    },
+    "keep": "La garder",
+    "managed": "Cette instance provient de encore.yml ou de variables ENCORE_*. Modifiez-la à cet endroit.",
+    "remove": "Supprimer",
+    "removeEllipsis": "Supprimer…",
+    "save": "Enregistrer"
+  },
+  "discovered": {
+    "add": "Ajouter",
+    "addNamed": "Ajouter {{name}}",
+    "intro": "Découvertes via mDNS (<mono>{{service}}</mono>). Un Kodi sur un autre VLAN n'apparaîtra pas ici ; ajoutez-le manuellement.",
+    "lastScan": "Dernière recherche {{when}} · recherche en continu",
+    "none": "Rien de nouveau.",
+    "scanning": "Recherche en cours…",
+    "searching": "Recherche de Kodi via mDNS. Cela prend quelques secondes.",
+    "title": "Trouvées sur votre réseau",
+    "unavailable": "La découverte n'est pas disponible pour le moment.",
+    "version": "Kodi {{version}}"
+  },
+  "library": {
+    "explanation": {
+      "common": {
+        "many": "Encore conserve une seule bibliothèque et un seul index de titres pour elles, la synchronise depuis la source de la bibliothèque et écoute les changements de chacune d'entre elles.",
+        "two": "Encore conserve une seule bibliothèque et un seul index de titres pour elles, la synchronise depuis la source de la bibliothèque et écoute les changements des deux."
+      },
+      "confirmed": {
+        "many": "Ces instances utilisent la même base de données Kodi : une lecture sur l'une a modifié le statut vu et le point de reprise sur toutes en même temps.",
+        "two": "Ces instances utilisent la même base de données Kodi : une lecture sur l'une a modifié le statut vu et le point de reprise sur les deux en même temps."
+      },
+      "likely": {
+        "check": {
+          "many": "À la prochaine lecture, Encore vérifiera que le statut vu et le point de reprise changent sur toutes les instances en même temps ; si c'est le cas, l'état passera à « Partage confirmé ».",
+          "two": "À la prochaine lecture, Encore vérifiera que le statut vu et le point de reprise changent sur les deux instances en même temps ; si c'est le cas, l'état passera à « Partage confirmé »."
+        },
+        "evidence": "Ces instances semblent utiliser la même base de données Kodi : {{evidence}}.",
+        "plain": "Ces instances semblent utiliser la même base de données Kodi."
+      },
+      "manual": "Vous avez regroupé ces instances manuellement."
+    },
+    "fallback": "La source est injoignable, Encore synchronise donc depuis {{name}}.",
+    "share": {
+      "add": "Ajouter une instance",
+      "alreadyShared": "Partage une bibliothèque avec {{names}} ; la cocher la déplace dans celle-ci.",
+      "cancel": "Annuler",
+      "confirm_one": "Partager la bibliothèque",
+      "confirm_other": "Partager la bibliothèque entre {{count}}",
+      "description": "Cochez les instances Kodi qui utilisent la même base de données Kodi, comme MySQL. Encore tiendra alors une seule bibliothèque et un seul index de titres pour elles.",
+      "legend": "Instances Kodi",
+      "open": "Partager une bibliothèque",
+      "sourceHint": "La première instance cochée devient la source de la bibliothèque ; vous pourrez la changer ensuite.",
+      "title": "Partager une bibliothèque"
+    },
+    "source": "Source de la bibliothèque",
+    "sourceHint": "Si la source est en veille, Encore synchronise depuis une autre instance éveillée du groupe. La lecture va toujours à l'instance que pilote l'Echo.",
+    "split": {
+      "cancel": "Annuler",
+      "confirm": "Séparer",
+      "currentSource": "Source actuelle de la bibliothèque",
+      "description": "Choisissez l'instance qui a sa propre base de données Kodi. Encore la synchronisera et l'indexera alors séparément.",
+      "legend": "Instance avec sa propre bibliothèque",
+      "open": "Pas partagée ? Séparer",
+      "title": "Séparer la bibliothèque partagée"
+    },
+    "state": {
+      "confirmed_shared": "Partage confirmé",
+      "likely_shared": "Probablement partagée",
+      "manual": "Regroupée manuellement",
+      "solo": "Bibliothèque propre"
+    },
+    "title": "Bibliothèque partagée : {{name}}"
+  },
+  "page": {
+    "addManually": "Ajouter Kodi manuellement",
+    "description": "Chaque Kodi qu'Encore peut piloter. L'index de la bibliothèque reste à jour grâce aux événements WebSocket de Kodi.",
+    "empty": {
+      "body": "Ajoutez-en une trouvée sur votre réseau, ou saisissez son adresse. Kodi doit avoir « Autoriser le contrôle à distance via HTTP » activé.",
+      "title": "Aucune instance Kodi pour l'instant"
+    },
+    "title": "Instances Kodi"
+  }
+}

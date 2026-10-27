@@ -1,0 +1,9 @@
+{
+  "bedroom": null,
+  "lounge": [
+    "Item movie/1",
+    "Item movie/2",
+    "Library movie",
+    "Play movie/3 resume"
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "name": "encore-docs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.12.1",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "go -C .. generate ./internal/docsgen && astro dev",
+    "build": "go -C .. generate ./internal/docsgen && astro build",
+    "preview": "astro preview",
+    "lint": "biome check .",
+    "format": "biome check --write ."
+  },
+  "dependencies": {
+    "@astrojs/starlight": "0.42.7",
+    "astro": "7.4.2",
+    "sharp": "0.35.5",
+    "starlight-links-validator": "0.27.0",
+    "starlight-openapi": "0.27.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15"
+  }
+}

@@ -1,0 +1,5 @@
+# en-US inherits lang/en.
+
+invocation: encore
+language: en
+skill_name: Encore

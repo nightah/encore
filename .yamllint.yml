@@ -1,0 +1,12 @@
+# yamllint checks only that keys are sorted, and only in the skill's language and locale files (not model.yaml, whose entries read name first). It can't sort them itself, so keep keys in order by hand.
+ignore: |
+  /*
+  !/i18n/
+  /i18n/*
+  !/i18n/lang/
+  !/i18n/locales/
+
+rules:
+  # Slot values are written {value: ..., synonyms: [...]}, value first.
+  key-ordering:
+    ignored-keys: ["^(value|synonyms)$"]

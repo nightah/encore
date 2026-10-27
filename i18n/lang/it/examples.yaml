@@ -1,0 +1,70 @@
+# Example values for the dynamic slot types in model.yaml (it): deploys replace them with what is set up in Encore. Chosen for this language rather than translated, so not on Crowdin.
+
+KODI_MUSIC_VIDEO:
+  - {value: bohemian rhapsody}
+  - {value: thriller}
+  - {value: take on me}
+  - {value: smells like teen spirit}
+  - {value: bad guy}
+
+# Examples only, extended from the library when available.
+KODI_PLAYLIST:
+  - {value: viaggio, synonyms: [viaggio in macchina]}
+  - {value: festa}
+  - {value: allenamento, synonyms: [palestra]}
+  - {value: relax}
+  - {value: bambini}
+  - {value: cena}
+  - {value: più votati}
+
+# Examples only: deploys replace them with the rooms set up in Encore. Utterances say "in|nel|nella {Room}", so values carry no article.
+KODI_ROOM:
+  - {value: soggiorno}
+  - {value: salotto}
+  - {value: sala, synonyms: [salone]}
+  - {value: camera da letto, synonyms: [camera]}
+  - {value: camera matrimoniale}
+  - {value: cameretta, synonyms: [camera dei bambini, camera dei ragazzi]}
+  - {value: cucina}
+  - {value: studio}
+  - {value: ufficio}
+  - {value: sala da pranzo}
+  - {value: taverna, synonyms: [sala giochi]}
+  - {value: cantina}
+  - {value: mansarda}
+  - {value: garage}
+
+# Examples only, extended from the library when available.
+MEDIA_GENRE:
+  - {value: azione, synonyms: [d'azione]}
+  - {value: avventura, synonyms: [d'avventura]}
+  - {value: animazione, synonyms: [d'animazione, animato, animati, cartoni animati]}
+  - {value: commedia, synonyms: [commedie, comico, comici]}
+  - {value: poliziesco, synonyms: [polizieschi, crimine]}
+  - {value: documentario, synonyms: [documentari]}
+  - {value: drammatico, synonyms: [dramma, drammatici]}
+  - {value: per famiglie, synonyms: [famiglia]}
+  - {value: fantasy}
+  - {value: horror, synonyms: [dell'orrore, paura]}
+  - {value: per bambini, synonyms: [bambini, per ragazzi]}
+  - {value: giallo, synonyms: [gialli, mistero]}
+  - {value: romantico, synonyms: [romantici, sentimentale]}
+  - {value: fantascienza, synonyms: [sci fi]}
+  - {value: thriller}
+  - {value: guerra, synonyms: [di guerra, bellico]}
+  - {value: western}
+  - {value: rock}
+  - {value: pop}
+  - {value: jazz}
+  - {value: classica, synonyms: [musica classica]}
+  - {value: hip hop, synonyms: [rap]}
+  - {value: country}
+  - {value: elettronica, synonyms: [dance]}
+  - {value: blues}
+  - {value: metal, synonyms: [heavy metal]}
+  - {value: folk}
+  - {value: reggae}
+  - {value: soul}
+  - {value: r. and b., synonyms: [r. n. b.]}
+  - {value: indie}
+  - {value: colonna sonora, synonyms: [colonne sonore]}

@@ -1,0 +1,130 @@
+# golangci-lint v2. It works per module and a run from the root never descends into tools/ (the code generators' own module), so CI and `make lint-go` lint tools/ separately with `--config ../.golangci.yml`.
+version: "2"
+
+run:
+  timeout: 5m
+  # Lint contract/live test files too so they do not rot between nightlies.
+  build-tags:
+    - contract
+    - smapi_live
+
+linters:
+  default: none
+  enable:
+    - bodyclose
+    - copyloopvar
+    - errcheck
+    - errorlint
+    - gocritic
+    - gosec
+    - govet
+    - ineffassign
+    - misspell
+    - nolintlint
+    - prealloc
+    - revive
+    - staticcheck
+    - testifylint
+    - unparam
+    - unused
+
+  settings:
+    errcheck:
+      check-type-assertions: true
+    govet:
+      enable-all: true
+      disable:
+        - fieldalignment # noisy; struct layout is chosen for readability
+        - shadow # `err` shadowing is idiomatic
+    gocritic:
+      enabled-tags: [diagnostic, performance, style]
+      disabled-checks:
+        - hugeParam # flags request/response structs passed by value
+        - unnamedResult
+        - whyNoLint # nolintlint covers this
+      settings:
+        rangeValCopy:
+          sizeThreshold: 512 # media.Item and similar values are ranged by value for readability
+    gosec:
+      excludes:
+        - G104 # duplicate of errcheck
+    # misspell: no locale on purpose, to catch genuine typos only. Setting US (or UK) would also flag the other variant, and prose here uses Australian spelling ("cancelled", "honoured").
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+    revive:
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: dot-imports
+        - name: error-naming
+        - name: error-return
+        - name: error-strings
+        - name: errorf
+        - name: exported
+        - name: increment-decrement
+        - name: indent-error-flow
+        - name: package-comments
+        - name: range
+        - name: receiver-naming
+        - name: redefines-builtin-id
+        - name: superfluous-else
+        - name: time-naming
+        - name: unexported-return
+        - name: unreachable-code
+        - name: unused-parameter
+        - name: var-declaration
+        - name: var-naming
+    testifylint:
+      enable-all: true
+
+  exclusions:
+    # Files with a "Code generated ... DO NOT EDIT." header (kodirpc, smapiclient) are skipped; "lax" also matches common generated-file names.
+    generated: lax
+    presets:
+      - std-error-handling
+    paths:
+      - internal/server/dist
+      - web
+    rules:
+      # Tests may be looser.
+      - path: _test\.go
+        linters:
+          - gosec
+          - errcheck
+          - unparam
+          - prealloc
+      # Generated clients: belt and braces in case a header is missing.
+      - path: internal/backend/kodi/kodirpc/
+        linters: [revive, gocritic, unparam, unused]
+      - path: internal/smapi/smapiclient/
+        linters: [revive, gocritic, unparam, unused]
+
+formatters:
+  enable:
+    - gci
+    - gofumpt
+    - goimports
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - localmodule
+    gofumpt:
+      extra:
+        group-params: true
+        clothe-returns: true
+    goimports:
+      local-prefixes:
+        - github.com/nightah/encore
+  exclusions:
+    generated: lax
+    paths:
+      - internal/server/dist
+      - web
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

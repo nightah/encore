@@ -1,0 +1,121 @@
+{
+  "amazon": {
+    "connect": "Connecter dans l'assistant de configuration",
+    "disconnect": "Déconnecter",
+    "disconnectDialog": {
+      "cancel": "Annuler",
+      "confirm": "Déconnecter",
+      "description": "Encore oublie ses jetons Login with Amazon. La skill continue de fonctionner sur vos Echo, mais vous ne pourrez plus la redéployer avant de l'avoir autorisée à nouveau.",
+      "title": "Se déconnecter d'Amazon ?"
+    },
+    "needsReauthorise": "Amazon n'accepte plus le jeton d'Encore. Autorisez-le à nouveau pour continuer à déployer.",
+    "notConnected": "Encore déploie la skill avec votre propre profil de sécurité Login with Amazon. Connectez-le pour déployer.",
+    "profile": "Profil de sécurité",
+    "reauthorise": "Autoriser à nouveau",
+    "title": "Compte développeur Amazon",
+    "vendor": "ID fournisseur"
+  },
+  "content": {
+    "movies": "Films",
+    "music": "Musique",
+    "musicHint": "Clips musicaux compris",
+    "tv": "Séries"
+  },
+  "locales": {
+    "build": {
+      "failed": "Échec",
+      "in_progress": "Compilation",
+      "succeeded": "Réussi"
+    },
+    "columns": {
+      "build": "Compilation",
+      "built": "Compilé",
+      "locale": "Langue",
+      "size": "Taille (sur {{limit}})",
+      "titles": "Titres de la médiathèque"
+    },
+    "content": {
+      "hint": "En retirer un supprime ses commandes vocales de la skill. La musique inclut les clips musicaux.",
+      "keepOne": "Gardez au moins les films, les séries ou la musique.",
+      "legend": "Ce qu'elle peut lire"
+    },
+    "empty": "Rien n'est encore compilé. Déployez la skill pour compiler un modèle pour chaque langue activée.",
+    "enabled": {
+      "hint": "Seules les langues activées sont compilées et déployées. Un Echo ne peut utiliser la skill que si sa langue correspond à l'une d'elles. Les modifications s'appliquent au prochain déploiement.",
+      "keepOne": "Gardez au moins une langue activée.",
+      "legend": "Langues"
+    },
+    "needsDeploy": {
+      "library": "De nouveaux titres sont arrivés dans la médiathèque depuis le dernier déploiement. Encore les trouve déjà ; redéployez pour les ajouter au modèle de la skill.",
+      "settings": "Les paramètres ont changé depuis le dernier déploiement. Redéployez pour les appliquer."
+    },
+    "saved": "Langues enregistrées. Elles s'appliquent au prochain déploiement.",
+    "sizeUsed": "{{locale}} : {{used}} utilisés sur {{limit}}",
+    "title": "Modèle d'interaction par langue"
+  },
+  "page": {
+    "deploy": {
+      "deploying": "Déploiement…",
+      "failed": "Échec du déploiement : {{reason}}",
+      "failedStep": "consultez la chronologie pour voir l'étape en échec",
+      "progress": "Déploiement terminé à {{percent}} %",
+      "redeploy": "Redéployer",
+      "running": "Déploiement : {{step}} ({{percent}} % effectués)",
+      "starting": "démarrage",
+      "succeeded": "Déploiement terminé. La skill est activée pour les tests sur vos Echo."
+    },
+    "description": "La skill privée « {{name}} » de votre compte développeur Amazon. Étape de développement : fonctionne sur les Echo connectés à votre compte.",
+    "export": "Exporter le package de la skill",
+    "title": "Skill Alexa"
+  },
+  "timeline": {
+    "amazon": {
+      "connected": "Connecté",
+      "notConnected": "Non connecté",
+      "reauthorise": "Autorisez à nouveau pour continuer à déployer",
+      "title": "Compte Amazon",
+      "vendor": "Fournisseur {{vendor}} · connecté"
+    },
+    "created": {
+      "creating": "Création…",
+      "firstDeploy": "Créée lors du premier déploiement",
+      "title": "Skill créée"
+    },
+    "endpoint": {
+      "title": "Endpoint"
+    },
+    "label": "État du déploiement",
+    "models": {
+      "building": "Compilation de {{locales}}…",
+      "built": "{{locales}} compilé",
+      "failed": "La dernière compilation a échoué",
+      "notBuilt": "Pas encore compilé",
+      "title": "Modèles"
+    },
+    "state": {
+      "busy": "en cours",
+      "fail": "à corriger",
+      "ok": "terminé",
+      "pending": "pas commencé"
+    },
+    "testing": {
+      "failed": "Non activée : corrigez l'étape en échec et redéployez",
+      "firstDeploy": "Après le premier déploiement",
+      "passed": "Test de fumée réussi {{time}}",
+      "title": "Activée pour les tests",
+      "waiting": "En attente du test de fumée"
+    }
+  },
+  "titles": {
+    "empty": "Affiché après le premier déploiement.",
+    "inModel_one": "<count>{{n}} titre</count> dans le modèle (en cours et récents d'abord)",
+    "inModel_other": "<count>{{n}} titres</count> dans le modèle (en cours et récents d'abord)",
+    "limit": "Le modèle de chaque langue doit rester sous la limite de {{limit}} fixée par Amazon.",
+    "serverOnly_one": "<count>{{n}} titre</count> reconnu uniquement sur le serveur",
+    "serverOnly_other": "<count>{{n}} titres</count> reconnus uniquement sur le serveur",
+    "title": "Titres dans le modèle"
+  },
+  "warnings": {
+    "title": "Avertissements du dernier déploiement"
+  }
+}

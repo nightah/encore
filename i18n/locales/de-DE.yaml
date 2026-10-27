@@ -1,0 +1,5 @@
+# de-DE inherits lang/de. "encore" is a known loanword in German and clashes with no German Alexa command word.
+
+invocation: encore
+language: de
+skill_name: Encore

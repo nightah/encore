@@ -1,0 +1,70 @@
+# Example values for the dynamic slot types in model.yaml (fr): deploys replace them with what is set up in Encore. Chosen for this language rather than translated, so not on Crowdin.
+
+KODI_MUSIC_VIDEO:
+  - {value: bohemian rhapsody}
+  - {value: thriller}
+  - {value: take on me}
+  - {value: smells like teen spirit}
+  - {value: bad guy}
+
+# Examples only, extended from the library when available.
+KODI_PLAYLIST:
+  - {value: voyage, synonyms: [road trip]}
+  - {value: soirée, synonyms: [fête]}
+  - {value: sport}
+  - {value: détente}
+  - {value: enfants}
+  - {value: dîner}
+  - {value: mieux notés, synonyms: [les mieux notés]}
+
+# Examples only: deploys replace them with the rooms set up in Encore. Kept free of articles and vowel-initial names so "dans le {Room}" and "dans la {Room}" read naturally.
+KODI_ROOM:
+  - {value: salon}
+  - {value: séjour}
+  - {value: chambre}
+  - {value: chambre parentale, synonyms: [grande chambre]}
+  - {value: chambre des enfants, synonyms: [chambre d'enfant]}
+  - {value: cuisine}
+  - {value: bureau}
+  - {value: salle à manger}
+  - {value: salle de jeux}
+  - {value: cinéma, synonyms: [salle de cinéma, home cinéma, salle télé]}
+  - {value: sous-sol}
+  - {value: garage}
+  - {value: véranda}
+
+# Examples only, extended from the library when available.
+MEDIA_GENRE:
+  - {value: action}
+  - {value: aventure}
+  - {value: animation, synonyms: [dessin animé, dessins animés]}
+  - {value: comédie, synonyms: [comédies, comique, drôle]}
+  - {value: policier, synonyms: [polar, crime]}
+  - {value: documentaire, synonyms: [documentaires]}
+  - {value: drame, synonyms: [drames, dramatique]}
+  - {value: famille, synonyms: [familial]}
+  - {value: fantastique, synonyms: [fantasy]}
+  - {value: horreur, synonyms: [épouvante]}
+  - {value: enfants, synonyms: [jeunesse]}
+  - {value: mystère}
+  - {value: romance, synonyms: [romantique]}
+  - {value: science-fiction, synonyms: [science fiction, s. f.]}
+  - {value: thriller, synonyms: [thrillers, suspense]}
+  - {value: guerre}
+  - {value: western, synonyms: [westerns]}
+  - {value: rock}
+  - {value: pop}
+  - {value: jazz}
+  - {value: classique, synonyms: [musique classique]}
+  - {value: hip-hop, synonyms: [hip hop, rap]}
+  - {value: country}
+  - {value: électro, synonyms: [électronique, dance]}
+  - {value: blues}
+  - {value: métal, synonyms: [heavy metal]}
+  - {value: folk}
+  - {value: reggae}
+  - {value: soul}
+  - {value: r. n. b., synonyms: [r. and b.]}
+  - {value: indé, synonyms: [indie]}
+  - {value: variété française, synonyms: [chanson française, variété]}
+  - {value: bande originale, synonyms: [bandes originales, b. o.]}

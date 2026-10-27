@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "response": {
+    "outputSpeech": {
+      "type": "PlainText",
+      "text": "There are 2 new episodes of Severance."
+    },
+    "shouldEndSession": true
+  }
+}
+

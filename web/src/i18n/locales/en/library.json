@@ -1,0 +1,94 @@
+{
+  "empty": {
+    "action": "Add a Kodi instance",
+    "body": "Encore builds a library index from each Kodi instance you add.",
+    "title": "No libraries yet"
+  },
+  "explain": {
+    "askOne": "{{top}} scores {{score}}, too close to call, so Alexa asks.",
+    "askTwo": "{{top}} and {{second}} score within {{margin}} of each other, so Alexa asks which one.",
+    "notFound": "The best score, {{score}} for {{top}}, is below the 0.60 needed to play.",
+    "nothing": "Nothing in this library comes close.",
+    "playOne": "{{top}} scores {{score}} and is the only close match.",
+    "playTwo": "{{top}} scores {{score}}, {{margin}} ahead of the next."
+  },
+  "kinds": {
+    "album": "Album",
+    "artist": "Artist",
+    "episode": "Episode",
+    "movie": "Movie",
+    "musicvideo": "Music video",
+    "playlist": "Playlist",
+    "song": "Song",
+    "tvshow": "TV show"
+  },
+  "matchTester": {
+    "addAlias": "Add “{{query}}” as an alias for the top result",
+    "aliasEntry": "“{{alias}}” → {{title}}",
+    "aliases": "Your aliases",
+    "aliasHint": "Aliases are saved in Encore and added to the skill model on the next resync.",
+    "candidates": "Match candidates",
+    "columns": {
+      "alias": "Matched alias",
+      "boost": "Boost",
+      "candidate": "Candidate",
+      "phonetic": "Phonetic",
+      "score": "Score",
+      "tokenSet": "Token set"
+    },
+    "heard": "What Alexa heard",
+    "mediaType": "Media type",
+    "noAlias": "The server didn't say which title this is, so it can't be aliased here.",
+    "normalized": "Normalised query",
+    "removeAlias": "Remove alias {{alias}}",
+    "test": "Test",
+    "title": "Match tester",
+    "try": "Try:",
+    "types": {
+      "any": "Any",
+      "movies": "Movies",
+      "music": "Music",
+      "shows": "TV shows"
+    }
+  },
+  "page": {
+    "description": "What Encore knows about your Kodi libraries, and how it matches what Alexa hears.",
+    "library": "Library",
+    "syncAll": "Sync all now",
+    "syncStarted": "Library sync started. Counts update when it finishes.",
+    "title": "Library"
+  },
+  "recent": {
+    "body": "New titles are searchable within seconds of being added in Kodi. They're pushed to Alexa straight away as dynamic entities, then added to the skill model at the next resync.",
+    "live": "Live from Kodi events",
+    "nothing": "Nothing added recently.",
+    "status": {
+      "findable": "Findable by voice",
+      "inModel": "In skill model",
+      "waiting": "Waiting for next update"
+    },
+    "title": "Recently added"
+  },
+  "summary": {
+    "backups": "Backups",
+    "episodes_one": "{{count, number}} episode",
+    "episodes_other": "{{count, number}} episodes",
+    "label": "Library summary",
+    "lastBackup": "last backup {{when}}",
+    "libraries": "Libraries",
+    "localDisk": "Local disk",
+    "movies": "Movies",
+    "music": "Music",
+    "noBackup": "no backup yet",
+    "notSynced": "not synced yet",
+    "s3": "S3-compatible",
+    "shows": "TV shows",
+    "songs": "songs",
+    "synced": "synced {{when}}"
+  },
+  "verdict": {
+    "ask": "Would ask",
+    "not_found": "Not found",
+    "play": "Would play"
+  }
+}

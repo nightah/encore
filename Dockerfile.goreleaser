@@ -1,0 +1,21 @@
+# syntax=docker/dockerfile:1
+# Used by GoReleaser (dockers_v2): copies the prebuilt binary for each platform onto antilax3's Alpine s6-overlay base. For local builds use ./Dockerfile instead.
+
+ARG BASE_IMAGE="antilax3/alpine:latest"
+
+FROM ${BASE_IMAGE}
+ARG TARGETPLATFORM
+
+LABEL maintainer="Nightah"
+
+ENV ENCORE_DATA_DIR="/config"
+
+# copy local files
+COPY --link docker/root/ /
+COPY --link --chmod=0755 ${TARGETPLATFORM}/encore /app/encore
+
+# ports, volumes and healthcheck
+EXPOSE 8080
+VOLUME /config
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD ["/app/encore", "healthcheck"]

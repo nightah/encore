@@ -1,0 +1,358 @@
+{
+  "access": {
+    "breakGlass": {
+      "hint": "Nome utente e password continuano a funzionare se il provider o il proxy smettono di funzionare. Se resti chiuso fuori con questa opzione disattivata, imposta ENCORE_BREAK_GLASS=true.",
+      "label": "Mantieni la password locale come accesso di emergenza",
+      "managed": "Impostato da ENCORE_BREAK_GLASS o encore.yml, quindi non modificabile qui."
+    },
+    "cancel": "Annulla",
+    "header": {
+      "adminGroup": {
+        "label": "Gruppo amministratori"
+      },
+      "groupsHeader": {
+        "label": "Header dei gruppi"
+      },
+      "strip": "Il tuo proxy deve rimuovere questi header dalle richieste in arrivo.",
+      "trustedProxies": {
+        "hint": "Gli header provenienti da qualsiasi altro indirizzo vengono ignorati. Separa con virgole.",
+        "label": "Indirizzi dei proxy attendibili"
+      },
+      "userHeader": {
+        "label": "Header utente",
+        "required": "Inserisci l'header che contiene il nome utente."
+      }
+    },
+    "local": {
+      "lockout": {
+        "5/15": "5 tentativi falliti per 15 minuti",
+        "10/60": "10 tentativi falliti per 1 ora",
+        "custom": "{{attempts}} tentativi falliti per {{minutes}} minuti",
+        "label": "Blocca dopo"
+      },
+      "password": {
+        "change": "Cambia password…",
+        "hint": "Salvata come hash argon2id.",
+        "label": "Password"
+      },
+      "session": {
+        "days_one": "{{count}} giorno",
+        "days_other": "{{count}} giorni",
+        "hours_one": "{{count}} ora",
+        "hours_other": "{{count}} ore",
+        "label": "Durata della sessione"
+      },
+      "totp": {
+        "hint": "Usa un'app di autenticazione come secondo passaggio.",
+        "label": "Richiedi un codice monouso (TOTP)"
+      },
+      "username": {
+        "hint": "Impostato alla creazione dell'account amministratore.",
+        "label": "Nome utente"
+      }
+    },
+    "mode": {
+      "header": {
+        "hint": "Remote-User dal tuo proxy di forward-auth",
+        "label": "Header di proxy attendibili"
+      },
+      "legend": "Metodo di accesso",
+      "local": {
+        "hint": "argon2id, tentativi limitati",
+        "label": "Password locale"
+      },
+      "oidc": {
+        "hint": "ad es. Authelia, Authentik, Keycloak",
+        "label": "OpenID Connect"
+      }
+    },
+    "oidc": {
+      "adminGroup": {
+        "hint": "Gli utenti senza questo valore nel claim dei gruppi vengono rifiutati.",
+        "label": "Gruppo amministratori"
+      },
+      "clientId": {
+        "label": "ID client",
+        "required": "Inserisci l'ID client."
+      },
+      "clientSecret": {
+        "empty": "Lascia vuoto per un client pubblico solo con PKCE.",
+        "label": "Secret del client",
+        "stored": "È salvato un secret. Digitane uno nuovo per sostituirlo."
+      },
+      "groupsClaim": {
+        "label": "Claim dei gruppi"
+      },
+      "issuer": {
+        "hint": "Encore legge da qui il documento di discovery del provider.",
+        "hintPreset": "{{shape}}. Encore legge da qui il documento di discovery.",
+        "invalid": "Inserisci l'URL dell'issuer, ad es. https://auth.example.net.",
+        "label": "URL dell'issuer"
+      },
+      "provider": {
+        "hint": "Compila gli scope e il claim dei gruppi consueti e mostra qui sotto la configurazione lato provider.",
+        "label": "Provider",
+        "other": "Altro"
+      },
+      "providers": {
+        "authelia": {
+          "digest": "Qui va il digest; la password casuale va nel Secret del client di Encore.",
+          "generate": "Genera entrambe le parti con:",
+          "issuerHint": "L'indirizzo di Authelia, ad es. https://auth.example.com",
+          "snippetTitle": "Aggiungi questo client in identity_providers.oidc nella configurazione di Authelia"
+        },
+        "authentik": {
+          "copySecret": "Copia il Client Secret del provider in Encore. L'issuer è\n{{issuer}} per lo slug qui sopra.",
+          "issuerHint": "L'issuer OpenID dell'applicazione, ad es. https://authentik.example.com/application/o/encore/",
+          "scopesNote": "(i valori predefiniti; profile contiene i gruppi)",
+          "snippetTitle": "In Authentik, vai in Applications > Applications > Create with provider"
+        },
+        "keycloak": {
+          "issuerHint": "L'indirizzo del realm, ad es. https://keycloak.example.com/realms/home",
+          "snippetTitle": "In Keycloak, incolla questo in Clients > Import client, poi copia il secret dalla scheda Credentials in Encore"
+        }
+      },
+      "redirectUri": {
+        "copy": "Copia URI di reindirizzamento",
+        "label": "URI di reindirizzamento da registrare presso il provider"
+      },
+      "saveToTest": "Salva con OpenID Connect selezionato per provarlo.",
+      "scopes": {
+        "hint": "Separati da spazi.",
+        "label": "Scope"
+      },
+      "snippetLabel": "Configurazione di {{provider}}",
+      "testSignIn": "Prova l'accesso"
+    },
+    "password": {
+      "changed": "Password cambiata.",
+      "confirm": {
+        "label": "Conferma la nuova password",
+        "mismatch": "Le password non coincidono."
+      },
+      "current": {
+        "label": "Password attuale",
+        "required": "Inserisci la password attuale."
+      },
+      "description": "Resti connesso in questo browser. Le altre sessioni vengono disconnesse.",
+      "new": {
+        "hint": "Almeno 12 caratteri.",
+        "label": "Nuova password",
+        "tooShort": "Usa almeno 12 caratteri."
+      },
+      "submit": "Cambia password",
+      "title": "Cambia password"
+    },
+    "title": "Accesso amministratore",
+    "totp": {
+      "code": "Codice",
+      "copySecret": "Copia secret",
+      "off": "Disattiva",
+      "offDescription": "Inserisci un codice dalla tua app di autenticazione per confermare.",
+      "offTitle": "Disattiva i codici monouso",
+      "on": "Attiva",
+      "onDescription": "Aggiungi Encore alla tua app di autenticazione, poi inserisci il codice che mostra.",
+      "onTitle": "Attiva i codici monouso",
+      "openApp": "Apri in un'app di autenticazione",
+      "secret": "Secret",
+      "turnedOff": "Codici monouso disattivati.",
+      "turnedOn": "Codici monouso attivati."
+    }
+  },
+  "backup": {
+    "export": "Esporta configurazione",
+    "import": "Importa configurazione…",
+    "imported": "Importato: {{items}}.",
+    "importedNothing": "Non è stato importato nulla.",
+    "importing": "Importazione…",
+    "includeSecrets": {
+      "hint": "Solo un altro Encore con la stessa chiave di cifratura può leggerli.",
+      "label": "Includi i segreti (cifrati)"
+    },
+    "intro": "YAML con le istanze di Kodi, le associazioni dei dispositivi, le stanze, gli alias e le impostazioni. I segreti sono esclusi, a meno che tu non li includa cifrati.",
+    "skillPackage": "Scarica il pacchetto della skill",
+    "skipped": "Saltato: {{items}}.",
+    "title": "Importa ed esporta"
+  },
+  "features": {
+    "confirm_sound": {
+      "hint": "Alexa riproduce un breve suono dopo comandi come pausa o alza il volume, invece di restare in silenzio",
+      "title": "Conferma i comandi con un suono"
+    },
+    "deep_search": {
+      "hint": "Cerca in tutti i tipi di contenuto quando il tipo non viene detto",
+      "title": "Ricerca approfondita per «riproduci X»"
+    },
+    "queue_limit": {
+      "hint": "Il numero massimo di elementi che una riproduzione casuale o una coda riproduce alla volta, per mantenere reattive le librerie grandi",
+      "title": "Limite della coda"
+    },
+    "shutdown_quits": {
+      "hint": "Invece di spegnere il dispositivo",
+      "title": "«Spegni» chiude Kodi"
+    },
+    "title": "Funzionalità facoltative"
+  },
+  "general": {
+    "basePath": {
+      "hint": "Per un proxy che serve Encore in un sottopercorso, ad es. /encore. Encore risponde ancora su /. Distribuisci di nuovo la skill dopo averlo cambiato.",
+      "label": "Percorso base"
+    },
+    "defaultLocale": {
+      "label": "Impostazioni locali predefinite"
+    },
+    "language": {
+      "auto": "Come il browser ({{language}})",
+      "hint": "Salvata solo in questo browser.",
+      "label": "Lingua"
+    },
+    "logLevel": {
+      "debug": "Debug: tutto, compresa ogni chiamata a Kodi",
+      "error": "Errore: solo errori gravi",
+      "hint": "Si applica subito, senza riavvio.",
+      "info": "Info: cosa fa Encore (predefinito)",
+      "label": "Livello di log",
+      "warn": "Avviso: solo problemi"
+    },
+    "sections": {
+      "appearance": "Aspetto",
+      "locale": "Impostazioni locali",
+      "logging": "Registrazione",
+      "server": "Server"
+    },
+    "theme": {
+      "dark": {
+        "hint": "Blu notte, più riposante la sera",
+        "label": "Scuro"
+      },
+      "legend": "Tema",
+      "light": {
+        "hint": "Area di lavoro grigio freddo",
+        "label": "Chiaro"
+      },
+      "note": "Salvato solo in questo browser. Il pulsante sole/luna in alto in ogni pagina cambia e salva subito.",
+      "system": {
+        "hint": "Segue l'impostazione chiara o scura del dispositivo",
+        "label": "Come il sistema"
+      }
+    },
+    "timezone": {
+      "hint": "Usato per «finirà alle 21:47».",
+      "label": "Fuso orario"
+    },
+    "title": "Generale"
+  },
+  "page": {
+    "description": "I campi contrassegnati con <badge/> provengono da <code>encore.yml</code> o dalle variabili <code>ENCORE_*</code> e non si possono modificare qui.",
+    "save": "Salva modifiche",
+    "sections": "Sezioni delle impostazioni",
+    "title": "Impostazioni"
+  },
+  "secrets": {
+    "encrypted": "Cifrati: refresh token e client secret di Login with Amazon, password di Kodi, credenziali di archiviazione.",
+    "keyId": {
+      "label": "ID della chiave attiva",
+      "rotated": "{{keyId}} (ruotata il {{date}})"
+    },
+    "rotate": {
+      "button": "Ruota la chiave di cifratura…",
+      "cancel": "Annulla",
+      "confirm": "Ruota chiave",
+      "description": "Encore crea una nuova chiave e cifra di nuovo con essa ogni segreto salvato. I backup precedenti richiedono ancora la vecchia chiave, che Encore conserva.",
+      "title": "Ruotare la chiave di cifratura?"
+    },
+    "source": {
+      "config": "Impostata in encore.yml",
+      "file": "Letta da un file di chiave (ENCORE_ENCRYPTION_KEY_FILE)",
+      "generated": "Generata da Encore e conservata nella directory dei dati",
+      "label": "Origine della chiave di cifratura"
+    },
+    "title": "Segreti"
+  },
+  "storage": {
+    "backend": {
+      "legend": "Backend",
+      "local": "Disco locale",
+      "localHint": "Il volume /data (predefinito)",
+      "s3": "Compatibile con S3",
+      "webdavHint": "Nextcloud, ownCloud e altri"
+    },
+    "backups": {
+      "folder": {
+        "hint": "All'interno della posizione di archiviazione qui sopra; lascia vuoto per la radice. Cambiare la destinazione dei backup ne avvia subito uno.",
+        "label": "Cartella dei backup"
+      },
+      "hint": "Database più esportazione della configurazione. I segreti sono esclusi.",
+      "keep": {
+        "count_one": "{{count}} backup",
+        "count_other": "{{count}} backup",
+        "label": "Conserva"
+      },
+      "label": "Backup",
+      "last": {
+        "label": "Ultimo backup",
+        "never": "Mai",
+        "run": "Esegui backup ora"
+      },
+      "schedules": {
+        "daily": "Ogni giorno alle 03:00",
+        "off": "Disattivati",
+        "weekly": "Ogni settimana, domenica alle 03:00"
+      },
+      "snapshot": {
+        "label": "Snapshot della libreria",
+        "value": "Salvato ogni 15 min e dopo ogni sincronizzazione, per un avvio rapido"
+      }
+    },
+    "intro": "Dove Encore conserva gli snapshot della libreria, i backup e i pacchetti della skill esportati. Le richieste vocali non aspettano mai questa archiviazione: l'indice attivo resta in memoria.",
+    "local": {
+      "hint": "Monta qui un volume perché gli snapshot sopravvivano ai riavvii del container.",
+      "label": "Directory dei dati"
+    },
+    "s3": {
+      "accessKey": "Chiave di accesso",
+      "bucket": "Bucket",
+      "caBundle": "Certificato CA (PEM)",
+      "customCa": "Certificato CA personalizzato",
+      "endpoint": {
+        "hint": "Lascia vuoto per AWS S3. Funziona con MinIO, Silo, Garage, Ceph RGW, SeaweedFS, R2, B2.",
+        "label": "URL dell'endpoint"
+      },
+      "pathStyle": "Indirizzamento path-style",
+      "prefix": "Prefisso",
+      "region": "Regione",
+      "secretKey": {
+        "hint": "Cifrata a riposo.",
+        "label": "Chiave segreta",
+        "stored": "Salvata, cifrata con la chiave {{keyId}}. Digitane una nuova per sostituirla."
+      },
+      "sse": "Crittografia lato server"
+    },
+    "test": {
+      "button": "Prova connessione",
+      "failed": "Non è stato possibile scrivere l'oggetto di prova.",
+      "ok": "Oggetto di prova scritto, letto ed eliminato in {{ms}} ms",
+      "saveFirst": "Salva le modifiche per provarle."
+    },
+    "title": "Archiviazione",
+    "webdav": {
+      "password": {
+        "hint": "Creane una in Sicurezza in Nextcloud. Cifrata a riposo.",
+        "label": "Password per app"
+      },
+      "url": {
+        "hint": "Nextcloud, ownCloud o qualsiasi server WebDAV.",
+        "label": "URL WebDAV"
+      },
+      "username": "Nome utente"
+    }
+  },
+  "tabs": {
+    "access": "Accesso",
+    "backup": "Importa ed esporta",
+    "features": "Funzionalità",
+    "general": "Generale",
+    "secrets": "Segreti",
+    "storage": "Archiviazione"
+  }
+}

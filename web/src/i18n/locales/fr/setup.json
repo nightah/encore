@@ -1,0 +1,234 @@
+{
+  "address": {
+    "check": "Vérifier l'adresse",
+    "checkAgain": "Vérifier à nouveau",
+    "checking": "Vérification depuis l'extérieur de votre réseau…",
+    "heading": "Indiquez votre adresse publique",
+    "intro": "Alexa appelle Encore en HTTPS sur le port 443 via votre proxy inverse ou votre tunnel.",
+    "results": {
+      "label": "Résultats du test d'accessibilité",
+      "title": "Test d'accessibilité (depuis l'extérieur de votre réseau)"
+    },
+    "unsupported": "Ce serveur ne peut pas encore vérifier l'adresse depuis l'extérieur. Continuez, puis vérifiez dans la Vue d'ensemble que le point de terminaison public est accessible.",
+    "url": {
+      "hint": "Par exemple {{url}}",
+      "label": "URL de base publique"
+    }
+  },
+  "admin": {
+    "errors": {
+      "password": "Utilisez au moins 12 caractères.",
+      "token": "Collez le jeton d'installation affiché dans le journal d'Encore.",
+      "username": "Choisissez un nom d'utilisateur."
+    },
+    "exists": "Le compte administrateur existe déjà.",
+    "existsSignedIn": "Le compte administrateur existe déjà, et vous êtes connecté en tant que {{name}}.",
+    "heading": "Créer le compte administrateur",
+    "intro": "Pour prouver que cette instance vous appartient, collez le jeton d'installation à usage unique qu'Encore a écrit dans son journal au démarrage. Il expire dès qu'un compte administrateur existe.",
+    "logs": {
+      "docker": "Exécution dans Docker",
+      "systemd": "Exécution en tant que service systemd"
+    },
+    "password": {
+      "hint": "Au moins 12 caractères. Stocké sous forme de hachage argon2id.",
+      "label": "Mot de passe"
+    },
+    "sso": "Vous préférez l'authentification unique ? Après l'installation, vous pourrez passer à OIDC ou aux en-têtes d'un proxy de confiance dans les Paramètres.",
+    "token": "Jeton d'installation",
+    "username": "Nom d'utilisateur"
+  },
+  "amazon": {
+    "authorize": "Autoriser avec Amazon",
+    "clientId": "ID client",
+    "clientSecret": {
+      "hint": "Chiffré au repos. Sert uniquement à renouveler le jeton d'accès.",
+      "label": "Secret client"
+    },
+    "connected": "Connecté à Amazon. Encore peut maintenant déployer la skill.",
+    "connectedVendor": "Connecté à Amazon (vendeur {{vendor}}). Encore peut maintenant déployer la skill.",
+    "copyReturnUrl": "Copier l'URL de retour",
+    "fallback": {
+      "connect": "Connecter",
+      "label": "Solution de repli",
+      "redirectUrl": {
+        "hint": "Après la connexion, Amazon vous renvoie vers une adresse qui ne se charge pas. Copiez l'adresse complète depuis la barre du navigateur.",
+        "label": "URL de redirection",
+        "option": "Coller l'URL de redirection"
+      },
+      "refreshToken": {
+        "hint": "Commence par {{prefix}}.",
+        "label": "Jeton d'actualisation",
+        "option": "Coller un jeton d'actualisation"
+      },
+      "summaryHttp": "Pas de callback HTTPS ? Utilisez plutôt « Coller l'URL de redirection », ou collez un jeton d'actualisation obtenu avec <code>{{command}}</code>.",
+      "summaryHttps": "Impossible de vous connecter via le callback ? Collez plutôt un jeton d'actualisation obtenu avec <code>{{command}}</code>."
+    },
+    "heading": "Connecter votre compte développeur Amazon",
+    "instructions": {
+      "credentials": "Collez ci-dessous le Client ID et le Client Secret du profil.",
+      "open": "Ouvrez la <link>console Login with Amazon</link> et créez un profil de sécurité nommé « encore ».",
+      "returnUrls_one": "Sous « Web Settings », ajoutez cette « Allowed Return URL » :",
+      "returnUrls_other": "Sous « Web Settings », ajoutez ces « Allowed Return URLs » :"
+    },
+    "intro": "Encore déploie la skill avec votre propre profil de sécurité Login with Amazon. Vous ne le créez qu'une fois, en deux minutes environ.",
+    "newTab": " (s'ouvre dans un nouvel onglet)",
+    "reauthorise": "Amazon a demandé à Encore de se reconnecter. Autorisez-le à nouveau pour continuer à déployer.",
+    "redirectError": "La connexion à Amazon a échoué : {{error}}"
+  },
+  "check": {
+    "fail": "Échec : ",
+    "ok": "Réussi : ",
+    "pending": "Vérification : ",
+    "warn": "Avertissement : "
+  },
+  "content": {
+    "legend": "Ce qu'il peut lire"
+  },
+  "deploy": {
+    "answer": {
+      "no": "Non",
+      "noLabel": "{{question}} : non",
+      "yes": "Oui",
+      "yesLabel": "{{question}} : oui"
+    },
+    "connectFirst": "Connectez d'abord votre compte développeur Amazon. Encore s'en sert pour déployer la skill.",
+    "contentNote": "En retirer un supprime ses commandes vocales de la skill.",
+    "deploy": "Déployer la skill",
+    "deploying": "Déploiement…",
+    "duration_one": "en général 2 à 3 minutes pour une langue",
+    "duration_other": "en général 3 à 5 minutes pour {{count}} langues",
+    "failed": "Le déploiement a échoué à l'étape « {{step}} » : {{message}}.",
+    "goToAmazon": "Aller au compte Amazon",
+    "heading": "Déployer la skill",
+    "invocation": {
+      "example": "« Alexa, demande à {{name}} de… »",
+      "french": "Le français utilise « kodi », car « encore » est un mot courant en français.",
+      "label": "Nom d'invocation"
+    },
+    "locales": {
+      "faster": "Moins il y a de langues, plus le déploiement est rapide.",
+      "legend": "Langues à déployer",
+      "match": "La langue de chaque Echo doit correspondre à l'une d'elles."
+    },
+    "noDetails": "aucun détail",
+    "privacy": {
+      "allows_purchases": {
+        "about": "Si l'on peut acheter quoi que ce soit via la skill : achats intégrés, abonnements ou biens physiques. Encore ne vend rien.",
+        "label": "La skill permet des achats"
+      },
+      "contains_ads": {
+        "about": "Si la skill diffuse, prononce ou affiche de la publicité, y compris des promotions pour d'autres produits. Encore ne contient aucune publicité.",
+        "label": "La skill contient de la publicité"
+      },
+      "is_child_directed": {
+        "about": "Si la skill est conçue pour les enfants de moins de 13 ans, au sens de la loi américaine Children's Online Privacy Protection Act (COPPA). La question porte sur le public visé par la skill, pas sur le fait qu'un enfant puisse l'utiliser.",
+        "label": "La skill s'adresse aux enfants de moins de 13 ans"
+      },
+      "is_export_compliant": {
+        "about": "Vous confirmez que la skill peut être importée aux États-Unis et dans tout autre pays où elle est disponible, et exportée depuis ceux-ci, sans licence, et qu'elle respecte les lois sur l'import et l'export, y compris celles qui visent les logiciels utilisant du chiffrement. Encore pilote la lecture multimédia et n'utilise que le chiffrement HTTPS standard.",
+        "label": "La skill est conforme aux règles d'exportation"
+      },
+      "legend": "Questions de confidentialité d'Amazon (répondez-y vous-même)",
+      "unanswered_one": "Encore {{count}} question à laquelle répondre avant de déployer.",
+      "unanswered_other": "Encore {{count}} questions auxquelles répondre avant de déployer.",
+      "uses_personal_info": {
+        "about": "Si la skill collecte des données personnelles auprès de ses utilisateurs, comme des noms, adresses e-mail, numéros de téléphone ou la localisation. Encore ne demande rien de tout cela : il voit l'identifiant de chaque Echo et ce qui lui a été demandé, et conserve ces informations sur votre propre serveur.",
+        "label": "La skill collecte des informations personnelles"
+      }
+    },
+    "progress": "Déploiement, {{percent}} pour cent effectués",
+    "starting": "Démarrage",
+    "succeeded": "Déployée. La skill est activée pour les tests sur votre compte Amazon.",
+    "tryAgain": "Réessayer"
+  },
+  "hello": {
+    "alexaPlus": "Sur les appareils Alexa+, activez la skill une fois depuis la boutique Alexa+ de l'application Alexa si « demande à {{invocation}} » n'est pas reconnu.",
+    "echoName": {
+      "hint": "Par exemple Echo Show du salon",
+      "label": "Nom de l'Echo"
+    },
+    "finish": "Terminer",
+    "heading": "Dites bonjour",
+    "intro": "Sur n'importe quel Echo connecté à votre compte Amazon, dites :",
+    "named": "Echo renommé.",
+    "phrase": "« Alexa, demande à {{invocation}} qu'est-ce qui passe. »",
+    "received": "Requête reçue de {{device}} à {{time}}.",
+    "receivedNew": "Requête reçue d'un nouvel Echo à {{time}}. Donnez-lui un nom pour pouvoir l'associer à une instance Kodi :",
+    "waiting": "En attente de la première requête…"
+  },
+  "kodi": {
+    "addAnother": "En ajouter une autre",
+    "added": "{{name}} a été ajoutée. Encore synchronise maintenant sa médiathèque.",
+    "adding": "Ajout de {{name}}…",
+    "alreadyAdded": "Déjà ajoutées : {{names}}. Ajoutez-en une autre ou continuez.",
+    "contentNote": "Encore ne synchronise que ces contenus depuis Kodi, et retire de la skill les commandes vocales des autres.",
+    "fixLater": "Vous pourrez corriger cela plus tard sur la page Kodi ; le contrôle vocal nécessite au moins la réussite des tests HTTP.",
+    "found": "Voici celles que nous avons trouvées sur votre réseau.",
+    "heading": "Ajouter votre première instance Kodi",
+    "instance": "Instance Kodi",
+    "manual": {
+      "hint": "Pour un Kodi sur un autre VLAN, ou quand la détection est bloquée",
+      "label": "Saisir une adresse manuellement"
+    },
+    "name": {
+      "hint": "Le nom que vous lui donnez, par ex. Salon",
+      "label": "Nom"
+    },
+    "notFound": "Aucun Kodi n'a répondu sur votre réseau : saisissez son adresse ci-dessous.",
+    "password": {
+      "hint": "Chiffré au repos.",
+      "label": "Mot de passe Kodi"
+    },
+    "remoteControl": "Kodi doit avoir « Allow remote control via HTTP » et « from applications on other systems » activés.",
+    "results": "Résultats du test de connexion",
+    "rpc": "Adresse JSON-RPC",
+    "searchAgain": "Rechercher à nouveau",
+    "searching": "Recherche de Kodi sur votre réseau.",
+    "submit": "Ajouter et tester",
+    "testFailed": "Le test de connexion n'a pas pu s'exécuter : {{error}}",
+    "username": "Nom d'utilisateur Kodi"
+  },
+  "nav": {
+    "back": "Retour",
+    "continue": "Continuer",
+    "skip": "Passer pour l'instant"
+  },
+  "steps": {
+    "address": {
+      "sub": "Vérification du proxy et du certificat",
+      "title": "Adresse publique"
+    },
+    "admin": {
+      "sub": "Jeton d'installation et mot de passe",
+      "title": "Compte administrateur"
+    },
+    "amazon": {
+      "sub": "Profil Login with Amazon",
+      "title": "Compte Amazon"
+    },
+    "deploy": {
+      "sub": "Build pour chaque langue",
+      "title": "Déployer la skill"
+    },
+    "hello": {
+      "sub": "Confirmer la première requête",
+      "title": "Dites bonjour"
+    },
+    "kodi": {
+      "sub": "Détecter et connecter",
+      "title": "Kodi"
+    }
+  },
+  "wizard": {
+    "label": "Étape {{step}} : {{title}}",
+    "progress": "Étape {{step}} sur {{total}}<sr> : {{title}}</sr>",
+    "skipped": "Passée",
+    "state": {
+      "current": " (étape en cours)",
+      "done": " (terminée)",
+      "skipped": " (passée)"
+    },
+    "steps": "Étapes de l'installation",
+    "subtitle": "Première installation"
+  }
+}

@@ -1,0 +1,192 @@
+{
+  "card": {
+    "address": "Address",
+    "and": " and ",
+    "defaultForUnlinked": "Default for unlinked Echos",
+    "edit": "Edit",
+    "editNamed": "Edit {{name}}",
+    "failed": "Failed:",
+    "hideTest": "Hide test results",
+    "httpOnly": {
+      "scheduled": "The WebSocket is off. Encore syncs the library on a schedule instead of live, and can't see what {{name}} is playing until you enable <b>Settings › Services › Control › Allow remote control from applications on other systems</b>.",
+      "theSource": "the library source",
+      "viaSource": "The WebSocket is off. Library updates still arrive through {{source}} (the library source), but Encore can't see what {{name}} is playing until you enable <b>Settings › Services › Control › Allow remote control from applications on other systems</b>."
+    },
+    "library": {
+      "label": "Library",
+      "own": "Its own library",
+      "sharedWith": "Shared with {{names}}"
+    },
+    "mac": "MAC (Wake-on-LAN)",
+    "ms": "{{ms}} ms",
+    "notSet": "Not set",
+    "offline": "Encore can't reach {{name}}. Check that Kodi is running and that the address below is right.",
+    "passed": "Passed:",
+    "shared": "Shared library",
+    "sharedSource": "Shared library · source",
+    "stats": {
+      "findable": "findable",
+      "lastEvent": "Last Kodi event",
+      "movies_one": "{{count, number}} movie",
+      "movies_other": "{{count, number}} movies",
+      "newest": "Newest title",
+      "noneYet": "None yet",
+      "notFindable": "not findable yet",
+      "resync": "Safety-net resync",
+      "resyncEvery": "Every 15 min",
+      "resyncNext": "Every 15 min · next {{time}}",
+      "sharedWith": "shared with {{names}}",
+      "shows_one": "{{count, number}} show",
+      "shows_other": "{{count, number}} shows"
+    },
+    "sync": "Sync library",
+    "test": "Test connection",
+    "testing": "Testing {{name}}…",
+    "testResults": "Connection test results",
+    "useForUnlinked": "Use for unlinked Echos",
+    "version": "Version",
+    "wake": "Wake now",
+    "wakeTimeout": {
+      "label": "Wake timeout",
+      "value": "60 s, then “it's still waking up”"
+    },
+    "waking": "Waking… (waiting for Kodi)"
+  },
+  "dialog": {
+    "add": "Add Kodi instance",
+    "addTitle": "Add a Kodi instance",
+    "cancel": "Cancel",
+    "close": "Close",
+    "confirmRemove": "Remove {{name}}? Echos linked to it stop working until you link them again.",
+    "description": "Kodi needs “Allow remote control via HTTP” and “from applications on other systems” turned on.",
+    "editTitle": "Edit {{name}}",
+    "errors": {
+      "mac": "Enter a MAC address like DC:A6:32:4B:19:0E, or leave it empty.",
+      "name": "Give it a name, like the room it's in.",
+      "url": "Enter an http:// or https:// address, e.g. http://192.168.1.20:8080/jsonrpc.",
+      "websocketUrl": "Enter a ws:// or wss:// address, or leave it empty."
+    },
+    "fields": {
+      "broadcast": {
+        "hint": "Only if Wake-on-LAN must go to a specific subnet.",
+        "label": "Broadcast address"
+      },
+      "language": {
+        "hint": "The rules used to match spoken titles against this library.",
+        "label": "Title language"
+      },
+      "mac": {
+        "hint": "Lets voice requests wake this Kodi instance when it's asleep.",
+        "label": "MAC address (Wake-on-LAN)"
+      },
+      "name": {
+        "hint": "Shown on Echos and in the request log.",
+        "label": "Name"
+      },
+      "password": {
+        "hint": "Encrypted at rest.",
+        "label": "Kodi password",
+        "saved": "A password is saved. Leave this empty to keep it."
+      },
+      "shutdown": {
+        "hint": "What “Alexa, ask encore to shut down” does on this Kodi instance.",
+        "inherit": "Follow Settings › Features",
+        "label": "“Shut down”",
+        "power_off": "Power off the device",
+        "quit": "Quit Kodi"
+      },
+      "timezone": {
+        "hint": "Where this Kodi instance is. Leave it empty to learn it from Kodi’s clock.",
+        "label": "Time zone"
+      },
+      "url": {
+        "label": "JSON-RPC URL"
+      },
+      "username": {
+        "label": "Kodi username"
+      },
+      "websocketUrl": {
+        "hint": "For live library updates and now playing. Usually port 9090.",
+        "label": "WebSocket URL"
+      }
+    },
+    "keep": "Keep it",
+    "managed": "This instance comes from encore.yml or ENCORE_* variables. Change it there.",
+    "remove": "Remove",
+    "removeEllipsis": "Remove…",
+    "save": "Save"
+  },
+  "discovered": {
+    "add": "Add",
+    "addNamed": "Add {{name}}",
+    "intro": "Discovered with mDNS (<mono>{{service}}</mono>). Kodi on another VLAN won't appear here; add it manually.",
+    "lastScan": "Last scan {{when}} · scanning continuously",
+    "none": "Nothing new found.",
+    "scanning": "Scanning now…",
+    "searching": "Searching for Kodi with mDNS. This takes a few seconds.",
+    "title": "Found on your network",
+    "unavailable": "Discovery isn't available right now.",
+    "version": "Kodi {{version}}"
+  },
+  "library": {
+    "explanation": {
+      "common": {
+        "many": "Encore keeps one library and one title index for them, syncs it from the library source, and listens for changes from all of them.",
+        "two": "Encore keeps one library and one title index for them, syncs it from the library source, and listens for changes from both."
+      },
+      "confirmed": {
+        "many": "These instances use the same Kodi database: playback on one changed the watched status and resume point on all of them at once.",
+        "two": "These instances use the same Kodi database: playback on one changed the watched status and resume point on both at once."
+      },
+      "likely": {
+        "check": {
+          "many": "The next time something is played, Encore checks that the watched status and resume point change on all of them at once; when they do, this becomes Confirmed shared.",
+          "two": "The next time something is played, Encore checks that the watched status and resume point change on both instances at once; when they do, this becomes Confirmed shared."
+        },
+        "evidence": "These instances appear to use the same Kodi database: {{evidence}}.",
+        "plain": "These instances appear to use the same Kodi database."
+      },
+      "manual": "You grouped these instances by hand."
+    },
+    "fallback": "The source is unreachable, so Encore is syncing from {{name}}.",
+    "share": {
+      "add": "Add an instance",
+      "alreadyShared": "Shares a library with {{names}}; ticking it moves it into this one.",
+      "cancel": "Cancel",
+      "confirm_one": "Share library",
+      "confirm_other": "Share library between {{count}}",
+      "description": "Tick the Kodi instances that use the same Kodi database, such as MySQL. Encore then keeps one library and title index for them.",
+      "legend": "Kodi instances",
+      "open": "Share a library",
+      "sourceHint": "The first instance you tick becomes the library source; you can change it afterwards.",
+      "title": "Share a library"
+    },
+    "source": "Library source",
+    "sourceHint": "If the source is asleep, Encore syncs from another instance in the group that is awake. Playback still goes to whichever instance the Echo controls.",
+    "split": {
+      "cancel": "Cancel",
+      "confirm": "Split",
+      "currentSource": "Current library source",
+      "description": "Pick the instance that has its own Kodi database. Encore then syncs and indexes it separately.",
+      "legend": "Instance with its own library",
+      "open": "Not shared? Split",
+      "title": "Split the shared library"
+    },
+    "state": {
+      "confirmed_shared": "Confirmed shared",
+      "likely_shared": "Likely shared",
+      "manual": "Grouped by hand",
+      "solo": "Own library"
+    },
+    "title": "Shared library: {{name}}"
+  },
+  "page": {
+    "addManually": "Add Kodi manually",
+    "description": "Each Kodi Encore can control. The library index stays live through Kodi's WebSocket events.",
+    "empty": {
+      "body": "Add one found on your network, or enter its address. Kodi needs “Allow remote control via HTTP” turned on.",
+      "title": "No Kodi instances yet"
+    },
+    "title": "Kodi instances"
+  }
+}

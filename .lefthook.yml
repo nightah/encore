@@ -1,0 +1,98 @@
+# Git hooks, installed by `pnpm install` in web/ (lefthook is a dev dependency there). Skip them once with LEFTHOOK=0.
+pre-commit:
+  piped: true
+  jobs:
+    # Tools that aren't Go tools in the tools/ module or web/ dependencies have to be installed; see the contributing docs.
+    - name: check tools
+      run: |
+        missing=""
+        for tool in golangci-lint hadolint pnpm shellcheck trufflehog typos yamllint zizmor; do
+          command -v "$tool" >/dev/null 2>&1 || missing="$missing $tool"
+        done
+        if [ -n "$missing" ]; then
+          echo "Install these first:$missing (https://nightah.github.io/encore/contributing/development/#prerequisites)"
+          exit 1
+        fi
+
+    - name: linters
+      group:
+        parallel: true
+        jobs:
+          - name: actionlint
+            run: go tool -modfile=tools/go.mod actionlint {staged_files}
+            glob: ".github/workflows/*.{yml,yaml}"
+
+          - name: biome (docs)
+            root: "docs/"
+            run: pnpm exec biome check --write --no-errors-on-unmatched {staged_files}
+            glob: "*.{js,mjs,ts,json,jsonc,css,astro}"
+            stage_fixed: true
+
+          - name: biome (web)
+            root: "web/"
+            run: pnpm exec biome check --write --no-errors-on-unmatched {staged_files}
+            glob: "*.{js,jsx,ts,tsx,mjs,json,jsonc,css}"
+            stage_fixed: true
+
+          - name: editorconfig
+            run: go tool -modfile=tools/go.mod editorconfig-checker {staged_files}
+
+          - name: golangci-lint
+            run: golangci-lint run --fix ./...
+            glob: "*.go"
+            exclude:
+              - "tools/**"
+            stage_fixed: true
+
+          - name: golangci-lint (tools)
+            root: "tools/"
+            run: golangci-lint run --config ../.golangci.yml --fix ./...
+            glob: "*.go"
+            stage_fixed: true
+
+          - name: hadolint
+            run: hadolint {staged_files}
+            glob: "*Dockerfile*"
+
+          - name: interaction model
+            run: go run ./cmd/encore gen lint
+            glob: "i18n/**"
+
+          - name: shellcheck
+            run: shellcheck --format=gcc {staged_files}
+            file_types:
+              - text/x-shellscript
+              - text/x-sh
+
+          # The container's s6 scripts start with #!/command/with-contenv, which file_types doesn't recognise as shell.
+          - name: shellcheck (s6)
+            run: shellcheck --format=gcc {staged_files}
+            glob:
+              - "docker/root/etc/s6-overlay/s6-rc.d/encore/run"
+              - "docker/root/etc/s6-overlay/scripts/adduser"
+              - "docker/root/etc/s6-overlay/scripts/encoresetup"
+
+          - name: trufflehog
+            run: trufflehog --fail --log-level=-1 filesystem -x .trufflehog .
+
+          - name: tsc (web)
+            root: "web/"
+            run: pnpm --reporter=silent typecheck
+            glob: "*.{ts,tsx}"
+
+          - name: typos
+            run: typos --force-exclude {staged_files}
+
+          - name: yamllint
+            run: yamllint --strict {staged_files}
+            glob: "i18n/**/*.yaml"
+
+          - name: zizmor
+            run: zizmor --no-progress {staged_files}
+            glob: ".github/workflows/*.{yml,yaml}"
+
+commit-msg:
+  jobs:
+    - name: commitlint
+      root: "web/"
+      run: pnpm exec commitlint --edit

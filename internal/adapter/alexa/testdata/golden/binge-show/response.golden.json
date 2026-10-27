@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "response": {
+    "outputSpeech": {
+      "type": "PlainText",
+      "text": "Binge mode: playing 2 episodes of Severance, starting with season 2, episode 4."
+    },
+    "card": {
+      "type": "Simple",
+      "title": "Encore",
+      "content": "Binge mode: playing 2 episodes of Severance, starting with season 2, episode 4."
+    },
+    "shouldEndSession": true
+  }
+}
+

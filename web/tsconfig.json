@@ -1,0 +1,38 @@
+{
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "exactOptionalPropertyTypes": false,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "lib": ["dom", "dom.iterable", "es2023"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "paths": {
+      "@api/*": ["./src/api/*"],
+      "@components/*": ["./src/components/*"],
+      "@dev/*": ["./src/dev/*"],
+      "@e2e/*": ["./e2e/*"],
+      "@features/*": ["./src/features/*"],
+      "@i18n/*": ["./src/i18n/*"],
+      "@lib/*": ["./src/lib/*"],
+      "@mocks/*": ["./src/mocks/*"],
+      "@routes/*": ["./src/routes/*"],
+      "@src/*": ["./src/*"],
+      "@styles/*": ["./src/styles/*"],
+      "@test/*": ["./src/test/*"],
+      "@theme/*": ["./src/theme/*"]
+    },
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "es2023",
+    "types": ["vite/client", "vitest/globals", "@testing-library/jest-dom/vitest", "node"],
+    "verbatimModuleSyntax": true
+  },
+  "include": ["src", "e2e", "vite.config.ts", "playwright.config.ts", "orval.config.ts"]
+}

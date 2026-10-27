@@ -1,0 +1,5 @@
+# es-ES inherits lang/es. "encore" is not a Spanish word, so it doesn't clash with anything Alexa understands.
+
+invocation: encore
+language: es
+skill_name: Encore

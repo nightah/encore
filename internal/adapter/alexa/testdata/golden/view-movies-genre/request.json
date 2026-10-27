@@ -1,0 +1,82 @@
+{
+  "version": "1.0",
+  "session": {
+    "new": true,
+    "sessionId": "amzn1.echo-api.session.1",
+    "application": {
+      "applicationId": "amzn1.ask.skill.test"
+    },
+    "attributes": {}
+  },
+  "context": {
+    "System": {
+      "application": {
+        "applicationId": "amzn1.ask.skill.test"
+      },
+      "device": {
+        "deviceId": "amzn1.ask.device.LOUNGE",
+        "supportedInterfaces": {}
+      },
+      "apiEndpoint": "",
+      "apiAccessToken": ""
+    }
+  },
+  "request": {
+    "requestId": "amzn1.echo-api.request.1",
+    "timestamp": "2026-10-26T09:00:00Z",
+    "locale": "en-AU",
+    "type": "IntentRequest",
+    "intent": {
+      "name": "ViewLibrary",
+      "confirmationStatus": "NONE",
+      "slots": {
+        "Section": {
+          "name": "Section",
+          "value": "movies",
+          "confirmationStatus": "NONE",
+          "resolutions": {
+            "resolutionsPerAuthority": [
+              {
+                "authority": "amzn1.er-authority.echo-sdk.amzn1.ask.skill.test.Section",
+                "status": {
+                  "code": "ER_SUCCESS_MATCH"
+                },
+                "values": [
+                  {
+                    "value": {
+                      "name": "movies",
+                      "id": "movies"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "Genre": {
+          "name": "Genre",
+          "value": "comedy",
+          "confirmationStatus": "NONE",
+          "resolutions": {
+            "resolutionsPerAuthority": [
+              {
+                "authority": "amzn1.er-authority.echo-sdk.amzn1.ask.skill.test.Genre",
+                "status": {
+                  "code": "ER_SUCCESS_MATCH"
+                },
+                "values": [
+                  {
+                    "value": {
+                      "name": "comedy",
+                      "id": "comedy"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

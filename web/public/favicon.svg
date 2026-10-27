@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-labelledby="title desc">
+  <title id="title">Encore</title>
+  <desc id="desc">Encore mark: gopher peeking over a couch backrest holding a TV remote.</desc>
+  <rect width="64" height="64" rx="14" fill="#1E2836"/>
+  <circle cx="14" cy="12" r="4.6" fill="#6ACFE3" stroke="#16202B" stroke-width="2.5"/>
+  <circle cx="14" cy="12.4" r="1.9" fill="#2F97B3"/>
+  <circle cx="50" cy="12" r="4.6" fill="#6ACFE3" stroke="#16202B" stroke-width="2.5"/>
+  <circle cx="50" cy="12.4" r="1.9" fill="#2F97B3"/>
+  <path d="M32.0 7C49 7 53 16 53 28V52H11V28C11 16 15 7 32.0 7Z" fill="#6ACFE3" stroke="#16202B" stroke-width="2.5" stroke-linejoin="round"/>
+  <ellipse cx="24.5" cy="22" rx="7.5" ry="7.5" fill="#FFFFFF" stroke="#16202B" stroke-width="2"/>
+  <circle cx="25.8" cy="23.4" r="3.3" fill="#16202B"/>
+  <circle cx="27.0" cy="22.099999999999998" r="1.2" fill="#FFFFFF"/>
+  <ellipse cx="39.5" cy="22" rx="7.5" ry="7.5" fill="#FFFFFF" stroke="#16202B" stroke-width="2"/>
+  <circle cx="38.2" cy="23.4" r="3.3" fill="#16202B"/>
+  <circle cx="39.400000000000006" cy="22.099999999999998" r="1.2" fill="#FFFFFF"/>
+  <g transform="rotate(0 32 31.5)">
+  <path d="M29.4 33.5h5.2v5.2a1.2 1.2 0 0 1-1.2 1.2h-2.8a1.2 1.2 0 0 1-1.2-1.2Z" fill="#FFFFFF" stroke="#16202B" stroke-width="1.5" stroke-linejoin="round"/>
+  <ellipse cx="32" cy="31.5" rx="6.5" ry="4.6" fill="#F6D2A2" stroke="#16202B" stroke-width="2"/>
+  <ellipse cx="32" cy="29.7" rx="3" ry="2" fill="#16202B"/>
+  </g>
+  <rect x="4" y="47" width="11" height="14" rx="4" fill="#B45309" stroke="#16202B" stroke-width="2.5"/>
+  <rect x="49" y="47" width="11" height="14" rx="4" fill="#B45309" stroke="#16202B" stroke-width="2.5"/>
+  <rect x="9" y="43" width="46" height="17" rx="4.5" fill="#D97706" stroke="#16202B" stroke-width="2.5"/>
+  <path d="M13 46.6H51" stroke="#F59E0B" stroke-width="2" stroke-linecap="round"/>
+  <path d="M14 36C12 41 14 44 20 44H38" fill="none" stroke="#16202B" stroke-width="9.9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M14 36C12 41 14 44 20 44H38" fill="none" stroke="#6ACFE3" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M50 36C52 41 50 44 46 44" fill="none" stroke="#16202B" stroke-width="9.9" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M50 36C52 41 50 44 46 44" fill="none" stroke="#6ACFE3" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <g transform="translate(45 39) rotate(52)">
+  <rect x="-3.5" y="-8.5" width="7" height="17" rx="2.4" fill="#3A4452" stroke="#16202B" stroke-width="2"/>
+  <circle cx="0" cy="-5.5" r="1.6" fill="#F59E0B"/>
+  </g>
+  <ellipse cx="45" cy="42" rx="4.2" ry="3.6" transform="rotate(-20 45 42)" fill="#F6D2A2" stroke="#16202B" stroke-width="2"/>
+  <ellipse cx="37" cy="44.5" rx="4.6" ry="3.3" transform="rotate(0 37 44.5)" fill="#F6D2A2" stroke="#16202B" stroke-width="2"/>
+  <rect x="1" y="1" width="62" height="62" rx="13" fill="none" stroke="#F59E0B" stroke-width="2"/>
+</svg>

@@ -1,0 +1,359 @@
+# Spanish values for the custom slot types in model.yaml. IDs are what the handler acts on; values and synonyms are what people say.
+
+LIBRARY_SECTION:
+  albums: |-
+    álbumes
+    discos
+    álbums
+  artists: |-
+    artistas
+    grupos
+    músicos
+    cantantes
+  favourites: |-
+    favoritos
+    mis favoritos
+  movies: |-
+    películas
+    pelis
+    mis películas
+    biblioteca de películas
+  music: |-
+    música
+    mi música
+    biblioteca de música
+    canciones
+  musicvideos: |-
+    videoclips
+    vídeos musicales
+    mis videoclips
+  recentepisodes: |-
+    episodios añadidos recientemente
+    episodios nuevos
+    últimos episodios
+    capítulos nuevos
+    últimos capítulos
+    series nuevas
+  recentmovies: |-
+    películas añadidas recientemente
+    películas nuevas
+    últimas películas
+    películas recientes
+  recentmusic: |-
+    música añadida recientemente
+    música nueva
+    últimos álbumes
+    álbumes nuevos
+    canciones nuevas
+    últimas canciones
+  recentmusicvideos: |-
+    videoclips añadidos recientemente
+    videoclips nuevos
+    últimos videoclips
+  tvshows: |-
+    series
+    series de televisión
+    mis series
+    tele
+
+LIBRARY_TYPE:
+  music: |-
+    música
+    audio
+    canciones
+  video: |-
+    vídeo
+    vídeos
+    video
+    películas
+    series
+    tele
+
+MEDIA_TYPE:
+  album: |-
+    álbum
+    álbumes
+    disco
+    discos
+  artist: |-
+    artista
+    artistas
+    grupo
+    grupos
+    cantante
+    cantantes
+    músico
+    músicos
+  audio: |-
+    algo para escuchar
+    algo que escuchar
+    música
+  episode: |-
+    episodio
+    episodios
+    capítulo
+    capítulos
+  movie: |-
+    película
+    películas
+    peli
+    pelis
+    film
+  musicvideo: |-
+    videoclip
+    videoclips
+    vídeo musical
+    vídeos musicales
+  song: |-
+    canción
+    canciones
+    tema
+    temas
+  tvshow: |-
+    serie
+    series
+    serie de televisión
+    series de televisión
+    programa
+    programas
+  video: |-
+    algo para ver
+    algo que ver
+    vídeo
+    vídeos
+
+NAV_ACTION:
+  back: |-
+    atrás
+    vuelve
+    volver
+    hacia atrás
+  down: |-
+    abajo
+    hacia abajo
+  home: |-
+    inicio
+    pantalla de inicio
+    pantalla principal
+    menú principal
+  info: |-
+    información
+    info
+    detalles
+    más información
+  left: |-
+    izquierda
+    a la izquierda
+    hacia la izquierda
+  menu: |-
+    menú
+    menú contextual
+    opciones
+  osd: |-
+    controles
+    controles del reproductor
+    menú de reproducción
+    o. s. d.
+  pagedown: |-
+    página siguiente
+    baja una página
+    avanza página
+    ver más
+  pageup: |-
+    página anterior
+    sube una página
+    retrocede página
+  right: |-
+    derecha
+    a la derecha
+    hacia la derecha
+  select: |-
+    selecciona
+    seleccionar
+    aceptar
+    vale
+    elige eso
+    intro
+  up: |-
+    arriba
+    hacia arriba
+
+NAV_DIRECTION:
+  down: |-
+    abajo
+    hacia abajo
+  left: |-
+    izquierda
+    a la izquierda
+    hacia la izquierda
+  right: |-
+    derecha
+    a la derecha
+    hacia la derecha
+  up: |-
+    arriba
+    hacia arriba
+
+POWER_ACTION:
+  hibernate: |-
+    hiberna
+    hibernar
+    hibernación
+  quit: |-
+    cierra kodi
+    cierra
+    sal de kodi
+    salir de kodi
+  reboot: |-
+    reinicia
+    reiniciar
+    reinícialo
+  shutdown: |-
+    apaga
+    apagar
+    apágate
+    apágalo
+  suspend: |-
+    suspende
+    suspender
+    suspensión
+    dormir
+
+REPEAT_MODE:
+  all: |-
+    todo
+    todas
+    todos
+    la lista
+    la cola
+  "off": |-
+    desactivada
+    desactivado
+    apagada
+    nada
+    ninguno
+  one: |-
+    esta
+    este
+    esta canción
+    esta pista
+    este capítulo
+    este episodio
+    la canción
+    solo una
+    uno
+
+ROTATE_DIRECTION:
+  clockwise: |-
+    en el sentido de las agujas del reloj
+    en sentido horario
+    a la derecha
+    hacia la derecha
+  counterclockwise: |-
+    en sentido contrario a las agujas del reloj
+    en sentido antihorario
+    a la izquierda
+    hacia la izquierda
+
+SEEK_DIRECTION:
+  back: |-
+    atrás
+    hacia atrás
+    para atrás
+  forward: |-
+    adelante
+    hacia adelante
+    hacia delante
+    para adelante
+    para delante
+
+SEEK_SIZE:
+  big: |-
+    mucho
+    bastante
+    grande
+    largo
+    un buen trozo
+  small: |-
+    un poco
+    un poquito
+    poco
+    pequeño
+    corto
+
+STREAM_STEP:
+  next: |-
+    siguiente
+    cambia
+    cambiar
+    otro
+    otra
+  previous: anterior
+
+SUBTITLE_ACTION:
+  download: |-
+    descarga
+    busca
+    consigue
+    descargar
+    buscar
+  next: |-
+    siguiente
+    siguientes
+    cambia
+    otro
+    otros
+  "off": |-
+    desactiva
+    quita
+    apaga
+    oculta
+    desactivados
+    fuera
+  "on": |-
+    activa
+    pon
+    enciende
+    muestra
+    activados
+  previous: |-
+    anterior
+    anteriores
+
+TRANSPORT_COMMAND:
+  next: |-
+    siguiente
+    salta
+    pasa
+  pause: pausa
+  previous: anterior
+  resume: |-
+    reanuda
+    continúa
+    sigue
+    quita la pausa
+  stop: |-
+    para
+    detén
+    stop
+
+ZOOM_ACTION:
+  in: |-
+    acerca
+    amplía
+    aumenta
+    más
+    acercar
+    ampliar
+  out: |-
+    aleja
+    reduce
+    menos
+    alejar
+    reducir
+  reset: |-
+    normal
+    restablece
+    quita
+    reinicia
+    desactiva

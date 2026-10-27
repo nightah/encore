@@ -1,0 +1,16 @@
+{
+  "Disable": {
+    "IndentSize": true,
+    "Indentation": true
+  },
+  "Exclude": [
+    "LICENSE$",
+    "^internal/server/apidocs/",
+    "^tools/smapigen/spec/",
+    "^tools/kodigen/schema/",
+    "testdata/",
+    "\\.(png|jpg|ico|svg|woff2?|gz|zip|db)$",
+    "pnpm-lock\\.yaml$",
+    "go\\.sum$"
+  ]
+}

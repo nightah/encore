@@ -1,0 +1,315 @@
+# Language-neutral interaction model: intents, their slots and custom slot types. Utterances, responses and the words of custom slot types live under lang/<language>/.
+#
+# Intents tagged with content (movies, tv or music; music takes music videos along) are left out of skills deployed without that group. Untagged intents, such as playback control and "play X", are always included.
+#
+# Kanzi's near-duplicate intents are merged into slot-parameterised ones (PlayerSeek, Navigate, ViewLibrary, Recommend, Power...). Intents that start playback take an optional Room slot: "... in the bedroom" plays on that room's Kodi instance.
+intents:
+  # Built-ins Alexa requires or that map directly to Kodi transport controls.
+  - name: AMAZON.CancelIntent
+  - name: AMAZON.HelpIntent
+  - name: AMAZON.StopIntent
+  - name: AMAZON.NavigateHomeIntent
+  - name: AMAZON.FallbackIntent
+  - name: AMAZON.PauseIntent
+  - name: AMAZON.ResumeIntent
+  - name: AMAZON.NextIntent
+  - name: AMAZON.PreviousIntent
+  - name: AMAZON.StartOverIntent
+  - name: AMAZON.YesIntent
+  - name: AMAZON.NoIntent
+  - name: AMAZON.ShuffleOnIntent
+  - name: AMAZON.ShuffleOffIntent
+  - name: AMAZON.LoopOnIntent
+  - name: AMAZON.LoopOffIntent
+
+  # Playing by name.
+  - name: WatchMovie
+    content: movies
+    slots:
+      - {name: Movie, type: AMAZON.Movie}
+      - {name: Room, type: KODI_ROOM}
+  - name: WatchNextEpisode
+    content: tv
+    slots:
+      - {name: Show, type: AMAZON.TVSeries}
+      - {name: Room, type: KODI_ROOM}
+  - name: PlayMedia
+    slots:
+      - {name: Query, type: AMAZON.SearchQuery}
+
+  # Movies.
+  - name: WatchRandomMovie
+    content: movies
+    slots:
+      - {name: Genre, type: MEDIA_GENRE}
+      - {name: Room, type: KODI_ROOM}
+  - name: WatchMovieTrailer
+    content: movies
+    slots:
+      - {name: Movie, type: AMAZON.Movie}
+  - name: WatchNextInCollection
+    content: movies
+    slots:
+      - {name: Movie, type: AMAZON.Movie}
+      - {name: Room, type: KODI_ROOM}
+
+  # TV.
+  - name: WatchEpisode
+    content: tv
+    slots:
+      - {name: Show, type: AMAZON.TVSeries}
+      - {name: Season, type: AMAZON.NUMBER}
+      - {name: Episode, type: AMAZON.NUMBER}
+      - {name: Room, type: KODI_ROOM}
+  - name: WatchLatestEpisode
+    content: tv
+    slots:
+      - {name: Show, type: AMAZON.TVSeries}
+      - {name: Room, type: KODI_ROOM}
+  - name: ContinueWatching
+    content: tv
+    slots:
+      - {name: Room, type: KODI_ROOM}
+  - name: WatchRandomEpisode
+    content: tv
+    slots:
+      - {name: Show, type: AMAZON.TVSeries}
+      - {name: Room, type: KODI_ROOM}
+  - name: WatchRandomShow
+    content: tv
+    slots:
+      - {name: Genre, type: MEDIA_GENRE}
+      - {name: Room, type: KODI_ROOM}
+  - name: ShuffleShow
+    content: tv
+    slots:
+      - {name: Show, type: AMAZON.TVSeries}
+      - {name: Room, type: KODI_ROOM}
+  - name: BingeShow
+    content: tv
+    slots:
+      - {name: Show, type: AMAZON.TVSeries}
+      - {name: Room, type: KODI_ROOM}
+
+  # Music.
+  - name: ListenToArtist
+    content: music
+    slots:
+      - {name: Artist, type: AMAZON.Musician}
+      - {name: Genre, type: MEDIA_GENRE}
+      - {name: Room, type: KODI_ROOM}
+  - name: ShuffleArtist
+    content: music
+    slots:
+      - {name: Artist, type: AMAZON.Musician}
+      - {name: Genre, type: MEDIA_GENRE}
+      - {name: Room, type: KODI_ROOM}
+  - name: ListenToAlbum
+    content: music
+    slots:
+      - {name: Album, type: AMAZON.MusicAlbum}
+      - {name: Artist, type: AMAZON.Musician}
+      - {name: Room, type: KODI_ROOM}
+  - name: ShuffleAlbum
+    content: music
+    slots:
+      - {name: Album, type: AMAZON.MusicAlbum}
+      - {name: Artist, type: AMAZON.Musician}
+      - {name: Room, type: KODI_ROOM}
+  - name: ListenToLatestAlbum
+    content: music
+    slots:
+      - {name: Artist, type: AMAZON.Musician}
+      - {name: Room, type: KODI_ROOM}
+  - name: ShuffleLatestAlbum
+    content: music
+    slots:
+      - {name: Artist, type: AMAZON.Musician}
+      - {name: Room, type: KODI_ROOM}
+  - name: ListenToSong
+    content: music
+    slots:
+      - {name: Song, type: AMAZON.MusicRecording}
+      - {name: Artist, type: AMAZON.Musician}
+      - {name: Album, type: AMAZON.MusicAlbum}
+      - {name: Room, type: KODI_ROOM}
+  - name: ListenToSongOrAlbum
+    content: music
+    slots:
+      - {name: Title, type: AMAZON.MusicRecording}
+      - {name: Artist, type: AMAZON.Musician}
+      - {name: Room, type: KODI_ROOM}
+  - name: ListenToGenre
+    content: music
+    slots:
+      - {name: Genre, type: MEDIA_GENRE}
+      - {name: Room, type: KODI_ROOM}
+  - name: ListenToRecentSongs
+    content: music
+    slots:
+      - {name: Room, type: KODI_ROOM}
+  - name: PartyMode
+    content: music
+    slots:
+      - {name: Room, type: KODI_ROOM}
+  - name: WatchMusicVideo
+    content: music
+    slots:
+      - {name: MusicVideo, type: KODI_MUSIC_VIDEO}
+      - {name: Artist, type: AMAZON.Musician}
+      - {name: Room, type: KODI_ROOM}
+  - name: WatchRandomMusicVideo
+    content: music
+    slots:
+      - {name: Genre, type: MEDIA_GENRE}
+      - {name: Artist, type: AMAZON.Musician}
+      - {name: Room, type: KODI_ROOM}
+  - name: ShuffleMusicVideos
+    content: music
+    slots:
+      - {name: Genre, type: MEDIA_GENRE}
+      - {name: Artist, type: AMAZON.Musician}
+      - {name: Room, type: KODI_ROOM}
+
+  # Playlists, including smart playlists.
+  - name: PlayPlaylist
+    slots:
+      - {name: Playlist, type: KODI_PLAYLIST}
+      - {name: Room, type: KODI_ROOM}
+  - name: ShufflePlaylist
+    slots:
+      - {name: Playlist, type: KODI_PLAYLIST}
+      - {name: Room, type: KODI_ROOM}
+
+  # Recommendations and discovery.
+  - name: Recommend
+    slots:
+      - {name: MediaType, type: MEDIA_TYPE}
+      - {name: Genre, type: MEDIA_GENRE}
+  - name: WhatsNew
+    slots:
+      - {name: MediaType, type: MEDIA_TYPE}
+      - {name: Genre, type: MEDIA_GENRE}
+      - {name: Show, type: AMAZON.TVSeries}
+  - name: WhatAlbums
+    content: music
+    slots:
+      - {name: Artist, type: AMAZON.Musician}
+
+  # Playback control and the picture.
+  - name: RoomControl
+    slots:
+      - {name: Command, type: TRANSPORT_COMMAND}
+      - {name: Room, type: KODI_ROOM}
+  - name: PlayerSeek
+    slots:
+      # Not "Direction": Amazon requires a slot name to have one type across the model, and PlayerZoom and PlayerMove use Direction for NAV_DIRECTION.
+      - {name: SeekDirection, type: SEEK_DIRECTION}
+      - {name: Size, type: SEEK_SIZE}
+      - {name: Duration, type: AMAZON.DURATION}
+  - name: PlayerRewind
+    slots:
+      - {name: Size, type: SEEK_SIZE}
+      - {name: Duration, type: AMAZON.DURATION}
+  - name: PlayerSeekTo
+    slots:
+      - {name: Position, type: AMAZON.DURATION}
+      - {name: Minute, type: AMAZON.NUMBER}
+  - name: Repeat
+    slots:
+      - {name: RepeatMode, type: REPEAT_MODE}
+  - name: PlayerZoom
+    slots:
+      - {name: Zoom, type: ZOOM_ACTION}
+      - {name: Direction, type: NAV_DIRECTION}
+  - name: PlayerRotate
+    slots:
+      - {name: Rotation, type: ROTATE_DIRECTION}
+  - name: PlayerMove
+    slots:
+      - {name: Direction, type: NAV_DIRECTION}
+  - name: Fullscreen
+  - name: StereoscopicMode
+  - name: AudioPassthrough
+  - name: VolumeSet
+    slots:
+      - {name: Level, type: AMAZON.NUMBER}
+  - name: VolumeUp
+  - name: VolumeDown
+  - name: Mute
+  - name: CurrentPlayItemEnquiry
+  - name: CurrentPlayItemTimeRemaining
+  # "Which device is this?": says the Echo's name in Encore, to tell devices apart when linking them.
+  - name: IdentifyEcho
+
+  # Subtitles and audio streams.
+  - name: Subtitles
+    slots:
+      - {name: SubtitleAction, type: SUBTITLE_ACTION}
+      - {name: Language, type: AMAZON.Language}
+  - name: AudioStream
+    slots:
+      - {name: Step, type: STREAM_STEP}
+      - {name: Language, type: AMAZON.Language}
+
+  # Navigating Kodi like a remote.
+  - name: Navigate
+    slots:
+      - {name: NavAction, type: NAV_ACTION}
+      - {name: Count, type: AMAZON.NUMBER}
+  - name: TypeText
+    slots:
+      - {name: Text, type: AMAZON.SearchQuery}
+  - name: ViewLibrary
+    slots:
+      - {name: Section, type: LIBRARY_SECTION}
+      - {name: Genre, type: MEDIA_GENRE}
+  - name: ViewPlaylist
+    slots:
+      - {name: Playlist, type: KODI_PLAYLIST}
+  - name: OpenFavourite
+    slots:
+      - {name: Favourite, type: AMAZON.SearchQuery}
+
+  # Add-ons.
+  - name: LaunchAddon
+    slots:
+      - {name: Addon, type: AMAZON.SearchQuery}
+  - name: GlobalSearch
+    slots:
+      - {name: Query, type: AMAZON.SearchQuery}
+
+  # The machine and the library.
+  - name: Power
+    slots:
+      - {name: PowerAction, type: POWER_ACTION}
+  - name: EjectMedia
+  - name: UpdateLibrary
+    slots:
+      - {name: Library, type: LIBRARY_TYPE}
+  - name: CleanLibrary
+    slots:
+      - {name: Library, type: LIBRARY_TYPE}
+
+types:
+  # Rooms come from Encore's rooms table at deploy time.
+  - {name: KODI_ROOM, dynamic: true}
+  # Playlist names and genres can be supplied from the library at deploy time; custom slots accept unlisted values anyway.
+  - {name: KODI_PLAYLIST, dynamic: true}
+  - {name: MEDIA_GENRE, dynamic: true}
+  # Music video titles come from the library at deploy time; Amazon has no built-in music video type outside a few English locales.
+  - {name: KODI_MUSIC_VIDEO, dynamic: true}
+  - name: MEDIA_TYPE
+  - name: LIBRARY_SECTION
+  - name: LIBRARY_TYPE
+  - name: NAV_ACTION
+  - name: NAV_DIRECTION
+  - name: SEEK_DIRECTION
+  - name: SEEK_SIZE
+  - name: ZOOM_ACTION
+  - name: ROTATE_DIRECTION
+  - name: REPEAT_MODE
+  - name: SUBTITLE_ACTION
+  - name: STREAM_STEP
+  - name: POWER_ACTION
+  - name: TRANSPORT_COMMAND

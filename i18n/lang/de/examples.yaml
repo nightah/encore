@@ -1,0 +1,70 @@
+# Example values for the dynamic slot types in model.yaml (de): deploys replace them with what is set up in Encore. Chosen for this language rather than translated, so not on Crowdin.
+
+KODI_MUSIC_VIDEO:
+  - {value: bohemian rhapsody}
+  - {value: thriller}
+  - {value: take on me}
+  - {value: smells like teen spirit}
+  - {value: bad guy}
+
+# Examples only, extended from the library when available.
+KODI_PLAYLIST:
+  - {value: roadtrip, synonyms: [road trip, autofahrt]}
+  - {value: party}
+  - {value: workout, synonyms: [training, sport]}
+  - {value: chillout, synonyms: [chill out, entspannung]}
+  - {value: kinder}
+  - {value: abendessen}
+  - {value: am besten bewertet, synonyms: [top bewertet, favoriten]}
+
+# Examples only: deploys replace them with the rooms set up in Encore. Utterances say "im {Room}" or "in der {Room}", so values carry no article.
+KODI_ROOM:
+  - {value: wohnzimmer}
+  - {value: schlafzimmer}
+  - {value: kinderzimmer}
+  - {value: küche}
+  - {value: arbeitszimmer}
+  - {value: büro}
+  - {value: esszimmer}
+  - {value: gästezimmer}
+  - {value: heimkino, synonyms: [kino, kinoraum]}
+  - {value: partykeller}
+  - {value: keller}
+  - {value: hobbyraum}
+  - {value: garage}
+
+# Examples only, extended from the library when available.
+MEDIA_GENRE:
+  - {value: action}
+  - {value: abenteuer}
+  - {value: animation, synonyms: [zeichentrick, animiert, trickfilm]}
+  - {value: komödie, synonyms: [komödien, lustig]}
+  - {value: krimi, synonyms: [krimis, kriminalfilm]}
+  - {value: dokumentation, synonyms: [dokumentationen, doku, dokus, dokumentarfilm]}
+  - {value: drama, synonyms: [dramen]}
+  - {value: familie, synonyms: [familienfilm]}
+  - {value: fantasy}
+  - {value: horror, synonyms: [gruselig, grusel]}
+  - {value: kinder, synonyms: [kinderfilm, kindersendung]}
+  - {value: mystery}
+  - {value: romantik, synonyms: [romantisch, liebesfilm, liebe]}
+  - {value: science fiction, synonyms: [sci fi]}
+  - {value: thriller}
+  - {value: krieg, synonyms: [kriegsfilm]}
+  - {value: western}
+  - {value: rock}
+  - {value: pop}
+  - {value: jazz}
+  - {value: klassik, synonyms: [klassische musik]}
+  - {value: hip hop, synonyms: [rap]}
+  - {value: country}
+  - {value: elektro, synonyms: [elektronisch, dance, techno]}
+  - {value: blues}
+  - {value: metal, synonyms: [heavy metal]}
+  - {value: folk, synonyms: [volksmusik]}
+  - {value: schlager}
+  - {value: reggae}
+  - {value: soul}
+  - {value: r. and b., synonyms: [r. n. b.]}
+  - {value: indie}
+  - {value: soundtrack, synonyms: [soundtracks, filmmusik]}

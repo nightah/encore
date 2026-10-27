@@ -1,0 +1,33 @@
+#!/command/with-contenv bash
+# shellcheck shell=bash
+
+# Overrides the base image's adduser oneshot to show Encore's banner; the user handling is unchanged.
+
+PUID=${PUID:-911}
+PGID=${PGID:-911}
+
+groupmod -o -g "${PGID}" abc
+usermod -o -u "${PUID}" abc
+
+cat <<'BANNER'
+--------------------------------------------
+  ___ _ __   ___ ___  _ __ ___
+ / _ \ '_ \ / __/ _ \| '__/ _ \
+|  __/ | | | (_| (_) | | |  __/
+ \___|_| |_|\___\___/|_|  \___|
+
+--------------------------------------------
+GID/UID
+--------------------------------------------
+BANNER
+cat <<IDS
+
+User uid:    $(id -u abc)
+User gid:    $(id -g abc)
+--------------------------------------------
+
+IDS
+
+chown -R abc:abc /app
+chown -R abc:abc /config
+chown -R abc:abc /defaults

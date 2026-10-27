@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "response": {
+    "outputSpeech": {
+      "type": "PlainText",
+      "text": "Playing Hot Fuzz."
+    },
+    "card": {
+      "type": "Simple",
+      "title": "Encore",
+      "content": "Playing Hot Fuzz."
+    },
+    "shouldEndSession": true
+  }
+}
+

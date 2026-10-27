@@ -1,0 +1,363 @@
+# English values for the static custom slot types in model.yaml, translated on Crowdin. Each key is the value's ID, which is what the handler acts on; the first line is the value and any further lines its synonyms, which are what people say. The dynamic types' examples are in examples.yaml.
+
+LIBRARY_SECTION:
+  albums: |-
+    albums
+    records
+    music albums
+  artists: |-
+    artists
+    musicians
+    bands
+    music artists
+  favourites: |-
+    favourites
+    favorites
+    my favourites
+    my favorites
+  movies: |-
+    movies
+    films
+    movie library
+    my movies
+  music: |-
+    music
+    music library
+    my music
+    songs
+  musicvideos: |-
+    music videos
+    video clips
+  recentepisodes: |-
+    recently added episodes
+    new episodes
+    latest episodes
+    recent episodes
+    new shows
+    latest shows
+    recently added shows
+    new t. v. shows
+  recentmovies: |-
+    recently added movies
+    new movies
+    latest movies
+    recent movies
+    newest movies
+    new films
+    latest films
+  recentmusic: |-
+    recently added music
+    new music
+    latest music
+    recent music
+    new albums
+    latest albums
+    recently added albums
+    recent albums
+    new songs
+    recent songs
+  recentmusicvideos: |-
+    recently added music videos
+    new music videos
+    latest music videos
+    recent music videos
+  tvshows: |-
+    t. v. shows
+    tv shows
+    shows
+    series
+    tv
+    telly
+    my shows
+
+LIBRARY_TYPE:
+  music: |-
+    music
+    audio
+    songs
+    music library
+    audio library
+  video: |-
+    video
+    videos
+    movie
+    movies
+    tv
+    t. v.
+    video library
+
+MEDIA_TYPE:
+  album: |-
+    album
+    albums
+    record
+    records
+  artist: |-
+    artist
+    artists
+    band
+    bands
+    musician
+    musicians
+    singer
+    music artist
+  audio: |-
+    something to listen to
+    anything to listen to
+    some music
+    music
+  episode: |-
+    episode
+    episodes
+  movie: |-
+    movie
+    movies
+    film
+    films
+    flick
+  musicvideo: |-
+    music video
+    music videos
+    video clip
+    video clips
+    film clip
+  song: |-
+    song
+    songs
+    track
+    tracks
+    tune
+    tunes
+  tvshow: |-
+    show
+    shows
+    t. v. show
+    t. v. shows
+    tv show
+    tv shows
+    series
+    program
+    programme
+  video: |-
+    something to watch
+    anything to watch
+    something to see
+    video
+    videos
+
+NAV_ACTION:
+  back: |-
+    back
+    go back
+  down: |-
+    down
+    go down
+    move down
+  home: |-
+    home
+    home screen
+    main menu
+  info: |-
+    info
+    information
+    details
+    more info
+  left: |-
+    left
+    go left
+    move left
+  menu: |-
+    menu
+    context menu
+    options
+  osd: |-
+    on screen display
+    player controls
+    controls
+    o. s. d.
+  pagedown: |-
+    page down
+    scroll down
+    show more
+  pageup: |-
+    page up
+    scroll up
+  right: |-
+    right
+    go right
+    move right
+  select: |-
+    select
+    ok
+    okay
+    enter
+    choose that
+    pick that
+    click
+  up: |-
+    up
+    go up
+    move up
+
+NAV_DIRECTION:
+  down: down
+  left: left
+  right: right
+  up: up
+
+POWER_ACTION:
+  hibernate: |-
+    hibernate
+    deep sleep
+  quit: |-
+    quit
+    close
+    quit kodi
+  reboot: |-
+    reboot
+    restart
+  shutdown: |-
+    shut down
+    turn off
+    power off
+    switch off
+    shutdown
+  suspend: |-
+    suspend
+    sleep
+    go to sleep
+
+REPEAT_MODE:
+  all: |-
+    all
+    everything
+    the playlist
+    the queue
+    the lot
+  "off": |-
+    off
+    nothing
+    none
+  one: |-
+    one
+    this
+    this one
+    this song
+    this track
+    this episode
+    the song
+    the track
+
+ROTATE_DIRECTION:
+  clockwise: |-
+    clockwise
+    right
+  counterclockwise: |-
+    anticlockwise
+    counter clockwise
+    counterclockwise
+    anti clockwise
+    left
+
+SEEK_DIRECTION:
+  back: |-
+    back
+    backward
+    backwards
+    behind
+  forward: |-
+    forward
+    forwards
+    ahead
+    on
+
+SEEK_SIZE:
+  big: |-
+    a lot
+    a big step
+    big
+    large
+    a long way
+    long
+    a big jump
+  small: |-
+    a bit
+    a little
+    a little bit
+    a small step
+    small
+    little
+    a short way
+
+STREAM_STEP:
+  next: |-
+    next
+    switch
+    change
+    cycle
+    other
+  previous: |-
+    previous
+    last
+
+SUBTITLE_ACTION:
+  download: |-
+    download
+    find
+    search for
+    get
+    look for
+  next: |-
+    next
+    switch
+    change
+    cycle
+    other
+  "off": |-
+    off
+    disable
+    hide
+    turn off
+    switch off
+    stop
+    remove
+  "on": |-
+    on
+    enable
+    show
+    turn on
+    switch on
+    start
+  previous: |-
+    previous
+    last
+
+TRANSPORT_COMMAND:
+  next: |-
+    next
+    skip
+  pause: pause
+  previous: |-
+    previous
+    go back
+  resume: |-
+    resume
+    unpause
+    continue
+    play
+  stop: stop
+
+ZOOM_ACTION:
+  in: |-
+    in
+    closer
+  out: |-
+    out
+    further
+    away
+  reset: |-
+    reset
+    normal
+    back to normal
+    off
+    clear

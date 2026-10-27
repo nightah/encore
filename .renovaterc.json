@@ -1,0 +1,293 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests",
+    ":semanticCommits",
+    ":semanticCommitTypeAll(build)"
+  ],
+  "labels": [
+    "dependencies"
+  ],
+  "timezone": "Etc/UTC",
+  "schedule": [
+    "before 6am on monday"
+  ],
+  "prConcurrentLimit": 10,
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "schedule": [
+      "at any time"
+    ],
+    "labels": [
+      "dependencies",
+      "security"
+    ]
+  },
+  "postUpdateOptions": [
+    "gomodTidy",
+    "gomodUpdateImportPaths",
+    "pnpmDedupe"
+  ],
+  "packageRules": [
+    {
+      "description": "npm releases wait three days, so one pulled soon after publishing never lands",
+      "matchDatasources": [
+        "npm"
+      ],
+      "minimumReleaseAge": "3 days"
+    },
+    {
+      "description": "Go (root module): group minor and patch updates",
+      "matchManagers": [
+        "gomod"
+      ],
+      "matchFileNames": [
+        "go.mod"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest"
+      ],
+      "groupName": "go dependencies (non-major)",
+      "semanticCommitType": "fix"
+    },
+    {
+      "description": "Go toolchain: the go directives in both modules and the Dockerfile's GO_VERSION bump together",
+      "matchManagers": [
+        "gomod",
+        "custom.regex"
+      ],
+      "matchDepNames": [
+        "go"
+      ],
+      "groupName": "go toolchain"
+    },
+    {
+      "description": "tools/ module (code generators): separate group; regenerated code must be committed, so never automerge",
+      "matchManagers": [
+        "gomod"
+      ],
+      "matchFileNames": [
+        "tools/go.mod"
+      ],
+      "groupName": "tools module",
+      "automerge": false
+    },
+    {
+      "description": "Web: group devDependencies (non-major)",
+      "matchManagers": [
+        "npm"
+      ],
+      "matchFileNames": [
+        "web/**"
+      ],
+      "matchDepTypes": [
+        "devDependencies"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "web dev dependencies"
+    },
+    {
+      "description": "Web: automerge patch updates of devDependencies once CI passes",
+      "matchManagers": [
+        "npm"
+      ],
+      "matchFileNames": [
+        "web/**"
+      ],
+      "matchDepTypes": [
+        "devDependencies"
+      ],
+      "matchUpdateTypes": [
+        "patch"
+      ],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    },
+    {
+      "description": "Web: group runtime dependencies (non-major)",
+      "matchManagers": [
+        "npm"
+      ],
+      "matchFileNames": [
+        "web/**"
+      ],
+      "matchDepTypes": [
+        "dependencies"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "web dependencies (non-major)",
+      "semanticCommitType": "fix"
+    },
+    {
+      "description": "GitHub Actions: group digest/minor/patch bumps",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest",
+        "pinDigest"
+      ],
+      "groupName": "github actions",
+      "semanticCommitType": "ci"
+    },
+    {
+      "description": "Container base images in Dockerfiles",
+      "matchManagers": [
+        "dockerfile"
+      ],
+      "groupName": "docker base images",
+      "semanticCommitType": "build"
+    },
+    {
+      "description": "Docs site: group its dependencies (non-major)",
+      "matchManagers": [
+        "npm"
+      ],
+      "matchFileNames": [
+        "docs/**"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "groupName": "docs dependencies (non-major)"
+    },
+    {
+      "description": "pnpm: the packageManager fields in web/ and docs/ and the Dockerfile's PNPM_VERSION bump together",
+      "matchDepNames": [
+        "pnpm"
+      ],
+      "groupName": "pnpm",
+      "semanticCommitType": "build"
+    },
+    {
+      "description": "Node.js: CI's node-version, the Dockerfile's NODE_VERSION and the engines fields bump together",
+      "matchDepNames": [
+        "node"
+      ],
+      "groupName": "node",
+      "semanticCommitType": "build"
+    },
+    {
+      "description": "Linters and scanners CI runs with pipx or docker run",
+      "matchManagers": [
+        "custom.regex"
+      ],
+      "matchDatasources": [
+        "pypi",
+        "docker"
+      ],
+      "groupName": "ci tools",
+      "semanticCommitType": "ci"
+    }
+  ],
+  "customManagers": [
+    {
+      "description": "pnpm version pinned in the Dockerfile (ARG PNPM_VERSION)",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^Dockerfile$/"
+      ],
+      "matchStrings": [
+        "ARG PNPM_VERSION=(?<currentValue>\\S+)"
+      ],
+      "depNameTemplate": "pnpm",
+      "datasourceTemplate": "npm"
+    },
+    {
+      "description": "Node.js major in the Dockerfile (ARG NODE_VERSION)",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^Dockerfile$/"
+      ],
+      "matchStrings": [
+        "ARG NODE_VERSION=(?<currentValue>\\d+)"
+      ],
+      "depNameTemplate": "node",
+      "datasourceTemplate": "node-version",
+      "versioningTemplate": "node"
+    },
+    {
+      "description": "Go version in the Dockerfile (ARG GO_VERSION)",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^Dockerfile$/"
+      ],
+      "matchStrings": [
+        "ARG GO_VERSION=(?<currentValue>\\S+)"
+      ],
+      "depNameTemplate": "go",
+      "datasourceTemplate": "golang-version"
+    },
+    {
+      "description": "golangci-lint version in CI",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/.+\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "GOLANGCI_LINT_VERSION: (?<currentValue>v\\S+)"
+      ],
+      "depNameTemplate": "golangci/golangci-lint",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "description": "Tools installed with go install @version in workflows",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/.+\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "go install (?<depName>[^@\\s]+?)(?:/cmd/[^@\\s]+)?@(?<currentValue>v[^\\s]+)"
+      ],
+      "datasourceTemplate": "go"
+    },
+    {
+      "description": "Node.js major in workflows (node-version: 24.x)",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/.+\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "node-version: (?<currentValue>\\d+)\\.x"
+      ],
+      "depNameTemplate": "node",
+      "datasourceTemplate": "node-version",
+      "versioningTemplate": "node"
+    },
+    {
+      "description": "Python tools CI runs with pipx run <name>==<version>",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/.+\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "pipx run (?<depName>[A-Za-z0-9_.-]+)==(?<currentValue>[^\\s]+)"
+      ],
+      "datasourceTemplate": "pypi"
+    },
+    {
+      "description": "Images CI runs with docker run <image>:<version>",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/.+\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "docker run [^\\n]*?\\s(?<depName>(?:[a-z0-9.-]+/)+[a-z0-9._-]+):(?<currentValue>v?\\d+\\.\\d+\\.\\d+)\\b"
+      ],
+      "datasourceTemplate": "docker"
+    }
+  ]
+}

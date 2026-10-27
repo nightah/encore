@@ -1,0 +1,69 @@
+# English example values for the dynamic slot types in model.yaml: deploys replace them with the rooms, playlists, genres and music videos set up in Encore, so they only let the model build before anything is configured. Each language picks its own, so they aren't translated on Crowdin.
+
+KODI_MUSIC_VIDEO:
+  - {value: bohemian rhapsody}
+  - {value: thriller}
+  - {value: take on me}
+  - {value: smells like teen spirit}
+  - {value: bad guy}
+
+# Examples only, extended from the library when available.
+KODI_PLAYLIST:
+  - {value: road trip}
+  - {value: party}
+  - {value: workout}
+  - {value: chill out}
+  - {value: kids}
+  - {value: dinner}
+  - {value: top rated}
+
+# Examples only: deploys replace them with the rooms set up in Encore.
+KODI_ROOM:
+  - {value: lounge, synonyms: [lounge room]}
+  - {value: living room}
+  - {value: family room}
+  - {value: bedroom}
+  - {value: main bedroom, synonyms: [master bedroom]}
+  - {value: kids room, synonyms: [kids' room]}
+  - {value: kitchen}
+  - {value: study}
+  - {value: office}
+  - {value: theatre, synonyms: [theater, home theatre, media room]}
+  - {value: rumpus room, synonyms: [games room]}
+  - {value: den}
+  - {value: garage}
+
+# Examples only, extended from the library when available.
+MEDIA_GENRE:
+  - {value: action}
+  - {value: adventure}
+  - {value: animation, synonyms: [animated, cartoon]}
+  - {value: comedy, synonyms: [comedies, funny]}
+  - {value: crime}
+  - {value: documentary, synonyms: [documentaries, doco]}
+  - {value: drama, synonyms: [dramas]}
+  - {value: family}
+  - {value: fantasy}
+  - {value: horror, synonyms: [scary]}
+  - {value: kids, synonyms: [children's]}
+  - {value: mystery}
+  - {value: romance, synonyms: [romantic]}
+  - {value: science fiction, synonyms: [sci fi]}
+  - {value: thriller, synonyms: [thrillers]}
+  - {value: war}
+  - {value: western, synonyms: [westerns]}
+  - {value: rock}
+  - {value: pop}
+  - {value: jazz}
+  - {value: classical}
+  - {value: hip hop, synonyms: [rap]}
+  - {value: country}
+  - {value: electronic, synonyms: [dance]}
+  - {value: blues}
+  - {value: metal, synonyms: [heavy metal]}
+  - {value: folk}
+  - {value: reggae}
+  - {value: soul}
+  - {value: r. and b., synonyms: [r. n. b.]}
+  - {value: indie}
+  - {value: soundtrack, synonyms: [soundtracks]}

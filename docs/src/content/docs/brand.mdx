@@ -1,0 +1,84 @@
+---
+title: Brand
+description: Encore's logo and mark, how to use them, and their attribution.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+import logo from "../../../brand/logo.svg";
+import mark from "../../../brand/mark.svg";
+
+Encore's logo is an original rendition of the Go gopher, peeking over the back of an amber couch with a TV remote. The files live in [`docs/brand/`](https://github.com/nightah/encore/tree/main/docs/brand) in the repository; this page and the site's own logo and favicon use them directly.
+
+## Logo
+
+The full illustration on its dark slate tile, for the README, release pages, social previews and anywhere it can be shown at 96 px or larger. The tile is part of the artwork, so it reads the same on light and dark backgrounds.
+
+<div class="brand-row">
+  <figure class="brand-tile brand-light">
+    <img src={logo.src} width="192" height="192" alt="Encore logo on a light background" />
+    <figcaption>On light</figcaption>
+  </figure>
+  <figure class="brand-tile brand-dark">
+    <img src={logo.src} width="192" height="192" alt="Encore logo on a dark background" />
+    <figcaption>On dark</figcaption>
+  </figure>
+</div>
+
+<a href={logo.src} download="encore-logo.svg">Download logo.svg</a> (SVG, 512 × 512 viewBox)
+
+## Mark
+
+A simplified gopher on the same tile, drawn on a 64 × 64 grid for small sizes: favicons, app icons and this site's header.
+
+<div class="brand-row">
+  <figure class="brand-tile brand-light">
+    <img src={mark.src} width="64" height="64" alt="Encore mark on a light background" />
+    <img src={mark.src} width="32" height="32" alt="" />
+    <img src={mark.src} width="16" height="16" alt="" />
+    <figcaption>On light, at 64, 32 and 16 px</figcaption>
+  </figure>
+  <figure class="brand-tile brand-dark">
+    <img src={mark.src} width="64" height="64" alt="Encore mark on a dark background" />
+    <img src={mark.src} width="32" height="32" alt="" />
+    <img src={mark.src} width="16" height="16" alt="" />
+    <figcaption>On dark, at 64, 32 and 16 px</figcaption>
+  </figure>
+</div>
+
+<a href={mark.src} download="encore-mark.svg">Download mark.svg</a> (SVG, 64 × 64 viewBox)
+
+There are no separate wordmark, lockup or monochrome versions. Where text is needed beside the mark, write "Encore" in the surrounding typeface.
+
+## Usage
+
+- Write the name capitalised, "Encore", in prose and titles; use lower-case `encore` only where it is typed or spoken: commands, file names, the container name and the Alexa invocation.
+- Use the logo above 96 px and the mark below that.
+- Keep the artwork as it is: don't recolour, crop off the tile, stretch, rotate or add effects, and leave some clear space around the tile.
+- Describe the project as working **with** Kodi, never as part of it or endorsed by it.
+- Colours used in the artwork and the web interface: slate tile `#1E2836`, gopher blue `#6ACFE3`, couch amber `#D97706`.
+
+## Attribution
+
+<Aside type="note" title="Go gopher">
+The Go gopher was designed by Renée French and is licensed under the [Creative Commons Attribution 4.0 License (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/). Encore's gopher is an original rendition drawn for this project.
+</Aside>
+
+Short credit for docs and footers:
+
+> Encore logo: Go gopher by Renée French, CC BY 4.0. Adapted for Encore.
+
+### Not used
+
+- The Go logo and "GO" wordmark are a [separate trademark](https://go.dev/brand) and are not used.
+- No Kodi logo or branding is used. Encore "works with Kodi"; it is not affiliated with or endorsed by the XBMC Foundation.
+
+<style>
+  {`
+  .brand-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; }
+  .brand-tile { margin: 0; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid var(--sl-color-gray-5); display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 1rem; }
+  .brand-tile img { margin: 0; }
+  .brand-tile figcaption { flex-basis: 100%; text-align: center; font-size: var(--sl-text-sm); }
+  .brand-light { background: #f4f6f8; color: #141a21; }
+  .brand-dark { background: #161d26; color: #e6ebf1; }
+  `}
+</style>

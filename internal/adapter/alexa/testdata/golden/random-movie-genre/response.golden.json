@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "response": {
+    "outputSpeech": {
+      "type": "PlainText",
+      "text": "Playing the Comedy movie Hot Fuzz."
+    },
+    "card": {
+      "type": "Simple",
+      "title": "Encore",
+      "content": "Playing the Comedy movie Hot Fuzz."
+    },
+    "shouldEndSession": true
+  }
+}
+

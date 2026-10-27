@@ -1,0 +1,91 @@
+{
+  "attention": {
+    "empty": "Nichts braucht deine Aufmerksamkeit.",
+    "links": {
+      "needsDeploy": "Jetzt aktualisieren",
+      "open": "Öffnen",
+      "unlinkedDevice": "Gerät verknüpfen"
+    },
+    "title": "Braucht Aufmerksamkeit"
+  },
+  "description": "Alles, was Alexa braucht, um deine Kodi-Instanzen zu erreichen, auf einen Blick. Nur zur Ansicht: Änderungen nimmst du auf der Seite des jeweiligen Bereichs vor.",
+  "instances": {
+    "asleep": {
+      "addMac": "Trag seine MAC-Adresse ein, damit Sprachbefehle es aufwecken können.",
+      "manage": "Auf der Kodi-Seite verwalten",
+      "plain": "Im Ruhezustand.",
+      "since": "Im Ruhezustand seit {{time}}.",
+      "willWake": "Sprachbefehle wecken es automatisch auf."
+    },
+    "empty": {
+      "action": "Auf der Kodi-Seite hinzufügen",
+      "body": "Füge eine Kodi-Instanz hinzu, damit Alexa etwas zu steuern hat.",
+      "title": "Noch keine Kodi-Instanzen"
+    },
+    "episode": "S{{season}} · F{{episode}} „{{title}}“",
+    "idle": "Es läuft nichts.",
+    "offline": {
+      "test": "Auf der Kodi-Seite testen",
+      "text": "Antwortet nicht. Prüfe, ob Kodi läuft und erreichbar ist."
+    },
+    "progress": "Fortschritt {{percent}} Prozent",
+    "title": "Kodi-Instanzen"
+  },
+  "ms": "{{ms}} ms",
+  "openRequestLog": "Anfrageprotokoll öffnen",
+  "recent": {
+    "columns": {
+      "echo": "Echo",
+      "heard": "Gehört",
+      "result": "Ergebnis",
+      "time": "Zeit"
+    },
+    "empty": "Noch keine Anfragen. Sag „Alexa, frag {{invocation}}, was gerade läuft.“",
+    "open": "Anfrage von {{time}} im Protokoll öffnen",
+    "title": "Letzte Anfragen",
+    "viewAll": "Alle anzeigen"
+  },
+  "status": {
+    "endpoint": {
+      "label": "Öffentlicher Endpunkt",
+      "notReachable": "{{host}} ist von außen nicht erreichbar",
+      "reachable": "{{host}} erreichbar",
+      "unreachable": "Nicht erreichbar"
+    },
+    "label": "Status",
+    "libraries": {
+      "and": " und ",
+      "count_one": "{{count, number}} Mediathek",
+      "count_other": "{{count, number}} Mediatheken",
+      "label": "Mediatheken",
+      "noneShared": "keine geteilt",
+      "notSynced": "Noch nicht synchronisiert",
+      "shared_one": "{{count}} geteilt",
+      "shared_other": "{{count}} geteilt",
+      "shareOne": "{{names}} teilen sich eine",
+      "synced": "Synchronisiert {{when}}"
+    },
+    "requests": {
+      "detail": "{{failed}} fehlgeschlagen · Median {{ms}} ms",
+      "label": "Anfragen heute"
+    },
+    "skill": {
+      "label": "Alexa-Skill",
+      "locales_one": "{{count, number}} Sprachregion",
+      "locales_other": "{{count, number}} Sprachregionen",
+      "stage": {
+        "development": "Entwicklungsphase",
+        "live": "Live-Phase",
+        "other": "Phase {{stage}}"
+      },
+      "state": {
+        "deploying": "Wird bereitgestellt…",
+        "failed": "Bereitstellung fehlgeschlagen",
+        "live": "Live",
+        "not_deployed": "Nicht bereitgestellt"
+      },
+      "updatePending": "Update ausstehend"
+    }
+  },
+  "title": "Übersicht"
+}

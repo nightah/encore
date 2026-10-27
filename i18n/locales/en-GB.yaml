@@ -1,0 +1,9 @@
+# en-GB inherits lang/en.
+
+invocation: encore
+language: en
+skill_name: Encore
+
+utterances:
+  WatchMovie:
+    - "(play|watch|put on) [the] film {Movie}"

@@ -1,0 +1,192 @@
+{
+  "card": {
+    "address": "Adresse",
+    "and": " und ",
+    "defaultForUnlinked": "Standard für nicht verknüpfte Echos",
+    "edit": "Bearbeiten",
+    "editNamed": "{{name}} bearbeiten",
+    "failed": "Fehlgeschlagen:",
+    "hideTest": "Testergebnisse ausblenden",
+    "httpOnly": {
+      "scheduled": "Der WebSocket ist aus. Encore synchronisiert die Mediathek nach Zeitplan statt live und sieht nicht, was auf {{name}} läuft, bis du <b>Einstellungen › Dienste › Steuerung › Fernsteuerung durch Anwendungen auf anderen Systemen erlauben</b> einschaltest.",
+      "theSource": "die Mediathek-Quelle",
+      "viaSource": "Der WebSocket ist aus. Mediathek-Updates kommen weiterhin über {{source}} (die Mediathek-Quelle) an, aber Encore sieht nicht, was auf {{name}} läuft, bis du <b>Einstellungen › Dienste › Steuerung › Fernsteuerung durch Anwendungen auf anderen Systemen erlauben</b> einschaltest."
+    },
+    "library": {
+      "label": "Mediathek",
+      "own": "Eigene Mediathek",
+      "sharedWith": "Geteilt mit {{names}}"
+    },
+    "mac": "MAC (Wake-on-LAN)",
+    "ms": "{{ms}} ms",
+    "notSet": "Nicht festgelegt",
+    "offline": "Encore erreicht {{name}} nicht. Prüfe, ob Kodi läuft und die Adresse unten stimmt.",
+    "passed": "Bestanden:",
+    "shared": "Geteilte Mediathek",
+    "sharedSource": "Geteilte Mediathek · Quelle",
+    "stats": {
+      "findable": "auffindbar",
+      "lastEvent": "Letztes Kodi-Ereignis",
+      "movies_one": "{{count, number}} Film",
+      "movies_other": "{{count, number}} Filme",
+      "newest": "Neuester Titel",
+      "noneYet": "Noch keines",
+      "notFindable": "noch nicht auffindbar",
+      "resync": "Sicherheits-Resync",
+      "resyncEvery": "Alle 15 Min.",
+      "resyncNext": "Alle 15 Min. · nächster um {{time}}",
+      "sharedWith": "geteilt mit {{names}}",
+      "shows_one": "{{count, number}} Serie",
+      "shows_other": "{{count, number}} Serien"
+    },
+    "sync": "Mediathek synchronisieren",
+    "test": "Verbindung testen",
+    "testing": "{{name}} wird getestet…",
+    "testResults": "Ergebnisse des Verbindungstests",
+    "useForUnlinked": "Für nicht verknüpfte Echos verwenden",
+    "version": "Version",
+    "wake": "Jetzt aufwecken",
+    "wakeTimeout": {
+      "label": "Aufweck-Timeout",
+      "value": "60 s, dann „es wacht noch auf“"
+    },
+    "waking": "Wird aufgeweckt… (warte auf Kodi)"
+  },
+  "dialog": {
+    "add": "Kodi-Instanz hinzufügen",
+    "addTitle": "Kodi-Instanz hinzufügen",
+    "cancel": "Abbrechen",
+    "close": "Schließen",
+    "confirmRemove": "{{name}} entfernen? Damit verknüpfte Echos funktionieren erst wieder, wenn du sie neu verknüpfst.",
+    "description": "In Kodi müssen „Fernsteuerung über HTTP erlauben“ und „durch Anwendungen auf anderen Systemen“ eingeschaltet sein.",
+    "editTitle": "{{name}} bearbeiten",
+    "errors": {
+      "mac": "Gib eine MAC-Adresse wie DC:A6:32:4B:19:0E ein oder lass das Feld leer.",
+      "name": "Gib ihr einen Namen, etwa den Raum, in dem sie steht.",
+      "url": "Gib eine http://- oder https://-Adresse ein, z. B. http://192.168.1.20:8080/jsonrpc.",
+      "websocketUrl": "Gib eine ws://- oder wss://-Adresse ein oder lass das Feld leer."
+    },
+    "fields": {
+      "broadcast": {
+        "hint": "Nur wenn Wake-on-LAN an ein bestimmtes Subnetz gehen muss.",
+        "label": "Broadcast-Adresse"
+      },
+      "language": {
+        "hint": "Die Regeln, mit denen gesprochene Titel mit dieser Mediathek abgeglichen werden.",
+        "label": "Titelsprache"
+      },
+      "mac": {
+        "hint": "Damit Sprachbefehle diese Kodi-Instanz aus dem Ruhezustand wecken können.",
+        "label": "MAC-Adresse (Wake-on-LAN)"
+      },
+      "name": {
+        "hint": "Wird auf Echos und im Anfrageprotokoll angezeigt.",
+        "label": "Name"
+      },
+      "password": {
+        "hint": "Wird verschlüsselt gespeichert.",
+        "label": "Kodi-Passwort",
+        "saved": "Ein Passwort ist gespeichert. Lass das Feld leer, um es zu behalten."
+      },
+      "shutdown": {
+        "hint": "Was „Alexa, sag encore, fahr herunter“ bei dieser Kodi-Instanz macht.",
+        "inherit": "Wie unter Einstellungen › Funktionen",
+        "label": "„Herunterfahren“",
+        "power_off": "Gerät ausschalten",
+        "quit": "Kodi beenden"
+      },
+      "timezone": {
+        "hint": "Wo diese Kodi-Instanz steht. Leer lassen, um sie aus Kodis Uhr zu ermitteln.",
+        "label": "Zeitzone"
+      },
+      "url": {
+        "label": "JSON-RPC-URL"
+      },
+      "username": {
+        "label": "Kodi-Benutzername"
+      },
+      "websocketUrl": {
+        "hint": "Für Live-Updates der Mediathek und die aktuelle Wiedergabe. Meist Port 9090.",
+        "label": "WebSocket-URL"
+      }
+    },
+    "keep": "Behalten",
+    "managed": "Diese Instanz stammt aus encore.yml oder ENCORE_*-Variablen. Ändere sie dort.",
+    "remove": "Entfernen",
+    "removeEllipsis": "Entfernen…",
+    "save": "Speichern"
+  },
+  "discovered": {
+    "add": "Hinzufügen",
+    "addNamed": "{{name}} hinzufügen",
+    "intro": "Per mDNS gefunden (<mono>{{service}}</mono>). Kodi in einem anderen VLAN erscheint hier nicht; füge es manuell hinzu.",
+    "lastScan": "Letzter Scan {{when}} · scannt fortlaufend",
+    "none": "Nichts Neues gefunden.",
+    "scanning": "Scanne gerade…",
+    "searching": "Suche per mDNS nach Kodi. Das dauert ein paar Sekunden.",
+    "title": "In deinem Netzwerk gefunden",
+    "unavailable": "Die Suche ist gerade nicht verfügbar.",
+    "version": "Kodi {{version}}"
+  },
+  "library": {
+    "explanation": {
+      "common": {
+        "many": "Encore führt für sie eine Mediathek und einen Titelindex, synchronisiert sie von der Mediathek-Quelle und achtet auf Änderungen von allen.",
+        "two": "Encore führt für sie eine Mediathek und einen Titelindex, synchronisiert sie von der Mediathek-Quelle und achtet auf Änderungen von beiden."
+      },
+      "confirmed": {
+        "many": "Diese Instanzen nutzen dieselbe Kodi-Datenbank: Eine Wiedergabe auf einer hat den Gesehen-Status und die Fortsetzungsposition auf allen gleichzeitig geändert.",
+        "two": "Diese Instanzen nutzen dieselbe Kodi-Datenbank: Eine Wiedergabe auf einer hat den Gesehen-Status und die Fortsetzungsposition auf beiden gleichzeitig geändert."
+      },
+      "likely": {
+        "check": {
+          "many": "Bei der nächsten Wiedergabe prüft Encore, ob sich Gesehen-Status und Fortsetzungsposition auf allen Instanzen gleichzeitig ändern; wenn ja, wird daraus „Sicher geteilt“.",
+          "two": "Bei der nächsten Wiedergabe prüft Encore, ob sich Gesehen-Status und Fortsetzungsposition auf beiden Instanzen gleichzeitig ändern; wenn ja, wird daraus „Sicher geteilt“."
+        },
+        "evidence": "Diese Instanzen scheinen dieselbe Kodi-Datenbank zu nutzen: {{evidence}}.",
+        "plain": "Diese Instanzen scheinen dieselbe Kodi-Datenbank zu nutzen."
+      },
+      "manual": "Du hast diese Instanzen von Hand gruppiert."
+    },
+    "fallback": "Die Quelle ist nicht erreichbar, daher synchronisiert Encore von {{name}}.",
+    "share": {
+      "add": "Instanz hinzufügen",
+      "alreadyShared": "Teilt eine Mediathek mit {{names}}; beim Auswählen wechselt sie in diese.",
+      "cancel": "Abbrechen",
+      "confirm_one": "Mediathek teilen",
+      "confirm_other": "Mediathek zwischen {{count}} teilen",
+      "description": "Wähle die Kodi-Instanzen, die dieselbe Kodi-Datenbank nutzen, etwa MySQL. Encore führt dann eine Mediathek und einen Titelindex für sie.",
+      "legend": "Kodi-Instanzen",
+      "open": "Mediathek teilen",
+      "sourceHint": "Die zuerst gewählte Instanz wird zur Mediathek-Quelle; du kannst sie danach ändern.",
+      "title": "Mediathek teilen"
+    },
+    "source": "Mediathek-Quelle",
+    "sourceHint": "Ist die Quelle im Ruhezustand, synchronisiert Encore von einer anderen wachen Instanz der Gruppe. Die Wiedergabe geht weiterhin an die Instanz, die das Echo steuert.",
+    "split": {
+      "cancel": "Abbrechen",
+      "confirm": "Trennen",
+      "currentSource": "Aktuelle Mediathek-Quelle",
+      "description": "Wähle die Instanz mit eigener Kodi-Datenbank. Encore synchronisiert und indiziert sie dann separat.",
+      "legend": "Instanz mit eigener Mediathek",
+      "open": "Nicht geteilt? Trennen",
+      "title": "Geteilte Mediathek trennen"
+    },
+    "state": {
+      "confirmed_shared": "Sicher geteilt",
+      "likely_shared": "Wahrscheinlich geteilt",
+      "manual": "Von Hand gruppiert",
+      "solo": "Eigene Mediathek"
+    },
+    "title": "Geteilte Mediathek: {{name}}"
+  },
+  "page": {
+    "addManually": "Kodi manuell hinzufügen",
+    "description": "Jedes Kodi, das Encore steuern kann. Der Mediathek-Index bleibt über die WebSocket-Ereignisse von Kodi aktuell.",
+    "empty": {
+      "body": "Füge eines aus deinem Netzwerk hinzu oder gib seine Adresse ein. In Kodi muss „Fernsteuerung über HTTP erlauben“ eingeschaltet sein.",
+      "title": "Noch keine Kodi-Instanzen"
+    },
+    "title": "Kodi-Instanzen"
+  }
+}

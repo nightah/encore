@@ -1,0 +1,94 @@
+{
+  "empty": {
+    "action": "Kodi-Instanz hinzufügen",
+    "body": "Encore erstellt aus jeder Kodi-Instanz, die du hinzufügst, einen Bibliotheksindex.",
+    "title": "Noch keine Bibliotheken"
+  },
+  "explain": {
+    "askOne": "{{top}} erreicht {{score}}, zu knapp für eine Entscheidung, also fragt Alexa nach.",
+    "askTwo": "{{top}} und {{second}} liegen nur {{margin}} auseinander, also fragt Alexa, welcher Titel gemeint ist.",
+    "notFound": "Der beste Wert, {{score}} für {{top}}, liegt unter den 0,60, die zum Abspielen nötig sind.",
+    "nothing": "Nichts in dieser Bibliothek kommt auch nur nahe.",
+    "playOne": "{{top}} erreicht {{score}} und ist der einzige passende Treffer.",
+    "playTwo": "{{top}} erreicht {{score}}, {{margin}} vor dem nächsten Treffer."
+  },
+  "kinds": {
+    "album": "Album",
+    "artist": "Künstler",
+    "episode": "Folge",
+    "movie": "Film",
+    "musicvideo": "Musikvideo",
+    "playlist": "Playlist",
+    "song": "Song",
+    "tvshow": "Serie"
+  },
+  "matchTester": {
+    "addAlias": "„{{query}}“ als Alias für das beste Ergebnis hinzufügen",
+    "aliasEntry": "„{{alias}}“ → {{title}}",
+    "aliases": "Deine Aliasse",
+    "aliasHint": "Aliasse werden in Encore gespeichert und beim nächsten Resync ins Skill-Modell übernommen.",
+    "candidates": "Treffer",
+    "columns": {
+      "alias": "Passender Alias",
+      "boost": "Bonus",
+      "candidate": "Treffer",
+      "phonetic": "Phonetisch",
+      "score": "Wert",
+      "tokenSet": "Token-Set"
+    },
+    "heard": "Was Alexa gehört hat",
+    "mediaType": "Medientyp",
+    "noAlias": "Der Server hat nicht mitgeteilt, um welchen Titel es sich handelt, daher kann hier kein Alias angelegt werden.",
+    "normalized": "Normalisierte Anfrage",
+    "removeAlias": "Alias {{alias}} entfernen",
+    "test": "Testen",
+    "title": "Treffertest",
+    "try": "Probier:",
+    "types": {
+      "any": "Alle",
+      "movies": "Filme",
+      "music": "Musik",
+      "shows": "Serien"
+    }
+  },
+  "page": {
+    "description": "Was Encore über deine Kodi-Bibliotheken weiß und wie es zuordnet, was Alexa hört.",
+    "library": "Bibliothek",
+    "syncAll": "Alle jetzt synchronisieren",
+    "syncStarted": "Bibliothekssynchronisierung gestartet. Die Zahlen werden aktualisiert, sobald sie fertig ist.",
+    "title": "Bibliothek"
+  },
+  "recent": {
+    "body": "Neue Titel sind wenige Sekunden nach dem Hinzufügen in Kodi durchsuchbar. Sie werden sofort als dynamische Entitäten an Alexa gesendet und beim nächsten Resync ins Skill-Modell übernommen.",
+    "live": "Live aus Kodi-Ereignissen",
+    "nothing": "In letzter Zeit wurde nichts hinzugefügt.",
+    "status": {
+      "findable": "Per Sprache auffindbar",
+      "inModel": "Im Skill-Modell",
+      "waiting": "Wartet auf nächstes Update"
+    },
+    "title": "Zuletzt hinzugefügt"
+  },
+  "summary": {
+    "backups": "Backups",
+    "episodes_one": "{{count, number}} Folge",
+    "episodes_other": "{{count, number}} Folgen",
+    "label": "Bibliotheksübersicht",
+    "lastBackup": "letztes Backup {{when}}",
+    "libraries": "Bibliotheken",
+    "localDisk": "Lokaler Datenträger",
+    "movies": "Filme",
+    "music": "Musik",
+    "noBackup": "noch kein Backup",
+    "notSynced": "noch nicht synchronisiert",
+    "s3": "S3-kompatibel",
+    "shows": "Serien",
+    "songs": "Songs",
+    "synced": "synchronisiert {{when}}"
+  },
+  "verdict": {
+    "ask": "Würde nachfragen",
+    "not_found": "Nicht gefunden",
+    "play": "Würde abspielen"
+  }
+}

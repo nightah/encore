@@ -1,0 +1,94 @@
+{
+  "empty": {
+    "action": "Ajouter une instance Kodi",
+    "body": "Encore construit un index de bibliothèque à partir de chaque instance Kodi que vous ajoutez.",
+    "title": "Aucune bibliothèque pour l'instant"
+  },
+  "explain": {
+    "askOne": "{{top}} obtient {{score}}, trop serré pour trancher, donc Alexa demande.",
+    "askTwo": "{{top}} et {{second}} sont à moins de {{margin}} l'un de l'autre, donc Alexa demande lequel.",
+    "notFound": "Le meilleur score, {{score}} pour {{top}}, est inférieur au 0,60 requis pour lancer la lecture.",
+    "nothing": "Rien dans cette bibliothèque ne s'en approche.",
+    "playOne": "{{top}} obtient {{score}} et c'est la seule correspondance proche.",
+    "playTwo": "{{top}} obtient {{score}}, {{margin}} devant le suivant."
+  },
+  "kinds": {
+    "album": "Album",
+    "artist": "Artiste",
+    "episode": "Épisode",
+    "movie": "Film",
+    "musicvideo": "Clip musical",
+    "playlist": "Playlist",
+    "song": "Morceau",
+    "tvshow": "Série"
+  },
+  "matchTester": {
+    "addAlias": "Ajouter « {{query}} » comme alias du premier résultat",
+    "aliasEntry": "« {{alias}} » → {{title}}",
+    "aliases": "Vos alias",
+    "aliasHint": "Les alias sont enregistrés dans Encore et ajoutés au modèle de la skill lors de la prochaine resynchronisation.",
+    "candidates": "Candidats",
+    "columns": {
+      "alias": "Alias correspondant",
+      "boost": "Bonus",
+      "candidate": "Candidat",
+      "phonetic": "Phonétique",
+      "score": "Score",
+      "tokenSet": "Ensemble de jetons"
+    },
+    "heard": "Ce qu'Alexa a entendu",
+    "mediaType": "Type de média",
+    "noAlias": "Le serveur n'a pas indiqué de quel titre il s'agit, il est donc impossible de lui attribuer un alias ici.",
+    "normalized": "Requête normalisée",
+    "removeAlias": "Supprimer l'alias {{alias}}",
+    "test": "Tester",
+    "title": "Testeur de correspondance",
+    "try": "Essayez :",
+    "types": {
+      "any": "Tous",
+      "movies": "Films",
+      "music": "Musique",
+      "shows": "Séries"
+    }
+  },
+  "page": {
+    "description": "Ce qu'Encore sait de vos bibliothèques Kodi, et comment il fait correspondre ce qu'Alexa entend.",
+    "library": "Bibliothèque",
+    "syncAll": "Tout synchroniser",
+    "syncStarted": "Synchronisation de la bibliothèque lancée. Les chiffres seront mis à jour une fois terminée.",
+    "title": "Bibliothèque"
+  },
+  "recent": {
+    "body": "Les nouveaux titres sont consultables quelques secondes après leur ajout dans Kodi. Ils sont envoyés immédiatement à Alexa sous forme d'entités dynamiques, puis ajoutés au modèle de la skill lors de la prochaine resynchronisation.",
+    "live": "En direct depuis les événements Kodi",
+    "nothing": "Rien n'a été ajouté récemment.",
+    "status": {
+      "findable": "Trouvable à la voix",
+      "inModel": "Dans le modèle de la skill",
+      "waiting": "En attente de la prochaine mise à jour"
+    },
+    "title": "Ajouts récents"
+  },
+  "summary": {
+    "backups": "Sauvegardes",
+    "episodes_one": "{{count, number}} épisode",
+    "episodes_other": "{{count, number}} épisodes",
+    "label": "Résumé de la bibliothèque",
+    "lastBackup": "dernière sauvegarde {{when}}",
+    "libraries": "Bibliothèques",
+    "localDisk": "Disque local",
+    "movies": "Films",
+    "music": "Musique",
+    "noBackup": "aucune sauvegarde pour l'instant",
+    "notSynced": "pas encore synchronisée",
+    "s3": "Compatible S3",
+    "shows": "Séries",
+    "songs": "morceaux",
+    "synced": "synchronisée {{when}}"
+  },
+  "verdict": {
+    "ask": "Demanderait",
+    "not_found": "Introuvable",
+    "play": "Lirait"
+  }
+}

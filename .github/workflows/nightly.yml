@@ -1,0 +1,248 @@
+name: Nightly
+
+on:
+  schedule:
+    # Daily at 17:00 UTC, split so Sunday's run can be told apart: every job runs on both schedules, mutation testing only on the Sunday one.
+    - cron: "0 17 * * 1-6"
+    - cron: "0 17 * * 0"
+  workflow_dispatch:
+    inputs:
+      mutation:
+        description: Also run mutation testing
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  kodi-contract:
+    name: Kodi contract (${{ matrix.kodi }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        # Omega = Kodi 21, Piers = Kodi 22.
+        kodi: [Omega, Piers]
+    env:
+      ENCORE_CONTRACT_KODI_URL: http://127.0.0.1:8080/jsonrpc
+      ENCORE_CONTRACT_KODI_WS_URL: ws://127.0.0.1:9090/jsonrpc
+      ENCORE_CONTRACT_KODI_VERSION: ${{ matrix.kodi }}
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      # Started by hand rather than as a service container so the SQLite-only advancedsettings.xml and the test library from the checkout can be mounted.
+      - name: Start headless Kodi
+        env:
+          KODI_TAG: ${{ matrix.kodi }}
+        run: |
+          docker run -d --name kodi -p 8080:8080 -p 9090:9090 \
+            -v "${GITHUB_WORKSPACE}/internal/backend/kodi/testdata/kodi-headless/advancedsettings.xml:/config/.kodi/userdata/advancedsettings.xml:ro" \
+            -v "${GITHUB_WORKSPACE}/internal/backend/kodi/testdata/kodi-headless/library:/media:ro" \
+            "matthuisman/kodi-headless:${KODI_TAG}"
+
+      - name: Wait for Kodi JSON-RPC
+        run: |
+          for _ in $(seq 1 90); do
+            if curl -fsS -H 'Content-Type: application/json' \
+                 -d '{"jsonrpc":"2.0","id":1,"method":"JSONRPC.Ping"}' \
+                 "${ENCORE_CONTRACT_KODI_URL}" | grep -q pong; then
+              echo "Kodi is up"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::Kodi JSON-RPC did not respond"
+          docker logs kodi || true
+          exit 1
+
+      - name: Contract tests (empty library)
+        run: go test -tags contract -count=1 -v ./internal/backend/kodi/...
+
+      # Kodi can't add a source over JSON-RPC, so the two library paths go straight into its video database, scraped by "Local information only" from the .nfo files, then a scan picks up the titles.
+      - name: Seed the library
+        run: |
+          docker exec kodi python3 -c '
+          import glob, sqlite3
+          db = sqlite3.connect(sorted(glob.glob("/config/.kodi/userdata/Database/MyVideos*.db"))[-1])
+          db.executemany("INSERT INTO path (strPath, strContent, strScraper, strHash, scanRecursive, useFolderNames, strSettings, noUpdate, exclude, allAudio) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+              ("/media/movies/", "movies", "metadata.local", "", 2147483647, 0, "", 0, 0, 0),
+              ("/media/tv/", "tvshows", "metadata.local", "", 0, 0, "", 0, 0, 0),
+          ])
+          db.commit()
+          '
+          rpc() { curl -fsS -H 'Content-Type: application/json' -d "$1" "${ENCORE_CONTRACT_KODI_URL}"; }
+          rpc '{"jsonrpc":"2.0","id":1,"method":"VideoLibrary.Scan"}'; echo
+          for _ in $(seq 1 60); do
+            movies=$(rpc '{"jsonrpc":"2.0","id":1,"method":"VideoLibrary.GetMovies"}' | jq '.result.limits.total')
+            episodes=$(rpc '{"jsonrpc":"2.0","id":1,"method":"VideoLibrary.GetEpisodes"}' | jq '.result.limits.total')
+            if [ "${movies}" = 5 ] && [ "${episodes}" = 2 ]; then
+              echo "Library seeded"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::Kodi listed ${movies} movies and ${episodes} episodes, expected 5 and 2"
+          exit 1
+
+      - name: Contract tests (seeded library)
+        env:
+          ENCORE_CONTRACT_KODI_LIBRARY: internal/backend/kodi/testdata/kodi-headless/library
+        run: go test -tags contract -count=1 -run TestContract -v ./internal/app/
+
+      - name: Kodi logs
+        if: failure()
+        run: docker logs kodi || true
+
+  store-contract:
+    name: Storage contract (MinIO)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      ENCORE_CONTRACT_S3_ENDPOINT: http://127.0.0.1:9000
+      ENCORE_CONTRACT_S3_ACCESS_KEY: minioadmin
+      ENCORE_CONTRACT_S3_SECRET_KEY: minioadmin
+      ENCORE_CONTRACT_S3_BUCKET: encore-contract
+      ENCORE_CONTRACT_S3_REGION: us-east-1
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      # Upstream stopped publishing minio/minio images, so this uses Chainguard's build. Started by hand because a service container can't be given a command ("server /data").
+      - name: Start MinIO
+        run: |
+          docker run -d --name minio -p 9000:9000 \
+            -e MINIO_ROOT_USER="${ENCORE_CONTRACT_S3_ACCESS_KEY}" \
+            -e MINIO_ROOT_PASSWORD="${ENCORE_CONTRACT_S3_SECRET_KEY}" \
+            cgr.dev/chainguard/minio:latest server /data
+          for _ in $(seq 1 30); do
+            if curl -fsS "${ENCORE_CONTRACT_S3_ENDPOINT}/minio/health/live"; then
+              echo "MinIO is up"
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs minio
+          exit 1
+
+      - name: Contract tests
+        run: go test -tags contract -count=1 -v ./internal/blobstore/...
+
+      - name: MinIO logs
+        if: failure()
+        run: docker logs minio || true
+
+  # Calls Amazon's live Skill Management API, read-only, with a maintainer-owned LWA security profile and refresh token. The secrets live in the smapi-live environment, which only main can deploy to, and the job runs only on main's schedule or a manual run. Without the secrets its steps are skipped rather than failed.
+  smapi-live:
+    name: SMAPI live
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: smapi-live
+    env:
+      SMAPI_CLIENT_ID: ${{ secrets.SMAPI_CLIENT_ID }}
+      SMAPI_CLIENT_SECRET: ${{ secrets.SMAPI_CLIENT_SECRET }}
+      SMAPI_REFRESH_TOKEN: ${{ secrets.SMAPI_REFRESH_TOKEN }}
+      # Optional; defaults to the account's first vendor.
+      SMAPI_VENDOR_ID: ${{ secrets.SMAPI_VENDOR_ID }}
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+
+      - name: Check secrets
+        id: secret
+        run: |
+          if [ -n "${SMAPI_CLIENT_ID}" ] && [ -n "${SMAPI_CLIENT_SECRET}" ] && [ -n "${SMAPI_REFRESH_TOKEN}" ]; then
+            echo "present=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "present=false" >> "${GITHUB_OUTPUT}"
+            echo "::notice::SMAPI_CLIENT_ID, SMAPI_CLIENT_SECRET or SMAPI_REFRESH_TOKEN not configured; skipping live SMAPI tests."
+          fi
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.secret.outputs.present == 'true'
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        if: steps.secret.outputs.present == 'true'
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      - name: Live SMAPI tests
+        if: steps.secret.outputs.present == 'true'
+        run: go test -tags smapi_live -count=1 -v ./internal/smapi/...
+
+  mutation:
+    name: Mutation testing (gremlins)
+    # Weekly: only on the Sunday schedule, or on demand.
+    if: >-
+      (github.event_name == 'schedule' && github.event.schedule == '0 17 * * 0') ||
+      (github.event_name == 'workflow_dispatch' && inputs.mutation)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    # Informational only; surviving mutants should not fail the nightly.
+    continue-on-error: true
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      - name: Run gremlins
+        run: |
+          go install github.com/go-gremlins/gremlins/cmd/gremlins@v0.6.0
+          # gremlins takes a directory and tests every package below it, i.e. the equivalent of ./internal/core/...
+          set -o pipefail
+          gremlins unleash ./internal/core | tee gremlins.txt
+
+      - name: Mutation summary
+        if: always()
+        run: |
+          [ -f gremlins.txt ] || exit 0
+          {
+            echo "### Mutation testing (internal/core)"
+            echo '```'
+            tail -n 20 gremlins.txt
+            echo '```'
+          } >> "${GITHUB_STEP_SUMMARY}"

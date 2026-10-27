@@ -1,0 +1,46 @@
+{
+  "version": "1.0",
+  "session": {
+    "new": true,
+    "sessionId": "amzn1.echo-api.session.1",
+    "application": {
+      "applicationId": "amzn1.ask.skill.test"
+    },
+    "attributes": {}
+  },
+  "context": {
+    "System": {
+      "application": {
+        "applicationId": "amzn1.ask.skill.test"
+      },
+      "device": {
+        "deviceId": "amzn1.ask.device.LOUNGE",
+        "supportedInterfaces": {}
+      },
+      "apiEndpoint": "",
+      "apiAccessToken": ""
+    }
+  },
+  "request": {
+    "requestId": "amzn1.echo-api.request.1",
+    "timestamp": "2026-10-26T09:00:00Z",
+    "locale": "en-AU",
+    "type": "IntentRequest",
+    "intent": {
+      "name": "ListenToSongOrAlbum",
+      "confirmationStatus": "NONE",
+      "slots": {
+        "Title": {
+          "name": "Title",
+          "value": "come together",
+          "confirmationStatus": "NONE"
+        },
+        "Artist": {
+          "name": "Artist",
+          "value": "the beatles",
+          "confirmationStatus": "NONE"
+        }
+      }
+    }
+  }
+}

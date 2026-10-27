@@ -1,0 +1,40 @@
+# Codecov (https://codecov.io): coverage from CI's Go and Web jobs, shown by the README's coverage badge.
+coverage:
+  status:
+    # The overall figure may dip by a point without failing a check; a pull request's own lines are reported, not enforced.
+    project:
+      default:
+        target: auto
+        threshold: 1%
+    patch:
+      default:
+        informational: true
+
+flags:
+  go:
+    paths:
+      - cmd/
+      - internal/
+    carryforward: true
+  web:
+    paths:
+      - web/src/
+    carryforward: true
+
+# Generated code and test helpers aren't Encore's code to test.
+ignore:
+  - "**/*.gen.go"
+  - "internal/backend/kodi/kodirpc/"
+  - "internal/backend/kodi/fakekodi/"
+  - "internal/smapi/smapiclient/"
+  - "internal/smapi/smapitest/"
+  - "internal/auth/oidctest/"
+  - "internal/blobstore/blobstoretest/"
+  - "internal/testkit/"
+  - "web/src/api/generated/"
+  - "web/src/mocks/"
+  - "web/src/routeTree.gen.ts"
+
+comment:
+  layout: "condensed_header, diff, flags"
+  require_changes: true

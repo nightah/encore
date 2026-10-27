@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "response": {
+    "outputSpeech": {
+      "type": "PlainText",
+      "text": "Playing Come Together by The Beatles."
+    },
+    "card": {
+      "type": "Simple",
+      "title": "Encore",
+      "content": "Playing Come Together by The Beatles."
+    },
+    "shouldEndSession": true
+  }
+}
+

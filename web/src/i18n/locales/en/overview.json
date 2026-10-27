@@ -1,0 +1,91 @@
+{
+  "attention": {
+    "empty": "Nothing needs your attention.",
+    "links": {
+      "needsDeploy": "Update now",
+      "open": "Open",
+      "unlinkedDevice": "Link device"
+    },
+    "title": "Needs attention"
+  },
+  "description": "Everything Alexa needs to reach your Kodi instances, at a glance. Read-only: changes happen on each section's page.",
+  "instances": {
+    "asleep": {
+      "addMac": "Add its MAC address so voice requests can wake it.",
+      "manage": "Manage on the Kodi page",
+      "plain": "Asleep.",
+      "since": "Asleep since {{time}}.",
+      "willWake": "Voice requests will wake it automatically."
+    },
+    "empty": {
+      "action": "Add one on the Kodi page",
+      "body": "Add a Kodi instance so Alexa has something to control.",
+      "title": "No Kodi instances yet"
+    },
+    "episode": "S{{season}} · E{{episode}} “{{title}}”",
+    "idle": "Nothing playing.",
+    "offline": {
+      "test": "Test it on the Kodi page",
+      "text": "Not answering. Check that Kodi is running and reachable."
+    },
+    "progress": "Progress {{percent}} percent",
+    "title": "Kodi instances"
+  },
+  "ms": "{{ms}} ms",
+  "openRequestLog": "Open request log",
+  "recent": {
+    "columns": {
+      "echo": "Echo",
+      "heard": "Heard",
+      "result": "Result",
+      "time": "Time"
+    },
+    "empty": "No requests yet. Say “Alexa, ask {{invocation}} what's playing.”",
+    "open": "Open the {{time}} request in the log",
+    "title": "Recent requests",
+    "viewAll": "View all"
+  },
+  "status": {
+    "endpoint": {
+      "label": "Public endpoint",
+      "notReachable": "{{host}} isn't reachable from outside",
+      "reachable": "{{host}} reachable",
+      "unreachable": "Unreachable"
+    },
+    "label": "Status",
+    "libraries": {
+      "and": " and ",
+      "count_one": "{{count, number}} library",
+      "count_other": "{{count, number}} libraries",
+      "label": "Libraries",
+      "noneShared": "none shared",
+      "notSynced": "Not synced yet",
+      "shared_one": "{{count}} shared",
+      "shared_other": "{{count}} shared",
+      "shareOne": "{{names}} share one",
+      "synced": "Synced {{when}}"
+    },
+    "requests": {
+      "detail": "{{failed}} failed · median {{ms}} ms",
+      "label": "Requests today"
+    },
+    "skill": {
+      "label": "Alexa skill",
+      "locales_one": "{{count, number}} locale",
+      "locales_other": "{{count, number}} locales",
+      "stage": {
+        "development": "Development stage",
+        "live": "Live stage",
+        "other": "{{stage}} stage"
+      },
+      "state": {
+        "deploying": "Deploying…",
+        "failed": "Deploy failed",
+        "live": "Live",
+        "not_deployed": "Not deployed"
+      },
+      "updatePending": "update pending"
+    }
+  },
+  "title": "Overview"
+}

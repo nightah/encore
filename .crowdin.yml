@@ -1,0 +1,21 @@
+# Crowdin (https://crowdin.com) through its GitHub integration: point the integration's configuration file setting at .crowdin.yml. It uploads the English sources and opens a pull request with the translations.
+pull_request_title: 'i18n: update translations'
+commit_message: 'i18n: update translation for %original_file_name% (%language%)'
+append_commit_message: false
+files:
+  # What Alexa says. A message not translated yet is left out, and Encore speaks it in English.
+  - source: /i18n/lang/en/responses.yaml
+    translation: /i18n/lang/%two_letters_code%/%original_file_name%
+    skip_untranslated_strings: true
+  # How people ask: each entry is one way of asking, and its translation may hold as many patterns, one per line, as the language needs. Left out until translated, so a language never gets English samples.
+  - source: /i18n/lang/en/utterances.yaml
+    translation: /i18n/lang/%two_letters_code%/%original_file_name%
+    skip_untranslated_strings: true
+  # Static slot values by ID: the value on the first line, its synonyms below. (examples.yaml isn't here: each language picks its own example rooms and genres.)
+  - source: /i18n/lang/en/types.yaml
+    translation: /i18n/lang/%two_letters_code%/%original_file_name%
+    skip_untranslated_strings: true
+  # The web interface, one file per area. A string not translated yet falls back to English.
+  - source: /web/src/i18n/locales/en/*.json
+    translation: /web/src/i18n/locales/%two_letters_code%/%original_file_name%
+    skip_untranslated_strings: true

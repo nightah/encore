@@ -1,0 +1,50 @@
+# Release notes GitHub generates for each tag (GoReleaser's changelog.use: github-native), grouped by the labels .github/workflows/pr-labels.yml applies from each pull request's title. A pull request goes in the first category it matches.
+changelog:
+  exclude:
+    labels:
+      - type/release
+  categories:
+    - title: Breaking changes
+      labels:
+        - type/breaking-change
+    - title: Features
+      labels:
+        - type/feat
+    # Renovate's fix(deps), build(deps) and ci(deps) updates go under Dependencies instead.
+    - title: Bug fixes
+      labels:
+        - type/fix
+      exclude:
+        labels:
+          - area/deps
+    - title: Performance
+      labels:
+        - type/perf
+    - title: Translations
+      labels:
+        - type/i18n
+    - title: Documentation
+      labels:
+        - type/docs
+    - title: Refactoring
+      labels:
+        - type/refactor
+    - title: Tests
+      labels:
+        - type/test
+    - title: Build and CI
+      labels:
+        - type/build
+        - type/ci
+      exclude:
+        labels:
+          - area/deps
+    - title: Reverts
+      labels:
+        - type/revert
+    - title: Dependencies
+      labels:
+        - area/deps
+    - title: Other changes
+      labels:
+        - "*"

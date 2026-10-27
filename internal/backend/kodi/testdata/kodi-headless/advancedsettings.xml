@@ -1,0 +1,16 @@
+<!-- Contract-test settings for matthuisman/kodi-headless: the image's default points both libraries at an unset MySQL host, which makes every library call fail. Without the database blocks Kodi uses its built-in SQLite libraries. -->
+<advancedsettings>
+    <services>
+        <devicename>encore-contract</devicename>
+        <!-- Allow remote control from applications on other systems: enables JSON-RPC over TCP and WebSocket. -->
+        <esenabled>true</esenabled>
+        <esallinterfaces>true</esallinterfaces>
+        <webserver>true</webserver>
+        <webserverport>8080</webserverport>
+        <webserverauthentication>false</webserverauthentication>
+        <zeroconf>false</zeroconf>
+    </services>
+    <jsonrpc>
+        <tcpport>9090</tcpport>
+    </jsonrpc>
+</advancedsettings>

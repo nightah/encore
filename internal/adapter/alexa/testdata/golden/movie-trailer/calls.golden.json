@@ -1,0 +1,7 @@
+{
+  "bedroom": null,
+  "lounge": [
+    "Item movie/4",
+    "PlayFile plugin://plugin.video.youtube/play/?video_id=ayTnvVpj9t4"
+  ]
+}

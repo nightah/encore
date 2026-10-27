@@ -1,0 +1,70 @@
+# Example values for the dynamic slot types in model.yaml (es): deploys replace them with what is set up in Encore. Chosen for this language rather than translated, so not on Crowdin.
+
+KODI_MUSIC_VIDEO:
+  - {value: bohemian rhapsody}
+  - {value: thriller}
+  - {value: take on me}
+  - {value: smells like teen spirit}
+  - {value: bad guy}
+
+# Examples only, extended from the library when available.
+KODI_PLAYLIST:
+  - {value: viaje, synonyms: [viaje en coche]}
+  - {value: fiesta}
+  - {value: gimnasio, synonyms: [entreno, deporte]}
+  - {value: relax, synonyms: [chill out]}
+  - {value: niños}
+  - {value: cena}
+  - {value: mejor valoradas, synonyms: [favoritas]}
+
+# Examples only: deploys replace them with the rooms set up in Encore. Utterances supply the article ("en el salón", "en la cocina").
+KODI_ROOM:
+  - {value: salón}
+  - {value: sala de estar}
+  - {value: dormitorio, synonyms: [habitación]}
+  - {value: dormitorio principal, synonyms: [habitación principal, habitación de matrimonio]}
+  - {value: habitación de los niños, synonyms: [cuarto de los niños]}
+  - {value: cocina}
+  - {value: despacho, synonyms: [estudio]}
+  - {value: oficina}
+  - {value: comedor}
+  - {value: cine, synonyms: [sala de cine, cine en casa]}
+  - {value: buhardilla}
+  - {value: sótano}
+  - {value: garaje}
+
+# Examples only, extended from the library when available. Values are nouns so they fit "una película de {Genre}" and "música {Genre}".
+MEDIA_GENRE:
+  - {value: acción}
+  - {value: aventuras, synonyms: [aventura]}
+  - {value: animación, synonyms: [dibujos animados, dibujos]}
+  - {value: comedia, synonyms: [comedias, humor, risa]}
+  - {value: crimen, synonyms: [policíaca, policiaca, policíacas]}
+  - {value: documental, synonyms: [documentales]}
+  - {value: drama, synonyms: [dramas]}
+  - {value: familia, synonyms: [familiar, para toda la familia]}
+  - {value: fantasía}
+  - {value: terror, synonyms: [miedo]}
+  - {value: infantil, synonyms: [niños, infantiles]}
+  - {value: misterio, synonyms: [intriga]}
+  - {value: romance, synonyms: [románticas, romántica, amor]}
+  - {value: ciencia ficción}
+  - {value: suspense, synonyms: [thriller, thrillers]}
+  - {value: guerra, synonyms: [bélica, bélicas]}
+  - {value: western, synonyms: [del oeste, vaqueros]}
+  - {value: rock}
+  - {value: pop}
+  - {value: jazz}
+  - {value: clásica, synonyms: [música clásica]}
+  - {value: hip hop, synonyms: [rap]}
+  - {value: country}
+  - {value: electrónica, synonyms: [dance]}
+  - {value: blues}
+  - {value: metal, synonyms: [heavy metal, heavy]}
+  - {value: folk}
+  - {value: reggae}
+  - {value: soul}
+  - {value: r. and b., synonyms: [r. n. b.]}
+  - {value: indie}
+  - {value: flamenco}
+  - {value: banda sonora, synonyms: [bandas sonoras]}

@@ -1,0 +1,9 @@
+# en-AU inherits lang/en.
+
+invocation: encore
+language: en
+skill_name: Encore
+
+utterances:
+  WatchMovie:
+    - "chuck on [the movie] {Movie}"

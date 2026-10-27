@@ -1,0 +1,17 @@
+{
+  "version": "1.0",
+  "response": {
+    "outputSpeech": {
+      "type": "PlainText",
+      "text": "Encore is ready. What would you like to watch?"
+    },
+    "reprompt": {
+      "outputSpeech": {
+        "type": "PlainText",
+        "text": "You can say things like: play the movie Dune, play the next episode of a show, or what's playing."
+      }
+    },
+    "shouldEndSession": false
+  }
+}
+

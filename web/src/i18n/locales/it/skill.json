@@ -1,0 +1,121 @@
+{
+  "amazon": {
+    "connect": "Collega nella configurazione guidata",
+    "disconnect": "Scollega",
+    "disconnectDialog": {
+      "cancel": "Annulla",
+      "confirm": "Scollega",
+      "description": "Encore dimentica i suoi token di Login with Amazon. La skill continua a funzionare sui tuoi Echo, ma non potrai distribuirla di nuovo finché non rinnovi l'autorizzazione.",
+      "title": "Scollegare da Amazon?"
+    },
+    "needsReauthorise": "Amazon non accetta più il token di Encore. Autorizza di nuovo per continuare a distribuire la skill.",
+    "notConnected": "Encore distribuisce la skill con il tuo profilo di sicurezza di Login with Amazon. Collegalo per distribuirla.",
+    "profile": "Profilo di sicurezza",
+    "reauthorise": "Autorizza di nuovo",
+    "title": "Account sviluppatore Amazon",
+    "vendor": "ID fornitore"
+  },
+  "content": {
+    "movies": "Film",
+    "music": "Musica",
+    "musicHint": "Include i video musicali",
+    "tv": "Serie TV"
+  },
+  "locales": {
+    "build": {
+      "failed": "Non riuscita",
+      "in_progress": "In compilazione",
+      "succeeded": "Riuscita"
+    },
+    "columns": {
+      "build": "Compilazione",
+      "built": "Compilato",
+      "locale": "Lingua",
+      "size": "Dimensione (su {{limit}})",
+      "titles": "Titoli della libreria"
+    },
+    "content": {
+      "hint": "Escluderne uno rimuove i relativi comandi vocali dalla skill. La musica include i video musicali.",
+      "keepOne": "Lascia attivo almeno uno tra film, serie TV e musica.",
+      "legend": "Cosa può riprodurre"
+    },
+    "empty": "Ancora niente di compilato. Distribuisci la skill per compilare un modello per ogni lingua attiva.",
+    "enabled": {
+      "hint": "Vengono compilate e distribuite solo le lingue attive. Un Echo può usare la skill solo se la sua lingua corrisponde a una di queste. Le modifiche si applicano alla prossima distribuzione.",
+      "keepOne": "Lascia attiva almeno una lingua.",
+      "legend": "Lingue"
+    },
+    "needsDeploy": {
+      "library": "Ci sono nuovi titoli nella libreria dall'ultima distribuzione. Encore li trova già; distribuisci di nuovo la skill per aggiungerli al suo modello.",
+      "settings": "Le impostazioni sono cambiate dall'ultima distribuzione. Distribuisci di nuovo la skill per applicarle."
+    },
+    "saved": "Lingue salvate. Si applicano alla prossima distribuzione.",
+    "sizeUsed": "{{locale}}: {{used}} usati su {{limit}}",
+    "title": "Modello di interazione per lingua"
+  },
+  "page": {
+    "deploy": {
+      "deploying": "Distribuzione…",
+      "failed": "Distribuzione non riuscita: {{reason}}",
+      "failedStep": "controlla la cronologia per il passaggio non riuscito",
+      "progress": "Distribuzione completata al {{percent}}%",
+      "redeploy": "Distribuisci di nuovo",
+      "running": "Distribuzione: {{step}} ({{percent}}% completato)",
+      "starting": "avvio",
+      "succeeded": "Distribuzione completata. La skill è abilitata per i test sui tuoi Echo."
+    },
+    "description": "La skill privata «{{name}}» nel tuo account sviluppatore Amazon. Fase di sviluppo: funziona sugli Echo collegati al tuo account.",
+    "export": "Esporta il pacchetto della skill",
+    "title": "Skill Alexa"
+  },
+  "timeline": {
+    "amazon": {
+      "connected": "Collegato",
+      "notConnected": "Non collegato",
+      "reauthorise": "Autorizza di nuovo per continuare a distribuire",
+      "title": "Account Amazon",
+      "vendor": "Fornitore {{vendor}} · collegato"
+    },
+    "created": {
+      "creating": "Creazione…",
+      "firstDeploy": "Creata alla prima distribuzione",
+      "title": "Skill creata"
+    },
+    "endpoint": {
+      "title": "Endpoint"
+    },
+    "label": "Stato della distribuzione",
+    "models": {
+      "building": "Compilazione di {{locales}}…",
+      "built": "{{locales}} compilato",
+      "failed": "L'ultima compilazione non è riuscita",
+      "notBuilt": "Non ancora compilato",
+      "title": "Modelli"
+    },
+    "state": {
+      "busy": "in corso",
+      "fail": "richiede attenzione",
+      "ok": "fatto",
+      "pending": "non iniziato"
+    },
+    "testing": {
+      "failed": "Non abilitata: correggi il passaggio non riuscito e distribuisci di nuovo",
+      "firstDeploy": "Dopo la prima distribuzione",
+      "passed": "Smoke test superato {{time}}",
+      "title": "Abilitata per i test",
+      "waiting": "In attesa dello smoke test"
+    }
+  },
+  "titles": {
+    "empty": "Visibile dopo la prima distribuzione.",
+    "inModel_one": "<count>{{n}} titolo</count> nel modello (prima quelli in corso e i recenti)",
+    "inModel_other": "<count>{{n}} titoli</count> nel modello (prima quelli in corso e i recenti)",
+    "limit": "Il modello di ogni lingua deve restare sotto il limite di {{limit}} di Amazon.",
+    "serverOnly_one": "<count>{{n}} titolo</count> riconosciuto solo sul server",
+    "serverOnly_other": "<count>{{n}} titoli</count> riconosciuti solo sul server",
+    "title": "Titoli nel modello"
+  },
+  "warnings": {
+    "title": "Avvisi dell'ultima distribuzione"
+  }
+}

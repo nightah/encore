@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "response": {
+    "outputSpeech": {
+      "type": "PlainText",
+      "text": "Shuffling the album Abbey Road by The Beatles."
+    },
+    "card": {
+      "type": "Simple",
+      "title": "Encore",
+      "content": "Shuffling the album Abbey Road by The Beatles."
+    },
+    "shouldEndSession": true
+  }
+}
+

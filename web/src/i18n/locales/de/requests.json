@@ -1,0 +1,67 @@
+{
+  "detail": {
+    "alexaSaid": "Alexa sagte",
+    "callFailed": "(fehlgeschlagen)",
+    "candidates": {
+      "label": "Treffer-Kandidaten",
+      "none": "Keine Kandidaten.",
+      "score": "{{title}}: Wert {{score}}",
+      "unlinked": "Dieser Echo ist mit keiner Kodi-Instanz verknüpft, und für nicht verknüpfte Echos ist keine Standardinstanz festgelegt."
+    },
+    "copied": "Kopiert",
+    "copy": "JSON kopieren",
+    "intent": "Intent",
+    "kodiCalls": "Kodi-Aufrufe",
+    "loading": "Anfrage wird geladen…",
+    "noCalls": "Keine.",
+    "replay": "Wiederholen (Probelauf)",
+    "replayResult": {
+      "label": "Ergebnis der Wiederholung",
+      "noCalls": "Keine Kodi-Aufrufe.",
+      "title": "Wiederholung gegen den aktuellen Index (Kodi bleibt unberührt)",
+      "topMatch": "Bester Treffer: {{title}}, {{score}}.",
+      "wouldCall": "Würde aufrufen",
+      "wouldSay": "Alexa würde sagen: „{{speech}}“"
+    },
+    "silent": "Nichts (stumm).",
+    "slotRaw": "Slot (roh)",
+    "target": {
+      "label": "Ziel-Kodi",
+      "none": "Keines",
+      "unlinked": "Keines (Gerät nicht verknüpft)"
+    },
+    "timing": {
+      "fallback": "Encore {{encore}} · Kodi {{kodi}} · gesamt {{total}}",
+      "label": "Zeitaufwand",
+      "split": "Prüfung {{verify}} · Abgleich {{match}} · Kodi {{kodi}} · gesamt {{total}}"
+    }
+  },
+  "empty": {
+    "filtered": "Versuch es mit einer anderen Suche oder setz die Filter zurück.",
+    "filteredTitle": "Keine passenden Anfragen",
+    "none": "Anfragen erscheinen hier, sobald ein Echo mit Encore spricht. Sag „Alexa, frag {{invocation}}, was läuft.“",
+    "noneTitle": "Noch keine Anfragen"
+  },
+  "filters": {
+    "allDevices": "Alle Echos",
+    "allOutcomes": "Alle Ergebnisse",
+    "device": "Echo-Gerät",
+    "label": "Anfragen filtern",
+    "outcome": "Ergebnis",
+    "search": "Gehörtes durchsuchen",
+    "unnamedDevice": "Unbenannter Echo"
+  },
+  "list": {
+    "label": "Anfragen",
+    "loading": "Anfragen werden geladen…",
+    "loadOlder": "Ältere Anfragen laden"
+  },
+  "live": {
+    "off": "Verbindung wird wiederhergestellt…",
+    "on": "Live",
+    "retention": "die letzten 500 Anfragen oder 7 Tage werden aufbewahrt"
+  },
+  "newRequest": "Neue Anfrage von {{device}}{{heard}}",
+  "title": "Anfrageprotokoll",
+  "unnamedDevice": "einem unbenannten Echo"
+}

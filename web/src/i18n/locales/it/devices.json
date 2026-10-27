@@ -1,0 +1,100 @@
+{
+  "controlsKodi": "Controlla Kodi",
+  "dialog": {
+    "cancel": "Annulla",
+    "confirmForget": "Dimenticare questo Echo? Tornerà, non collegato, la prossima volta che invia una richiesta.",
+    "editEcho": "Modifica Echo",
+    "editTitle": "Modifica {{name}}",
+    "fields": {
+      "kodi": {
+        "hint": "Di' “…in camera da letto” per cambiarlo per una sola richiesta."
+      },
+      "name": {
+        "hint": "Alexa non condivide i nomi dei dispositivi, quindi dagli un nome qui.",
+        "label": "Nome"
+      },
+      "room": {
+        "label": "Stanza",
+        "none": "Nessuna stanza"
+      }
+    },
+    "forget": "Dimentica dispositivo",
+    "forgetEllipsis": "Dimentica dispositivo…",
+    "keep": "Mantieni",
+    "save": "Salva"
+  },
+  "notLinked": "Non collegato",
+  "page": {
+    "description": "Ogni Echo controlla un Kodi per impostazione predefinita. Di' “…in camera da letto” per cambiarlo per una sola richiesta.",
+    "title": "Dispositivi Echo e stanze"
+  },
+  "rooms": {
+    "add": "Aggiungi stanza",
+    "card": {
+      "add": "Aggiungi",
+      "addAliasButton": "Aggiungi nome vocale a {{name}}",
+      "addAliasLabel": "Aggiungi un nome vocale per {{name}}",
+      "addAliasPlaceholder": "Aggiungi nome vocale",
+      "aliases": "Nomi vocali per {{name}}",
+      "edit": "Modifica stanza {{name}}",
+      "kodi": "→ Kodi “{{name}}”",
+      "noKodi": "→ nessuna istanza di Kodi",
+      "removeAlias": "Rimuovi il nome vocale “{{alias}}”"
+    },
+    "dialog": {
+      "addTitle": "Aggiungi una stanza",
+      "cancel": "Annulla",
+      "confirmRemove": "Rimuovere {{name}} e i suoi nomi vocali? Gli Echo al suo interno mantengono il collegamento a Kodi.",
+      "editTitle": "Modifica {{name}}",
+      "fields": {
+        "kodi": {
+          "hint": "Dove viene riprodotto “…in cucina”.",
+          "label": "Istanza di Kodi",
+          "none": "Nessuna"
+        },
+        "name": {
+          "label": "Nome",
+          "placeholder": "Cucina"
+        }
+      },
+      "keep": "Mantieni",
+      "remove": "Rimuovi stanza",
+      "removeEllipsis": "Rimuovi…",
+      "save": "Salva"
+    },
+    "empty": "Ancora nessuna stanza.",
+    "intro": "Questi nomi vengono aggiunti al modello di interazione della skill, così Alexa li riconosce in “metti Bluey <b>nella cameretta</b>”.",
+    "title": "Stanze e nomi vocali"
+  },
+  "table": {
+    "anUnnamedEcho": "un Echo senza nome",
+    "columns": {
+      "actions": "Azioni",
+      "controls": "Controlla",
+      "lastRequest": "Ultima richiesta",
+      "name": "Nome",
+      "room": "Stanza",
+      "today": "Oggi"
+    },
+    "edit": "Modifica",
+    "editNamed": "Modifica {{name}}",
+    "empty": "Ancora nessun Echo. Compaiono qui dopo la loro prima richiesta alla skill.",
+    "identified": "Questo è l'Echo con cui hai appena parlato",
+    "identifyHint": "Non sai quale Echo è quale? Di' “Alexa, chiedi a {{invocation}} quale dispositivo è questo” e verrà evidenziato qui.",
+    "spokeTo": "Hai appena parlato con {{name}}.",
+    "title": "Dispositivi"
+  },
+  "unlinked": {
+    "deviceName": "Nome del dispositivo",
+    "firstRequest": {
+      "other": "Prima richiesta {{when}}{{heard}}. Dispositivo <mono>{{id}}</mono>",
+      "today": "Prima richiesta oggi alle {{when}}{{heard}}. Dispositivo <mono>{{id}}</mono>"
+    },
+    "link": "Collega dispositivo",
+    "linked": "Echo collegato.",
+    "placeholder": "Echo Dot della cucina",
+    "title": "Nuovo Echo rilevato: non ancora collegato a un Kodi",
+    "titleIdentified": "Questo è l'Echo con cui hai appena parlato: non ancora collegato a un Kodi"
+  },
+  "unnamed": "Echo senza nome"
+}

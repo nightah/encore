@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "response": {
+    "outputSpeech": {
+      "type": "PlainText",
+      "text": "Playing Love of My Life by Queen."
+    },
+    "card": {
+      "type": "Simple",
+      "title": "Encore",
+      "content": "Playing Love of My Life by Queen."
+    },
+    "shouldEndSession": true
+  }
+}
+

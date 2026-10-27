@@ -1,0 +1,87 @@
+name: Docs
+
+# Publishes the documentation site (docs/) to GitHub Pages. CI's Docs job builds and checks it on every pull request; this only deploys from main.
+on:
+  push:
+    branches: [main]
+    paths:
+      - docs/**
+      - internal/api/openapi.json
+      # The reference pages are generated from these at build time.
+      - internal/cli/**
+      - internal/config/**
+      - internal/docsgen/**
+      - internal/skillmodel/**
+      - i18n/**
+      - .github/workflows/docs.yml
+  workflow_dispatch:
+
+# One deployment at a time; a newer push waits rather than cancelling one in flight.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The build generates the reference pages from the Go code and i18n/ first.
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: false
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: docs/package.json
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.x
+          # No dependency cache for what gets published (cache-poisoning hardening), as in the release workflow.
+          package-manager-cache: false
+
+      - name: Install
+        run: pnpm -C docs install --frozen-lockfile
+
+      - name: Build
+        run: pnpm -C docs build
+
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: docs/dist
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      pages: write # deploy the built site to GitHub Pages
+      id-token: write # verify the Pages deployment's origin
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

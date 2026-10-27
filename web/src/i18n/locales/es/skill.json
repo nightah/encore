@@ -1,0 +1,121 @@
+{
+  "amazon": {
+    "connect": "Conectar en el asistente de configuración",
+    "disconnect": "Desconectar",
+    "disconnectDialog": {
+      "cancel": "Cancelar",
+      "confirm": "Desconectar",
+      "description": "Encore olvida sus tokens de Login with Amazon. La skill sigue funcionando en tus Echo, pero no podrás volver a desplegarla hasta que la autorices de nuevo.",
+      "title": "¿Desconectar de Amazon?"
+    },
+    "needsReauthorise": "Amazon ha dejado de aceptar el token de Encore. Vuelve a autorizarlo para seguir desplegando.",
+    "notConnected": "Encore despliega la skill con tu propio perfil de seguridad de Login with Amazon. Conéctalo para desplegar.",
+    "profile": "Perfil de seguridad",
+    "reauthorise": "Volver a autorizar",
+    "title": "Cuenta de desarrollador de Amazon",
+    "vendor": "ID de proveedor"
+  },
+  "content": {
+    "movies": "Películas",
+    "music": "Música",
+    "musicHint": "Incluye vídeos musicales",
+    "tv": "Series"
+  },
+  "locales": {
+    "build": {
+      "failed": "Error",
+      "in_progress": "Compilando",
+      "succeeded": "Correcto"
+    },
+    "columns": {
+      "build": "Compilación",
+      "built": "Compilado",
+      "locale": "Configuración regional",
+      "size": "Tamaño (de {{limit}})",
+      "titles": "Títulos de la biblioteca"
+    },
+    "content": {
+      "hint": "Si dejas uno fuera, sus comandos de voz se quitan de la skill. La música incluye vídeos musicales.",
+      "keepOne": "Deja activado al menos uno: películas, series o música.",
+      "legend": "Qué puede reproducir"
+    },
+    "empty": "Aún no hay nada compilado. Despliega la skill para compilar un modelo para cada configuración regional activada.",
+    "enabled": {
+      "hint": "Solo se compilan y despliegan las configuraciones regionales activadas. Un Echo solo puede usar la skill si su idioma coincide con una de ellas. Los cambios se aplican en el próximo despliegue.",
+      "keepOne": "Deja activada al menos una configuración regional.",
+      "legend": "Configuraciones regionales"
+    },
+    "needsDeploy": {
+      "library": "Hay títulos nuevos en la biblioteca desde el último despliegue. Encore ya los encuentra; vuelve a desplegar para añadirlos al modelo de la skill.",
+      "settings": "La configuración ha cambiado desde el último despliegue. Vuelve a desplegar para aplicarla."
+    },
+    "saved": "Configuraciones regionales guardadas. Se aplican en el próximo despliegue.",
+    "sizeUsed": "{{locale}}: {{used}} de {{limit}} usados",
+    "title": "Modelo de interacción por configuración regional"
+  },
+  "page": {
+    "deploy": {
+      "deploying": "Desplegando…",
+      "failed": "Error en el despliegue: {{reason}}",
+      "failedStep": "consulta la cronología para ver el paso que falló",
+      "progress": "Despliegue completado al {{percent}} %",
+      "redeploy": "Volver a desplegar",
+      "running": "Desplegando: {{step}} ({{percent}} % completado)",
+      "starting": "iniciando",
+      "succeeded": "Despliegue terminado. La skill está habilitada para pruebas en tus Echo."
+    },
+    "description": "La skill privada «{{name}}» de tu cuenta de desarrollador de Amazon. Fase de desarrollo: funciona en los Echo que tienen iniciada sesión con tu cuenta.",
+    "export": "Exportar paquete de la skill",
+    "title": "Skill de Alexa"
+  },
+  "timeline": {
+    "amazon": {
+      "connected": "Conectada",
+      "notConnected": "No conectada",
+      "reauthorise": "Vuelve a autorizar para seguir desplegando",
+      "title": "Cuenta de Amazon",
+      "vendor": "Proveedor {{vendor}} · conectada"
+    },
+    "created": {
+      "creating": "Creando…",
+      "firstDeploy": "Se crea en el primer despliegue",
+      "title": "Skill creada"
+    },
+    "endpoint": {
+      "title": "Endpoint"
+    },
+    "label": "Estado del despliegue",
+    "models": {
+      "building": "Compilando {{locales}}…",
+      "built": "{{locales}} compilado",
+      "failed": "La última compilación falló",
+      "notBuilt": "Aún no compilado",
+      "title": "Modelos"
+    },
+    "state": {
+      "busy": "en curso",
+      "fail": "requiere atención",
+      "ok": "hecho",
+      "pending": "sin empezar"
+    },
+    "testing": {
+      "failed": "No habilitada: corrige el paso que falló y vuelve a desplegar",
+      "firstDeploy": "Tras el primer despliegue",
+      "passed": "Prueba de humo superada {{time}}",
+      "title": "Habilitada para pruebas",
+      "waiting": "Esperando la prueba de humo"
+    }
+  },
+  "titles": {
+    "empty": "Se muestra tras el primer despliegue.",
+    "inModel_one": "<count>{{n}} título</count> en el modelo (primero los que están en curso y los recientes)",
+    "inModel_other": "<count>{{n}} títulos</count> en el modelo (primero los que están en curso y los recientes)",
+    "limit": "El modelo de cada configuración regional debe quedar por debajo del límite de {{limit}} de Amazon.",
+    "serverOnly_one": "<count>{{n}} título</count> que solo se busca en el servidor",
+    "serverOnly_other": "<count>{{n}} títulos</count> que solo se buscan en el servidor",
+    "title": "Títulos en el modelo"
+  },
+  "warnings": {
+    "title": "Avisos del último despliegue"
+  }
+}

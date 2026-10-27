@@ -1,0 +1,67 @@
+{
+  "detail": {
+    "alexaSaid": "Alexa dijo",
+    "callFailed": "(falló)",
+    "candidates": {
+      "label": "Candidatos",
+      "none": "Sin candidatos.",
+      "score": "{{title}}: puntuación {{score}}",
+      "unlinked": "Este Echo no está vinculado a ninguna instancia de Kodi y no hay ninguna predeterminada para los Echo sin vincular."
+    },
+    "copied": "Copiado",
+    "copy": "Copiar JSON",
+    "intent": "Intent",
+    "kodiCalls": "Llamadas a Kodi",
+    "loading": "Cargando la solicitud…",
+    "noCalls": "Ninguna.",
+    "replay": "Repetir (simulación)",
+    "replayResult": {
+      "label": "Resultado de la repetición",
+      "noCalls": "Ninguna llamada a Kodi.",
+      "title": "Repetición con el índice actual (sin tocar Kodi)",
+      "topMatch": "Mejor coincidencia: {{title}}, {{score}}.",
+      "wouldCall": "Llamaría a",
+      "wouldSay": "Alexa diría: «{{speech}}»"
+    },
+    "silent": "Nada (en silencio).",
+    "slotRaw": "Slot (sin procesar)",
+    "target": {
+      "label": "Kodi de destino",
+      "none": "Ninguno",
+      "unlinked": "Ninguno (dispositivo sin vincular)"
+    },
+    "timing": {
+      "fallback": "Encore {{encore}} · Kodi {{kodi}} · total {{total}}",
+      "label": "Tiempos",
+      "split": "verificación {{verify}} · búsqueda {{match}} · Kodi {{kodi}} · total {{total}}"
+    }
+  },
+  "empty": {
+    "filtered": "Prueba con otra búsqueda o quita los filtros.",
+    "filteredTitle": "No hay solicitudes que coincidan",
+    "none": "Las solicitudes aparecen aquí en cuanto un Echo habla con Encore. Di «Alexa, pregúntale a {{invocation}} qué está sonando».",
+    "noneTitle": "Aún no hay solicitudes"
+  },
+  "filters": {
+    "allDevices": "Todos los Echo",
+    "allOutcomes": "Todos los resultados",
+    "device": "Dispositivo Echo",
+    "label": "Filtrar solicitudes",
+    "outcome": "Resultado",
+    "search": "Buscar en lo que se oyó",
+    "unnamedDevice": "Echo sin nombre"
+  },
+  "list": {
+    "label": "Solicitudes",
+    "loading": "Cargando solicitudes…",
+    "loadOlder": "Cargar solicitudes anteriores"
+  },
+  "live": {
+    "off": "Reconectando…",
+    "on": "En directo",
+    "retention": "se guardan las últimas 500 solicitudes o 7 días"
+  },
+  "newRequest": "Nueva solicitud de {{device}}{{heard}}",
+  "title": "Registro de solicitudes",
+  "unnamedDevice": "un Echo sin nombre"
+}

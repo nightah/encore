@@ -1,0 +1,6147 @@
+{
+  "components": {
+    "schemas": {
+      "Accepted": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "type": "object"
+      },
+      "AddRoomAliasRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "alias": {
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "alias"
+        ],
+        "type": "object"
+      },
+      "AmazonConnection": {
+        "additionalProperties": false,
+        "properties": {
+          "connected": {
+            "type": "boolean"
+          },
+          "has_client_secret": {
+            "type": "boolean"
+          },
+          "needs_reauthorise": {
+            "type": "boolean"
+          },
+          "profile_client_id": {
+            "type": "string"
+          },
+          "vendor_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "connected",
+          "vendor_id",
+          "profile_client_id",
+          "has_client_secret",
+          "needs_reauthorise"
+        ],
+        "type": "object"
+      },
+      "Attention": {
+        "additionalProperties": false,
+        "properties": {
+          "detail": {
+            "type": "string"
+          },
+          "kind": {
+            "description": "unlinked_device, amazon_not_connected, amazon_reauthorise, privacy_unanswered, skill_not_deployed, needs_deploy, deploy_failed, instance_offline, kodi_unauthorized, no_instances",
+            "type": "string"
+          },
+          "link": {
+            "description": "A web interface route: /echo-devices, /kodi, /alexa-skill, /request-log, /library or /settings",
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "title",
+          "detail",
+          "link"
+        ],
+        "type": "object"
+      },
+      "AuthPatch": {
+        "additionalProperties": true,
+        "properties": {
+          "header": {
+            "$ref": "#/components/schemas/HeaderAuthPatch"
+          },
+          "local": {
+            "$ref": "#/components/schemas/LocalAuthPatch"
+          },
+          "mode": {
+            "enum": [
+              "local",
+              "oidc",
+              "header"
+            ],
+            "type": "string"
+          },
+          "oidc": {
+            "$ref": "#/components/schemas/OIDCAuthPatch"
+          }
+        },
+        "type": "object"
+      },
+      "AuthSettings": {
+        "additionalProperties": false,
+        "properties": {
+          "header": {
+            "$ref": "#/components/schemas/HeaderAuth"
+          },
+          "local": {
+            "$ref": "#/components/schemas/LocalAuth"
+          },
+          "mode": {
+            "enum": [
+              "local",
+              "oidc",
+              "header"
+            ],
+            "type": "string"
+          },
+          "oidc": {
+            "$ref": "#/components/schemas/OIDCAuth"
+          }
+        },
+        "required": [
+          "mode",
+          "local",
+          "oidc",
+          "header"
+        ],
+        "type": "object"
+      },
+      "AuthState": {
+        "additionalProperties": false,
+        "properties": {
+          "authenticated": {
+            "type": "boolean"
+          },
+          "csrf_token": {
+            "description": "Send as X-CSRF-Token on every POST, PUT, PATCH and DELETE",
+            "type": "string"
+          },
+          "local_login": {
+            "description": "Whether the username and password form is available (always in local mode; in other modes only with the break-glass login on)",
+            "type": "boolean"
+          },
+          "mode": {
+            "enum": [
+              "local",
+              "oidc",
+              "header"
+            ],
+            "type": "string"
+          },
+          "oidc_login_url": {
+            "description": "Where to send the browser to sign in with OpenID Connect, or null",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "setup_required": {
+            "type": "boolean"
+          },
+          "user": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/User"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "setup_required",
+          "authenticated",
+          "user",
+          "mode",
+          "csrf_token",
+          "oidc_login_url",
+          "local_login"
+        ],
+        "type": "object"
+      },
+      "AuthorizeInfo": {
+        "additionalProperties": false,
+        "properties": {
+          "return_urls": {
+            "description": "Add these to the security profile's Allowed Return URLs",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "url": {
+            "description": "The consent page; empty until the client ID and secret are saved",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "return_urls"
+        ],
+        "type": "object"
+      },
+      "BackupSettings": {
+        "additionalProperties": false,
+        "properties": {
+          "keep": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "last_backup_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "prefix": {
+            "description": "The folder backups are written to; empty is the top of the storage location",
+            "type": "string"
+          },
+          "schedule": {
+            "description": "off, hourly, daily@HH:MM, weekly@DAY@HH:MM or every@DURATION",
+            "type": "string"
+          }
+        },
+        "required": [
+          "schedule",
+          "keep",
+          "prefix",
+          "last_backup_at"
+        ],
+        "type": "object"
+      },
+      "BackupSettingsPatch": {
+        "additionalProperties": true,
+        "properties": {
+          "keep": {
+            "format": "int64",
+            "maximum": 1000,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "prefix": {
+            "description": "Empty puts backups at the top of the storage location",
+            "maxLength": 256,
+            "type": "string"
+          },
+          "schedule": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Breakdown": {
+        "additionalProperties": false,
+        "properties": {
+          "alias": {
+            "type": "string"
+          },
+          "boost": {
+            "format": "double",
+            "type": "number"
+          },
+          "jaro_winkler": {
+            "format": "double",
+            "type": "number"
+          },
+          "osa": {
+            "format": "double",
+            "type": "number"
+          },
+          "phonetic": {
+            "format": "double",
+            "type": "number"
+          },
+          "token_set": {
+            "format": "double",
+            "type": "number"
+          }
+        },
+        "required": [
+          "alias",
+          "token_set",
+          "jaro_winkler",
+          "osa",
+          "phonetic",
+          "boost"
+        ],
+        "type": "object"
+      },
+      "Candidate": {
+        "additionalProperties": false,
+        "properties": {
+          "breakdown": {
+            "$ref": "#/components/schemas/Breakdown"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "media_id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "score": {
+            "format": "double",
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "year": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "title",
+          "year",
+          "kind",
+          "media_id",
+          "score",
+          "breakdown"
+        ],
+        "type": "object"
+      },
+      "ChangePasswordRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "current_password": {
+            "maxLength": 1024,
+            "minLength": 1,
+            "type": "string"
+          },
+          "new_password": {
+            "maxLength": 1024,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "type": "object"
+      },
+      "Check": {
+        "additionalProperties": false,
+        "properties": {
+          "detail": {
+            "type": "string"
+          },
+          "ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "name": {
+            "enum": [
+              "ping",
+              "websocket",
+              "auth",
+              "library"
+            ],
+            "type": "string"
+          },
+          "ok": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "ok",
+          "ms",
+          "detail"
+        ],
+        "type": "object"
+      },
+      "CheckReachabilityRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "setup_token": {
+            "description": "Required before the admin account exists, unless signed in",
+            "type": "string"
+          },
+          "url": {
+            "description": "The public base URL, e.g. https://encore.example.net",
+            "maxLength": 2048,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "type": "object"
+      },
+      "ClientErrorReport": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "description": "render: a page failed to draw; unhandled: an uncaught error or rejected promise",
+            "enum": [
+              "render",
+              "unhandled"
+            ],
+            "type": "string"
+          },
+          "message": {
+            "maxLength": 1000,
+            "type": "string"
+          },
+          "path": {
+            "description": "The page, e.g. /setup",
+            "maxLength": 500,
+            "type": "string"
+          },
+          "stack": {
+            "maxLength": 8000,
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "message",
+          "path"
+        ],
+        "type": "object"
+      },
+      "ConfirmTOTPRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "maxLength": 16,
+            "minLength": 6,
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "type": "object"
+      },
+      "CreateAdminRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "password": {
+            "maxLength": 1024,
+            "minLength": 1,
+            "type": "string"
+          },
+          "setup_token": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "username": {
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "setup_token",
+          "username",
+          "password"
+        ],
+        "type": "object"
+      },
+      "CreateAliasRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "alias": {
+            "maxLength": 140,
+            "minLength": 1,
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "movie",
+              "tvshow",
+              "episode",
+              "artist",
+              "album",
+              "song",
+              "musicvideo",
+              "playlist"
+            ],
+            "type": "string"
+          },
+          "library_id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "media_id": {
+            "format": "int64",
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "library_id",
+          "kind",
+          "media_id",
+          "alias"
+        ],
+        "type": "object"
+      },
+      "CreateRoomRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "kodi_instance_id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "name": {
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "Deploy": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/DeployEvent"
+            },
+            "type": "array"
+          },
+          "id": {
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "succeeded",
+              "failed",
+              "in_progress"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "events",
+          "error"
+        ],
+        "type": "object"
+      },
+      "DeployEvent": {
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "locales": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/LocaleStatus"
+            },
+            "type": "object"
+          },
+          "message": {
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "started",
+              "succeeded",
+              "failed",
+              "skipped"
+            ],
+            "type": "string"
+          },
+          "step": {
+            "enum": [
+              "package",
+              "vendor",
+              "skill",
+              "upload",
+              "import",
+              "build",
+              "enable",
+              "simulate"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "step",
+          "state",
+          "message",
+          "locales",
+          "at"
+        ],
+        "type": "object"
+      },
+      "DeploySkillRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "force": {
+            "description": "Deploy even when nothing changed",
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "Device": {
+        "additionalProperties": false,
+        "properties": {
+          "alexa_device_id": {
+            "type": "string"
+          },
+          "first_seen": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "kodi_instance_id": {
+            "description": "null when the device is not linked; it then uses the default instance",
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "last_seen": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "request_count": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "request_count_today": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "room_id": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "alexa_device_id",
+          "name",
+          "room_id",
+          "kodi_instance_id",
+          "first_seen",
+          "last_seen",
+          "request_count",
+          "request_count_today"
+        ],
+        "type": "object"
+      },
+      "DisableTOTPRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "maxLength": 16,
+            "minLength": 6,
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "type": "object"
+      },
+      "DiscoveredInstance": {
+        "additionalProperties": false,
+        "properties": {
+          "host": {
+            "type": "string"
+          },
+          "http_port": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "ws_port": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "host",
+          "http_port",
+          "ws_port",
+          "version"
+        ],
+        "type": "object"
+      },
+      "EndpointCheck": {
+        "additionalProperties": false,
+        "properties": {
+          "checked_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "latency_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "reachable": {
+            "type": "boolean"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "reachable",
+          "latency_ms",
+          "checked_at"
+        ],
+        "type": "object"
+      },
+      "ErrorDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "location": {
+            "description": "Where the error occurred, e.g. 'body.items[3].tags' or 'path.thing-id'",
+            "type": "string"
+          },
+          "message": {
+            "description": "Error message text",
+            "type": "string"
+          },
+          "value": {
+            "description": "The value at the given location"
+          }
+        },
+        "type": "object"
+      },
+      "ErrorModel": {
+        "additionalProperties": false,
+        "properties": {
+          "detail": {
+            "description": "A human-readable explanation specific to this occurrence of the problem.",
+            "examples": [
+              "Property foo is required but is missing."
+            ],
+            "type": "string"
+          },
+          "errors": {
+            "description": "Optional list of individual error details",
+            "items": {
+              "$ref": "#/components/schemas/ErrorDetail"
+            },
+            "type": "array"
+          },
+          "instance": {
+            "description": "A URI reference that identifies the specific occurrence of the problem.",
+            "examples": [
+              "https://example.com/error-log/abc123"
+            ],
+            "format": "uri",
+            "type": "string"
+          },
+          "status": {
+            "description": "HTTP status code",
+            "examples": [
+              400
+            ],
+            "format": "int64",
+            "type": "integer"
+          },
+          "title": {
+            "description": "A short, human-readable summary of the problem type. This value should not change between occurrences of the error.",
+            "examples": [
+              "Bad Request"
+            ],
+            "type": "string"
+          },
+          "type": {
+            "default": "about:blank",
+            "description": "A URI reference to human-readable documentation for the error.",
+            "examples": [
+              "https://example.com/errors/example"
+            ],
+            "format": "uri",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Features": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm_sound": {
+            "description": "A short sound answers commands that have nothing to say, such as pause or volume up",
+            "type": "boolean"
+          },
+          "deep_search": {
+            "description": "\"Play X\" also searches music when the request doesn't say what kind of title X is",
+            "type": "boolean"
+          },
+          "queue_limit": {
+            "description": "The most items a shuffle or queue plays at once",
+            "format": "int64",
+            "type": "integer"
+          },
+          "shutdown_quits": {
+            "description": "\"Shut down\" quits Kodi instead of powering off the device; a Kodi instance's own kodi[].shutdown_quits wins",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "deep_search",
+          "shutdown_quits",
+          "confirm_sound",
+          "queue_limit"
+        ],
+        "type": "object"
+      },
+      "FeaturesPatch": {
+        "additionalProperties": true,
+        "properties": {
+          "confirm_sound": {
+            "type": "boolean"
+          },
+          "deep_search": {
+            "type": "boolean"
+          },
+          "queue_limit": {
+            "format": "int64",
+            "maximum": 1000,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "shutdown_quits": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "GroupLibraryRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "instance_ids": {
+            "items": {
+              "format": "int64",
+              "type": "integer"
+            },
+            "minItems": 2,
+            "type": "array"
+          }
+        },
+        "required": [
+          "instance_ids"
+        ],
+        "type": "object"
+      },
+      "HeaderAuth": {
+        "additionalProperties": false,
+        "properties": {
+          "admin_group": {
+            "type": "string"
+          },
+          "groups_header": {
+            "type": "string"
+          },
+          "trusted_proxies": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "user_header": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "trusted_proxies",
+          "user_header",
+          "groups_header",
+          "admin_group"
+        ],
+        "type": "object"
+      },
+      "HeaderAuthPatch": {
+        "additionalProperties": true,
+        "properties": {
+          "admin_group": {
+            "type": "string"
+          },
+          "groups_header": {
+            "type": "string"
+          },
+          "trusted_proxies": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "user_header": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ImportResult": {
+        "additionalProperties": false,
+        "properties": {
+          "applied": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "skipped": {
+            "description": "Keys left alone, each with the reason",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "applied",
+          "skipped"
+        ],
+        "type": "object"
+      },
+      "Instance": {
+        "additionalProperties": false,
+        "properties": {
+          "broadcast": {
+            "type": "string"
+          },
+          "default_for_unlinked": {
+            "type": "boolean"
+          },
+          "has_password": {
+            "type": "boolean"
+          },
+          "id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "language": {
+            "description": "Title-matching rules for this library",
+            "type": "string"
+          },
+          "library": {
+            "$ref": "#/components/schemas/InstanceLibrary"
+          },
+          "mac": {
+            "type": "string"
+          },
+          "managed_by_config": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "now_playing": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/NowPlaying"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "shutdown": {
+            "description": "What \"shut down\" does; inherit follows Settings › Features",
+            "enum": [
+              "inherit",
+              "quit",
+              "power_off"
+            ],
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/InstanceStatus"
+          },
+          "timezone": {
+            "description": "The Kodi host's IANA time zone; empty when learnt from Kodi's clock",
+            "type": "string"
+          },
+          "url": {
+            "description": "HTTP JSON-RPC endpoint, without credentials",
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "websocket_url": {
+            "description": "Empty when live updates are disabled",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "url",
+          "websocket_url",
+          "username",
+          "has_password",
+          "mac",
+          "broadcast",
+          "default_for_unlinked",
+          "language",
+          "timezone",
+          "shutdown",
+          "managed_by_config",
+          "status",
+          "library",
+          "now_playing"
+        ],
+        "type": "object"
+      },
+      "InstanceInput": {
+        "additionalProperties": false,
+        "properties": {
+          "broadcast": {
+            "type": "string"
+          },
+          "language": {
+            "description": "Title-matching rules, e.g. en or de",
+            "type": "string"
+          },
+          "mac": {
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          },
+          "password": {
+            "description": "Write-only; empty removes it",
+            "type": "string"
+          },
+          "shutdown": {
+            "enum": [
+              "inherit",
+              "quit",
+              "power_off"
+            ],
+            "type": "string"
+          },
+          "timezone": {
+            "description": "The Kodi host's IANA time zone; empty learns it from Kodi's clock",
+            "type": "string"
+          },
+          "url": {
+            "description": "HTTP JSON-RPC endpoint, e.g. http://192.168.1.20:8080/jsonrpc",
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "websocket_url": {
+            "description": "e.g. ws://192.168.1.20:9090/jsonrpc; empty disables live updates",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "InstanceLibrary": {
+        "additionalProperties": false,
+        "properties": {
+          "episodes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "group_id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "is_source": {
+            "type": "boolean"
+          },
+          "movies": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "newest_title": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/NewestTitle"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "shared": {
+            "type": "boolean"
+          },
+          "shows": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "songs": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "group_id",
+          "shared",
+          "is_source",
+          "movies",
+          "shows",
+          "episodes",
+          "songs",
+          "newest_title"
+        ],
+        "type": "object"
+      },
+      "InstanceStatus": {
+        "additionalProperties": false,
+        "properties": {
+          "api_version": {
+            "type": "string"
+          },
+          "kodi_version": {
+            "type": "string"
+          },
+          "last_event_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "last_sync_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "next_sync_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "state": {
+            "enum": [
+              "connected",
+              "http_only",
+              "asleep",
+              "offline"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "state",
+          "kodi_version",
+          "api_version",
+          "last_event_at",
+          "last_sync_at",
+          "next_sync_at"
+        ],
+        "type": "object"
+      },
+      "KodiCall": {
+        "additionalProperties": false,
+        "properties": {
+          "method": {
+            "type": "string"
+          },
+          "ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "ok": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "method",
+          "ms",
+          "ok"
+        ],
+        "type": "object"
+      },
+      "LastDeploy": {
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          },
+          "hash": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "locales": {
+            "items": {
+              "$ref": "#/components/schemas/LocaleDeploy"
+            },
+            "type": "array"
+          },
+          "state": {
+            "enum": [
+              "succeeded",
+              "failed",
+              "in_progress"
+            ],
+            "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "at",
+          "state",
+          "hash",
+          "locales",
+          "warnings",
+          "error"
+        ],
+        "type": "object"
+      },
+      "Library": {
+        "additionalProperties": false,
+        "properties": {
+          "counts": {
+            "$ref": "#/components/schemas/LibraryCounts"
+          },
+          "evidence": {
+            "type": "string"
+          },
+          "id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "last_sync_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "members": {
+            "items": {
+              "$ref": "#/components/schemas/LibraryMember"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          },
+          "source_instance_id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "state": {
+            "enum": [
+              "solo",
+              "likely_shared",
+              "confirmed_shared",
+              "manual"
+            ],
+            "type": "string"
+          },
+          "syncing_instance_id": {
+            "description": "The instance Encore currently reads the library from: the source, or another member while the source is unreachable",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "members",
+          "source_instance_id",
+          "syncing_instance_id",
+          "state",
+          "evidence",
+          "last_sync_at",
+          "counts"
+        ],
+        "type": "object"
+      },
+      "LibraryCounts": {
+        "additionalProperties": false,
+        "properties": {
+          "movies": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "shows": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "songs": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "movies",
+          "shows",
+          "songs"
+        ],
+        "type": "object"
+      },
+      "LibraryMember": {
+        "additionalProperties": false,
+        "properties": {
+          "instance_id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "instance_id",
+          "name"
+        ],
+        "type": "object"
+      },
+      "LocalAuth": {
+        "additionalProperties": false,
+        "properties": {
+          "lockout_attempts": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "lockout_minutes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "session_hours": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "totp_enabled": {
+            "type": "boolean"
+          },
+          "username": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "session_hours",
+          "lockout_attempts",
+          "lockout_minutes",
+          "totp_enabled"
+        ],
+        "type": "object"
+      },
+      "LocalAuthPatch": {
+        "additionalProperties": true,
+        "properties": {
+          "lockout_attempts": {
+            "format": "int64",
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "lockout_minutes": {
+            "format": "int64",
+            "maximum": 1440,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "session_hours": {
+            "format": "int64",
+            "maximum": 8760,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
+      "LocalStorage": {
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "type": "object"
+      },
+      "LocalStoragePatch": {
+        "additionalProperties": true,
+        "properties": {
+          "path": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "LocaleDeploy": {
+        "additionalProperties": false,
+        "properties": {
+          "built_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "locale": {
+            "type": "string"
+          },
+          "size_bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "status": {
+            "enum": [
+              "succeeded",
+              "failed",
+              "in_progress"
+            ],
+            "type": "string"
+          },
+          "titles": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "locale",
+          "status",
+          "errors",
+          "titles",
+          "size_bytes",
+          "built_at"
+        ],
+        "type": "object"
+      },
+      "LocalePatch": {
+        "additionalProperties": true,
+        "properties": {
+          "default_locale": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "LocaleSettings": {
+        "additionalProperties": false,
+        "properties": {
+          "default_locale": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "timezone",
+          "default_locale"
+        ],
+        "type": "object"
+      },
+      "LocaleStatus": {
+        "additionalProperties": false,
+        "properties": {
+          "errors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "succeeded",
+              "failed",
+              "in_progress"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "errors"
+        ],
+        "type": "object"
+      },
+      "LoggingPatch": {
+        "additionalProperties": true,
+        "properties": {
+          "level": {
+            "enum": [
+              "debug",
+              "info",
+              "warn",
+              "error"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "LoggingSettings": {
+        "additionalProperties": false,
+        "properties": {
+          "level": {
+            "description": "The least severe messages written to the log; applies straight away",
+            "enum": [
+              "debug",
+              "info",
+              "warn",
+              "error"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "level"
+        ],
+        "type": "object"
+      },
+      "LoginRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "password": {
+            "maxLength": 1024,
+            "minLength": 1,
+            "type": "string"
+          },
+          "totp": {
+            "description": "The one-time code, when TOTP is enabled",
+            "maxLength": 16,
+            "type": "string"
+          },
+          "username": {
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ],
+        "type": "object"
+      },
+      "Match": {
+        "additionalProperties": false,
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/Candidate"
+            },
+            "type": "array"
+          },
+          "decision": {
+            "enum": [
+              "play",
+              "ask",
+              "not_found"
+            ],
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          },
+          "margin": {
+            "format": "double",
+            "type": "number"
+          },
+          "normalized": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "normalized",
+          "decision",
+          "margin",
+          "candidates",
+          "target",
+          "error"
+        ],
+        "type": "object"
+      },
+      "MatchResult": {
+        "additionalProperties": false,
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/Candidate"
+            },
+            "type": "array"
+          },
+          "decision": {
+            "enum": [
+              "play",
+              "ask",
+              "not_found"
+            ],
+            "type": "string"
+          },
+          "margin": {
+            "format": "double",
+            "type": "number"
+          },
+          "normalized": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "normalized",
+          "decision",
+          "margin",
+          "candidates"
+        ],
+        "type": "object"
+      },
+      "ModelSize": {
+        "additionalProperties": false,
+        "properties": {
+          "bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "limit_bytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "locale": {
+            "type": "string"
+          },
+          "titles_in_model": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "titles_server_only": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "locale",
+          "bytes",
+          "limit_bytes",
+          "titles_in_model",
+          "titles_server_only"
+        ],
+        "type": "object"
+      },
+      "NewestTitle": {
+        "additionalProperties": false,
+        "properties": {
+          "findable": {
+            "type": "boolean"
+          },
+          "title": {
+            "type": "string"
+          },
+          "year": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "title",
+          "year",
+          "findable"
+        ],
+        "type": "object"
+      },
+      "NowPlaying": {
+        "additionalProperties": false,
+        "properties": {
+          "art_url": {
+            "description": "The item's poster or thumbnail, fetched from Kodi through encore; empty when Kodi has none",
+            "type": "string"
+          },
+          "duration_s": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "episode": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "paused": {
+            "type": "boolean"
+          },
+          "position_s": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "season": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "show": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "title",
+          "show",
+          "season",
+          "episode",
+          "position_s",
+          "duration_s",
+          "paused",
+          "art_url"
+        ],
+        "type": "object"
+      },
+      "OIDCAuth": {
+        "additionalProperties": false,
+        "properties": {
+          "admin_group": {
+            "type": "string"
+          },
+          "break_glass": {
+            "description": "Whether the local password still works in oidc and header modes (the config key auth.break_glass, or ENCORE_BREAK_GLASS=true)",
+            "type": "boolean"
+          },
+          "client_id": {
+            "type": "string"
+          },
+          "groups_claim": {
+            "type": "string"
+          },
+          "has_client_secret": {
+            "type": "boolean"
+          },
+          "issuer": {
+            "type": "string"
+          },
+          "redirect_uri": {
+            "type": "string"
+          },
+          "scopes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "issuer",
+          "client_id",
+          "has_client_secret",
+          "scopes",
+          "admin_group",
+          "groups_claim",
+          "redirect_uri",
+          "break_glass"
+        ],
+        "type": "object"
+      },
+      "OIDCAuthPatch": {
+        "additionalProperties": true,
+        "properties": {
+          "admin_group": {
+            "type": "string"
+          },
+          "break_glass": {
+            "description": "Keep the local password working in oidc and header modes",
+            "type": "boolean"
+          },
+          "client_id": {
+            "type": "string"
+          },
+          "client_secret": {
+            "description": "Write-only",
+            "type": "string"
+          },
+          "groups_claim": {
+            "type": "string"
+          },
+          "issuer": {
+            "type": "string"
+          },
+          "redirect_uri": {
+            "description": "Empty derives it from the request",
+            "type": "string"
+          },
+          "scopes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "Overview": {
+        "additionalProperties": false,
+        "properties": {
+          "attention": {
+            "items": {
+              "$ref": "#/components/schemas/Attention"
+            },
+            "type": "array"
+          },
+          "endpoint": {
+            "$ref": "#/components/schemas/EndpointCheck"
+          },
+          "instances": {
+            "items": {
+              "$ref": "#/components/schemas/Instance"
+            },
+            "type": "array"
+          },
+          "libraries": {
+            "$ref": "#/components/schemas/OverviewLibs"
+          },
+          "recent_requests": {
+            "items": {
+              "$ref": "#/components/schemas/RequestSummary"
+            },
+            "type": "array"
+          },
+          "requests_today": {
+            "$ref": "#/components/schemas/RequestsToday"
+          },
+          "skill": {
+            "$ref": "#/components/schemas/OverviewSkill"
+          }
+        },
+        "required": [
+          "skill",
+          "endpoint",
+          "libraries",
+          "requests_today",
+          "instances",
+          "recent_requests",
+          "attention"
+        ],
+        "type": "object"
+      },
+      "OverviewLibs": {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "shared_groups": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "synced_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "count",
+          "synced_at",
+          "shared_groups"
+        ],
+        "type": "object"
+      },
+      "OverviewSkill": {
+        "additionalProperties": false,
+        "properties": {
+          "locales": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "needs_deploy": {
+            "type": "boolean"
+          },
+          "stage": {
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "live",
+              "not_deployed",
+              "deploying",
+              "failed"
+            ],
+            "type": "string"
+          },
+          "update_reason": {
+            "description": "Why needs_deploy is set: the skill's settings changed, or only the library titles in the model",
+            "enum": [
+              "none",
+              "settings",
+              "library"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "state",
+          "stage",
+          "locales",
+          "needs_deploy",
+          "update_reason"
+        ],
+        "type": "object"
+      },
+      "PasteAmazonAuthorizationRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "redirect_url": {
+            "type": "string"
+          },
+          "refresh_token": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "Privacy": {
+        "additionalProperties": false,
+        "properties": {
+          "allows_purchases": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "contains_ads": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "is_child_directed": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "is_export_compliant": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "uses_personal_info": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "uses_personal_info",
+          "is_child_directed",
+          "is_export_compliant",
+          "contains_ads",
+          "allows_purchases"
+        ],
+        "type": "object"
+      },
+      "Reachability": {
+        "additionalProperties": false,
+        "properties": {
+          "checks": {
+            "items": {
+              "$ref": "#/components/schemas/ReachabilityCheck"
+            },
+            "type": "array"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "checks"
+        ],
+        "type": "object"
+      },
+      "ReachabilityCheck": {
+        "additionalProperties": false,
+        "properties": {
+          "detail": {
+            "type": "string"
+          },
+          "level": {
+            "enum": [
+              "ok",
+              "warn",
+              "fail"
+            ],
+            "type": "string"
+          },
+          "name": {
+            "enum": [
+              "alexa_endpoint",
+              "certificate",
+              "admin_exposed"
+            ],
+            "type": "string"
+          },
+          "note": {
+            "description": "Extra information about a passing check, shown beneath it; may hold line breaks",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "level",
+          "detail"
+        ],
+        "type": "object"
+      },
+      "RecentTitle": {
+        "additionalProperties": false,
+        "properties": {
+          "added_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "findable": {
+            "type": "boolean"
+          },
+          "in_skill_model": {
+            "type": "boolean"
+          },
+          "instance": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "year": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "title",
+          "year",
+          "kind",
+          "instance",
+          "added_at",
+          "findable",
+          "in_skill_model"
+        ],
+        "type": "object"
+      },
+      "Replay": {
+        "additionalProperties": false,
+        "properties": {
+          "match": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Match"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "speech": {
+            "type": "string"
+          },
+          "would_call": {
+            "items": {
+              "$ref": "#/components/schemas/WouldCall"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "speech",
+          "match",
+          "would_call"
+        ],
+        "type": "object"
+      },
+      "RequestDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "device_id": {
+            "description": "The Echo device's ID in /devices, or null if it has been forgotten",
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "device_name": {
+            "type": "string"
+          },
+          "duration_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "heard": {
+            "description": "What Alexa heard for the title, if the intent has one",
+            "type": "string"
+          },
+          "id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "intent": {
+            "type": "string"
+          },
+          "kodi_calls": {
+            "items": {
+              "$ref": "#/components/schemas/KodiCall"
+            },
+            "type": "array"
+          },
+          "locale": {
+            "type": "string"
+          },
+          "match": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Match"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "outcome": {
+            "enum": [
+              "played",
+              "asked",
+              "not_found",
+              "unlinked",
+              "error",
+              "ok"
+            ],
+            "type": "string"
+          },
+          "simulated": {
+            "description": "Sent by Amazon's simulator during a deploy's smoke test, not by an Echo",
+            "type": "boolean"
+          },
+          "slots": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "speech": {
+            "type": "string"
+          },
+          "target": {
+            "description": "The Kodi instance that handled it",
+            "type": "string"
+          },
+          "time": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "timing": {
+            "description": "How long each phase took; null for requests logged before Encore recorded it",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Timing"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "slots",
+          "match",
+          "kodi_calls",
+          "timing",
+          "speech",
+          "id",
+          "time",
+          "device_name",
+          "device_id",
+          "locale",
+          "intent",
+          "heard",
+          "outcome",
+          "duration_ms",
+          "target",
+          "simulated"
+        ],
+        "type": "object"
+      },
+      "RequestPage": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RequestSummary"
+            },
+            "type": "array"
+          },
+          "next_before": {
+            "description": "Pass as before= for the next page; null on the last page",
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "next_before"
+        ],
+        "type": "object"
+      },
+      "RequestSummary": {
+        "additionalProperties": false,
+        "properties": {
+          "device_id": {
+            "description": "The Echo device's ID in /devices, or null if it has been forgotten",
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "device_name": {
+            "type": "string"
+          },
+          "duration_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "heard": {
+            "description": "What Alexa heard for the title, if the intent has one",
+            "type": "string"
+          },
+          "id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "intent": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "played",
+              "asked",
+              "not_found",
+              "unlinked",
+              "error",
+              "ok"
+            ],
+            "type": "string"
+          },
+          "simulated": {
+            "description": "Sent by Amazon's simulator during a deploy's smoke test, not by an Echo",
+            "type": "boolean"
+          },
+          "target": {
+            "description": "The Kodi instance that handled it",
+            "type": "string"
+          },
+          "time": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "time",
+          "device_name",
+          "device_id",
+          "locale",
+          "intent",
+          "heard",
+          "outcome",
+          "duration_ms",
+          "target",
+          "simulated"
+        ],
+        "type": "object"
+      },
+      "RequestsToday": {
+        "additionalProperties": false,
+        "properties": {
+          "failed": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "median_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "total": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "failed",
+          "median_ms"
+        ],
+        "type": "object"
+      },
+      "Room": {
+        "additionalProperties": false,
+        "properties": {
+          "aliases": {
+            "items": {
+              "$ref": "#/components/schemas/RoomAlias"
+            },
+            "type": "array"
+          },
+          "id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "kodi_instance_id": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "kodi_instance_id",
+          "aliases"
+        ],
+        "type": "object"
+      },
+      "RoomAlias": {
+        "additionalProperties": false,
+        "properties": {
+          "alias": {
+            "type": "string"
+          },
+          "id": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "alias"
+        ],
+        "type": "object"
+      },
+      "S3Patch": {
+        "additionalProperties": true,
+        "properties": {
+          "access_key": {
+            "type": "string"
+          },
+          "addressing": {
+            "enum": [
+              "auto",
+              "path",
+              "virtual"
+            ],
+            "type": "string"
+          },
+          "bucket": {
+            "type": "string"
+          },
+          "ca_bundle": {
+            "type": "string"
+          },
+          "endpoint": {
+            "type": "string"
+          },
+          "insecure_skip_verify": {
+            "type": "boolean"
+          },
+          "prefix": {
+            "type": "string"
+          },
+          "region": {
+            "type": "string"
+          },
+          "secret_key": {
+            "description": "Write-only",
+            "type": "string"
+          },
+          "sse": {
+            "enum": [
+              "",
+              "s3",
+              "kms"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "S3Settings": {
+        "additionalProperties": false,
+        "properties": {
+          "access_key": {
+            "type": "string"
+          },
+          "addressing": {
+            "enum": [
+              "auto",
+              "path",
+              "virtual"
+            ],
+            "type": "string"
+          },
+          "bucket": {
+            "type": "string"
+          },
+          "ca_bundle": {
+            "type": "string"
+          },
+          "endpoint": {
+            "type": "string"
+          },
+          "has_secret_key": {
+            "type": "boolean"
+          },
+          "insecure_skip_verify": {
+            "type": "boolean"
+          },
+          "prefix": {
+            "type": "string"
+          },
+          "region": {
+            "type": "string"
+          },
+          "sse": {
+            "enum": [
+              "",
+              "s3",
+              "kms"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "endpoint",
+          "region",
+          "bucket",
+          "prefix",
+          "addressing",
+          "access_key",
+          "has_secret_key",
+          "ca_bundle",
+          "insecure_skip_verify",
+          "sse"
+        ],
+        "type": "object"
+      },
+      "SecretsInfo": {
+        "additionalProperties": false,
+        "properties": {
+          "key_id": {
+            "type": "string"
+          },
+          "key_source": {
+            "enum": [
+              "generated",
+              "config",
+              "file"
+            ],
+            "type": "string"
+          },
+          "rotated_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "key_source",
+          "key_id",
+          "rotated_at"
+        ],
+        "type": "object"
+      },
+      "ServerPatch": {
+        "additionalProperties": true,
+        "properties": {
+          "base_path": {
+            "description": "A path such as /encore, or / for none",
+            "maxLength": 128,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "ServerSettings": {
+        "additionalProperties": false,
+        "properties": {
+          "base_path": {
+            "description": "The URL path Encore is served under behind a path-routing proxy, e.g. /encore; applies straight away",
+            "type": "string"
+          }
+        },
+        "required": [
+          "base_path"
+        ],
+        "type": "object"
+      },
+      "SetAmazonCredentialsRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "client_id": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "client_secret": {
+            "description": "Write-only; omit to keep the stored one",
+            "maxLength": 256,
+            "type": "string"
+          }
+        },
+        "required": [
+          "client_id"
+        ],
+        "type": "object"
+      },
+      "Settings": {
+        "additionalProperties": false,
+        "properties": {
+          "auth": {
+            "$ref": "#/components/schemas/AuthSettings"
+          },
+          "features": {
+            "$ref": "#/components/schemas/Features"
+          },
+          "locale": {
+            "$ref": "#/components/schemas/LocaleSettings"
+          },
+          "logging": {
+            "$ref": "#/components/schemas/LoggingSettings"
+          },
+          "managed": {
+            "description": "Dotted keys set by encore.yml or ENCORE_* variables; shown read-only",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "secrets": {
+            "$ref": "#/components/schemas/SecretsInfo"
+          },
+          "server": {
+            "$ref": "#/components/schemas/ServerSettings"
+          },
+          "storage": {
+            "$ref": "#/components/schemas/StorageSettings"
+          }
+        },
+        "required": [
+          "server",
+          "auth",
+          "storage",
+          "secrets",
+          "features",
+          "logging",
+          "locale",
+          "managed"
+        ],
+        "type": "object"
+      },
+      "SettingsPatch": {
+        "additionalProperties": true,
+        "properties": {
+          "auth": {
+            "$ref": "#/components/schemas/AuthPatch"
+          },
+          "features": {
+            "$ref": "#/components/schemas/FeaturesPatch"
+          },
+          "locale": {
+            "$ref": "#/components/schemas/LocalePatch"
+          },
+          "logging": {
+            "$ref": "#/components/schemas/LoggingPatch"
+          },
+          "server": {
+            "$ref": "#/components/schemas/ServerPatch"
+          },
+          "storage": {
+            "$ref": "#/components/schemas/StoragePatch"
+          }
+        },
+        "type": "object"
+      },
+      "SkillEndpoint": {
+        "additionalProperties": false,
+        "properties": {
+          "url": {
+            "description": "The public HTTPS URL of /api/v1/alexa, served with a certificate from a public authority",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "type": "object"
+      },
+      "SkillEndpointInfo": {
+        "additionalProperties": false,
+        "properties": {
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "type": "object"
+      },
+      "SkillInfo": {
+        "additionalProperties": false,
+        "properties": {
+          "amazon": {
+            "$ref": "#/components/schemas/AmazonConnection"
+          },
+          "content": {
+            "description": "What the skill can play; music includes music videos",
+            "items": {
+              "enum": [
+                "movies",
+                "tv",
+                "music"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "endpoint": {
+            "$ref": "#/components/schemas/SkillEndpointInfo"
+          },
+          "invocation": {
+            "enum": [
+              "encore",
+              "kodi"
+            ],
+            "type": "string"
+          },
+          "invocation_name": {
+            "description": "What people say, \"Alexa, ask \u003cinvocation_name\u003e to…\", in the first enabled locale",
+            "type": "string"
+          },
+          "last_deploy": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/LastDeploy"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "locales_available": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "locales_enabled": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "model_size": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ModelSize"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "needs_deploy": {
+            "type": "boolean"
+          },
+          "privacy": {
+            "$ref": "#/components/schemas/Privacy"
+          },
+          "skill_id": {
+            "type": "string"
+          },
+          "skill_name": {
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "live",
+              "not_deployed",
+              "deploying",
+              "failed"
+            ],
+            "type": "string"
+          },
+          "update_reason": {
+            "description": "Why needs_deploy is set: the skill's settings changed, or only the library titles in the model",
+            "enum": [
+              "none",
+              "settings",
+              "library"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "amazon",
+          "skill_id",
+          "state",
+          "invocation",
+          "invocation_name",
+          "skill_name",
+          "locales_available",
+          "locales_enabled",
+          "content",
+          "endpoint",
+          "privacy",
+          "last_deploy",
+          "needs_deploy",
+          "update_reason",
+          "model_size"
+        ],
+        "type": "object"
+      },
+      "SkillSettingsInput": {
+        "additionalProperties": true,
+        "properties": {
+          "content": {
+            "description": "What the skill can play; music includes music videos. Omit to keep the current choice.",
+            "items": {
+              "enum": [
+                "movies",
+                "tv",
+                "music"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "endpoint": {
+            "$ref": "#/components/schemas/SkillEndpoint"
+          },
+          "invocation": {
+            "default": "encore",
+            "description": "encore uses each locale's own name for it (\"kodi\" in French); kodi is \"kodi\" in every locale",
+            "enum": [
+              "encore",
+              "kodi"
+            ],
+            "type": "string"
+          },
+          "locales_enabled": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "privacy": {
+            "$ref": "#/components/schemas/Privacy"
+          },
+          "skill_name": {
+            "description": "Empty uses each locale's default",
+            "maxLength": 50,
+            "type": "string"
+          }
+        },
+        "required": [
+          "invocation",
+          "skill_name",
+          "locales_enabled",
+          "endpoint",
+          "privacy"
+        ],
+        "type": "object"
+      },
+      "SplitLibraryRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "instance_id": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "instance_id"
+        ],
+        "type": "object"
+      },
+      "StoragePatch": {
+        "additionalProperties": true,
+        "properties": {
+          "backend": {
+            "enum": [
+              "local",
+              "s3",
+              "webdav"
+            ],
+            "type": "string"
+          },
+          "backups": {
+            "$ref": "#/components/schemas/BackupSettingsPatch"
+          },
+          "local": {
+            "$ref": "#/components/schemas/LocalStoragePatch"
+          },
+          "s3": {
+            "$ref": "#/components/schemas/S3Patch"
+          },
+          "webdav": {
+            "$ref": "#/components/schemas/WebDAVPatch"
+          }
+        },
+        "type": "object"
+      },
+      "StorageSettings": {
+        "additionalProperties": false,
+        "properties": {
+          "backend": {
+            "enum": [
+              "local",
+              "s3",
+              "webdav"
+            ],
+            "type": "string"
+          },
+          "backups": {
+            "$ref": "#/components/schemas/BackupSettings"
+          },
+          "local": {
+            "$ref": "#/components/schemas/LocalStorage"
+          },
+          "s3": {
+            "$ref": "#/components/schemas/S3Settings"
+          },
+          "webdav": {
+            "$ref": "#/components/schemas/WebDAVSettings"
+          }
+        },
+        "required": [
+          "backend",
+          "s3",
+          "webdav",
+          "local",
+          "backups"
+        ],
+        "type": "object"
+      },
+      "StorageTest": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "ok": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok",
+          "ms",
+          "error"
+        ],
+        "type": "object"
+      },
+      "TOTPEnrollment": {
+        "additionalProperties": false,
+        "properties": {
+          "otpauth_url": {
+            "description": "otpauth:// URL, for a QR code",
+            "type": "string"
+          },
+          "secret": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "secret",
+          "otpauth_url"
+        ],
+        "type": "object"
+      },
+      "TestMatchRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "kinds": {
+            "items": {
+              "enum": [
+                "movie",
+                "tvshow",
+                "episode",
+                "artist",
+                "album",
+                "song",
+                "musicvideo",
+                "playlist"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "library_id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "query": {
+            "maxLength": 500,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "library_id",
+          "query"
+        ],
+        "type": "object"
+      },
+      "TestResult": {
+        "additionalProperties": false,
+        "properties": {
+          "checks": {
+            "items": {
+              "$ref": "#/components/schemas/Check"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "checks"
+        ],
+        "type": "object"
+      },
+      "Timing": {
+        "additionalProperties": false,
+        "properties": {
+          "kodi_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "match_ms": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "verify_ms": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "verify_ms",
+          "match_ms",
+          "kodi_ms"
+        ],
+        "type": "object"
+      },
+      "TitleAlias": {
+        "additionalProperties": false,
+        "properties": {
+          "alias": {
+            "type": "string"
+          },
+          "id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "library_id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "media_id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "library_id",
+          "kind",
+          "media_id",
+          "title",
+          "alias"
+        ],
+        "type": "object"
+      },
+      "UpdateDeviceRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "kodi_instance_id": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "name": {
+            "maxLength": 64,
+            "type": "string"
+          },
+          "room_id": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "UpdateLibraryRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "source_instance_id": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "source_instance_id"
+        ],
+        "type": "object"
+      },
+      "UpdateRoomRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "kodi_instance_id": {
+            "format": "int64",
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "name": {
+            "maxLength": 64,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "UpdateSkillContentRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "content": {
+            "description": "What the skill can play; music includes music videos",
+            "items": {
+              "enum": [
+                "movies",
+                "tv",
+                "music"
+              ],
+              "type": "string"
+            },
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "content"
+        ],
+        "type": "object"
+      },
+      "User": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "WebDAVPatch": {
+        "additionalProperties": true,
+        "properties": {
+          "password": {
+            "description": "Write-only",
+            "type": "string"
+          },
+          "prefix": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "WebDAVSettings": {
+        "additionalProperties": false,
+        "properties": {
+          "has_password": {
+            "type": "boolean"
+          },
+          "prefix": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "url",
+          "username",
+          "has_password",
+          "prefix"
+        ],
+        "type": "object"
+      },
+      "WouldCall": {
+        "additionalProperties": false,
+        "properties": {
+          "method": {
+            "type": "string"
+          },
+          "params": {
+            "additionalProperties": {},
+            "type": "object"
+          }
+        },
+        "required": [
+          "method",
+          "params"
+        ],
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "session": {
+        "description": "Admin session; trusted-header requests from server.trusted_proxies are accepted too.",
+        "in": "cookie",
+        "name": "encore_session",
+        "type": "apiKey"
+      }
+    }
+  },
+  "info": {
+    "description": "The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.",
+    "title": "Encore admin API",
+    "version": "1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/aliases": {
+      "get": {
+        "operationId": "listAliases",
+        "parameters": [
+          {
+            "explode": false,
+            "in": "query",
+            "name": "library_id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TitleAlias"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "List title aliases of a library",
+        "tags": [
+          "match"
+        ]
+      },
+      "post": {
+        "description": "The alias is added to the skill model on the next deploy.",
+        "operationId": "createAlias",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAliasRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TitleAlias"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Add a spoken alias for a title",
+        "tags": [
+          "match"
+        ]
+      }
+    },
+    "/api/v1/aliases/{id}": {
+      "delete": {
+        "operationId": "deleteAlias",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Remove a title alias",
+        "tags": [
+          "match"
+        ]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Sign in with a username and password",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "logout",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Sign out",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/oidc/callback": {
+      "get": {
+        "description": "Redirects to the web interface, or to its sign-in page with an error parameter.",
+        "operationId": "oidcCallback",
+        "parameters": [
+          {
+            "explode": false,
+            "in": "query",
+            "name": "code",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "state",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "error",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Found",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Finish OpenID Connect sign-in",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/oidc/login": {
+      "get": {
+        "operationId": "oidcLogin",
+        "responses": {
+          "302": {
+            "description": "Found",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Start OpenID Connect sign-in",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/password": {
+      "put": {
+        "description": "Signs out every other session.",
+        "operationId": "changePassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Change the local admin password",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/state": {
+      "get": {
+        "operationId": "getAuthState",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthState"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Sign-in state and CSRF token",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/totp/confirm": {
+      "post": {
+        "operationId": "confirmTOTP",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmTOTPRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Finish TOTP enrolment with a code",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/totp/disable": {
+      "post": {
+        "operationId": "disableTOTP",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisableTOTPRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Turn TOTP off",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/totp/enroll": {
+      "post": {
+        "description": "Returns a new secret to add to an authenticator app; it takes effect once confirmed.",
+        "operationId": "enrollTOTP",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TOTPEnrollment"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Start TOTP enrolment",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/client-errors": {
+      "post": {
+        "description": "Logged at warn level on the server, at most 20 a minute.",
+        "operationId": "reportClientError",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClientErrorReport"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Report an error the web interface hit",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/config/export": {
+      "get": {
+        "description": "Settings and Kodi instances in encore.yml form. Secrets are left out unless include_secrets=true, which needs a sign-in within the last 15 minutes (or a trusted-header request).",
+        "operationId": "exportConfig",
+        "parameters": [
+          {
+            "explode": false,
+            "in": "query",
+            "name": "include_secrets",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/yaml": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "encore.yml",
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Content-Type": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Export the configuration as encore.yml",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/v1/config/import": {
+      "post": {
+        "description": "Applies the settings and Kodi instances it contains. Keys managed by config, and keys the web interface cannot change, are skipped.",
+        "operationId": "importConfig",
+        "requestBody": {
+          "content": {
+            "application/yaml": {
+              "schema": {
+                "contentMediaType": "application/octet-stream",
+                "format": "binary",
+                "type": "string"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Import an encore.yml",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/v1/devices": {
+      "get": {
+        "operationId": "listDevices",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Device"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "List Echo devices",
+        "tags": [
+          "devices"
+        ]
+      }
+    },
+    "/api/v1/devices/{id}": {
+      "delete": {
+        "operationId": "deleteDevice",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Forget an Echo device",
+        "tags": [
+          "devices"
+        ]
+      },
+      "patch": {
+        "operationId": "updateDevice",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDeviceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Device"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Name an Echo device, put it in a room or link it to a Kodi instance",
+        "tags": [
+          "devices"
+        ]
+      }
+    },
+    "/api/v1/events": {
+      "get": {
+        "description": "Each event has a monotonic id (resume with the Last-Event-ID header), an event name (request, instance, library, device, deploy, attention) and a JSON data payload. A comment heartbeat is sent every 15 seconds. Slow clients are disconnected and should reconnect.",
+        "operationId": "streamEvents",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Last-Event-ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "An event stream"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Live updates as Server-Sent Events",
+        "tags": [
+          "events"
+        ]
+      }
+    },
+    "/api/v1/kodi/discovered": {
+      "get": {
+        "operationId": "listDiscoveredKodi",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DiscoveredInstance"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Find Kodi instances on the network with mDNS",
+        "tags": [
+          "kodi"
+        ]
+      }
+    },
+    "/api/v1/kodi/instances": {
+      "get": {
+        "operationId": "listKodiInstances",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Instance"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "List Kodi instances",
+        "tags": [
+          "kodi"
+        ]
+      },
+      "post": {
+        "operationId": "createKodiInstance",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InstanceInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Instance"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Add a Kodi instance",
+        "tags": [
+          "kodi"
+        ]
+      }
+    },
+    "/api/v1/kodi/instances/{id}": {
+      "delete": {
+        "operationId": "deleteKodiInstance",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Remove a Kodi instance",
+        "tags": [
+          "kodi"
+        ]
+      },
+      "get": {
+        "operationId": "getKodiInstance",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Instance"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Get a Kodi instance",
+        "tags": [
+          "kodi"
+        ]
+      },
+      "patch": {
+        "operationId": "updateKodiInstance",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InstanceInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Instance"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Change a Kodi instance",
+        "tags": [
+          "kodi"
+        ]
+      }
+    },
+    "/api/v1/kodi/instances/{id}/art": {
+      "get": {
+        "description": "Fetches an image:// reference (as in now_playing.art_url) from the instance's web server with its credentials, so the browser needn't reach Kodi itself. Anything other than an image:// reference is refused.",
+        "operationId": "getKodiArt",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "The image:// reference",
+            "explode": false,
+            "in": "query",
+            "name": "ref",
+            "required": true,
+            "schema": {
+              "description": "The image:// reference",
+              "maxLength": 2048,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/*": {
+                "schema": {
+                  "contentMediaType": "application/octet-stream",
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "The image"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Fetch artwork from a Kodi instance",
+        "tags": [
+          "kodi"
+        ]
+      }
+    },
+    "/api/v1/kodi/instances/{id}/default": {
+      "post": {
+        "operationId": "setDefaultKodiInstance",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Make a Kodi instance the default for unlinked Echo devices",
+        "tags": [
+          "kodi"
+        ]
+      }
+    },
+    "/api/v1/kodi/instances/{id}/sync": {
+      "post": {
+        "operationId": "syncKodiInstance",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Accepted"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Reload a Kodi instance's library",
+        "tags": [
+          "kodi"
+        ]
+      }
+    },
+    "/api/v1/kodi/instances/{id}/test": {
+      "post": {
+        "operationId": "testKodiInstance",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Test the connection to a Kodi instance",
+        "tags": [
+          "kodi"
+        ]
+      }
+    },
+    "/api/v1/kodi/instances/{id}/wake": {
+      "post": {
+        "operationId": "wakeKodiInstance",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Accepted"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Wake a Kodi instance with Wake-on-LAN",
+        "tags": [
+          "kodi"
+        ]
+      }
+    },
+    "/api/v1/libraries": {
+      "get": {
+        "operationId": "listLibraries",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Library"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "List libraries",
+        "tags": [
+          "libraries"
+        ]
+      }
+    },
+    "/api/v1/libraries/group": {
+      "post": {
+        "operationId": "groupLibrary",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupLibraryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Library"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Group Kodi instances that share a library",
+        "tags": [
+          "libraries"
+        ]
+      }
+    },
+    "/api/v1/libraries/{id}": {
+      "patch": {
+        "operationId": "updateLibrary",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateLibraryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Library"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Choose which instance syncs a shared library",
+        "tags": [
+          "libraries"
+        ]
+      }
+    },
+    "/api/v1/libraries/{id}/recent": {
+      "get": {
+        "operationId": "listRecentTitles",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 20,
+              "format": "int64",
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/RecentTitle"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Recently added titles",
+        "tags": [
+          "libraries"
+        ]
+      }
+    },
+    "/api/v1/libraries/{id}/split": {
+      "post": {
+        "operationId": "splitLibrary",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SplitLibraryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Take a Kodi instance out of a shared library",
+        "tags": [
+          "libraries"
+        ]
+      }
+    },
+    "/api/v1/match": {
+      "post": {
+        "operationId": "testMatch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestMatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatchResult"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Test how a spoken title is matched",
+        "tags": [
+          "match"
+        ]
+      }
+    },
+    "/api/v1/oauth/lwa/callback": {
+      "get": {
+        "description": "Public; checked against the state of a pending authorisation. Redirects to the page that started it (the Alexa skill page or the setup wizard).",
+        "operationId": "lwaCallback",
+        "parameters": [
+          {
+            "explode": false,
+            "in": "query",
+            "name": "code",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "state",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "error",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "error_description",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Found",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Finish Login with Amazon",
+        "tags": [
+          "skill"
+        ]
+      }
+    },
+    "/api/v1/overview": {
+      "get": {
+        "operationId": "getOverview",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Overview"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Dashboard",
+        "tags": [
+          "overview"
+        ]
+      }
+    },
+    "/api/v1/requests": {
+      "get": {
+        "operationId": "listRequests",
+        "parameters": [
+          {
+            "explode": false,
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 50,
+              "format": "int64",
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Only requests older than this ID",
+            "explode": false,
+            "in": "query",
+            "name": "before",
+            "schema": {
+              "description": "Only requests older than this ID",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Only requests from this Echo device ID",
+            "explode": false,
+            "in": "query",
+            "name": "device",
+            "schema": {
+              "description": "Only requests from this Echo device ID",
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "explode": false,
+            "in": "query",
+            "name": "outcome",
+            "schema": {
+              "enum": [
+                "",
+                "played",
+                "asked",
+                "not_found",
+                "unlinked",
+                "error",
+                "ok"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "description": "Search intent, heard text, speech and target",
+            "explode": false,
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "description": "Search intent, heard text, speech and target",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Only requests from an Echo, leaving out the simulator's during deploy smoke tests",
+            "explode": false,
+            "in": "query",
+            "name": "echo",
+            "schema": {
+              "description": "Only requests from an Echo, leaving out the simulator's during deploy smoke tests",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestPage"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "List handled Alexa requests",
+        "tags": [
+          "requests"
+        ]
+      }
+    },
+    "/api/v1/requests/{id}": {
+      "get": {
+        "operationId": "getRequest",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestDetail"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Get one request with its match details",
+        "tags": [
+          "requests"
+        ]
+      }
+    },
+    "/api/v1/requests/{id}/replay": {
+      "post": {
+        "operationId": "replayRequest",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Replay"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Replay a request against the current index without touching Kodi",
+        "tags": [
+          "requests"
+        ]
+      }
+    },
+    "/api/v1/rooms": {
+      "get": {
+        "operationId": "listRooms",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Room"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "List rooms",
+        "tags": [
+          "rooms"
+        ]
+      },
+      "post": {
+        "operationId": "createRoom",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRoomRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Room"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Add a room",
+        "tags": [
+          "rooms"
+        ]
+      }
+    },
+    "/api/v1/rooms/{id}": {
+      "delete": {
+        "operationId": "deleteRoom",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Remove a room",
+        "tags": [
+          "rooms"
+        ]
+      },
+      "patch": {
+        "operationId": "updateRoom",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRoomRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Room"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Rename a room or change its Kodi instance",
+        "tags": [
+          "rooms"
+        ]
+      }
+    },
+    "/api/v1/rooms/{id}/aliases": {
+      "post": {
+        "operationId": "addRoomAlias",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddRoomAliasRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoomAlias"
+                }
+              }
+            },
+            "description": "Created"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Add another spoken name for a room",
+        "tags": [
+          "rooms"
+        ]
+      }
+    },
+    "/api/v1/rooms/{id}/aliases/{alias_id}": {
+      "delete": {
+        "operationId": "deleteRoomAlias",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "alias_id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Remove a room alias",
+        "tags": [
+          "rooms"
+        ]
+      }
+    },
+    "/api/v1/settings": {
+      "get": {
+        "operationId": "getSettings",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Settings"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Get settings",
+        "tags": [
+          "settings"
+        ]
+      },
+      "patch": {
+        "description": "A partial settings document. Secrets are write-only (secret_key, password, client_secret); an empty string removes one. Keys managed by config are refused with 409. Changing auth.mode signs out every other session.",
+        "operationId": "updateSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SettingsPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Settings"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Change settings",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/v1/settings/backups/run": {
+      "post": {
+        "operationId": "runBackup",
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Accepted"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Back up the database to the storage backend now",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/v1/settings/secrets/rotate": {
+      "post": {
+        "description": "Only when Encore generated the key itself; with secrets.key or a key file the operator rotates it (409).",
+        "operationId": "rotateSecretsKey",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Re-encrypt every secret under a new generated key",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/v1/settings/storage/test": {
+      "post": {
+        "operationId": "testStorage",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StorageTest"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Write, read back and delete a probe object in the storage backend",
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/v1/setup/admin": {
+      "post": {
+        "description": "Only before an admin exists. The one-time setup token is printed in the server log at startup.",
+        "operationId": "createAdmin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAdminRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Create the first admin account",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/setup/reachability": {
+      "post": {
+        "description": "Probes the public URL the way Alexa would: an unsigned POST to /api/v1/alexa must be answered 400 by encore; the TLS certificate must be trusted and the endpoint must accept TLS 1.2, the only version Alexa offers; and, for information, whether other /api/v1 routes are reachable through the proxy too (they always need a sign-in). Needs an admin session, or before the admin account exists, the setup token.",
+        "operationId": "checkReachability",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckReachabilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Reachability"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "summary": "Check Encore's public address",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/skill": {
+      "get": {
+        "operationId": "getSkill",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillInfo"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Get the Alexa skill's settings and deploy state",
+        "tags": [
+          "skill"
+        ]
+      }
+    },
+    "/api/v1/skill/amazon": {
+      "delete": {
+        "operationId": "disconnectAmazon",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Forget the Login with Amazon authorisation",
+        "tags": [
+          "skill"
+        ]
+      }
+    },
+    "/api/v1/skill/amazon/authorize": {
+      "get": {
+        "description": "return_urls must be listed under the security profile's Allowed Return URLs. Over HTTPS the consent page returns to Encore's callback; otherwise to the local address, whose URL the user pastes back. Until the client ID and secret are saved, url is empty and only return_urls is filled in, so they can be shown while the security profile is being created.",
+        "operationId": "authorizeAmazon",
+        "parameters": [
+          {
+            "description": "One of return_urls, to choose the flow explicitly",
+            "explode": false,
+            "in": "query",
+            "name": "return_url",
+            "schema": {
+              "description": "One of return_urls, to choose the flow explicitly",
+              "type": "string"
+            }
+          },
+          {
+            "description": "The page the callback returns to",
+            "explode": false,
+            "in": "query",
+            "name": "then",
+            "schema": {
+              "default": "alexa-skill",
+              "description": "The page the callback returns to",
+              "enum": [
+                "alexa-skill",
+                "setup"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorizeInfo"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Get the Login with Amazon consent URL",
+        "tags": [
+          "skill"
+        ]
+      }
+    },
+    "/api/v1/skill/amazon/credentials": {
+      "put": {
+        "description": "Changing the client ID forgets the stored authorisation.",
+        "operationId": "setAmazonCredentials",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetAmazonCredentialsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Save the Login with Amazon security profile's client ID and secret",
+        "tags": [
+          "skill"
+        ]
+      }
+    },
+    "/api/v1/skill/amazon/paste": {
+      "post": {
+        "description": "Either the address the browser was sent to after consenting (redirect_url), or a refresh token from `ask util generate-lwa-tokens` (refresh_token).",
+        "operationId": "pasteAmazonAuthorization",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasteAmazonAuthorizationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Finish Login with Amazon by pasting",
+        "tags": [
+          "skill"
+        ]
+      }
+    },
+    "/api/v1/skill/content": {
+      "put": {
+        "description": "Saves alexa.content alone, as the setup wizard does before the first Kodi is added, so its first library sync fetches only what the skill plays. Applies on the next deploy for the skill model, at once for library syncs.",
+        "operationId": "updateSkillContent",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSkillContentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillInfo"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Change what the skill plays",
+        "tags": [
+          "skill"
+        ]
+      }
+    },
+    "/api/v1/skill/deploy": {
+      "post": {
+        "description": "Runs in the background, one deploy at a time; progress arrives as deploy events and from GET /skill/deploy/{id}. Refused with 422 until every privacy question is answered.",
+        "operationId": "deploySkill",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeploySkillRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Accepted"
+                }
+              }
+            },
+            "description": "Accepted"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Deploy the skill to your Amazon developer account",
+        "tags": [
+          "skill"
+        ]
+      }
+    },
+    "/api/v1/skill/deploy/{id}": {
+      "get": {
+        "operationId": "getDeploy",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Deploy"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Get a deploy's progress",
+        "tags": [
+          "skill"
+        ]
+      }
+    },
+    "/api/v1/skill/package": {
+      "get": {
+        "description": "A zip with skill-package/ and ask-resources.json, for a manual upload or `ask deploy`.",
+        "operationId": "downloadSkillPackage",
+        "responses": {
+          "200": {
+            "content": {
+              "application/zip": {
+                "schema": {
+                  "contentMediaType": "application/octet-stream",
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "The skill package",
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Content-Type": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Download the skill package",
+        "tags": [
+          "skill"
+        ]
+      }
+    },
+    "/api/v1/skill/settings": {
+      "put": {
+        "operationId": "updateSkillSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SkillSettingsInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkillInfo"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Change the skill's settings",
+        "tags": [
+          "skill"
+        ]
+      }
+    }
+  }
+}

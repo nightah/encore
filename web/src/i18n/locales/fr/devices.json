@@ -1,0 +1,100 @@
+{
+  "controlsKodi": "Pilote Kodi",
+  "dialog": {
+    "cancel": "Annuler",
+    "confirmForget": "Oublier cet Echo ? Il reviendra, non associé, la prochaine fois qu'il enverra une demande.",
+    "editEcho": "Modifier l'Echo",
+    "editTitle": "Modifier {{name}}",
+    "fields": {
+      "kodi": {
+        "hint": "Dites « …dans la chambre » pour changer de Kodi le temps d'une demande."
+      },
+      "name": {
+        "hint": "Alexa ne communique pas le nom des appareils, nommez-le donc ici.",
+        "label": "Nom"
+      },
+      "room": {
+        "label": "Pièce",
+        "none": "Aucune pièce"
+      }
+    },
+    "forget": "Oublier l'appareil",
+    "forgetEllipsis": "Oublier l'appareil…",
+    "keep": "Le garder",
+    "save": "Enregistrer"
+  },
+  "notLinked": "Non associé",
+  "page": {
+    "description": "Chaque Echo pilote un Kodi par défaut. Dites « …dans la chambre » pour changer de Kodi le temps d'une demande.",
+    "title": "Appareils Echo et pièces"
+  },
+  "rooms": {
+    "add": "Ajouter une pièce",
+    "card": {
+      "add": "Ajouter",
+      "addAliasButton": "Ajouter un nom prononcé à {{name}}",
+      "addAliasLabel": "Ajouter un nom prononcé pour {{name}}",
+      "addAliasPlaceholder": "Ajouter un nom prononcé",
+      "aliases": "Noms prononcés pour {{name}}",
+      "edit": "Modifier la pièce {{name}}",
+      "kodi": "→ Kodi « {{name}} »",
+      "noKodi": "→ aucune instance Kodi",
+      "removeAlias": "Supprimer le nom prononcé « {{alias}} »"
+    },
+    "dialog": {
+      "addTitle": "Ajouter une pièce",
+      "cancel": "Annuler",
+      "confirmRemove": "Supprimer {{name}} et ses noms prononcés ? Les Echo qui s'y trouvent gardent leur association à Kodi.",
+      "editTitle": "Modifier {{name}}",
+      "fields": {
+        "kodi": {
+          "hint": "Où « …dans la cuisine » lance la lecture.",
+          "label": "Instance Kodi",
+          "none": "Aucune"
+        },
+        "name": {
+          "label": "Nom",
+          "placeholder": "Cuisine"
+        }
+      },
+      "keep": "La garder",
+      "remove": "Supprimer la pièce",
+      "removeEllipsis": "Supprimer…",
+      "save": "Enregistrer"
+    },
+    "empty": "Aucune pièce pour l'instant.",
+    "intro": "Ces noms sont ajoutés au modèle d'interaction de la skill, pour qu'Alexa les reconnaisse dans « mets Bluey <b>dans la chambre des enfants</b> ».",
+    "title": "Pièces et noms prononcés"
+  },
+  "table": {
+    "anUnnamedEcho": "un Echo sans nom",
+    "columns": {
+      "actions": "Actions",
+      "controls": "Pilote",
+      "lastRequest": "Dernière demande",
+      "name": "Nom",
+      "room": "Pièce",
+      "today": "Aujourd'hui"
+    },
+    "edit": "Modifier",
+    "editNamed": "Modifier {{name}}",
+    "empty": "Aucun Echo pour l'instant. Ils apparaissent ici après leur première demande à la skill.",
+    "identified": "C'est l'Echo auquel vous venez de parler",
+    "identifyHint": "Vous ne savez plus quel Echo est lequel ? Dites « Alexa, demande à {{invocation}} quel appareil est-ce » et il sera mis en évidence ici.",
+    "spokeTo": "Vous venez de parler à {{name}}.",
+    "title": "Appareils"
+  },
+  "unlinked": {
+    "deviceName": "Nom de l'appareil",
+    "firstRequest": {
+      "other": "Première demande {{when}}{{heard}}. Appareil <mono>{{id}}</mono>",
+      "today": "Première demande aujourd'hui à {{when}}{{heard}}. Appareil <mono>{{id}}</mono>"
+    },
+    "link": "Associer l'appareil",
+    "linked": "Echo associé.",
+    "placeholder": "Echo Dot de la cuisine",
+    "title": "Nouvel Echo entendu : pas encore associé à un Kodi",
+    "titleIdentified": "C'est l'Echo auquel vous venez de parler : pas encore associé à un Kodi"
+  },
+  "unnamed": "Echo sans nom"
+}

@@ -1,0 +1,22 @@
+{
+  "version": "1.0",
+  "sessionAttributes": {
+    "followup": {
+      "confirm": "shutdown"
+    }
+  },
+  "response": {
+    "outputSpeech": {
+      "type": "PlainText",
+      "text": "Are you sure you want to shut down Lounge?"
+    },
+    "reprompt": {
+      "outputSpeech": {
+        "type": "PlainText",
+        "text": "Are you sure you want to shut down Lounge?"
+      }
+    },
+    "shouldEndSession": false
+  }
+}
+

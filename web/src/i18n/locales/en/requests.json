@@ -1,0 +1,67 @@
+{
+  "detail": {
+    "alexaSaid": "Alexa said",
+    "callFailed": "(failed)",
+    "candidates": {
+      "label": "Match candidates",
+      "none": "No candidates.",
+      "score": "{{title}}: score {{score}}",
+      "unlinked": "This Echo isn't linked to a Kodi instance, and no default is set for unlinked Echos."
+    },
+    "copied": "Copied",
+    "copy": "Copy JSON",
+    "intent": "Intent",
+    "kodiCalls": "Kodi calls",
+    "loading": "Loading the request…",
+    "noCalls": "None.",
+    "replay": "Replay (dry run)",
+    "replayResult": {
+      "label": "Replay result",
+      "noCalls": "No Kodi calls.",
+      "title": "Replay against the current index (Kodi not touched)",
+      "topMatch": "Top match: {{title}}, {{score}}.",
+      "wouldCall": "Would call",
+      "wouldSay": "Alexa would say: “{{speech}}”"
+    },
+    "silent": "Nothing (silent).",
+    "slotRaw": "Slot (raw)",
+    "target": {
+      "label": "Target Kodi",
+      "none": "None",
+      "unlinked": "None (device not linked)"
+    },
+    "timing": {
+      "fallback": "Encore {{encore}} · Kodi {{kodi}} · total {{total}}",
+      "label": "Timing",
+      "split": "verify {{verify}} · match {{match}} · Kodi {{kodi}} · total {{total}}"
+    }
+  },
+  "empty": {
+    "filtered": "Try a different search or clear the filters.",
+    "filteredTitle": "No matching requests",
+    "none": "Requests appear here as soon as an Echo talks to Encore. Say “Alexa, ask {{invocation}} what's playing.”",
+    "noneTitle": "No requests yet"
+  },
+  "filters": {
+    "allDevices": "All Echos",
+    "allOutcomes": "All outcomes",
+    "device": "Echo device",
+    "label": "Filter requests",
+    "outcome": "Outcome",
+    "search": "Search what was heard",
+    "unnamedDevice": "Unnamed Echo"
+  },
+  "list": {
+    "label": "Requests",
+    "loading": "Loading requests…",
+    "loadOlder": "Load older requests"
+  },
+  "live": {
+    "off": "Reconnecting…",
+    "on": "Live",
+    "retention": "last 500 requests or 7 days kept"
+  },
+  "newRequest": "New request from {{device}}{{heard}}",
+  "title": "Request log",
+  "unnamedDevice": "an unnamed Echo"
+}

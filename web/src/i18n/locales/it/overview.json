@@ -1,0 +1,91 @@
+{
+  "attention": {
+    "empty": "Niente richiede la tua attenzione.",
+    "links": {
+      "needsDeploy": "Aggiorna ora",
+      "open": "Apri",
+      "unlinkedDevice": "Collega dispositivo"
+    },
+    "title": "Da sistemare"
+  },
+  "description": "Tutto ciò che serve ad Alexa per raggiungere le tue istanze di Kodi, a colpo d'occhio. Sola lettura: le modifiche si fanno nella pagina di ciascuna sezione.",
+  "instances": {
+    "asleep": {
+      "addMac": "Aggiungi il suo indirizzo MAC così le richieste vocali possono riattivarla.",
+      "manage": "Gestisci nella pagina Kodi",
+      "plain": "In standby.",
+      "since": "In standby dalle {{time}}.",
+      "willWake": "Le richieste vocali la riattiveranno automaticamente."
+    },
+    "empty": {
+      "action": "Aggiungine una nella pagina Kodi",
+      "body": "Aggiungi un'istanza di Kodi così Alexa ha qualcosa da controllare.",
+      "title": "Ancora nessuna istanza di Kodi"
+    },
+    "episode": "S{{season}} · E{{episode}} “{{title}}”",
+    "idle": "Nessuna riproduzione.",
+    "offline": {
+      "test": "Provala nella pagina Kodi",
+      "text": "Non risponde. Controlla che Kodi sia in esecuzione e raggiungibile."
+    },
+    "progress": "Avanzamento {{percent}} percento",
+    "title": "Istanze di Kodi"
+  },
+  "ms": "{{ms}} ms",
+  "openRequestLog": "Apri il registro delle richieste",
+  "recent": {
+    "columns": {
+      "echo": "Echo",
+      "heard": "Sentito",
+      "result": "Esito",
+      "time": "Ora"
+    },
+    "empty": "Ancora nessuna richiesta. Di' “Alexa, chiedi a {{invocation}} cosa c'è in riproduzione.”",
+    "open": "Apri la richiesta delle {{time}} nel registro",
+    "title": "Richieste recenti",
+    "viewAll": "Vedi tutte"
+  },
+  "status": {
+    "endpoint": {
+      "label": "Endpoint pubblico",
+      "notReachable": "{{host}} non è raggiungibile dall'esterno",
+      "reachable": "{{host}} raggiungibile",
+      "unreachable": "Non raggiungibile"
+    },
+    "label": "Stato",
+    "libraries": {
+      "and": " e ",
+      "count_one": "{{count, number}} libreria",
+      "count_other": "{{count, number}} librerie",
+      "label": "Librerie",
+      "noneShared": "nessuna condivisa",
+      "notSynced": "Non ancora sincronizzate",
+      "shared_one": "{{count}} condivisa",
+      "shared_other": "{{count}} condivise",
+      "shareOne": "{{names}} ne condividono una",
+      "synced": "Sincronizzate {{when}}"
+    },
+    "requests": {
+      "detail": "{{failed}} non riuscite · mediana {{ms}} ms",
+      "label": "Richieste di oggi"
+    },
+    "skill": {
+      "label": "Skill di Alexa",
+      "locales_one": "{{count, number}} lingua",
+      "locales_other": "{{count, number}} lingue",
+      "stage": {
+        "development": "Fase di sviluppo",
+        "live": "Fase pubblicata",
+        "other": "Fase {{stage}}"
+      },
+      "state": {
+        "deploying": "Distribuzione in corso…",
+        "failed": "Distribuzione non riuscita",
+        "live": "Pubblicata",
+        "not_deployed": "Non distribuita"
+      },
+      "updatePending": "aggiornamento in sospeso"
+    }
+  },
+  "title": "Panoramica"
+}

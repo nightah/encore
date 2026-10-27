@@ -1,0 +1,100 @@
+{
+  "controlsKodi": "Controls Kodi",
+  "dialog": {
+    "cancel": "Cancel",
+    "confirmForget": "Forget this Echo? It comes back, unlinked, the next time it sends a request.",
+    "editEcho": "Edit Echo",
+    "editTitle": "Edit {{name}}",
+    "fields": {
+      "kodi": {
+        "hint": "Say “…on the bedroom TV” to override it for one request."
+      },
+      "name": {
+        "hint": "Alexa doesn't share device names, so label it here.",
+        "label": "Name"
+      },
+      "room": {
+        "label": "Room",
+        "none": "No room"
+      }
+    },
+    "forget": "Forget device",
+    "forgetEllipsis": "Forget device…",
+    "keep": "Keep it",
+    "save": "Save"
+  },
+  "notLinked": "Not linked",
+  "page": {
+    "description": "Each Echo controls one Kodi by default. Say “…on the bedroom TV” to override it for one request.",
+    "title": "Echo devices and rooms"
+  },
+  "rooms": {
+    "add": "Add room",
+    "card": {
+      "add": "Add",
+      "addAliasButton": "Add spoken name to {{name}}",
+      "addAliasLabel": "Add a spoken name for {{name}}",
+      "addAliasPlaceholder": "Add spoken name",
+      "aliases": "Spoken names for {{name}}",
+      "edit": "Edit room {{name}}",
+      "kodi": "→ Kodi “{{name}}”",
+      "noKodi": "→ no Kodi instance",
+      "removeAlias": "Remove spoken name “{{alias}}”"
+    },
+    "dialog": {
+      "addTitle": "Add a room",
+      "cancel": "Cancel",
+      "confirmRemove": "Remove {{name}} and its spoken names? Echos in it keep their Kodi link.",
+      "editTitle": "Edit {{name}}",
+      "fields": {
+        "kodi": {
+          "hint": "Where “…in the kitchen” plays.",
+          "label": "Kodi instance",
+          "none": "None"
+        },
+        "name": {
+          "label": "Name",
+          "placeholder": "Kitchen"
+        }
+      },
+      "keep": "Keep it",
+      "remove": "Remove room",
+      "removeEllipsis": "Remove…",
+      "save": "Save"
+    },
+    "empty": "No rooms yet.",
+    "intro": "These names are added to the skill's interaction model, so Alexa recognises them in “play Bluey <b>in the kids' room</b>”.",
+    "title": "Rooms and spoken names"
+  },
+  "table": {
+    "anUnnamedEcho": "an unnamed Echo",
+    "columns": {
+      "actions": "Actions",
+      "controls": "Controls",
+      "lastRequest": "Last request",
+      "name": "Name",
+      "room": "Room",
+      "today": "Today"
+    },
+    "edit": "Edit",
+    "editNamed": "Edit {{name}}",
+    "empty": "No Echos yet. They appear here after their first request to the skill.",
+    "identified": "This is the Echo you just spoke to",
+    "identifyHint": "Not sure which Echo is which? Say “Alexa, ask {{invocation}} which device this is” and it's highlighted here.",
+    "spokeTo": "You just spoke to {{name}}.",
+    "title": "Devices"
+  },
+  "unlinked": {
+    "deviceName": "Device name",
+    "firstRequest": {
+      "other": "First request {{when}}{{heard}}. Device <mono>{{id}}</mono>",
+      "today": "First request {{when}} today{{heard}}. Device <mono>{{id}}</mono>"
+    },
+    "link": "Link device",
+    "linked": "Echo linked.",
+    "placeholder": "Kitchen Dot",
+    "title": "New Echo heard: not linked to a Kodi yet",
+    "titleIdentified": "This is the Echo you just spoke to: not linked to a Kodi yet"
+  },
+  "unnamed": "Unnamed Echo"
+}

@@ -1,0 +1,67 @@
+{
+  "detail": {
+    "alexaSaid": "Alexa a dit",
+    "callFailed": "(échec)",
+    "candidates": {
+      "label": "Candidats",
+      "none": "Aucun candidat.",
+      "score": "{{title}} : score {{score}}",
+      "unlinked": "Cet Echo n'est lié à aucune instance Kodi, et aucune instance par défaut n'est définie pour les Echo non liés."
+    },
+    "copied": "Copié",
+    "copy": "Copier le JSON",
+    "intent": "Intent",
+    "kodiCalls": "Appels Kodi",
+    "loading": "Chargement de la requête…",
+    "noCalls": "Aucun.",
+    "replay": "Rejouer (simulation)",
+    "replayResult": {
+      "label": "Résultat de la simulation",
+      "noCalls": "Aucun appel Kodi.",
+      "title": "Rejouée sur l'index actuel (sans toucher à Kodi)",
+      "topMatch": "Meilleure correspondance : {{title}}, {{score}}.",
+      "wouldCall": "Appellerait",
+      "wouldSay": "Alexa dirait : « {{speech}} »"
+    },
+    "silent": "Rien (silencieux).",
+    "slotRaw": "Slot (brut)",
+    "target": {
+      "label": "Kodi cible",
+      "none": "Aucun",
+      "unlinked": "Aucun (appareil non lié)"
+    },
+    "timing": {
+      "fallback": "Encore {{encore}} · Kodi {{kodi}} · total {{total}}",
+      "label": "Durées",
+      "split": "vérification {{verify}} · recherche {{match}} · Kodi {{kodi}} · total {{total}}"
+    }
+  },
+  "empty": {
+    "filtered": "Essayez une autre recherche ou effacez les filtres.",
+    "filteredTitle": "Aucune requête correspondante",
+    "none": "Les requêtes s'affichent ici dès qu'un Echo parle à Encore. Dites « Alexa, demande à {{invocation}} qu'est-ce qui passe. »",
+    "noneTitle": "Aucune requête pour l'instant"
+  },
+  "filters": {
+    "allDevices": "Tous les Echo",
+    "allOutcomes": "Tous les résultats",
+    "device": "Appareil Echo",
+    "label": "Filtrer les requêtes",
+    "outcome": "Résultat",
+    "search": "Rechercher dans ce qui a été entendu",
+    "unnamedDevice": "Echo sans nom"
+  },
+  "list": {
+    "label": "Requêtes",
+    "loading": "Chargement des requêtes…",
+    "loadOlder": "Charger les requêtes plus anciennes"
+  },
+  "live": {
+    "off": "Reconnexion…",
+    "on": "En direct",
+    "retention": "500 dernières requêtes ou 7 jours conservés"
+  },
+  "newRequest": "Nouvelle requête de {{device}}{{heard}}",
+  "title": "Journal des requêtes",
+  "unnamedDevice": "un Echo sans nom"
+}

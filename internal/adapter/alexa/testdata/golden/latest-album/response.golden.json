@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "response": {
+    "outputSpeech": {
+      "type": "PlainText",
+      "text": "Playing the album Innuendo by Queen."
+    },
+    "card": {
+      "type": "Simple",
+      "title": "Encore",
+      "content": "Playing the album Innuendo by Queen."
+    },
+    "shouldEndSession": true
+  }
+}
+

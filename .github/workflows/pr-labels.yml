@@ -1,0 +1,180 @@
+---
+# Checks each pull request's title, labels it (type/<type>, area/<scope> for a scoped title, and type/breaking-change for `!` or a BREAKING CHANGE footer) and puts it in the milestone of the release it will ship in. Pull requests are squash-merged, so the title becomes the commit message, and the labels group the release notes (.github/release.yml).
+name: PR Labels
+
+on:
+  # Runs with the base repository's token so pull requests from forks can be labelled too. Nothing from the pull request is checked out or run: the title job checks out the base branch, and the label job only reads the title, body, labels and commit messages.
+  pull_request_target:  # zizmor: ignore[dangerous-triggers]
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+
+# One run per pull request; a newer edit or push cancels the one in progress.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  title:
+    name: Check Title
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read  # check out the base branch for commitlint and its config
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Reads the pnpm version from the "packageManager" field.
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: web/package.json
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.x
+
+      - name: Install
+        run: pnpm -C web install --frozen-lockfile --ignore-scripts
+
+      # The same rules as the commit-msg hook (web/commitlint.config.mjs).
+      - name: commitlint
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: printf '%s\n' "${TITLE}" | pnpm -C web exec commitlint
+
+  label:
+    name: Apply Labels
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      pull-requests: write  # add and remove the pull request's labels
+      issues: write  # create a label or milestone the first time it is used, and set the milestone
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+
+      - name: Parse the title and apply labels
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            // The title job checks the title in full; this only labels a well-formed one.
+            const title = context.payload.pull_request.title;
+            const match = title.match(/^([a-z]+)(\(([a-z0-9-]+)\))?(!)?: .+/);
+            if (!match) {
+              core.info(`Not a Conventional Commits title, so no labels: ${title}`);
+              return;
+            }
+
+            const issue = { owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number };
+            const breakingRe = /^BREAKING[ -]CHANGE: /m;
+            let breaking = match[4] === '!' || breakingRe.test(context.payload.pull_request.body || '');
+            if (!breaking) {
+              const commits = await github.paginate(github.rest.pulls.listCommits, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: context.issue.number,
+                per_page: 100,
+              });
+              breaking = commits.some((c) => breakingRe.test(c.commit.message));
+            }
+
+            const desired = new Set([`type/${match[1]}`]);
+            if (match[3]) {
+              desired.add(`area/${match[3]}`);
+            }
+            if (breaking) {
+              desired.add('type/breaking-change');
+            }
+
+            const existing = context.payload.pull_request.labels.map((l) => l.name);
+
+            for (const name of existing) {
+              if ((name.startsWith('type/') || name.startsWith('area/')) && !desired.has(name)) {
+                await github.rest.issues.removeLabel({ ...issue, name });
+              }
+            }
+
+            const toAdd = [...desired].filter((name) => !existing.includes(name));
+            if (toAdd.length > 0) {
+              await github.rest.issues.addLabels({ ...issue, labels: toAdd });
+            }
+
+            // The milestone is the version the pull request will ship in: a release pull request's own version, otherwise the next major, minor or patch after the latest release.
+            const type = match[1];
+            let target;
+            if (type === 'release') {
+              const version = title.match(/v\d+\.\d+\.\d+/);
+              if (!version) {
+                core.warning('Release title has no vX.Y.Z version; no milestone.');
+                return;
+              }
+              target = version[0];
+            } else {
+              let latest;
+              try {
+                ({ data: { tag_name: latest } } = await github.rest.repos.getLatestRelease({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                }));
+              } catch (e) {
+                core.info(`No release yet, so no milestone: ${e.message}`);
+                return;
+              }
+              const v = latest.match(/^v(\d+)\.(\d+)\.(\d+)$/);
+              if (!v) {
+                core.warning(`The latest release tag isn't vX.Y.Z: ${latest}`);
+                return;
+              }
+              const [major, minor, patch] = v.slice(1).map(Number);
+              if (breaking) {
+                target = `v${major + 1}.0.0`;
+              } else if (type === 'feat') {
+                target = `v${major}.${minor + 1}.0`;
+              } else {
+                target = `v${major}.${minor}.${patch + 1}`;
+              }
+            }
+
+            // A milestone someone chose by hand stays; one this workflow set is recomputed.
+            const current = context.payload.pull_request.milestone;
+            if (current) {
+              if (current.title === target) {
+                return;
+              }
+              const events = await github.paginate(github.rest.issues.listEvents, { ...issue, per_page: 100 });
+              const set = events.filter((e) => e.event === 'milestoned' && e.milestone?.title === current.title).pop();
+              if (set?.actor?.login !== 'github-actions[bot]') {
+                core.info(`Milestone ${current.title} was set by ${set?.actor?.login ?? 'someone'}; leaving it.`);
+                return;
+              }
+            }
+
+            const milestones = await github.paginate(github.rest.issues.listMilestones, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              per_page: 100,
+            });
+            let milestone = milestones.find((m) => m.title === target);
+            if (!milestone) {
+              ({ data: milestone } = await github.rest.issues.createMilestone({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: target,
+              }));
+            }
+            await github.rest.issues.update({ ...issue, milestone: milestone.number });
+...

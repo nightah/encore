@@ -1,0 +1,54 @@
+---
+title: A tour of the web interface
+description: What each page of Encore's web interface shows, with screenshots.
+---
+
+import Screenshot from "../../components/Screenshot.astro";
+
+Encore is set up and run from its web interface. These screenshots follow your light or dark theme; addresses, Amazon IDs and similar details are blurred.
+
+## Overview
+
+The dashboard: the skill's state, whether Alexa can reach Encore, each Kodi instance and what it's playing, today's requests, and anything that needs you.
+
+<Screenshot name="overview" alt="The Overview page, with the skill's state, Kodi instances and recent requests" />
+
+## Kodi
+
+Add Kodi instances, found on your network or entered by address, test them, sync their libraries and see shared libraries. See [Kodi instances](/encore/guides/kodi/).
+
+<Screenshot name="kodi" alt="The Kodi page, listing Kodi instances with their connection, library and Wake-on-LAN details" />
+
+## Echo devices
+
+Echos appear after their first request; link each to the Kodi instance it controls. See [Echo devices and rooms](/encore/guides/echo-devices/).
+
+<Screenshot name="echo-devices" alt="The Echo devices page, linking each Echo to a Kodi instance" />
+
+## Alexa skill
+
+Connect your Amazon developer account, choose locales and what the skill can play, and deploy. See [Deploying the skill](/encore/guides/deploy-skill/).
+
+<Screenshot name="alexa-skill" alt="The Alexa skill page, with the deploy steps, the interaction model per locale and the Amazon account" />
+
+## Library
+
+Search the library index, add aliases and test how a spoken title is matched. See [Matching and aliases](/encore/guides/matching/).
+
+<Screenshot name="library" alt="The Library page, with the library index and the match tester" />
+
+## Request log
+
+Every request from Alexa, live, with what was heard, how it matched and the Kodi calls made. See [Request log](/encore/guides/request-log/).
+
+<Screenshot name="request-log" alt="The Request log page, listing recent requests with their intent, outcome and timing" />
+
+## Settings
+
+The theme, time zone, default locale and log level, how admins sign in, and where backups go. See [Admin sign-in](/encore/guides/sign-in/) and [Storage and backups](/encore/guides/storage/).
+
+<Screenshot name="settings" alt="Settings, General tab" />
+
+<Screenshot name="settings-access" alt="Settings, Access tab, choosing how admins sign in" />
+
+<Screenshot name="settings-storage" alt="Settings, Storage tab, choosing where backups go" />

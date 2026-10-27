@@ -1,0 +1,9 @@
+#!/command/with-contenv bash
+# shellcheck shell=bash
+
+# Encore keeps its database, secrets key and local blob storage in the data directory, /config by default.
+mkdir -p "${ENCORE_DATA_DIR:-/config}"
+
+# permissions
+chown -R abc:abc \
+  "${ENCORE_DATA_DIR:-/config}"

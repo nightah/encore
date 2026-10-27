@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "response": {
+    "outputSpeech": {
+      "type": "PlainText",
+      "text": "Nothing is playing on Lounge."
+    },
+    "shouldEndSession": true
+  }
+}
+

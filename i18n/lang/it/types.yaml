@@ -1,0 +1,373 @@
+# Italian values for the custom slot types in model.yaml. IDs are what the handler acts on; values and synonyms are what people say.
+
+LIBRARY_SECTION:
+  albums: |-
+    album
+    dischi
+  artists: |-
+    artisti
+    musicisti
+    band
+    gruppi
+    cantanti
+  favourites: preferiti
+  movies: |-
+    film
+    libreria dei film
+  music: |-
+    musica
+    libreria musicale
+    canzoni
+  musicvideos: |-
+    video musicali
+    videoclip
+  recentepisodes: |-
+    episodi aggiunti di recente
+    nuovi episodi
+    ultimi episodi
+    episodi recenti
+    nuove serie
+    ultime serie
+    serie aggiunte di recente
+  recentmovies: |-
+    film aggiunti di recente
+    nuovi film
+    ultimi film
+    film recenti
+    film più recenti
+  recentmusic: |-
+    musica aggiunta di recente
+    nuova musica
+    musica recente
+    nuovi album
+    ultimi album
+    album recenti
+    album aggiunti di recente
+    nuove canzoni
+    ultime canzoni
+    canzoni recenti
+  recentmusicvideos: |-
+    video musicali aggiunti di recente
+    nuovi video musicali
+    ultimi video musicali
+    video musicali recenti
+  tvshows: |-
+    serie tv
+    serie t. v.
+    serie
+    telefilm
+    programmi tv
+
+LIBRARY_TYPE:
+  music: |-
+    musicale
+    musica
+    audio
+    canzoni
+    della musica
+  video: |-
+    video
+    film
+    serie
+    tv
+    t. v.
+    dei video
+    dei film
+
+MEDIA_TYPE:
+  album: |-
+    album
+    disco
+    dischi
+  artist: |-
+    artista
+    artisti
+    band
+    gruppo
+    gruppi
+    musicista
+    musicisti
+    cantante
+    cantanti
+  audio: |-
+    qualcosa da ascoltare
+    un po' di musica
+    musica
+  episode: |-
+    episodio
+    episodi
+    puntata
+    puntate
+  movie: |-
+    film
+    pellicola
+  musicvideo: |-
+    video musicale
+    video musicali
+    videoclip
+  song: |-
+    canzone
+    canzoni
+    brano
+    brani
+    pezzo
+    pezzi
+  tvshow: |-
+    serie
+    serie tv
+    serie t. v.
+    telefilm
+    programma
+    programmi
+    show
+  video: |-
+    qualcosa da vedere
+    qualcosa da guardare
+    video
+
+NAV_ACTION:
+  back: |-
+    indietro
+    torna indietro
+  down: |-
+    giù
+    in basso
+    sotto
+    verso il basso
+  home: |-
+    home
+    schermata principale
+    menu principale
+    pagina iniziale
+  info: |-
+    informazioni
+    info
+    dettagli
+  left: |-
+    sinistra
+    a sinistra
+    verso sinistra
+  menu: |-
+    menu
+    menu contestuale
+    opzioni
+  osd: |-
+    menu a schermo
+    controlli
+    controlli del lettore
+    o. s. d.
+  pagedown: |-
+    pagina giù
+    scorri giù
+    pagina successiva
+    mostra di più
+  pageup: |-
+    pagina su
+    scorri su
+    pagina precedente
+  right: |-
+    destra
+    a destra
+    verso destra
+  select: |-
+    seleziona
+    ok
+    okay
+    invio
+    conferma
+    scegli questo
+    clicca
+  up: |-
+    su
+    in alto
+    sopra
+    verso l'alto
+
+NAV_DIRECTION:
+  down: |-
+    giù
+    in basso
+    verso il basso
+  left: |-
+    sinistra
+    a sinistra
+    verso sinistra
+  right: |-
+    destra
+    a destra
+    verso destra
+  up: |-
+    su
+    in alto
+    verso l'alto
+
+POWER_ACTION:
+  hibernate: |-
+    iberna
+    ibernare
+    ibernazione
+  quit: |-
+    esci da kodi
+    chiudi kodi
+    termina kodi
+  reboot: |-
+    riavvia
+    riavviare
+    riavvio
+  shutdown: |-
+    spegni
+    spegnere
+    arresta
+    spegnimento
+  suspend: |-
+    sospendi
+    sospensione
+    standby
+    stand by
+
+REPEAT_MODE:
+  all: |-
+    tutto
+    tutti
+    la playlist
+    la coda
+    tutta la coda
+  "off": |-
+    off
+    niente
+    nessuno
+    disattivata
+  one: |-
+    questo
+    questa
+    solo questo
+    questa canzone
+    questo brano
+    questo episodio
+    la canzone
+    il brano
+    uno
+
+ROTATE_DIRECTION:
+  clockwise: |-
+    in senso orario
+    orario
+    a destra
+    verso destra
+  counterclockwise: |-
+    in senso antiorario
+    antiorario
+    a sinistra
+    verso sinistra
+
+SEEK_DIRECTION:
+  back: |-
+    indietro
+    all'indietro
+    più indietro
+  forward: |-
+    avanti
+    in avanti
+    più avanti
+
+SEEK_SIZE:
+  big: |-
+    di molto
+    molto
+    parecchio
+    tanto
+    un bel po'
+    grande
+  small: |-
+    di poco
+    un po'
+    un pochino
+    poco
+    piccolo
+
+STREAM_STEP:
+  next: |-
+    cambia
+    prossima
+    successiva
+    prossimo
+    successivo
+    altra
+    altro
+  previous: |-
+    precedente
+    torna alla precedente
+
+SUBTITLE_ACTION:
+  download: |-
+    scarica
+    scaricare
+    trova
+    cerca
+  next: |-
+    cambia
+    successivi
+    prossimi
+    altri
+  "off": |-
+    disattiva
+    disattivare
+    spegni
+    nascondi
+    togli
+    disabilita
+    rimuovi
+    off
+  "on": |-
+    attiva
+    attivare
+    accendi
+    mostra
+    abilita
+    metti
+    on
+  previous: |-
+    precedenti
+    torna ai precedenti
+
+TRANSPORT_COMMAND:
+  next: |-
+    avanti
+    prossimo
+    successivo
+    salta
+  pause: |-
+    pausa
+    metti in pausa
+  previous: |-
+    indietro
+    precedente
+    torna indietro
+  resume: |-
+    riprendi
+    continua
+    togli la pausa
+    riproduci
+  stop: |-
+    stop
+    ferma
+    interrompi
+
+ZOOM_ACTION:
+  in: |-
+    avanti
+    in avanti
+    dentro
+    più vicino
+  out: |-
+    indietro
+    all'indietro
+    fuori
+    più lontano
+  reset: |-
+    normale
+    azzera
+    resetta
+    reset
+    annulla
+    off

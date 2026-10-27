@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "response": {
+    "outputSpeech": {
+      "type": "PlainText",
+      "text": "Playing the music video Bohemian Rhapsody by Queen."
+    },
+    "card": {
+      "type": "Simple",
+      "title": "Encore",
+      "content": "Playing the music video Bohemian Rhapsody by Queen."
+    },
+    "shouldEndSession": true
+  }
+}
+

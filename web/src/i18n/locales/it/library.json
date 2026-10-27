@@ -1,0 +1,94 @@
+{
+  "empty": {
+    "action": "Aggiungi un'istanza di Kodi",
+    "body": "Encore crea un indice della libreria da ogni istanza di Kodi che aggiungi.",
+    "title": "Ancora nessuna libreria"
+  },
+  "explain": {
+    "askOne": "{{top}} ottiene {{score}}, troppo incerto per decidere, quindi Alexa chiede.",
+    "askTwo": "{{top}} e {{second}} sono a meno di {{margin}} l'uno dall'altro, quindi Alexa chiede quale.",
+    "notFound": "Il punteggio migliore, {{score}} per {{top}}, è sotto lo 0,60 necessario per la riproduzione.",
+    "nothing": "Niente in questa libreria si avvicina.",
+    "playOne": "{{top}} ottiene {{score}} ed è l'unica corrispondenza vicina.",
+    "playTwo": "{{top}} ottiene {{score}}, {{margin}} davanti al successivo."
+  },
+  "kinds": {
+    "album": "Album",
+    "artist": "Artista",
+    "episode": "Episodio",
+    "movie": "Film",
+    "musicvideo": "Video musicale",
+    "playlist": "Playlist",
+    "song": "Brano",
+    "tvshow": "Serie TV"
+  },
+  "matchTester": {
+    "addAlias": "Aggiungi «{{query}}» come alias del primo risultato",
+    "aliasEntry": "«{{alias}}» → {{title}}",
+    "aliases": "I tuoi alias",
+    "aliasHint": "Gli alias vengono salvati in Encore e aggiunti al modello della skill alla prossima risincronizzazione.",
+    "candidates": "Candidati",
+    "columns": {
+      "alias": "Alias corrispondente",
+      "boost": "Bonus",
+      "candidate": "Candidato",
+      "phonetic": "Fonetica",
+      "score": "Punteggio",
+      "tokenSet": "Insieme di token"
+    },
+    "heard": "Cosa ha sentito Alexa",
+    "mediaType": "Tipo di contenuto",
+    "noAlias": "Il server non ha indicato di quale titolo si tratta, quindi qui non è possibile assegnargli un alias.",
+    "normalized": "Query normalizzata",
+    "removeAlias": "Rimuovi l'alias {{alias}}",
+    "test": "Prova",
+    "title": "Tester delle corrispondenze",
+    "try": "Prova:",
+    "types": {
+      "any": "Tutti",
+      "movies": "Film",
+      "music": "Musica",
+      "shows": "Serie TV"
+    }
+  },
+  "page": {
+    "description": "Cosa sa Encore delle tue librerie di Kodi e come abbina ciò che sente Alexa.",
+    "library": "Libreria",
+    "syncAll": "Sincronizza tutto ora",
+    "syncStarted": "Sincronizzazione della libreria avviata. I conteggi si aggiornano al termine.",
+    "title": "Libreria"
+  },
+  "recent": {
+    "body": "I nuovi titoli sono cercabili pochi secondi dopo essere stati aggiunti in Kodi. Vengono inviati subito ad Alexa come entità dinamiche, poi aggiunti al modello della skill alla prossima risincronizzazione.",
+    "live": "In diretta dagli eventi di Kodi",
+    "nothing": "Niente aggiunto di recente.",
+    "status": {
+      "findable": "Trovabile con la voce",
+      "inModel": "Nel modello della skill",
+      "waiting": "In attesa del prossimo aggiornamento"
+    },
+    "title": "Aggiunti di recente"
+  },
+  "summary": {
+    "backups": "Backup",
+    "episodes_one": "{{count, number}} episodio",
+    "episodes_other": "{{count, number}} episodi",
+    "label": "Riepilogo della libreria",
+    "lastBackup": "ultimo backup {{when}}",
+    "libraries": "Librerie",
+    "localDisk": "Disco locale",
+    "movies": "Film",
+    "music": "Musica",
+    "noBackup": "ancora nessun backup",
+    "notSynced": "non ancora sincronizzata",
+    "s3": "Compatibile con S3",
+    "shows": "Serie TV",
+    "songs": "brani",
+    "synced": "sincronizzata {{when}}"
+  },
+  "verdict": {
+    "ask": "Chiederebbe",
+    "not_found": "Non trovato",
+    "play": "Riprodurrebbe"
+  }
+}
