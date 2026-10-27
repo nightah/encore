@@ -37,7 +37,7 @@
       "addAliasPlaceholder": "Aggiungi nome vocale",
       "aliases": "Nomi vocali per {{name}}",
       "edit": "Modifica stanza {{name}}",
-      "kodi": "→ Kodi “{{name}}”",
+      "kodi": "",
       "noKodi": "→ nessuna istanza di Kodi",
       "removeAlias": "Rimuovi il nome vocale “{{alias}}”"
     },
