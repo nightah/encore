@@ -11,11 +11,15 @@ Every release on [GitHub](https://github.com/nightah/encore/releases) has archiv
 | macOS | amd64, arm64 |
 | Windows | amd64 |
 
-Archives are named `encore_<version>_<os>_<arch>.tar.gz` (`.zip` for Windows) and contain the `encore` binary with the web interface built in. `checksums.txt` lists their SHA-256 sums, and SBOMs are attached. Each release carries [SLSA Build Level 3](https://slsa.dev) provenance, `encore.intoto.jsonl`, which proves an archive was built from this repository by its release workflow. Check one with [slsa-verifier](https://github.com/slsa-framework/slsa-verifier):
+Archives are named `encore_<version>_<os>_<arch>.tar.gz` (`.zip` for Windows) and contain the `encore` binary with the web interface built in. `checksums.txt` lists their SHA-256 sums, and SBOMs are attached. Each release carries [SLSA Build Level 3](https://slsa.dev) provenance, `encore.intoto.jsonl`, signed through [GitHub artifact attestations](https://docs.github.com/en/actions/concepts/security/artifact-attestations), which proves an archive was built from this repository by its release workflow. Check one with the [GitHub CLI](https://cli.github.com):
 
 ```sh
-slsa-verifier verify-artifact --provenance-path encore.intoto.jsonl --source-uri github.com/nightah/encore encore_1.2.3_linux_amd64.tar.gz
+gh attestation verify encore_1.2.3_linux_amd64.tar.gz --bundle encore.intoto.jsonl --repo nightah/encore
 ```
+
+For a stricter check, add `--signer-workflow nightah/encore/.github/workflows/release-slsa.yml` to require the release workflow itself as the signer, and `--source-ref refs/tags/v1.2.3` to require that release's tag.
+
+0.1.0 and 0.1.1 were attested differently; [SECURITY.md](https://github.com/nightah/encore/blob/main/SECURITY.md#verifying-releases) shows how to check them.
 
 ## Install
 
