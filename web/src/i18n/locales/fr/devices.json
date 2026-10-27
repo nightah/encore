@@ -69,7 +69,7 @@
   "table": {
     "anUnnamedEcho": "un Echo sans nom",
     "columns": {
-      "actions": "",
+      "actions": "Actions",
       "controls": "Pilote",
       "lastRequest": "Dernière demande",
       "name": "Nom",
