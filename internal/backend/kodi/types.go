@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/coder/websocket"
+	"github.com/miekg/dns"
 
 	"github.com/nightah/encore/internal/backend/kodi/kodirpc"
 	"github.com/nightah/encore/internal/core/media"
@@ -190,13 +191,15 @@ type Discoverer struct {
 	Timeout time.Duration
 }
 
-// Browser browses one mDNS service type, sending answers to entries until timeout or ctx ends. It must not close entries.
+// Browser browses for instances of the given mDNS service types until timeout or ctx ends.
 type Browser interface {
-	Browse(ctx context.Context, service string, timeout time.Duration, entries chan<- ServiceEntry) error
+	Browse(ctx context.Context, services []string, timeout time.Duration) ([]ServiceEntry, error)
 }
 
-// ServiceEntry is one mDNS answer.
+// ServiceEntry is one service instance found by browsing.
 type ServiceEntry struct {
+	// Service is the service type, e.g. ServiceJSONRPC.
+	Service string
 	// Instance is the service instance name, e.g. "Kodi (lounge)".
 	Instance string
 	Host     string
@@ -216,8 +219,25 @@ type Instance struct {
 
 // MDNSBrowser browses with multicast DNS.
 type MDNSBrowser struct {
-	// Interface restricts browsing to one interface; nil means the system default.
+	// Interface restricts browsing to one interface; nil means every multicast interface that is up.
 	Interface *net.Interface
+}
+
+// mdnsConn is one address family's mDNS socket.
+type mdnsConn struct {
+	conn  net.PacketConn
+	group *net.UDPAddr
+	// setInterface picks the interface the next multicast write leaves on.
+	setInterface func(*net.Interface) error
+}
+
+// mdnsAnswers collects records from every answer received during a browse, so services resolve whatever order the records arrive in or however they are split across packets.
+type mdnsAnswers struct {
+	// instances maps a lower-cased service type to the instance names announced for it.
+	instances map[string]map[string]bool
+	// srv and addrs are keyed by lower-cased instance and host names.
+	srv   map[string]*dns.SRV
+	addrs map[string][]net.IP
 }
 
 // LibraryFingerprint is a cheap sample of a Kodi instance's video library. Kodi instances reading one shared database (MySQL/MariaDB) report the same IDs, file paths and dates added; separate databases built from the same files almost never do.
