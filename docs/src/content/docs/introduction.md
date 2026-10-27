@@ -5,8 +5,8 @@ description: What Encore is, why it exists, and how it differs from Kanzi.
 
 Encore is a self-hosted Alexa skill server for Kodi. You run it on your own network, it talks to your Kodi instances over JSON-RPC, and it deploys a private custom Alexa skill into your own Amazon developer account. When you say "Alexa, ask encore to play the next episode of Severance", Alexa sends the request to Encore, which finds the episode in your library and tells the right Kodi to play it.
 
-:::caution[Early development]
-Encore is in early development and not yet ready for general use. Expect rough edges and breaking changes until 1.0.
+:::caution[Early releases]
+Encore is in its first releases (0.x). Voice control, the web interface and skill deploys work end to end, tested with a real Echo in English (Australia), but expect rough edges, and breaking changes are possible before 1.0. The other locales haven't been tried on real devices yet; if you use one, [reports](https://github.com/nightah/encore/issues) are welcome.
 :::
 
 ## Kanzi is archived
