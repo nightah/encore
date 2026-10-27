@@ -117,6 +117,20 @@ func (a *App) InstanceStatus(ctx context.Context, id int64, info bool) (Instance
 	return st, nil
 }
 
+// RefreshLibrary brings st's library counts, sync times and newest title up to date. They are read from memory, so a status cached to spare Kodi the questions doesn't have to hold them back.
+func (a *App) RefreshLibrary(id int64, st *InstanceStatus) {
+	_, cat, _, err := a.runtimeLibrary(id)
+	if err != nil || cat == nil {
+		return
+	}
+
+	// The episode total comes from Kodi when it was asked; the catalog only knows the episodes fetched so far.
+	episodes := st.Counts.Episodes
+	st.Newest = nil
+	st.fillLibrary(cat)
+	st.Counts.Episodes = max(st.Counts.Episodes, episodes)
+}
+
 func (st *InstanceStatus) fillLibrary(cat *library.Catalog) {
 	stats := cat.Stats()
 	st.LastEventAt = stats.LastEvent

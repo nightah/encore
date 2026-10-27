@@ -52,6 +52,8 @@ func (c *statusCache) get(ctx context.Context, id int64) (app.InstanceStatus, er
 	c.mu.Unlock()
 
 	if ok && c.a.now().Sub(e.at) < 2*c.a.opts.StatusInterval {
+		c.a.app.RefreshLibrary(id, &e.st)
+
 		return e.st, nil
 	}
 
