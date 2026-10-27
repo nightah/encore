@@ -82,6 +82,22 @@ func staleGenerated(t *testing.T, files map[string][]byte) []string {
 	return stale
 }
 
+func TestVoicePagesEditLinks(t *testing.T) {
+	files, err := Generate(root)
+	require.NoError(t, err)
+
+	page := func(lang string) string {
+		b, ok := files[ContentDir+"/voice-commands/"+lang+".md"]
+		require.True(t, ok, "no voice commands page for %s", lang)
+
+		return string(b)
+	}
+
+	assert.Contains(t, page("en"), "editUrl: "+SourceEditURL+"\n", "English is edited in the repository")
+	assert.Contains(t, page("de"), "editUrl: https://crowdin.com/project/encore/de\n", "translations are edited on Crowdin")
+	assert.Contains(t, page("es"), "editUrl: https://crowdin.com/project/encore/es-ES\n", "Crowdin names Spanish es-ES")
+}
+
 func TestConfigSectionsCoverEveryKey(t *testing.T) {
 	sections, err := ConfigSections(filepath.Join(root, "internal", "config"))
 	require.NoError(t, err, "every config key needs a doc comment")

@@ -1,4 +1,4 @@
-# English values for the static custom slot types in model.yaml, translated on Crowdin. Each key is the value's ID, which is what the handler acts on; the first line is the value and any further lines its synonyms, which are what people say. The dynamic types' examples are in examples.yaml.
+# Values for the static custom slot types in model.yaml, translated on Crowdin from the English file. Each key is the value's ID, which is what the handler acts on; the first line is the value and any further lines its synonyms, which are what people say. The dynamic types' examples are in examples.yaml, and notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
 
 LIBRARY_SECTION:
   albums: |-
