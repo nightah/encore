@@ -87,6 +87,17 @@ make test-contract
 
 With `ENCORE_CONTRACT_KODI_LIBRARY` also set, the voice tests in `internal/app` ask Encore for the titles in the test library (`internal/backend/kodi/testdata/kodi-headless/library`) and check what it matched and played. Kodi has to have scanned that library first: the "Seed the library" step in `.github/workflows/nightly.yml` adds it and starts the scan.
 
+## Test images
+
+Every branch pushed to the repository, and every pull request from a fork, gets a container image to try the change in, for the same platforms as releases:
+
+- A branch is published as `ghcr.io/nightah/encore:<branch>`, with each run of characters a tag can't hold turned into `-`, so `fix/abc` becomes `fix-abc` (`.github/scripts/image-tag.sh`). A branch whose name could take over a release or pull request tag, such as `1.2` or `latest`, gets no image.
+- A pull request from a fork is published as `ghcr.io/nightah/encore:PR<number>` once a maintainer approves the `pr-images` environment for its run.
+
+The pull request gets a comment with the `docker pull` command, updated on every push. Branches that only change `docs/` aren't built. A branch's image is deleted with the branch, and a fork's when its pull request closes.
+
+The build (`.github/workflows/images.yml`) has no write access, so it can run a fork's code; publishing (`images-publish.yml`) runs from the default branch and only copies the built image to the registry.
+
 ## Releasing
 
 Versions are chosen by hand, and a release is a tag:
