@@ -23,6 +23,7 @@ AudioPassthrough:
 AudioStream:
   audio: "{Step} (audio|traccia audio|lingua audio|colonna sonora)\n(traccia audio|lingua audio) {Step}"
   audio_2: "(audio|traccia audio) {Language}"
+  audio_3: "audio in {Language}"
   language: "{Step} [la] lingua"
   play: "(metti|ascolta) l'audio in {Language}"
   switch_audio: "(cambia|imposta|passa) (l'audio|la traccia audio|la lingua) (in|a) {Language}"
@@ -107,6 +108,7 @@ Navigate:
   go: "(vai|premi|naviga) {NavAction}"
   go_times: "(vai|premi|naviga) {NavAction} {Count} volte"
   open_screen: "(apri|mostra) (la schermata|la finestra|il pannello) {NavAction}"
+  sample: "{NavAction}"
   times: "{NavAction} {Count} volte"
 OpenFavourite:
   open_favourite: "(apri|mostra|avvia|lancia) il preferito {Favourite}\nvai al preferito {Favourite}"
@@ -162,6 +164,7 @@ PlayerZoom:
 Power:
   kodi: "{PowerAction} (kodi|il sistema|il computer|il media center|il box|la tv)"
   put_kodi: "metti (kodi|il sistema|il computer) in {PowerAction}"
+  sample: "{PowerAction}"
 Recommend:
   give_me_recommendation: "(dammi|vorrei) un consiglio (su un|su una|per un|per una) {MediaType}"
   recommend: "(consigliami|consigliarmi|suggeriscimi|suggerirmi) (un|una|qualche|dei|degli) {MediaType} [da (vedere|guardare|ascoltare)]"
