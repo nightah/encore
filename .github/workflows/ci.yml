@@ -5,10 +5,10 @@ on:
   push:
     branches: [main]
 
-# One run per ref; a new push to a PR cancels the superseded run.
+# One run per ref; a new push to a PR cancels the superseded run. Runs on main always finish: the build badge reports a cancelled run as failing, and every merged commit gets a full result and coverage upload.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 # Least privilege by default; jobs widen only what they need.
 permissions:
@@ -130,44 +130,6 @@ jobs:
             go.sum
             tools/go.sum
 
-      # editorconfig-checker, actionlint and govulncheck run from the tools module, which pins their versions; the rest are pinned here.
-      - name: editorconfig-checker
-        run: git ls-files -z | xargs -0 go tool -modfile=tools/go.mod editorconfig-checker
-
-      - name: actionlint
-        run: go tool -modfile=tools/go.mod actionlint
-
-      - name: zizmor
-        run: pipx run zizmor==1.31.1 --no-progress --format github .github/workflows
-
-      - name: typos
-        run: pipx run typos==1.51.1 --format brief
-
-      - name: yamllint
-        run: pipx run yamllint==1.38.0 --strict --format github .
-
-      # Preinstalled on GitHub's Ubuntu runners.
-      - name: shellcheck
-        run: shellcheck --format=gcc docker/root/etc/s6-overlay/s6-rc.d/encore/run docker/root/etc/s6-overlay/scripts/adduser docker/root/etc/s6-overlay/scripts/encoresetup .github/scripts/*.sh
-
-      - name: Image tag script
-        run: .github/scripts/image-tag_test.sh
-
-      - name: Next version script
-        run: .github/scripts/next-version_test.sh
-
-      - name: hadolint
-        run: |
-          for f in Dockerfile Dockerfile.goreleaser; do
-            docker run --rm -i hadolint/hadolint:v2.14.0 hadolint - < "$f"
-          done
-
-      - name: trufflehog
-        run: docker run --rm -v "$PWD:/repo:ro" -w /repo trufflesecurity/trufflehog:3.99.7 --fail --no-update --log-level=-1 filesystem -x .trufflehog .
-
-      - name: govulncheck
-        run: go tool -modfile=tools/go.mod govulncheck ./...
-
       # Reads the pnpm version from the "packageManager" field.
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
         with:
@@ -177,9 +139,21 @@ jobs:
         with:
           node-version: 24.x
 
-      # Needs pnpm and node for the package.json edits.
-      - name: Release version script
-        run: .github/scripts/release-version_test.sh
+      # actionlint, editorconfig-checker and govulncheck run from the tools module, which pins their versions; the rest are pinned here.
+      - name: actionlint
+        run: go tool -modfile=tools/go.mod actionlint
+
+      - name: editorconfig-checker
+        run: git ls-files -z | xargs -0 go tool -modfile=tools/go.mod editorconfig-checker
+
+      - name: govulncheck
+        run: go tool -modfile=tools/go.mod govulncheck ./...
+
+      - name: hadolint
+        run: |
+          for f in Dockerfile Dockerfile.goreleaser; do
+            docker run --rm -i hadolint/hadolint:v2.14.0 hadolint - < "$f"
+          done
 
       # Only what ships: Encore's go.mod and the web interface's production dependencies. Build and test tooling is left out; see .osv-scanner.toml.
       - name: osv-scanner
@@ -187,6 +161,32 @@ jobs:
           pnpm -C web sbom --sbom-format cyclonedx --prod --lockfile-only > "${RUNNER_TEMP}/web.cdx.json"
           docker run --rm -v "$PWD:/repo:ro" -v "${RUNNER_TEMP}:/sbom:ro" -w /repo ghcr.io/google/osv-scanner:v2.7.0 \
             scan source --config .osv-scanner.toml -L go.mod -L /sbom/web.cdx.json
+
+      # Preinstalled on GitHub's Ubuntu runners.
+      - name: shellcheck
+        run: shellcheck --format=gcc docker/root/etc/s6-overlay/s6-rc.d/encore/run docker/root/etc/s6-overlay/scripts/adduser docker/root/etc/s6-overlay/scripts/encoresetup .github/scripts/*.sh
+
+      - name: trufflehog
+        run: docker run --rm -v "$PWD:/repo:ro" -w /repo trufflesecurity/trufflehog:3.99.7 --fail --no-update --log-level=-1 filesystem -x .trufflehog .
+
+      - name: typos
+        run: pipx run typos==1.51.1 --format brief
+
+      - name: yamllint
+        run: pipx run yamllint==1.38.0 --strict --format github .
+
+      - name: zizmor
+        run: pipx run zizmor==1.31.1 --no-progress --format github .github/workflows
+
+      - name: Image tag script
+        run: .github/scripts/image-tag_test.sh
+
+      - name: Next version script
+        run: .github/scripts/next-version_test.sh
+
+      # Needs pnpm and node for the package.json edits.
+      - name: Release version script
+        run: .github/scripts/release-version_test.sh
 
   tools:
     name: Tools module
@@ -370,7 +370,7 @@ jobs:
         run: pnpm -C web install --frozen-lockfile
 
       - name: Install Playwright (chromium only)
-        run: pnpm -C web exec playwright install --with-deps chromium
+        run: pnpm -C web exec playwright install chromium
 
       # Starts a fake Kodi and bin/encore on a fresh data directory (web/e2e/real/global-setup.ts).
       - name: Run Playwright against the real server
