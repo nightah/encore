@@ -107,6 +107,7 @@ Navigate:
   go: "(ve|pulsa|navega) {NavAction}"
   go_times: "(ve|pulsa|navega) {NavAction} {Count} veces"
   open_screen: "(abre|muestra) (la pantalla|el diálogo|la ventana|el panel) de {NavAction}"
+  sample: "{NavAction}"
   times: "{NavAction} {Count} veces"
 OpenFavourite:
   open_favourite: "(abre|muestra|ve a|lanza|inicia) [mi|el] favorito {Favourite}"
@@ -139,6 +140,7 @@ PlayerRotate:
   rotate_picture: "(gira|rota) (la imagen|la pantalla|el vídeo) [{Rotation}]"
   turn_picture: "(gira|rota) (la imagen|el vídeo) noventa grados {Rotation}"
 PlayerSeek:
+  sample: "{SeekDirection} {Duration}"
   skip: "(salta|avanza|ve|vete) {Duration} {SeekDirection}\n(salta|ve|vete) {SeekDirection} {Duration}"
   skip_3: "(salta|ve|vete) {Size} {SeekDirection}"
   skip_4: "salta {SeekDirection}"
@@ -154,11 +156,13 @@ PlayerSeekTo:
 PlayerZoom:
   enhance: "(mejora|amplía y mejora) [la imagen]"
   enhance_and_move: "mejora y (muévete|desplázate) {Direction}"
+  zoom: "zoom {Zoom}"
   zoom_2: "{Zoom} [el] zoom\n{Zoom} la imagen"
   zoom_and_move: "{Zoom} el zoom y (muévete|desplázate|mueve la imagen) {Direction}"
 Power:
   kodi: "{PowerAction} (kodi|el sistema|el ordenador|el equipo|el centro multimedia|la tele)"
   put_kodi: "pon (kodi|el sistema|el ordenador) (a|en) {PowerAction}"
+  sample: "{PowerAction}"
 Recommend:
   give_me_recommendation: "(dame|quiero) una recomendación de {MediaType}"
   recommend: "(recomiéndame|recomiéndanos|sugiéreme|recomienda) (un|una|algún|alguna) {MediaType} [para (ver|escuchar)]"
