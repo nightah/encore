@@ -153,6 +153,9 @@ jobs:
       - name: Image tag script
         run: .github/scripts/image-tag_test.sh
 
+      - name: Next version script
+        run: .github/scripts/next-version_test.sh
+
       - name: hadolint
         run: |
           for f in Dockerfile Dockerfile.goreleaser; do
@@ -173,6 +176,10 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24.x
+
+      # Needs pnpm and node for the package.json edits.
+      - name: Release version script
+        run: .github/scripts/release-version_test.sh
 
       # Only what ships: Encore's go.mod and the web interface's production dependencies. Build and test tooling is left out; see .osv-scanner.toml.
       - name: osv-scanner
