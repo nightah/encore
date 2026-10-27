@@ -13,13 +13,13 @@
     "playTwo": "{{top}} erreicht {{score}}, {{margin}} vor dem nächsten Treffer."
   },
   "kinds": {
-    "album": "",
+    "album": "Album",
     "artist": "Künstler",
     "episode": "Folge",
     "movie": "Film",
     "musicvideo": "Musikvideo",
-    "playlist": "",
-    "song": "",
+    "playlist": "Playlist",
+    "song": "Song",
     "tvshow": "Serie"
   },
   "matchTester": {
@@ -70,7 +70,7 @@
     "title": "Zuletzt hinzugefügt"
   },
   "summary": {
-    "backups": "",
+    "backups": "Backups",
     "episodes_one": "{{count, number}} Folge",
     "episodes_other": "{{count, number}} Folgen",
     "label": "Bibliotheksübersicht",
