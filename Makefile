@@ -30,10 +30,14 @@ help: ## Show this help (default)
 	@grep -E '^[a-zA-Z_-]+:.*## ' Makefile | \
 		awk 'BEGIN { FS = ":.*## " } { printf "  %-14s %s\n", $$1, $$2 }'
 
-version: ## Stamp VERSION (e.g. make version VERSION=1.2.3) into web/ and docs/package.json for the "release: vX.Y.Z" commit
-	@echo "$(VERSION)" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$$' || { echo "usage: make version VERSION=1.2.3 (got $(VERSION))"; exit 1; }
-	$(PNPM) -C web pkg set version=$(VERSION)
-	$(PNPM) -C docs pkg set version=$(VERSION)
+version: ## Commit "release: vX.Y.Z" on a release branch (made from origin/main unless you're on one), stamping the next version into web/ and docs/package.json: make version patch (or minor, major), or name it with VERSION=1.2.3
+	@bump="$(VERSION)"; for goal in $(MAKECMDGOALS); do case "$$goal" in patch|minor|major) bump="$$goal" ;; esac; done; \
+	if [ "$$bump" = dev ]; then echo "usage: make version patch|minor|major, or make version VERSION=X.Y.Z" >&2; exit 1; fi; \
+	PNPM="$(PNPM)" .github/scripts/release-version.sh "$$bump"
+
+# The bump in "make version patch" is a goal of its own (GNU make's MAKECMDGOALS); version reads it, and alone it does nothing but say so.
+patch minor major:
+	@case " $(MAKECMDGOALS) " in *" version "*) ;; *) echo "make $@: did you mean make version $@?" >&2; exit 1 ;; esac
 
 icons: ## Render the Alexa skill icons (108 and 512 px PNG) from docs/brand/logo.svg; needs rsvg-convert
 	rsvg-convert -w 108 -h 108 docs/brand/logo.svg -o internal/smapi/skillpkg/assets/icon-108.png
@@ -49,13 +53,15 @@ lint-go: ## Lint Go (root + tools module) and interaction models
 	cd tools && $(GOLANGCI) run --config ../.golangci.yml ./...
 	$(GO) run ./cmd/encore gen lint
 
-lint-repo: ## Repository-wide checks, as CI runs them: editorconfig, typos, secrets, sorted language files, shell scripts and the image tag script's tests, Dockerfiles, workflows and Go vulnerabilities
+lint-repo: ## Repository-wide checks, as CI runs them: editorconfig, typos, secrets, sorted language files, shell scripts and the image tag, next version and release version scripts' tests, Dockerfiles, workflows and Go vulnerabilities
 	git ls-files -z | xargs -0 $(GO) tool -modfile=tools/go.mod editorconfig-checker
 	typos --format brief
 	yamllint --strict .
 	trufflehog --fail --log-level=-1 filesystem -x .trufflehog .
 	shellcheck --format=gcc docker/root/etc/s6-overlay/s6-rc.d/encore/run docker/root/etc/s6-overlay/scripts/adduser docker/root/etc/s6-overlay/scripts/encoresetup .github/scripts/*.sh
 	.github/scripts/image-tag_test.sh
+	.github/scripts/next-version_test.sh
+	.github/scripts/release-version_test.sh
 	hadolint Dockerfile Dockerfile.goreleaser
 	$(GO) tool -modfile=tools/go.mod actionlint
 	zizmor --no-progress .github/workflows
@@ -122,6 +128,6 @@ clean: ## Remove build outputs (keeps internal/server/dist/.gitkeep)
 	rm -rf bin dist coverage.out web/playwright-report web/test-results docs/dist docs/.astro
 	find internal/server/dist -mindepth 1 ! -name .gitkeep -exec rm -rf {} +
 
-.PHONY: help version icons generate lint lint-go lint-repo lint-web test test-go test-tools test-web \
+.PHONY: help version patch minor major icons generate lint lint-go lint-repo lint-web test test-go test-tools test-web \
 	test-contract web-install web-build build build-noui run dev web-dev docs-install docs docs-dev \
 	docker clean

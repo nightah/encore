@@ -102,7 +102,7 @@ The build (`.github/workflows/images.yml`) has no write access, so it can run a 
 
 Versions are chosen by hand, and a release is a tag:
 
-1. Open a pull request titled `release: vX.Y.Z` that runs `make version VERSION=X.Y.Z`, which stamps the version into `web/package.json` and `docs/package.json`. Its milestone, `vX.Y.Z`, already holds the pull requests going into it.
+1. Run `make version patch` (or `minor`, `major`; for an exact version, `make version VERSION=1.2.3`). It fetches `origin/main`, works out the next version from its `web/package.json`, creates a `release/vX.Y.Z` branch from it, stamps the version into `web/package.json` and `docs/package.json`, and commits them as `release: vX.Y.Z`. Run on a `release/…` branch, it commits there instead. Push the branch and open a pull request with that title; its milestone, `vX.Y.Z`, already holds the pull requests going into it.
 2. Merge it, then tag that commit and push the tag: `git tag vX.Y.Z && git push origin vX.Y.Z`.
 3. The release workflow checks the tag matches the stamped version, builds the web interface, and runs GoReleaser: binaries, multi-arch images and SBOMs. slsa-github-generator then adds SLSA Build Level 3 provenance for the archives (`encore.intoto.jsonl` on the release) and the image (attached in the registry). The binaries report the version from the tag.
 
