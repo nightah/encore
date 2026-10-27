@@ -22,7 +22,7 @@
       "body": "Aggiungi un'istanza di Kodi così Alexa ha qualcosa da controllare.",
       "title": "Ancora nessuna istanza di Kodi"
     },
-    "episode": "",
+    "episode": "S{{season}} · E{{episode}} “{{title}}”",
     "idle": "Nessuna riproduzione.",
     "offline": {
       "test": "Provala nella pagina Kodi",
@@ -31,11 +31,11 @@
     "progress": "Avanzamento {{percent}} percento",
     "title": "Istanze di Kodi"
   },
-  "ms": "",
+  "ms": "{{ms}} ms",
   "openRequestLog": "Apri il registro delle richieste",
   "recent": {
     "columns": {
-      "echo": "",
+      "echo": "Echo",
       "heard": "Sentito",
       "result": "Esito",
       "time": "Ora"
