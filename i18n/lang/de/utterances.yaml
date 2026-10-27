@@ -109,6 +109,7 @@ Navigate:
   go: "(geh|gehe|drück|drücke|navigiere) {NavAction}"
   go_times: "(geh|gehe|drück|drücke|navigiere) {Count} mal {NavAction}"
   open_screen: "(öffne|öffnen) (das|den) {NavAction}"
+  sample: "{NavAction}"
   times: "{NavAction} {Count} mal"
 OpenFavourite:
   open_favourite: "(öffne|öffnen|zeige|zeig|starte|start) [den|meinen] favoriten {Favourite}"
@@ -156,11 +157,13 @@ PlayerSeekTo:
 PlayerZoom:
   enhance: "(vergrößere|vergrößer) das bild"
   enhance_and_move: "(vergrößern|näher ran) und (schwenke|schwenk) {Direction}"
+  zoom: "zoom {Zoom}"
   zoom_2: "das bild {Zoom}"
   zoom_and_move: "(zoome|zoom) {Zoom} und (schwenke|schwenk|geh) {Direction}"
 Power:
   kodi: "kodi {PowerAction}\n(den computer|das system|das media center|die box|den fernseher) {PowerAction}"
   put_kodi: "(schicke|schick) (kodi|das system|den computer) in den {PowerAction}"
+  sample: "{PowerAction}"
 Recommend:
   give_me_recommendation: "ich (möchte|hätte gern) eine {MediaType} empfehlung"
   recommend: "(empfiehl|schlag) mir (einen|eine|ein) {MediaType} [vor]"
