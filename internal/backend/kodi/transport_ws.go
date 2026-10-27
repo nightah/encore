@@ -147,7 +147,19 @@ func (w *wsConn) call(ctx context.Context, id int64, method string, params, resu
 		w.mu.Unlock()
 	}
 
-	if err := w.c.Write(ctx, websocket.MessageText, data); err != nil {
+	if ctx.Err() != nil {
+		forget()
+
+		return ctxErr(method, ctx.Err())
+	}
+
+	// The websocket library closes the whole connection when a write's context ends, so a caller giving up must not end it; only a stalled write may.
+	wctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), w.t.cfg.Timeout)
+	err = w.c.Write(wctx, websocket.MessageText, data)
+
+	cancel()
+
+	if err != nil {
 		forget()
 
 		if ctx.Err() != nil {
@@ -167,6 +179,10 @@ func (w *wsConn) call(ctx context.Context, id int64, method string, params, resu
 		case msg := <-ch:
 			return msg.decode(method, result)
 		default:
+		}
+
+		if ctx.Err() != nil {
+			return ctxErr(method, ctx.Err())
 		}
 
 		return unreachable(method, fmt.Errorf("websocket closed: %w", w.err))
