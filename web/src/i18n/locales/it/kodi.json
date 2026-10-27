@@ -17,8 +17,8 @@
       "own": "Libreria propria",
       "sharedWith": "Condivisa con {{names}}"
     },
-    "mac": "",
-    "ms": "",
+    "mac": "MAC (Wake-on-LAN)",
+    "ms": "{{ms}} ms",
     "notSet": "Non impostato",
     "offline": "Encore non riesce a raggiungere {{name}}. Controlla che Kodi sia in esecuzione e che l'indirizzo qui sotto sia corretto.",
     "passed": "Riuscito:",
@@ -126,7 +126,7 @@
     "searching": "Ricerca di Kodi con mDNS. Ci vuole qualche secondo.",
     "title": "Trovate nella tua rete",
     "unavailable": "Il rilevamento non è disponibile al momento.",
-    "version": ""
+    "version": "Kodi {{version}}"
   },
   "library": {
     "explanation": {
