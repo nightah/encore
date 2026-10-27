@@ -81,6 +81,8 @@ docker compose pull && docker compose up -d
 
 Image tags: `latest`, the full version (`1.2.3`), `1.2` and, from 1.0, `1`. Pre-releases are tagged only with their full version. Each image carries [SLSA Build Level 3](https://slsa.dev) provenance, attached in the registry; check it with `slsa-verifier verify-image ghcr.io/nightah/encore@<digest> --source-uri github.com/nightah/encore`.
 
+Other tags, such as `fix-abc` or `PR12`, are test builds of unmerged changes ([test images](/encore/contributing/development/#test-images)): they carry no provenance and disappear when the change merges or closes.
+
 ## Next
 
 Put a [reverse proxy](/encore/guides/reverse-proxy/) in front of Encore, then do the [first run](/encore/getting-started/first-run/).

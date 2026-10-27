@@ -1,0 +1,72 @@
+name: Clean up images
+
+# Deletes a test image from ghcr.io/nightah/encore once it's no longer needed: a branch's when the branch is deleted (including when its pull request merges), a fork's PR<number> when its pull request closes. Only a version whose one tag is that tag is deleted, so release images and anything else sharing the version are left alone.
+on:
+  delete:
+  pull_request_target: # zizmor: ignore[dangerous-triggers] only the base branch is checked out, and nothing from the pull request runs
+    types: [closed]
+
+permissions: {}
+
+jobs:
+  cleanup:
+    name: Delete the image
+    if: >-
+      (github.event_name == 'delete' && github.event.ref_type == 'branch') ||
+      (github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name != github.repository)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read # check out the default branch for image-tag.sh
+      packages: write # delete the image
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Resolve the tag
+        id: tag
+        env:
+          BRANCH: ${{ github.event.ref }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          if [ "${GITHUB_EVENT_NAME}" = delete ]; then
+            tag="$(.github/scripts/image-tag.sh "${BRANCH}")" || exit 0
+          else
+            tag="PR${PR}"
+          fi
+          echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
+
+      - name: Delete
+        if: steps.tag.outputs.tag != ''
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        with:
+          script: |
+            const pkg = { package_type: 'container', package_name: context.repo.repo, username: context.repo.owner };
+            let versions;
+            try {
+              versions = await github.paginate(github.rest.packages.getAllPackageVersionsForPackageOwnedByUser, { ...pkg, per_page: 100 });
+            } catch (error) {
+              if (error.status === 404) {
+                core.info('No images published yet');
+                return;
+              }
+              throw error;
+            }
+
+            const tagged = versions.filter((v) => v.metadata.container.tags.includes(process.env.TAG));
+            for (const version of tagged) {
+              if (version.metadata.container.tags.length > 1) {
+                core.warning(`${process.env.TAG} shares version ${version.id} with ${version.metadata.container.tags.join(', ')}; left alone`);
+                continue;
+              }
+              await github.rest.packages.deletePackageVersionForUser({ ...pkg, package_version_id: version.id });
+              core.info(`Deleted ${process.env.TAG} (version ${version.id})`);
+            }

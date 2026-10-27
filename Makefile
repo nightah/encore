@@ -49,12 +49,13 @@ lint-go: ## Lint Go (root + tools module) and interaction models
 	cd tools && $(GOLANGCI) run --config ../.golangci.yml ./...
 	$(GO) run ./cmd/encore gen lint
 
-lint-repo: ## Repository-wide checks, as CI runs them: editorconfig, typos, secrets, sorted language files, shell scripts, Dockerfiles, workflows and Go vulnerabilities
+lint-repo: ## Repository-wide checks, as CI runs them: editorconfig, typos, secrets, sorted language files, shell scripts and the image tag script's tests, Dockerfiles, workflows and Go vulnerabilities
 	git ls-files -z | xargs -0 $(GO) tool -modfile=tools/go.mod editorconfig-checker
 	typos --format brief
 	yamllint --strict .
 	trufflehog --fail --log-level=-1 filesystem -x .trufflehog .
-	shellcheck --format=gcc docker/root/etc/s6-overlay/s6-rc.d/encore/run docker/root/etc/s6-overlay/scripts/adduser docker/root/etc/s6-overlay/scripts/encoresetup
+	shellcheck --format=gcc docker/root/etc/s6-overlay/s6-rc.d/encore/run docker/root/etc/s6-overlay/scripts/adduser docker/root/etc/s6-overlay/scripts/encoresetup .github/scripts/*.sh
+	.github/scripts/image-tag_test.sh
 	hadolint Dockerfile Dockerfile.goreleaser
 	$(GO) tool -modfile=tools/go.mod actionlint
 	zizmor --no-progress .github/workflows
