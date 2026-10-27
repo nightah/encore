@@ -11,7 +11,7 @@
       },
       "name": {
         "hint": "Alexa gibt keine Gerätenamen weiter, also benenne es hier.",
-        "label": "Name"
+        "label": ""
       },
       "room": {
         "label": "Raum",
@@ -53,7 +53,7 @@
           "none": "Keine"
         },
         "name": {
-          "label": "Name",
+          "label": "",
           "placeholder": "Küche"
         }
       },
@@ -72,7 +72,7 @@
       "actions": "Aktionen",
       "controls": "Steuert",
       "lastRequest": "Letzte Anfrage",
-      "name": "Name",
+      "name": "",
       "room": "Raum",
       "today": "Heute"
     },
