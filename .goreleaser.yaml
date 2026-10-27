@@ -95,7 +95,7 @@ dockers_v2:
       "index:org.opencontainers.image.revision": "{{ .FullCommit }}"
     sbom: true
 
-# .github/workflows/release.yml hands digests.txt (and checksums.txt) to slsa-github-generator, which generates SLSA Build Level 3 provenance for the images and archives. It's signed with Sigstore, so no separate cosign signatures are needed.
+# .github/workflows/release-slsa.yml attests the archives (checksums.txt) and the images (digests.txt) with GitHub artifact attestations: SLSA Build Level 3 provenance signed with Sigstore, so no separate cosign signatures are needed.
 docker_digest:
   name_template: digests.txt
 
