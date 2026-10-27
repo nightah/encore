@@ -17,8 +17,8 @@
       "own": "Sa propre bibliothèque",
       "sharedWith": "Partagée avec {{names}}"
     },
-    "mac": "",
-    "ms": "",
+    "mac": "MAC (Wake-on-LAN)",
+    "ms": "{{ms}} ms",
     "notSet": "Non définie",
     "offline": "Encore ne parvient pas à joindre {{name}}. Vérifiez que Kodi est lancé et que l'adresse ci-dessous est correcte.",
     "passed": "Réussi :",
@@ -44,7 +44,7 @@
     "testing": "Test de {{name}}…",
     "testResults": "Résultats du test de connexion",
     "useForUnlinked": "Utiliser pour les Echo non associés",
-    "version": "",
+    "version": "Version",
     "wake": "Réveiller",
     "wakeTimeout": {
       "label": "Délai de réveil",
@@ -126,7 +126,7 @@
     "searching": "Recherche de Kodi via mDNS. Cela prend quelques secondes.",
     "title": "Trouvées sur votre réseau",
     "unavailable": "La découverte n'est pas disponible pour le moment.",
-    "version": ""
+    "version": "Kodi {{version}}"
   },
   "library": {
     "explanation": {
