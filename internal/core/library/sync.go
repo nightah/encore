@@ -50,21 +50,19 @@ func (c *Catalog) syncLocked(ctx context.Context) error {
 		c.mu.Unlock()
 	}
 
-	c.apply(upserted, removed)
+	c.applyThen(upserted, removed, func() {
+		// Episodes are refetched on demand; a full sync may have changed any of them.
+		c.episodes, c.epIndex = map[int][]media.Item{}, map[int]media.Item{}
+		c.epGen++
 
-	c.mu.Lock()
-	// Episodes are refetched on demand; a full sync may have changed any of them.
-	c.episodes, c.epIndex = map[int][]media.Item{}, map[int]media.Item{}
-	c.epGen++
+		if c.watermark[media.KindEpisode].IsZero() {
+			c.watermark[media.KindEpisode] = start.Add(-episodeLookback)
+		}
 
-	if c.watermark[media.KindEpisode].IsZero() {
-		c.watermark[media.KindEpisode] = start.Add(-episodeLookback)
-	}
-
-	if len(errs) < len(kinds) {
-		c.lastSync = start
-	}
-	c.mu.Unlock()
+		if len(errs) < len(kinds) {
+			c.lastSync = start
+		}
+	})
 
 	c.log.Debug("library synced", "items", len(upserted), "removed", len(removed), "took", c.opts.Now().Sub(start), "errors", len(errs))
 
@@ -167,11 +165,7 @@ func (c *Catalog) deltaLocked(ctx context.Context) error {
 		upserted = append(upserted, items...)
 	}
 
-	c.apply(upserted, removed)
-
-	c.mu.Lock()
-	c.lastDelta = c.opts.Now()
-	c.mu.Unlock()
+	c.applyThen(upserted, removed, func() { c.lastDelta = c.opts.Now() })
 
 	return joinErrors(errs)
 }

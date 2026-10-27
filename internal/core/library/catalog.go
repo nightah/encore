@@ -207,6 +207,11 @@ func (c *Catalog) RecentlyAdded(n int, kinds ...media.Kind) []media.Item {
 
 // apply upserts and removes items, then tells the hooks what actually changed. Callers hold c.write.
 func (c *Catalog) apply(upserted []media.Item, removed []media.Ref) {
+	c.applyThen(upserted, removed, nil)
+}
+
+// applyThen is apply, running locked under c.mu once the items have changed, so the hooks see the whole update.
+func (c *Catalog) applyThen(upserted []media.Item, removed []media.Ref, locked func()) {
 	var (
 		changed []media.Item
 		gone    []media.Ref
@@ -242,6 +247,10 @@ func (c *Catalog) apply(upserted []media.Item, removed []media.Ref) {
 
 	for kind := range dirty {
 		c.rebuild(kind)
+	}
+
+	if locked != nil {
+		locked()
 	}
 
 	c.mu.Unlock()
