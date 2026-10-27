@@ -10,7 +10,7 @@
     },
     "copied": "Copié",
     "copy": "Copier le JSON",
-    "intent": "Intent",
+    "intent": "",
     "kodiCalls": "Appels Kodi",
     "loading": "Chargement de la requête…",
     "noCalls": "Aucun.",
@@ -31,7 +31,7 @@
       "unlinked": "Aucun (appareil non lié)"
     },
     "timing": {
-      "fallback": "Encore {{encore}} · Kodi {{kodi}} · total {{total}}",
+      "fallback": "",
       "label": "Durées",
       "split": "vérification {{verify}} · recherche {{match}} · Kodi {{kodi}} · total {{total}}"
     }
