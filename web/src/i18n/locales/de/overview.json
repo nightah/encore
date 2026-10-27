@@ -31,11 +31,11 @@
     "progress": "Fortschritt {{percent}} Prozent",
     "title": "Kodi-Instanzen"
   },
-  "ms": "",
+  "ms": "{{ms}} ms",
   "openRequestLog": "Anfrageprotokoll öffnen",
   "recent": {
     "columns": {
-      "echo": "",
+      "echo": "Echo",
       "heard": "Gehört",
       "result": "Ergebnis",
       "time": "Zeit"
@@ -52,7 +52,7 @@
       "reachable": "{{host}} erreichbar",
       "unreachable": "Nicht erreichbar"
     },
-    "label": "",
+    "label": "Status",
     "libraries": {
       "and": " und ",
       "count_one": "{{count, number}} Mediathek",
@@ -81,7 +81,7 @@
       "state": {
         "deploying": "Wird bereitgestellt…",
         "failed": "Bereitstellung fehlgeschlagen",
-        "live": "",
+        "live": "Live",
         "not_deployed": "Nicht bereitgestellt"
       },
       "updatePending": "Update ausstehend"
