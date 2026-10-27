@@ -86,8 +86,8 @@
   },
   "deploy": {
     "answer": {
-      "no": "",
-      "noLabel": "",
+      "no": "No",
+      "noLabel": "{{question}}: no",
       "yes": "Sí",
       "yesLabel": "{{question}}: sí"
     },
@@ -216,7 +216,7 @@
     },
     "kodi": {
       "sub": "Descubrir y conectar",
-      "title": ""
+      "title": "Kodi"
     }
   },
   "wizard": {
