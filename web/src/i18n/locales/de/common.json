@@ -4,7 +4,7 @@
     "copied": "Kopiert",
     "copy": "Kopieren",
     "copyNamed": "{{label}} kopieren",
-    "copyWithText": "",
+    "copyWithText": "{{label}}: {{text}}",
     "dismiss": "Ausblenden",
     "tryAgain": "Erneut versuchen"
   },
@@ -40,7 +40,7 @@
     "idle": "Bereit",
     "macSaved": "MAC gespeichert",
     "noMac": "Keine MAC-Adresse",
-    "offline": "",
+    "offline": "Offline",
     "paused": "Pausiert",
     "playing": "Wiedergabe",
     "versionUnknown": "Unbekannt, bis Encore Kodi erreicht"
@@ -49,7 +49,7 @@
   "nav": {
     "alexaSkill": "Alexa-Skill",
     "echoDevices": "Echo-Geräte",
-    "kodi": "",
+    "kodi": "Kodi",
     "label": "Hauptnavigation",
     "library": "Mediathek",
     "overview": "Übersicht",
@@ -92,7 +92,7 @@
     "justNow": "gerade eben",
     "minutesAgo": "vor {{value}} Min.",
     "never": "nie",
-    "seconds": "",
+    "seconds": "{{value}} s",
     "soon": "gleich"
   },
   "toast": {
