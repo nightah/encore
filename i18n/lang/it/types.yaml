@@ -1,5 +1,4 @@
-# Italian values for the custom slot types in model.yaml. IDs are what the handler acts on; values and synonyms are what people say.
-
+# Values for the static custom slot types in model.yaml, translated on Crowdin from the English file. Each key is the value's ID, which is what the handler acts on; the first line is the value and any further lines its synonyms, which are what people say. The dynamic types' examples are in examples.yaml, and notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
 LIBRARY_SECTION:
   albums: |-
     album
@@ -10,7 +9,8 @@ LIBRARY_SECTION:
     band
     gruppi
     cantanti
-  favourites: preferiti
+  favourites: |-
+    preferiti
   movies: |-
     film
     libreria dei film
@@ -57,7 +57,6 @@ LIBRARY_SECTION:
     serie
     telefilm
     programmi tv
-
 LIBRARY_TYPE:
   music: |-
     musicale
@@ -73,7 +72,6 @@ LIBRARY_TYPE:
     t. v.
     dei video
     dei film
-
 MEDIA_TYPE:
   album: |-
     album
@@ -124,7 +122,6 @@ MEDIA_TYPE:
     qualcosa da vedere
     qualcosa da guardare
     video
-
 NAV_ACTION:
   back: |-
     indietro
@@ -182,25 +179,11 @@ NAV_ACTION:
     in alto
     sopra
     verso l'alto
-
 NAV_DIRECTION:
-  down: |-
-    giù
-    in basso
-    verso il basso
-  left: |-
-    sinistra
-    a sinistra
-    verso sinistra
-  right: |-
-    destra
-    a destra
-    verso destra
-  up: |-
-    su
-    in alto
-    verso l'alto
-
+  down: "giù\nin basso\nverso il basso"
+  left: "sinistra\na sinistra\nverso sinistra"
+  right: "destra\na destra\nverso destra"
+  up: "su\nin alto\nverso l'alto"
 POWER_ACTION:
   hibernate: |-
     iberna
@@ -224,7 +207,6 @@ POWER_ACTION:
     sospensione
     standby
     stand by
-
 REPEAT_MODE:
   all: |-
     tutto
@@ -247,7 +229,6 @@ REPEAT_MODE:
     la canzone
     il brano
     uno
-
 ROTATE_DIRECTION:
   clockwise: |-
     in senso orario
@@ -259,7 +240,6 @@ ROTATE_DIRECTION:
     antiorario
     a sinistra
     verso sinistra
-
 SEEK_DIRECTION:
   back: |-
     indietro
@@ -269,7 +249,6 @@ SEEK_DIRECTION:
     avanti
     in avanti
     più avanti
-
 SEEK_SIZE:
   big: |-
     di molto
@@ -284,7 +263,6 @@ SEEK_SIZE:
     un pochino
     poco
     piccolo
-
 STREAM_STEP:
   next: |-
     cambia
@@ -297,7 +275,6 @@ STREAM_STEP:
   previous: |-
     precedente
     torna alla precedente
-
 SUBTITLE_ACTION:
   download: |-
     scarica
@@ -329,16 +306,13 @@ SUBTITLE_ACTION:
   previous: |-
     precedenti
     torna ai precedenti
-
 TRANSPORT_COMMAND:
   next: |-
     avanti
     prossimo
     successivo
     salta
-  pause: |-
-    pausa
-    metti in pausa
+  pause: "pausa\nmetti in pausa"
   previous: |-
     indietro
     precedente
@@ -348,11 +322,7 @@ TRANSPORT_COMMAND:
     continua
     togli la pausa
     riproduci
-  stop: |-
-    stop
-    ferma
-    interrompi
-
+  stop: "stop\nferma\ninterrompi"
 ZOOM_ACTION:
   in: |-
     avanti

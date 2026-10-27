@@ -1,41 +1,23 @@
-# French utterance patterns. (a|b) picks one, [a|b] is optional, {Slot} is a slot. Built-in intents already understand the common phrasings; samples here only add Kodi-specific ones.
-#
-# People talk to Alexa with tu-imperatives ("mets", "lance", "joue"). One-shot requests go through "demande à kodi de ...", which takes an infinitive, so the main verbs come in both forms ("mets|mettre").
-#
-# "[(dans le|dans la|au|à la) {Room}]" lets a request name the room whose Kodi should play it.
-
+# Utterance patterns, translated on Crowdin from the English file. Each key is one way of asking, and may hold several patterns, one per line. (a|b) picks one, [a|b] is optional, {Slot} is a slot. Built-in intents already understand the common phrasings; samples here only add Kodi-specific ones. An optional room at the end, such as "[(in|on) the {Room}]", lets a request name the room whose Kodi should play it; notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
 AMAZON.LoopOffIntent:
   loop_off: "mode répétition désactivé"
   turn_off_repeat: "(désactive|désactiver|arrête|arrêter) (la répétition|la lecture en boucle|le mode répétition)"
-
 AMAZON.LoopOnIntent:
   loop: "mode répétition activé"
   turn_repeat: "(active|activer) (la répétition|la lecture en boucle|le mode répétition)"
-
 AMAZON.PauseIntent:
-  pause_tv: |-
-    (mets|mettre) en pause (la télé|kodi|la vidéo|le film|la série)
-    (mets|mettre) (la télé|kodi|la vidéo|le film|la série) en pause
-
+  pause_tv: "(mets|mettre) en pause (la télé|kodi|la vidéo|le film|la série)\n(mets|mettre) (la télé|kodi|la vidéo|le film|la série) en pause"
 AMAZON.ResumeIntent:
   resume_tv: "(reprends|reprendre|relance|relancer) (la télé|kodi|la vidéo|le film|la série|la lecture)"
-
 AMAZON.ShuffleOffIntent:
   shuffle_off: "lecture aléatoire désactivée"
   turn_off_shuffle: "(désactive|désactiver|arrête|arrêter) (la lecture aléatoire|le mode aléatoire)"
-
 AMAZON.ShuffleOnIntent:
   shuffle: "lecture aléatoire activée"
-  turn_shuffle: |-
-    (active|activer) (la lecture aléatoire|le mode aléatoire)
-    (mets|mettre) en (aléatoire|mode aléatoire|lecture aléatoire)
-
+  turn_shuffle: "(active|activer) (la lecture aléatoire|le mode aléatoire)\n(mets|mettre) en (aléatoire|mode aléatoire|lecture aléatoire)"
 AudioPassthrough:
   toggle_digital_audio: "(active|activer|désactive|désactiver) (l'audio numérique|la sortie audio numérique)"
-  toggle_passthrough: |-
-    (active|activer|désactive|désactiver|bascule|basculer) le passthrough [audio|numérique]
-    passthrough audio
-
+  toggle_passthrough: "(active|activer|désactive|désactiver|bascule|basculer) le passthrough [audio|numérique]\npassthrough audio"
 AudioStream:
   audio: "(piste audio|langue audio|langue|flux audio|bande son) {Step}"
   audio_2: "piste audio en {Language}"
@@ -43,277 +25,182 @@ AudioStream:
   language: "(passe|passer) à la (piste audio|langue) {Step}"
   play: "(écoute|écouter|lis|lire) en {Language}"
   switch_audio: "(passe|passer|change|changer|mets|mettre|règle|régler) (l'audio|la piste audio|la langue|la langue audio) en {Language}"
-
 BingeShow:
-  binge: |-
-    (enchaîne|enchaîner) [les épisodes de] {Show} [(dans le|dans la|au|à la) {Room}]
-    (lance|lancer|fais|faire) un marathon {Show} [(dans le|dans la|au|à la) {Room}]
+  binge: "(enchaîne|enchaîner) [les épisodes de] {Show} [(dans le|dans la|au|à la) {Room}]\n(lance|lancer|fais|faire) un marathon {Show} [(dans le|dans la|au|à la) {Room}]"
   play_all: "(mets|mettre|lance|lancer) toute la série {Show}"
   play_all_unwatched: "(mets|mettre|lance|lancer) (tous les épisodes non vus|le reste des épisodes|tous les épisodes restants) de {Show} [(dans le|dans la|au|à la) {Room}]"
   start_binge_mode: "(active|activer|lance|lancer) le mode marathon (pour|sur) {Show} [(dans le|dans la|au|à la) {Room}]"
-
 CleanLibrary:
   clean_library: "(nettoie|nettoyer) (la|ma) bibliothèque"
   clean_library_2: "(nettoie|nettoyer) (la|ma) bibliothèque {Library}"
-  tidy_library: |-
-    (fais|faire) le ménage dans (la|ma) bibliothèque [{Library}]
-    (range|ranger) (la|ma) bibliothèque {Library}
-
+  tidy_library: "(fais|faire) le ménage dans (la|ma) bibliothèque [{Library}]\n(range|ranger) (la|ma) bibliothèque {Library}"
 ContinueWatching:
   continue_last_show: "(reprends|reprendre) ma dernière série [(dans le|dans la|au|à la) {Room}]"
   continue_watching: "(continue|continuer) à regarder [(dans le|dans la|au|à la) {Room}]"
   continue_where_i: "(reprends|reprendre|continue|continuer) là où je (me suis arrêté|me suis arrêtée|m'étais arrêté|m'étais arrêtée) [(dans le|dans la|au|à la) {Room}]"
   play_what_i: "(remets|remettre) ce que je regardais [(dans le|dans la|au|à la) {Room}]"
   where_did_i: "où (en étais-je|j'en étais)"
-
 CurrentPlayItemEnquiry:
   what_am_i: "qu'est-ce que (je regarde|j'écoute|c'est)"
-  what_show_is: |-
-    c'est quoi (ce film|cette série|cette chanson|ce morceau|ça)
-    (quel film|quel morceau|quelle série|quelle chanson) est-ce
+  what_show_is: "c'est quoi (ce film|cette série|cette chanson|ce morceau|ça)\n(quel film|quel morceau|quelle série|quelle chanson) est-ce"
   whats_playing: "qu'est-ce qui (passe|joue|est en lecture) [en ce moment|maintenant]"
   who_is_this: "qui (chante|est-ce)"
-
 CurrentPlayItemTimeRemaining:
   how_long_is: "combien de temps (reste-t-il|il reste) [pour ce film|pour cet épisode]"
-  how_much_longer: |-
-    c'est encore long
-    combien de temps encore
+  how_much_longer: "c'est encore long\ncombien de temps encore"
   how_much_time: "il reste combien de temps"
   when_is_this: "dans combien de temps (ça se termine|c'est fini)"
   when_will_movie: "(quand|à quelle heure) (se termine|finit) (le film|l'épisode)"
   when_will_this: "(quand|à quelle heure) (ça|le film|l'épisode|ce film|cet épisode) (se termine|finit)"
-
 EjectMedia:
   eject: "(éjecte|éjecter)"
   eject_disc: "(éjecte|éjecter) (le disque|le c. d.|le d. v. d.|le blu ray|le média)"
   open_disc_tray: "(ouvre|ouvrir) le (tiroir|lecteur) (du disque|c. d.|d. v. d.)"
-
 Fullscreen:
-  exit_fullscreen: |-
-    (quitte|quitter) le plein écran
-    (sors|sortir) du plein écran
+  exit_fullscreen: "(quitte|quitter) le plein écran\n(sors|sortir) du plein écran"
   fullscreen: "plein écran"
-  go_fullscreen: |-
-    (active|activer|bascule|basculer) le plein écran
-    (passe|passer|mets|mettre) en plein écran
+  go_fullscreen: "(active|activer|bascule|basculer) le plein écran\n(passe|passer|mets|mettre) en plein écran"
   show_visualizer: "(active|activer|affiche|afficher|montre) (le visualiseur|la visualisation)"
-
 GlobalSearch:
   do_global_search: "(fais|faire|lance|lancer) une recherche globale (de|pour|sur) {Query}"
   global_search: "recherche globale [de|pour] {Query}"
-  search_kodi_for: |-
-    (cherche|chercher|recherche|rechercher) {Query} (partout|dans toutes les extensions|dans kodi)
-    (cherche|chercher|recherche|rechercher) partout {Query}
-
+  search_kodi_for: "(cherche|chercher|recherche|rechercher) {Query} (partout|dans toutes les extensions|dans kodi)\n(cherche|chercher|recherche|rechercher) partout {Query}"
 IdentifyEcho:
   what_is_this: "comment s'appelle cet (echo|appareil)"
   whats_name_this: "quel est le nom de cet (echo|appareil)"
   which_echo_am: "à quel (echo|appareil) je parle"
   which_echo_is: "quel (echo|appareil) est-ce"
-
 LaunchAddon:
   launch: "(lance|lancer|exécute|exécuter) {Addon}"
-  launch_addon: |-
-    (lance|lancer|ouvre|ouvrir|exécute|exécuter|démarre|démarrer) (l'extension|l'addon|le plugin|le script|l'application|l'appli|le module complémentaire) {Addon}
-    (démarre|démarrer|ouvre|ouvrir) l'extension kodi {Addon}
-
+  launch_addon: "(lance|lancer|ouvre|ouvrir|exécute|exécuter|démarre|démarrer) (l'extension|l'addon|le plugin|le script|l'application|l'appli|le module complémentaire) {Addon}\n(démarre|démarrer|ouvre|ouvrir) l'extension kodi {Addon}"
 ListenToAlbum:
   play_album: "(mets|mettre|joue|jouer|lance|lancer|écoute|écouter) l'album {Album} [(dans le|dans la|au|à la) {Room}]"
   play_album_2: "(mets|mettre|joue|jouer|lance|lancer) le disque {Album} [de {Artist}]"
   play_album_by: "(mets|mettre|joue|jouer|lance|lancer|écoute|écouter) l'album {Album} (de|par) {Artist} [(dans le|dans la|au|à la) {Room}]"
-
 ListenToArtist:
   play_artist: "(mets|mettre|joue|jouer|lance|lancer) l'artiste {Artist} [(dans le|dans la|au|à la) {Room}]"
-  play_music_by: |-
-    (mets|mettre|joue|jouer|lance|lancer) (de la musique|des chansons) (de|par) {Artist} [(dans le|dans la|au|à la) {Room}]
-    je (veux|voudrais) écouter (de la musique|des chansons) de {Artist}
+  play_music_by: "(mets|mettre|joue|jouer|lance|lancer) (de la musique|des chansons) (de|par) {Artist} [(dans le|dans la|au|à la) {Room}]\nje (veux|voudrais) écouter (de la musique|des chansons) de {Artist}"
   play_music_by_2: "(mets|mettre|joue|jouer|lance|lancer) (de la musique|des chansons) {Genre} (de|par) {Artist}"
-
 ListenToGenre:
   play_genre: "(mets|mettre|joue|jouer|lance|lancer) de la musique du genre {Genre} [(dans le|dans la|au|à la) {Room}]"
-  play_music: |-
-    (mets|mettre|joue|jouer|lance|lancer) (de la musique|des chansons) {Genre} [(dans le|dans la|au|à la) {Room}]
-    (mets|mettre|joue|jouer) (du|de la) {Genre} [(dans le|dans la|au|à la) {Room}]
-    je (veux|voudrais) écouter (du|de la) {Genre}
+  play_music: "(mets|mettre|joue|jouer|lance|lancer) (de la musique|des chansons) {Genre} [(dans le|dans la|au|à la) {Room}]\n(mets|mettre|joue|jouer) (du|de la) {Genre} [(dans le|dans la|au|à la) {Room}]\nje (veux|voudrais) écouter (du|de la) {Genre}"
   shuffle_music: "(mélange|mélanger) (de la musique|des chansons) {Genre} [(dans le|dans la|au|à la) {Room}]"
-
 ListenToLatestAlbum:
-  play_latest_album: |-
-    (mets|mettre|joue|jouer|lance|lancer) (le dernier album|le nouvel album|l'album le plus récent) de {Artist} [(dans le|dans la|au|à la) {Room}]
-    je (veux|voudrais) écouter le dernier album (de|par) {Artist}
-    (mets|mettre|joue|jouer|lance|lancer) le dernier disque de {Artist} [(dans le|dans la|au|à la) {Room}]
-
+  play_latest_album: "(mets|mettre|joue|jouer|lance|lancer) (le dernier album|le nouvel album|l'album le plus récent) de {Artist} [(dans le|dans la|au|à la) {Room}]\nje (veux|voudrais) écouter le dernier album (de|par) {Artist}\n(mets|mettre|joue|jouer|lance|lancer) le dernier disque de {Artist} [(dans le|dans la|au|à la) {Room}]"
 ListenToRecentSongs:
   listen_recently_added: "je (veux|voudrais) écouter (mes|les) (nouvelles chansons|chansons récentes|dernières chansons)"
-  play_recently_added: |-
-    (mets|mettre|joue|jouer|lance|lancer) mes (nouvelles chansons|chansons récentes|chansons ajoutées récemment|derniers morceaux|dernières chansons) [(dans le|dans la|au|à la) {Room}]
-    (mélange|mélanger) mes (nouvelles chansons|dernières chansons)
-    (mets|mettre|joue|jouer|lance|lancer) la musique ajoutée récemment
-
+  play_recently_added: "(mets|mettre|joue|jouer|lance|lancer) mes (nouvelles chansons|chansons récentes|chansons ajoutées récemment|derniers morceaux|dernières chansons) [(dans le|dans la|au|à la) {Room}]\n(mélange|mélanger) mes (nouvelles chansons|dernières chansons)\n(mets|mettre|joue|jouer|lance|lancer) la musique ajoutée récemment"
 ListenToSong:
   play_song: "(mets|mettre|joue|jouer|lance|lancer|écoute|écouter) (la chanson|le morceau|le titre) {Song} [(dans le|dans la|au|à la) {Room}]"
   play_song_by: "(mets|mettre|joue|jouer|lance|lancer) (la chanson|le morceau|le titre) {Song} (de|par) {Artist}"
   play_song_from: "(mets|mettre|joue|jouer|lance|lancer) (la chanson|le morceau) {Song} (de|sur) l'album {Album}"
-
 ListenToSongOrAlbum:
   play_by: "(mets|mettre|joue|jouer|lance|lancer|écoute|écouter) {Title} (de|par) {Artist} [(dans le|dans la|au|à la) {Room}]"
-
 Mute:
-  mute: |-
-    sourdine
-    mode muet
+  mute: "sourdine\nmode muet"
   mute_tv: "(coupe|couper) le son [de la télé|de kodi]"
   toggle_mute: "(active|activer|désactive|désactiver) (le mode muet|la sourdine)"
   unmute: "(remets|remettre|rétablis|rétablir) le son"
-
 Navigate:
   go: "(va|aller|appuie sur|appuyer sur|navigue|naviguer) {NavAction}"
   go_times: "(va|aller|appuie sur|appuyer sur|navigue|naviguer) {NavAction} {Count} fois"
   open_screen: "(ouvre|ouvrir|affiche|afficher) (l'écran|la fenêtre|le panneau) {NavAction}"
   sample: "{NavAction}"
   times: "{NavAction} {Count} fois"
-
 OpenFavourite:
   open_favourite: "(ouvre|ouvrir|affiche|afficher|lance|lancer|démarre|démarrer) [mon|le] favori {Favourite}"
   play_from_favourites: "(mets|mettre|ouvre|ouvrir|lance|lancer) {Favourite} (depuis|dans) (mes|les) favoris"
-
 PartyMode:
   lets_party: "(c'est l'heure de|on va) faire la fête"
-  play_all_music: |-
-    (mets|mettre|joue|jouer|lance|lancer|mélange|mélanger) toute la musique [(dans le|dans la|au|à la) {Room}]
-    (mets|mettre|joue|jouer|lance|lancer) (de la musique au hasard|n'importe quelle musique) [(dans le|dans la|au|à la) {Room}]
+  play_all_music: "(mets|mettre|joue|jouer|lance|lancer|mélange|mélanger) toute la musique [(dans le|dans la|au|à la) {Room}]\n(mets|mettre|joue|jouer|lance|lancer) (de la musique au hasard|n'importe quelle musique) [(dans le|dans la|au|à la) {Room}]"
   start_party_mode: "(lance|lancer|active|activer|démarre|démarrer) le mode (fête|soirée|party) [(dans le|dans la|au|à la) {Room}]"
-
 PlayMedia:
   find: "(trouve|trouver) {Query}"
   play: "(joue|jouer|mets|mettre) {Query}"
   queue_up: "(ajoute|ajouter) {Query} à la file d'attente"
   search_for: "(cherche|chercher|recherche|rechercher) {Query}"
-
 PlayPlaylist:
   play_music_playlist: "(mets|mettre|joue|jouer|lance|lancer) la (playlist|liste de lecture) (musicale|vidéo|intelligente) {Playlist}"
   play_playlist: "(mets|mettre|joue|jouer|lance|lancer|écoute|écouter) (la|ma) (playlist|liste de lecture) {Playlist} [(dans le|dans la|au|à la) {Room}]"
-
 PlayerMove:
   move_picture: "(déplace|déplacer|bouge|bouger|décale|décaler) (l'image|la vidéo) {Direction}"
   pan: "(fais|faire) un panoramique {Direction}"
-
 PlayerRewind:
   go_back: "(reviens|revenir) {Duration} en arrière"
   rewind: "(rembobine|rembobiner|reviens en arrière|revenir en arrière|retourne en arrière) de {Duration}"
   rewind_2: "(rembobine|rembobiner|reviens en arrière|revenir en arrière) {Size}"
-  rewind_3: |-
-    (rembobine|rembobiner)
-    (fais|faire) un retour en arrière
+  rewind_3: "(rembobine|rembobiner)\n(fais|faire) un retour en arrière"
   rewind_it: "(rembobine|rembobiner) (la vidéo|le film|ça)"
-
 PlayerRotate:
   rotate: "(tourne|tourner|pivote|pivoter) {Rotation}"
   rotate_2: "(tourne|tourner|pivote|pivoter) de quatre-vingt-dix degrés [{Rotation}]"
   rotate_picture: "(tourne|tourner|pivote|pivoter) (l'image|la vidéo|l'écran) [{Rotation}]"
   turn_picture: "(fais|faire) pivoter (l'image|la vidéo) [{Rotation}]"
-
 PlayerSeek:
-  sample: |-
-    {SeekDirection} de {Duration}
-    {SeekDirection} {Duration}
-  skip: |-
-    (saute|sauter|va|aller) {SeekDirection} de {Duration}
-    (saute|sauter) {Duration} {SeekDirection}
+  sample: "{SeekDirection} de {Duration}\n{SeekDirection} {Duration}"
+  skip: "(saute|sauter|va|aller) {SeekDirection} de {Duration}\n(saute|sauter) {Duration} {SeekDirection}"
   skip_2: "{SeekDirection} {Size}"
   skip_3: "(saute|sauter|va|aller) {Size} {SeekDirection}"
   skip_4: "(saute|sauter) {SeekDirection}"
   skip_5: "(saute|sauter) {Duration}"
   take_step: "(fais|faire) {Size} {SeekDirection}"
-
 PlayerSeekTo:
   go_minute: "(va|aller|saute|sauter|passe|passer) à la minute {Minute}"
   jump: "(va|aller|saute|sauter|passe|passer) à {Position}"
   play_from_minute: "(lis|lire|commence|commencer|démarre|démarrer) à partir de la minute {Minute}"
-  start_from: |-
-    (reprends|reprendre|commence|commencer|démarre|démarrer) à {Position}
-    (lis|lire|commence|commencer|démarre|démarrer) à partir de {Position}
-
+  start_from: "(reprends|reprendre|commence|commencer|démarre|démarrer) à {Position}\n(lis|lire|commence|commencer|démarre|démarrer) à partir de {Position}"
 PlayerZoom:
   enhance: "(zoome|zoomer)"
   enhance_and_move: "(zoome|zoomer) et (déplace-toi|bouge|va) {Direction}"
-  zoom: |-
-    zoom {Zoom}
-    (fais|faire) un zoom {Zoom}
+  zoom: "zoom {Zoom}\n(fais|faire) un zoom {Zoom}"
   zoom_2: "{Zoom} (le zoom|l'image)"
-  zoom_and_move: |-
-    (fais|faire) un zoom {Zoom} et (déplace-toi|bouge|va) {Direction}
-    zoom {Zoom} et (déplace-toi|bouge|va) {Direction}
-
+  zoom_and_move: "(fais|faire) un zoom {Zoom} et (déplace-toi|bouge|va) {Direction}\nzoom {Zoom} et (déplace-toi|bouge|va) {Direction}"
 Power:
   kodi: "{PowerAction} (kodi|le système|l'ordinateur|le média center|le boîtier|la télé)"
   put_kodi: "(mets|mettre) (kodi|le système|l'ordinateur) en {PowerAction}"
   sample: "{PowerAction}"
-
 Recommend:
   give_me_recommendation: "(donne-moi|j'aimerais|je voudrais) une recommandation de {MediaType}"
   recommend: "(recommande|recommande-moi|recommander|suggère|suggère-moi|suggérer|conseille-moi|conseiller) (un|une|des) {MediaType} [à (regarder|écouter)]"
   recommend_2: "(recommande|recommande-moi|recommander|suggère|suggère-moi|suggérer|conseille-moi|conseiller) (un|une|des) {MediaType} (de|du genre) {Genre}"
   recommend_3: "(recommande-moi|suggère-moi|conseille-moi) {MediaType}"
   recommend_something: "(recommande-moi|suggère-moi|propose-moi) quelque chose"
-  what_movie_should: |-
-    quel film (je devrais|devrais-je|on pourrait) regarder
-    quelle série (je devrais|devrais-je|on pourrait) regarder
+  what_movie_should: "quel film (je devrais|devrais-je|on pourrait) regarder\nquelle série (je devrais|devrais-je|on pourrait) regarder"
   what_should_i: "qu'est-ce que je (devrais|pourrais) regarder"
   what_should_we: "qu'est-ce qu'on (regarde|pourrait regarder) [ce soir]"
-
 Repeat:
   loop_mode: "mode répétition {RepeatMode}"
   repeat: "(répète|répéter) {RepeatMode}"
   set_loop: "(mets|mettre|règle|régler) la répétition sur {RepeatMode}"
   turn_repeat: "(mets|mettre) {RepeatMode} en boucle"
-
 RoomControl:
   in_the: "{Command} (dans le|dans la|au|à la) {Room}"
   tv: "{Command} (la lecture|la télé|kodi|la musique|le film|la série|la vidéo) (dans le|dans la|au|à la) {Room}"
-
 ShuffleAlbum:
   shuffle_album: "(mélange|mélanger) l'album {Album} [(dans le|dans la|au|à la) {Room}]"
   shuffle_album_2: "(mets|mettre|joue|jouer|lance|lancer) l'album {Album} [de {Artist}] en (aléatoire|mode aléatoire)"
   shuffle_album_by: "(mélange|mélanger) l'album {Album} (de|par) {Artist} [(dans le|dans la|au|à la) {Room}]"
-
 ShuffleArtist:
   shuffle_artist: "(mélange|mélanger) l'artiste {Artist} [(dans le|dans la|au|à la) {Room}]"
-  shuffle_music_by: |-
-    (mélange|mélanger) (la musique|les chansons) (de|par) {Artist} [(dans le|dans la|au|à la) {Room}]
-    (mets|mettre|joue|jouer|lance|lancer) (de la musique|des chansons) de {Artist} en (aléatoire|mode aléatoire)
+  shuffle_music_by: "(mélange|mélanger) (la musique|les chansons) (de|par) {Artist} [(dans le|dans la|au|à la) {Room}]\n(mets|mettre|joue|jouer|lance|lancer) (de la musique|des chansons) de {Artist} en (aléatoire|mode aléatoire)"
   shuffle_music_by_2: "(mélange|mélanger) (la musique|les chansons) {Genre} (de|par) {Artist} [(dans le|dans la|au|à la) {Room}]"
-
 ShuffleLatestAlbum:
-  shuffle_latest_album: |-
-    (mélange|mélanger) (le dernier album|le nouvel album|l'album le plus récent) (de|par) {Artist} [(dans le|dans la|au|à la) {Room}]
-    (mets|mettre|joue|jouer|lance|lancer) le dernier album de {Artist} en (aléatoire|mode aléatoire)
-
+  shuffle_latest_album: "(mélange|mélanger) (le dernier album|le nouvel album|l'album le plus récent) (de|par) {Artist} [(dans le|dans la|au|à la) {Room}]\n(mets|mettre|joue|jouer|lance|lancer) le dernier album de {Artist} en (aléatoire|mode aléatoire)"
 ShuffleMusicVideos:
-  play_music_videos: |-
-    (mélange|mélanger) [tous] (les|mes) clips [du genre {Genre}] [(dans le|dans la|au|à la) {Room}]
-    (mets|mettre|lance|lancer) (tous les|tous mes) clips [du genre {Genre}] [(dans le|dans la|au|à la) {Room}]
-    (mets|mettre|lance|lancer) (les|mes) clips en (aléatoire|mode aléatoire)
+  play_music_videos: "(mélange|mélanger) [tous] (les|mes) clips [du genre {Genre}] [(dans le|dans la|au|à la) {Room}]\n(mets|mettre|lance|lancer) (tous les|tous mes) clips [du genre {Genre}] [(dans le|dans la|au|à la) {Room}]\n(mets|mettre|lance|lancer) (les|mes) clips en (aléatoire|mode aléatoire)"
   play_music_videos_2: "(mets|mettre|lance|lancer|mélange|mélanger) (les|mes) clips [du genre {Genre}] (de|par) {Artist}"
-
 ShufflePlaylist:
   play_playlist_shuffled: "(mets|mettre|joue|jouer|lance|lancer) (la|ma) (playlist|liste de lecture) {Playlist} en (aléatoire|mode aléatoire)"
   shuffle_music_playlist: "(mélange|mélanger) la (playlist|liste de lecture) (musicale|vidéo|intelligente) {Playlist}"
   shuffle_playlist: "(mélange|mélanger) (la|ma) (playlist|liste de lecture) {Playlist} [(dans le|dans la|au|à la) {Room}]"
-
 ShuffleShow:
-  play_shuffled: |-
-    (mets|mettre|lance|lancer) {Show} en (mode aléatoire|ordre aléatoire)
-    (mets|mettre|lance|lancer) les épisodes de {Show} dans le désordre
+  play_shuffled: "(mets|mettre|lance|lancer) {Show} en (mode aléatoire|ordre aléatoire)\n(mets|mettre|lance|lancer) les épisodes de {Show} dans le désordre"
   shuffle_episodes: "(mélange|mélanger) [tous] les épisodes de {Show} [(dans le|dans la|au|à la) {Room}]"
   shuffle_show: "(mélange|mélanger) la série {Show} [(dans le|dans la|au|à la) {Room}]"
-
 StereoscopicMode:
   stereoscopic_mode: "mode (trois d.|stéréoscopique)"
   toggle_stereoscopic_mode: "(active|activer|désactive|désactiver|bascule|basculer) le mode (trois d.|stéréoscopique|trois dimensions)"
   turn_stereoscopic_mode: "(passe|passer) en (trois d.|mode stéréoscopique)"
-
 Subtitles:
   subtitle_language: "{SubtitleAction} la langue des sous-titres"
   subtitles: "{SubtitleAction} (les|des) sous-titres"
@@ -322,140 +209,93 @@ Subtitles:
   switch_subtitles: "(passe|passer|change|changer|règle|régler) les sous-titres en {Language}"
   turn_subtitles: "(passe|passer) aux sous-titres {SubtitleAction}"
   turn_subtitles_2: "(mets|mettre|active|activer|affiche|afficher) les sous-titres en {Language}"
-
 TypeText:
   enter_text: "(entre|entrer) le texte {Text}"
   insert: "(saisis|saisir) {Text}"
   spell: "(épelle|épeler) {Text}"
   type: "(tape|taper) {Text}"
   write: "(écris|écrire) {Text}"
-
 UpdateLibrary:
   look_for_new: "(regarde|vérifie|vérifier) s'il y a (de nouveaux films|de nouvelles séries|de nouveaux épisodes|de la nouvelle musique|de nouvelles chansons|de nouveaux albums|de nouveaux médias)"
   update_library: "(mets à jour|mettre à jour|actualise|actualiser|scanne|scanner|rafraîchis|rafraîchir) (la|ma) bibliothèque"
   update_library_2: "(mets à jour|mettre à jour|actualise|actualiser|scanne|scanner|rafraîchis|rafraîchir) (la|ma) bibliothèque {Library}"
-
 ViewLibrary:
-  show: |-
-    (montre|montre-moi|affiche|afficher|ouvre|ouvrir) [les|la|mes|ma] {Section}
-    (va|aller) (dans|sur) [les|la|mes|ma] {Section}
-    (emmène-moi|amène-moi) (dans|sur) [les|la|mes|ma] {Section}
+  show: "(montre|montre-moi|affiche|afficher|ouvre|ouvrir) [les|la|mes|ma] {Section}\n(va|aller) (dans|sur) [les|la|mes|ma] {Section}\n(emmène-moi|amène-moi) (dans|sur) [les|la|mes|ma] {Section}"
   show_2: "(montre|montre-moi|affiche|afficher|ouvre|ouvrir) [les|mes] {Section} (de|du genre) {Genre}"
-
 ViewPlaylist:
   show_music_playlist: "(montre|montre-moi|affiche|afficher|ouvre|ouvrir) la (playlist|liste de lecture) (musicale|audio|vidéo|de films|de séries) {Playlist}"
-  show_playlist: |-
-    (montre|montre-moi|affiche|afficher|ouvre|ouvrir) (la|ma) (playlist|liste de lecture) {Playlist}
-    (va|aller) à la (playlist|liste de lecture) {Playlist}
-
+  show_playlist: "(montre|montre-moi|affiche|afficher|ouvre|ouvrir) (la|ma) (playlist|liste de lecture) {Playlist}\n(va|aller) à la (playlist|liste de lecture) {Playlist}"
 VolumeDown:
-  make_it_quieter: |-
-    (mets|mettre) moins fort
-    c'est trop fort
+  make_it_quieter: "(mets|mettre) moins fort\nc'est trop fort"
   quieter: "moins fort"
   turn_down: "(baisse|baisser|diminue|diminuer|réduis|réduire) le (volume|son)"
   volume_down: "volume plus bas"
-
 VolumeSet:
   set_volume: "(mets|mettre|règle|régler|passe|passer) le (volume|son) à {Level}"
-  set_volume_percent: |-
-    (mets|mettre|règle|régler) le volume à {Level} pour cent
-    volume {Level} pour cent
+  set_volume_percent: "(mets|mettre|règle|régler) le volume à {Level} pour cent\nvolume {Level} pour cent"
   volume: "volume [à] {Level}"
-
 VolumeUp:
   louder: "plus fort"
-  make_it_louder: |-
-    (mets|mettre) plus fort
-    c'est trop bas
+  make_it_louder: "(mets|mettre) plus fort\nc'est trop bas"
   turn_up: "(monte|monter|augmente|augmenter) le (volume|son)"
   volume_up: "volume plus fort"
-
 WatchEpisode:
   play_episode_season: "(mets|mettre|lance|lancer) {Show} épisode {Episode} saison {Season}"
   play_episode_season_2: "(mets|mettre|lance|lancer|joue|jouer|passe|passer) l'épisode {Episode} de la saison {Season} de {Show} [(dans le|dans la|au|à la) {Room}]"
   play_season_episode: "(mets|mettre|lance|lancer|joue|jouer|passe|passer) {Show} saison {Season} épisode {Episode} [(dans le|dans la|au|à la) {Room}]"
   play_season_episode_2: "(mets|mettre|lance|lancer|joue|jouer|passe|passer) la saison {Season} épisode {Episode} de {Show} [(dans le|dans la|au|à la) {Room}]"
-
 WatchLatestEpisode:
   play_latest: "(mets|mettre|lance|lancer) le dernier {Show}"
   play_latest_episode: "(mets|mettre|lance|lancer|joue|jouer|passe|passer) le (dernier|nouvel) épisode de {Show} [(dans le|dans la|au|à la) {Room}]"
   play_latest_episode_2: "(mets|mettre|lance|lancer|joue|jouer|passe|passer) l'épisode le plus récent de {Show} [(dans le|dans la|au|à la) {Room}]"
-
 WatchMovie:
   i_want_watch: "je (veux|voudrais) (regarder|voir) [le film] {Movie}"
-  lets_watch: |-
-    on (regarde|va regarder) [le film] {Movie}
-    (regardons|regarder) le film {Movie}
+  lets_watch: "on (regarde|va regarder) [le film] {Movie}\n(regardons|regarder) le film {Movie}"
   play_movie: "(mets|mettre|lance|lancer|joue|jouer|passe|passer) le film {Movie} [(dans le|dans la|au|à la) {Room}]"
-
 WatchMovieTrailer:
   play_trailer: "(mets|mettre|lance|lancer|joue|jouer|montre|montre-moi|passe|passer) (la bande-annonce|la bande annonce|le trailer)"
   play_trailer_2: "je (veux|voudrais) voir la bande-annonce (de|du film) {Movie}"
   play_trailer_for: "(mets|mettre|lance|lancer|joue|jouer|montre|montre-moi|passe|passer) (la bande-annonce|la bande annonce|le trailer) (de|du film) {Movie}"
-
 WatchMusicVideo:
   play_music_video: "(mets|mettre|lance|lancer|joue|jouer|passe|passer|montre|montre-moi) le clip [de] {MusicVideo} [(dans le|dans la|au|à la) {Room}]"
   play_music_video_2: "(mets|mettre|lance|lancer|joue|jouer|passe|passer|montre|montre-moi) le clip [de] {MusicVideo} par {Artist}"
   play_music_video_3: "(mets|mettre|lance|lancer|montre-moi) le clip vidéo [de] {MusicVideo}"
-
 WatchNextEpisode:
   continue: "(continue|continuer) [à regarder] {Show} [(dans le|dans la|au|à la) {Room}]"
   play_from_where: "(reprends|reprendre) {Show} là où je (me suis arrêté|me suis arrêtée|m'étais arrêté|m'étais arrêtée)"
   play_next_episode: "(mets|mettre|lance|lancer|joue|jouer|passe|passer) (le prochain épisode|l'épisode suivant) de {Show} [(dans le|dans la|au|à la) {Room}]"
   whats_next: "qu'est-ce qui (suit|vient ensuite) dans {Show}"
-
 WatchNextInCollection:
   continue_collection: "(continue|continuer) la (saga|collection) {Movie}"
-  play_next_movie: |-
-    (mets|mettre|lance|lancer|joue|jouer|passe|passer) (le film suivant|le prochain film) de la (saga|collection) {Movie} [(dans le|dans la|au|à la) {Room}]
-    (mets|mettre|lance|lancer) le film qui suit {Movie}
+  play_next_movie: "(mets|mettre|lance|lancer|joue|jouer|passe|passer) (le film suivant|le prochain film) de la (saga|collection) {Movie} [(dans le|dans la|au|à la) {Room}]\n(mets|mettre|lance|lancer) le film qui suit {Movie}"
   whats_next_collection: "qu'est-ce qui vient après dans la saga {Movie}"
-
 WatchRandomEpisode:
-  play_episode: |-
-    (mets|mettre|lance|lancer|joue|jouer|passe|passer) un épisode de {Show} au hasard [(dans le|dans la|au|à la) {Room}]
-    (mets|mettre|lance|lancer) n'importe quel épisode de {Show}
+  play_episode: "(mets|mettre|lance|lancer|joue|jouer|passe|passer) un épisode de {Show} au hasard [(dans le|dans la|au|à la) {Room}]\n(mets|mettre|lance|lancer) n'importe quel épisode de {Show}"
   play_random_episode: "(mets|mettre|lance|lancer|joue|jouer|passe|passer) un épisode (au hasard|aléatoire) de {Show} [(dans le|dans la|au|à la) {Room}]"
-
 WatchRandomMovie:
-  pick_movie_for: |-
-    (choisis|choisir) [moi] un film [(de|du genre) {Genre}]
-    choisis-moi un film [(de|du genre) {Genre}]
+  pick_movie_for: "(choisis|choisir) [moi] un film [(de|du genre) {Genre}]\nchoisis-moi un film [(de|du genre) {Genre}]"
   play_any_movie: "(mets|mettre|lance|lancer) n'importe quel film [(de|du genre) {Genre}]"
   play_random_movie: "(mets|mettre|lance|lancer|joue|jouer|passe|passer) un film [(de|du genre) {Genre}] au hasard [(dans le|dans la|au|à la) {Room}]"
   surprise_me_with: "surprends-moi avec un film [(de|du genre) {Genre}]"
-
 WatchRandomMusicVideo:
-  play_music_video: |-
-    (mets|mettre|lance|lancer|joue|jouer|passe|passer|montre-moi) un clip [du genre {Genre}] au hasard [(dans le|dans la|au|à la) {Room}]
-    (mets|mettre|lance|lancer|montre-moi) un clip {Genre} au hasard
+  play_music_video: "(mets|mettre|lance|lancer|joue|jouer|passe|passer|montre-moi) un clip [du genre {Genre}] au hasard [(dans le|dans la|au|à la) {Room}]\n(mets|mettre|lance|lancer|montre-moi) un clip {Genre} au hasard"
   play_music_video_2: "(mets|mettre|lance|lancer|joue|jouer|passe|passer|montre-moi) (un|n'importe quel) clip [du genre {Genre}] (de|par) {Artist}"
-
 WatchRandomShow:
   play_any_show: "(mets|mettre|lance|lancer) n'importe quelle série [(de|du genre) {Genre}]"
   play_random_show: "(mets|mettre|lance|lancer|joue|jouer|passe|passer) une série [(de|du genre) {Genre}] au hasard [(dans le|dans la|au|à la) {Room}]"
   surprise_me_with: "surprends-moi avec une série [(de|du genre) {Genre}]"
-
 WhatAlbums:
   list_albums_by: "(liste|cite|énumère|donne-moi) les albums de {Artist}"
   what_albums_by: "quels albums de {Artist} (ai-je|avons-nous|as-tu|est-ce que j'ai|j'ai)"
   what_albums_do: "quels albums (ai-je|avons-nous|as-tu) de {Artist}"
   what_albums_has: "quels albums {Artist} a (sortis|enregistrés|faits)"
   which_albums_by: "quels disques de {Artist} (ai-je|j'ai)"
-
 WhatsNew:
-  are_there_new: |-
-    (y a-t-il|est-ce qu'il y a|est-ce que j'ai|ai-je) (de nouveaux|de nouvelles|des) {MediaType} [à (regarder|écouter)]
-    (y a-t-il|est-ce qu'il y a|est-ce que j'ai|ai-je) des {MediaType} non vus
+  are_there_new: "(y a-t-il|est-ce qu'il y a|est-ce que j'ai|ai-je) (de nouveaux|de nouvelles|des) {MediaType} [à (regarder|écouter)]\n(y a-t-il|est-ce qu'il y a|est-ce que j'ai|ai-je) des {MediaType} non vus"
   are_there_new_2: "(y a-t-il|est-ce qu'il y a|est-ce que j'ai|ai-je) (de nouveaux|de nouvelles|des nouveaux) {MediaType} (de|du genre) {Genre}"
   are_there_new_3: "(y a-t-il|est-ce qu'il y a|est-ce que j'ai|ai-je) (de nouveaux épisodes|des épisodes non vus) de {Show}"
   how_many_new: "combien (de nouveaux épisodes|d'épisodes non vus) de {Show} (y a-t-il|ai-je|il y a|j'ai)"
-  what_new_do: |-
-    quels nouveaux {MediaType} (ai-je|avons-nous|est-ce que j'ai|y a-t-il) [à (regarder|écouter)]
-    quelles nouvelles {MediaType} (ai-je|avons-nous|est-ce que j'ai|y a-t-il) [à (regarder|écouter)]
-  whats_new: |-
-    quoi de neuf
-    qu'est-ce qu'il y a de nouveau [à (regarder|écouter)]
+  what_new_do: "quels nouveaux {MediaType} (ai-je|avons-nous|est-ce que j'ai|y a-t-il) [à (regarder|écouter)]\nquelles nouvelles {MediaType} (ai-je|avons-nous|est-ce que j'ai|y a-t-il) [à (regarder|écouter)]"
+  whats_new: "quoi de neuf\nqu'est-ce qu'il y a de nouveau [à (regarder|écouter)]"
   whats_new_2: "quoi de neuf (dans|sur|pour) {Show}"
   whats_new_watch: "quoi de neuf à (regarder|écouter)"

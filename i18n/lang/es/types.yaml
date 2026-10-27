@@ -1,5 +1,4 @@
-# Spanish values for the custom slot types in model.yaml. IDs are what the handler acts on; values and synonyms are what people say.
-
+# Values for the static custom slot types in model.yaml, translated on Crowdin from the English file. Each key is the value's ID, which is what the handler acts on; the first line is the value and any further lines its synonyms, which are what people say. The dynamic types' examples are in examples.yaml, and notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
 LIBRARY_SECTION:
   albums: |-
     álbumes
@@ -55,7 +54,6 @@ LIBRARY_SECTION:
     series de televisión
     mis series
     tele
-
 LIBRARY_TYPE:
   music: |-
     música
@@ -68,7 +66,6 @@ LIBRARY_TYPE:
     películas
     series
     tele
-
 MEDIA_TYPE:
   album: |-
     álbum
@@ -121,7 +118,6 @@ MEDIA_TYPE:
     algo que ver
     vídeo
     vídeos
-
 NAV_ACTION:
   back: |-
     atrás
@@ -177,23 +173,11 @@ NAV_ACTION:
   up: |-
     arriba
     hacia arriba
-
 NAV_DIRECTION:
-  down: |-
-    abajo
-    hacia abajo
-  left: |-
-    izquierda
-    a la izquierda
-    hacia la izquierda
-  right: |-
-    derecha
-    a la derecha
-    hacia la derecha
-  up: |-
-    arriba
-    hacia arriba
-
+  down: "abajo\nhacia abajo"
+  left: "izquierda\na la izquierda\nhacia la izquierda"
+  right: "derecha\na la derecha\nhacia la derecha"
+  up: "arriba\nhacia arriba"
 POWER_ACTION:
   hibernate: |-
     hiberna
@@ -218,7 +202,6 @@ POWER_ACTION:
     suspender
     suspensión
     dormir
-
 REPEAT_MODE:
   all: |-
     todo
@@ -242,7 +225,6 @@ REPEAT_MODE:
     la canción
     solo una
     uno
-
 ROTATE_DIRECTION:
   clockwise: |-
     en el sentido de las agujas del reloj
@@ -254,7 +236,6 @@ ROTATE_DIRECTION:
     en sentido antihorario
     a la izquierda
     hacia la izquierda
-
 SEEK_DIRECTION:
   back: |-
     atrás
@@ -266,7 +247,6 @@ SEEK_DIRECTION:
     hacia delante
     para adelante
     para delante
-
 SEEK_SIZE:
   big: |-
     mucho
@@ -280,7 +260,6 @@ SEEK_SIZE:
     poco
     pequeño
     corto
-
 STREAM_STEP:
   next: |-
     siguiente
@@ -288,8 +267,8 @@ STREAM_STEP:
     cambiar
     otro
     otra
-  previous: anterior
-
+  previous: |-
+    anterior
 SUBTITLE_ACTION:
   download: |-
     descarga
@@ -319,24 +298,20 @@ SUBTITLE_ACTION:
   previous: |-
     anterior
     anteriores
-
 TRANSPORT_COMMAND:
   next: |-
     siguiente
     salta
     pasa
-  pause: pausa
-  previous: anterior
+  pause: "pausa"
+  previous: |-
+    anterior
   resume: |-
     reanuda
     continúa
     sigue
     quita la pausa
-  stop: |-
-    para
-    detén
-    stop
-
+  stop: "para\ndetén\nstop"
 ZOOM_ACTION:
   in: |-
     acerca

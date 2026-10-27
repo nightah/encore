@@ -1,4 +1,4 @@
-# yamllint checks only that keys are sorted, and only in the skill's language and locale files (not model.yaml, whose entries read name first). It can't sort them itself, so keep keys in order by hand.
+# yamllint checks only the skill's language and locale files (not model.yaml, whose entries read name first): that keys are sorted, and that the files Crowdin translates are written the way Crowdin writes them. It can't fix either itself, so keep them in shape by hand.
 ignore: |
   /*
   !/i18n/
@@ -10,3 +10,17 @@ rules:
   # Slot values are written {value: ..., synonyms: [...]}, value first.
   key-ordering:
     ignored-keys: ["^(value|synonyms)$"]
+  # Crowdin writes translated files with double-quoted values and no blank lines, so the English sources match and a sync changes only what was translated. Block values (|-) are kept where the English uses them.
+  quoted-strings:
+    quote-type: double
+    required: true
+    ignore: |
+      /i18n/locales/
+      examples.yaml
+  empty-lines:
+    max: 0
+    max-start: 0
+    max-end: 0
+    ignore: |
+      /i18n/locales/
+      examples.yaml
