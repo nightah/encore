@@ -31,11 +31,11 @@
     "progress": "Progression {{percent}} pour cent",
     "title": "Instances Kodi"
   },
-  "ms": "{{ms}} ms",
+  "ms": "",
   "openRequestLog": "Ouvrir le journal des demandes",
   "recent": {
     "columns": {
-      "echo": "Echo",
+      "echo": "",
       "heard": "Entendu",
       "result": "Résultat",
       "time": "Heure"
