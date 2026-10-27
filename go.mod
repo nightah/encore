@@ -9,7 +9,7 @@ require (
 	github.com/coreos/go-oidc/v3 v3.21.0
 	github.com/danielgtaylor/huma/v2 v2.39.1
 	github.com/f1monkey/phonetic v1.4.2
-	github.com/go-jose/go-jose/v4 v4.1.4
+	github.com/go-jose/go-jose/v4 v4.1.6
 	github.com/hbollon/go-edlib v1.7.0
 	github.com/jamestelfer/billy v0.2.0
 	github.com/knadh/koanf/parsers/yaml v1.1.1
