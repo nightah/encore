@@ -63,7 +63,7 @@
       },
       "oidc": {
         "hint": "p. ex. Authelia, Authentik, Keycloak",
-        "label": ""
+        "label": "OpenID Connect"
       }
     },
     "oidc": {
@@ -119,7 +119,7 @@
       "saveToTest": "Enregistrez avec OpenID Connect sélectionné pour le tester.",
       "scopes": {
         "hint": "Séparés par des espaces.",
-        "label": ""
+        "label": "Scopes"
       },
       "snippetLabel": "Configuration de {{provider}}",
       "testSignIn": "Tester la connexion"
@@ -145,7 +145,7 @@
     },
     "title": "Accès administrateur",
     "totp": {
-      "code": "",
+      "code": "Code",
       "copySecret": "Copier le secret",
       "off": "Désactiver",
       "offDescription": "Saisissez un code de votre application d'authentification pour confirmer.",
@@ -154,7 +154,7 @@
       "onDescription": "Ajoutez Encore à votre application d'authentification, puis saisissez le code affiché.",
       "onTitle": "Activer les codes à usage unique",
       "openApp": "Ouvrir dans une application d'authentification",
-      "secret": "",
+      "secret": "Secret",
       "turnedOff": "Codes à usage unique désactivés.",
       "turnedOn": "Codes à usage unique activés."
     }
@@ -267,11 +267,11 @@
       "generated": "Générée par Encore et conservée dans le répertoire de données",
       "label": "Source de la clé de chiffrement"
     },
-    "title": ""
+    "title": "Secrets"
   },
   "storage": {
     "backend": {
-      "legend": "",
+      "legend": "Backend",
       "local": "Disque local",
       "localHint": "Le volume /data (par défaut)",
       "s3": "Compatible S3",
@@ -311,7 +311,7 @@
     },
     "s3": {
       "accessKey": "Clé d'accès",
-      "bucket": "",
+      "bucket": "Bucket",
       "caBundle": "Certificat d'AC (PEM)",
       "customCa": "Certificat d'AC personnalisé",
       "endpoint": {
@@ -352,7 +352,7 @@
     "backup": "Import et export",
     "features": "Fonctionnalités",
     "general": "Général",
-    "secrets": "",
+    "secrets": "Secrets",
     "storage": "Stockage"
   }
 }
