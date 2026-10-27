@@ -1,36 +1,23 @@
-# Italian responses keyed by message ID. {placeholders} are filled by the handler; the linter checks every language uses the same placeholders.
-#
-# Alexa uses "tu" in Italian. {remaining} renders like "1 ora 12 minuti", {end} like "15:04", {language} as a lowercase Italian language name and {titles} as a list joined with "e".
-
+# Responses keyed by message ID, translated on Crowdin from the English file. {placeholders} are filled by the handler, and every language uses the same ones (the linter checks); notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
 addon.no_global_search: "Per la ricerca globale serve l'add-on Global Search. Installalo in Kodi e riprova."
 addon.not_found: "Non ho trovato nessun add-on chiamato {addon}."
 addon.opening: "Apro {addon}."
 addon.searching: "Cerco {query}."
-
 content.disabled: "Questa skill è configurata senza questo tipo di contenuto. Puoi attivarlo nelle impostazioni della skill Alexa di Encore."
-
 device.identify_named: "Questo è {name}."
 device.identify_unnamed: "Questo Echo non ha ancora un nome in Encore. Il suo identificativo finisce con {suffix}."
-
 error.device_unlinked: "Questo Echo non è ancora collegato a un'istanza Kodi. Apri le impostazioni di Encore per sceglierne una."
 error.generic: "Scusa, qualcosa è andato storto nella comunicazione con Kodi."
 error.kodi_unreachable: "Non riesco a raggiungere {kodi} in questo momento."
 error.unknown_room: "Non conosco nessuna stanza chiamata {room}."
-
 fallback: "Scusa, non ho capito. Prova a dire: metti il film {example}."
-
 favourite.cant_open: "Non posso aprire {favourite} da qui."
 favourite.not_found: "Non ho trovato nessun preferito chiamato {favourite}."
 favourite.opening: "Apro {favourite}."
-
 goodbye: "Va bene."
-
 help.general: "Puoi dire ad esempio: metti il film {example}, metti il prossimo episodio di una serie, oppure cosa c'è in riproduzione."
-
 kodi.waking: "Sto svegliando {kodi}…"
-
 launch.welcome: "Encore è pronto. Cosa vuoi guardare?"
-
 library.clean_both: "Pulisco la libreria video e quella musicale."
 library.clean_music: "Pulisco la libreria musicale."
 library.clean_video: "Pulisco la libreria video."
@@ -39,19 +26,16 @@ library.no_genre: "Non ho trovato nessun titolo di genere {genre} nella tua libr
 library.scan_both: "Aggiorno la libreria video e quella musicale."
 library.scan_music: "Aggiorno la libreria musicale."
 library.scan_video: "Aggiorno la libreria video."
-
 match.cancelled: "D'accordo, lasciamo perdere."
 match.confirm: "Intendevi {title}?"
 match.did_you_mean: "Intendevi {first} o {second}?"
 match.not_found: "Non ho trovato {query} nella tua libreria."
-
 movie.collection_watched: "Hai visto tutti i film della raccolta {collection}."
 movie.no_collection: "{title} non fa parte di nessuna saga."
 movie.no_trailer: "Non ho trovato un trailer per {title}."
 movie.playing_genre: "Riproduco il film {title}, genere {genre}."
 movie.playing_trailer: "Riproduco il trailer di {title}."
 movie.which_trailer: "Di quale film vuoi vedere il trailer? Di' ad esempio: metti il trailer di Dune."
-
 music.albums_by: "Di {artist} hai {titles}."
 music.albums_by_more: "Di {artist} hai {titles} e altri ancora."
 music.no_albums_by: "Non hai nessun album di {artist}."
@@ -71,7 +55,6 @@ music.playing_song: "Riproduco {title} di {artist}."
 music.playing_video: "Riproduco il video musicale {title} di {artist}."
 music.shuffling_album: "Riproduco l'album {title} di {artist} in ordine casuale."
 music.shuffling_videos: "Riproduco i video musicali in ordine casuale."
-
 playback.all_watched: "Hai visto tutti gli episodi di {show}."
 playback.nothing_playing: "Non c'è niente in riproduzione su {kodi}."
 playback.now_episode: "Stai guardando {show}, stagione {season}, episodio {episode}, {title}. Finisce tra {remaining}."
@@ -80,7 +63,6 @@ playback.now_other: "In riproduzione: {title}."
 playback.playing_episode: "Riproduco {show}, stagione {season}, episodio {episode}, {title}."
 playback.playing_movie: "Riproduco {title}."
 playback.shuffling: "Riproduco {title} in ordine casuale."
-
 player.nearly_over: "È quasi finito."
 player.remaining: "Finisce tra {remaining}."
 player.remaining_until: "Finisce tra {remaining}, alle {end}."
@@ -89,11 +71,9 @@ player.repeat_off: "Ripetizione disattivata."
 player.repeat_one: "Ripeto solo questo."
 player.shuffle_off: "Riproduzione casuale disattivata."
 player.shuffle_on: "Riproduzione casuale attivata."
-
 playlist.not_found: "Non ho trovato nessuna playlist chiamata {playlist}."
 playlist.playing: "Riproduco la playlist {playlist}."
 playlist.shuffling: "Riproduco la playlist {playlist} in ordine casuale."
-
 power.confirm_hibernate: "Vuoi davvero ibernare {kodi}?"
 power.confirm_quit: "Vuoi davvero chiudere Kodi su {kodi}?"
 power.confirm_reboot: "Vuoi davvero riavviare {kodi}?"
@@ -105,7 +85,6 @@ power.quit: "Chiudo Kodi su {kodi}."
 power.reboot: "Riavvio {kodi}."
 power.shutdown: "Spengo {kodi}."
 power.suspend: "Metto {kodi} in standby."
-
 recommend.album: "Che ne dici dell'album {title} di {artist}?"
 recommend.artist: "Che ne dici di un po' di {title}?"
 recommend.episode: "Che ne dici di {show}, stagione {season}, episodio {episode}?"
@@ -113,9 +92,7 @@ recommend.movie: "Che ne dici del film {title}?"
 recommend.nothing: "Scusa, non ho niente da consigliarti."
 recommend.show: "Che ne dici della serie {title}?"
 recommend.song: "Che ne dici di {title} di {artist}?"
-
 remote.no_text: "Non ho capito cosa scrivere."
-
 streams.audio_language: "Audio: {language}."
 streams.audio_named: "Audio: {name}."
 streams.audio_unknown: "Ho cambiato la traccia audio."
@@ -127,7 +104,6 @@ streams.subtitles_language: "Sottotitoli: {language}."
 streams.subtitles_named: "Sottotitoli: {name}."
 streams.subtitles_off: "Sottotitoli disattivati."
 streams.subtitles_unknown: "Sottotitoli attivati."
-
 tv.binge: "Modalità maratona: riproduco {count} episodi di {show}, a partire dalla stagione {season}, episodio {episode}."
 tv.new_episodes: "Ci sono {count} nuovi episodi di {show}."
 tv.no_episode: "Non ho trovato l'episodio {episode} della stagione {season} di {show}."
@@ -137,9 +113,7 @@ tv.nothing_to_continue: "Non hai ancora iniziato nessuna serie."
 tv.one_new_episode: "C'è un nuovo episodio di {show}."
 tv.one_unwatched: "C'è un episodio non visto di {show}."
 tv.unwatched: "Ci sono {count} episodi non visti di {show}."
-
 volume.set: "Volume impostato a {level}."
-
 whatsnew.albums: "I tuoi album più recenti sono {titles}."
 whatsnew.albums_more: "I tuoi album più recenti sono {titles} e altri ancora."
 whatsnew.movies: "Da guardare hai {titles}."

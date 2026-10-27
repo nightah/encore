@@ -1,7 +1,4 @@
-# French values for the custom slot types in model.yaml. IDs are what the handler acts on and match English; values and synonyms are what people say.
-#
-# Several types hold the verb itself (SEEK_DIRECTION "avance"/"recule", SUBTITLE_ACTION "active"/"désactive", POWER_ACTION "éteins") because French puts the action first: "avance de dix minutes", "désactive les sous-titres".
-
+# Values for the static custom slot types in model.yaml, translated on Crowdin from the English file. Each key is the value's ID, which is what the handler acts on; the first line is the value and any further lines its synonyms, which are what people say. The dynamic types' examples are in examples.yaml, and notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
 LIBRARY_SECTION:
   albums: |-
     albums
@@ -56,7 +53,6 @@ LIBRARY_SECTION:
     mes séries
     émissions
     télé
-
 LIBRARY_TYPE:
   music: |-
     musicale
@@ -71,7 +67,6 @@ LIBRARY_TYPE:
     séries
     télé
     de films
-
 MEDIA_TYPE:
   album: |-
     album
@@ -124,7 +119,6 @@ MEDIA_TYPE:
     quelque chose à voir
     vidéo
     vidéos
-
 NAV_ACTION:
   back: |-
     retour
@@ -183,22 +177,11 @@ NAV_ACTION:
     haut
     vers le haut
     monte
-
 NAV_DIRECTION:
-  down: |-
-    vers le bas
-    en bas
-  left: |-
-    vers la gauche
-    à gauche
-  right: |-
-    vers la droite
-    à droite
-  up: |-
-    vers le haut
-    en haut
-
-# "arrête" and a bare "quitte" are deliberately absent: said alone they would steal the built-in stop.
+  down: "vers le bas\nen bas"
+  left: "vers la gauche\nà gauche"
+  right: "vers la droite\nà droite"
+  up: "vers le haut\nen haut"
 POWER_ACTION:
   hibernate: |-
     veille prolongée
@@ -225,7 +208,6 @@ POWER_ACTION:
     mets en veille
     mettre en veille
     suspends
-
 REPEAT_MODE:
   all: |-
     tout
@@ -247,7 +229,6 @@ REPEAT_MODE:
     cet épisode
     la chanson
     le morceau
-
 ROTATE_DIRECTION:
   clockwise: |-
     dans le sens des aiguilles d'une montre
@@ -260,7 +241,6 @@ ROTATE_DIRECTION:
     sens inverse
     vers la gauche
     à gauche
-
 SEEK_DIRECTION:
   back: |-
     recule
@@ -274,7 +254,6 @@ SEEK_DIRECTION:
     en avant
     vers l'avant
     avance rapide
-
 SEEK_SIZE:
   big: |-
     beaucoup
@@ -290,7 +269,6 @@ SEEK_SIZE:
     un petit saut
     un petit pas
     petit
-
 STREAM_STEP:
   next: |-
     suivante
@@ -300,7 +278,6 @@ STREAM_STEP:
   previous: |-
     précédente
     précédent
-
 SUBTITLE_ACTION:
   download: |-
     télécharger
@@ -341,17 +318,13 @@ SUBTITLE_ACTION:
   previous: |-
     précédents
     précédent
-
 TRANSPORT_COMMAND:
   next: |-
     suivant
     passe
     passe au suivant
     suivante
-  pause: |-
-    pause
-    mets en pause
-    mettre en pause
+  pause: "pause\nmets en pause\nmettre en pause"
   previous: |-
     précédent
     précédente
@@ -362,11 +335,7 @@ TRANSPORT_COMMAND:
     relance
     continue
     lecture
-  stop: |-
-    arrête
-    arrêter
-    stop
-
+  stop: "arrête\narrêter\nstop"
 ZOOM_ACTION:
   in: |-
     avant

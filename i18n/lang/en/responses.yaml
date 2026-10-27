@@ -1,34 +1,23 @@
 # Responses keyed by message ID, translated on Crowdin from the English file. {placeholders} are filled by the handler, and every language uses the same ones (the linter checks); notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
-
 addon.no_global_search: "Global search needs the Global Search add-on. Install it in Kodi and try again."
 addon.not_found: "I couldn't find an add-on called {addon}."
 addon.opening: "Opening {addon}."
 addon.searching: "Searching for {query}."
-
 content.disabled: "This skill is set up without that kind of title. You can turn it on in Encore's Alexa skill settings."
-
 device.identify_named: "This is {name}."
 device.identify_unnamed: "This Echo has no name in Encore yet. Its device ID ends in {suffix}."
-
 error.device_unlinked: "This Echo isn't linked to a Kodi yet. Open Encore's settings to choose one."
 error.generic: "Sorry, something went wrong talking to Kodi."
 error.kodi_unreachable: "I can't reach {kodi} right now."
 error.unknown_room: "I don't know a room called {room}."
-
 fallback: "Sorry, I didn't catch that. Try: play the movie {example}."
-
 favourite.cant_open: "I can't open {favourite} from here."
 favourite.not_found: "I couldn't find a favourite called {favourite}."
 favourite.opening: "Opening {favourite}."
-
 goodbye: "Okay."
-
 help.general: "You can say things like: play the movie {example}, play the next episode of a show, or what's playing."
-
 kodi.waking: "Waking {kodi}…"
-
 launch.welcome: "Encore is ready. What would you like to watch?"
-
 library.clean_both: "Cleaning your video and music libraries."
 library.clean_music: "Cleaning your music library."
 library.clean_video: "Cleaning your video library."
@@ -37,19 +26,16 @@ library.no_genre: "I couldn't find any {genre} in your library."
 library.scan_both: "Updating your video and music libraries."
 library.scan_music: "Updating your music library."
 library.scan_video: "Updating your video library."
-
 match.cancelled: "Okay, never mind."
 match.confirm: "Did you mean {title}?"
 match.did_you_mean: "Did you mean {first} or {second}?"
 match.not_found: "I couldn't find {query} in your library."
-
 movie.collection_watched: "You've watched every movie in the {collection}."
 movie.no_collection: "{title} isn't part of a collection."
 movie.no_trailer: "I couldn't find a trailer for {title}."
 movie.playing_genre: "Playing the {genre} movie {title}."
 movie.playing_trailer: "Playing the trailer for {title}."
 movie.which_trailer: "Which movie's trailer would you like? Say, for example, play the trailer for Dune."
-
 music.albums_by: "You have {titles} by {artist}."
 music.albums_by_more: "You have {titles}, and more, by {artist}."
 music.no_albums_by: "You don't have any albums by {artist}."
@@ -69,7 +55,6 @@ music.playing_song: "Playing {title} by {artist}."
 music.playing_video: "Playing the music video {title} by {artist}."
 music.shuffling_album: "Shuffling the album {title} by {artist}."
 music.shuffling_videos: "Shuffling music videos."
-
 playback.all_watched: "You've watched every episode of {show}."
 playback.nothing_playing: "Nothing is playing on {kodi}."
 playback.now_episode: "You're watching {show}, season {season}, episode {episode}, {title}. There's {remaining} left."
@@ -78,7 +63,6 @@ playback.now_other: "{title} is playing."
 playback.playing_episode: "Playing {show}, season {season}, episode {episode}, {title}."
 playback.playing_movie: "Playing {title}."
 playback.shuffling: "Shuffling {title}."
-
 player.nearly_over: "It's nearly over."
 player.remaining: "There's {remaining} left."
 player.remaining_until: "There's {remaining} left. It'll finish at {end}."
@@ -87,11 +71,9 @@ player.repeat_off: "Repeat is off."
 player.repeat_one: "Repeating this one."
 player.shuffle_off: "Shuffle is off."
 player.shuffle_on: "Shuffle is on."
-
 playlist.not_found: "I couldn't find a playlist called {playlist}."
 playlist.playing: "Playing the playlist {playlist}."
 playlist.shuffling: "Shuffling the playlist {playlist}."
-
 power.confirm_hibernate: "Are you sure you want to hibernate {kodi}?"
 power.confirm_quit: "Are you sure you want to quit Kodi on {kodi}?"
 power.confirm_reboot: "Are you sure you want to restart {kodi}?"
@@ -103,7 +85,6 @@ power.quit: "Quitting Kodi on {kodi}."
 power.reboot: "Restarting {kodi}."
 power.shutdown: "Shutting down {kodi}."
 power.suspend: "Putting {kodi} to sleep."
-
 recommend.album: "How about the album {title} by {artist}?"
 recommend.artist: "How about some {title}?"
 recommend.episode: "How about {show}, season {season}, episode {episode}?"
@@ -111,9 +92,7 @@ recommend.movie: "How about the movie {title}?"
 recommend.nothing: "Sorry, I don't have anything to recommend."
 recommend.show: "How about the show {title}?"
 recommend.song: "How about {title} by {artist}?"
-
 remote.no_text: "I didn't catch what to type."
-
 streams.audio_language: "Audio: {language}."
 streams.audio_named: "Audio: {name}."
 streams.audio_unknown: "Switched the audio."
@@ -125,7 +104,6 @@ streams.subtitles_language: "Subtitles: {language}."
 streams.subtitles_named: "Subtitles: {name}."
 streams.subtitles_off: "Subtitles off."
 streams.subtitles_unknown: "Subtitles are on."
-
 tv.binge: "Binge mode: playing {count} episodes of {show}, starting with season {season}, episode {episode}."
 tv.new_episodes: "There are {count} new episodes of {show}."
 tv.no_episode: "I couldn't find season {season}, episode {episode} of {show}."
@@ -135,9 +113,7 @@ tv.nothing_to_continue: "You haven't started any shows yet."
 tv.one_new_episode: "There's one new episode of {show}."
 tv.one_unwatched: "There's one unwatched episode of {show}."
 tv.unwatched: "There are {count} unwatched episodes of {show}."
-
 volume.set: "Volume set to {level}."
-
 whatsnew.albums: "Your newest albums are {titles}."
 whatsnew.albums_more: "Your newest albums are {titles}, and more."
 whatsnew.movies: "You have {titles} to watch."
