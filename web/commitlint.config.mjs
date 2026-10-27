@@ -74,11 +74,11 @@ export default {
       ],
     ],
     "scope-single": [2, "always"],
-    // No chore; i18n is Crowdin's translation pull requests (.crowdin.yml); release is the commit that stamps a new version (make version).
+    // No chore; i18n is the tooling and code that make Encore translatable, l10n the translations themselves, which come from Crowdin's pull requests (.crowdin.yml); release is the commit that stamps a new version (make version).
     "type-enum": [
       2,
       "always",
-      ["build", "ci", "docs", "feat", "fix", "i18n", "perf", "refactor", "release", "revert", "test"],
+      ["build", "ci", "docs", "feat", "fix", "i18n", "l10n", "perf", "refactor", "release", "revert", "test"],
     ],
   },
 };
