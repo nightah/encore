@@ -13,12 +13,12 @@
     "playTwo": "{{top}} ottiene {{score}}, {{margin}} davanti al successivo."
   },
   "kinds": {
-    "album": "Album",
+    "album": "",
     "artist": "Artista",
     "episode": "Episodio",
     "movie": "Film",
     "musicvideo": "Video musicale",
-    "playlist": "Playlist",
+    "playlist": "",
     "song": "Brano",
     "tvshow": "Serie TV"
   },
