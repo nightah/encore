@@ -17,8 +17,8 @@
       "own": "Eigene Mediathek",
       "sharedWith": "Geteilt mit {{names}}"
     },
-    "mac": "",
-    "ms": "",
+    "mac": "MAC (Wake-on-LAN)",
+    "ms": "{{ms}} ms",
     "notSet": "Nicht festgelegt",
     "offline": "Encore erreicht {{name}} nicht. Prüfe, ob Kodi läuft und die Adresse unten stimmt.",
     "passed": "Bestanden:",
@@ -44,7 +44,7 @@
     "testing": "{{name}} wird getestet…",
     "testResults": "Ergebnisse des Verbindungstests",
     "useForUnlinked": "Für nicht verknüpfte Echos verwenden",
-    "version": "",
+    "version": "Version",
     "wake": "Jetzt aufwecken",
     "wakeTimeout": {
       "label": "Aufweck-Timeout",
@@ -81,7 +81,7 @@
       },
       "name": {
         "hint": "Wird auf Echos und im Anfrageprotokoll angezeigt.",
-        "label": ""
+        "label": "Name"
       },
       "password": {
         "hint": "Wird verschlüsselt gespeichert.",
@@ -126,7 +126,7 @@
     "searching": "Suche per mDNS nach Kodi. Das dauert ein paar Sekunden.",
     "title": "In deinem Netzwerk gefunden",
     "unavailable": "Die Suche ist gerade nicht verfügbar.",
-    "version": ""
+    "version": "Kodi {{version}}"
   },
   "library": {
     "explanation": {
