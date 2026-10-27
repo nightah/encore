@@ -14,7 +14,6 @@ fallback: "Tut mir leid, das habe ich nicht verstanden. Sag zum Beispiel: spiele
 favourite.cant_open: "Ich kann {favourite} von hier aus nicht öffnen."
 favourite.not_found: "Ich habe keinen Favoriten namens {favourite} gefunden."
 favourite.opening: "Ich öffne {favourite}."
-goodbye: "Okay."
 help.general: "Du kannst zum Beispiel sagen: spiele den Film {example}, spiele die nächste Folge einer Serie, oder: was läuft gerade?"
 kodi.waking: "Ich wecke {kodi} auf…"
 launch.welcome: "Encore ist bereit. Was möchtest du schauen?"
