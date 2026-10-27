@@ -31,7 +31,7 @@
     },
     "password": {
       "hint": "Almeno 12 caratteri. Salvata come hash argon2id.",
-      "label": "Password"
+      "label": ""
     },
     "sso": "Preferisci il Single Sign-On? Dopo la configurazione puoi passare a OIDC o agli header di un proxy attendibile nelle Impostazioni.",
     "token": "Token di configurazione",
@@ -42,7 +42,7 @@
     "clientId": "ID client",
     "clientSecret": {
       "hint": "Salvato cifrato. Usato solo per rinnovare il token di accesso.",
-      "label": "Client secret"
+      "label": ""
     },
     "connected": "Connesso ad Amazon. Encore ora può distribuire la skill.",
     "connectedVendor": "Connesso ad Amazon (vendor {{vendor}}). Encore ora può distribuire la skill.",
@@ -57,7 +57,7 @@
       },
       "refreshToken": {
         "hint": "Inizia con {{prefix}}.",
-        "label": "Refresh token",
+        "label": "",
         "option": "Incolla un refresh token"
       },
       "summaryHttp": "Nessun callback HTTPS? Usa invece «Incolla l'URL di reindirizzamento», oppure incolla un refresh token ottenuto con <code>{{command}}</code>.",
@@ -86,8 +86,8 @@
   },
   "deploy": {
     "answer": {
-      "no": "No",
-      "noLabel": "{{question}}: no",
+      "no": "",
+      "noLabel": "",
       "yes": "Sì",
       "yesLabel": "{{question}}: sì"
     },
@@ -216,7 +216,7 @@
     },
     "kodi": {
       "sub": "Rileva e connetti",
-      "title": "Kodi"
+      "title": ""
     }
   },
   "wizard": {
