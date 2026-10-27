@@ -13,12 +13,12 @@
     "playTwo": "{{top}} obtient {{score}}, {{margin}} devant le suivant."
   },
   "kinds": {
-    "album": "Album",
+    "album": "",
     "artist": "Artiste",
     "episode": "Épisode",
     "movie": "Film",
     "musicvideo": "Clip musical",
-    "playlist": "Playlist",
+    "playlist": "",
     "song": "Morceau",
     "tvshow": "Série"
   },
@@ -33,7 +33,7 @@
       "boost": "Bonus",
       "candidate": "Candidat",
       "phonetic": "Phonétique",
-      "score": "Score",
+      "score": "",
       "tokenSet": "Ensemble de jetons"
     },
     "heard": "Ce qu'Alexa a entendu",
