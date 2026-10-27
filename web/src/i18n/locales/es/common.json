@@ -4,7 +4,7 @@
     "copied": "Copiado",
     "copy": "Copiar",
     "copyNamed": "Copiar {{label}}",
-    "copyWithText": "{{label}}: {{text}}",
+    "copyWithText": "",
     "dismiss": "Descartar",
     "tryAgain": "Reintentar"
   },
@@ -49,7 +49,7 @@
   "nav": {
     "alexaSkill": "Skill de Alexa",
     "echoDevices": "Dispositivos Echo",
-    "kodi": "Kodi",
+    "kodi": "",
     "label": "Principal",
     "library": "Biblioteca",
     "overview": "Resumen",
@@ -62,7 +62,7 @@
   },
   "outcome": {
     "asked": "Preguntó cuál",
-    "error": "Error",
+    "error": "",
     "not_found": "No encontrado",
     "ok": "Hecho",
     "played": "Reproducido",
@@ -92,7 +92,7 @@
     "justNow": "ahora mismo",
     "minutesAgo": "hace {{value}} min",
     "never": "nunca",
-    "seconds": "{{value}} s",
+    "seconds": "",
     "soon": "en un momento"
   },
   "toast": {
