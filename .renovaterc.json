@@ -4,21 +4,16 @@
     "config:recommended",
     "helpers:pinGitHubActionDigests",
     ":semanticCommits",
-    ":semanticCommitTypeAll(build)"
+    ":semanticCommitTypeAll(build)",
+    ":prHourlyLimitNone"
   ],
   "labels": [
     "dependencies"
   ],
-  "timezone": "Etc/UTC",
-  "schedule": [
-    "before 6am on monday"
-  ],
+  "rebaseWhen": "conflicted",
   "prConcurrentLimit": 10,
   "vulnerabilityAlerts": {
     "enabled": true,
-    "schedule": [
-      "at any time"
-    ],
     "labels": [
       "dependencies",
       "security"

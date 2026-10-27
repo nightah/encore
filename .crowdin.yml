@@ -1,6 +1,6 @@
 # Crowdin (https://crowdin.com) through its GitHub integration: point the integration's configuration file setting at .crowdin.yml. It uploads the English sources and opens a pull request with the translations.
-pull_request_title: 'i18n: update translations'
-commit_message: 'i18n: update translation for %original_file_name% (%language%)'
+pull_request_title: 'l10n: update translations'
+commit_message: 'l10n: update translation for %original_file_name% (%language%)'
 append_commit_message: false
 files:
   # What Alexa says. A message not translated yet is left out, and Encore speaks it in English.
