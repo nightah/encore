@@ -106,6 +106,7 @@ Navigate:
   go: "(va|aller|appuie sur|appuyer sur|navigue|naviguer) {NavAction}"
   go_times: "(va|aller|appuie sur|appuyer sur|navigue|naviguer) {NavAction} {Count} fois"
   open_screen: "(ouvre|ouvrir|affiche|afficher) (l'écran|la fenêtre|le panneau) {NavAction}"
+  sample: "{NavAction}"
   times: "{NavAction} {Count} fois"
 OpenFavourite:
   open_favourite: "(ouvre|ouvrir|affiche|afficher|lance|lancer|démarre|démarrer) [mon|le] favori {Favourite}"
@@ -158,6 +159,7 @@ PlayerZoom:
 Power:
   kodi: "{PowerAction} (kodi|le système|l'ordinateur|le média center|le boîtier|la télé)"
   put_kodi: "(mets|mettre) (kodi|le système|l'ordinateur) en {PowerAction}"
+  sample: "{PowerAction}"
 Recommend:
   give_me_recommendation: "(donne-moi|j'aimerais|je voudrais) une recommandation de {MediaType}"
   recommend: "(recommande|recommande-moi|recommander|suggère|suggère-moi|suggérer|conseille-moi|conseiller) (un|une|des) {MediaType} [à (regarder|écouter)]"
