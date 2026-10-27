@@ -16,7 +16,8 @@ module.exports = async ({ github, context }, { tag, prs, digest, sha, runUrl }) 
     `docker pull ${image}:${tag}`,
     '```',
     '',
-    `${built.length > 0 ? `Latest: ${built.join(', ')}. ` : ''}It is removed when ${removed}.`,
+    ...(built.length > 0 ? [`Latest: ${built.join(', ')}.`, ''] : []),
+    `It is removed when ${removed}.`,
   ].join('\n');
 
   for (const number of prs) {
