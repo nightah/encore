@@ -76,6 +76,8 @@ dockers_v2:
       - linux/arm64
       - linux/arm/v7
     labels:
+      version: "{{ .Version }}"
+      build_date: "{{ .CommitDate }}"
       org.opencontainers.image.title: "{{ .ProjectName }}"
       org.opencontainers.image.description: Self-hosted Alexa skill server for Kodi
       org.opencontainers.image.url: https://github.com/nightah/encore
