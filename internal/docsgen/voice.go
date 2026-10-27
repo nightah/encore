@@ -41,6 +41,7 @@ func VoiceCommands(src *skillmodel.Sources, modelFS fs.FS) (map[string][]byte, e
 		data := voiceData(src, lang, titles)
 		data["Order"] = i + 1
 		data["Lang"] = lang
+		data["EditURL"] = editURL(lang)
 
 		if lang == "en" {
 			data["Order"] = 0
@@ -179,4 +180,22 @@ func sectionTitle(comment string) string {
 	}
 
 	return strings.TrimSuffix(strings.Join(lines, " "), ".")
+}
+
+// editURL is where a language's voice commands are changed: English in the repository, every translation on Crowdin, whose pull requests overwrite edits made to the translated files directly.
+func editURL(lang string) string {
+	if lang == "en" {
+		return SourceEditURL
+	}
+
+	return CrowdinProject + "/" + crowdinLanguage(lang)
+}
+
+// crowdinLanguage maps a language directory under i18n/lang to the language's code on Crowdin, which differs where Crowdin names a regional variant.
+func crowdinLanguage(lang string) string {
+	if lang == "es" {
+		return "es-ES"
+	}
+
+	return lang
 }

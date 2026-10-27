@@ -1,4 +1,4 @@
-# English responses keyed by message ID. {placeholders} are filled by the handler; the linter checks every language uses the same placeholders.
+# Responses keyed by message ID, translated on Crowdin from the English file. {placeholders} are filled by the handler, and every language uses the same ones (the linter checks); notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
 
 addon.no_global_search: "Global search needs the Global Search add-on. Install it in Kodi and try again."
 addon.not_found: "I couldn't find an add-on called {addon}."

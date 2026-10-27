@@ -15,13 +15,24 @@ Open a [bug report](https://github.com/nightah/encore/issues/new?template=bug_re
 
 ## Translations
 
-Translations are managed on [Crowdin](https://crowdin.com), which opens a pull request with new translations (`.crowdin.yml`). For the Alexa skill, three files in `i18n/lang/en/` are translated:
+Translations are managed on [Crowdin](https://crowdin.com/project/encore), where anyone can sign in and translate; it opens a pull request with new translations (`.crowdin.yml`). For the Alexa skill, three files in `i18n/lang/en/` are translated:
 
 - `responses.yaml`: what Alexa says. A message not translated yet is spoken in English.
 - `utterances.yaml`: how people ask for each thing, one entry per way of asking (`WatchMovie.play_movie`). A translation can hold several patterns, one per line; `(a|b)` picks one, `[a]` is optional and `{Slot}` is a slot.
 - `types.yaml`: words for the fixed slot values, such as media types and navigation actions: the value on the first line and its synonyms below it.
 
 Example rooms, playlists and genres (`examples.yaml`) aren't translated: each language picks its own, and deploys replace them with what's set up in Encore.
+
+The translated files (`i18n/lang/<language>/` and `web/src/i18n/locales/<language>/`) are written by Crowdin, in its own layout and with the English file's comments, so change translations on Crowdin rather than in the repository: its next pull request would undo an edit made there.
+
+### Writing for each language
+
+Responses are filled in by the handler: every language uses the same `{placeholders}` (the linter checks), and the wording around a placeholder avoids agreeing with it, since the handler can't inflect. `{remaining}` is a spoken duration ("1 hour 12 minutes"), `{end}` a time ("15:04"), `{language}` a language name and `{titles}` a list joined with the language's "and". Where a response suggests what to say, it uses a phrasing `utterances.yaml` accepts. An optional room at the end of a request, such as `[(in|on) the {Room}]` in English, lets it name the room whose Kodi should play it.
+
+- **German:** Alexa says "du". `{remaining}` reads like "1 Stunde 12 Minuten", `{language}` like "Französisch", and lists end in "und". People speak with du-imperatives ("spiel", "spiele", "zeig mir"), and the main playback intents also take the infinitive for one-shot requests ("Alexa, sag encore, den Film Dune abzuspielen"). Rooms are `[(im|in der) {Room}]`, so room names carry no article.
+- **Spanish (Spain):** Alexa uses tú, and `{remaining}` reads like "1 hora 12 minutos". People speak with tú imperatives ("pon", "reproduce"); one-shot requests ("Alexa, pide a encore que ponga Dune") take the subjunctive, so the main playback verbs list both. Rooms are `[en (el|la) {Room}]`.
+- **French:** Alexa says "vous". Placeholders that may start with a vowel stay away from "de" and "le" behind a noun that carries them ("la série {show}", "le film {title}"), since the handler can't elide. People speak with tu-imperatives ("mets", "lance", "joue"); one-shot requests go through "demande à kodi de …", which takes an infinitive, so the main verbs come in both forms ("mets|mettre"). Rooms are `[(dans le|dans la|au|à la) {Room}]`. Some slot types hold the verb itself (`SEEK_DIRECTION` "avance"/"recule", `SUBTITLE_ACTION` "active"/"désactive", `POWER_ACTION` "éteins"), because French puts the action first ("avance de dix minutes"); "arrête" and a bare "quitte" are left out, since said alone they would take over the built-in stop.
+- **Italian:** Alexa uses "tu". `{remaining}` reads like "1 ora 12 minuti", `{language}` is a lowercase Italian language name and lists are joined with "e". Requests are tu-imperatives ("metti il film Dune"); one-shot requests ("Alexa, chiedi a encore di riprodurre Dune") take the infinitive, so the main verbs come in both forms. Rooms are `[(in|nel|nella) {Room}]`.
 
 The web interface's text is in `web/src/i18n/locales/en/`, one JSON file per area of the interface; a string not translated yet shows in English. In code, English text goes in those files and components look it up with `useTranslation` (an unknown key is a type error); German, Spanish, French and Italian arrive from Crowdin.
 
