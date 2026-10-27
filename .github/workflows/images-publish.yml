@@ -1,0 +1,187 @@
+name: Publish images
+
+# Pushes the image an "Images" run built to ghcr.io/nightah/encore and says so on the pull request. It runs from the default branch, never the pull request's code: the image is only copied to the registry, not run. A branch here is published straight away under its name (fix/abc becomes fix-abc, .github/scripts/image-tag.sh); a pull request from a fork waits for a maintainer to approve the pr-images environment and is published as PR<number>.
+on:
+  workflow_run:
+    workflows: [Images]
+    types: [completed]
+  # A branch is usually pushed, and its image published, before its pull request is opened, so opening one also comments.
+  pull_request_target: # zizmor: ignore[dangerous-triggers] only the base branch is checked out, and nothing from the pull request runs
+    types: [opened, reopened]
+
+permissions: {}
+
+jobs:
+  resolve:
+    name: Resolve the tag
+    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read # check out the default branch for image-tag.sh
+      pull-requests: read # find the run's pull requests
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      prs: ${{ steps.tag.outputs.prs }}
+      fork: ${{ steps.tag.outputs.fork }}
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # A fork's run lists no pull requests (workflow_run.pull_requests is empty for forks), so its pull request is looked up by head branch and must still be at the commit that was built.
+      - name: Resolve the tag and pull requests
+        id: tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event.workflow_run.event }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          HEAD_OWNER: ${{ github.event.workflow_run.head_repository.owner.login }}
+        run: |
+          if [ "${EVENT}" = push ]; then
+            tag="$(.github/scripts/image-tag.sh "${HEAD_BRANCH}")" || exit 0
+            prs="$(gh api "repos/${GITHUB_REPOSITORY}/pulls?state=open&head=${GITHUB_REPOSITORY_OWNER}:${HEAD_BRANCH}" --jq '[.[].number] | join(" ")')"
+            fork=false
+          else
+            # shellcheck disable=SC2016 # $ENV is jq's, not the shell's
+            pr="$(gh api "repos/${GITHUB_REPOSITORY}/pulls?state=open&head=${HEAD_OWNER}:${HEAD_BRANCH}" \
+              --jq '[.[] | select(.head.sha == $ENV.HEAD_SHA and .head.repo.full_name != $ENV.GITHUB_REPOSITORY) | .number] | first // empty')"
+            if [ -z "${pr}" ]; then
+              echo "::notice::No open pull request from a fork is at ${HEAD_SHA}"
+              exit 0
+            fi
+            tag="PR${pr}"
+            prs="${pr}"
+            fork=true
+          fi
+          {
+            echo "tag=${tag}"
+            echo "prs=${prs}"
+            echo "fork=${fork}"
+          } >> "${GITHUB_OUTPUT}"
+
+  approve:
+    name: Approve a fork's image
+    needs: resolve
+    if: needs.resolve.outputs.fork == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    # Required reviewers on this environment decide whether a fork's image is published.
+    environment: pr-images
+    steps:
+      - name: Approved
+        env:
+          TAG: ${{ needs.resolve.outputs.tag }}
+        run: echo "Publishing ${TAG}"
+
+  publish:
+    name: Publish
+    needs: [resolve, approve]
+    if: >-
+      !cancelled() && needs.resolve.result == 'success' && needs.resolve.outputs.tag != '' &&
+      (needs.approve.result == 'success' || needs.approve.result == 'skipped')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      actions: read # download the image from the Images run
+      contents: read # check out the default branch for image-comment.js
+      packages: write # push the image
+      pull-requests: write # comment on the pull requests
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Download image
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: image
+          path: ${{ runner.temp }}/image
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Push
+        id: push
+        env:
+          TAG: ${{ needs.resolve.outputs.tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY,,}:${TAG}"
+          skopeo login ghcr.io --username "${GITHUB_ACTOR}" --password-stdin <<< "${GH_TOKEN}"
+          skopeo copy --all --preserve-digests "oci-archive:${RUNNER_TEMP}/image/image.tar" "docker://${image}"
+          echo "digest=$(skopeo inspect --raw "docker://${image}" | sha256sum | cut -d' ' -f1)" >> "${GITHUB_OUTPUT}"
+          skopeo logout ghcr.io
+
+      - name: Comment
+        if: needs.resolve.outputs.prs != ''
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          TAG: ${{ needs.resolve.outputs.tag }}
+          PRS: ${{ needs.resolve.outputs.prs }}
+          DIGEST: ${{ steps.push.outputs.digest }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+        with:
+          script: |
+            const comment = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/image-comment.js`);
+            await comment({ github, context }, {
+              tag: process.env.TAG,
+              prs: process.env.PRS.split(' ').map(Number),
+              digest: process.env.DIGEST,
+              sha: process.env.HEAD_SHA,
+              runUrl: process.env.RUN_URL,
+            });
+
+  # A fork's image is only published after approval, which its "Images" run asks for, so only branches here are announced on opening.
+  announce:
+    name: Announce the image
+    if: github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read # check out the base branch for the scripts
+      packages: read # check the branch's image exists
+      pull-requests: write # comment on the pull request
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Until the branch's first image is pushed there is nothing to announce; publishing it comments instead.
+      - name: Find the image
+        id: image
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="$(.github/scripts/image-tag.sh "${HEAD_REF}")" || exit 0
+          image="ghcr.io/${GITHUB_REPOSITORY,,}:${tag}"
+          if skopeo inspect --raw --creds "${GITHUB_ACTOR}:${GH_TOKEN}" "docker://${image}" > /dev/null 2>&1; then
+            echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Comment
+        if: steps.image.outputs.tag != ''
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          TAG: ${{ steps.image.outputs.tag }}
+        with:
+          script: |
+            const comment = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/image-comment.js`);
+            await comment({ github, context }, { tag: process.env.TAG, prs: [context.issue.number] });

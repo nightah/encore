@@ -36,7 +36,7 @@ Encore is a self-hosted Alexa skill server for Kodi, and a modern successor to t
 - **One-click deploy:** Encore creates and updates the private skill in your own Amazon developer account through the Skill Management API.
 - **Finds new titles straight away:** Kodi's live events keep the library index current, so something added a minute ago is findable by voice.
 
-> **Status:** pre-release, working towards 1.0. Voice control, the web interface and skill deployment work end to end with a real Amazon developer account and Echo (tested in en-AU). Before 1.0: checks of the other locales. No release has been published yet.
+> **Status:** early releases (0.x), working towards 1.0; see the [latest release](https://github.com/nightah/encore/releases/latest). Voice control, the web interface and skill deployment work end to end with a real Amazon developer account and Echo, tested in en-AU. Expect rough edges, and breaking changes are possible before 1.0. The other locales haven't been tried on real devices yet, so [reports](https://github.com/nightah/encore/issues) from them are welcome.
 
 **Documentation:** <https://nightah.github.io/encore/> (source in [`docs/`](docs/)).
 
