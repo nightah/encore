@@ -10,7 +10,7 @@
     },
     "copied": "Kopiert",
     "copy": "JSON kopieren",
-    "intent": "Intent",
+    "intent": "",
     "kodiCalls": "Kodi-Aufrufe",
     "loading": "Anfrage wird geladen…",
     "noCalls": "Keine.",
@@ -58,7 +58,7 @@
   },
   "live": {
     "off": "Verbindung wird wiederhergestellt…",
-    "on": "Live",
+    "on": "",
     "retention": "die letzten 500 Anfragen oder 7 Tage werden aufbewahrt"
   },
   "newRequest": "Neue Anfrage von {{device}}{{heard}}",
