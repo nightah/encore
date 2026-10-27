@@ -24,7 +24,6 @@ AudioStream:
   audio: "{Step} (tonspur|audiospur|audio stream|sprache)\n(tonspur|audiospur|sprache) {Step}"
   audio_2: "{Language} (tonspur|audiospur)"
   audio_3: "ton auf {Language}"
-  language: "{Step} [the] language"
   play: "(spiele|spiel) (es|das) auf {Language}"
   switch_audio: "(stelle|stell|wechsle|wechsel|ändere) die (tonspur|audiospur|sprache) auf {Language}"
 BingeShow:
@@ -36,7 +35,6 @@ BingeShow:
 CleanLibrary:
   clean_library: "(bereinige|bereinig|säubere|räum) [die|meine] bibliothek [auf]\nbibliothek (bereinigen|säubern|aufräumen)"
   clean_library_2: "(bereinige|bereinig|säubere|räum) [die|meine] {Library} bibliothek [auf]\n{Library} bibliothek (bereinigen|säubern|aufräumen)"
-  tidy_library: "(tidy|clear out) [the|my] {Library} library"
 ContinueWatching:
   continue_last_show: "(setze|setz) die letzte serie fort [(im|in der) {Room}]\n(mach|mache) mit der letzten serie weiter [(im|in der) {Room}]"
   continue_watching: "(schau|schaue|guck|gucke) weiter [(im|in der) {Room}]"
@@ -57,7 +55,6 @@ CurrentPlayItemTimeRemaining:
   how_much_time: "wie viel zeit ist noch übrig"
   when_is_this: "wann ist (das|es) (vorbei|zu ende|fertig)\num wie viel uhr ist (das|es) (vorbei|zu ende)"
   when_will_movie: "wann (endet|ist) der (film|die folge|die serie) [zu ende]"
-  when_will_this: "(when|what time) (will|does) (this|it) (end|finish)"
 EjectMedia:
   eject: "auswerfen"
   eject_disc: "(wirf|werfe) [die] (disc|c. d.|d. v. d.|blu ray|scheibe) aus\n(disc|c. d.|d. v. d.) auswerfen"
@@ -73,8 +70,6 @@ GlobalSearch:
   global_search: "globale suche [nach] {Query}"
   search_kodi_for: "(durchsuche|durchsuch) (kodi|alles|alle addons|alle add ons) nach {Query}\n(such|suche) überall nach {Query}"
 IdentifyEcho:
-  identify_this_echo: "identify this (echo|device|speaker)"
-  what_echo_is: "what (echo|device|speaker) (is this|this is)"
   what_is_this: "wie heißt dieses (echo|gerät)"
   whats_name_this: "wie heißt das (echo|gerät)"
   which_echo_am: "mit welchem (echo|gerät) spreche ich"
@@ -99,26 +94,21 @@ ListenToLatestAlbum:
   play_latest_album: "(spiele|spiel) [mir] das (neueste|aktuellste|neue|aktuelle) album von {Artist} [(im|in der) {Room}]\n(spiele|spiel) [mir] (neuestes|aktuellstes|neues) album von {Artist} [(im|in der) {Room}]\nich (möchte|will) das neue album von {Artist} hören"
 ListenToRecentSongs:
   listen_recently_added: "ich (möchte|will) [meine] neuen (lieder|songs) hören"
-  play_recent_songs: "play [my] (recent|new) (songs|music)"
   play_recently_added: "(spiele|spiel) [meine] (zuletzt hinzugefügten|neuesten|neuen) (lieder|songs|titel) [(im|in der) {Room}]\n(spiele|spiel) [meine] (zuletzt hinzugefügte|neueste|neue) musik [(im|in der) {Room}]"
 ListenToSong:
   play_song: "(spiele|spiel) [mir] (das lied|den song|den titel|den track) {Song} [(im|in der) {Room}]\nich (möchte|will) (das lied|den song) {Song} [von {Artist}] hören\n(das lied|den song) {Song} [von {Artist}] (zu spielen|abzuspielen)"
   play_song_by: "(spiele|spiel) [mir] (das lied|den song|den titel) {Song} von {Artist} [(im|in der) {Room}]"
   play_song_from: "(spiele|spiel) [mir] (das lied|den song|den titel) {Song} (vom|aus dem|von dem) album {Album}"
-  play_track_by: "play the track {Song} by {Artist}"
 ListenToSongOrAlbum:
   play_by: "(spiele|spiel) [mir] {Title} von {Artist} [(im|in der) {Room}]\nich (möchte|will) {Title} von {Artist} hören\n{Title} von {Artist} (zu spielen|abzuspielen)"
 Mute:
   mute: "stummschalten"
   mute_tv: "(schalte|schalt) [den] (ton|fernseher|kodi) stumm\nton (aus|an|wieder an)\n(mach|mache) den ton (aus|an)"
-  silence_tv: "silence the tv"
-  toggle_mute: "toggle mute"
   unmute: "stummschaltung (aufheben|umschalten)"
 Navigate:
   go: "(geh|gehe|drück|drücke|navigiere) {NavAction}"
   go_times: "(geh|gehe|drück|drücke|navigiere) {Count} mal {NavAction}"
   open_screen: "(öffne|öffnen) (das|den) {NavAction}"
-  sample: "{NavAction}"
   times: "{NavAction} {Count} mal"
 OpenFavourite:
   open_favourite: "(öffne|öffnen|zeige|zeig|starte|start) [den|meinen] favoriten {Favourite}"
@@ -141,7 +131,6 @@ PlayerMove:
   move_picture: "(verschiebe|verschieb|schwenke|schwenk) das (bild|video) {Direction}\n(bewege|beweg) das bild {Direction}"
   pan: "(schwenke|schwenk) {Direction}"
 PlayerRewind:
-  go_back: "go back (to|by) {Duration}"
   rewind: "(spul|spule|spring|springe) [um] {Duration} zurück\n{Duration} zurückspulen"
   rewind_2: "(spul|spule|spring|springe) {Size} zurück"
   rewind_3: "zurückspulen"
@@ -155,10 +144,8 @@ PlayerSeek:
   sample: "{Duration} {SeekDirection}"
   skip: "(spring|springe|spul|spule|geh|gehe) [um] {Duration} {SeekDirection}\n(spring|springe) {SeekDirection} um {Duration}"
   skip_2: "(spring|springe|spul|spule|geh|gehe) {Size} {SeekDirection}"
-  skip_3: "(skip|jump|go|step) {Size} {SeekDirection}"
   skip_4: "(spring|springe|spul|spule) {SeekDirection}"
   skip_5: "überspringe {Duration}"
-  step: "{Size} (step|jump|skip) {SeekDirection}"
   take_step: "(mach|mache) einen (kleinen|großen) sprung {SeekDirection}"
 PlayerSeekTo:
   go_mark: "(geh|gehe|spring|springe|spul|spule) zur stelle {Position}"
@@ -169,13 +156,11 @@ PlayerSeekTo:
 PlayerZoom:
   enhance: "(vergrößere|vergrößer) das bild"
   enhance_and_move: "(vergrößern|näher ran) und (schwenke|schwenk) {Direction}"
-  zoom: "zoom {Zoom}"
   zoom_2: "das bild {Zoom}"
   zoom_and_move: "(zoome|zoom) {Zoom} und (schwenke|schwenk|geh) {Direction}"
 Power:
   kodi: "kodi {PowerAction}\n(den computer|das system|das media center|die box|den fernseher) {PowerAction}"
   put_kodi: "(schicke|schick) (kodi|das system|den computer) in den {PowerAction}"
-  sample: "{PowerAction}"
 Recommend:
   give_me_recommendation: "ich (möchte|hätte gern) eine {MediaType} empfehlung"
   recommend: "(empfiehl|schlag) mir (einen|eine|ein) {MediaType} [vor]"
@@ -189,7 +174,6 @@ Repeat:
   loop_mode: "wiederholung {RepeatMode}\nendlosschleife {RepeatMode}"
   repeat: "(wiederhole|wiederhol) {RepeatMode}"
   set_loop: "(stelle|stell) [die] wiederholung auf {RepeatMode}"
-  turn_repeat: "(turn|set) repeat {RepeatMode}"
 RoomControl:
   in_the: "{Command} (im|in der) {Room}"
   playback: "{Command} die wiedergabe (im|in der) {Room}"
@@ -209,7 +193,6 @@ ShuffleMusicVideos:
   play_music_videos_2: "(spiele|spiel|zeige|zeig) [mir] [alle] [{Genre}] musikvideos von {Artist}"
 ShufflePlaylist:
   play_playlist_shuffled: "(spiele|spiel) [meine] playlist {Playlist} (zufällig|gemischt|in zufälliger reihenfolge) [(im|in der) {Room}]\n(spiele|spiel) [die|meine] {Playlist} playlist (zufällig|gemischt|in zufälliger reihenfolge) [(im|in der) {Room}]"
-  shuffle_music_playlist: "shuffle [the] (music|video|smart) playlist {Playlist}"
   shuffle_playlist: "zufallswiedergabe [für] [die|meine] playlist {Playlist} [(im|in der) {Room}]"
   shuffle_playlist_2: "zufallswiedergabe [für] [die|meine] {Playlist} playlist"
 ShuffleShow:
@@ -221,7 +204,6 @@ StereoscopicMode:
   toggle_stereoscopic_mode: "(stereoskopischen|drei d.) modus umschalten"
   turn_stereoscopic_mode: "(schalte|schalt) den (stereoskopischen|drei d.) modus (an|ein|aus|um)\n(aktiviere|deaktiviere) [den] (drei d.|stereoskopischen) modus"
 Subtitles:
-  subtitle_language: "{SubtitleAction} (subtitle|subtitles) language"
   subtitles: "{SubtitleAction} untertitel"
   subtitles_2: "untertitel {SubtitleAction}\ndie untertitel {SubtitleAction}"
   subtitles_3: "untertitel auf {Language}"
@@ -241,8 +223,6 @@ UpdateLibrary:
 ViewLibrary:
   show: "(zeige|zeig|öffne|öffnen) [mir] [die|meine] {Section}\n(geh|gehe) zu [den|meinen] {Section}\n(durchsuche|stöbere in) [den|meinen] {Section}"
   show_2: "(zeige|zeig|öffne|öffnen) [mir] [die|meine] {Genre} {Section}\n(geh|gehe) zu [den|meinen] {Genre} {Section}"
-  show_me: "show me [the|my] {Section}"
-  show_me_2: "show me [the|my] {Genre} {Section}"
 ViewPlaylist:
   show_music_playlist: "(zeige|zeig|öffne|öffnen) [mir] die (musik|audio|video|film|serien) playlist {Playlist}"
   show_playlist: "(zeige|zeig|öffne|öffnen) [mir] [die|meine] playlist {Playlist}\n(geh|gehe) zur playlist {Playlist}"
@@ -315,7 +295,6 @@ WhatAlbums:
   what_albums_by: "welche alben von {Artist} (habe ich|haben wir|hast du)"
   what_albums_do: "welche alben (habe ich|haben wir|hast du) von {Artist}\nwelche platten (habe ich|haben wir) von {Artist}"
   what_albums_has: "welche alben hat {Artist} (gemacht|veröffentlicht|herausgebracht)"
-  which_albums_by: "which albums by {Artist} (do i|do we) have"
 WhatsNew:
   are_there_new: "(gibt es|habe ich|haben wir) [irgendwelche] (neue|neuen|ungesehene|ungesehenen) {MediaType}"
   are_there_new_2: "(gibt es|habe ich|haben wir) [irgendwelche] (neue|neuen|ungesehene) {Genre} {MediaType}"
