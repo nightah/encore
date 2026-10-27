@@ -28,7 +28,7 @@
       "succeeded": "Erfolgreich"
     },
     "columns": {
-      "build": "",
+      "build": "Build",
       "built": "Erstellt",
       "locale": "Gebietsschema",
       "size": "Größe (von {{limit}})",
