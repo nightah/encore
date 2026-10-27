@@ -63,7 +63,7 @@
       },
       "oidc": {
         "hint": "p. ej., Authelia, Authentik, Keycloak",
-        "label": ""
+        "label": "OpenID Connect"
       }
     },
     "oidc": {
@@ -119,7 +119,7 @@
       "saveToTest": "Guarda con OpenID Connect seleccionado para probarlo.",
       "scopes": {
         "hint": "Separados por espacios.",
-        "label": ""
+        "label": "Scopes"
       },
       "snippetLabel": "Configuración de {{provider}}",
       "testSignIn": "Probar inicio de sesión"
@@ -240,7 +240,7 @@
       "hint": "Se usa para «terminará a las 21:47».",
       "label": "Zona horaria"
     },
-    "title": ""
+    "title": "General"
   },
   "page": {
     "description": "Los campos marcados con <badge/> vienen de <code>encore.yml</code> o de variables <code>ENCORE_*</code> y no se pueden cambiar aquí.",
@@ -271,7 +271,7 @@
   },
   "storage": {
     "backend": {
-      "legend": "",
+      "legend": "Backend",
       "local": "Disco local",
       "localHint": "El volumen /data (predeterminado)",
       "s3": "Compatible con S3",
@@ -311,7 +311,7 @@
     },
     "s3": {
       "accessKey": "Clave de acceso",
-      "bucket": "",
+      "bucket": "Bucket",
       "caBundle": "Certificado de CA (PEM)",
       "customCa": "Certificado de CA personalizado",
       "endpoint": {
@@ -351,7 +351,7 @@
     "access": "Acceso",
     "backup": "Importar y exportar",
     "features": "Funciones",
-    "general": "",
+    "general": "General",
     "secrets": "Secretos",
     "storage": "Almacenamiento"
   }
