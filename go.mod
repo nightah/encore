@@ -10,7 +10,6 @@ require (
 	github.com/danielgtaylor/huma/v2 v2.39.1
 	github.com/f1monkey/phonetic v1.4.2
 	github.com/go-jose/go-jose/v4 v4.1.4
-	github.com/hashicorp/mdns v1.0.7
 	github.com/hbollon/go-edlib v1.7.0
 	github.com/jamestelfer/billy v0.2.0
 	github.com/knadh/koanf/parsers/yaml v1.1.1
@@ -21,6 +20,7 @@ require (
 	github.com/knadh/koanf/v2 v2.4.1
 	github.com/lmittmann/tint v1.2.1
 	github.com/mattn/go-isatty v0.0.24
+	github.com/miekg/dns v1.1.72
 	github.com/minio/minio-go/v7 v7.4.1
 	github.com/oapi-codegen/runtime v1.8.0
 	github.com/pquerna/otp v1.5.0
@@ -75,7 +75,6 @@ require (
 	github.com/klauspost/crc32 v1.3.0 // indirect
 	github.com/knadh/koanf/maps v0.1.2 // indirect
 	github.com/mfridman/interpolate v0.0.2 // indirect
-	github.com/miekg/dns v1.1.72 // indirect
 	github.com/minio/crc64nvme v1.1.1 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect

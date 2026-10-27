@@ -1,6 +1,7 @@
 package kodi
 
 import (
+	"net"
 	"time"
 
 	"github.com/nightah/encore/internal/backend/kodi/kodirpc"
@@ -42,6 +43,17 @@ const (
 
 // DefaultDiscoveryTimeout is how long Discover listens for answers.
 const DefaultDiscoveryTimeout = 3 * time.Second
+
+// mDNS's port and groups (RFC 6762 §3).
+const mdnsPort = 5353
+
+var (
+	mdnsGroupV4 = net.IPv4(224, 0, 0, 251)
+	mdnsGroupV6 = net.ParseIP("ff02::fb")
+)
+
+// mdnsDomain is the domain every mDNS name ends in.
+const mdnsDomain = "local."
 
 // Wake-on-LAN defaults.
 const (

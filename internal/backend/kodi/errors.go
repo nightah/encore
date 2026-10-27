@@ -23,6 +23,10 @@ var (
 	errFavouriteType   = errors.New("kodi: this kind of favourite can't be opened remotely")
 	// The request never left the process, so retrying it over HTTP is safe.
 	errNotSent = errors.New("request not sent")
+
+	errNoMulticastInterface = errors.New("kodi: no multicast interface is up")
+	errMDNSJoin             = errors.New("kodi: could not join the mDNS group on any interface")
+	errMDNSSend             = errors.New("kodi: could not send an mDNS query on any interface")
 )
 
 // RPCError is a JSON-RPC error returned by Kodi.

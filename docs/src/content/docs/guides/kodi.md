@@ -33,7 +33,7 @@ On the **Kodi** page, Encore lists Kodi instances it finds on your network with 
 
 When Encore first connects it loads the whole library, then keeps it current from Kodi's notifications, a check for recently added items, and a periodic safety net. **Sync** reloads the library by hand.
 
-mDNS doesn't cross Docker's default bridge network; with a bridged container, add instances by address or use host networking.
+mDNS doesn't cross Docker's default bridge network; with a bridged container, add instances by address or use host networking. It doesn't cross subnets either, unless your router repeats mDNS between them (MikroTik's mDNS repeater or Avahi's reflector, for example); Encore then finds Kodi instances on the other subnet too.
 
 ## Declare instances in config
 
