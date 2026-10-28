@@ -1,7 +1,7 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { OIDC_PRESETS } from "@features/settings/oidcProviders";
 import { getDb } from "@mocks/handlers";
@@ -63,6 +63,17 @@ describe("Settings page", () => {
     expect(await screen.findByRole("heading", { level: 2, name: "Allgemein" })).toBeInTheDocument();
     expect(window.localStorage.getItem("encore.language")).toBe("de");
     expect(document.documentElement.lang).toBe("de");
+  });
+
+  it("names the browser's language, as it calls itself, in the option that follows it", async () => {
+    const languages = vi.spyOn(navigator, "languages", "get").mockReturnValue(["it-IT", "en"]);
+    try {
+      renderApp("/settings");
+      const picker = await screen.findByRole("combobox", { name: "Language" });
+      expect(within(picker).getByRole("option", { name: "Match browser (Italiano)" })).toHaveValue("auto");
+    } finally {
+      languages.mockRestore();
+    }
   });
 
   it("saves the log level", async () => {
