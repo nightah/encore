@@ -537,11 +537,13 @@ function TotpDialog({
       footer={
         <>
           <Button onClick={() => onOpenChange(false)}>{t("access.cancel")}</Button>
+          {/* A submit button for the form, so Enter in the code field confirms even while the secret field makes it a two-field form. */}
           <Button
+            type="submit"
+            form="totp-form"
             variant={enabled ? "danger" : "primary"}
             pending={submit.isPending}
             disabled={!enabled && !enroll.data}
-            onClick={() => void confirm()}
           >
             {enabled ? t("access.totp.off") : t("access.totp.on")}
           </Button>
@@ -549,6 +551,7 @@ function TotpDialog({
       }
     >
       <form
+        id="totp-form"
         className="flex flex-col gap-4"
         onSubmit={(event) => {
           event.preventDefault();

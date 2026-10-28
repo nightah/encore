@@ -625,6 +625,24 @@ describe("One-time code dialog", () => {
     expect((await screen.findAllByText("One-time codes turned on.")).length).toBeGreaterThan(0);
   });
 
+  it("lets Enter in the code field confirm, as the dialog's button submits the code's form", async () => {
+    const user = userEvent.setup();
+    renderApp("/settings?tab=access");
+
+    await user.click(await screen.findByRole("checkbox", { name: /Require a one-time code/ }));
+    const dialog = within(await screen.findByRole("dialog", { name: "Turn on one-time codes" }));
+    await dialog.findByLabelText("Secret");
+    const code = dialog.getByRole("textbox", { name: "Code" }) as HTMLInputElement;
+    const submit = dialog.getByRole("button", { name: "Turn on" }) as HTMLButtonElement;
+    // With the secret field shown the form has two text fields, so a browser submits on Enter only through a submit button.
+    expect(code.form).not.toBeNull();
+    expect(submit.form).toBe(code.form);
+
+    await user.type(code, "123456");
+    await user.click(submit);
+    await waitFor(() => expect(getDb().settings.auth.local.totp_enabled).toBe(true));
+  });
+
   it("can't be turned on until the secret has been created", async () => {
     failWith("post", "/auth/totp/enroll", 500, "Couldn't create a secret.");
     const user = userEvent.setup();
