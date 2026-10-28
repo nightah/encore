@@ -292,6 +292,24 @@ describe("Echo dialog", () => {
     expect(within(dialog).queryByRole("alert")).not.toBeInTheDocument();
   });
 
+  it("doesn't carry a failed save over to the next Echo after Cancel", async () => {
+    failWith("patch", "/devices/1", 500, "Database is locked.");
+    const user = userEvent.setup();
+    renderApp("/echo-devices");
+
+    await user.click(await screen.findByRole("button", { name: "Edit Lounge Echo Show" }));
+    let dialog = await screen.findByRole("dialog", { name: "Edit Lounge Echo Show" });
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent("Database is locked.");
+
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
+
+    await user.click(screen.getByRole("button", { name: "Edit Study Echo Spot" }));
+    dialog = await screen.findByRole("dialog", { name: "Edit Study Echo Spot" });
+    expect(within(dialog).queryByRole("alert")).not.toBeInTheDocument();
+  });
+
   it("asks before forgetting an Echo, and keeps it when you change your mind", async () => {
     const user = userEvent.setup();
     const log = recordRequests();

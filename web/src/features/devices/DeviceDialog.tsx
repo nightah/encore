@@ -37,16 +37,19 @@ export function DeviceDialog({ device, onClose, rooms, instances }: DeviceDialog
     setConfirmForget(false);
   }
 
+  // Every way out of the dialog comes through here, so a failed save never shows on the next Echo opened.
+  const close = () => {
+    update.reset();
+    onClose();
+  };
+
   const title = device?.name ? t("dialog.editTitle", { name: device.name }) : t("dialog.editEcho");
 
   return (
     <Dialog
       open={!!device}
       onOpenChange={(open) => {
-        if (!open) {
-          update.reset();
-          onClose();
-        }
+        if (!open) close();
       }}
       title={title}
       description={device ? <span className="font-mono">{truncateDeviceId(device.alexa_device_id)}</span> : null}
@@ -58,7 +61,7 @@ export function DeviceDialog({ device, onClose, rooms, instances }: DeviceDialog
             <Button
               variant="danger"
               pending={remove.isPending}
-              onClick={() => remove.mutate(device.id, { onSuccess: onClose })}
+              onClick={() => remove.mutate(device.id, { onSuccess: close })}
             >
               {t("dialog.forget")}
             </Button>
@@ -68,7 +71,7 @@ export function DeviceDialog({ device, onClose, rooms, instances }: DeviceDialog
             <Button variant="danger" className="mr-auto" onClick={() => setConfirmForget(true)}>
               {t("dialog.forgetEllipsis")}
             </Button>
-            <Button onClick={onClose}>{t("dialog.cancel")}</Button>
+            <Button onClick={close}>{t("dialog.cancel")}</Button>
             <Button type="submit" form="device-form" variant="primary" pending={update.isPending}>
               {t("dialog.save")}
             </Button>
@@ -92,7 +95,7 @@ export function DeviceDialog({ device, onClose, rooms, instances }: DeviceDialog
               },
               id: device.id,
             },
-            { onSuccess: onClose },
+            { onSuccess: close },
           );
         }}
       >
