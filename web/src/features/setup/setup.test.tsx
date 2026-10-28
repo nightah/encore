@@ -4,11 +4,12 @@ import { HttpResponse, delay, http } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import type { RequestDetail } from "@api/generated/model";
+import { keys } from "@api/keys";
 import { SETUP_STORAGE_KEY, getSetupProgress } from "@lib/setupProgress";
 import { getDb, resetDb } from "@mocks/handlers";
 import { server } from "@mocks/node";
 import { FakeEventSource } from "@test/eventSource";
-import { recordRequests, renderApp } from "@test/utils";
+import { failWith, recordRequests, renderApp } from "@test/utils";
 
 async function heading(name: string | RegExp) {
   return screen.findByRole("heading", { level: 1, name }, { timeout: 4000 });
@@ -39,7 +40,7 @@ describe("setup wizard", () => {
 
     await heading("Tell us your public address");
     expect(getDb().admin?.username).toBe("admin");
-    expect(screen.getByLabelText("Public base URL")).toHaveValue("https://encore.example.net");
+    expect(await screen.findByLabelText("Public base URL")).toHaveValue("https://encore.example.net");
     await user.click(screen.getByRole("button", { name: "Check address" }));
     const checks = await screen.findByRole("list", { name: "Reachability check results" });
     expect(within(checks).getAllByRole("listitem")).toHaveLength(3);
@@ -210,11 +211,56 @@ describe("setup wizard", () => {
     const requests = recordRequests();
     const { queryClient } = renderApp("/setup");
     await heading("Tell us your public address");
-    await user.click(screen.getByRole("button", { name: "Check address" }));
+    await user.click(await screen.findByRole("button", { name: "Check address" }));
 
     await waitFor(() => expect(requests.some((r) => r.method === "PUT" && r.path === "/skill/settings")).toBe(true));
     await waitFor(() => expect(queryClient.isMutating()).toBe(0));
     expect(screen.queryByText("Skill settings saved.")).not.toBeInTheDocument();
+  });
+
+  it("waits for the skill settings before showing the address", async () => {
+    resetDb("configured");
+    window.localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify({ done: [1], skipped: [], step: 2 }));
+    let answer: () => void = () => {};
+    server.use(
+      http.get(
+        "*/api/v1/skill",
+        () =>
+          new Promise<Response>((resolve) => {
+            answer = () => resolve(HttpResponse.json(getDb().skill));
+          }),
+      ),
+    );
+    renderApp("/setup");
+
+    await heading("Tell us your public address");
+    expect(screen.queryByLabelText("Public base URL")).not.toBeInTheDocument();
+    expect(await screen.findByRole("status")).toHaveTextContent("Loading…");
+    expect(screen.queryByRole("button", { name: "Check address" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Skip for now" })).toBeEnabled();
+
+    answer();
+    expect(await screen.findByLabelText("Public base URL")).toHaveValue("https://encore.example.net");
+    expect(screen.getByRole("button", { name: "Check address" })).toBeEnabled();
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+
+  it("says the skill settings didn't load instead of showing an empty address", async () => {
+    resetDb("configured");
+    window.localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify({ done: [1], skipped: [], step: 2 }));
+    failWith("get", "/skill", 500, "boom");
+    const user = userEvent.setup();
+    const { queryClient } = renderApp("/setup");
+
+    await heading("Tell us your public address");
+    await waitFor(() => expect(queryClient.getQueryState(keys.skill)?.status).toBe("error"));
+    expect(screen.queryByLabelText("Public base URL")).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("boom");
+    expect(screen.getByRole("button", { name: "Skip for now" })).toBeEnabled();
+
+    server.resetHandlers();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByLabelText("Public base URL")).toHaveValue("https://encore.example.net");
   });
 
   it("resumes where you left off and offers it from the shell", async () => {
