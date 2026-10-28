@@ -1,0 +1,635 @@
+# Grown set: testdata/grown holds corpora added on top of the original ones (asr_corpus.yaml and phonetic/), which stay untouched. TestASRCorpus and TestPhoneticEval score both sets and report them separately.
+#
+# Italian (it-IT) phonetic evaluation corpus, second set, for TestPhoneticEval. Same schema as asr_corpus.yaml; cases are scored, not asserted, so there is no xfail. It adds two suites with their own libraries to the first Italian set; no play case repeats a heard string from it, and some absent cases deliberately name titles from its library, which are not in these libraries.
+#
+# Libraries: real, well-known Italian films and series (with original release years) and Italian artists, albums and songs (albums and songs with their original years), with near neighbours that share words, first names or surnames (C'era una volta il West / in America, Benvenuti al Sud / al Nord, Rocco e i suoi fratelli / Rocco Schiavone, 1992 / 1993, Zero / ZeroZeroZero, Anna / Annalisa, Mango / Angelina Mango, Edoardo / Eugenio Bennato, four Francescos, Felicità / Felicità puttana, Il Volo / Volare) so a wrong play is possible.
+#
+# Cases: what a speech recogniser plausibly writes when an Italian speaker asks for the title. Each mishearing sits under a "class" comment naming the confusion it models. The classes are documented Italian spelling-to-sound ambiguities and the errors ASR language models make when a name is out of vocabulary or a more frequent word sounds alike:
+#   geminate: double consonants shortened by northern speakers and lengthened by central-southern speakers (raddoppiamento), e.g. Cabiria notti/noti, Pezzali/Pezali, Biagio/Biaggio.
+#   palatal: c and g before e/i versus ch/gh, and the diacritic i of cie/gie/cia/gio that carries no sound (cielo/celo, Cenere/Cienere, Geolier/Giolier, Lamborghini/Lamborgini).
+#   gn-gli: the palatal nasal and lateral written as ni/nni and li/lli (Cutugno/Cutunio, figlio/filio, signore/signiore).
+#   z-s: z (/ts/, /dz/) against s, and the regional voicing of intervocalic s (divorzio/divorsio, paradiso/paradizo, musica/muzica).
+#   h: the silent h of avere and of Latin and foreign words (ho/o, hanno/anno, Habemus/Abemus, Ermal/Hermal).
+#   accent: written accents on final stressed vowels dropped or misplaced (più/piu, metà/meta, Carrà/Carra, Poët/Poet).
+#   elision: apostrophes, elided articles and dropped articles (l'avventura/lavventura/la avventura, all'italiana/alla italiana, L'italiano/italiano).
+#   split-merge: one word split into several or several merged (Borotalco/boro talco, ZeroZeroZero/zero zero zero, Al Bano/Albano).
+#   real-word: a more frequent real word replaces the title word (Verdone/verde, cera/c'era, Blanco/bianco, Marracash/Marrakesh, zitti/ziti, cannone/canone).
+#   foreign: English, French and Latin names respelled in Italian phonology, and letter names (Jeeg/gig, Youth/iut, Afterhours/after ours, Rkomi/erre komi, Johnny/Gianni).
+#   number: digits against words and the number forms Italian titles use (8½/otto e mezzo, 1992/millenovecentonovantadue, 883/otto otto tre, sei/6).
+# Controls (exact titles as an ASR writes them, lower case, punctuation dropped), ambiguous requests (ask among the near neighbours), missing sequels (ask) and absent titles (not_found, including near misses that share words with library titles) keep the decision thresholds honest.
+#
+# This corpus was written and frozen blind: without running or reading any encoder or matcher evaluation and without reading any encoder source. Changing it after seeing an encoder's results invalidates the comparison.
+suites:
+  - name: italian films and series
+    lang: it
+    library:
+      - {id: sorpasso, kind: movie, title: "Il sorpasso", year: 1962}
+      - {id: ottoemezzo, kind: movie, title: "8½", year: 1963}
+      - {id: amarcord, kind: movie, title: "Amarcord", year: 1973}
+      - {id: strada, kind: movie, title: "La strada", year: 1954}
+      - {id: cabiria, kind: movie, title: "Le notti di Cabiria", year: 1957}
+      - {id: romaaperta, kind: movie, title: "Roma città aperta", year: 1945}
+      - {id: umbertod, kind: movie, title: "Umberto D.", year: 1952}
+      - {id: avventura, kind: movie, title: "L'avventura", year: 1960}
+      - {id: desertorosso, kind: movie, title: "Il deserto rosso", year: 1964}
+      - {id: rocco, kind: movie, title: "Rocco e i suoi fratelli", year: 1960}
+      - {id: divorzio, kind: movie, title: "Divorzio all'italiana", year: 1961}
+      - {id: matrimonio, kind: movie, title: "Matrimonio all'italiana", year: 1964}
+      - {id: ierioggi, kind: movie, title: "Ieri, oggi, domani", year: 1963}
+      - {id: ciociara, kind: movie, title: "La ciociara", year: 1960}
+      - {id: sciuscia, kind: movie, title: "Sciuscià", year: 1946}
+      - {id: paisa, kind: movie, title: "Paisà", year: 1946}
+      - {id: uccellacci, kind: movie, title: "Uccellacci e uccellini", year: 1966}
+      - {id: accattone, kind: movie, title: "Accattone", year: 1961}
+      - {id: mammaroma, kind: movie, title: "Mamma Roma", year: 1962}
+      - {id: decameron, kind: movie, title: "Il Decameron", year: 1971}
+      - {id: brancaleone, kind: movie, title: "L'armata Brancaleone", year: 1966}
+      - {id: westcera, kind: movie, title: "C'era una volta il West", year: 1968}
+      - {id: americacera, kind: movie, title: "C'era una volta in America", year: 1984}
+      - {id: pugno, kind: movie, title: "Per un pugno di dollari", year: 1964}
+      - {id: qualche, kind: movie, title: "Per qualche dollaro in più", year: 1965}
+      - {id: giulatesta, kind: movie, title: "Giù la testa", year: 1971}
+      - {id: novecento, kind: movie, title: "Novecento", year: 1976}
+      - {id: conformista, kind: movie, title: "Il conformista", year: 1970}
+      - {id: finzicontini, kind: movie, title: "Il giardino dei Finzi-Contini", year: 1970}
+      - {id: amicimiei, kind: movie, title: "Amici miei", year: 1975}
+      - {id: amicimiei2, kind: movie, title: "Amici miei - Atto II", year: 1982}
+      - {id: marchese, kind: movie, title: "Il marchese del Grillo", year: 1981}
+      - {id: saccobello, kind: movie, title: "Un sacco bello", year: 1980}
+      - {id: biancorosso, kind: movie, title: "Bianco, rosso e Verdone", year: 1981}
+      - {id: borotalco, kind: movie, title: "Borotalco", year: 1982}
+      - {id: ricomincio, kind: movie, title: "Ricomincio da tre", year: 1981}
+      - {id: piangere, kind: movie, title: "Non ci resta che piangere", year: 1984}
+      - {id: ciclone, kind: movie, title: "Il ciclone", year: 1996}
+      - {id: treuomini, kind: movie, title: "Tre uomini e una gamba", year: 1997}
+      - {id: chiedimi, kind: movie, title: "Chiedimi se sono felice", year: 2000}
+      - {id: stecchino, kind: movie, title: "Johnny Stecchino", year: 1991}
+      - {id: mostro, kind: movie, title: "Il mostro", year: 1994}
+      - {id: tulipani, kind: movie, title: "Pane e tulipani", year: 2000}
+      - {id: paura, kind: movie, title: "Io non ho paura", year: 2003}
+      - {id: meglio, kind: movie, title: "La meglio gioventù", year: 2003}
+      - {id: divo, kind: movie, title: "Il divo", year: 2008}
+      - {id: conseguenze, kind: movie, title: "Le conseguenze dell'amore", year: 2004}
+      - {id: youth, kind: movie, title: "Youth - La giovinezza", year: 2015}
+      - {id: habemus, kind: movie, title: "Habemus Papam", year: 2011}
+      - {id: stanza, kind: movie, title: "La stanza del figlio", year: 2001}
+      - {id: carodiario, kind: movie, title: "Caro diario", year: 1993}
+      - {id: jeeg, kind: movie, title: "Lo chiamavano Jeeg Robot", year: 2015}
+      - {id: catinelle, kind: movie, title: "Sole a catinelle", year: 2013}
+      - {id: giornata, kind: movie, title: "Che bella giornata", year: 2011}
+      - {id: nubi, kind: movie, title: "Cado dalle nubi", year: 2009}
+      - {id: tolotolo, kind: movie, title: "Tolo Tolo", year: 2020}
+      - {id: benvenutisud, kind: movie, title: "Benvenuti al Sud", year: 2010}
+      - {id: benvenutinord, kind: movie, title: "Benvenuti al Nord", year: 2012}
+      - {id: capitale, kind: movie, title: "Il capitale umano", year: 2013}
+      - {id: dogman, kind: movie, title: "Dogman", year: 2018}
+      - {id: traditore, kind: movie, title: "Il traditore", year: 2019}
+      - {id: lazzaro, kind: movie, title: "Lazzaro felice", year: 2018}
+      - {id: fuocoammare, kind: movie, title: "Fuocoammare", year: 2016}
+      - {id: iocapitano, kind: movie, title: "Io capitano", year: 2023}
+      - {id: ancoradomani, kind: movie, title: "C'è ancora domani", year: 2023}
+      - {id: suspiria, kind: movie, title: "Suspiria", year: 1977}
+      - {id: profondorosso, kind: movie, title: "Profondo rosso", year: 1975}
+      - {id: esami, kind: movie, title: "Notte prima degli esami", year: 2006}
+      - {id: esamioggi, kind: movie, title: "Notte prima degli esami - Oggi", year: 2007}
+      - {id: tremetri, kind: movie, title: "Tre metri sopra il cielo", year: 2004}
+      - {id: hovoglia, kind: movie, title: "Ho voglia di te", year: 2007}
+      - {id: manuale, kind: movie, title: "Manuale d'amore", year: 2005}
+      - {id: manuale2, kind: movie, title: "Manuale d'amore 2 - Capitoli successivi", year: 2007}
+      - {id: vacanze, kind: movie, title: "Vacanze di Natale", year: 1983}
+      - {id: vacanze95, kind: movie, title: "Vacanze di Natale '95", year: 1995}
+      - {id: generale, kind: movie, title: "Il generale Della Rovere", year: 1959}
+      - {id: ricciardi, kind: tvshow, title: "Il commissario Ricciardi", year: 2021}
+      - {id: schiavone, kind: tvshow, title: "Rocco Schiavone", year: 2016}
+      - {id: tataranni, kind: tvshow, title: "Imma Tataranni - Sostituto procuratore", year: 2019}
+      - {id: doc, kind: tvshow, title: "Doc - Nelle tue mani", year: 2020}
+      - {id: braccialetti, kind: tvshow, title: "Braccialetti rossi", year: 2014}
+      - {id: medico, kind: tvshow, title: "Un medico in famiglia", year: 1998}
+      - {id: cesaroni, kind: tvshow, title: "I Cesaroni", year: 2006}
+      - {id: distretto, kind: tvshow, title: "Distretto di polizia", year: 2000}
+      - {id: signore, kind: tvshow, title: "Il paradiso delle signore", year: 2015}
+      - {id: zero, kind: tvshow, title: "Zero", year: 2021}
+      - {id: zerozerozero, kind: tvshow, title: "ZeroZeroZero", year: 2020}
+      - {id: summertime, kind: tvshow, title: "Summertime", year: 2020}
+      - {id: baby, kind: tvshow, title: "Baby", year: 2018}
+      - {id: curon, kind: tvshow, title: "Curon", year: 2020}
+      - {id: lunanera, kind: tvshow, title: "Luna nera", year: 2020}
+      - {id: s1992, kind: tvshow, title: "1992", year: 2015}
+      - {id: s1993, kind: tvshow, title: "1993", year: 2017}
+      - {id: romulus, kind: tvshow, title: "Romulus", year: 2020}
+      - {id: nomerosa, kind: tvshow, title: "Il nome della rosa", year: 2019}
+      - {id: medici, kind: tvshow, title: "I Medici", year: 2016}
+      - {id: rivombrosa, kind: tvshow, title: "Elisa di Rivombrosa", year: 2003}
+      - {id: chedio, kind: tvshow, title: "Che Dio ci aiuti", year: 2011}
+      - {id: coliandro, kind: tvshow, title: "L'ispettore Coliandro", year: 2006}
+      - {id: lidiapoet, kind: tvshow, title: "La legge di Lidia Poët", year: 2023}
+      - {id: strappare, kind: tvshow, title: "Strappare lungo i bordi", year: 2021}
+      - {id: vitadacarlo, kind: tvshow, title: "Vita da Carlo", year: 2021}
+    cases:
+      # Controls: the title as an ASR writes it.
+      - {heard: "il sorpasso", want: play, id: sorpasso}
+      - {heard: "amarcord", want: play, id: amarcord}
+      - {heard: "la strada", want: play, id: strada}
+      - {heard: "roma città aperta", want: play, id: romaaperta}
+      - {heard: "c'era una volta il west", want: play, id: westcera}
+      - {heard: "per un pugno di dollari", want: play, id: pugno}
+      - {heard: "novecento", want: play, id: novecento}
+      - {heard: "amici miei", want: play, id: amicimiei}
+      - {heard: "il marchese del grillo", want: play, id: marchese}
+      - {heard: "non ci resta che piangere", want: play, id: piangere}
+      - {heard: "il ciclone", want: play, id: ciclone}
+      - {heard: "io non ho paura", want: play, id: paura}
+      - {heard: "il divo", want: play, id: divo}
+      - {heard: "sole a catinelle", want: play, id: catinelle}
+      - {heard: "benvenuti al sud", want: play, id: benvenutisud}
+      - {heard: "profondo rosso", want: play, id: profondorosso}
+      - {heard: "suspiria", want: play, id: suspiria}
+      - {heard: "notte prima degli esami", want: play, id: esami}
+      - {heard: "rocco schiavone", want: play, id: schiavone}
+      - {heard: "il commissario ricciardi", want: play, id: ricciardi}
+      - {heard: "braccialetti rossi", want: play, id: braccialetti}
+      - {heard: "i cesaroni", want: play, id: cesaroni}
+      - {heard: "romulus", want: play, id: romulus}
+      - {heard: "zerozerozero", want: play, id: zerozerozero}
+      - {heard: "che dio ci aiuti", want: play, id: chedio}
+      - {heard: "1992", want: play, id: s1992}
+      - {heard: "ho voglia di te", want: play, id: hovoglia}
+      - {heard: "zero", want: play, id: zero}
+      - {heard: "il nome della rosa", want: play, id: nomerosa}
+      - {heard: "che bella giornata", want: play, id: giornata}
+      # Class geminate: double consonants shortened or lengthened.
+      - {heard: "il sorpaso", want: play, id: sorpasso}
+      - {heard: "le noti di cabiria", want: play, id: cabiria}
+      - {heard: "uccelacci e uccellini", want: play, id: uccellacci}
+      - {heard: "acatone", want: play, id: accattone}
+      - {heard: "mama roma", want: play, id: mammaroma}
+      - {heard: "il marchese del grilo", want: play, id: marchese}
+      - {heard: "un saco bello", want: play, id: saccobello}
+      - {heard: "il cicclone", want: play, id: ciclone}
+      - {heard: "johnny stechino", want: play, id: stecchino}
+      - {heard: "lazaro felice", want: play, id: lazzaro}
+      - {heard: "fuocoamare", want: play, id: fuocoammare}
+      - {heard: "profondo roso", want: play, id: profondorosso}
+      - {heard: "braccialeti rossi", want: play, id: braccialetti}
+      - {heard: "tollo tollo", want: play, id: tolotolo}
+      - {heard: "notte prima degli essami", want: play, id: esami}
+      - {heard: "distreto di polizia", want: play, id: distretto}
+      - {heard: "imma tatarani", want: play, id: tataranni}
+      - {heard: "il comissario ricciardi", want: play, id: ricciardi}
+      - {heard: "il commissario riciardi", want: play, id: ricciardi}
+      - {heard: "habemus pappam", want: play, id: habemus}
+      - {heard: "la ciocciara", want: play, id: ciociara}
+      - {heard: "sole a catinele", want: play, id: catinelle}
+      - {heard: "il nome della rossa", want: play, id: nomerosa}
+      # Class palatal: c and g before e and i, and the silent diacritic i.
+      - {heard: "tre metri sopra il celo", want: play, id: tremetri}
+      - {heard: "chedimi se sono felice", want: play, id: chiedimi}
+      - {heard: "cie ancora domani", want: play, id: ancoradomani}
+      - {heard: "il gienerale della rovere", want: play, id: generale}
+      - {heard: "i ciesaroni", want: play, id: cesaroni}
+      - {heard: "per cualche dollaro in più", want: play, id: qualche}
+      # Class gn-gli: palatal nasal and lateral written as ni and li.
+      - {heard: "la stanza del filio", want: play, id: stanza}
+      - {heard: "la mellio gioventù", want: play, id: meglio}
+      - {heard: "il paradiso delle signiore", want: play, id: signore}
+      - {heard: "notte prima delli esami", want: play, id: esami}
+      - {heard: "ho volia di te", want: play, id: hovoglia}
+      # Class z-s: z against s and voiced intervocalic s.
+      - {heard: "il giardino dei finsi contini", want: play, id: finzicontini}
+      - {heard: "divorsio all'italiana", want: play, id: divorzio}
+      - {heard: "vacanse di natale", want: play, id: vacanze}
+      - {heard: "il paradizo delle signore", want: play, id: signore}
+      - {heard: "la stansa del figlio", want: play, id: stanza}
+      # Class h: silent h.
+      - {heard: "o voglia di te", want: play, id: hovoglia}
+      - {heard: "abemus papam", want: play, id: habemus}
+      # Class accent: written accents dropped.
+      - {heard: "sciuscia", want: play, id: sciuscia}
+      - {heard: "paisa", want: play, id: paisa}
+      - {heard: "la meglio gioventu", want: play, id: meglio}
+      - {heard: "per qualche dollaro in piu", want: play, id: qualche}
+      - {heard: "giu la testa", want: play, id: giulatesta}
+      - {heard: "ce ancora domani", want: play, id: ancoradomani}
+      - {heard: "roma citta aperta", want: play, id: romaaperta}
+      - {heard: "la legge di lidia poet", want: play, id: lidiapoet}
+      # Class elision: apostrophes, elided and dropped articles.
+      - {heard: "lavventura", want: play, id: avventura}
+      - {heard: "la avventura", want: play, id: avventura}
+      - {heard: "divorzio alla italiana", want: play, id: divorzio}
+      - {heard: "matrimonio allitaliana", want: play, id: matrimonio}
+      - {heard: "manuale damore", want: play, id: manuale}
+      - {heard: "manuale di amore", want: play, id: manuale}
+      - {heard: "le conseguenze dell amore", want: play, id: conseguenze}
+      - {heard: "c era una volta in america", want: play, id: americacera}
+      - {heard: "lispettore coliandro", want: play, id: coliandro}
+      - {heard: "larmata brancaleone", want: play, id: brancaleone}
+      - {heard: "decameron", want: play, id: decameron}
+      - {heard: "commissario ricciardi", want: play, id: ricciardi}
+      # Class split-merge: words split or merged.
+      - {heard: "zero zero zero", want: play, id: zerozerozero}
+      - {heard: "fuoco a mare", want: play, id: fuocoammare}
+      - {heard: "fuoco ammare", want: play, id: fuocoammare}
+      - {heard: "boro talco", want: play, id: borotalco}
+      - {heard: "a mar cord", want: play, id: amarcord}
+      - {heard: "nove cento", want: play, id: novecento}
+      - {heard: "tolotolo", want: play, id: tolotolo}
+      - {heard: "lunanera", want: play, id: lunanera}
+      - {heard: "un saccobello", want: play, id: saccobello}
+      - {heard: "elisa di rivo ombrosa", want: play, id: rivombrosa}
+      # Class real-word: a frequent word replaces a title word.
+      - {heard: "bianco rosso e verde", want: play, id: biancorosso}
+      - {heard: "quando dalle nubi", want: play, id: nubi}
+      - {heard: "ricomincia da tre", want: play, id: ricomincio}
+      - {heard: "cera una volta il west", want: play, id: westcera}
+      - {heard: "il ciclope", want: play, id: ciclone}
+      - {heard: "il nostro", want: play, id: mostro}
+      - {heard: "lazzaro felici", want: play, id: lazzaro}
+      - {heard: "pane e tulipano", want: play, id: tulipani}
+      - {heard: "il capitano", want: play, id: iocapitano}
+      - {heard: "che dio ci aiuta", want: play, id: chedio}
+      - {heard: "vita di carlo", want: play, id: vitadacarlo}
+      - {heard: "uccellacci e uccelli", want: play, id: uccellacci}
+      - {heard: "sole a cantinelle", want: play, id: catinelle}
+      - {heard: "braccialetti russi", want: play, id: braccialetti}
+      - {heard: "il traduttore", want: play, id: traditore}
+      - {heard: "umberto di", want: play, id: umbertod}
+      # Class foreign: English, Latin and other names respelled, and letter names.
+      - {heard: "lo chiamavano gig robot", want: play, id: jeeg}
+      - {heard: "lo chiamavano jig robot", want: play, id: jeeg}
+      - {heard: "jonny stecchino", want: play, id: stecchino}
+      - {heard: "gianni stecchino", want: play, id: stecchino}
+      - {heard: "iut la giovinezza", want: play, id: youth}
+      - {heard: "dog men", want: play, id: dogman}
+      - {heard: "samertaim", want: play, id: summertime}
+      - {heard: "sammer time", want: play, id: summertime}
+      - {heard: "beibi", want: play, id: baby}
+      - {heard: "bebi", want: play, id: baby}
+      - {heard: "c'era una volta il uest", want: play, id: westcera}
+      - {heard: "c'era una volta il vest", want: play, id: westcera}
+      - {heard: "dok nelle tue mani", want: play, id: doc}
+      - {heard: "il decamerone", want: play, id: decameron}
+      # Class number: digits, words and number forms.
+      - {heard: "otto e mezzo", want: play, id: ottoemezzo}
+      - {heard: "8 e mezzo", want: play, id: ottoemezzo}
+      - {heard: "millenovecentonovantadue", want: play, id: s1992}
+      - {heard: "mille novecento novantadue", want: play, id: s1992}
+      - {heard: "millenovecentonovantatré", want: play, id: s1993}
+      - {heard: "ricomincio da 3", want: play, id: ricomincio}
+      - {heard: "3 metri sopra il cielo", want: play, id: tremetri}
+      - {heard: "3 uomini e una gamba", want: play, id: treuomini}
+      - {heard: "tre uomini e 1 gamba", want: play, id: treuomini}
+      - {heard: "amici miei atto secondo", want: play, id: amicimiei2}
+      - {heard: "amici miei atto 2", want: play, id: amicimiei2}
+      - {heard: "manuale d'amore due", want: play, id: manuale2}
+      - {heard: "vacanze di natale novantacinque", want: play, id: vacanze95}
+      - {heard: "vacanze di natale 95", want: play, id: vacanze95}
+      - {heard: "vacanze di natale millenovecentonovantacinque", want: play, id: vacanze95}
+      - {heard: "900", want: play, id: novecento}
+      # Ambiguous: ask among the near neighbours.
+      - {heard: "rocco", want: ask, among: [rocco, schiavone]}
+      - {heard: "c'era una volta", want: ask, among: [westcera, americacera]}
+      - {heard: "benvenuti", want: ask, among: [benvenutisud, benvenutinord]}
+      # Missing sequels: ask.
+      - {heard: "amici miei atto terzo", want: ask}
+      - {heard: "1994", want: ask}
+      - {heard: "manuale d'amore 3", want: ask}
+      - {heard: "vacanze di natale 2000", want: ask}
+      # Absent titles, including near misses that share words with the library.
+      - {heard: "il postino", want: not_found}
+      - {heard: "la vita è bella", want: not_found}
+      - {heard: "il commissario montalbano", want: not_found}
+      - {heard: "i soliti ignoti", want: not_found}
+      - {heard: "le notti bianche", want: not_found}
+      - {heard: "la grande guerra", want: not_found}
+      - {heard: "il buono il brutto il cattivo", want: not_found}
+      - {heard: "c'era una volta in messico", want: not_found}
+      - {heard: "per qualche dollaro in meno", want: not_found}
+      - {heard: "tenebre", want: not_found}
+      - {heard: "inferno", want: not_found}
+      - {heard: "benvenuti in casa gori", want: not_found}
+      - {heard: "scusa ma ti chiamo amore", want: not_found}
+      - {heard: "il giovane montalbano", want: not_found}
+      - {heard: "gomorra", want: not_found}
+      - {heard: "suburra", want: not_found}
+      - {heard: "un posto al sole", want: not_found}
+      - {heard: "la piovra", want: not_found}
+      - {heard: "mare fuori", want: not_found}
+      - {heard: "il racconto dei racconti", want: not_found}
+      - {heard: "il nome del figlio", want: not_found}
+      - {heard: "la grande bellezza", want: not_found}
+      - {heard: "perfetti sconosciuti", want: not_found}
+      - {heard: "nuovo cinema paradiso", want: not_found}
+      - {heard: "il deserto dei tartari", want: not_found}
+      - {heard: "rosso come il cielo", want: not_found}
+      - {heard: "lo chiamavano trinità", want: not_found}
+      - {heard: "un ciclone in famiglia", want: not_found}
+  - name: italian music
+    lang: it
+    library:
+      - {id: fibra, kind: artist, title: "Fabri Fibra"}
+      - {id: marracash, kind: artist, title: "Marracash"}
+      - {id: gue, kind: artist, title: "Guè"}
+      - {id: salmo, kind: artist, title: "Salmo"}
+      - {id: ghali, kind: artist, title: "Ghali"}
+      - {id: mahmood, kind: artist, title: "Mahmood"}
+      - {id: blanco, kind: artist, title: "Blanco"}
+      - {id: lazza, kind: artist, title: "Lazza"}
+      - {id: geolier, kind: artist, title: "Geolier"}
+      - {id: anna, kind: artist, title: "Anna"}
+      - {id: annalisa, kind: artist, title: "Annalisa"}
+      - {id: elodie, kind: artist, title: "Elodie"}
+      - {id: emma, kind: artist, title: "Emma"}
+      - {id: amoroso, kind: artist, title: "Alessandra Amoroso"}
+      - {id: noemi, kind: artist, title: "Noemi"}
+      - {id: arisa, kind: artist, title: "Arisa"}
+      - {id: madame, kind: artist, title: "Madame"}
+      - {id: lamborghini, kind: artist, title: "Elettra Lamborghini"}
+      - {id: cremonini, kind: artist, title: "Cesare Cremonini"}
+      - {id: pezzali, kind: artist, title: "Max Pezzali"}
+      - {id: a883, kind: artist, title: "883"}
+      - {id: nek, kind: artist, title: "Nek"}
+      - {id: raf, kind: artist, title: "Raf"}
+      - {id: antonacci, kind: artist, title: "Biagio Antonacci"}
+      - {id: baglioni, kind: artist, title: "Claudio Baglioni"}
+      - {id: degregori, kind: artist, title: "Francesco De Gregori"}
+      - {id: guccini, kind: artist, title: "Francesco Guccini"}
+      - {id: gabbani, kind: artist, title: "Francesco Gabbani"}
+      - {id: renga, kind: artist, title: "Francesco Renga"}
+      - {id: ermal, kind: artist, title: "Ermal Meta"}
+      - {id: ilvolo, kind: artist, title: "Il Volo"}
+      - {id: pinodaniele, kind: artist, title: "Pino Daniele"}
+      - {id: renatozero, kind: artist, title: "Renato Zero"}
+      - {id: battiato, kind: artist, title: "Franco Battiato"}
+      - {id: franco126, kind: artist, title: "Franco126"}
+      - {id: conte, kind: artist, title: "Paolo Conte"}
+      - {id: mannoia, kind: artist, title: "Fiorella Mannoia"}
+      - {id: berte, kind: artist, title: "Loredana Bertè"}
+      - {id: miamartini, kind: artist, title: "Mia Martini"}
+      - {id: vanoni, kind: artist, title: "Ornella Vanoni"}
+      - {id: pravo, kind: artist, title: "Patty Pravo"}
+      - {id: carra, kind: artist, title: "Raffaella Carrà"}
+      - {id: albano, kind: artist, title: "Al Bano"}
+      - {id: cutugno, kind: artist, title: "Toto Cutugno"}
+      - {id: tozzi, kind: artist, title: "Umberto Tozzi"}
+      - {id: nannini, kind: artist, title: "Gianna Nannini"}
+      - {id: edoardo, kind: artist, title: "Edoardo Bennato"}
+      - {id: eugenio, kind: artist, title: "Eugenio Bennato"}
+      - {id: cocciante, kind: artist, title: "Riccardo Cocciante"}
+      - {id: litfiba, kind: artist, title: "Litfiba"}
+      - {id: subsonica, kind: artist, title: "Subsonica"}
+      - {id: afterhours, kind: artist, title: "Afterhours"}
+      - {id: articolo31, kind: artist, title: "Articolo 31"}
+      - {id: clubdogo, kind: artist, title: "Club Dogo"}
+      - {id: thegiornalisti, kind: artist, title: "Thegiornalisti"}
+      - {id: coez, kind: artist, title: "Coez"}
+      - {id: calcutta, kind: artist, title: "Calcutta"}
+      - {id: gazzelle, kind: artist, title: "Gazzelle"}
+      - {id: pinguini, kind: artist, title: "Pinguini Tattici Nucleari"}
+      - {id: achille, kind: artist, title: "Achille Lauro"}
+      - {id: rkomi, kind: artist, title: "Rkomi"}
+      - {id: tananai, kind: artist, title: "Tananai"}
+      - {id: diodato, kind: artist, title: "Diodato"}
+      - {id: irama, kind: artist, title: "Irama"}
+      - {id: mango, kind: artist, title: "Mango"}
+      - {id: angelina, kind: artist, title: "Angelina Mango"}
+      - {id: vocepadrone, kind: album, title: "La voce del padrone", year: 1981}
+      - {id: animesalve, kind: album, title: "Anime salve", year: 1996}
+      - {id: terramia, kind: album, title: "Terra mia", year: 1977}
+      - {id: neroameta, kind: album, title: "Nero a metà", year: 1980}
+      - {id: uomoragno, kind: album, title: "Hanno ucciso l'Uomo Ragno", year: 1992}
+      - {id: persona, kind: album, title: "Persona", year: 2019}
+      - {id: rimmel, kind: album, title: "Rimmel", year: 1975}
+      - {id: radici, kind: album, title: "Radici", year: 1972}
+      - {id: paolofabbri, kind: album, title: "Via Paolo Fabbri 43", year: 1976}
+      - {id: mainstream, kind: album, title: "Mainstream", year: 2015}
+      - {id: evergreen, kind: album, title: "Evergreen", year: 2018}
+      - {id: fuorihype, kind: album, title: "Fuori dall'hype", year: 2019}
+      - {id: sirio, kind: album, title: "Sirio", year: 2022}
+      - {id: volare, kind: song, title: "Nel blu, dipinto di blu", aliases: ["Volare"], year: 1958}
+      - {id: azzurro, kind: song, title: "Azzurro", year: 1968}
+      - {id: litaliano, kind: song, title: "L'italiano", year: 1983}
+      - {id: felicita, kind: song, title: "Felicità", year: 1982}
+      - {id: felicitaputtana, kind: song, title: "Felicità puttana", year: 2018}
+      - {id: albachiara, kind: song, title: "Albachiara", year: 1979}
+      - {id: spericolata, kind: song, title: "Vita spericolata", year: 1983}
+      - {id: sapore, kind: song, title: "Sapore di sale", year: 1963}
+      - {id: cielostanza, kind: song, title: "Il cielo in una stanza", year: 1960}
+      - {id: bambola, kind: song, title: "La bambola", year: 1968}
+      - {id: gloria, kind: song, title: "Gloria", year: 1979}
+      - {id: tiamo, kind: song, title: "Ti amo", year: 1977}
+      - {id: soldi, kind: song, title: "Soldi", year: 2019}
+      - {id: brividi, kind: song, title: "Brividi", year: 2022}
+      - {id: zitti, kind: song, title: "Zitti e buoni", year: 2021}
+      - {id: karma, kind: song, title: "Occidentali's Karma", year: 2017}
+      - {id: tutagold, kind: song, title: "Tuta gold", year: 2024}
+      - {id: duevite, kind: song, title: "Due vite", year: 2023}
+      - {id: cenere, kind: song, title: "Cenere", year: 2023}
+      - {id: seibellissima, kind: song, title: "Sei bellissima", year: 1975}
+      - {id: ringo, kind: song, title: "Ringo Starr", year: 2019}
+      - {id: donnacannone, kind: song, title: "La donna cannone", year: 1983}
+      - {id: caruso, kind: song, title: "Caruso", year: 1986}
+      - {id: ciaociao, kind: song, title: "Ciao ciao", year: 2022}
+      - {id: leggerissima, kind: song, title: "Musica leggerissima", year: 2021}
+      - {id: uomini, kind: song, title: "Gli uomini non cambiano", year: 1993}
+      - {id: grandeamore, kind: song, title: "Grande amore", year: 2015}
+      - {id: noneta, kind: song, title: "Non ho l'età (per amarti)", year: 1964}
+      - {id: centrogravita, kind: song, title: "Centro di gravità permanente", year: 1981}
+      - {id: gluck, kind: song, title: "Il ragazzo della via Gluck", year: 1966}
+      - {id: tintarella, kind: song, title: "Tintarella di luna", year: 1959}
+    cases:
+      # Controls: the title as an ASR writes it.
+      - {heard: "marracash", want: play, id: marracash}
+      - {heard: "fabri fibra", want: play, id: fibra}
+      - {heard: "mahmood", want: play, id: mahmood}
+      - {heard: "annalisa", want: play, id: annalisa}
+      - {heard: "anna", want: play, id: anna}
+      - {heard: "pino daniele", want: play, id: pinodaniele}
+      - {heard: "franco battiato", want: play, id: battiato}
+      - {heard: "gianna nannini", want: play, id: nannini}
+      - {heard: "pinguini tattici nucleari", want: play, id: pinguini}
+      - {heard: "la voce del padrone", want: play, id: vocepadrone}
+      - {heard: "albachiara", want: play, id: albachiara}
+      - {heard: "zitti e buoni", want: play, id: zitti}
+      - {heard: "brividi", want: play, id: brividi}
+      - {heard: "volare", want: play, id: volare}
+      - {heard: "il cielo in una stanza", want: play, id: cielostanza}
+      - {heard: "caruso", want: play, id: caruso}
+      - {heard: "mango", want: play, id: mango}
+      - {heard: "angelina mango", want: play, id: angelina}
+      - {heard: "nel blu dipinto di blu", want: play, id: volare}
+      - {heard: "883", want: play, id: a883}
+      - {heard: "articolo 31", want: play, id: articolo31}
+      - {heard: "sei bellissima", want: play, id: seibellissima}
+      - {heard: "felicità", want: play, id: felicita}
+      - {heard: "felicità puttana", want: play, id: felicitaputtana}
+      - {heard: "edoardo bennato", want: play, id: edoardo}
+      - {heard: "eugenio bennato", want: play, id: eugenio}
+      - {heard: "francesco guccini", want: play, id: guccini}
+      - {heard: "gloria", want: play, id: gloria}
+      - {heard: "il volo", want: play, id: ilvolo}
+      - {heard: "salmo", want: play, id: salmo}
+      # Class geminate: double consonants shortened or lengthened.
+      - {heard: "fabri fibbra", want: play, id: fibra}
+      - {heard: "fabbri fibra", want: play, id: fibra}
+      - {heard: "laza", want: play, id: lazza}
+      - {heard: "gazzele", want: play, id: gazzelle}
+      - {heard: "gazelle", want: play, id: gazzelle}
+      - {heard: "max pezali", want: play, id: pezzali}
+      - {heard: "biagio antonaci", want: play, id: antonacci}
+      - {heard: "biaggio antonacci", want: play, id: antonacci}
+      - {heard: "francesco gabani", want: play, id: gabbani}
+      - {heard: "francesco gucini", want: play, id: guccini}
+      - {heard: "fiorella manoia", want: play, id: mannoia}
+      - {heard: "gianna nanini", want: play, id: nannini}
+      - {heard: "edoardo benato", want: play, id: edoardo}
+      - {heard: "riccardo cociante", want: play, id: cocciante}
+      - {heard: "rafaella carrà", want: play, id: carra}
+      - {heard: "pinguini tatici nucleari", want: play, id: pinguini}
+      - {heard: "tintarela di luna", want: play, id: tintarella}
+      - {heard: "umberto tozi", want: play, id: tozzi}
+      - {heard: "ermal metta", want: play, id: ermal}
+      - {heard: "achile lauro", want: play, id: achille}
+      - {heard: "azuro", want: play, id: azzurro}
+      - {heard: "rimel", want: play, id: rimmel}
+      - {heard: "ornella vannoni", want: play, id: vanoni}
+      # Class palatal: c and g before e and i, ch and gh, and the silent diacritic i.
+      - {heard: "elettra lamborgini", want: play, id: lamborghini}
+      - {heard: "gali", want: play, id: ghali}
+      - {heard: "angielina mango", want: play, id: angelina}
+      - {heard: "cienere", want: play, id: cenere}
+      - {heard: "il celo in una stanza", want: play, id: cielostanza}
+      - {heard: "cientro di gravità permanente", want: play, id: centrogravita}
+      - {heard: "ciesare cremonini", want: play, id: cremonini}
+      - {heard: "giolier", want: play, id: geolier}
+      # Class gn-gli: palatal nasal and lateral written as ni and li.
+      - {heard: "li uomini non cambiano", want: play, id: uomini}
+      - {heard: "toto cutunio", want: play, id: cutugno}
+      # Class z-s: z against s and voiced intervocalic s.
+      - {heard: "coes", want: play, id: coez}
+      - {heard: "umberto tossi", want: play, id: tozzi}
+      - {heard: "perzona", want: play, id: persona}
+      - {heard: "muzica leggerissima", want: play, id: leggerissima}
+      # Class h: silent h.
+      - {heard: "anno ucciso l'uomo ragno", want: play, id: uomoragno}
+      - {heard: "non o l'età", want: play, id: noneta}
+      - {heard: "hermal meta", want: play, id: ermal}
+      # Class accent: written accents dropped.
+      - {heard: "loredana berte", want: play, id: berte}
+      - {heard: "raffaella carra", want: play, id: carra}
+      - {heard: "felicita", want: play, id: felicita}
+      - {heard: "nero a meta", want: play, id: neroameta}
+      - {heard: "gue", want: play, id: gue}
+      - {heard: "centro di gravita permanente", want: play, id: centrogravita}
+      - {heard: "non ho l'eta", want: play, id: noneta}
+      # Class elision: apostrophes, elided and dropped articles.
+      - {heard: "litaliano", want: play, id: litaliano}
+      - {heard: "l italiano", want: play, id: litaliano}
+      - {heard: "italiano", want: play, id: litaliano}
+      - {heard: "hanno ucciso luomo ragno", want: play, id: uomoragno}
+      - {heard: "fuori dalla hype", want: play, id: fuorihype}
+      - {heard: "voce del padrone", want: play, id: vocepadrone}
+      - {heard: "bambola", want: play, id: bambola}
+      - {heard: "ragazzo della via gluck", want: play, id: gluck}
+      - {heard: "donna cannone", want: play, id: donnacannone}
+      # Class split-merge: words split or merged.
+      - {heard: "marra cash", want: play, id: marracash}
+      - {heard: "fabrifibra", want: play, id: fibra}
+      - {heard: "the giornalisti", want: play, id: thegiornalisti}
+      - {heard: "sub sonica", want: play, id: subsonica}
+      - {heard: "lit fiba", want: play, id: litfiba}
+      - {heard: "alba chiara", want: play, id: albachiara}
+      - {heard: "animesalve", want: play, id: animesalve}
+      - {heard: "dio dato", want: play, id: diodato}
+      - {heard: "i rama", want: play, id: irama}
+      - {heard: "albano", want: play, id: albano}
+      - {heard: "ever green", want: play, id: evergreen}
+      - {heard: "ciaociao", want: play, id: ciaociao}
+      - {heard: "main stream", want: play, id: mainstream}
+      # Class real-word: a frequent word replaces a title word.
+      - {heard: "marrakesh", want: play, id: marracash}
+      - {heard: "bianco", want: play, id: blanco}
+      - {heard: "la donna canone", want: play, id: donnacannone}
+      - {heard: "ziti e buoni", want: play, id: zitti}
+      - {heard: "tutta gold", want: play, id: tutagold}
+      - {heard: "madama", want: play, id: madame}
+      - {heard: "saldi", want: play, id: soldi}
+      - {heard: "brivido", want: play, id: brividi}
+      - {heard: "radice", want: play, id: radici}
+      - {heard: "persone", want: play, id: persona}
+      - {heard: "gazzella", want: play, id: gazzelle}
+      - {heard: "pinguini tattici nucleare", want: play, id: pinguini}
+      - {heard: "salmi", want: play, id: salmo}
+      - {heard: "sapori di sale", want: play, id: sapore}
+      # Class foreign: English, French and other names respelled, and letter names.
+      - {heard: "mamud", want: play, id: mahmood}
+      - {heard: "mahmud", want: play, id: mahmood}
+      - {heard: "geolié", want: play, id: geolier}
+      - {heard: "elodi", want: play, id: elodie}
+      - {heard: "madam", want: play, id: madame}
+      - {heard: "after ours", want: play, id: afterhours}
+      - {heard: "afterauers", want: play, id: afterhours}
+      - {heard: "clab dogo", want: play, id: clubdogo}
+      - {heard: "nec", want: play, id: nek}
+      - {heard: "neck", want: play, id: nek}
+      - {heard: "ringo star", want: play, id: ringo}
+      - {heard: "occidentalis karma", want: play, id: karma}
+      - {heard: "tuta gol", want: play, id: tutagold}
+      - {heard: "evergrin", want: play, id: evergreen}
+      - {heard: "meinstrim", want: play, id: mainstream}
+      - {heard: "fuori dall aip", want: play, id: fuorihype}
+      - {heard: "il ragazzo della via gluc", want: play, id: gluck}
+      - {heard: "pati pravo", want: play, id: pravo}
+      - {heard: "patti pravo", want: play, id: pravo}
+      - {heard: "erre komi", want: play, id: rkomi}
+      - {heard: "ercomi", want: play, id: rkomi}
+      # Class number: digits, words and number forms.
+      - {heard: "otto otto tre", want: play, id: a883}
+      - {heard: "ottoottotre", want: play, id: a883}
+      - {heard: "ottocento ottantatré", want: play, id: a883}
+      - {heard: "articolo trentuno", want: play, id: articolo31}
+      - {heard: "franco centoventisei", want: play, id: franco126}
+      - {heard: "franco uno due sei", want: play, id: franco126}
+      - {heard: "via paolo fabbri quarantatré", want: play, id: paolofabbri}
+      - {heard: "2 vite", want: play, id: duevite}
+      - {heard: "6 bellissima", want: play, id: seibellissima}
+      - {heard: "franco 126", want: play, id: franco126}
+      # Ambiguous: ask among the near neighbours.
+      - {heard: "francesco", want: ask, among: [degregori, guccini, gabbani, renga]}
+      - {heard: "bennato", want: ask, among: [edoardo, eugenio]}
+      - {heard: "franco", want: ask, among: [battiato, franco126]}
+      # Absent titles, including near misses that share words or names with the library.
+      - {heard: "vasco rossi", want: not_found}
+      - {heard: "laura pausini", want: not_found}
+      - {heard: "eros ramazzotti", want: not_found}
+      - {heard: "zucchero", want: not_found}
+      - {heard: "måneskin", want: not_found}
+      - {heard: "mina", want: not_found}
+      - {heard: "lucio dalla", want: not_found}
+      - {heard: "jovanotti", want: not_found}
+      - {heard: "ligabue", want: not_found}
+      - {heard: "tiziano ferro", want: not_found}
+      - {heard: "negramaro", want: not_found}
+      - {heard: "sfera ebbasta", want: not_found}
+      - {heard: "ultimo", want: not_found}
+      - {heard: "giorgia", want: not_found}
+      - {heard: "rino gaetano", want: not_found}
+      - {heard: "fabrizio de andré", want: not_found}
+      - {heard: "gianni morandi", want: not_found}
+      - {heard: "anna oxa", want: not_found}
+      - {heard: "francesco baccini", want: not_found}
+      - {heard: "franco califano", want: not_found}
+      - {heard: "pino donaggio", want: not_found}
+      - {heard: "renato carosone", want: not_found}
+      - {heard: "edoardo vianello", want: not_found}
+      - {heard: "max gazzè", want: not_found}
+      - {heard: "bella ciao", want: not_found}
+      - {heard: "nessun dorma", want: not_found}
+      - {heard: "con te partirò", want: not_found}
+      - {heard: "vivo per lei", want: not_found}
+      - {heard: "sapore di mare", want: not_found}
+      - {heard: "il cielo è sempre più blu", want: not_found}
+      - {heard: "una lunga storia d'amore", want: not_found}
+      - {heard: "la solitudine", want: not_found}
+      - {heard: "bollicine", want: not_found}
+      - {heard: "creuza de mä", want: not_found}
+      - {heard: "la buona novella", want: not_found}

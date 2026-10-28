@@ -1,0 +1,762 @@
+# Grown set: testdata/grown holds corpora added on top of the original ones (asr_corpus.yaml and phonetic/), which stay untouched. TestASRCorpus and TestPhoneticEval score both sets and report them separately.
+#
+# French (fr-FR) phonetic evaluation corpus, second set, for TestPhoneticEval. Same schema as asr_corpus.yaml; cases are scored, not asserted, so there is no xfail.
+#
+# Libraries: real, well-known French films, series, artists, albums and songs (titles as published, with original release years), with near neighbours that share words, first names or franchise names (Le Gendarme, Trois couleurs, Les Trois Mousquetaires, Les Rivières pourpres as film and series, Michel Sardou / Michel Polnareff / Michel Berger, Léo Ferré / Jean Ferrat / Nino Ferrer, Christophe / Christophe Maé, Zaz / Zazie, Julien Clerc / Julien Doré) so a wrong play is possible.
+#
+# Cases: what a speech recogniser plausibly writes when a French speaker asks for the title. Mishearings are grouped under a comment naming the confusion class they model. The classes come from documented French spelling-to-sound ambiguity, the main source of word errors when a name is out of vocabulary or a homophone is more frequent:
+# - silent: silent final consonants, plural -s/-x/-nt and the mute feminine -e (lettres muettes: sous-doués/sous-doué, Raphaëlle/Raphaël, Ferrat/Ferra).
+# - e-acute: the /e/ series é/ée/er/ez/et/ai and ait/ais/était (bélier/bélié, Bergé, osez/osé, allumer/allumez).
+# - nasal: nasal vowel spellings an/en/em, in/ain/ein/un, on/om (prénom/prénon, sentimentale/santimentale, ceinture/sainture).
+# - vowel: o/au/eau/ô, è/ê/ai/ei/et, ill/y/ï and e read /a/ before mm (Lescaut/Lescot, discret/discrè, Mireille/Mireye, femme/famme).
+# - h: silent h and h aspiré (Hippocrate/Ippocrate, Hardy/Ardi, Daho/Dao).
+# - consonant: c/ç/s/ss/sc, g/j/ge, qu/k/c/ck, ch/sh, gn/ni, th/t and y/i in Greek spellings.
+# - double: single versus double consonants (Polnareff/Polnaref, Navarro/Navaro).
+# - real-word: substitution by a more frequent homophone or near-homophone word, including the homophones grammaticaux (comte/conte/compte, aile/elle, et/est, on/ont, c'est/sait, vie/l'avis, temps/tant, Clerc/clair).
+# - liaison: liaison and elision consonants attached to the wrong word, and dropped or swapped articles (les zenfants, la ziza, comme habitude).
+# - split: word splits and merges, dropped hyphens and apostrophes (super condriaque, papa outai, laile).
+# - number: digits versus number words, ordinals, roman-free sequel numbers, abbreviations, initialisms and symbols (les 400 coups, 37 2, M. read as monsieur, h p i, & read as et).
+# - foreign: foreign and anglicised names spelt as a French recogniser hears them, or French names spelt in English (playtime/plé taïme, Kaas/Kass, Booba/Bouba, dernière dance).
+# - diacritic: accents dropped by the recogniser or text normalisation.
+# - schwa: schwa deletion in fast speech (les p'tits mouchoirs, j'veux).
+#
+# Controls (the title as written, plus genuine ambiguity that must ask) and absent titles (not_found for titles not in the library, including near misses that share words or first names with library titles; ask for missing numbered sequels, as in the first French corpus) keep the decision thresholds honest.
+#
+# This corpus was written and frozen blind: no encoder or matcher evaluation was run, read or consulted while writing it. Changing it after seeing an encoder's results invalidates the comparison.
+suites:
+  - name: french films and series
+    lang: fr
+    library:
+      # Films.
+      - {id: pere, kind: movie, title: "Le Père Noël est une ordure", year: 1982}
+      - {id: sousdoues, kind: movie, title: "Les Sous-doués", year: 1980}
+      - {id: sousdouesvac, kind: movie, title: "Les Sous-doués en vacances", year: 1982}
+      - {id: chevre, kind: movie, title: "La Chèvre", year: 1981}
+      - {id: comperes, kind: movie, title: "Les Compères", year: 1983}
+      - {id: fugitifs, kind: movie, title: "Les Fugitifs", year: 1986}
+      - {id: corniaud, kind: movie, title: "Le Corniaud", year: 1965}
+      - {id: gendarme, kind: movie, title: "Le Gendarme de Saint-Tropez", year: 1964}
+      - {id: gendarmemarie, kind: movie, title: "Le Gendarme se marie", year: 1968}
+      - {id: gendarmeet, kind: movie, title: "Le Gendarme et les Extra-terrestres", year: 1979}
+      - {id: rabbijacob, kind: movie, title: "Les Aventures de Rabbi Jacob", year: 1973}
+      - {id: folie, kind: movie, title: "La Folie des grandeurs", year: 1971}
+      - {id: aile, kind: movie, title: "L'Aile ou la Cuisse", year: 1976}
+      - {id: couffin, kind: movie, title: "Trois hommes et un couffin", year: 1985}
+      - {id: illusion, kind: movie, title: "La Grande Illusion", year: 1937}
+      - {id: bouffe, kind: movie, title: "La Grande Bouffe", year: 1973}
+      - {id: coups, kind: movie, title: "Les Quatre Cents Coups", year: 1959}
+      - {id: souffle, kind: movie, title: "À bout de souffle", year: 1960}
+      - {id: mepris, kind: movie, title: "Le Mépris", year: 1963}
+      - {id: pierrot, kind: movie, title: "Pierrot le Fou", year: 1965}
+      - {id: julesjim, kind: movie, title: "Jules et Jim", year: 1962}
+      - {id: parapluies, kind: movie, title: "Les Parapluies de Cherbourg", year: 1964}
+      - {id: demoiselles, kind: movie, title: "Les Demoiselles de Rochefort", year: 1967}
+      - {id: samourai, kind: movie, title: "Le Samouraï", year: 1967}
+      - {id: cercle, kind: movie, title: "Le Cercle rouge", year: 1970}
+      - {id: piscine, kind: movie, title: "La Piscine", year: 1969}
+      - {id: delicatessen, kind: movie, title: "Delicatessen", year: 1991}
+      - {id: citeenfants, kind: movie, title: "La Cité des enfants perdus", year: 1995}
+      - {id: dimanche, kind: movie, title: "Un long dimanche de fiançailles", year: 2004}
+      - {id: cinquieme, kind: movie, title: "Le Cinquième Élément", year: 1997}
+      - {id: nikita, kind: movie, title: "Nikita", year: 1990}
+      - {id: mouchoirs, kind: movie, title: "Les Petits Mouchoirs", year: 2010}
+      - {id: prenom, kind: movie, title: "Le Prénom", year: 2012}
+      - {id: belier, kind: movie, title: "La Famille Bélier", year: 2014}
+      - {id: fete, kind: movie, title: "Le Sens de la fête", year: 2017}
+      - {id: horsdeprix, kind: movie, title: "Hors de prix", year: 2006}
+      - {id: podium, kind: movie, title: "Podium", year: 2004}
+      - {id: brice, kind: movie, title: "Brice de Nice", year: 2005}
+      - {id: profs, kind: movie, title: "Les Profs", year: 2013}
+      - {id: profs2, kind: movie, title: "Les Profs 2", year: 2015}
+      - {id: babysitting, kind: movie, title: "Babysitting", year: 2014}
+      - {id: babysitting2, kind: movie, title: "Babysitting 2", year: 2015}
+      - {id: tuche, kind: movie, title: "Les Tuche", year: 2011}
+      - {id: tuche2, kind: movie, title: "Les Tuche 2 : Le Rêve américain", year: 2016}
+      - {id: supercondriaque, kind: movie, title: "Supercondriaque", year: 2014}
+      - {id: rien, kind: movie, title: "Rien à déclarer", year: 2010}
+      - {id: asterixcesar, kind: movie, title: "Astérix et Obélix contre César", year: 1999}
+      - {id: asterixjo, kind: movie, title: "Astérix aux Jeux olympiques", year: 2008}
+      - {id: dartagnan, kind: movie, title: "Les Trois Mousquetaires : D'Artagnan", year: 2023}
+      - {id: milady, kind: movie, title: "Les Trois Mousquetaires : Milady", year: 2023}
+      - {id: montecristo, kind: movie, title: "Le Comte de Monte-Cristo", year: 2024}
+      - {id: pereheros, kind: movie, title: "Mon père, ce héros", year: 1991}
+      - {id: camille, kind: movie, title: "Camille redouble", year: 2012}
+      - {id: polisse, kind: movie, title: "Polisse", year: 2011}
+      - {id: adele, kind: movie, title: "La Vie d'Adèle", year: 2013}
+      - {id: portrait, kind: movie, title: "Portrait de la jeune fille en feu", year: 2019}
+      - {id: titane, kind: movie, title: "Titane", year: 2021}
+      - {id: anatomie, kind: movie, title: "Anatomie d'une chute", year: 2023}
+      - {id: miserables, kind: movie, title: "Les Misérables", year: 2019}
+      - {id: bonheur, kind: movie, title: "Le bonheur est dans le pré", year: 1995}
+      - {id: choses, kind: movie, title: "Les Choses de la vie", year: 1970}
+      - {id: cesar, kind: movie, title: "César et Rosalie", year: 1972}
+      - {id: hommefemme, kind: movie, title: "Un homme et une femme", year: 1966}
+      - {id: bleu, kind: movie, title: "Trois couleurs : Bleu", year: 1993}
+      - {id: blanc, kind: movie, title: "Trois couleurs : Blanc", year: 1994}
+      - {id: rouge, kind: movie, title: "Trois couleurs : Rouge", year: 1994}
+      - {id: ensemble, kind: movie, title: "Ensemble, c'est tout", year: 2007}
+      - {id: gout, kind: movie, title: "Le Goût des autres", year: 2000}
+      - {id: chanson, kind: movie, title: "On connaît la chanson", year: 1997}
+      - {id: saveurs, kind: movie, title: "Les Saveurs du palais", year: 2012}
+      - {id: pacte, kind: movie, title: "Le Pacte des loups", year: 2001}
+      - {id: rivieres, kind: movie, title: "Les Rivières pourpres", year: 2000}
+      - {id: personne, kind: movie, title: "Ne le dis à personne", year: 2006}
+      - {id: auberge, kind: movie, title: "L'Auberge espagnole", year: 2002}
+      - {id: poupees, kind: movie, title: "Les Poupées russes", year: 2005}
+      - {id: cassetete, kind: movie, title: "Casse-tête chinois", year: 2013}
+      - {id: pamela, kind: movie, title: "Mais qui a tué Pamela Rose ?", year: 2003}
+      - {id: grandblond, kind: movie, title: "Le Grand Blond avec une chaussure noire", year: 1972}
+      - {id: retourblond, kind: movie, title: "Le Retour du grand blond", year: 1974}
+      - {id: boum, kind: movie, title: "La Boum", year: 1980}
+      - {id: boum2, kind: movie, title: "La Boum 2", year: 1982}
+      - {id: ete, kind: movie, title: "L'Été meurtrier", year: 1983}
+      - {id: betty, kind: movie, title: "37°2 le matin", year: 1986}
+      - {id: fantomas, kind: movie, title: "Fantômas", year: 1964}
+      - {id: fantomas2, kind: movie, title: "Fantômas se déchaîne", year: 1965}
+      - {id: fantomas3, kind: movie, title: "Fantômas contre Scotland Yard", year: 1967}
+      - {id: salaire, kind: movie, title: "Le Salaire de la peur", year: 1953}
+      - {id: diaboliques, kind: movie, title: "Les Diaboliques", year: 1955}
+      - {id: hulot, kind: movie, title: "Les Vacances de M. Hulot", year: 1953}
+      - {id: oncle, kind: movie, title: "Mon oncle", year: 1958}
+      - {id: playtime, kind: movie, title: "Playtime", year: 1967}
+      - {id: charme, kind: movie, title: "Le Charme discret de la bourgeoisie", year: 1972}
+      - {id: enfantsparadis, kind: movie, title: "Les Enfants du paradis", year: 1945}
+      - {id: belle, kind: movie, title: "La Belle et la Bête", year: 1946}
+      - {id: kirikou, kind: movie, title: "Kirikou et la Sorcière", year: 1998}
+      - {id: triplettes, kind: movie, title: "Les Triplettes de Belleville", year: 2003}
+      - {id: persepolis, kind: movie, title: "Persepolis", year: 2007}
+      - {id: ernest, kind: movie, title: "Ernest et Célestine", year: 2012}
+      # Series.
+      - {id: faispasci, kind: tvshow, title: "Fais pas ci, fais pas ça", year: 2007}
+      - {id: village, kind: tvshow, title: "Un village français", year: 2009}
+      - {id: rivieresserie, kind: tvshow, title: "Les Rivières pourpres", year: 2018}
+      - {id: hippocrate, kind: tvshow, title: "Hippocrate", year: 2018}
+      - {id: valide, kind: tvshow, title: "Validé", year: 2020}
+      - {id: marseille, kind: tvshow, title: "Marseille", year: 2016}
+      - {id: versailles, kind: tvshow, title: "Versailles", year: 2015}
+      - {id: mytho, kind: tvshow, title: "Mytho", year: 2019}
+      - {id: bracelets, kind: tvshow, title: "Les Bracelets rouges", year: 2018}
+      - {id: marleau, kind: tvshow, title: "Capitaine Marleau", year: 2015}
+      - {id: candice, kind: tvshow, title: "Candice Renoir", year: 2013}
+      - {id: profilage, kind: tvshow, title: "Profilage", year: 2009}
+      - {id: hpi, kind: tvshow, title: "HPI", year: 2021}
+      - {id: astrid, kind: tvshow, title: "Astrid et Raphaëlle", year: 2019}
+      - {id: josephine, kind: tvshow, title: "Joséphine, ange gardien", year: 1997}
+      - {id: navarro, kind: tvshow, title: "Navarro", year: 1989}
+      - {id: lescaut, kind: tvshow, title: "Julie Lescaut", year: 1992}
+      - {id: menages, kind: tvshow, title: "Scènes de ménages", year: 2009}
+      - {id: kaboul, kind: tvshow, title: "Kaboul Kitchen", year: 2012}
+      - {id: bref, kind: tvshow, title: "Bref.", year: 2011}
+      - {id: visiteurfutur, kind: tvshow, title: "Le Visiteur du futur", year: 2009}
+      - {id: helene, kind: tvshow, title: "Hélène et les Garçons", year: 1992}
+      - {id: soleil, kind: tvshow, title: "Sous le soleil", year: 1996}
+      - {id: brigades, kind: tvshow, title: "Les Brigades du Tigre", year: 1974}
+      - {id: fortboyard, kind: tvshow, title: "Fort Boyard", year: 1990}
+      - {id: kohlanta, kind: tvshow, title: "Koh-Lanta", year: 2001}
+      - {id: questions, kind: tvshow, title: "Questions pour un champion", year: 1988}
+      - {id: guignols, kind: tvshow, title: "Les Guignols de l'info", year: 1988}
+      - {id: etaitvie, kind: tvshow, title: "Il était une fois... la Vie", year: 1987}
+      - {id: etaithomme, kind: tvshow, title: "Il était une fois... l'Homme", year: 1978}
+      - {id: shadoks, kind: tvshow, title: "Les Shadoks", year: 1968}
+      - {id: miraculous, kind: tvshow, title: "Miraculous : Les Aventures de Ladybug et Chat Noir", year: 2015}
+      - {id: lyoko, kind: tvshow, title: "Code Lyoko", year: 2003}
+      - {id: oggy, kind: tvshow, title: "Oggy et les Cafards", year: 1998}
+      - {id: citesdor, kind: tvshow, title: "Les Mystérieuses Cités d'or", year: 1982}
+    cases:
+      # Controls: the title as written.
+      - {heard: "le père noël est une ordure", want: play, id: pere}
+      - {heard: "la chèvre", want: play, id: chevre}
+      - {heard: "le corniaud", want: play, id: corniaud}
+      - {heard: "les aventures de rabbi jacob", want: play, id: rabbijacob}
+      - {heard: "à bout de souffle", want: play, id: souffle}
+      - {heard: "le cinquième élément", want: play, id: cinquieme}
+      - {heard: "les sous-doués en vacances", want: play, id: sousdouesvac}
+      - {heard: "fantômas se déchaîne", want: play, id: fantomas2}
+      - {heard: "fantômas", want: play, id: fantomas}
+      - {heard: "trois couleurs rouge", want: play, id: rouge}
+      - {heard: "anatomie d'une chute", want: play, id: anatomie}
+      - {heard: "un village français", want: play, id: village}
+      - {heard: "fort boyard", want: play, id: fortboyard}
+      - {heard: "code lyoko", want: play, id: lyoko}
+      - {heard: "capitaine marleau", want: play, id: marleau}
+      - {heard: "les tuche", want: play, id: tuche}
+      - {heard: "babysitting", want: play, id: babysitting}
+      - {heard: "nikita", want: play, id: nikita}
+      - {heard: "les profs", want: play, id: profs}
+      - {heard: "la boum", want: play, id: boum}
+      - {heard: "la grande illusion", want: play, id: illusion}
+      - {heard: "le mépris", want: play, id: mepris}
+      - {heard: "jules et jim", want: play, id: julesjim}
+      - {heard: "les parapluies de cherbourg", want: play, id: parapluies}
+      - {heard: "le cercle rouge", want: play, id: cercle}
+      - {heard: "la famille bélier", want: play, id: belier}
+      - {heard: "les bracelets rouges", want: play, id: bracelets}
+      - {heard: "kirikou et la sorcière", want: play, id: kirikou}
+      - {heard: "joséphine ange gardien", want: play, id: josephine}
+      - {heard: "questions pour un champion", want: play, id: questions}
+      - {heard: "les rivières pourpres", want: play, id: rivieres, kinds: [movie]}
+      - {heard: "les rivières pourpres", want: play, id: rivieresserie, kinds: [tvshow]}
+      # Controls: genuinely ambiguous, must ask.
+      - {heard: "les rivières pourpres", want: ask, among: [rivieres, rivieresserie]}
+      - {heard: "le gendarme", want: ask, among: [gendarme, gendarmemarie, gendarmeet]}
+      - {heard: "trois couleurs", want: ask, among: [bleu, blanc, rouge]}
+      - {heard: "les trois mousquetaires", want: ask, among: [dartagnan, milady]}
+      - {heard: "il était une fois", want: ask, among: [etaitvie, etaithomme]}
+      # silent: final consonants, plural marks, mute feminine e.
+      - {heard: "les sous doué", want: play, id: sousdoues}
+      - {heard: "les compère", want: play, id: comperes}
+      - {heard: "les fugitif", want: play, id: fugitifs}
+      - {heard: "les parapluie de cherbourg", want: play, id: parapluies}
+      - {heard: "les demoiselle de rochefort", want: play, id: demoiselles}
+      - {heard: "le pacte des loup", want: play, id: pacte}
+      - {heard: "les poupée russe", want: play, id: poupees}
+      - {heard: "les diabolique", want: play, id: diaboliques}
+      - {heard: "les triplette de belleville", want: play, id: triplettes}
+      - {heard: "les saveur du palais", want: play, id: saveurs}
+      - {heard: "le cercle rouges", want: play, id: cercle}
+      - {heard: "les bracelet rouge", want: play, id: bracelets}
+      - {heard: "scène de ménage", want: play, id: menages}
+      - {heard: "les brigade du tigre", want: play, id: brigades}
+      - {heard: "oggy et les cafard", want: play, id: oggy}
+      - {heard: "les shadok", want: play, id: shadoks}
+      - {heard: "le goût des autre", want: play, id: gout}
+      - {heard: "astrid et raphaël", want: play, id: astrid}
+      - {heard: "la vie d'adel", want: play, id: adele}
+      - {heard: "l'auberge espagnol", want: play, id: auberge}
+      - {heard: "la cité des enfant perdu", want: play, id: citeenfants}
+      - {heard: "la grand bouffe", want: play, id: bouffe}
+      - {heard: "le corniau", want: play, id: corniaud}
+      - {heard: "le retour du grand blon", want: play, id: retourblond}
+      - {heard: "versaille", want: play, id: versailles}
+      - {heard: "les guignol de l'info", want: play, id: guignols}
+      - {heard: "un long dimanche de fiançaille", want: play, id: dimanche}
+      - {heard: "les sous doués en vacance", want: play, id: sousdouesvac}
+      # e-acute: é / ée / er / ez / et / ait / ais.
+      - {heard: "rien à déclaré", want: play, id: rien}
+      - {heard: "mais qui a tuer pamela rose", want: play, id: pamela}
+      - {heard: "l'été meurtrié", want: play, id: ete}
+      - {heard: "camille redoublé", want: play, id: camille}
+      - {heard: "validée", want: play, id: valide}
+      - {heard: "valider", want: play, id: valide}
+      - {heard: "la famille bélié", want: play, id: belier}
+      - {heard: "il étais une fois la vie", want: play, id: etaitvie}
+      - {heard: "il été une fois l'homme", want: play, id: etaithomme}
+      - {heard: "le gendarme de saint tropé", want: play, id: gendarme}
+      - {heard: "les mystérieuses citées d'or", want: play, id: citesdor}
+      # nasal: an / en / em, in / ain / ein, on / om.
+      - {heard: "le prénon", want: play, id: prenom}
+      - {heard: "un long dimenche de fiançailles", want: play, id: dimanche}
+      - {heard: "ansemble c'est tout", want: play, id: ensemble}
+      - {heard: "les anfants du paradis", want: play, id: enfantsparadis}
+      - {heard: "le gendarme de sin tropez", want: play, id: gendarme}
+      - {heard: "le cinquième élémant", want: play, id: cinquieme}
+      - {heard: "kolenta", want: play, id: kohlanta}
+      # vowel: o / au / eau, è / ai / ei / et, ill / ï, e read /a/ before mm.
+      - {heard: "le grand blond avec une chossure noire", want: play, id: grandblond}
+      - {heard: "le charme discrè de la bourgeoisie", want: play, id: charme}
+      - {heard: "pierreau le fou", want: play, id: pierrot}
+      - {heard: "le salère de la peur", want: play, id: salaire}
+      - {heard: "la belle et la baite", want: play, id: belle}
+      - {heard: "julie lescot", want: play, id: lescaut}
+      - {heard: "le cornio", want: play, id: corniaud}
+      - {heard: "un homme et une famme", want: play, id: hommefemme}
+      - {heard: "le samouraille", want: play, id: samourai}
+      - {heard: "sous le soleille", want: play, id: soleil}
+      # h: silent h and h aspiré.
+      - {heard: "ippocrate", want: play, id: hippocrate}
+      - {heard: "un omme et une femme", want: play, id: hommefemme}
+      - {heard: "élène et les garçons", want: play, id: helene}
+      - {heard: "ors de prix", want: play, id: horsdeprix}
+      - {heard: "les vacances de monsieur ulot", want: play, id: hulot}
+      - {heard: "mon père ce éros", want: play, id: pereheros}
+      # consonant: c / ç / s / ss / sc, g / j, qu / k / c / ck, ch / sh, gn / ni, th / t, y / i.
+      - {heard: "la pissine", want: play, id: piscine}
+      - {heard: "brice de nisse", want: play, id: brice}
+      - {heard: "hélène et les garsons", want: play, id: helene}
+      - {heard: "candisse renoir", want: play, id: candice}
+      - {heard: "persépolisse", want: play, id: persepolis}
+      - {heard: "kirikou et la sorsière", want: play, id: kirikou}
+      - {heard: "le jandarme se marie", want: play, id: gendarmemarie}
+      - {heard: "un village fransais", want: play, id: village}
+      - {heard: "les trois mousketaires d'artagnan", want: play, id: dartagnan}
+      - {heard: "caboul kitchen", want: play, id: kaboul}
+      - {heard: "le sinquième élément", want: play, id: cinquieme}
+      - {heard: "code lioko", want: play, id: lyoko}
+      - {heard: "les shadoques", want: play, id: shadoks}
+      - {heard: "les chadoks", want: play, id: shadoks}
+      - {heard: "ernest et sélestine", want: play, id: ernest}
+      - {heard: "les fujitifs", want: play, id: fugitifs}
+      - {heard: "les guiniols de l'info", want: play, id: guignols}
+      - {heard: "niquita", want: play, id: nikita}
+      - {heard: "mito", want: play, id: mytho}
+      # double: single versus double consonants.
+      - {heard: "titanne", want: play, id: titane}
+      - {heard: "un vilage français", want: play, id: village}
+      - {heard: "les aventures de rabi jacob", want: play, id: rabbijacob}
+      - {heard: "navaro", want: play, id: navarro}
+      - {heard: "la grande boufe", want: play, id: bouffe}
+      - {heard: "pierot le fou", want: play, id: pierrot}
+      - {heard: "hipocrate", want: play, id: hippocrate}
+      - {heard: "la follie des grandeurs", want: play, id: folie}
+      # real-word: more frequent homophones and homophones grammaticaux.
+      - {heard: "le conte de monte cristo", want: play, id: montecristo}
+      - {heard: "le compte de monte cristo", want: play, id: montecristo}
+      - {heard: "l'elle ou la cuisse", want: play, id: aile}
+      - {heard: "mon père ce héraut", want: play, id: pereheros}
+      - {heard: "police", want: play, id: polisse}
+      - {heard: "les quatre sans coups", want: play, id: coups}
+      - {heard: "hors de pris", want: play, id: horsdeprix}
+      - {heard: "les saveurs du palet", want: play, id: saveurs}
+      - {heard: "le sang de la fête", want: play, id: fete}
+      - {heard: "le gendarme de sein tropez", want: play, id: gendarme}
+      - {heard: "jules et gym", want: play, id: julesjim}
+      - {heard: "le père noël et une ordure", want: play, id: pere}
+      - {heard: "le bon heure est dans le pré", want: play, id: bonheur}
+      - {heard: "le bonheur est dans le prêt", want: play, id: bonheur}
+      - {heard: "ensemble sait tout", want: play, id: ensemble}
+      - {heard: "ont connaît la chanson", want: play, id: chanson}
+      - {heard: "ne le dit à personne", want: play, id: personne}
+      - {heard: "les choses de l'avis", want: play, id: choses}
+      - {heard: "il était une fois l'avis", want: play, id: etaitvie}
+      - {heard: "l'avis d'adèle", want: play, id: adele}
+      - {heard: "seine de ménages", want: play, id: menages}
+      - {heard: "for boyard", want: play, id: fortboyard}
+      # liaison: liaison and elision consonants, dropped or swapped articles.
+      - {heard: "les zenfants du paradis", want: play, id: enfantsparadis}
+      - {heard: "les zaventures de rabbi jacob", want: play, id: rabbijacob}
+      - {heard: "le gendarme et les zextraterrestres", want: play, id: gendarmeet}
+      - {heard: "astérix au jeux olympiques", want: play, id: asterixjo}
+      - {heard: "petits mouchoirs", want: play, id: mouchoirs}
+      - {heard: "goût des autres", want: play, id: gout}
+      - {heard: "la sens de la fête", want: play, id: fete}
+      - {heard: "le misérables", want: play, id: miserables}
+      - {heard: "le piscine", want: play, id: piscine}
+      - {heard: "un nhomme et une femme", want: play, id: hommefemme}
+      # split: splits, merges, dropped hyphens and apostrophes.
+      - {heard: "laile ou la cuisse", want: play, id: aile}
+      - {heard: "lauberge espagnole", want: play, id: auberge}
+      - {heard: "les trois mousquetaires dartagnan", want: play, id: dartagnan}
+      - {heard: "le gendarme et les extra terrestres", want: play, id: gendarmeet}
+      - {heard: "super condriaque", want: play, id: supercondriaque}
+      - {heard: "super hypocondriaque", want: play, id: supercondriaque}
+      - {heard: "casse tête chinois", want: play, id: cassetete}
+      - {heard: "les sous doués", want: play, id: sousdoues}
+      - {heard: "koh lanta", want: play, id: kohlanta}
+      - {heard: "baby sitting", want: play, id: babysitting}
+      - {heard: "les triplettes de bel ville", want: play, id: triplettes}
+      - {heard: "deli catessen", want: play, id: delicatessen}
+      - {heard: "hippo crate", want: play, id: hippocrate}
+      - {heard: "persé polis", want: play, id: persepolis}
+      - {heard: "anatomie dune chute", want: play, id: anatomie}
+      - {heard: "mononcle", want: play, id: oncle}
+      - {heard: "play time", want: play, id: playtime}
+      # number: digits and number words, ordinals, abbreviations, initialisms.
+      - {heard: "les 400 coups", want: play, id: coups}
+      - {heard: "trente-sept deux le matin", want: play, id: betty}
+      - {heard: "37 2 le matin", want: play, id: betty}
+      - {heard: "trente sept degrés deux le matin", want: play, id: betty}
+      - {heard: "les profs 2", want: play, id: profs2}
+      - {heard: "babysitting 2", want: play, id: babysitting2}
+      - {heard: "la boum 2", want: play, id: boum2}
+      - {heard: "les tuches deux", want: play, id: tuche2}
+      - {heard: "le 5ème élément", want: play, id: cinquieme}
+      - {heard: "le 5e élément", want: play, id: cinquieme}
+      - {heard: "h p i", want: play, id: hpi}
+      - {heard: "les vacances de monsieur hulot", want: play, id: hulot}
+      - {heard: "3 hommes et un couffin", want: play, id: couffin}
+      - {heard: "3 couleurs bleu", want: play, id: bleu}
+      - {heard: "le gendarme de st tropez", want: play, id: gendarme}
+      # foreign: foreign and anglicised names as a French recogniser spells them.
+      - {heard: "plé taïme", want: play, id: playtime}
+      - {heard: "kaboul kitchène", want: play, id: kaboul}
+      - {heard: "fantomas contre scotlande yarde", want: play, id: fantomas3}
+      - {heard: "la boom deux", want: play, id: boum2}
+      - {heard: "miraculous lady bug", want: play, id: miraculous}
+      - {heard: "ogui et les cafards", want: play, id: oggy}
+      - {heard: "délicatessenne", want: play, id: delicatessen}
+      - {heard: "podiome", want: play, id: podium}
+      - {heard: "brice de naïce", want: play, id: brice}
+      - {heard: "les trois mousquetaires milédi", want: play, id: milady}
+      # diacritic: accents dropped.
+      - {heard: "le gout des autres", want: play, id: gout}
+      - {heard: "le pere noel est une ordure", want: play, id: pere}
+      - {heard: "helene et les garcons", want: play, id: helene}
+      - {heard: "les miserables", want: play, id: miserables}
+      - {heard: "a bout de souffle", want: play, id: souffle}
+      - {heard: "l'ete meurtrier", want: play, id: ete}
+      # schwa: schwa deletion in fast speech.
+      - {heard: "les p'tits mouchoirs", want: play, id: mouchoirs}
+      - {heard: "ne l'dis à personne", want: play, id: personne}
+      - {heard: "l'samouraï", want: play, id: samourai}
+      - {heard: "l'retour du grand blond", want: play, id: retourblond}
+      # Missing numbered sequels: ask.
+      - {heard: "les profs trois", want: ask}
+      - {heard: "babysitting trois", want: ask}
+      - {heard: "les tuche trois", want: ask}
+      - {heard: "les tuche quatre", want: ask}
+      - {heard: "la boum trois", want: ask}
+      # Absent titles, including near misses sharing words with library titles.
+      - {heard: "la grande vadrouille", want: not_found}
+      - {heard: "le grand restaurant", want: not_found}
+      - {heard: "les petits meurtres d'agatha christie", want: not_found}
+      - {heard: "la cité de la peur", want: not_found}
+      - {heard: "les enfants du marais", want: not_found}
+      - {heard: "mon oncle d'amérique", want: not_found}
+      - {heard: "le cercle des poètes disparus", want: not_found}
+      - {heard: "la belle verte", want: not_found}
+      - {heard: "le dîner de cons", want: not_found}
+      - {heard: "les visiteurs", want: not_found}
+      - {heard: "intouchables", want: not_found}
+      - {heard: "camping", want: not_found}
+      - {heard: "la haine", want: not_found}
+      - {heard: "le fabuleux destin d'amélie poulain", want: not_found}
+      - {heard: "un prophète", want: not_found}
+      - {heard: "la vie est un long fleuve tranquille", want: not_found}
+      - {heard: "la reine margot", want: not_found}
+      - {heard: "la nuit américaine", want: not_found}
+      - {heard: "jeux interdits", want: not_found}
+      - {heard: "le retour de martin guerre", want: not_found}
+      - {heard: "un homme et son péché", want: not_found}
+      - {heard: "les aventuriers", want: not_found}
+      - {heard: "le petit nicolas", want: not_found}
+      - {heard: "bienvenue chez les ch'tis", want: not_found}
+      - {heard: "engrenages", want: not_found}
+      - {heard: "dix pour cent", want: not_found}
+      - {heard: "plus belle la vie", want: not_found}
+      - {heard: "un si grand soleil", want: not_found}
+      - {heard: "demain nous appartient", want: not_found}
+      - {heard: "les mystères de l'amour", want: not_found}
+      - {heard: "caméra café", want: not_found}
+      - {heard: "kaamelott", want: not_found}
+      - {heard: "la gloire de mon père", want: not_found}
+      - {heard: "le château de ma mère", want: not_found}
+      - {heard: "le grand bleu", want: not_found}
+      - {heard: "le nom des gens", want: not_found}
+      - {heard: "la belle époque", want: not_found}
+      - {heard: "le comte de bouderbala", want: not_found}
+      - {heard: "la cuisine au beurre", want: not_found}
+      - {heard: "les femmes du 6e étage", want: not_found}
+      - {heard: "le grand chemin", want: not_found}
+      - {heard: "la vache et le prisonnier", want: not_found}
+      - {heard: "les choristes", want: not_found}
+      - {heard: "la môme", want: not_found}
+      - {heard: "le petit prince", want: not_found}
+      - {heard: "les héritiers", want: not_found}
+      - {heard: "le père de mes enfants", want: not_found}
+
+  - name: french music
+    lang: fr
+    library:
+      # Artists.
+      - {id: cabrel, kind: artist, title: "Francis Cabrel"}
+      - {id: sardou, kind: artist, title: "Michel Sardou"}
+      - {id: polnareff, kind: artist, title: "Michel Polnareff"}
+      - {id: berger, kind: artist, title: "Michel Berger"}
+      - {id: renaud, kind: artist, title: "Renaud"}
+      - {id: souchon, kind: artist, title: "Alain Souchon"}
+      - {id: bashung, kind: artist, title: "Alain Bashung"}
+      - {id: clerc, kind: artist, title: "Julien Clerc"}
+      - {id: dore, kind: artist, title: "Julien Doré"}
+      - {id: paradis, kind: artist, title: "Vanessa Paradis"}
+      - {id: kaas, kind: artist, title: "Patricia Kaas"}
+      - {id: hardy, kind: artist, title: "Françoise Hardy"}
+      - {id: gall, kind: artist, title: "France Gall"}
+      - {id: vartan, kind: artist, title: "Sylvie Vartan"}
+      - {id: dalida, kind: artist, title: "Dalida"}
+      - {id: cloclo, kind: artist, title: "Claude François"}
+      - {id: dassin, kind: artist, title: "Joe Dassin"}
+      - {id: brassens, kind: artist, title: "Georges Brassens"}
+      - {id: moustaki, kind: artist, title: "Georges Moustaki"}
+      - {id: ferre, kind: artist, title: "Léo Ferré"}
+      - {id: ferrat, kind: artist, title: "Jean Ferrat"}
+      - {id: ferrer, kind: artist, title: "Nino Ferrer"}
+      - {id: barbara, kind: artist, title: "Barbara"}
+      - {id: greco, kind: artist, title: "Juliette Gréco"}
+      - {id: montand, kind: artist, title: "Yves Montand"}
+      - {id: daho, kind: artist, title: "Étienne Daho"}
+      - {id: louane, kind: artist, title: "Louane"}
+      - {id: mae, kind: artist, title: "Christophe Maé"}
+      - {id: christophe, kind: artist, title: "Christophe"}
+      - {id: calogero, kind: artist, title: "Calogero"}
+      - {id: kendji, kind: artist, title: "Kendji Girac"}
+      - {id: soprano, kind: artist, title: "Soprano"}
+      - {id: iam, kind: artist, title: "IAM"}
+      - {id: solaar, kind: artist, title: "MC Solaar"}
+      - {id: booba, kind: artist, title: "Booba"}
+      - {id: pnl, kind: artist, title: "PNL"}
+      - {id: nekfeu, kind: artist, title: "Nekfeu"}
+      - {id: gims, kind: artist, title: "Gims"}
+      - {id: bigflo, kind: artist, title: "Bigflo & Oli"}
+      - {id: luciani, kind: artist, title: "Clara Luciani"}
+      - {id: pomme, kind: artist, title: "Pomme"}
+      - {id: zazie, kind: artist, title: "Zazie"}
+      - {id: zaz, kind: artist, title: "Zaz"}
+      - {id: air, kind: artist, title: "Air"}
+      - {id: phoenix, kind: artist, title: "Phoenix"}
+      - {id: justice, kind: artist, title: "Justice"}
+      - {id: rita, kind: artist, title: "Les Rita Mitsouko"}
+      - {id: louiseattaque, kind: artist, title: "Louise Attaque"}
+      - {id: mathieu, kind: artist, title: "Mireille Mathieu"}
+      - {id: balavoine, kind: artist, title: "Daniel Balavoine"}
+      - {id: indila, kind: artist, title: "Indila"}
+      - {id: salvador, kind: artist, title: "Henri Salvador"}
+      # Albums.
+      - {id: racinecarree, kind: album, title: "Racine carrée", year: 2013}
+      - {id: multitude, kind: album, title: "Multitude", year: 2022}
+      - {id: civilisation, kind: album, title: "Civilisation", year: 2021}
+      - {id: ram, kind: album, title: "Random Access Memories", year: 2013}
+      - {id: discovery, kind: album, title: "Discovery", year: 2001}
+      - {id: moonsafari, kind: album, title: "Moon Safari", year: 1998}
+      - {id: ecolemicro, kind: album, title: "L'École du micro d'argent", year: 1997}
+      - {id: danslalegende, kind: album, title: "Dans la légende", year: 2016}
+      - {id: feu, kind: album, title: "Feu", year: 2015}
+      - {id: ceinture, kind: album, title: "Ceinture noire", year: 2018}
+      - {id: fantaisie, kind: album, title: "Fantaisie militaire", year: 1998}
+      - {id: melody, kind: album, title: "Histoire de Melody Nelson", year: 1971}
+      - {id: chambre, kind: album, title: "Chambre avec vue", year: 2000}
+      - {id: miniworld, kind: album, title: "Mini World", year: 2014}
+      # Songs.
+      - {id: nemequitte, kind: song, title: "Ne me quitte pas", year: 1959}
+      - {id: vieenrose, kind: song, title: "La Vie en rose", year: 1947}
+      - {id: regrette, kind: song, title: "Non, je ne regrette rien", year: 1960}
+      - {id: habitude, kind: song, title: "Comme d'habitude", year: 1967}
+      - {id: alexandrie, kind: song, title: "Alexandrie Alexandra", year: 1978}
+      - {id: champs, kind: song, title: "Les Champs-Élysées", year: 1969}
+      - {id: eteindien, kind: song, title: "L'Été indien", year: 1975}
+      - {id: existais, kind: song, title: "Et si tu n'existais pas", year: 1975}
+      - {id: boheme, kind: song, title: "La Bohème", year: 1965}
+      - {id: lacs, kind: song, title: "Les Lacs du Connemara", year: 1981}
+      - {id: ella, kind: song, title: "Ella, elle l'a", year: 1987}
+      - {id: resiste, kind: song, title: "Résiste", year: 1981}
+      - {id: poupee, kind: song, title: "Poupée de cire, poupée de son", year: 1965}
+      - {id: mistral, kind: song, title: "Mistral gagnant", year: 1985}
+      - {id: foule, kind: song, title: "Foule sentimentale", year: 1993}
+      - {id: osez, kind: song, title: "Osez Joséphine", year: 1991}
+      - {id: joetaxi, kind: song, title: "Joe le taxi", year: 1987}
+      - {id: aimeamourir, kind: song, title: "Je l'aime à mourir", year: 1979}
+      - {id: papaoutai, kind: song, title: "Papaoutai", year: 2013}
+      - {id: alorsondanse, kind: song, title: "Alors on danse", year: 2010}
+      - {id: djadja, kind: song, title: "Djadja", year: 2018}
+      - {id: promets, kind: song, title: "Je te promets", year: 1986}
+      - {id: allumer, kind: song, title: "Allumer le feu", year: 1998}
+      - {id: quejetaime, kind: song, title: "Que je t'aime", year: 1969}
+      - {id: sud, kind: song, title: "Le Sud", year: 1975}
+      - {id: demons, kind: song, title: "Les Démons de minuit", year: 1986}
+      - {id: tombe, kind: song, title: "Tombé pour la France", year: 1985}
+      - {id: desenchantee, kind: song, title: "Désenchantée", year: 1991}
+      - {id: aventurier, kind: song, title: "L'Aventurier", year: 1982}
+      - {id: encore, kind: song, title: "Pour que tu m'aimes encore", year: 1995}
+      - {id: derniere, kind: song, title: "Dernière danse", year: 2013}
+      - {id: jeveux, kind: song, title: "Je veux", year: 2010}
+      - {id: jevole, kind: song, title: "Je vole", year: 1978}
+      - {id: chanteur, kind: song, title: "Le Chanteur", year: 1978}
+      - {id: aziza, kind: song, title: "L'Aziza", year: 1985}
+      - {id: mademoiselle, kind: song, title: "Mademoiselle chante le blues", year: 1987}
+      - {id: garcons, kind: song, title: "Tous les garçons et les filles", year: 1962}
+      - {id: groupie, kind: song, title: "La Groupie du pianiste", year: 1980}
+      - {id: caplane, kind: song, title: "Ça plane pour moi", year: 1977}
+      - {id: copains, kind: song, title: "Les Copains d'abord", year: 1964}
+      - {id: meteque, kind: song, title: "Le Métèque", year: 1969}
+      - {id: avecletemps, kind: song, title: "Avec le temps", year: 1970}
+      - {id: montagne, kind: song, title: "La Montagne", year: 1964}
+      - {id: feuilles, kind: song, title: "Les Feuilles mortes", year: 1946}
+      - {id: dixhuit, kind: song, title: "Il venait d'avoir 18 ans", year: 1973}
+      - {id: gigi, kind: song, title: "Gigi l'amoroso", year: 1974}
+      - {id: tribu, kind: song, title: "La Tribu de Dana", year: 1998}
+      - {id: femmelikeu, kind: song, title: "Femme Like U", year: 2004}
+    cases:
+      # Controls: the title as written.
+      - {heard: "ne me quitte pas", want: play, id: nemequitte}
+      - {heard: "la vie en rose", want: play, id: vieenrose}
+      - {heard: "racine carrée", want: play, id: racinecarree}
+      - {heard: "papaoutai", want: play, id: papaoutai}
+      - {heard: "michel sardou", want: play, id: sardou}
+      - {heard: "michel berger", want: play, id: berger}
+      - {heard: "renaud", want: play, id: renaud}
+      - {heard: "christophe", want: play, id: christophe}
+      - {heard: "christophe maé", want: play, id: mae}
+      - {heard: "zaz", want: play, id: zaz}
+      - {heard: "zazie", want: play, id: zazie}
+      - {heard: "feu", want: play, id: feu, kinds: [album]}
+      - {heard: "air", want: play, id: air}
+      - {heard: "justice", want: play, id: justice}
+      - {heard: "le sud", want: play, id: sud}
+      - {heard: "les feuilles mortes", want: play, id: feuilles}
+      - {heard: "alexandrie alexandra", want: play, id: alexandrie}
+      - {heard: "comme d'habitude", want: play, id: habitude}
+      - {heard: "les lacs du connemara", want: play, id: lacs}
+      - {heard: "mistral gagnant", want: play, id: mistral}
+      - {heard: "osez joséphine", want: play, id: osez}
+      - {heard: "joe le taxi", want: play, id: joetaxi}
+      - {heard: "julien doré", want: play, id: dore}
+      - {heard: "jean ferrat", want: play, id: ferrat}
+      - {heard: "léo ferré", want: play, id: ferre}
+      - {heard: "nino ferrer", want: play, id: ferrer}
+      - {heard: "vanessa paradis", want: play, id: paradis}
+      - {heard: "random access memories", want: play, id: ram}
+      - {heard: "l'école du micro d'argent", want: play, id: ecolemicro}
+      - {heard: "le métèque", want: play, id: meteque}
+      # silent: final consonants, plural marks, mute feminine e.
+      - {heard: "les copain d'abord", want: play, id: copains}
+      - {heard: "les feuille morte", want: play, id: feuilles}
+      - {heard: "les démon de minuit", want: play, id: demons}
+      - {heard: "tous les garçon et les fille", want: play, id: garcons}
+      - {heard: "renaut", want: play, id: renaud}
+      - {heard: "francis cabrelle", want: play, id: cabrel}
+      - {heard: "les champs élysée", want: play, id: champs}
+      - {heard: "civilisations", want: play, id: civilisation}
+      - {heard: "multitudes", want: play, id: multitude}
+      - {heard: "george brassens", want: play, id: brassens}
+      - {heard: "dernier danse", want: play, id: derniere}
+      - {heard: "claude francoise", want: play, id: cloclo}
+      - {heard: "je te promet", want: play, id: promets}
+      - {heard: "la groupie du pianist", want: play, id: groupie}
+      - {heard: "mireille mathieux", want: play, id: mathieu}
+      - {heard: "jean ferra", want: play, id: ferrat}
+      - {heard: "les lac du connemara", want: play, id: lacs}
+      # e-acute: é / ée / er / ez / et.
+      - {heard: "léo ferret", want: play, id: ferre}
+      - {heard: "tombée pour la france", want: play, id: tombe}
+      - {heard: "désenchanté", want: play, id: desenchantee}
+      - {heard: "julien doret", want: play, id: dore}
+      - {heard: "osé joséphine", want: play, id: osez}
+      - {heard: "michel bergé", want: play, id: berger}
+      - {heard: "allumez le feu", want: play, id: allumer}
+      - {heard: "racine carré", want: play, id: racinecarree}
+      # nasal: an / en, in / ain / ein, on / om.
+      - {heard: "alin souchon", want: play, id: souchon}
+      - {heard: "sylvie vartent", want: play, id: vartan}
+      - {heard: "dans la légande", want: play, id: danslalegende}
+      - {heard: "foule santimentale", want: play, id: foule}
+      - {heard: "sainture noire", want: play, id: ceinture}
+      - {heard: "mistral gagnent", want: play, id: mistral}
+      # vowel: o / au / ou, è / ê, ill / y.
+      - {heard: "michel sardoux", want: play, id: sardou}
+      - {heard: "étienne dahaut", want: play, id: daho}
+      - {heard: "la bohême", want: play, id: boheme}
+      - {heard: "reno", want: play, id: renaud}
+      - {heard: "non je ne regrète rien", want: play, id: regrette}
+      - {heard: "mireye mathieu", want: play, id: mathieu}
+      # h: silent h.
+      - {heard: "étienne dao", want: play, id: daho}
+      - {heard: "françoise ardi", want: play, id: hardy}
+      - {heard: "enri salvador", want: play, id: salvador}
+      - {heard: "istoire de mélodie nelson", want: play, id: melody}
+      # consonant: c / ç / s, g / j, qu / k / ck, ch / sh.
+      - {heard: "fransis cabrel", want: play, id: cabrel}
+      - {heard: "alain bachung", want: play, id: bashung}
+      - {heard: "kendji jirac", want: play, id: kendji}
+      - {heard: "le métec", want: play, id: meteque}
+      - {heard: "claude fransois", want: play, id: cloclo}
+      - {heard: "sa plane pour moi", want: play, id: caplane}
+      - {heard: "georges moustaqui", want: play, id: moustaki}
+      - {heard: "louise atak", want: play, id: louiseattaque}
+      - {heard: "neckfeu", want: play, id: nekfeu}
+      - {heard: "jims", want: play, id: gims}
+      - {heard: "jiji l'amoroso", want: play, id: gigi}
+      # double: single versus double consonants.
+      - {heard: "michel polnaref", want: play, id: polnareff}
+      - {heard: "mireille matthieu", want: play, id: mathieu}
+      - {heard: "les lacs du conemara", want: play, id: lacs}
+      - {heard: "france gal", want: play, id: gall}
+      - {heard: "juliette grécco", want: play, id: greco}
+      - {heard: "indilla", want: play, id: indila}
+      - {heard: "la tribu de danna", want: play, id: tribu}
+      # real-word: more frequent homophones and homophones grammaticaux.
+      - {heard: "julien clair", want: play, id: clerc}
+      - {heard: "yves montant", want: play, id: montand}
+      - {heard: "alors on dense", want: play, id: alorsondanse}
+      - {heard: "poupée de sire poupée de son", want: play, id: poupee}
+      - {heard: "papa où t'es", want: play, id: papaoutai}
+      - {heard: "ella elle la", want: play, id: ella}
+      - {heard: "elle a elle l'a", want: play, id: ella}
+      - {heard: "est si tu n'existais pas", want: play, id: existais}
+      - {heard: "que je thème", want: play, id: quejetaime}
+      - {heard: "avec le tant", want: play, id: avecletemps}
+      - {heard: "l'avis en rose", want: play, id: vieenrose}
+      - {heard: "danse la légende", want: play, id: danslalegende}
+      # liaison: liaison and elision consonants, dropped articles.
+      - {heard: "la ziza", want: play, id: aziza}
+      - {heard: "la venturier", want: play, id: aventurier}
+      - {heard: "lété indien", want: play, id: eteindien}
+      - {heard: "les champs zélysées", want: play, id: champs}
+      - {heard: "comme habitude", want: play, id: habitude}
+      - {heard: "école du micro d'argent", want: play, id: ecolemicro}
+      # split: splits, merges, dropped hyphens.
+      - {heard: "papa outai", want: play, id: papaoutai}
+      - {heard: "nek feu", want: play, id: nekfeu}
+      - {heard: "dja dja", want: play, id: djadja}
+      - {heard: "calo géro", want: play, id: calogero}
+      - {heard: "des enchantées", want: play, id: desenchantee}
+      - {heard: "pol nareff", want: play, id: polnareff}
+      - {heard: "lou anne", want: play, id: louane}
+      # number: number words, initialisms, symbols.
+      - {heard: "il venait d'avoir dix-huit ans", want: play, id: dixhuit}
+      - {heard: "il venait d'avoir dix huit ans", want: play, id: dixhuit}
+      - {heard: "bigflo et oli", want: play, id: bigflo}
+      - {heard: "i a m", want: play, id: iam}
+      - {heard: "p n l", want: play, id: pnl}
+      - {heard: "m c solaar", want: play, id: solaar}
+      - {heard: "femme like you", want: play, id: femmelikeu}
+      # foreign: foreign and anglicised names as a French recogniser spells them.
+      - {heard: "patricia kass", want: play, id: kaas}
+      - {heard: "nino ferré", want: play, id: ferrer}
+      - {heard: "les rita mitsuko", want: play, id: rita}
+      - {heard: "phénix", want: play, id: phoenix}
+      - {heard: "bouba", want: play, id: booba}
+      - {heard: "mc solar", want: play, id: solaar}
+      - {heard: "dernière dance", want: play, id: derniere}
+      - {heard: "moune safari", want: play, id: moonsafari}
+      - {heard: "random access memory", want: play, id: ram}
+      - {heard: "discoveri", want: play, id: discovery}
+      - {heard: "jo dassin", want: play, id: dassin}
+      - {heard: "jadja", want: play, id: djadja}
+      - {heard: "kenji girac", want: play, id: kendji}
+      - {heard: "alexandria alexandra", want: play, id: alexandrie}
+      - {heard: "mini wourld", want: play, id: miniworld}
+      # diacritic: accents dropped or added.
+      - {heard: "resiste", want: play, id: resiste}
+      - {heard: "francoise hardy", want: play, id: hardy}
+      - {heard: "leo ferre", want: play, id: ferre}
+      - {heard: "la boheme", want: play, id: boheme}
+      - {heard: "calogéro", want: play, id: calogero}
+      # schwa: schwa deletion in fast speech.
+      - {heard: "j'veux", want: play, id: jeveux}
+      - {heard: "j'te promets", want: play, id: promets}
+      - {heard: "ne m'quitte pas", want: play, id: nemequitte}
+      - {heard: "j'vole", want: play, id: jevole}
+      # Absent titles, including near misses sharing first names or words with library titles, and artists whose songs or albums are in the library.
+      - {heard: "édith piaf", want: not_found}
+      - {heard: "johnny hallyday", want: not_found}
+      - {heard: "stromae", want: not_found}
+      - {heard: "daft punk", want: not_found}
+      - {heard: "mylène farmer", want: not_found}
+      - {heard: "aya nakamura", want: not_found}
+      - {heard: "michel delpech", want: not_found}
+      - {heard: "michel fugain", want: not_found}
+      - {heard: "alain chamfort", want: not_found}
+      - {heard: "christophe willem", want: not_found}
+      - {heard: "claude nougaro", want: not_found}
+      - {heard: "juliette armanet", want: not_found}
+      - {heard: "patrick bruel", want: not_found}
+      - {heard: "la vie ne m'apprend rien", want: not_found}
+      - {heard: "tombé du ciel", want: not_found}
+      - {heard: "la foule", want: not_found}
+      - {heard: "la dernière séance", want: not_found}
+      - {heard: "la javanaise", want: not_found}
+      - {heard: "l'aigle noir", want: not_found}
+      - {heard: "les mots bleus", want: not_found}
+      - {heard: "la mer", want: not_found}
+      - {heard: "un autre monde", want: not_found}
+      - {heard: "sous le ciel de paris", want: not_found}
+      - {heard: "week-end à rome", want: not_found}
+      - {heard: "je veux te voir", want: not_found}
+      - {heard: "je vais t'aimer", want: not_found}
+      - {heard: "le chanteur malheureux", want: not_found}
+      - {heard: "comme toi", want: not_found}
+      - {heard: "pomme d'api", want: not_found}
+      - {heard: "le premier jour du reste de ta vie", want: not_found}
+      - {heard: "renaud capuçon", want: not_found}
+      - {heard: "jean-louis aubert", want: not_found}
+      - {heard: "la nuit je mens", want: not_found}
+      - {heard: "le plat pays", want: not_found}
