@@ -177,6 +177,15 @@ func (l *appLibraries) Split(ctx context.Context, id, instanceID int64) error {
 	return l.api.app.SplitInstance(ctx, instanceID)
 }
 
+// listedTitle names an item in a list of titles: an episode's title alone means little, so it follows its show's.
+func listedTitle(it media.Item) string {
+	if it.Kind == media.KindEpisode && it.ShowTitle != "" {
+		return it.ShowTitle + ": " + it.Title
+	}
+
+	return it.Title
+}
+
 func (l *appLibraries) Recent(ctx context.Context, id int64, limit int) ([]RecentTitle, error) {
 	lib, err := l.Get(ctx, id)
 	if err != nil {
@@ -195,13 +204,8 @@ func (l *appLibraries) Recent(ctx context.Context, id int64, limit int) ([]Recen
 	out := make([]RecentTitle, 0, len(items))
 
 	for _, it := range items {
-		title := it.Title
-		if it.Kind == media.KindEpisode && it.ShowTitle != "" {
-			title = it.ShowTitle + ": " + it.Title
-		}
-
 		out = append(out, RecentTitle{
-			Title: title, Year: it.Year, Kind: string(it.Kind), Instance: lib.Name, AddedAt: timePtr(it.DateAdded),
+			Title: listedTitle(it), Year: it.Year, Kind: string(it.Kind), Instance: lib.Name, AddedAt: timePtr(it.DateAdded),
 			Findable: l.api.app.Findable(src, it.Ref()), InSkillModel: inModel(src, it),
 		})
 	}

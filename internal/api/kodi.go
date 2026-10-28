@@ -20,7 +20,6 @@ import (
 	"github.com/nightah/encore/internal/app"
 	"github.com/nightah/encore/internal/backend/kodi"
 	"github.com/nightah/encore/internal/core/match"
-	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/secrets"
 	"github.com/nightah/encore/internal/store"
 )
@@ -222,12 +221,7 @@ func (a *API) toInstance(ctx context.Context, rec store.KodiInstance, st app.Ins
 	inst.Library.Movies, inst.Library.Shows, inst.Library.Episodes, inst.Library.Songs = st.Counts.Movies, st.Counts.Shows, st.Counts.Episodes, st.Counts.Songs
 
 	if n := st.Newest; n != nil {
-		title := n.Title
-		if n.Kind == media.KindEpisode && n.ShowTitle != "" {
-			title = n.ShowTitle + ": " + n.Title
-		}
-
-		inst.Library.NewestTitle = Some(NewestTitle{Title: title, Year: n.Year, Findable: a.app.Findable(rec.ID, n.Ref())})
+		inst.Library.NewestTitle = Some(NewestTitle{Title: listedTitle(*n), Year: n.Year, Findable: a.app.Findable(rec.ID, n.Ref())})
 	}
 
 	if np := st.NowPlaying; np != nil {

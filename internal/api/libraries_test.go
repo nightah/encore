@@ -148,6 +148,23 @@ func TestRecentTitlesNewestFirst(t *testing.T) {
 	assert.Equal(t, "Conclave", recent[0].Title)
 }
 
+func TestListedTitle(t *testing.T) {
+	t.Parallel()
+
+	for name, tc := range map[string]struct {
+		item media.Item
+		want string
+	}{
+		"a movie":                     {media.Item{Kind: media.KindMovie, Title: "Conclave"}, "Conclave"},
+		"a show":                      {media.Item{Kind: media.KindTVShow, Title: "Severance"}, "Severance"},
+		"an episode, after its show":  {media.Item{Kind: media.KindEpisode, Title: "Who Is Alive?", ShowTitle: "Severance"}, "Severance: Who Is Alive?"},
+		"an episode without its show": {media.Item{Kind: media.KindEpisode, Title: "Who Is Alive?"}, "Who Is Alive?"},
+		"a song keeps its own title":  {media.Item{Kind: media.KindSong, Title: "Clair de Lune", ShowTitle: "ignored"}, "Clair de Lune"},
+	} {
+		assert.Equal(t, tc.want, listedTitle(tc.item), name)
+	}
+}
+
 func TestToLibraryUsesTheReasonWithoutEvidence(t *testing.T) {
 	t.Parallel()
 
