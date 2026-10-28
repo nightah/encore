@@ -13,6 +13,7 @@ import (
 
 	"github.com/nightah/encore/internal/backend/kodi"
 	"github.com/nightah/encore/internal/backend/kodi/fakekodi"
+	"github.com/nightah/encore/internal/config"
 	"github.com/nightah/encore/internal/store"
 	"github.com/nightah/encore/internal/testkit"
 )
@@ -30,11 +31,13 @@ func (b *lockedBuffer) Write(p []byte) (int, error) {
 	return b.buf.Write(p)
 }
 
-func (b *lockedBuffer) has(s string) bool {
+func (b *lockedBuffer) has(s string) bool { return b.count(s) > 0 }
+
+func (b *lockedBuffer) count(s string) int {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
-	return strings.Contains(b.buf.String(), s)
+	return strings.Count(b.buf.String(), s)
 }
 
 // refingerprint hands inst a fingerprint, as a fresh read of its library would.
@@ -148,9 +151,10 @@ func TestLibraryGroupChangesThatCannotBeSaved(t *testing.T) {
 		faults.Inject(testkit.Fault{Op: testkit.Insert, Table: "library_groups"})
 		t.Cleanup(faults.Clear)
 
+		before := logs.count(`msg="splitting a library group"`)
 		a.refingerprint(t, bedroom, diverged)
 
-		assert.True(t, logs.has(`msg="splitting a library group"`))
+		assert.Equal(t, before+1, logs.count(`msg="splitting a library group"`), "the failure is logged")
 		assert.Equal(t, shared, runtimeMembers(a), "nothing changed")
 		assert.Equal(t, shared, storedMembers(t, a))
 	})
@@ -160,9 +164,11 @@ func TestLibraryGroupChangesThatCannotBeSaved(t *testing.T) {
 		faults.Inject(testkit.Fault{Op: testkit.Update, Table: "library_groups", When: "NEW.name = 'Lounge' AND NEW.state = 'likely_shared'"})
 		t.Cleanup(faults.Clear)
 
+		before := logs.count(`msg="splitting a library group"`)
 		a.refingerprint(t, bedroom, diverged)
 
-		assert.True(t, logs.has(`msg="splitting a library group"`))
+		assert.Equal(t, before+1, logs.count(`msg="splitting a library group"`), "the failure is logged")
+		assert.Equal(t, map[string][]int64{"Lounge": {lounge.id}, "Bedroom": {bedroom.id}}, storedMembers(t, a), "the member left in the database")
 		assert.Equal(t, storedMembers(t, a), runtimeMembers(a), "the running groups are those saved")
 	})
 }
@@ -227,4 +233,99 @@ func TestResettingALibraryGroupReportsAFailedRebuild(t *testing.T) {
 	require.True(t, ok)
 	assert.False(t, g.Manual, "the instance is back with detection")
 	assert.Equal(t, []string{"Lounge"}, memberNames(g))
+}
+
+func TestASplitThatFailsPartWayRunsTheGroupsItSaved(t *testing.T) {
+	testCases := []struct {
+		name    string
+		leaving []string
+		faults  []testkit.Fault
+		want    []string
+		// stored is the members of each group left in the database, by name.
+		stored map[string][]string
+	}{
+		{
+			name:    "saving the second member's own group",
+			leaving: []string{"Bedroom", "Kitchen"},
+			faults:  []testkit.Fault{{Op: testkit.Insert, Table: "library_groups", Nth: 2}},
+			want:    []string{testkit.FaultMessage + " on INSERT library_groups"},
+			stored:  map[string][]string{"Lounge": {"Lounge", "Kitchen"}, "Bedroom": {"Bedroom"}},
+		},
+		{
+			name:    "recording the reason and then rebuilding the groups",
+			leaving: []string{"Bedroom"},
+			faults: []testkit.Fault{
+				{Op: testkit.Update, Table: "library_groups", When: "NEW.name = 'Lounge'"},
+				{Op: testkit.Read, Table: "kodi_instances"},
+			},
+			want:   []string{testkit.FaultMessage + " on UPDATE library_groups", "reconciling library groups: querying: " + testkit.ReadFaultMessage},
+			stored: map[string][]string{"Lounge": {"Lounge", "Kitchen"}, "Bedroom": {"Bedroom"}},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg, faults := faultyConfig(t,
+				config.KodiInstance{Name: "Lounge", URL: "http://127.0.0.1:1/jsonrpc"},
+				config.KodiInstance{Name: "Bedroom", URL: "http://127.0.0.1:2/jsonrpc"},
+				config.KodiInstance{Name: "Kitchen", URL: "http://127.0.0.1:3/jsonrpc"},
+			)
+
+			a, err := newApp(t.Context(), cfg, slog.New(slog.DiscardHandler), fastTuning())
+			require.NoError(t, err)
+
+			t.Cleanup(func() { assert.NoError(t, a.Close()) })
+
+			ids := map[string]int64{}
+			for _, name := range []string{"Lounge", "Bedroom", "Kitchen"} {
+				ids[name] = a.instanceNamed(t, name).id
+			}
+
+			ctx := t.Context()
+
+			a.planMu.Lock()
+			defer a.planMu.Unlock()
+
+			// Detection grouped all three.
+			shared := store.LibraryGroup{Name: "Lounge", State: store.GroupLikelyShared, SourceInstanceID: ids["Lounge"], Evidence: (&evidence{Origin: originDetected}).encode()}
+			require.NoError(t, a.DB().LibraryGroups().Save(ctx, &shared, []int64{ids["Lounge"], ids["Bedroom"], ids["Kitchen"]}))
+			require.NoError(t, a.plan(ctx))
+			require.Equal(t, map[string][]int64{"Lounge": {ids["Lounge"], ids["Bedroom"], ids["Kitchen"]}}, runtimeMembers(a))
+
+			a.mu.RLock()
+			g := a.instances[ids["Lounge"]].group
+			a.mu.RUnlock()
+
+			var leaving []*Instance
+			for _, name := range tc.leaving {
+				leaving = append(leaving, a.instanceNamed(t, name))
+			}
+
+			faults.Inject(tc.faults...)
+
+			err = a.split(ctx, g, leaving, "the libraries differ")
+			for _, want := range tc.want {
+				require.ErrorContains(t, err, want)
+			}
+
+			faults.Clear()
+
+			want := map[string][]int64{}
+			for group, members := range tc.stored {
+				for _, name := range members {
+					want[group] = append(want[group], ids[name])
+				}
+			}
+
+			assert.Equal(t, want, storedMembers(t, a), "the members saved before the failure left in the database")
+
+			if len(tc.want) == 1 {
+				assert.Equal(t, want, runtimeMembers(a), "and run in the groups they were saved in")
+			}
+
+			// Once the database works the running groups catch up with it.
+			require.NoError(t, a.plan(ctx))
+			assert.Equal(t, want, runtimeMembers(a))
+		})
+	}
 }
