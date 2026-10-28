@@ -139,6 +139,45 @@ func TestSlotBuilder(t *testing.T) {
 	assert.Equal(t, []skillmodel.SlotValue{{ID: "movie/1", Value: "Dune", Synonyms: []string{"the spice one", "arrakis"}}}, b.values(1), "the cap keeps the most recently played")
 }
 
+func TestSlotValuesOverTheCapKeepTheMostRecentlyAddedOrPlayed(t *testing.T) {
+	day := func(d int) time.Time { return time.Date(2026, 10, d, 20, 0, 0, 0, time.UTC) }
+
+	b := newSlotBuilder()
+	b.add(&media.Item{Kind: media.KindMovie, ID: 1, Title: "Arrival", DateAdded: day(1)}, nil)
+	b.add(&media.Item{Kind: media.KindMovie, ID: 2, Title: "Blade Runner", DateAdded: day(5)}, nil)
+	b.add(&media.Item{Kind: media.KindMovie, ID: 3, Title: "Zodiac", DateAdded: day(2), LastPlayed: day(20)}, nil)
+	b.add(&media.Item{Kind: media.KindMovie, ID: 4, Title: "Contact", DateAdded: day(10)}, nil)
+
+	titles := func(vs []skillmodel.SlotValue) []string {
+		out := make([]string, len(vs))
+		for i, v := range vs {
+			out[i] = v.Value
+		}
+
+		return out
+	}
+
+	assert.Equal(t, []string{"Zodiac"}, titles(b.values(1)), "a title played recently counts as recent though added long ago")
+	assert.Equal(t, []string{"Contact", "Zodiac"}, titles(b.values(2)), "kept by recency, listed by title")
+	assert.Equal(t, []string{"Blade Runner", "Contact", "Zodiac"}, titles(b.values(3)))
+	assert.Equal(t, []string{"Arrival", "Blade Runner", "Contact", "Zodiac"}, titles(b.values(4)), "a cap of exactly the number of titles keeps them all")
+	assert.Equal(t, titles(b.values(0)), titles(b.values(10)))
+}
+
+func TestSlotValuesSortTitlesIgnoringCase(t *testing.T) {
+	b := newSlotBuilder()
+	for i, title := range []string{"bluey", "Avatar", "Cars", "alien"} {
+		b.add(&media.Item{Kind: media.KindMovie, ID: i + 1, Title: title}, nil)
+	}
+
+	var got []string
+	for _, v := range b.values(0) {
+		got = append(got, v.Value)
+	}
+
+	assert.Equal(t, []string{"alien", "Avatar", "bluey", "Cars"}, got)
+}
+
 func TestSlotValuesIgnorePlayback(t *testing.T) {
 	build := func(dunePlayed time.Time) []skillmodel.SlotValue {
 		b := newSlotBuilder()

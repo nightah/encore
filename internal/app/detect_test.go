@@ -1,12 +1,15 @@
 package app
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/nightah/encore/internal/backend/kodi"
+	"github.com/nightah/encore/internal/backend/kodi/fakekodi"
 	"github.com/nightah/encore/internal/backend/kodi/kodirpc"
 )
 
@@ -121,4 +124,44 @@ func TestObservationMerge(t *testing.T) {
 
 	merged = first.merge(&observation{})
 	assert.Equal(t, &one, merged.playCount, "a later change without a play count keeps the one seen")
+}
+
+func TestASampleTooSmallToTellKeepsAMemberInItsGroup(t *testing.T) {
+	lib := testLibrary(30, 0, "2024-01-01 10:00:00")
+	lounge, bedroom := fakekodi.New(t, fakekodi.Options{Library: lib}), fakekodi.New(t, fakekodi.Options{Library: lib})
+	a, _ := runApp(t, t.TempDir(), fastTuning(), kodiConfig("Lounge", lounge, ""), kodiConfig("Bedroom", bedroom, ""))
+
+	require.Eventually(t, func() bool {
+		g, _ := a.groupOf("Lounge")
+		return len(g.Members) == 2 && a.fingerprintedAll("Lounge", "Bedroom")
+	}, eventually, 10*time.Millisecond)
+
+	loungeID, inst := a.instanceNamed(t, "Lounge").id, a.instanceNamed(t, "Bedroom")
+
+	small := func(id int) *kodi.LibraryFingerprint {
+		return &kodi.LibraryFingerprint{Movies: []kodi.FingerprintItem{{ID: id, File: fmt.Sprintf("nfs://nas/movies/%d.mkv", id), DateAdded: "2026-01-01 10:00:00"}}}
+	}
+
+	for _, c := range []struct {
+		name         string
+		lounge, mine *kodi.LibraryFingerprint
+	}{
+		{"an empty sample, as while Kodi rebuilds its library", nil, &kodi.LibraryFingerprint{}},
+		{"two libraries too small to compare", small(1), small(2)},
+	} {
+		a.planMu.Lock()
+
+		if c.lounge != nil {
+			a.mu.Lock()
+			a.prints[loungeID] = c.lounge
+			a.mu.Unlock()
+		}
+
+		a.fingerprinted(t.Context(), inst, c.mine)
+		a.planMu.Unlock()
+
+		g, _ := a.groupOf("Bedroom")
+		assert.ElementsMatch(t, []string{"Lounge", "Bedroom"}, memberNames(g), c.name)
+		assert.Empty(t, g.Reason, c.name)
+	}
 }

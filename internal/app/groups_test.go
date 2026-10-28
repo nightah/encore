@@ -234,8 +234,14 @@ func TestCompareFingerprints(t *testing.T) {
 	nearly.Movies = nearly.Movies[:195]
 	assert.True(t, compareFingerprints(sample(200, 0, "2024-01-01 10:00:00"), nearly).match(&tune), "a scan in progress may leave a few items behind")
 
+	nearly.Movies = nearly.Movies[:190]
+	assert.True(t, compareFingerprints(sample(200, 0, "2024-01-01 10:00:00"), nearly).match(&tune), "exactly the minimum agreement is enough")
+
 	nearly.Movies = nearly.Movies[:180]
 	assert.False(t, compareFingerprints(sample(200, 0, "2024-01-01 10:00:00"), nearly).match(&tune))
+	assert.False(t, compareFingerprints(nearly, sample(200, 0, "2024-01-01 10:00:00")).match(&tune), "the larger sample counts, whichever side it's on")
+
+	assert.True(t, compareFingerprints(sample(minFingerprintItems, 0, "2024-01-01 10:00:00"), sample(minFingerprintItems, 0, "2024-01-01 10:00:00")).meaningful(&tune), "the minimum sample is enough to tell")
 
 	small := compareFingerprints(sample(10, 0, "2024-01-01 10:00:00"), sample(10, 0, "2024-01-01 10:00:00"))
 	assert.False(t, small.meaningful(&tune), "too few items to tell")
@@ -356,6 +362,8 @@ func TestUnmirroredChangeSplitsTheGroup(t *testing.T) {
 	require.Eventually(t, func() bool { g, _ := a.groupOf("Lounge"); return len(g.Members) == 2 }, eventually, 10*time.Millisecond)
 	require.Eventually(t, func() bool { return hasTitle(a.instanceNamed(t, "Lounge").Catalog, "Film Number 3") }, eventually, 10*time.Millisecond)
 
+	shared, _ := a.groupOf("Lounge")
+
 	connected(t, lounge)
 	require.True(t, lounge.SetPlayState("movie", 3, fakekodi.PlayState{Resume: 1200, LastPlayed: time.Now().Truncate(time.Second)}))
 
@@ -365,8 +373,12 @@ func TestUnmirroredChangeSplitsTheGroup(t *testing.T) {
 		g, ok := a.groupOf(name)
 		require.True(t, ok)
 		assert.Equal(t, store.GroupSolo, g.State, name)
+		assert.Equal(t, name, g.Name)
 		assert.Equal(t, `a change to “Film Number 3” on Lounge wasn't seen on Bedroom`, g.Reason, name)
 	}
+
+	kept, _ := a.groupOf("Lounge")
+	assert.Equal(t, shared.ID, kept.ID, "the member that missed the change leaves; the one that made it keeps the group")
 
 	a.mu.RLock()
 	assert.NotSame(t, a.instanceNamed(t, "Lounge").Index, a.instanceNamed(t, "Bedroom").Index)
@@ -753,4 +765,164 @@ func TestUserGroupEdgeCases(t *testing.T) {
 	again, _ := a.groupOf("Lounge")
 	assert.Equal(t, split.ID, again.ID, "splitting an instance already on its own keeps its group")
 	assert.Len(t, a.Groups(), 2)
+}
+
+// plannedApp opens, without running, an App with Kodi instances that are never contacted, enough to plan library groups.
+func plannedApp(t *testing.T, names ...string) *App {
+	t.Helper()
+
+	cfg := config.Defaults()
+	cfg.DataDir = t.TempDir()
+
+	for i, name := range names {
+		cfg.Kodi = append(cfg.Kodi, config.KodiInstance{Name: name, URL: fmt.Sprintf("http://127.0.0.1:%d/jsonrpc", i+1)})
+	}
+
+	a := openApp(t, &cfg, fastTuning())
+
+	t.Cleanup(func() { assert.NoError(t, a.Close()) })
+
+	return a
+}
+
+func TestJoiningKeepsEarlierSplitsFromBothSides(t *testing.T) {
+	a := plannedApp(t, "Lounge", "Bedroom", "Study", "Kitchen")
+	ctx := t.Context()
+	lounge, bedroom := a.instanceNamed(t, "Lounge"), a.instanceNamed(t, "Bedroom")
+	study, kitchen := a.instanceNamed(t, "Study").id, a.instanceNamed(t, "Kitchen").id
+
+	a.mu.Lock()
+	g := lounge.group
+	g.ev.Vetoed = []int64{study}
+	bedroom.group.ev.Vetoed = []int64{kitchen}
+	a.mu.Unlock()
+
+	a.planMu.Lock()
+	err := a.join(ctx, lounge, g, bedroom, &fpResult{Matched: 60, Compared: 60})
+	a.planMu.Unlock()
+	require.NoError(t, err)
+
+	joined, ok := a.groupOf("Bedroom")
+	require.True(t, ok)
+	assert.ElementsMatch(t, []string{"Lounge", "Bedroom"}, memberNames(joined))
+	assert.Equal(t, "Lounge", joined.Name, "the instance created first leads")
+	assert.Equal(t, store.GroupLikelyShared, joined.State)
+	assert.Equal(t, "60 of 60 sampled items match", joined.Evidence)
+
+	rec, err := a.DB().LibraryGroups().Get(ctx, joined.ID)
+	require.NoError(t, err)
+	assert.ElementsMatch(t, []int64{study, kitchen}, decodeEvidence(rec.Evidence).Vetoed, "neither side's earlier splits are forgotten")
+}
+
+func TestPlanRestoresGroupInvariants(t *testing.T) {
+	fp := &fingerprintEvidence{Matched: 60, Compared: 60}
+
+	cases := []struct {
+		name       string
+		group      func(lounge, bedroom int64) (store.LibraryGroup, []int64)
+		wantState  store.LibraryGroupState
+		wantSource string
+		wantEv     evidence
+	}{
+		{
+			name: "a detected group left with one member is solo and forgets what showed it shared",
+			group: func(lounge, bedroom int64) (store.LibraryGroup, []int64) {
+				ev := evidence{Origin: originDetected, Fingerprint: fp, Confirmed: []int64{lounge, bedroom}, Confirmation: "seen", Reason: "split", Vetoed: []int64{99}}
+				return store.LibraryGroup{Name: "Lounge", State: store.GroupConfirmedShared, SourceInstanceID: lounge, Evidence: ev.encode()}, []int64{lounge}
+			},
+			wantState: store.GroupSolo, wantSource: "Lounge",
+			wantEv: evidence{Origin: originDetected, Reason: "split", Vetoed: []int64{99}},
+		},
+		{
+			name: "a detected solo group with two members is likely shared",
+			group: func(lounge, bedroom int64) (store.LibraryGroup, []int64) {
+				ev := evidence{Origin: originDetected, Fingerprint: fp}
+				return store.LibraryGroup{Name: "Lounge", State: store.GroupSolo, SourceInstanceID: lounge, Evidence: ev.encode()}, []int64{lounge, bedroom}
+			},
+			wantState: store.GroupLikelyShared, wantSource: "Lounge",
+			wantEv: evidence{Origin: originDetected, Fingerprint: fp},
+		},
+		{
+			name: "a manual group with two members is manual",
+			group: func(lounge, bedroom int64) (store.LibraryGroup, []int64) {
+				ev := evidence{Origin: originUser}
+				return store.LibraryGroup{Name: "Upstairs", State: store.GroupSolo, Manual: true, SourceInstanceID: bedroom, Evidence: ev.encode()}, []int64{lounge, bedroom}
+			},
+			wantState: store.GroupManual, wantSource: "Bedroom",
+			wantEv: evidence{Origin: originUser},
+		},
+		{
+			name: "a manual group with one member is solo",
+			group: func(_, bedroom int64) (store.LibraryGroup, []int64) {
+				ev := evidence{Origin: originUser}
+				return store.LibraryGroup{Name: "Upstairs", State: store.GroupManual, Manual: true, SourceInstanceID: bedroom, Evidence: ev.encode()}, []int64{bedroom}
+			},
+			wantState: store.GroupSolo, wantSource: "Bedroom",
+			wantEv: evidence{Origin: originUser},
+		},
+		{
+			name: "a group whose source isn't a member is led by its first member",
+			group: func(lounge, bedroom int64) (store.LibraryGroup, []int64) {
+				ev := evidence{Origin: originUser}
+				return store.LibraryGroup{Name: "Upstairs", State: store.GroupManual, Manual: true, Evidence: ev.encode()}, []int64{bedroom, lounge}
+			},
+			wantState: store.GroupManual, wantSource: "Lounge",
+			wantEv: evidence{Origin: originUser},
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			a := plannedApp(t, "Lounge", "Bedroom")
+			ctx := t.Context()
+			lounge, bedroom := a.instanceNamed(t, "Lounge").id, a.instanceNamed(t, "Bedroom").id
+
+			rec, members := c.group(lounge, bedroom)
+			require.NoError(t, a.DB().LibraryGroups().Save(ctx, &rec, members))
+
+			a.planMu.Lock()
+			err := a.plan(ctx)
+			a.planMu.Unlock()
+			require.NoError(t, err)
+
+			got, err := a.DB().LibraryGroups().Get(ctx, rec.ID)
+			require.NoError(t, err)
+			assert.Equal(t, c.wantState, got.State)
+			assert.Equal(t, a.instanceNamed(t, c.wantSource).id, got.SourceInstanceID)
+
+			ev := decodeEvidence(got.Evidence)
+			if ev.Fingerprint != nil {
+				ev.Fingerprint.At = fp.At
+			}
+
+			assert.Equal(t, c.wantEv, ev)
+
+			groups := a.Groups()
+			for _, g := range groups {
+				assert.NotEmpty(t, g.Members, "empty groups are removed")
+			}
+
+			assert.Len(t, groups, 3-len(members), "every instance is in exactly one group")
+		})
+	}
+}
+
+func TestResettingADetectedGroupChangesNothing(t *testing.T) {
+	lib := testLibrary(30, 0, "2024-01-01 10:00:00")
+	lounge, bedroom := fakekodi.New(t, fakekodi.Options{Library: lib}), fakekodi.New(t, fakekodi.Options{Library: lib})
+	a, _ := runApp(t, t.TempDir(), fastTuning(), kodiConfig("Lounge", lounge, ""), kodiConfig("Bedroom", bedroom, ""))
+
+	require.Eventually(t, func() bool {
+		g, _ := a.groupOf("Lounge")
+		return len(g.Members) == 2 && a.fingerprintedAll("Lounge", "Bedroom")
+	}, eventually, 10*time.Millisecond)
+
+	before, _ := a.groupOf("Lounge")
+
+	require.NoError(t, a.ResetLibraryGroup(t.Context(), a.instanceNamed(t, "Lounge").id))
+
+	after, _ := a.groupOf("Lounge")
+	assert.Equal(t, before.ID, after.ID, "the group isn't dissolved and formed again")
+	assert.ElementsMatch(t, []string{"Lounge", "Bedroom"}, memberNames(after))
+	assert.Equal(t, before.State, after.State)
 }

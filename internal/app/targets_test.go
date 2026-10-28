@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"errors"
+	"net"
 	"testing"
 	"time"
 
@@ -151,6 +152,13 @@ func TestTargetCarriesVoiceSettings(t *testing.T) {
 	assert.Equal(t, config.DefaultQueueLimit, target.QueueLimit)
 	assert.Equal(t, "en", target.Language)
 	assert.False(t, target.ShutdownQuits)
+	assert.Nil(t, target.Wake, "without a MAC address there's no way to wake Kodi")
+
+	h.instance(t).Waker.SetMAC(net.HardwareAddr{0xdc, 0xa6, 0x32, 0x4b, 0x19, 0x0e})
+
+	target, err = h.app.Target(t.Context(), testDevice)
+	require.NoError(t, err)
+	assert.NotNil(t, target.Wake, "a known MAC address lets a request wake Kodi")
 
 	h.app.cfg.Alexa.ShutdownQuits = true
 	h.app.cfg.Alexa.QueueLimit = 25
@@ -209,16 +217,34 @@ func TestTargetForRoom(t *testing.T) {
 		assert.Equal(t, config.DefaultQueueLimit, target.QueueLimit)
 	}
 
+	dev, err := h.app.DB().EchoDevices().GetByAlexaID(ctx, testDevice)
+	require.NoError(t, err)
+	assert.EqualValues(t, 3, dev.RequestCount, "room requests still record the device as seen")
+
 	_, err = h.app.TargetForRoom(ctx, testDevice, "attic")
 	require.ErrorIs(t, err, alexa.ErrUnknownRoom)
 
 	// The kitchen has no Kodi, so the device's own target applies; this device is unlinked and there's no default.
 	_, err = h.app.TargetForRoom(ctx, testDevice, "kitchen")
 	require.ErrorIs(t, err, alexa.ErrUnlinked)
+}
 
-	dev, err := h.app.DB().EchoDevices().GetByAlexaID(ctx, testDevice)
-	require.NoError(t, err)
-	assert.Positive(t, dev.RequestCount, "room requests still record the device as seen")
+func TestCutArticle(t *testing.T) {
+	for spoken, want := range map[string]struct {
+		rest string
+		ok   bool
+	}{
+		"the bedroom":       {"bedroom", true},
+		"The  Main Bedroom": {"Main Bedroom", true},
+		"the":               {"", false},
+		"bedroom":           {"", false},
+		"theatre room":      {"", false},
+		"":                  {"", false},
+	} {
+		rest, ok := cutArticle(spoken)
+		assert.Equal(t, want.rest, rest, spoken)
+		assert.Equal(t, want.ok, ok, spoken)
+	}
 }
 
 func TestEndToEndRoomTargeting(t *testing.T) {

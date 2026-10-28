@@ -1,6 +1,7 @@
 package app
 
 import (
+	"log/slog"
 	"testing"
 	"time"
 
@@ -75,4 +76,46 @@ func TestGroupBackendForwardsConnectionEventsOnlyFromTheActiveMember(t *testing.
 
 	assert.Equal(t, []media.EventKind{media.EventDisconnected, media.EventLibraryScanned}, got, "a non-active member's connection events don't reach the catalog, but its library events do")
 	assert.Len(t, b.nudge, 1, "connection events prompt a check of which member should be active")
+}
+
+func TestGroupBackendPicksTheMemberSyncsGoTo(t *testing.T) {
+	a := newBareApp(t)
+	ctx := t.Context()
+	lsrv, bsrv, ssrv := fakekodi.New(t, fakekodi.Options{}), fakekodi.New(t, fakekodi.Options{}), fakekodi.New(t, fakekodi.Options{})
+	lounge, bedroom, study := detachedInstance(t, a, "Lounge", lsrv), detachedInstance(t, a, "Bedroom", bsrv), detachedInstance(t, a, "Study", ssrv)
+
+	b := newGroupBackend([]*Instance{lounge, bedroom, study}, lounge, a.tune, slog.New(slog.DiscardHandler))
+
+	var switches int
+
+	b.emit = func(ev media.Event) {
+		assert.Equal(t, media.EventConnected, ev.Kind, "a switch syncs the new member's view")
+
+		switches++
+	}
+
+	step := func(want *Instance, wantSwitches int, why string) {
+		t.Helper()
+
+		b.evaluate(ctx)
+		assert.Same(t, want, b.current(), why)
+		assert.Equal(t, wantSwitches, switches, why)
+	}
+
+	step(lounge, 0, "the reachable source stays active")
+
+	lsrv.Close()
+	step(bedroom, 1, "the first reachable member takes over from the source")
+
+	b.active.Store(study)
+	step(study, 1, "a reachable stand-in keeps the job rather than handing it to an earlier member")
+
+	ssrv.Close()
+	step(bedroom, 2, "an unreachable stand-in hands over")
+
+	bsrv.Close()
+	step(bedroom, 2, "with nothing reachable the current member stays")
+
+	lsrv.Restart(t)
+	step(lounge, 3, "the source takes over again once it's back")
 }

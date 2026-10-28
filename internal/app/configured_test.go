@@ -63,14 +63,28 @@ func TestApplyConfiguredRoomsAndDevices(t *testing.T) {
 
 	dev, err := a.DB().EchoDevices().GetByAlexaID(t.Context(), "amzn1.ask.device.A")
 	require.NoError(t, err)
-	assert.Equal(t, "Lounge Echo Show", dev.DisplayName)
-	assert.NotZero(t, dev.KodiInstanceID)
-	assert.NotZero(t, dev.RoomID)
-	assert.Zero(t, dev.RequestCount, "declaring a device isn't a request")
-
 	room, err := a.DB().Rooms().Resolve(t.Context(), "living room")
 	require.NoError(t, err)
 	assert.Equal(t, "Lounge", room.Name)
+
+	ids := map[string]int64{}
+
+	kodis, err := a.DB().KodiInstances().List(t.Context())
+	require.NoError(t, err)
+
+	for _, k := range kodis {
+		ids[k.Name] = k.ID
+	}
+
+	assert.Equal(t, ids["Lounge"], room.KodiInstanceID, "the room plays on the Kodi instance it names")
+	assert.Equal(t, "Lounge Echo Show", dev.DisplayName)
+	assert.Equal(t, ids["Lounge"], dev.KodiInstanceID)
+	assert.Equal(t, room.ID, dev.RoomID)
+	assert.Zero(t, dev.RequestCount, "declaring a device isn't a request")
+
+	aliases, err := a.DB().Rooms().Aliases(t.Context(), room.ID)
+	require.NoError(t, err)
+	assert.Len(t, aliases, 2)
 
 	// Applying again with fewer aliases removes the dropped one, and stays idempotent.
 	a.cfg.Rooms[0].Aliases = []string{"big tv"}
@@ -78,6 +92,11 @@ func TestApplyConfiguredRoomsAndDevices(t *testing.T) {
 
 	_, err = a.DB().Rooms().Resolve(t.Context(), "living room")
 	require.Error(t, err)
+
+	aliases, err = a.DB().Rooms().Aliases(t.Context(), room.ID)
+	require.NoError(t, err)
+	require.Len(t, aliases, 1)
+	assert.Equal(t, "big tv", aliases[0].Alias, "an alias still wanted is kept, not added twice")
 
 	target, err := a.Target(t.Context(), "amzn1.ask.device.B")
 	require.NoError(t, err)

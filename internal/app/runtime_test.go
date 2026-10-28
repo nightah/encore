@@ -193,8 +193,11 @@ func TestSavingTheMACNeedsKodiAndTheRow(t *testing.T) {
 	h.kodi.Restart(t)
 	require.NoError(t, h.app.DB().KodiInstances().Delete(ctx, inst.id))
 
-	assert.NotPanics(t, func() { inst.saveMAC(ctx) }, "an instance deleted meanwhile has no row to save to")
+	inst.saveMAC(ctx)
 	assert.NotNil(t, inst.Waker.MAC(), "the runtime still knows it until it stops")
+
+	_, err = h.app.DB().KodiInstances().Get(ctx, inst.id)
+	require.ErrorIs(t, err, store.ErrNotFound, "an instance deleted meanwhile isn't brought back by saving its MAC")
 }
 
 func TestTimezone(t *testing.T) {

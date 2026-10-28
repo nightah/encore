@@ -206,6 +206,14 @@ func TestRefreshLibraryKeepsKodisEpisodeTotal(t *testing.T) {
 	st = InstanceStatus{}
 	h.app.RefreshLibrary(inst.id, &st)
 	assert.Zero(t, st.Counts.Episodes, "without a total from Kodi only the cached episodes count")
+
+	eps, err := inst.Catalog.Episodes(t.Context(), 1)
+	require.NoError(t, err)
+	require.NotEmpty(t, eps)
+
+	st = InstanceStatus{Counts: LibraryCounts{Episodes: 1}}
+	h.app.RefreshLibrary(inst.id, &st)
+	assert.Equal(t, len(eps), st.Counts.Episodes, "a stale total lower than the episodes cached since doesn't win")
 }
 
 func TestLibraryReads(t *testing.T) {
@@ -246,6 +254,12 @@ func TestFindable(t *testing.T) {
 	_, err := h.instance(t).Catalog.Episodes(t.Context(), 1)
 	require.NoError(t, err)
 	assert.True(t, h.app.Findable(id, episode), "an episode is found through its show")
+
+	h.instance(t).Catalog.SetKinds([]media.Kind{media.KindMovie, media.KindPlaylist})
+
+	_, cached := h.app.Item(id, episode)
+	require.True(t, cached, "turning TV off leaves fetched episodes cached")
+	assert.False(t, h.app.Findable(id, episode), "an episode whose show left the library can't be found")
 }
 
 func TestInstanceImage(t *testing.T) {

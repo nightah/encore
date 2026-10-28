@@ -44,6 +44,26 @@ func (*brokenStore) List(context.Context, string) ([]blobstore.Object, error) { 
 
 func (*brokenStore) Probe(context.Context) error { return errBroken }
 
+func TestTheLibraryIsSavedOnShutdown(t *testing.T) {
+	srv := fakekodi.New(t, fakekodi.Options{})
+	dir := t.TempDir()
+
+	// The periodic check never comes round, so only the save on the way out can write the snapshot.
+	tune := fastTuning()
+	tune.snapshotCheck = time.Hour
+
+	a, stop := runApp(t, dir, tune, kodiConfig("Lounge", srv, ""))
+	inst := a.instanceNamed(t, "Lounge")
+	g, _ := a.groupOf("Lounge")
+	file := filepath.Join(dir, "blobs", filepath.FromSlash(snapshotKey(g.ID)))
+
+	require.Eventually(t, func() bool { return !inst.Catalog.Stats().LastSync.IsZero() }, eventually, 10*time.Millisecond)
+	assert.NoFileExists(t, file)
+
+	stop()
+	assert.FileExists(t, file, "what changed since the last save isn't lost")
+}
+
 func TestSnapshotsAreDisabledWhenTheStoreCantOpen(t *testing.T) {
 	srv := fakekodi.New(t, fakekodi.Options{})
 	dir := t.TempDir()
