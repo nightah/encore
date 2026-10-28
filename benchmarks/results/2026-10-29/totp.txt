@@ -1,0 +1,72 @@
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/totp
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkCode/impl=pquerna-32         	 2291518	       520.4 ns/op	     529 B/op	      11 allocs/op
+BenchmarkCode/impl=intree-32          	 3225639	       376.4 ns/op	     520 B/op	       9 allocs/op
+BenchmarkValidate/impl=pquerna-32     	  716917	      1616 ns/op	    1611 B/op	      34 allocs/op
+BenchmarkValidate/impl=intree-32      	 1721622	       698.4 ns/op	    1008 B/op	      17 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/totp
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkCode/impl=pquerna-32         	 2176113	       549.8 ns/op	     529 B/op	      11 allocs/op
+BenchmarkCode/impl=intree-32          	 2972527	       405.0 ns/op	     520 B/op	       9 allocs/op
+BenchmarkValidate/impl=pquerna-32     	  695352	      1692 ns/op	    1611 B/op	      34 allocs/op
+BenchmarkValidate/impl=intree-32      	 1641510	       716.0 ns/op	    1008 B/op	      17 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/totp
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkCode/impl=pquerna-32         	 2218928	       538.7 ns/op	     529 B/op	      11 allocs/op
+BenchmarkCode/impl=intree-32          	 2996932	       394.9 ns/op	     520 B/op	       9 allocs/op
+BenchmarkValidate/impl=pquerna-32     	  748228	      1668 ns/op	    1611 B/op	      34 allocs/op
+BenchmarkValidate/impl=intree-32      	 1666167	       725.0 ns/op	    1008 B/op	      17 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/totp
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkCode/impl=pquerna-32         	 2249624	       532.5 ns/op	     529 B/op	      11 allocs/op
+BenchmarkCode/impl=intree-32          	 3161308	       385.0 ns/op	     520 B/op	       9 allocs/op
+BenchmarkValidate/impl=pquerna-32     	  694009	      1641 ns/op	    1611 B/op	      34 allocs/op
+BenchmarkValidate/impl=intree-32      	 1688088	       707.1 ns/op	    1008 B/op	      17 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/totp
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkCode/impl=pquerna-32         	 2233174	       531.1 ns/op	     529 B/op	      11 allocs/op
+BenchmarkCode/impl=intree-32          	 3057382	       382.8 ns/op	     520 B/op	       9 allocs/op
+BenchmarkValidate/impl=pquerna-32     	  710554	      1638 ns/op	    1611 B/op	      34 allocs/op
+BenchmarkValidate/impl=intree-32      	 1738099	       693.1 ns/op	    1008 B/op	      17 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/totp
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkCode/impl=pquerna-32         	 2271092	       522.6 ns/op	     529 B/op	      11 allocs/op
+BenchmarkCode/impl=intree-32          	 3185923	       376.0 ns/op	     520 B/op	       9 allocs/op
+BenchmarkValidate/impl=pquerna-32     	  699572	      1619 ns/op	    1611 B/op	      34 allocs/op
+BenchmarkValidate/impl=intree-32      	 1662834	       708.6 ns/op	    1008 B/op	      17 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/totp
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkCode/impl=pquerna-32         	 2232528	       535.8 ns/op	     529 B/op	      11 allocs/op
+BenchmarkCode/impl=intree-32          	 3127074	       385.1 ns/op	     520 B/op	       9 allocs/op
+BenchmarkValidate/impl=pquerna-32     	  704367	      1678 ns/op	    1611 B/op	      34 allocs/op
+BenchmarkValidate/impl=intree-32      	 1680470	       706.8 ns/op	    1008 B/op	      17 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/totp
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkCode/impl=pquerna-32         	 2216024	       542.5 ns/op	     529 B/op	      11 allocs/op
+BenchmarkCode/impl=intree-32          	 3041478	       392.5 ns/op	     520 B/op	       9 allocs/op
+BenchmarkValidate/impl=pquerna-32     	  735834	      1677 ns/op	    1611 B/op	      34 allocs/op
+BenchmarkValidate/impl=intree-32      	 1639516	       727.5 ns/op	    1008 B/op	      17 allocs/op
+PASS

@@ -1,0 +1,72 @@
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/phonetic
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkKeys/lang=en/impl=library-32         	 2649087	       457.6 ns/op	     208 B/op	      11 allocs/op
+BenchmarkKeys/lang=en/impl=intree-32          	14835546	        80.09 ns/op	       5 B/op	       1 allocs/op
+BenchmarkKeys/lang=de/impl=library-32         	 7708048	       163.1 ns/op	     134 B/op	       3 allocs/op
+BenchmarkKeys/lang=de/impl=intree-32          	27920288	        42.87 ns/op	       4 B/op	       0 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/phonetic
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkKeys/lang=en/impl=library-32         	 2663434	       444.5 ns/op	     208 B/op	      11 allocs/op
+BenchmarkKeys/lang=en/impl=intree-32          	15617868	        78.29 ns/op	       5 B/op	       1 allocs/op
+BenchmarkKeys/lang=de/impl=library-32         	 7536442	       160.6 ns/op	     134 B/op	       3 allocs/op
+BenchmarkKeys/lang=de/impl=intree-32          	27501692	        41.37 ns/op	       4 B/op	       0 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/phonetic
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkKeys/lang=en/impl=library-32         	 2644339	       451.3 ns/op	     208 B/op	      11 allocs/op
+BenchmarkKeys/lang=en/impl=intree-32          	14757052	        82.69 ns/op	       5 B/op	       1 allocs/op
+BenchmarkKeys/lang=de/impl=library-32         	 7446076	       159.0 ns/op	     134 B/op	       3 allocs/op
+BenchmarkKeys/lang=de/impl=intree-32          	27907280	        43.11 ns/op	       4 B/op	       0 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/phonetic
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkKeys/lang=en/impl=library-32         	 2709270	       448.2 ns/op	     208 B/op	      11 allocs/op
+BenchmarkKeys/lang=en/impl=intree-32          	13912812	        81.53 ns/op	       5 B/op	       1 allocs/op
+BenchmarkKeys/lang=de/impl=library-32         	 7283242	       164.5 ns/op	     134 B/op	       3 allocs/op
+BenchmarkKeys/lang=de/impl=intree-32          	28897184	        41.83 ns/op	       4 B/op	       0 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/phonetic
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkKeys/lang=en/impl=library-32         	 2707963	       443.2 ns/op	     208 B/op	      11 allocs/op
+BenchmarkKeys/lang=en/impl=intree-32          	14562390	        80.66 ns/op	       5 B/op	       1 allocs/op
+BenchmarkKeys/lang=de/impl=library-32         	 7674072	       162.7 ns/op	     134 B/op	       3 allocs/op
+BenchmarkKeys/lang=de/impl=intree-32          	27930582	        42.60 ns/op	       4 B/op	       0 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/phonetic
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkKeys/lang=en/impl=library-32         	 2727123	       436.1 ns/op	     208 B/op	      11 allocs/op
+BenchmarkKeys/lang=en/impl=intree-32          	15436336	        78.87 ns/op	       5 B/op	       1 allocs/op
+BenchmarkKeys/lang=de/impl=library-32         	 7419139	       161.4 ns/op	     134 B/op	       3 allocs/op
+BenchmarkKeys/lang=de/impl=intree-32          	27177759	        41.95 ns/op	       4 B/op	       0 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/phonetic
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkKeys/lang=en/impl=library-32         	 2612030	       444.3 ns/op	     208 B/op	      11 allocs/op
+BenchmarkKeys/lang=en/impl=intree-32          	14601394	        80.41 ns/op	       5 B/op	       1 allocs/op
+BenchmarkKeys/lang=de/impl=library-32         	 7185478	       158.7 ns/op	     134 B/op	       3 allocs/op
+BenchmarkKeys/lang=de/impl=intree-32          	28317252	        42.94 ns/op	       4 B/op	       0 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/phonetic
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkKeys/lang=en/impl=library-32         	 2752405	       433.9 ns/op	     208 B/op	      11 allocs/op
+BenchmarkKeys/lang=en/impl=intree-32          	15351488	        78.09 ns/op	       5 B/op	       1 allocs/op
+BenchmarkKeys/lang=de/impl=library-32         	 7482464	       160.4 ns/op	     134 B/op	       3 allocs/op
+BenchmarkKeys/lang=de/impl=intree-32          	28829529	        41.61 ns/op	       4 B/op	       0 allocs/op
+PASS

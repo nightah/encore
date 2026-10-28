@@ -1,0 +1,56 @@
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/retrieval
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkBuild/impl=bleve-32         	       3	2141130896 ns/op	       142.5 heap-MB
+BenchmarkBuild/impl=intree-32        	       3	 544075040 ns/op	       135.0 heap-MB
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/retrieval
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkBuild/impl=bleve-32         	       3	2105865083 ns/op	       145.9 heap-MB
+BenchmarkBuild/impl=intree-32        	       3	 538934250 ns/op	       134.9 heap-MB
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/retrieval
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkBuild/impl=bleve-32         	       3	2148128135 ns/op	       145.0 heap-MB
+BenchmarkBuild/impl=intree-32        	       3	 543821092 ns/op	       135.0 heap-MB
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/retrieval
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkBuild/impl=bleve-32         	       3	2286955327 ns/op	       145.0 heap-MB
+BenchmarkBuild/impl=intree-32        	       3	 562760850 ns/op	       135.0 heap-MB
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/retrieval
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkBuild/impl=bleve-32         	       3	2103313046 ns/op	       144.6 heap-MB
+BenchmarkBuild/impl=intree-32        	       3	 540665520 ns/op	       135.0 heap-MB
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/retrieval
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkBuild/impl=bleve-32         	       3	2183688723 ns/op	       145.9 heap-MB
+BenchmarkBuild/impl=intree-32        	       3	 583453181 ns/op	       135.0 heap-MB
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/retrieval
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkBuild/impl=bleve-32         	       3	2155095609 ns/op	       145.5 heap-MB
+BenchmarkBuild/impl=intree-32        	       3	 550732930 ns/op	       135.0 heap-MB
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/retrieval
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkBuild/impl=bleve-32         	       3	2142740749 ns/op	       147.2 heap-MB
+BenchmarkBuild/impl=intree-32        	       3	 554447923 ns/op	       135.0 heap-MB
+PASS

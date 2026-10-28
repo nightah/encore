@@ -1,0 +1,120 @@
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/retrieval
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkSearch100k/impl=bleve-32         	    1000	   4093445 ns/op	         2.925 p50-ms	        12.56 p99-ms	 2050564 B/op	   12036 allocs/op
+BenchmarkSearch100k/impl=intree-32        	    1000	   2525377 ns/op	         1.799 p50-ms	         7.881 p99-ms	  277889 B/op	    1717 allocs/op
+BenchmarkSearchScale/impl=bleve/n=100000-32         	    1000	   3862262 ns/op	         3.202 p50-ms	        13.38 p99-ms	 2097457 B/op	   10454 allocs/op
+BenchmarkSearchScale/impl=intree/n=100000-32        	    1000	   2390553 ns/op	         2.098 p50-ms	         6.936 p99-ms	  267872 B/op	    1568 allocs/op
+BenchmarkSearchScale/impl=bleve/n=500000-32         	    1000	   7846463 ns/op	         5.571 p50-ms	        43.33 p99-ms	 4290363 B/op	   35457 allocs/op
+BenchmarkSearchScale/impl=intree/n=500000-32        	    1000	   3184609 ns/op	         2.506 p50-ms	        13.75 p99-ms	  425081 B/op	    1434 allocs/op
+BenchmarkCandidates/impl=bleve/n=100000-32          	    1000	   1513461 ns/op	         1.052 p50-ms	         8.061 p99-ms	 1865016 B/op	    8917 allocs/op
+BenchmarkCandidates/impl=intree/n=100000-32         	    1000	    206871 ns/op	         0.1770 p50-ms	         0.6670 p99-ms	   31553 B/op	      31 allocs/op
+BenchmarkCandidates/impl=bleve/n=500000-32          	    1000	   5364890 ns/op	         3.372 p50-ms	        38.33 p99-ms	 3955898 B/op	   34052 allocs/op
+BenchmarkCandidates/impl=intree/n=500000-32         	    1000	    549860 ns/op	         0.3900 p50-ms	         2.635 p99-ms	   36184 B/op	      31 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/retrieval
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkSearch100k/impl=bleve-32         	    1000	   4076986 ns/op	         2.854 p50-ms	        12.96 p99-ms	 2050542 B/op	   12035 allocs/op
+BenchmarkSearch100k/impl=intree-32        	    1000	   2503886 ns/op	         1.826 p50-ms	         8.093 p99-ms	  278192 B/op	    1717 allocs/op
+BenchmarkSearchScale/impl=bleve/n=100000-32         	    1000	   3874684 ns/op	         3.221 p50-ms	        14.17 p99-ms	 2097460 B/op	   10454 allocs/op
+BenchmarkSearchScale/impl=intree/n=100000-32        	    1000	   2427143 ns/op	         2.135 p50-ms	         7.293 p99-ms	  267872 B/op	    1568 allocs/op
+BenchmarkSearchScale/impl=bleve/n=500000-32         	    1000	   7886665 ns/op	         5.714 p50-ms	        42.76 p99-ms	 4290316 B/op	   35457 allocs/op
+BenchmarkSearchScale/impl=intree/n=500000-32        	    1000	   3181215 ns/op	         2.524 p50-ms	        13.34 p99-ms	  428380 B/op	    1434 allocs/op
+BenchmarkCandidates/impl=bleve/n=100000-32          	    1000	   1501056 ns/op	         1.042 p50-ms	         8.019 p99-ms	 1865015 B/op	    8917 allocs/op
+BenchmarkCandidates/impl=intree/n=100000-32         	    1000	    203784 ns/op	         0.1750 p50-ms	         0.6600 p99-ms	   28501 B/op	      31 allocs/op
+BenchmarkCandidates/impl=bleve/n=500000-32          	    1000	   5397803 ns/op	         3.371 p50-ms	        38.17 p99-ms	 3955904 B/op	   34052 allocs/op
+BenchmarkCandidates/impl=intree/n=500000-32         	    1000	    545097 ns/op	         0.3880 p50-ms	         2.616 p99-ms	   51246 B/op	      31 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/retrieval
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkSearch100k/impl=bleve-32         	    1000	   4120961 ns/op	         2.934 p50-ms	        12.69 p99-ms	 2050567 B/op	   12036 allocs/op
+BenchmarkSearch100k/impl=intree-32        	    1000	   2521345 ns/op	         1.850 p50-ms	         7.952 p99-ms	  274609 B/op	    1717 allocs/op
+BenchmarkSearchScale/impl=bleve/n=100000-32         	    1000	   3877086 ns/op	         3.208 p50-ms	        13.60 p99-ms	 2097479 B/op	   10454 allocs/op
+BenchmarkSearchScale/impl=intree/n=100000-32        	    1000	   2430679 ns/op	         2.120 p50-ms	         7.086 p99-ms	  271300 B/op	    1568 allocs/op
+BenchmarkSearchScale/impl=bleve/n=500000-32         	    1000	   8024483 ns/op	         5.749 p50-ms	        41.25 p99-ms	 4290251 B/op	   35457 allocs/op
+BenchmarkSearchScale/impl=intree/n=500000-32        	    1000	   3396554 ns/op	         2.699 p50-ms	        14.12 p99-ms	  406951 B/op	    1434 allocs/op
+BenchmarkCandidates/impl=bleve/n=100000-32          	    1000	   1586213 ns/op	         1.125 p50-ms	         8.749 p99-ms	 1865014 B/op	    8917 allocs/op
+BenchmarkCandidates/impl=intree/n=100000-32         	    1000	    226014 ns/op	         0.1900 p50-ms	         0.6990 p99-ms	   31553 B/op	      31 allocs/op
+BenchmarkCandidates/impl=bleve/n=500000-32          	    1000	   5583646 ns/op	         3.562 p50-ms	        40.43 p99-ms	 3955905 B/op	   34052 allocs/op
+BenchmarkCandidates/impl=intree/n=500000-32         	    1000	    716681 ns/op	         0.4700 p50-ms	         3.686 p99-ms	   72729 B/op	      31 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/retrieval
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkSearch100k/impl=bleve-32         	    1000	   4136696 ns/op	         2.956 p50-ms	        12.21 p99-ms	 2050468 B/op	   12035 allocs/op
+BenchmarkSearch100k/impl=intree-32        	    1000	   2579261 ns/op	         1.853 p50-ms	         7.994 p99-ms	  274609 B/op	    1717 allocs/op
+BenchmarkSearchScale/impl=bleve/n=100000-32         	    1000	   3939770 ns/op	         3.224 p50-ms	        14.12 p99-ms	 2097574 B/op	   10454 allocs/op
+BenchmarkSearchScale/impl=intree/n=100000-32        	    1000	   2491442 ns/op	         2.171 p50-ms	         7.176 p99-ms	  267872 B/op	    1568 allocs/op
+BenchmarkSearchScale/impl=bleve/n=500000-32         	    1000	   7920438 ns/op	         5.716 p50-ms	        43.56 p99-ms	 4290299 B/op	   35457 allocs/op
+BenchmarkSearchScale/impl=intree/n=500000-32        	    1000	   3267748 ns/op	         2.573 p50-ms	        14.46 p99-ms	  424972 B/op	    1434 allocs/op
+BenchmarkCandidates/impl=bleve/n=100000-32          	    1000	   1554522 ns/op	         1.094 p50-ms	         8.044 p99-ms	 1865015 B/op	    8917 allocs/op
+BenchmarkCandidates/impl=intree/n=100000-32         	    1000	    214375 ns/op	         0.1840 p50-ms	         0.6700 p99-ms	   31553 B/op	      31 allocs/op
+BenchmarkCandidates/impl=bleve/n=500000-32          	    1000	   5684007 ns/op	         3.657 p50-ms	        39.34 p99-ms	 3955897 B/op	   34052 allocs/op
+BenchmarkCandidates/impl=intree/n=500000-32         	    1000	    766923 ns/op	         0.4990 p50-ms	         4.348 p99-ms	   92803 B/op	      31 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/retrieval
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkSearch100k/impl=bleve-32         	    1000	   4130547 ns/op	         2.966 p50-ms	        12.53 p99-ms	 2050483 B/op	   12035 allocs/op
+BenchmarkSearch100k/impl=intree-32        	    1000	   2568326 ns/op	         1.821 p50-ms	         7.989 p99-ms	  269231 B/op	    1717 allocs/op
+BenchmarkSearchScale/impl=bleve/n=100000-32         	    1000	   3904609 ns/op	         3.243 p50-ms	        13.66 p99-ms	 2097527 B/op	   10454 allocs/op
+BenchmarkSearchScale/impl=intree/n=100000-32        	    1000	   2409498 ns/op	         2.117 p50-ms	         6.950 p99-ms	  268854 B/op	    1568 allocs/op
+BenchmarkSearchScale/impl=bleve/n=500000-32         	    1000	   7930798 ns/op	         5.740 p50-ms	        44.67 p99-ms	 4290321 B/op	   35457 allocs/op
+BenchmarkSearchScale/impl=intree/n=500000-32        	    1000	   3213756 ns/op	         2.539 p50-ms	        13.02 p99-ms	  428489 B/op	    1434 allocs/op
+BenchmarkCandidates/impl=bleve/n=100000-32          	    1000	   1514755 ns/op	         1.043 p50-ms	         7.720 p99-ms	 1865016 B/op	    8917 allocs/op
+BenchmarkCandidates/impl=intree/n=100000-32         	    1000	    206050 ns/op	         0.1770 p50-ms	         0.6720 p99-ms	   31553 B/op	      31 allocs/op
+BenchmarkCandidates/impl=bleve/n=500000-32          	    1000	   5411869 ns/op	         3.489 p50-ms	        36.55 p99-ms	 3955896 B/op	   34052 allocs/op
+BenchmarkCandidates/impl=intree/n=500000-32         	    1000	    572734 ns/op	         0.4040 p50-ms	         2.746 p99-ms	   89649 B/op	      31 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/retrieval
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkSearch100k/impl=bleve-32         	    1000	   4040928 ns/op	         2.875 p50-ms	        12.21 p99-ms	 2050590 B/op	   12036 allocs/op
+BenchmarkSearch100k/impl=intree-32        	    1000	   2527088 ns/op	         1.836 p50-ms	         7.913 p99-ms	  279987 B/op	    1717 allocs/op
+BenchmarkSearchScale/impl=bleve/n=100000-32         	    1000	   3846193 ns/op	         3.138 p50-ms	        13.94 p99-ms	 2097407 B/op	   10454 allocs/op
+BenchmarkSearchScale/impl=intree/n=100000-32        	    1000	   2408778 ns/op	         2.077 p50-ms	         7.171 p99-ms	  264557 B/op	    1568 allocs/op
+BenchmarkSearchScale/impl=bleve/n=500000-32         	    1000	   7976341 ns/op	         5.772 p50-ms	        42.67 p99-ms	 4290290 B/op	   35457 allocs/op
+BenchmarkSearchScale/impl=intree/n=500000-32        	    1000	   3293500 ns/op	         2.576 p50-ms	        14.56 p99-ms	  428271 B/op	    1434 allocs/op
+BenchmarkCandidates/impl=bleve/n=100000-32          	    1000	   1542759 ns/op	         1.070 p50-ms	         7.902 p99-ms	 1865014 B/op	    8917 allocs/op
+BenchmarkCandidates/impl=intree/n=100000-32         	    1000	    234094 ns/op	         0.1940 p50-ms	         0.7690 p99-ms	   35588 B/op	      31 allocs/op
+BenchmarkCandidates/impl=bleve/n=500000-32          	    1000	   5611631 ns/op	         3.513 p50-ms	        39.80 p99-ms	 3955896 B/op	   34052 allocs/op
+BenchmarkCandidates/impl=intree/n=500000-32         	    1000	    622766 ns/op	         0.4240 p50-ms	         3.211 p99-ms	   36184 B/op	      31 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/retrieval
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkSearch100k/impl=bleve-32         	    1000	   4087147 ns/op	         2.986 p50-ms	        12.37 p99-ms	 2050548 B/op	   12035 allocs/op
+BenchmarkSearch100k/impl=intree-32        	    1000	   2529382 ns/op	         1.840 p50-ms	         8.000 p99-ms	  275733 B/op	    1717 allocs/op
+BenchmarkSearchScale/impl=bleve/n=100000-32         	    1000	   3953633 ns/op	         3.249 p50-ms	        14.03 p99-ms	 2097448 B/op	   10454 allocs/op
+BenchmarkSearchScale/impl=intree/n=100000-32        	    1000	   2494098 ns/op	         2.194 p50-ms	         7.252 p99-ms	  272250 B/op	    1568 allocs/op
+BenchmarkSearchScale/impl=bleve/n=500000-32         	    1000	   7804094 ns/op	         5.591 p50-ms	        42.48 p99-ms	 4290295 B/op	   35457 allocs/op
+BenchmarkSearchScale/impl=intree/n=500000-32        	    1000	   3224230 ns/op	         2.565 p50-ms	        13.99 p99-ms	  413372 B/op	    1434 allocs/op
+BenchmarkCandidates/impl=bleve/n=100000-32          	    1000	   1537174 ns/op	         1.084 p50-ms	         8.056 p99-ms	 1865014 B/op	    8917 allocs/op
+BenchmarkCandidates/impl=intree/n=100000-32         	    1000	    218822 ns/op	         0.1850 p50-ms	         0.7100 p99-ms	   31553 B/op	      31 allocs/op
+BenchmarkCandidates/impl=bleve/n=500000-32          	    1000	   5462593 ns/op	         3.456 p50-ms	        38.06 p99-ms	 3955896 B/op	   34052 allocs/op
+BenchmarkCandidates/impl=intree/n=500000-32         	    1000	    618492 ns/op	         0.4200 p50-ms	         3.387 p99-ms	   68166 B/op	      31 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/retrieval
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkSearch100k/impl=bleve-32         	    1000	   4137883 ns/op	         3.075 p50-ms	        12.68 p99-ms	 2050570 B/op	   12036 allocs/op
+BenchmarkSearch100k/impl=intree-32        	    1000	   2558082 ns/op	         1.830 p50-ms	         8.057 p99-ms	  266199 B/op	    1717 allocs/op
+BenchmarkSearchScale/impl=bleve/n=100000-32         	    1000	   3901190 ns/op	         3.235 p50-ms	        13.80 p99-ms	 2097444 B/op	   10454 allocs/op
+BenchmarkSearchScale/impl=intree/n=100000-32        	    1000	   2450996 ns/op	         2.124 p50-ms	         7.135 p99-ms	  263837 B/op	    1568 allocs/op
+BenchmarkSearchScale/impl=bleve/n=500000-32         	    1000	   8027095 ns/op	         5.888 p50-ms	        44.06 p99-ms	 4290301 B/op	   35457 allocs/op
+BenchmarkSearchScale/impl=intree/n=500000-32        	    1000	   3257268 ns/op	         2.558 p50-ms	        14.19 p99-ms	  385467 B/op	    1434 allocs/op
+BenchmarkCandidates/impl=bleve/n=100000-32          	    1000	   1520073 ns/op	         1.033 p50-ms	         8.164 p99-ms	 1865014 B/op	    8917 allocs/op
+BenchmarkCandidates/impl=intree/n=100000-32         	    1000	    201439 ns/op	         0.1740 p50-ms	         0.6630 p99-ms	   31553 B/op	      31 allocs/op
+BenchmarkCandidates/impl=bleve/n=500000-32          	    1000	   5361402 ns/op	         3.368 p50-ms	        37.45 p99-ms	 3955898 B/op	   34052 allocs/op
+BenchmarkCandidates/impl=intree/n=500000-32         	    1000	    582568 ns/op	         0.4090 p50-ms	         2.702 p99-ms	   51246 B/op	      31 allocs/op
+PASS

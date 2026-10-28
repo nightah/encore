@@ -9,6 +9,7 @@
     "^tools/smapigen/spec/",
     "^tools/kodigen/schema/",
     "testdata/",
+    "^benchmarks/results/",
     "\\.(png|jpg|ico|svg|woff2?|gz|zip|db)$",
     "pnpm-lock\\.yaml$",
     "go\\.sum$"
