@@ -92,7 +92,7 @@ type Config struct {
 	// DerivedPenalty multiplies scores against shortened titles, such as "Dune" for "Dune: Part Two".
 	DerivedPenalty float64
 
-	// Retriever selects candidate retrieval: RetrieverBleve (default) or RetrieverTrigram for tiny libraries.
+	// Retriever selects candidate retrieval: RetrieverInverted (default), RetrieverBleve, or RetrieverTrigram for tiny libraries.
 	Retriever string
 }
 
@@ -214,7 +214,7 @@ type accumulator struct {
 	clauseTouched []uint32
 }
 
-// trigramRetriever is a dependency-free inverted index over character trigrams and phonetic keys. It is meant for small libraries and as a cross-check for bleve; deleted slots are tombstoned, not reclaimed.
+// trigramRetriever is a dependency-free inverted index over character trigrams and phonetic keys. It is meant for small libraries and as a cross-check for the inverted index; deleted slots are tombstoned, not reclaimed.
 type trigramRetriever struct {
 	mu       sync.RWMutex
 	slots    []trigramSlot

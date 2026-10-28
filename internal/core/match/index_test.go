@@ -82,7 +82,7 @@ func TestIndexRejectsBadInput(t *testing.T) {
 	_, err := New("en", Config{Retriever: "nope"})
 	require.Error(t, err)
 
-	ix := newIndex(t, RetrieverBleve)
+	ix := newIndex(t, RetrieverInverted)
 	require.Error(t, ix.Upsert(Doc{Title: "No ID"}))
 
 	res, err := ix.Search(t.Context(), Query{Text: "?!"})
@@ -115,8 +115,34 @@ func TestSearchKindsAndLimit(t *testing.T) {
 	})
 }
 
+// TestDefaultRetrieverFindsUnsegmentedScripts searches titles in scripts written without spaces with a letter missing. bleve's tokenizer split them into single characters or dropped them, so only an exact title found them.
+func TestDefaultRetrieverFindsUnsegmentedScripts(t *testing.T) {
+	ix, err := New("en", Config{})
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = ix.Close() })
+
+	require.NoError(t, ix.Upsert(
+		movie("spirited", "千と千尋の神隠し", 2001),
+		Doc{ID: "thai", Kind: media.KindSong, Title: "สวัสดีชาวโลก"},
+		Doc{ID: "kana", Kind: media.KindSong, Title: "ひらがなとカタカナ"},
+		movie("filler", "Inception", 2010),
+	))
+
+	for _, c := range [][2]string{
+		{"千と千尋の神隠", "spirited"},
+		{"สวัสดีชาวโล", "thai"},
+		{"ひらがなとカタカ", "kana"},
+	} {
+		res, err := ix.Search(t.Context(), Query{Text: c[0]})
+		require.NoError(t, err)
+
+		best, _ := res.Best()
+		assert.Equal(t, c[1], best.Doc.ID, "%q", c[0])
+	}
+}
+
 func TestBoostsReorderOnlyNearTies(t *testing.T) {
-	ix := newIndex(t, RetrieverBleve,
+	ix := newIndex(t, RetrieverInverted,
 		movie("old", "The Thing", 1982),
 		movie("new", "The Things", 2011),
 		movie("far", "Thingamajig", 2011),
@@ -140,7 +166,7 @@ func TestBoostsReorderOnlyNearTies(t *testing.T) {
 }
 
 func TestSearchYear(t *testing.T) {
-	ix := newIndex(t, RetrieverBleve, movie("d84", "Dune", 1984), movie("d21", "Dune", 2021))
+	ix := newIndex(t, RetrieverInverted, movie("d84", "Dune", 1984), movie("d21", "Dune", 2021))
 
 	for q, want := range map[string]string{"dune 1984": "d84", "dune twenty twenty one": "d21", "dune (2021)": "d21"} {
 		res, err := ix.Search(t.Context(), Query{Text: q})
@@ -157,7 +183,7 @@ func TestSearchYear(t *testing.T) {
 }
 
 func TestSearchHonoursContext(t *testing.T) {
-	ix := newIndex(t, RetrieverBleve, movie("a", "Inception", 2010))
+	ix := newIndex(t, RetrieverInverted, movie("a", "Inception", 2010))
 
 	ctx, cancel := context.WithCancel(t.Context())
 	cancel()
@@ -205,12 +231,12 @@ func TestIndexConcurrency(t *testing.T) {
 	})
 }
 
-// TestRetrieversAgree cross-checks bleve against the trigram retriever on the corpus libraries: decisions must match, and so must the top Doc when something was found.
+// TestRetrieversAgree cross-checks the inverted index against the trigram retriever on the corpus libraries: decisions must match, and so must the top Doc when something was found.
 func TestRetrieversAgree(t *testing.T) {
 	c := loadCorpus(t)
 
 	for _, suite := range c.Suites {
-		b, err := New(suite.Lang, Config{Retriever: RetrieverBleve})
+		b, err := New(suite.Lang, Config{Retriever: RetrieverInverted})
 		require.NoError(t, err)
 		t.Cleanup(func() { _ = b.Close() })
 

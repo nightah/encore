@@ -14,7 +14,7 @@ func DefaultConfig() Config {
 		CoveragePenalty: 0.5,
 		CompactCoverage: 0.9,
 		DerivedPenalty:  0.95,
-		Retriever:       RetrieverBleve,
+		Retriever:       RetrieverInverted,
 	}
 }
 
