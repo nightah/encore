@@ -8,7 +8,8 @@ import { cn, focusRing } from "@components/ui/cn";
 
 interface DialogProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
+  /** Escape, the backdrop or the close button. The caller opens the dialog by setting `open`; it has no trigger of its own. */
+  onClose: () => void;
   title: ReactNode;
   description?: ReactNode;
   children?: ReactNode;
@@ -18,10 +19,11 @@ interface DialogProps {
 }
 
 /** Modal dialog on Base UI: focus trap, Escape to close, labelled by its title. */
-export function Dialog({ open, onOpenChange, title, description, children, footer, size = "md" }: DialogProps) {
+export function Dialog({ open, onClose, title, description, children, footer, size = "md" }: DialogProps) {
   const { t } = useTranslation("common");
   return (
-    <BaseDialog.Root open={open} onOpenChange={(next) => onOpenChange(next)}>
+    // Without a trigger, Base UI only ever asks to close.
+    <BaseDialog.Root open={open} onOpenChange={() => onClose()}>
       <BaseDialog.Portal>
         <BaseDialog.Backdrop className="fixed inset-0 z-40 bg-black/40 transition-opacity data-ending-style:opacity-0 data-starting-style:opacity-0" />
         <BaseDialog.Popup

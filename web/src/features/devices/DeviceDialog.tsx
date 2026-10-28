@@ -48,9 +48,7 @@ export function DeviceDialog({ device, onClose, rooms, instances }: DeviceDialog
   return (
     <Dialog
       open={!!device}
-      onOpenChange={(open) => {
-        if (!open) close();
-      }}
+      onClose={close}
       title={title}
       description={device ? <span className="font-mono">{truncateDeviceId(device.alexa_device_id)}</span> : null}
       footer={

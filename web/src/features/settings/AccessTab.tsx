@@ -397,8 +397,8 @@ export function AccessTab({
           </div>
         ) : null}
       </form>
-      <ChangePasswordDialog open={passwordOpen} onOpenChange={setPasswordOpen} />
-      <TotpDialog open={totpOpen} onOpenChange={setTotpOpen} enabled={settings.auth.local.totp_enabled} />
+      <ChangePasswordDialog open={passwordOpen} onClose={() => setPasswordOpen(false)} />
+      <TotpDialog open={totpOpen} onClose={() => setTotpOpen(false)} enabled={settings.auth.local.totp_enabled} />
     </>
   );
 }
@@ -415,7 +415,7 @@ const passwordSchema = z
   });
 type PasswordValues = z.infer<typeof passwordSchema>;
 
-function ChangePasswordDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+function ChangePasswordDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useTranslation("settings");
   const form = useForm<PasswordValues>({
     defaultValues: { confirm: "", current: "", password: "" },
@@ -426,17 +426,15 @@ function ChangePasswordDialog({ open, onOpenChange }: { open: boolean; onOpenCha
     mutationFn: ({ current, password }: PasswordValues) =>
       changePassword({ current_password: current, new_password: password }),
   });
-  const close = (next: boolean) => {
-    onOpenChange(next);
-    if (!next) {
-      form.reset();
-      change.reset();
-    }
+  const close = () => {
+    onClose();
+    form.reset();
+    change.reset();
   };
   const submit = form.handleSubmit(async (values) => {
     try {
       await change.mutateAsync(values);
-      close(false);
+      close();
     } catch {
       // Shown below.
     }
@@ -444,12 +442,12 @@ function ChangePasswordDialog({ open, onOpenChange }: { open: boolean; onOpenCha
   return (
     <Dialog
       open={open}
-      onOpenChange={close}
+      onClose={close}
       title={t("access.password.title")}
       description={t("access.password.description")}
       footer={
         <>
-          <Button onClick={() => close(false)}>{t("access.cancel")}</Button>
+          <Button onClick={close}>{t("access.cancel")}</Button>
           <Button type="submit" form="change-password" variant="primary" pending={change.isPending}>
             {t("access.password.submit")}
           </Button>
@@ -477,15 +475,7 @@ function ChangePasswordDialog({ open, onOpenChange }: { open: boolean; onOpenCha
 }
 
 /** Turns TOTP on (enrol, add to an authenticator app, confirm a code) or off (confirm a code). */
-function TotpDialog({
-  open,
-  onOpenChange,
-  enabled,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  enabled: boolean;
-}) {
+function TotpDialog({ open, onClose, enabled }: { open: boolean; onClose: () => void; enabled: boolean }) {
   const { t } = useTranslation("settings");
   const queryClient = useQueryClient();
   const [code, setCode] = useState("");
@@ -518,7 +508,7 @@ function TotpDialog({
   const confirm = async () => {
     try {
       await submit.mutateAsync(code.trim());
-      onOpenChange(false);
+      onClose();
     } catch {
       // Shown below.
     }
@@ -528,12 +518,12 @@ function TotpDialog({
   return (
     <Dialog
       open={open}
-      onOpenChange={onOpenChange}
+      onClose={onClose}
       title={enabled ? t("access.totp.offTitle") : t("access.totp.onTitle")}
       description={enabled ? t("access.totp.offDescription") : t("access.totp.onDescription")}
       footer={
         <>
-          <Button onClick={() => onOpenChange(false)}>{t("access.cancel")}</Button>
+          <Button onClick={onClose}>{t("access.cancel")}</Button>
           {/* A submit button for the form, so Enter in the code field confirms even while the secret field makes it a two-field form. */}
           <Button
             type="submit"

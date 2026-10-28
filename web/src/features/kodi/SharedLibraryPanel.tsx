@@ -109,7 +109,7 @@ export function SharedLibraryPanel({
 
       <Dialog
         open={splitOpen}
-        onOpenChange={setSplitOpen}
+        onClose={() => setSplitOpen(false)}
         title={t("library.split.title")}
         description={t("library.split.description")}
         footer={

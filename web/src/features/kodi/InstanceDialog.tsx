@@ -72,7 +72,7 @@ function fromInstance(instance: Instance): InstanceForm {
 
 interface InstanceDialogProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onClose: () => void;
   /** Edit this instance; omit to add a new one. */
   instance?: Instance | undefined;
   /** Prefilled values for a new instance (e.g. from discovery). */
@@ -80,7 +80,7 @@ interface InstanceDialogProps {
 }
 
 /** Add or edit a Kodi instance. Config-managed instances open read-only. */
-export function InstanceDialog({ open, onOpenChange, instance, prefill }: InstanceDialogProps) {
+export function InstanceDialog({ open, onClose, instance, prefill }: InstanceDialogProps) {
   const { t } = useTranslation("kodi");
   const schema = useMemo(() => makeSchema(t), [t]);
   const create = useCreateInstance();
@@ -101,9 +101,9 @@ export function InstanceDialog({ open, onOpenChange, instance, prefill }: Instan
   }, [open, instance, prefill, form, create.reset, update.reset]);
 
   // Every way out of the dialog comes through here, so it always reopens without the removal confirmation.
-  const changeOpen = (next: boolean) => {
-    if (!next) setConfirmRemove(false);
-    onOpenChange(next);
+  const close = () => {
+    setConfirmRemove(false);
+    onClose();
   };
 
   const pending = create.isPending || update.isPending;
@@ -125,7 +125,7 @@ export function InstanceDialog({ open, onOpenChange, instance, prefill }: Instan
     try {
       if (instance) await update.mutateAsync({ body, id: instance.id });
       else await create.mutateAsync(body);
-      changeOpen(false);
+      close();
     } catch (error) {
       for (const [name, message] of Object.entries(fieldErrorsOf(error))) {
         if (name in values) form.setError(name as keyof InstanceForm, { message });
@@ -140,7 +140,7 @@ export function InstanceDialog({ open, onOpenChange, instance, prefill }: Instan
   return (
     <Dialog
       open={open}
-      onOpenChange={changeOpen}
+      onClose={close}
       size="lg"
       title={title}
       description={
@@ -160,7 +160,7 @@ export function InstanceDialog({ open, onOpenChange, instance, prefill }: Instan
             <Button
               variant="danger"
               pending={remove.isPending}
-              onClick={() => remove.mutate(instance.id, { onSuccess: () => changeOpen(false) })}
+              onClick={() => remove.mutate(instance.id, { onSuccess: close })}
             >
               {t("dialog.remove")}
             </Button>
@@ -172,7 +172,7 @@ export function InstanceDialog({ open, onOpenChange, instance, prefill }: Instan
                 {t("dialog.removeEllipsis")}
               </Button>
             ) : null}
-            <Button onClick={() => changeOpen(false)}>{managed ? t("dialog.close") : t("dialog.cancel")}</Button>
+            <Button onClick={close}>{managed ? t("dialog.close") : t("dialog.cancel")}</Button>
             {managed ? null : (
               <Button type="submit" form="instance-form" variant="primary" pending={pending}>
                 {instance ? t("dialog.save") : t("dialog.add")}

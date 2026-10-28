@@ -320,7 +320,7 @@ export function AmazonCard({ skill }: { skill: Skill }) {
       ) : null}
       <Dialog
         open={confirming}
-        onOpenChange={setConfirming}
+        onClose={() => setConfirming(false)}
         title={t("amazon.disconnectDialog.title")}
         description={t("amazon.disconnectDialog.description")}
         footer={
