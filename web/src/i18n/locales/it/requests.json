@@ -46,6 +46,7 @@
     "allDevices": "Tutti gli Echo",
     "allOutcomes": "Tutti gli esiti",
     "device": "Dispositivo Echo",
+    "deviceById": "Echo n. {{id}}",
     "label": "Filtra le richieste",
     "outcome": "Esito",
     "search": "Cerca in ciò che è stato sentito",

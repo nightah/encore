@@ -46,6 +46,7 @@
     "allDevices": "Alle Echos",
     "allOutcomes": "Alle Ergebnisse",
     "device": "Echo-Gerät",
+    "deviceById": "Echo Nr. {{id}}",
     "label": "Anfragen filtern",
     "outcome": "Ergebnis",
     "search": "Gehörtes durchsuchen",

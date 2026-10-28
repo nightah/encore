@@ -46,6 +46,7 @@
     "allDevices": "All Echos",
     "allOutcomes": "All outcomes",
     "device": "Echo device",
+    "deviceById": "Echo #{{id}}",
     "label": "Filter requests",
     "outcome": "Outcome",
     "search": "Search what was heard",
