@@ -967,6 +967,28 @@ describe("setup Kodi step", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
+  it("calls an unnamed Kodi Kodi while adding it, and sends a schemeless address as typed", async () => {
+    startAt(3);
+    getDb().discovered = [];
+    server.use(http.post("*/api/v1/kodi/instances", () => delay("infinite")));
+    const user = userEvent.setup();
+    const log = recordRequests();
+    renderApp("/setup");
+    await heading("Add your first Kodi");
+
+    await user.type(await screen.findByLabelText("JSON-RPC address"), "192.168.1.60:8080/jsonrpc");
+    await user.click(screen.getByRole("button", { name: "Add and test" }));
+
+    expect(await screen.findByText("Adding Kodi…")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(log.find((r) => r.method === "POST")?.body).toEqual({
+        name: "",
+        url: "192.168.1.60:8080/jsonrpc",
+        username: "kodi",
+      }),
+    );
+  });
+
   it("shows a failure to add that isn't about one field", async () => {
     startAt(3);
     failWith("post", "/kodi/instances", 500, "The database is locked.");
