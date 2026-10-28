@@ -321,6 +321,7 @@ describe("Kodi instance card", () => {
 
   it("hides the connection test results again", async () => {
     const user = userEvent.setup();
+    const log = recordRequests();
     renderApp("/kodi");
     const lounge = await card("Lounge");
 
@@ -329,7 +330,8 @@ describe("Kodi instance card", () => {
     await user.click(lounge.getByRole("button", { name: "Hide test results" }));
 
     expect(lounge.queryByRole("list", { name: "Connection test results" })).not.toBeInTheDocument();
-    expect(lounge.getByRole("button", { name: "Test connection" })).toBeInTheDocument();
+    expect(lounge.getByRole("button", { name: "Test connection" })).toBeEnabled();
+    expect(log.filter((r) => r.path === "/kodi/instances/1/test")).toHaveLength(1);
   });
 
   it("marks failed checks and leaves out their time", async () => {
@@ -686,6 +688,59 @@ describe("Kodi instance dialog", () => {
     expect(await within(dialog).findByText(message)).toBeInTheDocument();
     expect(within(dialog).getByRole("textbox", { name: label })).toHaveAttribute("aria-invalid", "true");
     expect(log.some((r) => r.method === "POST")).toBe(false);
+  });
+
+  it("accepts secure addresses and a MAC address with dashes", async () => {
+    const user = userEvent.setup();
+    const log = recordRequests();
+    renderApp("/kodi");
+    await card("Lounge");
+
+    await user.click(screen.getByRole("button", { name: "Add Kodi manually" }));
+    const dialog = await screen.findByRole("dialog", { name: "Add a Kodi instance" });
+    await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "Garage");
+    await user.type(within(dialog).getByRole("textbox", { name: "JSON-RPC URL" }), "https://kodi.lan/jsonrpc");
+    await user.type(within(dialog).getByRole("textbox", { name: "WebSocket URL" }), "wss://kodi.lan/jsonrpc");
+    await user.type(within(dialog).getByRole("textbox", { name: "MAC address (Wake-on-LAN)" }), "dc-a6-32-4b-19-0e");
+    await user.click(within(dialog).getByRole("button", { name: "Add Kodi instance" }));
+
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
+    expect(log.find((r) => r.method === "POST")?.body).toMatchObject({
+      mac: "dc-a6-32-4b-19-0e",
+      url: "https://kodi.lan/jsonrpc",
+      websocket_url: "wss://kodi.lan/jsonrpc",
+    });
+  });
+
+  it("puts a rejected address from the server under the address", async () => {
+    server.use(
+      http.post("*/api/v1/kodi/instances", () =>
+        HttpResponse.json(
+          {
+            detail: "Check the highlighted fields.",
+            errors: [{ location: "body.url", message: "Kodi didn't answer at this address." }],
+            status: 422,
+            title: "Unprocessable Entity",
+            type: "about:blank",
+          },
+          { headers: { "Content-Type": "application/problem+json" }, status: 422 },
+        ),
+      ),
+    );
+    const user = userEvent.setup();
+    renderApp("/kodi");
+    await card("Lounge");
+
+    await user.click(screen.getByRole("button", { name: "Add Kodi manually" }));
+    const dialog = await screen.findByRole("dialog", { name: "Add a Kodi instance" });
+    await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "Garage");
+    await user.type(within(dialog).getByRole("textbox", { name: "JSON-RPC URL" }), "http://192.168.1.60:8080/jsonrpc");
+    await user.click(within(dialog).getByRole("button", { name: "Add Kodi instance" }));
+
+    const url = within(dialog).getByRole("textbox", { name: "JSON-RPC URL" });
+    await waitFor(() => expect(url).toHaveAccessibleDescription("Kodi didn't answer at this address."));
+    expect(url).toHaveAttribute("aria-invalid", "true");
+    expect(within(dialog).queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("asks for a name before sending", async () => {
