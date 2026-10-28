@@ -11,10 +11,10 @@ on:
       - synchronize
       - reopened
 
-# One run per pull request; a newer edit or push cancels the one in progress.
+# One run per pull request at a time, in order, so labels from an older title never land after a newer one's. A run isn't cancelled by the next: an edit followed by a push (Renovate's rebases) runs both. Only a run still waiting when a third arrives is dropped, as the newest supersedes it.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions: {}
 

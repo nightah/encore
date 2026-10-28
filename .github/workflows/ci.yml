@@ -6,10 +6,10 @@ on:
   push:
     branches: ["**"]
 
-# One run per ref; a new push cancels the superseded run. Runs on main always finish: the build badge reports a cancelled run as failing, and every merged commit gets a full result and coverage upload.
+# One run per branch or pull request; a new push cancels the superseded run. Each commit on main gets a group of its own, so its run always finishes: the build badge reports a cancelled run as failing, and every merged commit gets a full result and coverage upload. A shared group wouldn't do, even without cancel-in-progress: a run waiting in it is cancelled when the next merge's run arrives.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  group: ${{ github.workflow }}-${{ github.ref == 'refs/heads/main' && github.sha || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read

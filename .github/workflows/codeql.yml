@@ -11,9 +11,9 @@ on:
     # Weekly, so new queries reach code that hasn't changed.
     - cron: '25 13 * * 3'
 
-# One run per ref; a new push to a pull request cancels the superseded run.
+# One run per pull request; a new push cancels the superseded run. Each commit on main gets a group of its own, so merges in quick succession are each analysed rather than cancelling one another.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref == 'refs/heads/main' && github.sha || github.ref }}
   cancel-in-progress: true
 
 permissions: {}
