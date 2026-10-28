@@ -139,6 +139,17 @@ describe("Request log", () => {
     expect(within(list).getByRole("button", { name: /play hot fuzzy/ })).toBeInTheDocument();
   });
 
+  it("shows the first match instead of a request the new filter hides", async () => {
+    const user = userEvent.setup();
+    renderApp("/request-log?id=1003");
+    await screen.findByRole("heading", { level: 2, name: "“pause”" });
+
+    await user.selectOptions(screen.getByLabelText("Outcome"), "not_found");
+
+    expect(await screen.findByRole("heading", { level: 2, name: "“play hot fuzzy”" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { level: 2, name: "“pause”" })).not.toBeInTheDocument();
+  });
+
   it("replays a request as a dry run", async () => {
     const user = userEvent.setup();
     const log = recordRequests();
@@ -302,6 +313,13 @@ describe("Request log", () => {
     expect(screen.getByText("Try a different search or clear the filters.")).toBeInTheDocument();
   });
 
+  it.each(["device=1", "outcome=error"])("says no request matches when filtered by %s", async (filter) => {
+    getDb().requests = getDb().requests.filter((r) => r.device_id !== 1 && r.outcome !== "error");
+    renderApp(`/request-log?${filter}`);
+    expect(await screen.findByText("No matching requests")).toBeInTheDocument();
+    expect(screen.queryByText("No requests yet")).not.toBeInTheDocument();
+  });
+
   it("shows when the live feed drops", async () => {
     renderApp("/request-log");
     await requestList();
@@ -338,6 +356,29 @@ describe("Request log", () => {
     expect(screen.getAllByText("Encore 6.2 s · Kodi 200 ms · total 6.4 s").length).toBeGreaterThan(0);
     expect(screen.getByText("(failed)")).toBeInTheDocument();
     expect(screen.getByText("Kodi didn't answer.")).toBeInTheDocument();
+  });
+
+  it("never shows negative Encore time when Kodi's calls outlast the request", async () => {
+    const request = getDb().requests.find((r) => r.id === 1002);
+    if (!request) throw new Error("no sample request");
+    request.timing = null;
+    request.duration_ms = 500;
+    request.kodi_calls = [{ method: "Player.Open", ms: 800, ok: true }];
+    renderApp("/request-log?id=1002");
+    await screen.findByRole("heading", { level: 2, name: "“shuffle radiohead”" });
+
+    expect(screen.getAllByText("Encore 0 ms · Kodi 800 ms · total 500 ms").length).toBeGreaterThan(0);
+  });
+
+  it("lists only the slots Alexa filled", async () => {
+    const request = getDb().requests.find((r) => r.id === 1001);
+    if (!request) throw new Error("no sample request");
+    request.slots = { Room: "", Title: "hot fuzzy", Year: "" };
+    renderApp("/request-log?id=1001");
+    await screen.findByRole("heading", { level: 2, name: "“play hot fuzzy”" });
+
+    expect(screen.getByText('Title = "hot fuzzy"')).toBeInTheDocument();
+    expect(screen.queryByText(/Room =/)).not.toBeInTheDocument();
   });
 
   it("says when a match had no candidates", async () => {

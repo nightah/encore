@@ -29,6 +29,16 @@ describe("Alexa skill page", () => {
     expect(within(table).getByRole("meter", { name: /^en-AU: .* of 1.5 MB used$/ })).toBeInTheDocument();
   });
 
+  it("measures each locale's model against the limit Amazon sets", async () => {
+    const size = getDb().skill.model_size;
+    if (!size) throw new Error("no model size");
+    size.limit_bytes = 2_000_000;
+    renderApp("/alexa-skill");
+
+    const table = await screen.findByRole("table", { name: "Interaction model by locale" });
+    expect(within(table).getByRole("meter", { name: /^en-AU: .* of 2 MB used$/ })).toBeInTheDocument();
+  });
+
   it("saves locale changes with the CSRF token", async () => {
     const user = userEvent.setup();
     const log = recordRequests();

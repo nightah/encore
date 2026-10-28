@@ -54,11 +54,11 @@ describe("Library page", () => {
     const log = recordRequests();
     renderApp("/library");
 
-    await user.type(await screen.findByRole("textbox", { name: "What Alexa heard" }), "hot fuzzy");
+    await user.type(await screen.findByRole("textbox", { name: "What Alexa heard" }), "  Hot Fuzzy ");
     await user.click(screen.getByRole("button", { name: "Test" }));
     expect(await screen.findByText("Not found")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Add “hot fuzzy” as an alias for the top result" }));
+    await user.click(screen.getByRole("button", { name: "Add “Hot Fuzzy” as an alias for the top result" }));
 
     await waitFor(() =>
       expect(log.find((r) => r.method === "POST" && r.path === "/aliases")?.body).toEqual({
