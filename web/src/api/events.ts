@@ -51,10 +51,12 @@ function matchesFilters(item: RequestSummary, filters: RequestFilters): boolean 
   return true;
 }
 
-function upsert<T extends { id: number }>(list: T[] | undefined, item: T, prepend = false) {
+function upsert<T extends { id: number }>(list: T[], item: T): T[];
+function upsert<T extends { id: number }>(list: T[] | undefined, item: T): T[] | undefined;
+function upsert<T extends { id: number }>(list: T[] | undefined, item: T) {
   if (!list) return list;
   const index = list.findIndex((entry) => entry.id === item.id);
-  if (index === -1) return prepend ? [item, ...list] : [...list, item];
+  if (index === -1) return [...list, item];
   const next = list.slice();
   next[index] = item;
   return next;
@@ -66,7 +68,7 @@ function applyEvent<E extends EventName>(queryClient: QueryClient, name: E, payl
     case "request": {
       const item = payload as RequestSummary;
       for (const query of queryClient.getQueryCache().findAll({ queryKey: keys.requests })) {
-        const filters = (query.queryKey[2] ?? {}) as RequestFilters;
+        const filters = query.queryKey[2] as RequestFilters;
         if (!matchesFilters(item, filters)) continue;
         queryClient.setQueryData<InfiniteData<RequestPage>>(query.queryKey, (data) => {
           if (!data?.pages[0] || data.pages[0].items.some((r) => r.id === item.id)) return data;
@@ -97,7 +99,7 @@ function applyEvent<E extends EventName>(queryClient: QueryClient, name: E, payl
       const item = payload as Instance;
       queryClient.setQueryData<Instance[]>(keys.instances, (list) => upsert(list, item));
       queryClient.setQueryData<Overview>(keys.overview, (overview) =>
-        overview ? { ...overview, instances: upsert(overview.instances, item) ?? [] } : overview,
+        overview ? { ...overview, instances: upsert(overview.instances, item) } : overview,
       );
       break;
     }
@@ -149,7 +151,8 @@ function applyEvent<E extends EventName>(queryClient: QueryClient, name: E, payl
 class EventStream {
   private source: EventSource | undefined;
   private refs = 0;
-  private queryClient: QueryClient | undefined;
+  // Set by acquire, the only way a connection (and so an event) starts.
+  private queryClient!: QueryClient;
   private listeners = new Map<EventName, Set<Listener<EventName>>>();
   private statusListeners = new Set<(status: StreamStatus) => void>();
   status: StreamStatus = "connecting";
@@ -205,7 +208,7 @@ class EventStream {
       return;
     }
     if (typeof data !== "object" || data === null) return;
-    if (this.queryClient) applyEvent(this.queryClient, name, data);
+    applyEvent(this.queryClient, name, data);
     for (const listener of this.listeners.get(name) ?? []) listener(data);
   }
 
