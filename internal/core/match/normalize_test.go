@@ -64,6 +64,11 @@ func TestNormalize(t *testing.T) {
 		{"en", "one twenty", "1 20"},
 		{"en", "two hundred hundred", "200 100"},
 		{"en", "one thousand thousand", "1000 1000"},
+		{"en", "two thousand five thousand", "2005 1000"},
+		{"en", "two thousand one hundred thousand", "2100 1000"},
+		{"en", "nineteen twentieth", "19 20"},
+		{"en", "twenty and twelve", "20 and 12"},
+		{"en", "twenty and one", "21"},
 		// German: umlauts, ß, articles, compounds and ordinals.
 		{"de", "Die Brücke", "brucke"},
 		{"de", "Der Schuh des Manitu", "schuh des manitu"},
