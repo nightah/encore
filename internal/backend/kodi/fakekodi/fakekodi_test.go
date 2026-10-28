@@ -5,8 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
-	"net/http/httptest"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	"github.com/coder/websocket"
@@ -33,7 +33,7 @@ func post(t *testing.T, s *Server, user, pass, method string, params any) (int, 
 		req.SetBasicAuth(user, pass)
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := s.Client().Do(req)
 	require.NoError(t, err)
 
 	defer resp.Body.Close()
@@ -125,18 +125,26 @@ func TestHandleOverride(t *testing.T) {
 	assert.Equal(t, CodeUnavailable, resp.Error.Code)
 }
 
+// dial connects to the fake's WebSocket.
+func dial(t *testing.T, s *Server) *websocket.Conn {
+	t.Helper()
+
+	conn, resp, err := websocket.Dial(t.Context(), s.WebSocketURL(), &websocket.DialOptions{HTTPClient: s.Client()})
+	require.NoError(t, err)
+
+	if resp.Body != nil {
+		require.NoError(t, resp.Body.Close())
+	}
+
+	t.Cleanup(func() { _ = conn.CloseNow() })
+
+	return conn
+}
+
 func TestWebSocketCallsAndNotifications(t *testing.T) {
 	s := New(t, Options{})
 	ctx := t.Context()
-
-	conn, dialResp, err := websocket.Dial(ctx, s.WebSocketURL(), nil)
-	require.NoError(t, err)
-
-	if dialResp.Body != nil {
-		require.NoError(t, dialResp.Body.Close())
-	}
-
-	defer conn.CloseNow()
+	conn := dial(t, s)
 
 	require.NoError(t, conn.Write(ctx, websocket.MessageText,
 		[]byte(`{"jsonrpc":"2.0","id":7,"method":"Player.Open","params":{"item":{"movieid":3}}}`)))
@@ -172,29 +180,19 @@ func TestWebSocketCallsAndNotifications(t *testing.T) {
 
 // A client counts itself connected once it has the handshake response, which can be before the server has registered it; a notification sent straight away must still reach it.
 func TestNotifyReachesAClientStillBeingRegistered(t *testing.T) {
-	s := NewServer(Options{})
-	s.afterAccept = func() { time.Sleep(100 * time.Millisecond) }
-	s.httpServer = httptest.NewServer(s)
-	s.addr = s.httpServer.Listener.Addr().String()
-	t.Cleanup(s.Close)
+	synctest.Test(t, func(t *testing.T) {
+		s := NewNetwork(t).New(Options{})
+		s.afterAccept = func() { time.Sleep(100 * time.Millisecond) }
 
-	ctx := t.Context()
+		conn := dial(t, s)
+		s.Notify("VideoLibrary.OnScanFinished", nil)
 
-	conn, dialResp, err := websocket.Dial(ctx, s.WebSocketURL(), nil)
-	require.NoError(t, err)
+		ctx, cancel := context.WithTimeout(t.Context(), time.Second)
+		defer cancel()
 
-	if dialResp.Body != nil {
-		require.NoError(t, dialResp.Body.Close())
-	}
-
-	defer conn.CloseNow()
-
-	s.Notify("VideoLibrary.OnScanFinished", nil)
-
-	readCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
-	defer cancel()
-
-	_, data, err := conn.Read(readCtx)
-	require.NoError(t, err, "the notification was lost")
-	assert.Contains(t, string(data), `"method":"VideoLibrary.OnScanFinished"`)
+		_, data, err := conn.Read(ctx)
+		require.NoError(t, err, "the notification was lost")
+		assert.Contains(t, string(data), `"method":"VideoLibrary.OnScanFinished"`)
+		assert.Equal(t, 1, s.WebSocketClients())
+	})
 }

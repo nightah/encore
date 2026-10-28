@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"testing"
+	"testing/synctest"
 	"time"
 
-	"github.com/coder/websocket"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -15,13 +15,7 @@ func notifications(t *testing.T, s *Server) <-chan string {
 	t.Helper()
 
 	ctx, cancel := context.WithCancel(context.Background())
-
-	conn, resp, err := websocket.Dial(ctx, s.WebSocketURL(), nil)
-	require.NoError(t, err)
-
-	if resp.Body != nil {
-		require.NoError(t, resp.Body.Close())
-	}
+	conn := dial(t, s)
 
 	out := make(chan string, 16)
 	done := make(chan struct{})
@@ -50,59 +44,45 @@ func notifications(t *testing.T, s *Server) <-chan string {
 		<-done
 	})
 
-	require.Eventually(t, func() bool { return s.WebSocketClients() == 1 }, 2*time.Second, 5*time.Millisecond)
-
 	return out
 }
 
 func TestSharedLibrary(t *testing.T) {
-	lib := DefaultLibrary()
-	a, b := New(t, Options{Library: lib}), New(t, Options{Library: lib})
-	fromA, fromB := notifications(t, a), notifications(t, b)
+	synctest.Test(t, func(t *testing.T) {
+		lib, n := DefaultLibrary(), NewNetwork(t)
+		a, b := n.New(Options{Library: lib}), n.New(Options{Library: lib})
+		fromA, fromB := notifications(t, a), notifications(t, b)
 
-	played := time.Date(2026, 10, 26, 21, 30, 0, 0, time.Local)
-	require.True(t, a.SetPlayState("movie", 3, PlayState{PlayCount: 1, LastPlayed: played}))
-	assert.False(t, a.SetPlayState("movie", 999, PlayState{}))
+		played := time.Date(2026, 10, 26, 21, 30, 0, 0, time.Local)
+		require.True(t, a.SetPlayState("movie", 3, PlayState{PlayCount: 1, LastPlayed: played}))
+		assert.False(t, a.SetPlayState("movie", 999, PlayState{}))
 
-	// The change is visible through both servers.
-	for _, s := range []*Server{a, b} {
-		_, resp := post(t, s, "", "", "VideoLibrary.GetMovieDetails", map[string]any{"movieid": 3})
-		require.Nil(t, resp.Error)
-		assert.Contains(t, string(resp.Result), `"playcount":1`)
-		assert.Contains(t, string(resp.Result), `"lastplayed":"2026-10-26 21:30:00"`)
-		assert.Contains(t, string(resp.Result), `"position":0`)
-	}
+		// The change is visible through both servers.
+		for _, s := range []*Server{a, b} {
+			_, resp := post(t, s, "", "", "VideoLibrary.GetMovieDetails", map[string]any{"movieid": 3})
+			require.Nil(t, resp.Error)
+			assert.Contains(t, string(resp.Result), `"playcount":1`)
+			assert.Contains(t, string(resp.Result), `"lastplayed":"2026-10-26 21:30:00"`)
+			assert.Contains(t, string(resp.Result), `"position":0`)
+		}
 
-	// Only the server that made the change says so.
-	assert.Equal(t, "Player.OnStop", <-fromA)
-	assert.Equal(t, "VideoLibrary.OnUpdate", <-fromA)
+		// Only the server that made the change says so.
+		synctest.Wait()
+		assert.Equal(t, "Player.OnStop", <-fromA)
+		assert.Equal(t, "VideoLibrary.OnUpdate", <-fromA)
+		assert.Empty(t, fromB, "the other server notifies nothing")
 
-	select {
-	case m := <-fromB:
-		t.Fatalf("the other server notified %s", m)
-	case <-time.After(100 * time.Millisecond):
-	}
+		// Updates through either server reach the shared library.
+		b.Update(func(l *Library) { l.Episodes[0].PlayCount = 7 })
 
-	// Updates through either server reach the shared library.
-	b.Update(func(l *Library) { l.Episodes[0].PlayCount = 7 })
-
-	_, resp := post(t, a, "", "", "VideoLibrary.GetEpisodeDetails", map[string]any{"episodeid": 101})
-	assert.Contains(t, string(resp.Result), `"playcount":7`)
+		_, resp := post(t, a, "", "", "VideoLibrary.GetEpisodeDetails", map[string]any{"episodeid": 101})
+		assert.Contains(t, string(resp.Result), `"playcount":7`)
+	})
 }
 
 func TestSetPlayStateAnnouncesPlayCountOnlyWhenChanged(t *testing.T) {
 	s := New(t, Options{})
-
-	conn, resp, err := websocket.Dial(t.Context(), s.WebSocketURL(), nil)
-	require.NoError(t, err)
-
-	if resp.Body != nil {
-		require.NoError(t, resp.Body.Close())
-	}
-
-	defer conn.CloseNow()
-
-	require.Eventually(t, func() bool { return s.WebSocketClients() == 1 }, 2*time.Second, 5*time.Millisecond)
+	conn := dial(t, s)
 
 	read := func() string {
 		ctx, cancel := context.WithTimeout(t.Context(), 2*time.Second)
