@@ -43,7 +43,7 @@ type corpusCase struct {
 	XFail string `yaml:"xfail"`
 }
 
-func loadCorpus(t *testing.T) corpus {
+func loadCorpus(t testing.TB) corpus {
 	t.Helper()
 
 	raw, err := os.ReadFile("testdata/asr_corpus.yaml")
