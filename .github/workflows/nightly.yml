@@ -1,5 +1,6 @@
 name: Nightly
 
+# The nightly runs what needs something outside the tree: real Kodi, MinIO, rclone and Nextcloud servers, Amazon's live API, the pinned libraries the benchmarks module compares the in-tree code with, and the slow mutation run. A change to Encore's own code or test data should never fail here first: its gates, the matcher's accuracy on the corpora and on absent titles included, run in CI (ci-jobs.yml) on every push and pull request.
 on:
   schedule:
     # Daily at 17:00 UTC, split so Sunday's run can be told apart: every job runs on both schedules, mutation testing only on the Sunday one.

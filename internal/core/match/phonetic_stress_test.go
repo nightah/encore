@@ -1,6 +1,6 @@
 //go:build phoneticeval
 
-// The stress tests below only log, and take a minute under the race detector, so they run on demand: go test -tags phoneticeval -run 'TestPhonetic(Collisions|Distractors)' -v ./internal/core/match/
+// TestPhoneticCollisions only logs, and TestPhoneticDistractors holds production to wrong-play ceilings. TestPhoneticDistractors takes about two minutes, and more than the ten minutes go test allows by default under the race detector, so both sit behind a build tag: CI runs TestPhoneticDistractors on every push and pull request in a step of its own without -race (.github/workflows/ci-jobs.yml). By hand: go test -tags phoneticeval -run 'TestPhonetic(Collisions|Distractors)' -v ./internal/core/match/
 
 package match
 
@@ -14,12 +14,13 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/nightah/encore/internal/core/media"
 )
 
-// vocabulary is the words a language's synthetic titles are made of: every distinct normalised word of at least three letters in Encore's own translations (i18n/lang and the web UI locales), real words of the language that nobody chose to suit an encoder. They were frozen into testdata/distractors on 29 October 2026, so a translation update never moves what TestPhoneticDistractors measures.
+// vocabulary is the words a language's synthetic titles are made of: every distinct normalised word of at least three letters in Encore's own translations (i18n/lang and the web UI locales), real words of the language that nobody chose to suit an encoder. They were frozen into testdata/distractors on 29 October 2026, so a translation update never moves the wrong-play ceilings TestPhoneticDistractors holds production to.
 func vocabulary(t *testing.T, l *language) []string {
 	t.Helper()
 
@@ -146,7 +147,13 @@ func distractorPlays(t *testing.T, code, retr string, sets []distractorSet) (pla
 	return plays, asks
 }
 
-// TestPhoneticDistractors stresses precision with vocabulary nobody chose: for each of distractorSeeds, a library of 2000 synthetic titles of one to four words from the language's translations, queried with 400 other such titles that are not in it. Any play is a wrong play; asks cost a question. It logs the counts per encoder and retriever, and every play an encoder adds or removes against English Double Metaphone.
+// distractorCeiling is the most absent titles production may play per retriever and language, of the 2000 TestPhoneticDistractors asks: the counts measured when they were set. Lower one when a change plays fewer; raise one only with the evidence that the accuracy tables in docs/src/content/docs/contributing/dependencies.md are updated with.
+var distractorCeiling = map[string]int{
+	"inverted/de": 102, "inverted/en": 62, "inverted/es": 120, "inverted/fr": 73, "inverted/it": 94,
+	"trigram/de": 102, "trigram/en": 62, "trigram/es": 119, "trigram/fr": 73, "trigram/it": 94,
+}
+
+// TestPhoneticDistractors stresses precision with vocabulary nobody chose: for each of distractorSeeds, a library of 2000 synthetic titles of one to four words from the language's translations, queried with 400 other such titles that are not in it. Any play is a wrong play; asks cost a question. It logs the counts per encoder and retriever, and every play an encoder adds or removes against English Double Metaphone, and fails when production plays more than its distractorCeiling.
 func TestPhoneticDistractors(t *testing.T) {
 	var table strings.Builder
 
@@ -177,6 +184,12 @@ func TestPhoneticDistractors(t *testing.T) {
 						english = plays
 
 						return
+					}
+
+					if enc.name == "current" {
+						ceiling, ok := distractorCeiling[retr+"/"+code]
+						require.True(t, ok, "no distractor ceiling for %s/%s", retr, code)
+						assert.LessOrEqual(t, len(plays), ceiling, "%s %s: production plays more absent titles than its ceiling", retr, code)
 					}
 
 					for _, q := range slices.Sorted(maps.Keys(plays)) {

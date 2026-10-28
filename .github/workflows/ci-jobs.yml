@@ -19,7 +19,7 @@ jobs:
   go:
     name: Go
     runs-on: ubuntu-26.04
-    timeout-minutes: 20
+    timeout-minutes: 25
     permissions:
       contents: read # check out the code
       id-token: write # upload coverage to Codecov without a token (OIDC)
@@ -78,6 +78,10 @@ jobs:
       - name: Test
         # -coverpkg credits code to whichever package's tests run it, so code tested through its callers counts.
         run: go test -race -coverpkg=./... -coverprofile=coverage.out -covermode=atomic ./...
+
+      # The matcher's accuracy is gated here, on every push and pull request, so a regression fails the change that causes it rather than a later nightly. The Test step already runs TestPhoneticEval, which holds production to its floors on the grown corpora. TestPhoneticDistractors, which holds production's wrong plays for titles a library doesn't have to their ceilings, takes about two minutes, and under the race detector, which has little to find in a test that runs one search at a time, more than the ten minutes go test allows by default, so it sits behind a build tag and runs in this step without -race. It is a step of the Go job rather than a job of its own so it is part of a check that branch protection already requires.
+      - name: Phonetic distractors
+        run: go test -tags phoneticeval -count=1 -run TestPhoneticDistractors ./internal/core/match/
 
       - name: Coverage summary
         if: always()

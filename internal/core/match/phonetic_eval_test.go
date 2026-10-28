@@ -265,13 +265,22 @@ func discordant(out, ref []evalOutcome) (gains, losses int) {
 	return gains, losses
 }
 
-// fuzzyGate is how many more correct decisions than English Double Metaphone internal/fuzzy must make per language on the original corpora: the French and Spanish encoders earn their place only with a measurable gain.
+// fuzzyGate is how many more correct decisions than English Double Metaphone internal/fuzzy must make per language on the original corpora, and production on both sets where it has its own encoder (ownEncoder): the French and Spanish encoders earn their place only with a measurable gain.
 var fuzzyGate = map[string]int{"fr": 3, "es": 3}
 
-// ownEncoder lists the gated languages production keys with their own encoder. Production is held to the same gate there, so a language that lost its encoder would fail.
+// ownEncoder lists the gated languages production keys with their own encoder. Production is held to the same gate there, on both corpus sets, so a language that lost its encoder would fail.
 var ownEncoder = map[string]bool{"es": true, "fr": true}
 
-// TestPhoneticEval measures match accuracy per corpus set and language through the real pipeline (normalise, alias, retrieve, score, decide) with each candidate phonetic encoder swapped in. It logs a table with each encoder's gains and losses against English Double Metaphone, the production encoder's misses and every case another encoder gains or loses against it; run it with -v to read them. On the original corpora, internal/fuzzy, and production in the languages listed in ownEncoder, are held to fuzzyGate against English Double Metaphone with no wrong plays added, and internal/fuzzy must not lose a decision or add a wrong play against production.
+// grownFloor is what production must still do on each language's grown corpus, under either retriever: decide at least correct cases right and make at most wrong wrong plays. They are the counts measured when they were set. Raise them when a change gains; lower one only with the evidence that the accuracy tables in docs/src/content/docs/contributing/dependencies.md are updated with.
+var grownFloor = map[string]evalScore{
+	"de": {correct: 535, wrong: 1},
+	"en": {correct: 463, wrong: 1},
+	"es": {correct: 418, wrong: 2},
+	"fr": {correct: 408, wrong: 2},
+	"it": {correct: 343, wrong: 1},
+}
+
+// TestPhoneticEval measures match accuracy per corpus set and language through the real pipeline (normalise, alias, retrieve, score, decide) with each candidate phonetic encoder swapped in. It logs a table with each encoder's gains and losses against English Double Metaphone, the production encoder's misses and every case another encoder gains or loses against it; run it with -v to read them. On the grown corpora production is held to grownFloor. On both sets, production in the languages listed in ownEncoder is held to fuzzyGate against English Double Metaphone with no wrong plays added. On the original corpora internal/fuzzy is held to fuzzyGate too, and must not lose a decision or add a wrong play against production; on the grown ones it is only reported, as German production adds a rule to it there (germanKeys).
 func TestPhoneticEval(t *testing.T) {
 	var table strings.Builder
 
@@ -340,15 +349,22 @@ func evalLanguage(t *testing.T, table *strings.Builder, set, retr, code string, 
 		}
 	}
 
-	if set != corpusOriginal {
-		return
-	}
-
 	got, eng := tally(base), tally(english)
 
+	if set == corpusGrown {
+		floor, ok := grownFloor[code]
+		require.True(t, ok, "no grown floor for %s", code)
+		assert.GreaterOrEqual(t, got.correct, floor.correct, "%s %s %s: production must decide at least %d cases right", set, retr, code, floor.correct)
+		assert.LessOrEqual(t, got.wrong, floor.wrong, "%s %s %s: production must make at most %d wrong plays", set, retr, code, floor.wrong)
+	}
+
 	if ownEncoder[code] {
-		assert.GreaterOrEqual(t, got.correct, eng.correct+fuzzyGate[code], "%s %s: production must gain at least %d correct decisions over english", retr, code, fuzzyGate[code])
-		assert.LessOrEqual(t, got.wrong, eng.wrong, "%s %s: production must not add wrong plays over english", retr, code)
+		assert.GreaterOrEqual(t, got.correct, eng.correct+fuzzyGate[code], "%s %s %s: production must gain at least %d correct decisions over english", set, retr, code, fuzzyGate[code])
+		assert.LessOrEqual(t, got.wrong, eng.wrong, "%s %s %s: production must not add wrong plays over english", set, retr, code)
+	}
+
+	if set != corpusOriginal {
+		return
 	}
 
 	fz := tally(outs["fuzzy"])
