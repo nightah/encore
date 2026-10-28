@@ -341,8 +341,10 @@ type numWord struct {
 }
 
 type language struct {
-	code     string
-	and      string
+	code string
+	and  string
+	// half is how the language says "and a half", which "½" reads as ("8½" -> "8 e mezzo").
+	half     string
 	articles map[string]bool
 	stop     map[string]bool
 	// elide splits on apostrophes ("l'amour" -> "l amour") instead of joining ("ocean's" -> "oceans").

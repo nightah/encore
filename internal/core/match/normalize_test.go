@@ -120,6 +120,16 @@ func TestNormalize(t *testing.T) {
 		{"it", "duetto", "duetto"},
 		{"it", "unotre", "unotre"},
 		{"it", "treedue", "treedue"},
+		// ½ reads as each language says "and a half", so the title meets the spoken form.
+		{"it", "8½", "8 e mezzo"},
+		{"it", "otto e mezzo", "8 e mezzo"},
+		{"en", "8½ Women", "8 and a half women"},
+		{"en", "eight and a half women", "8 and a half women"},
+		{"de", "Die 8½ Frauen", "8 einhalb frauen"},
+		{"fr", "Huit et demi", "8 et demi"},
+		{"fr", "8½", "8 et demi"},
+		{"es", "8½", "8 y medio"},
+		{"es", "ocho y medio", "8 y medio"},
 		// Locale codes and unknown languages.
 		{"de-DE", "Die Ärzte", "arzte"},
 		{"en_GB", "The Crown", "crown"},

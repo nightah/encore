@@ -138,6 +138,7 @@ func merge(ms ...map[string]int) map[string]int {
 func english() *language {
 	return &language{
 		code:     "en",
+		half:     "and a half",
 		and:      "and",
 		articles: set("the", "a", "an"),
 		stop:     set("the", "a", "an", "of", "and", "in", "on", "to", "for", "at", "with"),
@@ -181,6 +182,7 @@ func german() *language {
 
 	return &language{
 		code:     "de",
+		half:     "einhalb",
 		and:      "und",
 		articles: set("der", "die", "das", "ein", "eine"),
 		stop:     set("der", "die", "das", "ein", "eine", "und", "von", "im", "in", "den", "dem", "des", "zu", "mit"),
@@ -207,6 +209,7 @@ func german() *language {
 func french() *language {
 	return &language{
 		code:     "fr",
+		half:     "et demi",
 		and:      "et",
 		articles: set("le", "la", "les", "l", "un", "une"),
 		stop:     set("le", "la", "les", "l", "un", "une", "de", "des", "du", "d", "et", "en", "au", "aux"),
@@ -242,6 +245,7 @@ func spanish() *language {
 
 	return &language{
 		code:     "es",
+		half:     "y medio",
 		and:      "y",
 		articles: set("el", "la", "los", "las", "un", "una"),
 		stop:     set("el", "la", "los", "las", "un", "una", "de", "del", "y", "en", "al"),
@@ -295,6 +299,7 @@ func italian() *language {
 
 	return &language{
 		code:     "it",
+		half:     "e mezzo",
 		and:      "e",
 		articles: set("il", "lo", "la", "i", "gli", "le", "l", "un", "uno", "una"),
 		stop:     set("il", "lo", "la", "i", "gli", "le", "l", "un", "uno", "una", "di", "e", "del", "della", "in"),
