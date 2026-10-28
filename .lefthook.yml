@@ -72,6 +72,18 @@ pre-commit:
               - "docker/root/etc/s6-overlay/scripts/adduser"
               - "docker/root/etc/s6-overlay/scripts/encoresetup"
 
+          - name: sort-package-json (docs)
+            root: "docs/"
+            run: pnpm exec sort-package-json {staged_files}
+            glob: "docs/package.json"
+            stage_fixed: true
+
+          - name: sort-package-json (web)
+            root: "web/"
+            run: pnpm exec sort-package-json {staged_files}
+            glob: "web/package.json"
+            stage_fixed: true
+
           - name: trufflehog
             run: trufflehog --fail --log-level=-1 filesystem -x .trufflehog .
 

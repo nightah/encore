@@ -7,7 +7,7 @@
 # The runtime is antilax3's Alpine s6-overlay base: PUID/PGID select the user, /config holds Encore's data, and docker/root adds the Encore services and banner.
 
 ARG BASE_IMAGE="antilax3/alpine:latest"
-ARG NODE_VERSION=24
+ARG NODE_VERSION=26
 ARG GO_VERSION=1.27
 ARG PNPM_VERSION=12.15.0
 
