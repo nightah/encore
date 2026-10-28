@@ -168,7 +168,7 @@ Each language has phonetic test corpora: real titles and the ways a speech recog
 There are two sets of corpora, scored separately:
 
 - **The original set** (`internal/core/match/testdata/asr_corpus.yaml` and `testdata/phonetic/`): 457 cases, frozen before any in-tree encoder was evaluated. It gates CI: a change that makes an encoder lose cases there fails the tests.
-- **The grown set** (`testdata/grown/`): 2,352 cases over 1,345 library entries in 9 suites, added in October 2026 because the original set was too small to decide some languages. Italian, for one, had only 57 cases, so English Double Metaphone making 56 of them said little about whether Italian needed rules of its own. Each file was written blind, without running any encoder or reading its source, and committed before any evaluation ran; nothing in it was changed to suit an encoder. It is reported, not asserted.
+- **The grown set** (`testdata/grown/`): 2,352 cases over 1,345 library entries in 9 suites, added in October 2026 because the original set was too small to decide some languages. Italian, for one, had only 57 cases, so English Double Metaphone making 56 of them said little about whether Italian needed rules of its own. Each file was written blind, without running any encoder or reading its source, and committed before any evaluation ran; nothing in it was changed to suit an encoder. One label was corrected since: "der hauptmann" expected nothing to be found, but *Der Hauptmann von Köpenick* is in that library, and the corpora treat a title's distinctive opening words as a request for it ("pulp" plays *Pulp Fiction*), so it now expects that title. The grown set gates CI too: production must decide at least as many cases right in each language, and make no more wrong plays, than in the table below.
 
 | Language | Original set | Grown set | Grown library entries |
 | --- | --- | --- | --- |
@@ -184,25 +184,37 @@ Each row compares the encoder Encore uses for the language with English Double M
 
 | Language | Encoder | Cases right | Wrong plays | Asks | With English Double Metaphone | With no phonetic keys | Gains / losses against English | Difference (95% interval) | p |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| English | Double Metaphone | 462 of 509 (90.8%) | 1 | 61 | same | 403 | none | none | none |
-| German | Kölner Phonetik | 521 of 580 (89.8%) | 2 | 43 | 533 (91.9%), 2 wrong | 457 | +5 / −17 | −2.1 (−3.6 to −0.5) | 0.017 |
-| Spanish | Spanish rules | 416 of 458 (90.8%) | 2 | 40 | 385 (84.1%), 2 wrong | 347 | +37 / −6 | +6.8 (+4.0 to +9.5) | 1.6 × 10⁻⁶ |
-| French | French rules | 406 of 441 (92.1%) | 2 | 38 | 388 (88.0%), 2 wrong | 353 | +21 / −3 | +4.1 (+1.9 to +6.2) | 0.0003 |
-| Italian | English Double Metaphone | 332 of 364 (91.2%) | 2 | 25 | same | 286 | none | none | none |
+| English | Double Metaphone | 463 of 509 (91.0%) | 1 | 60 | same | 404 | none | none | none |
+| German | Kölner Phonetik, with a final *-er* keyed as *-a* | 535 of 580 (92.2%) | 1 | 35 | 539 (92.9%), 1 wrong | 463 | +5 / −9 | −0.7 (−2.0 to +0.6) | 0.42 |
+| Spanish | Spanish rules | 418 of 458 (91.3%) | 2 | 39 | 387 (84.5%), 2 wrong | 349 | +37 / −6 | +6.8 (+4.0 to +9.5) | 1.6 × 10⁻⁶ |
+| French | French rules | 408 of 441 (92.5%) | 2 | 36 | 390 (88.4%), 2 wrong | 355 | +21 / −3 | +4.1 (+1.9 to +6.2) | 0.0003 |
+| Italian | English Double Metaphone | 343 of 364 (94.2%) | 1 | 25 | same | 297 | none | none | none |
+
+These include three changes made after the grown set was first scored, none of them to an encoder: the label correction above, numbers the normaliser now reads, and the German *-er* rule. The first published results, at commit `0a5742b5`, were:
+
+| Language | Then | Now | What changed |
+| --- | --- | --- | --- |
+| English | 462, 1 wrong | 463, 1 wrong | Ordinals written with digits read as the number ("the 6th sense" meets *The Sixth Sense*) |
+| German | 521, 2 wrong | 535, 1 wrong | The label correction (+1, and its wrong play); numbers written as one word, such as "neunzehnhundertvierundfünfzig" and "zweihundertsieben", and "neun und neunzig" (+5); the final *-er* rule (+8) |
+| Spanish | 416, 2 wrong | 418, 2 wrong | The hundreds from "doscientos" to "novecientos" (+2) |
+| French | 406, 2 wrong | 408, 2 wrong | Ordinals written with digits ("le 5ème élément", "le 5e élément") |
+| Italian | 332, 2 wrong | 343, 1 wrong | Numbers written as one word, such as "millenovecentonovantadue" and "ottoottotre", with "novecento" and the other whole hundreds (+9, one of them a wrong play); ½ read as "e mezzo" (+2) |
 
 #### Original set
 
 | Language | Encoder | Cases right | Wrong plays | With English Double Metaphone | With no phonetic keys | Gains / losses against English | Difference (95% interval) | p |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | English | Double Metaphone | 172 of 174 | 0 | same | 160 | none | none | none |
-| German | Kölner Phonetik | 106 of 108 | 0 | 103 | 86 | +3 / −0 | +2.8 (−0.3 to +5.9) | 0.25 |
+| German | Kölner Phonetik, with a final *-er* keyed as *-a* | 106 of 108 | 0 | 103 | 86 | +3 / −0 | +2.8 (−0.3 to +5.9) | 0.25 |
 | Spanish | Spanish rules | 51 of 55 | 1 | 44 | 41 | +7 / −0 | +12.7 (+3.9 to +21.5) | 0.016 |
 | French | French rules | 61 of 63 | 0 | 55 | 48 | +6 / −0 | +9.5 (+2.3 to +16.8) | 0.031 |
 | Italian | English Double Metaphone | 56 of 57 | 0 | same | 49 | none | none | none |
 
+None of the changes above moved a case in the original set.
+
 #### Absent titles
 
-Sound-alike keys find more titles, and can also make Encore play a title that wasn't asked for. To measure that with words nobody chose to suit an encoder, `TestPhoneticDistractors` builds five libraries of 2,000 synthetic titles per language from the words of Encore's own translations, and asks for 400 other such titles that are not in each, 2,000 absent titles per language. Any play is a wrong play.
+Sound-alike keys find more titles, and can also make Encore play a title that wasn't asked for. To measure that with words nobody chose to suit an encoder, `TestPhoneticDistractors` builds five libraries of 2,000 synthetic titles per language from the words of Encore's own translations, and asks for 400 other such titles that are not in each, 2,000 absent titles per language. Any play is a wrong play. The words were frozen into `testdata/distractors/` on 29 October 2026, so a translation update doesn't move the counts, and CI fails a change that makes production play more absent titles than below.
 
 | Language | Wrong plays with English Double Metaphone | With the language's encoder | Difference |
 | --- | --- | --- | --- |
@@ -212,28 +224,30 @@ Sound-alike keys find more titles, and can also make Encore play a title that wa
 | French | 75 | 73 | −2 |
 | Italian | 94 | 94 | 0 |
 
+None of the changes since the first results moved these counts.
+
 #### What was decided
 
 - **English** keeps Double Metaphone.
 - **Spanish and French** keep their own rules. On the grown set they decide 31 and 18 more cases right than English Double Metaphone, with intervals well clear of zero and no more wrong plays. Spanish makes 6 more wrong plays per 2,000 absent titles, a cost worth paying for 37 gains; French makes 2 fewer.
-- **Italian** stays on English Double Metaphone, and no Italian encoder was built. English already decides all 96 grown cases in the classes an Italian encoder would model (double consonants, c and g before e and i, gn and gli, z and s, silent h, dropped accents), so an encoder had nothing to gain there. Of the 32 cases missed, 13 are number forms the normaliser doesn't parse yet (compound number words such as "millenovecentonovantadue" or "centoventisei", "otto e mezzo" for *8½*), and the rest are a real word heard instead of the title word, words split or merged, letter names and absent titles, which no spelling-to-sound rule reaches. No published Italian phonetic algorithm was found to adopt either: Italian adaptations of Soundex and Metaphone are ad hoc rule sets. This will be revisited if a corpus shows Italian misses that sound-alike keys would fix.
-- **German** keeps Kölner Phonetik for now, but the grown set doesn't support it: English Double Metaphone decides 12 more cases right, an interval that excludes zero. Eight of English's 17 gains are a final *-er* heard as *-a* ("lieda" for *Lieder*, "rolla" for *Roller*, "es war somma"), and most of the rest are English loanwords ("skuter" for *Scooter*). Against that, Kölner Phonetik makes 13 fewer wrong plays per 2,000 absent titles. Teaching it that a final *-er* sounds like *-a*, or switching German to Double Metaphone, is under review.
+- **Italian** stays on English Double Metaphone, and no Italian encoder was built. English already decides all 96 grown cases in the classes an Italian encoder would model (double consonants, c and g before e and i, gn and gli, z and s, silent h, dropped accents), so an encoder had nothing to gain there. Most of what it missed were number forms the normaliser didn't parse: Italian writes numbers as one word ("millenovecentonovantadue", "centoventisei", "ottocento ottantatré"), and *8½* is said "otto e mezzo". The normaliser now splits such words into the number words they're made of, with the whole hundreds ("duecento" to "novecento"), "mila", "milione" and "cento" dropping its *o* before a vowel ("centottanta"), and reads ½ as each language says "and a half", which is a rule for every title with ½, not for one film. That decided 11 more cases. Of the 21 left, three are requests for *Franco126*, whose number is joined to its name, one says "1" for "una", and the rest are a real word heard instead of the title word, words split or merged, letter names and absent titles, which no spelling-to-sound rule reaches. No published Italian phonetic algorithm was found to adopt either: Italian adaptations of Soundex and Metaphone are ad hoc rule sets. This will be revisited if a corpus shows Italian misses that sound-alike keys would fix.
+- **German** keeps Kölner Phonetik, and now keys a final *-er* as the *-a* it is spoken as. On the grown set English Double Metaphone decided 12 more cases right (+17 / −5), an interval that excluded zero, and 8 of its gains were a final *-er* heard as *-a* ("lieda" for *Lieder*, "rolla" for *Roller*, "es war somma"): Kölner Phonetik codes the *r* and Double Metaphone, as Encore uses it, also keys a word without a final *r*. Encore now drops the *r* of a final *-er* in words of four letters or more before keying German. That decides all 8, and leaves English 4 ahead (+9 / −5), a difference whose interval now includes zero, with no wrong plays added on either set and the same 102 per 2,000 absent titles, against English's 115. Keeping Kölner Phonetik's key and adding the *r*-less one beside it decided the same cases with 103. Nothing in the corpora called for treating *-ern* as *-an*. The rule is in the matcher, not in `internal/fuzzy/phonetic/de`, which still gives f1monkey/phonetic's codes. Most of English's remaining gains are English loanwords and names ("skuter" for *Scooter*, "kraftklup" for *Kraftklub*), which a German rule shouldn't chase.
 
 French keys merge spellings that are different titles as well as mishearings (*mot* and *mots*, *son* and *sont*), so in French a top candidate that only sounds like the request must lead the runner-up clearly before Encore plays it; otherwise Alexa asks.
 
 The grown set also exposed a matcher bug that no encoder could fix: asking for a sequel the library doesn't have ("crocodile dundee two", "die vorstadtkrokodile 2") played the original. Encore now asks instead (commit `d1857c0e`), which removed 6 wrong plays from the grown set and decided 4 more cases right; the numbers above include it.
 
-Measured on 29 October 2026 at commit `0a5742b5`; the inverted index and the simpler trigram retriever give the same counts everywhere, and the trigram retriever's absent-title plays differ by at most one.
+Measured on 29 October 2026 at commit `8773cd20`; the inverted index and the simpler trigram retriever give the same counts everywhere, and the trigram retriever's absent-title plays differ by at most one.
 
 #### Rerunning the evaluation
 
-Both tests are in `internal/core/match` rather than `benchmarks/`, because they swap the encoder inside the matcher, which only the package's own tests can reach, and there is no library to compare with. From the repository root:
+Both tests are in `internal/core/match` rather than `benchmarks/`, because they swap the encoder inside the matcher, which only the package's own tests can reach, and there is no library to compare with. Both are also gates: `TestPhoneticEval` holds production to the grown-set counts above (`grownFloor`) and runs with the rest of the tests, and `TestPhoneticDistractors` holds it to the absent-title counts (`distractorCeiling`) in a CI step of its own, so a change that loses accuracy fails its own pull request. From the repository root:
 
 ```sh
 # Both corpus sets, every encoder and retriever: a table of cases right, wrong plays, asks and gains and losses against English, then every case each encoder wins or loses.
 go test -run TestPhoneticEval -v ./internal/core/match/
 
-# Absent-title wrong plays per language (about two minutes; behind a build tag so the normal test run skips it).
+# Absent-title wrong plays per language (about two minutes, far longer under the race detector, so it is behind a build tag and CI runs it without -race).
 go test -tags phoneticeval -run TestPhoneticDistractors -v ./internal/core/match/
 ```
 
