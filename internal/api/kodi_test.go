@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"testing"
@@ -559,6 +560,33 @@ func TestRedactURL(t *testing.T) {
 	assert.Equal(t, "http://kodi:xxxxx@[::1/jsonrpc", redactURL("http://kodi:s3cret@[::1/jsonrpc"), "an unparsable URL still hides its password") // trufflehog:ignore
 	assert.Equal(t, "ws://kodi:xxxxx@192.0.2.1:80a?x=@", redactURL("ws://kodi:s3cret@192.0.2.1:80a?x=@"), "only the authority's @ counts")        // trufflehog:ignore
 	assert.Equal(t, "http://kodi@[::1", redactURL("http://kodi@[::1"), "a user name alone isn't secret")
+	assert.Equal(t, "%zz kodi:s3cret", redactURL("%zz kodi:s3cret"), "an unparsable value without an authority has no credentials to hide")
+}
+
+func TestDiscoverAsksKodiForItsVersion(t *testing.T) {
+	garage := fakekodi.New(t, fakekodi.Options{})
+
+	ws, err := url.Parse(garage.WebSocketURL())
+	require.NoError(t, err)
+
+	addr, err := net.ResolveTCPAddr("tcp", ws.Host)
+	require.NoError(t, err)
+
+	h := newHarness(t, harnessOpts{
+		noKodi: true,
+		discover: func(context.Context) ([]kodi.Instance, error) {
+			return []kodi.Instance{{Name: "Kodi (garage)", Host: "garage.local.", Addrs: []net.IP{addr.IP}, Port: 8080, WebSocketPort: addr.Port}}, nil
+		},
+		// Without a probe of its own, the API asks the instance over its WebSocket.
+		mutate: func(o *Options) { o.ProbeVersion = nil },
+	})
+	c := h.admin()
+
+	var found []DiscoveredInstance
+
+	c.json(http.MethodGet, "/api/v1/kodi/discovered", nil, http.StatusOK, &found)
+	require.Len(t, found, 1)
+	assert.Equal(t, "21.3", found[0].Version, "the fake Kodi's own version")
 }
 
 func TestArtURL(t *testing.T) {

@@ -105,6 +105,18 @@ func TestProbeVersionReplies(t *testing.T) {
 	}
 }
 
+func TestProbeVersionOfAPortWithoutWebSocket(t *testing.T) {
+	// Something else answers on the port: a web server that refuses the upgrade.
+	srv := httptest.NewServer(http.NotFoundHandler())
+	t.Cleanup(srv.Close)
+
+	addr := srv.Listener.Addr().(*net.TCPAddr)
+
+	_, err := kodi.ProbeVersion(t.Context(), addr.IP.String(), addr.Port)
+	require.ErrorContains(t, err, "kodi:")
+	assert.ErrorContains(t, err, "404", "the refusal says what answered")
+}
+
 func TestProbeVersionNothingListening(t *testing.T) {
 	l, err := net.Listen("tcp", "127.0.0.1:0")
 	require.NoError(t, err)
