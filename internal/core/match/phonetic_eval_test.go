@@ -235,7 +235,7 @@ func (s evalScore) String() string {
 var fuzzyGate = map[string]int{"fr": 3, "es": 3}
 
 // ownEncoder lists the gated languages production keys with their own encoder. Production is held to the same gate there, so a language that lost its encoder would fail.
-var ownEncoder = map[string]bool{"es": true}
+var ownEncoder = map[string]bool{"es": true, "fr": true}
 
 // TestPhoneticEval measures match accuracy per language through the real pipeline (normalise, alias, retrieve, score, decide) with each candidate phonetic encoder swapped in. It logs a table, the production encoder's misses and every case another encoder gains or loses against it; run it with -v to read them. internal/fuzzy, and production in the languages listed in ownEncoder, are held to fuzzyGate against English Double Metaphone with no wrong plays added, and internal/fuzzy must not lose a decision or add a wrong play against production.
 func TestPhoneticEval(t *testing.T) {

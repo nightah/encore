@@ -8,6 +8,7 @@ import (
 	"github.com/nightah/encore/internal/fuzzy/phonetic/de"
 	"github.com/nightah/encore/internal/fuzzy/phonetic/en"
 	"github.com/nightah/encore/internal/fuzzy/phonetic/es"
+	"github.com/nightah/encore/internal/fuzzy/phonetic/fr"
 )
 
 var languages = map[string]*language{
@@ -218,9 +219,10 @@ func french() *language {
 				"onzieme": 11, "douzieme": 12, "vingtieme": 20,
 			},
 		}.build(),
-		conj:     set("et"),
-		parts:    set("partie", "chapitre"),
-		phonetic: phoneticKeysOf(en.Encoder{}),
+		conj:           set("et"),
+		parts:          set("partie", "chapitre"),
+		phonetic:       phoneticKeysOf(fr.Encoder{}),
+		soundAlikeLead: true,
 	}
 }
 

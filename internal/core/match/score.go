@@ -22,6 +22,8 @@ func (ix *Index) scoreAlias(q *form, a *alias, floor float64) scored {
 
 	// Sounding the same as a whole is the typical ASR failure, so it counts as near-identical text.
 	homophone := numbers && keysIntersect(q.compactKeys, a.compactKeys)
+	soundAlike := homophone && q.compact != a.compact
+
 	if homophone {
 		s = max(s, homophoneSet)
 	}
@@ -70,8 +72,9 @@ func (ix *Index) scoreAlias(q *form, a *alias, floor float64) scored {
 	}
 
 	return scored{
-		score: min(f, nonExactCap),
-		bd:    Breakdown{Alias: a.text, TokenSet: s, JaroWinkler: jw, OSA: osa, Phonetic: ph},
+		score:      min(f, nonExactCap),
+		soundAlike: soundAlike,
+		bd:         Breakdown{Alias: a.text, TokenSet: s, JaroWinkler: jw, OSA: osa, Phonetic: ph},
 	}
 }
 

@@ -199,6 +199,7 @@ func (ix *Index) Search(ctx context.Context, q Query) (Result, error) {
 
 	cands := make([]Candidate, 0, len(entries))
 	exact := make(map[string]bool)
+	soundAlike := make(map[string]bool)
 
 	for _, e := range entries {
 		if len(q.Kinds) > 0 && !slices.Contains(q.Kinds, e.doc.Kind) {
@@ -216,6 +217,10 @@ func (ix *Index) Search(ctx context.Context, q Query) (Result, error) {
 			exact[e.doc.ID] = true
 		}
 
+		if best.soundAlike {
+			soundAlike[e.doc.ID] = true
+		}
+
 		boost := min(max(e.doc.Boost+q.Hints[e.doc.ID], 0), ix.cfg.MaxBoost)
 		best.bd.Boost = boost
 
@@ -231,7 +236,12 @@ func (ix *Index) Search(ctx context.Context, q Query) (Result, error) {
 		)
 	})
 
-	res.Decision, res.Margin = ix.cfg.decide(cands, len(exact))
+	cfg := ix.cfg
+	if ix.lang.soundAlikeLead && len(cands) > 0 && soundAlike[cands[0].Doc.ID] {
+		cfg.TieMargin = max(cfg.TieMargin, cfg.PlayMargin)
+	}
+
+	res.Decision, res.Margin = cfg.decide(cands, len(exact))
 
 	limit := q.Limit
 	if limit <= 0 {

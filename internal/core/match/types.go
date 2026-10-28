@@ -254,7 +254,9 @@ type trigramSlot struct {
 type scored struct {
 	score float64
 	exact bool
-	bd    Breakdown
+	// soundAlike is set when the alias won on sound alone: the strings sound identical but their text is not close enough to score as well.
+	soundAlike bool
+	bd         Breakdown
 }
 
 // form is a normalised string with everything the scorer needs precomputed.
@@ -308,6 +310,8 @@ type language struct {
 	conj     map[string]bool
 	parts    map[string]bool
 	phonetic phoneticFunc
+	// soundAlikeLead makes a top candidate that won on sound alone (scored.soundAlike) lead by Config.PlayMargin to play, not just Config.TieMargin. It suits an encoder that merges spellings differing only in silent letters, which different titles often do.
+	soundAlikeLead bool
 }
 
 // numTable builds a number vocabulary from ordered lists where index i means value i (units) or (i+2)*10 (tens).
