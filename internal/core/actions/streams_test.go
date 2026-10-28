@@ -107,6 +107,11 @@ func TestLanguageTag(t *testing.T) {
 	for in, want := range map[string]string{"eng": "en", "fre": "fr", "fra": "fr", "ger": "de", "pt-BR": "pt", "en-AU": "en", "": "", "xx": "", "und": "", "not a code": ""} {
 		assert.Equal(t, want, languageTag(in), in)
 	}
+
+	// Tags that parse but name no language: a private-use tag, and an undetermined one whose region (Antarctica) suggests none.
+	for _, in := range []string{"x-dub", "und-AQ"} {
+		assert.Empty(t, languageTag(in), in)
+	}
 }
 
 func TestStreamMessage(t *testing.T) {
