@@ -1,11 +1,12 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { DEPLOY_STEPS } from "@features/skill/timeline";
 import { getDb } from "@mocks/handlers";
+import { server } from "@mocks/node";
 import { FakeEventSource } from "@test/eventSource";
-import { recordRequests, renderApp } from "@test/utils";
+import { failWith, recordRequests, renderApp } from "@test/utils";
 
 describe("Alexa skill page", () => {
   it("shows the deployment timeline, locale builds and model size", async () => {
@@ -128,5 +129,150 @@ describe("Alexa skill page", () => {
 
     await waitFor(() => expect(getDb().skill.amazon.connected).toBe(false));
     expect(await screen.findByRole("link", { name: "Connect in the setup wizard" })).toBeInTheDocument();
+  });
+
+  it("keeps Amazon connected when disconnecting is cancelled", async () => {
+    const user = userEvent.setup();
+    const log = recordRequests();
+    renderApp("/alexa-skill");
+
+    await user.click(await screen.findByRole("button", { name: "Disconnect" }));
+    const dialog = await screen.findByRole("dialog", { name: "Disconnect from Amazon?" });
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(log.some((r) => r.method === "DELETE")).toBe(false);
+    expect(getDb().skill.amazon.connected).toBe(true);
+  });
+
+  it("can't deploy before Amazon is connected", async () => {
+    getDb().skill.amazon = { ...getDb().skill.amazon, connected: false };
+    renderApp("/alexa-skill");
+    await screen.findByRole("region", { name: "Deployment status" });
+    expect(screen.getByRole("button", { name: "Redeploy" })).toBeDisabled();
+    expect(screen.getByRole("link", { name: "Connect in the setup wizard" })).toHaveAttribute("href", "/setup");
+  });
+
+  it.each([
+    [false, { force: true }],
+    [true, {}],
+  ])("forces a redeploy only when nothing changed (changes waiting: %s)", async (needsDeploy, body) => {
+    getDb().skill.needs_deploy = needsDeploy;
+    const user = userEvent.setup();
+    const log = recordRequests();
+    renderApp("/alexa-skill");
+
+    await user.click(await screen.findByRole("button", { name: "Redeploy" }));
+
+    await waitFor(() => expect(log.find((r) => r.method === "POST")?.body).toEqual(body));
+  });
+
+  it("explains a deploy that fails", async () => {
+    const user = userEvent.setup();
+    renderApp("/alexa-skill");
+    await user.click(await screen.findByRole("button", { name: "Redeploy" }));
+    await screen.findByText(/^Deploying: /);
+    const deployId = Object.keys(getDb().deploys)[0] ?? "";
+
+    FakeEventSource.emit("deploy", {
+      at: new Date().toISOString(),
+      deploy_id: deployId,
+      message: "Amazon rejected the interaction model.",
+      state: "failed",
+      step: "build",
+    });
+
+    expect(await screen.findByText("Deploy failed: Amazon rejected the interaction model.")).toBeInTheDocument();
+    const status = screen.getByRole("region", { name: "Deployment status" });
+    expect(within(status).getByText("The last build failed")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Redeploy" })).toBeEnabled();
+  });
+
+  it("shows each locale's build, its errors and an unknown status as it is", async () => {
+    const db = getDb();
+    if (!db.skill.last_deploy) throw new Error("no sample deploy");
+    db.skill.last_deploy = {
+      ...db.skill.last_deploy,
+      locales: [
+        ...db.skill.last_deploy.locales,
+        {
+          built_at: null,
+          errors: ["Slot type MEDIA has too many values."],
+          locale: "de-DE",
+          size_bytes: 0,
+          status: "failed",
+          titles: 0,
+        },
+        { built_at: null, errors: [], locale: "fr-FR", size_bytes: 0, status: "queued", titles: 0 },
+      ] as typeof db.skill.last_deploy.locales,
+      warnings: ["en-AU: 12 titles were too long to include."],
+    };
+    renderApp("/alexa-skill");
+
+    const table = await screen.findByRole("table", { name: "Interaction model by locale" });
+    const german = within(table).getByText("de-DE").closest("tr") as HTMLElement;
+    expect(german).toHaveTextContent("Failed");
+    expect(german).toHaveTextContent("Slot type MEDIA has too many values.");
+    expect(within(german).getAllByText("-")).toHaveLength(3);
+    expect(within(table).getByText("fr-FR").closest("tr")).toHaveTextContent("queued");
+    expect(screen.getByRole("note")).toHaveTextContent("en-AU: 12 titles were too long to include.");
+  });
+
+  it("explains what appears after the first deploy", async () => {
+    getDb().skill = { ...getDb().skill, last_deploy: null, model_size: null };
+    renderApp("/alexa-skill");
+    expect(await screen.findByText(/Nothing built yet/)).toBeInTheDocument();
+    expect(screen.getByText("Shown after the first deploy.")).toBeInTheDocument();
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    expect(screen.queryByRole("note")).not.toBeInTheDocument();
+  });
+
+  it("shows why saving locales failed", async () => {
+    const user = userEvent.setup();
+    failWith("put", "/skill/settings", 502, "Amazon is unavailable.");
+    renderApp("/alexa-skill");
+    await user.click(await screen.findByRole("button", { name: "en-GB" }));
+    expect(await screen.findByText("Amazon is unavailable.")).toBeInTheDocument();
+  });
+
+  it("sends Amazon re-authorisation through Login with Amazon", async () => {
+    const user = userEvent.setup();
+    const assign = vi.fn();
+    vi.stubGlobal("location", { ...window.location, assign });
+    try {
+      getDb().skill.amazon = { ...getDb().skill.amazon, needs_reauthorise: true };
+      renderApp("/alexa-skill");
+      expect(await screen.findByText(/Amazon stopped accepting Encore's token/)).toBeInTheDocument();
+
+      await user.click(screen.getByRole("button", { name: "Re-authorise" }));
+
+      await waitFor(() => expect(assign).toHaveBeenCalledWith(expect.stringContaining("mock_lwa=1")));
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("says why re-authorising can't start", async () => {
+    const user = userEvent.setup();
+    getDb().skill.amazon = { ...getDb().skill.amazon, has_client_secret: false };
+    renderApp("/alexa-skill");
+
+    await user.click(await screen.findByRole("button", { name: "Re-authorise" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Save the Login with Amazon client ID and secret first.",
+    );
+    expect(screen.getByRole("button", { name: "Re-authorise" })).toBeEnabled();
+  });
+
+  it("offers to retry when the skill can't be loaded", async () => {
+    const user = userEvent.setup();
+    failWith("get", "/skill", 500, "Encore's database is locked.");
+    renderApp("/alexa-skill");
+    expect(await screen.findByRole("alert", {}, { timeout: 4000 })).toHaveTextContent("Encore's database is locked.");
+
+    server.resetHandlers();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByRole("region", { name: "Deployment status" })).toBeInTheDocument();
   });
 });
