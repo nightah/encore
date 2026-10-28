@@ -456,8 +456,8 @@ type faultyRepo struct {
 
 	putErr, keyIDsErr, rewriteErr error
 
-	// beforePut, when set, runs inside Put before the row is written.
-	beforePut func()
+	// beforePut, when set, runs inside Put before the row is written; beforeRewrite runs inside Rewrite before any row is.
+	beforePut, beforeRewrite func()
 }
 
 func (r *faultyRepo) Put(ctx context.Context, row store.SecretRow) error {
@@ -483,6 +483,10 @@ func (r *faultyRepo) KeyIDs(ctx context.Context) ([]string, error) {
 func (r *faultyRepo) Rewrite(ctx context.Context, fn func(row *store.SecretRow) error) error {
 	if r.rewriteErr != nil {
 		return r.rewriteErr
+	}
+
+	if r.beforeRewrite != nil {
+		r.beforeRewrite()
 	}
 
 	return r.Repo.Rewrite(ctx, fn)
@@ -763,6 +767,17 @@ func TestPutDuringRotate(t *testing.T) {
 		t.Fatal("a rotation could start while a Put was between sealing and writing")
 	}
 
+	// And the rotation holds that lock against every Put while it re-encrypts, so a Put that came after it can't start until it's done.
+	rewrote := false
+	repo.beforeRewrite = func() {
+		rewrote = true
+
+		if s.writeMu.TryRLock() {
+			s.writeMu.RUnlock()
+			t.Error("a Put could start while a rotation was re-encrypting")
+		}
+	}
+
 	next := testKey(t)
 	nextID := KeyID(next)
 	rotated := make(chan error, 1)
@@ -772,6 +787,7 @@ func TestPutDuringRotate(t *testing.T) {
 	close(release)
 	require.NoError(t, <-putDone)
 	require.NoError(t, <-rotated)
+	assert.True(t, rewrote, "the rotation re-encrypted the stored secrets")
 
 	repo.beforePut = nil
 
