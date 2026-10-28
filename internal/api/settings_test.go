@@ -104,7 +104,8 @@ func TestStorageFailures(t *testing.T) {
 	assert.Contains(t, test.Error, "creating storage directory", "the reason is shown to the admin")
 
 	c.json(http.MethodPost, "/api/v1/settings/backups/run", nil, http.StatusAccepted, nil)
-	require.Eventually(t, func() bool { return strings.Contains(h.logs.String(), `msg="backup failed"`) }, 10*time.Second, 20*time.Millisecond)
+	h.api.bg.Wait()
+	assert.Contains(t, h.logs.String(), `msg="backup failed"`)
 
 	var s Settings
 
@@ -120,31 +121,56 @@ func TestBackupToNewStorageFailureIsLogged(t *testing.T) {
 	require.NoError(t, os.WriteFile(notADir, nil, 0o600))
 
 	c.json(http.MethodPatch, "/api/v1/settings", map[string]any{"storage": map[string]any{"local": map[string]any{"path": notADir}}}, http.StatusOK, nil)
-	require.Eventually(t, func() bool { return strings.Contains(h.logs.String(), "backup to the new storage failed") }, 10*time.Second, 20*time.Millisecond)
+	h.api.bg.Wait()
+	assert.Contains(t, h.logs.String(), "backup to the new storage failed")
+}
+
+// backupClock steps runBackups by hand in place of time.After.
+type backupClock struct {
+	waits chan time.Duration
+	wake  chan time.Time
+}
+
+func newBackupClock() *backupClock {
+	return &backupClock{waits: make(chan time.Duration, 100), wake: make(chan time.Time)}
+}
+
+func (b *backupClock) after(d time.Duration) <-chan time.Time {
+	b.waits <- d
+
+	return b.wake
+}
+
+// step ends the current wait and returns the next one asked for, which comes only once any backup that was due has finished.
+func (b *backupClock) step() time.Duration {
+	b.wake <- time.Now()
+
+	return <-b.waits
 }
 
 func TestScheduledBackups(t *testing.T) {
 	dir := t.TempDir()
 
+	clock := newBackupClock()
 	h := newHarness(t, harnessOpts{noKodi: true, env: []string{"ENCORE_STORAGE_BACKUPS_SCHEDULE=every@1h", "ENCORE_STORAGE_LOCAL_PATH=" + dir}, mutate: func(o *Options) {
 		// The last backup ran before a restart, longer ago than the interval.
 		require.NoError(t, o.App.DB().Settings().Set(t.Context(), lastBackupSetting, time.Now().Add(-2*time.Hour).UTC()))
+		o.after = clock.after
 	}})
 	c := h.admin()
 
-	require.Eventually(t, func() bool {
-		found, _ := filepath.Glob(filepath.Join(dir, "Encore", "encore-*.db.gz"))
+	assert.Equal(t, time.Second, <-clock.waits, "an overdue interval runs straight away")
+	clock.step()
 
-		return len(found) == 1
-	}, 10*time.Second, 50*time.Millisecond, "an overdue interval runs straight away")
+	found, err := filepath.Glob(filepath.Join(dir, "Encore", "encore-*.db.gz"))
+	require.NoError(t, err)
+	assert.Len(t, found, 1)
 
 	var s Settings
 
-	require.Eventually(t, func() bool {
-		c.json(http.MethodGet, "/api/v1/settings", nil, http.StatusOK, &s)
-
-		return s.Storage.Backups.LastBackupAt != nil && time.Since(*s.Storage.Backups.LastBackupAt) < time.Minute
-	}, 10*time.Second, 50*time.Millisecond)
+	c.json(http.MethodGet, "/api/v1/settings", nil, http.StatusOK, &s)
+	require.NotNil(t, s.Storage.Backups.LastBackupAt)
+	assert.WithinDuration(t, time.Now(), *s.Storage.Backups.LastBackupAt, time.Minute)
 	assert.Contains(t, h.logs.String(), "database backed up")
 }
 
@@ -230,11 +256,15 @@ func TestScheduledBackupFailureIsLogged(t *testing.T) {
 	notADir := filepath.Join(t.TempDir(), "file")
 	require.NoError(t, os.WriteFile(notADir, nil, 0o600))
 
+	clock := newBackupClock()
 	h := newHarness(t, harnessOpts{noKodi: true, env: []string{"ENCORE_STORAGE_BACKUPS_SCHEDULE=every@1h", "ENCORE_STORAGE_LOCAL_PATH=" + notADir}, mutate: func(o *Options) {
 		require.NoError(t, o.App.DB().Settings().Set(t.Context(), lastBackupSetting, time.Now().Add(-2*time.Hour).UTC()))
+		o.after = clock.after
 	}})
 
-	require.Eventually(t, func() bool { return strings.Contains(h.logs.String(), "scheduled backup failed") }, 10*time.Second, 20*time.Millisecond)
+	<-clock.waits
+	assert.InDelta(t, time.Hour, clock.step(), float64(time.Minute), "a failed backup waits for the next interval")
+	assert.Contains(t, h.logs.String(), "scheduled backup failed")
 }
 
 func TestSettings(t *testing.T) {
@@ -287,11 +317,9 @@ func TestSettings(t *testing.T) {
 	assert.True(t, test.OK, test.Error)
 
 	c.json(http.MethodPost, "/api/v1/settings/backups/run", nil, http.StatusAccepted, nil)
-	require.Eventually(t, func() bool {
-		c.json(http.MethodGet, "/api/v1/settings", nil, http.StatusOK, &s)
-
-		return s.Storage.Backups.LastBackupAt != nil
-	}, 10*time.Second, 50*time.Millisecond)
+	h.api.bg.Wait()
+	c.json(http.MethodGet, "/api/v1/settings", nil, http.StatusOK, &s)
+	require.NotNil(t, s.Storage.Backups.LastBackupAt, "a backup run by hand is recorded")
 
 	keyID := s.Secrets.KeyID
 
@@ -449,11 +477,11 @@ func TestBackupOnNewStorage(t *testing.T) {
 	c.json(http.MethodPatch, "/api/v1/settings", map[string]any{"storage": map[string]any{"local": map[string]any{"path": dir}, "backups": map[string]any{"prefix": "Kodi backups"}}}, http.StatusOK, &s)
 	assert.Equal(t, "Kodi backups", s.Storage.Backups.Prefix)
 
-	require.Eventually(t, func() bool {
-		found, _ := filepath.Glob(filepath.Join(dir, "Kodi backups", "encore-*.db.gz"))
+	h.api.bg.Wait()
 
-		return len(found) == 1
-	}, 10*time.Second, 50*time.Millisecond, "a new storage location gets a backup straight away")
+	found, err := filepath.Glob(filepath.Join(dir, "Kodi backups", "encore-*.db.gz"))
+	require.NoError(t, err)
+	assert.Len(t, found, 1, "a new storage location gets a backup straight away")
 
 	c.json(http.MethodGet, "/api/v1/settings", nil, http.StatusOK, &s)
 	assert.NotNil(t, s.Storage.Backups.LastBackupAt)
@@ -462,11 +490,11 @@ func TestBackupOnNewStorage(t *testing.T) {
 	c.json(http.MethodPatch, "/api/v1/settings", map[string]any{"storage": map[string]any{"backups": map[string]any{"prefix": ""}}}, http.StatusOK, &s)
 	assert.Empty(t, s.Storage.Backups.Prefix)
 
-	require.Eventually(t, func() bool {
-		found, _ := filepath.Glob(filepath.Join(dir, "encore-*.db.gz"))
+	h.api.bg.Wait()
 
-		return len(found) == 1
-	}, 10*time.Second, 50*time.Millisecond, "the backup lands at the top")
+	found, err = filepath.Glob(filepath.Join(dir, "encore-*.db.gz"))
+	require.NoError(t, err)
+	assert.Len(t, found, 1, "the backup lands at the top")
 }
 
 func TestTrustedProxiesDefaultIsEditable(t *testing.T) {
