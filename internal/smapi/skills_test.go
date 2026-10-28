@@ -6,8 +6,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -433,25 +435,63 @@ func TestPOSTNotRetriedAfterTransportError(t *testing.T) {
 	assert.Equal(t, 1, calls, "a POST may have been processed, so it is not resent")
 }
 
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripFunc) RoundTrip(r *http.Request) (*http.Response, error) { return f(r) }
+
+// closeHook is a response body that runs a function when the client discards it.
+type closeHook struct {
+	io.Reader
+
+	onClose func()
+}
+
+func (c closeHook) Close() error {
+	c.onClose()
+
+	return nil
+}
+
 func TestCancelledContextStopsRetrying(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())
 	calls := 0
 
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+	// The context ends once the throttled response has been read, so cancellation lands in the hour-long wait before the retry.
+	rt := roundTripFunc(func(*http.Request) (*http.Response, error) {
 		calls++
 
-		cancel()
-		w.Header().Set("Retry-After", "60")
-		w.WriteHeader(http.StatusServiceUnavailable)
-	}))
-	t.Cleanup(srv.Close)
+		return &http.Response{
+			StatusCode: http.StatusServiceUnavailable,
+			Header:     http.Header{"Retry-After": {"3600"}},
+			Body:       closeHook{Reader: strings.NewReader("busy"), onClose: cancel},
+		}, nil
+	})
 
-	c, err := smapi.New(oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "x"}), smapi.Options{BaseURL: srv.URL, Retry: smapi.RetryPolicy{MaxRetryAfter: time.Hour}})
+	c, err := smapi.New(oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "x"}), smapi.Options{
+		BaseURL:    "https://smapi.invalid",
+		HTTPClient: &http.Client{Transport: rt},
+		Retry:      smapi.RetryPolicy{MaxRetryAfter: time.Hour},
+	})
 	require.NoError(t, err)
 
 	_, err = c.Vendors(ctx)
 	require.ErrorIs(t, err, context.Canceled)
 	assert.Equal(t, 1, calls)
+}
+
+func TestOnlySuccessStatusesSucceed(t *testing.T) {
+	for _, status := range []int{http.StatusOK, http.StatusAccepted, http.StatusNoContent, 299} {
+		c := stubClient(t, func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(status) })
+		require.NoError(t, c.EnableDevelopment(t.Context(), "amzn1.ask.skill.1"), status)
+	}
+
+	for _, status := range []int{http.StatusMultipleChoices, http.StatusNotModified, http.StatusBadRequest, http.StatusForbidden, http.StatusConflict} {
+		c := stubClient(t, func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(status) })
+
+		err := c.EnableDevelopment(t.Context(), "amzn1.ask.skill.1")
+		require.Error(t, err, status)
+		assert.Equal(t, status, smapi.StatusCode(err))
+	}
 }
 
 func TestAPIIsAuthorised(t *testing.T) {
