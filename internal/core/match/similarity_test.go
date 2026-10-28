@@ -4,12 +4,11 @@ import (
 	"strings"
 	"testing"
 
-	edlib "github.com/hbollon/go-edlib"
 	"github.com/stretchr/testify/assert"
 	"pgregory.net/rapid"
 )
 
-// similarityVectors were captured from go-edlib 1.7.0 (JaroWinklerSimilarity widened to float64, OSADamerauLevenshteinDistance).
+// similarityVectors were captured from go-edlib 1.7.0 (JaroWinklerSimilarity widened to float64, OSADamerauLevenshteinDistance), which scoring used before these functions; matching them exactly keeps scores and thresholds unchanged.
 var similarityVectors = []struct {
 	a, b string
 	jw   float64
@@ -71,19 +70,82 @@ func genSimilarityText() *rapid.Generator[string] {
 	)
 }
 
-func TestPropSimilarityMatchesEdlib(t *testing.T) {
+func TestPropJaroWinkler(t *testing.T) {
 	rapid.Check(t, func(t *rapid.T) {
 		a := genSimilarityText().Draw(t, "a")
 		b := genSimilarityText().Draw(t, "b")
+		ra, rb := []rune(a), []rune(b)
+		jw := jaroWinkler(a, b)
 
-		if got, want := jaroWinkler(a, b), float64(edlib.JaroWinklerSimilarity(a, b)); got != want {
-			t.Fatalf("jaroWinkler(%q, %q) = %v, go-edlib %v", a, b, got, want)
+		if jw < 0 || jw > 1 {
+			t.Fatalf("jaroWinkler(%q, %q) = %v, outside [0, 1]", a, b, jw)
 		}
 
-		if got, want := osaDistance(a, b), edlib.OSADamerauLevenshteinDistance(a, b); got != want {
-			t.Fatalf("osaDistance(%q, %q) = %d, go-edlib %d", a, b, got, want)
+		if back := jaroWinkler(b, a); back != jw {
+			t.Fatalf("jaroWinkler(%q, %q) = %v but reversed %v", a, b, jw, back)
+		}
+
+		if j := float64(jaro(ra, rb)); jw < j {
+			t.Fatalf("jaroWinkler(%q, %q) = %v, below Jaro %v", a, b, jw, j)
+		}
+
+		if same := jaroWinkler(a, a); len(ra) > 0 && same != 1 {
+			t.Fatalf("jaroWinkler(%q, itself) = %v, want 1", a, same)
+		}
+
+		if jw == 1 && string(ra) != string(rb) {
+			t.Fatalf("jaroWinkler(%q, %q) = 1 for different strings", a, b)
 		}
 	})
+}
+
+func TestPropOSADistance(t *testing.T) {
+	rapid.Check(t, func(t *rapid.T) {
+		a := genSimilarityText().Draw(t, "a")
+		b := genSimilarityText().Draw(t, "b")
+		ra, rb := []rune(a), []rune(b)
+		d := osaDistance(a, b)
+
+		if back := osaDistance(b, a); back != d {
+			t.Fatalf("osaDistance(%q, %q) = %d but reversed %d", a, b, d, back)
+		}
+
+		// At least the length difference, at most one substitution per rune of the longer string.
+		if d < abs(len(ra)-len(rb)) || d > max(len(ra), len(rb)) {
+			t.Fatalf("osaDistance(%q, %q) = %d, outside [%d, %d]", a, b, d, abs(len(ra)-len(rb)), max(len(ra), len(rb)))
+		}
+
+		if (d == 0) != (string(ra) == string(rb)) {
+			t.Fatalf("osaDistance(%q, %q) = %d", a, b, d)
+		}
+
+		// Never more than insertions and deletions alone, which the independent LCS code measures.
+		sa, sb := string(ra), string(rb)
+		if indel := len(ra) + len(rb) - 2*lcsLen(sa, sb); d > indel {
+			t.Fatalf("osaDistance(%q, %q) = %d, above the indel distance %d", a, b, d, indel)
+		}
+
+		// Swapping two adjacent runes costs exactly one edit when they differ.
+		if len(ra) >= 2 {
+			i := rapid.IntRange(0, len(ra)-2).Draw(t, "i")
+			if ra[i] != ra[i+1] {
+				sw := []rune(sa)
+				sw[i], sw[i+1] = sw[i+1], sw[i]
+
+				if got := osaDistance(sa, string(sw)); got != 1 {
+					t.Fatalf("osaDistance(%q, %q) = %d after one swap, want 1", sa, string(sw), got)
+				}
+			}
+		}
+	})
+}
+
+func abs(n int) int {
+	if n < 0 {
+		return -n
+	}
+
+	return n
 }
 
 var (
@@ -113,23 +175,5 @@ func BenchmarkOSADistance(b *testing.B) {
 	for i := range b.N {
 		p := similarityBenchPairs[i%len(similarityBenchPairs)]
 		sinkInt = osaDistance(p[0], p[1])
-	}
-}
-
-func BenchmarkEdlibJaroWinkler(b *testing.B) {
-	b.ReportAllocs()
-
-	for i := range b.N {
-		p := similarityBenchPairs[i%len(similarityBenchPairs)]
-		sinkFloat = float64(edlib.JaroWinklerSimilarity(p[0], p[1]))
-	}
-}
-
-func BenchmarkEdlibOSADistance(b *testing.B) {
-	b.ReportAllocs()
-
-	for i := range b.N {
-		p := similarityBenchPairs[i%len(similarityBenchPairs)]
-		sinkInt = edlib.OSADamerauLevenshteinDistance(p[0], p[1])
 	}
 }

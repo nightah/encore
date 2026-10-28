@@ -1,9 +1,5 @@
 package match
 
-import (
-	edlib "github.com/hbollon/go-edlib"
-)
-
 // scoreAlias rates how well alias a matches query q, in [0, 1]. It gives up early, returning a negative score, once the alias provably can't beat floor.
 func (ix *Index) scoreAlias(q *form, a *alias, floor float64) scored {
 	if !a.derived && q.norm == a.norm {
@@ -49,12 +45,12 @@ func (ix *Index) scoreAlias(q *form, a *alias, floor float64) scored {
 		s = max(s, partialFactor*partialRatio(q.norm, a.norm))
 	}
 
-	jw := float64(edlib.JaroWinklerSimilarity(q.norm, a.norm))
+	jw := jaroWinkler(q.norm, a.norm)
 	osa := osaSimilarity(q.norm, a.norm)
 
 	if q.sorted != "" || a.sorted != "" {
 		qs, as := q.sortedNorm(), a.sortedNorm()
-		jw = max(jw, float64(edlib.JaroWinklerSimilarity(qs, as)))
+		jw = max(jw, jaroWinkler(qs, as))
 		osa = max(osa, osaSimilarity(qs, as))
 	}
 
@@ -85,7 +81,7 @@ func osaSimilarity(a, b string) float64 {
 		return 1
 	}
 
-	return 1 - float64(edlib.OSADamerauLevenshteinDistance(a, b))/float64(n)
+	return 1 - float64(osaDistance(a, b))/float64(n)
 }
 
 // phoneticOverlap is the share of tokens on each side whose phonetic keys appear on the other, weighted towards the query, or 1 when the whole strings sound alike.
@@ -182,9 +178,9 @@ func tokenMatches(t, u string, tk, uk []string) bool {
 	n := runeLen(t)
 
 	switch {
-	case n >= 8 && edlib.OSADamerauLevenshteinDistance(t, u) <= 2:
+	case n >= 8 && osaDistance(t, u) <= 2:
 		return true
-	case n >= 4 && edlib.OSADamerauLevenshteinDistance(t, u) <= 1:
+	case n >= 4 && osaDistance(t, u) <= 1:
 		return true
 	case n >= 3 && keysIntersect(tk, uk):
 		return true
