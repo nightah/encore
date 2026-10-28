@@ -112,7 +112,8 @@ formatters:
       sections:
         - standard
         - default
-        - localmodule
+        # Not localmodule: the benchmarks module imports the root module's packages, which goimports' local-prefixes groups with its own.
+        - prefix(github.com/nightah/encore)
     gofumpt:
       extra:
         group-params: true

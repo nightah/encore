@@ -21,6 +21,9 @@ web/test-results
 internal/server/dist/*
 !internal/server/dist/.gitkeep
 
+# The benchmarks module: not part of the image
+benchmarks
+
 # Documentation site: not part of the image
 docs/node_modules
 docs/dist

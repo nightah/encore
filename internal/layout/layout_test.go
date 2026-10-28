@@ -15,7 +15,7 @@ import (
 // skipDirs are trees with no hand-written Go of ours.
 var skipDirs = []string{".git", "node_modules", "web", "docs", "dist", "bin", "testdata", ".scratch"}
 
-// TestLayout checks every hand-written, non-test Go file in the root and tools modules.
+// TestLayout checks every hand-written, non-test Go file in the root, tools and benchmarks modules.
 func TestLayout(t *testing.T) {
 	root, err := filepath.Abs("../..")
 	if err != nil {
