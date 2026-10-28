@@ -575,6 +575,19 @@ describe("Shared library panel", () => {
     expect(within(dialog).getByRole("radio", { name: "Bedroom" })).toBeChecked();
     expect(log.some((r) => r.method !== "GET")).toBe(false);
   });
+
+  it("closes the split dialog on Escape without splitting", async () => {
+    const user = userEvent.setup();
+    const log = recordRequests();
+    renderApp("/kodi");
+    await user.click(within(await panel()).getByRole("button", { name: "Not shared? Split" }));
+    const dialog = await screen.findByRole("dialog", { name: "Split the shared library" });
+
+    await user.keyboard("{Escape}");
+
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
+    expect(log.some((r) => r.method !== "GET")).toBe(false);
+  });
 });
 
 describe("Share a library dialog", () => {

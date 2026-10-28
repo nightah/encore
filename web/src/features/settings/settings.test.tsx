@@ -336,6 +336,20 @@ describe("Settings page", () => {
     expect(await screen.findByLabelText("Active key ID")).toHaveDisplayValue(/^k3 \(rotated /);
   });
 
+  it("keeps the encryption key when the rotate dialog is closed with Escape", async () => {
+    const user = userEvent.setup();
+    const log = recordRequests();
+    renderApp("/settings?tab=secrets");
+    await user.click(await screen.findByRole("button", { name: "Rotate encryption key…" }));
+    const dialog = await screen.findByRole("dialog", { name: "Rotate the encryption key?" });
+
+    await user.keyboard("{Escape}");
+
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
+    expect(log.some((r) => r.method !== "GET")).toBe(false);
+    expect(getDb().settings.secrets.key_id).not.toBe("k3");
+  });
+
   it("offers the confirmation sound, on by default", async () => {
     renderApp("/settings?tab=features");
     expect(await screen.findByRole("switch", { name: /Confirm commands with a sound/ })).toBeChecked();

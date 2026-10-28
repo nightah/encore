@@ -155,6 +155,20 @@ describe("Alexa skill page", () => {
     expect(getDb().skill.amazon.connected).toBe(true);
   });
 
+  it("keeps Amazon connected when the disconnect dialog is closed with Escape", async () => {
+    const user = userEvent.setup();
+    const log = recordRequests();
+    renderApp("/alexa-skill");
+
+    await user.click(await screen.findByRole("button", { name: "Disconnect" }));
+    await screen.findByRole("dialog", { name: "Disconnect from Amazon?" });
+    await user.keyboard("{Escape}");
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(log.some((r) => r.method === "DELETE")).toBe(false);
+    expect(getDb().skill.amazon.connected).toBe(true);
+  });
+
   it("can't deploy before Amazon is connected", async () => {
     getDb().skill.amazon = { ...getDb().skill.amazon, connected: false };
     renderApp("/alexa-skill");
