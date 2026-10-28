@@ -563,12 +563,13 @@ describe("setup wizard", () => {
 });
 
 /** Opens the wizard on `step` of a configured install, with the steps before it done. */
-function startAt(step: number, progress: Partial<{ done: number[]; skipped: number[] }> = {}) {
+function startAt(step: number, progress: Partial<{ done: number[]; skipped: number[]; reached: number }> = {}) {
   resetDb("configured");
   window.localStorage.setItem(
     SETUP_STORAGE_KEY,
     JSON.stringify({
       done: progress.done ?? Array.from({ length: step - 1 }, (_, i) => i + 1),
+      reached: progress.reached,
       skipped: progress.skipped ?? [],
       step,
     }),
@@ -604,6 +605,38 @@ describe("setup wizard steps list", () => {
     expect(steps.queryByRole("button", { name: /Deploy skill/ })).not.toBeInTheDocument();
     await user.click(steps.getByRole("button", { name: /Kodi/ }));
     await heading("Add your first Kodi");
+  });
+
+  it("keeps the furthest step reached when you go back, so you can jump forward to it again", async () => {
+    startAt(4);
+    const user = userEvent.setup();
+    renderApp("/setup");
+    await heading("Connect your Amazon developer account");
+    const steps = within(screen.getByRole("list", { name: "Setup steps" }));
+
+    await user.click(steps.getByRole("button", { name: /Public address/ }));
+    await heading("Tell us your public address");
+    expect(getSetupProgress()).toMatchObject({ reached: 4, step: 2 });
+    expect(steps.queryByRole("button", { name: /Deploy skill/ })).not.toBeInTheDocument();
+    await user.click(steps.getByRole("button", { name: /Amazon account/ }));
+    await heading("Connect your Amazon developer account");
+
+    await user.click(screen.getByRole("button", { name: "Back" }));
+    await heading("Add your first Kodi");
+    await user.click(steps.getByRole("button", { name: /Amazon account/ }));
+    await heading("Connect your Amazon developer account");
+  });
+
+  it("remembers the furthest step reached when it resumes", async () => {
+    startAt(2, { done: [1, 2, 3], reached: 4 });
+    const user = userEvent.setup();
+    renderApp("/setup");
+    await heading("Tell us your public address");
+
+    const steps = within(screen.getByRole("list", { name: "Setup steps" }));
+    expect(steps.queryByRole("button", { name: /Deploy skill/ })).not.toBeInTheDocument();
+    await user.click(steps.getByRole("button", { name: /Amazon account/ }));
+    await heading("Connect your Amazon developer account");
   });
 
   it("clears a skipped step once it's finished", async () => {

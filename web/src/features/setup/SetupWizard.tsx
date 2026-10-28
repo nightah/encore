@@ -27,18 +27,19 @@ export function SetupWizard() {
 
   const [state, setState] = useState(() => {
     const saved = getSetupProgress();
-    if (setupRequired) return { done: [] as number[], skipped: [] as number[], step: 1 };
-    return {
-      done: saved?.done ?? [1],
-      skipped: saved?.skipped ?? [],
-      step: saved?.step ?? 2,
-    };
+    if (setupRequired) return { done: [] as number[], reached: 1, skipped: [] as number[], step: 1 };
+    const done = saved?.done ?? [1];
+    const skipped = saved?.skipped ?? [];
+    const step = saved?.step ?? 2;
+    return { done, reached: Math.max(saved?.reached ?? 0, step, ...done, ...skipped), skipped, step };
   });
 
   const headingFocusRef = useRef(false);
   const update = useCallback((next: typeof state) => {
-    setState(next);
-    saveSetupProgress({ ...getSetupProgress(), ...next });
+    // Going back keeps the furthest step reached, so the steps list can jump forward to it again.
+    const progress = { ...next, reached: Math.max(next.reached, next.step) };
+    setState(progress);
+    saveSetupProgress({ ...getSetupProgress(), ...progress });
     headingFocusRef.current = true;
   }, []);
 
@@ -48,7 +49,7 @@ export function SetupWizard() {
     document.querySelector<HTMLElement>("[data-step-heading]")?.focus();
   });
 
-  const { step, done, skipped } = state;
+  const { step, done, reached, skipped } = state;
   const finish = useCallback(() => {
     clearSetupProgress();
     void navigate({ to: "/" });
@@ -66,7 +67,7 @@ export function SetupWizard() {
         finish();
         return;
       }
-      update({ done: nextDone, skipped: nextSkipped, step: step + 1 });
+      update({ ...state, done: nextDone, skipped: nextSkipped, step: step + 1 });
     },
     goTo: (target) => update({ ...state, step: target }),
     skip: () => {
@@ -74,12 +75,11 @@ export function SetupWizard() {
         finish();
         return;
       }
-      update({ done, skipped: [...new Set([...skipped, step])], step: step + 1 });
+      update({ ...state, skipped: [...new Set([...skipped, step])], step: step + 1 });
     },
   };
 
   const Step = STEP_COMPONENTS[step - 1] ?? AdminStep;
-  const reached = Math.max(step, ...done, ...skipped);
   const stepKey = STEPS[step - 1];
   const title = stepKey ? t(`steps.${stepKey}.title`) : "";
 

@@ -7,6 +7,8 @@ export interface SetupProgress {
   /** Steps finished or skipped. */
   done: number[];
   skipped: number[];
+  /** The furthest step shown, so going back to an earlier step can jump forward to it again. */
+  reached?: number;
   /** When step 6 started waiting for the first request. */
   waitingSince?: string;
 }
