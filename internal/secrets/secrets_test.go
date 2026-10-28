@@ -3,10 +3,12 @@ package secrets
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -442,4 +444,337 @@ func TestOpenWithKeyCanOpen(t *testing.T) {
 	require.NoError(t, none.CanOpen(nil))
 
 	assert.NoFileExists(t, filepath.Join(dir, KeyFileName), "OpenWithKey writes nothing")
+
+	require.ErrorIs(t, none.Put(ctx, "a", []byte("x")), ErrUnknownKey, "a store without a key cannot seal")
+
+	_, err = OpenWithKey(nil, []byte("short"))
+	require.Error(t, err)
+}
+
+// faultyRepo wraps a real repository and fails the operations whose error is set.
+type faultyRepo struct {
+	Repo
+
+	putErr, keyIDsErr, rewriteErr error
+}
+
+func (r *faultyRepo) Put(ctx context.Context, row store.SecretRow) error {
+	if r.putErr != nil {
+		return r.putErr
+	}
+
+	return r.Repo.Put(ctx, row)
+}
+
+func (r *faultyRepo) KeyIDs(ctx context.Context) ([]string, error) {
+	if r.keyIDsErr != nil {
+		return nil, r.keyIDsErr
+	}
+
+	return r.Repo.KeyIDs(ctx)
+}
+
+func (r *faultyRepo) Rewrite(ctx context.Context, fn func(row *store.SecretRow) error) error {
+	if r.rewriteErr != nil {
+		return r.rewriteErr
+	}
+
+	return r.Repo.Rewrite(ctx, fn)
+}
+
+func TestOpenOptionErrors(t *testing.T) {
+	db := openDB(t, t.TempDir())
+
+	badFile := filepath.Join(t.TempDir(), "key")
+	require.NoError(t, os.WriteFile(badFile, []byte("hunter2"), 0o600))
+
+	notADir := filepath.Join(t.TempDir(), "file")
+	require.NoError(t, os.WriteFile(notADir, nil, 0o600))
+
+	for name, tt := range map[string]struct {
+		opts Options
+		want string
+	}{
+		"nothing configured": {Options{}, "no key configured"},
+		"invalid key":        {Options{Key: "hunter2"}, "secrets.key:"},
+		"invalid key file":   {Options{KeyFile: badFile}, "secrets.key_file:"},
+		"missing key file":   {Options{KeyFile: filepath.Join(t.TempDir(), "missing")}, "secrets.key_file:"},
+		"data dir is a file": {Options{DataDir: notADir}, "checking key file"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			_, err := Open(t.Context(), db.SecretRows(), tt.opts)
+			require.ErrorContains(t, err, tt.want)
+			assert.NotContains(t, err.Error(), "hunter2")
+		})
+	}
+}
+
+func TestOpenKeyTakesPrecedenceOverKeyFile(t *testing.T) {
+	db := openDB(t, t.TempDir())
+	k, other := testKey(t), testKey(t)
+
+	path := filepath.Join(t.TempDir(), "key")
+	require.NoError(t, os.WriteFile(path, []byte(EncodeKey(other)), 0o600))
+
+	s, err := Open(t.Context(), db.SecretRows(), Options{Key: EncodeKey(k), KeyFile: path})
+	require.NoError(t, err)
+	assert.Equal(t, KeyID(k), s.KeyID())
+
+	got, err := ReadKey(Options{KeyFile: path})
+	require.NoError(t, err)
+	assert.Equal(t, other, got)
+}
+
+func TestOpenWarnsAboutAReadableKeyFile(t *testing.T) {
+	dir := t.TempDir()
+	db := openDB(t, dir)
+
+	_, err := Open(t.Context(), db.SecretRows(), Options{DataDir: dir})
+	require.NoError(t, err)
+	require.NoError(t, os.Chmod(filepath.Join(dir, KeyFileName), 0o644))
+
+	var logs bytes.Buffer
+
+	_, err = Open(t.Context(), db.SecretRows(), Options{DataDir: dir, Logger: slog.New(slog.NewTextHandler(&logs, nil))})
+	require.NoError(t, err)
+	assert.Contains(t, logs.String(), "readable by other users")
+}
+
+func TestOpenWithUnwritableDataDir(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("root ignores directory permissions")
+	}
+
+	db := openDB(t, t.TempDir())
+
+	dir := t.TempDir()
+	require.NoError(t, os.Chmod(dir, 0o500))
+	t.Cleanup(func() { _ = os.Chmod(dir, 0o700) })
+
+	_, err := Open(t.Context(), db.SecretRows(), Options{DataDir: dir})
+	require.ErrorContains(t, err, "creating key file")
+}
+
+func TestOpenReportsRepositoryErrors(t *testing.T) {
+	ctx := t.Context()
+
+	t.Run("generating a key", func(t *testing.T) {
+		dir := t.TempDir()
+		repo := &faultyRepo{Repo: openDB(t, dir).SecretRows(), keyIDsErr: assert.AnError}
+
+		_, err := Open(ctx, repo, Options{DataDir: dir})
+		require.ErrorIs(t, err, assert.AnError)
+		assert.NoFileExists(t, filepath.Join(dir, KeyFileName), "no key is generated when existing secrets cannot be checked")
+	})
+
+	t.Run("checking key usage", func(t *testing.T) {
+		repo := &faultyRepo{Repo: openDB(t, t.TempDir()).SecretRows(), keyIDsErr: assert.AnError}
+
+		_, err := Open(ctx, repo, Options{Key: EncodeKey(testKey(t))})
+		require.ErrorIs(t, err, assert.AnError)
+	})
+
+	t.Run("recovering a rotation", func(t *testing.T) {
+		dir := t.TempDir()
+		db := openDB(t, dir)
+
+		_, err := Open(ctx, db.SecretRows(), Options{DataDir: dir})
+		require.NoError(t, err)
+		require.NoError(t, writeKeyFile(filepath.Join(dir, KeyFileName+".new"), testKey(t)))
+
+		_, err = Open(ctx, &faultyRepo{Repo: db.SecretRows(), keyIDsErr: assert.AnError}, Options{DataDir: dir})
+		require.ErrorIs(t, err, assert.AnError)
+		assert.FileExists(t, filepath.Join(dir, KeyFileName+".new"), "the pending key is kept until it can be checked")
+	})
+}
+
+func TestOpenRefusesACorruptPendingKey(t *testing.T) {
+	dir := t.TempDir()
+	db := openDB(t, dir)
+
+	_, err := Open(t.Context(), db.SecretRows(), Options{DataDir: dir})
+	require.NoError(t, err)
+	require.NoError(t, os.WriteFile(filepath.Join(dir, KeyFileName+".new"), []byte("garbage"), 0o600))
+
+	_, err = Open(t.Context(), db.SecretRows(), Options{DataDir: dir})
+	require.ErrorContains(t, err, KeyFileName+".new")
+}
+
+func TestPutReportsRepositoryErrors(t *testing.T) {
+	repo := &faultyRepo{Repo: openDB(t, t.TempDir()).SecretRows()}
+
+	s, err := Open(t.Context(), repo, Options{Key: EncodeKey(testKey(t))})
+	require.NoError(t, err)
+
+	repo.putErr = assert.AnError
+	err = s.Put(t.Context(), "kodi/1/password", []byte("hunter2"))
+	require.ErrorIs(t, err, assert.AnError)
+	assert.Contains(t, err.Error(), "kodi/1/password")
+	assert.NotContains(t, err.Error(), "hunter2")
+}
+
+func TestGetRejectsAMalformedNonce(t *testing.T) {
+	db := openDB(t, t.TempDir())
+
+	s, err := Open(t.Context(), db.SecretRows(), Options{Key: EncodeKey(testKey(t))})
+	require.NoError(t, err)
+	require.NoError(t, s.Put(t.Context(), "a", []byte("alpha")))
+
+	row, err := db.SecretRows().Get(t.Context(), "a")
+	require.NoError(t, err)
+
+	row.Nonce = row.Nonce[:4]
+	require.NoError(t, db.SecretRows().Put(t.Context(), row))
+
+	_, err = s.Get(t.Context(), "a")
+	require.ErrorIs(t, err, ErrDecrypt)
+}
+
+func TestRotateRepositoryFailureLeavesEverythingAsItWas(t *testing.T) {
+	dir := t.TempDir()
+	repo := &faultyRepo{Repo: openDB(t, dir).SecretRows()}
+
+	s, err := Open(t.Context(), repo, Options{DataDir: dir})
+	require.NoError(t, err)
+	require.NoError(t, s.Put(t.Context(), "a", []byte("alpha")))
+
+	before := s.KeyID()
+	next := testKey(t)
+
+	repo.rewriteErr = assert.AnError
+	require.ErrorIs(t, s.Rotate(t.Context(), bytes.Clone(next)), assert.AnError)
+	assert.Equal(t, before, s.KeyID())
+	assert.NoFileExists(t, filepath.Join(dir, KeyFileName+".new"))
+
+	repo.rewriteErr = nil
+	require.NoError(t, s.Rotate(t.Context(), next), "the key is unloaded again, so the same key can be retried")
+	assert.Equal(t, KeyID(next), s.KeyID())
+}
+
+func TestRotateCannotStageTheKeyFile(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("root ignores directory permissions")
+	}
+
+	dir := t.TempDir()
+	db := openDB(t, filepath.Join(dir, "db"))
+	keyDir := filepath.Join(dir, "keys")
+
+	s, err := Open(t.Context(), db.SecretRows(), Options{DataDir: keyDir})
+	require.NoError(t, err)
+	require.NoError(t, s.Put(t.Context(), "a", []byte("alpha")))
+
+	before := s.KeyID()
+
+	require.NoError(t, os.Chmod(keyDir, 0o500))
+	t.Cleanup(func() { _ = os.Chmod(keyDir, 0o700) })
+
+	require.Error(t, s.Rotate(t.Context(), testKey(t)))
+	assert.Equal(t, before, s.KeyID())
+
+	ids, err := db.SecretRows().KeyIDs(t.Context())
+	require.NoError(t, err)
+	assert.Equal(t, []string{before}, ids, "no row is re-encrypted when the key cannot be saved first")
+}
+
+// TestRotateRenameFailureIsCompletedOnRestart simulates a crash-like failure after the database commit: the new key is in use, and the next Open finishes the rename from the staged file.
+func TestRotateRenameFailureIsCompletedOnRestart(t *testing.T) {
+	dir := t.TempDir()
+	db := openDB(t, dir)
+	ctx := t.Context()
+	keyFile := filepath.Join(dir, KeyFileName)
+
+	s, err := Open(ctx, db.SecretRows(), Options{DataDir: dir})
+	require.NoError(t, err)
+	require.NoError(t, s.Put(ctx, "a", []byte("alpha")))
+
+	oldKey, err := os.ReadFile(keyFile)
+	require.NoError(t, err)
+
+	// A non-empty directory in place of the key file makes the final rename fail.
+	require.NoError(t, os.Remove(keyFile))
+	require.NoError(t, os.MkdirAll(filepath.Join(keyFile, "blocker"), 0o700))
+
+	next := testKey(t)
+	err = s.Rotate(ctx, bytes.Clone(next))
+	require.ErrorContains(t, err, "completed on restart")
+	assert.Equal(t, KeyID(next), s.KeyID(), "the database is committed, so the new key is current")
+
+	got, err := s.Get(ctx, "a")
+	require.NoError(t, err)
+	assert.Equal(t, "alpha", string(got))
+
+	require.NoError(t, os.RemoveAll(keyFile))
+	require.NoError(t, os.WriteFile(keyFile, oldKey, 0o600))
+
+	s2, err := Open(ctx, db.SecretRows(), Options{DataDir: dir})
+	require.NoError(t, err)
+	assert.Equal(t, KeyID(next), s2.KeyID())
+	assert.NoFileExists(t, keyFile+".new")
+
+	got, err = s2.Get(ctx, "a")
+	require.NoError(t, err)
+	assert.Equal(t, "alpha", string(got))
+}
+
+func TestRotateWithSuppliedKeyWarnsToUpdateConfig(t *testing.T) {
+	db := openDB(t, t.TempDir())
+
+	var logs bytes.Buffer
+
+	s, err := Open(t.Context(), db.SecretRows(), Options{Key: EncodeKey(testKey(t)), Logger: slog.New(slog.NewTextHandler(&logs, nil))})
+	require.NoError(t, err)
+	require.NoError(t, s.Rotate(t.Context(), testKey(t)))
+	assert.Contains(t, logs.String(), "update secrets.key before restarting")
+}
+
+// TestPutDuringRotate checks no secret is left sealed under the outgoing key when writes race a rotation.
+func TestPutDuringRotate(t *testing.T) {
+	db := openDB(t, t.TempDir())
+	ctx := t.Context()
+
+	s, err := Open(ctx, db.SecretRows(), Options{Key: EncodeKey(testKey(t))})
+	require.NoError(t, err)
+
+	for i := range 20 {
+		require.NoError(t, s.Put(ctx, fmt.Sprintf("seed/%d", i), []byte("x")))
+	}
+
+	next := testKey(t)
+	nextID := KeyID(next)
+
+	var wg sync.WaitGroup
+
+	for i := range 8 {
+		wg.Go(func() {
+			for j := range 10 {
+				assert.NoError(t, s.Put(ctx, fmt.Sprintf("racer/%d/%d", i, j), []byte("y")))
+			}
+		})
+	}
+
+	require.NoError(t, s.Rotate(ctx, next))
+	wg.Wait()
+
+	ids, err := db.SecretRows().KeyIDs(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, []string{nextID}, ids)
+}
+
+func TestReadKeyErrors(t *testing.T) {
+	notADir := filepath.Join(t.TempDir(), "file")
+	require.NoError(t, os.WriteFile(notADir, nil, 0o600))
+
+	_, err := ReadKey(Options{DataDir: notADir})
+	require.ErrorContains(t, err, "checking key file")
+
+	_, err = ReadKey(Options{})
+	require.ErrorIs(t, err, ErrNoKey)
+
+	dir := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(dir, KeyFileName), []byte("garbage"), 0o600))
+
+	_, err = ReadKey(Options{DataDir: dir})
+	require.Error(t, err)
+	require.NotErrorIs(t, err, ErrNoKey, "a damaged key file is not a missing one")
 }
