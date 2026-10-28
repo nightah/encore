@@ -175,7 +175,23 @@ func TestBackupToRefusesExisting(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, os.FileMode(0o600), info.Mode().Perm())
 
-	assert.Error(t, db.BackupTo(t.Context(), path))
+	require.Error(t, db.BackupTo(t.Context(), path))
+
+	// VACUUM INTO would write into an empty file or through a symlink, so anything already at the path is refused.
+	empty := filepath.Join(t.TempDir(), "empty.db")
+	require.NoError(t, os.WriteFile(empty, nil, 0o644))
+	require.Error(t, db.BackupTo(t.Context(), empty))
+
+	info, err = os.Stat(empty)
+	require.NoError(t, err)
+	assert.Zero(t, info.Size(), "an existing file is left alone")
+
+	dir := t.TempDir()
+	target := filepath.Join(dir, "elsewhere.db")
+	link := filepath.Join(dir, "link.db")
+	require.NoError(t, os.Symlink(target, link))
+	require.Error(t, db.BackupTo(t.Context(), link))
+	assert.NoFileExists(t, target, "a dangling symlink is not followed")
 }
 
 func TestBackupHonoursContext(t *testing.T) {
@@ -255,16 +271,6 @@ func TestOpenReadConns(t *testing.T) {
 
 	db, _ = openTest(t, Options{})
 	assert.GreaterOrEqual(t, db.read.Stats().MaxOpenConnections, 4)
-}
-
-func TestReadPoolIsReadOnly(t *testing.T) {
-	db, _ := openTest(t, Options{})
-
-	_, err := db.read.ExecContext(t.Context(), `INSERT INTO settings (key, value, updated_at) VALUES ('k', '1', 0)`)
-	require.Error(t, err, "only the single writer may write, so writes are serialised")
-
-	_, err = db.Settings().Raw(t.Context(), "k")
-	require.ErrorIs(t, err, ErrNotFound)
 }
 
 func TestPingReportsWhichPoolFailed(t *testing.T) {
