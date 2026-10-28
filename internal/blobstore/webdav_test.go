@@ -2,11 +2,13 @@ package blobstore_test
 
 import (
 	"encoding/pem"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -81,6 +83,44 @@ func TestWebDAVPrefixAndCollections(t *testing.T) {
 	b, err := os.ReadFile(filepath.Join(dir, "encore", "deep", "nested", "file.txt"))
 	require.NoError(t, err)
 	assert.Equal(t, "hi", string(b))
+}
+
+// TestWebDAVPutSendsContentLength pins that uploads carry a Content-Length rather than chunked transfer encoding: PHP-FPM behind Apache mod_proxy_fcgi, or nginx with fastcgi_request_buffering off, hands Nextcloud an empty body for a chunked PUT and it stores a zero-byte file without an error.
+func TestWebDAVPutSendsContentLength(t *testing.T) {
+	type upload struct {
+		length   int64
+		encoding []string
+	}
+
+	var (
+		mu      sync.Mutex
+		uploads []upload
+	)
+
+	h := &xwebdav.Handler{FileSystem: xwebdav.Dir(t.TempDir()), LockSystem: xwebdav.NewMemLS()}
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPut {
+			mu.Lock()
+			uploads = append(uploads, upload{r.ContentLength, r.TransferEncoding})
+			mu.Unlock()
+		}
+
+		h.ServeHTTP(w, r)
+	}))
+	t.Cleanup(srv.Close)
+
+	s := newDAV(t, config.StorageWebDAV{URL: srv.URL})
+	body := strings.Repeat("encore ", 1<<15)
+
+	require.NoError(t, s.Put(t.Context(), "known/size.bin", strings.NewReader(body), int64(len(body))))
+	// MultiReader hides the length, as a pipe or gzip stream would.
+	require.NoError(t, s.Put(t.Context(), "unknown/size.bin", io.MultiReader(strings.NewReader(body)), -1))
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	want := upload{length: int64(len(body))}
+	assert.Equal(t, []upload{want, want}, uploads)
 }
 
 func TestWebDAVBadCredentials(t *testing.T) {
