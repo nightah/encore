@@ -11,7 +11,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"go.yaml.in/yaml/v3"
 
 	"github.com/nightah/encore/internal/fuzzy/phonetic"
 	_ "github.com/nightah/encore/internal/fuzzy/phonetic/de"
@@ -30,6 +29,7 @@ type evalEncoder struct {
 type evalOutcome struct {
 	suite, heard string
 	ok, wrong    bool
+	ask          bool
 	why          string
 }
 
@@ -121,7 +121,7 @@ func TestPhoneticLibraryGolden(t *testing.T) {
 		golden[f[0]][f[1]] = f[2:]
 	}
 
-	suites := evalSuites(t)
+	suites := evalSuites(t, corpusOriginal)
 
 	for _, code := range slices.Sorted(maps.Keys(golden)) {
 		toks := goldenTokens(t, code, suites[code])
@@ -146,29 +146,36 @@ func withPhonetic(t testing.TB, code string, fn phoneticFunc) {
 	t.Cleanup(func() { l.phonetic = old })
 }
 
-// evalSuites gathers the English and German suites from asr_corpus.yaml and the per-language suites in testdata/phonetic, grouped by language.
-func evalSuites(t *testing.T) map[string][]corpusSuite {
+// Corpus sets TestPhoneticEval scores separately.
+const (
+	// corpusOriginal is asr_corpus.yaml (English and German) and the per-language suites in testdata/phonetic: the corpora the encoders were chosen on.
+	corpusOriginal = "original"
+	// corpusGrown is testdata/grown: blind-written suites in every language, frozen before any encoder was evaluated on them.
+	corpusGrown = "grown"
+)
+
+// evalSuites gathers one corpus set's suites, grouped by language.
+func evalSuites(t *testing.T, set string) map[string][]corpusSuite {
 	t.Helper()
+
+	var c corpus
+
+	switch set {
+	case corpusOriginal:
+		paths, err := filepath.Glob("testdata/phonetic/*.yaml")
+		require.NoError(t, err)
+
+		c = loadCorpusFiles(t, append([]string{"testdata/asr_corpus.yaml"}, paths...)...)
+	case corpusGrown:
+		c = loadGrownCorpus(t)
+	default:
+		require.Failf(t, "unknown corpus set", "%q", set)
+	}
 
 	out := map[string][]corpusSuite{}
 
-	for _, s := range loadCorpus(t).Suites {
+	for _, s := range c.Suites {
 		out[s.Lang] = append(out[s.Lang], s)
-	}
-
-	paths, err := filepath.Glob("testdata/phonetic/*.yaml")
-	require.NoError(t, err)
-
-	for _, p := range paths {
-		raw, err := os.ReadFile(p)
-		require.NoError(t, err)
-
-		var c corpus
-		require.NoError(t, yaml.Unmarshal(raw, &c), p)
-
-		for _, s := range c.Suites {
-			out[s.Lang] = append(out[s.Lang], s)
-		}
 	}
 
 	return out
@@ -196,6 +203,7 @@ func runEval(t *testing.T, suites []corpusSuite, retr string) []evalOutcome {
 				heard: tc.Heard,
 				ok:    why == "",
 				wrong: res.Decision == DecisionPlay && (tc.Want != "play" || best.Doc.ID != tc.ID),
+				ask:   res.Decision == DecisionAsk,
 				why:   why,
 			})
 		}
@@ -208,7 +216,7 @@ func runEval(t *testing.T, suites []corpusSuite, retr string) []evalOutcome {
 
 // evalScore is a language's tally under one encoder and retriever.
 type evalScore struct {
-	correct, total, wrong int
+	correct, total, wrong, asks int
 }
 
 func tally(out []evalOutcome) evalScore {
@@ -222,100 +230,124 @@ func tally(out []evalOutcome) evalScore {
 		if o.wrong {
 			s.wrong++
 		}
+
+		if o.ask {
+			s.asks++
+		}
 	}
 
 	return s
 }
 
 func (s evalScore) String() string {
-	return fmt.Sprintf("%3d/%3d (%5.1f%%) wrong plays %d", s.correct, s.total, 100*float64(s.correct)/float64(s.total), s.wrong)
+	return fmt.Sprintf("%3d/%3d (%5.1f%%) wrong plays %2d asks %3d", s.correct, s.total, 100*float64(s.correct)/float64(s.total), s.wrong, s.asks)
 }
 
-// fuzzyGate is how many more correct decisions than English Double Metaphone internal/fuzzy must make per language: the French and Spanish encoders earn their place only with a measurable gain.
+// discordant counts the cases out decides correctly and ref does not (gains), and the reverse (losses): the pairs a paired comparison of two encoders rests on.
+func discordant(out, ref []evalOutcome) (gains, losses int) {
+	for i, o := range out {
+		switch {
+		case o.ok && !ref[i].ok:
+			gains++
+		case !o.ok && ref[i].ok:
+			losses++
+		}
+	}
+
+	return gains, losses
+}
+
+// fuzzyGate is how many more correct decisions than English Double Metaphone internal/fuzzy must make per language on the original corpora: the French and Spanish encoders earn their place only with a measurable gain.
 var fuzzyGate = map[string]int{"fr": 3, "es": 3}
 
 // ownEncoder lists the gated languages production keys with their own encoder. Production is held to the same gate there, so a language that lost its encoder would fail.
 var ownEncoder = map[string]bool{"es": true, "fr": true}
 
-// TestPhoneticEval measures match accuracy per language through the real pipeline (normalise, alias, retrieve, score, decide) with each candidate phonetic encoder swapped in. It logs a table, the production encoder's misses and every case another encoder gains or loses against it; run it with -v to read them. internal/fuzzy, and production in the languages listed in ownEncoder, are held to fuzzyGate against English Double Metaphone with no wrong plays added, and internal/fuzzy must not lose a decision or add a wrong play against production.
+// TestPhoneticEval measures match accuracy per corpus set and language through the real pipeline (normalise, alias, retrieve, score, decide) with each candidate phonetic encoder swapped in. It logs a table with each encoder's gains and losses against English Double Metaphone, the production encoder's misses and every case another encoder gains or loses against it; run it with -v to read them. On the original corpora, internal/fuzzy, and production in the languages listed in ownEncoder, are held to fuzzyGate against English Double Metaphone with no wrong plays added, and internal/fuzzy must not lose a decision or add a wrong play against production.
 func TestPhoneticEval(t *testing.T) {
-	suites := evalSuites(t)
-	codes := slices.Sorted(func(yield func(string) bool) {
-		for c := range suites {
-			if !yield(c) {
-				return
-			}
-		}
-	})
-
 	var table strings.Builder
 
-	for _, retr := range []string{RetrieverInverted, RetrieverTrigram} {
-		for _, code := range codes {
-			var base, english []evalOutcome
+	for _, set := range []string{corpusOriginal, corpusGrown} {
+		suites := evalSuites(t, set)
 
-			for _, enc := range evalEncoders {
-				fn := enc.keys(code)
-				if fn == nil && enc.name != "current" {
-					continue
-				}
-
-				var out []evalOutcome
-
-				t.Run(retr+"/"+code+"/"+enc.name, func(t *testing.T) {
-					if fn != nil {
-						withPhonetic(t, code, fn)
-					}
-
-					out = runEval(t, suites[code], retr)
-				})
-
-				fmt.Fprintf(&table, "%-8s %-3s %-10s %s\n", retr, code, enc.name, tally(out))
-
-				if enc.name == "current" {
-					base = out
-
-					for _, o := range out {
-						if !o.ok {
-							t.Logf("%s %s current misses [%s] %q: %s", retr, code, o.suite, o.heard, o.why)
-						}
-					}
-
-					continue
-				}
-
-				for i, o := range out {
-					switch {
-					case o.ok && !base[i].ok:
-						t.Logf("%s %s %s gains [%s] %q (current: %s)", retr, code, enc.name, o.suite, o.heard, base[i].why)
-					case !o.ok && base[i].ok:
-						t.Logf("%s %s %s loses [%s] %q: %s", retr, code, enc.name, o.suite, o.heard, o.why)
-					}
-				}
-
-				switch enc.name {
-				case "english":
-					english = out
-
-					if ownEncoder[code] {
-						got, eng := tally(base), tally(out)
-						assert.GreaterOrEqual(t, got.correct, eng.correct+fuzzyGate[code], "%s %s: production must gain at least %d correct decisions over english", retr, code, fuzzyGate[code])
-						assert.LessOrEqual(t, got.wrong, eng.wrong, "%s %s: production must not add wrong plays over english", retr, code)
-					}
-				case "fuzzy":
-					got, was, eng := tally(out), tally(base), tally(english)
-					assert.GreaterOrEqual(t, got.correct, was.correct, "%s %s: fuzzy must not lose correct decisions against production", retr, code)
-					assert.LessOrEqual(t, got.wrong, was.wrong, "%s %s: fuzzy must not add wrong plays against production", retr, code)
-					assert.GreaterOrEqual(t, got.correct, eng.correct+fuzzyGate[code], "%s %s: fuzzy must gain at least %d correct decisions over english", retr, code, fuzzyGate[code])
-					assert.LessOrEqual(t, got.wrong, eng.wrong, "%s %s: fuzzy must not add wrong plays over english", retr, code)
-				}
+		for _, retr := range []string{RetrieverInverted, RetrieverTrigram} {
+			for _, code := range slices.Sorted(maps.Keys(suites)) {
+				evalLanguage(t, &table, set, retr, code, suites[code])
 			}
-
-			assert.NotEmpty(t, base, "no current run for %s", code)
 		}
 	}
 
 	t.Logf("phonetic encoder evaluation:\n%s", table.String())
+}
+
+// evalLanguage runs every encoder over one language's suites in one corpus set, writes their rows to table and applies the gates.
+func evalLanguage(t *testing.T, table *strings.Builder, set, retr, code string, suites []corpusSuite) {
+	t.Helper()
+
+	outs := map[string][]evalOutcome{}
+
+	var names []string
+
+	for _, enc := range evalEncoders {
+		fn := enc.keys(code)
+		if fn == nil && enc.name != "current" {
+			continue
+		}
+
+		t.Run(set+"/"+retr+"/"+code+"/"+enc.name, func(t *testing.T) {
+			if fn != nil {
+				withPhonetic(t, code, fn)
+			}
+
+			outs[enc.name] = runEval(t, suites, retr)
+		})
+
+		names = append(names, enc.name)
+	}
+
+	base, english := outs["current"], outs["english"]
+	require.NotEmpty(t, base, "no current run for %s", code)
+
+	for _, name := range names {
+		gains, losses := discordant(outs[name], english)
+		fmt.Fprintf(table, "%-8s %-8s %-3s %-8s %s  vs english +%d -%d\n", set, retr, code, name, tally(outs[name]), gains, losses)
+
+		if name == "current" {
+			for _, o := range base {
+				if !o.ok {
+					t.Logf("%s %s %s current misses [%s] %q: %s", set, retr, code, o.suite, o.heard, o.why)
+				}
+			}
+
+			continue
+		}
+
+		for i, o := range outs[name] {
+			switch {
+			case o.ok && !base[i].ok:
+				t.Logf("%s %s %s %s gains [%s] %q (current: %s)", set, retr, code, name, o.suite, o.heard, base[i].why)
+			case !o.ok && base[i].ok:
+				t.Logf("%s %s %s %s loses [%s] %q: %s", set, retr, code, name, o.suite, o.heard, o.why)
+			}
+		}
+	}
+
+	if set != corpusOriginal {
+		return
+	}
+
+	got, eng := tally(base), tally(english)
+
+	if ownEncoder[code] {
+		assert.GreaterOrEqual(t, got.correct, eng.correct+fuzzyGate[code], "%s %s: production must gain at least %d correct decisions over english", retr, code, fuzzyGate[code])
+		assert.LessOrEqual(t, got.wrong, eng.wrong, "%s %s: production must not add wrong plays over english", retr, code)
+	}
+
+	fz := tally(outs["fuzzy"])
+	assert.GreaterOrEqual(t, fz.correct, got.correct, "%s %s: fuzzy must not lose correct decisions against production", retr, code)
+	assert.LessOrEqual(t, fz.wrong, got.wrong, "%s %s: fuzzy must not add wrong plays against production", retr, code)
+	assert.GreaterOrEqual(t, fz.correct, eng.correct+fuzzyGate[code], "%s %s: fuzzy must gain at least %d correct decisions over english", retr, code, fuzzyGate[code])
+	assert.LessOrEqual(t, fz.wrong, eng.wrong, "%s %s: fuzzy must not add wrong plays over english", retr, code)
 }
 
 // BenchmarkPhoneticUpsert measures building an index of 2000 synthetic titles with each encoder swapped in, which is where encoders run most: once per word and compact form of every alias.

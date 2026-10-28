@@ -1,8 +1,11 @@
 package match
 
 import (
+	"bytes"
 	"fmt"
+	"maps"
 	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
@@ -46,13 +49,43 @@ type corpusCase struct {
 func loadCorpus(t testing.TB) corpus {
 	t.Helper()
 
-	raw, err := os.ReadFile("testdata/asr_corpus.yaml")
+	return loadCorpusFiles(t, "testdata/asr_corpus.yaml")
+}
+
+// grownCorpusGlob matches the grown corpora: blind-written suites in every language, added on top of asr_corpus.yaml and testdata/phonetic and scored separately from them.
+const grownCorpusGlob = "testdata/grown/*.yaml"
+
+// loadGrownCorpus returns the suites of every grown corpus file, in file order.
+func loadGrownCorpus(t testing.TB) corpus {
+	t.Helper()
+
+	paths, err := filepath.Glob(grownCorpusGlob)
 	require.NoError(t, err)
+	require.NotEmpty(t, paths, "no grown corpora")
 
-	var c corpus
-	require.NoError(t, yaml.Unmarshal(raw, &c))
+	return loadCorpusFiles(t, paths...)
+}
 
-	return c
+// loadCorpusFiles decodes each file, rejecting unknown fields, and returns their suites in order.
+func loadCorpusFiles(t testing.TB, paths ...string) corpus {
+	t.Helper()
+
+	var all corpus
+
+	for _, p := range paths {
+		raw, err := os.ReadFile(p)
+		require.NoError(t, err)
+
+		dec := yaml.NewDecoder(bytes.NewReader(raw))
+		dec.KnownFields(true)
+
+		var c corpus
+		require.NoError(t, dec.Decode(&c), p)
+
+		all.Suites = append(all.Suites, c.Suites...)
+	}
+
+	return all
 }
 
 func (s corpusSuite) docs() []Doc {
@@ -114,55 +147,92 @@ func describe(res Result) string {
 	return b.String()
 }
 
+// corpusScore is one retriever's tally over a corpus. Wrong plays are the costly failure: starting the wrong thing instead of asking.
+type corpusScore struct {
+	total, correct, wrongPlays, asks int
+}
+
+func (s corpusScore) String() string {
+	return fmt.Sprintf("%d/%d correct decisions (%.1f%%), %d wrong plays, %d asks", s.correct, s.total, 100*float64(s.correct)/float64(s.total), s.wrongPlays, s.asks)
+}
+
+// scoreCorpus searches every case of the suites with the given retriever, calling miss for each case that fails and reporting an xfail case that passes.
+func scoreCorpus(t *testing.T, suites []corpusSuite, retr string, miss func(suite string, tc corpusCase, why string, res Result)) corpusScore {
+	t.Helper()
+
+	var s corpusScore
+
+	for _, suite := range suites {
+		ix, err := New(suite.Lang, Config{Retriever: retr})
+		require.NoError(t, err)
+		t.Cleanup(func() { assert.NoError(t, ix.Close()) })
+		require.NoError(t, ix.Upsert(suite.docs()...))
+
+		for _, tc := range suite.Cases {
+			res, err := ix.Search(t.Context(), tc.query())
+			require.NoError(t, err)
+
+			s.total++
+
+			if best, _ := res.Best(); res.Decision == DecisionPlay && (tc.Want != "play" || best.Doc.ID != tc.ID) {
+				s.wrongPlays++
+			}
+
+			if res.Decision == DecisionAsk {
+				s.asks++
+			}
+
+			if why := tc.check(res); why != "" {
+				miss(suite.Name, tc, why, res)
+
+				continue
+			}
+
+			s.correct++
+
+			if tc.XFail != "" {
+				t.Errorf("[%s] %q: passes but is marked xfail (%s)", suite.Name, tc.Heard, tc.XFail)
+			}
+		}
+	}
+
+	return s
+}
+
+// TestASRCorpus holds the matcher to asr_corpus.yaml: every case passes unless it is marked xfail, with at least 95% correct decisions and no wrong plays. The grown corpora are scored and logged per language, not asserted: TestPhoneticEval gates them.
 func TestASRCorpus(t *testing.T) {
 	c := loadCorpus(t)
+	grown := map[string][]corpusSuite{}
+
+	for _, s := range loadGrownCorpus(t).Suites {
+		grown[s.Lang] = append(grown[s.Lang], s)
+	}
 
 	for _, retr := range []string{RetrieverInverted, RetrieverTrigram} {
 		t.Run(retr, func(t *testing.T) {
-			// wrongPlays counts the costly failure: starting the wrong thing instead of asking.
-			total, correct, wrongPlays := 0, 0, 0
+			s := scoreCorpus(t, c.Suites, retr, func(suite string, tc corpusCase, why string, res Result) {
+				if tc.XFail != "" {
+					t.Logf("[%s] %q: known miss (%s): %s", suite, tc.Heard, tc.XFail, why)
 
-			for _, suite := range c.Suites {
-				ix, err := New(suite.Lang, Config{Retriever: retr})
-				require.NoError(t, err)
-				t.Cleanup(func() { assert.NoError(t, ix.Close()) })
-				require.NoError(t, ix.Upsert(suite.docs()...))
-
-				for _, tc := range suite.Cases {
-					res, err := ix.Search(t.Context(), tc.query())
-					require.NoError(t, err)
-
-					total++
-
-					if best, _ := res.Best(); res.Decision == DecisionPlay && (tc.Want != "play" || best.Doc.ID != tc.ID) {
-						wrongPlays++
-					}
-
-					why := tc.check(res)
-					if why == "" {
-						correct++
-
-						if tc.XFail != "" {
-							t.Errorf("[%s] %q: passes but is marked xfail (%s)", suite.Name, tc.Heard, tc.XFail)
-						}
-
-						continue
-					}
-
-					if tc.XFail != "" {
-						t.Logf("[%s] %q: known miss (%s): %s", suite.Name, tc.Heard, tc.XFail, why)
-
-						continue
-					}
-
-					t.Errorf("[%s] %q: %s\n  %s", suite.Name, tc.Heard, why, describe(res))
+					return
 				}
-			}
 
-			precision := float64(correct) / float64(total)
-			t.Logf("%s: %d/%d correct decisions (%.1f%%), %d wrong plays", retr, correct, total, 100*precision, wrongPlays)
-			assert.GreaterOrEqual(t, precision, 0.95)
-			assert.Zero(t, wrongPlays)
+				t.Errorf("[%s] %q: %s\n  %s", suite, tc.Heard, why, describe(res))
+			})
+
+			t.Logf("%s: %s", retr, s)
+			assert.GreaterOrEqual(t, float64(s.correct)/float64(s.total), 0.95)
+			assert.Zero(t, s.wrongPlays)
+		})
+
+		t.Run(retr+"/grown", func(t *testing.T) {
+			for _, code := range slices.Sorted(maps.Keys(grown)) {
+				s := scoreCorpus(t, grown[code], retr, func(suite string, tc corpusCase, why string, _ Result) {
+					t.Logf("%s grown miss [%s] %q: %s", code, suite, tc.Heard, why)
+				})
+
+				t.Logf("%s %s grown: %s", retr, code, s)
+			}
 		})
 	}
 }
