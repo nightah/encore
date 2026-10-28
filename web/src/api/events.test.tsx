@@ -288,6 +288,32 @@ describe("event stream", () => {
     expect(seen).toEqual([[1, 1]]);
   });
 
+  it("calls every listener for an event, and unsubscribing one leaves the others", () => {
+    const first = vi.fn();
+    const second = vi.fn();
+    const offFirst = eventStream.on("device", first);
+    const offSecond = eventStream.on("device", second);
+    emit("device", { id: 1 });
+    offFirst();
+    emit("device", { id: 2 });
+    offSecond();
+    expect(first.mock.calls).toEqual([[{ id: 1 }]]);
+    expect(second.mock.calls).toEqual([[{ id: 1 }], [{ id: 2 }]]);
+  });
+
+  it("opens nothing, and doesn't throw, where there is no EventSource", () => {
+    release();
+    vi.stubGlobal("EventSource", undefined);
+    try {
+      expect(() => {
+        release = eventStream.acquire(queryClient);
+      }).not.toThrow();
+      expect(FakeEventSource.open).toBe(0);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("shares one connection and closes it when the last user leaves", () => {
     expect(FakeEventSource.open).toBe(1);
     const second = eventStream.acquire(queryClient);
