@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { skipToken, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { createAlias, deleteAlias, listAliases, testMatch } from "@api/generated/endpoints/match/match";
 import type { CreateAliasRequest, TestMatchRequest } from "@api/generated/model";
@@ -15,8 +15,7 @@ export function useMatch() {
 
 export function useAliases(libraryId: number | undefined) {
   return useQuery({
-    enabled: libraryId !== undefined,
-    queryFn: ({ signal }) => listAliases({ library_id: libraryId ?? 0 }, { signal }),
+    queryFn: libraryId === undefined ? skipToken : ({ signal }) => listAliases({ library_id: libraryId }, { signal }),
     queryKey: keys.aliases(libraryId ?? 0),
   });
 }

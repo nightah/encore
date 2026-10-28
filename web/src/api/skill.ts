@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, skipToken, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { buildUrl } from "@api/client";
 import {
@@ -87,8 +87,7 @@ export function useActiveDeploy(skill: SkillInfo | undefined) {
 /** Polls a deploy while it runs; SSE `deploy` events also append to this cache. */
 export function useDeploy(id: string | undefined) {
   return useQuery({
-    enabled: !!id,
-    queryFn: ({ signal }) => getDeploy(id ?? "", { signal }),
+    queryFn: id ? ({ signal }) => getDeploy(id, { signal }) : skipToken,
     queryKey: keys.deploy(id ?? ""),
     refetchInterval: (query) => (query.state.data?.state === "in_progress" ? 3_000 : false),
   });
