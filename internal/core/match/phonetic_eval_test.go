@@ -2,6 +2,7 @@ package match
 
 import (
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"slices"
@@ -11,6 +12,11 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.yaml.in/yaml/v3"
+	"pgregory.net/rapid"
+
+	"github.com/nightah/encore/internal/fuzzy/phonetic"
+	_ "github.com/nightah/encore/internal/fuzzy/phonetic/de"
+	_ "github.com/nightah/encore/internal/fuzzy/phonetic/en"
 )
 
 // evalEncoder is a candidate phonetic function for TestPhoneticEval. keys returns nil for a language it does not cover, which keeps the production encoder.
@@ -26,13 +32,74 @@ type evalOutcome struct {
 	why          string
 }
 
-// evalEncoders are compared against "current", the production encoders. "none" makes every word its own key, which measures how much the phonetic layer contributes at all.
+// evalEncoders are compared against "current", the production encoders. "none" makes every word its own key, which measures how much the phonetic layer contributes at all. "fuzzy" is internal/fuzzy/phonetic, which falls back to English for languages without an encoder of their own.
 var evalEncoders = []evalEncoder{
 	{name: "current", keys: func(string) phoneticFunc { return nil }},
 	{name: "none", keys: func(string) phoneticFunc { return identityKeys }},
+	{name: "fuzzy", keys: fuzzyKeys},
 }
 
 func identityKeys(tok string) []string { return []string{tok} }
+
+// fuzzyKeys adapts an internal/fuzzy encoder to the matcher's phoneticFunc.
+func fuzzyKeys(code string) phoneticFunc {
+	enc := phonetic.For(code)
+
+	return func(tok string) []string { return enc.Keys(make([]string, 0, 3), tok) }
+}
+
+// corpusTokens returns every normalised token and compact form the matcher would encode for a language's suites: titles, aliases and what was heard.
+func corpusTokens(l *language, suites []corpusSuite) []string {
+	seen := map[string]bool{}
+
+	add := func(toks []string) {
+		for _, tok := range toks {
+			seen[tok] = true
+		}
+
+		seen[strings.Join(toks, "")] = true
+	}
+
+	for _, s := range suites {
+		for _, d := range s.Library {
+			for _, a := range append([]string{d.Title}, d.Aliases...) {
+				add(l.normalize(a, true))
+				add(l.normalize(a, false))
+			}
+		}
+
+		for _, c := range s.Cases {
+			add(l.normalize(c.Heard, false))
+		}
+	}
+
+	return slices.Sorted(maps.Keys(seen))
+}
+
+// TestFuzzyPortsMatchProduction checks that internal/fuzzy's English and German encoders give the production keys for every token and compact form in the corpora and for random normalised text, so swapping them in cannot change a match.
+func TestFuzzyPortsMatchProduction(t *testing.T) {
+	suites := evalSuites(t)
+
+	for _, code := range []string{"en", "de"} {
+		l, enc := languages[code], fuzzyKeys(code)
+
+		toks := corpusTokens(l, suites[code])
+		for _, tok := range toks {
+			require.Equal(t, l.phonetic(tok), enc(tok), "%s %q", code, tok)
+		}
+
+		t.Logf("%s: %d corpus tokens agree", code, len(toks))
+
+		rapid.Check(t, func(t *rapid.T) {
+			toks := l.normalize(genText().Draw(t, "s"), true)
+			for _, tok := range append(toks, strings.Join(toks, "")) {
+				if got, want := enc(tok), l.phonetic(tok); !slices.Equal(got, want) {
+					t.Fatalf("%s %q: fuzzy %q, production %q", code, tok, got, want)
+				}
+			}
+		})
+	}
+}
 
 // withPhonetic swaps a language's phonetic function until the test ends. The bleve filter and the trigram retriever read it when an index is built, so it must be set before New. Tests in this package do not run in parallel, so swapping the shared language is safe.
 func withPhonetic(t testing.TB, code string, fn phoneticFunc) {
@@ -192,4 +259,32 @@ func TestPhoneticEval(t *testing.T) {
 	}
 
 	t.Logf("phonetic encoder evaluation:\n%s", table.String())
+}
+
+// BenchmarkPhoneticUpsert measures building an index of 2000 synthetic titles with each encoder swapped in, which is where encoders run most: once per word and compact form of every alias.
+func BenchmarkPhoneticUpsert(b *testing.B) {
+	docs := syntheticDocs(2000, 3)
+
+	for _, code := range []string{"en", "de", "fr", "es", "it"} {
+		for _, enc := range evalEncoders {
+			if enc.name == "none" {
+				continue
+			}
+
+			b.Run("lang="+code+"/enc="+enc.name, func(b *testing.B) {
+				if fn := enc.keys(code); fn != nil {
+					withPhonetic(b, code, fn)
+				}
+
+				b.ReportAllocs()
+
+				for range b.N {
+					ix, err := New(code, Config{})
+					require.NoError(b, err)
+					require.NoError(b, ix.Upsert(docs...))
+					require.NoError(b, ix.Close())
+				}
+			})
+		}
+	}
 }
