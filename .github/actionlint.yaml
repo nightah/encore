@@ -3,3 +3,9 @@ paths:
   .github/workflows/*.yml:
     ignore:
       - 'reusable workflow call "\$/\.github/workflows/[^"]+\.yml" at "uses" is not following the format'
+
+# GitHub's Ubuntu 26.04 runners, which actionlint doesn't know yet; it only accepts labels it doesn't know when they're listed here. Drop these once it does.
+self-hosted-runner:
+  labels:
+    - ubuntu-26.04
+    - ubuntu-26.04-arm

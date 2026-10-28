@@ -21,7 +21,7 @@ jobs:
       github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' &&
       (github.event.workflow_run.event == 'push' ||
       (github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.head_repository.full_name != github.repository))
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     permissions:
       actions: read # check the run built an image
@@ -86,7 +86,7 @@ jobs:
     name: Approve a fork's image
     needs: resolve
     if: needs.resolve.outputs.fork == 'true'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     # Required reviewers on this environment decide whether a fork's image is published.
     environment: pr-images
@@ -102,7 +102,7 @@ jobs:
     if: >-
       !cancelled() && needs.resolve.result == 'success' && needs.resolve.outputs.tag != '' &&
       (needs.approve.result == 'success' || needs.approve.result == 'skipped')
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     # One publish per tag at a time, so an older run can't land after a newer one.
     concurrency:
@@ -214,7 +214,7 @@ jobs:
   announce:
     name: Announce the image
     if: github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     permissions:
       contents: read # check out the base branch for the scripts
