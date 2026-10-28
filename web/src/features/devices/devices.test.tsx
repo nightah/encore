@@ -1,9 +1,12 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 
+import { keys } from "@api/keys";
 import i18n from "@i18n/index";
 import { getDb } from "@mocks/handlers";
+import { server } from "@mocks/node";
 import { failWith, recordRequests, renderApp } from "@test/utils";
 
 describe("Echo devices page", () => {
@@ -139,5 +142,51 @@ describe("Echo devices page", () => {
     await user.click(await screen.findByRole("button", { name: "Forget device…" }));
     await user.click(screen.getByRole("button", { name: "Forget device" }));
     expect((await screen.findAllByText("Nope")).length).toBeGreaterThan(0);
+  });
+
+  it("waits for the Kodi instances before saying which Kodi each Echo controls", async () => {
+    let answer: () => void = () => {};
+    server.use(
+      http.get(
+        "*/api/v1/kodi/instances",
+        () =>
+          new Promise<Response>((resolve) => {
+            answer = () => resolve(HttpResponse.json(getDb().instances));
+          }),
+      ),
+    );
+    const { queryClient } = renderApp("/echo-devices");
+
+    // The Echos and rooms are in; the Kodi instances aren't yet.
+    await waitFor(() => expect(queryClient.getQueryState(keys.devices)?.status).toBe("success"));
+    await waitFor(() => expect(queryClient.getQueryState(keys.rooms)?.status).toBe("success"));
+    expect(screen.queryByText("Not linked")).not.toBeInTheDocument();
+    expect(screen.queryByText("→ no Kodi instance")).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Loading…");
+
+    answer();
+    const table = await screen.findByRole("table", { name: "Devices" });
+    expect(within(table).getAllByText("Not linked")).toHaveLength(1);
+    expect(within(table).getAllByText("Lounge", { selector: "span" })).toHaveLength(2);
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+
+  it("says the Kodi instances didn't load instead of showing every Echo as not linked", async () => {
+    const user = userEvent.setup();
+    failWith("get", "/kodi/instances", 500, "boom");
+    const { queryClient } = renderApp("/echo-devices");
+
+    await waitFor(() => expect(queryClient.getQueryState(keys.instances)?.status).toBe("error"));
+    await waitFor(() => expect(queryClient.getQueryState(keys.devices)?.status).toBe("success"));
+    await waitFor(() => expect(queryClient.getQueryState(keys.rooms)?.status).toBe("success"));
+    expect(screen.queryByText("Not linked")).not.toBeInTheDocument();
+    expect(screen.queryByText("→ no Kodi instance")).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("boom");
+
+    server.resetHandlers();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    const table = await screen.findByRole("table", { name: "Devices" });
+    expect(within(table).getAllByText("Not linked")).toHaveLength(1);
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });
