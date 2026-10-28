@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { keys } from "@api/keys";
 import { getDb } from "@mocks/handlers";
 import { server } from "@mocks/node";
-import { failWith, recordRequests, renderApp } from "@test/utils";
+import { failWith, findEnabledButton, recordRequests, renderApp } from "@test/utils";
 
 describe("Library page", () => {
   it("shows the summary tiles for the shared library", async () => {
@@ -92,7 +92,7 @@ describe("Library page", () => {
     const user = userEvent.setup();
     const log = recordRequests();
     renderApp("/library");
-    await user.click(await screen.findByRole("button", { name: "Sync all now" }));
+    await user.click(await findEnabledButton({ name: "Sync all now" }));
     await waitFor(() => {
       const syncs = log.filter((r) => r.method === "POST" && r.path.endsWith("/sync")).map((r) => r.path);
       expect(syncs.sort()).toEqual(["/kodi/instances/1/sync", "/kodi/instances/3/sync"]);
@@ -142,7 +142,7 @@ describe("Library page", () => {
       { ...solo, id: 5, members: [], name: "Empty", source_instance_id: 0 },
     ];
     renderApp("/library");
-    await user.click(await screen.findByRole("button", { name: "Sync all now" }));
+    await user.click(await findEnabledButton({ name: "Sync all now" }));
     expect(await screen.findByText("Library sync started. Counts update when it finishes.")).toBeInTheDocument();
     const syncs = log.filter((r) => r.method === "POST" && r.path.endsWith("/sync")).map((r) => r.path);
     expect(syncs).toEqual(["/kodi/instances/2/sync"]);

@@ -15,6 +15,20 @@ async function heading(name: string | RegExp) {
   return screen.findByRole("heading", { level: 1, name }, { timeout: 4000 });
 }
 
+/** Waits for the Amazon step to fill in the stored client ID: Authorise with Amazon stays disabled until it has one. */
+async function amazonStep() {
+  await heading("Connect your Amazon developer account");
+  await waitFor(() =>
+    expect(screen.getByLabelText("Client ID")).toHaveValue("amzn1.application-oa2-client.4f1c8d2b7a6e4e92a"),
+  );
+}
+
+/** Waits for the address step to fill in the stored address: until the skill settings load, Check address has nothing to check and a check can't store the endpoint. */
+async function addressStep() {
+  await heading("Tell us your public address");
+  await waitFor(() => expect(screen.getByLabelText("Public base URL")).toHaveValue("https://encore.example.net"));
+}
+
 describe("setup wizard", () => {
   beforeEach(() => {
     resetDb("fresh");
@@ -38,9 +52,8 @@ describe("setup wizard", () => {
     await user.type(screen.getByLabelText("Setup token"), "K7QF-2M9X-PL4D");
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
-    await heading("Tell us your public address");
+    await addressStep();
     expect(getDb().admin?.username).toBe("admin");
-    expect(await screen.findByLabelText("Public base URL")).toHaveValue("https://encore.example.net");
     await user.click(screen.getByRole("button", { name: "Check address" }));
     const checks = await screen.findByRole("list", { name: "Reachability check results" });
     expect(within(checks).getAllByRole("listitem")).toHaveLength(3);
@@ -222,7 +235,7 @@ describe("setup wizard", () => {
   it("shows the network search until Kodi is found, and offers another search when none is", async () => {
     resetDb("configured");
     window.localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify({ done: [1, 2], skipped: [], step: 3 }));
-    let answer: () => void = () => {};
+    let answer: (() => void) | undefined;
     server.use(
       http.get(
         "*/api/v1/kodi/discovered",
@@ -236,7 +249,9 @@ describe("setup wizard", () => {
 
     await heading("Add your first Kodi");
     expect(await screen.findByRole("status")).toHaveTextContent("Searching for Kodi with mDNS");
-    answer();
+    // The search shows as soon as the request starts, which can be before the mock API sees it.
+    await waitFor(() => expect(answer).toBeDefined());
+    answer?.();
     expect(await screen.findByRole("button", { name: "Search again" })).toBeInTheDocument();
     expect(screen.queryByText(/Searching for Kodi/)).not.toBeInTheDocument();
     expect(screen.getByText(/No Kodi answered on your network/)).toBeInTheDocument();
@@ -293,8 +308,8 @@ describe("setup wizard", () => {
     const user = userEvent.setup();
     const requests = recordRequests();
     const { queryClient } = renderApp("/setup");
-    await heading("Tell us your public address");
-    await user.click(await screen.findByRole("button", { name: "Check address" }));
+    await addressStep();
+    await user.click(screen.getByRole("button", { name: "Check address" }));
 
     await waitFor(() => expect(requests.some((r) => r.method === "PUT" && r.path === "/skill/settings")).toBe(true));
     await waitFor(() => expect(queryClient.isMutating()).toBe(0));
@@ -646,7 +661,7 @@ describe("setup wizard steps list", () => {
     await heading("Add your first Kodi");
 
     await user.click(screen.getByRole("button", { name: "Back" }));
-    await heading("Tell us your public address");
+    await addressStep();
     await user.click(screen.getByRole("button", { name: "Check address" }));
     await user.click(await screen.findByRole("button", { name: "Continue" }));
 
@@ -769,7 +784,7 @@ describe("setup address step", () => {
     const user = userEvent.setup();
     const log = recordRequests();
     renderApp("/setup");
-    await heading("Tell us your public address");
+    await addressStep();
 
     const field = screen.getByLabelText("Public base URL");
     // A url input has no text selection in jsdom, so user-event can't clear it; set the value as a paste would.
@@ -810,7 +825,7 @@ describe("setup address step", () => {
     const user = userEvent.setup();
     const log = recordRequests();
     renderApp("/setup");
-    await heading("Tell us your public address");
+    await addressStep();
 
     await user.click(screen.getByRole("button", { name: "Check address" }));
 
@@ -830,7 +845,7 @@ describe("setup address step", () => {
     );
     const user = userEvent.setup();
     renderApp("/setup");
-    await heading("Tell us your public address");
+    await addressStep();
 
     await user.click(screen.getByRole("button", { name: "Check address" }));
 
@@ -856,7 +871,7 @@ describe("setup address step", () => {
     );
     const user = userEvent.setup();
     renderApp("/setup");
-    await heading("Tell us your public address");
+    await addressStep();
 
     await user.click(screen.getByRole("button", { name: "Check address" }));
 
@@ -896,7 +911,7 @@ describe("setup address step", () => {
     failWith("post", "/setup/reachability", status, "Not Found");
     const user = userEvent.setup();
     renderApp("/setup");
-    await heading("Tell us your public address");
+    await addressStep();
 
     await user.click(screen.getByRole("button", { name: "Check address" }));
 
@@ -995,8 +1010,10 @@ describe("setup Kodi step", () => {
     const user = userEvent.setup();
     renderApp("/setup");
     await heading("Add your first Kodi");
+    // Until discovery answers there's nothing to add but an empty form.
+    expect(await screen.findByRole("radio", { name: /LibreELEC-Study/ })).toBeChecked();
 
-    await user.click(await screen.findByRole("button", { name: "Add and test" }));
+    await user.click(screen.getByRole("button", { name: "Add and test" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("The database is locked.");
   });
@@ -1036,8 +1053,10 @@ describe("setup Kodi step", () => {
     const user = userEvent.setup();
     renderApp("/setup");
     await heading("Add your first Kodi");
+    // Until discovery answers there's nothing to add but an empty form.
+    expect(await screen.findByRole("radio", { name: /LibreELEC-Study/ })).toBeChecked();
 
-    await user.click(await screen.findByRole("button", { name: "Add and test" }));
+    await user.click(screen.getByRole("button", { name: "Add and test" }));
 
     expect(await screen.findByText("The connection test didn't run: Kodi closed the connection.")).toHaveAttribute(
       "role",
@@ -1110,9 +1129,9 @@ describe("setup Amazon step", () => {
     const user = userEvent.setup();
     const log = recordRequests();
     renderApp("/setup");
-    await heading("Connect your Amazon developer account");
+    await amazonStep();
 
-    await user.type(await screen.findByLabelText("Client secret"), "lwa-secret");
+    await user.type(screen.getByLabelText("Client secret"), "lwa-secret");
     await user.click(screen.getByRole("button", { name: "Authorise with Amazon" }));
 
     await waitFor(() => expect(log.some((r) => r.path === "/skill/amazon/authorize?then=setup")).toBe(true));
@@ -1128,9 +1147,9 @@ describe("setup Amazon step", () => {
     getDb().skill.amazon.connected = false;
     const user = userEvent.setup();
     renderApp("/setup");
-    await heading("Connect your Amazon developer account");
+    await amazonStep();
 
-    const id = await screen.findByLabelText("Client ID");
+    const id = screen.getByLabelText("Client ID");
     await user.clear(id);
     await user.type(id, "not-a-client-id");
     await user.type(screen.getByLabelText("Client secret"), "lwa-secret");
@@ -1150,9 +1169,9 @@ describe("setup Amazon step", () => {
     const user = userEvent.setup();
     const log = recordRequests();
     renderApp("/setup");
-    await heading("Connect your Amazon developer account");
+    await amazonStep();
 
-    await user.type(await screen.findByLabelText("Client secret"), "lwa-secret");
+    await user.type(screen.getByLabelText("Client secret"), "lwa-secret");
     await user.click(screen.getByRole("button", { name: "Authorise with Amazon" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Couldn't store the secret.");
@@ -1170,9 +1189,9 @@ describe("setup Amazon step", () => {
     );
     const user = userEvent.setup();
     renderApp("/setup");
-    await heading("Connect your Amazon developer account");
+    await amazonStep();
 
-    await user.type(await screen.findByLabelText("Client secret"), "lwa-secret");
+    await user.type(screen.getByLabelText("Client secret"), "lwa-secret");
     await user.click(screen.getByRole("button", { name: "Authorise with Amazon" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -1218,8 +1237,10 @@ describe("setup Amazon step", () => {
     const log = recordRequests();
     renderApp("/setup");
     await heading("Connect your Amazon developer account");
+    // Until Amazon's return URLs load, the step goes by the skill's HTTPS endpoint.
+    expect(await screen.findByText("http://127.0.0.1:9090/cb")).toBeInTheDocument();
 
-    await user.click(await screen.findByText(/No HTTPS callback/));
+    await user.click(screen.getByText(/No HTTPS callback/));
     await user.click(screen.getByRole("radio", { name: "Paste a refresh token" }));
     await user.type(screen.getByLabelText("Refresh token"), " Atzr|token ");
     await user.click(screen.getByRole("button", { name: "Connect" }));
@@ -1237,8 +1258,10 @@ describe("setup Amazon step", () => {
     const log = recordRequests();
     renderApp("/setup");
     await heading("Connect your Amazon developer account");
+    // Until Amazon's return URLs load, the step goes by the skill's HTTPS endpoint.
+    expect(await screen.findByText("http://127.0.0.1:9090/cb")).toBeInTheDocument();
 
-    await user.click(await screen.findByText(/No HTTPS callback/));
+    await user.click(screen.getByText(/No HTTPS callback/));
     expect(screen.getByRole("radio", { name: "Paste the redirect URL" })).toHaveAttribute("aria-checked", "true");
     const redirect = screen.getByLabelText("Redirect URL");
     await user.type(redirect, "http://127.0.0.1:9090/cb?state=x{Enter}");

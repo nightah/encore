@@ -1,3 +1,4 @@
+import type { QueryClient } from "@tanstack/react-query";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -6,7 +7,14 @@ import { DEPLOY_STEPS } from "@features/skill/timeline";
 import { getDb } from "@mocks/handlers";
 import { server } from "@mocks/node";
 import { FakeEventSource } from "@test/eventSource";
-import { failWith, recordRequests, renderApp } from "@test/utils";
+import { type RecordedRequest, failWith, findEnabledButton, recordRequests, renderApp } from "@test/utils";
+
+/** Waits until the page has loaded the deploy it just started, and returns its ID. The mock API doesn't record the steps a test streams, so a load landing after them would put the deploy back as the API has it. */
+async function followedDeploy(log: RecordedRequest[], queryClient: QueryClient) {
+  await waitFor(() => expect(log.some((r) => r.method === "GET" && r.path.startsWith("/skill/deploy/"))).toBe(true));
+  await waitFor(() => expect(queryClient.isFetching({ queryKey: ["deploy"] })).toBe(0));
+  return Object.keys(getDb().deploys)[0] ?? "";
+}
 
 describe("Alexa skill page", () => {
   it("shows the deployment timeline, locale builds and model size", async () => {
@@ -59,14 +67,14 @@ describe("Alexa skill page", () => {
     const log = recordRequests();
     renderApp("/alexa-skill");
 
-    await user.click(await screen.findByRole("button", { name: "Music" }));
+    await user.click(await findEnabledButton({ name: "Music" }));
     await waitFor(() => expect(getDb().skill.content).toEqual(["movies", "tv"]));
     const put = log.find((r) => r.method === "PUT" && r.path === "/skill/settings");
     expect(put?.body).toMatchObject({ content: ["movies", "tv"] });
 
-    await user.click(await screen.findByRole("button", { name: "TV shows", pressed: true }));
+    await user.click(await findEnabledButton({ name: "TV shows", pressed: true }));
     await waitFor(() => expect(getDb().skill.content).toEqual(["movies"]));
-    await user.click(await screen.findByRole("button", { name: "Movies", pressed: true }));
+    await user.click(await findEnabledButton({ name: "Movies", pressed: true }));
     expect(await screen.findByText("Keep at least one of movies, TV shows or music.")).toBeInTheDocument();
     expect(getDb().skill.content).toEqual(["movies"]);
   });
@@ -103,18 +111,15 @@ describe("Alexa skill page", () => {
   it("redeploys and follows progress from the event stream", async () => {
     const user = userEvent.setup();
     const log = recordRequests();
-    renderApp("/alexa-skill");
+    const { queryClient } = renderApp("/alexa-skill");
 
-    await user.click(await screen.findByRole("button", { name: "Redeploy" }));
+    await user.click(await findEnabledButton({ name: "Redeploy" }));
 
-    await waitFor(() => expect(log.some((r) => r.method === "GET" && r.path.startsWith("/skill/deploy/"))).toBe(true));
+    const deployId = await followedDeploy(log, queryClient);
     const post = log.find((r) => r.method === "POST" && r.path === "/skill/deploy");
     expect(post?.csrf).toBe("mock-csrf-token");
     expect(screen.getByRole("button", { name: /Deploying/ })).toBeDisabled();
-
-    const deployId = Object.keys(getDb().deploys)[0] ?? "";
-    // Let the initial GET settle before streaming events on top of it.
-    await screen.findByText(/^Deploying: /);
+    expect(screen.getByText(/^Deploying: /)).toBeInTheDocument();
     for (const step of DEPLOY_STEPS) {
       FakeEventSource.emit("deploy", {
         at: new Date().toISOString(),
@@ -186,17 +191,17 @@ describe("Alexa skill page", () => {
     const log = recordRequests();
     renderApp("/alexa-skill");
 
-    await user.click(await screen.findByRole("button", { name: "Redeploy" }));
+    await user.click(await findEnabledButton({ name: "Redeploy" }));
 
     await waitFor(() => expect(log.find((r) => r.method === "POST")?.body).toEqual(body));
   });
 
   it("points to the timeline for a deploy that fails without saying why", async () => {
     const user = userEvent.setup();
-    renderApp("/alexa-skill");
-    await user.click(await screen.findByRole("button", { name: "Redeploy" }));
-    await screen.findByText(/^Deploying: /);
-    const deployId = Object.keys(getDb().deploys)[0] ?? "";
+    const log = recordRequests();
+    const { queryClient } = renderApp("/alexa-skill");
+    await user.click(await findEnabledButton({ name: "Redeploy" }));
+    const deployId = await followedDeploy(log, queryClient);
 
     FakeEventSource.emit("deploy", {
       at: new Date().toISOString(),
@@ -221,10 +226,10 @@ describe("Alexa skill page", () => {
 
   it("explains a deploy that fails", async () => {
     const user = userEvent.setup();
-    renderApp("/alexa-skill");
-    await user.click(await screen.findByRole("button", { name: "Redeploy" }));
-    await screen.findByText(/^Deploying: /);
-    const deployId = Object.keys(getDb().deploys)[0] ?? "";
+    const log = recordRequests();
+    const { queryClient } = renderApp("/alexa-skill");
+    await user.click(await findEnabledButton({ name: "Redeploy" }));
+    const deployId = await followedDeploy(log, queryClient);
 
     FakeEventSource.emit("deploy", {
       at: new Date().toISOString(),

@@ -1,6 +1,7 @@
 import { createMemoryHistory } from "@tanstack/react-router";
-import { render } from "@testing-library/react";
+import { type ByRoleOptions, render, screen, waitFor } from "@testing-library/react";
 import { HttpResponse, http } from "msw";
+import { expect } from "vitest";
 
 import { server } from "@mocks/node";
 import { App } from "@src/App";
@@ -18,6 +19,13 @@ export function renderApp(path: string) {
   });
   const result = render(<App queryClient={queryClient} router={router} />);
   return { ...result, queryClient, router };
+}
+
+/** Finds a button and waits until it's enabled: buttons stay disabled while their data loads or a save is in flight, and a click on a disabled button does nothing. */
+export async function findEnabledButton(options: ByRoleOptions) {
+  const button = await screen.findByRole("button", options);
+  await waitFor(() => expect(button).toBeEnabled());
+  return button;
 }
 
 export interface RecordedRequest {

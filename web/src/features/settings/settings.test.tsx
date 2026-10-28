@@ -466,7 +466,9 @@ describe("Access settings", () => {
         auth: { local: { lockout_attempts: 10, lockout_minutes: 60, session_hours: 720 } },
       }),
     );
-    expect(getDb().settings.auth.local).toMatchObject({ lockout_attempts: 10, lockout_minutes: 60 });
+    await waitFor(() =>
+      expect(getDb().settings.auth.local).toMatchObject({ lockout_attempts: 10, lockout_minutes: 60 }),
+    );
   });
 
   it("keeps a saved session length and lockout that aren't among the choices", async () => {

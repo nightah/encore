@@ -18,7 +18,8 @@ describe("Echo devices page", () => {
     const table = await screen.findByRole("table", { name: "Devices" });
     expect(within(table).getByText("Lounge Echo Show")).toBeInTheDocument();
     expect(within(table).getByText("amzn1.ask.device.AFQ…2LM")).toBeInTheDocument();
-    expect(within(table).getByText("Not linked")).toBeInTheDocument();
+    // Every Echo shows as not linked until the Kodi instances load.
+    await waitFor(() => expect(within(table).getByText("Not linked")).toBeInTheDocument());
 
     const banner = screen.getByRole("region", { name: "New Echo heard: not linked to a Kodi yet" });
     expect(await within(banner).findByText(/“pause”/)).toBeInTheDocument();
@@ -105,7 +106,10 @@ describe("Echo devices page", () => {
 
     await user.click(await screen.findByRole("button", { name: "Edit Study Echo Spot" }));
     const dialog = await screen.findByRole("dialog", { name: "Edit Study Echo Spot" });
-    await user.selectOptions(within(dialog).getByRole("combobox", { name: "Controls Kodi" }), "2");
+    // The Kodi instances to choose from arrive with their own request.
+    const kodi = within(dialog).getByRole("combobox", { name: "Controls Kodi" });
+    await within(kodi).findByRole("option", { name: "Bedroom" });
+    await user.selectOptions(kodi, "2");
     await user.click(screen.getByRole("button", { name: "Save" }));
 
     await waitFor(() => expect(getDb().devices.find((d) => d.id === 4)?.kodi_instance_id).toBe(2));
@@ -122,7 +126,8 @@ describe("Echo devices page", () => {
     await user.type(name, "Not saved");
     await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
 
-    await user.click(screen.getByRole("button", { name: "Edit Lounge Echo Show" }));
+    // The page is hidden from the accessibility tree until the dialog finishes closing.
+    await user.click(await screen.findByRole("button", { name: "Edit Lounge Echo Show" }));
     dialog = await screen.findByRole("dialog", { name: "Edit Lounge Echo Show" });
     expect(within(dialog).getByRole("textbox", { name: "Name" })).toHaveValue("Lounge Echo Show");
     await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
@@ -161,7 +166,8 @@ describe("Echo devices page", () => {
     await user.click(within(dialog).getByRole("button", { name: "Add room" }));
     expect((await screen.findAllByText("Room made.")).length).toBeGreaterThan(0);
 
-    await user.click(screen.getByRole("button", { name: "Edit Lounge Echo Show" }));
+    // The page is hidden from the accessibility tree until the dialog finishes closing.
+    await user.click(await screen.findByRole("button", { name: "Edit Lounge Echo Show" }));
     await user.click(await screen.findByRole("button", { name: "Forget device…" }));
     await user.click(screen.getByRole("button", { name: "Forget device" }));
     expect((await screen.findAllByText("Nope")).length).toBeGreaterThan(0);
@@ -222,7 +228,8 @@ describe("Echo dialog", () => {
 
     await user.click(await screen.findByRole("button", { name: "Edit Study Echo Spot" }));
     const dialog = await screen.findByRole("dialog", { name: "Edit Study Echo Spot" });
-    expect(within(dialog).getByRole("combobox", { name: "Room" })).toHaveValue("4");
+    // Its room shows once the rooms load.
+    await waitFor(() => expect(within(dialog).getByRole("combobox", { name: "Room" })).toHaveValue("4"));
     await user.clear(within(dialog).getByRole("textbox", { name: "Name" }));
     await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "   ");
     await user.selectOptions(within(dialog).getByRole("combobox", { name: "Room" }), "No room");
@@ -471,7 +478,8 @@ describe("Rooms", () => {
 
     await user.click(await screen.findByRole("button", { name: "Edit room Study" }));
     const dialog = await screen.findByRole("dialog", { name: "Edit Study" });
-    expect(within(dialog).getByRole("combobox", { name: "Kodi instance" })).toHaveValue("1");
+    // Its Kodi instance shows once the instances load.
+    await waitFor(() => expect(within(dialog).getByRole("combobox", { name: "Kodi instance" })).toHaveValue("1"));
     const name = within(dialog).getByRole("textbox", { name: "Name" });
     await user.clear(name);
     await user.type(name, "Office ");

@@ -14,6 +14,12 @@ async function card(name: string) {
   return within(await screen.findByRole("article", { name }));
 }
 
+/** Waits for the instances and, with their own request, the libraries they share: sharing tells which instances already share one. */
+async function sharedLibraryLoaded() {
+  await card("Kids' room");
+  return screen.findByRole("region", { name: "Shared library: Lounge and Bedroom" });
+}
+
 function patchInstance(
   id: number,
   patch: Partial<Omit<Instance, "status" | "library">> & {
@@ -36,7 +42,7 @@ function patchLibrary(id: number, patch: Partial<Library>) {
 
 describe("Kodi instances page", () => {
   it("shows the network search until discovery answers", async () => {
-    let answer: () => void = () => {};
+    let answer: (() => void) | undefined;
     server.use(
       http.get(
         "*/api/v1/kodi/discovered",
@@ -50,7 +56,9 @@ describe("Kodi instances page", () => {
 
     const found = await screen.findByRole("complementary", { name: "Found on your network" });
     expect(await within(found).findByRole("status")).toHaveTextContent("Searching for Kodi with mDNS");
-    answer();
+    // The search shows as soon as the request starts, which can be before the mock API sees it.
+    await waitFor(() => expect(answer).toBeDefined());
+    answer?.();
     expect(await within(found).findByText("LibreELEC-Study")).toBeInTheDocument();
     expect(within(found).queryByText(/Searching for Kodi/)).not.toBeInTheDocument();
   });
@@ -67,7 +75,7 @@ describe("Kodi instances page", () => {
     expect(screen.getByText(/The WebSocket is off/)).toBeInTheDocument();
     expect((await card("Kids' room")).getByRole("button", { name: "Wake now" })).toBeInTheDocument();
 
-    const shared = screen.getByRole("region", { name: "Shared library: Lounge and Bedroom" });
+    const shared = await screen.findByRole("region", { name: "Shared library: Lounge and Bedroom" });
     expect(within(shared).getByText("Likely shared")).toBeInTheDocument();
     expect(within(shared).getByRole("combobox", { name: "Library source" })).toHaveValue("1");
 
@@ -96,9 +104,13 @@ describe("Kodi instances page", () => {
     await user.click(bedroom.getByRole("button", { name: "Use for unlinked Echos" }));
 
     expect(await bedroom.findByText("Default for unlinked Echos")).toBeInTheDocument();
-    const call = log.find((r) => r.method === "POST" && r.path === "/kodi/instances/2/default");
-    expect(call?.csrf).toBe("mock-csrf-token");
-    expect(getDb().instances.find((i) => i.id === 2)?.default_for_unlinked).toBe(true);
+    // The card updates before the request goes out.
+    await waitFor(() =>
+      expect(log.find((r) => r.method === "POST" && r.path === "/kodi/instances/2/default")?.csrf).toBe(
+        "mock-csrf-token",
+      ),
+    );
+    await waitFor(() => expect(getDb().instances.find((i) => i.id === 2)?.default_for_unlinked).toBe(true));
   });
 
   it("opens config-managed instances read-only", async () => {
@@ -206,7 +218,7 @@ describe("Kodi instances page", () => {
     const user = userEvent.setup();
     const log = recordRequests();
     renderApp("/kodi");
-    await card("Kids' room");
+    await sharedLibraryLoaded();
 
     await user.click(screen.getByRole("button", { name: "Share a library" }));
     const dialog = await screen.findByRole("dialog", { name: "Share a library" });
@@ -226,7 +238,7 @@ describe("Kodi instances page", () => {
     const user = userEvent.setup();
     const log = recordRequests();
     renderApp("/kodi");
-    await card("Kids' room");
+    await sharedLibraryLoaded();
 
     await user.click(screen.getByRole("button", { name: "Add an instance" }));
     const dialog = await screen.findByRole("dialog", { name: "Share a library" });
@@ -595,7 +607,7 @@ describe("Share a library dialog", () => {
     const user = userEvent.setup();
     const log = recordRequests();
     renderApp("/kodi");
-    await card("Kids' room");
+    await sharedLibraryLoaded();
 
     await user.click(screen.getByRole("button", { name: "Share a library" }));
     const dialog = await screen.findByRole("dialog", { name: "Share a library" });
@@ -615,7 +627,7 @@ describe("Share a library dialog", () => {
     failWith("post", "/libraries/group", 409, "Bedroom is being synced.");
     const user = userEvent.setup();
     renderApp("/kodi");
-    await card("Kids' room");
+    await sharedLibraryLoaded();
 
     await user.click(screen.getByRole("button", { name: "Share a library" }));
     let dialog = await screen.findByRole("dialog", { name: "Share a library" });
