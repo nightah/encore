@@ -175,7 +175,7 @@ jobs:
       - name: hadolint
         run: |
           for f in Dockerfile Dockerfile.goreleaser; do
-            docker run --rm -i hadolint/hadolint:v2.14.0 hadolint - < "$f"
+            docker run --rm -i hadolint/hadolint:v2.15.1 hadolint - < "$f"
           done
 
       # Only what ships: Encore's go.mod and the web interface's production dependencies. Build and test tooling is left out; see .osv-scanner.toml.
