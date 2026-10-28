@@ -552,6 +552,66 @@ func TestOIDCClaimsFromUserInfo(t *testing.T) {
 	assert.Equal(t, "household-admin", p.Name, "the username comes from userinfo, not the subject")
 }
 
+func TestOIDCGroupsClaimName(t *testing.T) {
+	opts := oidctest.Options{Username: "household-admin", Groups: []string{"encore-admins"}}
+
+	f, _ := oidcFixture(t, opts, "encore-admins")
+	f.update(func(s *Settings) { s.OIDC.GroupsClaim = "" })
+
+	_, err := signIn(t, f)
+	require.NoError(t, err, "an unset groups claim means \"groups\"")
+
+	f, _ = oidcFixture(t, opts, "encore-admins")
+	f.update(func(s *Settings) { s.OIDC.GroupsClaim = "roles" })
+
+	_, err = signIn(t, f)
+	require.ErrorIs(t, err, ErrNotAdmin, "a configured claim is the only place groups are read from")
+}
+
+func TestOIDCUserInfoFillsGaps(t *testing.T) {
+	name := func(t *testing.T, f *fixture) string {
+		t.Helper()
+
+		rec, err := signIn(t, f)
+		require.NoError(t, err)
+
+		p, err := f.svc.Authenticate(httptest.NewRecorder(), request(http.MethodGet, "/", cookie(rec, SessionCookie)))
+		require.NoError(t, err)
+		require.NotNil(t, p)
+
+		return p.Name
+	}
+
+	t.Run("username without an admin group", func(t *testing.T) {
+		f, _ := oidcFixture(t, oidctest.Options{Subject: "c0ffee", Username: "household-admin", ClaimsInUserInfoOnly: true}, "")
+		assert.Equal(t, "household-admin", name(t, f), "userinfo is asked for a username even when no group is needed")
+	})
+
+	t.Run("ID token claims win", func(t *testing.T) {
+		f, _ := oidcFixture(t, oidctest.Options{Subject: "c0ffee", Username: "from-id-token", UserInfoUsername: "from-userinfo", Groups: []string{"encore-admins"}, GroupsInUserInfoOnly: true}, "encore-admins")
+		assert.Equal(t, "from-id-token", name(t, f), "userinfo only adds claims the ID token left out")
+	})
+}
+
+func TestOIDCIgnoresUserInfoForAnotherSubject(t *testing.T) {
+	opts := oidctest.Options{Subject: "c0ffee", UserInfoSubject: "someone-else", Username: "household-admin", Groups: []string{"encore-admins"}, ClaimsInUserInfoOnly: true}
+
+	f, _ := oidcFixture(t, opts, "encore-admins")
+
+	_, err := signIn(t, f)
+	require.ErrorIs(t, err, ErrNotAdmin, "groups from another subject's userinfo do not count")
+
+	f, _ = oidcFixture(t, opts, "")
+
+	rec, err := signIn(t, f)
+	require.NoError(t, err)
+
+	p, err := f.svc.Authenticate(httptest.NewRecorder(), request(http.MethodGet, "/", cookie(rec, SessionCookie)))
+	require.NoError(t, err)
+	require.NotNil(t, p)
+	assert.Equal(t, "c0ffee", p.Name, "nor does its username")
+}
+
 func TestOIDCRefusals(t *testing.T) {
 	t.Run("not in admin group", func(t *testing.T) {
 		f, _ := oidcFixture(t, oidctest.Options{Username: "household-member", Groups: []string{"users"}}, "encore-admins")
@@ -652,14 +712,25 @@ func TestRestartKeepsCSRFTokensAndAccounts(t *testing.T) {
 }
 
 func TestNewReplacesAMalformedCSRFKey(t *testing.T) {
-	f := newFixture(t, nil)
-	require.NoError(t, f.sec.Put(t.Context(), csrfKeyRef, []byte("too short")))
+	for name, stored := range map[string][]byte{
+		"too short": []byte("too short"),
+		"16 bytes":  bytes.Repeat([]byte{1}, 16),
+		"31 bytes":  bytes.Repeat([]byte{1}, 31),
+		"33 bytes":  bytes.Repeat([]byte{1}, 33),
+	} {
+		t.Run(name, func(t *testing.T) {
+			f := newFixture(t, nil)
+			require.NoError(t, f.sec.Put(t.Context(), csrfKeyRef, stored))
 
-	_, _ = f.restart(t)
+			svc, _ := f.restart(t)
+			assert.Len(t, svc.csrfKey, 32, "the service only signs with a full-size key")
 
-	key, err := f.sec.Get(t.Context(), csrfKeyRef)
-	require.NoError(t, err)
-	assert.Len(t, key, 32)
+			key, err := f.sec.Get(t.Context(), csrfKeyRef)
+			require.NoError(t, err)
+			assert.Len(t, key, 32)
+			assert.Equal(t, svc.csrfKey, key, "the replacement is stored")
+		})
+	}
 }
 
 func TestNewFailsOnAnUnreadableCSRFKey(t *testing.T) {

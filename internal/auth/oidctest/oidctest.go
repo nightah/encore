@@ -174,7 +174,17 @@ func (s *Server) userinfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, map[string]any{"sub": s.opts.Subject, "preferred_username": s.opts.Username, "groups": s.opts.Groups})
+	sub := s.opts.Subject
+	if s.opts.UserInfoSubject != "" {
+		sub = s.opts.UserInfoSubject
+	}
+
+	username := s.opts.Username
+	if s.opts.UserInfoUsername != "" {
+		username = s.opts.UserInfoUsername
+	}
+
+	writeJSON(w, map[string]any{"sub": sub, "preferred_username": username, "groups": s.opts.Groups})
 }
 
 func (s *Server) sign(claims map[string]any) (string, error) {

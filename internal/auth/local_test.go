@@ -55,6 +55,24 @@ func TestCreateAdminValidatesInput(t *testing.T) {
 	require.ErrorIs(t, f.svc.CheckSetupToken(request(http.MethodPost, "/"), token), ErrAdminExists, "the token is single-use")
 }
 
+func TestCreateAdminNeverReplacesAnExistingAccount(t *testing.T) {
+	f := newFixture(t, nil)
+	token := f.svc.setupToken
+
+	// Another Encore, or a restored database, created the account after this one generated its setup token.
+	hash, err := HashPassword("the real admin's password")
+	require.NoError(t, err)
+	require.NoError(t, f.db.Settings().Set(t.Context(), adminSetting, admin{Username: "owner", PasswordHash: hash}))
+
+	rec := httptest.NewRecorder()
+	require.ErrorIs(t, f.svc.CreateAdmin(t.Context(), rec, request(http.MethodPost, "/"), token, "intruder", "correct horse battery"), ErrAdminExists)
+	assert.Nil(t, cookie(rec, SessionCookie))
+
+	a, err := f.svc.Admin(t.Context())
+	require.NoError(t, err)
+	assert.Equal(t, "owner", a.Username, "the setup token cannot overwrite an account")
+}
+
 func TestSetupTokenLockout(t *testing.T) {
 	f := newFixture(t, nil)
 	token := f.svc.setupToken

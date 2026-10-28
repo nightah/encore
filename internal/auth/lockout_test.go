@@ -35,6 +35,14 @@ func TestLimiterWindowForgetsOldFailures(t *testing.T) {
 	assert.True(t, l.fail("k", 2, time.Minute, start.Add(62*time.Second)))
 }
 
+func TestLimiterWindowIncludesItsLastInstant(t *testing.T) {
+	l := newLimiter()
+	start := time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC)
+
+	assert.False(t, l.fail("k", 2, time.Minute, start))
+	assert.True(t, l.fail("k", 2, time.Minute, start.Add(time.Minute)), "a failure exactly one window after the first still counts towards it")
+}
+
 func TestLimiterResetAndIsolation(t *testing.T) {
 	l := newLimiter()
 	now := time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC)

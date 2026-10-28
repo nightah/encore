@@ -17,6 +17,10 @@ type Options struct {
 	GroupsInUserInfoOnly bool
 	// ClaimsInUserInfoOnly leaves the username and groups out of the ID token, as some providers do by default.
 	ClaimsInUserInfoOnly bool
+	// UserInfoSubject, when set, makes the userinfo endpoint answer for another subject than the ID token's.
+	UserInfoSubject string
+	// UserInfoUsername, when set, makes the userinfo endpoint report another username than the ID token's.
+	UserInfoUsername string
 	// WrongNonce makes the ID token carry a different nonce.
 	WrongNonce bool
 	// AuthMethod limits how the token endpoint accepts the client secret: client_secret_basic or client_secret_post. Empty accepts either.
