@@ -17,6 +17,8 @@ import (
 	"github.com/nightah/encore/internal/fuzzy/phonetic"
 	_ "github.com/nightah/encore/internal/fuzzy/phonetic/de"
 	_ "github.com/nightah/encore/internal/fuzzy/phonetic/en"
+	_ "github.com/nightah/encore/internal/fuzzy/phonetic/es"
+	_ "github.com/nightah/encore/internal/fuzzy/phonetic/fr"
 )
 
 // evalEncoder is a candidate phonetic function for TestPhoneticEval. keys returns nil for a language it does not cover, which keeps the production encoder.
@@ -197,7 +199,10 @@ func (s evalScore) String() string {
 	return fmt.Sprintf("%3d/%3d (%5.1f%%) wrong plays %d", s.correct, s.total, 100*float64(s.correct)/float64(s.total), s.wrong)
 }
 
-// TestPhoneticEval measures match accuracy per language through the real pipeline (normalise, alias, retrieve, score, decide) with each candidate phonetic encoder swapped in. It logs a table, the production encoder's misses and every case another encoder gains or loses against it; run it with -v to read them. It asserts nothing about the candidates, so it never blocks on one.
+// fuzzyGate is how many more correct decisions than production internal/fuzzy must make per language: its own French and Spanish encoders earn their place only with a measurable gain, and the ports of the production encoders must not lose any.
+var fuzzyGate = map[string]int{"fr": 3, "es": 3}
+
+// TestPhoneticEval measures match accuracy per language through the real pipeline (normalise, alias, retrieve, score, decide) with each candidate phonetic encoder swapped in. It logs a table, the production encoder's misses and every case another encoder gains or loses against it; run it with -v to read them. Only internal/fuzzy is held to fuzzyGate, with no wrong plays added.
 func TestPhoneticEval(t *testing.T) {
 	suites := evalSuites(t)
 	codes := slices.Sorted(func(yield func(string) bool) {
@@ -251,6 +256,12 @@ func TestPhoneticEval(t *testing.T) {
 					case !o.ok && base[i].ok:
 						t.Logf("%s %s %s loses [%s] %q: %s", retr, code, enc.name, o.suite, o.heard, o.why)
 					}
+				}
+
+				if enc.name == "fuzzy" {
+					got, was := tally(out), tally(base)
+					assert.GreaterOrEqual(t, got.correct, was.correct+fuzzyGate[code], "%s %s: fuzzy must gain at least %d correct decisions", retr, code, fuzzyGate[code])
+					assert.LessOrEqual(t, got.wrong, was.wrong, "%s %s: fuzzy must not add wrong plays", retr, code)
 				}
 			}
 

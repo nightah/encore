@@ -3,9 +3,10 @@ version: "2"
 
 run:
   timeout: 5m
-  # Lint contract/live test files too so they do not rot between nightlies.
+  # Lint contract/live and on-demand evaluation test files too so they do not rot between runs.
   build-tags:
     - contract
+    - phoneticeval
     - smapi_live
 
 linters:
