@@ -4,13 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"net"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"sync"
 	"sync/atomic"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	"github.com/coder/websocket"
@@ -30,10 +29,11 @@ type scriptedKodi struct {
 	dials  atomic.Int32
 }
 
+// start serves k on an in-memory network, so a test can run in a synctest bubble.
 func (k *scriptedKodi) start(t *testing.T) Config {
 	t.Helper()
 
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewTestServer(t, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Upgrade") != "" {
 			k.dials.Add(1)
 
@@ -65,15 +65,11 @@ func (k *scriptedKodi) start(t *testing.T) Config {
 
 		k.post(w, r)
 	}))
-	t.Cleanup(srv.Close)
 
-	host, port, err := net.SplitHostPort(srv.Listener.Addr().String())
-	require.NoError(t, err)
-
-	p, err := strconv.Atoi(port)
-	require.NoError(t, err)
-
-	return Config{Host: host, Port: p, WebSocketPort: p, Timeout: 2 * time.Second, HeartbeatInterval: time.Hour, ReconnectMin: 5 * time.Millisecond, ReconnectMax: 20 * time.Millisecond}
+	return Config{
+		Host: "kodi.test", Port: 8080, WebSocketPort: 9090, Timeout: 2 * time.Second, HeartbeatInterval: time.Hour,
+		ReconnectMin: 5 * time.Millisecond, ReconnectMax: 20 * time.Millisecond, HTTPClient: srv.Client(),
+	}
 }
 
 // readRequest reads the next request the client sends.
@@ -94,118 +90,130 @@ func readRequest(ctx context.Context, c *websocket.Conn) (request, json.RawMessa
 	return req.request, req.ID, err
 }
 
+// ignore reads and drops whatever the client sends until it disconnects.
+func ignore(ctx context.Context, c *websocket.Conn) {
+	for {
+		if _, _, err := readRequest(ctx, c); err != nil {
+			return
+		}
+	}
+}
+
 func write(ctx context.Context, c *websocket.Conn, msg string) {
 	_ = c.Write(ctx, websocket.MessageText, []byte(msg))
 }
 
 func TestWebSocketSkipsWhatIsNotAReply(t *testing.T) {
-	k := &scriptedKodi{ws: func(ctx context.Context, c *websocket.Conn) {
-		for {
-			_, id, err := readRequest(ctx, c)
-			if err != nil {
-				return
+	synctest.Test(t, func(t *testing.T) {
+		k := &scriptedKodi{ws: func(ctx context.Context, c *websocket.Conn) {
+			for {
+				_, id, err := readRequest(ctx, c)
+				if err != nil {
+					return
+				}
+
+				write(ctx, c, `not json`)
+				write(ctx, c, `{"jsonrpc":"2.0","id":null}`)
+				write(ctx, c, `{"jsonrpc":"2.0","id":"abc","result":"wrong"}`)
+				write(ctx, c, `{"jsonrpc":"2.0","id":987654,"result":"nobody asked"}`)
+				write(ctx, c, `{"jsonrpc":"2.0","method":"Player.OnPause","params":{"data":{}}}`)
+				write(ctx, c, `{"jsonrpc":"2.0","id":`+string(id)+`,"result":"pong"}`)
 			}
+		}}
+		tr := NewTransport(k.start(t), nil)
 
-			write(ctx, c, `not json`)
-			write(ctx, c, `{"jsonrpc":"2.0","id":null}`)
-			write(ctx, c, `{"jsonrpc":"2.0","id":"abc","result":"wrong"}`)
-			write(ctx, c, `{"jsonrpc":"2.0","id":987654,"result":"nobody asked"}`)
-			write(ctx, c, `{"jsonrpc":"2.0","method":"Player.OnPause","params":{"data":{}}}`)
-			write(ctx, c, `{"jsonrpc":"2.0","id":`+string(id)+`,"result":"pong"}`)
-		}
-	}}
-	tr := NewTransport(k.start(t), nil)
+		var (
+			mu    sync.Mutex
+			heard []kodirpc.NotificationName
+		)
 
-	var (
-		mu    sync.Mutex
-		heard []kodirpc.NotificationName
-	)
+		tr.Listen(Listener{Notification: func(n Notification) {
+			mu.Lock()
+			defer mu.Unlock()
 
-	tr.Listen(Listener{Notification: func(n Notification) {
+			heard = append(heard, n.Method)
+		}})
+		runTransport(t, tr)
+
+		require.NoError(t, ping(t.Context(), tr), "the reply is found among the noise")
+		assert.True(t, tr.Connected(), "noise doesn't drop the connection")
+		assert.Zero(t, k.posts.Load())
+
+		synctest.Wait()
+
 		mu.Lock()
 		defer mu.Unlock()
 
-		heard = append(heard, n.Method)
-	}})
-	runTransport(t, tr)
-
-	require.NoError(t, ping(t.Context(), tr), "the reply is found among the noise")
-	assert.True(t, tr.Connected(), "noise doesn't drop the connection")
-	assert.Zero(t, k.posts.Load())
-
-	require.Eventually(t, func() bool {
-		mu.Lock()
-		defer mu.Unlock()
-
-		return len(heard) == 1
-	}, time.Second, 5*time.Millisecond)
-	assert.Equal(t, []kodirpc.NotificationName{"Player.OnPause"}, heard, "only a message naming a method is a notification")
+		assert.Equal(t, []kodirpc.NotificationName{"Player.OnPause"}, heard, "only a message naming a method is a notification")
+	})
 }
 
 func TestWebSocketDroppedMidCallIsUnreachable(t *testing.T) {
-	k := &scriptedKodi{ws: func(ctx context.Context, c *websocket.Conn) {
-		req, _, err := readRequest(ctx, c)
-		if err != nil || req.Method != "Player.Stop" {
-			return
-		}
+	synctest.Test(t, func(t *testing.T) {
+		k := &scriptedKodi{ws: func(ctx context.Context, c *websocket.Conn) {
+			req, _, err := readRequest(ctx, c)
+			if err != nil || req.Method != "Player.Stop" {
+				return
+			}
 
-		_ = c.CloseNow()
-	}}
-	tr := NewTransport(k.start(t), nil)
-	runTransport(t, tr)
+			_ = c.CloseNow()
+		}}
+		tr := NewTransport(k.start(t), nil)
+		runTransport(t, tr)
 
-	err := tr.Call(t.Context(), "Player.Stop", map[string]int{"playerid": 1}, nil)
+		err := tr.Call(t.Context(), "Player.Stop", map[string]int{"playerid": 1}, nil)
 
-	require.ErrorIs(t, err, media.ErrUnreachable)
-	assert.Contains(t, err.Error(), "websocket closed")
-	assert.Zero(t, k.posts.Load(), "a call that may have been carried out isn't sent again over HTTP")
+		require.ErrorIs(t, err, media.ErrUnreachable)
+		assert.Contains(t, err.Error(), "websocket closed")
+		assert.Zero(t, k.posts.Load(), "a call that may have been carried out isn't sent again over HTTP")
+	})
 }
 
 func TestWebSocketCallerGivesUpWhileWaiting(t *testing.T) {
-	k := &scriptedKodi{ws: func(ctx context.Context, c *websocket.Conn) {
-		for {
-			if _, _, err := readRequest(ctx, c); err != nil {
-				return
-			}
-		}
-	}}
-	tr := NewTransport(k.start(t), nil)
-	runTransport(t, tr)
+	synctest.Test(t, func(t *testing.T) {
+		k := &scriptedKodi{ws: ignore}
+		tr := NewTransport(k.start(t), nil)
+		runTransport(t, tr)
 
-	ws := tr.conn()
-	ctx, cancel := context.WithTimeout(t.Context(), 30*time.Millisecond)
-	defer cancel()
+		ws := tr.conn()
+		ctx, cancel := context.WithTimeout(t.Context(), 30*time.Millisecond)
+		defer cancel()
 
-	err := tr.Call(ctx, "Player.Stop", nil, nil)
+		start := time.Now()
+		err := tr.Call(ctx, "Player.Stop", nil, nil)
 
-	require.ErrorIs(t, err, media.ErrUnreachable, "an unanswered call times out as unreachable")
-	require.ErrorIs(t, err, context.DeadlineExceeded)
-	assert.Same(t, ws, tr.conn(), "the connection stays up for other calls")
+		require.ErrorIs(t, err, media.ErrUnreachable, "an unanswered call times out as unreachable")
+		require.ErrorIs(t, err, context.DeadlineExceeded)
+		assert.Equal(t, 30*time.Millisecond, time.Since(start), "the caller's deadline wins over the transport's timeout")
+		assert.Same(t, ws, tr.conn(), "the connection stays up for other calls")
 
-	ws.mu.Lock()
-	defer ws.mu.Unlock()
-	assert.Empty(t, ws.pending, "the abandoned call is forgotten")
+		ws.mu.Lock()
+		defer ws.mu.Unlock()
+		assert.Empty(t, ws.pending, "the abandoned call is forgotten")
+	})
 }
 
 func TestUnencodableParams(t *testing.T) {
-	k := &scriptedKodi{ws: func(ctx context.Context, _ *websocket.Conn) { <-ctx.Done() }}
-	cfg := k.start(t)
+	synctest.Test(t, func(t *testing.T) {
+		k := &scriptedKodi{ws: ignore}
+		cfg := k.start(t)
 
-	for _, ws := range []bool{false, true} {
-		cfg.DisableWebSocket = !ws
-		tr := NewTransport(cfg, nil)
+		for _, ws := range []bool{false, true} {
+			cfg.DisableWebSocket = !ws
+			tr := NewTransport(cfg, nil)
 
-		if ws {
-			runTransport(t, tr)
+			if ws {
+				runTransport(t, tr)
+			}
+
+			err := tr.Call(t.Context(), "Input.SendText", map[string]any{"text": make(chan int)}, nil)
+
+			require.ErrorContains(t, err, "encoding params", "websocket=%v", ws)
+			require.NotErrorIs(t, err, media.ErrUnreachable, "a bug here is not Kodi's absence")
 		}
 
-		err := tr.Call(t.Context(), "Input.SendText", map[string]any{"text": make(chan int)}, nil)
-
-		require.ErrorContains(t, err, "encoding params", "websocket=%v", ws)
-		require.NotErrorIs(t, err, media.ErrUnreachable, "a bug here is not Kodi's absence")
-	}
-
-	assert.Zero(t, k.posts.Load())
+		assert.Zero(t, k.posts.Load())
+	})
 }
 
 func TestHTTPReplies(t *testing.T) {
@@ -242,41 +250,51 @@ func TestHTTPReplies(t *testing.T) {
 }
 
 func TestRunRedialsUntilKodiAcceptsTheWebSocket(t *testing.T) {
-	k := &scriptedKodi{ws: func(ctx context.Context, _ *websocket.Conn) { <-ctx.Done() }}
-	k.refuse.Store(true)
-	tr := NewTransport(k.start(t), nil)
+	synctest.Test(t, func(t *testing.T) {
+		k := &scriptedKodi{ws: ignore}
+		k.refuse.Store(true)
+		cfg := k.start(t)
+		tr := NewTransport(cfg, nil)
 
-	ctx, cancel := context.WithCancel(t.Context())
-	done := make(chan struct{})
+		ctx, cancel := context.WithCancel(t.Context())
+		done := make(chan struct{})
 
-	go func() {
-		defer close(done)
+		go func() {
+			defer close(done)
 
-		_ = tr.Run(ctx)
-	}()
+			_ = tr.Run(ctx)
+		}()
 
-	t.Cleanup(func() {
-		cancel()
-		<-done
+		t.Cleanup(func() {
+			cancel()
+			<-done
+		})
+
+		// Waits of at most 5, 10 and 20ms come before the fourth dial.
+		time.Sleep(cfg.ReconnectMin + 2*cfg.ReconnectMax)
+		synctest.Wait()
+		assert.GreaterOrEqual(t, k.dials.Load(), int32(4), "a refused WebSocket is retried")
+		assert.False(t, tr.Connected())
+
+		k.refuse.Store(false)
+		time.Sleep(cfg.ReconnectMax)
+		synctest.Wait()
+		assert.True(t, tr.Connected(), "and connects once Kodi accepts")
 	})
-
-	require.Eventually(t, func() bool { return k.dials.Load() >= 3 }, 2*time.Second, time.Millisecond, "a refused WebSocket is retried")
-	assert.False(t, tr.Connected())
-
-	k.refuse.Store(false)
-	require.Eventually(t, tr.Connected, 2*time.Second, time.Millisecond, "and connects once Kodi accepts")
 }
 
 func TestRunWithoutWebSocketNeverDials(t *testing.T) {
-	k := &scriptedKodi{ws: func(ctx context.Context, _ *websocket.Conn) { <-ctx.Done() }}
-	cfg := k.start(t)
-	cfg.DisableWebSocket = true
-	tr := NewTransport(cfg, nil)
+	synctest.Test(t, func(t *testing.T) {
+		k := &scriptedKodi{ws: ignore}
+		cfg := k.start(t)
+		cfg.DisableWebSocket = true
+		tr := NewTransport(cfg, nil)
 
-	ctx, cancel := context.WithTimeout(t.Context(), 50*time.Millisecond)
-	defer cancel()
+		ctx, cancel := context.WithTimeout(t.Context(), time.Minute)
+		defer cancel()
 
-	require.NoError(t, tr.Run(ctx))
-	assert.Zero(t, k.dials.Load())
-	assert.False(t, tr.Connected())
+		require.NoError(t, tr.Run(ctx))
+		assert.Zero(t, k.dials.Load())
+		assert.False(t, tr.Connected())
+	})
 }

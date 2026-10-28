@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	"github.com/stretchr/testify/assert"
@@ -21,7 +22,7 @@ var aest = time.FixedZone("AEST", 10*60*60)
 func newBackend(t *testing.T, opts fakekodi.Options, bopts BackendOptions) (*Backend, *fakekodi.Server) {
 	t.Helper()
 
-	s := fakekodi.New(t, opts)
+	s := newFake(t, opts)
 
 	if bopts.Location == nil {
 		bopts.Location = aest
@@ -514,13 +515,15 @@ func collectEvents(t *testing.T, b *Backend) <-chan media.Event {
 	return events
 }
 
-func nextEvent(t *testing.T, events <-chan media.Event) media.Event {
+// heard returns the event the backend reported once everything has settled, failing if there is none.
+func heard(t *testing.T, events <-chan media.Event) media.Event {
 	t.Helper()
+	synctest.Wait()
 
 	select {
 	case ev := <-events:
 		return ev
-	case <-time.After(2 * time.Second):
+	default:
 		t.Fatal("no event")
 
 		return media.Event{}
@@ -528,43 +531,48 @@ func nextEvent(t *testing.T, events <-chan media.Event) media.Event {
 }
 
 func TestSubscribe(t *testing.T) {
-	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
-	events := collectEvents(t, b)
+	synctest.Test(t, func(t *testing.T) {
+		b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+		events := collectEvents(t, b)
 
-	require.Equal(t, media.Event{Kind: media.EventConnected}, nextEvent(t, events))
+		require.Equal(t, media.Event{Kind: media.EventConnected}, heard(t, events))
 
-	s.Notify("VideoLibrary.OnUpdate", map[string]any{"id": 7, "type": "movie", "added": true})
-	assert.Equal(t, media.Event{Kind: media.EventItemUpdated, Ref: media.Ref{Kind: media.KindMovie, ID: 7}}, nextEvent(t, events))
+		s.Notify("VideoLibrary.OnUpdate", map[string]any{"id": 7, "type": "movie", "added": true})
+		assert.Equal(t, media.Event{Kind: media.EventItemUpdated, Ref: media.Ref{Kind: media.KindMovie, ID: 7}}, heard(t, events))
 
-	s.Notify("GUI.OnScreensaverActivated", map[string]any{})
-	s.Notify("VideoLibrary.OnRemove", map[string]any{"id": 103, "type": "episode"})
-	assert.Equal(t, media.Event{Kind: media.EventItemRemoved, Ref: media.Ref{Kind: media.KindEpisode, ID: 103}}, nextEvent(t, events),
-		"notifications encore doesn't use are dropped")
+		s.Notify("GUI.OnScreensaverActivated", map[string]any{})
+		s.Notify("VideoLibrary.OnRemove", map[string]any{"id": 103, "type": "episode"})
+		assert.Equal(t, media.Event{Kind: media.EventItemRemoved, Ref: media.Ref{Kind: media.KindEpisode, ID: 103}}, heard(t, events),
+			"notifications encore doesn't use are dropped")
 
-	s.Notify("AudioLibrary.OnUpdate", map[string]any{"id": 2, "type": "song"})
-	assert.Equal(t, media.Event{Kind: media.EventItemUpdated, Ref: media.Ref{Kind: media.KindSong, ID: 2}}, nextEvent(t, events))
+		s.Notify("AudioLibrary.OnUpdate", map[string]any{"id": 2, "type": "song"})
+		assert.Equal(t, media.Event{Kind: media.EventItemUpdated, Ref: media.Ref{Kind: media.KindSong, ID: 2}}, heard(t, events))
 
-	s.Notify("VideoLibrary.OnScanFinished", nil)
-	assert.Equal(t, media.Event{Kind: media.EventLibraryScanned}, nextEvent(t, events))
+		s.Notify("VideoLibrary.OnScanFinished", nil)
+		assert.Equal(t, media.Event{Kind: media.EventLibraryScanned}, heard(t, events))
 
-	s.Notify("AudioLibrary.OnCleanFinished", nil)
-	assert.Equal(t, media.Event{Kind: media.EventLibraryScanned}, nextEvent(t, events))
+		s.Notify("AudioLibrary.OnCleanFinished", nil)
+		assert.Equal(t, media.Event{Kind: media.EventLibraryScanned}, heard(t, events))
 
-	require.NoError(t, b.Play(t.Context(), media.Ref{Kind: media.KindMovie, ID: 6}, media.PlayOptions{}))
-	assert.Equal(t, media.Event{Kind: media.EventPlaybackStarted, Ref: media.Ref{Kind: media.KindMovie, ID: 6}}, nextEvent(t, events))
+		require.NoError(t, b.Play(t.Context(), media.Ref{Kind: media.KindMovie, ID: 6}, media.PlayOptions{}))
+		assert.Equal(t, media.Event{Kind: media.EventPlaybackStarted, Ref: media.Ref{Kind: media.KindMovie, ID: 6}}, heard(t, events))
 
-	require.NoError(t, b.Transport(t.Context(), media.TransportStop))
-	assert.Equal(t, media.Event{Kind: media.EventPlaybackStopped, Ref: media.Ref{Kind: media.KindMovie, ID: 6}}, nextEvent(t, events))
+		require.NoError(t, b.Transport(t.Context(), media.TransportStop))
+		assert.Equal(t, media.Event{Kind: media.EventPlaybackStopped, Ref: media.Ref{Kind: media.KindMovie, ID: 6}}, heard(t, events))
 
-	s.Notify("System.OnQuit", map[string]any{"exitcode": 0})
-	assert.Equal(t, media.Event{Kind: media.EventDisconnected}, nextEvent(t, events))
+		s.Notify("System.OnQuit", map[string]any{"exitcode": 0})
+		assert.Equal(t, media.Event{Kind: media.EventDisconnected}, heard(t, events))
 
-	s.Notify("System.OnWake", nil)
-	assert.Equal(t, media.Event{Kind: media.EventConnected}, nextEvent(t, events))
+		s.Notify("System.OnWake", nil)
+		assert.Equal(t, media.Event{Kind: media.EventConnected}, heard(t, events))
 
-	s.DropConnections()
-	assert.Equal(t, media.Event{Kind: media.EventDisconnected}, nextEvent(t, events))
-	assert.Equal(t, media.Event{Kind: media.EventConnected}, nextEvent(t, events), "reconnects and says so")
+		s.DropConnections()
+		assert.Equal(t, media.Event{Kind: media.EventDisconnected}, heard(t, events))
+		assert.Empty(t, events, "nothing more until the transport reconnects")
+
+		time.Sleep(b.Client().Transport().cfg.ReconnectMin)
+		assert.Equal(t, media.Event{Kind: media.EventConnected}, heard(t, events), "reconnects and says so")
+	})
 }
 
 func TestTranslate(t *testing.T) {
