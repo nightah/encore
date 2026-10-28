@@ -3,6 +3,8 @@ package auth
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
+	"errors"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -25,11 +27,13 @@ import (
 type fixture struct {
 	svc *Service
 	db  *store.DB
+	sec *secrets.Store
 	log *bytes.Buffer
 
-	mu       sync.Mutex
-	settings Settings
-	now      time.Time
+	mu          sync.Mutex
+	settings    Settings
+	settingsErr error
+	now         time.Time
 }
 
 func newFixture(t *testing.T, mutate func(*Settings)) *fixture {
@@ -46,6 +50,8 @@ func newFixture(t *testing.T, mutate func(*Settings)) *fixture {
 
 	sec, err := secrets.Open(t.Context(), db.SecretRows(), secrets.Options{DataDir: dir})
 	require.NoError(t, err)
+
+	f.sec = sec
 	f.settings = Settings{
 		Mode:            ModeLocal,
 		SessionTTL:      time.Hour,
@@ -60,11 +66,15 @@ func newFixture(t *testing.T, mutate func(*Settings)) *fixture {
 	}
 
 	f.svc, err = New(t.Context(), Options{
-		DB:       db,
-		Secrets:  sec,
-		Settings: func(context.Context) (Settings, error) { f.mu.Lock(); defer f.mu.Unlock(); return f.settings, nil },
-		Logger:   slog.New(slog.NewTextHandler(f.log, nil)),
-		Now:      f.clock,
+		DB:      db,
+		Secrets: sec,
+		Settings: func(context.Context) (Settings, error) {
+			f.mu.Lock()
+			defer f.mu.Unlock()
+			return f.settings, f.settingsErr
+		},
+		Logger: slog.New(slog.NewTextHandler(f.log, nil)),
+		Now:    f.clock,
 	})
 	require.NoError(t, err)
 
@@ -76,6 +86,20 @@ func (f *fixture) clock() time.Time {
 	defer f.mu.Unlock()
 
 	return f.now
+}
+
+func (f *fixture) update(fn func(s *Settings)) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	fn(&f.settings)
+}
+
+func (f *fixture) failSettings(err error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	f.settingsErr = err
 }
 
 func (f *fixture) advance(d time.Duration) {
@@ -561,4 +585,299 @@ func TestOIDCRefusals(t *testing.T) {
 		_, err := f.svc.BeginOIDC(t.Context(), httptest.NewRecorder(), request(http.MethodGet, "/"))
 		require.ErrorIs(t, err, ErrOIDCDisabled)
 	})
+}
+
+// restart builds a second Service on the fixture's database and secrets, as a process restart would.
+func (f *fixture) restart(t *testing.T) (*Service, *bytes.Buffer) {
+	t.Helper()
+
+	var logs bytes.Buffer
+
+	svc, err := New(t.Context(), Options{
+		DB:      f.db,
+		Secrets: f.sec,
+		Settings: func(context.Context) (Settings, error) {
+			f.mu.Lock()
+			defer f.mu.Unlock()
+			return f.settings, f.settingsErr
+		},
+		Logger: slog.New(slog.NewTextHandler(&logs, nil)),
+		Now:    f.clock,
+	})
+	require.NoError(t, err)
+
+	return svc, &logs
+}
+
+func TestNewRequiresDependencies(t *testing.T) {
+	f := newFixture(t, nil)
+	settings := func(context.Context) (Settings, error) { return Settings{}, nil }
+
+	for name, opts := range map[string]Options{
+		"nothing":     {},
+		"no DB":       {Secrets: f.sec, Settings: settings},
+		"no secrets":  {DB: f.db, Settings: settings},
+		"no settings": {DB: f.db, Secrets: f.sec},
+	} {
+		_, err := New(t.Context(), opts)
+		require.Error(t, err, name)
+	}
+
+	svc, err := New(t.Context(), Options{DB: f.db, Secrets: f.sec, Settings: settings})
+	require.NoError(t, err, "the logger, clock and HTTP client have defaults")
+	assert.Equal(t, http.DefaultClient, svc.httpClient)
+	assert.WithinDuration(t, time.Now(), svc.now(), time.Minute)
+}
+
+func TestRestartKeepsCSRFTokensAndAccounts(t *testing.T) {
+	f := newFixture(t, nil)
+	session := f.setup(t)
+
+	rec := httptest.NewRecorder()
+	token := f.svc.CSRFToken(rec, request(http.MethodGet, "/"))
+	c := cookie(rec, csrfCookie)
+
+	svc, logs := f.restart(t)
+
+	r := request(http.MethodPost, "/", c)
+	r.Header.Set(CSRFHeader, token)
+	assert.True(t, svc.CheckCSRF(r), "the CSRF key is stored, so tokens survive a restart")
+
+	assert.NotContains(t, logs.String(), "setup token", "no setup token once an admin exists")
+	require.ErrorIs(t, svc.CheckSetupToken(request(http.MethodPost, "/"), f.svc.setupToken), ErrAdminExists)
+
+	p, err := svc.Authenticate(httptest.NewRecorder(), request(http.MethodGet, "/", session))
+	require.NoError(t, err)
+	require.NotNil(t, p, "sessions survive a restart")
+}
+
+func TestNewReplacesAMalformedCSRFKey(t *testing.T) {
+	f := newFixture(t, nil)
+	require.NoError(t, f.sec.Put(t.Context(), csrfKeyRef, []byte("too short")))
+
+	_, _ = f.restart(t)
+
+	key, err := f.sec.Get(t.Context(), csrfKeyRef)
+	require.NoError(t, err)
+	assert.Len(t, key, 32)
+}
+
+func TestNewFailsOnAnUnreadableCSRFKey(t *testing.T) {
+	f := newFixture(t, nil)
+
+	row, err := f.db.SecretRows().Get(t.Context(), csrfKeyRef)
+	require.NoError(t, err)
+
+	row.Ciphertext[0] ^= 0xff
+	require.NoError(t, f.db.SecretRows().Put(t.Context(), row))
+
+	_, err = New(t.Context(), Options{DB: f.db, Secrets: f.sec, Settings: func(context.Context) (Settings, error) { return f.settings, nil }})
+	require.ErrorIs(t, err, secrets.ErrDecrypt, "a damaged key is not silently replaced")
+}
+
+func TestNewFailsOnACorruptAdminRecord(t *testing.T) {
+	f := newFixture(t, nil)
+	require.NoError(t, f.db.Settings().Set(t.Context(), adminSetting, "not an account"))
+
+	_, err := New(t.Context(), Options{DB: f.db, Secrets: f.sec, Settings: func(context.Context) (Settings, error) { return f.settings, nil }})
+	require.Error(t, err)
+
+	_, err = f.svc.Admin(t.Context())
+	require.Error(t, err)
+
+	_, err = f.svc.SetupRequired(t.Context())
+	require.Error(t, err, "a corrupt account does not reopen setup")
+}
+
+func TestSettingsErrorsAreReported(t *testing.T) {
+	f := newFixture(t, nil)
+	c := f.setup(t)
+
+	want, err := f.svc.Settings(t.Context())
+	require.NoError(t, err)
+	assert.Equal(t, ModeLocal, want.Mode)
+
+	f.failSettings(assert.AnError)
+
+	_, err = f.svc.Settings(t.Context())
+	require.ErrorIs(t, err, assert.AnError)
+
+	_, err = f.svc.Authenticate(httptest.NewRecorder(), request(http.MethodGet, "/", c))
+	require.ErrorIs(t, err, assert.AnError, "a request is not treated as anonymous when settings are unavailable")
+
+	require.ErrorIs(t, f.svc.Login(t.Context(), httptest.NewRecorder(), request(http.MethodPost, "/"), "admin", "correct horse battery", ""), assert.AnError)
+	require.ErrorIs(t, f.svc.StartSession(t.Context(), httptest.NewRecorder(), request(http.MethodPost, "/"), "admin"), assert.AnError)
+
+	_, err = f.svc.BeginOIDC(t.Context(), httptest.NewRecorder(), request(http.MethodGet, "/"))
+	require.ErrorIs(t, err, assert.AnError)
+	require.ErrorIs(t, f.svc.FinishOIDC(t.Context(), httptest.NewRecorder(), request(http.MethodGet, "/")), assert.AnError)
+
+	r := request(http.MethodGet, "/")
+	r.RemoteAddr = "10.0.0.1:1234"
+	r.Header.Set("X-Forwarded-For", "203.0.113.9")
+	assert.False(t, f.svc.FromTrustedProxy(r), "no proxy is trusted without settings")
+	assert.Equal(t, "10.0.0.1", f.svc.ClientIP(r))
+}
+
+func TestPeerAddresses(t *testing.T) {
+	f := newFixture(t, func(s *Settings) {
+		s.TrustedProxies = []netip.Prefix{netip.MustParsePrefix("10.0.0.0/8"), netip.MustParsePrefix("fd00::/8")}
+	})
+
+	for remote, trusted := range map[string]bool{
+		"10.1.2.3:443":          true,
+		"10.1.2.3":              true,
+		"[::ffff:10.1.2.3]:443": true,
+		"[fd00::1]:443":         true,
+		"192.0.2.10:443":        false,
+		"[2001:db8::1]:443":     false,
+		"@unix-socket":          false,
+		"":                      false,
+	} {
+		r := request(http.MethodGet, "/")
+		r.RemoteAddr = remote
+		assert.Equal(t, trusted, f.svc.FromTrustedProxy(r), remote)
+	}
+
+	r := request(http.MethodGet, "/")
+	r.RemoteAddr = "@unix-socket"
+	assert.Equal(t, "@unix-socket", f.svc.ClientIP(r), "an unparsable peer is used as is")
+
+	r.RemoteAddr = "[::ffff:192.0.2.10]:443"
+	assert.Equal(t, "192.0.2.10", f.svc.ClientIP(r), "IPv4-mapped addresses are unmapped")
+}
+
+func TestClientIPWalksForwardedFor(t *testing.T) {
+	f := newFixture(t, func(s *Settings) { s.TrustedProxies = []netip.Prefix{netip.MustParsePrefix("10.0.0.0/8")} })
+
+	for name, tt := range map[string]struct {
+		xff  string
+		want string
+	}{
+		"no header":              {"", "10.1.2.3"},
+		"one client":             {"203.0.113.9", "203.0.113.9"},
+		"chain of proxies":       {"203.0.113.9, 10.0.0.7, 10.0.0.8", "203.0.113.9"},
+		"spoofed left-most hop":  {"198.51.100.1, 203.0.113.9, 10.0.0.7", "203.0.113.9"},
+		"only trusted hops":      {"10.0.0.7, 10.0.0.8", "10.1.2.3"},
+		"garbage right-most hop": {"203.0.113.9, nonsense", "10.1.2.3"},
+		"mapped client":          {"::ffff:203.0.113.9", "203.0.113.9"},
+		"ipv6 client":            {"2001:db8::1", "2001:db8::1"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			r := request(http.MethodGet, "/")
+			r.RemoteAddr = "10.1.2.3:443"
+
+			if tt.xff != "" {
+				r.Header.Set("X-Forwarded-For", tt.xff)
+			}
+
+			assert.Equal(t, tt.want, f.svc.ClientIP(r))
+		})
+	}
+}
+
+func TestExternalBaseBehindProxies(t *testing.T) {
+	f := newFixture(t, func(s *Settings) { s.TrustedProxies = []netip.Prefix{netip.MustParsePrefix("10.0.0.0/8")} })
+
+	r := request(http.MethodGet, "http://encore.lan/")
+	r.Header.Set("X-Forwarded-Proto", "HTTPS")
+	r.Header.Set("X-Forwarded-Host", "encore.example.net, internal.lan")
+	assert.Equal(t, "http://encore.lan", f.svc.ExternalBase(r), "forwarded headers from an untrusted peer are ignored")
+
+	r.RemoteAddr = "10.0.0.2:5555"
+	assert.Equal(t, "https://encore.example.net", f.svc.ExternalBase(r), "the first forwarded host is the browser's")
+
+	r = request(http.MethodGet, "https://encore.lan/")
+	r.TLS = &tls.ConnectionState{}
+	r = r.WithContext(basepath.With(r.Context(), "/encore/"))
+	assert.True(t, f.svc.Secure(r))
+	assert.Equal(t, "https://encore.lan/encore", f.svc.ExternalBase(r), "without a trailing slash")
+}
+
+func TestTrustedHeaderEdgeCases(t *testing.T) {
+	f := newFixture(t, func(s *Settings) {
+		s.Mode = ModeHeader
+		s.BreakGlass = true
+		s.TrustedProxies = []netip.Prefix{netip.MustParsePrefix("172.20.0.0/16")}
+	})
+	c := f.setup(t)
+
+	fromProxy := func(user string, cookies ...*http.Cookie) *http.Request {
+		r := request(http.MethodGet, "/", cookies...)
+		r.RemoteAddr = "172.20.0.5:40000"
+		r.Header.Set("Remote-User", user)
+
+		return r
+	}
+
+	p, err := f.svc.Authenticate(httptest.NewRecorder(), fromProxy("  household-member  "))
+	require.NoError(t, err)
+	require.NotNil(t, p)
+	assert.Equal(t, "household-member", p.Name, "without an admin group every proxied user is an admin")
+
+	p, err = f.svc.Authenticate(httptest.NewRecorder(), fromProxy("   ", c))
+	require.NoError(t, err)
+	require.NotNil(t, p, "a blank user header falls back to the session")
+	assert.Equal(t, ModeLocal, p.Method)
+
+	p, err = f.svc.Authenticate(httptest.NewRecorder(), fromProxy(""))
+	require.NoError(t, err)
+	assert.Nil(t, p)
+
+	f.update(func(s *Settings) { s.Header.AdminGroup = "encore-admins" })
+
+	r := fromProxy("household-admin")
+	r.Header.Set("Remote-Groups", " ,encore-admins-old, ENCORE-ADMINS,")
+	_, err = f.svc.Authenticate(httptest.NewRecorder(), r)
+	require.ErrorIs(t, err, ErrNotAdmin, "group names match exactly")
+
+	r.Header.Set("Remote-Groups", "users,, encore-admins ")
+	p, err = f.svc.Authenticate(httptest.NewRecorder(), r)
+	require.NoError(t, err)
+	require.NotNil(t, p)
+}
+
+func TestAuthenticateStripsSpoofableHeaders(t *testing.T) {
+	f := newFixture(t, func(s *Settings) {
+		s.TrustedProxies = []netip.Prefix{netip.MustParsePrefix("10.0.0.0/8")}
+		s.Header = HeaderSettings{UserHeader: "X-Auth-User", GroupsHeader: "X-Auth-Groups"}
+	})
+
+	headers := []string{"X-Auth-User", "X-Auth-Groups", "Remote-User", "Remote-Groups", "Remote-Name", "Remote-Email", "X-Forwarded-Proto", "X-Forwarded-Host", "X-Forwarded-For"}
+
+	build := func(remote string) *http.Request {
+		r := request(http.MethodGet, "/")
+		r.RemoteAddr = remote
+
+		for _, h := range headers {
+			r.Header.Set(h, "spoofed")
+		}
+
+		return r
+	}
+
+	untrusted := build("192.0.2.66:1234")
+	_, err := f.svc.Authenticate(httptest.NewRecorder(), untrusted)
+	require.NoError(t, err)
+
+	for _, h := range headers {
+		assert.Empty(t, untrusted.Header.Get(h), h)
+	}
+
+	trusted := build("10.0.0.2:1234")
+	_, err = f.svc.Authenticate(httptest.NewRecorder(), trusted)
+	require.NoError(t, err)
+
+	for _, h := range headers {
+		assert.Equal(t, "spoofed", trusted.Header.Get(h), "a trusted proxy's headers are kept: %s", h)
+	}
+}
+
+func TestErrorMessages(t *testing.T) {
+	err := error(&InputError{Field: "username", Err: errors.New("must not be empty")})
+	assert.Equal(t, "username: must not be empty", err.Error())
+	require.ErrorContains(t, errors.Unwrap(err), "must not be empty")
+
+	locked := &LockedError{RetryAfter: 14*time.Minute + 59*time.Second + 600*time.Millisecond}
+	assert.Equal(t, "too many failed sign-ins; try again in 15m0s", locked.Error())
 }
