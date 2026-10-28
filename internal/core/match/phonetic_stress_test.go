@@ -95,74 +95,129 @@ func TestPhoneticCollisions(t *testing.T) {
 	t.Logf("phonetic key collisions over translation vocabulary:\n%s", table.String())
 }
 
-// TestPhoneticDistractors stresses precision with vocabulary nobody chose: a library of 2000 synthetic titles of one to four words from the language's translations, queried with 400 other such titles that are not in it. Any play is a wrong play; asks cost a question. It logs the counts per encoder and retriever.
+// distractorSeeds each build a library of 2000 titles and 400 absent queries, so a run asks 2000 absent titles per language and retriever.
+var distractorSeeds = []uint64{11, 12, 13, 14, 15}
+
+// distractorSet is one seed's library and the absent titles queried against it.
+type distractorSet struct {
+	docs    []Doc
+	queries []string
+}
+
+// distractors builds a library of 2000 synthetic titles of one to four words from vocabulary, and 400 other such titles that are not in it.
+func distractors(code string, words []string, seed uint64) distractorSet {
+	r := rand.New(rand.NewPCG(seed, seed))
+
+	title := func() string {
+		w := make([]string, 1+r.IntN(4))
+		for i := range w {
+			w[i] = words[r.IntN(len(words))]
+		}
+
+		return strings.Join(w, " ")
+	}
+
+	set := distractorSet{docs: make([]Doc, 2000), queries: make([]string, 0, 400)}
+	inLibrary := map[string]bool{}
+
+	for i := range set.docs {
+		set.docs[i] = Doc{ID: fmt.Sprintf("d%d", i), Kind: media.KindMovie, Ref: media.Ref{Kind: media.KindMovie, ID: i + 1}, Title: title()}
+		inLibrary[Normalize(code, set.docs[i].Title)] = true
+	}
+
+	for len(set.queries) < cap(set.queries) {
+		if q := title(); !inLibrary[Normalize(code, q)] {
+			set.queries = append(set.queries, q)
+		}
+	}
+
+	return set
+}
+
+// distractorPlays returns, for each absent title that played, the title it played.
+func distractorPlays(t *testing.T, code, retr string, sets []distractorSet) (plays map[string]string, asks int) {
+	t.Helper()
+
+	plays = map[string]string{}
+
+	for i, set := range sets {
+		ix, err := New(code, Config{Retriever: retr})
+		require.NoError(t, err)
+		require.NoError(t, ix.Upsert(set.docs...))
+
+		for _, q := range set.queries {
+			res, err := ix.Search(t.Context(), Query{Text: q})
+			require.NoError(t, err)
+
+			switch res.Decision {
+			case DecisionPlay:
+				best, _ := res.Best()
+				plays[fmt.Sprintf("%d/%s", i, q)] = best.Doc.Title
+			case DecisionAsk:
+				asks++
+			}
+		}
+
+		require.NoError(t, ix.Close())
+	}
+
+	return plays, asks
+}
+
+// TestPhoneticDistractors stresses precision with vocabulary nobody chose: for each of distractorSeeds, a library of 2000 synthetic titles of one to four words from the language's translations, queried with 400 other such titles that are not in it. Any play is a wrong play; asks cost a question. It logs the counts per encoder and retriever, and every play an encoder adds or removes against English Double Metaphone.
 func TestPhoneticDistractors(t *testing.T) {
 	var table strings.Builder
 
 	for _, code := range Languages() {
-		l := languages[code]
-		words := vocabulary(t, l)
-		r := rand.New(rand.NewPCG(11, 11))
+		words := vocabulary(t, languages[code])
 
-		title := func() string {
-			w := make([]string, 1+r.IntN(4))
-			for i := range w {
-				w[i] = words[r.IntN(len(words))]
-			}
-
-			return strings.Join(w, " ")
-		}
-
-		docs := make([]Doc, 2000)
-		inLibrary := map[string]bool{}
-
-		for i := range docs {
-			docs[i] = Doc{ID: fmt.Sprintf("d%d", i), Kind: media.KindMovie, Ref: media.Ref{Kind: media.KindMovie, ID: i + 1}, Title: title()}
-			inLibrary[Normalize(code, docs[i].Title)] = true
-		}
-
-		queries := make([]string, 0, 400)
-		for len(queries) < cap(queries) {
-			if q := title(); !inLibrary[Normalize(code, q)] {
-				queries = append(queries, q)
-			}
+		sets := make([]distractorSet, len(distractorSeeds))
+		for i, seed := range distractorSeeds {
+			sets[i] = distractors(code, words, seed)
 		}
 
 		for _, retr := range []string{RetrieverInverted, RetrieverTrigram} {
-			for _, enc := range evalEncoders {
-				if enc.name == "none" {
-					continue
-				}
+			var english map[string]string
+
+			// English goes first: the others are compared with it.
+			for _, name := range []string{"english", "current", "fuzzy"} {
+				enc := evalEncoderNamed(name)
 
 				t.Run(retr+"/"+code+"/"+enc.name, func(t *testing.T) {
 					if fn := enc.keys(code); fn != nil {
 						withPhonetic(t, code, fn)
 					}
 
-					ix, err := New(code, Config{Retriever: retr})
-					require.NoError(t, err)
-					require.NoError(t, ix.Upsert(docs...))
+					plays, asks := distractorPlays(t, code, retr, sets)
+					fmt.Fprintf(&table, "%-8s %-3s %-8s wrong plays %4d, asks %4d of %d absent titles\n", retr, code, enc.name, len(plays), asks, 400*len(sets))
 
-					var plays, asks int
+					if enc.name == "english" {
+						english = plays
 
-					for _, q := range queries {
-						res, err := ix.Search(t.Context(), Query{Text: q})
-						require.NoError(t, err)
+						return
+					}
 
-						switch res.Decision {
-						case DecisionPlay:
-							plays++
-						case DecisionAsk:
-							asks++
+					for _, q := range slices.Sorted(maps.Keys(plays)) {
+						if _, ok := english[q]; !ok {
+							t.Logf("%s %s %s adds %q -> %q", retr, code, enc.name, q, plays[q])
 						}
 					}
 
-					require.NoError(t, ix.Close())
-					fmt.Fprintf(&table, "%-8s %-3s %-8s wrong plays %3d, asks %3d of %d absent titles\n", retr, code, enc.name, plays, asks, len(queries))
+					for _, q := range slices.Sorted(maps.Keys(english)) {
+						if _, ok := plays[q]; !ok {
+							t.Logf("%s %s %s removes %q -> %q", retr, code, enc.name, q, english[q])
+						}
+					}
 				})
 			}
 		}
 	}
 
 	t.Logf("absent-title distractors:\n%s", table.String())
+}
+
+func evalEncoderNamed(name string) evalEncoder {
+	i := slices.IndexFunc(evalEncoders, func(e evalEncoder) bool { return e.name == name })
+
+	return evalEncoders[i]
 }

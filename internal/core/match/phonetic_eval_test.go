@@ -16,7 +16,7 @@ import (
 
 	"github.com/nightah/encore/internal/fuzzy/phonetic"
 	_ "github.com/nightah/encore/internal/fuzzy/phonetic/de"
-	_ "github.com/nightah/encore/internal/fuzzy/phonetic/en"
+	"github.com/nightah/encore/internal/fuzzy/phonetic/en"
 	_ "github.com/nightah/encore/internal/fuzzy/phonetic/es"
 	_ "github.com/nightah/encore/internal/fuzzy/phonetic/fr"
 )
@@ -34,19 +34,21 @@ type evalOutcome struct {
 	why          string
 }
 
-// evalEncoders are compared against "current", the production encoders. "none" makes every word its own key, which measures how much the phonetic layer contributes at all. "fuzzy" is internal/fuzzy/phonetic, which falls back to English for languages without an encoder of their own.
+// evalEncoders are compared against "current", the production encoders. "none" makes every word its own key, which measures how much the phonetic layer contributes at all. "english" keys every language with English Double Metaphone, which is what French, Spanish and Italian titles had before they had encoders of their own. "fuzzy" is internal/fuzzy/phonetic, which falls back to English for languages without an encoder of their own.
 var evalEncoders = []evalEncoder{
 	{name: "current", keys: func(string) phoneticFunc { return nil }},
 	{name: "none", keys: func(string) phoneticFunc { return identityKeys }},
+	{name: "english", keys: func(string) phoneticFunc { return encoderKeys(en.Encoder{}) }},
 	{name: "fuzzy", keys: fuzzyKeys},
 }
 
 func identityKeys(tok string) []string { return []string{tok} }
 
-// fuzzyKeys adapts an internal/fuzzy encoder to the matcher's phoneticFunc.
-func fuzzyKeys(code string) phoneticFunc {
-	enc := phonetic.For(code)
+// fuzzyKeys is the internal/fuzzy encoder registered for a language.
+func fuzzyKeys(code string) phoneticFunc { return encoderKeys(phonetic.For(code)) }
 
+// encoderKeys adapts an internal/fuzzy encoder to the matcher's phoneticFunc.
+func encoderKeys(enc phonetic.Encoder) phoneticFunc {
 	return func(tok string) []string { return enc.Keys(make([]string, 0, 3), tok) }
 }
 
@@ -199,10 +201,10 @@ func (s evalScore) String() string {
 	return fmt.Sprintf("%3d/%3d (%5.1f%%) wrong plays %d", s.correct, s.total, 100*float64(s.correct)/float64(s.total), s.wrong)
 }
 
-// fuzzyGate is how many more correct decisions than production internal/fuzzy must make per language: its own French and Spanish encoders earn their place only with a measurable gain, and the ports of the production encoders must not lose any.
+// fuzzyGate is how many more correct decisions than English Double Metaphone internal/fuzzy must make per language: the French and Spanish encoders earn their place only with a measurable gain.
 var fuzzyGate = map[string]int{"fr": 3, "es": 3}
 
-// TestPhoneticEval measures match accuracy per language through the real pipeline (normalise, alias, retrieve, score, decide) with each candidate phonetic encoder swapped in. It logs a table, the production encoder's misses and every case another encoder gains or loses against it; run it with -v to read them. Only internal/fuzzy is held to fuzzyGate, with no wrong plays added.
+// TestPhoneticEval measures match accuracy per language through the real pipeline (normalise, alias, retrieve, score, decide) with each candidate phonetic encoder swapped in. It logs a table, the production encoder's misses and every case another encoder gains or loses against it; run it with -v to read them. internal/fuzzy is held to fuzzyGate against English Double Metaphone with no wrong plays added, and must not lose a decision or add a wrong play against production.
 func TestPhoneticEval(t *testing.T) {
 	suites := evalSuites(t)
 	codes := slices.Sorted(func(yield func(string) bool) {
@@ -217,7 +219,7 @@ func TestPhoneticEval(t *testing.T) {
 
 	for _, retr := range []string{RetrieverInverted, RetrieverTrigram} {
 		for _, code := range codes {
-			var base []evalOutcome
+			var base, english []evalOutcome
 
 			for _, enc := range evalEncoders {
 				fn := enc.keys(code)
@@ -258,10 +260,15 @@ func TestPhoneticEval(t *testing.T) {
 					}
 				}
 
-				if enc.name == "fuzzy" {
-					got, was := tally(out), tally(base)
-					assert.GreaterOrEqual(t, got.correct, was.correct+fuzzyGate[code], "%s %s: fuzzy must gain at least %d correct decisions", retr, code, fuzzyGate[code])
-					assert.LessOrEqual(t, got.wrong, was.wrong, "%s %s: fuzzy must not add wrong plays", retr, code)
+				switch enc.name {
+				case "english":
+					english = out
+				case "fuzzy":
+					got, was, eng := tally(out), tally(base), tally(english)
+					assert.GreaterOrEqual(t, got.correct, was.correct, "%s %s: fuzzy must not lose correct decisions against production", retr, code)
+					assert.LessOrEqual(t, got.wrong, was.wrong, "%s %s: fuzzy must not add wrong plays against production", retr, code)
+					assert.GreaterOrEqual(t, got.correct, eng.correct+fuzzyGate[code], "%s %s: fuzzy must gain at least %d correct decisions over english", retr, code, fuzzyGate[code])
+					assert.LessOrEqual(t, got.wrong, eng.wrong, "%s %s: fuzzy must not add wrong plays over english", retr, code)
 				}
 			}
 
