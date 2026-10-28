@@ -130,6 +130,27 @@ func f() {}
 	assert.Equal(t, map[string]string{"A": "A is a trailing comment.", "B": "B is a leading comment over two lines.", "C": "B is a leading comment over two lines."}, docs.fields["One"])
 }
 
+func TestWalkSkipsFieldsWithoutAKey(t *testing.T) {
+	t.Parallel()
+
+	type section struct {
+		Address string `koanf:"address"`
+		cache   string
+		Derived string
+	}
+
+	w := &walker{docs: goDocs{fields: map[string]map[string]string{"section": {"Address": "Address is where to listen."}}}}
+
+	var sec ConfigSection
+
+	w.walk(&sec, reflect.TypeFor[section](), reflect.ValueOf(section{Address: ":8080", cache: "x", Derived: "y"}), "server", false)
+
+	require.Empty(t, w.errs)
+	require.Len(t, sec.Keys, 1, "fields without a koanf tag aren't configuration")
+	assert.Equal(t, "server.address", sec.Keys[0].Key)
+	assert.Equal(t, `":8080"`, sec.Keys[0].Default)
+}
+
 func TestRewrite(t *testing.T) {
 	t.Parallel()
 
