@@ -1,18 +1,18 @@
 import type { ComponentType } from "react";
 
 import type { ErrorComponentProps } from "@tanstack/react-router";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "@api/client";
 import { resetErrorReports } from "@lib/reportError";
-import { clientErrors, getDb } from "@mocks/handlers";
+import { clientErrors, getDb, resetDb } from "@mocks/handlers";
 import { server } from "@mocks/node";
 import { Route, isServerUnreachable } from "@routes/__root";
 import { FakeEventSource } from "@test/eventSource";
-import { renderApp } from "@test/utils";
+import { failWith, recordRequests, renderApp } from "@test/utils";
 
 const RootError = Route.options.errorComponent as ComponentType<ErrorComponentProps>;
 
@@ -124,5 +124,156 @@ describe("root route", () => {
     await waitFor(() => expect(FakeEventSource.open).toBe(1));
     expect(FakeEventSource.instances[0]?.url).toBe("/api/v1/events");
     expect(FakeEventSource.instances[0]?.withCredentials).toBe(true);
+  });
+});
+
+describe("route gates", () => {
+  it("lets a signed-out admin resume setup only after signing in", async () => {
+    getDb().authenticated = false;
+    const { router } = renderApp("/setup");
+    await screen.findByRole("heading", { level: 1, name: "Sign in" });
+    expect(router.state.location.pathname).toBe("/login");
+    expect(router.state.location.search).toEqual({ redirect: "/setup" });
+  });
+
+  it("opens the setup wizard on first run without signing in", async () => {
+    resetDb("fresh");
+    const { router } = renderApp("/setup");
+    await screen.findByRole("heading", { level: 1, name: "Create the admin account" });
+    expect(router.state.location.pathname).toBe("/setup");
+  });
+
+  it("keeps the query string when sending a signed-out visitor to sign in", async () => {
+    getDb().authenticated = false;
+    const { router } = renderApp("/request-log?outcome=error");
+    await screen.findByRole("heading", { level: 1, name: "Sign in" });
+    expect(router.state.location.search).toEqual({ redirect: "/request-log?outcome=error" });
+  });
+});
+
+describe("login page", () => {
+  async function signIn(path: string, totp = "") {
+    getDb().authenticated = false;
+    const user = userEvent.setup();
+    const result = renderApp(path);
+    await screen.findByRole("heading", { level: 1, name: "Sign in" });
+    await user.type(screen.getByLabelText("Username"), "admin");
+    await user.type(screen.getByLabelText("Password"), "correct-horse-battery");
+    if (totp) await user.type(screen.getByLabelText("One-time code"), totp);
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
+    return result;
+  }
+
+  it.each([
+    ["an address on another site", "https://evil.example/steal"],
+    ["a protocol-relative address", "//evil.example/steal"],
+    ["a relative path", "kodi"],
+  ])("goes to the overview instead of %s", async (_name, target) => {
+    const { router } = await signIn(`/login?redirect=${encodeURIComponent(target)}`);
+    await screen.findByRole("heading", { level: 1, name: "Overview" });
+    expect(router.state.location.pathname).toBe("/");
+  });
+
+  it("checks the one-time code's format before calling the server", async () => {
+    const log = recordRequests();
+    await signIn("/login", "12ab");
+    expect(await screen.findByText("Enter the 6-digit code from your authenticator app.")).toBeInTheDocument();
+    expect(log.some((r) => r.path === "/auth/login")).toBe(false);
+  });
+
+  it("sends the one-time code only when one is typed", async () => {
+    const log = recordRequests();
+    await signIn("/login");
+    await waitFor(() =>
+      expect(log.find((r) => r.path === "/auth/login")?.body).toEqual({
+        password: "correct-horse-battery",
+        username: "admin",
+      }),
+    );
+  });
+
+  it("puts the server's field errors next to the fields, in its own words for the code", async () => {
+    server.use(
+      http.post("*/api/v1/auth/login", () =>
+        HttpResponse.json(
+          {
+            detail: "validation failed",
+            errors: [
+              { location: "body.totp", message: "totp: wrong code" },
+              { location: "body.username", message: "No such user." },
+              { location: "body.remember", message: "Not a field on this form." },
+            ],
+            status: 422,
+            title: "Unprocessable Entity",
+          },
+          { headers: { "Content-Type": "application/problem+json" }, status: 422 },
+        ),
+      ),
+    );
+    await signIn("/login", "123456");
+    expect(await screen.findByText("No such user.")).toBeInTheDocument();
+    expect(screen.getByText("Enter the 6-digit code from your authenticator app.")).toBeInTheDocument();
+    expect(screen.queryByText("totp: wrong code")).not.toBeInTheDocument();
+    expect(screen.queryByText("Not a field on this form.")).not.toBeInTheDocument();
+    // Field errors replace the general alert.
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("shows why single sign-on failed", async () => {
+    getDb().authenticated = false;
+    renderApp(`/login?error=${encodeURIComponent("The identity provider refused the sign-in.")}`);
+    expect(await screen.findByRole("alert")).toHaveTextContent("The identity provider refused the sign-in.");
+  });
+
+  it("explains header sign-in and offers no form", async () => {
+    getDb().authenticated = false;
+    getDb().authMode = "header";
+    renderApp("/login");
+    expect(await screen.findByText(/Encore trusts your reverse proxy to sign you in/)).toBeInTheDocument();
+    expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
+  });
+});
+
+describe("settings page", () => {
+  it("opens the tab named in the address and keeps the address in step", async () => {
+    const user = userEvent.setup();
+    const { router } = renderApp("/settings?tab=secrets");
+    const tabs = await screen.findByRole("tablist", { name: "Settings sections" });
+    expect(within(tabs).getByRole("tab", { name: "Secrets" })).toHaveAttribute("aria-selected", "true");
+    expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled();
+
+    await user.click(within(tabs).getByRole("tab", { name: "Import and export" }));
+    await waitFor(() => expect(router.state.location.search).toEqual({ tab: "backup" }));
+  });
+
+  it("forgets unsaved changes' state when switching tabs", async () => {
+    const user = userEvent.setup();
+    renderApp("/settings?tab=general");
+    await user.selectOptions(await screen.findByRole("combobox", { name: "Log level" }), "debug");
+    const save = screen.getByRole("button", { name: "Save changes" });
+    await waitFor(() => expect(save).toBeEnabled());
+
+    await user.click(screen.getByRole("tab", { name: "Features" }));
+    await waitFor(() => expect(save).toBeDisabled());
+  });
+});
+
+describe("page load errors", () => {
+  it.each([
+    ["/", "/overview", "Overview"],
+    ["/kodi", "/kodi/instances", "Kodi instances"],
+    ["/echo-devices", "/devices", "Echo devices and rooms"],
+    ["/settings", "/settings", "Settings"],
+  ])("%s offers to retry when GET %s fails", async (path, endpoint, title) => {
+    const user = userEvent.setup();
+    failWith("get", endpoint, 500, "The database is locked.");
+    renderApp(path);
+    expect(await screen.findByRole("heading", { level: 1, name: title })).toBeInTheDocument();
+    expect(await screen.findByText("The database is locked.", {}, { timeout: 4000 })).toBeInTheDocument();
+
+    server.resetHandlers();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    await waitFor(() => expect(screen.queryByText("The database is locked.")).not.toBeInTheDocument());
+    expect(screen.queryByRole("button", { name: "Try again" })).not.toBeInTheDocument();
   });
 });
