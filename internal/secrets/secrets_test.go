@@ -3,13 +3,12 @@ package secrets
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -456,11 +455,18 @@ type faultyRepo struct {
 	Repo
 
 	putErr, keyIDsErr, rewriteErr error
+
+	// beforePut, when set, runs inside Put before the row is written.
+	beforePut func()
 }
 
 func (r *faultyRepo) Put(ctx context.Context, row store.SecretRow) error {
 	if r.putErr != nil {
 		return r.putErr
+	}
+
+	if r.beforePut != nil {
+		r.beforePut()
 	}
 
 	return r.Repo.Put(ctx, row)
@@ -728,37 +734,51 @@ func TestRotateWithSuppliedKeyWarnsToUpdateConfig(t *testing.T) {
 	assert.Contains(t, logs.String(), "update secrets.key before restarting")
 }
 
-// TestPutDuringRotate checks no secret is left sealed under the outgoing key when writes race a rotation.
+// TestPutDuringRotate holds a Put between sealing and writing while a rotation starts, which is when a row could be sealed under the outgoing key after the rotation re-encrypted everything.
 func TestPutDuringRotate(t *testing.T) {
-	db := openDB(t, t.TempDir())
 	ctx := t.Context()
+	db := openDB(t, t.TempDir())
+	repo := &faultyRepo{Repo: db.SecretRows()}
 
-	s, err := Open(ctx, db.SecretRows(), Options{Key: EncodeKey(testKey(t))})
+	s, err := Open(ctx, repo, Options{Key: EncodeKey(testKey(t))})
 	require.NoError(t, err)
+	require.NoError(t, s.Put(ctx, "seed", []byte("x")))
 
-	for i := range 20 {
-		require.NoError(t, s.Put(ctx, fmt.Sprintf("seed/%d", i), []byte("x")))
+	entered, release := make(chan struct{}), make(chan struct{})
+	repo.beforePut = func() {
+		close(entered)
+		<-release
 	}
+
+	putDone := make(chan error, 1)
+
+	go func() { putDone <- s.Put(ctx, "racer", []byte("y")) }()
+
+	<-entered
 
 	next := testKey(t)
 	nextID := KeyID(next)
+	rotated := make(chan error, 1)
 
-	var wg sync.WaitGroup
+	go func() { rotated <- s.Rotate(ctx, next) }()
 
-	for i := range 8 {
-		wg.Go(func() {
-			for j := range 10 {
-				assert.NoError(t, s.Put(ctx, fmt.Sprintf("racer/%d/%d", i, j), []byte("y")))
-			}
-		})
+	// Rotate must wait for the in-flight Put. If it finishes first the bug is shown; otherwise give it a moment to start before letting the Put go.
+	select {
+	case err := <-rotated:
+		require.NoError(t, err)
+		close(release)
+		require.NoError(t, <-putDone)
+	case <-time.After(200 * time.Millisecond):
+		close(release)
+		require.NoError(t, <-putDone)
+		require.NoError(t, <-rotated)
 	}
 
-	require.NoError(t, s.Rotate(ctx, next))
-	wg.Wait()
+	repo.beforePut = nil
 
 	ids, err := db.SecretRows().KeyIDs(ctx)
 	require.NoError(t, err)
-	assert.Equal(t, []string{nextID}, ids)
+	assert.Equal(t, []string{nextID}, ids, "no secret is left under the outgoing key")
 }
 
 func TestReadKeyErrors(t *testing.T) {
