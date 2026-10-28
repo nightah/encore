@@ -151,6 +151,62 @@ func TestPhoneticMatchesLibraries(t *testing.T) {
 	}
 }
 
+// libraryKeysFile pins the keys the libraries gave each token in goldenTokens before internal/fuzzy replaced them: one line per language and token, tab-separated, with the keys after the token.
+const libraryKeysFile = "testdata/phonetic/library_keys.tsv"
+
+// goldenTokens are a language's corpus tokens and compact forms (corpusTokens) plus those of 300 synthetic titles.
+func goldenTokens(t *testing.T, code string, suites []corpusSuite) []string {
+	t.Helper()
+
+	l := languages[code]
+	seen := map[string]bool{}
+
+	for _, tok := range corpusTokens(l, suites) {
+		seen[tok] = true
+	}
+
+	for _, d := range syntheticDocs(300, 7) {
+		toks := l.normalize(d.Title, true)
+		for _, tok := range append(toks, strings.Join(toks, "")) {
+			seen[tok] = true
+		}
+	}
+
+	return slices.Sorted(maps.Keys(seen))
+}
+
+// TestPhoneticLibraryGolden checks that production keys every token as the libraries did, from the keys pinned in libraryKeysFile, for the languages still keyed with the ported encoders.
+func TestPhoneticLibraryGolden(t *testing.T) {
+	raw, err := os.ReadFile(libraryKeysFile)
+	require.NoError(t, err)
+
+	golden := map[string]map[string][]string{}
+
+	for line := range strings.Lines(string(raw)) {
+		f := strings.Split(strings.TrimSuffix(line, "\n"), "\t")
+		require.GreaterOrEqual(t, len(f), 3, line)
+
+		if golden[f[0]] == nil {
+			golden[f[0]] = map[string][]string{}
+		}
+
+		golden[f[0]][f[1]] = f[2:]
+	}
+
+	suites := evalSuites(t)
+
+	for _, code := range slices.Sorted(maps.Keys(libraryKeys)) {
+		toks := goldenTokens(t, code, suites[code])
+		require.Equal(t, slices.Sorted(maps.Keys(golden[code])), toks, "%s: %s pins goldenTokens", code, libraryKeysFile)
+
+		for _, tok := range toks {
+			require.Equal(t, golden[code][tok], languages[code].phonetic(tok), "%s %q", code, tok)
+		}
+
+		t.Logf("%s: %d tokens keyed as the libraries did", code, len(toks))
+	}
+}
+
 // withPhonetic swaps a language's phonetic function until the test ends. The inverted index and the trigram retriever read it when an index is built, so it must be set before New. Tests in this package do not run in parallel, so swapping the shared language is safe.
 func withPhonetic(t testing.TB, code string, fn phoneticFunc) {
 	t.Helper()
