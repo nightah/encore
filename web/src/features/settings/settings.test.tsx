@@ -137,6 +137,15 @@ describe("Settings page", () => {
     await waitFor(() => expect(save).toBeDisabled());
   });
 
+  it("disables a choice that config manages, rather than making it read-only", async () => {
+    getDb().settings.managed = ["locale.default_locale"];
+    renderApp("/settings");
+    // A select ignores readOnly, so a managed one has to be disabled to stay unchanged.
+    const locale = await screen.findByRole("combobox", { name: "Default locale, Managed by config" });
+    expect(locale).toBeDisabled();
+    expect(locale).not.toHaveAttribute("readonly");
+  });
+
   it("shows the fields for each sign-in method and saves the mode", async () => {
     const user = userEvent.setup();
     const log = recordRequests();
