@@ -112,6 +112,49 @@ func TestTranslationsUseTheEnglishLayout(t *testing.T) {
 	}
 }
 
+// Every locale's language must ship each source file, and every language must be used by a locale, or the binary builds models from a partial language.
+func TestEmbeddedLocalesAndLanguagesMatch(t *testing.T) {
+	_, err := fs.Stat(FS, "model.yaml")
+	require.NoError(t, err, "the language-neutral model is embedded")
+
+	locales, err := fs.ReadDir(FS, "locales")
+	require.NoError(t, err)
+	require.NotEmpty(t, locales)
+
+	used := map[string]bool{}
+
+	for _, l := range locales {
+		name := strings.TrimSuffix(l.Name(), ".yaml")
+		assert.Regexp(t, `^[a-z]{2}-[A-Z]{2}$`, name, "%s is named after its locale", l.Name())
+
+		b, err := fs.ReadFile(FS, "locales/"+l.Name())
+		require.NoError(t, err)
+
+		var loc struct {
+			Language   string `yaml:"language"`
+			Invocation string `yaml:"invocation"`
+		}
+		require.NoError(t, yaml.Unmarshal(b, &loc), l.Name())
+
+		assert.NotEmpty(t, loc.Invocation, "%s has an invocation name", l.Name())
+		assert.True(t, strings.HasPrefix(name, loc.Language+"-"), "%s belongs to its language %q", l.Name(), loc.Language)
+
+		used[loc.Language] = true
+
+		for _, file := range append([]string{"examples.yaml"}, crowdinFiles...) {
+			_, err := fs.Stat(FS, "lang/"+loc.Language+"/"+file)
+			require.NoError(t, err, "%s needs lang/%s/%s", l.Name(), loc.Language, file)
+		}
+	}
+
+	langs, err := fs.ReadDir(FS, "lang")
+	require.NoError(t, err)
+
+	for _, lang := range langs {
+		assert.True(t, used[lang.Name()], "no locale uses lang/%s", lang.Name())
+	}
+}
+
 func styleName(s yaml.Style) string {
 	switch s {
 	case yaml.DoubleQuotedStyle:
