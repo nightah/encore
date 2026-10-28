@@ -154,9 +154,16 @@ describe("setup wizard", () => {
 
     await heading("Say hello");
     await waitFor(() => expect(FakeEventSource.open).toBeGreaterThan(0));
-    FakeEventSource.emit("request", { ...simulated, id: 5002 });
-    expect(screen.getByText("Waiting for the first request…")).toBeInTheDocument();
-    expect(screen.queryByText(/Request received/)).not.toBeInTheDocument();
+    FakeEventSource.emit("request", { ...simulated, device_name: "Simulator", id: 5002 });
+    FakeEventSource.emit("request", {
+      ...simulated,
+      device_name: "Kitchen Echo",
+      id: 5003,
+      simulated: false,
+      time: new Date().toISOString(),
+    });
+    expect(await screen.findByText(/Request received from Kitchen Echo at/)).toBeInTheDocument();
+    expect(screen.queryByText(/Simulator/)).not.toBeInTheDocument();
   });
 
   it("waits for the skill settings before saying what to ask Alexa", async () => {
@@ -246,6 +253,16 @@ describe("setup wizard", () => {
     expect(screen.queryByText(/No Kodi answered on your network/)).not.toBeInTheDocument();
     expect(screen.getByText(/Encore couldn't search your network for Kodi/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Search again" })).toBeInTheDocument();
+  });
+
+  it("starts from the admin account on a fresh install, whatever this browser remembers", async () => {
+    window.localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify({ done: [1, 2, 3], skipped: [], step: 4 }));
+    renderApp("/setup");
+
+    await heading("Create the admin account");
+    const steps = within(screen.getByRole("list", { name: "Setup steps" }));
+    expect(steps.queryAllByText("(done)", { exact: false })).toHaveLength(0);
+    expect(steps.queryAllByRole("button")).toHaveLength(0);
   });
 
   it("skips steps and remembers progress", async () => {
@@ -583,6 +600,10 @@ describe("setup wizard steps list", () => {
     await heading("Tell us your public address");
     expect(getSetupProgress()).toMatchObject({ step: 2 });
     expect(screen.getByRole("button", { name: "Back" })).toBeDisabled();
+
+    expect(steps.queryByRole("button", { name: /Deploy skill/ })).not.toBeInTheDocument();
+    await user.click(steps.getByRole("button", { name: /Kodi/ }));
+    await heading("Add your first Kodi");
   });
 
   it("clears a skipped step once it's finished", async () => {
@@ -632,6 +653,29 @@ describe("setup admin step", () => {
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("An admin account already exists. Sign in instead.");
+    expect(screen.getByRole("heading", { level: 1, name: "Create the admin account" })).toBeInTheDocument();
+  });
+
+  it("puts a rejected setup token under its field, without a separate alert", async () => {
+    resetDb("fresh");
+    server.use(
+      http.post("*/api/v1/setup/admin", () =>
+        problem422([{ location: "body.setup_token", message: "That isn't this server's setup token." }]),
+      ),
+    );
+    const user = userEvent.setup();
+    renderApp("/setup");
+    await heading("Create the admin account");
+
+    await user.type(screen.getByLabelText("Setup token"), "WRONG-TOKEN");
+    await user.type(screen.getByLabelText("Password"), "correct-horse-battery");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    expect(await screen.findByLabelText("Setup token")).toHaveAccessibleDescription(
+      "That isn't this server's setup token.",
+    );
+    expect(screen.getByLabelText("Setup token")).toHaveAttribute("aria-invalid", "true");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 1, name: "Create the admin account" })).toBeInTheDocument();
   });
 
@@ -741,9 +785,9 @@ describe("setup address step", () => {
     expect(screen.queryByRole("button", { name: "Continue" })).not.toBeInTheDocument();
   });
 
-  it("lets you continue when this server can't check addresses", async () => {
+  it.each([404, 405, 501])("lets you continue when this server can't check addresses (%i)", async (status) => {
     startAt(2);
-    failWith("post", "/setup/reachability", 404, "Not Found");
+    failWith("post", "/setup/reachability", status, "Not Found");
     const user = userEvent.setup();
     renderApp("/setup");
     await heading("Tell us your public address");
@@ -969,6 +1013,23 @@ describe("setup Amazon step", () => {
     ).toBeInTheDocument();
     expect(id).toHaveAttribute("aria-invalid", "true");
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("shows why the credentials couldn't be saved and stays on the step", async () => {
+    startAt(4);
+    getDb().skill.amazon.connected = false;
+    failWith("put", "/skill/amazon/credentials", 500, "Couldn't store the secret.");
+    const user = userEvent.setup();
+    const log = recordRequests();
+    renderApp("/setup");
+    await heading("Connect your Amazon developer account");
+
+    await user.type(await screen.findByLabelText("Client secret"), "lwa-secret");
+    await user.click(screen.getByRole("button", { name: "Authorise with Amazon" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Couldn't store the secret.");
+    expect(log.some((r) => r.path.startsWith("/skill/amazon/authorize?"))).toBe(false);
+    expect(screen.getByRole("button", { name: "Authorise with Amazon" })).toBeEnabled();
   });
 
   it("explains when Amazon gives no sign-in address", async () => {
