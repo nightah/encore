@@ -71,6 +71,7 @@ describe("errorMessage", () => {
     expect(errorMessage(new ApiError("Request failed with HTTP 502.", 502, "Bad Gateway"))).toBe(
       "Request failed with HTTP 502.",
     );
+    expect(errorMessage(new ApiError("Not Found", 404, { detail: "", title: "" }))).toBe("Not Found");
   });
 
   it("uses the message of any other error, and a generic one for non-errors", () => {

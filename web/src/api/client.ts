@@ -43,7 +43,7 @@ export function problemMessage(body: unknown, status: number): string {
 /** A short, human message for any error thrown by the API layer. */
 export function errorMessage(error: unknown): string {
   if (error instanceof ApiError) {
-    return error.problem?.detail ?? error.problem?.title ?? error.message;
+    return error.problem?.detail || error.problem?.title || error.message;
   }
   if (error instanceof Error) return error.message;
   return i18n.t("error.generic");
