@@ -28,16 +28,16 @@ func deployableSettings() map[string]any {
 	}
 }
 
+// waitForDeploy waits for the API's background work, the deploy among it, and returns the deploy as it ended.
 func waitForDeploy(t *testing.T, c *client, id string) Deploy {
 	t.Helper()
 
+	c.h.api.bg.Wait()
+
 	var d Deploy
 
-	require.Eventually(t, func() bool {
-		c.json(http.MethodGet, "/api/v1/skill/deploy/"+id, nil, http.StatusOK, &d)
-
-		return d.State != "in_progress"
-	}, 20*time.Second, 50*time.Millisecond)
+	c.json(http.MethodGet, "/api/v1/skill/deploy/"+id, nil, http.StatusOK, &d)
+	require.NotEqual(t, "in_progress", d.State, "the deploy has finished")
 
 	return d
 }

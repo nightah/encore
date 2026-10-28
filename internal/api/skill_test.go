@@ -160,14 +160,7 @@ func TestDeploy(t *testing.T) {
 	assert.Equal(t, "package", msg.Step)
 	assert.Equal(t, "started", msg.State)
 
-	var d Deploy
-
-	require.Eventually(t, func() bool {
-		c.json(http.MethodGet, "/api/v1/skill/deploy/"+acc.ID, nil, http.StatusOK, &d)
-
-		return d.State != "in_progress"
-	}, 20*time.Second, 50*time.Millisecond)
-
+	d := waitForDeploy(t, c, acc.ID)
 	require.Equal(t, "succeeded", d.State, d.Error)
 
 	steps := map[string]string{}
@@ -201,11 +194,8 @@ func TestDeploy(t *testing.T) {
 	assert.Equal(t, info.SkillID, state.SkillID)
 
 	c.json(http.MethodPost, "/api/v1/skill/deploy", map[string]any{"force": true}, http.StatusAccepted, &acc)
-	require.Eventually(t, func() bool {
-		c.json(http.MethodGet, "/api/v1/skill/deploy/"+acc.ID, nil, http.StatusOK, &d)
-
-		return d.State != "in_progress"
-	}, 20*time.Second, 50*time.Millisecond)
+	d = waitForDeploy(t, c, acc.ID)
+	require.Equal(t, "succeeded", d.State, d.Error)
 	assert.Equal(t, 1, h.smapi.SkillCount())
 
 	pkg := c.do(http.MethodGet, "/api/v1/skill/package", nil)
@@ -241,13 +231,7 @@ func TestDeployFailurePersistsState(t *testing.T) {
 	c.json(http.MethodPost, "/api/v1/skill/deploy", nil, http.StatusAccepted, &acc)
 	assert.Equal(t, http.StatusConflict, c.do(http.MethodPost, "/api/v1/skill/deploy", nil).status, "one deploy at a time")
 
-	var d Deploy
-
-	require.Eventually(t, func() bool {
-		c.json(http.MethodGet, fmt.Sprintf("/api/v1/skill/deploy/%s", acc.ID), nil, http.StatusOK, &d)
-
-		return d.State != "in_progress"
-	}, 20*time.Second, 50*time.Millisecond)
+	d := waitForDeploy(t, c, acc.ID)
 
 	assert.Equal(t, "failed", d.State)
 	assert.Contains(t, d.Error, "slot value too long")
@@ -370,13 +354,8 @@ func TestUpdateReason(t *testing.T) {
 	var started Accepted
 
 	c.json(http.MethodPost, "/api/v1/skill/deploy", map[string]any{}, http.StatusAccepted, &started)
-	require.Eventually(t, func() bool {
-		var d Deploy
-
-		c.json(http.MethodGet, "/api/v1/skill/deploy/"+started.ID, nil, http.StatusOK, &d)
-
-		return d.State == "succeeded"
-	}, 20*time.Second, 50*time.Millisecond)
+	d := waitForDeploy(t, c, started.ID)
+	require.Equal(t, "succeeded", d.State, d.Error)
 
 	var info SkillInfo
 
@@ -426,13 +405,8 @@ func TestDeployMarksSimulatorWindow(t *testing.T) {
 	var started Accepted
 
 	c.json(http.MethodPost, "/api/v1/skill/deploy", map[string]any{}, http.StatusAccepted, &started)
-	require.Eventually(t, func() bool {
-		var d Deploy
-
-		c.json(http.MethodGet, "/api/v1/skill/deploy/"+started.ID, nil, http.StatusOK, &d)
-
-		return d.State == "succeeded"
-	}, 20*time.Second, 50*time.Millisecond)
+	d := waitForDeploy(t, c, started.ID)
+	require.Equal(t, "succeeded", d.State, d.Error)
 
 	assert.True(t, h.api.Simulating(), "the session-ended request after the smoke test still counts as the simulator's")
 
