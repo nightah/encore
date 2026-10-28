@@ -70,6 +70,12 @@ describe("explain", () => {
     );
   });
 
+  it("uses the margin the server worked out over the scores shown", () => {
+    expect(explain(result("play", [candidate("Rocky II", 0.96), candidate("Rocky", 0.65)], 0.4))).toBe(
+      "Rocky II scores 0.96, 0.40 ahead of the next.",
+    );
+  });
+
   it("works the margin out from the scores when the result has none", () => {
     expect(explain(result("play", [candidate("Rocky II", 0.96), candidate("Rocky", 0.65)], 0))).toBe(
       "Rocky II scores 0.96, 0.31 ahead of the next.",

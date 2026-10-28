@@ -55,6 +55,27 @@ describe("theme store", () => {
     expect(result.current.resolved).toBe("light");
   });
 
+  it("starts from the choice saved in this browser", () => {
+    window.localStorage.setItem(THEME_STORAGE_KEY, "dark");
+    initTheme();
+    expect(theme()).toBe("dark");
+
+    const { result } = renderHook(() => useTheme());
+    expect(result.current).toMatchObject({ preference: "dark", resolved: "dark", saved: "dark" });
+
+    act(() => previewTheme("light"));
+    act(() => endThemePreview());
+    expect(theme()).toBe("dark");
+  });
+
+  it.each(["purple", "", "DARK"])("follows the OS for a saved value it doesn't know (%j)", (stored) => {
+    os.dark = true;
+    window.localStorage.setItem(THEME_STORAGE_KEY, stored);
+    initTheme();
+    const { result } = renderHook(() => useTheme());
+    expect(result.current).toMatchObject({ preference: "system", resolved: "dark", saved: "system" });
+  });
+
   it("ignores the OS once light or dark is chosen", () => {
     const { result } = renderHook(() => useTheme());
     act(() => result.current.setPreference("light"));

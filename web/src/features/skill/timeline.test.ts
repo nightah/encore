@@ -159,6 +159,7 @@ describe("deployFraction", () => {
         ]),
       ),
     ).toBe(25);
+    expect(deployFraction(deploy("in_progress", [event("vendor", "skipped"), event("skill", "skipped")]))).toBe(25);
     expect(
       deployFraction(
         deploy(
