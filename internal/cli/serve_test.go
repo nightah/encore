@@ -263,13 +263,18 @@ func TestRunAllWaitsForEveryTaskToStop(t *testing.T) {
 }
 
 func TestServeStopsWhenStartupFails(t *testing.T) {
+	missing := t.TempDir() + "/missing"
+
 	for name, tc := range map[string]struct {
 		setup func(t *testing.T, dataDir string)
 		want  string
+		// Stateless mode works in a temporary directory and never locks the data directory.
+		locks bool
 	}{
 		"the database can't be opened": {
 			setup: func(t *testing.T, dataDir string) { require.NoError(t, os.Mkdir(store.DefaultPath(dataDir), 0o700)) },
 			want:  "opening database",
+			locks: true,
 		},
 		"stateless mode has nowhere to restore to": {
 			setup: func(t *testing.T, _ string) {
@@ -281,9 +286,9 @@ func TestServeStopsWhenStartupFails(t *testing.T) {
 				t.Setenv("ENCORE_STORAGE_S3_BUCKET", "encore")
 				t.Setenv("ENCORE_STORAGE_S3_ACCESS_KEY", "AKIA")
 				t.Setenv("ENCORE_STORAGE_S3_SECRET_KEY", "not-a-real-secret")
-				t.Setenv("TMPDIR", t.TempDir()+"/missing")
+				t.Setenv("TMPDIR", missing)
 			},
-			want: "missing",
+			want: "stat " + missing + ": no such file or directory",
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
@@ -294,6 +299,12 @@ func TestServeStopsWhenStartupFails(t *testing.T) {
 			_, stderr, err := runCLI(t, "serve", "--server.address", freeAddress(t), "--log.format", "text")
 			require.ErrorContains(t, err, tc.want)
 			assert.NotContains(t, stderr, "listening on", "the server never starts")
+
+			if !tc.locks {
+				assert.NoFileExists(t, store.DefaultPath(dataDir), "the data directory isn't used")
+
+				return
+			}
 
 			lock, err := lockDataDir(dataDir)
 			require.NoError(t, err, "the data directory is released")
