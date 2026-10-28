@@ -13,6 +13,15 @@ function requestList() {
   return screen.findByRole("region", { name: "Requests" });
 }
 
+/** The request rows currently listed (each is a toggle button). */
+function rows() {
+  const list = screen.getByRole("region", { name: "Requests" });
+  return [
+    ...within(list).queryAllByRole("button", { pressed: true }),
+    ...within(list).queryAllByRole("button", { pressed: false }),
+  ];
+}
+
 describe("Request log", () => {
   it("lists requests, selects the newest and shows a request's detail on click", async () => {
     const user = userEvent.setup();
@@ -213,5 +222,168 @@ describe("Request log", () => {
     const filter = screen.getByLabelText<HTMLSelectElement>("Echo device");
     await waitFor(() => expect(within(filter).getByText("Bedroom Echo")).toBeInTheDocument());
     expect(filter.selectedOptions[0]).toHaveTextContent("Echo #99");
+  });
+
+  it("searches what was heard once typing pauses", async () => {
+    const user = userEvent.setup();
+    const log = recordRequests();
+    const { router } = renderApp("/request-log");
+    await requestList();
+
+    await user.type(screen.getByRole("searchbox", { name: "Search what was heard" }), "  Severance ");
+
+    await waitFor(() => expect(router.state.location.search).toMatchObject({ q: "Severance" }));
+    await waitFor(() => expect(rows()).toHaveLength(1));
+    expect(rows()[0]).toHaveTextContent("severance");
+    // One search for the whole phrase, not one per keystroke.
+    expect(log.filter((r) => r.path.includes("q="))).toEqual([
+      expect.objectContaining({ path: "/requests?limit=50&q=Severance" }),
+    ]);
+
+    await user.clear(screen.getByRole("searchbox", { name: "Search what was heard" }));
+    await waitFor(() => expect(router.state.location.search).not.toHaveProperty("q"));
+  });
+
+  it("filters by Echo, naming unnamed ones", async () => {
+    const user = userEvent.setup();
+    const { router } = renderApp("/request-log");
+    await requestList();
+    const device = screen.getByRole("combobox", { name: "Echo device" });
+    await waitFor(() => expect(within(device).getAllByRole("option").length).toBeGreaterThan(1));
+    expect(within(device).getByRole("option", { name: "Unnamed Echo" })).toBeInTheDocument();
+
+    await user.selectOptions(device, "Bedroom Echo");
+
+    await waitFor(() => expect(router.state.location.search).toMatchObject({ device: 2 }));
+    await waitFor(() => expect(rows().every((row) => row.textContent?.includes("Bedroom Echo"))).toBe(true));
+    expect(rows().length).toBeGreaterThan(0);
+
+    await user.selectOptions(device, "All Echos");
+    await waitFor(() => expect(router.state.location.search).not.toHaveProperty("device"));
+  });
+
+  it("opens the request named in the address", async () => {
+    renderApp("/request-log?id=1002");
+    expect(await screen.findByRole("heading", { level: 2, name: "“shuffle radiohead”" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /shuffle radiohead/, pressed: true })).toBeInTheDocument();
+  });
+
+  it("ignores filters in the address that make no sense", async () => {
+    const { router } = renderApp("/request-log?outcome=exploded&device=abc");
+    await requestList();
+    expect(router.state.location.search).toEqual({});
+    expect(screen.getByRole("combobox", { name: "Outcome" })).toHaveValue("");
+  });
+
+  it("loads older requests a page at a time", async () => {
+    const user = userEvent.setup();
+    renderApp("/request-log");
+    await requestList();
+    expect(rows()).toHaveLength(50);
+
+    await user.click(screen.getByRole("button", { name: "Load older requests" }));
+
+    await waitFor(() => expect(rows()).toHaveLength(getDb().requests.length));
+    expect(screen.queryByRole("button", { name: "Load older requests" })).not.toBeInTheDocument();
+  });
+
+  it("says when nothing has been heard yet, with what to say", async () => {
+    getDb().requests = [];
+    renderApp("/request-log");
+    expect(await screen.findByText("No requests yet")).toBeInTheDocument();
+    expect(screen.getByText(/Say “Alexa, ask encore what's playing.”/)).toBeInTheDocument();
+  });
+
+  it("says when no request matches the filters", async () => {
+    renderApp("/request-log?q=nothing-like-this");
+    expect(await screen.findByText("No matching requests")).toBeInTheDocument();
+    expect(screen.getByText("Try a different search or clear the filters.")).toBeInTheDocument();
+  });
+
+  it("shows when the live feed drops", async () => {
+    renderApp("/request-log");
+    await requestList();
+    expect(await screen.findByText(/^Live ·/)).toBeInTheDocument();
+
+    FakeEventSource.instances[0]?.onerror?.(new Event("error"));
+    expect(await screen.findByText(/^Reconnecting… ·/)).toBeInTheDocument();
+  });
+
+  it("explains an unlinked Echo's request and a silent answer", async () => {
+    const unlinked = getDb().requests.find((r) => r.id === 1003);
+    if (unlinked) unlinked.speech = "";
+    renderApp("/request-log?id=1003");
+    await screen.findByRole("heading", { level: 2, name: "“pause”" });
+
+    expect(screen.getByText("None (device not linked)")).toBeInTheDocument();
+    expect(screen.getByText(/This Echo isn't linked to a Kodi instance/)).toBeInTheDocument();
+    expect(screen.getByText("Nothing (silent).")).toBeInTheDocument();
+    expect(screen.getByText("None.")).toBeInTheDocument();
+  });
+
+  it("splits time between Encore and Kodi for requests logged without timing, and flags failed calls", async () => {
+    const request = getDb().requests.find((r) => r.id === 1002);
+    if (!request?.match) throw new Error("no sample request");
+    request.timing = null;
+    request.kodi_calls = [
+      { method: "Player.Open", ms: 140, ok: false },
+      { method: "JSONRPC.Ping", ms: 60, ok: true },
+    ];
+    request.match = { ...request.match, error: "Kodi didn't answer." };
+    renderApp("/request-log?id=1002");
+    await screen.findByRole("heading", { level: 2, name: "“shuffle radiohead”" });
+
+    expect(screen.getAllByText("Encore 6.2 s · Kodi 200 ms · total 6.4 s").length).toBeGreaterThan(0);
+    expect(screen.getByText("(failed)")).toBeInTheDocument();
+    expect(screen.getByText("Kodi didn't answer.")).toBeInTheDocument();
+  });
+
+  it("says when a match had no candidates", async () => {
+    const request = getDb().requests.find((r) => r.id === 1001);
+    if (!request?.match) throw new Error("no sample request");
+    request.match = { ...request.match, candidates: [] };
+    renderApp("/request-log?id=1001");
+    await screen.findByRole("heading", { level: 2, name: "“play hot fuzzy”" });
+    expect(screen.getByText("No candidates.")).toBeInTheDocument();
+  });
+
+  it("copies a request as JSON", async () => {
+    const user = userEvent.setup();
+    renderApp("/request-log?id=1002");
+    await screen.findByRole("heading", { level: 2, name: "“shuffle radiohead”" });
+
+    await user.click(screen.getByRole("button", { name: "Copy JSON" }));
+
+    expect(await screen.findByRole("button", { name: "Copied" })).toBeInTheDocument();
+    expect(JSON.parse(await navigator.clipboard.readText())).toMatchObject({ heard: "shuffle radiohead", id: 1002 });
+  });
+
+  it("shows a replay without Kodi calls, and a replay that fails", async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.post("*/api/v1/requests/1003/replay", () => HttpResponse.json({ match: null, speech: "", would_call: [] })),
+    );
+    renderApp("/request-log?id=1003");
+    await screen.findByRole("heading", { level: 2, name: "“pause”" });
+    await user.click(screen.getByRole("button", { name: "Replay (dry run)" }));
+    const result = await screen.findByRole("region", { name: "Replay result" });
+    expect(within(result).getByText("No Kodi calls.")).toBeInTheDocument();
+    expect(within(result).queryByText(/Alexa would say/)).not.toBeInTheDocument();
+
+    failWith("post", "/requests/1003/replay", 503, "The matcher is rebuilding its index.");
+    await user.click(screen.getByRole("button", { name: "Replay (dry run)" }));
+    const pane = screen.getByRole("region", { name: "“pause”" });
+    expect(await within(pane).findByText("The matcher is rebuilding its index.")).toBeInTheDocument();
+  });
+
+  it("offers to retry a request that fails to load", async () => {
+    const user = userEvent.setup();
+    failWith("get", "/requests/1002", 500, "Database is locked.");
+    renderApp("/request-log?id=1002");
+    expect(await screen.findByRole("alert", {}, { timeout: 4000 })).toHaveTextContent("Database is locked.");
+
+    server.resetHandlers();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByRole("heading", { level: 2, name: "“shuffle radiohead”" })).toBeInTheDocument();
   });
 });
