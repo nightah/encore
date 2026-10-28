@@ -124,4 +124,13 @@ describe("orvalFetch", () => {
     expect(error).toBeInstanceOf(ApiError);
     expect(error).toMatchObject({ message: "The Encore server could not be reached.", status: 0 });
   });
+
+  it("lets a cancelled request reject as an AbortError, not a connection error", async () => {
+    probe(() => HttpResponse.json({}));
+    const controller = new AbortController();
+    controller.abort();
+    const error = await orvalFetch("/api/v1/probe", { signal: controller.signal }).catch((e: unknown) => e);
+    expect(error).not.toBeInstanceOf(ApiError);
+    expect(error).toMatchObject({ name: "AbortError" });
+  });
 });
