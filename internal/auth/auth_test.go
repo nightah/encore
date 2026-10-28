@@ -624,6 +624,23 @@ func TestOIDCRefusals(t *testing.T) {
 		require.ErrorContains(t, err, "nonce")
 	})
 
+	t.Run("an ID token issued to another client", func(t *testing.T) {
+		f, _ := oidcFixture(t, oidctest.Options{Username: "household-admin", Audience: "someone-else"}, "")
+
+		rec, err := signIn(t, f)
+		require.ErrorContains(t, err, "verifying the ID token: ")
+		require.ErrorContains(t, err, "someone-else")
+		assert.Nil(t, cookie(rec, SessionCookie), "no session")
+	})
+
+	t.Run("no ID token at all", func(t *testing.T) {
+		f, _ := oidcFixture(t, oidctest.Options{Username: "household-admin", NoIDToken: true}, "")
+
+		rec, err := signIn(t, f)
+		require.EqualError(t, err, "the provider returned no ID token")
+		assert.Nil(t, cookie(rec, SessionCookie), "no session")
+	})
+
 	t.Run("state from another browser", func(t *testing.T) {
 		f, _ := oidcFixture(t, oidctest.Options{Username: "household-admin"}, "")
 

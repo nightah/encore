@@ -23,6 +23,10 @@ type Options struct {
 	UserInfoUsername string
 	// WrongNonce makes the ID token carry a different nonce.
 	WrongNonce bool
+	// Audience, when set, is the ID token's audience instead of the client ID, as a token issued to another client has.
+	Audience string
+	// NoIDToken leaves the ID token out of the token response, as a plain OAuth 2.0 server does.
+	NoIDToken bool
 	// AuthMethod limits how the token endpoint accepts the client secret: client_secret_basic or client_secret_post. Empty accepts either.
 	AuthMethod string
 }

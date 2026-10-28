@@ -1,6 +1,7 @@
 package oidctest
 
 import (
+	"cmp"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
@@ -145,7 +146,7 @@ func (s *Server) token(w http.ResponseWriter, r *http.Request) {
 	}
 
 	claims := map[string]any{
-		"iss": s.URL, "aud": s.opts.ClientID, "sub": s.opts.Subject, "nonce": nonce,
+		"iss": s.URL, "aud": cmp.Or(s.opts.Audience, s.opts.ClientID), "sub": s.opts.Subject, "nonce": nonce,
 		"iat": time.Now().Unix(), "exp": time.Now().Add(5 * time.Minute).Unix(),
 	}
 
@@ -164,7 +165,12 @@ func (s *Server) token(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, map[string]any{"access_token": "access-" + s.opts.Subject, "token_type": "Bearer", "expires_in": 300, "id_token": idToken})
+	resp := map[string]any{"access_token": "access-" + s.opts.Subject, "token_type": "Bearer", "expires_in": 300, "id_token": idToken}
+	if s.opts.NoIDToken {
+		delete(resp, "id_token")
+	}
+
+	writeJSON(w, resp)
 }
 
 func (s *Server) userinfo(w http.ResponseWriter, r *http.Request) {
