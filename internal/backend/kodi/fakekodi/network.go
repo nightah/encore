@@ -43,13 +43,13 @@ func (n *Network) New(t testing.TB, opts Options) *Server {
 // Client returns an HTTP client that reaches every fake on the network, over HTTP and WebSocket alike.
 func (n *Network) Client() *http.Client { return n.client }
 
-// RoundTrip implements http.RoundTripper. A host with no fake, or one that is down, refuses the connection.
+// RoundTrip implements http.RoundTripper. A fake answers on its host's ports 8080 and 9090, as Kodi does; any other address, or a fake that is down, refuses the connection.
 func (n *Network) RoundTrip(r *http.Request) (*http.Response, error) {
 	n.mu.Lock()
 	s := n.servers[r.URL.Hostname()]
 	n.mu.Unlock()
 
-	if s == nil || s.isDown() {
+	if port := r.URL.Port(); s == nil || s.isDown() || (port != "8080" && port != "9090") {
 		return nil, &net.OpError{Op: "dial", Net: "tcp", Err: syscall.ECONNREFUSED}
 	}
 

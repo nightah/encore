@@ -34,6 +34,12 @@ func TestNetwork(t *testing.T) {
 
 		_, err = n.Client().Do(req) //nolint:bodyclose // there is no response
 		require.ErrorIs(t, err, syscall.ECONNREFUSED, "a host without a fake refuses the connection")
+
+		req, err = http.NewRequestWithContext(t.Context(), http.MethodPost, "http://kodi1.test:1/jsonrpc", http.NoBody)
+		require.NoError(t, err)
+
+		_, err = n.Client().Do(req) //nolint:bodyclose // there is no response
+		require.ErrorIs(t, err, syscall.ECONNREFUSED, "a port Kodi doesn't use refuses the connection")
 	})
 }
 
