@@ -439,6 +439,10 @@ func TestSeek(t *testing.T) {
 	}
 
 	require.Error(t, b.Seek(ctx, media.Seek{Step: "sideways"}))
+
+	before := -5 * time.Second
+	require.NoError(t, b.Seek(ctx, media.Seek{To: &before}))
+	assert.JSONEq(t, `{"playerid":1,"value":{"time":{}}}`, lastParams(t, s, "Player.Seek"), "a position before the start seeks to the start")
 }
 
 func TestVolume(t *testing.T) {
@@ -465,6 +469,27 @@ func TestVolume(t *testing.T) {
 		got, err := b.Volume(ctx, st.change)
 		require.NoError(t, err)
 		assert.Equal(t, st.want, got, "%+v", st.change)
+	}
+}
+
+func TestVolumeSendsOnlyLevelsKodiAccepts(t *testing.T) {
+	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+	ctx := t.Context()
+	level := func(n int) *int { return &n }
+
+	for _, tc := range []struct {
+		name   string
+		change media.VolumeChange
+		sent   string
+	}{
+		{"a step below zero", media.VolumeChange{Step: -150}, `{"volume":0}`},
+		{"a negative level", media.VolumeChange{Set: level(-5)}, `{"volume":0}`},
+		{"a step past the top", media.VolumeChange{Step: 150}, `{"volume":100}`},
+		{"a level past the top", media.VolumeChange{Set: level(101)}, `{"volume":100}`},
+	} {
+		_, err := b.Volume(ctx, tc.change)
+		require.NoError(t, err, tc.name)
+		assert.JSONEq(t, tc.sent, lastParams(t, s, "Application.SetVolume"), tc.name)
 	}
 }
 
@@ -553,6 +578,12 @@ func TestTranslate(t *testing.T) {
 		{"VideoLibrary.OnUpdate", `{"data":{"item":{"id":9,"type":"musicvideo"},"playcount":1}}`, media.Event{Kind: media.EventItemUpdated, Ref: media.Ref{Kind: media.KindMusicVideo, ID: 9}}, true},
 		{"VideoLibrary.OnUpdate", `{"data":{"id":2,"type":"set"}}`, media.Event{}, false},
 		{"VideoLibrary.OnUpdate", `not json`, media.Event{}, false},
+		{"VideoLibrary.OnUpdate", `{"data":{"id":0,"type":"movie"}}`, media.Event{}, false},
+		{"VideoLibrary.OnRemove", `{"data":{"item":{"type":"episode"}}}`, media.Event{}, false},
+		{"VideoLibrary.OnScanFinished", `{}`, media.Event{Kind: media.EventLibraryScanned}, true},
+		{"Player.OnPlay", `{"data":{"item":{"type":"movie","id":0}}}`, media.Event{Kind: media.EventPlaybackStarted}, true},
+		{"Player.OnPlay", `{"data":{"item":{"type":"episode","id":7}}}`, media.Event{Kind: media.EventPlaybackStarted, Ref: media.Ref{Kind: media.KindEpisode, ID: 7}}, true},
+		{"System.OnWake", `{}`, media.Event{Kind: media.EventConnected}, true},
 		{"AudioLibrary.OnRemove", `{"data":{"id":5,"type":"album"}}`, media.Event{Kind: media.EventItemRemoved, Ref: media.Ref{Kind: media.KindAlbum, ID: 5}}, true},
 		{"Player.OnPlay", `{"data":{"item":{"type":"channel","id":3},"player":{"playerid":1}}}`, media.Event{Kind: media.EventPlaybackStarted}, true},
 		{"Player.OnStop", `{"data":{"end":true}}`, media.Event{Kind: media.EventPlaybackStopped}, true},

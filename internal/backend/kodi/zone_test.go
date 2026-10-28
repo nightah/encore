@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestUTCOffset(t *testing.T) {
@@ -21,6 +22,46 @@ func TestUTCOffset(t *testing.T) {
 	assert.Equal(t, 5*time.Hour+30*time.Minute, utcOffset(tod(10, 0, 4), at(4, 30)), "India")
 	assert.Equal(t, 5*time.Hour+45*time.Minute, utcOffset(tod(10, 14, 50), at(4, 30)), "Nepal, with a slow reply")
 	assert.Zero(t, utcOffset(tod(4, 29, 58), at(4, 30)))
+	assert.Equal(t, 13*time.Hour, utcOffset(tod(17, 30, 0), at(4, 30)), "Tonga, on the same UTC day")
+	assert.Equal(t, 14*time.Hour, utcOffset(tod(18, 0, 0), at(4, 0)), "Kiribati is the furthest ahead")
+	assert.Equal(t, -12*time.Hour, utcOffset(tod(8, 0, 0), at(20, 0)), "Baker Island is the furthest behind")
+	assert.Equal(t, 11*time.Hour, utcOffset(tod(10, 0, 0), at(23, 0)), "thirteen hours behind is read as eleven ahead")
+}
+
+func TestZoneRelearnsWhenDue(t *testing.T) {
+	now := time.Date(2026, 10, 26, 4, 30, 0, 0, time.UTC)
+	z := newZone(nil)
+	z.now = func() time.Time { return now }
+
+	local := time.Date(2026, 10, 26, 15, 30, 0, 0, time.UTC)
+	calls := 0
+	clock := func(context.Context) (time.Time, bool, error) {
+		calls++
+
+		return local, true, nil
+	}
+
+	offset := func() int {
+		_, off := time.Date(2026, 1, 1, 0, 0, 0, 0, z.location()).Zone()
+
+		return off
+	}
+
+	z.refresh(t.Context(), clock)
+	require.Equal(t, 11*3600, offset())
+
+	// Melbourne leaves daylight saving.
+	now = now.Add(zoneRelearn - time.Second)
+	local = now.Add(10 * time.Hour)
+	z.refresh(t.Context(), clock)
+	assert.Equal(t, 1, calls, "not due yet")
+	assert.Equal(t, 11*3600, offset())
+
+	now = now.Add(time.Second)
+	local = now.Add(10 * time.Hour)
+	z.refresh(t.Context(), clock)
+	assert.Equal(t, 2, calls)
+	assert.Equal(t, 10*3600, offset(), "the new offset is learned")
 }
 
 func TestZoneRefresh(t *testing.T) {
