@@ -1197,12 +1197,16 @@ describe("setup Amazon step", () => {
     startAt(4);
     getDb().skill.amazon.connected = false;
     getDb().skill.endpoint.url = "not a url";
+    getDb().skill.amazon.profile_client_id = "amzn1.application-oa2-client.loaded";
     failWith("get", "/skill/amazon/authorize", 500, "Amazon is unavailable.");
     renderApp("/setup");
     await heading("Connect your Amazon developer account");
 
+    // Once the skill has loaded, so the return URL comes from its endpoint rather than this page's address.
+    await waitFor(() => expect(screen.getByLabelText("Client ID")).toHaveValue("amzn1.application-oa2-client.loaded"));
     expect(await screen.findByText("Under Web Settings, add this Allowed Return URL:")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Copy return URL" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Copy return URL/ })).not.toBeInTheDocument();
+    expect(screen.queryByText(/oauth\/lwa\/callback/)).not.toBeInTheDocument();
   });
 
   it("connects with a pasted refresh token without HTTPS", async () => {
