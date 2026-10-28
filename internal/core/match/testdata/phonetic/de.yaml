@@ -1,0 +1,132 @@
+# German (de-DE) phonetic evaluation corpus for TestPhoneticEval, a second library alongside the German suite in asr_corpus.yaml. Same schema; cases are scored, not asserted, so there is no xfail.
+#
+# Library: real, well-known German films, series and artists (titles as published, with their original release years), with near neighbours (shared first names, shared words) so a wrong play is possible.
+#
+# Cases: what a speech recogniser plausibly writes when a German speaker asks for the title. Each mishearing is tagged with the confusion it models. The classes are documented German spelling-to-sound ambiguities: final devoicing (d/t, g/k, b/p, and -ig said as -ich), f/v/ph and w/v, ei/ai and eu/äu/oi, ie/i and long vowels marked with h or doubling, x/chs/cks, c/k/z, y/i, plus word splits and merges in compounds. Controls (exact titles) and absent titles (not_found) keep the decision thresholds honest.
+#
+# This corpus was frozen before any in-tree encoder was evaluated; changing it after seeing an encoder's results invalidates the comparison.
+suites:
+  - name: german library 2
+    lang: de
+    library:
+      - {id: experiment, kind: movie, title: "Das Experiment", year: 2001}
+      - {id: baader, kind: movie, title: "Der Baader Meinhof Komplex", year: 2008}
+      - {id: lammbock, kind: movie, title: "Lammbock", year: 2001}
+      - {id: sonnenallee, kind: movie, title: "Sonnenallee", year: 1999}
+      - {id: erdmann, kind: movie, title: "Toni Erdmann", year: 2016}
+      - {id: systemsprenger, kind: movie, title: "Systemsprenger", year: 2019}
+      - {id: parfum, kind: movie, title: "Das Parfum – Die Geschichte eines Mörders", year: 2006}
+      - {id: afrika, kind: movie, title: "Nirgendwo in Afrika", year: 2001}
+      - {id: welle, kind: movie, title: "Die Welle", year: 2008}
+      - {id: kokowaeaeh, kind: movie, title: "Kokowääh", year: 2011}
+      - {id: honig, kind: movie, title: "Honig im Kopf", year: 2014}
+      - {id: vorname, kind: movie, title: "Der Vorname", year: 2018}
+      - {id: feuerzangen, kind: movie, title: "Die Feuerzangenbowle", year: 1944}
+      - {id: sissi, kind: movie, title: "Sissi", year: 1955}
+      - {id: babylon, kind: tvshow, title: "Babylon Berlin", year: 2017}
+      - {id: dark, kind: tvshow, title: "Dark", year: 2017}
+      - {id: tatortreiniger, kind: tvshow, title: "Der Tatortreiniger", year: 2011}
+      - {id: stromberg, kind: tvshow, title: "Stromberg", year: 2004}
+      - {id: pastewka, kind: tvshow, title: "Pastewka", year: 2005}
+      - {id: loewenzahn, kind: tvshow, title: "Löwenzahn", year: 1981}
+      - {id: benjamin, kind: tvshow, title: "Benjamin Blümchen", year: 1988}
+      - {id: bibiblocksberg, kind: tvshow, title: "Bibi Blocksberg", year: 1997}
+      - {id: pumuckl, kind: tvshow, title: "Meister Eder und sein Pumuckl", aliases: ["Pumuckl"], year: 1982}
+      - {id: helene, kind: artist, title: "Helene Fischer"}
+      - {id: nena, kind: artist, title: "Nena"}
+      - {id: kraftwerk, kind: artist, title: "Kraftwerk"}
+      - {id: tokiohotel, kind: artist, title: "Tokio Hotel"}
+      - {id: peterfox, kind: artist, title: "Peter Fox"}
+      - {id: seeed, kind: artist, title: "Seeed"}
+      - {id: naidoo, kind: artist, title: "Xavier Naidoo"}
+      - {id: lindenberg, kind: artist, title: "Udo Lindenberg"}
+      - {id: jurgens, kind: artist, title: "Udo Jürgens"}
+      - {id: raabe, kind: artist, title: "Max Raabe"}
+      - {id: giesinger, kind: artist, title: "Max Giesinger"}
+      - {id: bourani, kind: artist, title: "Andreas Bourani"}
+      - {id: forster, kind: artist, title: "Mark Forster"}
+      - {id: wincent, kind: artist, title: "Wincent Weiss"}
+      - {id: cro, kind: artist, title: "Cro"}
+      - {id: silbermond, kind: artist, title: "Silbermond"}
+      - {id: helden, kind: artist, title: "Wir sind Helden"}
+      - {id: reim, kind: artist, title: "Matthias Reim"}
+      - {id: kaiser, kind: artist, title: "Roland Kaiser"}
+      - {id: petry, kind: artist, title: "Wolfgang Petry"}
+      - {id: poisel, kind: artist, title: "Philipp Poisel"}
+      - {id: clueso, kind: artist, title: "Clueso"}
+      - {id: amk, kind: artist, title: "AnnenMayKantereit"}
+      - {id: revolverheld, kind: artist, title: "Revolverheld"}
+      - {id: unheilig, kind: artist, title: "Unheilig"}
+      - {id: sportfreunde, kind: artist, title: "Sportfreunde Stiller"}
+      - {id: hosen, kind: artist, title: "Die Toten Hosen"}
+    cases:
+      # Controls: the title as written.
+      - {heard: "helene fischer", want: play, id: helene}
+      - {heard: "kraftwerk", want: play, id: kraftwerk}
+      - {heard: "tokio hotel", want: play, id: tokiohotel}
+      - {heard: "das experiment", want: play, id: experiment}
+      - {heard: "die welle", want: play, id: welle}
+      - {heard: "honig im kopf", want: play, id: honig}
+      - {heard: "nena", want: play, id: nena}
+      - {heard: "die toten hosen", want: play, id: hosen}
+      # Final devoicing and -ig as -ich.
+      - {heard: "kraftwerg", want: play, id: kraftwerk}
+      - {heard: "udo lindenberk", want: play, id: lindenberg}
+      - {heard: "silbermont", want: play, id: silbermond}
+      - {heard: "wir sint helden", want: play, id: helden}
+      - {heard: "stromberk", want: play, id: stromberg}
+      - {heard: "unheilich", want: play, id: unheilig}
+      - {heard: "honich im kopf", want: play, id: honig}
+      - {heard: "toni ertmann", want: play, id: erdmann}
+      - {heard: "nirgentwo in afrika", want: play, id: afrika}
+      # f / v / ph and w / v.
+      - {heard: "helene vischer", want: play, id: helene}
+      - {heard: "peter vox", want: play, id: peterfox}
+      - {heard: "mark vorster", want: play, id: forster}
+      - {heard: "vincent weiss", want: play, id: wincent}
+      - {heard: "der forname", want: play, id: vorname}
+      - {heard: "filipp poisel", want: play, id: poisel}
+      - {heard: "pastefka", want: play, id: pastewka}
+      - {heard: "lövenzahn", want: play, id: loewenzahn}
+      - {heard: "die feuerzangenbole", want: play, id: feuerzangen}
+      # ei / ai, eu / oi, ie / i, ou / u, y / i, long vowels.
+      - {heard: "roland keiser", want: play, id: kaiser}
+      - {heard: "matthias raim", want: play, id: reim}
+      - {heard: "xavier neidoo", want: play, id: naidoo}
+      - {heard: "sportfroinde stiller", want: play, id: sportfreunde}
+      - {heard: "max gisinger", want: play, id: giesinger}
+      - {heard: "andreas burani", want: play, id: bourani}
+      - {heard: "wolfgang petri", want: play, id: petry}
+      - {heard: "tokyo hotel", want: play, id: tokiohotel}
+      - {heard: "tony erdmann", want: play, id: erdmann}
+      - {heard: "max rabe", want: play, id: raabe}
+      - {heard: "seed", want: play, id: seeed}
+      - {heard: "löwenzan", want: play, id: loewenzahn}
+      - {heard: "babilon berlin", want: play, id: babylon}
+      - {heard: "sisi", want: play, id: sissi}
+      # x / chs / cks, c / k, z / ts, doubled consonants.
+      - {heard: "bibi bloxberg", want: play, id: bibiblocksberg}
+      - {heard: "macks raabe", want: play, id: raabe}
+      - {heard: "kro", want: play, id: cro}
+      - {heard: "klueso", want: play, id: clueso}
+      - {heard: "marc forster", want: play, id: forster}
+      - {heard: "pumuckel", want: play, id: pumuckl}
+      - {heard: "der bader meinhof komplex", want: play, id: baader}
+      - {heard: "kokowäh", want: play, id: kokowaeaeh}
+      - {heard: "pastevka", want: play, id: pastewka}
+      # Splits and merges in compounds.
+      - {heard: "annen may kantereit", want: play, id: amk}
+      - {heard: "revolver held", want: play, id: revolverheld}
+      - {heard: "lamm bock", want: play, id: lammbock}
+      - {heard: "sonnen allee", want: play, id: sonnenallee}
+      - {heard: "system sprenger", want: play, id: systemsprenger}
+      - {heard: "der tatort reiniger", want: play, id: tatortreiniger}
+      # Ambiguous: ask.
+      - {heard: "udo", want: ask, among: [lindenberg, jurgens]}
+      - {heard: "max", want: ask, among: [raabe, giesinger]}
+      # Absent titles.
+      - {heard: "das boot", want: not_found}
+      - {heard: "rammstein", want: not_found}
+      - {heard: "die drei fragezeichen", want: not_found}
+      - {heard: "der untergang", want: not_found}
+      - {heard: "herbert grönemeyer", want: not_found}

@@ -1,0 +1,141 @@
+# French (fr-FR) phonetic evaluation corpus for TestPhoneticEval. Same schema as asr_corpus.yaml; cases are scored, not asserted, so there is no xfail.
+#
+# Library: real, well-known French films, series and artists (titles as published, with their original release years), with near neighbours (sequels, shared words) so a wrong play is possible.
+#
+# Cases: what a speech recogniser plausibly writes when a French speaker asks for the title. Each mishearing is tagged with the confusion it models. The classes come from documented French spelling-to-sound ambiguity, which is what ASR language models trip over when a name is out of vocabulary or a homophone is more frequent: silent final consonants and plural -s/-x/-t (cons/con, sources/source), the é/er/ez/es homophones (bronzés/bronzer), nasal vowel spellings (an/en, ain/ein/in), eau/au/o and è/ai/ei, silent h, c/ç/s/ss and qu/k/c, ch/sh, gn/ni, word splits and merges, and real-word substitutions (cent/sang/sans, arnacœur/arnaqueur, Kaamelott/Camelot). Controls (exact titles) and absent titles (not_found, missing sequels) keep the decision thresholds honest.
+#
+# This corpus was frozen before any French encoder was written; changing it after seeing an encoder's results invalidates the comparison.
+suites:
+  - name: french library
+    lang: fr
+    library:
+      - {id: amelie, kind: movie, title: "Le Fabuleux Destin d'Amélie Poulain", year: 2001}
+      - {id: intouchables, kind: movie, title: "Intouchables", year: 2011}
+      - {id: bronzes, kind: movie, title: "Les Bronzés", year: 1978}
+      - {id: bronzesski, kind: movie, title: "Les Bronzés font du ski", year: 1979}
+      - {id: diner, kind: movie, title: "Le Dîner de cons", year: 1998}
+      - {id: visiteurs, kind: movie, title: "Les Visiteurs", year: 1993}
+      - {id: visiteurs2, kind: movie, title: "Les Visiteurs 2 : Les Couloirs du temps", year: 1998}
+      - {id: chtis, kind: movie, title: "Bienvenue chez les Ch'tis", year: 2008}
+      - {id: choristes, kind: movie, title: "Les Choristes", year: 2004}
+      - {id: haine, kind: movie, title: "La Haine", year: 1995}
+      - {id: vadrouille, kind: movie, title: "La Grande Vadrouille", year: 1966}
+      - {id: cleopatre, kind: movie, title: "Astérix & Obélix : Mission Cléopâtre", year: 2002}
+      - {id: cite, kind: movie, title: "La Cité de la peur", year: 1994}
+      - {id: tontons, kind: movie, title: "Les Tontons flingueurs", year: 1963}
+      - {id: grandbleu, kind: movie, title: "Le Grand Bleu", year: 1988}
+      - {id: leon, kind: movie, title: "Léon", year: 1994}
+      - {id: oss117, kind: movie, title: "OSS 117 : Le Caire, nid d'espions", year: 2006}
+      - {id: taxi, kind: movie, title: "Taxi", year: 1998}
+      - {id: taxi2, kind: movie, title: "Taxi 2", year: 2000}
+      - {id: bondieu, kind: movie, title: "Qu'est-ce qu'on a fait au Bon Dieu ?", year: 2014}
+      - {id: cyrano, kind: movie, title: "Cyrano de Bergerac", year: 1990}
+      - {id: florette, kind: movie, title: "Jean de Florette", year: 1986}
+      - {id: manon, kind: movie, title: "Manon des sources", year: 1986}
+      - {id: huitfemmes, kind: movie, title: "8 femmes", year: 2002}
+      - {id: arnacoeur, kind: movie, title: "L'Arnacœur", year: 2010}
+      - {id: nicolas, kind: movie, title: "Le Petit Nicolas", year: 2009}
+      - {id: mome, kind: movie, title: "La Môme", year: 2007}
+      - {id: kaamelott, kind: tvshow, title: "Kaamelott", year: 2005}
+      - {id: dixpourcent, kind: tvshow, title: "Dix pour cent", year: 2015}
+      - {id: bureau, kind: tvshow, title: "Le Bureau des légendes", year: 2015}
+      - {id: lupin, kind: tvshow, title: "Lupin", year: 2021}
+      - {id: engrenages, kind: tvshow, title: "Engrenages", year: 2005}
+      - {id: pblv, kind: tvshow, title: "Plus belle la vie", year: 2004}
+      - {id: camera, kind: tvshow, title: "Caméra Café", year: 2001}
+      - {id: revenants, kind: tvshow, title: "Les Revenants", year: 2012}
+      - {id: baronnoir, kind: tvshow, title: "Baron noir", year: 2016}
+      - {id: stromae, kind: artist, title: "Stromae"}
+      - {id: indochine, kind: artist, title: "Indochine"}
+      - {id: celine, kind: artist, title: "Céline Dion"}
+      - {id: mylene, kind: artist, title: "Mylène Farmer"}
+      - {id: johnny, kind: artist, title: "Johnny Hallyday"}
+      - {id: piaf, kind: artist, title: "Édith Piaf"}
+      - {id: aznavour, kind: artist, title: "Charles Aznavour"}
+      - {id: goldman, kind: artist, title: "Jean-Jacques Goldman"}
+      - {id: angele, kind: artist, title: "Angèle"}
+      - {id: aya, kind: artist, title: "Aya Nakamura"}
+      - {id: orelsan, kind: artist, title: "Orelsan"}
+      - {id: zaz, kind: artist, title: "Zaz"}
+      - {id: gainsbourg, kind: artist, title: "Serge Gainsbourg"}
+      - {id: brel, kind: artist, title: "Jacques Brel"}
+      - {id: daftpunk, kind: artist, title: "Daft Punk"}
+      - {id: christine, kind: artist, title: "Christine and the Queens"}
+      - {id: vianney, kind: artist, title: "Vianney"}
+      - {id: telephone, kind: artist, title: "Téléphone"}
+      - {id: noirdesir, kind: artist, title: "Noir Désir"}
+    cases:
+      # Controls: the title as written.
+      - {heard: "le fabuleux destin d'amélie poulain", want: play, id: amelie}
+      - {heard: "intouchables", want: play, id: intouchables}
+      - {heard: "kaamelott", want: play, id: kaamelott}
+      - {heard: "les bronzés font du ski", want: play, id: bronzesski}
+      - {heard: "stromae", want: play, id: stromae}
+      - {heard: "la môme", want: play, id: mome}
+      - {heard: "huit femmes", want: play, id: huitfemmes}
+      - {heard: "taxi deux", want: play, id: taxi2}
+      - {heard: "angèle", want: play, id: angele}
+      # Silent final consonants and plural marks.
+      - {heard: "intouchable", want: play, id: intouchables}
+      - {heard: "le dîner de con", want: play, id: diner}
+      - {heard: "les visiteur", want: play, id: visiteurs}
+      - {heard: "les choriste", want: play, id: choristes}
+      - {heard: "les tontons flingueur", want: play, id: tontons}
+      - {heard: "le bureau des légende", want: play, id: bureau}
+      - {heard: "les revenant", want: play, id: revenants}
+      - {heard: "engrenage", want: play, id: engrenages}
+      - {heard: "manon des source", want: play, id: manon}
+      - {heard: "le gran bleu", want: play, id: grandbleu}
+      - {heard: "le petit nicola", want: play, id: nicolas}
+      - {heard: "taxis", want: play, id: taxi}
+      - {heard: "noir désirs", want: play, id: noirdesir}
+      - {heard: "serge gainsbour", want: play, id: gainsbourg}
+      - {heard: "baron noire", want: play, id: baronnoir}
+      - {heard: "qu'est-ce qu'on a fait au bon dieux", want: play, id: bondieu}
+      # é / er / ez / ée homophones.
+      - {heard: "les bronzer", want: play, id: bronzes}
+      - {heard: "la citée de la peur", want: play, id: cite}
+      - {heard: "vianné", want: play, id: vianney}
+      - {heard: "noir désiré", want: play, id: noirdesir}
+      # Real-word homophone substitutions.
+      - {heard: "dix pour sang", want: play, id: dixpourcent}
+      - {heard: "dix pour sans", want: play, id: dixpourcent}
+      - {heard: "l'arnaqueur", want: play, id: arnacoeur}
+      - {heard: "camelot", want: play, id: kaamelott}
+      - {heard: "jean de floret", want: play, id: florette}
+      # Vowel spellings: eau/au/o, è/ai/ei, ou/u, eur/er.
+      - {heard: "mylène farmeur", want: play, id: mylene}
+      - {heard: "céline dionne", want: play, id: celine}
+      - {heard: "jacques braile", want: play, id: brel}
+      - {heard: "aya nakamoura", want: play, id: aya}
+      - {heard: "édith piaffe", want: play, id: piaf}
+      # Nasal vowels: an/en, ain/ein/in.
+      - {heard: "lupain", want: play, id: lupin}
+      - {heard: "serge ginsbourg", want: play, id: gainsbourg}
+      - {heard: "ange elle", want: play, id: angele}
+      - {heard: "en grenage", want: play, id: engrenages}
+      # Silent h.
+      - {heard: "johnny alliday", want: play, id: johnny}
+      - {heard: "johnny holiday", want: play, id: johnny}
+      - {heard: "la aine", want: play, id: haine}
+      # c / s / z and qu / k, ch / sh.
+      - {heard: "syrano de bergerac", want: play, id: cyrano}
+      - {heard: "charles asnavour", want: play, id: aznavour}
+      - {heard: "bienvenue chez les shtis", want: play, id: chtis}
+      - {heard: "mission cléopatre", want: play, id: cleopatre}
+      - {heard: "jean jacques goldmann", want: play, id: goldman}
+      - {heard: "caméra caffé", want: play, id: camera}
+      # Splits and merges.
+      - {heard: "orel san", want: play, id: orelsan}
+      - {heard: "indo chine", want: play, id: indochine}
+      - {heard: "christine and the queen", want: play, id: christine}
+      - {heard: "o s s cent dix sept", want: play, id: oss117}
+      # Missing sequels: ask.
+      - {heard: "les bronzés trois", want: ask}
+      - {heard: "taxi cinq", want: ask}
+      # Absent titles.
+      - {heard: "les misérables", want: not_found}
+      - {heard: "la boum", want: not_found}
+      - {heard: "camping", want: not_found}
+      - {heard: "le grand restaurant", want: not_found}
+      - {heard: "jul", want: not_found}

@@ -1,0 +1,127 @@
+# Spanish (es-ES) phonetic evaluation corpus for TestPhoneticEval. Same schema as asr_corpus.yaml; cases are scored, not asserted, so there is no xfail.
+#
+# Library: real, well-known Spanish films, series and artists (titles as published, with their original release years), with near neighbours so a wrong play is possible.
+#
+# Cases: what a speech recogniser plausibly writes when a Spanish speaker asks for the title. Each mishearing is tagged with the confusion it models. The classes are the documented sound mergers of peninsular and southern Spanish, which leave several spellings for one sound: betacism (b and v are both /b/), silent h, yeísmo (ll and y merge), seseo and ceceo (c before e/i, z and s), aspiration or loss of syllable-final s, loss of intervocalic d, qu/k/c and gu/g, plus word splits and merges and real-word substitutions (Joan/Juan, vis/bis, cerrados/serrados). Controls (exact titles) and absent titles (not_found, missing sequels) keep the decision thresholds honest.
+#
+# This corpus was frozen before any Spanish encoder was written; changing it after seeing an encoder's results invalidates the comparison.
+suites:
+  - name: spanish library
+    lang: es
+    library:
+      - {id: volver, kind: movie, title: "Volver", year: 2006}
+      - {id: hable, kind: movie, title: "Hable con ella", year: 2002}
+      - {id: madre, kind: movie, title: "Todo sobre mi madre", year: 1999}
+      - {id: mujeres, kind: movie, title: "Mujeres al borde de un ataque de nervios", year: 1988}
+      - {id: laberinto, kind: movie, title: "El laberinto del fauno", year: 2006}
+      - {id: otros, kind: movie, title: "Los otros", year: 2001}
+      - {id: orfanato, kind: movie, title: "El orfanato", year: 2007}
+      - {id: maradentro, kind: movie, title: "Mar adentro", year: 2004}
+      - {id: apellidos, kind: movie, title: "Ocho apellidos vascos", year: 2014}
+      - {id: apellidos2, kind: movie, title: "Ocho apellidos catalanes", year: 2015}
+      - {id: campeones, kind: movie, title: "Campeones", year: 2018}
+      - {id: celda, kind: movie, title: "Celda 211", year: 2009}
+      - {id: abreojos, kind: movie, title: "Abre los ojos", year: 1997}
+      - {id: torrente, kind: movie, title: "Torrente, el brazo tonto de la ley", year: 1998}
+      - {id: secreto, kind: movie, title: "El secreto de sus ojos", year: 2009}
+      - {id: vivir, kind: movie, title: "Vivir es fácil con los ojos cerrados", year: 2013}
+      - {id: relatos, kind: movie, title: "Relatos salvajes", year: 2014}
+      - {id: papel, kind: tvshow, title: "La casa de papel", year: 2017}
+      - {id: elite, kind: tvshow, title: "Élite", year: 2018}
+      - {id: visavis, kind: tvshow, title: "Vis a vis", year: 2015}
+      - {id: serrano, kind: tvshow, title: "Los Serrano", year: 2003}
+      - {id: aqui, kind: tvshow, title: "Aquí no hay quien viva", year: 2003}
+      - {id: cuentame, kind: tvshow, title: "Cuéntame cómo pasó", year: 2001}
+      - {id: ministerio, kind: tvshow, title: "El ministerio del tiempo", year: 2015}
+      - {id: velvet, kind: tvshow, title: "Velvet", year: 2014}
+      - {id: granhotel, kind: tvshow, title: "Gran Hotel", year: 2011}
+      - {id: hospital, kind: tvshow, title: "Hospital Central", year: 2000}
+      - {id: veneno, kind: tvshow, title: "Veneno", year: 2020}
+      - {id: paquita, kind: tvshow, title: "Paquita Salas", year: 2016}
+      - {id: isabel, kind: tvshow, title: "Isabel", year: 2012}
+      - {id: rosalia, kind: artist, title: "Rosalía"}
+      - {id: sanz, kind: artist, title: "Alejandro Sanz"}
+      - {id: heroes, kind: artist, title: "Héroes del Silencio"}
+      - {id: mecano, kind: artist, title: "Mecano"}
+      - {id: bunbury, kind: artist, title: "Enrique Bunbury"}
+      - {id: julio, kind: artist, title: "Julio Iglesias"}
+      - {id: enrique, kind: artist, title: "Enrique Iglesias"}
+      - {id: serrat, kind: artist, title: "Joan Manuel Serrat"}
+      - {id: sabina, kind: artist, title: "Joaquín Sabina"}
+      - {id: estopa, kind: artist, title: "Estopa"}
+      - {id: vetusta, kind: artist, title: "Vetusta Morla"}
+      - {id: oreja, kind: artist, title: "La Oreja de Van Gogh"}
+      - {id: alboran, kind: artist, title: "Pablo Alborán"}
+      - {id: bisbal, kind: artist, title: "David Bisbal"}
+      - {id: melendi, kind: artist, title: "Melendi"}
+      - {id: quevedo, kind: artist, title: "Quevedo"}
+      - {id: aitana, kind: artist, title: "Aitana"}
+      - {id: tangana, kind: artist, title: "C. Tangana"}
+      - {id: camela, kind: artist, title: "Camela"}
+      - {id: fito, kind: artist, title: "Fito & Fitipaldis"}
+    cases:
+      # Controls: the title as written.
+      - {heard: "la casa de papel", want: play, id: papel}
+      - {heard: "volver", want: play, id: volver}
+      - {heard: "élite", want: play, id: elite}
+      - {heard: "rosalía", want: play, id: rosalia}
+      - {heard: "los serrano", want: play, id: serrano}
+      - {heard: "mecano", want: play, id: mecano}
+      - {heard: "estopa", want: play, id: estopa}
+      - {heard: "c tangana", want: play, id: tangana}
+      - {heard: "cuéntame como paso", want: play, id: cuentame}
+      # Betacism: b and v.
+      - {heard: "bis a bis", want: play, id: visavis}
+      - {heard: "betusta morla", want: play, id: vetusta}
+      - {heard: "beneno", want: play, id: veneno}
+      - {heard: "belbet", want: play, id: velvet}
+      - {heard: "bolber", want: play, id: volver}
+      - {heard: "isavel", want: play, id: isabel}
+      - {heard: "joaquín savina", want: play, id: sabina}
+      - {heard: "pablo alvorán", want: play, id: alboran}
+      - {heard: "el laverinto del fauno", want: play, id: laberinto}
+      - {heard: "relatos salbajes", want: play, id: relatos}
+      - {heard: "aquí no hay quien biba", want: play, id: aqui}
+      - {heard: "mujeres al borde de un ataque de nerbios", want: play, id: mujeres}
+      - {heard: "ocho apellidos bascos", want: play, id: apellidos}
+      # Silent h.
+      - {heard: "able con ella", want: play, id: hable}
+      - {heard: "eroes del silencio", want: play, id: heroes}
+      - {heard: "ospital central", want: play, id: hospital}
+      - {heard: "gran otel", want: play, id: granhotel}
+      - {heard: "habre los ojos", want: play, id: abreojos}
+      # Yeísmo: ll and y.
+      - {heard: "hable con eya", want: play, id: hable}
+      - {heard: "ocho apeyidos vascos", want: play, id: apellidos}
+      - {heard: "aytana", want: play, id: aitana}
+      # Seseo and ceceo: c, z and s.
+      - {heard: "alejandro sans", want: play, id: sanz}
+      - {heard: "selda 211", want: play, id: celda}
+      - {heard: "david bizbal", want: play, id: bisbal}
+      - {heard: "bibir es fácil con los ojos serrados", want: play, id: vivir}
+      # Aspirated or dropped final s, dropped intervocalic d.
+      - {heard: "julio iglesia", want: play, id: julio}
+      - {heard: "paquita sala", want: play, id: paquita}
+      - {heard: "lo otro", want: play, id: otros}
+      - {heard: "el secreto de su ojos", want: play, id: secreto}
+      - {heard: "todo sobre mi mare", want: play, id: madre}
+      # qu / k, g / j, vowel raising, rr / r.
+      - {heard: "kevedo", want: play, id: quevedo}
+      - {heard: "campiones", want: play, id: campeones}
+      - {heard: "torente", want: play, id: torrente}
+      - {heard: "la oreja de ban gog", want: play, id: oreja}
+      - {heard: "enrique bumbury", want: play, id: bunbury}
+      # Real-word substitutions, splits and merges.
+      - {heard: "juan manuel serrat", want: play, id: serrat}
+      - {heard: "mar a dentro", want: play, id: maradentro}
+      - {heard: "fito y fitipaldi", want: play, id: fito}
+      - {heard: "el ministerio de tiempo", want: play, id: ministerio}
+      # Ambiguous or missing: ask.
+      - {heard: "iglesias", want: ask, among: [julio, enrique]}
+      - {heard: "torrente dos", want: ask}
+      # Absent titles.
+      - {heard: "los lunes al sol", want: not_found}
+      - {heard: "el hoyo", want: not_found}
+      - {heard: "la que se avecina", want: not_found}
+      - {heard: "mar de plástico", want: not_found}
+      - {heard: "bebe", want: not_found}
