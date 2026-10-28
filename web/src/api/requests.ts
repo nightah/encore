@@ -48,5 +48,5 @@ export function useRequest(id: number | undefined) {
 }
 
 export function useReplayRequest() {
-  return useMutation({ mutationFn: (id: number) => replayRequest(id) });
+  return useMutation({ meta: { inline: true }, mutationFn: (id: number) => replayRequest(id) });
 }

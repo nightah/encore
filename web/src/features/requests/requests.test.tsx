@@ -450,6 +450,9 @@ describe("Request log", () => {
     await user.click(screen.getByRole("button", { name: "Replay (dry run)" }));
     const pane = screen.getByRole("region", { name: "“pause”" });
     expect(await within(pane).findByText("The matcher is rebuilding its index.")).toBeInTheDocument();
+    // Shown next to the button only, not again in a toast.
+    expect(screen.queryByText("That didn't work")).not.toBeInTheDocument();
+    expect(screen.getAllByText("The matcher is rebuilding its index.")).toHaveLength(1);
   });
 
   it("offers to retry a request that fails to load", async () => {
