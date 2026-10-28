@@ -30,7 +30,10 @@ func TestQueue(t *testing.T) {
 	assert.JSONEq(t, `{"playlistid":1,"item":[{"episodeid":102},{"movieid":1},{"musicvideoid":1}]}`, lastParams(t, s, "Playlist.Add"))
 
 	require.ErrorIs(t, b.Queue(ctx, []media.Ref{{Kind: media.KindSong, ID: 1}, {Kind: media.KindMovie, ID: 1}}), errMixedQueue)
+
+	clears := len(s.CallsTo("Playlist.Clear"))
 	require.ErrorIs(t, b.Queue(ctx, nil), media.ErrNotFound)
+	assert.Len(t, s.CallsTo("Playlist.Clear"), clears, "nothing to queue leaves the playlist as it was")
 	require.ErrorIs(t, b.Queue(ctx, []media.Ref{{Kind: media.KindAlbum, ID: 1}}), errUnsupportedKind)
 }
 
