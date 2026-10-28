@@ -54,3 +54,20 @@ func after(t *testing.T, d time.Duration, cond func() bool, msgAndArgs ...any) {
 	time.Sleep(d)
 	settled(t, cond, msgAndArgs...)
 }
+
+// soon moves the bubble's clock on a little at a time until cond holds, for waits whose exact time the test doesn't pin; it fails after a fake minute.
+func soon(t *testing.T, cond func() bool, msgAndArgs ...any) {
+	t.Helper()
+
+	for range time.Minute / (10 * time.Millisecond) {
+		synctest.Wait()
+
+		if cond() {
+			return
+		}
+
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	require.True(t, cond(), msgAndArgs...)
+}

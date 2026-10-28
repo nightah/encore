@@ -90,149 +90,158 @@ func runtimeMembers(a *App) map[string][]int64 {
 }
 
 func TestLibraryGroupChangesThatCannotBeSaved(t *testing.T) {
-	lib := testLibrary(30, 0, "2024-01-01 10:00:00")
-	loungeKodi, bedroomKodi := fakekodi.New(t, fakekodi.Options{Library: lib}), fakekodi.New(t, fakekodi.Options{Library: lib})
+	inBubble(t, func(t *testing.T) {
+		lib := testLibrary(30, 0, "2024-01-01 10:00:00")
+		loungeKodi, bedroomKodi := newKodi(t, fakekodi.Options{Library: lib}), newKodi(t, fakekodi.Options{Library: lib})
 
-	cfg, faults := faultyConfig(t, kodiConfig("Lounge", loungeKodi, ""), kodiConfig("Bedroom", bedroomKodi, ""))
-	logs := &lockedBuffer{}
+		cfg, faults := faultyConfig(t, kodiConfig("Lounge", loungeKodi, ""), kodiConfig("Bedroom", bedroomKodi, ""))
+		logs := &lockedBuffer{}
 
-	a, err := newApp(t.Context(), cfg, slog.New(slog.NewTextHandler(logs, nil)), fastTuning())
-	require.NoError(t, err)
-
-	// Joining the two instances' groups updates the one that leads.
-	faults.Inject(testkit.Fault{Op: testkit.Update, Table: "library_groups"})
-	startApp(t, a)
-
-	lounge, bedroom := a.instanceNamed(t, "Lounge"), a.instanceNamed(t, "Bedroom")
-
-	require.Eventually(t, func() bool { return logs.has(`msg="grouping Kodi instances that share a library"`) }, eventually, 10*time.Millisecond)
-	assert.Len(t, a.Groups(), 2, "the instances keep libraries of their own")
-	assert.Equal(t, map[string][]int64{"Lounge": {lounge.id}, "Bedroom": {bedroom.id}}, storedMembers(t, a))
-
-	// The next fingerprint, once the database works, joins them.
-	faults.Clear()
-	a.refingerprint(t, bedroom, a.printOf(bedroom))
-
-	shared := map[string][]int64{"Lounge": {lounge.id, bedroom.id}}
-	require.Equal(t, shared, runtimeMembers(a))
-	require.Equal(t, shared, storedMembers(t, a))
-
-	before, ok := a.groupOf("Lounge")
-	require.True(t, ok)
-
-	t.Run("saving fresh evidence", func(t *testing.T) {
-		faults.Inject(testkit.Fault{Op: testkit.Update, Table: "library_groups"})
-		t.Cleanup(faults.Clear)
-
-		a.refingerprint(t, lounge, a.printOf(lounge))
-
-		assert.True(t, logs.has(`msg="saving library group evidence"`))
-
-		stored, err := a.DB().LibraryGroups().Get(t.Context(), before.ID)
+		a, err := newApp(t.Context(), cfg, slog.New(slog.NewTextHandler(logs, nil)), fastTuning())
 		require.NoError(t, err)
 
-		a.mu.RLock()
-		running := lounge.group.rec.Evidence
-		a.mu.RUnlock()
+		// Joining the two instances' groups updates the one that leads.
+		faults.Inject(testkit.Fault{Op: testkit.Update, Table: "library_groups"})
+		startApp(t, a)
 
-		assert.JSONEq(t, string(stored.Evidence), string(running), "the running group keeps the evidence that was saved")
-	})
+		lounge, bedroom := a.instanceNamed(t, "Lounge"), a.instanceNamed(t, "Bedroom")
 
-	diverged := &kodi.LibraryFingerprint{
-		Movies:     []kodi.FingerprintItem{{ID: 1, File: "nfs://nas/elsewhere/1.mkv", DateAdded: "2025-06-01 09:00:00"}},
-		Episodes:   []kodi.FingerprintItem{{ID: 1, File: "nfs://nas/elsewhere/s01e01.mkv", DateAdded: "2025-06-01 09:00:00"}},
-		MovieTotal: 1, EpisodeTotal: 1,
-	}
-	for i := 2; i <= 30; i++ {
-		diverged.Movies = append(diverged.Movies, kodi.FingerprintItem{ID: i, File: "nfs://nas/elsewhere/x.mkv", DateAdded: "2025-06-01 09:00:00"})
-	}
+		soon(t, func() bool { return logs.has(`msg="grouping Kodi instances that share a library"`) })
+		assert.Len(t, a.Groups(), 2, "the instances keep libraries of their own")
+		assert.Equal(t, map[string][]int64{"Lounge": {lounge.id}, "Bedroom": {bedroom.id}}, storedMembers(t, a))
 
-	t.Run("splitting off a member", func(t *testing.T) {
-		faults.Inject(testkit.Fault{Op: testkit.Insert, Table: "library_groups"})
-		t.Cleanup(faults.Clear)
+		// The next fingerprint, once the database works, joins them.
+		faults.Clear()
+		a.refingerprint(t, bedroom, a.printOf(bedroom))
 
-		before := logs.count(`msg="splitting a library group"`)
-		a.refingerprint(t, bedroom, diverged)
+		shared := map[string][]int64{"Lounge": {lounge.id, bedroom.id}}
+		require.Equal(t, shared, runtimeMembers(a))
+		require.Equal(t, shared, storedMembers(t, a))
 
-		assert.Equal(t, before+1, logs.count(`msg="splitting a library group"`), "the failure is logged")
-		assert.Equal(t, shared, runtimeMembers(a), "nothing changed")
-		assert.Equal(t, shared, storedMembers(t, a))
-	})
+		before, ok := a.groupOf("Lounge")
+		require.True(t, ok)
 
-	t.Run("recording why a member left", func(t *testing.T) {
-		// The split-off member's group is saved, but a passing failure loses the reason on the group it left.
-		faults.Inject(testkit.Fault{Op: testkit.Update, Table: "library_groups", When: "NEW.name = 'Lounge' AND NEW.state = 'likely_shared'"})
-		t.Cleanup(faults.Clear)
+		func() {
+			// Saving fresh evidence.
+			faults.Inject(testkit.Fault{Op: testkit.Update, Table: "library_groups"})
+			defer faults.Clear()
 
-		before := logs.count(`msg="splitting a library group"`)
-		a.refingerprint(t, bedroom, diverged)
+			a.refingerprint(t, lounge, a.printOf(lounge))
 
-		assert.Equal(t, before+1, logs.count(`msg="splitting a library group"`), "the failure is logged")
-		assert.Equal(t, map[string][]int64{"Lounge": {lounge.id}, "Bedroom": {bedroom.id}}, storedMembers(t, a), "the member left in the database")
-		assert.Equal(t, storedMembers(t, a), runtimeMembers(a), "the running groups are those saved")
+			assert.True(t, logs.has(`msg="saving library group evidence"`))
+
+			stored, err := a.DB().LibraryGroups().Get(t.Context(), before.ID)
+			require.NoError(t, err)
+
+			a.mu.RLock()
+			running := lounge.group.rec.Evidence
+			a.mu.RUnlock()
+
+			assert.JSONEq(t, string(stored.Evidence), string(running), "the running group keeps the evidence that was saved")
+		}()
+
+		diverged := &kodi.LibraryFingerprint{
+			Movies:     []kodi.FingerprintItem{{ID: 1, File: "nfs://nas/elsewhere/1.mkv", DateAdded: "2025-06-01 09:00:00"}},
+			Episodes:   []kodi.FingerprintItem{{ID: 1, File: "nfs://nas/elsewhere/s01e01.mkv", DateAdded: "2025-06-01 09:00:00"}},
+			MovieTotal: 1, EpisodeTotal: 1,
+		}
+		for i := 2; i <= 30; i++ {
+			diverged.Movies = append(diverged.Movies, kodi.FingerprintItem{ID: i, File: "nfs://nas/elsewhere/x.mkv", DateAdded: "2025-06-01 09:00:00"})
+		}
+
+		func() {
+			// Splitting off a member.
+			faults.Inject(testkit.Fault{Op: testkit.Insert, Table: "library_groups"})
+			defer faults.Clear()
+
+			before := logs.count(`msg="splitting a library group"`)
+			a.refingerprint(t, bedroom, diverged)
+
+			assert.Equal(t, before+1, logs.count(`msg="splitting a library group"`), "the failure is logged")
+			assert.Equal(t, shared, runtimeMembers(a), "nothing changed")
+			assert.Equal(t, shared, storedMembers(t, a))
+		}()
+
+		func() {
+			// Recording why a member left.
+			// The split-off member's group is saved, but a passing failure loses the reason on the group it left.
+			faults.Inject(testkit.Fault{Op: testkit.Update, Table: "library_groups", When: "NEW.name = 'Lounge' AND NEW.state = 'likely_shared'"})
+			defer faults.Clear()
+
+			before := logs.count(`msg="splitting a library group"`)
+			a.refingerprint(t, bedroom, diverged)
+
+			assert.Equal(t, before+1, logs.count(`msg="splitting a library group"`), "the failure is logged")
+			assert.Equal(t, map[string][]int64{"Lounge": {lounge.id}, "Bedroom": {bedroom.id}}, storedMembers(t, a), "the member left in the database")
+			assert.Equal(t, storedMembers(t, a), runtimeMembers(a), "the running groups are those saved")
+		}()
 	})
 }
 
 func TestAConfirmationThatCannotBeSavedLeavesTheGroupUnconfirmed(t *testing.T) {
-	lib := testLibrary(30, 0, "2024-01-01 10:00:00")
-	loungeKodi, bedroomKodi := fakekodi.New(t, fakekodi.Options{Library: lib}), fakekodi.New(t, fakekodi.Options{Library: lib})
+	inBubble(t, func(t *testing.T) {
+		lib := testLibrary(30, 0, "2024-01-01 10:00:00")
+		loungeKodi, bedroomKodi := newKodi(t, fakekodi.Options{Library: lib}), newKodi(t, fakekodi.Options{Library: lib})
 
-	cfg, faults := faultyConfig(t, kodiConfig("Lounge", loungeKodi, ""), kodiConfig("Bedroom", bedroomKodi, ""))
-	logs := &lockedBuffer{}
+		cfg, faults := faultyConfig(t, kodiConfig("Lounge", loungeKodi, ""), kodiConfig("Bedroom", bedroomKodi, ""))
+		logs := &lockedBuffer{}
 
-	a, err := newApp(t.Context(), cfg, slog.New(slog.NewTextHandler(logs, nil)), fastTuning())
-	require.NoError(t, err)
-	startApp(t, a)
+		a, err := newApp(t.Context(), cfg, slog.New(slog.NewTextHandler(logs, nil)), fastTuning())
+		require.NoError(t, err)
+		startApp(t, a)
 
-	require.Eventually(t, func() bool { g, _ := a.groupOf("Lounge"); return len(g.Members) == 2 }, eventually, 10*time.Millisecond)
-	require.Eventually(t, func() bool { return a.instanceNamed(t, "Bedroom").Index.Len() == 31 }, eventually, 10*time.Millisecond)
-	connected(t, bedroomKodi)
+		soon(t, func() bool { g, _ := a.groupOf("Lounge"); return len(g.Members) == 2 })
+		soon(t, func() bool { return a.instanceNamed(t, "Bedroom").Index.Len() == 31 })
+		connected(t, bedroomKodi)
 
-	faults.Inject(testkit.Fault{Op: testkit.Update, Table: "library_groups"})
+		faults.Inject(testkit.Fault{Op: testkit.Update, Table: "library_groups"})
 
-	require.True(t, bedroomKodi.SetPlayState("episode", 7, fakekodi.PlayState{PlayCount: 1, LastPlayed: time.Now().Truncate(time.Second)}))
-	require.Eventually(t, func() bool { return logs.has(`msg="recording library group confirmation"`) }, eventually, 10*time.Millisecond)
+		require.True(t, bedroomKodi.SetPlayState("episode", 7, fakekodi.PlayState{PlayCount: 1, LastPlayed: time.Now().Truncate(time.Second)}))
+		soon(t, func() bool { return logs.has(`msg="recording library group confirmation"`) })
 
-	g, _ := a.groupOf("Lounge")
-	assert.Equal(t, store.GroupLikelyShared, g.State, "the running group isn't confirmed when the confirmation wasn't saved")
+		g, _ := a.groupOf("Lounge")
+		assert.Equal(t, store.GroupLikelyShared, g.State, "the running group isn't confirmed when the confirmation wasn't saved")
 
-	for _, m := range g.Members {
-		assert.False(t, m.Confirmed, m.Name)
-	}
+		for _, m := range g.Members {
+			assert.False(t, m.Confirmed, m.Name)
+		}
 
-	stored, err := a.DB().LibraryGroups().Get(t.Context(), g.ID)
-	require.NoError(t, err)
-	assert.Equal(t, store.GroupLikelyShared, stored.State)
+		stored, err := a.DB().LibraryGroups().Get(t.Context(), g.ID)
+		require.NoError(t, err)
+		assert.Equal(t, store.GroupLikelyShared, stored.State)
+	})
 }
 
 func TestResettingALibraryGroupReportsAFailedRebuild(t *testing.T) {
-	loungeKodi := fakekodi.New(t, fakekodi.Options{Library: testLibrary(30, 0, "2024-01-01 10:00:00")})
-	bedroomKodi := fakekodi.New(t, fakekodi.Options{Library: testLibrary(30, 100, "2024-03-09 18:00:00")})
+	inBubble(t, func(t *testing.T) {
+		loungeKodi := newKodi(t, fakekodi.Options{Library: testLibrary(30, 0, "2024-01-01 10:00:00")})
+		bedroomKodi := newKodi(t, fakekodi.Options{Library: testLibrary(30, 100, "2024-03-09 18:00:00")})
 
-	cfg, faults := faultyConfig(t)
-	a, _ := runApp(t, cfg.DataDir, fastTuning(), kodiConfig("Lounge", loungeKodi, ""), kodiConfig("Bedroom", bedroomKodi, ""))
-	lounge, bedroom := a.instanceNamed(t, "Lounge"), a.instanceNamed(t, "Bedroom")
-	ctx := t.Context()
+		cfg, faults := faultyConfig(t)
+		a, _ := runApp(t, cfg.DataDir, fastTuning(), kodiConfig("Lounge", loungeKodi, ""), kodiConfig("Bedroom", bedroomKodi, ""))
+		lounge, bedroom := a.instanceNamed(t, "Lounge"), a.instanceNamed(t, "Bedroom")
+		ctx := t.Context()
 
-	_, err := a.GroupInstances(ctx, "Whole house", lounge.id, bedroom.id)
-	require.NoError(t, err)
+		_, err := a.GroupInstances(ctx, "Whole house", lounge.id, bedroom.id)
+		require.NoError(t, err)
 
-	// Saving the reset reads no instances; rebuilding the groups after it does.
-	faults.Inject(testkit.Fault{Op: testkit.Read, Table: "kodi_instances"})
+		// Saving the reset reads no instances; rebuilding the groups after it does.
+		faults.Inject(testkit.Fault{Op: testkit.Read, Table: "kodi_instances"})
 
-	err = a.ResetLibraryGroup(ctx, lounge.id)
-	require.ErrorContains(t, err, "reconciling library groups: querying: "+testkit.ReadFaultMessage)
+		err = a.ResetLibraryGroup(ctx, lounge.id)
+		require.ErrorContains(t, err, "reconciling library groups: querying: "+testkit.ReadFaultMessage)
 
-	// Trying again once the database works finishes the reset.
-	faults.Clear()
-	require.NoError(t, a.ResetLibraryGroup(ctx, lounge.id))
+		// Trying again once the database works finishes the reset.
+		faults.Clear()
+		require.NoError(t, a.ResetLibraryGroup(ctx, lounge.id))
 
-	assert.Equal(t, storedMembers(t, a), runtimeMembers(a))
+		assert.Equal(t, storedMembers(t, a), runtimeMembers(a))
 
-	g, ok := a.groupOf("Lounge")
-	require.True(t, ok)
-	assert.False(t, g.Manual, "the instance is back with detection")
-	assert.Equal(t, []string{"Lounge"}, memberNames(g))
+		g, ok := a.groupOf("Lounge")
+		require.True(t, ok)
+		assert.False(t, g.Manual, "the instance is back with detection")
+		assert.Equal(t, []string{"Lounge"}, memberNames(g))
+	})
 }
 
 func TestASplitThatFailsPartWayRunsTheGroupsItSaved(t *testing.T) {
