@@ -328,6 +328,39 @@ describe("overview page", () => {
     expect(await card("Study")).toHaveTextContent("Nothing playing.");
   });
 
+  it("names a playing movie by its title, with no episode line", async () => {
+    const db = getDb();
+    const [first] = db.instances;
+    if (!first) throw new Error("the sample has an instance");
+    db.instances = [
+      {
+        ...first,
+        name: "Lounge",
+        now_playing: {
+          art_url: "",
+          duration_s: 8400,
+          episode: 0,
+          kind: "movie",
+          paused: false,
+          position_s: 4200,
+          season: 0,
+          show: "",
+          title: "Conclave",
+        },
+      },
+    ];
+    renderApp("/");
+
+    const heading = await screen.findByRole("heading", { level: 3, name: "Lounge" });
+    const card = heading.closest("div")?.parentElement as HTMLElement;
+    expect(within(card).getByText("Conclave")).toBeInTheDocument();
+    // Without artwork the cover shows the title's initials.
+    expect(within(card).getByText("CON")).toBeInTheDocument();
+    expect(card).not.toHaveTextContent(/S\d+ · E\d+/);
+    expect(within(card).getByText("1:10:00 / 2:20:00")).toBeInTheDocument();
+    expect(within(card).getByRole("meter", { name: "Progress 50 percent" })).toBeInTheDocument();
+  });
+
   it("shows an empty install as not set up yet", async () => {
     const db = getDb();
     Object.assign(db, { attention: [], instances: [], libraries: [], publicUrl: "", requests: [] });
