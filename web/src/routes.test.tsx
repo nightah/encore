@@ -225,6 +225,32 @@ describe("login page", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("The identity provider refused the sign-in.");
   });
 
+  it("offers the break-glass form next to single sign-on when it is on", async () => {
+    getDb().authenticated = false;
+    server.use(
+      http.get("*/api/v1/auth/state", () =>
+        HttpResponse.json({
+          authenticated: false,
+          csrf_token: getDb().csrf,
+          local_login: true,
+          mode: "oidc",
+          oidc_login_url: "/api/v1/auth/oidc/login",
+          setup_required: false,
+          user: null,
+        }),
+      ),
+    );
+    renderApp("/login");
+    expect(await screen.findByRole("link", { name: "Sign in with single sign-on" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Password")).toBeInTheDocument();
+  });
+
+  it("says when the server can't be reached to sign in", async () => {
+    server.use(http.post("*/api/v1/auth/login", () => HttpResponse.error()));
+    await signIn("/login");
+    expect(await screen.findByRole("alert")).toHaveTextContent("The Encore server could not be reached.");
+  });
+
   it("explains header sign-in and offers no form", async () => {
     getDb().authenticated = false;
     getDb().authMode = "header";

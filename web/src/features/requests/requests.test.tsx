@@ -360,6 +360,27 @@ describe("Request log", () => {
     expect(JSON.parse(await navigator.clipboard.readText())).toMatchObject({ heard: "shuffle radiohead", id: 1002 });
   });
 
+  it("explains a replay that matched nothing", async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.post("*/api/v1/requests/1001/replay", () =>
+        HttpResponse.json({
+          match: { candidates: [], decision: "not_found", error: "", margin: 0, normalized: "hot fuzzy", target: "" },
+          speech: "I couldn't find hot fuzzy.",
+          would_call: [],
+        }),
+      ),
+    );
+    renderApp("/request-log?id=1001");
+    await screen.findByRole("heading", { level: 2, name: "“play hot fuzzy”" });
+    await user.click(screen.getByRole("button", { name: "Replay (dry run)" }));
+
+    const result = await screen.findByRole("region", { name: "Replay result" });
+    expect(within(result).getByText("Nothing in this library comes close.")).toBeInTheDocument();
+    expect(within(result).queryByText(/Top match/)).not.toBeInTheDocument();
+    expect(within(result).getByText("Alexa would say: “I couldn't find hot fuzzy.”")).toBeInTheDocument();
+  });
+
   it("doesn't claim to have copied when the clipboard refuses", async () => {
     const user = userEvent.setup();
     vi.spyOn(navigator.clipboard, "writeText").mockRejectedValue(new DOMException("denied", "NotAllowedError"));
