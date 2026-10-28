@@ -13,6 +13,7 @@ import (
 
 	"github.com/nightah/encore/internal/backend/kodi"
 	"github.com/nightah/encore/internal/backend/kodi/fakekodi"
+	"github.com/nightah/encore/internal/store"
 	"github.com/nightah/encore/internal/testkit"
 )
 
@@ -164,4 +165,66 @@ func TestLibraryGroupChangesThatCannotBeSaved(t *testing.T) {
 		assert.True(t, logs.has(`msg="splitting a library group"`))
 		assert.Equal(t, storedMembers(t, a), runtimeMembers(a), "the running groups are those saved")
 	})
+}
+
+func TestAConfirmationThatCannotBeSavedLeavesTheGroupUnconfirmed(t *testing.T) {
+	lib := testLibrary(30, 0, "2024-01-01 10:00:00")
+	loungeKodi, bedroomKodi := fakekodi.New(t, fakekodi.Options{Library: lib}), fakekodi.New(t, fakekodi.Options{Library: lib})
+
+	cfg, faults := faultyConfig(t, kodiConfig("Lounge", loungeKodi, ""), kodiConfig("Bedroom", bedroomKodi, ""))
+	logs := &lockedBuffer{}
+
+	a, err := newApp(t.Context(), cfg, slog.New(slog.NewTextHandler(logs, nil)), fastTuning())
+	require.NoError(t, err)
+	startApp(t, a)
+
+	require.Eventually(t, func() bool { g, _ := a.groupOf("Lounge"); return len(g.Members) == 2 }, eventually, 10*time.Millisecond)
+	require.Eventually(t, func() bool { return a.instanceNamed(t, "Bedroom").Index.Len() == 31 }, eventually, 10*time.Millisecond)
+	connected(t, bedroomKodi)
+
+	faults.Inject(testkit.Fault{Op: testkit.Update, Table: "library_groups"})
+
+	require.True(t, bedroomKodi.SetPlayState("episode", 7, fakekodi.PlayState{PlayCount: 1, LastPlayed: time.Now().Truncate(time.Second)}))
+	require.Eventually(t, func() bool { return logs.has(`msg="recording library group confirmation"`) }, eventually, 10*time.Millisecond)
+
+	g, _ := a.groupOf("Lounge")
+	assert.Equal(t, store.GroupLikelyShared, g.State, "the running group isn't confirmed when the confirmation wasn't saved")
+
+	for _, m := range g.Members {
+		assert.False(t, m.Confirmed, m.Name)
+	}
+
+	stored, err := a.DB().LibraryGroups().Get(t.Context(), g.ID)
+	require.NoError(t, err)
+	assert.Equal(t, store.GroupLikelyShared, stored.State)
+}
+
+func TestResettingALibraryGroupReportsAFailedRebuild(t *testing.T) {
+	loungeKodi := fakekodi.New(t, fakekodi.Options{Library: testLibrary(30, 0, "2024-01-01 10:00:00")})
+	bedroomKodi := fakekodi.New(t, fakekodi.Options{Library: testLibrary(30, 100, "2024-03-09 18:00:00")})
+
+	cfg, faults := faultyConfig(t)
+	a, _ := runApp(t, cfg.DataDir, fastTuning(), kodiConfig("Lounge", loungeKodi, ""), kodiConfig("Bedroom", bedroomKodi, ""))
+	lounge, bedroom := a.instanceNamed(t, "Lounge"), a.instanceNamed(t, "Bedroom")
+	ctx := t.Context()
+
+	_, err := a.GroupInstances(ctx, "Whole house", lounge.id, bedroom.id)
+	require.NoError(t, err)
+
+	// Saving the reset reads no instances; rebuilding the groups after it does.
+	faults.Inject(testkit.Fault{Op: testkit.Read, Table: "kodi_instances"})
+
+	err = a.ResetLibraryGroup(ctx, lounge.id)
+	require.ErrorContains(t, err, "reconciling library groups: querying: "+testkit.ReadFaultMessage)
+
+	// Trying again once the database works finishes the reset.
+	faults.Clear()
+	require.NoError(t, a.ResetLibraryGroup(ctx, lounge.id))
+
+	assert.Equal(t, storedMembers(t, a), runtimeMembers(a))
+
+	g, ok := a.groupOf("Lounge")
+	require.True(t, ok)
+	assert.False(t, g.Manual, "the instance is back with detection")
+	assert.Equal(t, []string{"Lounge"}, memberNames(g))
 }
