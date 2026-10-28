@@ -246,6 +246,13 @@ describe("settings page", () => {
     await waitFor(() => expect(router.state.location.search).toEqual({ tab: "backup" }));
   });
 
+  it("opens General for a tab it doesn't know, as from an old bookmark", async () => {
+    const { router } = renderApp("/settings?tab=bogus");
+    const tabs = await screen.findByRole("tablist", { name: "Settings sections" });
+    expect(within(tabs).getByRole("tab", { name: "General" })).toHaveAttribute("aria-selected", "true");
+    expect(router.state.location.search).toEqual({});
+  });
+
   it("forgets unsaved changes' state when switching tabs", async () => {
     const user = userEvent.setup();
     renderApp("/settings?tab=general");
