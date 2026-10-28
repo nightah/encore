@@ -85,6 +85,8 @@ func TestNewReportsDatabaseFailuresWhileApplyingTheConfig(t *testing.T) {
 		name  string
 		kodi  []config.KodiInstance
 		fault testkit.Fault
+		// extra faults are injected alongside fault.
+		extra []testkit.Fault
 		// earlier, when set, is the config of a successful start before the failing one.
 		earlier []config.KodiInstance
 		// setup prepares the database before the failing start.
@@ -115,9 +117,20 @@ func TestNewReportsDatabaseFailuresWhileApplyingTheConfig(t *testing.T) {
 			kodi:  []config.KodiInstance{lounge, bedroom},
 			fault: testkit.Fault{Op: testkit.Insert, Table: "kodi_instances", Nth: 2},
 			want:  `kodi instance "Bedroom": creating kodi instance: `,
-			after: func(t *testing.T, _ *config.Config, db *store.DB) {
+			after: func(t *testing.T, cfg *config.Config, db *store.DB) {
 				assert.Equal(t, []string{"Lounge"}, instanceNames(t, db), "the instances before it are kept")
+				assert.Equal(t, []string{"kodi/Lounge/password"}, secretIDs(t, cfg, db, "kodi/Lounge/password", "kodi/Bedroom/password"),
+					"the password of an instance that wasn't saved isn't left behind")
 			},
+		},
+		{
+			name:  "removing the password of an instance that wasn't saved",
+			kodi:  []config.KodiInstance{bedroom},
+			fault: testkit.Fault{Op: testkit.Insert, Table: "kodi_instances"},
+			extra: []testkit.Fault{{Op: testkit.Delete, Table: "secrets"}},
+			// Both failures are reported.
+			want: "creating kodi instance: constraint failed: " + testkit.FaultMessage + " on INSERT kodi_instances (1811)\n" +
+				`deleting secret "kodi/Bedroom/password": constraint failed: ` + testkit.FaultMessage + " on DELETE secrets",
 		},
 		{
 			name:    "updating an instance",
@@ -128,6 +141,16 @@ func TestNewReportsDatabaseFailuresWhileApplyingTheConfig(t *testing.T) {
 			after: func(t *testing.T, cfg *config.Config, db *store.DB) {
 				assert.Equal(t, []string{"Bedroom"}, instanceNames(t, db))
 				assert.Equal(t, []string{"kodi/Bedroom/password"}, secretIDs(t, cfg, db, "kodi/Bedroom/password"), "the saved instance keeps its password")
+			},
+		},
+		{
+			name:    "giving an instance a password",
+			earlier: []config.KodiInstance{{Name: "Bedroom", URL: bedroom.URL}},
+			kodi:    []config.KodiInstance{bedroom},
+			fault:   testkit.Fault{Op: testkit.Update, Table: "kodi_instances"},
+			want:    `kodi instance "Bedroom": updating kodi instance`,
+			after: func(t *testing.T, cfg *config.Config, db *store.DB) {
+				assert.Empty(t, secretIDs(t, cfg, db, "kodi/Bedroom/password"), "a password the saved instance doesn't use isn't left behind")
 			},
 		},
 		{
@@ -261,7 +284,7 @@ func TestNewReportsDatabaseFailuresWhileApplyingTheConfig(t *testing.T) {
 			}
 
 			cfg.Kodi = tc.kodi
-			faults.Inject(tc.fault)
+			faults.Inject(append([]testkit.Fault{tc.fault}, tc.extra...)...)
 
 			_, err := New(t.Context(), cfg, slog.New(slog.DiscardHandler))
 			require.ErrorContains(t, err, tc.want)

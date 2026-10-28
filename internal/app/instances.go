@@ -58,6 +58,11 @@ func (a *App) applyConfiguredInstances(ctx context.Context) error {
 		}
 
 		if err != nil {
+			// A password the stored row doesn't refer to would be left behind.
+			if ref := rec.PasswordSecretRef; ref != "" && ref != byName[c.Name].PasswordSecretRef {
+				err = errors.Join(err, a.secrets.Delete(ctx, ref))
+			}
+
 			return fmt.Errorf("kodi instance %q: %w", c.Name, err)
 		}
 
