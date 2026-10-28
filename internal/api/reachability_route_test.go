@@ -105,6 +105,17 @@ func TestReachabilityRejectsTLS13Only(t *testing.T) {
 	assert.Contains(t, checks["certificate"].Note, "Minimum TLS Version")
 }
 
+// A certificate that is about to expire is only a warning, but the TLS 1.2 check still applies to it.
+func TestReachabilityRejectsTLS13OnlyWithAnExpiringCertificate(t *testing.T) {
+	srv, client := ecdsaServer(t, tls.VersionTLS13)
+	h := newHarness(t, harnessOpts{noKodi: true, mutate: func(o *Options) { o.HTTPClient = client }})
+	h.skew.Add(int64(80 * 24 * time.Hour)) // the certificate has 10 days left
+
+	checks := checkReachability(t, h, srv.URL)
+	assert.Equal(t, "fail", checks["certificate"].Level, "%+v", checks["certificate"])
+	assert.Contains(t, checks["certificate"].Detail, "refuses TLS 1.2")
+}
+
 func TestReachabilityAcceptsRSACertificate(t *testing.T) {
 	srv := httptest.NewTLSServer(encoreLike()) // httptest's certificate is RSA
 	t.Cleanup(srv.Close)

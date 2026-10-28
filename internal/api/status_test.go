@@ -135,7 +135,14 @@ func versionCalls(k *fakekodi.Server) int {
 }
 
 func TestStatusAsksForVersionOnlyNowAndThen(t *testing.T) {
-	h := newHarness(t, harnessOpts{mutate: func(o *Options) { o.StatusInterval = time.Hour }})
+	// A clock that moves only when told, so infoEvery's boundary can be hit exactly.
+	var skew atomic.Int64
+
+	start := time.Date(2026, 10, 28, 9, 0, 0, 0, time.UTC)
+	h := newHarness(t, harnessOpts{mutate: func(o *Options) {
+		o.StatusInterval = time.Hour
+		o.Now = func() time.Time { return start.Add(time.Duration(skew.Load())) }
+	}})
 	lounge := cachedStatus(t, h)
 	cache := h.api.status
 
@@ -152,7 +159,13 @@ func TestStatusAsksForVersionOnlyNowAndThen(t *testing.T) {
 	assert.Equal(t, full.APIVersion, st.APIVersion)
 	assert.Equal(t, 4, st.Counts.Episodes, "as is the episode total")
 
-	h.skew.Add(int64(infoEvery))
+	skew.Add(int64(infoEvery - time.Nanosecond))
+
+	_, err = cache.probe(t.Context(), lounge)
+	require.NoError(t, err)
+	assert.Equal(t, asked, versionCalls(h.kodi), "not until infoEvery has passed")
+
+	skew.Add(int64(time.Nanosecond))
 
 	st, err = cache.probe(t.Context(), lounge)
 	require.NoError(t, err)
@@ -172,7 +185,13 @@ func TestStatusGetReusesAFreshProbe(t *testing.T) {
 	assert.True(t, st.Reachable)
 	assert.Len(t, h.kodi.CallsTo("JSONRPC.Ping"), pings, "a fresh status is served from the cache")
 
-	h.skew.Add(int64(2 * time.Hour))
+	h.skew.Add(int64(90 * time.Minute))
+
+	_, err = cache.get(t.Context(), lounge)
+	require.NoError(t, err)
+	assert.Len(t, h.kodi.CallsTo("JSONRPC.Ping"), pings, "a status is fresh for two poll intervals, so a late poll doesn't mean a probe")
+
+	h.skew.Add(int64(30 * time.Minute))
 
 	_, err = cache.get(t.Context(), lounge)
 	require.NoError(t, err)
@@ -279,4 +298,78 @@ func TestPlayerChangesCoalesce(t *testing.T) {
 	cache.playerChanged(lounge)
 	require.Eventually(t, settled, 5*time.Second, 10*time.Millisecond)
 	assert.Len(t, h.kodi.CallsTo("JSONRPC.Ping"), pings+1)
+}
+
+// A full probe that finds Kodi unreachable learns nothing, so the version from the last one that did is kept.
+func TestStatusKeepsTheVersionWhileKodiIsUnreachable(t *testing.T) {
+	h := newHarness(t, harnessOpts{mutate: func(o *Options) { o.StatusInterval = time.Hour }})
+	lounge := cachedStatus(t, h)
+	cache := h.api.status
+
+	cache.mu.Lock()
+	known := cache.entries[lounge].st.KodiVersion
+	cache.mu.Unlock()
+
+	h.kodi.Handle("JSONRPC.Ping", func(json.RawMessage) (any, *fakekodi.Error) {
+		return nil, &fakekodi.Error{Code: -32100, Message: "busy"}
+	})
+	h.skew.Add(int64(infoEvery))
+
+	st, err := cache.probe(t.Context(), lounge)
+	require.NoError(t, err)
+	require.False(t, st.Reachable)
+	assert.Equal(t, known, st.KodiVersion)
+
+	asked := versionCalls(h.kodi)
+
+	h.kodi.Handle("JSONRPC.Ping", func(json.RawMessage) (any, *fakekodi.Error) { return "pong", nil })
+
+	st, err = cache.probe(t.Context(), lounge)
+	require.NoError(t, err)
+	assert.True(t, st.Reachable)
+	assert.Equal(t, asked+1, versionCalls(h.kodi), "the version is asked for as soon as Kodi answers again")
+}
+
+// A probe already under way when an instance is forgotten (its runtime replaced or removed) must not put the old status back.
+func TestStatusProbeOutlivedByForget(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true, mutate: func(o *Options) { o.StatusInterval = time.Hour }})
+	c := h.admin()
+	cache := h.api.status
+	den := fakekodi.New(t, fakekodi.Options{})
+
+	var created Instance
+
+	c.json(http.MethodPost, "/api/v1/kodi/instances", map[string]string{"name": "Den", "url": den.URL(), "websocket_url": "ws://127.0.0.1:1/jsonrpc"}, http.StatusCreated, &created)
+	cache.forget(created.ID)
+
+	held, release := make(chan struct{}), make(chan struct{})
+
+	var first atomic.Bool
+
+	den.Handle("Player.GetActivePlayers", func(json.RawMessage) (any, *fakekodi.Error) {
+		if first.CompareAndSwap(false, true) {
+			close(held)
+			<-release
+		}
+
+		return []any{}, nil
+	})
+
+	done := make(chan error, 1)
+
+	go func() {
+		_, err := cache.probe(t.Context(), created.ID)
+		done <- err
+	}()
+
+	<-held
+	cache.forget(created.ID)
+	close(release)
+	require.NoError(t, <-done)
+
+	cache.mu.Lock()
+	_, cached := cache.entries[created.ID]
+	cache.mu.Unlock()
+
+	assert.False(t, cached, "the forgotten instance's old status isn't cached")
 }

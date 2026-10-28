@@ -752,3 +752,45 @@ func TestDiscoverWithoutPortMatchesHost(t *testing.T) {
 	resp := c.json(http.MethodGet, "/api/v1/kodi/discovered", nil, http.StatusOK, &found)
 	assert.Equal(t, "[]", strings.TrimSpace(string(resp.body)))
 }
+
+func TestDeletingAnInstanceForgetsItsStatus(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true, mutate: func(o *Options) { o.StatusInterval = time.Hour }})
+	c := h.admin()
+	den := fakekodi.New(t, fakekodi.Options{})
+
+	var inst Instance
+
+	c.json(http.MethodPost, "/api/v1/kodi/instances", map[string]string{"name": "Den", "url": den.URL()}, http.StatusCreated, &inst)
+
+	_, err := h.api.status.get(t.Context(), inst.ID)
+	require.NoError(t, err)
+
+	cached := func() bool {
+		h.api.status.mu.Lock()
+		defer h.api.status.mu.Unlock()
+
+		_, ok := h.api.status.entries[inst.ID]
+
+		return ok
+	}
+
+	require.True(t, cached())
+
+	c.json(http.MethodDelete, fmt.Sprintf("/api/v1/kodi/instances/%d", inst.ID), nil, http.StatusNoContent, nil)
+	assert.False(t, cached(), "a removed instance's status isn't kept for one that reuses its ID")
+}
+
+func TestDiscoverMatchesHostNamesWhateverTheirCase(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true, discover: func(context.Context) ([]kodi.Instance, error) {
+		return []kodi.Instance{{Name: "Kodi (garage)", Host: "garage.local.", Port: 8080, WebSocketPort: 9090}}, nil
+	}})
+	c := h.admin()
+
+	// Stored directly: only the saved address matters here, not a runtime.
+	require.NoError(t, h.app.DB().KodiInstances().Create(t.Context(), &store.KodiInstance{Name: "Garage", Scheme: "http", Host: "Garage.Local", Port: 8080, Path: "/jsonrpc"}))
+
+	var found []DiscoveredInstance
+
+	c.json(http.MethodGet, "/api/v1/kodi/discovered", nil, http.StatusOK, &found)
+	assert.Empty(t, found, "host names aren't case-sensitive")
+}

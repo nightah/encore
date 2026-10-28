@@ -90,16 +90,22 @@ func TestCheckEndpoint(t *testing.T) {
 	assert.False(t, check.Reachable, "a proxy's 502 means Encore isn't behind it")
 	assert.EqualValues(t, 2, hits.Load(), "an old check is made again")
 
+	status.Store(http.StatusInternalServerError)
+
+	check = a.checkEndpoint(t.Context(), ec, srv.URL+"/api/v1/alexa?broken")
+	assert.False(t, check.Reachable, "a 500 is a server error, not Encore's answer")
+	assert.EqualValues(t, 3, hits.Load())
+
 	status.Store(http.StatusNotFound)
 
 	check = a.checkEndpoint(t.Context(), ec, srv.URL+"/other")
 	assert.True(t, check.Reachable, "something answered")
-	assert.EqualValues(t, 3, hits.Load(), "a different URL is checked at once")
+	assert.EqualValues(t, 4, hits.Load(), "a different URL is checked at once")
 
 	plain := a.checkEndpoint(t.Context(), ec, "http://encore.example.net/api/v1/alexa")
 	assert.Equal(t, EndpointCheck{URL: "http://encore.example.net/api/v1/alexa"}, plain, "only https endpoints are checked")
 	assert.Equal(t, EndpointCheck{}, a.checkEndpoint(t.Context(), ec, ""))
-	assert.EqualValues(t, 3, hits.Load())
+	assert.EqualValues(t, 4, hits.Load())
 
 	ln, err := net.Listen("tcp", "127.0.0.1:0")
 	require.NoError(t, err)

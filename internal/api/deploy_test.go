@@ -154,6 +154,15 @@ func TestLocaleResults(t *testing.T) {
 		assert.Equal(t, []string{"en-GB", "en-AU"}, opts.Locales, "the options are left as they were")
 	})
 
+	t.Run("skipped with locales from the last deploy", func(t *testing.T) {
+		t.Parallel()
+
+		got := s.localeResults(&deploy.Result{Skipped: true, Locales: map[string]deploy.LocaleStatus{"en-GB": {Status: smapi.StatusFailed}}}, pkg, nil, opts)
+		require.Len(t, got, 2, "every enabled locale, not just those the result names")
+		assert.Equal(t, "en-AU", got[0].Locale)
+		assert.Equal(t, "succeeded", got[0].Status)
+	})
+
 	t.Run("package didn't build", func(t *testing.T) {
 		t.Parallel()
 
@@ -265,9 +274,9 @@ func TestDeployHistory(t *testing.T) {
 
 	s := h.api.skill
 
-	// As if keepDeploys deploys had already run.
+	// As if all but one of keepDeploys deploys had already run.
 	s.mu.Lock()
-	for range keepDeploys {
+	for range keepDeploys - 1 {
 		id := jobID("old")
 		s.deploys[id] = &deployRecord{ID: id, State: "succeeded"}
 		s.order = append(s.order, id)
@@ -276,11 +285,32 @@ func TestDeployHistory(t *testing.T) {
 	oldest, second := s.order[0], s.order[1]
 	s.mu.Unlock()
 
-	var acc Accepted
+	run := func(body any) string {
+		t.Helper()
 
-	c.json(http.MethodPost, "/api/v1/skill/deploy", map[string]any{"force": true}, http.StatusAccepted, &acc)
-	d := waitForDeploy(t, c, acc.ID)
-	require.Equal(t, "succeeded", d.State, d.Error)
+		var acc Accepted
+
+		c.json(http.MethodPost, "/api/v1/skill/deploy", body, http.StatusAccepted, &acc)
+		d := waitForDeploy(t, c, acc.ID)
+		require.Equal(t, "succeeded", d.State, d.Error)
+
+		return acc.ID
+	}
+
+	uploads := func() int { return h.smapi.Calls("POST /v1/skills/uploads") }
+
+	first := run(nil)
+	assert.NotNil(t, s.deploy(t.Context(), oldest), "keepDeploys deploys are kept")
+	assert.Equal(t, first, s.lastDeploy(t.Context()).ID, "the last deploy is the newest")
+
+	sent := uploads()
+	require.Positive(t, sent)
+
+	unchanged := run(nil)
+	assert.Equal(t, sent, uploads(), "an unchanged package isn't sent again")
+	events := s.deploy(t.Context(), unchanged).Events
+	require.NotEmpty(t, events)
+	assert.Equal(t, "skipped", events[len(events)-1].State)
 
 	s.mu.Lock()
 	assert.Len(t, s.order, keepDeploys)
@@ -290,14 +320,47 @@ func TestDeployHistory(t *testing.T) {
 	assert.Nil(t, s.deploy(t.Context(), oldest), "the oldest is forgotten")
 	assert.NotNil(t, s.deploy(t.Context(), second))
 
+	forced := run(map[string]any{"force": true})
+	assert.Equal(t, sent+1, uploads(), "force sends it anyway")
+
 	// After a restart only the last deploy is known, from settings.
 	restarted := newSkillService(h.api)
 
-	last := restarted.deploy(t.Context(), acc.ID)
+	last := restarted.deploy(t.Context(), forced)
 	require.NotNil(t, last)
 	assert.Equal(t, "succeeded", last.State)
 	assert.True(t, slices.ContainsFunc(last.Events, func(e DeployEvent) bool { return e.Step == "enable" }), "with its events")
-	assert.Nil(t, restarted.deploy(t.Context(), second))
+	assert.Nil(t, restarted.deploy(t.Context(), first))
 	assert.Equal(t, h.api.SkillID(), restarted.storedSkillID(), "and the skill ID")
 	assert.NotEmpty(t, restarted.storedSkillID())
+}
+
+func TestSkillModelSizeUnit(t *testing.T) {
+	t.Parallel()
+
+	pkg := &skillpkg.Package{Files: []skillpkg.File{
+		{Name: "skill-package/skill.json", Data: make([]byte, 5000)},
+		{Name: skillpkg.ModelDir + "en-AU.json", Data: make([]byte, 1200)},
+		{Name: skillpkg.ModelDir + "en-GB.json", Data: make([]byte, 1300)},
+		{Name: skillpkg.ModelDir + "de-DE.json", Data: make([]byte, 900)},
+	}}
+	values := map[string][]skillmodel.SlotValue{"AMAZON.Movie": {{ID: "movie/1"}, {ID: "movie/2"}, {ID: "movie/3"}}}
+
+	for name, tc := range map[string]struct {
+		libs       Libraries
+		serverOnly int
+	}{
+		"more titles than the model holds":  {stubLibraries{list: []Library{{Counts: LibraryCounts{Movies: 4, Shows: 2, Songs: 9}}}}, 3},
+		"fewer titles than the model holds": {stubLibraries{list: []Library{{Counts: LibraryCounts{Movies: 1}}}}, 0},
+		"libraries can't be listed":         {stubLibraries{err: errors.New("catalog locked")}, 0},
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			s := &skillService{a: &API{libraries: tc.libs}}
+
+			ms := s.modelSize(t.Context(), pkg, skillpkg.Options{SlotValues: values})
+			assert.Equal(t, ModelSize{LimitBytes: skillpkg.MaxModelBytes, Locale: "en-GB", Bytes: 1300, TitlesInModel: 3, TitlesServerOnly: tc.serverOnly}, ms, "the largest model counts against the limit")
+		})
+	}
 }

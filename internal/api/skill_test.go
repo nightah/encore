@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"slices"
 	"strings"
@@ -255,6 +256,7 @@ func TestDeployFailurePersistsState(t *testing.T) {
 
 	require.NoError(t, h.app.DB().Settings().Get(t.Context(), deployStateKey, &state))
 	assert.NotEmpty(t, state.SkillID, "the skill created before the failure is remembered")
+	assert.Empty(t, state.SettingsHash, "a package that wasn't fully deployed records no settings hash, so the next deploy isn't put down to library titles")
 
 	var info SkillInfo
 
@@ -858,4 +860,39 @@ func TestEndpointURL(t *testing.T) {
 
 	assert.Equal(t, "https://encore.example.net/api/v1/alexa", h.api.skill.endpointURL(t.Context(), skillSettings{Endpoint: SkillEndpoint{URL: "https://encore.example.net/api/v1/alexa"}}))
 	assert.Empty(t, h.api.skill.endpointURL(t.Context(), skillSettings{}), "outside a request there's nothing to derive it from")
+}
+
+func TestAmazonAuthorizeOverHTTPSReturnsToEncore(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+	o := h.smapi.Options()
+	c.json(http.MethodPut, "/api/v1/skill/amazon/credentials", map[string]string{"client_id": o.ClientID, "client_secret": o.ClientSecret}, http.StatusNoContent, nil)
+
+	// As the browser reached Encore: over HTTPS, so the consent page can come back to the callback itself.
+	r := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "https://encore.example.net/api/v1/skill/amazon/authorize", nil)
+	ctx := context.WithValue(t.Context(), ctxKey{}, &reqInfo{r: r})
+
+	auth, err := h.api.skill.authorize(ctx, "", "setup")
+	require.NoError(t, err)
+
+	callback := "https://encore.example.net/api/v1/oauth/lwa/callback"
+	assert.Equal(t, []string{callback, localReturnURL}, auth.ReturnURLs)
+
+	u, err := url.Parse(auth.URL)
+	require.NoError(t, err)
+	assert.Equal(t, callback, u.Query().Get("redirect_uri"), "HTTPS uses the callback, not the paste flow")
+
+	h.api.skill.mu.Lock()
+	p := h.api.skill.pending[u.Query().Get("state")]
+	h.api.skill.mu.Unlock()
+
+	assert.Equal(t, callback, p.redirect, "the code is redeemed with the same redirect")
+	assert.Equal(t, "setup", p.page)
+
+	auth, err = h.api.skill.authorize(ctx, localReturnURL, "alexa-skill")
+	require.NoError(t, err)
+
+	u, err = url.Parse(auth.URL)
+	require.NoError(t, err)
+	assert.Equal(t, localReturnURL, u.Query().Get("redirect_uri"), "the paste flow can still be chosen")
 }

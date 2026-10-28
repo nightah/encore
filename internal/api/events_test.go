@@ -159,6 +159,7 @@ func TestRingKeepsRecentEvents(t *testing.T) {
 
 	for i := range ringSize + 10 {
 		hub.publish("request", i)
+		require.LessOrEqual(t, len(hub.ring), ringSize, "the ring never grows past ringSize")
 	}
 
 	c, backlog := hub.subscribe(5)
