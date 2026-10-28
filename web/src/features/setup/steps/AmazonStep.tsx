@@ -8,7 +8,7 @@ import { getAuthorize, useAuthorize, usePasteAmazon, useSaveAmazonCredentials, u
 import { Button } from "@components/ui/Button";
 import { Field, Input } from "@components/ui/Field";
 import { Callout, CopyButton } from "@components/ui/States";
-import { StepFooter, StepHeading, type StepProps } from "@features/setup/shared";
+import { StepFooter, StepHeading, StepPending, type StepProps } from "@features/setup/shared";
 
 const LWA_CONSOLE = "https://developer.amazon.com/loginwithamazon/console/site/lwa/overview.html";
 const LWA_TOKENS_COMMAND = "ask util generate-lwa-tokens";
@@ -48,8 +48,9 @@ function ConsoleLink({ children }: { children?: ReactNode }) {
 
 export function AmazonStep({ nav }: StepProps) {
   const { t } = useTranslation("setup");
-  const { data: skill } = useSkill();
-  const authorize = useAuthorize(!skill?.amazon.connected);
+  const skillQuery = useSkill();
+  const skill = skillQuery.data;
+  const authorize = useAuthorize(!!skill && !skill.amazon.connected);
   const saveCredentials = useSaveAmazonCredentials();
   const [clientId, setClientId] = useState<string | null>(null);
   const [clientSecret, setClientSecret] = useState("");
@@ -60,7 +61,18 @@ export function AmazonStep({ nav }: StepProps) {
     return error ? t("amazon.redirectError", { error }) : null;
   });
 
-  if (skill?.amazon.connected && !skill.amazon.needs_reauthorise) {
+  // Whether Amazon is connected comes from the skill, so the step waits for it rather than asking to connect an account that already is.
+  if (!skill) {
+    return (
+      <div className="flex flex-col gap-4.5">
+        <StepHeading>{t("amazon.heading")}</StepHeading>
+        <StepPending error={skillQuery.error} onRetry={() => skillQuery.refetch()} />
+        <StepFooter nav={nav} primary={null} />
+      </div>
+    );
+  }
+
+  if (skill.amazon.connected && !skill.amazon.needs_reauthorise) {
     return (
       <div className="flex flex-col gap-4.5">
         <StepHeading>{t("amazon.heading")}</StepHeading>
@@ -81,11 +93,11 @@ export function AmazonStep({ nav }: StepProps) {
     );
   }
 
-  const allReturnUrls = authorize.data?.return_urls ?? fallbackReturnUrls(skill?.endpoint.url);
+  const allReturnUrls = authorize.data?.return_urls ?? fallbackReturnUrls(skill.endpoint.url);
   // Over HTTPS Amazon returns to Encore's callback; without HTTPS it returns to the local address for the paste flow, as Amazon allows plain HTTP only for loopback.
   const https = allReturnUrls.some((url) => url.startsWith("https://"));
   const returnUrls = allReturnUrls.filter((url) => url.startsWith(https ? "https://" : "http://127.0.0.1"));
-  const id = clientId ?? skill?.amazon.profile_client_id ?? "";
+  const id = clientId ?? skill.amazon.profile_client_id ?? "";
   const fieldErrors = saveCredentials.error instanceof ApiError ? saveCredentials.error.fieldErrors : {};
 
   const submit = async (event: FormEvent) => {
@@ -110,7 +122,7 @@ export function AmazonStep({ nav }: StepProps) {
   return (
     <form onSubmit={submit} noValidate className="flex flex-col gap-4.5">
       <StepHeading intro={t("amazon.intro")}>{t("amazon.heading")}</StepHeading>
-      {skill?.amazon.needs_reauthorise ? <Callout tone="warnStrong">{t("amazon.reauthorise")}</Callout> : null}
+      {skill.amazon.needs_reauthorise ? <Callout tone="warnStrong">{t("amazon.reauthorise")}</Callout> : null}
       <ol className="flex list-decimal flex-col gap-2 pl-5">
         <li>
           <Trans t={t} i18nKey="amazon.instructions.open" components={{ link: <ConsoleLink /> }} />

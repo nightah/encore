@@ -263,6 +263,77 @@ describe("setup wizard", () => {
     expect(await screen.findByLabelText("Public base URL")).toHaveValue("https://encore.example.net");
   });
 
+  it("waits for the skill settings before offering to connect Amazon", async () => {
+    resetDb("configured");
+    window.localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify({ done: [1, 2, 3], skipped: [], step: 4 }));
+    const requests = recordRequests();
+    let answer: () => void = () => {};
+    server.use(
+      http.get(
+        "*/api/v1/skill",
+        () =>
+          new Promise<Response>((resolve) => {
+            answer = () => resolve(HttpResponse.json(getDb().skill));
+          }),
+      ),
+    );
+    renderApp("/setup");
+
+    // The configured sample is already connected, so the sign-in form must never show.
+    await heading("Connect your Amazon developer account");
+    expect(screen.queryByLabelText("Client ID")).not.toBeInTheDocument();
+    expect(await screen.findByRole("status")).toHaveTextContent("Loading…");
+    expect(screen.getByRole("button", { name: "Skip for now" })).toBeEnabled();
+
+    answer();
+    expect(await screen.findByText(/Connected to Amazon \(vendor M2X8K4P1QF\)/)).toBeInTheDocument();
+    expect(screen.queryByLabelText("Client ID")).not.toBeInTheDocument();
+    expect(requests.some((r) => r.path.startsWith("/skill/amazon/authorize"))).toBe(false);
+  });
+
+  it("says the skill settings didn't load instead of asking to connect Amazon", async () => {
+    resetDb("configured");
+    window.localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify({ done: [1, 2, 3], skipped: [], step: 4 }));
+    failWith("get", "/skill", 500, "boom");
+    const { queryClient } = renderApp("/setup");
+
+    await heading("Connect your Amazon developer account");
+    await waitFor(() => expect(queryClient.getQueryState(keys.skill)?.status).toBe("error"));
+    expect(screen.queryByLabelText("Client ID")).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("boom");
+    expect(screen.getByRole("button", { name: "Skip for now" })).toBeEnabled();
+  });
+
+  it("shows the deploy step loading, and why it didn't load, with a way to move on", async () => {
+    resetDb("configured");
+    window.localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify({ done: [1, 2, 3, 4], skipped: [], step: 5 }));
+    let answer: () => void = () => {};
+    server.use(
+      http.get(
+        "*/api/v1/skill",
+        () =>
+          new Promise<Response>((resolve) => {
+            answer = () => resolve(HttpResponse.json(getDb().skill));
+          }),
+      ),
+    );
+    const first = renderApp("/setup");
+
+    await heading("Deploy the skill");
+    expect(await screen.findByRole("status")).toHaveTextContent("Loading…");
+    expect(screen.getByRole("button", { name: "Back" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Skip for now" })).toBeEnabled();
+    answer();
+    expect(await screen.findByRole("button", { name: "Deploy skill" })).toBeInTheDocument();
+    first.unmount();
+
+    failWith("get", "/skill", 500, "boom");
+    renderApp("/setup");
+    await heading("Deploy the skill");
+    expect(await screen.findByRole("alert")).toHaveTextContent("boom");
+    expect(screen.getByRole("button", { name: "Skip for now" })).toBeEnabled();
+  });
+
   it("resumes where you left off and offers it from the shell", async () => {
     resetDb("configured");
     window.localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify({ done: [1, 2, 3], skipped: [], step: 4 }));

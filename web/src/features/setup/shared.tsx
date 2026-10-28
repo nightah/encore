@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 
 import { Button } from "@components/ui/Button";
 import { Dot } from "@components/ui/Card";
+import { ErrorState, LoadingBlock } from "@components/ui/States";
 
 /** The wizard's steps in order; each names its title and subtitle under steps.* in the setup namespace. */
 export const STEPS = ["admin", "address", "kodi", "amazon", "deploy", "hello"] as const;
@@ -37,6 +38,11 @@ export function StepFooter({ nav, primary }: { nav: StepNav; primary: ReactNode 
       </div>
     </div>
   );
+}
+
+/** What a step shows while the query it starts from loads: the loading state, or the error with a retry. */
+export function StepPending({ error, onRetry }: { error: unknown; onRetry: () => void }) {
+  return error ? <ErrorState error={error} onRetry={onRetry} /> : <LoadingBlock />;
 }
 
 export function StepHeading({ children, intro }: { children: ReactNode; intro?: ReactNode }) {

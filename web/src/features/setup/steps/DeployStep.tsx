@@ -20,7 +20,7 @@ import { Checkbox, FieldGrid } from "@components/ui/Field";
 import { InfoTip } from "@components/ui/InfoTip";
 import { Progress } from "@components/ui/Meter";
 import { Callout } from "@components/ui/States";
-import { StepFooter, StepHeading, type StepProps } from "@features/setup/shared";
+import { StepFooter, StepHeading, StepPending, type StepProps } from "@features/setup/shared";
 import { CONTENT, type Content, toggleContent } from "@features/skill/content";
 import { deployFraction } from "@features/skill/timeline";
 
@@ -39,7 +39,8 @@ type Invocation = "encore" | "kodi";
 
 export function DeployStep({ nav }: StepProps) {
   const { t } = useTranslation("setup");
-  const { data: skill } = useSkill();
+  const skillQuery = useSkill();
+  const skill = skillQuery.data;
   const save = useSaveSkillSettings(null);
   const start = useStartDeploy();
   const [deployId, setDeployId] = useActiveDeploy(skill);
@@ -50,7 +51,15 @@ export function DeployStep({ nav }: StepProps) {
   const [content, setContent] = useState<Content[] | null>(null);
   const [privacy, setPrivacy] = useState<Answers | null>(null);
 
-  if (!skill) return <StepHeading>{t("deploy.heading")}</StepHeading>;
+  if (!skill) {
+    return (
+      <div className="flex flex-col gap-4.5">
+        <StepHeading>{t("deploy.heading")}</StepHeading>
+        <StepPending error={skillQuery.error} onRetry={() => skillQuery.refetch()} />
+        <StepFooter nav={nav} primary={null} />
+      </div>
+    );
+  }
 
   const currentInvocation = invocation ?? skill.invocation;
   const currentLocales = locales ?? skill.locales_enabled;

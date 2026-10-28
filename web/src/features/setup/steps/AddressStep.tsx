@@ -7,8 +7,8 @@ import { ApiError, errorMessage } from "@api/client";
 import { skillSettingsFrom, useSaveSkillSettings, useSkill } from "@api/skill";
 import { Button } from "@components/ui/Button";
 import { Field, Input } from "@components/ui/Field";
-import { Callout, ErrorState, LoadingBlock } from "@components/ui/States";
-import { CheckList, StepFooter, StepHeading, type StepProps } from "@features/setup/shared";
+import { Callout } from "@components/ui/States";
+import { CheckList, StepFooter, StepHeading, StepPending, type StepProps } from "@features/setup/shared";
 
 function originOf(url: string | undefined): string {
   if (!url) return "";
@@ -61,11 +61,7 @@ export function AddressStep({ nav }: StepProps) {
       <StepHeading intro={t("address.intro")}>{t("address.heading")}</StepHeading>
       {/* The address starts from the skill's saved endpoint, so the field waits for the skill rather than showing empty and then filling in. */}
       {!skill ? (
-        skillQuery.error ? (
-          <ErrorState error={skillQuery.error} onRetry={() => skillQuery.refetch()} />
-        ) : (
-          <LoadingBlock />
-        )
+        <StepPending error={skillQuery.error} onRetry={() => skillQuery.refetch()} />
       ) : (
         <>
           <Field
