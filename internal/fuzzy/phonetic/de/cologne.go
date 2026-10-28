@@ -79,7 +79,6 @@ func cologne(dst []byte, word string) []byte {
 // cologneCode is the code for letter r at the start of the word or not, between prev and next (zero when absent).
 func cologneCode(r rune, initial bool, prev, next rune) string {
 	// A missing neighbour satisfies both the positive and the negative test, as in the reference.
-	after := func(set string) bool { return prev == 0 || strings.ContainsRune(set, prev) }
 	notAfter := func(set string) bool { return prev == 0 || !strings.ContainsRune(set, prev) }
 	before := func(set string) bool { return next == 0 || strings.ContainsRune(set, next) }
 	notBefore := func(set string) bool { return next == 0 || !strings.ContainsRune(set, next) }
@@ -95,15 +94,10 @@ func cologneCode(r rune, initial bool, prev, next rune) string {
 			return "4"
 		case before("AHKOQUX") && notAfter("SZ"):
 			return "4"
-		case after("SZ"):
-			return "8"
-		case initial && notBefore("AHKLOQRUX"):
-			return "8"
-		case notBefore("AHKOQUX"):
+		default:
+			// The reference's remaining cases (after S or Z, initial and not before AHKLOQRUX, not before AHKOQUX) all give 8, and between them cover every C the first two cases leave: an initial C has no previous letter, which counts as after S or Z.
 			return "8"
 		}
-
-		return ""
 	case 'D', 'T':
 		if notBefore("CSZ") {
 			return "2"

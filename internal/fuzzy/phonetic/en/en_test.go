@@ -64,6 +64,9 @@ var metaphoneVectors = []struct{ word, primary, alternate string }{
 	{"kaiser", "KSR", ""},
 	{"harry", "HR", ""},
 	{"ocean", "ASN", ""},
+	{"rogier", "RJ", "RJR"},
+	{"rosheim", "RSM", ""},
+	{"mosholm", "MSLM", ""},
 	{"x", "S", ""},
 	{"", "", ""},
 }

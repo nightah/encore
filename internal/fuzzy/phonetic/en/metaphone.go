@@ -669,14 +669,8 @@ func (m *metaphone) stepW() {
 	m.i++
 }
 
+// stepX never sees an initial X: doubleMetaphone codes it S before the first step, so the library's own initial-X branch here could never run and is left out.
 func (m *metaphone) stepX() {
-	if m.i == 0 {
-		m.add("S", "S")
-		m.i++
-
-		return
-	}
-
 	if m.i != m.last || (!m.stringAt(m.i-3, "IAU", "EAU") && !m.stringAt(m.i-2, "AU", "OU")) {
 		m.add("KS", "KS")
 	}
