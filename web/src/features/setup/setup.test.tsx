@@ -1112,6 +1112,29 @@ describe("setup deploy step", () => {
     expect(log.some((r) => r.path === "/skill/deploy")).toBe(false);
   });
 
+  it("shows a rejected setting the step has no field for", async () => {
+    // As the server answers when the address step was skipped and the stored endpoint isn't https.
+    startAt(5);
+    server.use(
+      http.put("*/api/v1/skill/settings", () =>
+        problem422(
+          [{ location: "body.endpoint.url", message: "must be an https:// URL; Alexa only calls HTTPS endpoints" }],
+          "validation failed: endpoint.url must be an https:// URL",
+        ),
+      ),
+    );
+    const user = userEvent.setup();
+    renderApp("/setup");
+    await heading("Deploy the skill");
+
+    await user.click(await screen.findByRole("button", { name: "Deploy skill" }));
+
+    const step = screen.getByRole("region", { name: "Step 5: Deploy skill" });
+    expect(await within(step).findByRole("alert")).toHaveTextContent(
+      "validation failed: endpoint.url must be an https:// URL",
+    );
+  });
+
   it("shows why the deploy couldn't start", async () => {
     startAt(5);
     failWith("post", "/skill/deploy", 409, "A deploy is already running.");
