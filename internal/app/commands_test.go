@@ -190,7 +190,7 @@ func TestTestConnectionWithTheWrongPassword(t *testing.T) {
 
 	lib := checkNamed(t, checks, "library")
 	assert.False(t, lib.OK)
-	assert.Contains(t, lib.Detail, "not checked")
+	assert.Equal(t, "not checked: Kodi rejected the username or password", lib.Detail, "Kodi did answer, so the library check says why it was skipped")
 	assert.Empty(t, srv.CallsTo("VideoLibrary.GetMovies"))
 }
 
