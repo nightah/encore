@@ -20,6 +20,7 @@ description: Run Encore from source, the make targets, generated code and the te
 | `web/` | The web interface: React, Vite, Biome, Vitest and Playwright |
 | `docs/` | This site (Astro Starlight) |
 | `tools/` | A separate Go module for the code generators and the developer tools (actionlint, air, editorconfig-checker, govulncheck), so their dependencies stay out of Encore's; run them with `go tool -modfile=tools/go.mod …` |
+| `benchmarks/` | A separate Go module comparing Encore's own search index, edit distances, TOTP and phonetic encoders with the libraries they replaced, so those libraries stay out of Encore's `go.mod`; see [Dependencies and benchmarks](/encore/contributing/dependencies/) |
 | `i18n/` | The Alexa interaction model and translations |
 
 ## Git hooks
@@ -28,7 +29,7 @@ description: Run Encore from source, the make targets, generated code and the te
 
 | Hook | Checks |
 | --- | --- |
-| `pre-commit` | actionlint for workflows; Biome for `web/` and `docs/`; editorconfig-checker (`.editorconfig`); golangci-lint with fixes on both Go modules; hadolint for Dockerfiles; the interaction-model lint; ShellCheck for shell scripts; TruffleHog over the repository (`.trufflehog`); `tsc` for `web/`; typos (`.typos.toml`, Australian English in prose); yamllint for sorted keys in the skill's language files (`.yamllint.yml`); and zizmor for workflows. Each runs only when matching files are staged, and fixes are staged again |
+| `pre-commit` | actionlint for workflows; Biome for `web/` and `docs/`; editorconfig-checker (`.editorconfig`); golangci-lint with fixes on all three Go modules; hadolint for Dockerfiles; the interaction-model lint; ShellCheck for shell scripts; TruffleHog over the repository (`.trufflehog`); `tsc` for `web/`; typos (`.typos.toml`, Australian English in prose); yamllint for sorted keys in the skill's language files (`.yamllint.yml`); and zizmor for workflows. Each runs only when matching files are staged, and fixes are staged again |
 | `commit-msg` | [commitlint](https://commitlint.js.org/) (`web/commitlint.config.mjs`): a Conventional Commits header of at most 72 characters with a known scope |
 
 `make lint-repo` runs the repository-wide checks over everything, as CI's **Repository checks** job does; CI also runs [OSV-Scanner](https://google.github.io/osv-scanner/) on what ships (Encore's `go.mod` and the web interface's production dependencies; `.osv-scanner.toml`). Skip the hooks for one commit with `LEFTHOOK=0 git commit …`.
@@ -50,8 +51,9 @@ To reach it through a reverse proxy, override the host and allowed host names, a
 | Command | Does |
 | --- | --- |
 | `make dev` | The server and the web dev server, as above |
-| `make lint` | golangci-lint (root and `tools/`), interaction-model lint, Biome and `tsc`, and `make lint-repo` |
+| `make lint` | golangci-lint (root, `tools/` and `benchmarks/`), interaction-model lint, Biome and `tsc`, and `make lint-repo` |
 | `make test` | Go tests with the race detector, `tools/` tests and Vitest |
+| `make test-benchmarks` / `make bench` | The `benchmarks/` module's parity tests / one quick run of its comparisons with benchstat |
 | `make generate` | Regenerates the Kodi JSON-RPC and SMAPI clients, the OpenAPI document and the docs reference pages |
 | `make build` | Builds the web interface, then `bin/encore` with it embedded |
 | `make docs` / `make docs-dev` | Builds this site into `docs/dist` (checking links) / serves it locally |
