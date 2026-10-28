@@ -10,6 +10,9 @@
 /dist/
 coverage.out
 *.test
+# make bench's output; published results live in benchmarks/results/.
+/benchmarks/bench-*.txt
+/benchmarks/bin/
 
 # Web build output is embedded at build time, never committed.
 internal/server/dist/*

@@ -264,6 +264,47 @@ jobs:
             ~/.cache/go-build
           key: ${{ steps.cache.outputs.cache-primary-key }}
 
+  # benchmarks/ is a separate Go module that compares in-tree code with the libraries it replaced (bleve, go-edlib, pquerna/otp, the phonetic libraries), so they never enter Encore's go.mod. It imports Encore's internal packages, so a change there can break it: this job lints it and runs its parity tests in short mode, beside the Go job rather than in it. The nightly workflow runs them in full; the benchmarks themselves are only run by hand (benchmarks/README.md).
+  benchmarks:
+    name: Benchmarks module
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: benchmarks/go.mod
+          cache: false
+
+      # The Go job's cache from main, which holds Encore's own modules and builds; the benchmark libraries are downloaded each time rather than kept in a cache of their own.
+      - name: Restore the Go cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: go-test-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('go.mod', 'go.sum', 'tools/go.mod', 'tools/go.sum') }}
+          restore-keys: go-test-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
+        with:
+          version: ${{ env.GOLANGCI_LINT_VERSION }}
+          working-directory: benchmarks
+          args: --config=../.golangci.yml
+
+      - name: Parity tests
+        working-directory: benchmarks
+        run: go test -short ./...
+
   web:
     name: Web
     runs-on: ubuntu-26.04

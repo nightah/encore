@@ -291,6 +291,42 @@ jobs:
         if: steps.secret.outputs.present == 'true'
         run: go test -tags smapi_live -count=1 -v ./internal/smapi/...
 
+  # CI runs the benchmarks module's parity tests in short mode; this runs them all, including the comparison with bleve over a 10,000-title library. The benchmarks themselves are only run by hand (benchmarks/README.md).
+  benchmarks:
+    name: Benchmarks module parity
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: benchmarks
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: benchmarks/go.mod
+          cache: false
+
+      # CI's test cache from main (ci-jobs.yml); nightly runs never save their own.
+      - name: Restore the Go cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: go-test-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('go.mod', 'go.sum', 'tools/go.mod', 'tools/go.sum') }}
+          restore-keys: go-test-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Parity tests
+        run: go test -count=1 ./...
+
   mutation:
     name: Mutation testing (gremlins)
     # Weekly: only on the Sunday schedule, or on demand.
