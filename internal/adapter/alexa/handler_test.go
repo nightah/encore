@@ -560,6 +560,8 @@ func TestSpokenIDSuffix(t *testing.T) {
 		"AB":                         "A B",
 		"":                           "",
 		"device-äöü":                 "ä ö ü",
+		"ABCD":                       "B C D",
+		"ABC":                        "A B C",
 	} {
 		assert.Equal(t, want, spokenIDSuffix(in), in)
 	}

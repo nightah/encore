@@ -213,3 +213,51 @@ func TestSeekRequest(t *testing.T) {
 func slotsFor(intent Intent, speech *Speech) slots {
 	return slots{intent: intent, locale: "en-AU", speech: speech}
 }
+
+func TestBlankRoomMeansThisEcho(t *testing.T) {
+	h, backend, bedroom, rec := newRoomHandler(t)
+
+	serveBody(t, h, intentRequest(t, "WatchMovie", map[string]slotSpec{"Movie": {value: "hot fuzz"}, "Room": {value: " \t "}}))
+
+	assert.Equal(t, []string{"Play movie/4 resume"}, backend.Calls(), "a room slot of only whitespace is no room at all")
+	assert.Empty(t, bedroom.Calls())
+	require.Len(t, rec.entries, 1)
+	assert.Equal(t, "Lounge", rec.entries[0].Target)
+}
+
+func TestWhatsNewRespectsContentGroups(t *testing.T) {
+	const declined = "This skill is set up without that kind of title."
+
+	tests := map[string]struct {
+		disabled []media.Content
+		slots    map[string]slotSpec
+		want     string
+	}{
+		"films by default":                      {want: "Library movie"},
+		"episodes without films":                {disabled: []media.Content{media.ContentMovies}, want: "RecentlyAdded episode"},
+		"albums with only music":                {disabled: []media.Content{media.ContentMovies, media.ContentTV}, want: "Library album"},
+		"nothing with every group switched off": {disabled: media.Contents},
+		"an asked-for type that is switched off": {
+			disabled: []media.Content{media.ContentTV},
+			slots:    map[string]slotSpec{"MediaType": {"shows", "tvshow"}},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			h, backend := withDisabled(t, false, tc.disabled...)
+
+			res := serveBody(t, h, intentRequest(t, "WhatsNew", tc.slots))
+
+			if tc.want == "" {
+				assert.Contains(t, string(res), declined)
+				assert.Empty(t, backend.Calls())
+
+				return
+			}
+
+			assert.NotContains(t, string(res), declined)
+			assert.True(t, containsPrefix(backend.Calls(), tc.want), "want %q, got %q", tc.want, backend.Calls())
+		})
+	}
+}

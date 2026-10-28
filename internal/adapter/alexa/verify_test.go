@@ -19,6 +19,8 @@ import (
 	"math/big"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -579,4 +581,85 @@ func TestNewVerifierRefusesWithoutFetching(t *testing.T) {
 	require.ErrorIs(t, v.Verify(t.Context(), body, http.Header{}), alexaverify.ErrMissingHeader)
 	require.ErrorIs(t, v.Verify(t.Context(), body, signed("c2ln", "https://attacker.example.com/echo.api/cert.pem")), alexaverify.ErrCertURLInvalid)
 	require.ErrorIs(t, v.Verify(t.Context(), body, signed("c2ln", "file:///etc/passwd")), alexaverify.ErrCertURLInvalid)
+}
+
+// TestVerifiedEnforcesSkillOnRealEnvelopes checks the skill ID on full-size envelopes of every request type, not just the minimal test envelope.
+func TestVerifiedEnforcesSkillOnRealEnvelopes(t *testing.T) {
+	const (
+		own     = "amzn1.ask.skill.test"
+		foreign = "amzn1.ask.skill.attacker"
+	)
+
+	requests, err := filepath.Glob("testdata/golden/*/request.json")
+	require.NoError(t, err)
+	require.NotEmpty(t, requests)
+
+	for _, path := range requests {
+		body := mustRead(t, path)
+
+		// with re-encodes the envelope naming the given skills in its context and session.
+		with := func(contextID, sessionID string) []byte {
+			var env map[string]any
+			require.NoError(t, json.Unmarshal(body, &env), path)
+
+			app := func(parent map[string]any) map[string]any {
+				a, ok := parent["application"].(map[string]any)
+				require.True(t, ok, "%s has an application", path)
+
+				return a
+			}
+
+			app(env["context"].(map[string]any)["System"].(map[string]any))["applicationId"] = contextID
+			app(env["session"].(map[string]any))["applicationId"] = sessionID
+
+			b, err := json.Marshal(env)
+			require.NoError(t, err)
+
+			return b
+		}
+
+		for name, tc := range map[string]struct {
+			body []byte
+			ok   bool
+		}{
+			"own skill":                     {body: body, ok: true},
+			"another skill":                 {body: with(foreign, foreign)},
+			"another skill in the context":  {body: with(foreign, own)},
+			"another skill only in session": {body: with(own, foreign), ok: true},
+		} {
+			called := false
+			h := Verified(acceptAll{}, own, slog.New(slog.DiscardHandler), func(w http.ResponseWriter, _ *http.Request, _ []byte) {
+				called = true
+
+				w.WriteHeader(http.StatusOK)
+			})
+
+			rec := serve(t, h, tc.body, "sig")
+			assert.Equal(t, tc.ok, called, "%s: %s", path, name)
+
+			if !tc.ok {
+				assert.Equal(t, http.StatusBadRequest, rec.Code, "%s: %s", path, name)
+			}
+		}
+	}
+}
+
+func TestVerifiedBodySizeLimitIsInclusive(t *testing.T) {
+	var got int
+
+	h := Verified(acceptAll{}, testSkillID, slog.New(slog.DiscardHandler), func(w http.ResponseWriter, _ *http.Request, body []byte) {
+		got = len(body)
+
+		w.WriteHeader(http.StatusOK)
+	})
+
+	env := envelope(testSkillID, fixedNow)
+	padded := slices.Concat(env, bytes.Repeat([]byte(" "), MaxRequestBytes-len(env)))
+
+	require.Equal(t, http.StatusOK, serve(t, h, padded, "sig").Code, "a body of exactly MaxRequestBytes is read whole")
+	assert.Equal(t, MaxRequestBytes, got)
+
+	got = 0
+	assert.Equal(t, http.StatusBadRequest, serve(t, h, append(padded, ' '), "sig").Code)
+	assert.Zero(t, got)
 }

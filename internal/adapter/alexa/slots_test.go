@@ -39,7 +39,7 @@ func TestParseDuration(t *testing.T) {
 
 // A duration too long for time.Duration is unreadable, not a wrapped or platform-dependent value.
 func TestParseDurationRejectsOverflow(t *testing.T) {
-	for _, in := range []string{"P7000Y", "P300Y", "P250Y250Y250Y", "PT9999999999999H", "P1" + strings.Repeat("0", 400) + "D"} {
+	for _, in := range []string{"P7000Y", "P300Y", "P250Y250Y250Y", "PT9999999999999H", "P1" + strings.Repeat("0", 400) + "D", "PT9223372036.854775808S"} {
 		d, ok := parseDuration(in)
 		assert.False(t, ok, in)
 		assert.Zero(t, d, in)
