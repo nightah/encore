@@ -253,7 +253,7 @@ func (f *filter) matches(r record) bool {
 	}
 
 	switch f.Field {
-	case "title", "artist":
+	case "title", "artist", "album":
 		t, v := strings.ToLower(r.title()), strings.ToLower(value)
 
 		switch f.Operator {

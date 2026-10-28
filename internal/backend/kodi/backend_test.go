@@ -593,3 +593,186 @@ func TestNowPlayingArtAndImage(t *testing.T) {
 	_, _, err = b.Client().Image(ctx, "http://192.0.2.1/secret")
 	require.ErrorIs(t, err, ErrNotImage, "only image:// references are fetched")
 }
+
+func TestActivePlayerPrefersVideoThenAudio(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		players string
+		want    string
+	}{
+		{"video first", `[{"playerid":2,"type":"picture"},{"playerid":0,"type":"audio"},{"playerid":1,"type":"video"}]`, `{"playerid":1,"shuffle":true}`},
+		{"then audio", `[{"playerid":2,"type":"picture"},{"playerid":0,"type":"audio"}]`, `{"playerid":0,"shuffle":true}`},
+		{"then anything", `[{"playerid":2,"type":"picture"}]`, `{"playerid":2,"shuffle":true}`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+			s.Handle("Player.GetActivePlayers", func(json.RawMessage) (any, *fakekodi.Error) { return json.RawMessage(tc.players), nil })
+			s.Handle("Player.SetShuffle", func(json.RawMessage) (any, *fakekodi.Error) { return "OK", nil })
+
+			require.NoError(t, b.SetShuffle(t.Context(), true))
+			assert.JSONEq(t, tc.want, lastParams(t, s, "Player.SetShuffle"))
+		})
+	}
+}
+
+func TestNowPlayingNothing(t *testing.T) {
+	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+
+	np, err := b.NowPlaying(t.Context())
+
+	require.NoError(t, err)
+	assert.Nil(t, np, "nothing playing is not an error")
+	assert.Empty(t, s.CallsTo("Player.GetItem"))
+}
+
+func TestNowPlayingOutsideTheLibrary(t *testing.T) {
+	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+	playing(t, b)
+
+	s.Handle("Player.GetItem", func(json.RawMessage) (any, *fakekodi.Error) {
+		return json.RawMessage(`{"item":{"type":"channel","id":42,"label":"ABC News","duration":0,"runtime":1800}}`), nil
+	})
+	s.Handle("Player.GetProperties", func(json.RawMessage) (any, *fakekodi.Error) {
+		return json.RawMessage(`{"speed":1,"time":{"hours":0,"minutes":5,"seconds":0,"milliseconds":0}}`), nil
+	})
+
+	np, err := b.NowPlaying(t.Context())
+	require.NoError(t, err)
+	require.NotNil(t, np)
+
+	assert.Equal(t, media.Item{Title: "ABC News", Runtime: 30 * time.Minute}, np.Item, "no kind and no ID for something outside the library")
+	assert.Equal(t, 5*time.Minute, np.Position)
+	assert.Equal(t, 30*time.Minute, np.Duration, "without a total time the runtime is the duration")
+	assert.False(t, np.Paused)
+}
+
+func TestNowPlayingKinds(t *testing.T) {
+	for typ, kind := range map[string]media.Kind{"movie": media.KindMovie, "episode": media.KindEpisode, "musicvideo": media.KindMusicVideo, "song": media.KindSong} {
+		m := mapper{zone: newZone(aest)}
+
+		it := m.playing(&kodirpc.ListItemAll{ListItemBase: kodirpc.ListItemBase{ID: 7, Type: kodirpc.ListItemBaseType(typ), Title: "T"}})
+
+		assert.Equal(t, kind, it.Kind, typ)
+		assert.Equal(t, 7, it.ID, typ)
+	}
+}
+
+func TestParseTime(t *testing.T) {
+	m := mapper{zone: newZone(aest)}
+
+	assert.Equal(t, at("2024-06-01 10:00:00"), m.parseTime("2024-06-01 10:00:00"))
+	assert.True(t, m.parseTime("").IsZero())
+	assert.True(t, m.parseTime("yesterday").IsZero(), "a malformed date is no date")
+	assert.True(t, m.parseTime("2024-06-01").IsZero())
+	assert.Zero(t, globalDuration(nil))
+}
+
+func TestSearchEachKind(t *testing.T) {
+	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+
+	for _, tc := range []struct {
+		kind   media.Kind
+		title  string
+		method string
+		field  string
+		want   []string
+	}{
+		{media.KindTVShow, "office", "VideoLibrary.GetTVShows", "title", []string{"The Office (US)", "The Office (UK)"}},
+		{media.KindMusicVideo, "rhapsody", "VideoLibrary.GetMusicVideos", "title", []string{"Bohemian Rhapsody"}},
+		{media.KindAlbum, "abbey", "AudioLibrary.GetAlbums", "album", []string{"Abbey Road"}},
+		{media.KindSong, "love", "AudioLibrary.GetSongs", "title", []string{"Love of My Life"}},
+		{media.KindSong, "zzz", "AudioLibrary.GetSongs", "title", []string{}},
+	} {
+		items, err := b.Search(t.Context(), tc.kind, tc.title)
+		require.NoError(t, err, tc.kind)
+		assert.ElementsMatch(t, tc.want, titles(items), tc.kind)
+		assert.Contains(t, lastParams(t, s, tc.method), `"filter":{"operator":"contains","value":"`+tc.title+`","field":"`+tc.field+`"}`, tc.kind)
+	}
+}
+
+func TestPlaylistsSkipFoldersAndUnreachableKodi(t *testing.T) {
+	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+
+	s.Handle("Files.GetDirectory", func(params json.RawMessage) (any, *fakekodi.Error) {
+		if bytes.Contains(params, []byte("Mix.m3u")) {
+			return json.RawMessage(`{"files":[{"file":"/m/1.flac","filetype":"file","label":"1"},{"file":"/m/sub/","filetype":"directory","label":"sub"},{"file":"","filetype":"file","label":"stream"}]}`), nil
+		}
+
+		if bytes.Contains(params, []byte("music")) {
+			return json.RawMessage(`{"files":[{"file":"special://profile/playlists/music/Mix.m3u","filetype":"file","label":""},{"file":"special://profile/playlists/music/Old/","filetype":"directory","label":"Old"}]}`), nil
+		}
+
+		return nil, &fakekodi.Error{Code: CodeInvalidParams, Message: "no such folder"}
+	})
+
+	items, err := b.Library(t.Context(), media.KindPlaylist)
+	require.NoError(t, err, "a missing playlist folder means no playlists there")
+	require.Len(t, items, 1, "folders aren't playlists")
+	assert.Equal(t, "special://profile/playlists/music/Mix.m3u", items[0].Title, "the path stands in for a missing label")
+
+	require.NoError(t, b.Play(t.Context(), items[0].Ref(), media.PlayOptions{Shuffle: true}))
+	assert.JSONEq(t, `{"playlistid":0,"item":[{"file":"/m/1.flac"}]}`, lastParams(t, s, "Playlist.Add"), "only playable files are queued")
+
+	_, err = b.Item(t.Context(), media.Ref{Kind: media.KindPlaylist, ID: 12345})
+	require.ErrorIs(t, err, media.ErrNotFound)
+
+	s.Close()
+
+	_, err = b.Library(t.Context(), media.KindPlaylist)
+	require.ErrorIs(t, err, media.ErrUnreachable, "an unreachable Kodi isn't an empty one")
+}
+
+func TestShuffleEmptyContainer(t *testing.T) {
+	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+	s.Update(func(l *fakekodi.Library) { l.Songs = nil })
+
+	err := b.Play(t.Context(), media.Ref{Kind: media.KindArtist, ID: 1}, media.PlayOptions{Shuffle: true})
+
+	require.ErrorIs(t, err, media.ErrNotFound)
+	assert.Empty(t, s.CallsTo("Playlist.Clear"), "the queue is left alone")
+}
+
+func TestZoneIsLearnedFromKodi(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		labels func(now time.Time) map[string]string
+		offset int
+	}{
+		{"date and time", func(now time.Time) map[string]string {
+			local := now.In(time.FixedZone("", 11*3600))
+
+			return map[string]string{clockLabel: local.Format("03:04:05 PM"), dateLabel: local.Format(time.DateOnly)}
+		}, 11 * 3600},
+		{"time only", func(now time.Time) map[string]string {
+			return map[string]string{clockLabel: now.In(time.FixedZone("", 10*3600)).Format("15:04:05"), dateLabel: ""}
+		}, 10 * 3600},
+		{"unreadable clock", func(time.Time) map[string]string { return map[string]string{clockLabel: "soon"} }, -1},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			s := fakekodi.New(t, fakekodi.Options{})
+			b := NewBackend(NewClient(testConfig(t, s), nil), BackendOptions{})
+			now := time.Date(2026, 10, 28, 9, 30, 0, 0, time.UTC)
+			b.m.zone.now = func() time.Time { return now }
+			s.Handle(kodirpc.MethodXBMCGetInfoLabels, func(json.RawMessage) (any, *fakekodi.Error) { return tc.labels(now), nil })
+
+			movies, err := b.Library(t.Context(), media.KindMovie)
+			require.NoError(t, err)
+
+			_, offset := movies[0].DateAdded.Zone()
+
+			if tc.offset < 0 {
+				_, local := time.Date(2019, 3, 2, 10, 0, 0, 0, time.Local).Zone()
+				assert.Equal(t, local, offset, "the server's own zone stays the guess")
+
+				return
+			}
+
+			assert.Equal(t, tc.offset, offset, "dates are read in Kodi's zone")
+			assert.Equal(t, 10, movies[0].DateAdded.Hour())
+
+			_, err = b.Library(t.Context(), media.KindMovie)
+			require.NoError(t, err)
+			assert.Len(t, s.CallsTo(kodirpc.MethodXBMCGetInfoLabels), 1, "the zone is learned once, not on every read")
+		})
+	}
+}
