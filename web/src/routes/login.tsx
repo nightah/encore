@@ -37,6 +37,7 @@ const loginSchema = (t: TFunction<"auth">) =>
     username: z.string().trim().min(1, t("login.errors.username")),
   });
 type LoginForm = z.infer<ReturnType<typeof loginSchema>>;
+const EMPTY: LoginForm = { password: "", totp: "", username: "" };
 
 /** Only same-app paths are allowed as a post-login destination. */
 function safeRedirect(target: string | undefined): string {
@@ -51,7 +52,7 @@ function LoginPage() {
   const { data: auth } = useSuspenseQuery(authStateQuery);
   const login = useLogin();
   const form = useForm<LoginForm>({
-    defaultValues: { password: "", totp: "", username: "" },
+    defaultValues: EMPTY,
     resolver: zodResolver(loginSchema(t)),
   });
 
@@ -109,7 +110,7 @@ function LoginPage() {
             <Field label={t("login.totp.label")} hint={t("login.totp.hint")} error={errors.totp?.message}>
               <Input inputMode="numeric" autoComplete="one-time-code" mono {...form.register("totp")} />
             </Field>
-            {login.error && Object.keys(fieldErrorsOf(login.error)).length === 0 ? (
+            {login.error && !Object.keys(fieldErrorsOf(login.error)).some((name) => name in EMPTY) ? (
               <p role="alert" className="rounded-[10px] bg-bad-bg px-3.5 py-2.5 text-bad">
                 {login.error instanceof ApiError && login.error.status === 429
                   ? t("login.tooManyAttempts")
