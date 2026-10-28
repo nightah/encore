@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import { API_BASE, ApiError, buildUrl, errorMessage, getCsrfToken, problemMessage, setCsrfToken } from "@api/client";
+import {
+  API_BASE,
+  ApiError,
+  buildUrl,
+  errorMessage,
+  fieldErrorsOf,
+  getCsrfToken,
+  problemErrorsOf,
+  problemMessage,
+  setCsrfToken,
+} from "@api/client";
 
 describe("ApiError", () => {
   it("keeps an object body as the problem and ignores anything else", () => {
@@ -42,6 +52,31 @@ describe("ApiError", () => {
 
   it("has no field errors without a problem body", () => {
     expect(new ApiError("down", 502, "Bad Gateway").fieldErrors).toEqual({});
+  });
+});
+
+describe("problemErrorsOf and fieldErrorsOf", () => {
+  const invalid = new ApiError("invalid", 422, {
+    errors: [{ location: "body.oidc.client_id", message: "required" }],
+  });
+
+  it("read an API error's validation problems, raw and keyed by field", () => {
+    expect(problemErrorsOf(invalid)).toEqual([{ location: "body.oidc.client_id", message: "required" }]);
+    expect(fieldErrorsOf(invalid)).toEqual({ client_id: "required" });
+  });
+
+  it("find none in an API error without validation problems", () => {
+    expect(problemErrorsOf(new ApiError("down", 502, "Bad Gateway"))).toEqual([]);
+    expect(problemErrorsOf(new ApiError("conflict", 409, { detail: "Room exists." }))).toEqual([]);
+    expect(fieldErrorsOf(new ApiError("down", 502, "Bad Gateway"))).toEqual({});
+  });
+
+  it("find none in anything that isn't an API error", () => {
+    const lookalike = Object.assign(new Error("boom"), { fieldErrors: { name: "x" }, problem: { errors: [{}] } });
+    for (const error of [lookalike, new TypeError("x is undefined"), "boom", undefined, null]) {
+      expect(problemErrorsOf(error)).toEqual([]);
+      expect(fieldErrorsOf(error)).toEqual({});
+    }
   });
 });
 
