@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -139,6 +139,35 @@ describe("Request log", () => {
     expect(within(list).getByRole("button", { name: /play hot fuzzy/ })).toBeInTheDocument();
   });
 
+  it("clears the outcome filter with All outcomes", async () => {
+    const user = userEvent.setup();
+    const { router } = renderApp("/request-log?outcome=not_found");
+    const list = await requestList();
+    await waitFor(() => expect(within(list).getAllByRole("button")).toHaveLength(1));
+
+    await user.selectOptions(screen.getByLabelText("Outcome"), "All outcomes");
+
+    await waitFor(() => expect(router.state.location.search).not.toHaveProperty("outcome"));
+    await waitFor(() => expect(rows().length).toBeGreaterThan(1));
+  });
+
+  it("keeps the page when Enter is pressed in the search box", async () => {
+    const user = userEvent.setup();
+    const { router } = renderApp("/request-log");
+    await requestList();
+    const submits: boolean[] = [];
+    const onSubmit = (event: Event) => submits.push(event.defaultPrevented);
+    window.addEventListener("submit", onSubmit);
+    try {
+      await user.type(screen.getByRole("searchbox", { name: "Search what was heard" }), "severance{Enter}");
+    } finally {
+      window.removeEventListener("submit", onSubmit);
+    }
+    // The browser would reload the page for a submit nobody cancelled.
+    expect(submits).toEqual([true]);
+    await waitFor(() => expect(router.state.location.search).toMatchObject({ q: "severance" }));
+  });
+
   it("shows the first match instead of a request the new filter hides", async () => {
     const user = userEvent.setup();
     renderApp("/request-log?id=1003");
@@ -235,6 +264,18 @@ describe("Request log", () => {
     const filter = screen.getByLabelText<HTMLSelectElement>("Echo device");
     await waitFor(() => expect(within(filter).getByText("Bedroom Echo")).toBeInTheDocument());
     expect(filter.selectedOptions[0]).toHaveTextContent("Echo #99");
+  });
+
+  it("loads the log again from Try again", async () => {
+    const user = userEvent.setup();
+    failWith("get", "/requests", 500, "The request log database is locked.");
+    renderApp("/request-log");
+    expect(await screen.findByRole("alert")).toHaveTextContent("The request log database is locked.");
+
+    server.resetHandlers();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await requestList()).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("searches what was heard once typing pauses", async () => {
@@ -341,6 +382,19 @@ describe("Request log", () => {
     expect(screen.getByText("None.")).toBeInTheDocument();
   });
 
+  it("says a request that failed before matching reached no Kodi instance, without candidates", async () => {
+    const request = getDb().requests.find((r) => r.id === 1003);
+    if (!request) throw new Error("no sample request");
+    Object.assign(request, { match: null, outcome: "error", target: "" });
+    renderApp("/request-log?id=1003");
+    await screen.findByRole("heading", { level: 2, name: "“pause”" });
+
+    expect(screen.getByText("None")).toBeInTheDocument();
+    expect(screen.queryByText("None (device not linked)")).not.toBeInTheDocument();
+    expect(screen.queryByText("Match candidates")).not.toBeInTheDocument();
+    expect(screen.queryByText(/no default is set for unlinked Echos/)).not.toBeInTheDocument();
+  });
+
   it("splits time between Encore and Kodi for requests logged without timing, and flags failed calls", async () => {
     const request = getDb().requests.find((r) => r.id === 1002);
     if (!request?.match) throw new Error("no sample request");
@@ -399,6 +453,21 @@ describe("Request log", () => {
 
     expect(await screen.findByRole("button", { name: "Copied" })).toBeInTheDocument();
     expect(JSON.parse(await navigator.clipboard.readText())).toMatchObject({ heard: "shuffle radiohead", id: 1002 });
+  });
+
+  it("goes back to Copy JSON two seconds after copying", async () => {
+    renderApp("/request-log?id=1002");
+    await screen.findByRole("heading", { level: 2, name: "“shuffle radiohead”" });
+    // Fake timers would also stall TanStack Query's own scheduling, so run the page's two-second timer by hand instead of waiting for it.
+    const timers = vi.spyOn(globalThis, "setTimeout");
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Copy JSON" }));
+    expect(await screen.findByRole("button", { name: "Copied" })).toBeInTheDocument();
+
+    const reset = timers.mock.calls.find(([, ms]) => ms === 2000)?.[0];
+    if (typeof reset !== "function") throw new Error("no two-second timer");
+    act(() => reset());
+    expect(screen.getByRole("button", { name: "Copy JSON" })).toBeInTheDocument();
   });
 
   it("explains a replay that matched nothing", async () => {
