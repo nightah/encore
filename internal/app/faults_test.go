@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/nightah/encore/internal/adapter/alexa"
 	"github.com/nightah/encore/internal/backend/kodi/fakekodi"
 	"github.com/nightah/encore/internal/config"
 	"github.com/nightah/encore/internal/core/match"
@@ -378,4 +379,84 @@ func TestIndexFailuresAreLogged(t *testing.T) {
 	out := logs.String()
 	assert.Contains(t, out, `level=ERROR msg="updating the title index" library_group=1 instance=Lounge backend=kodi error="`+match.ErrClosed.Error()+`"`)
 	assert.Contains(t, out, `level=ERROR msg="removing titles from the index" library_group=1 instance=Lounge backend=kodi error="`+match.ErrClosed.Error()+`"`)
+}
+
+func TestRequestsReportDatabaseFailures(t *testing.T) {
+	const device = "amzn1.ask.device.A"
+
+	testCases := []struct {
+		name  string
+		fault testkit.Fault
+		call  func(t *testing.T, a *App) error
+		want  string
+	}{
+		{
+			name:  "finding the default Kodi instance for an unlinked device",
+			fault: testkit.Fault{Op: testkit.Read, Table: "kodi_instances"},
+			call: func(t *testing.T, a *App) error {
+				_, err := a.Target(t.Context(), device)
+
+				return err
+			},
+			want: "getting default kodi instance: ",
+		},
+		{
+			name:  "finding the default Kodi instance for a dry run",
+			fault: testkit.Fault{Op: testkit.Read, Table: "kodi_instances"},
+			call: func(t *testing.T, a *App) error {
+				_, err := DryRunTargets{App: a, Run: &DryRun{}}.Target(t.Context(), device)
+
+				return err
+			},
+			want: "getting default kodi instance: ",
+		},
+		{
+			name:  "recording the device that named a room",
+			fault: testkit.Fault{Op: testkit.Insert, Table: "echo_devices"},
+			call: func(t *testing.T, a *App) error {
+				_, err := a.TargetForRoom(t.Context(), device, "bedroom")
+
+				return err
+			},
+			want: "recording echo device: ",
+		},
+		{
+			name:  "reading room aliases for the skill model",
+			fault: testkit.Fault{Op: testkit.Read, Table: "room_aliases"},
+			call: func(t *testing.T, a *App) error {
+				_, err := a.SlotValues(t.Context())
+
+				return err
+			},
+			want: "querying: ",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg, faults := faultyConfig(t, config.KodiInstance{Name: "Lounge", URL: "http://127.0.0.1:1/jsonrpc", Default: true})
+			cfg.Rooms = []config.Room{{Name: "Bedroom", Kodi: "Lounge"}}
+
+			a, err := New(t.Context(), cfg, slog.New(slog.DiscardHandler))
+			require.NoError(t, err)
+
+			t.Cleanup(func() { assert.NoError(t, a.Close()) })
+			require.NoError(t, a.ApplyConfiguredRoomsAndDevices(t.Context()))
+
+			faults.Inject(tc.fault)
+
+			err = tc.call(t, a)
+			require.ErrorContains(t, err, tc.want)
+			require.NotErrorIs(t, err, alexa.ErrUnlinked, "a database failure isn't mistaken for an unlinked device")
+
+			if tc.fault.Op == testkit.Read {
+				require.ErrorContains(t, err, testkit.ReadFaultMessage)
+			} else {
+				require.ErrorContains(t, err, testkit.FaultMessage)
+			}
+
+			faults.Clear()
+			require.NoError(t, tc.call(t, a), "it works again with the database")
+		})
+	}
 }
