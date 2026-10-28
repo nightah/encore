@@ -33,7 +33,7 @@ type evalOutcome struct {
 	why          string
 }
 
-// evalEncoders are compared against "current", the production encoders. "none" makes every word its own key, which measures how much the phonetic layer contributes at all. "english" keys every language with English Double Metaphone, which is what French, Spanish and Italian titles had before they had encoders of their own. "fuzzy" is internal/fuzzy/phonetic, which falls back to English for languages without an encoder of their own.
+// evalEncoders are compared against "current", the production encoders. "none" makes every word its own key, which measures how much the phonetic layer contributes at all. "english" keys every language with English Double Metaphone, the baseline the gates compare with and what a language without an encoder of its own falls back to. "fuzzy" is internal/fuzzy/phonetic, which falls back to English for languages without an encoder of their own.
 var evalEncoders = []evalEncoder{
 	{name: "current", keys: func(string) phoneticFunc { return nil }},
 	{name: "none", keys: func(string) phoneticFunc { return identityKeys }},
@@ -79,7 +79,7 @@ func corpusTokens(l *language, suites []corpusSuite) []string {
 	return slices.Sorted(maps.Keys(seen))
 }
 
-// libraryKeysFile pins the keys the libraries gave each token in goldenTokens before internal/fuzzy replaced them: one line per language and token, tab-separated, with the keys after the token.
+// libraryKeysFile pins the keys PhonoGrams/double_metaphone and f1monkey/phonetic give each token in goldenTokens: one line per language and token, tab-separated, with the keys after the token.
 const libraryKeysFile = "testdata/phonetic/library_keys.tsv"
 
 // goldenTokens are a language's corpus tokens and compact forms (corpusTokens) plus those of 300 synthetic titles.
@@ -103,10 +103,10 @@ func goldenTokens(t *testing.T, code string, suites []corpusSuite) []string {
 	return slices.Sorted(maps.Keys(seen))
 }
 
-// portedKeys is the ported encoder alone for each language whose production keying adds a rule on top of it (germanKeys), which TestPhoneticLibraryGolden checks instead.
+// portedKeys is the in-tree encoder alone, without production's extra rule, for each language whose production keying adds one on top of it (germanKeys); TestPhoneticLibraryGolden checks it instead.
 var portedKeys = map[string]phoneticFunc{"de": encoderKeys(de.Encoder{})}
 
-// TestPhoneticLibraryGolden checks that production keys every token as PhonoGrams/double_metaphone and f1monkey/phonetic did, from the keys pinned in libraryKeysFile, in every language it lists: those keyed with the ported encoders. Where production adds a rule of its own (portedKeys), the ported encoder is checked.
+// TestPhoneticLibraryGolden checks that production keys every token as PhonoGrams/double_metaphone and f1monkey/phonetic do, from the keys pinned in libraryKeysFile, in every language it lists: those whose in-tree encoders reproduce a library. Where production adds a rule of its own (portedKeys), the encoder alone is checked.
 func TestPhoneticLibraryGolden(t *testing.T) {
 	raw, err := os.ReadFile(libraryKeysFile)
 	require.NoError(t, err)
@@ -139,7 +139,7 @@ func TestPhoneticLibraryGolden(t *testing.T) {
 			require.Equal(t, golden[code][tok], keys(tok), "%s %q", code, tok)
 		}
 
-		t.Logf("%s: %d tokens keyed as the libraries did", code, len(toks))
+		t.Logf("%s: %d tokens keyed as the libraries do", code, len(toks))
 	}
 }
 
@@ -156,9 +156,9 @@ func withPhonetic(t testing.TB, code string, fn phoneticFunc) {
 
 // Corpus sets TestPhoneticEval scores separately.
 const (
-	// corpusOriginal is asr_corpus.yaml (English and German) and the per-language suites in testdata/phonetic: the corpora the encoders were chosen on.
+	// corpusOriginal is asr_corpus.yaml (English and German) and the per-language suites in testdata/phonetic: the set encoders are chosen and tuned on.
 	corpusOriginal = "original"
-	// corpusGrown is testdata/grown: blind-written suites in every language, frozen before any encoder was evaluated on them.
+	// corpusGrown is testdata/grown: held-out suites in every language. Cases describe what a listener hears; don't change one to suit an encoder (see docs/src/content/docs/contributing/dependencies.md).
 	corpusGrown = "grown"
 )
 

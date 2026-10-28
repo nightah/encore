@@ -4,7 +4,7 @@
 #
 # Cases: what a speech recogniser plausibly writes when a German speaker asks for the title. Each mishearing is tagged with the confusion it models. The classes are documented German spelling-to-sound ambiguities: final devoicing (d/t, g/k, b/p, and -ig said as -ich), f/v/ph and w/v, ei/ai and eu/äu/oi, ie/i and long vowels marked with h or doubling, x/chs/cks, c/k/z, y/i, plus word splits and merges in compounds. Controls (exact titles) and absent titles (not_found) keep the decision thresholds honest.
 #
-# This corpus was frozen before any in-tree encoder was evaluated; changing it after seeing an encoder's results invalidates the comparison.
+# Cases describe what a listener hears; don't change a case to suit an encoder's results, or the comparison stops meaning anything (see docs/src/content/docs/contributing/dependencies.md).
 suites:
   - name: german library 2
     lang: de

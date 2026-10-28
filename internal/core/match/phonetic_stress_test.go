@@ -20,7 +20,7 @@ import (
 	"github.com/nightah/encore/internal/core/media"
 )
 
-// vocabulary is the words a language's synthetic titles are made of: every distinct normalised word of at least three letters in Encore's own translations (i18n/lang and the web UI locales), real words of the language that nobody chose to suit an encoder. They were frozen into testdata/distractors on 29 October 2026, so a translation update never moves the wrong-play ceilings TestPhoneticDistractors holds production to.
+// vocabulary is the words a language's synthetic titles are made of: every distinct normalised word of at least three letters in Encore's own translations (i18n/lang and the web UI locales), real words of the language that nobody chose to suit an encoder. They are kept in testdata/distractors, so a translation update never moves the wrong-play ceilings TestPhoneticDistractors holds production to.
 func vocabulary(t *testing.T, l *language) []string {
 	t.Helper()
 

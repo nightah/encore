@@ -485,7 +485,7 @@ func TestInvertedCompaction(t *testing.T) {
 	}
 }
 
-// TestInvertedKeepsUnsegmentedScripts covers titles in scripts written without spaces, which segmenting words by Unicode rules, as bleve did, splits into single characters or drops: the inverted index keeps each normalised word whole, so a near miss still retrieves them.
+// TestInvertedKeepsUnsegmentedScripts covers titles in scripts written without spaces, which segmenting words by Unicode rules splits into single characters or drops: the inverted index keeps each normalised word whole, so a near miss still retrieves them.
 func TestInvertedKeepsUnsegmentedScripts(t *testing.T) {
 	docs := []Doc{
 		{ID: "spirited", Kind: media.KindMovie, Title: "千と千尋の神隠し"},
@@ -671,7 +671,7 @@ func TestInvertedNoCandidatesWanted(t *testing.T) {
 	assert.Empty(t, ids)
 }
 
-// TestInvertedKindFilterOnlyFilters filters a library of many films, one show and one song to films and shows. Retrieval used to add each allowed kind's IDF to its Docs' scores, as bleve did, so the rare show gained on the films; now the filter only removes the song, and every other Doc keeps its unfiltered score and rank.
+// TestInvertedKindFilterOnlyFilters filters a library of many films, one show and one song to films and shows. Adding each allowed kind's IDF to its Docs' scores would let the rare show gain on the films; the filter only removes the song, and every other Doc keeps its unfiltered score and rank.
 func TestInvertedKindFilterOnlyFilters(t *testing.T) {
 	l := languageFor("en")
 	inv := newInvertedRetriever(l)

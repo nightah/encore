@@ -18,7 +18,7 @@ import (
 	"github.com/nightah/encore/internal/fuzzy/phonetic/en"
 )
 
-// libraryEnglish is how internal/core/match keyed a word with PhonoGrams/double_metaphone before the port: numbers are their own key; otherwise the primary and alternate codes, deduplicated, then the primary without a final R when the word ends in a vowel and r ("lover", "star"), which speakers often drop; the word itself when there is no code.
+// libraryEnglish keys a word as internal/core/match does, with PhonoGrams/double_metaphone in place of the in-tree encoder: numbers are their own key; otherwise the primary and alternate codes, deduplicated, then the primary without a final R when the word ends in a vowel and r ("lover", "star"), which speakers often drop; the word itself when there is no code.
 func libraryEnglish(tok string) []string {
 	if phonetic.IsDigits(tok) {
 		return []string{tok}
@@ -48,7 +48,7 @@ func libraryEnglish(tok string) []string {
 
 var cologneEncoder = cologne.NewEncoder()
 
-// libraryGerman is how internal/core/match keyed a word with f1monkey/phonetic's Kölner Phonetik before the port: numbers are their own key, otherwise the code, or the word itself when there is none.
+// libraryGerman keys a word as internal/core/match does, with f1monkey/phonetic's Kölner Phonetik in place of the in-tree encoder: numbers are their own key, otherwise the code, or the word itself when there is none.
 func libraryGerman(tok string) []string {
 	if phonetic.IsDigits(tok) {
 		return []string{tok}
@@ -211,7 +211,7 @@ var (
 
 var sink []string
 
-// BenchmarkKeys times keying one word, with the in-tree encoder appending to a reused slice as the matcher does, and with the library as the matcher called it.
+// BenchmarkKeys times keying one word, with the in-tree encoder appending to a reused slice as the matcher does, and with the library through libraryEnglish and libraryGerman.
 func BenchmarkKeys(b *testing.B) {
 	for _, tc := range []struct {
 		lang   string

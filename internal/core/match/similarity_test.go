@@ -8,7 +8,7 @@ import (
 	"pgregory.net/rapid"
 )
 
-// similarityVectors were captured from go-edlib 1.7.0 (JaroWinklerSimilarity widened to float64, OSADamerauLevenshteinDistance), which scoring used before these functions; matching them exactly keeps scores and thresholds unchanged.
+// similarityVectors are go-edlib 1.7.0's values (JaroWinklerSimilarity widened to float64, OSADamerauLevenshteinDistance); matching them exactly keeps scores, and the thresholds tuned on them, identical to go-edlib's.
 var similarityVectors = []struct {
 	a, b string
 	jw   float64

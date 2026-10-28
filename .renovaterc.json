@@ -71,7 +71,7 @@
       "automerge": false
     },
     {
-      "description": "benchmarks/ module (comparisons with the libraries Encore replaced, never shipped): separate group, never automerge",
+      "description": "benchmarks/ module (comparisons with external libraries, never shipped): separate group, never automerge",
       "matchManagers": [
         "gomod"
       ],
@@ -82,7 +82,7 @@
       "automerge": false
     },
     {
-      "description": "benchmarks/ module: the replaced libraries stay at the versions Encore last shipped, so the comparisons and the published numbers measure what was replaced",
+      "description": "benchmarks/ module: the compared libraries stay pinned at the versions the in-tree code reproduces, so the comparisons and the published numbers stay comparable",
       "matchManagers": [
         "gomod"
       ],

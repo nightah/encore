@@ -115,7 +115,7 @@ func TestSearchKindsAndLimit(t *testing.T) {
 	})
 }
 
-// TestDefaultRetrieverFindsUnsegmentedScripts searches titles in scripts written without spaces with a letter missing. Segmenting them into words by Unicode rules, as bleve did, splits them into single characters or drops them, so only an exact title would find them.
+// TestDefaultRetrieverFindsUnsegmentedScripts searches titles in scripts written without spaces with a letter missing. Segmenting them into words by Unicode rules splits them into single characters or drops them, so only an exact title would find them.
 func TestDefaultRetrieverFindsUnsegmentedScripts(t *testing.T) {
 	ix, err := New("en", Config{})
 	require.NoError(t, err)
@@ -182,7 +182,7 @@ func TestSearchYear(t *testing.T) {
 	assert.Equal(t, DecisionAsk, res.Decision)
 }
 
-// TestSearchAsksForMissingSequel checks that a number the best title lacks stops a play: with no sibling to compete, a long title used to outscore the number and start the original instead of asking.
+// TestSearchAsksForMissingSequel checks that a number the best title lacks stops a play: with no sibling to compete, a long title must not outscore the number and start the original instead of asking.
 func TestSearchAsksForMissingSequel(t *testing.T) {
 	retrievers(t, func(t *testing.T, retr string) {
 		ix := newIndex(t, retr, movie("dundee", "Crocodile Dundee", 1986), movie("babe", "Babe", 1995), movie("bullitt", "Bullitt", 1968))

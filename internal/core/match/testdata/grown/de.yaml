@@ -1,4 +1,4 @@
-# Grown set: testdata/grown holds corpora added on top of the original ones (asr_corpus.yaml and phonetic/), which stay untouched. TestASRCorpus and TestPhoneticEval score both sets and report them separately.
+# Grown set: testdata/grown is a held-out set of corpora, kept apart from the original set (asr_corpus.yaml and phonetic/). TestASRCorpus and TestPhoneticEval score both sets and report them separately.
 #
 # German (de-DE) evaluation corpus, second batch: two more German libraries for TestPhoneticEval in the same schema as asr_corpus.yaml and phonetic/de.yaml. Cases are scored, not asserted, so there is no xfail.
 #
@@ -23,7 +23,7 @@
 #
 # Controls (exact titles, lowercased as a recogniser writes them) and absent titles (ask for missing numbered sequels, as asr_corpus.yaml does; not_found for spin-offs, near-miss titles not in the library and well-known titles that are simply absent) keep the decision thresholds honest.
 #
-# This corpus was frozen blind, before any encoder or matcher was evaluated against it; changing it after seeing an encoder's results invalidates the comparison.
+# Cases describe what a listener hears; don't change a case to suit an encoder's results, or the comparison stops meaning anything (see docs/src/content/docs/contributing/dependencies.md).
 suites:
   - name: german film and series library
     lang: de

@@ -1,4 +1,4 @@
-# Grown set: testdata/grown holds corpora added on top of the original ones (asr_corpus.yaml and phonetic/), which stay untouched. TestASRCorpus and TestPhoneticEval score both sets and report them separately.
+# Grown set: testdata/grown is a held-out set of corpora, kept apart from the original set (asr_corpus.yaml and phonetic/). TestASRCorpus and TestPhoneticEval score both sets and report them separately.
 #
 # English (en-AU, en-GB, en-US) phonetic evaluation corpus for TestPhoneticEval, a second library alongside the English suite in asr_corpus.yaml. Same schema; cases are scored, not asserted, so there is no xfail.
 #
@@ -17,7 +17,7 @@
 #   - inflection, articles and dropped or added words (plural and possessive s, a leading "the", a surname alone, a subtitle alone)
 # Controls (exact titles, including deliberate same-title ambiguity that should ask) and absent titles (not_found for titles sharing words with the library, ask for missing sequels as asr_corpus.yaml does) keep the decision thresholds honest.
 #
-# This corpus was written and frozen blind, without running or reading any encoder or matcher evaluation; changing it after seeing an encoder's results invalidates the comparison.
+# Cases describe what a listener hears; don't change a case to suit an encoder's results, or the comparison stops meaning anything (see docs/src/content/docs/contributing/dependencies.md).
 suites:
   - name: english library two
     lang: en

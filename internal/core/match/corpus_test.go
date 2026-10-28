@@ -52,7 +52,7 @@ func loadCorpus(t testing.TB) corpus {
 	return loadCorpusFiles(t, "testdata/asr_corpus.yaml")
 }
 
-// grownCorpusGlob matches the grown corpora: blind-written suites in every language, added on top of asr_corpus.yaml and testdata/phonetic and scored separately from them.
+// grownCorpusGlob matches the grown corpora: held-out suites in every language, kept apart from asr_corpus.yaml and testdata/phonetic and scored separately from them.
 const grownCorpusGlob = "testdata/grown/*.yaml"
 
 // loadGrownCorpus returns the suites of every grown corpus file, in file order.

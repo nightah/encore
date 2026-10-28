@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// libraryDigest is exhaustiveDigest of the library's codes and keys, captured from github.com/PhonoGrams/double_metaphone v0.1.0 before it was removed.
+// libraryDigest is exhaustiveDigest of the library's codes and keys, captured from github.com/PhonoGrams/double_metaphone v0.1.0.
 const libraryDigest = "e08ae020a4d3dac972d533ba95f18448905d931097cfbd35ab74bdaed5a875af"
 
 // libraryWords are the words testdata/library.txt pins: random words over all letters, over the letters with context rules and over the digraphs and names the rules single out, mixed-case text with digits and punctuation, arbitrary bytes including invalid UTF-8, and long words. The generator is seeded, so the list never changes.
@@ -89,7 +89,7 @@ func TestLibraryExhaustive(t *testing.T) {
 	assert.Equal(t, libraryDigest, exhaustiveDigest(portCode))
 }
 
-// TestLibraryGolden checks the port against the library's codes and keys in testdata/library.txt: per line, tab-separated and Go-quoted, a word, its primary and alternate codes and its keys.
+// TestLibraryGolden checks the encoder against the library's codes and keys in testdata/library.txt: per line, tab-separated and Go-quoted, a word, its primary and alternate codes and its keys.
 func TestLibraryGolden(t *testing.T) {
 	f, err := os.Open("testdata/library.txt")
 	require.NoError(t, err)

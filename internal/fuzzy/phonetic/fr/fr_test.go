@@ -145,7 +145,7 @@ var benchWords = []string{
 	"bergerac", "florette", "sources", "femmes", "arnacoeur", "petit", "nicolas", "kaamelott",
 }
 
-// BenchmarkKeys compares the French encoder with the English Double Metaphone it would replace for French titles.
+// BenchmarkKeys compares the French encoder with the English Double Metaphone that French titles would otherwise fall back to.
 func BenchmarkKeys(b *testing.B) {
 	for _, impl := range []struct {
 		name string

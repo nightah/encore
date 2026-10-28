@@ -142,7 +142,7 @@ func idsOf(docs []Doc) []string {
 	return out
 }
 
-// TestInvertedCompactsInBackground deletes a quarter of the Docs, which used to compact the index under the write lock before the delete returned, blocking every search meanwhile. The delete now returns with the compaction still to run, searches answer from the tombstoned index, writes made before the compaction finishes are kept, and the result is what a fresh index holds.
+// TestInvertedCompactsInBackground deletes a quarter of the Docs, enough to compact the index. Compacting under the write lock before the delete returned would block every search meanwhile; the delete returns with the compaction still to run, searches answer from the tombstoned index, writes made before the compaction finishes are kept, and the result is what a fresh index holds.
 func TestInvertedCompactsInBackground(t *testing.T) {
 	l := languageFor("en")
 	inv := newInvertedRetriever(l)

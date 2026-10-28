@@ -4,7 +4,7 @@
 #
 # Cases: what a speech recogniser plausibly writes when a Spanish speaker asks for the title. Each mishearing is tagged with the confusion it models. The classes are the documented sound mergers of peninsular and southern Spanish, which leave several spellings for one sound: betacism (b and v are both /b/), silent h, yeísmo (ll and y merge), seseo and ceceo (c before e/i, z and s), aspiration or loss of syllable-final s, loss of intervocalic d, qu/k/c and gu/g, plus word splits and merges and real-word substitutions (Joan/Juan, vis/bis, cerrados/serrados). Controls (exact titles) and absent titles (not_found, missing sequels) keep the decision thresholds honest.
 #
-# This corpus was frozen before any Spanish encoder was written; changing it after seeing an encoder's results invalidates the comparison.
+# Cases describe what a listener hears; don't change a case to suit an encoder's results, or the comparison stops meaning anything (see docs/src/content/docs/contributing/dependencies.md).
 suites:
   - name: spanish library
     lang: es

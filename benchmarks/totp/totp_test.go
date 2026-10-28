@@ -16,7 +16,7 @@ import (
 	"github.com/nightah/encore/internal/auth"
 )
 
-// opts are the parameters Encore used with pquerna/otp: SHA1, six digits, 30-second steps and one step of skew.
+// opts are Encore's TOTP parameters in pquerna/otp's terms: SHA1, six digits, 30-second steps and one step of skew.
 var opts = totp.ValidateOpts{Period: 30, Skew: 1, Digits: otp.DigitsSix, Algorithm: otp.AlgorithmSHA1}
 
 // rfcSecret is the SHA1 key of RFC 6238 Appendix B, "12345678901234567890", in base32.
@@ -51,7 +51,7 @@ func genSecret(t *rapid.T) string {
 	key := rapid.SliceOfN(rapid.Byte(), 20, 20).Draw(t, "key")
 	s := base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(key)
 
-	// Secrets are stored as enrolled, but the in-tree decoder also accepts lowercase and surrounding space, as pquerna/otp did.
+	// Secrets are stored as enrolled, but the in-tree decoder also accepts lowercase and surrounding space, as pquerna/otp does.
 	if rapid.Bool().Draw(t, "lower") {
 		s = strings.ToLower(s)
 	}

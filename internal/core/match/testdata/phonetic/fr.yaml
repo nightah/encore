@@ -4,7 +4,7 @@
 #
 # Cases: what a speech recogniser plausibly writes when a French speaker asks for the title. Each mishearing is tagged with the confusion it models. The classes come from documented French spelling-to-sound ambiguity, which is what ASR language models trip over when a name is out of vocabulary or a homophone is more frequent: silent final consonants and plural -s/-x/-t (cons/con, sources/source), the é/er/ez/es homophones (bronzés/bronzer), nasal vowel spellings (an/en, ain/ein/in), eau/au/o and è/ai/ei, silent h, c/ç/s/ss and qu/k/c, ch/sh, gn/ni, word splits and merges, and real-word substitutions (cent/sang/sans, arnacœur/arnaqueur, Kaamelott/Camelot). Controls (exact titles) and absent titles (not_found, missing sequels) keep the decision thresholds honest.
 #
-# This corpus was frozen before any French encoder was written; changing it after seeing an encoder's results invalidates the comparison.
+# Cases describe what a listener hears; don't change a case to suit an encoder's results, or the comparison stops meaning anything (see docs/src/content/docs/contributing/dependencies.md).
 suites:
   - name: french library
     lang: fr

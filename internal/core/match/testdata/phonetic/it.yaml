@@ -4,7 +4,7 @@
 #
 # Cases: what a speech recogniser plausibly writes when an Italian speaker asks for the title. Each mishearing is tagged with the confusion it models. The classes are documented Italian spelling-to-sound ambiguities: geminate consonants that northern speakers and ASR shorten or lengthen (bella/bela, Ramazzotti/Ramazotti), c and g before e/i and the redundant i of cie/gie/scie, ch and gh, gn/ni and gli/li, z/s and qu/cu, silent h, the English or Danish spellings of foreign names, plus word splits and merges and real-word substitutions (Negramaro/negro amaro, l'amica/la mica, Sfera Ebbasta/e basta). Controls (exact titles) and absent titles (not_found, missing sequels) keep the decision thresholds honest.
 #
-# This corpus was frozen before any Italian encoder was written; changing it after seeing an encoder's results invalidates the comparison.
+# Cases describe what a listener hears; don't change a case to suit an encoder's results, or the comparison stops meaning anything (see docs/src/content/docs/contributing/dependencies.md).
 suites:
   - name: italian library
     lang: it

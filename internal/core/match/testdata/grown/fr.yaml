@@ -1,4 +1,4 @@
-# Grown set: testdata/grown holds corpora added on top of the original ones (asr_corpus.yaml and phonetic/), which stay untouched. TestASRCorpus and TestPhoneticEval score both sets and report them separately.
+# Grown set: testdata/grown is a held-out set of corpora, kept apart from the original set (asr_corpus.yaml and phonetic/). TestASRCorpus and TestPhoneticEval score both sets and report them separately.
 #
 # French (fr-FR) phonetic evaluation corpus, second set, for TestPhoneticEval. Same schema as asr_corpus.yaml; cases are scored, not asserted, so there is no xfail.
 #
@@ -22,7 +22,7 @@
 #
 # Controls (the title as written, plus genuine ambiguity that must ask) and absent titles (not_found for titles not in the library, including near misses that share words or first names with library titles; ask for missing numbered sequels, as in the first French corpus) keep the decision thresholds honest.
 #
-# This corpus was written and frozen blind: no encoder or matcher evaluation was run, read or consulted while writing it. Changing it after seeing an encoder's results invalidates the comparison.
+# Cases describe what a listener hears; don't change a case to suit an encoder's results, or the comparison stops meaning anything (see docs/src/content/docs/contributing/dependencies.md).
 suites:
   - name: french films and series
     lang: fr

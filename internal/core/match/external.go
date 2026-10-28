@@ -7,7 +7,7 @@ import (
 	"github.com/nightah/encore/internal/core/media"
 )
 
-// This file is a seam for the benchmarks module (benchmarks/ at the repository root), which compares the in-tree code with the libraries it replaced. Encore itself never calls anything here. It adds no behaviour: each function wraps what the package already does, so code outside the package can measure and check it.
+// This file is a seam for the benchmarks module (benchmarks/ at the repository root), which compares the in-tree code with external libraries. Encore itself never calls anything here. It adds no behaviour: each function wraps what the package already does, so code outside the package can measure and check it.
 
 // NewWithRetriever is New with candidate retrieval supplied by newRetriever, which is given the language's phonetic encoder. Everything else, from normalising to scoring and deciding, is the Index's own, so two retrievers can be compared through the same Search.
 func NewWithRetriever(lang string, cfg Config, newRetriever func(phonetic func(word string) []string) (Retriever, error)) (*Index, error) {

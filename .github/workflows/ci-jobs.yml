@@ -268,7 +268,7 @@ jobs:
             ~/.cache/go-build
           key: ${{ steps.cache.outputs.cache-primary-key }}
 
-  # benchmarks/ is a separate Go module that compares in-tree code with the libraries it replaced (bleve, go-edlib, pquerna/otp, the phonetic libraries), so they never enter Encore's go.mod. It imports Encore's internal packages, so a change there can break it: this job lints it and runs its parity tests in short mode, beside the Go job rather than in it. The nightly workflow runs them in full; the benchmarks themselves are only run by hand (benchmarks/README.md).
+  # benchmarks/ is a separate Go module that compares in-tree code with external libraries (bleve, go-edlib, pquerna/otp, the phonetic libraries), so they never enter Encore's go.mod. It imports Encore's internal packages, so a change there can break it: this job lints it and runs its parity tests in short mode, beside the Go job rather than in it. The nightly workflow runs them in full; the benchmarks themselves are only run by hand (benchmarks/README.md).
   benchmarks:
     name: Benchmarks module
     runs-on: ubuntu-26.04

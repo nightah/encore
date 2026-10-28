@@ -1,4 +1,4 @@
-# Grown set: testdata/grown holds corpora added on top of the original ones (asr_corpus.yaml and phonetic/), which stay untouched. TestASRCorpus and TestPhoneticEval score both sets and report them separately.
+# Grown set: testdata/grown is a held-out set of corpora, kept apart from the original set (asr_corpus.yaml and phonetic/). TestASRCorpus and TestPhoneticEval score both sets and report them separately.
 #
 # Italian (it-IT) phonetic evaluation corpus, second set, for TestPhoneticEval. Same schema as asr_corpus.yaml; cases are scored, not asserted, so there is no xfail. It adds two suites with their own libraries to the first Italian set; no play case repeats a heard string from it, and some absent cases deliberately name titles from its library, which are not in these libraries.
 #
@@ -18,7 +18,7 @@
 #   number: digits against words and the number forms Italian titles use (8½/otto e mezzo, 1992/millenovecentonovantadue, 883/otto otto tre, sei/6).
 # Controls (exact titles as an ASR writes them, lower case, punctuation dropped), ambiguous requests (ask among the near neighbours), missing sequels (ask) and absent titles (not_found, including near misses that share words with library titles) keep the decision thresholds honest.
 #
-# This corpus was written and frozen blind: without running or reading any encoder or matcher evaluation and without reading any encoder source. Changing it after seeing an encoder's results invalidates the comparison.
+# Cases describe what a listener hears; don't change a case to suit an encoder's results, or the comparison stops meaning anything (see docs/src/content/docs/contributing/dependencies.md).
 suites:
   - name: italian films and series
     lang: it

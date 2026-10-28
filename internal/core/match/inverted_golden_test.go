@@ -86,7 +86,7 @@ func corpusRankings(t *testing.T) []pinnedRanking {
 	return out
 }
 
-// TestInvertedRankingsPinned pins the inverted index's candidates for every ASR corpus case and title, with and without a kind filter. They were checked against bleve's, up to the order of equal scores, before bleve was removed; regenerate with -update only for an intended change to retrieval.
+// TestInvertedRankingsPinned pins the inverted index's candidates for every ASR corpus case and title, with and without a kind filter. They match bleve's, up to the order of equal scores (the benchmarks module checks the two retrievers' parity); regenerate with -update only for an intended change to retrieval.
 func TestInvertedRankingsPinned(t *testing.T) {
 	got := corpusRankings(t)
 

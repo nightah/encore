@@ -42,7 +42,7 @@ export default defineConfig(({ mode }) => ({
     outDir,
     sourcemap: false,
   },
-  // One dependency cache per mode: the dev server and a mock-mode server (pnpm dev:mock, the mock e2e run) pre-bundle differently, and sharing a cache made each rebuild it under the other, breaking open pages ("error loading dynamically imported module").
+  // One dependency cache per mode: the dev server and a mock-mode server (pnpm dev:mock, the mock e2e run) pre-bundle differently, and a shared cache would make each rebuild it under the other, breaking open pages ("error loading dynamically imported module").
   cacheDir: resolve(root, "node_modules/.vite", mode),
   optimizeDeps: { include: baseUIEntries(root) },
   plugins: [

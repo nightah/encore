@@ -10,7 +10,7 @@ import (
 	"github.com/nightah/encore/internal/core/match"
 )
 
-// Scoring used go-edlib's JaroWinklerSimilarity (a float32, widened to float64) and OSADamerauLevenshteinDistance. The in-tree functions must return exactly the same values, bit for bit, so scores and the thresholds tuned on them are unchanged.
+// The reference is go-edlib's JaroWinklerSimilarity (a float32, widened to float64) and OSADamerauLevenshteinDistance. The in-tree functions must return exactly the same values, bit for bit, so scores and the thresholds tuned on them match the reference's.
 
 // genText favours a small alphabet, where matches, swaps and shared prefixes are common, but also draws arbitrary Unicode, invalid UTF-8 and strings longer than the 64 runes the in-tree functions keep on the stack.
 func genText() *rapid.Generator[string] {

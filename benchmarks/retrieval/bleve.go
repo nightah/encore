@@ -22,14 +22,14 @@ import (
 	"github.com/nightah/encore/internal/core/media"
 )
 
-// The bleve retriever below is internal/core/match/bleve.go as of commit 96d0dfaa, the last commit that shipped it, adapted to match.Retriever: the same mapping, analyzers, batching and query. The Index flattens each Doc into match.RetrievalDoc as bleveDoc did, and works out the query's terms, fuzziness and phonetic keys as wordClauses did.
+// The bleve retriever below has the mapping, analyzers, batching and query Encore used with bleve, behind match.Retriever. bleveDoc indexes each match.RetrievalDoc, and wordClauses works out the query's terms, fuzziness and phonetic keys.
 
 var (
 	filtersMu sync.Mutex
 	filters   = map[string]bool{}
 )
 
-// NewBleve returns a factory for match.NewWithRetriever that retrieves candidates with bleve as Encore did up to commit 96d0dfaa. lang names the phonetic token filter registered for the language, since bleve's registry is global.
+// NewBleve returns a factory for match.NewWithRetriever that retrieves candidates with bleve, set up as Encore used it. lang names the phonetic token filter registered for the language, since bleve's registry is global.
 func NewBleve(lang string) func(phonetic func(string) []string) (match.Retriever, error) {
 	return func(phonetic func(string) []string) (match.Retriever, error) {
 		name := "encore_phonetic_" + lang

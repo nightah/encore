@@ -8,7 +8,7 @@ const (
 	fieldKind  = "kind"
 )
 
-// Values from internal/core/match as of commit 96d0dfaa.
+// Retrieval settings, the ones Encore used with bleve.
 const (
 	batchSize = 2000
 	// fuzzyPrefix pins the first letter of fuzzy words, as the inverted index does.

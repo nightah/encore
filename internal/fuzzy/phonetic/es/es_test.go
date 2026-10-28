@@ -120,7 +120,7 @@ var benchWords = []string{
 	"aqui", "quien", "viva", "cuentame", "ministerio",
 }
 
-// BenchmarkKeys compares the Spanish encoder with the English Double Metaphone it would replace for Spanish titles.
+// BenchmarkKeys compares the Spanish encoder with the English Double Metaphone that Spanish titles would otherwise fall back to.
 func BenchmarkKeys(b *testing.B) {
 	for _, impl := range []struct {
 		name string

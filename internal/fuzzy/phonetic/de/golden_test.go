@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// libraryDigest is exhaustiveDigest of the library's codes and keys, captured from github.com/f1monkey/phonetic v1.4.2 before it was removed.
+// libraryDigest is exhaustiveDigest of the library's codes and keys, captured from github.com/f1monkey/phonetic v1.4.2.
 const libraryDigest = "535ff632bec29bba0ee7140242e42b577d5230d9a2c7365f198b75b1c6fbe7ff"
 
 // libraryWords are the words testdata/library.txt pins: random words over all letters and the German extras, over the letter groups the rules single out, mixed-case text with digits and punctuation, arbitrary bytes including invalid UTF-8, and long words. The generator is seeded, so the list never changes.
@@ -87,7 +87,7 @@ func TestLibraryExhaustive(t *testing.T) {
 	assert.Equal(t, libraryDigest, exhaustiveDigest(portCode))
 }
 
-// TestLibraryGolden checks the port against the library's codes and keys in testdata/library.txt: per line, tab-separated and Go-quoted, a word, its code and its key.
+// TestLibraryGolden checks the encoder against the library's codes and keys in testdata/library.txt: per line, tab-separated and Go-quoted, a word, its code and its key.
 func TestLibraryGolden(t *testing.T) {
 	f, err := os.Open("testdata/library.txt")
 	require.NoError(t, err)
