@@ -325,20 +325,22 @@ func TestApplyInstanceInputRejects(t *testing.T) {
 		creating bool
 		location string
 	}{
-		"blank name":                 {in: InstanceInput{Name: new("   ")}, location: "body.name"},
-		"create without url":         {in: InstanceInput{Name: new("Den")}, creating: true, location: "body"},
-		"create without name":        {in: InstanceInput{URL: new("http://192.0.2.1:8080/jsonrpc")}, creating: true, location: "body"},
-		"ftp url":                    {in: InstanceInput{URL: new("ftp://192.0.2.1/jsonrpc")}, location: "body.url"},
-		"url without host":           {in: InstanceInput{URL: new("http:///jsonrpc")}, location: "body.url"},
-		"unparsable url":             {in: InstanceInput{URL: new("http://[::1")}, location: "body.url"},
-		"port overflows":             {in: InstanceInput{URL: new("http://192.0.2.1:99999999999999999999/jsonrpc")}, location: "body.url"},
-		"http websocket url":         {in: InstanceInput{WebSocketURL: new("http://192.0.2.1:9090/jsonrpc")}, location: "body.websocket_url"},
-		"websocket url without host": {in: InstanceInput{WebSocketURL: new("ws:///jsonrpc")}, location: "body.websocket_url"},
-		"not a mac":                  {in: InstanceInput{MAC: new("dc:a6:32")}, location: "body.mac"},
-		"broadcast host name":        {in: InstanceInput{Broadcast: new("broadcast.lan")}, location: "body.broadcast"},
-		"unknown language":           {in: InstanceInput{Language: new("tlh")}, location: "body.language"},
-		"unknown time zone":          {in: InstanceInput{Timezone: new("Mars/Olympus")}, location: "body.timezone"},
-		"server-local time zone":     {in: InstanceInput{Timezone: new("Local")}, location: "body.timezone"},
+		"blank name":                  {in: InstanceInput{Name: new("   ")}, location: "body.name"},
+		"create without url":          {in: InstanceInput{Name: new("Den")}, creating: true, location: "body"},
+		"create without name":         {in: InstanceInput{URL: new("http://192.0.2.1:8080/jsonrpc")}, creating: true, location: "body"},
+		"ftp url":                     {in: InstanceInput{URL: new("ftp://192.0.2.1/jsonrpc")}, location: "body.url"},
+		"url without host":            {in: InstanceInput{URL: new("http:///jsonrpc")}, location: "body.url"},
+		"unparsable url":              {in: InstanceInput{URL: new("http://[::1")}, location: "body.url"},
+		"port overflows":              {in: InstanceInput{URL: new("http://192.0.2.1:99999999999999999999/jsonrpc")}, location: "body.url"},
+		"port out of range":           {in: InstanceInput{URL: new("http://192.0.2.1:65536/jsonrpc")}, location: "body.url"},
+		"websocket port out of range": {in: InstanceInput{WebSocketURL: new("ws://192.0.2.1:70000/jsonrpc")}, location: "body.websocket_url"},
+		"http websocket url":          {in: InstanceInput{WebSocketURL: new("http://192.0.2.1:9090/jsonrpc")}, location: "body.websocket_url"},
+		"websocket url without host":  {in: InstanceInput{WebSocketURL: new("ws:///jsonrpc")}, location: "body.websocket_url"},
+		"not a mac":                   {in: InstanceInput{MAC: new("dc:a6:32")}, location: "body.mac"},
+		"broadcast host name":         {in: InstanceInput{Broadcast: new("broadcast.lan")}, location: "body.broadcast"},
+		"unknown language":            {in: InstanceInput{Language: new("tlh")}, location: "body.language"},
+		"unknown time zone":           {in: InstanceInput{Timezone: new("Mars/Olympus")}, location: "body.timezone"},
+		"server-local time zone":      {in: InstanceInput{Timezone: new("Local")}, location: "body.timezone"},
 	} {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
@@ -350,6 +352,21 @@ func TestApplyInstanceInputRejects(t *testing.T) {
 			assert.Equal(t, tc.location, loc)
 		})
 	}
+}
+
+// The database refuses an out-of-range port too, but only after the password is stored, and with its own constraint text.
+func TestKodiInstancePortOutOfRange(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+
+	p := c.do(http.MethodPost, "/api/v1/kodi/instances", map[string]string{"name": "Den", "url": "http://192.0.2.1:70000/jsonrpc", "password": "s3cret"}).problem(t)
+	require.Equal(t, http.StatusUnprocessableEntity, p.Status)
+	require.Len(t, p.Errors, 1, "%+v", p)
+	assert.Equal(t, "body.url", p.Errors[0].Location)
+	assert.NotContains(t, p.Detail, "constraint")
+
+	_, err := h.app.Secrets().Get(t.Context(), "kodi/Den/password")
+	require.ErrorIs(t, err, secrets.ErrNotFound, "a refused instance leaves no password behind")
 }
 
 func TestApplyInstanceInputNeverEchoesURLPassword(t *testing.T) {

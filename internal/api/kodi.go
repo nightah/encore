@@ -333,6 +333,14 @@ func applyInstanceInput(rec *store.KodiInstance, in InstanceInput, creating bool
 			return nil, fieldError("body.url", err.Error(), redactURL(httpRaw))
 		}
 
+		if kc.Port > maxPort {
+			return nil, fieldError("body.url", "the port must be between 1 and 65535", redactURL(httpRaw))
+		}
+
+		if wsRaw != "" && kc.WebSocketPort > maxPort {
+			return nil, fieldError("body.websocket_url", "the port must be between 1 and 65535", wsRaw)
+		}
+
 		rec.Scheme, rec.Host, rec.Port, rec.Path = kc.Scheme, kc.Host, kc.Port, kc.Path
 		rec.WSPort = 0
 

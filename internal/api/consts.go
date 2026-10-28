@@ -97,6 +97,9 @@ const infoEvery = 10 * time.Minute
 // playerSettle lets Kodi finish a change (and a burst, such as a seek) before its status is read.
 const playerSettle = 250 * time.Millisecond
 
+// maxPort is the highest TCP port; a Kodi URL naming a higher one is refused before anything is saved.
+const maxPort = 65535
+
 // The values of Instance.Shutdown.
 const (
 	shutdownInherit  = "inherit"
