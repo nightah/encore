@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 
 import { cleanup } from "@testing-library/react";
-import { afterAll, afterEach, beforeAll, beforeEach } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, vi } from "vitest";
 
 import { setCsrfToken } from "@api/client";
 import { eventStream } from "@api/events";
@@ -9,10 +9,12 @@ import i18n from "@i18n/index";
 import { onEmit, resetDb } from "@mocks/handlers";
 import { server } from "@mocks/node";
 import { FakeEventSource } from "@test/eventSource";
+import { cancelRequests, settleRequests, trackRequests } from "@test/inflight";
 
 // Every test talks to the MSW implementation of the admin API (docs/src/content/docs/reference/api/); unknown requests fail loudly.
 beforeAll(() => {
   server.listen({ onUnhandledFrame: "error" });
+  trackRequests();
   globalThis.EventSource = FakeEventSource as unknown as typeof EventSource;
   // Simulated server events (deploy progress, wake, sync…) reach the app through the fake EventSource.
   onEmit(({ event, data }) => FakeEventSource.emit(event, data));
@@ -25,8 +27,12 @@ beforeEach(async () => {
   setCsrfToken(undefined);
 });
 
-afterEach(() => {
+afterEach(async () => {
+  // A test that left fake timers on would stall the wait below.
+  vi.useRealTimers();
+  await settleRequests();
   cleanup();
+  await cancelRequests();
   server.resetHandlers();
   server.events.removeAllListeners();
   eventStream.reset();
