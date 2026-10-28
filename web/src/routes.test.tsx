@@ -265,6 +265,50 @@ describe("settings page", () => {
   });
 });
 
+describe("overview page", () => {
+  it("says what to do about an offline, an asleep and an idle Kodi instance", async () => {
+    const db = getDb();
+    const [first, second, third] = db.instances;
+    if (!first || !second || !third) throw new Error("the sample has three instances");
+    db.instances = [
+      { ...first, name: "Lounge", now_playing: null, status: { ...first.status, state: "offline" } },
+      {
+        ...second,
+        mac: "",
+        name: "Bedroom",
+        now_playing: null,
+        status: { ...second.status, last_event_at: null, state: "asleep" },
+      },
+      { ...third, name: "Study", now_playing: null, status: { ...third.status, state: "connected" } },
+    ];
+    renderApp("/");
+
+    const card = async (name: string) =>
+      (await screen.findByRole("heading", { level: 3, name })).closest("div")?.parentElement as HTMLElement;
+    const lounge = await card("Lounge");
+    expect(lounge).toHaveTextContent("Not answering. Check that Kodi is running and reachable.");
+    expect(within(lounge).getByRole("link", { name: "Test it on the Kodi page" })).toHaveAttribute("href", "/kodi");
+
+    const bedroom = await card("Bedroom");
+    expect(bedroom).toHaveTextContent("Asleep. Add its MAC address so voice requests can wake it.");
+
+    expect(await card("Study")).toHaveTextContent("Nothing playing.");
+  });
+
+  it("opens a recent request from its time link", async () => {
+    const user = userEvent.setup();
+    const { router } = renderApp("/");
+    const table = await screen.findByRole("table", { name: "Recent requests" });
+    const [link] = within(table).getAllByRole("link", { name: /^Open the .* request in the log$/ });
+    if (!link) throw new Error("no recent request");
+
+    await user.click(link);
+
+    await screen.findByRole("heading", { level: 1, name: "Request log" });
+    expect(router.state.location.search).toEqual({ id: getDb().requests[0]?.id });
+  });
+});
+
 describe("page load errors", () => {
   it.each([
     ["/", "/overview", "Overview"],
