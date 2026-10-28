@@ -292,6 +292,52 @@ func TestDeployLocaleKeysWithUnderscores(t *testing.T) {
 	assert.Equal(t, smapi.StatusSucceeded, res.Locales["en-US"].Status)
 }
 
+// When only the skill status reports builds, its underscore keys must still be matched to the package's locales.
+func TestDeployReadsUnderscoreKeysFromSkillStatus(t *testing.T) {
+	h := newHarness(t, smapitest.Options{UnderscoreLocales: true, ImportWithoutModels: true})
+
+	res, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
+	require.NoError(t, err)
+	assert.Equal(t, smapi.StatusSucceeded, res.Locales["en-GB"].Status)
+	assert.Equal(t, smapi.StatusSucceeded, res.Locales["en-US"].Status)
+	assert.NotContains(t, res.Locales, "en_GB")
+
+	h.fake.FailLocale("en-GB", "Sample utterance conflicts")
+
+	req := h.request(res.State)
+	req.Force = true
+
+	_, err = h.deployer.Deploy(t.Context(), req)
+
+	var de *deploy.Error
+	require.ErrorAs(t, err, &de)
+	require.Contains(t, de.Locales, "en-GB")
+	assert.Contains(t, de.Locales["en-GB"][0].Message, "Sample utterance conflicts")
+}
+
+// A locale absent from the skill status counts as failed after exactly missingLocalePolls polls once the manifest has built.
+func TestDeployGivesUpOnUnreportedLocaleAfterTenPolls(t *testing.T) {
+	h := newHarness(t, smapitest.Options{ImportWithoutModels: true})
+	h.fake.UnreportLocale("en-GB")
+
+	_, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
+	require.ErrorIs(t, err, deploy.ErrBuildFailed)
+
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	// Each build poll reports progress with the locales' states.
+	polls := 0
+
+	for _, ev := range h.events {
+		if ev.Step == deploy.StepBuild && ev.State == deploy.StateRunning && ev.Locales != nil {
+			polls++
+		}
+	}
+
+	assert.Equal(t, 10, polls)
+}
+
 // A failed import whose locale never reports a build must fail with the import's errors at once, not wait out the poll timeout.
 func TestDeployFailedImportDoesNotWait(t *testing.T) {
 	h := newHarness(t, smapitest.Options{})
@@ -441,9 +487,12 @@ func TestResync(t *testing.T) {
 	sk, _ := h.fake.Skill(second.State.SkillID)
 	assert.Contains(t, string(sk.Models["en-US"]), "Ronin")
 
-	third, err := h.deployer.Resync(t.Context(), h.request(second.State), movies)
+	forced := h.request(second.State)
+	forced.Force = true
+
+	third, err := h.deployer.Resync(t.Context(), forced, movies)
 	require.NoError(t, err)
-	assert.True(t, third.Skipped)
+	assert.True(t, third.Skipped, "a resync never redeploys an unchanged package, even when the request says force")
 	assert.False(t, second.State.NeedsDeploy(pkg.Hash()))
 }
 
