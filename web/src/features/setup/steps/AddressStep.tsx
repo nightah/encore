@@ -8,16 +8,8 @@ import { skillSettingsFrom, useSaveSkillSettings, useSkill } from "@api/skill";
 import { Button } from "@components/ui/Button";
 import { Field, Input } from "@components/ui/Field";
 import { Callout } from "@components/ui/States";
+import { suggestedAddress } from "@features/setup/address";
 import { CheckList, StepFooter, StepHeading, StepPending, type StepProps } from "@features/setup/shared";
-
-function originOf(url: string | undefined): string {
-  if (!url) return "";
-  try {
-    return new URL(url).origin;
-  } catch {
-    return "";
-  }
-}
 
 export function AddressStep({ nav }: StepProps) {
   const { t } = useTranslation("setup");
@@ -26,8 +18,7 @@ export function AddressStep({ nav }: StepProps) {
   const check = useCheckReachability();
   const save = useSaveSkillSettings(null);
   const [url, setUrl] = useState<string | null>(null);
-  const value =
-    url ?? (originOf(skill?.endpoint.url) || (window.location.protocol === "https:" ? window.location.origin : ""));
+  const value = url ?? suggestedAddress(skill?.endpoint.url, window.location);
 
   const result = check.data;
   const failed = result?.checks.some((c) => c.level === "fail") ?? false;
