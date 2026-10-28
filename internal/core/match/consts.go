@@ -69,6 +69,8 @@ const (
 	digitWeight = 4
 	// stackRunes is the longest string, in runes, that the edit distances handle without allocating.
 	stackRunes = 64
+	// maxFused is the longest token, in bytes, that is tried as a number written as one word.
+	maxFused = 64
 )
 
 const (
@@ -77,6 +79,7 @@ const (
 	numCompound                // a whole 21-99 in one word, e.g. "einundzwanzig"
 	numHundred
 	numThousand
+	numMillion
 )
 
 const (
@@ -85,4 +88,5 @@ const (
 	stTens
 	stHundred
 	stThousand
+	stMillion
 )

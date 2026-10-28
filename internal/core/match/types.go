@@ -346,8 +346,11 @@ type language struct {
 	articles map[string]bool
 	stop     map[string]bool
 	// elide splits on apostrophes ("l'amour" -> "l amour") instead of joining ("ocean's" -> "oceans").
-	elide    bool
-	nums     map[string]numWord
+	elide bool
+	nums  map[string]numWord
+	// fused splits numbers written as one word ("millenovecentonovantadue") into the number words they are made of; elided maps a number word's shortened form inside such a word ("cent" in "centottanta") to its full form.
+	fused    bool
+	elided   map[string]string
 	conj     map[string]bool
 	parts    map[string]bool
 	phonetic phoneticFunc
@@ -357,8 +360,11 @@ type language struct {
 
 // numTable builds a number vocabulary from ordered lists where index i means value i (units) or (i+2)*10 (tens).
 type numTable struct {
-	units, tens          []string
-	hundreds, thousands  []string
+	units, tens         []string
+	hundreds, thousands []string
+	millions            []string
+	// hundredsOf are words for a whole number of hundreds ("duecento" 200).
+	hundredsOf           map[string]int
 	cont                 map[string]int
 	ordinals             map[string]int
 	compounds            map[string]int

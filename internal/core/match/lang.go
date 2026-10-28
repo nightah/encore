@@ -70,8 +70,16 @@ func (t numTable) build() map[string]numWord {
 		m[w] = numWord{val: 100, kind: numHundred}
 	}
 
+	for w, v := range t.hundredsOf {
+		m[w] = numWord{val: v, kind: numHundred}
+	}
+
 	for _, w := range t.thousands {
 		m[w] = numWord{val: 1000, kind: numThousand}
+	}
+
+	for _, w := range t.millions {
+		m[w] = numWord{val: 1_000_000, kind: numMillion}
 	}
 
 	for w, v := range t.compounds {
@@ -276,6 +284,15 @@ func italian() *language {
 		}
 	}
 
+	// "cento" and its multiples drop their final o before a vowel inside a word ("centottanta" 180, "novecentuno" 901).
+	hundredsOf := map[string]int{}
+	elided := map[string]string{"cent": "cento"}
+
+	for i, u := range units[1:] {
+		hundredsOf[u+"cento"] = (i + 2) * 100
+		elided[u+"cent"] = u + "cento"
+	}
+
 	return &language{
 		code:     "it",
 		and:      "e",
@@ -287,16 +304,20 @@ func italian() *language {
 				"zero", "", "due", "tre", "quattro", "cinque", "sei", "sette", "otto", "nove", "dieci",
 				"undici", "dodici", "tredici", "quattordici", "quindici", "sedici", "diciassette", "diciotto", "diciannove",
 			},
-			tens:      []string{"venti", "trenta", "quaranta", "cinquanta", "sessanta", "settanta", "ottanta", "novanta"},
-			hundreds:  []string{"cento"},
-			thousands: []string{"mille"},
-			cont:      map[string]int{"un": 1, "uno": 1, "una": 1},
-			compounds: compounds,
+			tens:       []string{"venti", "trenta", "quaranta", "cinquanta", "sessanta", "settanta", "ottanta", "novanta"},
+			hundreds:   []string{"cento"},
+			hundredsOf: hundredsOf,
+			thousands:  []string{"mille", "mila"},
+			millions:   []string{"milione", "milioni"},
+			cont:       map[string]int{"un": 1, "uno": 1, "una": 1},
+			compounds:  compounds,
 			ordinals: suffixed(map[string]int{
 				"prim": 1, "second": 2, "terz": 3, "quart": 4, "quint": 5, "sest": 6, "settim": 7, "ottav": 8,
 				"non": 9, "decim": 10,
 			}, "o", "a"),
 		}.build(),
+		fused:    true,
+		elided:   elided,
 		conj:     set("e"),
 		parts:    set("parte", "capitolo"),
 		phonetic: phoneticKeysOf(en.Encoder{}),
