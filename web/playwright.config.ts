@@ -37,8 +37,13 @@ export default defineConfig({
     : {
         globalSetup: "./e2e/real/global-setup.ts",
         projects: [
-          // The journey creates the admin account, so it runs first, once, on the fresh server.
-          { name: "journey", testMatch: "real/**/*.spec.ts", use: { ...chromium } },
+          // The journey creates the admin account, so it runs first, once, on the fresh server. A retry would find setup already done and fail at its first step, hiding the real failure, so it keeps a trace of the one run instead.
+          {
+            name: "journey",
+            retries: 0,
+            testMatch: "real/**/*.spec.ts",
+            use: { ...chromium, trace: "retain-on-failure" },
+          },
           {
             dependencies: ["journey"],
             name: "chromium",
