@@ -92,10 +92,58 @@ func TestRedactURL(t *testing.T) {
 
 	assert.Equal(t, "http://kodi/jsonrpc", RedactURL("http://kodi/jsonrpc"))
 	assert.Equal(t, "http://%zz", RedactURL("http://%zz"), "an unparsable URL without credentials is shown as given")
-	assert.Equal(t, "kodi:8080", RedactURL("kodi:8080"), "nor is one without an authority")
+	assert.Equal(t, ":8080", RedactURL(":8080"), "nor is one without an authority")
 	assert.Equal(t, "http://kodi:xxxxx@[::1/jsonrpc", RedactURL("http://kodi:hunter2@[::1/jsonrpc"), "an unparsable URL still hides its password") // trufflehog:ignore
 	assert.Equal(t, "ws://kodi:xxxxx@media.lan:80a?x=@", RedactURL("ws://kodi:hunter2@media.lan:80a?x=@"), "only the authority's @ counts")        // trufflehog:ignore
 	assert.Equal(t, "http://kodi@[::1", RedactURL("http://kodi@[::1"), "a user name alone isn't secret")
+}
+
+func TestConfigFromURLsPortRange(t *testing.T) {
+	for name, tc := range map[string]struct {
+		port       string
+		want       int
+		outOfRange bool
+	}{
+		"lowest":      {port: "1", want: 1},
+		"highest":     {port: "65535", want: 65535},
+		"one over":    {port: "65536", outOfRange: true},
+		"far over":    {port: "99999", outOfRange: true},
+		"overflows":   {port: "99999999999999999999", outOfRange: true},
+		"zero":        {port: "0", outOfRange: true},
+		"negative":    {port: "-1"},
+		"non-numeric": {port: "http"},
+	} {
+		t.Run(name+"/HTTP URL", func(t *testing.T) {
+			cfg, err := ConfigFromURLs("http://kodi:hunter2@media.lan:"+tc.port+"/jsonrpc", "") // trufflehog:ignore
+			assertPort(t, tc.want, tc.outOfRange, cfg.Port, err, ErrHTTPPort, "Kodi URL")
+		})
+
+		t.Run(name+"/WebSocket URL", func(t *testing.T) {
+			cfg, err := ConfigFromURLs("http://media.lan/jsonrpc", "ws://kodi:hunter2@media.lan:"+tc.port+"/jsonrpc") // trufflehog:ignore
+			assertPort(t, tc.want, tc.outOfRange, cfg.WebSocketPort, err, ErrWebSocketPort, "Kodi WebSocket URL")
+		})
+	}
+}
+
+// assertPort checks an accepted port is kept, and a refused one names the setting without the URL or its password.
+func assertPort(t *testing.T, want int, outOfRange bool, got int, err, sentinel error, setting string) {
+	t.Helper()
+
+	if want != 0 {
+		require.NoError(t, err)
+		assert.Equal(t, want, got)
+
+		return
+	}
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), setting, "the error names the setting")
+	assert.NotContains(t, err.Error(), "media.lan", "the error never carries the URL")
+	assert.NotContains(t, err.Error(), "hunter2", "the error never carries the password")
+
+	if outOfRange {
+		require.ErrorIs(t, err, sentinel)
+	}
 }
 
 func FuzzConfigFromURLs(f *testing.F) {
@@ -113,6 +161,8 @@ func FuzzConfigFromURLs(f *testing.F) {
 		assert.NotEmpty(t, cfg.Host, "an accepted URL names a host")
 		assert.Positive(t, cfg.Port)
 		assert.Positive(t, cfg.WebSocketPort)
+		assert.LessOrEqual(t, cfg.Port, maxPort)
+		assert.LessOrEqual(t, cfg.WebSocketPort, maxPort)
 		assert.Positive(t, cfg.Timeout)
 		assert.GreaterOrEqual(t, cfg.ReconnectMax, cfg.ReconnectMin)
 

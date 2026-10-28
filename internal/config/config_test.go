@@ -402,6 +402,80 @@ func TestValidateKodiNeverEchoesURLPassword(t *testing.T) {
 	}
 }
 
+func TestValidateKodiPorts(t *testing.T) {
+	for name, tc := range map[string]struct {
+		port string
+		ok   bool
+	}{
+		"lowest":      {port: "1", ok: true},
+		"highest":     {port: "65535", ok: true},
+		"one over":    {port: "65536"},
+		"far over":    {port: "99999"},
+		"overflows":   {port: "99999999999999999999"},
+		"zero":        {port: "0"},
+		"negative":    {port: "-1"},
+		"non-numeric": {port: "http"},
+	} {
+		for setting, k := range map[string]KodiInstance{
+			"kodi[0].url":           {Name: "Lounge", URL: "http://kodi:hunter2@media.lan:" + tc.port + "/jsonrpc"},                                         // trufflehog:ignore
+			"kodi[0].websocket_url": {Name: "Lounge", URL: "http://media.lan/jsonrpc", WebSocketURL: "ws://kodi:hunter2@media.lan:" + tc.port + "/jsonrpc"}, // trufflehog:ignore
+		} {
+			t.Run(name+"/"+setting, func(t *testing.T) {
+				cfg := Defaults()
+				cfg.Kodi = []KodiInstance{k}
+
+				err := cfg.Validate()
+				if tc.ok {
+					require.NoError(t, err)
+
+					return
+				}
+
+				require.ErrorContains(t, err, setting)
+				assert.NotContains(t, err.Error(), "hunter2", "credentials never reach the error")
+			})
+		}
+	}
+}
+
+func TestValidateKodiPortErrorsLeaveOutTheURL(t *testing.T) {
+	for setting, k := range map[string]KodiInstance{
+		"kodi[0].url":           {Name: "Lounge", URL: "http://kodi:hunter2@media.lan:99999/jsonrpc"},                                     // trufflehog:ignore
+		"kodi[0].websocket_url": {Name: "Lounge", URL: "http://media.lan/jsonrpc", WebSocketURL: "ws://kodi:hunter2@media.lan:0/jsonrpc"}, // trufflehog:ignore
+	} {
+		cfg := Defaults()
+		cfg.Kodi = []KodiInstance{k}
+
+		err := cfg.Validate()
+		require.ErrorContains(t, err, setting+" port must be between 1 and 65535")
+		assert.NotContains(t, err.Error(), "media.lan", "the URL is left out")
+	}
+}
+
+func TestValidateKodiHostFromURLs(t *testing.T) {
+	cfg := Defaults()
+	cfg.Kodi = []KodiInstance{{Name: "Lounge", URL: "http://kodi:hunter2@:8080/jsonrpc"}} // trufflehog:ignore
+
+	err := cfg.Validate()
+	require.ErrorContains(t, err, "kodi[0]: parsing Kodi URL: no host to connect to", "the scheme check passes it, the backend doesn't")
+	assert.NotContains(t, err.Error(), "hunter2")
+}
+
+func TestLoadRefusesAKodiPortOutOfRange(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "encore.yml")
+	require.NoError(t, os.WriteFile(path, []byte(`
+kodi:
+  - name: Lounge
+    url: http://kodi:hunter2@media.lan:99999/ # trufflehog:ignore
+    websocket_url: ws://media.lan:9090/jsonrpc
+`), 0o600))
+
+	_, err := Load(Options{File: path, Environ: environ()})
+	require.ErrorContains(t, err, "kodi[0].url port must be between 1 and 65535")
+	assert.NotContains(t, err.Error(), "hunter2")
+	assert.NotContains(t, err.Error(), "media.lan")
+}
+
 func TestRoomsNeedNames(t *testing.T) {
 	cfg := Defaults()
 	cfg.Rooms = []Room{{Name: ""}}

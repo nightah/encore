@@ -35,15 +35,7 @@ func validateKodi(instances []KodiInstance) []error {
 
 		names[k.Name] = true
 
-		if u, err := url.Parse(k.URL); err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
-			errs = append(errs, fmt.Errorf("%s.url %q must be an http(s) URL such as http://kodi:8080/jsonrpc", where, kodi.RedactURL(k.URL)))
-		}
-
-		if k.WebSocketURL != "" {
-			if u, err := url.Parse(k.WebSocketURL); err != nil || (u.Scheme != "ws" && u.Scheme != "wss") || u.Host == "" {
-				errs = append(errs, fmt.Errorf("%s.websocket_url %q must be a ws(s) URL such as ws://kodi:9090/jsonrpc", where, kodi.RedactURL(k.WebSocketURL)))
-			}
-		}
+		errs = append(errs, validateKodiURLs(where, k)...)
 
 		if k.MAC != "" {
 			if _, err := net.ParseMAC(k.MAC); err != nil {
@@ -75,6 +67,37 @@ func validateKodi(instances []KodiInstance) []error {
 	}
 
 	return errs
+}
+
+// validateKodiURLs checks the URLs' schemes and hosts, then that the Kodi backend accepts them, so a port outside 1 to 65535 is refused at load rather than when Encore starts using it.
+func validateKodiURLs(where string, k KodiInstance) []error {
+	var errs []error
+
+	if u, err := url.Parse(k.URL); err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+		errs = append(errs, fmt.Errorf("%s.url %q must be an http(s) URL such as http://kodi:8080/jsonrpc", where, kodi.RedactURL(k.URL)))
+	}
+
+	if k.WebSocketURL != "" {
+		if u, err := url.Parse(k.WebSocketURL); err != nil || (u.Scheme != "ws" && u.Scheme != "wss") || u.Host == "" {
+			errs = append(errs, fmt.Errorf("%s.websocket_url %q must be a ws(s) URL such as ws://kodi:9090/jsonrpc", where, kodi.RedactURL(k.WebSocketURL)))
+		}
+	}
+
+	if len(errs) > 0 {
+		return errs
+	}
+
+	// The backend's errors never hold the URL, which may carry a password.
+	switch _, err := kodi.ConfigFromURLs(k.URL, k.WebSocketURL); {
+	case errors.Is(err, kodi.ErrHTTPPort):
+		return []error{fmt.Errorf("%s.url port must be between 1 and 65535", where)}
+	case errors.Is(err, kodi.ErrWebSocketPort):
+		return []error{fmt.Errorf("%s.websocket_url port must be between 1 and 65535", where)}
+	case err != nil:
+		return []error{fmt.Errorf("%s: %w", where, err)}
+	}
+
+	return nil
 }
 
 func (c *Config) validateRoomsAndDevices() []error {

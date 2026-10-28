@@ -18,7 +18,7 @@ func ConfigFromURLs(httpURL, wsURL string) (Config, error) {
 
 	cfg := Config{Scheme: u.Scheme, Host: u.Hostname(), Path: u.Path}
 
-	if cfg.Port, err = portOf(u, DefaultHTTPPort); err != nil {
+	if cfg.Port, err = portOf(u, DefaultHTTPPort, ErrHTTPPort); err != nil {
 		return Config{}, err
 	}
 
@@ -36,7 +36,7 @@ func ConfigFromURLs(httpURL, wsURL string) (Config, error) {
 		return Config{}, fmt.Errorf("parsing Kodi WebSocket URL: %w", err)
 	}
 
-	if cfg.WebSocketPort, err = portOf(w, DefaultWebSocketPort); err != nil {
+	if cfg.WebSocketPort, err = portOf(w, DefaultWebSocketPort, ErrWebSocketPort); err != nil {
 		return Config{}, err
 	}
 
@@ -75,14 +75,16 @@ func hasHost(u *url.URL) bool {
 	return strings.HasPrefix(u.Host, "[") && net.ParseIP(ip) != nil
 }
 
-func portOf(u *url.URL, fallback int) (int, error) {
+// portOf returns u's port, fallback when it names none, or errRange when it is outside 1 to 65535.
+func portOf(u *url.URL, fallback int, errRange error) (int, error) {
 	if u.Port() == "" {
 		return fallback, nil
 	}
 
+	// url.Parse lets only digits through, so Atoi fails only on a number too large for an int.
 	p, err := strconv.Atoi(u.Port())
-	if err != nil {
-		return 0, fmt.Errorf("invalid port in %q: %w", u.Redacted(), err)
+	if err != nil || p < 1 || p > maxPort {
+		return 0, errRange
 	}
 
 	return p, nil

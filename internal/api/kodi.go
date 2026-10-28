@@ -329,16 +329,18 @@ func applyInstanceInput(rec *store.KodiInstance, in InstanceInput, creating bool
 		}
 
 		kc, err := kodi.ConfigFromURLs(httpRaw, wsRaw)
-		if err != nil {
-			return nil, fieldError("body.url", err.Error(), redactURL(httpRaw))
-		}
 
-		if kc.Port > maxPort {
-			return nil, fieldError("body.url", "the port must be between 1 and 65535", redactURL(httpRaw))
-		}
+		switch {
+		case errors.Is(err, kodi.ErrWebSocketPort):
+			return nil, fieldError("body.websocket_url", portRangeMessage, redactURL(wsRaw))
+		case err != nil:
+			// The checks above leave only the port for the backend to refuse, but its message is kept for anything else.
+			msg := err.Error()
+			if errors.Is(err, kodi.ErrHTTPPort) {
+				msg = portRangeMessage
+			}
 
-		if wsRaw != "" && kc.WebSocketPort > maxPort {
-			return nil, fieldError("body.websocket_url", "the port must be between 1 and 65535", redactURL(wsRaw))
+			return nil, fieldError("body.url", msg, redactURL(httpRaw))
 		}
 
 		rec.Scheme, rec.Host, rec.Port, rec.Path = kc.Scheme, kc.Host, kc.Port, kc.Path

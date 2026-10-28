@@ -369,6 +369,46 @@ func TestKodiInstancePortOutOfRange(t *testing.T) {
 	require.ErrorIs(t, err, secrets.ErrNotFound, "a refused instance leaves no password behind")
 }
 
+// Every port outside 1 to 65535 points at the URL that names it, with the same message.
+func TestApplyInstanceInputPortRange(t *testing.T) {
+	t.Parallel()
+
+	for name, tc := range map[string]struct {
+		in       InstanceInput
+		location string
+		value    string
+	}{
+		"zero":                {in: InstanceInput{URL: new("http://kodi:s3cret@192.0.2.1:0/jsonrpc")}, location: "body.url", value: "http://kodi:xxxxx@192.0.2.1:0/jsonrpc"},                                             // trufflehog:ignore
+		"overflows":           {in: InstanceInput{URL: new("http://192.0.2.1:99999999999999999999/jsonrpc")}, location: "body.url", value: "http://192.0.2.1:99999999999999999999/jsonrpc"},                              // trufflehog:ignore
+		"websocket zero":      {in: InstanceInput{WebSocketURL: new("ws://kodi:s3cret@192.0.2.1:0/jsonrpc")}, location: "body.websocket_url", value: "ws://kodi:xxxxx@192.0.2.1:0/jsonrpc"},                              // trufflehog:ignore
+		"websocket overflows": {in: InstanceInput{WebSocketURL: new("ws://192.0.2.1:99999999999999999999/jsonrpc")}, location: "body.websocket_url", value: "ws://192.0.2.1:99999999999999999999/jsonrpc"},               // trufflehog:ignore
+		"websocket one over":  {in: InstanceInput{URL: new("http://192.0.2.1:65535/jsonrpc"), WebSocketURL: new("ws://192.0.2.1:65536/jsonrpc")}, location: "body.websocket_url", value: "ws://192.0.2.1:65536/jsonrpc"}, // trufflehog:ignore
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			rec := store.KodiInstance{Name: "Lounge", Scheme: "http", Host: "192.0.2.10", Port: 8080, Path: "/jsonrpc", WSPort: 9090}
+
+			_, err := applyInstanceInput(&rec, tc.in, false)
+			loc, value := fieldLocation(t, err)
+			assert.Equal(t, tc.location, loc)
+			assert.Equal(t, tc.value, value)
+
+			var em *huma.ErrorModel
+
+			require.ErrorAs(t, err, &em)
+			assert.Equal(t, "the port must be between 1 and 65535", em.Errors[0].Message)
+		})
+	}
+
+	rec := store.KodiInstance{Name: "Lounge"}
+
+	_, err := applyInstanceInput(&rec, InstanceInput{URL: new("http://192.0.2.1:65535/jsonrpc"), WebSocketURL: new("ws://192.0.2.1:65535/jsonrpc")}, false)
+	require.NoError(t, err)
+	assert.Equal(t, 65535, rec.Port)
+	assert.Equal(t, 65535, rec.WSPort)
+}
+
 func TestApplyInstanceInputNeverEchoesURLPassword(t *testing.T) {
 	t.Parallel()
 

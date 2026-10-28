@@ -29,6 +29,9 @@ const (
 	CodeUnavailable    = -32097
 )
 
+// maxPort is the highest TCP port a Kodi URL may name.
+const maxPort = 65535
+
 // DefaultPageSize is how many items one library request asks for.
 const DefaultPageSize = 1000
 
