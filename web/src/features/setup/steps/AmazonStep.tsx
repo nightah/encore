@@ -191,7 +191,9 @@ export function AmazonStep({ nav }: StepProps) {
 function PasteFallbacks({ https }: { https: boolean }) {
   const { t } = useTranslation("setup");
   const paste = usePasteAmazon();
-  const [mode, setMode] = useState<"redirect_url" | "refresh_token">(https ? "refresh_token" : "redirect_url");
+  // Over HTTPS only the refresh token applies; `https` can change after the first render, once the skill and its return URLs load.
+  const [chosen, setMode] = useState<"redirect_url" | "refresh_token">("redirect_url");
+  const mode = https ? "refresh_token" : chosen;
   const [value, setValue] = useState("");
   const error =
     paste.error instanceof ApiError ? (paste.error.fieldErrors[mode] ?? errorMessage(paste.error)) : undefined;

@@ -1016,6 +1016,25 @@ describe("setup Amazon step", () => {
     await user.type(token, "   {Enter}");
     expect(log.filter((r) => r.path === "/skill/amazon/paste")).toHaveLength(1);
   });
+
+  it("offers the refresh token over HTTPS when the step opens before the skill has loaded", async () => {
+    // Opening the step straight away, as after Login with Amazon sends you back, renders it before the skill and its return URLs arrive.
+    startAt(4);
+    getDb().skill.amazon.connected = false;
+    failWith("post", "/skill/amazon/paste", 502, "Amazon didn't answer.");
+    const user = userEvent.setup();
+    const log = recordRequests();
+    renderApp("/setup");
+    await heading("Connect your Amazon developer account");
+
+    await user.click(await screen.findByText(/Can't sign in through the callback/));
+    expect(screen.queryByLabelText("Redirect URL")).not.toBeInTheDocument();
+    await user.type(screen.getByLabelText("Refresh token"), "Atzr|token");
+    await user.click(screen.getByRole("button", { name: "Connect" }));
+
+    expect(await screen.findByText("Amazon didn't answer.")).toBeInTheDocument();
+    expect(log.find((r) => r.path === "/skill/amazon/paste")?.body).toEqual({ refresh_token: "Atzr|token" });
+  });
 });
 
 describe("setup deploy step", () => {
