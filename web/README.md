@@ -145,7 +145,7 @@ The client is generated from the server's OpenAPI 3.1 spec, `internal/api/openap
 
 ## Stack
 
-React 19.3, Vite 8 with `@vitejs/plugin-react`, TypeScript 7 (native `tsc`, installed as `@typescript/native` aliased to `typescript@7`), Tailwind CSS 4.3 with `@tailwindcss/vite`, Base UI (`@base-ui/react`), lucide-react, TanStack Router (file-based) and TanStack Query 5, react-hook-form and zod 4, Biome, Vitest with Testing Library and jsdom, Playwright. Fonts are self-hosted from Fontsource: Bricolage Grotesque, IBM Plex Sans and IBM Plex Mono.
+React 19.3, Vite 8 with `@vitejs/plugin-react`, TypeScript 7 (the native `tsc`), Tailwind CSS 4.3 with `@tailwindcss/vite`, Base UI (`@base-ui/react`), lucide-react, TanStack Router (file-based) and TanStack Query 5, react-hook-form and zod 4, Biome, Vitest with Testing Library and jsdom, Playwright. Fonts are self-hosted from Fontsource: Bricolage Grotesque, IBM Plex Sans and IBM Plex Mono.
 
 ## Brand
 
