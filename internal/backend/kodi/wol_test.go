@@ -222,6 +222,29 @@ func TestWakeAddressAndFailures(t *testing.T) {
 	require.ErrorContains(t, w.Wake(t.Context()), "6-byte MAC", "an EUI-64 address can't be woken")
 }
 
+func TestWakeSendsOverUDPByDefault(t *testing.T) {
+	conn, err := net.ListenPacket("udp", "127.0.0.1:0")
+	require.NoError(t, err)
+
+	defer conn.Close()
+
+	mac := net.HardwareAddr{1, 2, 3, 4, 5, 6}
+	w := &Waker{Broadcast: conn.LocalAddr().String()}
+	w.SetMAC(mac)
+
+	require.NoError(t, w.Wake(t.Context()))
+
+	require.NoError(t, conn.SetReadDeadline(time.Now().Add(2*time.Second)))
+
+	buf := make([]byte, 128)
+	n, _, err := conn.ReadFrom(buf)
+	require.NoError(t, err)
+
+	want, err := MagicPacket(mac)
+	require.NoError(t, err)
+	assert.Equal(t, want, buf[:n], "the magic packet arrives without a Send of its own")
+}
+
 func TestWakeAndWaitStops(t *testing.T) {
 	s := newFake(t, fakekodi.Options{})
 	s.Handle("JSONRPC.Ping", func(json.RawMessage) (any, *fakekodi.Error) {

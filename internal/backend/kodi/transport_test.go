@@ -166,6 +166,31 @@ func TestHTTPOnly(t *testing.T) {
 	assert.NotContains(t, err.Error(), "wrong", "credentials must not leak into errors")
 }
 
+func TestHTTPCallToAMalformedHost(t *testing.T) {
+	tr := NewTransport(Config{Host: "kodi lounge", Port: 8080, DisableWebSocket: true}, nil)
+
+	err := ping(t.Context(), tr)
+	require.ErrorContains(t, err, "kodi: JSONRPC.Ping: ")
+	require.ErrorContains(t, err, `parse "http://kodi%20lounge:8080/jsonrpc"`, "the address can't even be requested")
+	assert.NotErrorIs(t, err, media.ErrUnreachable, "Kodi wasn't tried, so it isn't known to be unreachable")
+}
+
+func TestDecodeWithoutAResult(t *testing.T) {
+	t.Parallel()
+
+	var got map[string]any
+
+	require.NoError(t, (&message{}).decode("Player.Stop", &got), "an empty result is no error")
+	assert.Nil(t, got, "and leaves the result alone")
+
+	require.NoError(t, (&message{Result: json.RawMessage(`"OK"`)}).decode("Player.Stop", nil), "nor is a result nobody wants")
+
+	err := (&message{Error: &RPCError{Code: CodeInvalidParams, Message: "Invalid params."}}).decode("Player.Stop", &got)
+	var rpcErr *RPCError
+	require.ErrorAs(t, err, &rpcErr)
+	assert.Equal(t, "Player.Stop", rpcErr.Method, "the error names the method")
+}
+
 func TestWebSocketConcurrentCalls(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		s := newFake(t, fakekodi.Options{})
