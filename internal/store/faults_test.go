@@ -130,6 +130,31 @@ func TestFailedWritesChangeNothing(t *testing.T) {
 			},
 		},
 		{
+			name:  "re-encrypting the second secret",
+			fault: testkit.Fault{Op: testkit.Update, Table: "secrets", Nth: 2},
+			write: func(t *testing.T, db *DB) error {
+				for _, id := range []string{"a", "b"} {
+					require.NoError(t, db.SecretRows().Put(t.Context(), SecretRow{ID: id, KeyID: "old", Nonce: []byte{1}, Ciphertext: []byte{2}}))
+				}
+
+				return db.SecretRows().Rewrite(t.Context(), func(row *SecretRow) error {
+					row.KeyID, row.Ciphertext = "new", []byte{3}
+
+					return nil
+				})
+			},
+			want: `rewriting secret "b": `,
+			check: func(t *testing.T, db *DB) {
+				ids, err := db.SecretRows().KeyIDs(t.Context())
+				require.NoError(t, err)
+				assert.Equal(t, []string{"old"}, ids, "the first secret's rewrite is undone too")
+
+				row, err := db.SecretRows().Get(t.Context(), "a")
+				require.NoError(t, err)
+				assert.Equal(t, []byte{2}, row.Ciphertext)
+			},
+		},
+		{
 			name:  "logging a request that can't be pruned",
 			fault: testkit.Fault{Op: testkit.Delete, Table: "request_log"},
 			write: func(t *testing.T, db *DB) error {
