@@ -238,6 +238,18 @@ func TestHealthzReportsTheVersionUncached(t *testing.T) {
 	assert.Equal(t, map[string]string{"status": "ok", "version": buildinfo.Get().Version}, body)
 }
 
+func TestHealthzAnswersOnlyReads(t *testing.T) {
+	h := newTestServer(t, config.Server{BasePath: "/"}, Deps{})
+
+	assert.Equal(t, http.StatusOK, do(t, h, http.MethodHead, PathHealthz).Code, "HEAD is a GET without the body")
+
+	for _, method := range []string{http.MethodPost, http.MethodPut, http.MethodDelete} {
+		rec := do(t, h, method, PathHealthz)
+		assert.Equal(t, http.StatusNotFound, rec.Code, "%s falls through to the API's JSON not found", method)
+		assert.NotContains(t, rec.Body.String(), `"status"`, method)
+	}
+}
+
 func TestSecurityHeadersOnEveryResponse(t *testing.T) {
 	h := newTestServer(t, config.Server{BasePath: "/"}, Deps{})
 
