@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"encoding/json"
+	"strconv"
 	"testing"
 	"time"
 
@@ -320,6 +321,28 @@ func TestRequestLogRetentionByCount(t *testing.T) {
 	assert.Equal(t, "d", page[0].RequestID)
 }
 
+func TestRequestLogDefaults(t *testing.T) {
+	db, _ := openTest(t, Options{})
+	ctx := t.Context()
+	repo := db.RequestLog()
+
+	assert.Equal(t, RequestLogRetention{MaxEntries: DefaultRequestLogMaxEntries, MaxAge: DefaultRequestLogMaxAge}, db.retention, "unset limits take the defaults")
+
+	for i := range 101 {
+		require.NoError(t, repo.Insert(ctx, &RequestLogEntry{RequestID: strconv.Itoa(i)}))
+	}
+
+	list, err := repo.List(ctx, RequestLogQuery{})
+	require.NoError(t, err)
+	require.Len(t, list, 100, "a page holds 100 entries unless asked otherwise")
+	assert.Equal(t, "100", list[0].RequestID, "newest first")
+	assert.Equal(t, "1", list[99].RequestID)
+
+	list, err = repo.List(ctx, RequestLogQuery{Limit: -1, BeforeID: -5})
+	require.NoError(t, err)
+	assert.Len(t, list, 100, "negative values mean the defaults too")
+}
+
 func TestRequestLogRetentionByAge(t *testing.T) {
 	db, clk := openTest(t, Options{RequestLog: RequestLogRetention{MaxAge: time.Hour}})
 	ctx := t.Context()
@@ -457,6 +480,32 @@ func TestSessions(t *testing.T) {
 	n, err = repo.DeleteAllExcept(ctx, nil)
 	require.NoError(t, err)
 	assert.EqualValues(t, 1, n)
+}
+
+func TestSessionsExpireAtTheirExpiryInstant(t *testing.T) {
+	db, clk := openTest(t, Options{})
+	ctx := t.Context()
+	repo := db.Sessions()
+
+	require.NoError(t, repo.Create(ctx, &Session{IDHash: []byte{1}, Username: "admin", ExpiresAt: clk.Now().Add(time.Hour)}))
+
+	clk.Advance(time.Hour - time.Millisecond)
+
+	_, err := repo.Get(ctx, []byte{1})
+	require.NoError(t, err, "a session is valid until its last millisecond")
+
+	n, err := repo.DeleteExpired(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, n)
+
+	clk.Advance(time.Millisecond)
+
+	_, err = repo.Get(ctx, []byte{1})
+	require.ErrorIs(t, err, ErrNotFound, "a session is over at its expiry time")
+
+	n, err = repo.DeleteExpired(ctx)
+	require.NoError(t, err)
+	assert.EqualValues(t, 1, n, "and is swept at that same instant")
 }
 
 func TestSecretRows(t *testing.T) {

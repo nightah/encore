@@ -257,6 +257,16 @@ func TestOpenReadConns(t *testing.T) {
 	assert.GreaterOrEqual(t, db.read.Stats().MaxOpenConnections, 4)
 }
 
+func TestReadPoolIsReadOnly(t *testing.T) {
+	db, _ := openTest(t, Options{})
+
+	_, err := db.read.ExecContext(t.Context(), `INSERT INTO settings (key, value, updated_at) VALUES ('k', '1', 0)`)
+	require.Error(t, err, "only the single writer may write, so writes are serialised")
+
+	_, err = db.Settings().Raw(t.Context(), "k")
+	require.ErrorIs(t, err, ErrNotFound)
+}
+
 func TestPingReportsWhichPoolFailed(t *testing.T) {
 	db, err := Open(t.Context(), Options{Path: filepath.Join(t.TempDir(), FileName)})
 	require.NoError(t, err)
