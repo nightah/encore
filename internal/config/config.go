@@ -46,11 +46,9 @@ func Defaults() Config {
 
 // Load builds the configuration from all sources and validates it.
 func Load(opts Options) (*Config, error) {
+	// Loading and merging below can't fail: the confmap, env and posflag providers' Read never returns an error, and a Koanf without StrictMerge merges any maps. Only the file provider and the yaml parser can.
 	k := koanf.New(".")
-
-	if err := k.Load(confmap.Provider(defaultsMap(), "."), nil); err != nil {
-		return nil, fmt.Errorf("loading defaults: %w", err)
-	}
+	_ = k.Load(confmap.Provider(defaultsMap(), "."), nil)
 
 	// explicit collects what the operator set, so the web interface can show those keys as managed by config.
 	explicit := koanf.New(".")
@@ -99,9 +97,7 @@ func Load(opts Options) (*Config, error) {
 		},
 	})
 
-	if err := explicit.Load(envProvider, nil); err != nil {
-		return nil, fmt.Errorf("loading environment: %w", err)
-	}
+	_ = explicit.Load(envProvider, nil)
 
 	if fileErr != nil {
 		return nil, fileErr
@@ -109,14 +105,10 @@ func Load(opts Options) (*Config, error) {
 
 	if opts.Flags != nil {
 		// Without a Koanf to compare against, only flags the user set are read.
-		if err := explicit.Load(posflag.Provider(opts.Flags, ".", nil), nil); err != nil {
-			return nil, fmt.Errorf("loading flags: %w", err)
-		}
+		_ = explicit.Load(posflag.Provider(opts.Flags, ".", nil), nil)
 	}
 
-	if err := k.Merge(explicit); err != nil {
-		return nil, fmt.Errorf("merging configuration: %w", err)
-	}
+	_ = k.Merge(explicit)
 
 	var cfg Config
 	if err := k.Unmarshal("", &cfg); err != nil {

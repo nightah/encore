@@ -212,10 +212,9 @@ func applyFlat(base *config.Config, flat map[string]any) (*config.Config, error)
 		}
 	}
 
+	// A confmap provider never fails to load.
 	k := koanf.New(".")
-	if err := k.Load(confmap.Provider(flat, "."), nil); err != nil {
-		return nil, err
-	}
+	_ = k.Load(confmap.Provider(flat, "."), nil)
 
 	if err := k.UnmarshalWithConf("", &eff, koanf.UnmarshalConf{Tag: "koanf"}); err != nil {
 		return nil, fmt.Errorf("applying saved settings: %w", err)
