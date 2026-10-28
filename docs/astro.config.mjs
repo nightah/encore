@@ -9,21 +9,15 @@ const apiGroup = createOpenAPISidebarGroup();
 
 // Published to GitHub Pages at https://nightah.github.io/encore/. Pages link to each other with relative links, so the base path only lives here.
 export default defineConfig({
-  site: "https://nightah.github.io",
   base: "/encore",
-  trailingSlash: "always",
-  // brand/ is the single source of the logo and mark: it is served as the site's public directory (for the favicon) and imported by pages, never copied.
-  publicDir: "./brand",
   integrations: [
     starlight({
-      title: "Encore",
-      description: "Control Kodi with Alexa. Self-hosted, set up from a web interface.",
-      logo: { src: "./brand/mark.svg", alt: "Encore" },
-      favicon: "/mark.svg",
-      social: [{ icon: "github", label: "GitHub", href: "https://github.com/nightah/encore" }],
-      editLink: { baseUrl: "https://github.com/nightah/encore/edit/main/docs/" },
       customCss: ["./src/styles/theme.css"],
+      description: "Control Kodi with Alexa. Self-hosted, set up from a web interface.",
+      editLink: { baseUrl: "https://github.com/nightah/encore/edit/main/docs/" },
+      favicon: "/mark.svg",
       lastUpdated: false,
+      logo: { alt: "Encore", src: "./brand/mark.svg" },
       plugins: [
         // Fails the build on broken internal links and anchors. The OpenAPI pages are generated routes rather than content entries, so the validator can't see them.
         starlightLinksValidator({
@@ -33,13 +27,12 @@ export default defineConfig({
           {
             base: "reference/api/operations",
             schema: "../internal/api/openapi.json",
-            sidebar: { label: "Operations", group: apiGroup, collapsed: true },
+            sidebar: { collapsed: true, group: apiGroup, label: "Operations" },
           },
         ]),
       ],
       sidebar: [
         {
-          label: "Start here",
           items: [
             "introduction",
             "getting-started/docker",
@@ -47,9 +40,9 @@ export default defineConfig({
             "getting-started/first-run",
             "tour",
           ],
+          label: "Start here",
         },
         {
-          label: "Guides",
           items: [
             "guides/reverse-proxy",
             "guides/deploy-skill",
@@ -63,29 +56,36 @@ export default defineConfig({
             "guides/stateless",
             "guides/health",
           ],
+          label: "Guides",
         },
         {
-          label: "Voice commands",
           // The overview (index.md, sidebar order -1) then one generated page per language.
           items: [{ autogenerate: { directory: "voice-commands" } }],
+          label: "Voice commands",
         },
         {
-          label: "Contributing",
           items: ["contributing", "contributing/development"],
+          label: "Contributing",
         },
         {
-          label: "Reference",
           items: [
             "reference/configuration",
             "reference/cli",
             {
-              label: "Admin API",
               items: ["reference/api", "reference/api/endpoints", apiGroup],
+              label: "Admin API",
             },
           ],
+          label: "Reference",
         },
-        { label: "About", items: ["brand", "credits"] },
+        { items: ["brand", "credits"], label: "About" },
       ],
+      social: [{ href: "https://github.com/nightah/encore", icon: "github", label: "GitHub" }],
+      title: "Encore",
     }),
   ],
+  // brand/ is the single source of the logo and mark: it is served as the site's public directory (for the favicon) and imported by pages, never copied.
+  publicDir: "./brand",
+  site: "https://nightah.github.io",
+  trailingSlash: "always",
 });

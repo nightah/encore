@@ -176,6 +176,29 @@
       "semanticCommitType": "build"
     },
     {
+      "description": "Node.js: the custom managers below own every Node reference, so the built-in extractions that read them with other datasources stay off (they bump to non-LTS majors, and the Dockerfile one can't rewrite FROM node:${NODE_VERSION})",
+      "matchManagers": [
+        "github-actions",
+        "dockerfile",
+        "npm"
+      ],
+      "matchDepNames": [
+        "node"
+      ],
+      "enabled": false
+    },
+    {
+      "description": "Node.js: @types/node major bumps join the node group (config:recommended already gives it node versioning, so it only moves to LTS majors)",
+      "matchDepNames": [
+        "@types/node"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "groupName": "node",
+      "semanticCommitType": "build"
+    },
+    {
       "description": "Linters and scanners CI runs with pipx or docker run",
       "matchManagers": [
         "custom.regex"
@@ -209,6 +232,19 @@
       ],
       "matchStrings": [
         "ARG NODE_VERSION=(?<currentValue>\\d+)"
+      ],
+      "depNameTemplate": "node",
+      "datasourceTemplate": "node-version",
+      "versioningTemplate": "node"
+    },
+    {
+      "description": "Node.js major in the engines fields of web/ and docs/ (\"node\": \">=26\")",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^(web|docs)/package\\.json$/"
+      ],
+      "matchStrings": [
+        "\"node\": \">=(?<currentValue>\\d+)\""
       ],
       "depNameTemplate": "node",
       "datasourceTemplate": "node-version",
@@ -250,7 +286,7 @@
       "datasourceTemplate": "go"
     },
     {
-      "description": "Node.js major in workflows (node-version: 24.x)",
+      "description": "Node.js major in workflows (node-version: 26.x)",
       "customType": "regex",
       "managerFilePatterns": [
         "/^\\.github/workflows/.+\\.ya?ml$/"
