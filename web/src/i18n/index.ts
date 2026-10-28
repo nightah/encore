@@ -12,6 +12,9 @@ export const LANGUAGES = [
 
 export type Language = (typeof LANGUAGES)[number]["code"];
 
+/** Each language's name in itself, by code. */
+export const LANGUAGE_NAMES = Object.fromEntries(LANGUAGES.map((l) => [l.code, l.name])) as Record<Language, string>;
+
 /** One namespace per area of the interface, each a JSON file per language in locales/. common holds the shell, shared components and formatting. */
 export const NAMESPACES = [
   "common",
@@ -32,7 +35,9 @@ const files = import.meta.glob<Record<string, unknown>>("./locales/*/*.json", { 
 
 const resources: Record<string, Record<string, Record<string, unknown>>> = {};
 for (const [path, strings] of Object.entries(files)) {
-  const [, lang = "", ns = ""] = path.match(/\.\/locales\/([^/]+)\/([^/]+)\.json$/) ?? [];
+  // ./locales/<language>/<namespace>.json, as the glob above only matches those.
+  const [, , lang = "", file = ""] = path.split("/");
+  const ns = file.replace(/\.json$/, "");
   resources[lang] ??= {};
   resources[lang][ns] = strings;
 }
