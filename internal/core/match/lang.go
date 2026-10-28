@@ -205,7 +205,7 @@ func german() *language {
 		unitsFirst: true,
 		conj:       set("und"),
 		parts:      set("teil", "kapitel"),
-		phonetic:   phoneticKeysOf(de.Encoder{}),
+		phonetic:   germanKeys(de.Encoder{}),
 	}
 }
 

@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nightah/encore/internal/fuzzy/phonetic"
-	_ "github.com/nightah/encore/internal/fuzzy/phonetic/de"
+	"github.com/nightah/encore/internal/fuzzy/phonetic/de"
 	"github.com/nightah/encore/internal/fuzzy/phonetic/en"
 	_ "github.com/nightah/encore/internal/fuzzy/phonetic/es"
 	_ "github.com/nightah/encore/internal/fuzzy/phonetic/fr"
@@ -103,7 +103,10 @@ func goldenTokens(t *testing.T, code string, suites []corpusSuite) []string {
 	return slices.Sorted(maps.Keys(seen))
 }
 
-// TestPhoneticLibraryGolden checks that production keys every token as PhonoGrams/double_metaphone and f1monkey/phonetic did, from the keys pinned in libraryKeysFile, in every language it lists: those still keyed with the ported encoders.
+// portedKeys is the ported encoder alone for each language whose production keying adds a rule on top of it (germanKeys), which TestPhoneticLibraryGolden checks instead.
+var portedKeys = map[string]phoneticFunc{"de": encoderKeys(de.Encoder{})}
+
+// TestPhoneticLibraryGolden checks that production keys every token as PhonoGrams/double_metaphone and f1monkey/phonetic did, from the keys pinned in libraryKeysFile, in every language it lists: those keyed with the ported encoders. Where production adds a rule of its own (portedKeys), the ported encoder is checked.
 func TestPhoneticLibraryGolden(t *testing.T) {
 	raw, err := os.ReadFile(libraryKeysFile)
 	require.NoError(t, err)
@@ -127,8 +130,13 @@ func TestPhoneticLibraryGolden(t *testing.T) {
 		toks := goldenTokens(t, code, suites[code])
 		require.Equal(t, slices.Sorted(maps.Keys(golden[code])), toks, "%s: %s pins goldenTokens", code, libraryKeysFile)
 
+		keys := languages[code].phonetic
+		if fn, ok := portedKeys[code]; ok {
+			keys = fn
+		}
+
 		for _, tok := range toks {
-			require.Equal(t, golden[code][tok], languages[code].phonetic(tok), "%s %q", code, tok)
+			require.Equal(t, golden[code][tok], keys(tok), "%s %q", code, tok)
 		}
 
 		t.Logf("%s: %d tokens keyed as the libraries did", code, len(toks))
