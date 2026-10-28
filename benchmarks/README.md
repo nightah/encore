@@ -11,11 +11,20 @@ It is a Go module of its own (`github.com/nightah/encore/benchmarks`), so the re
 | `retrieval` | The inverted index in `internal/core/match` | bleve 2.6.1, the retriever as it was in commit `96d0dfaa` (the last that shipped it) | Every ASR corpus case and every library title as a query (English and German suites): the same candidates and the same `Search` result. A 10,000-title scale library with 874 queries: the same candidates with a pool as large as the library, and the same decision, top candidate, score and margin at the default pool of 800 | `Search100k`, `SearchScale`, `Candidates`, `Build` |
 | `editdistance` | `jaroWinkler` and `osaDistance` in `internal/core/match` | go-edlib 1.7.0 (`JaroWinklerSimilarity`, `OSADamerauLevenshteinDistance`) | Bit-for-bit equal results for every pair of strings of up to three runes over `abü😀`, for rapid-generated text (arbitrary Unicode, invalid UTF-8, strings longer than the 64-rune stack buffers) and for title pairs | `JaroWinkler`, `OSADistance` |
 | `totp` | RFC 6238 TOTP in `internal/auth` | pquerna/otp 1.5.0 with the options Encore used (SHA1, six digits, 30-second steps, one step of skew) | RFC 6238 Appendix B vectors for both; the same code for random secrets and times; the same accept or reject for codes from nearby steps, random codes and codes with surrounding space; the same secret and `otpauth://` URL from the same random bytes | `Code`, `Validate` |
-| `phonetic` | `internal/fuzzy/phonetic/en` (Double Metaphone) and `de` (Kölner Phonetik) | PhonoGrams/double_metaphone 0.1.0 and f1monkey/phonetic 1.4.2, keyed as `internal/core/match` called them | The same keys for every word of up to four letters (a to z, plus ä, ö, ü and ß for German), for rapid-generated words, invalid UTF-8 and long words, and for every word of the matcher's ASR and phonetic corpora | `Keys` per language |
+| `phonetic` | `internal/fuzzy/phonetic/en` (Double Metaphone) and `de` (Kölner Phonetik) | PhonoGrams/double_metaphone 0.1.0 and f1monkey/phonetic 1.4.2, keyed as `internal/core/match` called them | The same keys for every word of up to four letters (a to z, plus ä, ö, ü and ß for German), for rapid-generated words, invalid UTF-8 and long words, and for every word of the matcher's ASR, phonetic and grown corpora | `Keys` per language |
 
 Each benchmark runs the library and the in-tree code as sub-benchmarks named `impl=<library>` and `impl=intree`, library first, so `benchstat -col /impl` reports the in-tree code's change against the library.
 
-The French and Spanish encoders have no library to compare with: they were written from each language's spelling rules. Their accuracy is measured in the root module by `TestPhoneticEval` (`go test -run TestPhoneticEval -v ./internal/core/match/`).
+### Phonetic accuracy
+
+Parity shows the ports behave like the libraries; it doesn't show which encoder suits which language. That is measured in the root module, not here, because the evaluation swaps the encoder inside the matcher, which only `internal/core/match`'s own tests can reach, and the French and Spanish encoders, written from each language's spelling rules, have no library to compare with. From the repository root:
+
+```sh
+go test -run TestPhoneticEval -v ./internal/core/match/
+go test -tags phoneticeval -run TestPhoneticDistractors -v ./internal/core/match/
+```
+
+`TestPhoneticEval` scores every language's original and grown corpora (`internal/core/match/testdata/asr_corpus.yaml`, `testdata/phonetic/` and `testdata/grown/`) with the production encoders, English Double Metaphone everywhere and no phonetic keys, and lists every case each one gains or loses against English. `TestPhoneticDistractors` counts wrong plays for 2,000 absent titles per language. The documentation's [accuracy tables](https://nightah.github.io/encore/contributing/dependencies/#accuracy-by-language) come from these two tests, with how the intervals and p-values were computed.
 
 ### Seams in Encore's code
 
