@@ -712,6 +712,28 @@ describe("setup admin step", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Create the admin account" })).toBeInTheDocument();
   });
 
+  it("shows a rejection whose field errors name no field on the form", async () => {
+    resetDb("fresh");
+    server.use(
+      http.post("*/api/v1/setup/admin", () =>
+        problem422(
+          [{ location: "body", message: "unexpected end of JSON input" }],
+          "The request body isn't valid JSON.",
+        ),
+      ),
+    );
+    const user = userEvent.setup();
+    renderApp("/setup");
+    await heading("Create the admin account");
+
+    await user.type(screen.getByLabelText("Setup token"), "K7QF-2M9X-PL4D");
+    await user.type(screen.getByLabelText("Password"), "correct-horse-battery");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("The request body isn't valid JSON.");
+    expect(screen.getByRole("heading", { level: 1, name: "Create the admin account" })).toBeInTheDocument();
+  });
+
   it("says when Encore couldn't be reached to create the account", async () => {
     resetDb("fresh");
     server.use(http.post("*/api/v1/setup/admin", () => HttpResponse.error()));

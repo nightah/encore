@@ -226,6 +226,24 @@ describe("login page", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
+  it("shows a rejection whose field errors name no field on the form", async () => {
+    server.use(
+      http.post("*/api/v1/auth/login", () =>
+        HttpResponse.json(
+          {
+            detail: "The request body isn't valid JSON.",
+            errors: [{ location: "body", message: "unexpected end of JSON input" }],
+            status: 422,
+            title: "Unprocessable Entity",
+          },
+          { headers: { "Content-Type": "application/problem+json" }, status: 422 },
+        ),
+      ),
+    );
+    await signIn("/login");
+    expect(await screen.findByRole("alert")).toHaveTextContent("The request body isn't valid JSON.");
+  });
+
   it("shows why single sign-on failed", async () => {
     getDb().authenticated = false;
     renderApp(`/login?error=${encodeURIComponent("The identity provider refused the sign-in.")}`);
