@@ -200,9 +200,11 @@ func german() *language {
 			compounds:  compounds,
 			ordinals:   suffixed(ordStems, "e", "er", "en", "es", "em"),
 		}.build(),
-		conj:     set("und"),
-		parts:    set("teil", "kapitel"),
-		phonetic: phoneticKeysOf(de.Encoder{}),
+		fused:      true,
+		unitsFirst: true,
+		conj:       set("und"),
+		parts:      set("teil", "kapitel"),
+		phonetic:   phoneticKeysOf(de.Encoder{}),
 	}
 }
 

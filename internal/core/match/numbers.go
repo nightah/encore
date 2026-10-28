@@ -50,7 +50,11 @@ loop:
 	for j < len(toks) {
 		w, ok := l.nums[toks[j]]
 		if !ok {
-			if l.conj[toks[j]] && j+1 < len(toks) && l.conjFollows(st, toks[j+1]) {
+			if l.conj[toks[j]] && j+1 < len(toks) && l.conjFollows(st, cur, toks[j+1]) {
+				if st == stUnit {
+					st = stUnitAnd
+				}
+
 				j++
 
 				continue
@@ -79,6 +83,7 @@ loop:
 			cur += w.val
 			st = stUnit
 		case numTens:
+			// From stUnitAnd the unit is already in cur ("neun und neunzig"), so the tens adds to it.
 			if st == stUnit || st == stTens {
 				break loop
 			}
@@ -131,8 +136,8 @@ loop:
 	return mill + total + cur, j - i, false
 }
 
-// conjFollows reports whether a conjunction in state st is part of the number, given the word after it ("hundred and one", "vingt et un").
-func (l *language) conjFollows(st numState, next string) bool {
+// conjFollows reports whether a conjunction in state st, with cur read so far, is part of the number, given the word after it ("hundred and one", "vingt et un", "neun und neunzig").
+func (l *language) conjFollows(st numState, cur int, next string) bool {
 	w, ok := l.nums[next]
 	if !ok {
 		return false
@@ -143,6 +148,8 @@ func (l *language) conjFollows(st numState, next string) bool {
 		return w.kind == numUnit || w.kind == numTens || w.kind == numCompound
 	case stTens:
 		return w.kind == numUnit && w.val < 10
+	case stUnit:
+		return l.unitsFirst && w.kind == numTens && cur%100 < 10
 	default:
 		return false
 	}

@@ -85,6 +85,8 @@ const (
 const (
 	stStart numState = iota
 	stUnit
+	// stUnitAnd is a unit and the conjunction after it, waiting for the tens (unitsFirst).
+	stUnitAnd
 	stTens
 	stHundred
 	stThousand

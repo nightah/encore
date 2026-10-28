@@ -351,11 +351,13 @@ type language struct {
 	elide bool
 	nums  map[string]numWord
 	// fused splits numbers written as one word ("millenovecentonovantadue") into the number words they are made of; elided maps a number word's shortened form inside such a word ("cent" in "centottanta") to its full form.
-	fused    bool
-	elided   map[string]string
-	conj     map[string]bool
-	parts    map[string]bool
-	phonetic phoneticFunc
+	fused  bool
+	elided map[string]string
+	// unitsFirst reads a unit, "und" and a tens as one number, as German says them ("neun und neunzig" 99).
+	unitsFirst bool
+	conj       map[string]bool
+	parts      map[string]bool
+	phonetic   phoneticFunc
 	// soundAlikeLead makes a top candidate that won on sound alone (scored.soundAlike) lead by Config.PlayMargin to play, not just Config.TieMargin. It suits an encoder that merges spellings differing only in silent letters, which different titles often do.
 	soundAlikeLead bool
 }
