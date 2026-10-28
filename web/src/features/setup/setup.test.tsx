@@ -398,7 +398,7 @@ describe("setup wizard", () => {
     resetDb("configured");
     window.localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify({ done: [1, 2], skipped: [], step: 3 }));
     const requests = recordRequests();
-    // The skill's settings arrive after the step renders, as they can on a busy machine, so the boxes are first shown unticked and disabled.
+    // The skill's settings arrive after the step renders, as they can on a busy machine, so the boxes show only once they're in.
     server.use(
       http.get("*/skill", async () => {
         await delay(100);
@@ -420,6 +420,53 @@ describe("setup wizard", () => {
     await user.click(screen.getByRole("checkbox", { name: "Movies" }));
     await waitFor(() => expect(getDb().skill.content).toEqual(["tv"]));
     expect(screen.getByRole("checkbox", { name: "TV shows" })).toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("waits for the skill settings before showing what the skill can play on the Kodi step", async () => {
+    resetDb("configured");
+    window.localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify({ done: [1, 2], skipped: [], step: 3 }));
+    let answer: (() => void) | undefined;
+    server.use(
+      http.get(
+        "*/api/v1/skill",
+        () =>
+          new Promise<Response>((resolve) => {
+            answer = () => resolve(HttpResponse.json(getDb().skill));
+          }),
+      ),
+    );
+    renderApp("/setup");
+
+    await heading("Add your first Kodi");
+    await waitFor(() => expect(answer).toBeDefined());
+    const content = screen.getByRole("group", { name: "What it can play" });
+    expect(within(content).queryByRole("checkbox", { checked: false })).not.toBeInTheDocument();
+    expect(within(content).getByRole("status")).toHaveTextContent("Loading…");
+
+    answer?.();
+    expect(await within(content).findByRole("checkbox", { name: "Movies" })).toBeChecked();
+    expect(within(content).getByRole("checkbox", { name: "TV shows" })).toBeChecked();
+    expect(within(content).getByRole("checkbox", { name: /Music/ })).toBeChecked();
+    expect(within(content).queryByRole("status")).not.toBeInTheDocument();
+  });
+
+  it("says the skill settings didn't load instead of showing nothing the skill can play", async () => {
+    resetDb("configured");
+    window.localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify({ done: [1, 2], skipped: [], step: 3 }));
+    failWith("get", "/skill", 500, "boom");
+    const user = userEvent.setup();
+    const { queryClient } = renderApp("/setup");
+
+    await heading("Add your first Kodi");
+    await waitFor(() => expect(queryClient.getQueryState(keys.skill)?.status).toBe("error"));
+    const content = screen.getByRole("group", { name: "What it can play" });
+    expect(within(content).queryByRole("checkbox")).not.toBeInTheDocument();
+    expect(within(content).getByRole("alert")).toHaveTextContent("boom");
+
+    server.resetHandlers();
+    await user.click(within(content).getByRole("button", { name: "Try again" }));
+    expect(await within(content).findByRole("checkbox", { name: "Movies" })).toBeChecked();
+    expect(within(content).queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("asks a signed-out admin to sign in before resuming", async () => {
