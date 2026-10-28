@@ -30,10 +30,8 @@ func New(ts oauth2.TokenSource, opts Options) (*Client, error) {
 
 	retry := opts.Retry.withDefaults()
 
-	api, err := smapiclient.NewClient(opts.BaseURL, smapiclient.WithHTTPClient(&doer{http: hc, tokens: ts, retry: retry}))
-	if err != nil {
-		return nil, fmt.Errorf("smapi: %w", err)
-	}
+	// NewClient fails only when an option does, and WithHTTPClient never does.
+	api, _ := smapiclient.NewClient(opts.BaseURL, smapiclient.WithHTTPClient(&doer{http: hc, tokens: ts, retry: retry}))
 
 	return &Client{
 		api:    api,
