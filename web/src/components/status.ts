@@ -59,8 +59,8 @@ export function checkLabel(check: Pick<Check, "name" | "detail">): string {
 }
 
 /** "13.5.0" → "13.5" */
-function shortApi(version: string | null | undefined): string {
-  return version ? version.split(".").slice(0, 2).join(".") : "";
+function shortApi(version: string): string {
+  return version.split(".").slice(0, 2).join(".");
 }
 
 /** "Kodi 21.3 · API 13.5", leaving out what isn't known; Encore learns both once it reaches Kodi. */

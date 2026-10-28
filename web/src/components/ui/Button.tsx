@@ -53,21 +53,16 @@ export function Button({
   );
 }
 
-interface IconButtonProps extends Omit<ButtonProps, "children" | "icon"> {
+interface IconButtonProps extends Omit<ButtonProps, "children" | "icon" | "className"> {
   label: string;
+  className?: string;
   children: ReactNode;
 }
 
 /** Square 44px button with an accessible name; the visible content is just an icon. */
 export function IconButton({ label, className, children, variant = "default", ...props }: IconButtonProps) {
   return (
-    <Button
-      aria-label={label}
-      title={label}
-      variant={variant}
-      className={cn("size-11 px-0", typeof className === "string" ? className : undefined)}
-      {...props}
-    >
+    <Button aria-label={label} title={label} variant={variant} className={cn("size-11 px-0", className)} {...props}>
       {children}
     </Button>
   );
