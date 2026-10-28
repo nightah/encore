@@ -9,6 +9,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	"github.com/stretchr/testify/assert"
@@ -288,6 +289,7 @@ func TestRecentlyAdded(t *testing.T) {
 	assert.Empty(t, c.RecentlyAdded(0))
 }
 
+// runCatalog runs c until the test ends, returning once it has synced and subscribed. Call it in a synctest bubble.
 func runCatalog(t *testing.T, c *Catalog, b *fakeBackend) {
 	t.Helper()
 
@@ -305,99 +307,158 @@ func runCatalog(t *testing.T, c *Catalog, b *fakeBackend) {
 		<-done
 	})
 
+	synctest.Wait()
+
 	select {
 	case <-b.subbed:
-	case <-time.After(2 * time.Second):
+	default:
 		t.Fatal("catalog never subscribed")
 	}
 }
 
 func TestRunAppliesEvents(t *testing.T) {
-	b := seed()
-	clk := newClock()
-	c, rec := newCatalog(b, clk, Options{Debounce: 5 * time.Millisecond, RefreshInterval: -1})
-	runCatalog(t, c, b)
-	rec.take()
+	synctest.Test(t, func(t *testing.T) {
+		const debounce = 5 * time.Millisecond
 
-	b.put(media.Item{Kind: media.KindMovie, ID: 1, Title: "Dune", PlayCount: 2, DateAdded: t0.Add(-72 * time.Hour)})
-	b.put(movie(7, "Conclave", t0.Add(-9000*time.Hour)))
-	b.emit(media.Event{Kind: media.EventItemUpdated, Ref: media.Ref{Kind: media.KindMovie, ID: 1}})
-	b.emit(media.Event{Kind: media.EventItemUpdated, Ref: media.Ref{Kind: media.KindMovie, ID: 7}})
-	b.emit(media.Event{Kind: media.EventItemRemoved, Ref: media.Ref{Kind: media.KindArtist, ID: 5}})
+		b := seed()
+		clk := newClock()
+		c, rec := newCatalog(b, clk, Options{Debounce: debounce, RefreshInterval: -1})
+		runCatalog(t, c, b)
+		rec.take()
 
-	require.Eventually(t, func() bool {
+		b.put(media.Item{Kind: media.KindMovie, ID: 1, Title: "Dune", PlayCount: 2, DateAdded: t0.Add(-72 * time.Hour)})
+		b.put(movie(7, "Conclave", t0.Add(-9000*time.Hour)))
+		b.emit(media.Event{Kind: media.EventItemUpdated, Ref: media.Ref{Kind: media.KindMovie, ID: 1}})
+		b.emit(media.Event{Kind: media.EventItemUpdated, Ref: media.Ref{Kind: media.KindMovie, ID: 7}})
+		b.emit(media.Event{Kind: media.EventItemRemoved, Ref: media.Ref{Kind: media.KindArtist, ID: 5}})
+		time.Sleep(debounce)
+		synctest.Wait()
+
 		it, ok := c.Get(media.Ref{Kind: media.KindMovie, ID: 1})
+		require.True(t, ok)
+		assert.Equal(t, 2, it.PlayCount, "an update refetches the item")
+
 		_, added := c.Get(media.Ref{Kind: media.KindMovie, ID: 7})
+		assert.True(t, added, "an update for an unknown item adds it")
+		assert.Empty(t, c.Items(media.KindArtist), "a removal removes")
 
-		return ok && it.PlayCount == 2 && added && len(c.Items(media.KindArtist)) == 0
-	}, 2*time.Second, 5*time.Millisecond)
+		var upserted []int
 
-	var upserted []int
+		var removed []media.Ref
 
-	var removed []media.Ref
+		for _, ch := range rec.take() {
+			upserted = append(upserted, ids(ch.upserted)...)
+			removed = append(removed, ch.removed...)
+		}
 
-	for _, ch := range rec.take() {
-		upserted = append(upserted, ids(ch.upserted)...)
-		removed = append(removed, ch.removed...)
-	}
+		assert.ElementsMatch(t, []int{1, 7}, upserted)
+		assert.Equal(t, []media.Ref{{Kind: media.KindArtist, ID: 5}}, removed)
+		assert.Equal(t, t0, c.Stats().LastEvent)
 
-	assert.ElementsMatch(t, []int{1, 7}, upserted)
-	assert.Equal(t, []media.Ref{{Kind: media.KindArtist, ID: 5}}, removed)
-	assert.Equal(t, t0, c.Stats().LastEvent)
+		// An update for something Kodi no longer has removes it.
+		b.del(media.Ref{Kind: media.KindMovie, ID: 2})
+		b.emit(media.Event{Kind: media.EventItemUpdated, Ref: media.Ref{Kind: media.KindMovie, ID: 2}})
+		time.Sleep(debounce)
+		synctest.Wait()
 
-	// An update for something Kodi no longer has removes it.
-	b.del(media.Ref{Kind: media.KindMovie, ID: 2})
-	b.emit(media.Event{Kind: media.EventItemUpdated, Ref: media.Ref{Kind: media.KindMovie, ID: 2}})
-	require.Eventually(t, func() bool { _, ok := c.Get(media.Ref{Kind: media.KindMovie, ID: 2}); return !ok }, 2*time.Second, 5*time.Millisecond)
+		_, ok = c.Get(media.Ref{Kind: media.KindMovie, ID: 2})
+		assert.False(t, ok)
 
-	// A finished scan runs a delta.
-	before := b.count("RecentlyAdded")
-	b.emit(media.Event{Kind: media.EventLibraryScanned})
-	require.Eventually(t, func() bool { return b.count("RecentlyAdded") > before }, 2*time.Second, 5*time.Millisecond)
+		// A finished scan runs a delta.
+		before := b.count("RecentlyAdded")
+		b.emit(media.Event{Kind: media.EventLibraryScanned})
+		time.Sleep(debounce)
+		synctest.Wait()
+		assert.Greater(t, b.count("RecentlyAdded"), before)
 
-	// Playback events change nothing.
-	b.emit(media.Event{Kind: media.EventPlaybackStarted, Ref: media.Ref{Kind: media.KindMovie, ID: 1}})
+		// Playback events change nothing.
+		rec.take()
+
+		calls := b.count("Item") + b.count("RecentlyAdded") + b.count("Library:movie")
+
+		b.emit(media.Event{Kind: media.EventPlaybackStarted, Ref: media.Ref{Kind: media.KindMovie, ID: 1}})
+		time.Sleep(debounce)
+		synctest.Wait()
+		assert.Equal(t, calls, b.count("Item")+b.count("RecentlyAdded")+b.count("Library:movie"), "playback asks Kodi for nothing")
+		assert.Empty(t, rec.take(), "and changes nothing")
+	})
 }
 
 func TestRunCoalescesBursts(t *testing.T) {
-	b := seed()
-	c, _ := newCatalog(b, newClock(), Options{Debounce: 50 * time.Millisecond, RefreshInterval: -1})
-	runCatalog(t, c, b)
+	synctest.Test(t, func(t *testing.T) {
+		const debounce = 50 * time.Millisecond
 
-	for range 100 {
-		b.emit(media.Event{Kind: media.EventItemUpdated, Ref: media.Ref{Kind: media.KindMovie, ID: 1}})
-	}
+		b := seed()
+		c, _ := newCatalog(b, newClock(), Options{Debounce: debounce, RefreshInterval: -1})
+		runCatalog(t, c, b)
 
-	require.Eventually(t, func() bool { return b.count("Item") >= 1 }, 2*time.Second, 5*time.Millisecond)
-	time.Sleep(100 * time.Millisecond)
-	assert.Equal(t, 1, b.count("Item"), "a burst of updates to one item fetches it once")
+		for range 100 {
+			b.emit(media.Event{Kind: media.EventItemUpdated, Ref: media.Ref{Kind: media.KindMovie, ID: 1}})
+		}
+
+		time.Sleep(debounce - time.Millisecond)
+		synctest.Wait()
+		assert.Zero(t, b.count("Item"), "nothing is fetched while the burst settles")
+
+		time.Sleep(time.Millisecond)
+		synctest.Wait()
+		assert.Equal(t, 1, b.count("Item"), "a burst of updates to one item fetches it once")
+
+		time.Sleep(10 * debounce)
+		synctest.Wait()
+		assert.Equal(t, 1, b.count("Item"), "and only once")
+	})
 }
 
 func TestRunResyncsOnReconnect(t *testing.T) {
-	b := seed()
-	clk := newClock()
-	c, _ := newCatalog(b, clk, Options{Debounce: 5 * time.Millisecond, RefreshInterval: -1, MinResync: time.Minute})
-	runCatalog(t, c, b)
+	synctest.Test(t, func(t *testing.T) {
+		const debounce = 5 * time.Millisecond
 
-	syncs := b.count("Library:movie")
-	require.Equal(t, 1, syncs, "Run starts with a full sync")
+		b := seed()
+		clk := newClock()
+		c, _ := newCatalog(b, clk, Options{Debounce: debounce, RefreshInterval: -1, MinResync: time.Minute})
+		runCatalog(t, c, b)
 
-	b.emit(media.Event{Kind: media.EventDisconnected})
-	b.emit(media.Event{Kind: media.EventConnected})
-	time.Sleep(50 * time.Millisecond)
-	assert.Equal(t, 1, b.count("Library:movie"), "a reconnect right after a sync doesn't sync again")
+		require.Equal(t, 1, b.count("Library:movie"), "Run starts with a full sync")
 
-	clk.advance(2 * time.Minute)
-	b.emit(media.Event{Kind: media.EventConnected})
-	require.Eventually(t, func() bool { return b.count("Library:movie") == 2 }, 2*time.Second, 5*time.Millisecond)
+		b.emit(media.Event{Kind: media.EventDisconnected})
+		b.emit(media.Event{Kind: media.EventConnected})
+		time.Sleep(debounce)
+		synctest.Wait()
+		assert.Equal(t, 1, b.count("Library:movie"), "a reconnect right after a sync doesn't sync again")
+
+		clk.advance(2 * time.Minute)
+		b.emit(media.Event{Kind: media.EventConnected})
+		time.Sleep(debounce)
+		synctest.Wait()
+		assert.Equal(t, 2, b.count("Library:movie"), "a reconnect after MinResync syncs in full")
+	})
 }
 
 func TestRunPeriodicDelta(t *testing.T) {
-	b := seed()
-	c, _ := newCatalog(b, newClock(), Options{RefreshInterval: 10 * time.Millisecond})
-	runCatalog(t, c, b)
+	synctest.Test(t, func(t *testing.T) {
+		const every = 10 * time.Millisecond
 
-	require.Eventually(t, func() bool { return b.count("RecentlyAdded") >= 2 }, 2*time.Second, 5*time.Millisecond)
+		b := seed()
+		c, _ := newCatalog(b, newClock(), Options{RefreshInterval: every})
+		runCatalog(t, c, b)
+
+		before := b.count("RecentlyAdded")
+
+		time.Sleep(every - time.Millisecond)
+		synctest.Wait()
+		assert.Equal(t, before, b.count("RecentlyAdded"), "no delta before the interval")
+
+		time.Sleep(time.Millisecond)
+		synctest.Wait()
+
+		first := b.count("RecentlyAdded")
+		assert.Greater(t, first, before, "a delta every interval")
+
+		time.Sleep(every)
+		synctest.Wait()
+		assert.Equal(t, 2*first-before, b.count("RecentlyAdded"), "and again the next")
+	})
 }
 
 func TestSnapshotRestore(t *testing.T) {
@@ -480,19 +541,29 @@ func TestRestoreSkipsKindsNoLongerLoaded(t *testing.T) {
 	assert.Empty(t, restored.Items(media.KindTVShow))
 }
 
+// Run under -race: readers, the event loop, periodic deltas and full syncs all touch the catalog at once.
 func TestConcurrentReadsDuringUpdates(t *testing.T) {
+	const rounds = 200
+
 	b := seed()
 	c, _ := newCatalog(b, newClock(), Options{Debounce: time.Millisecond, RefreshInterval: time.Millisecond})
-	runCatalog(t, c, b)
 
-	ctx, cancel := context.WithTimeout(t.Context(), 200*time.Millisecond)
-	defer cancel()
+	ctx, cancel := context.WithCancel(t.Context())
+	done := make(chan struct{})
+
+	go func() {
+		defer close(done)
+
+		_ = c.Run(ctx)
+	}()
+
+	<-b.subbed
 
 	var wg sync.WaitGroup
 
 	for range 4 {
 		wg.Go(func() {
-			for ctx.Err() == nil {
+			for range rounds {
 				_ = c.Items(media.KindMovie)
 				_, _ = c.Get(media.Ref{Kind: media.KindMovie, ID: 1})
 				_ = c.RecentlyAdded(3)
@@ -504,14 +575,18 @@ func TestConcurrentReadsDuringUpdates(t *testing.T) {
 	}
 
 	wg.Go(func() {
-		for i := 0; ctx.Err() == nil; i++ {
+		for i := range rounds {
 			b.put(movie(1000+i%10, "Churn", t0))
 			b.emit(media.Event{Kind: media.EventItemUpdated, Ref: media.Ref{Kind: media.KindMovie, ID: 1000 + i%10}})
-			_ = c.Sync(ctx)
+			assert.NoError(t, c.Sync(ctx))
 		}
 	})
 
 	wg.Wait()
+	cancel()
+	<-done
+
+	assert.Len(t, c.Items(media.KindMovie), 12, "every churned movie is in the catalog")
 }
 
 func TestSetKinds(t *testing.T) {
