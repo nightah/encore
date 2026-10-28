@@ -4,6 +4,9 @@ import (
 	"maps"
 	"slices"
 	"strings"
+
+	"github.com/nightah/encore/internal/fuzzy/phonetic/de"
+	"github.com/nightah/encore/internal/fuzzy/phonetic/en"
 )
 
 var languages = map[string]*language{
@@ -146,7 +149,7 @@ func english() *language {
 		}.build(),
 		conj:     set("and"),
 		parts:    set("part", "chapter", "volume", "vol"),
-		phonetic: metaphoneKeys,
+		phonetic: phoneticKeysOf(en.Encoder{}),
 	}
 }
 
@@ -187,7 +190,7 @@ func german() *language {
 		}.build(),
 		conj:     set("und"),
 		parts:    set("teil", "kapitel"),
-		phonetic: cologneKeys,
+		phonetic: phoneticKeysOf(de.Encoder{}),
 	}
 }
 
@@ -216,7 +219,7 @@ func french() *language {
 		}.build(),
 		conj:     set("et"),
 		parts:    set("partie", "chapitre"),
-		phonetic: metaphoneKeys,
+		phonetic: phoneticKeysOf(en.Encoder{}),
 	}
 }
 
@@ -251,7 +254,7 @@ func spanish() *language {
 		}.build(),
 		conj:     set("y"),
 		parts:    set("parte", "capitulo"), //nolint:misspell // Spanish for "chapter".
-		phonetic: metaphoneKeys,
+		phonetic: phoneticKeysOf(en.Encoder{}),
 	}
 }
 
@@ -293,6 +296,6 @@ func italian() *language {
 		}.build(),
 		conj:     set("e"),
 		parts:    set("parte", "capitolo"),
-		phonetic: metaphoneKeys,
+		phonetic: phoneticKeysOf(en.Encoder{}),
 	}
 }
