@@ -160,7 +160,7 @@ jobs:
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24.x
+          node-version: 26.x
 
       # actionlint, editorconfig-checker and govulncheck run from the tools module, which pins their versions; the rest are pinned here.
       - name: actionlint
@@ -282,7 +282,7 @@ jobs:
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24.x
+          node-version: 26.x
           cache: pnpm
           cache-dependency-path: web/pnpm-lock.yaml
 
@@ -367,7 +367,7 @@ jobs:
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24.x
+          node-version: 26.x
           cache: pnpm
           cache-dependency-path: docs/pnpm-lock.yaml
 
@@ -540,7 +540,7 @@ jobs:
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: 24.x
+          node-version: 26.x
           cache: pnpm
           cache-dependency-path: web/pnpm-lock.yaml
 
