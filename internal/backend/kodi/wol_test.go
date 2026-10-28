@@ -157,3 +157,86 @@ func TestWakeAndWaitTimesOut(t *testing.T) {
 
 	require.Error(t, (&Waker{Client: w.Client}).Wake(t.Context()), "no MAC, no packet")
 }
+
+func TestSendUDPBadAddress(t *testing.T) {
+	require.Error(t, SendUDP(t.Context(), "no port here", []byte("x")))
+}
+
+func TestMACAddressReplies(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		reply func(json.RawMessage) (any, *fakekodi.Error)
+		err   string
+	}{
+		{"too long", labels("00:00:00:00:fe:80:00:00"), "instead of a MAC address"},
+		{"failing", func(json.RawMessage) (any, *fakekodi.Error) {
+			return nil, &fakekodi.Error{Code: CodeInternalError, Message: "x"}
+		}, "XBMC.GetInfoLabels"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			s := fakekodi.New(t, fakekodi.Options{})
+			s.Handle("XBMC.GetInfoLabels", tc.reply)
+
+			known := net.HardwareAddr{1, 2, 3, 4, 5, 6}
+			w := &Waker{Client: NewClient(testConfig(t, s), nil)}
+			w.SetMAC(known)
+
+			err := w.Learn(t.Context())
+
+			require.ErrorContains(t, err, tc.err)
+			assert.Equal(t, known, w.MAC(), "a failed lookup keeps the address already known")
+		})
+	}
+}
+
+func labels(mac string) func(json.RawMessage) (any, *fakekodi.Error) {
+	return func(json.RawMessage) (any, *fakekodi.Error) { return map[string]string{"Network.MacAddress": mac}, nil }
+}
+
+func TestWakeAddressAndFailures(t *testing.T) {
+	log := &packetLog{}
+	w := &Waker{Send: log.send}
+	w.SetMAC(net.HardwareAddr{1, 2, 3, 4, 5, 6})
+
+	require.NoError(t, w.Wake(t.Context()))
+	assert.Equal(t, DefaultBroadcast, log.addrs[0], "the default broadcast address")
+
+	w.Send = func(context.Context, string, []byte) error { return errNotSent }
+	err := w.Wake(t.Context())
+	require.ErrorIs(t, err, errNotSent)
+	require.ErrorContains(t, err, "sending to "+DefaultBroadcast)
+
+	w.SetMAC(net.HardwareAddr{1, 2, 3, 4, 5, 6, 7, 8})
+	require.ErrorContains(t, w.Wake(t.Context()), "6-byte MAC", "an EUI-64 address can't be woken")
+}
+
+func TestWakeAndWaitStops(t *testing.T) {
+	s := fakekodi.New(t, fakekodi.Options{})
+	s.Handle("JSONRPC.Ping", func(json.RawMessage) (any, *fakekodi.Error) {
+		return nil, &fakekodi.Error{Code: -32100, Message: "asleep"}
+	})
+
+	cfg := testConfig(t, s)
+	cfg.DisableWebSocket = true
+
+	t.Run("without a MAC", func(t *testing.T) {
+		w := &Waker{Client: NewClient(cfg, nil), PollInterval: time.Millisecond}
+
+		require.ErrorContains(t, w.WakeAndWait(t.Context(), time.Second), "MAC address unknown")
+	})
+
+	t.Run("when the caller gives up", func(t *testing.T) {
+		log := &packetLog{}
+		w := &Waker{Client: NewClient(cfg, nil), Send: log.send, PollInterval: 5 * time.Millisecond}
+		w.SetMAC(net.HardwareAddr{1, 2, 3, 4, 5, 6})
+
+		ctx, cancel := context.WithCancel(t.Context())
+		log.onSend = cancel
+
+		err := w.WakeAndWait(ctx, time.Minute)
+
+		require.ErrorIs(t, err, context.Canceled)
+		require.NotErrorIs(t, err, media.ErrUnreachable, "giving up isn't Kodi failing to wake")
+		assert.Equal(t, 1, log.count(), "the default resend interval doesn't repeat the packet straight away")
+	})
+}

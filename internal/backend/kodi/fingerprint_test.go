@@ -51,3 +51,23 @@ func TestFingerprintDatabaseName(t *testing.T) {
 	assert.Equal(t, "MyVideos149", fp.DatabaseName)
 	assert.True(t, fp.Empty())
 }
+
+func TestFingerprintFailures(t *testing.T) {
+	for _, method := range []string{"VideoLibrary.GetMovies", "VideoLibrary.GetEpisodes"} {
+		b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+		failWith(s, method)
+
+		fp, err := b.Fingerprint(t.Context(), 5)
+
+		require.ErrorContains(t, err, "sampling", method)
+		assert.True(t, fp.Empty(), "no partial sample: %s", method)
+	}
+
+	b, s := newBackend(t, fakekodi.Options{Version: [3]int{13, 1000, 0}, DatabaseName: "MyVideos149"}, BackendOptions{})
+	failWith(s, "Database.GetDatabaseName")
+
+	fp, err := b.Fingerprint(t.Context(), 5)
+	require.NoError(t, err, "the database name is a bonus, not required")
+	assert.Empty(t, fp.DatabaseName)
+	assert.Len(t, fp.Movies, 5)
+}
