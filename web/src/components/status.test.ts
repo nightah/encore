@@ -69,6 +69,11 @@ describe("instance status helpers", () => {
     expect(connectionStatus(inState("offline"))).toEqual({ label: "Offline", tone: "bad" });
   });
 
+  it("doesn't break on a state it doesn't know", () => {
+    expect(instanceStatus(inState("waking"))).toEqual({ label: "waking", tone: "neutral" });
+    expect(connectionStatus(inState("waking"))).toEqual({ label: "waking", tone: "neutral" });
+  });
+
   it("says how Encore reaches Kodi, or whether it can wake it", () => {
     expect(transportLabel(inState("connected"))).toBe("WebSocket");
     expect(transportLabel(inState("http_only"))).toBe("HTTP only");

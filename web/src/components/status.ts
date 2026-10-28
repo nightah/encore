@@ -87,7 +87,14 @@ export function instanceStatus(instance: Instance): { label: string; tone: Tone 
       return { label: i18n.t("instance.asleep"), tone: "neutral" };
     case "offline":
       return { label: i18n.t("instance.offline"), tone: "bad" };
+    default:
+      return unknownState(instance);
   }
+}
+
+/** A state this UI doesn't know (from a newer server) shows as-is rather than breaking the page. */
+function unknownState(instance: Instance): { label: string; tone: Tone } {
+  return { label: instance.status.state, tone: "neutral" };
 }
 
 /** Connection pill on the Kodi page: "Connected · WebSocket", "Connected · HTTP only", "Asleep", "Offline". */
@@ -101,6 +108,8 @@ export function connectionStatus(instance: Instance): { label: string; tone: Ton
       return { label: i18n.t("instance.asleep"), tone: "neutral" };
     case "offline":
       return { label: i18n.t("instance.offline"), tone: "bad" };
+    default:
+      return unknownState(instance);
   }
 }
 
