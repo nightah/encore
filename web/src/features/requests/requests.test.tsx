@@ -197,6 +197,31 @@ describe("Request log", () => {
     expect(replay?.csrf).toBe("mock-csrf-token");
   });
 
+  it("lists each Kodi call a replay would make with its parameters", async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.post("*/api/v1/requests/1004/replay", () =>
+        HttpResponse.json({
+          match: null,
+          speech: "",
+          would_call: [
+            { method: "Player.Open", params: { item: { movieid: 42 }, options: { resume: true } } },
+            { method: "GUI.ShowNotification", params: {} },
+          ],
+        }),
+      ),
+    );
+    renderApp("/request-log?id=1004");
+    await screen.findByRole("heading", { level: 2, name: "“play blue y”" });
+    await user.click(screen.getByRole("button", { name: "Replay (dry run)" }));
+
+    const result = await screen.findByRole("region", { name: "Replay result" });
+    expect(
+      within(result).getByText('Player.Open {"item":{"movieid":42},"options":{"resume":true}}'),
+    ).toBeInTheDocument();
+    expect(within(result).getByText("GUI.ShowNotification {}")).toBeInTheDocument();
+  });
+
   it("shows an error when the log can't be loaded", async () => {
     failWith("get", "/requests", 500, "The request log database is locked.");
     renderApp("/request-log");
