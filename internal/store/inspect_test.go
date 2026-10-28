@@ -1,6 +1,7 @@
 package store
 
 import (
+	"database/sql"
 	"fmt"
 	"io/fs"
 	"os"
@@ -96,4 +97,27 @@ func TestSchemaVersionMatchesMigrations(t *testing.T) {
 	var applied int64
 	require.NoError(t, db.read.QueryRowContext(t.Context(), `SELECT MAX(version_id) FROM goose_db_version`).Scan(&applied))
 	assert.Equal(t, v, applied, "Open migrates to the newest version")
+}
+
+func TestInspectFileReportsASingleIntegrityProblem(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "check.db")
+
+	raw, err := sql.Open("sqlite", "file:"+path)
+	require.NoError(t, err)
+
+	for _, stmt := range []string{
+		`CREATE TABLE t (a INTEGER)`,
+		`INSERT INTO t VALUES (1), (9)`,
+		`PRAGMA writable_schema = ON`,
+		`UPDATE sqlite_schema SET sql = 'CREATE TABLE t (a INTEGER CHECK (a < 5))' WHERE name = 't'`,
+	} {
+		_, err = raw.ExecContext(t.Context(), stmt)
+		require.NoError(t, err, stmt)
+	}
+
+	require.NoError(t, raw.Close())
+
+	_, err = InspectFile(t.Context(), path)
+	require.ErrorContains(t, err, "failed its integrity check", "one problem is as fatal as many")
+	assert.Contains(t, err.Error(), "CHECK constraint failed")
 }
