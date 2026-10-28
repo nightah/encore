@@ -124,6 +124,45 @@ type retriever interface {
 	close() error
 }
 
+// Retriever is candidate retrieval supplied from outside the package through NewWithRetriever, for the benchmarks module to compare other implementations with the in-tree inverted index. Encore never uses one.
+type Retriever interface {
+	// Upsert adds docs, replacing any with the same ID.
+	Upsert(docs []RetrievalDoc) error
+	// Remove deletes Docs by ID; unknown IDs are ignored.
+	Remove(ids []string) error
+	// Candidates returns up to k Doc IDs likely to match q, best first, restricted to kinds when non-empty.
+	Candidates(ctx context.Context, q RetrievalQuery, kinds []media.Kind, k int) ([]string, error)
+	// Close releases the retriever.
+	Close() error
+}
+
+// RetrievalDoc is what a Retriever indexes for one Doc: the distinct normalised words of all its aliases, and each alias with spaces removed.
+type RetrievalDoc struct {
+	ID       string
+	Kind     media.Kind
+	Words    []string
+	Compacts []string
+}
+
+// RetrievalQuery is what a Retriever searches with: the query words worth searching for (stop words left out unless that is all there is), the distinct phonetic keys of those words and of the whole query, and the query with spaces removed, for trigrams.
+type RetrievalQuery struct {
+	Terms   []RetrievalTerm
+	Keys    []string
+	Compact string
+}
+
+// RetrievalTerm is one query word and how many edits a fuzzy match of it may make; zero means it must match exactly. Fuzzy matches keep the word's first rune.
+type RetrievalTerm struct {
+	Text      string
+	Fuzziness int
+}
+
+// externalRetriever adapts a Retriever to the index.
+type externalRetriever struct {
+	lang *language
+	r    Retriever
+}
+
 // invertedRetriever is an in-memory inverted index over words, phonetic keys and trigrams, ranked by TF-IDF with coordination factors. Replaced or deleted Docs are tombstoned and leave the document counts at once; once they are a quarter of the slots, a compaction in the background rebuilds the postings without them.
 type invertedRetriever struct {
 	mu   sync.RWMutex
