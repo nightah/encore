@@ -99,6 +99,35 @@ func TestRequestDetailCandidatesWithoutAKnownTarget(t *testing.T) {
 	assert.Empty(t, d.Match.V.Candidates[0].Kind, "a title must match its year too")
 }
 
+func TestRequestDetailWithoutCandidatesToFill(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+
+	// Configured, but not running: saved straight to the database, as a restore leaves it until Encore restarts.
+	require.NoError(t, h.app.DB().KodiInstances().Create(t.Context(), &store.KodiInstance{Name: "Attic", Scheme: "http", Host: "192.0.2.9", Port: 8080, Path: "/jsonrpc"}))
+
+	entries := []store.RequestLogEntry{
+		{DeviceID: "amzn1.ask.device.X", Intent: "LaunchRequest", Speech: "What would you like to watch?"},
+		{DeviceID: "amzn1.ask.device.X", Intent: "WatchMovie", Match: logMatch(t, "Attic", "ask")},
+	}
+
+	for i := range entries {
+		require.NoError(t, h.app.DB().RequestLog().Insert(t.Context(), &entries[i]))
+	}
+
+	var d RequestDetail
+
+	c.json(http.MethodGet, fmt.Sprintf("/api/v1/requests/%d", entries[0].ID), nil, http.StatusOK, &d)
+	assert.Nil(t, d.Match.V, "a request that matched nothing has no match to show")
+	assert.Equal(t, "What would you like to watch?", d.Speech)
+
+	c.json(http.MethodGet, fmt.Sprintf("/api/v1/requests/%d", entries[1].ID), nil, http.StatusOK, &d)
+	require.NotNil(t, d.Match.V)
+	require.Len(t, d.Match.V.Candidates, 1)
+	assert.Equal(t, "Hot Fuzz", d.Match.V.Candidates[0].Title, "the logged candidate is shown")
+	assert.Empty(t, d.Match.V.Candidates[0].Kind, "an instance that isn't running has no index to fill it in from")
+}
+
 func TestRequestEventsUpdateTheDevice(t *testing.T) {
 	h := newHarness(t, harnessOpts{noKodi: true})
 	c := h.admin()
