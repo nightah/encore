@@ -41,7 +41,7 @@ type Config struct {
 	// DisableWebSocket sends every call over HTTP and disables notifications.
 	DisableWebSocket bool
 
-	// HTTPClient overrides the client used for HTTP calls.
+	// HTTPClient overrides the client used for HTTP calls and the WebSocket handshake.
 	HTTPClient *http.Client
 }
 
