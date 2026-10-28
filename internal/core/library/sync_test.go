@@ -196,3 +196,66 @@ func TestLookupFindsNothing(t *testing.T) {
 	assert.Empty(t, found)
 	assert.Empty(t, rec.take(), "nothing to report")
 }
+
+func TestSyncWithSomeKindsFailingStillCountsAsASync(t *testing.T) {
+	b := seed()
+	b.mu.Lock()
+	b.fail[media.KindArtist] = errRefused
+	b.mu.Unlock()
+
+	clk := newClock()
+	c, _ := newCatalog(b, clk, Options{Kinds: []media.Kind{media.KindMovie, media.KindArtist}})
+
+	require.ErrorIs(t, c.Sync(t.Context()), errRefused)
+	assert.Equal(t, t0, c.Stats().LastSync)
+
+	b.mu.Lock()
+	delete(b.fail, media.KindArtist)
+	b.mu.Unlock()
+
+	clk.advance(time.Minute)
+	require.NoError(t, c.Delta(t.Context()))
+	assert.Equal(t, 1, b.count("Library:movie"), "a delta, not another full sync")
+	assert.Equal(t, []int{5}, ids(c.Items(media.KindArtist)), "the kind that failed catches up by date added")
+}
+
+func TestSyncWithEveryKindFailingIsNotASync(t *testing.T) {
+	b := seed()
+	b.mu.Lock()
+	b.fail[media.KindMovie] = errRefused
+	b.mu.Unlock()
+
+	c, _ := newCatalog(b, newClock(), Options{Kinds: []media.Kind{media.KindMovie}})
+
+	require.ErrorIs(t, c.Sync(t.Context()), errRefused)
+	assert.True(t, c.Stats().LastSync.IsZero())
+
+	b.mu.Lock()
+	delete(b.fail, media.KindMovie)
+	b.mu.Unlock()
+
+	require.NoError(t, c.Delta(t.Context()))
+	assert.Equal(t, 2, b.count("Library:movie"), "the delta falls back to a full sync")
+	assert.Zero(t, b.count("RecentlyAdded"))
+}
+
+func TestResyncKeepsTheEpisodeWatermark(t *testing.T) {
+	b := seed()
+	clk := newClock()
+	c, _ := newCatalog(b, clk, Options{Kinds: []media.Kind{media.KindMovie}})
+	require.NoError(t, c.Sync(t.Context()))
+
+	b.put(episode(103, 10, 1, 3, t0.Add(-time.Hour)))
+	require.NoError(t, c.Delta(t.Context()))
+
+	clk.advance(48 * time.Hour)
+	require.NoError(t, c.Sync(t.Context()))
+	require.NoError(t, c.Delta(t.Context()))
+
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	require.Len(t, b.sinces, 4)
+	assert.Equal(t, t0.Add(-episodeLookback-deltaSlack), b.sinces[1], "the first sync starts episodes a day back")
+	assert.Equal(t, t0.Add(-time.Hour-deltaSlack), b.sinces[3], "a later sync keeps the newest episode seen")
+}

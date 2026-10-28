@@ -212,3 +212,78 @@ func TestRunStopsDuringTheDebounce(t *testing.T) {
 		assert.Zero(t, b.count("Item"), "the pending update is dropped, not applied after stopping")
 	})
 }
+
+func TestRunFullResyncCoversTheRestOfTheBurst(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		b := seed()
+		c, _ := newLoggedCatalog(b, Options{RefreshInterval: -1, MinResync: time.Minute})
+
+		startRun(t, c)
+		time.Sleep(time.Hour)
+
+		b.put(movie(1, "Dune: Part One", t0.Add(-72*time.Hour)))
+		b.emit(media.Event{Kind: media.EventItemUpdated, Ref: media.Ref{Kind: media.KindMovie, ID: 1}})
+		b.emit(media.Event{Kind: media.EventLibraryScanned})
+		b.emit(media.Event{Kind: media.EventConnected})
+		time.Sleep(DefaultDebounce)
+		synctest.Wait()
+
+		assert.Equal(t, 2, b.count("Library:movie"), "the reconnect resyncs")
+		assert.Zero(t, b.count("Item"), "the resync already fetched the updated item")
+		assert.Zero(t, b.count("RecentlyAdded"), "the resync already covers the scan")
+
+		it, _ := c.Get(media.Ref{Kind: media.KindMovie, ID: 1})
+		assert.Equal(t, "Dune: Part One", it.Title)
+	})
+}
+
+func TestRunLastEventForAnItemWins(t *testing.T) {
+	ref := media.Ref{Kind: media.KindMovie, ID: 1}
+
+	t.Run("removed then updated is refreshed, not removed", func(t *testing.T) {
+		synctest.Test(t, func(t *testing.T) {
+			b := seed()
+			c, _ := newLoggedCatalog(b, Options{RefreshInterval: -1})
+			rec := &recorder{}
+			c.OnChange(rec.hook)
+
+			startRun(t, c)
+			rec.take()
+
+			b.emit(media.Event{Kind: media.EventItemRemoved, Ref: ref})
+			b.emit(media.Event{Kind: media.EventItemUpdated, Ref: ref})
+			time.Sleep(DefaultDebounce)
+			synctest.Wait()
+
+			_, ok := c.Get(ref)
+			assert.True(t, ok)
+			assert.Equal(t, 1, b.count("Item"))
+			assert.Empty(t, rec.take(), "the unchanged film is neither removed nor re-added")
+		})
+	})
+
+	t.Run("updated then removed is removed without a fetch", func(t *testing.T) {
+		synctest.Test(t, func(t *testing.T) {
+			b := seed()
+			c, _ := newLoggedCatalog(b, Options{RefreshInterval: -1})
+			rec := &recorder{}
+			c.OnChange(rec.hook)
+
+			startRun(t, c)
+			rec.take()
+
+			b.emit(media.Event{Kind: media.EventItemUpdated, Ref: ref})
+			b.emit(media.Event{Kind: media.EventItemRemoved, Ref: ref})
+			time.Sleep(DefaultDebounce)
+			synctest.Wait()
+
+			_, ok := c.Get(ref)
+			assert.False(t, ok)
+			assert.Zero(t, b.count("Item"))
+
+			changes := rec.take()
+			require.Len(t, changes, 1)
+			assert.Equal(t, []media.Ref{ref}, changes[0].removed)
+		})
+	})
+}
