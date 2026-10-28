@@ -762,15 +762,51 @@ func TestAChangeMostMembersMissedSplitsOffItsInstance(t *testing.T) {
 		require.True(t, study.SetPlayState("movie", 3, fakekodi.PlayState{Resume: 1200, LastPlayed: time.Now().Truncate(time.Second)}))
 
 		tune := fastTuning()
-		// The peers are checked in turn, each getting its grace period.
-		after(t, tune.confirmDebounce+2*tune.confirmGrace, func() bool { return len(a.Groups()) == 2 })
+		// The peers get their grace periods at once, so a bigger group takes no longer to decide.
+		after(t, tune.confirmDebounce+tune.confirmGrace-time.Millisecond, func() bool { return len(a.Groups()) == 1 }, "nothing is decided before the grace period ends")
+		after(t, time.Millisecond, func() bool { return len(a.Groups()) == 2 }, "every peer is decided after one grace period")
 
 		st, _ := a.groupOf("Study")
 		assert.Equal(t, []string{"Study"}, memberNames(st), "the one Kodi whose change nobody saw is the odd one out")
-		assert.Contains(t, st.Reason, "a change to “Film Number 3” on Study wasn't seen on")
+		assert.Equal(t, `a change to “Film Number 3” on Study wasn't seen on Lounge, Bedroom`, st.Reason, "the peers are named in member order")
 
 		rest, _ := a.groupOf("Lounge")
 		assert.ElementsMatch(t, []string{"Lounge", "Bedroom"}, memberNames(rest), "the others still agree with each other")
+	})
+}
+
+func TestAChangeSomeMembersMissedSplitsOffThoseMembers(t *testing.T) {
+	inBubble(t, func(t *testing.T) {
+		// Lounge and Bedroom share one database; Study and Garage have identical copies of their own that fool the fingerprint, but not playback.
+		shared := testLibrary(30, 0, "2024-01-01 10:00:00")
+		lounge, bedroom := newKodi(t, fakekodi.Options{Library: shared}), newKodi(t, fakekodi.Options{Library: shared})
+		study := newKodi(t, fakekodi.Options{Library: testLibrary(30, 0, "2024-01-01 10:00:00")})
+		garage := newKodi(t, fakekodi.Options{Library: testLibrary(30, 0, "2024-01-01 10:00:00")})
+
+		a, _ := runApp(t, t.TempDir(), fastTuning(),
+			kodiConfig("Lounge", lounge, ""), kodiConfig("Bedroom", bedroom, ""), kodiConfig("Study", study, ""), kodiConfig("Garage", garage, ""))
+
+		settled(t, func() bool { g, _ := a.groupOf("Lounge"); return len(g.Members) == 4 })
+		settled(t, func() bool { return hasTitle(a.instanceNamed(t, "Lounge").Catalog, "Film Number 3") })
+
+		connected(t, lounge)
+		require.True(t, lounge.SetPlayState("movie", 3, fakekodi.PlayState{Resume: 1200, LastPlayed: time.Now().Truncate(time.Second)}))
+
+		tune := fastTuning()
+		after(t, tune.confirmDebounce+tune.confirmGrace-time.Millisecond, func() bool { return len(a.Groups()) == 1 }, "nothing is decided before the grace period ends")
+		after(t, time.Millisecond, func() bool { return len(a.Groups()) == 3 }, "both members that missed the change are split off after one grace period")
+
+		reason := `a change to “Film Number 3” on Lounge wasn't seen on Study, Garage`
+
+		for _, name := range []string{"Study", "Garage"} {
+			g, _ := a.groupOf(name)
+			assert.Equal(t, []string{name}, memberNames(g), name)
+			assert.Equal(t, reason, g.Reason, name)
+		}
+
+		rest, _ := a.groupOf("Lounge")
+		assert.Equal(t, []string{"Lounge", "Bedroom"}, memberNames(rest), "the members that saw the change keep the group")
+		assert.Equal(t, reason, rest.Reason)
 	})
 }
 

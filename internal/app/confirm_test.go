@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"testing"
 	"time"
 
@@ -189,6 +190,76 @@ func TestConfirmIgnoresChangesThatProveNothing(t *testing.T) {
 			a.confirm(t.Context(), m, &o)
 
 			assert.Empty(t, psrv.CallsTo("VideoLibrary.GetMovieDetails"), "the other members aren't asked")
+		})
+	}
+}
+
+// lockedCtx reads as cancelled whenever planMu is held, as when a runtime is replaced while confirm waits for the lock.
+type lockedCtx struct {
+	context.Context
+
+	a *App
+}
+
+func (c lockedCtx) Err() error {
+	if !c.a.planMu.TryLock() {
+		return context.Canceled
+	}
+
+	c.a.planMu.Unlock()
+
+	return nil
+}
+
+func TestConfirmRecordsOnlyAVerdictStillWanted(t *testing.T) {
+	lib := fakekodi.DefaultLibrary()
+	hotFuzz := media.Ref{Kind: media.KindMovie, ID: 6}
+	one := 1
+
+	cases := []struct {
+		name string
+		// closeP leaves the other member without a verdict.
+		closeP bool
+		locked bool
+		want   bool
+	}{
+		{name: "a verdict is recorded", want: true},
+		{name: "no member gives a verdict", closeP: true},
+		{name: "cancelled while waiting to record", locked: true},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			a := newBareApp(t)
+			psrv := newKodi(t, fakekodi.Options{Library: lib})
+			m, p := detachedInstance(t, a, "Lounge", newKodi(t, fakekodi.Options{Library: lib})), detachedInstance(t, a, "Bedroom", psrv)
+
+			g := &group{id: 7, members: []*Instance{m, p}, log: slog.New(slog.DiscardHandler)}
+			m.group, p.group, a.groups[g.id] = g, g, g
+			// The group has no index for Close to close.
+			t.Cleanup(func() { delete(a.groups, g.id) })
+
+			if c.closeP {
+				psrv.Close()
+			}
+
+			ctx := t.Context()
+			if c.locked {
+				ctx = lockedCtx{Context: ctx, a: a}
+			}
+
+			a.confirm(ctx, m, &observation{ref: hotFuzz, playCount: &one})
+
+			groups, err := a.DB().LibraryGroups().List(t.Context())
+			require.NoError(t, err)
+
+			if c.want {
+				assert.Len(t, groups, 1)
+				assert.Equal(t, "a change to “Hot Fuzz” on Lounge was seen on Bedroom", g.ev.Confirmation)
+			} else {
+				assert.Empty(t, groups)
+				assert.Empty(t, g.ev.Confirmation)
+			}
 		})
 	}
 }

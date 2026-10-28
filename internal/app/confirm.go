@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/nightah/encore/internal/backend/kodi"
@@ -197,10 +198,21 @@ func (a *App) confirm(ctx context.Context, m *Instance, o *observation) {
 	}
 	a.mu.RUnlock()
 
+	// Each peer gets its grace period at the same time, so a bigger group takes no longer to decide; the verdicts are read in member order after.
+	verdicts := make([]verdict, len(peers))
+
+	var wg sync.WaitGroup
+
+	for i, p := range peers {
+		wg.Go(func() { verdicts[i] = a.mirrors(ctx, m, p, o.ref, &after) })
+	}
+
+	wg.Wait()
+
 	var seen, notSeen []*Instance
 
-	for _, p := range peers {
-		switch a.mirrors(ctx, m, p, o.ref, &after) {
+	for i, p := range peers {
+		switch verdicts[i] {
 		case mirrored:
 			seen = append(seen, p)
 		case missed:
