@@ -32,18 +32,55 @@ function tile(label: string) {
 describe("SummaryTiles", () => {
   it("counts the library and names its source's episodes", () => {
     const instances = [{ id: 1, library: { episodes: 1 } }] as unknown as Instance[];
-    render(<SummaryTiles library={library} libraries={[library]} instances={instances} settings={undefined} />);
+    render(
+      <SummaryTiles
+        library={library}
+        libraries={[library]}
+        instances={instances}
+        settings={undefined}
+        settingsPending={false}
+      />,
+    );
     expect(screen.getByText("2,184")).toBeInTheDocument();
     expect(screen.getByText("1 episode")).toBeInTheDocument();
     expect(screen.getByText("41,907")).toBeInTheDocument();
   });
 
   it("leaves out episodes while instances load, and says when nothing has synced", () => {
-    render(<SummaryTiles library={library} libraries={[library]} instances={undefined} settings={undefined} />);
+    render(
+      <SummaryTiles
+        library={library}
+        libraries={[library]}
+        instances={undefined}
+        settings={settings({ backend: "local" })}
+        settingsPending={false}
+      />,
+    );
     expect(screen.queryByText(/episode/)).not.toBeInTheDocument();
     expect(screen.getByText("not synced yet")).toBeInTheDocument();
+    expect(tile("Backups")).toHaveTextContent("/var/lib/encore · no backup yet");
+  });
+
+  it("shows the backups tile loading while the settings load", () => {
+    render(
+      <SummaryTiles library={library} libraries={[library]} instances={[]} settings={undefined} settingsPending />,
+    );
+    expect(within(tile("Backups")).getByRole("status")).toHaveTextContent("Loading…");
+    expect(tile("Backups")).not.toHaveTextContent("no backup yet");
+  });
+
+  it("doesn't claim there's no backup when the settings didn't load", () => {
+    render(
+      <SummaryTiles
+        library={library}
+        libraries={[library]}
+        instances={[]}
+        settings={undefined}
+        settingsPending={false}
+      />,
+    );
     expect(tile("Backups")).toHaveTextContent("-");
-    expect(tile("Backups")).toHaveTextContent("no backup yet");
+    expect(tile("Backups")).not.toHaveTextContent("no backup yet");
   });
 
   it("reports the most recent sync across all libraries", () => {
@@ -54,7 +91,15 @@ describe("SummaryTiles", () => {
       { ...library, id: 4, last_sync_at: hourAgo },
       { ...library, id: 5, last_sync_at: null },
     ];
-    render(<SummaryTiles library={library} libraries={libraries} instances={[]} settings={undefined} />);
+    render(
+      <SummaryTiles
+        library={library}
+        libraries={libraries}
+        instances={[]}
+        settings={undefined}
+        settingsPending={false}
+      />,
+    );
     expect(screen.getByText("3")).toBeInTheDocument();
     expect(screen.getByText("synced 1 h ago")).toBeInTheDocument();
   });
@@ -71,6 +116,7 @@ describe("SummaryTiles", () => {
         libraries={[library]}
         instances={[]}
         settings={settings(storage as Partial<Settings["storage"]>, new Date(Date.now() - 120_000).toISOString())}
+        settingsPending={false}
       />,
     );
     expect(tile("Backups")).toHaveTextContent(label);

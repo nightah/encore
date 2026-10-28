@@ -131,4 +131,92 @@ describe("Library page", () => {
     expect(within(tiles).queryByText(/no backup yet/)).not.toBeInTheDocument();
     expect(within(tiles).queryByText("Loading…")).not.toBeInTheDocument();
   });
+
+  it("points to adding a Kodi instance when there is no library", async () => {
+    getDb().libraries = [];
+    renderApp("/library");
+    expect(await screen.findByText("No libraries yet")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Add a Kodi instance" })).toHaveAttribute("href", "/kodi");
+    expect(screen.getByRole("button", { name: "Sync all now" })).toBeDisabled();
+    expect(screen.queryByRole("combobox", { name: "Library" })).not.toBeInTheDocument();
+  });
+
+  it("switches the page to another library", async () => {
+    const user = userEvent.setup();
+    const log = recordRequests();
+    renderApp("/library");
+    const picker = await screen.findByRole("combobox", { name: "Library" });
+    const other = getDb().libraries.find((l) => l.id !== 3);
+    if (!other) throw new Error("no second library");
+
+    await user.selectOptions(picker, String(other.id));
+
+    expect(picker).toHaveValue(String(other.id));
+    const tiles = screen.getByRole("region", { name: "Library summary" });
+    expect(within(tiles).getByText(other.counts.movies.toLocaleString("en-GB"))).toBeInTheDocument();
+    await waitFor(() => expect(log.some((r) => r.path.startsWith(`/libraries/${other.id}/recent`))).toBe(true));
+  });
+
+  it("restricts the match tester to the chosen media type and ignores an empty query", async () => {
+    const user = userEvent.setup();
+    const log = recordRequests();
+    renderApp("/library");
+    const heard = await screen.findByRole("textbox", { name: "What Alexa heard" });
+
+    await user.click(screen.getByRole("button", { name: "Test" }));
+    await user.type(heard, "   ");
+    await user.click(screen.getByRole("button", { name: "Test" }));
+    expect(log.some((r) => r.path === "/match")).toBe(false);
+
+    await user.clear(heard);
+    await user.type(heard, " seinfield ");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Media type" }), "shows");
+    await user.click(screen.getByRole("button", { name: "Test" }));
+
+    await waitFor(() =>
+      expect(log.find((r) => r.path === "/match")?.body).toEqual({
+        kinds: ["tvshow", "episode"],
+        library_id: 3,
+        query: "seinfield",
+      }),
+    );
+  });
+
+  it("removes an alias", async () => {
+    const user = userEvent.setup();
+    const alias = getDb().aliases.find((a) => a.library_id === 3);
+    if (!alias) throw new Error("no sample alias");
+    renderApp("/library");
+
+    await user.click(await screen.findByRole("button", { name: `Remove alias ${alias.alias}` }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("button", { name: `Remove alias ${alias.alias}` })).not.toBeInTheDocument(),
+    );
+    expect(getDb().aliases.some((a) => a.id === alias.id)).toBe(false);
+  });
+
+  it("says when nothing was added recently", async () => {
+    getDb().recent = {};
+    renderApp("/library");
+    expect(await screen.findByText("Nothing added recently.")).toBeInTheDocument();
+  });
+
+  it("shows an error when recent titles can't load", async () => {
+    failWith("get", "/libraries/3/recent", 503, "Kodi is asleep.");
+    renderApp("/library");
+    const recent = await screen.findByRole("region", { name: "Recently added" });
+    expect(await within(recent).findByRole("alert", {}, { timeout: 4000 })).toHaveTextContent("Kodi is asleep.");
+  });
+
+  it("offers to retry when the libraries can't be loaded", async () => {
+    const user = userEvent.setup();
+    failWith("get", "/libraries", 500, "Index is rebuilding.");
+    renderApp("/library");
+    expect(await screen.findByRole("alert", {}, { timeout: 4000 })).toHaveTextContent("Index is rebuilding.");
+
+    server.resetHandlers();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByRole("region", { name: "Library summary" })).toBeInTheDocument();
+  });
 });
