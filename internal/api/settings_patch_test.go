@@ -52,36 +52,36 @@ func TestPropBasePathIsTidy(t *testing.T) {
 	})
 }
 
-// fillPatch sets every field of a settings patch, recursively, so no field can be left out of changes unnoticed.
-func fillPatch(v reflect.Value) int {
-	n := 0
-
+// fillPatch sets every field of a settings patch, recursively, to a value unique to its JSON path and records it in want, so no field can be left out of changes or saved under another field's key unnoticed.
+func fillPatch(v reflect.Value, prefix string, want map[string]any) {
 	for i := range v.NumField() {
 		f := v.Field(i)
 		if !f.CanSet() {
 			continue
 		}
 
+		path := prefix + strings.Split(v.Type().Field(i).Tag.Get("json"), ",")[0]
+
 		switch e := f.Type().Elem(); {
 		case e.Kind() == reflect.Struct:
 			f.Set(reflect.New(e))
-			n += fillPatch(f.Elem())
+			fillPatch(f.Elem(), path+".", want)
 		case e.Kind() == reflect.String:
-			f.Set(reflect.ValueOf(new(" value ")))
-			n++
+			f.Set(reflect.ValueOf(new(" " + path + " ")))
+			want[path] = path
 		case e.Kind() == reflect.Int:
-			f.Set(reflect.ValueOf(new(5)))
-			n++
+			n := len(want) + 1
+			f.Set(reflect.ValueOf(&n))
+			want[path] = n
 		case e.Kind() == reflect.Bool:
-			f.Set(reflect.ValueOf(new(true)))
-			n++
+			b := len(want)%2 == 0
+			f.Set(reflect.ValueOf(&b))
+			want[path] = b
 		case e.Kind() == reflect.Slice:
-			f.Set(reflect.ValueOf(&[]string{" a ", "", "  ", "b"}))
-			n++
+			f.Set(reflect.ValueOf(&[]string{" " + path + " ", "", "  ", "b"}))
+			want[path] = []string{path, "b"}
 		}
 	}
-
-	return n
 }
 
 func TestSettingsPatchChanges(t *testing.T) {
@@ -89,11 +89,12 @@ func TestSettingsPatchChanges(t *testing.T) {
 
 	var p SettingsPatch
 
-	fields := fillPatch(reflect.ValueOf(&p).Elem())
+	want := map[string]any{}
+	fillPatch(reflect.ValueOf(&p).Elem(), "", want)
 
 	ch := p.changes()
 	// The locale is saved outside the config overrides.
-	assert.Len(t, ch, fields-2, "every patch field becomes a change")
+	assert.Len(t, ch, len(want)-2, "every patch field becomes a change")
 
 	seen := map[string]bool{}
 
@@ -102,25 +103,25 @@ func TestSettingsPatchChanges(t *testing.T) {
 		assert.False(t, seen[c.Key], "%s appears once", c.Key)
 		seen[c.Key] = true
 
-		switch v := c.Value.(type) {
-		case string:
-			if c.Key == "server.base_path" {
-				assert.Equal(t, "/value", v)
-			} else {
-				assert.Equal(t, "value", v, "%s is trimmed", c.Key)
-			}
-		case []string:
-			assert.Equal(t, []string{"a", "b"}, v, "%s entries are trimmed and blanks dropped", c.Key)
-		case int:
-			assert.Equal(t, 5, v)
-		case bool:
-			assert.True(t, v)
-		default:
-			t.Errorf("%s has an unexpected value %#v", c.Key, v)
+		// A patch names a field as the settings document does: the config key, unless settingPaths says otherwise.
+		path := c.Key
+		if p, ok := settingPaths[c.Key]; ok {
+			path = p
 		}
+
+		w, ok := want[path]
+		if !assert.True(t, ok, "%s comes from the patch field %s", c.Key, path) {
+			continue
+		}
+
+		if c.Key == "server.base_path" {
+			w = "/" + path
+		}
+
+		assert.Equal(t, w, c.Value, "%s takes its own field's value, trimmed, with blank list entries dropped", c.Key)
 	}
 
-	for _, key := range []string{"auth.break_glass", "server.trusted_proxies", "alexa.queue_limit", "log.level", "storage.s3.secret_key", "storage.webdav.password", "auth.session_hours"} {
+	for _, key := range []string{"auth.break_glass", "server.trusted_proxies", "alexa.queue_limit", "log.level", "storage.s3.secret_key", "storage.webdav.password", "auth.session_hours", "auth.header.groups_header", "auth.header.admin_group"} {
 		assert.True(t, seen[key], key)
 	}
 }

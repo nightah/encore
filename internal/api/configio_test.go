@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/stretchr/testify/assert"
@@ -68,6 +69,14 @@ func TestImportAFileWithNothingInIt(t *testing.T) {
 	assert.Equal(t, ImportResult{Applied: []string{}, Skipped: []string{}}, res)
 
 	assert.Equal(t, http.StatusBadRequest, c.do(http.MethodPost, "/api/v1/config/import", []byte{}, "Content-Type", "application/yaml").status, "an empty body is not a file")
+}
+
+func TestImportALoneInstanceWithoutAList(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+
+	res, _ := importYAML(t, c, "kodi:\n  name: Den\n  url: "+h.kodi.URL()+"\n", http.StatusOK)
+	assert.Equal(t, ImportResult{Applied: []string{"kodi Den (added)"}, Skipped: []string{}}, res, "an instance's fields are not settings to skip")
 }
 
 func TestImportSkipsManagedKeysAndInstances(t *testing.T) {
@@ -215,6 +224,31 @@ func TestExportSecretsThroughATrustedProxy(t *testing.T) {
 
 	resp := c.do(http.MethodGet, "/api/v1/config/export?include_secrets=true", nil, "Remote-User", "admin")
 	assert.Equal(t, http.StatusOK, resp.status, "the proxy signs every request in afresh")
+}
+
+func TestExportSecretsNeedASignInWithinFifteenMinutes(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+
+	c.json(http.MethodPatch, "/api/v1/settings", map[string]any{"storage": map[string]any{"webdav": map[string]any{"password": "davpw"}}}, http.StatusOK, nil)
+
+	h.skew.Store(int64(14 * time.Minute))
+
+	resp := c.do(http.MethodGet, "/api/v1/config/export?include_secrets=true", nil)
+	require.Equal(t, http.StatusOK, resp.status)
+	assert.Contains(t, string(resp.body), "davpw")
+
+	h.skew.Store(int64(16 * time.Minute))
+
+	resp = c.do(http.MethodGet, "/api/v1/config/export?include_secrets=true", nil)
+	p := resp.problem(t)
+	assert.Equal(t, http.StatusForbidden, p.Status)
+	assert.Contains(t, p.Detail, "sign in again")
+	assert.NotContains(t, string(resp.body), "davpw")
+
+	resp = c.do(http.MethodGet, "/api/v1/config/export", nil)
+	require.Equal(t, http.StatusOK, resp.status, "an export without secrets needs no fresh sign-in")
+	assert.NotContains(t, string(resp.body), "davpw")
 }
 
 func TestImportErr(t *testing.T) {

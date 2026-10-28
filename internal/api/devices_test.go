@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -94,6 +95,30 @@ func TestUpdateDeviceValidation(t *testing.T) {
 	assert.Nil(t, list[0].RoomID)
 }
 
+func TestDeviceChangesAreStreamed(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+
+	dev, err := h.app.DB().EchoDevices().Seen(t.Context(), "amzn1.ask.device.DEN")
+	require.NoError(t, err)
+
+	ctx, cancel := context.WithCancel(t.Context())
+	defer cancel()
+
+	ch, resp := c.stream(ctx, "")
+	defer resp.Body.Close()
+
+	next(t, ch, "comment")
+
+	c.json(http.MethodPatch, fmt.Sprintf("/api/v1/devices/%d", dev.ID), map[string]any{"name": "Den Echo"}, http.StatusOK, nil)
+
+	var d Device
+
+	require.NoError(t, json.Unmarshal([]byte(next(t, ch, "device").data), &d))
+	assert.Equal(t, dev.ID, d.ID)
+	assert.Equal(t, "Den Echo", d.Name, "other open pages see the new name")
+}
+
 func TestDevicesWithNone(t *testing.T) {
 	h := newHarness(t, harnessOpts{noKodi: true})
 	c := h.admin()
@@ -148,4 +173,18 @@ func TestRequestsTodayFollowTheConfiguredTimeZone(t *testing.T) {
 
 	c.json(http.MethodPatch, fmt.Sprintf("/api/v1/devices/%d", kitchen.ID), map[string]any{"name": "Kitchen"}, http.StatusOK, &one)
 	assert.Equal(t, 2, one.RequestCountToday, "one device counts only its own requests")
+
+	// The next morning nothing has been asked yet, so even the newest request was yesterday.
+	h.skew.Store(int64(time.Until(breakfast.AddDate(0, 0, 1))))
+
+	c.json(http.MethodGet, "/api/v1/devices", nil, http.StatusOK, &list)
+
+	require.Len(t, list, 2)
+
+	for _, d := range list {
+		assert.Zero(t, d.RequestCountToday, d.AlexaDeviceID)
+	}
+
+	c.json(http.MethodPatch, fmt.Sprintf("/api/v1/devices/%d", kitchen.ID), map[string]any{}, http.StatusOK, &one)
+	assert.Zero(t, one.RequestCountToday)
 }

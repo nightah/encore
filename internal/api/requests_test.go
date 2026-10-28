@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/nightah/encore/internal/core/actions"
 	"github.com/nightah/encore/internal/store"
 )
 
@@ -139,7 +140,7 @@ func TestReplayLaunch(t *testing.T) {
 	var r Replay
 
 	c.json(http.MethodPost, fmt.Sprintf("/api/v1/requests/%d/replay", e.ID), nil, http.StatusOK, &r)
-	assert.NotEmpty(t, r.Speech, "the welcome is spoken again")
+	assert.Equal(t, h.api.opts.Speech.Render("en-AU", actions.Message{ID: "launch.welcome"}), r.Speech, "the welcome is spoken again, not the answer to an intent of that name")
 	assert.Nil(t, r.Match.V, "nothing was matched")
 	assert.Equal(t, []WouldCall{}, r.WouldCall)
 

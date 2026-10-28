@@ -151,6 +151,10 @@ func TestToDetail(t *testing.T) {
 	require.NotNil(t, onlyErr.Match.V)
 	assert.Equal(t, "no such room", onlyErr.Match.V.Error)
 	assert.Equal(t, []Candidate{}, onlyErr.Match.V.Candidates)
+
+	onlyTarget := toDetail(store.RequestLogEntry{Match: json.RawMessage(`{"target":"Lounge"}`)}, nil)
+	require.NotNil(t, onlyTarget.Match.V, "a target alone says where the request went")
+	assert.Equal(t, "Lounge", onlyTarget.Match.V.Target)
 }
 
 func TestMatchResult(t *testing.T) {

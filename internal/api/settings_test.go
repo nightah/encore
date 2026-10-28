@@ -148,6 +148,43 @@ func TestScheduledBackups(t *testing.T) {
 	assert.Contains(t, h.logs.String(), "database backed up")
 }
 
+func TestScheduledBackupsWaitForTheNextDueTime(t *testing.T) {
+	waits := make(chan time.Duration, 100)
+	wake := make(chan time.Time)
+
+	h := newHarness(t, harnessOpts{noKodi: true, env: []string{"ENCORE_STORAGE_BACKUPS_SCHEDULE=every@1h", "ENCORE_STORAGE_LOCAL_PATH=" + t.TempDir()}, mutate: func(o *Options) {
+		require.NoError(t, o.App.DB().Settings().Set(t.Context(), lastBackupSetting, time.Now().Add(-2*time.Hour).UTC()))
+		o.after = func(d time.Duration) <-chan time.Time {
+			waits <- d
+
+			return wake
+		}
+	}})
+
+	backups := func() int { return strings.Count(h.logs.String(), `msg="database backed up"`) }
+
+	// Each step wakes the scheduler and waits for it to settle on its next wait, so every backup it decided on has finished.
+	step := func() time.Duration {
+		wake <- time.Now()
+
+		return <-waits
+	}
+
+	assert.Equal(t, time.Second, <-waits, "an overdue backup is barely waited for")
+	assert.Zero(t, backups())
+
+	assert.InDelta(t, time.Hour, step(), float64(time.Minute), "after a backup the next is an interval away")
+	assert.Equal(t, 1, backups())
+
+	assert.InDelta(t, time.Hour, step(), float64(time.Minute), "woken early, it keeps waiting for the same due time")
+	assert.Equal(t, 1, backups(), "nothing is due yet")
+
+	h.skew.Store(int64(61 * time.Minute))
+
+	assert.InDelta(t, time.Hour, step(), float64(time.Minute))
+	assert.Equal(t, 2, backups(), "the next interval came due")
+}
+
 func TestScheduledBackupFailureIsLogged(t *testing.T) {
 	notADir := filepath.Join(t.TempDir(), "file")
 	require.NoError(t, os.WriteFile(notADir, nil, 0o600))

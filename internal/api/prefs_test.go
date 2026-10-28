@@ -260,6 +260,26 @@ func TestPrefsSecretFromConfigIsManaged(t *testing.T) {
 	assert.Equal(t, "storage.s3.secret_key", managed.key)
 }
 
+func TestPrefsSecretFromConfigBeatsASavedOne(t *testing.T) {
+	t.Parallel()
+
+	f := newPrefs(t)
+	ctx := t.Context()
+
+	_, err := f.prefs.Apply(ctx, []Change{{Key: "storage.s3.secret_key", Value: "saved"}, {Key: "auth.oidc.client_secret", Value: "saved"}})
+	require.NoError(t, err)
+	require.NoError(t, f.db.Close())
+	require.NoError(t, f.sec.Close())
+
+	// The operator later sets one of them in config.
+	restarted := openPrefs(t, f.dir, "ENCORE_STORAGE_S3_SECRET_KEY=from-env")
+
+	eff, err := restarted.prefs.Effective(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, "from-env", eff.Storage.S3.SecretKey)
+	assert.Equal(t, "saved", eff.Auth.OIDC.ClientSecret, "a secret config does not set is still merged in")
+}
+
 func TestPrefsShorterListReplacesLonger(t *testing.T) {
 	t.Parallel()
 

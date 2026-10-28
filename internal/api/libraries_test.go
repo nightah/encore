@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"slices"
@@ -11,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nightah/encore/internal/app"
+	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/store"
 )
 
@@ -76,6 +78,37 @@ func TestLibraryGroupsManagedByConfig(t *testing.T) {
 	}
 }
 
+func TestLibraryChangesAreStreamed(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true, mutate: func(o *Options) {
+		o.Libraries = &fakeLibraries{lib: Library{ID: 7, Name: "Lounge", Members: []LibraryMember{{InstanceID: 1, Name: "Lounge"}, {InstanceID: 2, Name: "Den"}}}}
+	}})
+	c := h.admin()
+
+	ctx, cancel := context.WithCancel(t.Context())
+	defer cancel()
+
+	ch, resp := c.stream(ctx, "")
+	defer resp.Body.Close()
+
+	next(t, ch, "comment")
+
+	for _, req := range []struct {
+		method, path string
+		body         any
+	}{
+		{http.MethodPatch, "/api/v1/libraries/7", map[string]int64{"source_instance_id": 2}},
+		{http.MethodPost, "/api/v1/libraries/group", map[string][]int64{"instance_ids": {1, 2}}},
+	} {
+		c.json(req.method, req.path, req.body, http.StatusOK, nil)
+
+		var lib Library
+
+		require.NoError(t, json.Unmarshal([]byte(next(t, ch, "library").data), &lib), req.path)
+		assert.Equal(t, int64(7), lib.ID, req.path)
+		assert.Len(t, lib.Members, 2, req.path)
+	}
+}
+
 func TestLibraryRequestValidation(t *testing.T) {
 	h := newHarness(t, harnessOpts{})
 	c := h.admin()
@@ -122,6 +155,11 @@ func TestToLibraryUsesTheReasonWithoutEvidence(t *testing.T) {
 	assert.Equal(t, "only one instance", lib.Evidence)
 	assert.Nil(t, lib.LastSyncAt, "never synced")
 	assert.Equal(t, []LibraryMember{{InstanceID: 1, Name: "Lounge"}}, lib.Members)
+
+	assert.Equal(t, LibraryCounts{}, lib.Counts, "nothing counted yet is zero, not missing")
+
+	lib = toLibrary(&app.GroupStatus{ID: 3, Counts: map[media.Kind]int{media.KindMovie: 12, media.KindTVShow: 3, media.KindSong: 450, media.KindEpisode: 80}})
+	assert.Equal(t, LibraryCounts{Movies: 12, Shows: 3, Songs: 450}, lib.Counts, "each kind is counted under its own name")
 
 	lib = toLibrary(&app.GroupStatus{ID: 3, Evidence: "same database path", Reason: "only one instance"})
 	assert.Equal(t, "same database path", lib.Evidence)

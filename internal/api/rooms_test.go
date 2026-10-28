@@ -99,6 +99,17 @@ func TestRoomAliasValidation(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, c.do(http.MethodDelete, fmt.Sprintf("/api/v1/rooms/999/aliases/%d", alias.ID), nil).status)
 	assert.Equal(t, http.StatusNotFound, c.do(http.MethodDelete, fmt.Sprintf("%s/999", aliases), nil).status)
 
+	var den Room
+
+	c.json(http.MethodPost, "/api/v1/rooms", map[string]any{"name": "Den"}, http.StatusCreated, &den)
+	c.json(http.MethodPost, fmt.Sprintf("/api/v1/rooms/%d/aliases", den.ID), map[string]any{"alias": "study"}, http.StatusCreated, nil)
+	assert.Equal(t, http.StatusNotFound, c.do(http.MethodDelete, fmt.Sprintf("/api/v1/rooms/%d/aliases/%d", den.ID, alias.ID), nil).status, "an alias is removed only through its own room")
+
+	var rooms []Room
+
+	c.json(http.MethodGet, "/api/v1/rooms", nil, http.StatusOK, &rooms)
+	assert.Contains(t, rooms, Room{ID: room.ID, Name: "Lounge", Aliases: []RoomAlias{alias}}, "the Lounge keeps its alias")
+
 	c.json(http.MethodDelete, fmt.Sprintf("/api/v1/rooms/%d", room.ID), nil, http.StatusNoContent, nil)
 	assert.Equal(t, http.StatusNotFound, c.do(http.MethodDelete, fmt.Sprintf("%s/%d", aliases, alias.ID), nil).status, "a removed room takes its aliases with it")
 
