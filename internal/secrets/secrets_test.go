@@ -3,6 +3,7 @@ package secrets
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -797,4 +798,54 @@ func TestReadKeyErrors(t *testing.T) {
 	_, err = ReadKey(Options{DataDir: dir})
 	require.Error(t, err)
 	require.NotErrorIs(t, err, ErrNoKey, "a damaged key file is not a missing one")
+}
+
+func TestReadKeyWithoutADataDirIgnoresTheWorkingDirectory(t *testing.T) {
+	dir := t.TempDir()
+	require.NoError(t, writeKeyFile(filepath.Join(dir, KeyFileName), testKey(t)))
+	t.Chdir(dir)
+
+	_, err := ReadKey(Options{})
+	require.ErrorIs(t, err, ErrNoKey, "a stray key file in the working directory is never picked up")
+}
+
+func TestPutRefusesAnEmptyID(t *testing.T) {
+	db := openDB(t, t.TempDir())
+
+	s, err := Open(t.Context(), db.SecretRows(), Options{Key: EncodeKey(testKey(t))})
+	require.NoError(t, err)
+	require.Error(t, s.Put(t.Context(), "", []byte("hunter2")))
+
+	_, err = db.SecretRows().Get(t.Context(), "")
+	require.ErrorIs(t, err, store.ErrNotFound, "nothing is stored")
+}
+
+// TestStoredFormatIsStable opens a row sealed by an earlier build. Key IDs and the envelope are persisted, so changing how either is derived would make every existing database unreadable.
+func TestStoredFormatIsStable(t *testing.T) {
+	const (
+		encodedKey = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8="
+		keyID      = "v1-c8f8abddbfc39267"
+	)
+
+	key, err := ParseKey(encodedKey)
+	require.NoError(t, err)
+	assert.Equal(t, keyID, KeyID(key))
+
+	ciphertext, err := hex.DecodeString("8e6d125920b930072d67628f61170b62270b63e28769e9")
+	require.NoError(t, err)
+
+	db := openDB(t, t.TempDir())
+	require.NoError(t, db.SecretRows().Put(t.Context(), store.SecretRow{
+		ID:         "kodi/1/password",
+		KeyID:      keyID,
+		Nonce:      []byte{0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7, 0xa8, 0xa9, 0xaa, 0xab},
+		Ciphertext: ciphertext,
+	}))
+
+	s, err := Open(t.Context(), db.SecretRows(), Options{Key: encodedKey})
+	require.NoError(t, err)
+
+	got, err := s.Get(t.Context(), "kodi/1/password")
+	require.NoError(t, err)
+	assert.Equal(t, "hunter2", string(got))
 }
