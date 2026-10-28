@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -159,13 +160,10 @@ func TestStatelessValidation(t *testing.T) {
 	require.ErrorContains(t, err, "secrets.key")
 
 	cfg.Storage.Backend = "s3"
-	cfg.Storage.S3 = StorageS3{Bucket: "encore", AccessKey: "a", SecretKey: "b", Region: "us-east-1"}
+	cfg.Storage.S3 = StorageS3{Endpoint: "https://s3.amazonaws.com", Bucket: "encore", AccessKey: "a", SecretKey: "b", Region: "us-east-1", Addressing: AddressingAuto}
 	cfg.Secrets.Key = "c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0MTI="
 
-	err = cfg.Validate()
-	if err != nil {
-		assert.NotContains(t, err.Error(), "stateless")
-	}
+	require.NoError(t, cfg.Validate())
 }
 
 func TestRoomsAndDevicesValidation(t *testing.T) {
@@ -435,4 +433,58 @@ func TestEnvAliases(t *testing.T) {
 	cfg, err := Load(Options{Environ: environ("ENCORE_BREAK_GLASS=true")})
 	require.NoError(t, err)
 	assert.True(t, cfg.Managed("auth.break_glass"), "the alias sets its key")
+}
+
+func TestManagedMatchesWholeKeySegments(t *testing.T) {
+	cfg, err := Load(Options{Environ: environ("ENCORE_STORAGE_S3_SSE_KMS_KEY_ID=key-1")})
+	require.NoError(t, err)
+
+	assert.True(t, cfg.Managed("storage.s3.sse_kms_key_id"))
+	assert.True(t, cfg.Managed("storage.s3"), "a parent of a set key")
+	assert.True(t, cfg.Managed("storage"))
+	assert.False(t, cfg.Managed("storage.s"), "a prefix of a segment is not a parent")
+	assert.False(t, cfg.Managed("stor"))
+	assert.False(t, cfg.Managed("storage.s3.sse_kms"), "a prefix of the last segment")
+	assert.False(t, cfg.Managed("storage.s3.sse"), "a sibling whose name starts the set key's")
+	assert.False(t, cfg.Managed("storage.webdav"))
+	assert.False(t, cfg.Managed(""))
+}
+
+func TestEnvListsIgnoreEmptyEntries(t *testing.T) {
+	cfg, err := Load(Options{Environ: environ("ENCORE_ALEXA_LOCALES= en-AU,,en-GB , ", "ENCORE_ALEXA_CONTENT=,movies,")})
+	require.NoError(t, err, "stray commas and spaces are not entries")
+	assert.Equal(t, []string{"en-AU", "en-GB"}, cfg.Alexa.Locales)
+	assert.Equal(t, []string{"movies"}, cfg.Alexa.Content)
+
+	assert.Empty(t, splitList(""))
+	assert.Empty(t, splitList(" , ,"))
+	assert.Equal(t, []string{"10.0.0.0/8"}, splitList("10.0.0.0/8"))
+}
+
+func TestAlexaLocalesMustBeWholeLocaleCodes(t *testing.T) {
+	for _, locale := range []string{"xen-AUx", "en-AU ", "en-au", "EN-AU", "en_AU", "eng-AUS", "en-AU-x", ""} {
+		cfg := Defaults()
+		cfg.Alexa.Locales = []string{locale}
+
+		require.ErrorContains(t, cfg.Validate(), fmt.Sprintf("alexa.locales: %q is not a locale", locale), "%q", locale)
+	}
+
+	cfg := Defaults()
+	cfg.Alexa.Locales = []string{"en-AU", "fr-CA", "pt-BR"}
+	require.NoError(t, cfg.Validate())
+}
+
+func TestStatelessAcceptsRemoteStorageAndAKey(t *testing.T) {
+	for name, edit := range map[string]func(*Config){
+		"key":      func(c *Config) { c.Secrets.Key = "c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0MTI=" },
+		"key file": func(c *Config) { c.Secrets.KeyFile = "/run/secrets/encore_key" },
+	} {
+		cfg := Defaults()
+		cfg.Stateless = true
+		cfg.Storage.Backend = BackendS3
+		cfg.Storage.S3 = StorageS3{Endpoint: "https://s3.ap-southeast-2.amazonaws.com", Bucket: "encore", AccessKey: "a", SecretKey: "b", Region: "ap-southeast-2", Addressing: AddressingAuto}
+		edit(&cfg)
+
+		require.NoError(t, cfg.Validate(), name)
+	}
 }
