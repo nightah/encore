@@ -98,6 +98,11 @@ func TestHealthcheckRejectsAnUnparsableAddress(t *testing.T) {
 	_, _, err := runCLI(t, "healthcheck", "--server.address", "localhost")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "server.address")
+
+	// A host and port, but no host a URL can name.
+	_, _, err = runCLI(t, "healthcheck", "--server.address", "encore box:8080")
+	require.ErrorContains(t, err, `invalid character " " in host name`)
+	assert.NotContains(t, err.Error(), "checking", "nothing is requested")
 }
 
 func TestHealthcheckTakesNoArguments(t *testing.T) {
