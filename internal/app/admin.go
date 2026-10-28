@@ -62,7 +62,7 @@ func (a *App) runtimeLibrary(id int64) (*Instance, *library.Catalog, *match.Inde
 	return inst, inst.Catalog, inst.Index, nil
 }
 
-// InstanceStatus reports an instance's connection, library and playback. It asks Kodi, each question bounded by a short timeout, whether it answers and what is playing; with info it also asks for the version and the episode total, which change rarely and cost more calls.
+// InstanceStatus reports an instance's connection, library and playback. It asks Kodi, each question bounded by a short timeout, whether it answers and what is playing; with info it also asks for the version and the episode total, which change rarely and cost more calls, and checks the credentials over HTTP again.
 func (a *App) InstanceStatus(ctx context.Context, id int64, info bool) (InstanceStatus, error) {
 	inst, cat, _, err := a.runtimeLibrary(id)
 	if err != nil {
@@ -91,6 +91,14 @@ func (a *App) InstanceStatus(ctx context.Context, id int64, info bool) (Instance
 
 	if !st.Reachable {
 		return st, nil
+	}
+
+	// While the WebSocket is up the ping above went over it, and Kodi doesn't authenticate the WebSocket. HTTP traffic records whether the credentials work, so ask over HTTP only while that is unknown or refused, or on the rare info probe so a password changed in Kodi is noticed.
+	if tr := inst.Client.Transport(); st.Connected && (info || tr.HTTPAuth() != kodi.HTTPAuthAccepted) {
+		hctx, cancel := context.WithTimeout(ctx, probeTimeout)
+		st.Unauthorized = errors.Is(tr.PingHTTP(hctx), kodi.ErrUnauthorized)
+
+		cancel()
 	}
 
 	if info {

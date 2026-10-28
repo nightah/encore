@@ -60,12 +60,16 @@ type Client struct {
 // Refuses methods the server's API version lacks before they reach the transport.
 type gate struct{ c *Client }
 
+// HTTPAuth is what Kodi's web server last made of the configured credentials. Only HTTP requests are authenticated; the WebSocket never is.
+type HTTPAuth int32
+
 // Transport is a kodirpc.Caller that prefers one long-lived WebSocket and falls back to HTTP POST while the socket is down. Notifications only arrive over the WebSocket, which is kept up while at least one Run is active.
 type Transport struct {
 	cfg  Config
 	log  *slog.Logger
 	http *http.Client
 	ids  atomic.Int64
+	auth atomic.Int32
 
 	mu        sync.Mutex
 	ws        *wsConn

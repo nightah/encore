@@ -426,6 +426,35 @@ func TestReconnectBackoff(t *testing.T) {
 	})
 }
 
+func TestPingHTTPChecksCredentialsWhileTheWebSocketIsUp(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		s := newFake(t, fakekodi.Options{Username: "kodi", Password: "secret"})
+		cfg := testConfig(t, s)
+		cfg.Username, cfg.Password = "kodi", "wrong"
+		tr := NewTransport(cfg, nil)
+		runTransport(t, tr)
+
+		require.NoError(t, ping(t.Context(), tr), "Kodi doesn't authenticate the WebSocket")
+		assert.Equal(t, HTTPAuthUnknown, tr.HTTPAuth(), "a WebSocket call says nothing about the credentials")
+
+		require.ErrorIs(t, tr.PingHTTP(t.Context()), ErrUnauthorized)
+		assert.Equal(t, HTTPAuthRefused, tr.HTTPAuth())
+
+		_, _, err := (&Client{t: tr}).Image(t.Context(), "image://poster.jpg")
+		require.ErrorIs(t, err, ErrUnauthorized)
+		assert.Equal(t, HTTPAuthRefused, tr.HTTPAuth())
+
+		cfg.Password = "secret"
+		ok := NewTransport(cfg, nil)
+		require.NoError(t, ok.PingHTTP(t.Context()))
+		assert.Equal(t, HTTPAuthAccepted, ok.HTTPAuth())
+
+		s.Close()
+		require.Error(t, ok.PingHTTP(t.Context()))
+		assert.Equal(t, HTTPAuthAccepted, ok.HTTPAuth(), "no answer keeps what the last answer said")
+	})
+}
+
 func TestHTTPFallbackWhileWebSocketDown(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		s := newFake(t, fakekodi.Options{})

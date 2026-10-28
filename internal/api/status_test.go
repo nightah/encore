@@ -122,6 +122,29 @@ func cachedStatus(t *testing.T, h *harness) int64 {
 	return lounge
 }
 
+// wsPings waits for the instance's WebSocket, then counts the pings Kodi has had over it. Each probe pings over the WebSocket once while it is up; a full probe also checks the credentials with a ping over HTTP, which isn't counted.
+func wsPings(t *testing.T, h *harness, id int64) func() int {
+	t.Helper()
+
+	require.Eventually(t, func() bool {
+		st, err := h.app.InstanceStatus(t.Context(), id, false)
+
+		return err == nil && st.Connected
+	}, 10*time.Second, 20*time.Millisecond)
+
+	return func() int {
+		n := 0
+
+		for _, c := range h.kodi.CallsTo("JSONRPC.Ping") {
+			if c.WebSocket {
+				n++
+			}
+		}
+
+		return n
+	}
+}
+
 func versionCalls(k *fakekodi.Server) int {
 	n := 0
 
@@ -178,30 +201,31 @@ func TestStatusGetReusesAFreshProbe(t *testing.T) {
 	lounge := cachedStatus(t, h)
 	cache := h.api.status
 
-	pings := len(h.kodi.CallsTo("JSONRPC.Ping"))
+	probes := wsPings(t, h, lounge)
+	pings := probes()
 
 	st, err := cache.get(t.Context(), lounge)
 	require.NoError(t, err)
 	assert.True(t, st.Reachable)
-	assert.Len(t, h.kodi.CallsTo("JSONRPC.Ping"), pings, "a fresh status is served from the cache")
+	assert.Equal(t, pings, probes(), "a fresh status is served from the cache")
 
 	h.skew.Add(int64(90 * time.Minute))
 
 	_, err = cache.get(t.Context(), lounge)
 	require.NoError(t, err)
-	assert.Len(t, h.kodi.CallsTo("JSONRPC.Ping"), pings, "a status is fresh for two poll intervals, so a late poll doesn't mean a probe")
+	assert.Equal(t, pings, probes(), "a status is fresh for two poll intervals, so a late poll doesn't mean a probe")
 
 	h.skew.Add(int64(30 * time.Minute))
 
 	_, err = cache.get(t.Context(), lounge)
 	require.NoError(t, err)
-	assert.Len(t, h.kodi.CallsTo("JSONRPC.Ping"), pings+1, "a stale one is probed again")
+	assert.Equal(t, pings+1, probes(), "a stale one is probed again")
 
 	cache.forget(lounge)
 
 	_, err = cache.get(t.Context(), lounge)
 	require.NoError(t, err)
-	assert.Len(t, h.kodi.CallsTo("JSONRPC.Ping"), pings+2, "a forgotten one too")
+	assert.Equal(t, pings+2, probes(), "a forgotten one too")
 }
 
 func TestStatusOfUnknownInstance(t *testing.T) {
@@ -293,7 +317,8 @@ func TestPlayerChangesCoalesce(t *testing.T) {
 		return cache.refreshing[lounge]
 	}
 
-	pings := len(h.kodi.CallsTo("JSONRPC.Ping"))
+	probes := wsPings(t, h, lounge)
+	pings := probes()
 
 	for range 5 {
 		cache.playerChanged(lounge)
@@ -301,11 +326,11 @@ func TestPlayerChangesCoalesce(t *testing.T) {
 
 	require.Len(t, scheduled, 1, "a burst of changes schedules one refresh")
 	assert.True(t, refreshing())
-	assert.Len(t, h.kodi.CallsTo("JSONRPC.Ping"), pings, "nothing is read before it runs")
+	assert.Equal(t, pings, probes(), "nothing is read before it runs")
 
 	scheduled[0]()
 	assert.False(t, refreshing(), "a refresh that ran makes way for the next")
-	assert.Len(t, h.kodi.CallsTo("JSONRPC.Ping"), pings+1, "a burst of changes is read once")
+	assert.Equal(t, pings+1, probes(), "a burst of changes is read once")
 
 	cache.playerChanged(lounge)
 	require.Len(t, scheduled, 2, "a change after the refresh schedules another")
@@ -314,7 +339,7 @@ func TestPlayerChangesCoalesce(t *testing.T) {
 	cancel()
 	scheduled[1]()
 	assert.False(t, refreshing())
-	assert.Len(t, h.kodi.CallsTo("JSONRPC.Ping"), pings+1)
+	assert.Equal(t, pings+1, probes())
 }
 
 // A full probe that finds Kodi unreachable learns nothing, so the version from the last one that did is kept.

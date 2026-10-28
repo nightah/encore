@@ -85,7 +85,7 @@ type InstanceStatus struct {
 	Connected bool
 	// Reachable means Kodi answered a JSON-RPC ping, over either transport.
 	Reachable bool
-	// Unauthorized means Kodi refused the configured credentials.
+	// Unauthorized means Kodi's web server refused the configured credentials. Kodi may still answer over the WebSocket, which it doesn't authenticate, but images and the HTTP fallback fail.
 	Unauthorized bool
 	// CanWake means a MAC address is known for Wake-on-LAN.
 	CanWake     bool

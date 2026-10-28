@@ -29,6 +29,16 @@ const (
 	CodeUnavailable    = -32097
 )
 
+// What Kodi's web server last made of the configured credentials.
+const (
+	// HTTPAuthUnknown means no HTTP request has had an answer yet.
+	HTTPAuthUnknown HTTPAuth = iota
+	// HTTPAuthAccepted means the last answered HTTP request was let in.
+	HTTPAuthAccepted
+	// HTTPAuthRefused means the last answered HTTP request was refused with 401.
+	HTTPAuthRefused
+)
+
 // maxPort is the highest TCP port a Kodi URL may name.
 const maxPort = 65535
 
