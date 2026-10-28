@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
@@ -121,6 +122,70 @@ func TestWebDAVPutSendsContentLength(t *testing.T) {
 
 	want := upload{length: int64(len(body))}
 	assert.Equal(t, []upload{want, want}, uploads)
+}
+
+func TestWebDAVSendsEachRequestOnce(t *testing.T) {
+	var (
+		mu       sync.Mutex
+		requests []string
+	)
+
+	h := &xwebdav.Handler{FileSystem: xwebdav.Dir(t.TempDir()), LockSystem: xwebdav.NewMemLS()}
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		requests = append(requests, r.Method+" "+r.URL.Path)
+		mu.Unlock()
+
+		h.ServeHTTP(w, r)
+	}))
+	t.Cleanup(srv.Close)
+
+	s := newDAV(t, config.StorageWebDAV{URL: srv.URL, Username: "alice", Password: "app-password"})
+
+	require.NoError(t, s.Put(t.Context(), "top.bin", strings.NewReader("x"), 1))
+
+	rc, err := s.Get(t.Context(), "top.bin")
+	require.NoError(t, err)
+	require.NoError(t, rc.Close())
+
+	require.NoError(t, s.Delete(t.Context(), "top.bin"))
+
+	_, err = s.List(t.Context(), "")
+	require.NoError(t, err)
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	assert.Equal(t, []string{"PUT /top.bin", "GET /top.bin", "DELETE /top.bin", "PROPFIND /"}, requests)
+}
+
+// TestWebDAVPutStreams checks that an upload is not held in memory, since database backups go through Put.
+func TestWebDAVPutStreams(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = io.Copy(io.Discard, r.Body)
+		w.WriteHeader(http.StatusCreated)
+	}))
+	t.Cleanup(srv.Close)
+
+	s := newDAV(t, config.StorageWebDAV{URL: srv.URL})
+
+	const size = 32 << 20
+
+	var before, after runtime.MemStats
+
+	runtime.ReadMemStats(&before)
+	require.NoError(t, s.Put(t.Context(), "backup.db.gz", io.LimitReader(zeros{}, size), size))
+	runtime.ReadMemStats(&after)
+
+	assert.Less(t, after.TotalAlloc-before.TotalAlloc, uint64(size/4), "bytes allocated uploading %d bytes", size)
+}
+
+type zeros struct{}
+
+func (zeros) Read(p []byte) (int, error) {
+	clear(p)
+
+	return len(p), nil
 }
 
 func TestWebDAVBadCredentials(t *testing.T) {

@@ -58,16 +58,31 @@ func NewWebDAV(cfg config.StorageWebDAV) (*WebDAV, error) {
 }
 
 // client returns a gowebdav client whose requests are bound to ctx. gowebdav has no context support, so each operation gets its own lightweight client with a transport that attaches ctx to every request it sends.
+//
+// The authorizer is preemptive: gowebdav's negotiating ones send a fresh client's first request twice and copy every non-seekable upload into memory in case it has to be resent.
 func (w *WebDAV) client(ctx context.Context) *gowebdav.Client {
-	c := gowebdav.NewAuthClient(w.url, gowebdav.NewEmptyAuth())
+	c := gowebdav.NewAuthClient(w.url, gowebdav.NewPreemptiveAuth(davAuth{header: w.auth}))
 	c.SetTransport(ctxTransport{ctx: ctx, base: w.transport})
-
-	if w.auth != "" {
-		c.SetHeader("Authorization", w.auth)
-	}
 
 	return c
 }
+
+func (a davAuth) Authorize(_ *http.Client, r *http.Request, _ string) error {
+	if a.header != "" {
+		r.Header.Set("Authorization", a.header)
+	}
+
+	return nil
+}
+
+// Verify never asks for a retry; a failure surfaces as the operation's own status error.
+func (davAuth) Verify(*http.Client, *http.Response, string) (redo bool, err error) {
+	return false, nil
+}
+
+func (a davAuth) Clone() gowebdav.Authenticator { return a }
+
+func (davAuth) Close() error { return nil }
 
 func (t ctxTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 	return t.base.RoundTrip(r.WithContext(t.ctx))

@@ -60,6 +60,11 @@ type WebDAV struct {
 	transport http.RoundTripper
 }
 
+// davAuth sends a fixed Authorization header, if there is one, on every request.
+type davAuth struct {
+	header string
+}
+
 type ctxTransport struct {
 	ctx  context.Context
 	base http.RoundTripper
