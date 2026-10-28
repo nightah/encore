@@ -17,15 +17,21 @@ func TestKeys(t *testing.T) {
 		word string
 		want []string
 	}{
-		// Silent endings: plural marks, final t/d/p, g/c after n, -er.
-		{"bronzes", []string{"PRNS", "PRNSS"}},
+		// Silent endings: plural marks, final t/d/p, g/c after n, -er. The second key sounds the final consonant but never a plural mark.
+		{"bronzes", []string{"PRNS"}},
 		{"bronzer", []string{"PRNS", "PRNSR"}},
 		{"cent", []string{"SN", "SNT"}},
 		{"sang", []string{"SN", "SNK"}},
-		{"sans", []string{"SN", "SNS"}},
-		{"taxis", []string{"TKS", "TKSS"}},
+		{"sans", []string{"SN"}},
+		{"taxis", []string{"TKS"}},
 		{"florette", []string{"FLRT"}},
 		{"floret", []string{"FLR", "FLRT"}},
+		{"allez", []string{"AL"}},
+		{"aliases", []string{"ALS"}},
+		{"pieds", []string{"P", "PT"}},
+		// An English past participle keeps its d.
+		{"paused", []string{"PST"}},
+		{"imported", []string{"ANPRTT"}},
 		// Short words keep their last consonant.
 		{"dit", []string{"TT"}},
 		{"mer", []string{"MR"}},
@@ -33,7 +39,8 @@ func TestKeys(t *testing.T) {
 		{"hallyday", []string{"ALT"}},
 		{"haine", []string{"AN"}},
 		// Digraphs and soft c/g.
-		{"chtis", []string{"XT", "XTS"}},
+		{"chtis", []string{"XT"}},
+		{"schtroumpf", []string{"XTRNPF"}},
 		{"christ", []string{"KRS", "KRST"}},
 		{"philippe", []string{"FLP"}},
 		{"agneau", []string{"AN"}},
@@ -76,6 +83,18 @@ func TestHomophones(t *testing.T) {
 	}
 }
 
+// TestDistinct pins pairs that sound different in French but that sounding a plural mark, or dropping a sounded d, would merge.
+func TestDistinct(t *testing.T) {
+	for _, pair := range [][2]string{
+		{"allez", "aliases"},
+		{"pause", "paused"},
+		{"importee", "imported"},
+	} {
+		a, b := Encoder{}.Keys(nil, pair[0]), Encoder{}.Keys(nil, pair[1])
+		assert.False(t, shareKey(a, b), "%s %q and %s %q should not share a key", pair[0], a, pair[1], b)
+	}
+}
+
 func shareKey(a, b []string) bool {
 	return slices.ContainsFunc(a, func(k string) bool { return slices.Contains(b, k) })
 }
@@ -112,7 +131,7 @@ func TestPropKeysContract(t *testing.T) {
 func TestKeysAllocations(t *testing.T) {
 	dst := make([]string, 0, 3)
 
-	for word, want := range map[string]float64{"bronzes": 2, "kaamelott": 1, "2049": 0} {
+	for word, want := range map[string]float64{"christ": 2, "kaamelott": 1, "2049": 0} {
 		got := testing.AllocsPerRun(100, func() { dst = Encoder{}.Keys(dst[:0], word) })
 		assert.InDelta(t, want, got, 0, "%s: only the returned keys allocate", word)
 	}

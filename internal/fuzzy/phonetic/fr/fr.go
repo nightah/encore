@@ -10,7 +10,7 @@ import (
 
 func init() { phonetic.Register("fr", Encoder{}) }
 
-// Keys appends the key of the word as French says it, with its silent ending left out, and, when different, the key with every letter sounded, which catches names that keep their final consonant ("Farmer", "Brest").
+// Keys appends the key of the word as French says it, with its silent ending left out, and, when different, the key with its final consonant sounded, which catches names that keep it ("Farmer", "Brest"). Neither key sounds a plural s, x or z, so a word's sounded consonant never meets another word's plural ("allez", "aliases").
 func (Encoder) Keys(dst []string, word string) []string {
 	if phonetic.IsDigits(word) {
 		return append(dst, word)
@@ -18,14 +18,15 @@ func (Encoder) Keys(dst []string, word string) []string {
 
 	var primary, full skeleton.Key
 
-	encode(&primary, word[:sounded(word)])
-	encode(&full, word)
+	singular, silent := sounded(word)
+	encode(&primary, word[:silent])
+	encode(&full, word[:singular])
 
 	return skeleton.Append(dst, word, &primary, &full)
 }
 
-// sounded is the length of word without its silent ending: a plural s, x or z, then a final t, d or p, then a g or c after n ("sang", "blanc"), then the r of a final -er ("dîner", "bronzer"). At least three letters stay, so short words ("dit", "mot", "lit") keep the consonant that tells them apart.
-func sounded(w string) int {
+// sounded returns the length of word without a plural s, x or z (singular), and without its whole silent ending (silent): the plural mark, then a final t, d or p, then a g or c after n ("sang", "blanc"), then the r of a final -er ("dîner", "bronzer"). A consonant then "ed" keeps its d: that is an English past participle ("paused", "imported"), and French words end in "ed" only after a vowel ("pied"). At least three letters stay, so short words ("dit", "mot", "lit") keep the consonant that tells them apart.
+func sounded(w string) (singular, silent int) {
 	n := len(w)
 	strip := func(set string) {
 		if n > minSounded && strings.IndexByte(set, w[n-1]) >= 0 {
@@ -34,7 +35,11 @@ func sounded(w string) int {
 	}
 
 	strip("sxz")
-	strip("tdp")
+	singular = n
+
+	if participle := n > minSounded && w[n-1] == 'd' && w[n-2] == 'e' && !isVowel(w[n-3]); !participle {
+		strip("tdp")
+	}
 
 	if n > 1 && w[n-2] == 'n' {
 		strip("gc")
@@ -44,7 +49,7 @@ func sounded(w string) int {
 		strip("r")
 	}
 
-	return n
+	return singular, n
 }
 
 func isVowel(c byte) bool { return strings.IndexByte("aeiouy", c) >= 0 }
