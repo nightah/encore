@@ -42,12 +42,13 @@ func TestConfigSectionsRequireADocCommentForEveryKey(t *testing.T) {
 
 		src = strings.Replace(src, "// Server configures the single HTTP listener.\n", "", 1)
 
-		return strings.Replace(src, "\t// BasePath is the URL path prefix", "\t// The URL path prefix", 1)
+		return strings.Replace(src, "\t// Address is the listen address, e.g. \":8080\".\n", "", 1)
 	})
 
 	_, err := ConfigSections(dir)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "config.Server (server) has no doc comment")
+	assert.Contains(t, err.Error(), "config.Server.Address (server.address) has no doc comment")
 
 	_, err = ConfigReference(dir)
 	require.Error(t, err, "the page isn't rendered with undocumented keys")
