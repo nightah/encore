@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/nightah/encore/internal/backend/kodi"
 	"github.com/nightah/encore/internal/core/match"
 )
 
@@ -35,12 +36,12 @@ func validateKodi(instances []KodiInstance) []error {
 		names[k.Name] = true
 
 		if u, err := url.Parse(k.URL); err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
-			errs = append(errs, fmt.Errorf("%s.url %q must be an http(s) URL such as http://kodi:8080/jsonrpc", where, redact(k.URL)))
+			errs = append(errs, fmt.Errorf("%s.url %q must be an http(s) URL such as http://kodi:8080/jsonrpc", where, kodi.RedactURL(k.URL)))
 		}
 
 		if k.WebSocketURL != "" {
 			if u, err := url.Parse(k.WebSocketURL); err != nil || (u.Scheme != "ws" && u.Scheme != "wss") || u.Host == "" {
-				errs = append(errs, fmt.Errorf("%s.websocket_url %q must be a ws(s) URL such as ws://kodi:9090/jsonrpc", where, k.WebSocketURL))
+				errs = append(errs, fmt.Errorf("%s.websocket_url %q must be a ws(s) URL such as ws://kodi:9090/jsonrpc", where, kodi.RedactURL(k.WebSocketURL)))
 			}
 		}
 
@@ -76,21 +77,12 @@ func validateKodi(instances []KodiInstance) []error {
 	return errs
 }
 
-func redact(raw string) string {
-	u, err := url.Parse(raw)
-	if err != nil || u.User == nil {
-		return raw
-	}
-
-	return u.Redacted()
-}
-
 func (c *Config) validateRoomsAndDevices() []error {
 	var errs []error
 
-	kodi := map[string]bool{}
+	instances := map[string]bool{}
 	for _, k := range c.Kodi {
-		kodi[k.Name] = true
+		instances[k.Name] = true
 	}
 
 	rooms := map[string]bool{}
@@ -106,7 +98,7 @@ func (c *Config) validateRoomsAndDevices() []error {
 
 		rooms[r.Name] = true
 
-		if r.Kodi != "" && !kodi[r.Kodi] {
+		if r.Kodi != "" && !instances[r.Kodi] {
 			errs = append(errs, fmt.Errorf("rooms[%d].kodi %q is not a Kodi instance in the kodi list", i, r.Kodi))
 		}
 	}
@@ -124,7 +116,7 @@ func (c *Config) validateRoomsAndDevices() []error {
 
 		devices[d.ID] = true
 
-		if d.Kodi != "" && !kodi[d.Kodi] {
+		if d.Kodi != "" && !instances[d.Kodi] {
 			errs = append(errs, fmt.Errorf("devices[%d].kodi %q is not a Kodi instance in the kodi list", i, d.Kodi))
 		}
 

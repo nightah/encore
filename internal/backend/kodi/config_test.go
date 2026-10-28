@@ -84,6 +84,20 @@ func TestConfigDefaults(t *testing.T) {
 	assert.Equal(t, time.Second, c.Timeout)
 }
 
+func TestRedactURL(t *testing.T) {
+	withPassword := (&url.URL{Scheme: "http", User: url.UserPassword("kodi", "hunter2"), Host: "kodi", Path: "/jsonrpc"}).String()
+	got := RedactURL(withPassword)
+	assert.NotContains(t, got, "hunter2")
+	assert.Equal(t, (&url.URL{Scheme: "http", User: url.UserPassword("kodi", "xxxxx"), Host: "kodi", Path: "/jsonrpc"}).String(), got)
+
+	assert.Equal(t, "http://kodi/jsonrpc", RedactURL("http://kodi/jsonrpc"))
+	assert.Equal(t, "http://%zz", RedactURL("http://%zz"), "an unparsable URL without credentials is shown as given")
+	assert.Equal(t, "kodi:8080", RedactURL("kodi:8080"), "nor is one without an authority")
+	assert.Equal(t, "http://kodi:xxxxx@[::1/jsonrpc", RedactURL("http://kodi:hunter2@[::1/jsonrpc"), "an unparsable URL still hides its password") // trufflehog:ignore
+	assert.Equal(t, "ws://kodi:xxxxx@media.lan:80a?x=@", RedactURL("ws://kodi:hunter2@media.lan:80a?x=@"), "only the authority's @ counts")        // trufflehog:ignore
+	assert.Equal(t, "http://kodi@[::1", RedactURL("http://kodi@[::1"), "a user name alone isn't secret")
+}
+
 func FuzzConfigFromURLs(f *testing.F) {
 	f.Add("http://kodi:secret@media.lan:8080/jsonrpc", "ws://media.lan:9090/jsonrpc") // trufflehog:ignore
 	f.Add("https://[fe80::1]/", "")

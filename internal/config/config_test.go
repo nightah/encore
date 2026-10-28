@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -387,14 +386,20 @@ func TestValidateKodiURLs(t *testing.T) {
 	}
 }
 
-func TestRedact(t *testing.T) {
-	withPassword := (&url.URL{Scheme: "http", User: url.UserPassword("kodi", "hunter2"), Host: "kodi", Path: "/jsonrpc"}).String()
-	got := redact(withPassword)
-	assert.NotContains(t, got, "hunter2")
-	assert.Equal(t, (&url.URL{Scheme: "http", User: url.UserPassword("kodi", "xxxxx"), Host: "kodi", Path: "/jsonrpc"}).String(), got)
+func TestValidateKodiNeverEchoesURLPassword(t *testing.T) {
+	for name, k := range map[string]KodiInstance{
+		"unparsable url":           {Name: "Lounge", URL: "http://kodi:hunter2@media.lan:80a/jsonrpc"},                                         // trufflehog:ignore
+		"http websocket url":       {Name: "Lounge", URL: "http://media.lan/jsonrpc", WebSocketURL: "http://kodi:hunter2@media.lan:9090/"},     // trufflehog:ignore
+		"unparsable websocket url": {Name: "Lounge", URL: "http://media.lan/jsonrpc", WebSocketURL: "ws://kodi:hunter2@media.lan:90a/jsonrpc"}, // trufflehog:ignore
+	} {
+		cfg := Defaults()
+		cfg.Kodi = []KodiInstance{k}
 
-	assert.Equal(t, "http://kodi/jsonrpc", redact("http://kodi/jsonrpc"))
-	assert.Equal(t, "http://%zz", redact("http://%zz"), "an unparsable URL is shown as given")
+		err := cfg.Validate()
+		require.Error(t, err, name)
+		assert.NotContains(t, err.Error(), "hunter2", "%s: the error is logged, so it mustn't carry the password", name)
+		assert.Contains(t, err.Error(), "kodi:xxxxx@", "%s: the URL is still shown, redacted", name)
+	}
 }
 
 func TestRoomsNeedNames(t *testing.T) {

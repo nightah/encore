@@ -88,6 +88,40 @@ func portOf(u *url.URL, fallback int) (int, error) {
 	return p, nil
 }
 
+// RedactURL hides the password in a Kodi URL as url.URL.Redacted does, also in a URL that doesn't parse, so the URL can be shown in an error.
+func RedactURL(raw string) string {
+	if u, err := url.Parse(raw); err == nil {
+		if u.User == nil {
+			return raw
+		}
+
+		return u.Redacted()
+	}
+
+	// An unparsable URL can still carry a password; hide it as Redacted would.
+	prefix, rest, ok := strings.Cut(raw, "//")
+	if !ok {
+		return raw
+	}
+
+	authority := rest
+	if i := strings.IndexAny(rest, "/?#"); i >= 0 {
+		authority = rest[:i]
+	}
+
+	at := strings.LastIndex(authority, "@")
+	if at < 0 {
+		return raw
+	}
+
+	user, _, hasPassword := strings.Cut(authority[:at], ":")
+	if !hasPassword {
+		return raw
+	}
+
+	return prefix + "//" + user + ":xxxxx" + rest[at:]
+}
+
 func (c Config) withDefaults() Config {
 	if c.Scheme == "" {
 		c.Scheme = "http"

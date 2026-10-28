@@ -433,36 +433,7 @@ func shutdownOf(q *bool) string {
 }
 
 func redactURL(raw string) string {
-	if u, err := url.Parse(raw); err == nil {
-		if u.User == nil {
-			return raw
-		}
-
-		return u.Redacted()
-	}
-
-	// An unparsable URL can still carry a password; hide it as Redacted would.
-	prefix, rest, ok := strings.Cut(raw, "//")
-	if !ok {
-		return raw
-	}
-
-	authority := rest
-	if i := strings.IndexAny(rest, "/?#"); i >= 0 {
-		authority = rest[:i]
-	}
-
-	at := strings.LastIndex(authority, "@")
-	if at < 0 {
-		return raw
-	}
-
-	user, _, hasPassword := strings.Cut(authority[:at], ":")
-	if !hasPassword {
-		return raw
-	}
-
-	return prefix + "//" + user + ":xxxxx" + rest[at:]
+	return kodi.RedactURL(raw)
 }
 
 func (a *API) createInstance(ctx context.Context, in InstanceInput) (Instance, error) {
