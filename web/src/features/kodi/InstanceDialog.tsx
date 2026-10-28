@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
-import { ApiError, errorMessage } from "@api/client";
+import { ApiError, errorMessage, fieldErrorsOf } from "@api/client";
 import type { Instance, InstanceInput as InstanceBody } from "@api/generated/model";
 import { useCreateInstance, useDeleteInstance, useUpdateInstance } from "@api/kodi";
 import { Button } from "@components/ui/Button";
@@ -127,10 +127,8 @@ export function InstanceDialog({ open, onOpenChange, instance, prefill }: Instan
       else await create.mutateAsync(body);
       changeOpen(false);
     } catch (error) {
-      if (error instanceof ApiError) {
-        for (const [name, message] of Object.entries(error.fieldErrors)) {
-          if (name in values) form.setError(name as keyof InstanceForm, { message });
-        }
+      for (const [name, message] of Object.entries(fieldErrorsOf(error))) {
+        if (name in values) form.setError(name as keyof InstanceForm, { message });
       }
     }
   });

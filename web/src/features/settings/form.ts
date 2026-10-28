@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import type { FieldValues, Path, UseFormReturn } from "react-hook-form";
 
-import { ApiError, errorMessage } from "@api/client";
+import { errorMessage, problemErrorsOf } from "@api/client";
 import type { Settings, SettingsPatch } from "@api/generated/model";
 import { isManaged, useSaveSettings } from "@api/settings";
 
@@ -83,14 +83,12 @@ export function useSettingsForm<V extends FieldValues>({
       form.reset(toValues(next));
     } catch (error) {
       let placed = false;
-      if (error instanceof ApiError) {
-        for (const problem of error.problem?.errors ?? []) {
-          const location = problem.location?.replace(/^body\./, "");
-          const key = (Object.keys(mapping) as Array<keyof V>).find((k) => mapping[k]?.path === location);
-          if (key) {
-            form.setError(key as Path<V>, { message: problem.message });
-            placed = true;
-          }
+      for (const problem of problemErrorsOf(error)) {
+        const location = problem.location?.replace(/^body\./, "");
+        const key = (Object.keys(mapping) as Array<keyof V>).find((k) => mapping[k]?.path === location);
+        if (key) {
+          form.setError(key as Path<V>, { message: problem.message });
+          placed = true;
         }
       }
       if (!placed) setFormError(errorMessage(error));

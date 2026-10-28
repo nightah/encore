@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
 import { useAuthState, useSetupAdmin } from "@api/auth";
-import { ApiError, errorMessage } from "@api/client";
+import { ApiError, errorMessage, fieldErrorsOf } from "@api/client";
 import { Button } from "@components/ui/Button";
 import { Field, FieldGrid, Input } from "@components/ui/Field";
 import { Callout } from "@components/ui/States";
@@ -53,10 +53,8 @@ export function AdminStep({ nav }: StepProps) {
       await setup.mutateAsync(values);
       nav.done();
     } catch (error) {
-      if (error instanceof ApiError) {
-        for (const [name, message] of Object.entries(error.fieldErrors)) {
-          if (name in values) form.setError(name as keyof Values, { message });
-        }
+      for (const [name, message] of Object.entries(fieldErrorsOf(error))) {
+        if (name in values) form.setError(name as keyof Values, { message });
       }
     }
   });
