@@ -182,6 +182,56 @@ describe("Library page", () => {
     );
   });
 
+  it("says when nothing comes close, without offering an alias", async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.post("*/api/v1/match", () =>
+        HttpResponse.json({ candidates: [], decision: "not_found", margin: 0, normalized: "zzz" }),
+      ),
+    );
+    renderApp("/library");
+    await user.type(await screen.findByRole("textbox", { name: "What Alexa heard" }), "zzz");
+    await user.click(screen.getByRole("button", { name: "Test" }));
+
+    expect(await screen.findByText("Nothing in this library comes close.")).toBeInTheDocument();
+    expect(screen.queryByRole("table", { name: "Match candidates" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /as an alias/ })).not.toBeInTheDocument();
+  });
+
+  it("won't alias a result the server can't name", async () => {
+    const user = userEvent.setup();
+    const log = recordRequests();
+    server.use(
+      http.post("*/api/v1/match", () =>
+        HttpResponse.json({
+          candidates: [
+            {
+              breakdown: { alias: "", boost: 0, jaro_winkler: 0.9, phonetic: 1, token_set: 0.9 },
+              kind: "movie",
+              media_id: 0,
+              score: 0.93,
+              title: "Rocky II",
+              year: 1979,
+            },
+          ],
+          decision: "play",
+          margin: 1,
+          normalized: "rocky two",
+        }),
+      ),
+    );
+    renderApp("/library");
+    await user.type(await screen.findByRole("textbox", { name: "What Alexa heard" }), "rocky two");
+    await user.click(screen.getByRole("button", { name: "Test" }));
+
+    const add = await screen.findByRole("button", { name: "Add “rocky two” as an alias for the top result" });
+    expect(add).toBeDisabled();
+    expect(
+      screen.getByText("The server didn't say which title this is, so it can't be aliased here."),
+    ).toBeInTheDocument();
+    expect(log.some((r) => r.method === "POST" && r.path === "/aliases")).toBe(false);
+  });
+
   it("removes an alias", async () => {
     const user = userEvent.setup();
     const alias = getDb().aliases.find((a) => a.library_id === 3);

@@ -1,13 +1,15 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { keys } from "@api/keys";
 import { getDb } from "@mocks/handlers";
 import { server } from "@mocks/node";
 import { FakeEventSource } from "@test/eventSource";
 import { failWith, recordRequests, renderApp } from "@test/utils";
+
+afterEach(() => vi.restoreAllMocks());
 
 function requestList() {
   return screen.findByRole("region", { name: "Requests" });
@@ -356,6 +358,18 @@ describe("Request log", () => {
 
     expect(await screen.findByRole("button", { name: "Copied" })).toBeInTheDocument();
     expect(JSON.parse(await navigator.clipboard.readText())).toMatchObject({ heard: "shuffle radiohead", id: 1002 });
+  });
+
+  it("doesn't claim to have copied when the clipboard refuses", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(navigator.clipboard, "writeText").mockRejectedValue(new DOMException("denied", "NotAllowedError"));
+    renderApp("/request-log?id=1002");
+    await screen.findByRole("heading", { level: 2, name: "“shuffle radiohead”" });
+
+    await user.click(screen.getByRole("button", { name: "Copy JSON" }));
+
+    expect(screen.getByRole("button", { name: "Copy JSON" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Copied" })).not.toBeInTheDocument();
   });
 
   it("shows a replay without Kodi calls, and a replay that fails", async () => {
