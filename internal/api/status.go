@@ -42,7 +42,7 @@ func (c *statusCache) playerChanged(id int64) {
 }
 
 func newStatusCache(a *API) *statusCache {
-	return &statusCache{a: a, entries: map[int64]statusEntry{}, published: map[string]string{}, refreshing: map[int64]bool{}}
+	return &statusCache{a: a, entries: map[int64]statusEntry{}, published: map[string]string{}, gens: map[int64]uint64{}, refreshing: map[int64]bool{}}
 }
 
 // get returns a recent status, probing Kodi when the cached one is stale.
@@ -87,11 +87,13 @@ func (c *statusCache) getAll(ctx context.Context, ids []int64) map[int64]app.Ins
 	return out
 }
 
+// probe asks the instance's runtime for its status and caches it. Probes overlap (the poll, requests, player changes) and each takes as long as Kodi does to answer, so one can finish after a newer one, or after the runtime it asked was replaced; its result is then out of date and isn't cached.
 func (c *statusCache) probe(ctx context.Context, id int64) (app.InstanceStatus, error) {
 	now := c.a.now()
 
 	c.mu.Lock()
 	prev, had := c.entries[id]
+	gen := c.gens[id]
 	c.mu.Unlock()
 
 	info := !had || prev.st.KodiVersion == "" || now.Sub(prev.infoAt) >= infoEvery
@@ -113,15 +115,26 @@ func (c *statusCache) probe(ctx context.Context, id int64) (app.InstanceStatus, 
 	}
 
 	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if cur, ok := c.entries[id]; ok && cur.at.After(now) {
+		return cur.st, nil
+	}
+
+	if c.gens[id] != gen {
+		return e.st, nil
+	}
+
 	c.entries[id] = e
-	c.mu.Unlock()
 
 	return e.st, nil
 }
 
+// forget drops id's status, including what probes already under way would cache, as when its runtime is replaced.
 func (c *statusCache) forget(id int64) {
 	c.mu.Lock()
 	delete(c.entries, id)
+	c.gens[id]++
 	c.mu.Unlock()
 }
 

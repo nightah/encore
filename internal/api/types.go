@@ -1046,6 +1046,8 @@ type statusCache struct {
 	mu        sync.Mutex
 	entries   map[int64]statusEntry
 	published map[string]string
+	// gens counts each instance's forgets, so a probe of a runtime that has since been replaced isn't cached.
+	gens map[int64]uint64
 	// ctx is run's context while it runs; refreshing holds the instances with a refresh already scheduled.
 	ctx        context.Context
 	refreshing map[int64]bool

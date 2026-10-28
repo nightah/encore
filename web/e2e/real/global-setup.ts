@@ -9,6 +9,8 @@ import { E2E_ECHO_ID, realServer } from "@e2e/real/env";
  * Starts a fake Kodi and a fresh Encore (empty data directory) for the real-server specs, and stops both afterwards.
  *
  * Encore is built first: the UI with `vite build` (into internal/server/dist, which the binary embeds), then the binary with `go build` into the run's temporary directory, so the specs always test the current code. Set `E2E_ENCORE_BIN` to use a binary you've already built instead, relative to the repository root (CI does, from its build step). The fake Kodi is built with `go build` too, unless `E2E_FAKEKODI_BIN` names one, also relative to the repository root. The one-time setup token is read from Encore's log and handed to the specs as `E2E_SETUP_TOKEN`; it is never printed.
+ *
+ * Set `E2E_SERVER_LOG` to echo Encore's log, and `ENCORE_LOG_LEVEL` (`info` by default) to see more of it.
  */
 export default async function globalSetup() {
   const repo = resolve(import.meta.dirname, "../../..");
@@ -62,7 +64,7 @@ export default async function globalSetup() {
         ...process.env,
         ENCORE_DATA_DIR: dataDir,
         ENCORE_LOG_FORMAT: "text",
-        ENCORE_LOG_LEVEL: "info",
+        ENCORE_LOG_LEVEL: process.env.ENCORE_LOG_LEVEL ?? "info",
         ENCORE_SERVER_ADDRESS: realServer.addr,
       },
       stdio: ["ignore", "pipe", "pipe"],
