@@ -295,6 +295,67 @@ describe("overview page", () => {
     expect(await card("Study")).toHaveTextContent("Nothing playing.");
   });
 
+  it("shows an empty install as not set up yet", async () => {
+    const db = getDb();
+    Object.assign(db, { attention: [], instances: [], libraries: [], publicUrl: "", requests: [] });
+    db.skill = { ...db.skill, last_deploy: null };
+    renderApp("/");
+
+    const status = await screen.findByRole("region", { name: "Status" });
+    expect(status).toHaveTextContent("Not deployed");
+    expect(status).toHaveTextContent("Unreachable");
+    expect(status).toHaveTextContent("isn't reachable from outside");
+    expect(status).toHaveTextContent("Not synced yet");
+    expect(status).toHaveTextContent("0 libraries · none shared");
+    expect(screen.getByText("No Kodi instances yet")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Add one on the Kodi page" })).toHaveAttribute("href", "/kodi");
+    expect(screen.getByText(/No requests yet. Say “Alexa, ask encore what's playing.”/)).toBeInTheDocument();
+    expect(screen.getByText("Nothing needs your attention.")).toBeInTheDocument();
+  });
+
+  it("names an unfamiliar stage, a failed deploy and shared libraries it can't name", async () => {
+    getDb().libraries = [];
+    server.use(
+      http.get("*/api/v1/overview", () =>
+        HttpResponse.json({
+          attention: [
+            { detail: "Kitchen isn't linked.", kind: "unlinked_device", link: "/echo-devices", title: "Link an Echo" },
+            { detail: "Two new titles.", kind: "needs_deploy", link: "/alexa-skill", title: "Update the skill" },
+            { detail: "Backups failed.", kind: "backup_failed", link: "/settings", title: "Check backups" },
+            { detail: "Just so you know.", kind: "info", link: "", title: "A note" },
+          ],
+          endpoint: { checked_at: null, latency_ms: 95, reachable: true, url: "https://encore.example.net/alexa" },
+          instances: [],
+          libraries: { count: 4, shared_groups: 2, synced_at: null },
+          recent_requests: [],
+          requests_today: { failed: 2, median_ms: 140, total: 12 },
+          skill: {
+            locales: ["en-AU"],
+            needs_deploy: true,
+            stage: "certification",
+            state: "failed",
+            update_reason: "library",
+          },
+        }),
+      ),
+    );
+    renderApp("/");
+
+    const status = await screen.findByRole("region", { name: "Status" });
+    expect(status).toHaveTextContent("Deploy failed");
+    expect(status).toHaveTextContent("Certification stage · 1 locale · update pending");
+    expect(status).toHaveTextContent("95 ms");
+    expect(status).toHaveTextContent("encore.example.net reachable");
+    expect(status).toHaveTextContent("4 libraries · 2 shared");
+    expect(status).toHaveTextContent("2 failed · median 140 ms");
+
+    const attention = screen.getByRole("region", { name: "Needs attention" });
+    expect(within(attention).getByRole("link", { name: "Link device" })).toHaveAttribute("href", "/echo-devices");
+    expect(within(attention).getByRole("link", { name: "Update now" })).toHaveAttribute("href", "/alexa-skill");
+    expect(within(attention).getByRole("link", { name: "Open" })).toHaveAttribute("href", "/settings");
+    expect(within(attention).getAllByRole("link")).toHaveLength(3);
+  });
+
   it("opens a recent request from its time link", async () => {
     const user = userEvent.setup();
     const { router } = renderApp("/");
