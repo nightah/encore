@@ -656,3 +656,56 @@ func BenchmarkRetrieverCandidates(b *testing.B) {
 		}
 	}
 }
+
+// BenchmarkSearchScale times whole Searches, retrieval and scoring, with the default Config over the scale library (ENCORE_MATCH_BENCH_SCALE, default 100000), cycling through the synthetic queries and the ASR corpus cases. Indexes are built once and shared across -count runs.
+func BenchmarkSearchScale(b *testing.B) {
+	suite := englishSuite(b)
+
+	for _, n := range scaleSizes(b, "ENCORE_MATCH_BENCH_SCALE", []int{100_000}) {
+		docs := scaleDocs(n, suite.docs(), 1)
+
+		var queries []Query
+		for _, q := range scaleQueries(docs, 700, 2) {
+			queries = append(queries, Query{Text: q.text})
+		}
+
+		for _, c := range suite.Cases {
+			queries = append(queries, c.query())
+		}
+
+		b.Run(fmt.Sprintf("n=%d", n), func(b *testing.B) {
+			key := fmt.Sprintf("search/%d", n)
+
+			v, ok := scaleIndexes.Load(key)
+			if !ok {
+				ix, err := New("en", Config{})
+				require.NoError(b, err)
+				require.NoError(b, ix.Upsert(docs...))
+
+				v, _ = scaleIndexes.LoadOrStore(key, ix)
+			}
+
+			ix, ok := v.(*Index)
+			require.True(b, ok)
+
+			ctx := b.Context()
+			lat := make([]time.Duration, 0, b.N)
+
+			b.ReportAllocs()
+			b.ResetTimer()
+
+			for i := range b.N {
+				t := time.Now()
+				if _, err := ix.Search(ctx, queries[i%len(queries)]); err != nil {
+					b.Fatal(err)
+				}
+
+				lat = append(lat, time.Since(t))
+			}
+
+			b.StopTimer()
+			b.ReportMetric(float64(percentile(lat, 0.5).Microseconds())/1000, "p50-ms")
+			b.ReportMetric(float64(percentile(lat, 0.99).Microseconds())/1000, "p99-ms")
+		})
+	}
+}
