@@ -96,6 +96,7 @@ func TestDispatchControlIntents(t *testing.T) {
 		"subtitles off":                 {intent: "Subtitles", slots: map[string]slotSpec{"SubtitleAction": {"off", "off"}}, want: "SetSubtitle off"},
 		"subtitles off, despite a lang": {intent: "Subtitles", slots: map[string]slotSpec{"SubtitleAction": {"off", "off"}, "Language": {value: "german"}}, want: "SetSubtitle off"},
 		"subtitles next":                {intent: "Subtitles", slots: map[string]slotSpec{"SubtitleAction": {"next", "next"}}, want: "SetSubtitle next"},
+		"subtitles alone turn them on":  {intent: "Subtitles", want: "SetSubtitle on"},
 		"view library default":          {intent: "ViewLibrary", want: "ShowView"},
 		"update the music library":      {intent: "UpdateLibrary", slots: map[string]slotSpec{"Library": {"music", "music"}}, want: "ScanLibrary music"},
 		"update every library":          {intent: "UpdateLibrary", want: "ScanLibrary"},

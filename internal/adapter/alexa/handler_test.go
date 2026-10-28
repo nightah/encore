@@ -442,6 +442,24 @@ func TestContentDisabled(t *testing.T) {
 		assert.Contains(t, backend.Calls(), "Play album/41 resume")
 	})
 
+	t.Run("play X is declined with neither films nor shows", func(t *testing.T) {
+		h, backend := withDisabled(t, false, media.ContentMovies, media.ContentTV)
+		res := serveBody(t, h, mustRead(t, "testdata/golden/play-media-not-found/request.json"))
+		assert.Contains(t, string(res), declined, "without deep search, play X looks only for films and shows")
+		assert.Empty(t, backend.Calls())
+	})
+
+	t.Run("a recommendation of an unknown type is any video", func(t *testing.T) {
+		h, _ := withDisabled(t, false, media.ContentMovies, media.ContentTV)
+		res := serveBody(t, h, intentRequest(t, "Recommend", map[string]slotSpec{"MediaType": {"podcasts", "podcast"}}))
+
+		var resp ResponseEnvelope
+		require.NoError(t, json.Unmarshal(res, &resp))
+		followup, err := json.Marshal(resp.SessionAttributes["followup"])
+		require.NoError(t, err)
+		assert.JSONEq(t, `{"recommend":{"kinds":["musicvideo"]}}`, string(followup), "a music video is the video left")
+	})
+
 	t.Run("a movie recommendation is declined without movies", func(t *testing.T) {
 		h, _ := withDisabled(t, false, media.ContentMovies)
 		res := serveBody(t, h, mustRead(t, "testdata/golden/recommend-movie/request.json"))
@@ -665,6 +683,29 @@ func TestProgressiveResponseWhileWaking(t *testing.T) {
 			assert.Equal(t, []string{"Play movie/4 resume"}, backend.Calls(), "the action is retried once the Kodi instance is awake, whether or not Alexa took the interim speech")
 		})
 	}
+
+	t.Run("without progressive responses", func(t *testing.T) {
+		h, backend, _ := newHandler(t)
+		sleepy := &sleepyBackend{Backend: backend}
+		ft := h.Targets.(fakeTargets)
+		ft.target.Backend = sleepy
+		ft.target.Wake = sleepy.wake
+		h.Targets = ft
+		require.Nil(t, h.Progressive)
+
+		// Alexa offers an endpoint for progressive responses, which goes unused.
+		var env RequestEnvelope
+		require.NoError(t, json.Unmarshal(mustRead(t, "testdata/golden/watch-movie-unique/request.json"), &env))
+		env.Context.System.APIEndpoint = "http://127.0.0.1:1"
+		env.Context.System.APIAccessToken = "token"
+
+		body, err := json.Marshal(env)
+		require.NoError(t, err)
+
+		var resp ResponseEnvelope
+		require.NoError(t, json.Unmarshal(serveBody(t, h, body), &resp))
+		assert.Equal(t, []string{"Play movie/4 resume"}, backend.Calls(), "the Kodi instance is woken all the same, with nothing said meanwhile")
+	})
 }
 
 func TestProgressiveSendFailures(t *testing.T) {
