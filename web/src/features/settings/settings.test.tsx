@@ -312,6 +312,8 @@ describe("Settings page", () => {
     const dialog = await screen.findByRole("dialog", { name: "Rotate the encryption key?" });
     await user.click(within(dialog).getByRole("button", { name: "Rotate key" }));
     await waitFor(() => expect(getDb().settings.secrets.key_id).toBe("k3"));
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
+    expect(await screen.findByLabelText("Active key ID")).toHaveDisplayValue(/^k3 \(rotated /);
   });
 
   it("offers the confirmation sound, on by default", async () => {
@@ -571,6 +573,26 @@ describe("Change password dialog", () => {
     expect(dialog.getByText("Use at least 12 characters.")).toBeInTheDocument();
     expect(dialog.getByText("The passwords don't match.")).toBeInTheDocument();
     expect(log.some((r) => r.method === "PUT")).toBe(false);
+  });
+
+  it("needs a new password of at least 12 characters", async () => {
+    const user = userEvent.setup();
+    const log = recordRequests();
+    const dialog = await open(user);
+    const password = dialog.getByLabelText("New password");
+    const confirm = dialog.getByLabelText("Confirm new password");
+
+    await user.type(dialog.getByLabelText("Current password"), "correct-horse-battery");
+    await user.type(password, "elevenchars");
+    await user.type(confirm, "elevenchars");
+    await user.click(dialog.getByRole("button", { name: "Change password" }));
+    expect(await dialog.findByText("Use at least 12 characters.")).toBeInTheDocument();
+    expect(log.some((r) => r.method === "PUT")).toBe(false);
+
+    await user.type(password, "!");
+    await user.type(confirm, "!");
+    await user.click(dialog.getByRole("button", { name: "Change password" }));
+    await waitFor(() => expect(getDb().admin?.password).toBe("elevenchars!"));
   });
 
   it("shows a wrong current password, and starts empty after cancelling", async () => {
