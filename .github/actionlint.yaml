@@ -1,5 +1,5 @@
-# actionlint doesn't understand GitHub's $/ self-repository syntax yet (rhysd/actionlint#711), so it rejects release.yml's call to release-slsa.yml. Ignore just that message there; drop this once actionlint supports $/.
+# actionlint doesn't understand GitHub's $/ self-repository syntax yet (rhysd/actionlint#711), so it rejects the calls to this repository's reusable workflows. Ignore just that message; drop this once actionlint supports $/.
 paths:
-  .github/workflows/release.yml:
+  .github/workflows/*.yml:
     ignore:
-      - 'reusable workflow call "\$/\.github/workflows/release-slsa\.yml" at "uses" is not following the format'
+      - 'reusable workflow call "\$/\.github/workflows/[^"]+\.yml" at "uses" is not following the format'

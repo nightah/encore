@@ -19,8 +19,45 @@ concurrency:
 permissions: {}
 
 jobs:
+  # A pull request only analyses the languages it changes; pushes to main and the weekly run analyse everything. Each language's job still runs and passes when skipped, since the checks are required.
+  changes:
+    name: Changes
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      pull-requests: read # list the pull request's files
+    outputs:
+      go: ${{ steps.filter.outputs.go }}
+      javascript-typescript: ${{ steps.filter.outputs.javascript-typescript }}
+      actions: ${{ steps.filter.outputs.actions }}
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        with:
+          egress-policy: audit
+
+      - name: Filter
+        id: filter
+        env:
+          PR: ${{ github.event.pull_request.number }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${GITHUB_EVENT_NAME}" != pull_request ]; then
+            printf '%s\n' go=true javascript-typescript=true actions=true >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+          files="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls/${PR}/files" --jq '.[].filename')"
+          # A change to this workflow analyses everything.
+          changed() { grep -qE "$1|^\.github/workflows/codeql\.yml$" <<< "${files}" && echo true || echo false; }
+          {
+            echo "go=$(changed '\.go$|(^|/)go\.(mod|sum)$')"
+            echo "javascript-typescript=$(changed '\.(js|mjs|cjs|jsx|ts|mts|cts|tsx|vue|astro|html)$|(^|/)package\.json$|(^|/)pnpm-lock\.yaml$')"
+            echo "actions=$(changed '^\.github/(workflows|actions)/')"
+          } >> "${GITHUB_OUTPUT}"
+
   analyze:
     name: Analyse (${{ matrix.language }})
+    needs: changes
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
@@ -43,22 +80,43 @@ jobs:
         with:
           egress-policy: audit
 
+      - name: Unchanged
+        if: needs.changes.outputs[matrix.language] != 'true'
+        env:
+          LANGUAGE: ${{ matrix.language }}
+        run: echo "::notice::No ${LANGUAGE} changes to analyse"
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: needs.changes.outputs[matrix.language] == 'true'
         with:
           persist-credentials: false
 
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        if: matrix.language == 'go'
+        if: needs.changes.outputs[matrix.language] == 'true' && matrix.language == 'go'
         with:
           go-version-file: go.mod
+          cache: false
+
+      # Main's release-build cache (ci-jobs.yml); this job never saves one.
+      - name: Restore the Go cache
+        if: needs.changes.outputs[matrix.language] == 'true' && matrix.language == 'go'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: go-build-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('go.mod', 'go.sum') }}
+          restore-keys: go-build-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Initialise CodeQL
+        if: needs.changes.outputs[matrix.language] == 'true'
         uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         with:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
 
       - name: Analyse
+        if: needs.changes.outputs[matrix.language] == 'true'
         uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
         with:
           category: /language:${{ matrix.language }}

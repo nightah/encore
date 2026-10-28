@@ -1,9 +1,11 @@
 name: Publish images
 
-# Pushes the image an "Images" run built to ghcr.io/nightah/encore and says so on the pull request. It runs from the default branch, never the pull request's code: the image is only copied to the registry, not run. A branch here is published straight away under its name (fix/abc becomes fix-abc, .github/scripts/image-tag.sh); a pull request from a fork waits for a maintainer to approve the pr-images environment and is published as PR<number>.
+# Pushes the test image a CI run built (the Image job in ci-jobs.yml) to ghcr.io/nightah/encore and says so on the pull request. It runs from the default branch, never the pull request's code: the image is only copied to the registry, not run. Main is published as main, and a branch here straight away under its name (fix/abc becomes fix-abc, .github/scripts/image-tag.sh); a pull request from a fork waits for a maintainer to approve the pr-images environment and is published as PR<number>.
+#
+# A tag only moves forward: a run whose commit is no longer the branch's or pull request's head isn't published. The image a tag moved off is deleted, as the registry would otherwise keep it, untagged, forever.
 on:
   workflow_run:
-    workflows: [Images]
+    workflows: [CI]
     types: [completed]
   # A branch is usually pushed, and its image published, before its pull request is opened, so opening one also comments.
   pull_request_target: # zizmor: ignore[dangerous-triggers] only the base branch is checked out, and nothing from the pull request runs
@@ -14,10 +16,15 @@ permissions: {}
 jobs:
   resolve:
     name: Resolve the tag
-    if: github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success'
+    # Same-repository pull requests' runs are skipped, and have no image.
+    if: >-
+      github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' &&
+      (github.event.workflow_run.event == 'push' ||
+      (github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.head_repository.full_name != github.repository))
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
+      actions: read # check the run built an image
       contents: read # check out the default branch for image-tag.sh
       pull-requests: read # find the run's pull requests
     outputs:
@@ -34,17 +41,26 @@ jobs:
         with:
           persist-credentials: false
 
-      # A fork's run lists no pull requests (workflow_run.pull_requests is empty for forks), so its pull request is looked up by head branch and must still be at the commit that was built.
+      # CI builds no image for Renovate's branches or for changes to docs/ alone. A fork's run lists no pull requests (workflow_run.pull_requests is empty for forks), so its pull request is looked up by head branch and must still be at the commit that was built.
       - name: Resolve the tag and pull requests
         id: tag
         env:
           GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
           EVENT: ${{ github.event.workflow_run.event }}
           HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
           HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
           HEAD_OWNER: ${{ github.event.workflow_run.head_repository.owner.login }}
         run: |
-          if [ "${EVENT}" = push ]; then
+          if [ "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/artifacts?name=image" --jq '.total_count')" = 0 ]; then
+            echo "::notice::The run built no image"
+            exit 0
+          fi
+          if [ "${EVENT}" = push ] && [ "${HEAD_BRANCH}" = main ]; then
+            tag=main
+            prs=""
+            fork=false
+          elif [ "${EVENT}" = push ]; then
             tag="$(.github/scripts/image-tag.sh "${HEAD_BRANCH}")" || exit 0
             prs="$(gh api "repos/${GITHUB_REPOSITORY}/pulls?state=open&head=${GITHUB_REPOSITORY_OWNER}:${HEAD_BRANCH}" --jq '[.[].number] | join(" ")')"
             fork=false
@@ -88,8 +104,12 @@ jobs:
       (needs.approve.result == 'success' || needs.approve.result == 'skipped')
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    # One publish per tag at a time, so an older run can't land after a newer one.
+    concurrency:
+      group: images-publish-${{ needs.resolve.outputs.tag }}
+      cancel-in-progress: false
     permissions:
-      actions: read # download the image from the Images run
+      actions: write # download the image from the CI run, and delete it once published
       contents: read # check out the default branch for image-comment.js
       packages: write # push the image
       pull-requests: write # comment on the pull requests
@@ -111,20 +131,67 @@ jobs:
           run-id: ${{ github.event.workflow_run.id }}
           github-token: ${{ github.token }}
 
+      # A newer commit's run publishes instead; it may already have.
+      - name: Check the commit is still the head
+        id: head
+        env:
+          GH_TOKEN: ${{ github.token }}
+          FORK: ${{ needs.resolve.outputs.fork }}
+          PRS: ${{ needs.resolve.outputs.prs }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          if [ "${FORK}" = true ]; then
+            head="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PRS}" --jq '.head.sha')"
+          else
+            head="$(git ls-remote origin "refs/heads/${HEAD_BRANCH}" | cut -f1)"
+          fi
+          if [ "${head}" = "${HEAD_SHA}" ]; then
+            echo "current=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "::notice::${HEAD_SHA} is no longer the head (now ${head:-gone}); not publishing it"
+          fi
+
       - name: Push
         id: push
+        if: steps.head.outputs.current == 'true'
         env:
           TAG: ${{ needs.resolve.outputs.tag }}
           GH_TOKEN: ${{ github.token }}
         run: |
           image="ghcr.io/${GITHUB_REPOSITORY,,}:${TAG}"
           skopeo login ghcr.io --username "${GITHUB_ACTOR}" --password-stdin <<< "${GH_TOKEN}"
+          # The manifest list the tag points at now, if any; its digest is the SHA-256 of these exact bytes.
+          skopeo inspect --raw "docker://${image}" > "${RUNNER_TEMP}/old.json" 2> /dev/null || rm -f "${RUNNER_TEMP}/old.json"
           skopeo copy --all --preserve-digests "oci-archive:${RUNNER_TEMP}/image/image.tar" "docker://${image}"
-          echo "digest=$(skopeo inspect --raw "docker://${image}" | sha256sum | cut -d' ' -f1)" >> "${GITHUB_OUTPUT}"
+          skopeo inspect --raw "docker://${image}" > "${RUNNER_TEMP}/new.json"
           skopeo logout ghcr.io
+          echo "digest=$(sha256sum < "${RUNNER_TEMP}/new.json" | cut -d' ' -f1)" >> "${GITHUB_OUTPUT}"
+          [ -f "${RUNNER_TEMP}/old.json" ] || exit 0
+          .github/scripts/image-superseded.sh "${RUNNER_TEMP}/old.json" "${RUNNER_TEMP}/new.json" > "${RUNNER_TEMP}/superseded.txt"
+          echo "superseded=${RUNNER_TEMP}/superseded.txt" >> "${GITHUB_OUTPUT}"
+
+      # The registry keeps an image a tag moved off as untagged versions: the manifest list and one manifest per platform. Only those are deleted, and only while untagged.
+      - name: Delete the superseded image
+        if: steps.push.outputs.superseded != ''
+        env:
+          SUPERSEDED: ${{ steps.push.outputs.superseded }}
+          GH_TOKEN: ${{ github.token }}
+        run: .github/scripts/image-delete-untagged.sh "${GITHUB_REPOSITORY_OWNER}" "${GITHUB_REPOSITORY#*/}" < "${SUPERSEDED}"
+
+      # The registry has it now, or a newer one; don't keep a copy as an artifact for days.
+      - name: Delete the image artifact
+        env:
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          id="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/artifacts?name=image" --jq '.artifacts[0].id // empty')"
+          if [ -n "${id}" ]; then
+            gh api -X DELETE "repos/${GITHUB_REPOSITORY}/actions/artifacts/${id}"
+          fi
 
       - name: Comment
-        if: needs.resolve.outputs.prs != ''
+        if: steps.push.outcome == 'success' && needs.resolve.outputs.prs != ''
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           TAG: ${{ needs.resolve.outputs.tag }}
@@ -143,7 +210,7 @@ jobs:
               runUrl: process.env.RUN_URL,
             });
 
-  # A fork's image is only published after approval, which its "Images" run asks for, so only branches here are announced on opening.
+  # A fork's image is only published after approval, which its CI run asks for, so only branches here are announced on opening.
   announce:
     name: Announce the image
     if: github.event_name == 'pull_request_target' && github.event.pull_request.head.repo.full_name == github.repository
