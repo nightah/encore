@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net"
+	"sync/atomic"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -157,11 +158,21 @@ func TestTargetCarriesVoiceSettings(t *testing.T) {
 	assert.False(t, target.ShutdownQuits)
 	assert.Nil(t, target.Wake, "without a MAC address there's no way to wake Kodi")
 
-	h.instance(t).Waker.SetMAC(net.HardwareAddr{0xdc, 0xa6, 0x32, 0x4b, 0x19, 0x0e})
+	var sent atomic.Int32
+
+	waker := h.instance(t).Waker
+	waker.Send = func(context.Context, string, []byte) error {
+		sent.Add(1)
+
+		return nil
+	}
+	waker.SetMAC(net.HardwareAddr{0xdc, 0xa6, 0x32, 0x4b, 0x19, 0x0e})
 
 	target, err = h.app.Target(t.Context(), testDevice)
 	require.NoError(t, err)
-	assert.NotNil(t, target.Wake, "a known MAC address lets a request wake Kodi")
+	require.NotNil(t, target.Wake, "a known MAC address lets a request wake Kodi")
+	require.NoError(t, target.Wake(t.Context()), "a Kodi that already answers is awake")
+	assert.Zero(t, sent.Load(), "so no packet is sent")
 
 	h.app.cfg.Alexa.ShutdownQuits = true
 	h.app.cfg.Alexa.QueueLimit = 25

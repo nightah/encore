@@ -8,6 +8,8 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -20,6 +22,7 @@ import (
 	"github.com/nightah/encore/internal/backend/kodi/fakekodi"
 	"github.com/nightah/encore/internal/config"
 	"github.com/nightah/encore/internal/core/actions"
+	"github.com/nightah/encore/internal/secrets"
 	"github.com/nightah/encore/internal/skillmodel"
 	"github.com/nightah/encore/internal/store"
 )
@@ -180,6 +183,24 @@ func TestEndToEndUnlinkedDevice(t *testing.T) {
 		assert.Contains(t, speech(resp), "isn't linked to a Kodi")
 		assert.Empty(t, h.kodi.CallsTo("Player.Open"))
 	})
+}
+
+func TestNewRefusesToStartWithoutTheGeneratedKey(t *testing.T) {
+	cfg := config.Defaults()
+	cfg.DataDir = t.TempDir()
+
+	a, err := New(t.Context(), &cfg, slog.New(slog.DiscardHandler))
+	require.NoError(t, err)
+	require.NoError(t, a.Secrets().Put(t.Context(), "test/secret", []byte("hunter2")))
+	require.NoError(t, a.Close())
+
+	// The key Encore generated next to the database is lost, but the secrets it sealed are still there.
+	require.NoError(t, os.Remove(filepath.Join(cfg.DataDir, secrets.KeyFileName)))
+
+	_, err = New(t.Context(), &cfg, slog.New(slog.DiscardHandler))
+	require.ErrorContains(t, err, "opening secrets: ")
+	require.ErrorContains(t, err, "is missing; restore it or set secrets.key")
+	assert.NoFileExists(t, filepath.Join(cfg.DataDir, secrets.KeyFileName), "no new key replaces the lost one")
 }
 
 func TestConfiguredInstancesAreReconciled(t *testing.T) {

@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nightah/encore/internal/backend/kodi/fakekodi"
+	"github.com/nightah/encore/internal/config"
 )
 
 func TestEvidenceSummary(t *testing.T) {
@@ -33,6 +34,40 @@ func TestEvidenceSummary(t *testing.T) {
 		t.Run(c.name, func(t *testing.T) {
 			assert.Equal(t, c.want, c.ev.summary(c.members))
 		})
+	}
+}
+
+func TestLibrariesAreOrderedByGroup(t *testing.T) {
+	names := []string{"Study", "Lounge", "Bedroom", "Den"}
+
+	cfg := config.Defaults()
+	cfg.DataDir = t.TempDir()
+
+	for _, name := range names {
+		cfg.Kodi = append(cfg.Kodi, kodiConfig(name, fakekodi.New(t, fakekodi.Options{}), ""))
+	}
+
+	// Not run, so no instances are grouped yet: each has a library of its own.
+	a := openApp(t, &cfg, fastTuning())
+	t.Cleanup(func() { assert.NoError(t, a.Close()) })
+
+	// The groups are held in a map, whose order changes from one range to the next; the list's must not.
+	for range 20 {
+		libs := a.Libraries()
+		require.Len(t, libs, len(names))
+
+		got := make([]string, 0, len(libs))
+
+		for i, lib := range libs {
+			if i > 0 {
+				require.Less(t, libs[i-1].GroupID, lib.GroupID, "ordered by group ID")
+			}
+
+			require.Len(t, lib.Members, 1)
+			got = append(got, lib.Members[0])
+		}
+
+		require.ElementsMatch(t, names, got, "one library per instance")
 	}
 }
 
