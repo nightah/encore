@@ -181,7 +181,7 @@ func TestWebSocketCallsAndNotifications(t *testing.T) {
 // A client counts itself connected once it has the handshake response, which can be before the server has registered it; a notification sent straight away must still reach it.
 func TestNotifyReachesAClientStillBeingRegistered(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
-		s := NewNetwork(t).New(Options{})
+		s := NewNetwork().New(t, Options{})
 		s.afterAccept = func() { time.Sleep(100 * time.Millisecond) }
 
 		conn := dial(t, s)

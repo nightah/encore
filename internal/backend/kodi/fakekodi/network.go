@@ -9,28 +9,33 @@ import (
 	"testing"
 )
 
-// NewNetwork returns an empty in-memory network; its fakes stop when the test ends.
-func NewNetwork(t testing.TB) *Network {
-	t.Helper()
-
-	n := &Network{t: t, servers: map[string]*Server{}}
+// NewNetwork returns an empty in-memory network. One network may serve the fakes of many tests, since each fake has a host of its own.
+func NewNetwork() *Network {
+	n := &Network{servers: map[string]*Server{}}
 	n.client = &http.Client{Transport: n}
 
 	return n
 }
 
-// New starts a fake on the network. Its URLs name a host of its own: kodi1.test for the first fake, kodi2.test for the next, and so on.
-func (n *Network) New(opts Options) *Server {
-	n.t.Helper()
+// New starts a fake on the network, for t's synctest bubble when t is a bubble's, and stops it when t ends. Its URLs name a host of its own: kodi1.test for the network's first fake, kodi2.test for the next, and so on.
+func (n *Network) New(t testing.TB, opts Options) *Server {
+	t.Helper()
 
 	s := NewServer(opts)
-	s.network, s.httpServer = n, httptest.NewTestServer(n.t, s)
+	s.network, s.httpServer = n, httptest.NewTestServer(t, s)
 	s.httpServer.Client() // starts the server
 
 	n.mu.Lock()
-	s.host = fmt.Sprintf("kodi%d.test", len(n.servers)+1)
+	n.made++
+	s.host = fmt.Sprintf("kodi%d.test", n.made)
 	n.servers[s.host] = s
 	n.mu.Unlock()
+
+	t.Cleanup(func() {
+		n.mu.Lock()
+		delete(n.servers, s.host)
+		n.mu.Unlock()
+	})
 
 	return s
 }

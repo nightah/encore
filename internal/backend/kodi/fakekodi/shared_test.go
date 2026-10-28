@@ -49,8 +49,8 @@ func notifications(t *testing.T, s *Server) <-chan string {
 
 func TestSharedLibrary(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
-		lib, n := DefaultLibrary(), NewNetwork(t)
-		a, b := n.New(Options{Library: lib}), n.New(Options{Library: lib})
+		lib, n := DefaultLibrary(), NewNetwork()
+		a, b := n.New(t, Options{Library: lib}), n.New(t, Options{Library: lib})
 		fromA, fromB := notifications(t, a), notifications(t, b)
 
 		played := time.Date(2026, 10, 26, 21, 30, 0, 0, time.Local)

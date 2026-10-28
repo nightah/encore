@@ -14,9 +14,9 @@ import (
 
 func TestNetwork(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
-		n := NewNetwork(t)
-		lounge := n.New(Options{MAC: "DC:A6:32:00:00:01"})
-		bedroom := n.New(Options{MAC: "DC:A6:32:00:00:02"})
+		n := NewNetwork()
+		lounge := n.New(t, Options{MAC: "DC:A6:32:00:00:01"})
+		bedroom := n.New(t, Options{MAC: "DC:A6:32:00:00:02"})
 
 		assert.Equal(t, "http://kodi1.test:8080/jsonrpc", lounge.URL())
 		assert.Equal(t, "ws://kodi1.test:9090/jsonrpc", lounge.WebSocketURL())
@@ -39,7 +39,7 @@ func TestNetwork(t *testing.T) {
 
 func TestNetworkRestartAndClose(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
-		s := NewNetwork(t).New(Options{})
+		s := NewNetwork().New(t, Options{})
 		conn := dial(t, s)
 
 		ctx, cancel := context.WithTimeout(t.Context(), time.Second)

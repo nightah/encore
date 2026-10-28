@@ -29,7 +29,7 @@ import (
 func newFake(t *testing.T, opts fakekodi.Options) *fakekodi.Server {
 	t.Helper()
 
-	return fakekodi.NewNetwork(t).New(opts)
+	return fakekodi.NewNetwork().New(t, opts)
 }
 
 func testConfig(t *testing.T, s *fakekodi.Server) Config {

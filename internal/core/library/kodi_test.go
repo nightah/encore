@@ -24,7 +24,7 @@ func TestKodiCatalog(t *testing.T) {
 		// The bubble's clock starts in 2000; move it on so the library's dates are in the past.
 		time.Sleep(time.Until(time.Date(2026, 10, 28, 9, 0, 0, 0, time.UTC)))
 
-		s := fakekodi.NewNetwork(t).New(fakekodi.Options{})
+		s := fakekodi.NewNetwork().New(t, fakekodi.Options{})
 
 		cfg, err := kodi.ConfigFromURLs(s.URL(), s.WebSocketURL())
 		require.NoError(t, err)
