@@ -1,14 +1,20 @@
 package api
 
 import (
+	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
 	"testing"
+	"time"
 
+	"github.com/danielgtaylor/huma/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/nightah/encore/internal/auth"
 	"github.com/nightah/encore/internal/auth/oidctest"
 )
 
@@ -211,4 +217,211 @@ func TestTOTPAndPasswordChange(t *testing.T) {
 	other := h.client()
 	assert.Equal(t, http.StatusUnauthorized, other.do(http.MethodPost, "/api/v1/auth/login", map[string]string{"username": "admin", "password": testPassword}).status)
 	other.json(http.MethodPost, "/api/v1/auth/login", map[string]string{"username": "admin", "password": "another long one"}, http.StatusNoContent, nil)
+}
+
+func TestAuthProblem(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name       string
+		err        error
+		status     int
+		detail     string
+		location   string
+		retryAfter string
+	}{
+		{name: "locked out", err: &auth.LockedError{RetryAfter: 90*time.Second + 200*time.Millisecond}, status: http.StatusTooManyRequests, retryAfter: "91"},
+		{name: "locked for under a second", err: &auth.LockedError{RetryAfter: time.Millisecond}, status: http.StatusTooManyRequests, retryAfter: "1"},
+		{name: "invalid input", err: &auth.InputError{Field: "password", Err: errors.New("must be at least 12 characters")}, status: http.StatusUnprocessableEntity, detail: "validation failed", location: "body.password"},
+		{name: "bad credentials", err: fmt.Errorf("login: %w", auth.ErrBadCredentials), status: http.StatusUnauthorized, detail: "login: " + auth.ErrBadCredentials.Error()},
+		{name: "bad one-time code", err: auth.ErrBadTOTP, status: http.StatusUnauthorized, detail: auth.ErrBadTOTP.Error()},
+		{name: "one-time code required", err: auth.ErrTOTPRequired, status: http.StatusUnauthorized, detail: auth.ErrTOTPRequired.Error(), location: "body.totp"},
+		{name: "admin exists", err: auth.ErrAdminExists, status: http.StatusConflict, detail: auth.ErrAdminExists.Error()},
+		{name: "bad setup token", err: auth.ErrBadSetupToken, status: http.StatusForbidden, detail: auth.ErrBadSetupToken.Error()},
+		{name: "password sign-in off", err: auth.ErrLocalDisabled, status: http.StatusForbidden, detail: auth.ErrLocalDisabled.Error()},
+		{name: "anything else", err: errors.New("hashing: out of memory"), status: http.StatusInternalServerError, detail: "internal error"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			a, _ := testAPI()
+			err := a.authProblem(t.Context(), tt.err)
+
+			m := errorModel(t, err)
+			assert.Equal(t, tt.status, m.Status)
+
+			if tt.detail != "" {
+				assert.Equal(t, tt.detail, m.Detail)
+			}
+
+			if tt.location != "" {
+				require.Len(t, m.Errors, 1)
+				assert.Equal(t, tt.location, m.Errors[0].Location)
+			}
+
+			if tt.retryAfter != "" {
+				var hdr huma.HeadersError
+				require.ErrorAs(t, err, &hdr)
+				assert.Equal(t, tt.retryAfter, hdr.GetHeaders().Get("Retry-After"), "whole seconds, rounded up")
+			}
+		})
+	}
+
+	a, _ := testAPI()
+	assert.NoError(t, a.authProblem(t.Context(), nil))
+}
+
+func TestLoginErrorRedirect(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		err  error
+		want string
+	}{
+		{auth.ErrNotAdmin, auth.ErrNotAdmin.Error()},
+		{fmt.Errorf("finishing: %w", auth.ErrOIDCDisabled), "finishing: " + auth.ErrOIDCDisabled.Error()},
+		{errors.New("oidc: id token signed by unknown key kid=abc"), "Sign-in failed. Check the server log for details."},
+	}
+
+	for _, tt := range tests {
+		a, _ := testAPI()
+		r := a.loginError(t.Context(), tt.err)
+		assert.Equal(t, http.StatusFound, r.Status)
+
+		loc, err := url.Parse(r.Location)
+		require.NoError(t, err)
+		assert.Equal(t, "/login", loc.Path)
+		assert.Equal(t, tt.want, loc.Query().Get("error"), "only messages meant for the user are shown")
+	}
+}
+
+func TestOIDCLoginWhenNotConfigured(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.client()
+
+	for _, path := range []string{"/api/v1/auth/oidc/login", "/api/v1/auth/oidc/callback?code=x&state=y"} {
+		resp := c.do(http.MethodGet, path, nil)
+		require.Equal(t, http.StatusFound, resp.status, path)
+
+		loc, err := url.Parse(resp.header.Get("Location"))
+		require.NoError(t, err)
+		assert.Equal(t, "/login", loc.Path, path)
+		assert.Equal(t, auth.ErrOIDCDisabled.Error(), loc.Query().Get("error"), path)
+	}
+
+	assert.Contains(t, h.logs.String(), "OpenID Connect sign-in could not start")
+	assert.Contains(t, h.logs.String(), "OpenID Connect sign-in failed")
+}
+
+// oidcSignIn runs the browser through the provider and returns where the callback sends it.
+func oidcSignIn(t *testing.T, c *client) *url.URL {
+	t.Helper()
+
+	resp := c.do(http.MethodGet, "/api/v1/auth/oidc/login", nil)
+	require.Equal(t, http.StatusFound, resp.status, string(resp.body))
+
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, resp.header.Get("Location"), http.NoBody)
+	require.NoError(t, err)
+
+	idpResp, err := c.http.Do(req)
+	require.NoError(t, err)
+	require.NoError(t, idpResp.Body.Close())
+	require.Equal(t, http.StatusFound, idpResp.StatusCode)
+
+	cb, err := url.Parse(idpResp.Header.Get("Location"))
+	require.NoError(t, err)
+
+	resp = c.do(http.MethodGet, cb.RequestURI(), nil)
+	require.Equal(t, http.StatusFound, resp.status, string(resp.body))
+
+	loc, err := url.Parse(resp.header.Get("Location"))
+	require.NoError(t, err)
+
+	return loc
+}
+
+func TestOIDCSignInFailures(t *testing.T) {
+	tests := []struct {
+		name string
+		opts oidctest.Options
+		want string
+	}{
+		{name: "not in the admin group", opts: oidctest.Options{Username: "guest", Groups: []string{"users"}}, want: auth.ErrNotAdmin.Error()},
+		{name: "a token for another sign-in", opts: oidctest.Options{Username: "household-admin", Groups: []string{"encore-admins"}, WrongNonce: true}, want: "Sign-in failed. Check the server log for details."},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			idp := oidctest.New(t, tt.opts)
+
+			h := newHarness(t, harnessOpts{noKodi: true, env: []string{
+				"ENCORE_AUTH_MODE=oidc",
+				"ENCORE_AUTH_OIDC_ISSUER=" + idp.URL,
+				"ENCORE_AUTH_OIDC_CLIENT_ID=" + oidctest.DefaultClientID,
+				"ENCORE_AUTH_OIDC_CLIENT_SECRET=" + oidctest.DefaultClientSecret,
+				"ENCORE_AUTH_OIDC_ADMIN_GROUP=encore-admins",
+			}})
+			c := h.client()
+
+			loc := oidcSignIn(t, c)
+			assert.Equal(t, "/login", loc.Path)
+			assert.Equal(t, tt.want, loc.Query().Get("error"))
+
+			var st AuthState
+
+			c.json(http.MethodGet, "/api/v1/auth/state", nil, http.StatusOK, &st)
+			assert.False(t, st.Authenticated)
+			assert.Equal(t, http.StatusUnauthorized, c.do(http.MethodGet, "/api/v1/overview", nil).status)
+		})
+	}
+}
+
+func TestLogout(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+	other := h.admin()
+
+	assert.Equal(t, http.StatusUnauthorized, h.client().do(http.MethodPost, "/api/v1/auth/logout", nil).status, "only a signed-in admin can sign out")
+
+	c.json(http.MethodPost, "/api/v1/auth/logout", nil, http.StatusNoContent, nil)
+
+	var st AuthState
+
+	c.json(http.MethodGet, "/api/v1/auth/state", nil, http.StatusOK, &st)
+	assert.False(t, st.Authenticated)
+	assert.Nil(t, st.User.V)
+	other.json(http.MethodGet, "/api/v1/overview", nil, http.StatusOK, nil)
+}
+
+func TestTOTPRoutesNeedASignedInAdmin(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	h.admin()
+
+	c := h.client()
+
+	for _, path := range []string{"/api/v1/auth/totp/enroll", "/api/v1/auth/totp/confirm", "/api/v1/auth/totp/disable"} {
+		assert.Equal(t, http.StatusUnauthorized, c.do(http.MethodPost, path, map[string]string{"code": "123456"}).status, path)
+	}
+
+	admin := h.admin()
+	p := admin.do(http.MethodPost, "/api/v1/auth/totp/disable", map[string]string{"code": "123"}).problem(t)
+	assert.Equal(t, http.StatusUnprocessableEntity, p.Status, "a code has at least six digits")
+}
+
+func TestHeaderModeAuthState(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true, env: []string{"ENCORE_AUTH_MODE=header", "ENCORE_SERVER_TRUSTED_PROXIES=172.20.0.0/16"}})
+
+	rec := h.handlerRequest(http.MethodGet, "/api/v1/auth/state", "192.0.2.50", map[string]string{"Remote-User": "spoofed"})
+	require.Equal(t, http.StatusOK, rec.Code)
+
+	var st AuthState
+
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &st))
+	assert.False(t, st.Authenticated, "headers from an untrusted peer sign no one in")
+	assert.Nil(t, st.User.V)
+	assert.False(t, st.LocalLogin)
+	assert.Nil(t, st.OIDCLoginURL)
+	assert.NotEmpty(t, st.CSRFToken)
 }
