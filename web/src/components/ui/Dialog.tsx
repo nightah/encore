@@ -14,7 +14,7 @@ interface DialogProps {
   description?: ReactNode;
   children?: ReactNode;
   /** Buttons row; usually a Close and a submit button. */
-  footer?: ReactNode;
+  footer: ReactNode;
   size?: "md" | "lg";
 }
 
@@ -50,9 +50,7 @@ export function Dialog({ open, onClose, title, description, children, footer, si
             </BaseDialog.Close>
           </div>
           {children}
-          {footer ? (
-            <div className="flex flex-wrap justify-end gap-2.5 border-line-soft border-t pt-4">{footer}</div>
-          ) : null}
+          <div className="flex flex-wrap justify-end gap-2.5 border-line-soft border-t pt-4">{footer}</div>
         </BaseDialog.Popup>
       </BaseDialog.Portal>
     </BaseDialog.Root>
