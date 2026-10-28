@@ -193,6 +193,50 @@ func TestVolume(t *testing.T) {
 	assert.Equal(t, []string{"Volume set 70", "Volume set 35", "Volume set 100", "Volume step -10", "Volume toggle mute"}, backend.Calls())
 }
 
+func TestSetVolumeScaleBoundaries(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		level int
+		set   string
+	}{
+		{"zero is silent", 0, "Volume set 0"},
+		{"ten is the top of the 0–10 scale", 10, "Volume set 100"},
+		{"eleven is a percentage", 11, "Volume set 11"},
+		{"a negative level is clamped to zero", -3, "Volume set 0"},
+		{"a large negative level is clamped to zero", -40, "Volume set 0"},
+		{"just over a hundred is clamped", 101, "Volume set 100"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			target, backend, _ := newTarget()
+
+			o := newService().SetVolume(t.Context(), target, tc.level)
+
+			require.NoError(t, o.Err)
+			assert.Equal(t, "volume.set", o.Say.ID)
+			assert.Equal(t, []string{tc.set}, backend.Calls())
+		})
+	}
+}
+
+func TestPendingChoicesAddToTheCallersHints(t *testing.T) {
+	var got match.Query
+
+	target, _, _ := newTarget()
+	target.Matcher = matcherFunc(func(q match.Query) match.Result {
+		got = q
+
+		return match.Result{Decision: match.DecisionNotFound}
+	})
+
+	newService().PlayTitle(t.Context(), target, TitleRequest{
+		Query:   "dune",
+		Hints:   map[string]float64{"movie/1": 0.1, "movie/2": 0.05},
+		Pending: []Choice{{DocID: "movie/1"}, {DocID: "movie/3"}},
+	}, nil)
+
+	assert.InDeltaMapValues(t, map[string]float64{"movie/1": 0.1 + pendingBoost, "movie/2": 0.05, "movie/3": pendingBoost}, got.Hints, 1e-9)
+}
+
 func TestNowPlaying(t *testing.T) {
 	target, backend, _ := newTarget()
 	svc := newService()
