@@ -63,6 +63,8 @@ export function StepHeading({ children, intro }: { children: ReactNode; intro?: 
 /** "pending" is a check still running. */
 export type CheckLevel = "ok" | "warn" | "fail" | "pending";
 
+const DOT_TONES = { fail: "bad", ok: "ok", warn: "warn" } as const;
+
 /** A bordered list of pass/warn/fail checks (reachability, Kodi connection test). */
 export function CheckList({
   title,
@@ -90,7 +92,7 @@ export function CheckList({
             {check.level === "pending" ? (
               <LoaderCircle aria-hidden className="mt-1 size-3.5 shrink-0 animate-spin text-muted" />
             ) : (
-              <Dot tone={check.level === "ok" ? "ok" : check.level === "warn" ? "warn" : "bad"} className="mt-1.5" />
+              <Dot tone={DOT_TONES[check.level]} className="mt-1.5" />
             )}
             <span className="sr-only">{t(`check.${check.level}`)}</span>
             <span className="flex min-w-0 flex-1 flex-col gap-0.5">
