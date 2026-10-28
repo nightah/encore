@@ -60,6 +60,10 @@ func TestNormalize(t *testing.T) {
 		{"en", "Harry Potter and the Deathly Hallows Part 1", "harry potter and the deathly hallows 1"},
 		{"en", "Chapter", "chapter"},
 		{"en", "hundred and", "100 and"},
+		{"en", "twenty eleven", "2011"},
+		{"en", "one twenty", "1 20"},
+		{"en", "two hundred hundred", "200 100"},
+		{"en", "one thousand thousand", "1000 1000"},
 		// German: umlauts, ß, articles, compounds and ordinals.
 		{"de", "Die Brücke", "brucke"},
 		{"de", "Der Schuh des Manitu", "schuh des manitu"},
@@ -86,6 +90,7 @@ func TestNormalize(t *testing.T) {
 		{"de", "Du hast mich tausendmal belogen", "du hast mich tausendmal belogen"},
 		{"de", "Elfenbein", "elfenbein"},
 		{"de", "Achtung", "achtung"},
+		{"de", "zweiundzwanzig drei", "22 3"},
 		// French: elision and articles.
 		{"fr", "L'Auberge espagnole", "auberge espagnole"},
 		{"fr", "Le Fabuleux Destin d'Amélie Poulain", "fabuleux destin d amelie poulain"},
@@ -98,6 +103,8 @@ func TestNormalize(t *testing.T) {
 		{"es", "El Laberinto del Fauno", "laberinto del fauno"},
 		{"es", "Veintiuno", "21"},
 		{"es", "treinta y uno", "31"},
+		{"es", "uno veintiuno", "1 21"},
+		{"es", "veinte veintiuno", "2021"},
 		{"es", "La Casa de Papel parte dos", "casa de papel 2"},
 		// Spanish hundreds from doscientos to novecientos, in either gender.
 		{"es", "argentina mil novecientos ochenta y cinco", "argentina 1985"},
@@ -199,6 +206,7 @@ func TestShortenings(t *testing.T) {
 		{"Dune: Part Two", []string{"Dune", "Part Two"}},
 		{"Star Wars: Episode IV - A New Hope", []string{"Star Wars", "Episode IV - A New Hope", "Star Wars: Episode IV", "A New Hope"}},
 		{"The Office (US)", []string{"The Office"}},
+		{"The Office (US", []string{"The Office"}},
 		{"Seinfeld", nil},
 	}
 
