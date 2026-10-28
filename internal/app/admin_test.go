@@ -143,6 +143,72 @@ func TestInstanceStatusReportsRejectedCredentials(t *testing.T) {
 	assert.True(t, st.Unauthorized)
 }
 
+func TestInstanceStatusReportsRejectedCredentialsWhileTheWebSocketIsUp(t *testing.T) {
+	inBubble(t, func(t *testing.T) {
+		srv := newKodi(t, fakekodi.Options{Username: "kodi", Password: "secret"})
+		h := startHarness(t, onFakes(defaultTuning()), config.KodiInstance{Name: "Lounge", URL: srv.URL(), WebSocketURL: srv.WebSocketURL(), Username: "kodi", Password: "wrong"})
+		inst := h.instance(t)
+
+		// Kodi doesn't authenticate its WebSocket, so it connects whatever the credentials.
+		settled(t, func() bool { return inst.Client.Transport().Connected() })
+
+		for range 2 {
+			st, err := h.app.InstanceStatus(t.Context(), inst.id, false)
+			require.NoError(t, err)
+			assert.True(t, st.Connected)
+			assert.True(t, st.Unauthorized, "HTTP refuses the credentials, so images and the HTTP fallback fail")
+			assert.True(t, st.Reachable, "Kodi still answers over the WebSocket")
+		}
+	})
+}
+
+func TestInstanceStatusChecksAcceptedCredentialsOverHTTPOnlyNowAndThen(t *testing.T) {
+	inBubble(t, func(t *testing.T) {
+		srv := newKodi(t, fakekodi.Options{Username: "kodi", Password: "secret"})
+		srv.SetWebSocket(false)
+
+		h := startHarness(t, onFakes(defaultTuning()), config.KodiInstance{Name: "Lounge", URL: srv.URL(), WebSocketURL: srv.WebSocketURL(), Username: "kodi", Password: "secret"})
+		inst := h.instance(t)
+
+		httpPings := func() int {
+			n := 0
+
+			for _, c := range srv.CallsTo("JSONRPC.Ping") {
+				if !c.WebSocket {
+					n++
+				}
+			}
+
+			return n
+		}
+
+		status := func(info bool) InstanceStatus {
+			st, err := h.app.InstanceStatus(t.Context(), inst.id, info)
+			require.NoError(t, err)
+			assert.True(t, st.Reachable)
+			assert.False(t, st.Unauthorized)
+
+			return st
+		}
+
+		// The first status pings over HTTP with the WebSocket down, which records the credentials as accepted.
+		status(false)
+		require.Equal(t, 1, httpPings())
+
+		srv.SetWebSocket(true)
+		soon(t, func() bool { return inst.Client.Transport().Connected() })
+
+		for range 3 {
+			assert.True(t, status(false).Connected)
+		}
+
+		assert.Equal(t, 1, httpPings(), "accepted credentials aren't asked about again on every poll")
+
+		status(true)
+		assert.Equal(t, 2, httpPings(), "the info probe checks them again")
+	})
+}
+
 func TestConfiguredCredentialsReachKodi(t *testing.T) {
 	srv := newKodi(t, fakekodi.Options{Username: "kodi", Password: "s3cret"})
 
