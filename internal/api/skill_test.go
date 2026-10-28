@@ -870,3 +870,150 @@ func TestAmazonAuthorizeOverHTTPSReturnsToEncore(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, localReturnURL, u.Query().Get("redirect_uri"), "the paste flow can still be chosen")
 }
+
+func TestSkillSettingsRefuseANameTheSkillCantUse(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+
+	settings := deployableSettings()
+	settings["skill_name"] = "K"
+
+	p := c.do(http.MethodPut, "/api/v1/skill/settings", settings).problem(t)
+	require.Equal(t, http.StatusUnprocessableEntity, p.Status)
+	assert.Contains(t, p.Detail, `skill name "K" is too short`)
+	assert.NotContains(t, p.Detail, "skillpkg:", "the package builder's prefix means nothing to the user")
+
+	var stored skillSettings
+
+	require.ErrorIs(t, h.app.DB().Settings().Get(t.Context(), skillSettingsKey, &stored), store.ErrNotFound, "nothing is saved")
+}
+
+func TestSavingUnchangedContentKeepsTheDefault(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+
+	overridden := func() bool {
+		var o map[string]any
+		if err := h.app.DB().Settings().Get(t.Context(), overridesSetting, &o); err != nil {
+			require.ErrorIs(t, err, store.ErrNotFound)
+
+			return false
+		}
+
+		_, ok := o["alexa.content"]
+
+		return ok
+	}
+
+	var info SkillInfo
+
+	c.json(http.MethodGet, "/api/v1/skill", nil, http.StatusOK, &info)
+	require.NotEmpty(t, info.Content)
+
+	c.json(http.MethodPut, "/api/v1/skill/content", map[string]any{"content": info.Content}, http.StatusOK, &info)
+	assert.False(t, overridden(), "choosing what is already played stores nothing, so the default still applies")
+
+	settings := deployableSettings()
+	settings["content"] = info.Content
+	c.json(http.MethodPut, "/api/v1/skill/settings", settings, http.StatusOK, &info)
+	assert.False(t, overridden(), "nor when it comes with the other settings")
+
+	c.json(http.MethodPut, "/api/v1/skill/content", map[string]any{"content": []string{"movies"}}, http.StatusOK, &info)
+	assert.True(t, overridden(), "a change is stored")
+	assert.Equal(t, []string{"movies"}, info.Content)
+}
+
+func TestAmazonAuthorisationNeedsTheClientID(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+
+	// A secret without its client ID, as a save that failed halfway would leave.
+	require.NoError(t, h.app.Secrets().Put(t.Context(), lwaSecretRef, []byte(h.smapi.Options().ClientSecret)))
+
+	var auth AuthorizeInfo
+
+	c.json(http.MethodGet, "/api/v1/skill/amazon/authorize", nil, http.StatusOK, &auth)
+	assert.Empty(t, auth.URL, "no consent URL without a client ID")
+	assert.Len(t, auth.ReturnURLs, 2)
+
+	assert.Equal(t, http.StatusConflict, c.do(http.MethodPost, "/api/v1/skill/amazon/paste", map[string]string{"refresh_token": smapitest.DefaultRefreshToken}).status)
+}
+
+func TestAmazonCallbackFailures(t *testing.T) {
+	for name, tc := range map[string]struct {
+		code   string
+		before func(t *testing.T, h *harness)
+		want   string
+	}{
+		"Amazon refuses the code": {code: "not-the-code", want: "invalid_grant"},
+		"the credentials were removed meanwhile": {
+			code:   smapitest.DefaultAuthCode,
+			before: func(t *testing.T, h *harness) { require.NoError(t, h.app.Secrets().Delete(t.Context(), lwaSecretRef)) },
+			want:   errNoLWACredentials.Error(),
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			h := newHarness(t, harnessOpts{noKodi: true})
+			c := h.admin()
+			o := h.smapi.Options()
+			c.json(http.MethodPut, "/api/v1/skill/amazon/credentials", map[string]string{"client_id": o.ClientID, "client_secret": o.ClientSecret}, http.StatusNoContent, nil)
+
+			var auth AuthorizeInfo
+
+			c.json(http.MethodGet, "/api/v1/skill/amazon/authorize?then=setup", nil, http.StatusOK, &auth)
+
+			u, err := url.Parse(auth.URL)
+			require.NoError(t, err)
+
+			if tc.before != nil {
+				tc.before(t, h)
+			}
+
+			resp := h.client().do(http.MethodGet, "/api/v1/oauth/lwa/callback?code="+tc.code+"&state="+url.QueryEscape(u.Query().Get("state")), nil)
+			require.Equal(t, http.StatusFound, resp.status)
+
+			loc, err := url.Parse(resp.header.Get("Location"))
+			require.NoError(t, err)
+			assert.Equal(t, "/setup", loc.Path, "back to the page that started it")
+			assert.Contains(t, loc.Query().Get("amazon_error"), tc.want)
+
+			var info SkillInfo
+
+			c.json(http.MethodGet, "/api/v1/skill", nil, http.StatusOK, &info)
+			assert.False(t, info.Amazon.Connected)
+			assert.Contains(t, h.logs.String(), "Login with Amazon failed")
+		})
+	}
+}
+
+func TestSkillPackageNeedsAnHTTPSEndpoint(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+
+	// No endpoint is set, and the one derived from how the browser reached Encore is plain HTTP.
+	settings := deployableSettings()
+	settings["endpoint"] = map[string]any{"url": ""}
+	c.json(http.MethodPut, "/api/v1/skill/settings", settings, http.StatusOK, nil)
+
+	p := c.do(http.MethodGet, "/api/v1/skill/package", nil).problem(t)
+	require.Equal(t, http.StatusUnprocessableEntity, p.Status)
+	assert.Contains(t, p.Detail, "must be an https:// URL")
+	assert.Contains(t, p.Detail, h.server.URL+"/api/v1/alexa")
+	assert.NotContains(t, p.Detail, "skillpkg:")
+}
+
+func TestDeployRefusesStoredSettingsThatNoLongerBuild(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+
+	// Saved settings are checked as they are saved; these could only come from an older release or a restored backup.
+	require.NoError(t, h.app.DB().Settings().Set(t.Context(), skillSettingsKey, skillSettings{
+		SkillName: "K", Endpoint: SkillEndpoint{URL: "https://encore.example.net/api/v1/alexa"}, Privacy: answeredPrivacy(),
+	}))
+
+	p := c.do(http.MethodPost, "/api/v1/skill/deploy", map[string]any{}).problem(t)
+	require.Equal(t, http.StatusUnprocessableEntity, p.Status)
+	assert.Contains(t, p.Detail, "too short")
+	assert.NotContains(t, p.Detail, "skillpkg:")
+	assert.Zero(t, h.smapi.Exchanges(), "nothing reaches Amazon")
+}
