@@ -1,6 +1,7 @@
 package match
 
 import (
+	"cmp"
 	"context"
 	"math"
 	"slices"
@@ -789,18 +790,11 @@ func (h topHits) down(i int) {
 	}
 }
 
-// sorted returns the hits best first.
+// sorted returns the hits best first: higher scores, then earlier slots, the reverse of worse.
 func (h topHits) sorted() []slotHit {
 	out := []slotHit(h)
 	slices.SortFunc(out, func(a, b slotHit) int {
-		switch {
-		case worse(b, a):
-			return -1
-		case worse(a, b):
-			return 1
-		default:
-			return 0
-		}
+		return cmp.Or(cmp.Compare(b.score, a.score), cmp.Compare(a.slot, b.slot))
 	})
 
 	return out

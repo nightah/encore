@@ -642,3 +642,49 @@ func TestPropOSAWithin(t *testing.T) {
 		assert.Equal(t, want, osaWithin([]rune(a), b, maxD), "osaWithin(%q, %q, %d)", a, b, maxD)
 	})
 }
+
+// TestInvertedVeryFrequentTerms indexes titles that repeat a trigram more often than a posting can count, and more often than the square-root table covers, and checks their scores against the reference before and after a compaction moves them to new slots.
+func TestInvertedVeryFrequentTerms(t *testing.T) {
+	l := languageFor("en")
+	inv := newInvertedRetriever(l)
+	m := newInvModel()
+
+	docs := []Doc{
+		{ID: "few", Kind: media.KindSong, Title: strings.Repeat("na ", 12)},
+		{ID: "many", Kind: media.KindSong, Title: strings.Repeat("na ", 40)},
+		{ID: "most", Kind: media.KindSong, Title: strings.Repeat("na ", 100)},
+		{ID: "gone", Kind: media.KindSong, Title: strings.Repeat("na ", 90)},
+		{ID: "other", Kind: media.KindMovie, Title: "Banana Republic"},
+	}
+
+	es := entriesOf(l, docs)
+	require.NoError(t, inv.upsert(es))
+	m.upsert(es)
+
+	require.NoError(t, inv.remove([]string{"gone"}))
+	m.remove([]string{"gone"})
+
+	queries := []string{"nanana", "na na na na", "banana"}
+	checkRankings(t, inv, m, queries)
+
+	inv.mu.Lock()
+	c := inv.beginCompaction()
+	inv.mu.Unlock()
+	inv.compactInto(c)
+
+	require.Zero(t, inv.dead)
+	checkInverted(t, inv, m)
+	checkRankings(t, inv, m, queries)
+}
+
+// TestInvertedNoCandidatesWanted asks for zero candidates, which the retriever contract allows.
+func TestInvertedNoCandidatesWanted(t *testing.T) {
+	l := languageFor("en")
+	inv := newInvertedRetriever(l)
+	require.NoError(t, inv.upsert(entriesOf(l, []Doc{movie("m", "Inception", 2010)})))
+
+	qf := l.newForm(l.normalizeSpelled("inception", false))
+	ids, err := inv.candidates(t.Context(), &qf, nil, 0)
+	require.NoError(t, err)
+	assert.Empty(t, ids)
+}
