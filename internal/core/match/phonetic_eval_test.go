@@ -234,7 +234,10 @@ func (s evalScore) String() string {
 // fuzzyGate is how many more correct decisions than English Double Metaphone internal/fuzzy must make per language: the French and Spanish encoders earn their place only with a measurable gain.
 var fuzzyGate = map[string]int{"fr": 3, "es": 3}
 
-// TestPhoneticEval measures match accuracy per language through the real pipeline (normalise, alias, retrieve, score, decide) with each candidate phonetic encoder swapped in. It logs a table, the production encoder's misses and every case another encoder gains or loses against it; run it with -v to read them. internal/fuzzy is held to fuzzyGate against English Double Metaphone with no wrong plays added, and must not lose a decision or add a wrong play against production.
+// ownEncoder lists the gated languages production keys with their own encoder. Production is held to the same gate there, so a language that lost its encoder would fail.
+var ownEncoder = map[string]bool{"es": true}
+
+// TestPhoneticEval measures match accuracy per language through the real pipeline (normalise, alias, retrieve, score, decide) with each candidate phonetic encoder swapped in. It logs a table, the production encoder's misses and every case another encoder gains or loses against it; run it with -v to read them. internal/fuzzy, and production in the languages listed in ownEncoder, are held to fuzzyGate against English Double Metaphone with no wrong plays added, and internal/fuzzy must not lose a decision or add a wrong play against production.
 func TestPhoneticEval(t *testing.T) {
 	suites := evalSuites(t)
 	codes := slices.Sorted(func(yield func(string) bool) {
@@ -293,6 +296,12 @@ func TestPhoneticEval(t *testing.T) {
 				switch enc.name {
 				case "english":
 					english = out
+
+					if ownEncoder[code] {
+						got, eng := tally(base), tally(out)
+						assert.GreaterOrEqual(t, got.correct, eng.correct+fuzzyGate[code], "%s %s: production must gain at least %d correct decisions over english", retr, code, fuzzyGate[code])
+						assert.LessOrEqual(t, got.wrong, eng.wrong, "%s %s: production must not add wrong plays over english", retr, code)
+					}
 				case "fuzzy":
 					got, was, eng := tally(out), tally(base), tally(english)
 					assert.GreaterOrEqual(t, got.correct, was.correct, "%s %s: fuzzy must not lose correct decisions against production", retr, code)

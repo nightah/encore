@@ -7,6 +7,7 @@ import (
 
 	"github.com/nightah/encore/internal/fuzzy/phonetic/de"
 	"github.com/nightah/encore/internal/fuzzy/phonetic/en"
+	"github.com/nightah/encore/internal/fuzzy/phonetic/es"
 )
 
 var languages = map[string]*language{
@@ -254,7 +255,7 @@ func spanish() *language {
 		}.build(),
 		conj:     set("y"),
 		parts:    set("parte", "capitulo"), //nolint:misspell // Spanish for "chapter".
-		phonetic: phoneticKeysOf(en.Encoder{}),
+		phonetic: phoneticKeysOf(es.Encoder{}),
 	}
 }
 
