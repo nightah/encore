@@ -593,3 +593,122 @@ func TestRunDoesNotWarnWhenStopping(t *testing.T) {
 
 	assert.NotContains(t, buf.String(), "level=WARN", "an interrupted sync means Encore is stopping, not that something failed")
 }
+
+func TestInstance(t *testing.T) {
+	assert.Equal(t, "lounge", New("lounge", seed(), Options{}).Instance())
+}
+
+func TestOnChangeRemove(t *testing.T) {
+	b := seed()
+	c := New("lounge", b, Options{Kinds: []media.Kind{media.KindMovie}})
+
+	var first, second int
+
+	removeFirst := c.OnChange(func(string, []media.Item, []media.Ref) { first++ })
+	c.OnChange(func(string, []media.Item, []media.Ref) { second++ })
+
+	require.NoError(t, c.Sync(t.Context()))
+	assert.Equal(t, 1, first)
+	assert.Equal(t, 1, second)
+
+	removeFirst()
+	removeFirst()
+
+	b.put(movie(3, "Conclave", t0))
+	require.NoError(t, c.Sync(t.Context()))
+	assert.Equal(t, 1, first, "a removed hook isn't called")
+	assert.Equal(t, 2, second, "removing one hook leaves the others")
+}
+
+func TestUnchangedItemsAreNotReported(t *testing.T) {
+	b := seed()
+	c, rec := newCatalog(b, newClock(), Options{Kinds: []media.Kind{media.KindMovie, media.KindArtist}})
+
+	require.NoError(t, c.Sync(t.Context()))
+	rec.take()
+
+	require.NoError(t, c.Sync(t.Context()))
+	assert.Empty(t, rec.take(), "a sync that changes nothing reports nothing")
+
+	watched := movie(2, "Hot Fuzz", t0.Add(-48*time.Hour))
+	watched.PlayCount = 1
+	b.put(watched)
+
+	require.NoError(t, c.Sync(t.Context()))
+
+	changes := rec.take()
+	require.Len(t, changes, 1)
+	assert.Equal(t, []int{2}, ids(changes[0].upserted), "only the changed item is reported")
+	assert.Empty(t, changes[0].removed)
+}
+
+func TestItemEquality(t *testing.T) {
+	base := media.Item{
+		Kind: media.KindEpisode, ID: 1, Title: "T", SortTitle: "S", OriginalTitle: "O", Year: 2020, Genres: []string{"Drama"},
+		ShowID: 2, ShowTitle: "Show", Season: 1, Episode: 2, Artist: "A", Album: "B", PlayCount: 1, Resume: time.Minute,
+		Runtime: time.Hour, DateAdded: t0, LastPlayed: t0,
+	}
+
+	same := base
+	same.Genres = []string{"Drama"}
+	same.DateAdded = t0.In(time.FixedZone("AEDT", 11*60*60))
+	assert.True(t, equal(&base, &same), "a copy is equal, whatever the time zone")
+
+	for name, change := range map[string]func(*media.Item){
+		"kind":           func(i *media.Item) { i.Kind = media.KindMovie },
+		"id":             func(i *media.Item) { i.ID++ },
+		"title":          func(i *media.Item) { i.Title = "U" },
+		"sort title":     func(i *media.Item) { i.SortTitle = "U" },
+		"original title": func(i *media.Item) { i.OriginalTitle = "U" },
+		"year":           func(i *media.Item) { i.Year++ },
+		"genres":         func(i *media.Item) { i.Genres = []string{"Drama", "Crime"} },
+		"show":           func(i *media.Item) { i.ShowID++ },
+		"show title":     func(i *media.Item) { i.ShowTitle = "U" },
+		"season":         func(i *media.Item) { i.Season++ },
+		"episode":        func(i *media.Item) { i.Episode++ },
+		"artist":         func(i *media.Item) { i.Artist = "U" },
+		"album":          func(i *media.Item) { i.Album = "U" },
+		"play count":     func(i *media.Item) { i.PlayCount++ },
+		"resume":         func(i *media.Item) { i.Resume++ },
+		"runtime":        func(i *media.Item) { i.Runtime++ },
+		"date added":     func(i *media.Item) { i.DateAdded = i.DateAdded.Add(time.Second) },
+		"last played":    func(i *media.Item) { i.LastPlayed = time.Time{} },
+	} {
+		other := base
+		other.Genres = []string{"Drama"}
+		change(&other)
+		assert.False(t, equal(&base, &other), name)
+	}
+}
+
+func TestRestoreBareSnapshot(t *testing.T) {
+	b := seed()
+	c, _ := newCatalog(b, newClock(), Options{})
+
+	require.NoError(t, c.Restore(Snapshot{Instance: "lounge", Items: []media.Item{show(10, "Severance")}}))
+
+	eps, err := c.Episodes(t.Context(), 10)
+	require.NoError(t, err, "a snapshot without watermarks still takes new ones")
+	assert.Equal(t, []int{101, 102}, ids(eps))
+	assert.True(t, c.Stats().LastSync.IsZero())
+
+	require.NoError(t, c.Delta(t.Context()))
+	assert.Equal(t, []int{1, 2}, ids(c.Items(media.KindMovie)), "never synced, so the delta is a full sync")
+}
+
+func TestRestoreWithoutTVDropsEpisodes(t *testing.T) {
+	b := seed()
+	src, _ := newCatalog(b, newClock(), Options{})
+	require.NoError(t, src.Sync(t.Context()))
+
+	_, err := src.Episodes(t.Context(), 10)
+	require.NoError(t, err)
+
+	c, _ := newCatalog(b, newClock(), Options{Kinds: []media.Kind{media.KindMovie}})
+	require.NoError(t, c.Restore(src.Snapshot()))
+
+	assert.Zero(t, c.Stats().Episodes)
+	_, ok := c.Get(media.Ref{Kind: media.KindEpisode, ID: 101})
+	assert.False(t, ok, "episodes of shows the catalog doesn't load aren't restored")
+	assert.Equal(t, []int{1, 2}, ids(c.Items(media.KindMovie)))
+}

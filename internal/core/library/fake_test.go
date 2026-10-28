@@ -17,6 +17,7 @@ type fakeBackend struct {
 	mu      sync.Mutex
 	items   map[media.Ref]media.Item
 	fail    map[media.Kind]error
+	failing map[string]error
 	calls   map[string]int
 	sinces  []time.Time
 	fn      func(media.Event)
@@ -26,10 +27,11 @@ type fakeBackend struct {
 
 func newFakeBackend(items ...media.Item) *fakeBackend {
 	f := &fakeBackend{
-		items:  map[media.Ref]media.Item{},
-		fail:   map[media.Kind]error{},
-		calls:  map[string]int{},
-		subbed: make(chan struct{}),
+		items:   map[media.Ref]media.Item{},
+		fail:    map[media.Kind]error{},
+		failing: map[string]error{},
+		calls:   map[string]int{},
+		subbed:  make(chan struct{}),
 	}
 
 	for i := range items {
@@ -66,6 +68,21 @@ func (f *fakeBackend) record(method string) {
 	f.mu.Lock()
 	f.calls[method]++
 	f.mu.Unlock()
+}
+
+// failOn makes method fail with err; a nil err makes it work again.
+func (f *fakeBackend) failOn(method string, err error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	f.failing[method] = err
+}
+
+func (f *fakeBackend) err(method string) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+
+	return f.failing[method]
 }
 
 func (f *fakeBackend) where(keep func(*media.Item) bool) []media.Item {
@@ -114,6 +131,10 @@ func (f *fakeBackend) Library(_ context.Context, kind media.Kind) ([]media.Item,
 func (f *fakeBackend) Episodes(_ context.Context, showID int) ([]media.Item, error) {
 	f.record("Episodes")
 
+	if err := f.err("Episodes"); err != nil {
+		return nil, err
+	}
+
 	eps := f.where(func(it *media.Item) bool { return it.Kind == media.KindEpisode && it.ShowID == showID })
 	sortEpisodes(eps)
 
@@ -127,6 +148,10 @@ func (f *fakeBackend) RecentlyAdded(_ context.Context, kind media.Kind, since ti
 	f.sinces = append(f.sinces, since)
 	f.mu.Unlock()
 
+	if err := f.err("RecentlyAdded"); err != nil {
+		return nil, err
+	}
+
 	items := f.where(func(it *media.Item) bool { return it.Kind == kind && it.DateAdded.After(since) })
 	slices.SortFunc(items, func(a, b media.Item) int { return b.DateAdded.Compare(a.DateAdded) })
 
@@ -135,6 +160,10 @@ func (f *fakeBackend) RecentlyAdded(_ context.Context, kind media.Kind, since ti
 
 func (f *fakeBackend) Item(_ context.Context, ref media.Ref) (media.Item, error) {
 	f.record("Item")
+
+	if err := f.err("Item"); err != nil {
+		return media.Item{}, err
+	}
 
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -162,6 +191,13 @@ func (*fakeBackend) Volume(context.Context, media.VolumeChange) (media.VolumeSta
 func (*fakeBackend) NowPlaying(context.Context) (*media.NowPlaying, error) { return nil, nil }
 
 func (f *fakeBackend) Subscribe(ctx context.Context, fn func(media.Event)) error {
+	f.record("Subscribe")
+
+	// A failing subscription ends straight away, as when the connection drops.
+	if err := f.err("Subscribe"); err != nil {
+		return err
+	}
+
 	f.mu.Lock()
 	f.fn = fn
 	f.mu.Unlock()
@@ -179,6 +215,10 @@ type searchingBackend struct {
 
 func (s searchingBackend) Search(_ context.Context, kind media.Kind, title string) ([]media.Item, error) {
 	s.record("Search")
+
+	if err := s.err("Search"); err != nil {
+		return nil, err
+	}
 
 	title = strings.ToLower(title)
 
