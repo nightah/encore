@@ -148,6 +148,14 @@ func TestActiveOwner(t *testing.T) {
 	assert.Equal(t, "pod-1", name)
 	assert.True(t, seen.Equal(now))
 
+	_, _, active, err = ActiveOwner(t.Context(), bs, now.Add(ownerStale-time.Millisecond))
+	require.NoError(t, err)
+	assert.True(t, active, "a heartbeat is fresh until it is ownerStale old")
+
+	_, _, active, err = ActiveOwner(t.Context(), bs, now.Add(ownerStale))
+	require.NoError(t, err)
+	assert.False(t, active, "a heartbeat exactly ownerStale old is stale")
+
 	_, _, active, err = ActiveOwner(t.Context(), bs, now.Add(time.Hour))
 	require.NoError(t, err)
 	assert.False(t, active, "a stale heartbeat")
@@ -420,6 +428,19 @@ func TestRestoreIntoAnUnusablePath(t *testing.T) {
 
 	_, err := Restore(t.Context(), s, filepath.Join(file, "encore.db"))
 	require.Error(t, err)
+
+	// A non-empty directory where the database belongs cannot be replaced, so the final rename fails.
+	dir := t.TempDir()
+	path := filepath.Join(dir, "encore.db")
+	require.NoError(t, os.MkdirAll(filepath.Join(path, "occupied"), 0o700))
+
+	ok, err := Restore(t.Context(), s, path)
+	require.Error(t, err, "a failed rename is reported, not a restored database")
+	assert.True(t, ok, "a saved database did exist")
+
+	entries, err := os.ReadDir(dir)
+	require.NoError(t, err)
+	assert.Len(t, entries, 1, "the temporary copy is removed")
 }
 
 func TestSaveRetriesAFailedUpload(t *testing.T) {
