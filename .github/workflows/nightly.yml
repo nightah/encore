@@ -122,7 +122,7 @@ jobs:
         run: docker logs kodi || true
 
   store-contract:
-    name: Storage contract (MinIO)
+    name: Storage contract (MinIO, rclone WebDAV)
     runs-on: ubuntu-26.04
     timeout-minutes: 15
     env:
@@ -131,6 +131,9 @@ jobs:
       ENCORE_CONTRACT_S3_SECRET_KEY: minioadmin
       ENCORE_CONTRACT_S3_BUCKET: encore-contract
       ENCORE_CONTRACT_S3_REGION: us-east-1
+      ENCORE_CONTRACT_WEBDAV_URL: http://127.0.0.1:8081/
+      ENCORE_CONTRACT_WEBDAV_USERNAME: encore
+      ENCORE_CONTRACT_WEBDAV_PASSWORD: encore-contract
     steps:
       - name: Harden the runner (audit all outbound calls)
         uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
@@ -173,12 +176,30 @@ jobs:
           docker logs minio
           exit 1
 
+      - name: Start rclone WebDAV
+        run: |
+          docker run -d --name rclone -p 8081:80 rclone/rclone:1.75.2 \
+            serve webdav /data --addr :80 \
+            --user "${ENCORE_CONTRACT_WEBDAV_USERNAME}" --pass "${ENCORE_CONTRACT_WEBDAV_PASSWORD}"
+          for _ in $(seq 1 30); do
+            if curl -fsS -o /dev/null -u "${ENCORE_CONTRACT_WEBDAV_USERNAME}:${ENCORE_CONTRACT_WEBDAV_PASSWORD}" \
+                 -X PROPFIND -H 'Depth: 0' "${ENCORE_CONTRACT_WEBDAV_URL}"; then
+              echo "rclone is up"
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs rclone
+          exit 1
+
       - name: Contract tests
         run: go test -tags contract -count=1 -v ./internal/blobstore/...
 
-      - name: MinIO logs
+      - name: MinIO and rclone logs
         if: failure()
-        run: docker logs minio || true
+        run: |
+          docker logs minio || true
+          docker logs rclone || true
 
   # Calls Amazon's live Skill Management API, read-only, with a maintainer-owned LWA security profile and refresh token. The secrets live in the smapi-live environment, which only main can deploy to, and the job runs only on main's schedule or a manual run. Without the secrets its steps are skipped rather than failed.
   smapi-live:

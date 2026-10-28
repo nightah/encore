@@ -87,7 +87,7 @@ test-tools: ## Run tools module tests
 test-web: web-install ## Run web unit tests
 	$(PNPM) -C web test
 
-test-contract: ## Run contract tests (needs a real Kodi and MinIO; see the development docs)
+test-contract: ## Run contract tests (needs a real Kodi, MinIO and WebDAV server; see the development docs)
 	$(GO) test -tags contract -count=1 ./internal/backend/kodi/... ./internal/blobstore/... ./internal/app/
 
 web-install: ## Install web dependencies (frozen lockfile)

@@ -55,7 +55,7 @@ To reach it through a reverse proxy, override the host and allowed host names, a
 | `make generate` | Regenerates the Kodi JSON-RPC and SMAPI clients, the OpenAPI document and the docs reference pages |
 | `make build` | Builds the web interface, then `bin/encore` with it embedded |
 | `make docs` / `make docs-dev` | Builds this site into `docs/dist` (checking links) / serves it locally |
-| `make test-contract` | Contract tests against a real Kodi and MinIO |
+| `make test-contract` | Contract tests against a real Kodi, MinIO and WebDAV server |
 | `make docker` | Builds a local container image, `encore:dev` |
 
 ## Generated code
@@ -79,11 +79,18 @@ docker run -d --rm --name kodi -p 8080:8080 -p 9090:9090 \
 docker run -d --rm --name minio -p 9000:9000 \
   -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin \
   cgr.dev/chainguard/minio:latest server /data
+docker run -d --rm --name rclone -p 8081:80 \
+  rclone/rclone:1.75.2 serve webdav /data --addr :80 --user encore --pass encore-contract
 
 export ENCORE_CONTRACT_KODI_URL=http://127.0.0.1:8080/jsonrpc
 export ENCORE_CONTRACT_S3_ENDPOINT=http://127.0.0.1:9000
+export ENCORE_CONTRACT_WEBDAV_URL=http://127.0.0.1:8081/
+export ENCORE_CONTRACT_WEBDAV_USERNAME=encore
+export ENCORE_CONTRACT_WEBDAV_PASSWORD=encore-contract
 make test-contract
 ```
+
+The WebDAV test takes any server: point `ENCORE_CONTRACT_WEBDAV_URL` at a Nextcloud user's files (`…/remote.php/dav/files/<user>/`) to check against Nextcloud instead.
 
 With `ENCORE_CONTRACT_KODI_LIBRARY` also set, the voice tests in `internal/app` ask Encore for the titles in the test library (`internal/backend/kodi/testdata/kodi-headless/library`) and check what it matched and played. Kodi has to have scanned that library first: the "Seed the library" step in `.github/workflows/nightly.yml` adds it and starts the scan.
 
