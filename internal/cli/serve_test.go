@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -289,6 +290,20 @@ func TestServeStopsWhenStartupFails(t *testing.T) {
 				t.Setenv("TMPDIR", missing)
 			},
 			want: "stat " + missing + ": no such file or directory",
+		},
+		"a configured room takes a name another room answers to": {
+			setup: func(t *testing.T, dataDir string) {
+				db := openStore(t, store.DefaultPath(dataDir))
+				study := store.Room{Name: "Study"}
+				require.NoError(t, db.Rooms().Create(t.Context(), &study))
+				_, err := db.Rooms().AddAlias(t.Context(), study.ID, "den")
+				require.NoError(t, err)
+				require.NoError(t, db.Close())
+
+				require.NoError(t, os.WriteFile(filepath.Join(dataDir, "encore.yml"), []byte("rooms:\n  - name: Den\n"), 0o600))
+			},
+			want:  `room "Den": `,
+			locks: true,
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
