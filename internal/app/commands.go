@@ -44,7 +44,7 @@ func (a *App) WakeInstance(ctx context.Context, id int64, timeout time.Duration)
 func (a *App) TestConnection(ctx context.Context, rec store.KodiInstance, password string) []Check {
 	cfg := kodi.Config{
 		Scheme: rec.Scheme, Host: rec.Host, Port: rec.Port, Path: rec.Path, WebSocketPort: rec.WSPort,
-		Username: rec.Username, Password: password, Timeout: testTimeout, DisableWebSocket: true,
+		Username: rec.Username, Password: password, Timeout: testTimeout, DisableWebSocket: true, HTTPClient: a.tune.kodiClient,
 	}
 
 	httpClient := kodi.NewClient(cfg, nil)
