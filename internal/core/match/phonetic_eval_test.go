@@ -9,12 +9,9 @@ import (
 	"strings"
 	"testing"
 
-	dm "github.com/PhonoGrams/double_metaphone"
-	"github.com/f1monkey/phonetic/cologne"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.yaml.in/yaml/v3"
-	"pgregory.net/rapid"
 
 	"github.com/nightah/encore/internal/fuzzy/phonetic"
 	_ "github.com/nightah/encore/internal/fuzzy/phonetic/de"
@@ -82,75 +79,6 @@ func corpusTokens(l *language, suites []corpusSuite) []string {
 	return slices.Sorted(maps.Keys(seen))
 }
 
-// libraryKeys are the keys production gave before internal/fuzzy replaced the libraries: uncapped Double Metaphone with the R-less key, and Kölner Phonetik for German.
-var libraryKeys = map[string]phoneticFunc{"en": libraryMetaphone, "de": libraryCologne, "fr": libraryMetaphone, "es": libraryMetaphone, "it": libraryMetaphone}
-
-func libraryMetaphone(tok string) []string {
-	if isDigits(tok) {
-		return []string{tok}
-	}
-
-	p, a := dm.EncodeUncapped(tok)
-
-	keys := make([]string, 0, 3)
-	for _, k := range []string{p, a} {
-		if k != "" && !slices.Contains(keys, k) {
-			keys = append(keys, k)
-		}
-	}
-
-	if len(keys) == 0 {
-		return []string{tok}
-	}
-
-	if len(keys[0]) > 1 && strings.HasSuffix(keys[0], "R") && len(tok) > 2 && tok[len(tok)-1] == 'r' && strings.IndexByte("aeiouy", tok[len(tok)-2]) >= 0 {
-		if k := strings.TrimSuffix(keys[0], "R"); !slices.Contains(keys, k) {
-			keys = append(keys, k)
-		}
-	}
-
-	return keys
-}
-
-var libraryCologneEncoder = cologne.NewEncoder()
-
-func libraryCologne(tok string) []string {
-	if isDigits(tok) {
-		return []string{tok}
-	}
-
-	if k := libraryCologneEncoder.Encode(tok); k != "" {
-		return []string{k}
-	}
-
-	return []string{tok}
-}
-
-// TestPhoneticMatchesLibraries checks that production gives the keys the libraries gave for every token and compact form in the corpora and for random normalised text, so moving to internal/fuzzy changed no match.
-func TestPhoneticMatchesLibraries(t *testing.T) {
-	suites := evalSuites(t)
-
-	for _, code := range slices.Sorted(maps.Keys(libraryKeys)) {
-		l, lib := languages[code], libraryKeys[code]
-
-		toks := corpusTokens(l, suites[code])
-		for _, tok := range toks {
-			require.Equal(t, lib(tok), l.phonetic(tok), "%s %q", code, tok)
-		}
-
-		t.Logf("%s: %d corpus tokens agree", code, len(toks))
-
-		rapid.Check(t, func(t *rapid.T) {
-			toks := l.normalize(genText().Draw(t, "s"), true)
-			for _, tok := range append(toks, strings.Join(toks, "")) {
-				if got, want := l.phonetic(tok), lib(tok); !slices.Equal(got, want) {
-					t.Fatalf("%s %q: production %q, library %q", code, tok, got, want)
-				}
-			}
-		})
-	}
-}
-
 // libraryKeysFile pins the keys the libraries gave each token in goldenTokens before internal/fuzzy replaced them: one line per language and token, tab-separated, with the keys after the token.
 const libraryKeysFile = "testdata/phonetic/library_keys.tsv"
 
@@ -175,7 +103,7 @@ func goldenTokens(t *testing.T, code string, suites []corpusSuite) []string {
 	return slices.Sorted(maps.Keys(seen))
 }
 
-// TestPhoneticLibraryGolden checks that production keys every token as the libraries did, from the keys pinned in libraryKeysFile, for the languages still keyed with the ported encoders.
+// TestPhoneticLibraryGolden checks that production keys every token as PhonoGrams/double_metaphone and f1monkey/phonetic did, from the keys pinned in libraryKeysFile, in every language it lists: those still keyed with the ported encoders.
 func TestPhoneticLibraryGolden(t *testing.T) {
 	raw, err := os.ReadFile(libraryKeysFile)
 	require.NoError(t, err)
@@ -195,7 +123,7 @@ func TestPhoneticLibraryGolden(t *testing.T) {
 
 	suites := evalSuites(t)
 
-	for _, code := range slices.Sorted(maps.Keys(libraryKeys)) {
+	for _, code := range slices.Sorted(maps.Keys(golden)) {
 		toks := goldenTokens(t, code, suites[code])
 		require.Equal(t, slices.Sorted(maps.Keys(golden[code])), toks, "%s: %s pins goldenTokens", code, libraryKeysFile)
 

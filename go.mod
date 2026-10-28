@@ -3,11 +3,9 @@ module github.com/nightah/encore
 go 1.27
 
 require (
-	github.com/PhonoGrams/double_metaphone v0.1.0
 	github.com/coder/websocket v1.8.15
 	github.com/coreos/go-oidc/v3 v3.21.0
 	github.com/danielgtaylor/huma/v2 v2.40.0
-	github.com/f1monkey/phonetic v1.4.2
 	github.com/go-jose/go-jose/v4 v4.1.6
 	github.com/jamestelfer/billy v0.2.0
 	github.com/knadh/koanf/parsers/yaml v1.1.1
@@ -61,7 +59,6 @@ require (
 	github.com/tinylib/msgp v1.6.5 // indirect
 	github.com/zeebo/xxh3 v1.1.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/exp v0.0.0-20261011100332-faecfb24eb49 // indirect
 	golang.org/x/sync v0.24.0 // indirect
 	gopkg.in/ini.v1 v1.67.3 // indirect
 	modernc.org/libc v1.79.0 // indirect

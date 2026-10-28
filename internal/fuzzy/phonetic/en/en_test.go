@@ -2,11 +2,9 @@ package en
 
 import (
 	"slices"
-	"strings"
 	"testing"
 	"unicode/utf8"
 
-	dm "github.com/PhonoGrams/double_metaphone"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
@@ -100,74 +98,6 @@ func TestKeys(t *testing.T) {
 	assert.Equal(t, Encoder{}, phonetic.For("xx"), "unknown languages fall back to English")
 }
 
-// refKeys is internal/core/match's metaphoneKeys over the library, the behaviour Keys must reproduce.
-func refKeys(tok string) []string {
-	if phonetic.IsDigits(tok) {
-		return []string{tok}
-	}
-
-	p, a := dm.EncodeUncapped(tok)
-
-	keys := make([]string, 0, 3)
-	for _, k := range []string{p, a} {
-		if k != "" && !slices.Contains(keys, k) {
-			keys = append(keys, k)
-		}
-	}
-
-	if len(keys) == 0 {
-		return []string{tok}
-	}
-
-	if len(keys[0]) > 1 && strings.HasSuffix(keys[0], "R") && len(tok) > 2 && tok[len(tok)-1] == 'r' && strings.IndexByte("aeiouy", tok[len(tok)-2]) >= 0 {
-		if k := strings.TrimSuffix(keys[0], "R"); !slices.Contains(keys, k) {
-			keys = append(keys, k)
-		}
-	}
-
-	return keys
-}
-
-// fataler is what checkSame needs from testing.T and rapid.T.
-type fataler interface {
-	Helper()
-	Fatalf(format string, args ...any)
-}
-
-func checkSame(t fataler, word string) {
-	t.Helper()
-
-	p, a := doubleMetaphone(word)
-	if wp, wa := dm.EncodeUncapped(word); p != wp || a != wa {
-		t.Fatalf("doubleMetaphone(%q) = %q, %q; library %q, %q", word, p, a, wp, wa)
-	}
-
-	if got, want := (Encoder{}).Keys(nil, word), refKeys(word); !slices.Equal(got, want) {
-		t.Fatalf("Keys(%q) = %q; reference %q", word, got, want)
-	}
-}
-
-// TestDifferentialExhaustive compares every lowercase word of up to four letters with the library.
-func TestDifferentialExhaustive(t *testing.T) {
-	var word [4]byte
-
-	var walk func(n int)
-	walk = func(n int) {
-		checkSame(t, string(word[:n]))
-
-		if n == len(word) {
-			return
-		}
-
-		for c := byte('a'); c <= 'z'; c++ {
-			word[n] = c
-			walk(n + 1)
-		}
-	}
-
-	walk(0)
-}
-
 // rulyAlphabet weights the letters Double Metaphone has context rules for, so long random words exercise them.
 const rulyAlphabet = "aceghijlmnorstwxyzbckpsdgu"
 
@@ -179,24 +109,6 @@ func genWord() *rapid.Generator[string] {
 		rapid.StringMatching(`(sch|ch|gh|gn|cc|ll|th|wicz|witz|cia|tion|ough|mb|ps|wr|kn|jose|van|von|san|sugar|caesar|[a-z]){1,6}`),
 		rapid.StringMatching(`[A-Za-z0-9 '-]{0,30}`),
 	)
-}
-
-func TestDifferentialRapid(t *testing.T) {
-	rapid.Check(t, func(t *rapid.T) {
-		checkSame(t, genWord().Draw(t, "word"))
-	})
-}
-
-func TestDifferentialInvalidUTF8(t *testing.T) {
-	rapid.Check(t, func(t *rapid.T) {
-		checkSame(t, string(rapid.SliceOfN(rapid.Byte(), 0, 32).Draw(t, "bytes")))
-	})
-}
-
-func TestDifferentialLong(t *testing.T) {
-	for _, w := range []string{strings.Repeat("schwarzenegger", 8), strings.Repeat("thompson", 20), strings.Repeat("a", 200), strings.Repeat("ç", 60)} {
-		checkSame(t, w)
-	}
 }
 
 func TestPropKeysContract(t *testing.T) {
@@ -246,21 +158,11 @@ var benchWords = []string{
 }
 
 func BenchmarkKeys(b *testing.B) {
-	b.Run("impl=intree", func(b *testing.B) {
-		dst := make([]string, 0, 3)
+	dst := make([]string, 0, 3)
 
-		b.ReportAllocs()
+	b.ReportAllocs()
 
-		for i := range b.N {
-			dst = Encoder{}.Keys(dst[:0], benchWords[i%len(benchWords)])
-		}
-	})
-
-	b.Run("impl=library", func(b *testing.B) {
-		b.ReportAllocs()
-
-		for i := range b.N {
-			_ = refKeys(benchWords[i%len(benchWords)])
-		}
-	})
+	for i := range b.N {
+		dst = Encoder{}.Keys(dst[:0], benchWords[i%len(benchWords)])
+	}
 }

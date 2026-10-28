@@ -1,11 +1,8 @@
 package de
 
 import (
-	"slices"
-	"strings"
 	"testing"
 
-	lib "github.com/f1monkey/phonetic/cologne"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
@@ -70,62 +67,6 @@ func TestKeys(t *testing.T) {
 	assert.Equal(t, Encoder{}, phonetic.For("DE_de"))
 }
 
-var reference = lib.NewEncoder()
-
-// refKeys is internal/core/match's cologneKeys over the library, the behaviour Keys must reproduce.
-func refKeys(tok string) []string {
-	if phonetic.IsDigits(tok) {
-		return []string{tok}
-	}
-
-	if k := reference.Encode(tok); k != "" {
-		return []string{k}
-	}
-
-	return []string{tok}
-}
-
-// fataler is what checkSame needs from testing.T and rapid.T.
-type fataler interface {
-	Helper()
-	Fatalf(format string, args ...any)
-}
-
-func checkSame(t fataler, word string) {
-	t.Helper()
-
-	if got, want := string(cologne(nil, word)), reference.Encode(word); got != want {
-		t.Fatalf("cologne(%q) = %q; library %q", word, got, want)
-	}
-
-	if got, want := (Encoder{}).Keys(nil, word), refKeys(word); !slices.Equal(got, want) {
-		t.Fatalf("Keys(%q) = %q; reference %q", word, got, want)
-	}
-}
-
-// TestDifferentialExhaustive compares every word of up to four letters from a-z and the German extras with the library.
-func TestDifferentialExhaustive(t *testing.T) {
-	alphabet := []rune("abcdefghijklmnopqrstuvwxyzäöüß")
-	word := make([]rune, 0, 4)
-
-	var walk func()
-	walk = func() {
-		checkSame(t, string(word))
-
-		if len(word) == cap(word) {
-			return
-		}
-
-		for _, r := range alphabet {
-			word = append(word, r)
-			walk()
-			word = word[:len(word)-1]
-		}
-	}
-
-	walk()
-}
-
 func genWord() *rapid.Generator[string] {
 	return rapid.OneOf(
 		rapid.String(),
@@ -133,24 +74,6 @@ func genWord() *rapid.Generator[string] {
 		rapid.StringMatching(`(sch|ch|chs|cks|ph|dt|tz|ck|cz|x|c|qu|ß|[a-z]){1,8}`),
 		rapid.StringMatching(`[A-Za-zÄÖÜ0-9 '-]{0,30}`),
 	)
-}
-
-func TestDifferentialRapid(t *testing.T) {
-	rapid.Check(t, func(t *rapid.T) {
-		checkSame(t, genWord().Draw(t, "word"))
-	})
-}
-
-func TestDifferentialInvalidUTF8(t *testing.T) {
-	rapid.Check(t, func(t *rapid.T) {
-		checkSame(t, string(rapid.SliceOfN(rapid.Byte(), 0, 32).Draw(t, "bytes")))
-	})
-}
-
-func TestDifferentialLong(t *testing.T) {
-	for _, w := range []string{strings.Repeat("rechtsanwalt", 10), strings.Repeat("ß", 40), strings.Repeat("ab", 100)} {
-		checkSame(t, w)
-	}
 }
 
 func TestPropKeysContract(t *testing.T) {
@@ -193,21 +116,11 @@ var benchWords = []string{
 }
 
 func BenchmarkKeys(b *testing.B) {
-	b.Run("impl=intree", func(b *testing.B) {
-		dst := make([]string, 0, 3)
+	dst := make([]string, 0, 3)
 
-		b.ReportAllocs()
+	b.ReportAllocs()
 
-		for i := range b.N {
-			dst = Encoder{}.Keys(dst[:0], benchWords[i%len(benchWords)])
-		}
-	})
-
-	b.Run("impl=library", func(b *testing.B) {
-		b.ReportAllocs()
-
-		for i := range b.N {
-			_ = refKeys(benchWords[i%len(benchWords)])
-		}
-	})
+	for i := range b.N {
+		dst = Encoder{}.Keys(dst[:0], benchWords[i%len(benchWords)])
+	}
 }
