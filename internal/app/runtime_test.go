@@ -238,7 +238,10 @@ func TestAnInstanceStoppedEarlyDoesntLearnItsMAC(t *testing.T) {
 
 		synctest.Wait()
 		require.NoError(t, h.app.DB().KodiInstances().Delete(ctx, inst.id))
+
+		stopping := time.Now()
 		require.NoError(t, h.app.RemoveInstance(ctx, inst.id))
+		assert.Zero(t, time.Since(stopping), "stopping doesn't wait out the delay")
 
 		time.Sleep(defaultTuning().learnMACDelay)
 		synctest.Wait()

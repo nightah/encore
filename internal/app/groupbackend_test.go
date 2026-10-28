@@ -1,8 +1,11 @@
 package app
 
 import (
+	"context"
 	"log/slog"
 	"testing"
+	"testing/synctest"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -121,4 +124,28 @@ func TestGroupBackendPicksTheMemberSyncsGoTo(t *testing.T) {
 
 	lsrv.Restart(t)
 	step(lounge, 3, "the source takes over again once it's back")
+}
+
+func TestGroupBackendSubscribeLastsUntilCancelled(t *testing.T) {
+	inBubble(t, func(t *testing.T) {
+		a := newBareApp(t)
+		lounge := detachedInstance(t, a, "Lounge", newKodi(t, fakekodi.Options{}))
+		bedroom := detachedInstance(t, a, "Bedroom", newKodi(t, fakekodi.Options{}))
+		b := newGroupBackend([]*Instance{lounge, bedroom}, lounge, a.tune, slog.New(slog.DiscardHandler))
+
+		ctx, cancel := context.WithCancel(t.Context())
+		done := make(chan error, 1)
+
+		go func() { done <- b.Subscribe(ctx, func(media.Event) {}) }()
+
+		// The catalog resubscribes when a subscription ends, which would subscribe every member again.
+		time.Sleep(time.Hour)
+		synctest.Wait()
+		require.Empty(t, done, "the merged subscription lasts as long as its members' do")
+
+		cancel()
+		synctest.Wait()
+		require.Len(t, done, 1, "it ends with its context")
+		require.ErrorIs(t, <-done, context.Canceled)
+	})
 }
