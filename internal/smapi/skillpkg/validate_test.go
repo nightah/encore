@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand/v2"
 	"strings"
 	"testing"
 
@@ -171,9 +172,30 @@ var errWrite = errors.New("disk full")
 func (failingWriter) Write([]byte) (int, error) { return 0, errWrite }
 
 func TestWriteZipReportsWriterErrors(t *testing.T) {
-	err := writeZip(failingWriter{}, []File{{Name: "a.json", Data: []byte(strings.Repeat("x", 1<<16))}})
-	require.ErrorIs(t, err, errWrite)
-	assert.Contains(t, err.Error(), "skillpkg:")
+	// Incompressible data reaches the writer as it is written, rather than when the zip is finished.
+	noise := make([]byte, 1<<20)
+	_, _ = rand.NewChaCha8([32]byte{}).Read(noise)
+
+	// Each entry's header goes to the writer once enough of them are buffered.
+	many := make([]File, 200)
+	for i := range many {
+		many[i] = File{Name: fmt.Sprintf("models/locale-%03d-with-a-long-enough-name.json", i), Data: []byte("{}")}
+	}
+
+	for name, tc := range map[string]struct {
+		files []File
+		want  string
+	}{
+		"while finishing":       {[]File{{Name: "a.json", Data: []byte(strings.Repeat("x", 1<<16))}}, "skillpkg: finishing zip: "},
+		"while writing a file":  {[]File{{Name: "a.json", Data: noise}}, "skillpkg: writing a.json: "},
+		"while adding a header": {many, "skillpkg: adding models/locale-"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			err := writeZip(failingWriter{}, tc.files)
+			require.ErrorIs(t, err, errWrite)
+			assert.True(t, strings.HasPrefix(err.Error(), tc.want), err.Error())
+		})
+	}
 }
 
 func TestHashFilesSeparatesNamesFromData(t *testing.T) {
