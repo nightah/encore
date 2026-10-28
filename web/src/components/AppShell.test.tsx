@@ -67,6 +67,22 @@ describe("AppShell", () => {
     expect(screen.queryByText("vdev")).not.toBeInTheDocument();
   });
 
+  it("leaves out the version line, gap and all, when the server reports none", async () => {
+    let checked = false;
+    server.use(
+      http.get("*/api/v1/healthz", () => {
+        checked = true;
+        return HttpResponse.json({ status: "ok" });
+      }),
+    );
+    renderAt("/");
+    const footer = (await screen.findByRole("button", { name: "Sign out" })).parentElement as HTMLElement;
+    await waitFor(() => expect(checked).toBe(true));
+    expect(footer).toHaveTextContent(/^Signed in as admin\s*Sign out$/);
+    // An empty line would still take a gap in the column.
+    expect(footer.querySelectorAll(":scope > :empty")).toHaveLength(0);
+  });
+
   it("offers no sign-out when the reverse proxy signs people in", async () => {
     getDb().authMode = "header";
     renderAt("/");
