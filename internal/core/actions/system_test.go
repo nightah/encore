@@ -65,3 +65,25 @@ func TestAddons(t *testing.T) {
 	assert.Contains(t, backend.Calls(), "ExecuteAddon plugin.video.youtube")
 	assert.Contains(t, backend.Calls(), "ExecuteAddon script.globalsearch searchstring=dune")
 }
+
+func TestAddonNamesMustBeSpoken(t *testing.T) {
+	target, backend, _ := newTarget()
+	withAddons(backend)
+	svc := newService()
+
+	assert.Equal(t, "remote.no_text", svc.GlobalSearch(t.Context(), target, " \t").Say.ID)
+	assert.Equal(t, "addon.not_found", svc.LaunchAddon(t.Context(), target, "").Say.ID)
+	assert.Equal(t, []string{"Addons"}, backend.Calls(), "a blank search asks Kodi nothing")
+}
+
+func TestUpdateLibraryStopsAtTheFirstFailure(t *testing.T) {
+	target, backend, _ := newTarget()
+	target, f := failing(target, backend, errBoom, "ScanLibrary")
+
+	assertFailed(t, newService().UpdateLibrary(t.Context(), target, false, media.DatabaseVideo, media.DatabaseMusic))
+	assert.Equal(t, []string{"ScanLibrary"}, f.failed, "the music library isn't scanned after the video library failed")
+
+	target, _, _ = newTarget()
+	o := newService().UpdateLibrary(t.Context(), target, false, media.DatabaseVideo)
+	assert.Equal(t, "library.scan_video", o.Say.ID)
+}
