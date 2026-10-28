@@ -191,7 +191,7 @@ func (r *sqliteRetriever) candidates(ctx context.Context, q *form, kinds []media
 				continue
 			}
 
-			if levenshteinWithin(rt, term, fz) >= 0 {
+			if osaWithin(rt, term, fz) >= 0 {
 				words = append(words, fts5Quote(term))
 			}
 		}
@@ -246,7 +246,7 @@ func (r *sqliteRetriever) candidates(ctx context.Context, q *form, kinds []media
 	}
 
 	var grams []string
-	for _, g := range trigramsOf(q.compact, nil) {
+	for _, g := range appendTrigrams(nil, q.compact) {
 		if !slices.Contains(grams, fts5Quote(g)) {
 			grams = append(grams, fts5Quote(g))
 		}

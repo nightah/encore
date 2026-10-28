@@ -9,8 +9,29 @@ const (
 
 // Retriever names for Config.Retriever.
 const (
-	RetrieverBleve   = "bleve"
-	RetrieverTrigram = "trigram"
+	RetrieverBleve    = "bleve"
+	RetrieverInverted = "inverted"
+	RetrieverTrigram  = "trigram"
+)
+
+// Inverted index fields.
+const (
+	termWords termField = iota
+	termPhonetic
+	termTrigrams
+	termFields
+)
+
+// Inverted index layout.
+const (
+	slotBits  = 28
+	slotMask  = 1<<slotBits - 1
+	slotLimit = 1 << slotBits
+	// tfOverflow in a posting means the term frequency is in freqs.
+	tfOverflow = 1<<(32-slotBits) - 1
+	// Tombstoned slots are compacted once there are at least compactMinDead of them and they are 1/compactRatio of all slots.
+	compactMinDead = 1024
+	compactRatio   = 4
 )
 
 // Index fields. Docs carry every alias form in each text field.

@@ -84,7 +84,7 @@ func (r *bleveLiteRetriever) upsert(entries []*entry) error {
 
 		var grams []string
 		for _, c := range compacts {
-			grams = trigramsOf(c, grams)
+			grams = appendTrigrams(grams, c)
 		}
 
 		doc := document.NewDocument(e.doc.ID)
@@ -140,7 +140,7 @@ func (r *bleveLiteRetriever) candidates(ctx context.Context, q *form, kinds []me
 
 	var grams []search.Searcher
 
-	for _, g := range trigramsOf(q.compact, nil) {
+	for _, g := range appendTrigrams(nil, q.compact) {
 		s, err := searcher.NewTermSearcher(ctx, rd, g, fieldNgram, boostNgram, search.SearcherOptions{})
 		if err != nil {
 			return nil, err

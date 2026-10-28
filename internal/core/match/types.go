@@ -134,6 +134,86 @@ type bleveRetriever struct {
 	idx  bleve.Index
 }
 
+// invertedRetriever is an in-memory inverted index over words, phonetic keys and trigrams, scored like bleve's TF-IDF so it ranks candidates the same way. Replaced or deleted Docs are tombstoned and leave the document counts at once; their postings are dropped by compaction once they are a quarter of the slots.
+type invertedRetriever struct {
+	mu    sync.RWMutex
+	lang  *language
+	slots []invertedSlot
+	byID  map[string]uint32
+	// live counts live slots, dead tombstoned ones; kinds counts live slots per kind.
+	live, dead int
+	kinds      map[media.Kind]int
+	fields     [termFields]postingField
+	// buckets groups word term IDs by first rune and length in runes, for fuzzy expansion.
+	buckets map[wordBucket][]uint32
+	// freqs holds term frequencies of tfOverflow and above, which do not fit in a posting.
+	freqs map[freqKey]uint32
+	pool  sync.Pool
+}
+
+type invertedSlot struct {
+	entry *entry
+	alive bool
+	// norms are 1/sqrt(number of terms) per field.
+	norms [termFields]float32
+}
+
+// termField is one of the inverted index's fields.
+type termField uint8
+
+// postingField maps terms to IDs and IDs to postings. A posting is a slot in its low slotBits bits and the term's frequency in that slot, capped at tfOverflow, above them; postings are in slot order.
+type postingField struct {
+	ids   map[string]uint32
+	terms []string
+	post  [][]uint32
+	// live counts the live slots that have each term.
+	live []int32
+}
+
+type wordBucket struct {
+	first rune
+	runes int
+}
+
+type freqKey struct {
+	field termField
+	term  uint32
+	slot  uint32
+}
+
+// queryClause is one disjunct of the retrieval query: its terms are alternatives (fuzzy expansions of a word, or a query's trigrams), and total is how many there are, for the coordination factor.
+type queryClause struct {
+	field termField
+	boost float64
+	terms []clauseTerm
+	total int
+}
+
+type clauseTerm struct {
+	id     uint32
+	weight float64
+	// count is how many of the clause's alternatives are this term, as when a trigram repeats in the query.
+	count int
+}
+
+type slotHit struct {
+	slot  uint32
+	score float64
+}
+
+// topHits is a min-heap of the best hits so far.
+type topHits []slotHit
+
+// accumulator holds per-slot scores for one search; clauseScore and clauseCount collect one clause's alternatives before they are folded in.
+type accumulator struct {
+	score         []float64
+	matched       []uint32
+	touched       []uint32
+	clauseScore   []float64
+	clauseCount   []uint32
+	clauseTouched []uint32
+}
+
 // trigramRetriever is a dependency-free inverted index over character trigrams and phonetic keys. It is meant for small libraries and as a cross-check for bleve; deleted slots are tombstoned, not reclaimed.
 type trigramRetriever struct {
 	mu       sync.RWMutex

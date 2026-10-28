@@ -19,3 +19,28 @@ func (l *language) queryTokens(q *form) []string {
 
 	return out
 }
+
+// queryKeys are the distinct phonetic keys of the query terms, then of the whole query with spaces removed.
+func queryKeys(q *form, terms []string) []string {
+	keys := make([]string, 0, len(terms)+1)
+
+	for i, t := range q.toks {
+		if !slices.Contains(terms, t) {
+			continue
+		}
+
+		for _, k := range q.keys[i] {
+			if !slices.Contains(keys, k) {
+				keys = append(keys, k)
+			}
+		}
+	}
+
+	for _, k := range q.compactKeys {
+		if !slices.Contains(keys, k) {
+			keys = append(keys, k)
+		}
+	}
+
+	return keys
+}

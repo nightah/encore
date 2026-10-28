@@ -156,3 +156,61 @@ func flags(buf []bool, n int) []bool {
 
 	return make([]bool, n)
 }
+
+// osaWithin is the optimal string alignment distance between a and b when it is at most maxD, else -1. It gives up as soon as a whole row exceeds maxD.
+func osaWithin(a []rune, b string, maxD int) int {
+	var bb [stackRunes]rune
+
+	t := appendRunes(bb[:0], b)
+	if len(a)-len(t) > maxD || len(t)-len(a) > maxD {
+		return -1
+	}
+
+	n := len(t)
+
+	var buf [3 * (stackRunes + 1)]int
+
+	rows := buf[:]
+	if 3*(n+1) > len(rows) {
+		rows = make([]int, 3*(n+1))
+	}
+
+	prev2, prev, cur := rows[:n+1], rows[n+1:2*(n+1)], rows[2*(n+1):3*(n+1)]
+
+	for j := range prev {
+		prev[j] = j
+	}
+
+	for i := 1; i <= len(a); i++ {
+		cur[0] = i
+		best := i
+
+		for j := 1; j <= n; j++ {
+			cost := 1
+			if a[i-1] == t[j-1] {
+				cost = 0
+			}
+
+			d := min(prev[j]+1, cur[j-1]+1, prev[j-1]+cost)
+			if i > 1 && j > 1 && a[i-1] == t[j-2] && a[i-2] == t[j-1] {
+				d = min(d, prev2[j-2]+1)
+			}
+
+			cur[j] = d
+			best = min(best, d)
+		}
+
+		// A swap reaches back two rows, so a row can only be abandoned once the one before it is past maxD too.
+		if best > maxD && (i == 1 || slices.Min(prev) > maxD) {
+			return -1
+		}
+
+		prev2, prev, cur = prev, cur, prev2
+	}
+
+	if d := prev[n]; d <= maxD {
+		return d
+	}
+
+	return -1
+}

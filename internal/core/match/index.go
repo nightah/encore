@@ -22,6 +22,8 @@ func New(lang string, cfg Config) (*Index, error) {
 	switch cfg.Retriever {
 	case RetrieverBleve:
 		ret, err = newBleveRetriever(l)
+	case RetrieverInverted:
+		ret = newInvertedRetriever(l)
 	case RetrieverTrigram:
 		ret = newTrigramRetriever()
 	default:

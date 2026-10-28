@@ -30,7 +30,7 @@ func newIndex(t *testing.T, retr string, docs ...Doc) *Index {
 func retrievers(t *testing.T, fn func(t *testing.T, retr string)) {
 	t.Helper()
 
-	for _, r := range []string{RetrieverBleve, RetrieverTrigram} {
+	for _, r := range []string{RetrieverBleve, RetrieverInverted, RetrieverTrigram} {
 		t.Run(r, func(t *testing.T) { fn(t, r) })
 	}
 }

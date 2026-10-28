@@ -31,8 +31,9 @@ import (
 
 // scaleRetrievers builds each retriever the harness compares against exhaustive scoring.
 var scaleRetrievers = map[string]func(*language) (retriever, error){
-	RetrieverBleve:   func(l *language) (retriever, error) { return newBleveRetriever(l) },
-	RetrieverTrigram: func(*language) (retriever, error) { return newTrigramRetriever(), nil },
+	RetrieverBleve:    func(l *language) (retriever, error) { return newBleveRetriever(l) },
+	RetrieverInverted: func(l *language) (retriever, error) { return newInvertedRetriever(l), nil },
+	RetrieverTrigram:  func(*language) (retriever, error) { return newTrigramRetriever(), nil },
 }
 
 // exhaustiveRetriever hands every Doc to the scorer, so its results are the best the scorer can do: the reference the real retrievers are measured against.

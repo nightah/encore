@@ -203,20 +203,8 @@ func (r *bleveRetriever) candidates(ctx context.Context, q *form, kinds []media.
 // wordClauses matches words fuzzily and phonetic keys exactly.
 func (r *bleveRetriever) wordClauses(q *form) []query.Query {
 	terms := r.lang.queryTokens(q)
-	clauses := make([]query.Query, 0, 2*len(terms)+1)
-	keys := make([]string, 0, len(terms)+1)
-
-	for i, t := range q.toks {
-		if !slices.Contains(terms, t) {
-			continue
-		}
-
-		for _, k := range q.keys[i] {
-			if !slices.Contains(keys, k) {
-				keys = append(keys, k)
-			}
-		}
-	}
+	keys := queryKeys(q, terms)
+	clauses := make([]query.Query, 0, len(terms)+len(keys))
 
 	for _, t := range terms {
 		if fz := fuzziness(t); fz > 0 {
@@ -234,12 +222,6 @@ func (r *bleveRetriever) wordClauses(q *form) []query.Query {
 		tq.SetField(fieldNorm)
 		tq.SetBoost(boostNorm)
 		clauses = append(clauses, tq)
-	}
-
-	for _, k := range q.compactKeys {
-		if !slices.Contains(keys, k) {
-			keys = append(keys, k)
-		}
 	}
 
 	for _, k := range keys {
