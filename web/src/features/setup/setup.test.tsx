@@ -814,8 +814,59 @@ describe("setup address step", () => {
 
     const results = await screen.findByRole("list", { name: "Reachability check results" });
     expect(within(results).getByRole("listitem")).toHaveTextContent("Failed: Certificate expired");
+    expect(within(results).getByRole("listitem").querySelector("[aria-hidden='true']")).toHaveClass("bg-bad");
     expect(screen.getByRole("button", { name: "Check again" })).toBeEnabled();
     expect(screen.queryByRole("button", { name: "Continue" })).not.toBeInTheDocument();
+  });
+
+  it("lets you continue past a warning, marking it as one", async () => {
+    startAt(2);
+    server.use(
+      http.post("*/api/v1/setup/reachability", () =>
+        HttpResponse.json({
+          checks: [
+            { detail: "Alexa endpoint answers", level: "ok", name: "alexa_endpoint", note: "" },
+            { detail: "Admin API reachable from outside", level: "warn", name: "admin_exposed", note: "" },
+          ],
+          url: "https://encore.example.net",
+        }),
+      ),
+    );
+    const user = userEvent.setup();
+    renderApp("/setup");
+    await heading("Tell us your public address");
+
+    await user.click(screen.getByRole("button", { name: "Check address" }));
+
+    const results = await screen.findByRole("list", { name: "Reachability check results" });
+    expect(
+      within(results)
+        .getAllByRole("listitem")
+        .map((item) => item.textContent),
+    ).toEqual(["Passed: Alexa endpoint answers", "Warning: Admin API reachable from outside"]);
+    const dots = within(results)
+      .getAllByRole("listitem")
+      .map((item) => item.querySelector("[aria-hidden='true']"));
+    expect(dots[0]).toHaveClass("bg-dot-ok");
+    expect(dots[1]).toHaveClass("bg-dot-warn");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+    await heading("Add your first Kodi");
+  });
+
+  it("checks an address typed before the skill has loaded, saving no endpoint", async () => {
+    startAt(2);
+    server.use(http.get("*/api/v1/skill", () => delay("infinite")));
+    const user = userEvent.setup();
+    const log = recordRequests();
+    renderApp("/setup");
+    await heading("Tell us your public address");
+
+    await user.type(screen.getByLabelText("Public base URL"), "https://kodi.example.org");
+    await user.click(screen.getByRole("button", { name: "Check address" }));
+
+    expect(await screen.findByRole("list", { name: "Reachability check results" })).toBeInTheDocument();
+    expect(log.some((r) => r.path === "/setup/reachability")).toBe(true);
+    expect(log.some((r) => r.path === "/skill/settings")).toBe(false);
   });
 
   it.each([404, 405, 501])("lets you continue when this server can't check addresses (%i)", async (status) => {
