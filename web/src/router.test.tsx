@@ -168,4 +168,15 @@ describe("createAppRouter", () => {
     expect(router.basepath).toBe("/encore/");
     expect(router.state.location.pathname).toBe("/login");
   });
+
+  it("follows the browser's address bar when given no history", () => {
+    window.history.replaceState(null, "", "/kodi?tab=1");
+    try {
+      const router = createAppRouter({ queryClient: createQueryClient() });
+      expect(router.history.location.pathname).toBe("/kodi");
+      expect(router.history.location.search).toBe("?tab=1");
+    } finally {
+      window.history.replaceState(null, "", "/");
+    }
+  });
 });
