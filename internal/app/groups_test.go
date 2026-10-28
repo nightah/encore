@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os"
@@ -339,6 +340,59 @@ func TestSharedLibraryIsDetectedAndConfirmed(t *testing.T) {
 		stored, err := a.DB().LibraryGroups().Get(t.Context(), g.ID)
 		require.NoError(t, err)
 		assert.Equal(t, store.GroupConfirmedShared, stored.State)
+	})
+}
+
+// Each changed item is compared once its own notifications settle: a later change to the same item restarts its wait, and one item settling doesn't bring another forward.
+func TestChangesAreComparedOnceEachItemSettles(t *testing.T) {
+	inBubble(t, func(t *testing.T) {
+		lib := testLibrary(30, 0, "2024-01-01 10:00:00")
+		lounge, bedroom := newKodi(t, fakekodi.Options{Library: lib}), newKodi(t, fakekodi.Options{Library: lib})
+		tune := onFakes(defaultTuning())
+
+		a, _ := runApp(t, t.TempDir(), tune, kodiConfig("Lounge", lounge, ""), kodiConfig("Bedroom", bedroom, ""))
+		settled(t, func() bool { g, _ := a.groupOf("Lounge"); return len(g.Members) == 2 })
+		connected(t, bedroom)
+
+		// The catalog reads changed items from the group's source, the lounge Kodi, so the bedroom Kodi is asked for an item only to compare a change made there.
+		reads := func(id int) int {
+			n := 0
+
+			for _, c := range bedroom.CallsTo("VideoLibrary.GetEpisodeDetails") {
+				var p struct {
+					EpisodeID int `json:"episodeid"`
+				}
+
+				require.NoError(t, json.Unmarshal(c.Params, &p))
+
+				if p.EpisodeID == id {
+					n++
+				}
+			}
+
+			return n
+		}
+
+		play := func(id, count int) {
+			t.Helper()
+			require.True(t, bedroom.SetPlayState("episode", id, fakekodi.PlayState{PlayCount: count, LastPlayed: time.Now().Truncate(time.Second)}))
+		}
+
+		const gap = 500 * time.Millisecond
+
+		play(7, 1)
+		time.Sleep(gap)
+		play(8, 1)
+		time.Sleep(gap)
+		play(7, 2)
+
+		// Episode 8 changed once, gap after the first change to episode 7.
+		after(t, tune.confirmDebounce-gap-time.Millisecond, func() bool { return reads(7) == 0 && reads(8) == 0 }, "nothing is compared while notifications are still arriving")
+		after(t, time.Millisecond, func() bool { return reads(8) > 0 }, "episode 8 is compared once its notification settles")
+		assert.Zero(t, reads(7), "episode 7 changed again since, so it isn't compared yet")
+
+		after(t, gap-time.Millisecond, func() bool { return reads(7) == 0 }, "the second change to episode 7 restarted its wait")
+		after(t, time.Millisecond, func() bool { return reads(7) > 0 }, "episode 7 is compared once its last change settles")
 	})
 }
 
