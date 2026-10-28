@@ -122,9 +122,9 @@ jobs:
         run: docker logs kodi || true
 
   store-contract:
-    name: Storage contract (MinIO, rclone WebDAV)
+    name: Storage contract (MinIO, rclone and Nextcloud WebDAV)
     runs-on: ubuntu-26.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     env:
       ENCORE_CONTRACT_S3_ENDPOINT: http://127.0.0.1:9000
       ENCORE_CONTRACT_S3_ACCESS_KEY: minioadmin
@@ -134,11 +134,24 @@ jobs:
       ENCORE_CONTRACT_WEBDAV_URL: http://127.0.0.1:8081/
       ENCORE_CONTRACT_WEBDAV_USERNAME: encore
       ENCORE_CONTRACT_WEBDAV_PASSWORD: encore-contract
+      # Nextcloud's admin is the same account, and its WebDAV root is that user's files.
+      NEXTCLOUD_URL: http://127.0.0.1:8082
+      NEXTCLOUD_WEBDAV_URL: http://127.0.0.1:8082/remote.php/dav/files/encore/
     steps:
       - name: Harden the runner (audit all outbound calls)
         uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
+
+      # Started first so the image pull and the SQLite install overlap the Go setup; "Wait for Nextcloud" checks on it later.
+      - name: Start Nextcloud
+        run: |
+          docker run -d --name nextcloud -p 8082:80 \
+            -e SQLITE_DATABASE=nextcloud \
+            -e NEXTCLOUD_ADMIN_USER="${ENCORE_CONTRACT_WEBDAV_USERNAME}" \
+            -e NEXTCLOUD_ADMIN_PASSWORD="${ENCORE_CONTRACT_WEBDAV_PASSWORD}" \
+            -e NEXTCLOUD_TRUSTED_DOMAINS=127.0.0.1 \
+            nextcloud:35.0.2-apache
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -192,14 +205,36 @@ jobs:
           docker logs rclone
           exit 1
 
+      # The image installs Nextcloud before it starts Apache, so status.php reporting it installed means the install is done; the PROPFIND then checks the account's WebDAV root.
+      - name: Wait for Nextcloud
+        run: |
+          for _ in $(seq 1 90); do
+            if curl -fsS "${NEXTCLOUD_URL}/status.php" | grep -q '"installed":true,"maintenance":false' &&
+               curl -fsS -o /dev/null -u "${ENCORE_CONTRACT_WEBDAV_USERNAME}:${ENCORE_CONTRACT_WEBDAV_PASSWORD}" \
+                 -X PROPFIND -H 'Depth: 0' "${NEXTCLOUD_WEBDAV_URL}"; then
+              echo "Nextcloud is up"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::Nextcloud did not come up"
+          docker logs nextcloud
+          exit 1
+
       - name: Contract tests
         run: go test -tags contract -count=1 -v ./internal/blobstore/...
 
-      - name: MinIO and rclone logs
+      - name: WebDAV contract tests (Nextcloud)
+        env:
+          ENCORE_CONTRACT_WEBDAV_URL: ${{ env.NEXTCLOUD_WEBDAV_URL }}
+        run: go test -tags contract -count=1 -run TestWebDAVServerContract -v ./internal/blobstore/...
+
+      - name: MinIO, rclone and Nextcloud logs
         if: failure()
         run: |
           docker logs minio || true
           docker logs rclone || true
+          docker logs nextcloud || true
 
   # Calls Amazon's live Skill Management API, read-only, with a maintainer-owned LWA security profile and refresh token. The secrets live in the smapi-live environment, which only main can deploy to, and the job runs only on main's schedule or a manual run. Without the secrets its steps are skipped rather than failed.
   smapi-live:

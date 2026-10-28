@@ -90,7 +90,17 @@ export ENCORE_CONTRACT_WEBDAV_PASSWORD=encore-contract
 make test-contract
 ```
 
-The WebDAV test takes any server: point `ENCORE_CONTRACT_WEBDAV_URL` at a Nextcloud user's files (`…/remote.php/dav/files/<user>/`) to check against Nextcloud instead.
+The WebDAV test takes any server, and the nightly job also runs it against Nextcloud. To do the same, start Nextcloud, wait for `http://127.0.0.1:8082/status.php` to report `"installed":true`, and point `ENCORE_CONTRACT_WEBDAV_URL` at the user's files:
+
+```sh
+docker run -d --rm --name nextcloud -p 8082:80 \
+  -e SQLITE_DATABASE=nextcloud -e NEXTCLOUD_TRUSTED_DOMAINS=127.0.0.1 \
+  -e NEXTCLOUD_ADMIN_USER=encore -e NEXTCLOUD_ADMIN_PASSWORD=encore-contract \
+  nextcloud:35.0.2-apache
+
+ENCORE_CONTRACT_WEBDAV_URL=http://127.0.0.1:8082/remote.php/dav/files/encore/ \
+  go test -tags contract -count=1 -run TestWebDAVServerContract ./internal/blobstore/
+```
 
 With `ENCORE_CONTRACT_KODI_LIBRARY` also set, the voice tests in `internal/app` ask Encore for the titles in the test library (`internal/backend/kodi/testdata/kodi-headless/library`) and check what it matched and played. Kodi has to have scanned that library first: the "Seed the library" step in `.github/workflows/nightly.yml` adds it and starts the scan.
 
