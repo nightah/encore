@@ -122,3 +122,35 @@ func BenchmarkSearch100k(b *testing.B) {
 	b.ReportMetric(pct(0.95), "p95-ms")
 	b.ReportMetric(pct(0.99), "p99-ms")
 }
+
+// BenchmarkScore measures scoring alone: misspelled queries against 1000 synthetic entries, without retrieval.
+func BenchmarkScore(b *testing.B) {
+	ix, err := New("en", Config{})
+	require.NoError(b, err)
+
+	defer ix.Close()
+
+	docs := syntheticDocs(1000, 4)
+	entries := make([]*entry, len(docs))
+
+	for i, d := range docs {
+		entries[i] = ix.lang.newEntry(d)
+	}
+
+	queries := make([]form, 0, 20)
+	for _, d := range docs[:20] {
+		rs := []rune(d.Title)
+		rs[len(rs)/2] = 'q'
+		queries = append(queries, ix.lang.newForm(ix.lang.normalizeSpelled(string(rs), false)))
+	}
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := range b.N {
+		q := &queries[i%len(queries)]
+		for _, e := range entries {
+			ix.scoreEntry(q, e)
+		}
+	}
+}

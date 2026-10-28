@@ -47,6 +47,8 @@ const (
 	nonExactCap = 0.99
 	// digitWeight is how many characters a number token counts for in coverage: numbers tell sequels apart.
 	digitWeight = 4
+	// stackRunes is the longest string, in runes, that the edit distances handle without allocating.
+	stackRunes = 64
 )
 
 const (
