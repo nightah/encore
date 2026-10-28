@@ -241,18 +241,9 @@ func (s *Store) checkKeys(ctx context.Context) error {
 
 // addKey takes ownership of k.
 func (s *Store) addKey(k []byte) error {
-	if len(k) != KeySize {
-		return fmt.Errorf("key must be %d bytes", KeySize)
-	}
-
-	block, err := aes.NewCipher(k)
+	e, err := newKeyEntry(k)
 	if err != nil {
-		return fmt.Errorf("creating cipher: %w", err)
-	}
-
-	aead, err := cipher.NewGCM(block)
-	if err != nil {
-		return fmt.Errorf("creating GCM: %w", err)
+		return err
 	}
 
 	id := KeyID(k)
@@ -266,9 +257,28 @@ func (s *Store) addKey(k []byte) error {
 		return nil
 	}
 
-	s.keys[id] = &keyEntry{raw: k, aead: aead}
+	s.keys[id] = e
 
 	return nil
+}
+
+// newKeyEntry checks k is a key and prepares its cipher. The entry holds k.
+func newKeyEntry(k []byte) (*keyEntry, error) {
+	if len(k) != KeySize {
+		return nil, fmt.Errorf("key must be %d bytes", KeySize)
+	}
+
+	block, err := aes.NewCipher(k)
+	if err != nil {
+		return nil, fmt.Errorf("creating cipher: %w", err)
+	}
+
+	aead, err := cipher.NewGCM(block)
+	if err != nil {
+		return nil, fmt.Errorf("creating GCM: %w", err)
+	}
+
+	return &keyEntry{raw: k, aead: aead}, nil
 }
 
 func (s *Store) removeKey(id string) {
@@ -303,13 +313,12 @@ func (s *Store) key(id string) (*keyEntry, error) {
 
 func aad(id string) []byte { return []byte(aadPrefix + id) }
 
-func seal(e *keyEntry, id string, plaintext []byte) (nonce, ciphertext []byte, err error) {
+func seal(e *keyEntry, id string, plaintext []byte) (nonce, ciphertext []byte) {
 	nonce = make([]byte, e.aead.NonceSize())
-	if _, err := rand.Read(nonce); err != nil {
-		return nil, nil, fmt.Errorf("generating nonce: %w", err)
-	}
+	// crypto/rand.Read never returns an error.
+	_, _ = rand.Read(nonce)
 
-	return nonce, e.aead.Seal(nil, nonce, plaintext, aad(id)), nil
+	return nonce, e.aead.Seal(nil, nonce, plaintext, aad(id))
 }
 
 func (s *Store) open(row *store.SecretRow) ([]byte, error) {
@@ -346,10 +355,7 @@ func (s *Store) Put(ctx context.Context, id string, plaintext []byte) error {
 		return err
 	}
 
-	nonce, ct, err := seal(e, id, plaintext)
-	if err != nil {
-		return err
-	}
+	nonce, ct := seal(e, id, plaintext)
 
 	if err := s.repo.Put(ctx, store.SecretRow{ID: id, KeyID: keyID, Nonce: nonce, Ciphertext: ct}); err != nil {
 		return fmt.Errorf("storing secret %q: %w", id, err)
@@ -385,8 +391,9 @@ func (s *Store) Rotate(ctx context.Context, newKey []byte) error {
 	s.writeMu.Lock()
 	defer s.writeMu.Unlock()
 
-	if len(newKey) != KeySize {
-		return fmt.Errorf("key must be %d bytes", KeySize)
+	next, err := newKeyEntry(newKey)
+	if err != nil {
+		return err
 	}
 
 	newID := KeyID(newKey)
@@ -412,14 +419,9 @@ func (s *Store) Rotate(ctx context.Context, newKey []byte) error {
 		return err
 	}
 
-	if err := s.addKey(newKey); err != nil {
-		return fail(err)
-	}
-
-	next, err := s.key(newID)
-	if err != nil {
-		return fail(err)
-	}
+	s.mu.Lock()
+	s.keys[newID] = next
+	s.mu.Unlock()
 
 	err = s.repo.Rewrite(ctx, func(row *store.SecretRow) error {
 		pt, err := s.open(row)
@@ -428,10 +430,10 @@ func (s *Store) Rotate(ctx context.Context, newKey []byte) error {
 		}
 		defer clear(pt)
 
-		row.Nonce, row.Ciphertext, err = seal(next, row.ID, pt)
+		row.Nonce, row.Ciphertext = seal(next, row.ID, pt)
 		row.KeyID = newID
 
-		return err
+		return nil
 	})
 	if err != nil {
 		return fail(fmt.Errorf("rotating secrets: %w", err))
