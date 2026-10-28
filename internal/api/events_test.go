@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
+	"net/http/httptest"
 	"strconv"
 	"strings"
 	"testing"
@@ -226,4 +228,221 @@ func TestLogsNameInstanceAndBackend(t *testing.T) {
 	assert.Contains(t, line, "host=")
 	assert.NotContains(t, h.logs.String(), " kodi=", "the instance is instance=, whatever kind of media server it is")
 	assert.NotContains(t, h.logs.String(), `\"`, "messages quote with “”, which log lines don't escape")
+}
+
+func TestHubSkipsValuesItCantEncode(t *testing.T) {
+	t.Parallel()
+
+	hub := newHub()
+	c, _ := hub.subscribe(0)
+
+	hub.publish("request", make(chan int))
+	hub.publish("request", nil)
+
+	ev := <-c.ch
+	assert.EqualValues(t, 1, ev.ID, "the unencodable value took no ID")
+	assert.Equal(t, "null", string(ev.Data))
+
+	select {
+	case extra := <-c.ch:
+		t.Fatalf("unexpected event %+v", extra)
+	default:
+	}
+}
+
+func TestHubUnsubscribeIsIdempotent(t *testing.T) {
+	t.Parallel()
+
+	hub := newHub()
+	c, _ := hub.subscribe(0)
+
+	hub.unsubscribe(c)
+	hub.unsubscribe(c) // closing dropped twice would panic
+
+	assert.Zero(t, hub.clientCount())
+
+	hub.publish("request", 1)
+
+	select {
+	case ev := <-c.ch:
+		t.Fatalf("an unsubscribed client got %+v", ev)
+	default:
+	}
+}
+
+func TestHubReplaysOnlyNewerEvents(t *testing.T) {
+	t.Parallel()
+
+	hub := newHub()
+
+	for i := range 3 {
+		hub.publish("request", i)
+	}
+
+	_, backlog := hub.subscribe(3)
+	assert.Empty(t, backlog, "a client that saw the latest event is up to date")
+
+	_, backlog = hub.subscribe(99)
+	assert.Empty(t, backlog, "an ID from before a restart replays nothing")
+
+	_, backlog = hub.subscribe(1)
+	require.Len(t, backlog, 2)
+	assert.EqualValues(t, 2, backlog[0].ID)
+	assert.Equal(t, "1", string(backlog[0].Data))
+}
+
+// failingWriter accepts the headers but refuses the body after limit bytes, as a closed connection does.
+type failingWriter struct {
+	*httptest.ResponseRecorder
+	limit int
+}
+
+func (w *failingWriter) Write(p []byte) (int, error) {
+	if w.Body.Len()+len(p) > w.limit {
+		return 0, errors.New("connection reset")
+	}
+
+	return w.ResponseRecorder.Write(p)
+}
+
+// streamAPI is just enough of an API to serve the event stream.
+func streamAPI(heartbeat time.Duration) *API {
+	return &API{events: newHub(), opts: Options{Heartbeat: heartbeat}}
+}
+
+func TestStreamEndsWhenAWriteFails(t *testing.T) {
+	t.Parallel()
+
+	retry := len("retry: 3000\n\n")
+
+	for name, tc := range map[string]struct {
+		limit     int
+		heartbeat time.Duration
+		lastID    string
+		live      bool
+	}{
+		"the retry hint": {limit: 0, heartbeat: time.Hour},
+		"the backlog":    {limit: retry + 1, heartbeat: time.Hour, lastID: "1"},
+		"a live event":   {limit: retry + 1, heartbeat: time.Hour, live: true},
+		"the heartbeat":  {limit: retry + 1, heartbeat: time.Millisecond},
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			a := streamAPI(tc.heartbeat)
+			a.events.publish("request", 1)
+			a.events.publish("request", 2)
+
+			w := &failingWriter{ResponseRecorder: httptest.NewRecorder(), limit: tc.limit}
+			done := make(chan struct{})
+
+			go func() {
+				defer close(done)
+				a.stream(t.Context(), w, tc.lastID)
+			}()
+
+			if tc.live {
+				require.Eventually(t, func() bool { return a.events.clientCount() == 1 }, 5*time.Second, time.Millisecond)
+				a.events.publish("request", 3)
+			}
+
+			select {
+			case <-done:
+			case <-time.After(10 * time.Second):
+				t.Fatal("the stream kept running after a write failed")
+			}
+
+			assert.Zero(t, a.events.clientCount(), "and unsubscribed")
+		})
+	}
+}
+
+func TestStreamWritesBacklogAndEvents(t *testing.T) {
+	t.Parallel()
+
+	a := streamAPI(time.Hour)
+	a.events.publish("request", map[string]string{"heard": "dune"})
+	a.events.publish("request", map[string]string{"heard": "arrival"})
+
+	ctx, cancel := context.WithCancel(t.Context())
+	w := httptest.NewRecorder()
+	done := make(chan struct{})
+
+	go func() {
+		defer close(done)
+		a.stream(ctx, w, "1")
+	}()
+
+	require.Eventually(t, func() bool { return a.events.clientCount() == 1 }, 5*time.Second, time.Millisecond)
+	a.events.publish("deploy", map[string]string{"step": "package"})
+
+	require.Eventually(t, func() bool {
+		a.events.mu.Lock()
+		defer a.events.mu.Unlock()
+
+		for c := range a.events.clients {
+			return len(c.ch) == 0
+		}
+
+		return false
+	}, 5*time.Second, time.Millisecond)
+
+	cancel()
+	<-done
+
+	assert.Equal(t, "retry: 3000\n\n"+
+		"id: 2\nevent: request\ndata: {\"heard\":\"arrival\"}\n\n"+
+		"id: 3\nevent: deploy\ndata: {\"step\":\"package\"}\n\n", w.Body.String())
+	assert.Equal(t, "text/event-stream", w.Header().Get("Content-Type"))
+	assert.Equal(t, "no-store", w.Header().Get("Cache-Control"))
+	assert.Zero(t, a.events.clientCount())
+}
+
+func TestStreamIgnoresAMalformedLastEventID(t *testing.T) {
+	t.Parallel()
+
+	a := streamAPI(time.Hour)
+	a.events.publish("request", 1)
+
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+
+	w := httptest.NewRecorder()
+	a.stream(ctx, w, "not-a-number")
+
+	assert.Equal(t, "retry: 3000\n\n", w.Body.String(), "nothing is replayed")
+}
+
+func TestStreamEndsWhenTheClientIsDropped(t *testing.T) {
+	t.Parallel()
+
+	a := streamAPI(time.Hour)
+	done := make(chan struct{})
+
+	go func() {
+		defer close(done)
+		a.stream(t.Context(), httptest.NewRecorder(), "")
+	}()
+
+	require.Eventually(t, func() bool { return a.events.clientCount() == 1 }, 5*time.Second, time.Millisecond)
+
+	// A client too slow for clientBuffer events is dropped by the hub.
+	a.events.mu.Lock()
+	for c := range a.events.clients {
+		delete(a.events.clients, c)
+		close(c.dropped)
+	}
+	a.events.mu.Unlock()
+
+	select {
+	case <-done:
+	case <-time.After(10 * time.Second):
+		t.Fatal("a dropped client's stream kept running")
+	}
+}
+
+func TestEventsNeedASignIn(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+
+	assert.Equal(t, http.StatusUnauthorized, h.client().do(http.MethodGet, "/api/v1/events", nil).status)
 }

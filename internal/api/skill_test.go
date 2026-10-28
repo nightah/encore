@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -15,12 +16,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/danielgtaylor/huma/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/skillmodel"
 	"github.com/nightah/encore/internal/smapi/deploy"
+	"github.com/nightah/encore/internal/smapi/lwa"
+	"github.com/nightah/encore/internal/smapi/skillpkg"
 	"github.com/nightah/encore/internal/smapi/smapitest"
+	"github.com/nightah/encore/internal/store"
 )
 
 func connectAmazon(t *testing.T, h *harness, c *client) {
@@ -525,4 +531,331 @@ func TestSaveContentAlone(t *testing.T) {
 
 	assert.Equal(t, http.StatusUnprocessableEntity, c.do(http.MethodPut, "/api/v1/skill/content", map[string]any{"content": []string{}}).status)
 	assert.Equal(t, http.StatusUnprocessableEntity, c.do(http.MethodPut, "/api/v1/skill/content", map[string]any{"content": []string{"podcasts"}}).status)
+}
+
+func TestPrivacyAnswers(t *testing.T) {
+	t.Parallel()
+
+	var none Privacy
+
+	assert.False(t, none.answered())
+	assert.Equal(t, []string{"allows_purchases", "contains_ads", "is_child_directed", "is_export_compliant", "uses_personal_info"}, none.unanswered(), "sorted, so messages are stable")
+
+	all := answeredPrivacy()
+	assert.True(t, all.answered())
+	assert.Empty(t, all.unanswered())
+
+	// false is an answer; only null isn't.
+	partial := Privacy{UsesPersonalInfo: new(false), IsChildDirected: new(false), IsExportCompliant: new(false), ContainsAds: new(false)}
+	assert.False(t, partial.answered())
+	assert.Equal(t, []string{"allows_purchases"}, partial.unanswered())
+
+	pkg := all.toPkg()
+	assert.Equal(t, all.IsExportCompliant, pkg.IsExportCompliant)
+	assert.Equal(t, all.AllowsPurchases, pkg.AllowsPurchases)
+	assert.Equal(t, all.UsesPersonalInfo, pkg.UsesPersonalInfo)
+	assert.Equal(t, all.IsChildDirected, pkg.IsChildDirected)
+	assert.Equal(t, all.ContainsAds, pkg.ContainsAds)
+}
+
+func TestInvocationChoice(t *testing.T) {
+	t.Parallel()
+
+	for stored, want := range map[string]string{"kodi": "kodi", "": "encore", "encore": "encore", "Kodi": "encore", "my kodi": "encore"} {
+		assert.Equal(t, want, invocationChoice(stored), stored)
+	}
+}
+
+func TestOrderContent(t *testing.T) {
+	t.Parallel()
+
+	assert.Equal(t, []string{"movies", "tv", "music"}, orderContent([]string{"music", "tv", "movies", "tv"}), "in the order offered, without duplicates")
+	assert.Equal(t, []string{"tv"}, orderContent([]string{"podcasts", "tv", "TV"}), "unknown groups are dropped")
+	assert.Equal(t, []string{}, orderContent(nil), "an empty list, not nil")
+}
+
+func TestSmallHelpers(t *testing.T) {
+	t.Parallel()
+
+	assert.Equal(t, "en-US", firstOr(nil, "en-US"))
+	assert.Equal(t, "en-AU", firstOr([]string{"en-AU", "en-GB"}, "en-US"))
+
+	in := []string{"en-GB", "de-DE", "en-AU"}
+	assert.Equal(t, []string{"de-DE", "en-AU", "en-GB"}, sortedCopy(in))
+	assert.Equal(t, []string{"en-GB", "de-DE", "en-AU"}, in, "the input is left as it was")
+
+	assert.Empty(t, (&skillService{}).storedSkillID(), "no skill ID before one is loaded")
+}
+
+func TestLWAProblem(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+
+	status := func(err error) int {
+		var se huma.StatusError
+
+		require.ErrorAs(t, h.api.lwaProblem(t.Context(), err), &se)
+
+		return se.GetStatus()
+	}
+
+	require.NoError(t, h.api.lwaProblem(t.Context(), nil))
+	assert.Equal(t, http.StatusUnprocessableEntity, status(fmt.Errorf("exchanging: %w", lwa.ErrInvalidClient)))
+	assert.Equal(t, http.StatusUnprocessableEntity, status(fmt.Errorf("refreshing: %w", lwa.ErrReauthorise)))
+	assert.Equal(t, http.StatusConflict, status(errNoLWACredentials), "a problem already is passed on")
+	assert.Equal(t, http.StatusUnprocessableEntity, status(errors.New("lwa: pasted URL is empty")))
+	assert.Equal(t, http.StatusUnprocessableEntity, status(errors.New("this authorisation was not started here or has expired; start again")))
+	assert.Equal(t, http.StatusInternalServerError, status(errors.New("disk full")))
+	assert.Equal(t, http.StatusNotFound, status(store.ErrNotFound))
+}
+
+func TestSkillSettingsValidation(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+
+	for name, tc := range map[string]struct {
+		change   func(map[string]any)
+		location string
+	}{
+		"unknown locale": {func(s map[string]any) { s["locales_enabled"] = []string{"en-AU", "xx-XX"} }, "body.locales_enabled"},
+		"no locale":      {func(s map[string]any) { s["locales_enabled"] = []string{} }, "body.locales_enabled"},
+		"http endpoint": {func(s map[string]any) {
+			s["endpoint"] = map[string]any{"url": "http://encore.example.net/api/v1/alexa"}
+		}, "body.endpoint.url"},
+		"endpoint no host": {func(s map[string]any) { s["endpoint"] = map[string]any{"url": "https:///api/v1/alexa"} }, "body.endpoint.url"},
+		"bad invocation":   {func(s map[string]any) { s["invocation"] = "alexa" }, "body.invocation"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			settings := deployableSettings()
+			tc.change(settings)
+
+			p := c.do(http.MethodPut, "/api/v1/skill/settings", settings).problem(t)
+			require.Equal(t, http.StatusUnprocessableEntity, p.Status)
+			require.Len(t, p.Errors, 1, "%+v", p)
+			assert.Equal(t, tc.location, p.Errors[0].Location)
+		})
+	}
+
+	var info SkillInfo
+
+	c.json(http.MethodGet, "/api/v1/skill", nil, http.StatusOK, &info)
+	assert.Equal(t, info.LocalesAvailable, info.LocalesEnabled, "refused settings change nothing")
+
+	settings := deployableSettings()
+	settings["locales_enabled"] = []string{"en-GB", "en-AU", "en-GB"}
+	settings["skill_name"] = "  Kodi Remote  "
+	c.json(http.MethodPut, "/api/v1/skill/settings", settings, http.StatusOK, &info)
+	assert.Equal(t, []string{"en-GB", "en-AU"}, info.LocalesEnabled, "duplicates are dropped, the order kept")
+	assert.Equal(t, "Kodi Remote", info.SkillName)
+
+	var stored skillSettings
+
+	require.NoError(t, h.app.DB().Settings().Get(t.Context(), skillSettingsKey, &stored))
+	assert.Empty(t, stored.Invocation, "Encore's own name is stored as no override, so each locale keeps its own")
+
+	// Once locales were chosen, choosing every one is a choice too.
+	settings["locales_enabled"] = info.LocalesAvailable
+	c.json(http.MethodPut, "/api/v1/skill/settings", settings, http.StatusOK, &info)
+
+	eff, err := h.api.prefs.Effective(t.Context())
+	require.NoError(t, err)
+	assert.Equal(t, info.LocalesAvailable, eff.Alexa.Locales)
+}
+
+func TestSkillLocalesFollowShippedOnes(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+
+	var info SkillInfo
+
+	c.json(http.MethodGet, "/api/v1/skill", nil, http.StatusOK, &info)
+
+	settings := deployableSettings()
+	settings["locales_enabled"] = slices.Concat([]string{info.LocalesAvailable[len(info.LocalesAvailable)-1]}, info.LocalesAvailable)
+	c.json(http.MethodPut, "/api/v1/skill/settings", settings, http.StatusOK, &info)
+
+	eff, err := h.api.prefs.Effective(t.Context())
+	require.NoError(t, err)
+	assert.Empty(t, eff.Alexa.Locales, "every locale, in any order, is no change from the default")
+	assert.Equal(t, info.LocalesAvailable, info.LocalesEnabled)
+	assert.Equal(t, h.api.opts.Sources.Locales[info.LocalesEnabled[0]].SkillName, info.SkillName, "the first locale's own skill name")
+	assert.NotEmpty(t, info.SkillName)
+}
+
+func TestAmazonCredentials(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+	o := h.smapi.Options()
+
+	p := c.do(http.MethodPut, "/api/v1/skill/amazon/credentials", map[string]string{"client_id": o.ClientID}).problem(t)
+	require.Equal(t, http.StatusUnprocessableEntity, p.Status)
+	assert.Equal(t, "body.client_secret", p.Errors[0].Location, "the secret is required the first time")
+
+	connectAmazon(t, h, c)
+
+	var info SkillInfo
+
+	c.json(http.MethodPut, "/api/v1/skill/amazon/credentials", map[string]string{"client_id": " " + o.ClientID + " "}, http.StatusNoContent, nil)
+	c.json(http.MethodGet, "/api/v1/skill", nil, http.StatusOK, &info)
+	assert.True(t, info.Amazon.Connected, "saving the same client ID keeps the authorisation")
+	assert.True(t, info.Amazon.HasClientSecret, "and the stored secret")
+	assert.Equal(t, o.ClientID, info.Amazon.ProfileClientID, "trimmed")
+
+	c.json(http.MethodPut, "/api/v1/skill/amazon/credentials", map[string]string{"client_id": "amzn1.application-oa2-client.other"}, http.StatusNoContent, nil)
+	c.json(http.MethodGet, "/api/v1/skill", nil, http.StatusOK, &info)
+	assert.False(t, info.Amazon.Connected, "a token belongs to the client that obtained it")
+
+	p = c.do(http.MethodPost, "/api/v1/skill/amazon/paste", map[string]string{"refresh_token": smapitest.DefaultRefreshToken}).problem(t)
+	assert.Equal(t, http.StatusUnprocessableEntity, p.Status)
+	assert.Contains(t, p.Detail, "rejected the client ID or secret")
+}
+
+func TestAmazonAuthorizeChoosesTheReturnURL(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+	o := h.smapi.Options()
+	c.json(http.MethodPut, "/api/v1/skill/amazon/credentials", map[string]string{"client_id": o.ClientID, "client_secret": o.ClientSecret}, http.StatusNoContent, nil)
+
+	callback := h.server.URL + "/api/v1/oauth/lwa/callback"
+
+	var auth AuthorizeInfo
+
+	c.json(http.MethodGet, "/api/v1/skill/amazon/authorize?return_url="+url.QueryEscape(callback), nil, http.StatusOK, &auth)
+
+	u, err := url.Parse(auth.URL)
+	require.NoError(t, err)
+	assert.Equal(t, callback, u.Query().Get("redirect_uri"), "the flow can be chosen explicitly")
+
+	p := c.do(http.MethodGet, "/api/v1/skill/amazon/authorize?return_url="+url.QueryEscape("https://evil.example/cb"), nil).problem(t)
+	require.Equal(t, http.StatusUnprocessableEntity, p.Status)
+	assert.Equal(t, "query.return_url", p.Errors[0].Location)
+}
+
+func TestAmazonAuthorisationExpires(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+	o := h.smapi.Options()
+	c.json(http.MethodPut, "/api/v1/skill/amazon/credentials", map[string]string{"client_id": o.ClientID, "client_secret": o.ClientSecret}, http.StatusNoContent, nil)
+
+	state := func() string {
+		var auth AuthorizeInfo
+
+		c.json(http.MethodGet, "/api/v1/skill/amazon/authorize", nil, http.StatusOK, &auth)
+
+		u, err := url.Parse(auth.URL)
+		require.NoError(t, err)
+
+		return u.Query().Get("state")
+	}
+
+	stale := state()
+
+	h.skew.Add(int64(lwaPendingTTL + time.Second))
+
+	fresh := state()
+
+	h.api.skill.mu.Lock()
+	_, kept := h.api.skill.pending[stale]
+	pending := len(h.api.skill.pending)
+	h.api.skill.mu.Unlock()
+
+	assert.False(t, kept, "expired authorisations are cleared as new ones start")
+	assert.Equal(t, 1, pending)
+
+	h.skew.Add(int64(lwaPendingTTL + time.Second))
+
+	p := c.do(http.MethodPost, "/api/v1/skill/amazon/paste", map[string]string{"redirect_url": localReturnURL + "?code=" + smapitest.DefaultAuthCode + "&state=" + url.QueryEscape(fresh)}).problem(t)
+	assert.Equal(t, http.StatusUnprocessableEntity, p.Status)
+	assert.Contains(t, p.Detail, "expired")
+	assert.Zero(t, h.smapi.Exchanges(), "an expired code is never redeemed")
+
+	h.skew.Store(0)
+
+	p = c.do(http.MethodPost, "/api/v1/skill/amazon/paste", map[string]string{"redirect_url": localReturnURL + "?code=" + smapitest.DefaultAuthCode + "&state=" + url.QueryEscape(fresh)}).problem(t)
+	assert.Equal(t, http.StatusUnprocessableEntity, p.Status, "a state is used once, even if it failed")
+}
+
+func TestAmazonPasteValidation(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+
+	p := c.do(http.MethodPost, "/api/v1/skill/amazon/paste", map[string]string{}).problem(t)
+	require.Equal(t, http.StatusUnprocessableEntity, p.Status)
+	assert.Equal(t, "body", p.Errors[0].Location)
+
+	p = c.do(http.MethodPost, "/api/v1/skill/amazon/paste", map[string]string{"redirect_url": "http://127.0.0.1:9090/cb?error=access_denied"}).problem(t)
+	require.Equal(t, http.StatusUnprocessableEntity, p.Status)
+	assert.Equal(t, "body.redirect_url", p.Errors[0].Location)
+
+	assert.Equal(t, http.StatusConflict, c.do(http.MethodPost, "/api/v1/skill/amazon/paste", map[string]string{"refresh_token": smapitest.DefaultRefreshToken}).status, "credentials come first")
+}
+
+func TestSkillModelSize(t *testing.T) {
+	h := newHarness(t, harnessOpts{mutate: func(o *Options) {
+		o.SlotValues = func(context.Context) (map[string][]skillmodel.SlotValue, error) {
+			return map[string][]skillmodel.SlotValue{"AMAZON.Movie": {{ID: "movie/6", Value: "Hot Fuzz"}, {ID: "movie/1", Value: "Dune"}}}, nil
+		}
+	}})
+	c := h.admin()
+	h.libraryID(t)
+
+	var info SkillInfo
+
+	c.json(http.MethodGet, "/api/v1/skill", nil, http.StatusOK, &info)
+	require.NotNil(t, info.ModelSize.V, "sized before the privacy questions are answered")
+
+	ms := info.ModelSize.V
+	assert.Equal(t, skillpkg.MaxModelBytes, ms.LimitBytes)
+	assert.Positive(t, ms.Bytes)
+	assert.Contains(t, info.LocalesEnabled, ms.Locale, "the largest model's locale")
+	assert.Equal(t, 2, ms.TitlesInModel)
+	assert.Equal(t, 7+4-2, ms.TitlesServerOnly, "movies and shows Encore finds without the model's help")
+
+	in := h.api.skill.inSkillModel(t.Context())
+	assert.True(t, in(0, media.Item{Kind: media.KindMovie, ID: 6}))
+	assert.False(t, in(0, media.Item{Kind: media.KindMovie, ID: 7}))
+	assert.False(t, in(0, media.Item{Kind: media.KindTVShow, ID: 6}), "kinds don't mix")
+}
+
+func TestInSkillModelWithoutTitles(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true, mutate: func(o *Options) {
+		o.SlotValues = func(context.Context) (map[string][]skillmodel.SlotValue, error) {
+			return nil, errors.New("catalog locked")
+		}
+	}})
+
+	assert.False(t, h.api.skill.inSkillModel(t.Context())(0, media.Item{Kind: media.KindMovie, ID: 1}), "nothing is in a model that can't be built")
+
+	s := &skillService{a: &API{}}
+	assert.False(t, s.inSkillModel(t.Context())(0, media.Item{Kind: media.KindMovie, ID: 1}), "nor without a title source")
+}
+
+func TestSkillStateOf(t *testing.T) {
+	t.Parallel()
+
+	s := &skillService{}
+
+	for name, tc := range map[string]struct {
+		state deploy.State
+		last  *deployRecord
+		want  string
+	}{
+		"never":                     {deploy.State{}, nil, "not_deployed"},
+		"failed":                    {deploy.State{Hash: "h"}, &deployRecord{State: "failed"}, "failed"},
+		"deployed":                  {deploy.State{Hash: "h"}, &deployRecord{State: "succeeded"}, "live"},
+		"deployed before a restart": {deploy.State{Hash: "h"}, nil, "live"},
+		"skill without a package":   {deploy.State{SkillID: "amzn1.ask.skill.1"}, nil, "not_deployed"},
+		"skill with a success":      {deploy.State{SkillID: "amzn1.ask.skill.1"}, &deployRecord{State: "succeeded"}, "live"},
+	} {
+		assert.Equal(t, tc.want, s.stateOf(tc.state, tc.last), name)
+	}
+
+	s.running = "d-1"
+	assert.Equal(t, "deploying", s.stateOf(deploy.State{Hash: "h"}, &deployRecord{State: "failed"}), "a running deploy wins")
+}
+
+func TestEndpointURL(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+
+	assert.Equal(t, "https://encore.example.net/api/v1/alexa", h.api.skill.endpointURL(t.Context(), skillSettings{Endpoint: SkillEndpoint{URL: "https://encore.example.net/api/v1/alexa"}}))
+	assert.Empty(t, h.api.skill.endpointURL(t.Context(), skillSettings{}), "outside a request there's nothing to derive it from")
 }

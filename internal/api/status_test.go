@@ -1,9 +1,11 @@
 package api
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -100,4 +102,181 @@ func TestStatusCacheKeepsTheNewestProbe(t *testing.T) {
 	st, err := cache.get(t.Context(), created.ID)
 	require.NoError(t, err)
 	assert.True(t, st.Connected, "and doesn't replace it in the cache")
+}
+
+// cachedStatus waits for the startup poll to cache the Lounge's status, so a test's own probes are the only ones.
+func cachedStatus(t *testing.T, h *harness) int64 {
+	t.Helper()
+
+	lounge := h.loungeID()
+
+	require.Eventually(t, func() bool {
+		h.api.status.mu.Lock()
+		defer h.api.status.mu.Unlock()
+
+		e, ok := h.api.status.entries[lounge]
+
+		return ok && e.st.KodiVersion != ""
+	}, 10*time.Second, 20*time.Millisecond)
+
+	return lounge
+}
+
+func versionCalls(k *fakekodi.Server) int {
+	n := 0
+
+	for _, c := range k.CallsTo("Application.GetProperties") {
+		if strings.Contains(string(c.Params), `"version"`) {
+			n++
+		}
+	}
+
+	return n
+}
+
+func TestStatusAsksForVersionOnlyNowAndThen(t *testing.T) {
+	h := newHarness(t, harnessOpts{mutate: func(o *Options) { o.StatusInterval = time.Hour }})
+	lounge := cachedStatus(t, h)
+	cache := h.api.status
+
+	asked := versionCalls(h.kodi)
+
+	cache.mu.Lock()
+	full := cache.entries[lounge].st
+	cache.mu.Unlock()
+
+	st, err := cache.probe(t.Context(), lounge)
+	require.NoError(t, err)
+	assert.Equal(t, asked, versionCalls(h.kodi), "the version was asked for moments ago")
+	assert.Equal(t, full.KodiVersion, st.KodiVersion, "and is kept from the last full probe")
+	assert.Equal(t, full.APIVersion, st.APIVersion)
+	assert.Equal(t, 4, st.Counts.Episodes, "as is the episode total")
+
+	h.skew.Add(int64(infoEvery))
+
+	st, err = cache.probe(t.Context(), lounge)
+	require.NoError(t, err)
+	assert.Equal(t, asked+1, versionCalls(h.kodi), "after a while it's asked for again")
+	assert.NotEmpty(t, st.KodiVersion)
+}
+
+func TestStatusGetReusesAFreshProbe(t *testing.T) {
+	h := newHarness(t, harnessOpts{mutate: func(o *Options) { o.StatusInterval = time.Hour }})
+	lounge := cachedStatus(t, h)
+	cache := h.api.status
+
+	pings := len(h.kodi.CallsTo("JSONRPC.Ping"))
+
+	st, err := cache.get(t.Context(), lounge)
+	require.NoError(t, err)
+	assert.True(t, st.Reachable)
+	assert.Len(t, h.kodi.CallsTo("JSONRPC.Ping"), pings, "a fresh status is served from the cache")
+
+	h.skew.Add(int64(2 * time.Hour))
+
+	_, err = cache.get(t.Context(), lounge)
+	require.NoError(t, err)
+	assert.Len(t, h.kodi.CallsTo("JSONRPC.Ping"), pings+1, "a stale one is probed again")
+
+	cache.forget(lounge)
+
+	_, err = cache.get(t.Context(), lounge)
+	require.NoError(t, err)
+	assert.Len(t, h.kodi.CallsTo("JSONRPC.Ping"), pings+2, "a forgotten one too")
+}
+
+func TestStatusOfUnknownInstance(t *testing.T) {
+	h := newHarness(t, harnessOpts{mutate: func(o *Options) { o.StatusInterval = time.Hour }})
+	lounge := cachedStatus(t, h)
+	cache := h.api.status
+
+	_, err := cache.get(t.Context(), 999)
+	require.ErrorIs(t, err, app.ErrNoRuntime)
+
+	all := cache.getAll(t.Context(), []int64{lounge, 999})
+	assert.Len(t, all, 1, "an instance without a runtime is left out")
+	assert.Contains(t, all, lounge)
+
+	assert.Empty(t, cache.getAll(t.Context(), nil))
+}
+
+func TestPublishIfChanged(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true, mutate: func(o *Options) { o.StatusInterval = time.Hour }})
+	cache := newStatusCache(h.api)
+
+	sub, _ := h.api.events.subscribe(0)
+	defer h.api.events.unsubscribe(sub)
+
+	received := func() []event {
+		var out []event
+
+		for {
+			select {
+			case ev := <-sub.ch:
+				if ev.Name == "test" {
+					out = append(out, ev)
+				}
+			default:
+				return out
+			}
+		}
+	}
+
+	cache.publishIfChanged("test", "a", []string{"x"})
+	cache.publishIfChanged("test", "a", []string{"x"})
+	cache.publishIfChanged("test", "b", []string{"x"})
+	cache.publishIfChanged("test", "a", []string{"y"})
+	cache.publishIfChanged("test", "a", []string(nil))
+	cache.publishIfChanged("test", "a", []string{})
+	cache.publishIfChanged("test", "a", make(chan int))
+
+	evs := received()
+	require.Len(t, evs, 4, "unchanged values and values that can't be encoded aren't published")
+	assert.JSONEq(t, `["x"]`, string(evs[0].Data))
+	assert.JSONEq(t, `["x"]`, string(evs[1].Data), "each key is tracked on its own")
+	assert.JSONEq(t, `["y"]`, string(evs[2].Data))
+	assert.JSONEq(t, `[]`, string(evs[3].Data), "nil is published as an empty list, and the same as one")
+}
+
+func TestPlayerChangeIsIgnoredUntilPolling(t *testing.T) {
+	h := newHarness(t, harnessOpts{mutate: func(o *Options) { o.StatusInterval = time.Hour }})
+	cache := newStatusCache(h.api) // not running
+
+	cache.playerChanged(1)
+
+	cache.mu.Lock()
+	defer cache.mu.Unlock()
+
+	assert.Empty(t, cache.refreshing, "nothing is scheduled before the poll runs")
+}
+
+func TestPlayerChangesCoalesce(t *testing.T) {
+	h := newHarness(t, harnessOpts{mutate: func(o *Options) { o.StatusInterval = time.Hour }})
+	lounge := cachedStatus(t, h)
+	cache := newStatusCache(h.api)
+
+	ctx, cancel := context.WithCancel(t.Context())
+	cache.ctx = ctx
+
+	pings := len(h.kodi.CallsTo("JSONRPC.Ping"))
+
+	for range 5 {
+		cache.playerChanged(lounge)
+	}
+
+	settled := func() bool {
+		cache.mu.Lock()
+		defer cache.mu.Unlock()
+
+		return len(cache.refreshing) == 0
+	}
+
+	require.Eventually(t, func() bool { return settled() && len(h.kodi.CallsTo("JSONRPC.Ping")) > pings }, 5*time.Second, 10*time.Millisecond)
+	assert.Len(t, h.kodi.CallsTo("JSONRPC.Ping"), pings+1, "a burst of changes is read once")
+
+	// After the poll stops, a scheduled refresh does nothing.
+	cancel()
+	cache.playerChanged(lounge)
+	require.Eventually(t, settled, 5*time.Second, 10*time.Millisecond)
+	assert.Len(t, h.kodi.CallsTo("JSONRPC.Ping"), pings+1)
 }
