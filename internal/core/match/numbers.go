@@ -70,7 +70,7 @@ loop:
 
 		switch w.kind {
 		case numUnit:
-			if st == stUnit || (st == stTens && w.val >= 10) {
+			if st == stUnit || (st == stTens && w.val >= 10 && !l.twenties(cur)) {
 				break loop
 			}
 
@@ -84,12 +84,20 @@ loop:
 			cur += w.val
 			st = stUnit
 		case numTens:
-			// From stUnitAnd the unit is already in cur ("neun und neunzig"), so the tens adds to it.
-			if st == stUnit || st == stTens {
+			switch {
+			case l.vigesimal && st == stUnit && cur%100 == 4 && w.val == 20:
+				// "quatre-vingts": four twenties.
+				cur = cur - 4 + 4*w.val
+			case st == stTens && w.val == 10 && l.twenties(cur):
+				// "soixante-dix", "quatre-vingt-dix".
+				cur += w.val
+			case st == stUnit || st == stTens:
 				break loop
+			default:
+				// From stUnitAnd the unit is already in cur ("neun und neunzig"), so the tens adds to it.
+				cur += w.val
 			}
 
-			cur += w.val
 			st = stTens
 		case numHundred:
 			g := max(cur, 1)
@@ -137,7 +145,7 @@ loop:
 	return mill + total + cur, j - i, false
 }
 
-// conjFollows reports whether a conjunction in state st, with cur read so far, is part of the number, given the word after it ("hundred and one", "vingt et un", "neun und neunzig").
+// conjFollows reports whether a conjunction in state st, with cur read so far, is part of the number, given the word after it ("hundred and one", "vingt et un", "soixante et onze", "neun und neunzig").
 func (l *language) conjFollows(st numState, cur int, next string) bool {
 	w, ok := l.nums[next]
 	if !ok {
@@ -148,7 +156,7 @@ func (l *language) conjFollows(st numState, cur int, next string) bool {
 	case stHundred, stThousand, stMillion:
 		return w.kind == numUnit || w.kind == numTens || w.kind == numCompound
 	case stTens:
-		return w.kind == numUnit && w.val < 10
+		return w.kind == numUnit && (w.val < 10 || (l.vigesimal && cur%100 == 60 && w.val == 11))
 	case stUnit:
 		return l.unitsFirst && w.kind == numTens && cur%100 < 10
 	default:
@@ -269,4 +277,11 @@ func (l *language) ordinalDigits(tok string) string {
 	}
 
 	return tok
+}
+
+// twenties reports whether cur ends on a tens that a vigesimal language counts on from with 10-19 ("soixante-douze" 72, "quatre-vingt-onze" 91).
+func (l *language) twenties(cur int) bool {
+	t := cur % 100
+
+	return l.vigesimal && (t == 60 || t == 80)
 }

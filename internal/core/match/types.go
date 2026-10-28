@@ -349,7 +349,9 @@ type language struct {
 	stop     map[string]bool
 	// elide splits on apostrophes ("l'amour" -> "l amour") instead of joining ("ocean's" -> "oceans").
 	elide bool
-	nums  map[string]numWord
+	// vigesimal counts on in twenties past sixty, as French does ("soixante-dix" 70, "quatre-vingts" 80, "quatre-vingt-onze" 91).
+	vigesimal bool
+	nums      map[string]numWord
 	// ordSuffixes are what follows the digits of an ordinal written with them ("6th", "5e", "2º" once folded to "2o").
 	ordSuffixes []string
 	// fused splits numbers written as one word ("millenovecentonovantadue") into the number words they are made of; elided maps a number word's shortened form inside such a word ("cent" in "centottanta") to its full form.
