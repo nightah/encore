@@ -12,6 +12,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nightah/encore/internal/testkit"
 )
 
 func TestInspectFile(t *testing.T) {
@@ -120,4 +122,73 @@ func TestInspectFileReportsASingleIntegrityProblem(t *testing.T) {
 	_, err = InspectFile(t.Context(), path)
 	require.ErrorContains(t, err, "failed its integrity check", "one problem is as fatal as many")
 	assert.Contains(t, err.Error(), "CHECK constraint failed")
+}
+
+// sqliteFile makes a database file at path from stmts, without Encore's schema.
+func sqliteFile(t *testing.T, path string, stmts ...string) {
+	t.Helper()
+
+	raw, err := sql.Open("sqlite", "file:"+path)
+	require.NoError(t, err)
+
+	for _, stmt := range stmts {
+		_, err = raw.ExecContext(t.Context(), stmt)
+		require.NoError(t, err, stmt)
+	}
+
+	require.NoError(t, raw.Close())
+}
+
+func TestInspectFileReportsTablesItCannotRead(t *testing.T) {
+	testCases := []struct {
+		name  string
+		stmts []string
+		want  string
+	}{
+		{
+			name:  "a schema version table without versions",
+			stmts: []string{`CREATE TABLE goose_db_version (id INTEGER PRIMARY KEY)`},
+			want:  "reading schema version: ",
+		},
+		{
+			name:  "a secrets table without Encore's columns",
+			stmts: []string{`CREATE TABLE goose_db_version (version_id INTEGER)`, `INSERT INTO goose_db_version VALUES (1)`, `CREATE TABLE secrets (id TEXT)`},
+			want:  "reading secrets: ",
+		},
+		{
+			name:  "secrets with columns of the wrong type",
+			stmts: []string{`CREATE TABLE secrets (id TEXT, key_id TEXT, nonce BLOB, ciphertext BLOB, created_at TEXT, updated_at INTEGER)`, `INSERT INTO secrets VALUES ('a', 'k', x'00', x'00', 'yesterday', 0)`},
+			want:  "reading secrets: ",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), "crafted.db")
+			sqliteFile(t, path, tc.stmts...)
+
+			_, err := InspectFile(t.Context(), path)
+			require.ErrorContains(t, err, tc.want)
+		})
+	}
+}
+
+func TestInspectFileReportsSchemaReadFailures(t *testing.T) {
+	db, _ := openTest(t, Options{})
+
+	path := filepath.Join(t.TempDir(), "copy.db")
+	require.NoError(t, db.BackupTo(t.Context(), path))
+
+	for nth := 1; nth <= 2; nth++ {
+		t.Run(fmt.Sprintf("read %d", nth), func(t *testing.T) {
+			faults := testkit.NewFaults(t, path)
+			faults.Inject(testkit.Fault{Op: testkit.Read, Table: "sqlite_master", Nth: nth})
+
+			_, err := InspectFile(t.Context(), path)
+			require.ErrorContains(t, err, "reading schema: "+testkit.ReadFaultMessage)
+		})
+	}
+
+	_, err := InspectFile(t.Context(), path)
+	require.NoError(t, err, "the file itself was sound")
 }
