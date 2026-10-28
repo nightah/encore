@@ -25,7 +25,12 @@ func TestStartSessionReplacesThePreviousOne(t *testing.T) {
 	assert.NotEqual(t, planted.Value, fresh.Value, "a new token is issued, never the old one reused")
 	assert.Equal(t, int(time.Hour.Seconds()), fresh.MaxAge)
 
-	_, err := f.db.Sessions().Get(t.Context(), hashToken(planted.Value))
+	sess, err := f.db.Sessions().Get(t.Context(), hashToken(fresh.Value))
+	require.NoError(t, err)
+	assert.Equal(t, f.clock().Add(time.Hour), sess.ExpiresAt, "the server-side expiry matches the cookie's")
+	assert.Equal(t, "admin", sess.Username)
+
+	_, err = f.db.Sessions().Get(t.Context(), hashToken(planted.Value))
 	require.ErrorIs(t, err, store.ErrNotFound, "the previous session on this browser ends")
 }
 
