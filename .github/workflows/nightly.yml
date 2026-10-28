@@ -264,7 +264,7 @@ jobs:
       (github.event_name == 'workflow_dispatch' && inputs.mutation)
     runs-on: ubuntu-26.04
     timeout-minutes: 60
-    # Informational only; surviving mutants should not fail the nightly.
+    # Advisory only: the score is reported, never gated (no thresholds), and surviving mutants don't fail the nightly.
     continue-on-error: true
     steps:
       - name: Harden the runner (audit all outbound calls)
@@ -292,19 +292,37 @@ jobs:
           restore-keys: go-test-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Run gremlins
+        env:
+          # Uncached: gremlins times every mutant against its coverage run, and one served from the test cache in ~0s times every mutant out (go-gremlins/gremlins#267).
+          GOFLAGS: -count=1
         run: |
           go install github.com/go-gremlins/gremlins/cmd/gremlins@v0.6.0
+          # mutation-go.sh stands in for go, so a mutant that doesn't compile is NOT VIABLE rather than KILLED (go-gremlins/gremlins#321).
+          MUTATION_GO="$(command -v go)"
+          export MUTATION_GO
+          mkdir -p "${RUNNER_TEMP}/mutation-bin"
+          ln -s "${GITHUB_WORKSPACE}/.github/scripts/mutation-go.sh" "${RUNNER_TEMP}/mutation-bin/go"
+          export PATH="${RUNNER_TEMP}/mutation-bin:${PATH}"
           # gremlins takes a directory and tests every package below it, i.e. the equivalent of ./internal/core/...
+          # The default timeout of 3x the coverage run times out mutants on a busy runner; 10x keeps the results stable between runs.
           set -o pipefail
-          gremlins unleash ./internal/core | tee gremlins.txt
+          gremlins unleash --timeout-coefficient 10 --output gremlins.json ./internal/core | tee gremlins.txt
 
       - name: Mutation summary
         if: always()
         run: |
-          [ -f gremlins.txt ] || exit 0
+          [ -f gremlins.json ] || exit 0
           {
-            echo "### Mutation testing (internal/core)"
+            echo "### Mutation testing (internal/core, advisory)"
+            echo
+            jq -r '"| Efficacy | Mutant coverage | Killed | Lived | Not covered | Not viable |",
+              "| --- | --- | --- | --- | --- | --- |",
+              "| \(.test_efficacy * 100 | round / 100)% | \(.mutations_coverage * 100 | round / 100)% | \(.mutants_killed) | \(.mutants_lived) | \(.mutants_not_covered) | \(.mutants_not_viable) |"' gremlins.json
+            echo
+            echo '<details><summary>Lived mutants</summary>'
+            echo
             echo '```'
-            tail -n 20 gremlins.txt
+            grep -E '^ *LIVED ' gremlins.txt || true
             echo '```'
+            echo '</details>'
           } >> "${GITHUB_STEP_SUMMARY}"
