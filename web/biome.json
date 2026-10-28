@@ -59,15 +59,7 @@
     }
   },
   "files": {
-    "includes": [
-      "**",
-      "!src/routeTree.gen.ts",
-      "!public",
-      "!pnpm-lock.yaml",
-      "!mocks/mockServiceWorker.js",
-      "!test-results",
-      "!playwright-report"
-    ]
+    "includes": ["**", "!src/routeTree.gen.ts", "!public", "!pnpm-lock.yaml", "!test-results", "!playwright-report"]
   },
   "formatter": {
     "enabled": true,

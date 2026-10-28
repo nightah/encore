@@ -17,7 +17,6 @@ extend-exclude = [
   "tools/kodigen/schema/",
   "*.gen.go",
   "web/src/api/generated/",
-  "web/mocks/mockServiceWorker.js",
   "pnpm-lock.yaml",
   "go.sum",
   "go.mod",

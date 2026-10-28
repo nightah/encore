@@ -66,16 +66,14 @@ lint-repo: ## Repository-wide checks, as CI runs them: editorconfig, typos, secr
 	.github/scripts/image-delete-untagged_test.sh
 	.github/scripts/image-superseded_test.sh
 	.github/scripts/image-tag_test.sh
-	.github/scripts/msw-worker_test.sh
 	.github/scripts/mutation-go_test.sh
 	.github/scripts/next-version_test.sh
 	.github/scripts/release-commit_test.sh
 	.github/scripts/release-version_test.sh
 
-lint-web: web-install ## Lint and typecheck web, and check the MSW worker matches msw
+lint-web: web-install ## Lint and typecheck web
 	$(PNPM) -C web lint
 	$(PNPM) -C web typecheck
-	.github/scripts/msw-worker.sh
 
 test: test-go test-tools test-web ## Run Go, tools and web unit tests
 
