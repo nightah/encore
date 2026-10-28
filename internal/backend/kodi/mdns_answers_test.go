@@ -146,6 +146,25 @@ func TestMDNSAnswersInstanceNames(t *testing.T) {
 	}
 }
 
+// A host named with a dot inside a label is asked for byte for byte, and one such answer doesn't stop the query naming every other host.
+func TestMDNSAnswersDottedTarget(t *testing.T) {
+	answers := addAll([][]byte{newPacket(flagResponse).
+		answer("Lounge._xbmc-jsonrpc._tcp.local.", typeSRV, 120, srvData(9090, `Kodi\.2\..local.`)).
+		answer("Den._xbmc-jsonrpc._tcp.local.", typeSRV, 120, srvData(9091, "den.local.")).
+		bytes()})
+
+	q, err := answers.query(bothServices)
+	require.NoError(t, err)
+	assert.Equal(t, expectedQuery(t, bothServices, "den.local.", `kodi\.2\..local.`), q)
+
+	answers.add(newPacket(flagResponse).answer(`kodi\.2\..local.`, typeA, 120, ipData("192.168.1.60")).bytes())
+
+	assert.Equal(t, []ServiceEntry{
+		{Service: ServiceJSONRPC, Instance: "Den", Host: "den.local.", Port: 9091},
+		{Service: ServiceJSONRPC, Instance: "Lounge", Host: `Kodi\.2\..local.`, Addrs: []net.IP{net.ParseIP("192.168.1.60").To4()}, Port: 9090},
+	}, answers.entries(bothServices))
+}
+
 // mdnsMalformed are packets that are wrong in one way each. Every one would otherwise add the instance Bad on port 9999.
 func mdnsMalformed() map[string][]byte {
 	const owner = "Bad._xbmc-jsonrpc._tcp.local."
