@@ -45,3 +45,21 @@ func TestUploadDecodesLiveResponse(t *testing.T) {
 	require.NoError(t, err)
 	assert.JSONEq(t, `{"uploadUrl":"https://s3.example/upload","expiresAt":"2026-10-26T08:18:45.519Z"}`, string(out))
 }
+
+func TestTimeMarshalZeroIsNull(t *testing.T) {
+	out, err := json.Marshal(Time{})
+	require.NoError(t, err)
+	assert.JSONEq(t, `null`, string(out))
+
+	melbourne, err := time.LoadLocation("Australia/Melbourne")
+	require.NoError(t, err)
+
+	out, err = json.Marshal(Time{time.Date(2026, 10, 28, 9, 0, 0, 0, melbourne)})
+	require.NoError(t, err)
+	assert.JSONEq(t, `"2026-10-28T09:00:00+11:00"`, string(out))
+}
+
+func TestTimeUnmarshalRejectsMalformedString(t *testing.T) {
+	var got Time
+	require.Error(t, got.UnmarshalJSON([]byte(`"unterminated`)))
+}
