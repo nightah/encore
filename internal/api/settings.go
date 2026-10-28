@@ -291,7 +291,7 @@ func (a *API) runBackups(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case <-time.After(wait):
+		case <-a.opts.after(wait):
 		}
 
 		if !sched.Enabled() || a.now().Before(due) {

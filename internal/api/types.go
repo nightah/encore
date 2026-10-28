@@ -56,6 +56,8 @@ type Options struct {
 	Heartbeat time.Duration
 	// StatusInterval is how often Kodi instances are polled for the event stream; zero means 10 seconds.
 	StatusInterval time.Duration
+	// after waits between scheduled backup checks; nil means time.After. Tests replace it to step through the schedule.
+	after func(time.Duration) <-chan time.Time
 }
 
 // API is the admin API.
