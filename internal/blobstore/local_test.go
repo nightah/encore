@@ -1,10 +1,13 @@
 package blobstore_test
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"testing/iotest"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -82,6 +85,110 @@ func TestOpen(t *testing.T) {
 
 	_, err = blobstore.Open(config.Storage{Backend: "tape"}, dataDir)
 	require.Error(t, err)
+}
+
+func TestNewLocalErrors(t *testing.T) {
+	_, err := blobstore.NewLocal("")
+	require.Error(t, err)
+
+	file := filepath.Join(t.TempDir(), "file")
+	require.NoError(t, os.WriteFile(file, nil, 0o600))
+
+	_, err = blobstore.NewLocal(filepath.Join(file, "blobs"))
+	require.ErrorContains(t, err, "creating storage directory")
+}
+
+func TestLocalRootRemoved(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "blobs")
+	s, err := blobstore.NewLocal(dir)
+	require.NoError(t, err)
+	require.NoError(t, os.Remove(dir))
+
+	ctx := t.Context()
+
+	require.ErrorContains(t, s.Put(ctx, "k", strings.NewReader("v"), 1), "opening storage directory")
+
+	_, err = s.Get(ctx, "k")
+	require.ErrorContains(t, err, "opening storage directory")
+	require.NotErrorIs(t, err, blobstore.ErrNotFound, "a missing store is not a missing object")
+
+	require.ErrorContains(t, s.Delete(ctx, "k"), "opening storage directory")
+
+	_, err = s.List(ctx, "")
+	require.ErrorContains(t, err, "opening storage directory")
+}
+
+func TestLocalPutFailuresLeaveNothing(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "blobs")
+	s, err := blobstore.NewLocal(dir)
+	require.NoError(t, err)
+
+	ctx := t.Context()
+
+	require.ErrorIs(t, s.Put(ctx, "a/broken", iotest.ErrReader(assert.AnError), -1), assert.AnError)
+	require.Error(t, s.Put(ctx, "a/long", strings.NewReader("too long"), 3), "more data than the size is refused")
+
+	entries, err := os.ReadDir(filepath.Join(dir, "a"))
+	require.NoError(t, err)
+	assert.Empty(t, entries, "no temporary file is left behind")
+
+	require.NoError(t, s.Put(ctx, "file", strings.NewReader("x"), 1))
+	require.ErrorContains(t, s.Put(ctx, "file/child", strings.NewReader("x"), 1), "creating directory for file/child")
+}
+
+func TestLocalDeleteLeavesDirectories(t *testing.T) {
+	s, err := blobstore.NewLocal(filepath.Join(t.TempDir(), "blobs"))
+	require.NoError(t, err)
+
+	ctx := t.Context()
+	require.NoError(t, s.Put(ctx, "dir/file", strings.NewReader("x"), 1))
+
+	require.NoError(t, s.Delete(ctx, "dir"), "a directory is not an object, so there is nothing to delete")
+
+	objs, err := s.List(ctx, "")
+	require.NoError(t, err)
+	require.Len(t, objs, 1, "the directory's contents survive")
+	assert.Equal(t, "dir/file", objs[0].Key)
+}
+
+func TestLocalListSkipsInternalFiles(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "blobs")
+	s, err := blobstore.NewLocal(dir)
+	require.NoError(t, err)
+
+	ctx := t.Context()
+	require.NoError(t, s.Put(ctx, "a/real", strings.NewReader("x"), 1))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "a", ".tmp-0123"), []byte("in flight"), 0o600))
+	require.NoError(t, os.Symlink(filepath.Join(dir, "a", "real"), filepath.Join(dir, "a", "link")))
+
+	objs, err := s.List(ctx, "a/")
+	require.NoError(t, err)
+	require.Len(t, objs, 1, "in-flight writes and symlinks are not objects")
+	assert.Equal(t, "a/real", objs[0].Key)
+	assert.EqualValues(t, 1, objs[0].Size)
+	assert.Equal(t, time.UTC, objs[0].Modified.Location())
+
+	cancelled, cancel := context.WithCancel(ctx)
+	cancel()
+
+	_, err = s.List(cancelled, "a/")
+	require.ErrorIs(t, err, context.Canceled)
+}
+
+func TestLocalUnreadableObject(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("root ignores file permissions")
+	}
+
+	dir := filepath.Join(t.TempDir(), "blobs")
+	s, err := blobstore.NewLocal(dir)
+	require.NoError(t, err)
+	require.NoError(t, s.Put(t.Context(), "k", strings.NewReader("x"), 1))
+	require.NoError(t, os.Chmod(filepath.Join(dir, "k"), 0o000))
+
+	_, err = s.Get(t.Context(), "k")
+	require.ErrorContains(t, err, "opening k")
+	require.NotErrorIs(t, err, blobstore.ErrNotFound, "an unreadable object is not a missing one")
 }
 
 func TestValidateKey(t *testing.T) {
