@@ -1,13 +1,18 @@
 package app
 
 import (
+	"bytes"
 	"log/slog"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/nightah/encore/internal/backend/kodi/fakekodi"
 	"github.com/nightah/encore/internal/config"
+	"github.com/nightah/encore/internal/core/match"
+	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/secrets"
 	"github.com/nightah/encore/internal/store"
 	"github.com/nightah/encore/internal/testkit"
@@ -318,4 +323,59 @@ func TestNewReportsDatabaseFailuresWhileApplyingTheConfig(t *testing.T) {
 			assert.Len(t, a.InstanceIDs(), len(tc.kodi), "every instance has a runtime")
 		})
 	}
+}
+
+func TestNewReportsDatabasesItCannotOpen(t *testing.T) {
+	t.Run("the database", func(t *testing.T) {
+		cfg := config.Defaults()
+		cfg.DataDir = t.TempDir()
+
+		// A directory where the database file should be.
+		require.NoError(t, os.Mkdir(store.DefaultPath(cfg.DataDir), 0o700))
+
+		_, err := New(t.Context(), &cfg, slog.New(slog.DiscardHandler))
+		require.ErrorContains(t, err, "opening database: ")
+	})
+
+	t.Run("the secrets", func(t *testing.T) {
+		cfg, faults := faultyConfig(t)
+		faults.Inject(testkit.Fault{Op: testkit.Read, Table: "secrets"})
+
+		_, err := New(t.Context(), cfg, slog.New(slog.DiscardHandler))
+		require.ErrorContains(t, err, "opening secrets: checking for existing secrets: querying: "+testkit.ReadFaultMessage)
+
+		faults.Clear()
+
+		// Nothing was half set up: once the database works, New succeeds.
+		a, err := New(t.Context(), cfg, slog.New(slog.DiscardHandler))
+		require.NoError(t, err)
+		require.NoError(t, a.Close())
+	})
+}
+
+func TestIndexFailuresAreLogged(t *testing.T) {
+	var logs bytes.Buffer
+
+	a := newBareApp(t)
+	a.log = slog.New(slog.NewTextHandler(&logs, nil))
+
+	inst := detachedInstance(t, a, "Lounge", fakekodi.New(t, fakekodi.Options{}))
+
+	g, err := a.newGroup(store.LibraryGroup{ID: 1, State: store.GroupSolo}, evidence{}, []*Instance{inst}, inst)
+	require.NoError(t, err)
+
+	added := media.Item{Kind: media.KindMovie, ID: 1, Title: "Hot Fuzz"}
+
+	g.indexChanges("Lounge", []media.Item{added}, nil)
+	assert.Equal(t, 1, g.index.Len())
+	assert.Empty(t, logs.String())
+
+	require.NoError(t, g.close())
+
+	// A change arriving after the index closed, as when a group is rebuilt during a sync, is logged rather than lost silently or fatal.
+	g.indexChanges("Lounge", []media.Item{added}, []media.Ref{{Kind: media.KindMovie, ID: 2}})
+
+	out := logs.String()
+	assert.Contains(t, out, `level=ERROR msg="updating the title index" library_group=1 instance=Lounge backend=kodi error="`+match.ErrClosed.Error()+`"`)
+	assert.Contains(t, out, `level=ERROR msg="removing titles from the index" library_group=1 instance=Lounge backend=kodi error="`+match.ErrClosed.Error()+`"`)
 }
