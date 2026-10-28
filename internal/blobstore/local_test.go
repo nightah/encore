@@ -127,6 +127,7 @@ func TestLocalPutFailuresLeaveNothing(t *testing.T) {
 
 	require.ErrorIs(t, s.Put(ctx, "a/broken", iotest.ErrReader(assert.AnError), -1), assert.AnError)
 	require.Error(t, s.Put(ctx, "a/long", strings.NewReader("too long"), 3), "more data than the size is refused")
+	require.Error(t, s.Put(ctx, "a/empty", strings.NewReader("x"), 0), "a size of zero is a size too")
 
 	entries, err := os.ReadDir(filepath.Join(dir, "a"))
 	require.NoError(t, err)
@@ -192,7 +193,7 @@ func TestLocalUnreadableObject(t *testing.T) {
 }
 
 func TestValidateKey(t *testing.T) {
-	for _, k := range []string{"a", "a/b", "a/b.c", "backups/encore-20261026T030000.000Z.db.gz", "with space/ü"} {
+	for _, k := range []string{"a", "a/b", "a/b.c", "backups/encore-20261026T030000.000Z.db.gz", "with space/ü", strings.Repeat("a", 1024)} {
 		require.NoError(t, blobstore.ValidateKey(k), k)
 	}
 

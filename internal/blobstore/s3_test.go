@@ -491,12 +491,48 @@ func TestS3ConfigErrors(t *testing.T) {
 			require.Error(t, err)
 		})
 	}
+}
 
-	for _, sse := range []string{config.SSES3, config.SSEKMS} {
-		cfg := base
-		cfg.SSE, cfg.SSEKMSKeyID = sse, "key-1"
+func TestS3ServerSideEncryption(t *testing.T) {
+	for name, tt := range map[string]struct {
+		sse, wantAlgorithm, wantKeyID string
+	}{
+		"none":    {"", "", ""},
+		"SSE-S3":  {config.SSES3, "AES256", ""},
+		"SSE-KMS": {config.SSEKMS, "aws:kms", "key-1"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			m := &memS3{buckets: map[string]map[string]memObject{"encore": {}}, uploads: map[string]map[int][]byte{}, failures: map[string]s3Failure{}}
 
-		_, err := blobstore.NewS3(cfg)
-		require.NoError(t, err, sse)
+			var (
+				mu      sync.Mutex
+				headers []http.Header
+			)
+
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				if r.Method == http.MethodPut {
+					mu.Lock()
+					headers = append(headers, r.Header.Clone())
+					mu.Unlock()
+				}
+
+				m.ServeHTTP(w, r)
+			}))
+			t.Cleanup(srv.Close)
+
+			s, err := blobstore.NewS3(config.StorageS3{
+				Endpoint: srv.URL, Region: "us-east-1", Bucket: "encore", Addressing: config.AddressingPath,
+				AccessKey: "AKIA", SecretKey: "s3cr3t-value", SSE: tt.sse, SSEKMSKeyID: "key-1",
+			})
+			require.NoError(t, err)
+			require.NoError(t, s.Put(t.Context(), "state/db", strings.NewReader("v"), 1))
+
+			mu.Lock()
+			defer mu.Unlock()
+
+			require.Len(t, headers, 1)
+			assert.Equal(t, tt.wantAlgorithm, headers[0].Get("X-Amz-Server-Side-Encryption"), "every upload asks for the configured encryption")
+			assert.Equal(t, tt.wantKeyID, headers[0].Get("X-Amz-Server-Side-Encryption-Aws-Kms-Key-Id"))
+		})
 	}
 }

@@ -289,6 +289,7 @@ func TestBackupTime(t *testing.T) {
 		"backups/encore-20261026T030000.000Z.db.gz":   true,
 		"a/b/c/encore-20261026T030000.000Z.db.gz":     true,
 		"backups/encore-20261026T030000.000Z.db":      false,
+		"backups/encore-20261026T030000.000Z":         false,
 		"backups/other-20261026T030000.000Z.db.gz":    false,
 		"backups/encore-2026-10-26.db.gz":             false,
 		"encore-20261026T030000.000Z.db.gz/notes.txt": false,
