@@ -372,13 +372,31 @@ func TestKodiInstancePortOutOfRange(t *testing.T) {
 func TestApplyInstanceInputNeverEchoesURLPassword(t *testing.T) {
 	t.Parallel()
 
-	rec := store.KodiInstance{}
+	for name, tc := range map[string]struct {
+		in       InstanceInput
+		location string
+	}{
+		"ftp url":                     {in: InstanceInput{URL: new("ftp://kodi:s3cret@192.0.2.1/jsonrpc")}, location: "body.url"},                          // trufflehog:ignore
+		"unparsable port":             {in: InstanceInput{URL: new("http://kodi:s3cret@192.0.2.1:80a/jsonrpc")}, location: "body.url"},                     // trufflehog:ignore
+		"unparsable host":             {in: InstanceInput{URL: new("http://kodi:s3cret@[::1/jsonrpc")}, location: "body.url"},                              // trufflehog:ignore
+		"port out of range":           {in: InstanceInput{URL: new("http://kodi:s3cret@192.0.2.1:70000/jsonrpc")}, location: "body.url"},                   // trufflehog:ignore
+		"http websocket url":          {in: InstanceInput{WebSocketURL: new("http://kodi:s3cret@192.0.2.1:9090/jsonrpc")}, location: "body.websocket_url"}, // trufflehog:ignore
+		"unparsable websocket url":    {in: InstanceInput{WebSocketURL: new("ws://kodi:s3cret@[::1/jsonrpc")}, location: "body.websocket_url"},             // trufflehog:ignore
+		"websocket port out of range": {in: InstanceInput{WebSocketURL: new("ws://kodi:s3cret@192.0.2.1:70000/jsonrpc")}, location: "body.websocket_url"},  // trufflehog:ignore
+	} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	_, err := applyInstanceInput(&rec, InstanceInput{Name: new("Den"), URL: new("ftp://kodi:s3cret@192.0.2.1/jsonrpc")}, true) // trufflehog:ignore
-	loc, value := fieldLocation(t, err)
-	assert.Equal(t, "body.url", loc)
-	assert.NotContains(t, fmt.Sprint(value), "s3cret")
-	assert.Contains(t, fmt.Sprint(value), "kodi:xxxxx@")
+			rec := store.KodiInstance{Name: "Lounge", Scheme: "http", Host: "192.0.2.10", Port: 8080, Path: "/jsonrpc", WSPort: 9090}
+
+			_, err := applyInstanceInput(&rec, tc.in, false)
+			loc, value := fieldLocation(t, err)
+			assert.Equal(t, tc.location, loc)
+			assert.NotContains(t, fmt.Sprint(value), "s3cret")
+			assert.Contains(t, fmt.Sprint(value), "kodi:xxxxx@", "the value is still shown, redacted")
+			assert.NotContains(t, err.Error(), "s3cret")
+		})
+	}
 }
 
 func TestApplyInstanceInput(t *testing.T) {
@@ -497,7 +515,10 @@ func TestRedactURL(t *testing.T) {
 
 	assert.Equal(t, "http://kodi:xxxxx@192.0.2.1/jsonrpc", redactURL("http://kodi:s3cret@192.0.2.1/jsonrpc")) // trufflehog:ignore
 	assert.Equal(t, "http://192.0.2.1/jsonrpc", redactURL("http://192.0.2.1/jsonrpc"))
-	assert.Equal(t, "http://[::1", redactURL("http://[::1"), "an unparsable URL has no credentials to hide")
+	assert.Equal(t, "http://[::1", redactURL("http://[::1"), "an unparsable URL without credentials is kept")
+	assert.Equal(t, "http://kodi:xxxxx@[::1/jsonrpc", redactURL("http://kodi:s3cret@[::1/jsonrpc"), "an unparsable URL still hides its password") // trufflehog:ignore
+	assert.Equal(t, "ws://kodi:xxxxx@192.0.2.1:80a?x=@", redactURL("ws://kodi:s3cret@192.0.2.1:80a?x=@"), "only the authority's @ counts")        // trufflehog:ignore
+	assert.Equal(t, "http://kodi@[::1", redactURL("http://kodi@[::1"), "a user name alone isn't secret")
 }
 
 func TestArtURL(t *testing.T) {

@@ -324,7 +324,7 @@ func applyInstanceInput(rec *store.KodiInstance, in InstanceInput, creating bool
 		if wsRaw != "" {
 			w, err := url.Parse(wsRaw)
 			if err != nil || (w.Scheme != "ws" && w.Scheme != "wss") || w.Hostname() == "" {
-				return nil, fieldError("body.websocket_url", "must be a ws(s) URL such as ws://192.168.1.20:9090/jsonrpc", wsRaw)
+				return nil, fieldError("body.websocket_url", "must be a ws(s) URL such as ws://192.168.1.20:9090/jsonrpc", redactURL(wsRaw))
 			}
 		}
 
@@ -338,7 +338,7 @@ func applyInstanceInput(rec *store.KodiInstance, in InstanceInput, creating bool
 		}
 
 		if wsRaw != "" && kc.WebSocketPort > maxPort {
-			return nil, fieldError("body.websocket_url", "the port must be between 1 and 65535", wsRaw)
+			return nil, fieldError("body.websocket_url", "the port must be between 1 and 65535", redactURL(wsRaw))
 		}
 
 		rec.Scheme, rec.Host, rec.Port, rec.Path = kc.Scheme, kc.Host, kc.Port, kc.Path
@@ -433,12 +433,36 @@ func shutdownOf(q *bool) string {
 }
 
 func redactURL(raw string) string {
-	u, err := url.Parse(raw)
-	if err != nil || u.User == nil {
+	if u, err := url.Parse(raw); err == nil {
+		if u.User == nil {
+			return raw
+		}
+
+		return u.Redacted()
+	}
+
+	// An unparsable URL can still carry a password; hide it as Redacted would.
+	prefix, rest, ok := strings.Cut(raw, "//")
+	if !ok {
 		return raw
 	}
 
-	return u.Redacted()
+	authority := rest
+	if i := strings.IndexAny(rest, "/?#"); i >= 0 {
+		authority = rest[:i]
+	}
+
+	at := strings.LastIndex(authority, "@")
+	if at < 0 {
+		return raw
+	}
+
+	user, _, hasPassword := strings.Cut(authority[:at], ":")
+	if !hasPassword {
+		return raw
+	}
+
+	return prefix + "//" + user + ":xxxxx" + rest[at:]
 }
 
 func (a *API) createInstance(ctx context.Context, in InstanceInput) (Instance, error) {
