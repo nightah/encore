@@ -132,7 +132,9 @@ func TestPicture(t *testing.T) {
 		{media.PictureRotateClockwise, "Player.Rotate", `{"playerid":1,"value":"clockwise"}`},
 		{media.PictureRotateCounterClockwise, "Player.Rotate", `{"playerid":1,"value":"counterclockwise"}`},
 		{media.PictureMoveUp, "Player.Move", `{"playerid":1,"direction":"up"}`},
+		{media.PictureMoveDown, "Player.Move", `{"playerid":1,"direction":"down"}`},
 		{media.PictureMoveLeft, "Player.Move", `{"playerid":1,"direction":"left"}`},
+		{media.PictureMoveRight, "Player.Move", `{"playerid":1,"direction":"right"}`},
 	}
 
 	for _, tc := range cases {

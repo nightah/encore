@@ -441,6 +441,10 @@ func TestSeek(t *testing.T) {
 
 	require.Error(t, b.Seek(ctx, media.Seek{Step: "sideways"}))
 
+	seeks := len(s.CallsTo("Player.Seek"))
+	require.NoError(t, b.Seek(ctx, media.Seek{}), "a seek by nothing is no seek")
+	assert.Len(t, s.CallsTo("Player.Seek"), seeks, "and Kodi isn't asked")
+
 	before := -5 * time.Second
 	require.NoError(t, b.Seek(ctx, media.Seek{To: &before}))
 	assert.JSONEq(t, `{"playerid":1,"value":{"time":{}}}`, lastParams(t, s, "Player.Seek"), "a position before the start seeks to the start")
@@ -759,6 +763,59 @@ func TestPlaylistsSkipFoldersAndUnreachableKodi(t *testing.T) {
 
 	_, err = b.Library(t.Context(), media.KindPlaylist)
 	require.ErrorIs(t, err, media.ErrUnreachable, "an unreachable Kodi isn't an empty one")
+}
+
+func TestPlaylistsOfAnUnreachableKodi(t *testing.T) {
+	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+
+	playlists, err := b.Library(t.Context(), media.KindPlaylist)
+	require.NoError(t, err)
+	require.NotEmpty(t, playlists)
+
+	known := playlists[0].Ref()
+
+	s.Close()
+
+	_, err = b.Search(t.Context(), media.KindPlaylist, "road")
+	require.ErrorIs(t, err, media.ErrUnreachable, "no playlists found is not the same as none there")
+
+	_, err = b.Item(t.Context(), known)
+	require.ErrorIs(t, err, media.ErrUnreachable, "a playlist is looked up afresh")
+
+	err = b.Play(t.Context(), media.Ref{Kind: media.KindPlaylist, ID: known.ID + 1}, media.PlayOptions{})
+	require.ErrorIs(t, err, media.ErrUnreachable, "an unknown playlist is looked for, and Kodi can't be asked")
+}
+
+func TestShuffleAPlaylistKodiCantRead(t *testing.T) {
+	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+
+	playlists, err := b.Library(t.Context(), media.KindPlaylist)
+	require.NoError(t, err)
+	require.NotEmpty(t, playlists)
+
+	// The folders still list, but the playlist itself can't be read.
+	s.Handle("Files.GetDirectory", func(params json.RawMessage) (any, *fakekodi.Error) {
+		if bytes.Contains(params, []byte(`"directory":"special://profile/playlists/`)) && !bytes.Contains(params, []byte(`/"`)) {
+			return nil, &fakekodi.Error{Code: CodeInternalError, Message: "Internal error."}
+		}
+
+		return nil, &fakekodi.Error{Code: CodeInvalidParams, Message: "no such folder"}
+	})
+
+	err = b.Play(t.Context(), playlists[0].Ref(), media.PlayOptions{Shuffle: true})
+	require.ErrorContains(t, err, "reading playlist special://profile/playlists/")
+	assert.Empty(t, s.CallsTo("Playlist.Clear"), "the queue is left alone")
+}
+
+func TestItemWithoutDetails(t *testing.T) {
+	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+
+	// Kodi answers, but with no movie in the reply.
+	s.Handle("VideoLibrary.GetMovieDetails", func(json.RawMessage) (any, *fakekodi.Error) { return map[string]any{}, nil })
+
+	_, err := b.Item(t.Context(), media.Ref{Kind: media.KindMovie, ID: 1})
+	require.ErrorIs(t, err, media.ErrNotFound)
+	assert.ErrorContains(t, err, "movie 1")
 }
 
 func TestShuffleEmptyContainer(t *testing.T) {
