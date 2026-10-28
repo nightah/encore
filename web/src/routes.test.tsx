@@ -370,6 +370,64 @@ describe("overview page", () => {
   });
 });
 
+describe("Kodi page", () => {
+  it("offers to add the first instance and nothing to share", async () => {
+    const user = userEvent.setup();
+    Object.assign(getDb(), { discovered: [], instances: [], libraries: [] });
+    renderApp("/kodi");
+
+    expect(await screen.findByText("No Kodi instances yet")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Share a library" })).not.toBeInTheDocument();
+    const [, fromEmptyState] = screen.getAllByRole("button", { name: "Add Kodi manually" });
+    if (!fromEmptyState) throw new Error("the empty state offers to add one");
+
+    await user.click(fromEmptyState);
+
+    const dialog = await screen.findByRole("dialog", { name: "Add a Kodi instance" });
+    expect(within(dialog).getByRole("textbox", { name: "JSON-RPC URL" })).toHaveValue("");
+  });
+
+  it("leaves the WebSocket address empty for a discovered Kodi without one", async () => {
+    const user = userEvent.setup();
+    const db = getDb();
+    db.discovered = db.discovered.map((d) => (d.name === "LibreELEC-Study" ? { ...d, ws_port: 0 } : d));
+    renderApp("/kodi");
+
+    await user.click(await screen.findByRole("button", { name: "Add LibreELEC-Study" }));
+
+    const dialog = await screen.findByRole("dialog", { name: "Add a Kodi instance" });
+    expect(within(dialog).getByRole("textbox", { name: "JSON-RPC URL" })).toHaveValue(
+      "http://192.168.1.47:8080/jsonrpc",
+    );
+    expect(within(dialog).getByRole("textbox", { name: "WebSocket URL" })).toHaveValue("");
+  });
+});
+
+describe("Echo devices page", () => {
+  it("says when no Echo has spoken to the skill yet", async () => {
+    getDb().devices = [];
+    renderApp("/echo-devices");
+    expect(
+      await screen.findByText("No Echos yet. They appear here after their first request to the skill."),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("table", { name: "Devices" })).not.toBeInTheDocument();
+  });
+
+  it("shows an unnamed Echo with no room or Kodi instance", async () => {
+    const db = getDb();
+    const [device] = db.devices;
+    if (!device) throw new Error("no sample device");
+    db.devices = [{ ...device, kodi_instance_id: 999, name: "", room_id: 999 }];
+    renderApp("/echo-devices");
+
+    const table = await screen.findByRole("table", { name: "Devices" });
+    const row = within(table).getByRole("button", { name: "Edit Unnamed Echo" }).closest("tr") as HTMLElement;
+    expect(within(row).getByText("Unnamed Echo")).toBeInTheDocument();
+    expect(within(row).getByText("Not linked")).toBeInTheDocument();
+    expect(within(row).getByText("-")).toBeInTheDocument();
+  });
+});
+
 describe("page load errors", () => {
   it.each([
     ["/", "/overview", "Overview"],
