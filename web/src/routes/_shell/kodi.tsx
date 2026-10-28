@@ -37,7 +37,10 @@ function KodiPage() {
   const libraries = useLibraries();
   const [dialog, setDialog] = useState<DialogState>({ mode: "closed" });
   const [share, setShare] = useState<{ open: boolean; initial?: number[] }>({ open: false });
-  const shared = libraries.data?.filter((l) => l.members.length > 1) ?? [];
+  // A card names the instances it shares a library with, so the cards wait for the libraries too rather than showing "Shared with" no one.
+  const list = libraries.data ? instances.data : undefined;
+  const error = instances.error ?? libraries.error;
+  const shared = (list && libraries.data?.filter((l) => l.members.length > 1)) ?? [];
   const libraryOf = (instance: Instance) =>
     libraries.data?.find((l) => l.members.some((m) => m.instance_id === instance.id));
 
@@ -58,22 +61,29 @@ function KodiPage() {
     >
       <div className="flex flex-wrap items-start gap-4.5">
         <div className="flex min-w-0 flex-[3_1_560px] flex-col gap-4">
-          {instances.isPending ? <LoadingBlock /> : null}
-          {instances.error ? <ErrorState error={instances.error} onRetry={() => instances.refetch()} /> : null}
+          {!list && !error ? <LoadingBlock /> : null}
+          {error ? (
+            <ErrorState
+              error={error}
+              onRetry={() => {
+                for (const q of [instances, libraries]) if (q.error) void q.refetch();
+              }}
+            />
+          ) : null}
           {shared.map((library) => (
             <SharedLibraryPanel
               key={library.id}
               library={library}
               onAddInstance={
-                (instances.data?.length ?? 0) > library.members.length
+                (list?.length ?? 0) > library.members.length
                   ? () => setShare({ initial: library.members.map((m) => m.instance_id), open: true })
                   : undefined
               }
             />
           ))}
-          {instances.data?.length ? (
+          {list?.length ? (
             <div className="grid items-start gap-4 min-[1800px]:grid-cols-2 min-[2800px]:grid-cols-3">
-              {instances.data.map((instance) => (
+              {list.map((instance) => (
                 <InstanceCard
                   key={instance.id}
                   instance={instance}
@@ -83,7 +93,7 @@ function KodiPage() {
               ))}
             </div>
           ) : null}
-          {instances.data?.length === 0 ? (
+          {list?.length === 0 ? (
             <EmptyState
               title={t("page.empty.title")}
               action={
