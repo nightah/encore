@@ -116,6 +116,8 @@ function applyEvent<E extends EventName>(queryClient: QueryClient, name: E, payl
     }
     case "deploy": {
       const { deploy_id, ...event } = payload as DeployStreamEvent;
+      // A load of this deploy still on its way was answered before this step, and would put the deploy back as it was; the next poll catches up instead.
+      void queryClient.cancelQueries({ queryKey: keys.deploy(deploy_id) });
       queryClient.setQueryData<Deploy>(keys.deploy(deploy_id), (deploy) => {
         const base: Deploy = deploy ?? {
           error: "",
