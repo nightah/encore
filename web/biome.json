@@ -89,14 +89,13 @@
         "preset": "recommended"
       },
       "correctness": {
+        "noJsxNamespace": "error",
         "noNestedComponentDefinitions": "error",
         "noUnusedImports": "error",
         "noUnusedVariables": "error",
         "useExhaustiveDependencies": "error"
       },
       "nursery": {
-        "noJsxLeakedDollar": "error",
-        "noJsxNamespace": "error",
         "useReactCompiler": "error",
         "useReactNamingConvention": "error"
       },
@@ -138,6 +137,7 @@
             "allow": ["error", "warn"]
           }
         },
+        "noJsxLeakedDollar": "error",
         "noReactForwardRef": "error"
       }
     }

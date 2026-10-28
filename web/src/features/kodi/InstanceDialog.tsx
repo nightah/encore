@@ -96,10 +96,15 @@ export function InstanceDialog({ open, onOpenChange, instance, prefill }: Instan
   useEffect(() => {
     if (!open) return;
     form.reset(instance ? fromInstance(instance) : { ...EMPTY, ...prefill });
-    setConfirmRemove(false);
     create.reset();
     update.reset();
   }, [open, instance, prefill, form, create.reset, update.reset]);
+
+  // Every way out of the dialog comes through here, so it always reopens without the removal confirmation.
+  const changeOpen = (next: boolean) => {
+    if (!next) setConfirmRemove(false);
+    onOpenChange(next);
+  };
 
   const pending = create.isPending || update.isPending;
   const failure = create.error ?? update.error;
@@ -120,7 +125,7 @@ export function InstanceDialog({ open, onOpenChange, instance, prefill }: Instan
     try {
       if (instance) await update.mutateAsync({ body, id: instance.id });
       else await create.mutateAsync(body);
-      onOpenChange(false);
+      changeOpen(false);
     } catch (error) {
       if (error instanceof ApiError) {
         for (const [name, message] of Object.entries(error.fieldErrors)) {
@@ -136,7 +141,7 @@ export function InstanceDialog({ open, onOpenChange, instance, prefill }: Instan
   return (
     <Dialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={changeOpen}
       size="lg"
       title={title}
       description={
@@ -156,7 +161,7 @@ export function InstanceDialog({ open, onOpenChange, instance, prefill }: Instan
             <Button
               variant="danger"
               pending={remove.isPending}
-              onClick={() => remove.mutate(instance.id, { onSuccess: () => onOpenChange(false) })}
+              onClick={() => remove.mutate(instance.id, { onSuccess: () => changeOpen(false) })}
             >
               {t("dialog.remove")}
             </Button>
@@ -168,7 +173,7 @@ export function InstanceDialog({ open, onOpenChange, instance, prefill }: Instan
                 {t("dialog.removeEllipsis")}
               </Button>
             ) : null}
-            <Button onClick={() => onOpenChange(false)}>{managed ? t("dialog.close") : t("dialog.cancel")}</Button>
+            <Button onClick={() => changeOpen(false)}>{managed ? t("dialog.close") : t("dialog.cancel")}</Button>
             {managed ? null : (
               <Button type="submit" form="instance-form" variant="primary" pending={pending}>
                 {instance ? t("dialog.save") : t("dialog.add")}
