@@ -57,31 +57,28 @@ func (c *Catalog) Restore(s Snapshot) error {
 	}
 	c.mu.RUnlock()
 
-	c.apply(items, removed)
+	c.applyThen(items, removed, func() {
+		c.episodes, c.epIndex = map[int][]media.Item{}, map[int]media.Item{}
+		c.epGen++
 
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	c.episodes, c.epIndex = map[int][]media.Item{}, map[int]media.Item{}
-	c.epGen++
-
-	if !slices.Contains(kinds, media.KindTVShow) {
-		s.Episodes = nil
-	}
-
-	for show, eps := range s.Episodes {
-		c.episodes[show] = eps
-		for i := range eps {
-			c.epIndex[eps[i].ID] = eps[i]
+		if !slices.Contains(kinds, media.KindTVShow) {
+			s.Episodes = nil
 		}
-	}
 
-	c.watermark = maps.Clone(s.Watermarks)
-	if c.watermark == nil {
-		c.watermark = map[media.Kind]time.Time{}
-	}
+		for show, eps := range s.Episodes {
+			c.episodes[show] = eps
+			for i := range eps {
+				c.epIndex[eps[i].ID] = eps[i]
+			}
+		}
 
-	c.lastSync = s.LastSync
+		c.watermark = maps.Clone(s.Watermarks)
+		if c.watermark == nil {
+			c.watermark = map[media.Kind]time.Time{}
+		}
+
+		c.lastSync = s.LastSync
+	})
 
 	return nil
 }

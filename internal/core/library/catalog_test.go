@@ -434,6 +434,39 @@ func TestSnapshotRestore(t *testing.T) {
 	require.Error(t, New("bedroom", b, Options{}).Restore(snap))
 }
 
+func TestChangeHooksSeeFinishedUpdates(t *testing.T) {
+	b := seed()
+	src, _ := newCatalog(b, newClock(), Options{})
+	require.NoError(t, src.Sync(t.Context()))
+
+	_, err := src.Episodes(t.Context(), 10)
+	require.NoError(t, err)
+
+	clk := newClock()
+	c := New("lounge", b, Options{Now: clk.now})
+
+	var seen []Stats
+
+	c.OnChange(func(string, []media.Item, []media.Ref) { seen = append(seen, c.Stats()) })
+
+	require.NoError(t, c.Restore(src.Snapshot()))
+	require.Len(t, seen, 1)
+	assert.Equal(t, src.Stats().LastSync, seen[0].LastSync, "a restored catalog is seen with its sync time")
+	assert.Equal(t, 2, seen[0].Episodes, "and its episodes")
+
+	clk.advance(time.Hour)
+	b.put(movie(3, "Conclave", t0.Add(-time.Hour)))
+	require.NoError(t, c.Sync(t.Context()))
+	require.Len(t, seen, 2)
+	assert.Equal(t, clk.now(), seen[1].LastSync, "a synced catalog is seen with its new sync time")
+
+	clk.advance(time.Hour)
+	b.put(movie(4, "Paddington", t0.Add(time.Hour)))
+	require.NoError(t, c.Delta(t.Context()))
+	require.Len(t, seen, 3)
+	assert.Equal(t, clk.now(), seen[2].LastDelta, "and after a delta, with its delta time")
+}
+
 func TestRestoreSkipsKindsNoLongerLoaded(t *testing.T) {
 	b := seed()
 	c, _ := newCatalog(b, newClock(), Options{})
