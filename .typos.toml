@@ -22,6 +22,8 @@ extend-exclude = [
   "go.mod",
   # Speech-recognition test data spells titles the way Alexa mishears them.
   "internal/core/match/testdata/",
+  # Double Metaphone's rules match letter sequences ("PN", "ALLE"), not words.
+  "internal/fuzzy/phonetic/en/metaphone.go",
 ]
 
 # Prose is Australian English.
