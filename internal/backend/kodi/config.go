@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/url"
 	"strconv"
+	"strings"
 )
 
 // ConfigFromURLs builds a Config from an HTTP JSON-RPC URL such as http://kodi:8080/jsonrpc and an optional WebSocket URL; credentials in the HTTP URL's userinfo are used for basic auth.
@@ -42,16 +43,36 @@ func ConfigFromURLs(httpURL, wsURL string) (Config, error) {
 	return cfg.withDefaults(), nil
 }
 
-// parseURL is url.Parse with errors that leave out the URL, which may hold a password.
+// parseURL is url.Parse with errors that leave out the URL, which may hold a password, and that refuses a URL without a host to connect to.
 func parseURL(raw string) (*url.URL, error) {
 	u, err := url.Parse(raw)
 
 	var urlErr *url.Error
-	if errors.As(err, &urlErr) {
+
+	switch {
+	case errors.As(err, &urlErr):
 		return nil, urlErr.Err
+	case err == nil && !hasHost(u):
+		return nil, errNoHost
 	}
 
 	return u, err
+}
+
+// hasHost reports whether u names a host to connect to: not empty, and a bracketed IP address if it holds colons ("//::" leaves the host ":").
+func hasHost(u *url.URL) bool {
+	h := u.Hostname()
+	if h == "" {
+		return false
+	}
+
+	if !strings.Contains(h, ":") {
+		return true
+	}
+
+	ip, _, _ := strings.Cut(h, "%")
+
+	return strings.HasPrefix(u.Host, "[") && net.ParseIP(ip) != nil
 }
 
 func portOf(u *url.URL, fallback int) (int, error) {
