@@ -78,9 +78,8 @@ func NewS3(cfg config.StorageS3) (*S3, error) {
 	case config.SSES3:
 		s.sse = encrypt.NewSSE()
 	case config.SSEKMS:
-		if s.sse, err = encrypt.NewSSEKMS(cfg.SSEKMSKeyID, nil); err != nil {
-			return nil, fmt.Errorf("s3: configuring SSE-KMS: %w", err)
-		}
+		// Without an encryption context there is nothing to marshal, so NewSSEKMS can't fail.
+		s.sse, _ = encrypt.NewSSEKMS(cfg.SSEKMSKeyID, nil)
 	}
 
 	return s, nil
