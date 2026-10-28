@@ -53,7 +53,7 @@ lint-go: ## Lint Go (root + tools module) and interaction models
 	cd tools && $(GOLANGCI) run --config ../.golangci.yml ./...
 	$(GO) run ./cmd/encore gen lint
 
-lint-repo: ## Repository-wide checks, as CI runs them: editorconfig, typos, secrets, sorted language files, shell scripts and the image scripts', next version, release commit and release version scripts' tests, Dockerfiles, workflows and Go vulnerabilities
+lint-repo: ## Repository-wide checks, as CI runs them: editorconfig, typos, secrets, sorted language files, shell scripts and the image scripts', MSW worker, next version, release commit and release version scripts' tests, Dockerfiles, workflows and Go vulnerabilities
 	$(GO) tool -modfile=tools/go.mod actionlint
 	git ls-files -z | xargs -0 $(GO) tool -modfile=tools/go.mod editorconfig-checker
 	$(GO) tool -modfile=tools/go.mod govulncheck ./...
@@ -66,13 +66,15 @@ lint-repo: ## Repository-wide checks, as CI runs them: editorconfig, typos, secr
 	.github/scripts/image-delete-untagged_test.sh
 	.github/scripts/image-superseded_test.sh
 	.github/scripts/image-tag_test.sh
+	.github/scripts/msw-worker_test.sh
 	.github/scripts/next-version_test.sh
 	.github/scripts/release-commit_test.sh
 	.github/scripts/release-version_test.sh
 
-lint-web: web-install ## Lint and typecheck web
+lint-web: web-install ## Lint and typecheck web, and check the MSW worker matches msw
 	$(PNPM) -C web lint
 	$(PNPM) -C web typecheck
+	.github/scripts/msw-worker.sh
 
 test: test-go test-tools test-web ## Run Go, tools and web unit tests
 

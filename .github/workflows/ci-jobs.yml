@@ -207,6 +207,9 @@ jobs:
           .github/scripts/image-superseded_test.sh
           .github/scripts/image-tag_test.sh
 
+      - name: MSW worker script
+        run: .github/scripts/msw-worker_test.sh
+
       - name: Next version script
         run: .github/scripts/next-version_test.sh
 
@@ -308,6 +311,10 @@ jobs:
 
       - name: Lint
         run: pnpm -C web lint
+
+      # msw has no postinstall to refresh the committed worker, and Renovate doesn't run install scripts, so an msw upgrade has to bring mocks/mockServiceWorker.js along by hand.
+      - name: Check the MSW worker matches msw
+        run: .github/scripts/msw-worker.sh
 
       - name: Typecheck
         run: pnpm -C web typecheck

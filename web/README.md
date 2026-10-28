@@ -48,7 +48,7 @@ pnpm dev:mock       # http://localhost:3000, API served by MSW in the browser
 - `?mock=fresh` starts from a first run (setup required; the setup token is `K7QF-2M9X-PL4D`).
 - `?mock=configured` resets to the sample home. Its admin password is `correct-horse-battery`.
 
-The worker script lives in `mocks/mockServiceWorker.js` (not `public/`) and is served only in mock mode, so production builds never contain it; `import.meta.env.MODE === "mock"` is static, so the mock code is dropped from builds too. Tests use the same handlers through `msw/node` (`src/mocks/node.ts`). After upgrading msw, refresh the worker with `pnpm exec msw init mocks --no-save`.
+The worker script lives in `mocks/mockServiceWorker.js` (not `public/`) and is served only in mock mode, so production builds never contain it; `import.meta.env.MODE === "mock"` is static, so the mock code is dropped from builds too. Tests use the same handlers through `msw/node` (`src/mocks/node.ts`). After upgrading msw, refresh the worker with `pnpm exec msw init mocks --no-save`: msw has no postinstall that does it, and `make lint-web` and CI (`.github/scripts/msw-worker.sh`) fail while the worker's `PACKAGE_VERSION` differs from the installed msw.
 
 ## Build
 
