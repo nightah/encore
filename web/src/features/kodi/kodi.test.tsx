@@ -146,6 +146,25 @@ describe("Kodi instances page", () => {
     });
   });
 
+  it("forgets an unconfirmed removal when the dialog closes", async () => {
+    const user = userEvent.setup();
+    renderApp("/kodi");
+    const lounge = await card("Lounge");
+
+    await user.click(lounge.getByRole("button", { name: "Edit Lounge" }));
+    let dialog = await screen.findByRole("dialog", { name: "Edit Lounge" });
+    await user.click(within(dialog).getByRole("button", { name: "Remove…" }));
+    expect(within(dialog).getByRole("button", { name: "Keep it" })).toBeVisible();
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+
+    await user.click(lounge.getByRole("button", { name: "Edit Lounge" }));
+    dialog = await screen.findByRole("dialog", { name: "Edit Lounge" });
+    expect(within(dialog).getByRole("button", { name: "Remove…" })).toBeVisible();
+    expect(within(dialog).queryByRole("button", { name: "Keep it" })).not.toBeInTheDocument();
+    expect(getDb().instances.some((i) => i.name === "Lounge")).toBe(true);
+  });
+
   it("updates a card from an instance event", async () => {
     renderApp("/kodi");
     const kids = await card("Kids' room");

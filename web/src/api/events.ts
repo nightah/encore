@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useSyncExternalStore } from "react";
 
 import { type InfiniteData, type QueryClient, useQueryClient } from "@tanstack/react-query";
 
@@ -225,30 +225,23 @@ class EventStream {
 
 export const eventStream = new EventStream();
 
+const subscribeStatus = (onChange: () => void) => eventStream.onStatus(onChange);
+const getStatus = () => eventStream.status;
+
 /** Keeps the event stream open while mounted and returns its connection status. */
 export function useEventStream(): StreamStatus {
   const queryClient = useQueryClient();
-  const [status, setStatus] = useState<StreamStatus>(eventStream.status);
-  useEffect(() => {
-    const release = eventStream.acquire(queryClient);
-    const off = eventStream.onStatus(setStatus);
-    setStatus(eventStream.status);
-    return () => {
-      off();
-      release();
-    };
-  }, [queryClient]);
-  return status;
+  useEffect(() => eventStream.acquire(queryClient), [queryClient]);
+  return useSyncExternalStore(subscribeStatus, getStatus, getStatus);
 }
 
 /** Calls `listener` for each event of one type (the cache is already updated by then). */
 export function useServerEvent<E extends EventName>(name: E, listener: Listener<E>): void {
   const queryClient = useQueryClient();
-  const ref = useRef(listener);
-  ref.current = listener;
+  const onEvent = useEffectEvent(listener);
   useEffect(() => {
     const release = eventStream.acquire(queryClient);
-    const off = eventStream.on(name, (payload) => ref.current(payload));
+    const off = eventStream.on(name, (payload) => onEvent(payload));
     return () => {
       off();
       release();
