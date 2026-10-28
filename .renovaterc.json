@@ -209,6 +209,15 @@
       ],
       "groupName": "ci tools",
       "semanticCommitType": "ci"
+    },
+    {
+      "description": "Release tools: GoReleaser and syft, pinned in the release workflow, bump together",
+      "matchDepNames": [
+        "goreleaser/goreleaser",
+        "anchore/syft"
+      ],
+      "groupName": "release tools",
+      "semanticCommitType": "ci"
     }
   ],
   "customManagers": [
@@ -272,6 +281,30 @@
         "GOLANGCI_LINT_VERSION: (?<currentValue>v\\S+)"
       ],
       "depNameTemplate": "golangci/golangci-lint",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "description": "GoReleaser version in the release workflow",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/.+\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "GORELEASER_VERSION: (?<currentValue>v\\S+)"
+      ],
+      "depNameTemplate": "goreleaser/goreleaser",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "description": "syft version in the release workflow (it generates the release SBOMs)",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/.+\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "SYFT_VERSION: (?<currentValue>v\\S+)"
+      ],
+      "depNameTemplate": "anchore/syft",
       "datasourceTemplate": "github-releases"
     },
     {
