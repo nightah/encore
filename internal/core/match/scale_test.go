@@ -27,7 +27,7 @@ import (
 //
 //	ENCORE_MATCH_SCALE=10000,100000,500000 go test ./internal/core/match -run TestRetrieverScale -v -timeout 1h
 //
-// ENCORE_MATCH_RETRIEVERS limits which retrievers run (comma-separated names from scaleRetrievers).
+// ENCORE_MATCH_RETRIEVERS limits which retrievers run (comma-separated names from scaleRetrievers), and ENCORE_MATCH_POOLS lists candidate pool sizes to compare (default Config.CandidatePool).
 
 // scaleRetrievers builds each retriever the harness compares against exhaustive scoring.
 var scaleRetrievers = map[string]func(*language) (retriever, error){
@@ -458,13 +458,14 @@ func englishSuite(tb testing.TB) corpusSuite {
 	return corpusSuite{}
 }
 
-// TestRetrieverScale reports, per retriever and library size, build time and memory, candidate and Search latency, and how often Search agrees with exhaustive scoring. Agreement is the share of queries with the same decision and top Doc; recall@10 is the share of exhaustive scoring's top ten that the retriever's Search also returns.
+// TestRetrieverScale reports, per retriever, library size and candidate pool size, build time and memory, candidate and Search latency, and how often Search agrees with exhaustive scoring. Agreement is the share of queries with the same decision and top Doc; recall@10 is the share of exhaustive scoring's top ten that the retriever's Search also returns.
 func TestRetrieverScale(t *testing.T) {
 	if os.Getenv("ENCORE_MATCH_SCALE") == "" {
 		t.Skip("set ENCORE_MATCH_SCALE (e.g. 10000,100000) to run the retriever scale harness")
 	}
 
 	suite := englishSuite(t)
+	pools := scaleSizes(t, "ENCORE_MATCH_POOLS", []int{DefaultConfig().CandidatePool})
 
 	for _, n := range scaleSizes(t, "ENCORE_MATCH_SCALE", nil) {
 		docs := scaleDocs(n, suite.docs(), 1)
@@ -495,75 +496,94 @@ func TestRetrieverScale(t *testing.T) {
 
 				heap, rss := memMB()
 
-				var candLat, searchLat []time.Duration
+				for _, pool := range pools {
+					ix.cfg.CandidatePool = pool
 
-				ctx := t.Context()
+					var candLat, searchLat []time.Duration
 
-				for pass := range 4 {
-					for _, q := range queries {
-						qf := ix.lang.newForm(ix.lang.normalizeSpelled(q.Text, false))
+					ctx := t.Context()
 
-						t0 := time.Now()
-						_, err := ix.ret.candidates(ctx, &qf, q.Kinds, ix.cfg.CandidatePool)
-						require.NoError(t, err)
+					for pass := range 4 {
+						for _, q := range queries {
+							qf := ix.lang.newForm(ix.lang.normalizeSpelled(q.Text, false))
 
-						t1 := time.Now()
-						_, err = ix.Search(ctx, q)
-						require.NoError(t, err)
+							t0 := time.Now()
+							_, err := ix.ret.candidates(ctx, &qf, q.Kinds, ix.cfg.CandidatePool)
+							require.NoError(t, err)
 
-						if pass > 0 {
-							candLat = append(candLat, t1.Sub(t0))
-							searchLat = append(searchLat, time.Since(t1))
+							t1 := time.Now()
+							_, err = ix.Search(ctx, q)
+							require.NoError(t, err)
+
+							if pass > 0 {
+								candLat = append(candLat, t1.Sub(t0))
+								searchLat = append(searchLat, time.Since(t1))
+							}
 						}
 					}
+
+					results := searchAll(t, ix, queries, runtime.GOMAXPROCS(0))
+					got := outcomes(results)
+
+					agree, recall, targetTop := 0, 0.0, 0
+					byKind := map[string][2]int{}
+
+					for i := range queries {
+						same := got[i].decision == want[i].decision && slices.Equal(first(got[i].top), first(want[i].top))
+						if same {
+							agree++
+						}
+
+						ref := want[i].top[:min(10, len(want[i].top))]
+						hit := 0
+
+						for _, id := range ref {
+							if slices.Contains(got[i].top, id) {
+								hit++
+							}
+						}
+
+						if len(ref) > 0 {
+							recall += float64(hit) / float64(len(ref))
+						} else {
+							recall++
+						}
+
+						kind := "asr-corpus"
+						if i < len(synth) {
+							kind = synth[i].kind
+							if len(got[i].top) > 0 && got[i].top[0] == synth[i].target {
+								targetTop++
+							}
+						}
+
+						c := byKind[kind]
+						c[1]++
+
+						if same {
+							c[0]++
+						}
+
+						byKind[kind] = c
+					}
+
+					asrCorrect, wrongPlays := asrScore(suite.Cases, results[len(synth):])
+
+					kinds := make([]string, 0, len(byKind))
+					for k, c := range byKind {
+						kinds = append(kinds, fmt.Sprintf("%s %d/%d", k, c[0], c[1]))
+					}
+
+					slices.Sort(kinds)
+
+					t.Logf("RESULT retriever=%s n=%d pool=%d build=%v heap=%.0fMB rss=%.0fMB cand_p50=%v cand_p99=%v search_p50=%v search_p99=%v agree=%.1f%% recall10=%.1f%% target_top=%.1f%% asr=%d/%d wrong_plays=%d",
+						name, n, pool, build.Round(time.Millisecond), heap-refHeap, rss-refRSS,
+						percentile(candLat, 0.5).Round(time.Microsecond), percentile(candLat, 0.99).Round(time.Microsecond),
+						percentile(searchLat, 0.5).Round(time.Microsecond), percentile(searchLat, 0.99).Round(time.Microsecond),
+						100*float64(agree)/float64(len(queries)), 100*recall/float64(len(queries)), 100*float64(targetTop)/float64(len(synth)),
+						asrCorrect, len(suite.Cases), wrongPlays)
+					t.Logf("agreement by query kind: %s", strings.Join(kinds, ", "))
 				}
-
-				results := searchAll(t, ix, queries, runtime.GOMAXPROCS(0))
-				got := outcomes(results)
-
-				agree, recall, targetTop := 0, 0.0, 0
-				byKind := map[string][2]int{}
-
-				for i := range queries {
-					same := got[i].decision == want[i].decision && slices.Equal(first(got[i].top), first(want[i].top))
-					if same {
-						agree++
-					}
-
-					ref := want[i].top[:min(10, len(want[i].top))]
-					hit := 0
-
-					for _, id := range ref {
-						if slices.Contains(got[i].top, id) {
-							hit++
-						}
-					}
-
-					if len(ref) > 0 {
-						recall += float64(hit) / float64(len(ref))
-					} else {
-						recall++
-					}
-
-					kind := "asr-corpus"
-					if i < len(synth) {
-						kind = synth[i].kind
-						if len(got[i].top) > 0 && got[i].top[0] == synth[i].target {
-							targetTop++
-						}
-					}
-
-					c := byKind[kind]
-					c[1]++
-
-					if same {
-						c[0]++
-					}
-
-					byKind[kind] = c
-				}
-
-				asrCorrect, wrongPlays := asrScore(suite.Cases, results[len(synth):])
 
 				// Library changes arrive a few Docs at a time, so single-Doc updates are timed last, once the index no longer needs to match the reference.
 				upd := make([]time.Duration, 0, 500)
@@ -578,21 +598,7 @@ func TestRetrieverScale(t *testing.T) {
 					upd = append(upd, time.Since(t0))
 				}
 
-				kinds := make([]string, 0, len(byKind))
-				for k, c := range byKind {
-					kinds = append(kinds, fmt.Sprintf("%s %d/%d", k, c[0], c[1]))
-				}
-
-				slices.Sort(kinds)
-
-				t.Logf("RESULT retriever=%s n=%d build=%v heap=%.0fMB rss=%.0fMB cand_p50=%v cand_p99=%v search_p50=%v search_p99=%v upsert1_p50=%v upsert1_p99=%v agree=%.1f%% recall10=%.1f%% target_top=%.1f%% asr=%d/%d wrong_plays=%d",
-					name, n, build.Round(time.Millisecond), heap-refHeap, rss-refRSS,
-					percentile(candLat, 0.5).Round(time.Microsecond), percentile(candLat, 0.99).Round(time.Microsecond),
-					percentile(searchLat, 0.5).Round(time.Microsecond), percentile(searchLat, 0.99).Round(time.Microsecond),
-					percentile(upd, 0.5).Round(time.Microsecond), percentile(upd, 0.99).Round(time.Microsecond),
-					100*float64(agree)/float64(len(queries)), 100*recall/float64(len(queries)), 100*float64(targetTop)/float64(len(synth)),
-					asrCorrect, len(suite.Cases), wrongPlays)
-				t.Logf("agreement by query kind: %s", strings.Join(kinds, ", "))
+				t.Logf("UPDATE retriever=%s n=%d upsert1_p50=%v upsert1_p99=%v", name, n, percentile(upd, 0.5).Round(time.Microsecond), percentile(upd, 0.99).Round(time.Microsecond))
 			})
 		}
 	}
