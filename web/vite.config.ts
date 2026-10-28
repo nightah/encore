@@ -46,8 +46,8 @@ export default defineConfig(({ mode }) => ({
   cacheDir: resolve(root, "node_modules/.vite", mode),
   optimizeDeps: { include: baseUIEntries(root) },
   plugins: [
-    // Must run before the React plugin.
-    tanstackRouter({ autoCodeSplitting: true, target: "react" }),
+    // Must run before the React plugin. No route HMR glue under Vitest: it never runs there (no import.meta.hot), and its source map points back into each route file, so coverage counted it as untested route code.
+    tanstackRouter({ autoCodeSplitting: true, codeSplittingOptions: { addHmr: mode !== "test" }, target: "react" }),
     react(),
     tailwindcss(),
     keepGitkeep(),
