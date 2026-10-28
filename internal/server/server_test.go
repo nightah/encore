@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"regexp"
+	"strings"
 	"sync"
 	"testing"
 	"testing/fstest"
@@ -97,7 +98,6 @@ func TestBasePath(t *testing.T) {
 	assert.Equal(t, "/api/v1/overview /", do(t, h, http.MethodGet, "/api/v1/overview").Body.String(), "served at / too, so a wrong base path never locks anyone out")
 	assert.Equal(t, http.StatusOK, do(t, h, http.MethodGet, PathHealthz).Code)
 	assert.Equal(t, http.StatusOK, do(t, h, http.MethodGet, "/encore"+PathHealthz).Code)
-	assert.NotContains(t, do(t, h, http.MethodGet, "/encorex/api/v1/overview").Body.String(), "/encore/", "a longer first segment isn't the prefix")
 
 	rec := do(t, h, http.MethodGet, "/encore")
 	assert.Equal(t, http.StatusMovedPermanently, rec.Code)
@@ -359,11 +359,87 @@ func TestContentSecurityPolicyUsesTheNonce(t *testing.T) {
 	t.Parallel()
 
 	csp := contentSecurityPolicy("abc")
-	assert.Contains(t, csp, "script-src 'self' 'nonce-abc'")
-	assert.Contains(t, csp, "style-src 'self' 'nonce-abc'")
-	assert.Contains(t, csp, "frame-ancestors 'none'")
-	assert.Contains(t, csp, "object-src 'none'")
+	assert.Equal(t, map[string]string{
+		"default-src":     "'self'",
+		"script-src":      "'self' 'nonce-abc'",
+		"style-src":       "'self' 'nonce-abc'",
+		"img-src":         "'self' data:",
+		"font-src":        "'self'",
+		"connect-src":     "'self'",
+		"object-src":      "'none'",
+		"base-uri":        "'self'",
+		"form-action":     "'self'",
+		"frame-ancestors": "'none'",
+	}, cspDirectives(t, csp), "every directive is pinned, so a loosened or dropped one is noticed")
 	assert.NotContains(t, csp, "unsafe-inline")
+}
+
+// cspDirectives splits a Content-Security-Policy header into its directives, failing on a repeated one.
+func cspDirectives(t *testing.T, csp string) map[string]string {
+	t.Helper()
+
+	out := map[string]string{}
+
+	for d := range strings.SplitSeq(csp, ";") {
+		name, value, _ := strings.Cut(strings.TrimSpace(d), " ")
+		require.NotContains(t, out, name, "directive %s appears twice", name)
+		out[name] = value
+	}
+
+	return out
+}
+
+func TestAPIDocsAssetsKeepTheirPolicy(t *testing.T) {
+	h := newTestServer(t, config.Server{BasePath: "/"}, Deps{})
+
+	for _, target := range []string{"/api/", "/api/docs/init.js"} {
+		rec := do(t, h, http.MethodGet, target)
+		require.Equal(t, http.StatusOK, rec.Code, target)
+		assert.Equal(t, apiDocsCSP, rec.Header().Get("Content-Security-Policy"), target)
+		assert.Equal(t, "nosniff", rec.Header().Get("X-Content-Type-Options"), target)
+	}
+
+	assert.Equal(t, "public, max-age=86400", do(t, h, http.MethodGet, "/api/docs/swagger-ui.css").Header().Get("Cache-Control"), "the assets change only with Encore")
+	assert.Equal(t, "no-cache", do(t, h, http.MethodGet, "/api/").Header().Get("Cache-Control"))
+	assert.Equal(t, "'none'", cspDirectives(t, apiDocsCSP)["frame-ancestors"])
+}
+
+func TestSPAOnlyCachesTheAssetsDirectoryForever(t *testing.T) {
+	spa, err := newSPAHandler(fstest.MapFS{
+		"index.html":                {Data: []byte(`<html><head></head></html>`)},
+		"static/app-abc123.js":      {Data: []byte("1")},
+		"static.webmanifest":        {Data: []byte("{}")},
+		"staticfiles/logo-1234.svg": {Data: []byte("<svg/>")},
+	}, slog.New(slog.DiscardHandler))
+	require.NoError(t, err)
+
+	for target, want := range map[string]string{
+		"/static/app-abc123.js":      "public, max-age=31536000, immutable",
+		"/static.webmanifest":        "no-cache",
+		"/staticfiles/logo-1234.svg": "no-cache",
+	} {
+		rec := do(t, spa, http.MethodGet, target)
+		require.Equal(t, http.StatusOK, rec.Code, target)
+		assert.Equal(t, want, rec.Header().Get("Cache-Control"), "%s: only files inside static/ carry content hashes", target)
+	}
+}
+
+func TestBasePathMatchesWholeSegmentsOnly(t *testing.T) {
+	echo := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(r.URL.Path + " " + basepath.From(r.Context())))
+	})
+	h := withBasePath(func() string { return "/encore/" })(echo)
+
+	for target, want := range map[string]string{
+		"/encore/kodi":  "/kodi /encore/",
+		"/encore/":      "/ /encore/",
+		"/encorex/kodi": "/encorex/kodi /",
+		"/encorex":      "/encorex /",
+		"/kodi/encore":  "/kodi/encore /",
+		"/":             "/ /",
+	} {
+		assert.Equal(t, want, do(t, h, http.MethodGet, target).Body.String(), target)
+	}
 }
 
 func TestNewNonceIsRandomAndURLSafeEnough(t *testing.T) {
