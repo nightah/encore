@@ -9,7 +9,7 @@
 ARG BASE_IMAGE="antilax3/alpine:latest"
 ARG NODE_VERSION=24
 ARG GO_VERSION=1.27
-ARG PNPM_VERSION=12.12.1
+ARG PNPM_VERSION=12.15.0
 
 # ---- web: build the SPA once, on the build host's architecture ----
 FROM --platform=$BUILDPLATFORM node:${NODE_VERSION}-bookworm-slim AS web
