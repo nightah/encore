@@ -14,7 +14,7 @@ describe("ThemeToggle", () => {
   it("flips between light and dark and persists the choice", async () => {
     const user = userEvent.setup();
     render(<ThemeToggle />);
-    // happy-dom reports no dark preference, so "system" resolves to light.
+    // jsdom has no matchMedia, so "system" resolves to light.
     const button = screen.getByRole("button", { name: "Switch to dark mode" });
 
     await user.click(button);

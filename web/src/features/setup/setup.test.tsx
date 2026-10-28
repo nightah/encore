@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { HttpResponse, http } from "msw";
+import { HttpResponse, delay, http } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import type { RequestDetail } from "@api/generated/model";
@@ -281,11 +281,17 @@ describe("setup wizard", () => {
     resetDb("configured");
     window.localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify({ done: [1, 2], skipped: [], step: 3 }));
     const requests = recordRequests();
+    // The skill's settings arrive after the step renders, as they can on a busy machine, so the boxes are first shown unticked and disabled.
+    server.use(
+      http.get("*/skill", async () => {
+        await delay(100);
+      }),
+    );
     renderApp("/setup");
 
     await heading("Add your first Kodi");
-    const music = await screen.findByRole("checkbox", { name: /Music/ });
-    expect(music).toBeChecked();
+    const music = await screen.findByRole("checkbox", { checked: true, name: /Music/ });
+    await waitFor(() => expect(music).not.toHaveAttribute("aria-disabled", "true"));
     await user.click(music);
 
     await waitFor(() => expect(getDb().skill.content).toEqual(["movies", "tv"]));

@@ -66,12 +66,12 @@ Assets use relative URLs (`base: "./"`) so the Go server can mount the UI under 
 pnpm lint           # Biome lint + format check
 pnpm format         # Biome: apply formatting and safe fixes
 pnpm typecheck      # TypeScript 7 (native compiler)
-pnpm test           # Vitest + Testing Library (happy-dom)
+pnpm test           # Vitest + Testing Library (jsdom)
 pnpm test:e2e:mock  # Playwright against `vite --mode mock` (started for you)
 pnpm test:e2e       # Playwright against the real binary and a fake Kodi (started for you)
 ```
 
-Unit and screen tests (Vitest + Testing Library + happy-dom) render the whole app with `renderApp()` from `src/test/utils.tsx` against the MSW handlers. `recordRequests()` captures method, path, CSRF header and body; `failWith()` makes one endpoint return problem+json; `FakeEventSource.emit()` (`src/test/eventSource.ts`) delivers SSE events, and the mock's own simulated events are forwarded to it.
+Unit and screen tests (Vitest + Testing Library + jsdom) render the whole app with `renderApp()` from `src/test/utils.tsx` against the MSW handlers. `recordRequests()` captures method, path, CSRF header and body; `failWith()` makes one endpoint return problem+json; `FakeEventSource.emit()` (`src/test/eventSource.ts`) delivers SSE events, and the mock's own simulated events are forwarded to it.
 
 Specs directly in `e2e/` run in both modes; `e2e/mock/` only against the mock API and `e2e/real/` only against the real server.
 
@@ -145,7 +145,7 @@ The client is generated from the server's OpenAPI 3.1 spec, `internal/api/openap
 
 ## Stack
 
-React 19.3, Vite 8 with `@vitejs/plugin-react`, TypeScript 7 (native `tsc`, installed as `@typescript/native` aliased to `typescript@7`), Tailwind CSS 4.3 with `@tailwindcss/vite`, Base UI (`@base-ui/react`), lucide-react, TanStack Router (file-based) and TanStack Query 5, react-hook-form and zod 4, Biome, Vitest with Testing Library and happy-dom, Playwright. Fonts are self-hosted from Fontsource: Bricolage Grotesque, IBM Plex Sans and IBM Plex Mono.
+React 19.3, Vite 8 with `@vitejs/plugin-react`, TypeScript 7 (native `tsc`, installed as `@typescript/native` aliased to `typescript@7`), Tailwind CSS 4.3 with `@tailwindcss/vite`, Base UI (`@base-ui/react`), lucide-react, TanStack Router (file-based) and TanStack Query 5, react-hook-form and zod 4, Biome, Vitest with Testing Library and jsdom, Playwright. Fonts are self-hosted from Fontsource: Bricolage Grotesque, IBM Plex Sans and IBM Plex Mono.
 
 ## Brand
 
