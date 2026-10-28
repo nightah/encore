@@ -453,12 +453,8 @@ func (a *API) registerSkill(api huma.API) {
 			}
 		},
 		) (*body[SkillInfo], error) {
-			content := orderContent(in.Body.Content)
-			if len(content) == 0 {
-				return nil, a.settingsProblem(ctx, fieldError("body.content", "choose at least one of movies, tv or music", nil))
-			}
-
-			if err := s.saveContent(ctx, content); err != nil {
+			// The schema's minItems and enum leave at least one group to save.
+			if err := s.saveContent(ctx, orderContent(in.Body.Content)); err != nil {
 				return nil, a.settingsProblem(ctx, err)
 			}
 
@@ -580,15 +576,10 @@ func (s *skillService) saveSettings(ctx context.Context, in SkillSettingsInput) 
 		}
 	}
 
-	// The stored override is empty for Encore, so each locale keeps its own name.
+	// The stored override is empty for Encore, so each locale keeps its own name. The schema's enum allows only encore and kodi.
 	invocation := ""
-
-	switch in.Invocation {
-	case "", invocationEncore:
-	case invocationKodi:
+	if in.Invocation == invocationKodi {
 		invocation = invocationKodi
-	default:
-		return fieldError("body.invocation", "must be encore or kodi", in.Invocation)
 	}
 
 	next := skillSettings{Invocation: invocation, SkillName: strings.TrimSpace(in.SkillName), Endpoint: ep, Privacy: in.Privacy}
