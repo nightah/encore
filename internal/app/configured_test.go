@@ -8,7 +8,44 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nightah/encore/internal/config"
+	"github.com/nightah/encore/internal/store"
 )
+
+func TestApplyConfiguredRoomsAndDevicesWithNothingDeclared(t *testing.T) {
+	a := newBareApp(t)
+
+	require.NoError(t, a.DB().Rooms().Create(t.Context(), &store.Room{Name: "Kitchen"}))
+	require.NoError(t, a.ApplyConfiguredRoomsAndDevices(t.Context()))
+
+	rooms, err := a.DB().Rooms().List(t.Context())
+	require.NoError(t, err)
+	assert.Len(t, rooms, 1, "rooms made in the web interface are left alone")
+}
+
+func TestApplyConfiguredRoomsAndDevicesWithUnknownNames(t *testing.T) {
+	a := newBareApp(t)
+	ctx := t.Context()
+
+	require.NoError(t, a.DB().Rooms().Create(ctx, &store.Room{Name: "Kitchen"}))
+
+	a.cfg.Rooms = []config.Room{{Name: "Attic", Kodi: "Nowhere"}}
+	a.cfg.Devices = []config.Device{{ID: "amzn1.ask.device.C", Name: "Attic Dot", Kodi: "Nowhere", Room: "Cellar"}}
+
+	require.NoError(t, a.ApplyConfiguredRoomsAndDevices(ctx))
+
+	room, err := a.DB().Rooms().Resolve(ctx, "attic")
+	require.NoError(t, err)
+	assert.Zero(t, room.KodiInstanceID, "a room naming no known Kodi instance plays nowhere of its own")
+
+	_, err = a.DB().Rooms().Resolve(ctx, "kitchen")
+	require.NoError(t, err, "rooms that aren't declared are left alone")
+
+	dev, err := a.DB().EchoDevices().GetByAlexaID(ctx, "amzn1.ask.device.C")
+	require.NoError(t, err)
+	assert.Equal(t, "Attic Dot", dev.DisplayName)
+	assert.Zero(t, dev.KodiInstanceID)
+	assert.Zero(t, dev.RoomID)
+}
 
 func TestApplyConfiguredRoomsAndDevices(t *testing.T) {
 	cfg := config.Defaults()

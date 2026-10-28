@@ -2,15 +2,145 @@ package app
 
 import (
 	"context"
+	"errors"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/nightah/encore/internal/adapter/alexa"
+	"github.com/nightah/encore/internal/backend/kodi/fakekodi"
 	"github.com/nightah/encore/internal/config"
+	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/store"
 )
+
+func TestContentSettingsShapeTheLibrary(t *testing.T) {
+	h := newHarness(t, true)
+	h.waitIndexed(t)
+	ctx := t.Context()
+	id := h.instance(t).id
+	movie := media.Ref{Kind: media.KindMovie, ID: 6}
+
+	content := func(groups ...string) {
+		h.app.SetSettings(func(context.Context) (*config.Config, error) {
+			eff := *h.app.cfg
+			eff.Alexa.Content = groups
+
+			return &eff, nil
+		})
+	}
+
+	content(config.ContentTV)
+
+	assert.False(t, h.app.Findable(id, movie), "turning movies off takes them out of the library")
+	assert.True(t, h.app.Findable(id, media.Ref{Kind: media.KindTVShow, ID: 1}))
+
+	target, err := h.app.Target(ctx, testDevice)
+	require.NoError(t, err)
+	assert.Equal(t, []media.Content{media.ContentMovies, media.ContentMusic}, target.Disabled)
+
+	content(config.ContentMovies, config.ContentTV, config.ContentMusic)
+
+	require.Eventually(t, func() bool { return h.app.Findable(id, movie) }, eventually, 10*time.Millisecond, "turning movies on fetches them from Kodi straight away")
+
+	target, err = h.app.Target(ctx, testDevice)
+	require.NoError(t, err)
+	assert.Empty(t, target.Disabled)
+}
+
+func TestUnreadableSettingsFallBackToTheStartupConfiguration(t *testing.T) {
+	h := newHarness(t, true)
+	h.waitIndexed(t)
+
+	h.app.cfg.Alexa.QueueLimit = 12
+	h.app.SetSettings(func(context.Context) (*config.Config, error) { return nil, errors.New("settings table locked") })
+
+	target, err := h.app.Target(t.Context(), testDevice)
+	require.NoError(t, err)
+	assert.Equal(t, 12, target.QueueLimit)
+	assert.True(t, h.app.Findable(h.instance(t).id, media.Ref{Kind: media.KindMovie, ID: 6}), "the library keeps the startup content")
+}
+
+func TestTargetIsTheLinkedInstanceBeforeTheDefault(t *testing.T) {
+	lounge, bedroom := fakekodi.New(t, fakekodi.Options{}), fakekodi.New(t, fakekodi.Options{})
+	lc := kodiConfig("Lounge", lounge, "")
+	lc.Default = true
+	a, _ := runApp(t, t.TempDir(), fastTuning(), lc, kodiConfig("Bedroom", bedroom, ""))
+	ctx := t.Context()
+
+	target, err := a.Target(ctx, testDevice)
+	require.NoError(t, err)
+	assert.Equal(t, "Lounge", target.Name)
+
+	dev, err := a.DB().EchoDevices().GetByAlexaID(ctx, testDevice)
+	require.NoError(t, err)
+
+	dev.KodiInstanceID = a.instanceNamed(t, "Bedroom").id
+	require.NoError(t, a.DB().EchoDevices().Update(ctx, &dev))
+
+	target, err = a.Target(ctx, testDevice)
+	require.NoError(t, err)
+	assert.Equal(t, "Bedroom", target.Name)
+
+	// The bedroom room plays on the bedroom Kodi even for an Echo linked elsewhere.
+	require.NoError(t, a.DB().Rooms().Create(ctx, &store.Room{Name: "Lounge", KodiInstanceID: a.instanceNamed(t, "Lounge").id}))
+
+	target, err = a.TargetForRoom(ctx, testDevice, "lounge")
+	require.NoError(t, err)
+	assert.Equal(t, "Lounge", target.Name)
+
+	// The default's runtime gone, an unlinked Echo has nowhere to play.
+	require.NoError(t, a.RemoveInstance(ctx, a.instanceNamed(t, "Lounge").id))
+
+	_, err = a.Target(ctx, "amzn1.ask.device.OTHER")
+	require.ErrorIs(t, err, alexa.ErrUnlinked)
+
+	target, err = a.TargetForRoom(ctx, testDevice, "lounge")
+	require.NoError(t, err)
+	assert.Equal(t, "Bedroom", target.Name, "a room whose Kodi has no runtime falls back to the Echo's own")
+}
+
+func TestDatabaseFailuresAreNotMistakenForMissingLinks(t *testing.T) {
+	h := newHarness(t, true)
+	a := h.app
+	ctx := t.Context()
+
+	require.NoError(t, a.DB().Rooms().Create(ctx, &store.Room{Name: "Lounge"}))
+	require.NoError(t, a.DB().Close())
+
+	_, err := a.Target(ctx, testDevice)
+	require.Error(t, err)
+	require.NotErrorIs(t, err, alexa.ErrUnlinked)
+
+	_, err = a.TargetForRoom(ctx, testDevice, "lounge")
+	require.Error(t, err)
+	require.NotErrorIs(t, err, alexa.ErrUnknownRoom)
+
+	_, err = a.DeviceName(ctx, testDevice)
+	require.Error(t, err)
+
+	dry := DryRunTargets{App: a, Run: &DryRun{}}
+
+	_, err = dry.Target(ctx, testDevice)
+	require.Error(t, err)
+	require.NotErrorIs(t, err, alexa.ErrUnlinked)
+
+	_, err = dry.TargetForRoom(ctx, testDevice, "lounge")
+	require.Error(t, err)
+	require.NotErrorIs(t, err, alexa.ErrUnknownRoom)
+
+	_, err = dry.DeviceName(ctx, testDevice)
+	require.Error(t, err)
+
+	_, err = a.SlotValues(ctx)
+	require.Error(t, err)
+
+	require.Error(t, a.ReloadAliases(ctx))
+	a.cfg.Rooms = []config.Room{{Name: "Lounge"}}
+	require.Error(t, a.ApplyConfiguredRoomsAndDevices(ctx))
+}
 
 func TestTargetCarriesVoiceSettings(t *testing.T) {
 	h := newHarness(t, true)
