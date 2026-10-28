@@ -388,7 +388,7 @@ suites:
       - {heard: "die vorstadtkrokodile 2", want: ask}
       - {heard: "die vorstadtkrokodile 3", want: ask}
       - {heard: "sams im glück", want: not_found}
-      - {heard: "der hauptmann", want: not_found}
+      - {heard: "der hauptmann", want: play, id: koepenick}
       - {heard: "der alte affe angst", want: not_found}
       - {heard: "der kommissar und das meer", want: not_found}
       - {heard: "berlin berlin", want: not_found}
