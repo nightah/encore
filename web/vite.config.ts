@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
+import { playwright } from "@vitest/browser-playwright";
 import { msw } from "msw/vite";
 import { type Plugin, defineConfig } from "vite";
 
@@ -14,6 +15,28 @@ import { baseUIEntries } from "./src/dev/baseUI.ts";
 const root = fileURLToPath(new URL(".", import.meta.url));
 const outDir = resolve(root, "../internal/server/dist");
 const apiTarget = process.env.ENCORE_API_URL ?? "http://127.0.0.1:8080";
+
+/** What the browser tests load besides the app's own code, pre-bundled with it: Vite's scan of the test files misses some (react-dom/client, which Testing Library loads), and finding one mid-run makes Vite re-bundle and reload a test page, leaving it with two copies of React. */
+const TEST_DEPS = [
+  "@mswjs/interceptors/fetch",
+  "@tanstack/react-query",
+  "@tanstack/react-router",
+  "@testing-library/jest-dom/vitest",
+  "@testing-library/react",
+  "@testing-library/user-event",
+  "i18next",
+  "lucide-react",
+  "msw",
+  "msw/experimental",
+  "react",
+  "react-dom",
+  "react-dom/client",
+  "react-hook-form",
+  "react-i18next",
+  "react/jsx-dev-runtime",
+  "react/jsx-runtime",
+  "zod",
+];
 
 /** `emptyOutDir` wipes internal/server/dist on every build, including the committed `.gitkeep` that keeps `//go:embed all:dist` compiling on a clean checkout. Put it back. */
 function keepGitkeep(): Plugin {
@@ -44,7 +67,7 @@ export default defineConfig(({ mode }) => ({
   },
   // One dependency cache per mode: the dev server and a mock-mode server (pnpm dev:mock, the mock e2e run) pre-bundle differently, and a shared cache would make each rebuild it under the other, breaking open pages ("error loading dynamically imported module").
   cacheDir: resolve(root, "node_modules/.vite", mode),
-  optimizeDeps: { include: baseUIEntries(root) },
+  optimizeDeps: { include: [...baseUIEntries(root), ...(mode === "test" ? TEST_DEPS : [])] },
   plugins: [
     // Must run before the React plugin. No route HMR glue under Vitest: it never runs there (no import.meta.hot), and its source map points back into each route file, so coverage counted it as untested route code.
     tanstackRouter({ autoCodeSplitting: true, codeSplittingOptions: { addHmr: mode !== "test" }, target: "react" }),
@@ -77,32 +100,36 @@ export default defineConfig(({ mode }) => ({
       .map((h) => h.trim())
       .filter(Boolean),
     port: 3000,
-    proxy: {
-      // Server-sent events: keep the connection open indefinitely and never buffer.
-      "/api/v1/events": {
-        changeOrigin: true,
-        configure(proxy) {
-          // Only adjust the headers here: the proxy copies them to the response after this handler, so flushing headers early would send them without Content-Type: text/event-stream, and EventSource rejects such a stream.
-          proxy.on("proxyRes", (proxyRes) => {
-            proxyRes.headers["cache-control"] = "no-cache, no-transform";
-            proxyRes.headers["x-accel-buffering"] = "no";
-          });
-        },
-        headers: { Accept: "text/event-stream" },
-        proxyTimeout: 0,
-        target: apiTarget,
-        timeout: 0,
-      },
-      // Everything else under /api. A regular expression that leaves out the event stream, so the two rules don't depend on their order.
-      "^/api/(?!v1/events)": {
-        changeOrigin: true,
-        target: apiTarget,
-      },
-    },
+    // Not under Vitest: the tests have their own mock API, and what they load beyond it (a cover image) must not reach a real Encore.
+    proxy:
+      mode === "test"
+        ? undefined
+        : {
+            // Server-sent events: keep the connection open indefinitely and never buffer.
+            "/api/v1/events": {
+              changeOrigin: true,
+              configure(proxy) {
+                // Only adjust the headers here: the proxy copies them to the response after this handler, so flushing headers early would send them without Content-Type: text/event-stream, and EventSource rejects such a stream.
+                proxy.on("proxyRes", (proxyRes) => {
+                  proxyRes.headers["cache-control"] = "no-cache, no-transform";
+                  proxyRes.headers["x-accel-buffering"] = "no";
+                });
+              },
+              headers: { Accept: "text/event-stream" },
+              proxyTimeout: 0,
+              target: apiTarget,
+              timeout: 0,
+            },
+            // Everything else under /api. A regular expression that leaves out the event stream, so the two rules don't depend on their order.
+            "^/api/(?!v1/events)": {
+              changeOrigin: true,
+              target: apiTarget,
+            },
+          },
     strictPort: true,
   },
   test: {
-    // `pnpm test:coverage` (CI) writes coverage/lcov.info for Codecov and fails below the thresholds; generated code, the mock API, test helpers and main.tsx's bootstrapping (each piece it calls is tested on its own) aren't counted, as in .codecov.yml.
+    // `pnpm test:coverage` (CI) writes coverage/lcov.info for Codecov and fails below the thresholds; generated code, the mock API, test helpers, main.tsx's bootstrapping (each piece it calls is tested on its own) and pageLocation.ts (the real reload and redirect, which tests replace) aren't counted, as in .codecov.yml.
     coverage: {
       exclude: [
         "src/api/generated/**",
@@ -110,6 +137,7 @@ export default defineConfig(({ mode }) => ({
         "src/test/**",
         "src/dev/**",
         "src/main.tsx",
+        "src/lib/pageLocation.ts",
         "src/routeTree.gen.ts",
         "**/*.test.{ts,tsx}",
       ],
@@ -124,9 +152,32 @@ export default defineConfig(({ mode }) => ({
       },
     },
     css: false,
-    environment: "jsdom",
     globals: true,
-    include: ["src/**/*.test.{ts,tsx}"],
-    setupFiles: ["./src/test/setup.ts"],
+    // Tests run in headless Chromium, against the mock API's service worker; `*.node.test.ts` files read the repository or start servers, so they run in Node.
+    projects: [
+      {
+        extends: true,
+        test: { environment: "node", include: ["src/**/*.node.test.ts"], name: "node" },
+      },
+      {
+        extends: true,
+        test: {
+          browser: {
+            enabled: true,
+            headless: true,
+            instances: [{ browser: "chromium" }],
+            // The same browser settings on every machine, whatever its own language, time zone and colour scheme.
+            provider: playwright({
+              contextOptions: { colorScheme: "light", locale: "en-US", timezoneId: "Australia/Melbourne" },
+            }),
+            screenshotFailures: false,
+          },
+          exclude: ["src/**/*.node.test.ts"],
+          include: ["src/**/*.test.{ts,tsx}"],
+          name: "browser",
+          setupFiles: ["./src/test/setup.ts"],
+        },
+      },
+    ],
   },
 }));

@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import { keys } from "@api/keys";
 import { getDb } from "@mocks/handlers";
-import { server } from "@mocks/node";
+import { server } from "@test/server";
 import { failWith, findEnabledButton, recordRequests, renderApp } from "@test/utils";
 
 describe("Library page", () => {

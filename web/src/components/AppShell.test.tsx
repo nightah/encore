@@ -7,9 +7,9 @@ import { describe, expect, it } from "vitest";
 import { NAV_ITEMS } from "@components/nav";
 import { saveSetupProgress } from "@lib/setupProgress";
 import { getDb } from "@mocks/handlers";
-import { server } from "@mocks/node";
 import { App } from "@src/App";
 import { createAppRouter, createQueryClient } from "@src/router";
+import { server } from "@test/server";
 
 function renderAt(path: string) {
   const queryClient = createQueryClient();

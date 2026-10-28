@@ -367,6 +367,10 @@ jobs:
       - name: Typecheck
         run: pnpm -C web typecheck
 
+      # The unit tests run in headless Chromium, installed as the E2E job does.
+      - name: Install Playwright (chromium only)
+        run: pnpm -C web exec playwright install chromium
+
       - name: Test
         run: pnpm -C web test:coverage
 

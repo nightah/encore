@@ -1,17 +1,16 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { pageLocation } from "@lib/pageLocation";
 import { installStaleModuleReload, isStaleModuleError, reloadForStaleModule } from "@lib/staleReload";
 
 describe("reloadForStaleModule", () => {
-  let reload: ReturnType<typeof vi.fn>;
+  let reload: ReturnType<typeof vi.fn<() => void>>;
 
   beforeEach(() => {
     sessionStorage.clear();
-    reload = vi.fn();
-    vi.stubGlobal("location", { ...window.location, reload });
+    reload = vi.fn<() => void>();
+    pageLocation.reload = reload;
   });
-
-  afterEach(() => vi.unstubAllGlobals());
 
   it("reloads once, then lets the error show instead of looping", () => {
     expect(reloadForStaleModule()).toBe(true);
@@ -49,15 +48,13 @@ describe("reloadForStaleModule", () => {
 });
 
 describe("installStaleModuleReload", () => {
-  let reload: ReturnType<typeof vi.fn>;
+  let reload: ReturnType<typeof vi.fn<() => void>>;
 
   beforeEach(() => {
     sessionStorage.clear();
-    reload = vi.fn();
-    vi.stubGlobal("location", { ...window.location, reload });
+    reload = vi.fn<() => void>();
+    pageLocation.reload = reload;
   });
-
-  afterEach(() => vi.unstubAllGlobals());
 
   it("reloads on Vite's preload error and stops Vite throwing, but only once", () => {
     installStaleModuleReload();

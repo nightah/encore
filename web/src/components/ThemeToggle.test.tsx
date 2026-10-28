@@ -14,7 +14,7 @@ describe("ThemeToggle", () => {
   it("flips between light and dark and persists the choice", async () => {
     const user = userEvent.setup();
     render(<ThemeToggle />);
-    // jsdom has no matchMedia, so "system" resolves to light.
+    // The test browser prefers a light colour scheme, so "system" resolves to light.
     const button = screen.getByRole("button", { name: "Switch to dark mode" });
 
     await user.click(button);

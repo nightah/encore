@@ -9,6 +9,7 @@ import { Button } from "@components/ui/Button";
 import { Field, Input } from "@components/ui/Field";
 import { Callout, CopyButton } from "@components/ui/States";
 import { StepFooter, StepHeading, StepPending, type StepProps } from "@features/setup/shared";
+import { pageLocation } from "@lib/pageLocation";
 
 const LWA_CONSOLE = "https://developer.amazon.com/loginwithamazon/console/site/lwa/overview.html";
 const LWA_TOKENS_COMMAND = "ask util generate-lwa-tokens";
@@ -108,7 +109,7 @@ export function AmazonStep({ nav }: StepProps) {
       await saveCredentials.mutateAsync({ client_id: id.trim(), client_secret: clientSecret });
       setRedirecting(true);
       const { url } = await getAuthorize("setup");
-      window.location.assign(url);
+      pageLocation.assign(url);
     } catch (error) {
       setRedirecting(false);
       if (!(error instanceof ApiError && Object.keys(error.fieldErrors).length)) {

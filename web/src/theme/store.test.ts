@@ -10,7 +10,7 @@ import {
   useTheme,
 } from "@theme/store";
 
-/** A stand-in for the OS colour scheme, which jsdom doesn't have. */
+/** A stand-in for the OS colour scheme, which tests can switch. */
 const os = {
   dark: false,
   listeners: new Set<() => void>(),

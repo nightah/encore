@@ -33,6 +33,7 @@ ignore:
   - "internal/testkit/"
   - "web/src/api/generated/"
   - "web/src/dev/"
+  - "web/src/lib/pageLocation.ts"
   - "web/src/main.tsx"
   - "web/src/mocks/"
   - "web/src/routeTree.gen.ts"

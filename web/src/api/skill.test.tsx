@@ -24,8 +24,8 @@ import {
   useStartDeploy,
 } from "@api/skill";
 import { getDb } from "@mocks/handlers";
-import { server } from "@mocks/node";
 import { createQueryClient } from "@src/router";
+import { server } from "@test/server";
 import { recordRequests } from "@test/utils";
 
 let queryClient: ReturnType<typeof createQueryClient>;

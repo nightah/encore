@@ -1,3 +1,5 @@
+import { pageLocation } from "@lib/pageLocation";
+
 /** sessionStorage key marking that the page already reloaded once for a stale module. */
 const RELOADED_KEY = "encore.staleReload";
 
@@ -15,7 +17,7 @@ export function reloadForStaleModule(): boolean {
     return false;
   }
 
-  window.location.reload();
+  pageLocation.reload();
   return true;
 }
 

@@ -6,14 +6,15 @@ import { afterAll, afterEach, beforeAll, beforeEach, vi } from "vitest";
 import { setCsrfToken } from "@api/client";
 import { eventStream } from "@api/events";
 import i18n from "@i18n/index";
+import { pageLocation } from "@lib/pageLocation";
 import { onEmit, resetDb } from "@mocks/handlers";
-import { server } from "@mocks/node";
 import { FakeEventSource } from "@test/eventSource";
 import { cancelRequests, settleRequests, trackRequests } from "@test/inflight";
+import { server } from "@test/server";
 
 // Every test talks to the MSW implementation of the admin API (docs/src/content/docs/reference/api/); unknown requests fail loudly.
 beforeAll(() => {
-  server.listen({ onUnhandledFrame: "error" });
+  server.enable();
   trackRequests();
   globalThis.EventSource = FakeEventSource as unknown as typeof EventSource;
   // Simulated server events (deploy progress, wake, sync…) reach the app through the fake EventSource.
@@ -25,6 +26,9 @@ beforeEach(async () => {
   await i18n.changeLanguage("en");
   resetDb("configured");
   setCsrfToken(undefined);
+  // A real reload or redirect would take the test page with it.
+  pageLocation.assign = vi.fn();
+  pageLocation.reload = vi.fn();
 });
 
 afterEach(async () => {
@@ -45,4 +49,4 @@ afterEach(async () => {
   delete document.documentElement.dataset.theme;
 });
 
-afterAll(() => server.close());
+afterAll(() => server.disable());

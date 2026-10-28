@@ -3,9 +3,9 @@ import { type ByRoleOptions, render, screen, waitFor } from "@testing-library/re
 import { HttpResponse, http } from "msw";
 import { expect } from "vitest";
 
-import { server } from "@mocks/node";
 import { App } from "@src/App";
 import { createAppRouter, createQueryClient } from "@src/router";
+import { server } from "@test/server";
 
 /** Renders the whole app (router, query client, toasts) at `path`, against the MSW mock API. */
 export function renderApp(path: string) {

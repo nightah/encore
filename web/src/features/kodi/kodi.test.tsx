@@ -6,8 +6,8 @@ import { describe, expect, it } from "vitest";
 import type { Instance, Library } from "@api/generated/model";
 import { keys } from "@api/keys";
 import { getDb } from "@mocks/handlers";
-import { server } from "@mocks/node";
 import { FakeEventSource } from "@test/eventSource";
+import { server } from "@test/server";
 import { failWith, recordRequests, renderApp } from "@test/utils";
 
 async function card(name: string) {

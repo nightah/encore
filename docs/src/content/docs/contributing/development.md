@@ -69,7 +69,7 @@ The configuration, CLI and voice-command reference pages here are generated too,
 ## Tests
 
 - **Go:** `go test -race ./...`. Kodi is replaced by a fake JSON-RPC server (`internal/backend/kodi/fakekodi`) and Amazon's APIs by fakes, so nothing external is needed.
-- **Web:** `pnpm test` (Vitest) in `web/`, against the same mock API as `pnpm dev:mock`.
+- **Web:** `pnpm test` (Vitest) in `web/`, in headless Chromium against the same mock API as `pnpm dev:mock`. Install the browser once with `pnpm exec playwright install chromium`; `make test` does it for you.
 - **Browser:** `pnpm test:e2e:mock` runs Playwright against the mock API; `pnpm test:e2e` builds Encore and runs the first-run journey against a real server and a fake Kodi.
 - **Contract:** the `contract` build tag runs against real services, nightly in CI. To run them locally:
 

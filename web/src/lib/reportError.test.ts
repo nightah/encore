@@ -4,8 +4,8 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { ApiError, getCsrfToken, setCsrfToken } from "@api/client";
 import { installErrorReporting, reportError, resetErrorReports } from "@lib/reportError";
 import { clientErrors, getDb } from "@mocks/handlers";
-import { server } from "@mocks/node";
 import { isServerUnreachable } from "@routes/__root";
+import { server } from "@test/server";
 import { recordRequests } from "@test/utils";
 
 describe("reportError", () => {

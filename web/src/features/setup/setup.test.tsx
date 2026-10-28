@@ -5,10 +5,11 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 import type { RequestDetail } from "@api/generated/model";
 import { keys } from "@api/keys";
+import { pageLocation } from "@lib/pageLocation";
 import { SETUP_STORAGE_KEY, getSetupProgress } from "@lib/setupProgress";
 import { getDb, resetDb } from "@mocks/handlers";
-import { server } from "@mocks/node";
 import { FakeEventSource } from "@test/eventSource";
+import { server } from "@test/server";
 import { failWith, recordRequests, renderApp } from "@test/utils";
 
 async function heading(name: string | RegExp) {
@@ -787,7 +788,7 @@ describe("setup address step", () => {
     await addressStep();
 
     const field = screen.getByLabelText("Public base URL");
-    // A url input has no text selection in jsdom, so user-event can't clear it; set the value as a paste would.
+    // Set the value as a paste would, spaces and all.
     fireEvent.change(field, { target: { value: " https://kodi.example.org/ " } });
     await user.click(screen.getByRole("button", { name: "Check address" }));
 
@@ -1134,7 +1135,10 @@ describe("setup Amazon step", () => {
     await user.type(screen.getByLabelText("Client secret"), "lwa-secret");
     await user.click(screen.getByRole("button", { name: "Authorise with Amazon" }));
 
-    await waitFor(() => expect(log.some((r) => r.path === "/skill/amazon/authorize?then=setup")).toBe(true));
+    await waitFor(() =>
+      expect(pageLocation.assign).toHaveBeenCalledWith(expect.stringMatching(/\/setup\?mock_lwa=1$/)),
+    );
+    expect(log.some((r) => r.path === "/skill/amazon/authorize?then=setup")).toBe(true);
     expect(log.find((r) => r.path === "/skill/amazon/credentials")?.body).toEqual({
       client_id: "amzn1.application-oa2-client.4f1c8d2b7a6e4e92a",
       client_secret: "lwa-secret",

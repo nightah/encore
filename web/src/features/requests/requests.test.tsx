@@ -5,8 +5,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { keys } from "@api/keys";
 import { getDb } from "@mocks/handlers";
-import { server } from "@mocks/node";
 import { FakeEventSource } from "@test/eventSource";
+import { server } from "@test/server";
 import { failWith, recordRequests, renderApp } from "@test/utils";
 
 afterEach(() => vi.restoreAllMocks());

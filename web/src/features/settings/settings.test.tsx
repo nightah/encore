@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { OIDC_PRESETS } from "@features/settings/oidcProviders";
 import { getDb } from "@mocks/handlers";
-import { server } from "@mocks/node";
+import { server } from "@test/server";
 import { failWith, recordRequests, renderApp } from "@test/utils";
 import { THEME_STORAGE_KEY, initTheme } from "@theme/store";
 

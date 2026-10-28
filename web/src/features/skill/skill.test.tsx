@@ -2,13 +2,14 @@ import type { QueryClient } from "@tanstack/react-query";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { keys } from "@api/keys";
 import { DEPLOY_STEPS } from "@features/skill/timeline";
+import { pageLocation } from "@lib/pageLocation";
 import { getDb } from "@mocks/handlers";
-import { server } from "@mocks/node";
 import { FakeEventSource } from "@test/eventSource";
+import { server } from "@test/server";
 import { type RecordedRequest, failWith, findEnabledButton, recordRequests, renderApp } from "@test/utils";
 
 /** Waits until the page has loaded the deploy it just started, and returns its ID. The mock API doesn't record the steps a test streams, so a load landing after them would put the deploy back as the API has it. */
@@ -330,19 +331,13 @@ describe("Alexa skill page", () => {
 
   it("sends Amazon re-authorisation through Login with Amazon", async () => {
     const user = userEvent.setup();
-    const assign = vi.fn();
-    vi.stubGlobal("location", { ...window.location, assign });
-    try {
-      getDb().skill.amazon = { ...getDb().skill.amazon, needs_reauthorise: true };
-      renderApp("/alexa-skill");
-      expect(await screen.findByText(/Amazon stopped accepting Encore's token/)).toBeInTheDocument();
+    getDb().skill.amazon = { ...getDb().skill.amazon, needs_reauthorise: true };
+    renderApp("/alexa-skill");
+    expect(await screen.findByText(/Amazon stopped accepting Encore's token/)).toBeInTheDocument();
 
-      await user.click(screen.getByRole("button", { name: "Re-authorise" }));
+    await user.click(screen.getByRole("button", { name: "Re-authorise" }));
 
-      await waitFor(() => expect(assign).toHaveBeenCalledWith(expect.stringContaining("mock_lwa=1")));
-    } finally {
-      vi.unstubAllGlobals();
-    }
+    await waitFor(() => expect(pageLocation.assign).toHaveBeenCalledWith(expect.stringContaining("mock_lwa=1")));
   });
 
   it("says why re-authorising can't start", async () => {

@@ -10,7 +10,7 @@ let controller = new AbortController();
 const nextTurn = () => new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 /**
- * Tracks every request the app makes, so a test can't end with one still on its way. Its answer would otherwise land in the next test: an error toast on the next test's page, or a follow-up request against the next test's freshly reset mock database. Call once, after the mock API is listening (MSW's Node interceptor replaces `fetch` too).
+ * Tracks every request the app makes, so a test can't end with one still on its way. Its answer would otherwise land in the next test: an error toast on the next test's page, or a follow-up request against the next test's freshly reset mock database. Call once per test file.
  */
 export function trackRequests() {
   const fetch = globalThis.fetch;

@@ -4,14 +4,15 @@ import type { ErrorComponentProps } from "@tanstack/react-router";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ApiError } from "@api/client";
+import { pageLocation } from "@lib/pageLocation";
 import { resetErrorReports } from "@lib/reportError";
 import { clientErrors, getDb, resetDb } from "@mocks/handlers";
-import { server } from "@mocks/node";
 import { Route, isServerUnreachable } from "@routes/__root";
 import { FakeEventSource } from "@test/eventSource";
+import { server } from "@test/server";
 import { failWith, recordRequests, renderApp } from "@test/utils";
 
 const RootError = Route.options.errorComponent as ComponentType<ErrorComponentProps>;
@@ -34,17 +35,15 @@ describe("isServerUnreachable", () => {
 });
 
 describe("root error screen", () => {
-  let reload: ReturnType<typeof vi.fn>;
+  let reload: ReturnType<typeof vi.fn<() => void>>;
 
   beforeEach(() => {
     clientErrors.length = 0;
     resetErrorReports();
     sessionStorage.clear();
-    reload = vi.fn();
-    vi.stubGlobal("location", { ...window.location, reload });
+    reload = vi.fn<() => void>();
+    pageLocation.reload = reload;
   });
-
-  afterEach(() => vi.unstubAllGlobals());
 
   /** Renders an error that is reported and waits for its report: anything reported before it would have arrived first. */
   async function expectOnlyLaterReports() {

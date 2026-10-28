@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { ApiError, setCsrfToken } from "@api/client";
 import { orvalFetch } from "@api/orvalFetch";
-import { server } from "@mocks/node";
+import { server } from "@test/server";
 
 interface Seen {
   url: string;

@@ -6,8 +6,8 @@ import { describe, expect, it } from "vitest";
 import { keys } from "@api/keys";
 import i18n from "@i18n/index";
 import { getDb } from "@mocks/handlers";
-import { server } from "@mocks/node";
 import { FakeEventSource } from "@test/eventSource";
+import { server } from "@test/server";
 import { failWith, recordRequests, renderApp } from "@test/utils";
 
 describe("Echo devices page", () => {
