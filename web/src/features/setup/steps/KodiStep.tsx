@@ -155,7 +155,13 @@ export function KodiStep({ nav }: StepProps) {
       <StepHeading
         intro={
           <>
-            {searching ? t("kodi.searching") : discovered.length ? t("kodi.found") : t("kodi.notFound")}
+            {searching
+              ? t("kodi.searching")
+              : discovered.length
+                ? t("kodi.found")
+                : discovery.isError
+                  ? t("kodi.searchFailed")
+                  : t("kodi.notFound")}
             <br />
             {t("kodi.remoteControl")}
           </>

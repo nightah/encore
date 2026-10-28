@@ -235,6 +235,19 @@ describe("setup wizard", () => {
     expect(screen.getByText(/No Kodi answered on your network/)).toBeInTheDocument();
   });
 
+  it("says the network search failed instead of that no Kodi answered", async () => {
+    resetDb("configured");
+    window.localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify({ done: [1, 2], skipped: [], step: 3 }));
+    failWith("get", "/kodi/discovered", 503, "mDNS is unavailable");
+    const { queryClient } = renderApp("/setup");
+
+    await heading("Add your first Kodi");
+    await waitFor(() => expect(queryClient.getQueryState(keys.discovered)?.status).toBe("error"));
+    expect(screen.queryByText(/No Kodi answered on your network/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Encore couldn't search your network for Kodi/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Search again" })).toBeInTheDocument();
+  });
+
   it("skips steps and remembers progress", async () => {
     const user = userEvent.setup();
     resetDb("fresh");
