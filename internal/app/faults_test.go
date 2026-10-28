@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"log/slog"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -56,6 +58,22 @@ func instanceNames(t *testing.T, db *store.DB) []string {
 	}
 
 	return names
+}
+
+// assertNothingOpenIn fails when the process still has a file under dir open, as it would if a failed New left its database open. It needs /proc, so it checks nothing elsewhere.
+func assertNothingOpenIn(t *testing.T, dir string) {
+	t.Helper()
+
+	fds, err := os.ReadDir("/proc/self/fd")
+	if err != nil {
+		return
+	}
+
+	for _, fd := range fds {
+		if target, err := os.Readlink("/proc/self/fd/" + fd.Name()); err == nil {
+			assert.False(t, strings.HasPrefix(target, dir+string(filepath.Separator)), "%s is still open", target)
+		}
+	}
 }
 
 func secretIDs(t *testing.T, cfg *config.Config, db *store.DB, ids ...string) []string {
@@ -294,6 +312,7 @@ func TestNewReportsDatabaseFailuresWhileApplyingTheConfig(t *testing.T) {
 
 			_, err := New(t.Context(), cfg, slog.New(slog.DiscardHandler))
 			require.ErrorContains(t, err, tc.want)
+			assertNothingOpenIn(t, cfg.DataDir)
 
 			if tc.fault.Op == testkit.Read {
 				require.ErrorContains(t, err, testkit.ReadFaultMessage)
@@ -344,6 +363,7 @@ func TestNewReportsDatabasesItCannotOpen(t *testing.T) {
 
 		_, err := New(t.Context(), cfg, slog.New(slog.DiscardHandler))
 		require.ErrorContains(t, err, "opening secrets: checking for existing secrets: querying: "+testkit.ReadFaultMessage)
+		assertNothingOpenIn(t, cfg.DataDir)
 
 		faults.Clear()
 
