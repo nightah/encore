@@ -495,6 +495,20 @@ describe("Access settings", () => {
     expect(screen.getByText(/The realm's address/)).toBeInTheDocument();
   });
 
+  it("keeps a groups claim managed by config when picking a provider", async () => {
+    const db = getDb();
+    db.settings.auth.oidc.scopes = ["openid"];
+    db.settings.auth.oidc.groups_claim = "roles";
+    db.settings.managed = ["auth.oidc.groups_claim"];
+    const user = userEvent.setup();
+    renderApp("/settings?tab=access");
+    await user.click(await screen.findByRole("radio", { name: /OpenID Connect/ }));
+    await user.selectOptions(screen.getByRole("combobox", { name: "Provider" }), "keycloak");
+
+    expect(screen.getByLabelText(/^Groups claim/)).toHaveValue("roles");
+    expect(screen.getByLabelText(/^Scopes/)).toHaveValue(OIDC_PRESETS.keycloak.scopes);
+  });
+
   it("locks the break-glass login when config sets it", async () => {
     getDb().settings.managed = ["auth.oidc.break_glass"];
     const user = userEvent.setup();
