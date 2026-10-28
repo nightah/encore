@@ -104,10 +104,8 @@ export function AmazonStep({ nav }: StepProps) {
     event.preventDefault();
     setRedirectError(null);
     try {
-      await saveCredentials.mutateAsync({
-        client_id: id.trim(),
-        ...(clientSecret ? { client_secret: clientSecret } : {}),
-      });
+      // The submit button stays disabled without a secret, so there always is one here.
+      await saveCredentials.mutateAsync({ client_id: id.trim(), client_secret: clientSecret });
       setRedirecting(true);
       const { url } = await getAuthorize("setup");
       window.location.assign(url);
@@ -197,6 +195,8 @@ function PasteFallbacks({ https }: { https: boolean }) {
   const [value, setValue] = useState("");
   const error =
     paste.error instanceof ApiError ? (paste.error.fieldErrors[mode] ?? errorMessage(paste.error)) : undefined;
+  const connect = () =>
+    paste.mutate(mode === "redirect_url" ? { redirect_url: value.trim() } : { refresh_token: value.trim() });
 
   return (
     <details className="rounded-[10px] border border-line px-4 py-3">
@@ -254,22 +254,12 @@ function PasteFallbacks({ https }: { https: boolean }) {
               // Enter here connects with the pasted value instead of submitting the outer credentials form.
               if (e.key !== "Enter") return;
               e.preventDefault();
-              if (value.trim()) {
-                paste.mutate(
-                  mode === "redirect_url" ? { redirect_url: value.trim() } : { refresh_token: value.trim() },
-                );
-              }
+              if (value.trim()) connect();
             }}
           />
         </Field>
         <div>
-          <Button
-            pending={paste.isPending}
-            disabled={!value.trim()}
-            onClick={() =>
-              paste.mutate(mode === "redirect_url" ? { redirect_url: value.trim() } : { refresh_token: value.trim() })
-            }
-          >
+          <Button pending={paste.isPending} disabled={!value.trim()} onClick={connect}>
             {t("amazon.fallback.connect")}
           </Button>
         </div>
