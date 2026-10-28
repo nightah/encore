@@ -20,11 +20,12 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/dprotaso/go-yit v0.0.0-20220510233725-9ba8df137936 // indirect
-	github.com/editorconfig-checker/editorconfig-checker/v3 v3.11.3 // indirect
+	github.com/editorconfig-checker/editorconfig-checker/v4 v4.0.2 // indirect
 	github.com/editorconfig/editorconfig-core-go/v2 v2.6.4 // indirect
 	github.com/fatih/color v1.19.0 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.15 // indirect
+	github.com/gkampitakis/ciinfo v0.3.4 // indirect
 	github.com/go-openapi/jsonpointer v0.23.1 // indirect
 	github.com/go-openapi/swag/jsonname v0.26.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
@@ -65,7 +66,7 @@ require (
 
 tool (
 	github.com/air-verse/air
-	github.com/editorconfig-checker/editorconfig-checker/v3/cmd/editorconfig-checker
+	github.com/editorconfig-checker/editorconfig-checker/v4/cmd/editorconfig-checker
 	github.com/rhysd/actionlint/cmd/actionlint
 	golang.org/x/vuln/cmd/govulncheck
 )
