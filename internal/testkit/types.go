@@ -2,6 +2,7 @@ package testkit
 
 import (
 	"sync"
+	"testing"
 	"time"
 
 	"github.com/nightah/encore/internal/core/match"
@@ -36,4 +37,33 @@ type Library struct {
 	Hidden  []media.Item
 	// Cached is what Items serves.
 	Cached []media.Item
+}
+
+// Op is the kind of statement a Fault fails.
+type Op string
+
+// Fault makes statements on one table of a database fail.
+type Fault struct {
+	Op    Op
+	Table string
+	// Nth is the first statement (for Read) or row (for writes) to fail, counting from 1; every one after it fails too. Zero means the first.
+	Nth int
+	// When narrows a write fault to the rows that meet this SQL condition on NEW or OLD, e.g. "NEW.name = 'Bedroom'". It cannot be set for Read.
+	When string
+}
+
+// Faults injects failures into the SQLite database at one path, for testing what an operation leaves behind when the database fails part way through. Writes fail through triggers added to the schema, so they fail as SQLite would, undoing their statement and failing their transaction; reads fail through an authorizer on every connection to the path.
+type Faults struct {
+	t    testing.TB
+	path string
+
+	mu       sync.Mutex
+	reads    []*readFault
+	triggers []string
+}
+
+type readFault struct {
+	table string
+	nth   int
+	seen  int
 }
