@@ -2,7 +2,6 @@ package app
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -51,42 +50,44 @@ func TestEvidenceRoundTrip(t *testing.T) {
 }
 
 func TestGroupsDescribeEachMember(t *testing.T) {
-	lib := testLibrary(30, 0, "2024-01-01 10:00:00")
-	study := fakekodi.New(t, fakekodi.Options{Library: testLibrary(30, 100, "2024-03-09 18:00:00")})
-	lounge, bedroom := fakekodi.New(t, fakekodi.Options{Library: lib}), fakekodi.New(t, fakekodi.Options{Library: lib})
-	a, _ := runApp(t, t.TempDir(), fastTuning(), kodiConfig("Study", study, ""), kodiConfig("Lounge", lounge, ""), kodiConfig("Bedroom", bedroom, ""))
+	inBubble(t, func(t *testing.T) {
+		lib := testLibrary(30, 0, "2024-01-01 10:00:00")
+		study := newKodi(t, fakekodi.Options{Library: testLibrary(30, 100, "2024-03-09 18:00:00")})
+		lounge, bedroom := newKodi(t, fakekodi.Options{Library: lib}), newKodi(t, fakekodi.Options{Library: lib})
+		a, _ := runApp(t, t.TempDir(), fastTuning(), kodiConfig("Study", study, ""), kodiConfig("Lounge", lounge, ""), kodiConfig("Bedroom", bedroom, ""))
 
-	require.Eventually(t, func() bool {
-		g, _ := a.groupOf("Lounge")
-		return len(g.Members) == 2 && a.fingerprintedAll("Study", "Lounge", "Bedroom")
-	}, eventually, 10*time.Millisecond)
+		settled(t, func() bool {
+			g, _ := a.groupOf("Lounge")
+			return len(g.Members) == 2 && a.fingerprintedAll("Study", "Lounge", "Bedroom")
+		})
 
-	inst := a.instanceNamed(t, "Lounge")
+		inst := a.instanceNamed(t, "Lounge")
 
-	a.mu.RLock()
-	g := inst.group
-	rec, ev := g.rec, g.ev.clone()
-	a.mu.RUnlock()
+		a.mu.RLock()
+		g := inst.group
+		rec, ev := g.rec, g.ev.clone()
+		a.mu.RUnlock()
 
-	ev.Confirmed = []int64{inst.id}
+		ev.Confirmed = []int64{inst.id}
 
-	a.planMu.Lock()
-	err := a.saveGroup(t.Context(), g, rec, ev)
-	a.planMu.Unlock()
-	require.NoError(t, err)
+		a.planMu.Lock()
+		err := a.saveGroup(t.Context(), g, rec, ev)
+		a.planMu.Unlock()
+		require.NoError(t, err)
 
-	groups := a.Groups()
-	require.Len(t, groups, 2)
-	assert.Equal(t, []string{"Lounge", "Study"}, []string{groups[0].Name, groups[1].Name}, "ordered by name, not by when they were made")
+		groups := a.Groups()
+		require.Len(t, groups, 2)
+		assert.Equal(t, []string{"Lounge", "Study"}, []string{groups[0].Name, groups[1].Name}, "ordered by name, not by when they were made")
 
-	confirmed := map[string]bool{}
+		confirmed := map[string]bool{}
 
-	for _, m := range groups[0].Members {
-		confirmed[m.Name] = m.Confirmed
-		assert.True(t, m.Fingerprinted, m.Name)
-	}
+		for _, m := range groups[0].Members {
+			confirmed[m.Name] = m.Confirmed
+			assert.True(t, m.Fingerprinted, m.Name)
+		}
 
-	assert.Equal(t, map[string]bool{"Lounge": true, "Bedroom": false}, confirmed, "only members seen mirroring a change are confirmed")
-	assert.Equal(t, inst.id, groups[0].SourceID)
-	assert.Equal(t, inst.id, groups[0].ActiveID)
+		assert.Equal(t, map[string]bool{"Lounge": true, "Bedroom": false}, confirmed, "only members seen mirroring a change are confirmed")
+		assert.Equal(t, inst.id, groups[0].SourceID)
+		assert.Equal(t, inst.id, groups[0].ActiveID)
+	})
 }

@@ -13,36 +13,38 @@ import (
 )
 
 func TestReloadAliasesUpdatesTheIndex(t *testing.T) {
-	h := newHarness(t, true)
-	h.waitIndexed(t)
-	ctx := t.Context()
-	id := h.instance(t).id
+	inBubble(t, func(t *testing.T) {
+		h := newHarness(t, true)
+		h.waitIndexed(t)
+		ctx := t.Context()
+		id := h.instance(t).id
 
-	top := func() string {
-		t.Helper()
+		top := func() string {
+			t.Helper()
 
-		res, err := h.app.Search(ctx, id, match.Query{Text: "the cornetto one", Kinds: []media.Kind{media.KindMovie}})
-		require.NoError(t, err)
+			res, err := h.app.Search(ctx, id, match.Query{Text: "the cornetto one", Kinds: []media.Kind{media.KindMovie}})
+			require.NoError(t, err)
 
-		if len(res.Candidates) == 0 || res.Candidates[0].Breakdown.Alias == "" {
-			return ""
+			if len(res.Candidates) == 0 || res.Candidates[0].Breakdown.Alias == "" {
+				return ""
+			}
+
+			return res.Candidates[0].Doc.Title
 		}
 
-		return res.Candidates[0].Doc.Title
-	}
+		require.Empty(t, top(), "no alias yet")
 
-	require.Empty(t, top(), "no alias yet")
+		alias := store.TitleAlias{KodiInstanceID: id, Media: media.Ref{Kind: media.KindMovie, ID: 6}, Alias: "the cornetto one"}
+		require.NoError(t, h.app.DB().Aliases().Add(ctx, &alias))
+		assert.Empty(t, top(), "a saved alias waits for the reload")
 
-	alias := store.TitleAlias{KodiInstanceID: id, Media: media.Ref{Kind: media.KindMovie, ID: 6}, Alias: "the cornetto one"}
-	require.NoError(t, h.app.DB().Aliases().Add(ctx, &alias))
-	assert.Empty(t, top(), "a saved alias waits for the reload")
+		require.NoError(t, h.app.ReloadAliases(ctx))
+		assert.Equal(t, "Hot Fuzz", top())
 
-	require.NoError(t, h.app.ReloadAliases(ctx))
-	assert.Equal(t, "Hot Fuzz", top())
-
-	require.NoError(t, h.app.DB().Aliases().Delete(ctx, alias.ID))
-	require.NoError(t, h.app.ReloadAliases(ctx))
-	assert.Empty(t, top(), "a removed alias leaves the index")
+		require.NoError(t, h.app.DB().Aliases().Delete(ctx, alias.ID))
+		require.NoError(t, h.app.ReloadAliases(ctx))
+		assert.Empty(t, top(), "a removed alias leaves the index")
+	})
 }
 
 func TestDocFor(t *testing.T) {

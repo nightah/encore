@@ -18,25 +18,29 @@ import (
 )
 
 func TestSyncInstancePicksUpChangesWithoutNotifications(t *testing.T) {
-	h := newHarness(t, true)
-	h.waitIndexed(t)
-	inst := h.instance(t)
+	inBubble(t, func(t *testing.T) {
+		h := newHarness(t, true)
+		h.waitIndexed(t)
+		inst := h.instance(t)
 
-	h.kodi.Update(func(l *fakekodi.Library) {
-		l.Movies = append(l.Movies, fakekodi.Movie{MovieID: 50, Title: "Arrival", Label: "Arrival", File: "nfs://nas/movies/arrival.mkv", DateAdded: "2026-10-27 10:00:00"})
+		h.kodi.Update(func(l *fakekodi.Library) {
+			l.Movies = append(l.Movies, fakekodi.Movie{MovieID: 50, Title: "Arrival", Label: "Arrival", File: "nfs://nas/movies/arrival.mkv", DateAdded: "2026-10-27 10:00:00"})
+		})
+
+		require.NoError(t, h.app.SyncInstance(t.Context(), inst.id))
+		assert.True(t, hasTitle(inst.Catalog, "Arrival"))
 	})
-
-	require.NoError(t, h.app.SyncInstance(t.Context(), inst.id))
-	assert.True(t, hasTitle(inst.Catalog, "Arrival"))
 }
 
 func TestSyncInstanceReportsKodiErrors(t *testing.T) {
-	h := newHarness(t, true)
-	h.waitIndexed(t)
+	inBubble(t, func(t *testing.T) {
+		h := newHarness(t, true)
+		h.waitIndexed(t)
 
-	h.kodi.Close()
+		h.kodi.Close()
 
-	require.Error(t, h.app.SyncInstance(t.Context(), h.instance(t).id))
+		require.Error(t, h.app.SyncInstance(t.Context(), h.instance(t).id))
+	})
 }
 
 // packets records the Wake-on-LAN packets a Waker sends.
@@ -63,28 +67,35 @@ func (p *packets) count() int {
 }
 
 func TestWakeInstance(t *testing.T) {
-	h := newHarness(t, true)
-	inst := h.instance(t)
-	ctx := t.Context()
+	inBubble(t, func(t *testing.T) {
+		h := newHarness(t, true)
+		inst := h.instance(t)
+		ctx := t.Context()
 
-	err := h.app.WakeInstance(ctx, inst.id, time.Second)
-	require.ErrorContains(t, err, "no MAC address is known")
+		err := h.app.WakeInstance(ctx, inst.id, time.Second)
+		require.ErrorContains(t, err, "no MAC address is known")
 
-	sent := &packets{}
-	inst.Waker.Send = sent.send
-	inst.Waker.Broadcast = "192.0.2.255"
-	inst.Waker.SetMAC(net.HardwareAddr{0xdc, 0xa6, 0x32, 0x4b, 0x19, 0x0e})
+		sent := &packets{}
+		inst.Waker.Send = sent.send
+		inst.Waker.Broadcast = "192.0.2.255"
+		inst.Waker.SetMAC(net.HardwareAddr{0xdc, 0xa6, 0x32, 0x4b, 0x19, 0x0e})
 
-	require.NoError(t, h.app.WakeInstance(ctx, inst.id, time.Second))
-	assert.Zero(t, sent.count(), "an awake Kodi isn't sent a packet")
+		require.NoError(t, h.app.WakeInstance(ctx, inst.id, time.Second))
+		assert.Zero(t, sent.count(), "an awake Kodi isn't sent a packet")
 
-	h.kodi.Close()
+		h.kodi.Close()
 
-	err = h.app.WakeInstance(ctx, inst.id, 300*time.Millisecond)
-	require.ErrorIs(t, err, media.ErrUnreachable)
-	require.Positive(t, sent.count(), "a sleeping Kodi is sent a packet")
-	assert.Equal(t, "192.0.2.255:9", sent.sent[0], "the default Wake-on-LAN port is added")
-	assert.Len(t, sent.payload[0], 102, "a magic packet is 6 bytes of 0xFF and the MAC 16 times")
+		// Packets go out at once and then every five seconds, the default, until the budget runs out.
+		const budget = 12 * time.Second
+
+		start := time.Now()
+		err = h.app.WakeInstance(ctx, inst.id, budget)
+		require.ErrorIs(t, err, media.ErrUnreachable)
+		assert.Equal(t, budget, time.Since(start), "a Kodi that stays asleep is given the whole budget")
+		require.Equal(t, 3, sent.count(), "the packet is repeated while Kodi sleeps")
+		assert.Equal(t, "192.0.2.255:9", sent.sent[0], "the default Wake-on-LAN port is added")
+		assert.Len(t, sent.payload[0], 102, "a magic packet is 6 bytes of 0xFF and the MAC 16 times")
+	})
 }
 
 // connectionRecord describes a fake Kodi as the admin API saves it.
@@ -121,27 +132,36 @@ func checkNamed(t *testing.T, checks []Check, name string) Check {
 }
 
 func TestTestConnectionToAHealthyKodi(t *testing.T) {
-	a := newBareApp(t)
-	srv := fakekodi.New(t, fakekodi.Options{Username: "kodi", Password: "secret"})
-	rec := connectionRecord(t, srv)
-	rec.Username = "kodi"
+	inBubble(t, func(t *testing.T) {
+		const pingTime = 5 * time.Millisecond
 
-	checks := a.TestConnection(t.Context(), rec, "secret")
-	require.Equal(t, []string{"ping", "websocket", "auth", "library"}, checkNames(checks))
+		a := newBareApp(t)
+		srv := newKodi(t, fakekodi.Options{Username: "kodi", Password: "secret"})
+		srv.Handle("JSONRPC.Ping", func(json.RawMessage) (any, *fakekodi.Error) {
+			time.Sleep(pingTime)
 
-	for _, c := range checks {
-		assert.True(t, c.OK, "%s: %s", c.Name, c.Detail)
-	}
+			return "pong", nil
+		})
+		rec := connectionRecord(t, srv)
+		rec.Username = "kodi"
 
-	assert.Equal(t, "7 movies", checkNamed(t, checks, "library").Detail)
-	assert.Positive(t, checkNamed(t, checks, "ping").Duration)
-	assert.Empty(t, srv.CallsTo("Player.Open"), "the test plays nothing")
-	require.Eventually(t, func() bool { return srv.WebSocketClients() == 0 }, eventually, 10*time.Millisecond, "the test leaves nothing connected")
+		checks := a.TestConnection(t.Context(), rec, "secret")
+		require.Equal(t, []string{"ping", "websocket", "auth", "library"}, checkNames(checks))
+
+		for _, c := range checks {
+			assert.True(t, c.OK, "%s: %s", c.Name, c.Detail)
+		}
+
+		assert.Equal(t, "7 movies", checkNamed(t, checks, "library").Detail)
+		assert.Equal(t, pingTime, checkNamed(t, checks, "ping").Duration, "each check says how long it took")
+		assert.Empty(t, srv.CallsTo("Player.Open"), "the test plays nothing")
+		settled(t, func() bool { return srv.WebSocketClients() == 0 }, "the test leaves nothing connected")
+	})
 }
 
 func TestTestConnectionWithoutAWebSocketPort(t *testing.T) {
 	a := newBareApp(t)
-	srv := fakekodi.New(t, fakekodi.Options{})
+	srv := newKodi(t, fakekodi.Options{})
 	rec := connectionRecord(t, srv)
 	rec.WSPort = 0
 
@@ -155,7 +175,7 @@ func TestTestConnectionWithoutAWebSocketPort(t *testing.T) {
 
 func TestTestConnectionWithTheWrongPassword(t *testing.T) {
 	a := newBareApp(t)
-	srv := fakekodi.New(t, fakekodi.Options{Username: "kodi", Password: "secret"})
+	srv := newKodi(t, fakekodi.Options{Username: "kodi", Password: "secret"})
 	rec := connectionRecord(t, srv)
 	rec.Username = "kodi"
 
@@ -175,30 +195,31 @@ func TestTestConnectionWithTheWrongPassword(t *testing.T) {
 }
 
 func TestTestConnectionToAnUnreachableKodi(t *testing.T) {
-	a := newBareApp(t)
-	srv := fakekodi.New(t, fakekodi.Options{})
-	rec := connectionRecord(t, srv)
-	srv.Close()
+	inBubble(t, func(t *testing.T) {
+		a := newBareApp(t)
+		srv := newKodi(t, fakekodi.Options{})
+		rec := connectionRecord(t, srv)
+		srv.Close()
 
-	ctx, cancel := context.WithTimeout(t.Context(), 500*time.Millisecond)
-	defer cancel()
+		start := time.Now()
+		checks := a.TestConnection(t.Context(), rec, "")
+		require.Equal(t, []string{"ping", "websocket", "auth", "library"}, checkNames(checks))
+		assert.Equal(t, testTimeout, time.Since(start), "the WebSocket is retried for the whole test")
 
-	checks := a.TestConnection(ctx, rec, "")
-	require.Equal(t, []string{"ping", "websocket", "auth", "library"}, checkNames(checks))
+		for _, c := range checks {
+			assert.False(t, c.OK, c.Name)
+			assert.NotEmpty(t, c.Detail, c.Name)
+		}
 
-	for _, c := range checks {
-		assert.False(t, c.OK, c.Name)
-		assert.NotEmpty(t, c.Detail, c.Name)
-	}
-
-	assert.Contains(t, checkNamed(t, checks, "websocket").Detail, "could not connect to port")
-	assert.Equal(t, "not checked: Kodi did not answer", checkNamed(t, checks, "auth").Detail)
-	assert.Equal(t, "not checked: Kodi did not answer", checkNamed(t, checks, "library").Detail)
+		assert.Contains(t, checkNamed(t, checks, "websocket").Detail, "could not connect to port")
+		assert.Equal(t, "not checked: Kodi did not answer", checkNamed(t, checks, "auth").Detail)
+		assert.Equal(t, "not checked: Kodi did not answer", checkNamed(t, checks, "library").Detail)
+	})
 }
 
 func TestTestConnectionWhenTheLibraryCantBeRead(t *testing.T) {
 	a := newBareApp(t)
-	srv := fakekodi.New(t, fakekodi.Options{})
+	srv := newKodi(t, fakekodi.Options{})
 	srv.Handle("VideoLibrary.GetMovies", func(json.RawMessage) (any, *fakekodi.Error) {
 		return nil, &fakekodi.Error{Code: fakekodi.CodeUnavailable, Message: "database locked"}
 	})

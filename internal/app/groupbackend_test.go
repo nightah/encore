@@ -3,7 +3,6 @@ package app
 import (
 	"log/slog"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -13,51 +12,55 @@ import (
 )
 
 func TestGroupBackendReadsFromTheActiveMember(t *testing.T) {
-	lib := fakekodi.DefaultLibrary()
-	lounge, bedroom := fakekodi.New(t, fakekodi.Options{Library: lib}), fakekodi.New(t, fakekodi.Options{Library: lib})
-	a, _ := runApp(t, t.TempDir(), fastTuning(), kodiConfig("Lounge", lounge, "upstairs"), kodiConfig("Bedroom", bedroom, "upstairs"))
-	ctx := t.Context()
-	bedroomID := a.instanceNamed(t, "Bedroom").id
+	inBubble(t, func(t *testing.T) {
+		lib := fakekodi.DefaultLibrary()
+		lounge, bedroom := newKodi(t, fakekodi.Options{Library: lib}), newKodi(t, fakekodi.Options{Library: lib})
+		a, _ := runApp(t, t.TempDir(), fastTuning(), kodiConfig("Lounge", lounge, "upstairs"), kodiConfig("Bedroom", bedroom, "upstairs"))
+		ctx := t.Context()
+		bedroomID := a.instanceNamed(t, "Bedroom").id
 
-	a.mu.RLock()
-	b := a.instanceNamed(t, "Lounge").group.backend
-	a.mu.RUnlock()
+		a.mu.RLock()
+		b := a.instanceNamed(t, "Lounge").group.backend
+		a.mu.RUnlock()
 
-	// Each member also samples its own library for detection, so only item lookups tell who answered.
-	reads := func(srv *fakekodi.Server) int { return len(srv.CallsTo("VideoLibrary.GetMovieDetails")) }
+		// Each member also samples its own library for detection, so only item lookups tell who answered.
+		reads := func(srv *fakekodi.Server) int { return len(srv.CallsTo("VideoLibrary.GetMovieDetails")) }
 
-	check := func(t *testing.T) {
-		t.Helper()
+		check := func(t *testing.T) {
+			t.Helper()
 
-		eps, err := b.Episodes(ctx, 1)
-		require.NoError(t, err)
-		assert.Len(t, eps, 3)
+			eps, err := b.Episodes(ctx, 1)
+			require.NoError(t, err)
+			assert.Len(t, eps, 3)
 
-		it, err := b.Item(ctx, media.Ref{Kind: media.KindMovie, ID: 6})
-		require.NoError(t, err)
-		assert.Equal(t, "Hot Fuzz", it.Title)
+			it, err := b.Item(ctx, media.Ref{Kind: media.KindMovie, ID: 6})
+			require.NoError(t, err)
+			assert.Equal(t, "Hot Fuzz", it.Title)
 
-		next, err := b.NextEpisode(ctx, 1)
-		require.NoError(t, err)
-		assert.Equal(t, 102, next.ID, "the first unwatched episode after the last watched")
+			next, err := b.NextEpisode(ctx, 1)
+			require.NoError(t, err)
+			assert.Equal(t, 102, next.ID, "the first unwatched episode after the last watched")
 
-		found, err := b.Search(ctx, media.KindMovie, "dune")
-		require.NoError(t, err)
-		assert.Len(t, found, 3)
-	}
+			found, err := b.Search(ctx, media.KindMovie, "dune")
+			require.NoError(t, err)
+			assert.Len(t, found, 3)
+		}
 
-	before := reads(bedroom)
+		before := reads(bedroom)
 
-	check(t)
-	assert.Equal(t, before, reads(bedroom), "the source answers while it's reachable")
+		check(t)
+		assert.Equal(t, before, reads(bedroom), "the source answers while it's reachable")
 
-	lounge.Close()
-	require.Eventually(t, func() bool { return b.current().id == bedroomID }, eventually, 10*time.Millisecond)
+		// The source's WebSocket drops with it, which prompts the check at once.
+		connected(t, lounge)
+		lounge.Close()
+		settled(t, func() bool { return b.current().id == bedroomID }, "another member takes over as soon as the source is gone")
 
-	before = reads(bedroom)
+		before = reads(bedroom)
 
-	check(t)
-	assert.Greater(t, reads(bedroom), before, "another member answers while the source is away")
+		check(t)
+		assert.Greater(t, reads(bedroom), before, "another member answers while the source is away")
+	})
 }
 
 func TestGroupBackendForwardsConnectionEventsOnlyFromTheActiveMember(t *testing.T) {
@@ -81,7 +84,7 @@ func TestGroupBackendForwardsConnectionEventsOnlyFromTheActiveMember(t *testing.
 func TestGroupBackendPicksTheMemberSyncsGoTo(t *testing.T) {
 	a := newBareApp(t)
 	ctx := t.Context()
-	lsrv, bsrv, ssrv := fakekodi.New(t, fakekodi.Options{}), fakekodi.New(t, fakekodi.Options{}), fakekodi.New(t, fakekodi.Options{})
+	lsrv, bsrv, ssrv := newKodi(t, fakekodi.Options{}), newKodi(t, fakekodi.Options{}), newKodi(t, fakekodi.Options{})
 	lounge, bedroom, study := detachedInstance(t, a, "Lounge", lsrv), detachedInstance(t, a, "Bedroom", bsrv), detachedInstance(t, a, "Study", ssrv)
 
 	b := newGroupBackend([]*Instance{lounge, bedroom, study}, lounge, a.tune, slog.New(slog.DiscardHandler))

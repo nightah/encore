@@ -20,68 +20,72 @@ import (
 )
 
 func TestRecorderDropsEntriesRatherThanBlock(t *testing.T) {
-	a := newBareApp(t)
-	r := newRecorder(a.DB().RequestLog(), slog.New(slog.DiscardHandler))
-	start := time.Date(2026, 10, 28, 9, 0, 0, 0, time.UTC)
+	inBubble(t, func(t *testing.T) {
+		a := newBareApp(t)
+		r := newRecorder(a.DB().RequestLog(), slog.New(slog.DiscardHandler))
+		start := time.Date(2026, 10, 28, 9, 0, 0, 0, time.UTC)
 
-	for i := range recorderBuffer + 5 {
-		r.Record(t.Context(), alexa.LogEntry{Time: start.Add(time.Duration(i) * time.Second), RequestID: fmt.Sprintf("req-%d", i), Intent: "WatchMovie"})
-	}
+		for i := range recorderBuffer + 5 {
+			r.Record(t.Context(), alexa.LogEntry{Time: start.Add(time.Duration(i) * time.Second), RequestID: fmt.Sprintf("req-%d", i), Intent: "WatchMovie"})
+		}
 
-	assert.Len(t, r.entries, recorderBuffer, "entries beyond the buffer are dropped")
+		assert.Len(t, r.entries, recorderBuffer, "entries beyond the buffer are dropped")
 
-	ctx, cancel := context.WithCancel(t.Context())
-	done := make(chan struct{})
+		ctx, cancel := context.WithCancel(t.Context())
+		done := make(chan struct{})
 
-	go func() {
-		defer close(done)
+		go func() {
+			defer close(done)
 
-		r.run(ctx)
-	}()
+			r.run(ctx)
+		}()
 
-	require.Eventually(t, func() bool {
+		settled(t, func() bool {
+			entries, err := a.DB().RequestLog().List(t.Context(), store.RequestLogQuery{Limit: 1000})
+			return err == nil && len(entries) == recorderBuffer
+		})
+
+		cancel()
+		<-done
+
 		entries, err := a.DB().RequestLog().List(t.Context(), store.RequestLogQuery{Limit: 1000})
-		return err == nil && len(entries) == recorderBuffer
-	}, eventually, 10*time.Millisecond)
+		require.NoError(t, err)
 
-	cancel()
-	<-done
+		ids := make([]string, len(entries))
+		for i, e := range entries {
+			ids[i] = e.RequestID
+		}
 
-	entries, err := a.DB().RequestLog().List(t.Context(), store.RequestLogQuery{Limit: 1000})
-	require.NoError(t, err)
-
-	ids := make([]string, len(entries))
-	for i, e := range entries {
-		ids[i] = e.RequestID
-	}
-
-	assert.Contains(t, ids, "req-0", "the oldest queued entries are kept")
-	assert.NotContains(t, ids, fmt.Sprintf("req-%d", recorderBuffer), "the ones that didn't fit are not")
+		assert.Contains(t, ids, "req-0", "the oldest queued entries are kept")
+		assert.NotContains(t, ids, fmt.Sprintf("req-%d", recorderBuffer), "the ones that didn't fit are not")
+	})
 }
 
 func TestRecorderKeepsGoingWhenTheDatabaseFails(t *testing.T) {
-	a := newBareApp(t)
-	r := newRecorder(a.DB().RequestLog(), slog.New(slog.DiscardHandler))
+	inBubble(t, func(t *testing.T) {
+		a := newBareApp(t)
+		r := newRecorder(a.DB().RequestLog(), slog.New(slog.DiscardHandler))
 
-	require.NoError(t, a.DB().Close())
+		require.NoError(t, a.DB().Close())
 
-	for i := range 3 {
-		r.Record(t.Context(), alexa.LogEntry{RequestID: fmt.Sprintf("req-%d", i)})
-	}
+		for i := range 3 {
+			r.Record(t.Context(), alexa.LogEntry{RequestID: fmt.Sprintf("req-%d", i)})
+		}
 
-	ctx, cancel := context.WithCancel(t.Context())
-	done := make(chan struct{})
+		ctx, cancel := context.WithCancel(t.Context())
+		done := make(chan struct{})
 
-	go func() {
-		defer close(done)
+		go func() {
+			defer close(done)
 
-		r.run(ctx)
-	}()
+			r.run(ctx)
+		}()
 
-	require.Eventually(t, func() bool { return len(r.entries) == 0 }, eventually, 10*time.Millisecond, "failed writes don't back the queue up")
+		settled(t, func() bool { return len(r.entries) == 0 }, "failed writes don't back the queue up")
 
-	cancel()
-	<-done
+		cancel()
+		<-done
+	})
 }
 
 func TestRecorderRow(t *testing.T) {

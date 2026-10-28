@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"encoding/json"
-	"sync/atomic"
 	"testing"
 	"time"
 
@@ -51,40 +50,43 @@ func TestMirrors(t *testing.T) {
 		{name: "item missing from the other library", other: without, immediate: true, want: missed},
 		{name: "other library disagrees after the grace period", other: separate, want: missed},
 		{name: "a later write settles within the grace period", other: shared, stale: true, want: mirrored},
-		{name: "other Kodi unreachable", other: shared, closeP: true, want: inconclusive},
+		{name: "other Kodi unreachable", other: shared, closeP: true, immediate: true, want: inconclusive},
 		{name: "changed Kodi unreachable after the grace period", other: shared, stale: true, closeM: true, want: inconclusive},
 	}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			a := newBareApp(t)
-			a.tune.confirmGrace = 20 * time.Millisecond
-			if c.immediate {
-				a.tune.confirmGrace = time.Hour
-			}
+			inBubble(t, func(t *testing.T) {
+				a := newBareApp(t)
+				grace := a.tune.confirmGrace
 
-			msrv, psrv := fakekodi.New(t, fakekodi.Options{Library: shared}), fakekodi.New(t, fakekodi.Options{Library: c.other})
-			m, p := detachedInstance(t, a, "Lounge", msrv), detachedInstance(t, a, "Bedroom", psrv)
+				msrv, psrv := newKodi(t, fakekodi.Options{Library: shared}), newKodi(t, fakekodi.Options{Library: c.other})
+				m, p := detachedInstance(t, a, "Lounge", msrv), detachedInstance(t, a, "Bedroom", psrv)
 
-			after, err := m.Backend.Item(t.Context(), hotFuzz)
-			require.NoError(t, err)
+				after, err := m.Backend.Item(t.Context(), hotFuzz)
+				require.NoError(t, err)
 
-			if c.stale {
-				after.PlayCount++
-			}
+				if c.stale {
+					after.PlayCount++
+				}
 
-			if c.closeM {
-				msrv.Close()
-			}
+				if c.closeM {
+					msrv.Close()
+				}
 
-			if c.closeP {
-				psrv.Close()
-			}
+				if c.closeP {
+					psrv.Close()
+				}
 
-			ctx, cancel := context.WithTimeout(t.Context(), eventually)
-			defer cancel()
+				start := time.Now()
+				assert.Equal(t, c.want, a.mirrors(t.Context(), m, p, hotFuzz, &after))
 
-			assert.Equal(t, c.want, a.mirrors(ctx, m, p, hotFuzz, &after))
+				if c.immediate {
+					assert.Zero(t, time.Since(start), "the verdict needs no grace period")
+				} else {
+					assert.Equal(t, grace, time.Since(start), "the other member gets the grace period")
+				}
+			})
 		})
 	}
 }
@@ -101,50 +103,57 @@ func TestMirrorsRereadsTheOtherMemberAfterTheGracePeriod(t *testing.T) {
 		{"unreachable meanwhile", &fakekodi.Error{Code: fakekodi.CodeUnavailable, Message: "busy"}, inconclusive},
 	} {
 		t.Run(c.name, func(t *testing.T) {
-			a := newBareApp(t)
-			a.tune.confirmGrace = 10 * time.Millisecond
+			inBubble(t, func(t *testing.T) {
+				a := newBareApp(t)
 
-			opts := fakekodi.Options{Version: [3]int{13, 1000, 0}}
-			psrv := fakekodi.New(t, opts)
-			m, p := detachedInstance(t, a, "Lounge", fakekodi.New(t, opts)), detachedInstance(t, a, "Bedroom", psrv)
+				opts := fakekodi.Options{Version: [3]int{13, 1000, 0}}
+				psrv := newKodi(t, opts)
+				m, p := detachedInstance(t, a, "Lounge", newKodi(t, opts)), detachedInstance(t, a, "Bedroom", psrv)
 
-			var reads atomic.Int32
+				var reads []time.Time
 
-			psrv.Handle("VideoLibrary.GetMovieDetails", func(json.RawMessage) (any, *fakekodi.Error) {
-				if reads.Add(1) > 1 {
-					return nil, c.again
-				}
+				psrv.Handle("VideoLibrary.GetMovieDetails", func(json.RawMessage) (any, *fakekodi.Error) {
+					reads = append(reads, time.Now())
+					if len(reads) > 1 {
+						return nil, c.again
+					}
 
-				return map[string]any{"moviedetails": map[string]any{"movieid": 6, "label": "Hot Fuzz", "title": "Hot Fuzz", "playcount": 7}}, nil
+					return map[string]any{"moviedetails": map[string]any{"movieid": 6, "label": "Hot Fuzz", "title": "Hot Fuzz", "playcount": 7}}, nil
+				})
+
+				after, err := m.Backend.Item(t.Context(), hotFuzz)
+				require.NoError(t, err)
+
+				assert.Equal(t, c.want, a.mirrors(t.Context(), m, p, hotFuzz, &after))
+				require.Len(t, reads, 2)
+				assert.Equal(t, a.tune.confirmGrace, reads[1].Sub(reads[0]), "the second read comes after the grace period")
 			})
-
-			after, err := m.Backend.Item(t.Context(), hotFuzz)
-			require.NoError(t, err)
-
-			assert.Equal(t, c.want, a.mirrors(t.Context(), m, p, hotFuzz, &after))
-			assert.EqualValues(t, 2, reads.Load())
 		})
 	}
 }
 
 func TestMirrorsGivesUpWhenCancelledDuringTheGracePeriod(t *testing.T) {
-	a := newBareApp(t)
-	a.tune.confirmGrace = time.Hour
+	inBubble(t, func(t *testing.T) {
+		a := newBareApp(t)
 
-	lib := fakekodi.DefaultLibrary()
-	m := detachedInstance(t, a, "Lounge", fakekodi.New(t, fakekodi.Options{Library: lib}))
-	p := detachedInstance(t, a, "Bedroom", fakekodi.New(t, fakekodi.Options{Library: lib}))
-	ref := media.Ref{Kind: media.KindMovie, ID: 6}
+		lib := fakekodi.DefaultLibrary()
+		m := detachedInstance(t, a, "Lounge", newKodi(t, fakekodi.Options{Library: lib}))
+		p := detachedInstance(t, a, "Bedroom", newKodi(t, fakekodi.Options{Library: lib}))
+		ref := media.Ref{Kind: media.KindMovie, ID: 6}
 
-	after, err := m.Backend.Item(t.Context(), ref)
-	require.NoError(t, err)
+		after, err := m.Backend.Item(t.Context(), ref)
+		require.NoError(t, err)
 
-	after.PlayCount++
+		after.PlayCount++
 
-	ctx, cancel := context.WithTimeout(t.Context(), 50*time.Millisecond)
-	defer cancel()
+		wait := a.tune.confirmGrace / 2
+		ctx, cancel := context.WithTimeout(t.Context(), wait)
+		defer cancel()
 
-	assert.Equal(t, inconclusive, a.mirrors(ctx, m, p, ref, &after))
+		start := time.Now()
+		assert.Equal(t, inconclusive, a.mirrors(ctx, m, p, ref, &after))
+		assert.Equal(t, wait, time.Since(start), "a cancelled check stops waiting at once")
+	})
 }
 
 func TestConfirmIgnoresChangesThatProveNothing(t *testing.T) {
@@ -165,7 +174,7 @@ func TestConfirmIgnoresChangesThatProveNothing(t *testing.T) {
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
 			a := newBareApp(t)
-			msrv, psrv := fakekodi.New(t, fakekodi.Options{Library: lib}), fakekodi.New(t, fakekodi.Options{Library: lib})
+			msrv, psrv := newKodi(t, fakekodi.Options{Library: lib}), newKodi(t, fakekodi.Options{Library: lib})
 			m, p := detachedInstance(t, a, "Lounge", msrv), detachedInstance(t, a, "Bedroom", psrv)
 			m.group = &group{members: []*Instance{m, p}}
 
@@ -218,52 +227,57 @@ func TestSamePlayState(t *testing.T) {
 }
 
 func TestRecheckOnRestart(t *testing.T) {
-	lib := testLibrary(30, 0, "2024-01-01 10:00:00")
-	// Kodi 22 (API 13.1000) and later name their database.
-	piers := func(db string) *fakekodi.Server {
-		return fakekodi.New(t, fakekodi.Options{Version: [3]int{13, 1000, 0}, Library: lib, DatabaseName: db})
-	}
-	lounge, bedroom := piers("MyVideos149"), piers("MyVideos149")
-	dir := t.TempDir()
+	inBubble(t, func(t *testing.T) {
+		lib := testLibrary(30, 0, "2024-01-01 10:00:00")
+		// Kodi 22 (API 13.1000) and later name their database.
+		piers := func(db string) *fakekodi.Server {
+			return newKodi(t, fakekodi.Options{Version: [3]int{13, 1000, 0}, Library: lib, DatabaseName: db})
+		}
+		lounge, bedroom := piers("MyVideos149"), piers("MyVideos149")
+		dir := t.TempDir()
 
-	a, stop := runApp(t, dir, fastTuning(), kodiConfig("Lounge", lounge, ""), kodiConfig("Bedroom", bedroom, ""))
-	require.Eventually(t, func() bool { g, _ := a.groupOf("Lounge"); return len(g.Members) == 2 }, eventually, 10*time.Millisecond)
+		a, stop := runApp(t, dir, fastTuning(), kodiConfig("Lounge", lounge, ""), kodiConfig("Bedroom", bedroom, ""))
+		settled(t, func() bool { g, _ := a.groupOf("Lounge"); return len(g.Members) == 2 })
 
-	g, _ := a.groupOf("Lounge")
-	stop()
+		g, _ := a.groupOf("Lounge")
+		stop()
 
-	sampled := func(a *App) time.Time {
-		rec, err := a.DB().LibraryGroups().Get(t.Context(), g.ID)
-		if err != nil {
+		sampled := func(a *App) time.Time {
+			rec, err := a.DB().LibraryGroups().Get(t.Context(), g.ID)
+			if err != nil {
+				return time.Time{}
+			}
+
+			if ev := decodeEvidence(rec.Evidence); ev.Fingerprint != nil {
+				return ev.Fingerprint.At
+			}
+
 			return time.Time{}
 		}
 
-		if ev := decodeEvidence(rec.Evidence); ev.Fingerprint != nil {
-			return ev.Fingerprint.At
-		}
+		// Encore is down for a while.
+		time.Sleep(time.Minute)
 
-		return time.Time{}
-	}
+		restarted := time.Now()
 
-	restarted := time.Now()
+		// Still sharing after a restart: the members' fingerprints refresh the evidence.
+		a, stop = runApp(t, dir, fastTuning(), kodiConfig("Lounge", lounge, ""), kodiConfig("Bedroom", bedroom, ""))
+		settled(t, func() bool { return sampled(a).Equal(restarted) }, "the evidence is refreshed as soon as both members are sampled")
 
-	// Still sharing after a restart: the members' fingerprints refresh the evidence.
-	a, stop = runApp(t, dir, fastTuning(), kodiConfig("Lounge", lounge, ""), kodiConfig("Bedroom", bedroom, ""))
-	require.Eventually(t, func() bool { return sampled(a).After(restarted) }, eventually, 10*time.Millisecond)
+		again, _ := a.groupOf("Lounge")
+		assert.Equal(t, g.ID, again.ID)
+		assert.Equal(t, "60 of 60 sampled items match", again.Evidence)
+		stop()
 
-	again, _ := a.groupOf("Lounge")
-	assert.Equal(t, g.ID, again.ID)
-	assert.Equal(t, "60 of 60 sampled items match", again.Evidence)
-	stop()
+		// The bedroom Kodi was given a database of its own, with the same files.
+		own := piers("MyVideos149_bedroom")
 
-	// The bedroom Kodi was given a database of its own, with the same files.
-	own := piers("MyVideos149_bedroom")
+		a, _ = runApp(t, dir, fastTuning(), kodiConfig("Lounge", lounge, ""), kodiConfig("Bedroom", own, ""))
+		settled(t, func() bool { return len(a.Groups()) == 2 })
 
-	a, _ = runApp(t, dir, fastTuning(), kodiConfig("Lounge", lounge, ""), kodiConfig("Bedroom", own, ""))
-	require.Eventually(t, func() bool { return len(a.Groups()) == 2 }, eventually, 10*time.Millisecond)
-
-	split, _ := a.groupOf("Bedroom")
-	assert.Equal(t, store.GroupSolo, split.State)
-	assert.Contains(t, split.Reason, "uses database MyVideos149")
-	assert.Contains(t, split.Reason, "MyVideos149_bedroom")
+		split, _ := a.groupOf("Bedroom")
+		assert.Equal(t, store.GroupSolo, split.State)
+		assert.Contains(t, split.Reason, "uses database MyVideos149")
+		assert.Contains(t, split.Reason, "MyVideos149_bedroom")
+	})
 }

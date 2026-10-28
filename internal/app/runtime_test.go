@@ -5,7 +5,9 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	"github.com/stretchr/testify/assert"
@@ -17,89 +19,95 @@ import (
 )
 
 func TestRemoveInstanceLeavesItsGroup(t *testing.T) {
-	lib := testLibrary(30, 0, "2024-01-01 10:00:00")
-	lounge, bedroom := fakekodi.New(t, fakekodi.Options{Library: lib}), fakekodi.New(t, fakekodi.Options{Library: lib})
-	a, _ := runApp(t, t.TempDir(), fastTuning(), kodiConfig("Lounge", lounge, "upstairs"), kodiConfig("Bedroom", bedroom, "upstairs"))
-	ctx := t.Context()
-	loungeID, bedroomID := a.instanceNamed(t, "Lounge").id, a.instanceNamed(t, "Bedroom").id
+	inBubble(t, func(t *testing.T) {
+		lib := testLibrary(30, 0, "2024-01-01 10:00:00")
+		lounge, bedroom := newKodi(t, fakekodi.Options{Library: lib}), newKodi(t, fakekodi.Options{Library: lib})
+		a, _ := runApp(t, t.TempDir(), fastTuning(), kodiConfig("Lounge", lounge, "upstairs"), kodiConfig("Bedroom", bedroom, "upstairs"))
+		ctx := t.Context()
+		loungeID, bedroomID := a.instanceNamed(t, "Lounge").id, a.instanceNamed(t, "Bedroom").id
 
-	connected(t, bedroom)
+		connected(t, bedroom)
 
-	// The admin API deletes the row, then the runtime.
-	require.NoError(t, a.DB().KodiInstances().Delete(ctx, bedroomID))
-	require.NoError(t, a.RemoveInstance(ctx, bedroomID))
+		// The admin API deletes the row, then the runtime.
+		require.NoError(t, a.DB().KodiInstances().Delete(ctx, bedroomID))
+		require.NoError(t, a.RemoveInstance(ctx, bedroomID))
 
-	assert.Equal(t, []int64{loungeID}, a.InstanceIDs())
+		assert.Equal(t, []int64{loungeID}, a.InstanceIDs())
 
-	g, ok := a.groupOf("Lounge")
-	require.True(t, ok)
-	assert.Equal(t, []string{"Lounge"}, memberNames(g))
+		g, ok := a.groupOf("Lounge")
+		require.True(t, ok)
+		assert.Equal(t, []string{"Lounge"}, memberNames(g))
 
-	_, err := a.InstanceStatus(ctx, bedroomID, false)
-	require.ErrorIs(t, err, ErrNoRuntime)
+		_, err := a.InstanceStatus(ctx, bedroomID, false)
+		require.ErrorIs(t, err, ErrNoRuntime)
 
-	require.Eventually(t, func() bool { return bedroom.WebSocketClients() == 0 }, eventually, 10*time.Millisecond, "the removed runtime disconnects")
+		settled(t, func() bool { return bedroom.WebSocketClients() == 0 }, "the removed runtime disconnects")
 
-	a.mu.RLock()
-	_, printed := a.prints[bedroomID]
-	a.mu.RUnlock()
-	assert.False(t, printed, "its fingerprint is forgotten")
+		a.mu.RLock()
+		_, printed := a.prints[bedroomID]
+		a.mu.RUnlock()
+		assert.False(t, printed, "its fingerprint is forgotten")
 
-	require.NoError(t, a.RemoveInstance(ctx, bedroomID), "removing twice is harmless")
+		require.NoError(t, a.RemoveInstance(ctx, bedroomID), "removing twice is harmless")
+	})
 }
 
 func TestRemovingTheLastMemberDeletesTheSnapshot(t *testing.T) {
-	srv := fakekodi.New(t, fakekodi.Options{})
-	dir := t.TempDir()
-	a, _ := runApp(t, dir, fastTuning(), kodiConfig("Lounge", srv, ""))
-	ctx := t.Context()
-	inst := a.instanceNamed(t, "Lounge")
+	inBubble(t, func(t *testing.T) {
+		srv := newKodi(t, fakekodi.Options{})
+		dir := t.TempDir()
+		a, _ := runApp(t, dir, fastTuning(), kodiConfig("Lounge", srv, ""))
+		ctx := t.Context()
+		inst := a.instanceNamed(t, "Lounge")
 
-	g, _ := a.groupOf("Lounge")
-	file := filepath.Join(dir, "blobs", "library", fmt.Sprintf("%d.json.gz", g.ID))
+		g, _ := a.groupOf("Lounge")
+		file := filepath.Join(dir, "blobs", "library", fmt.Sprintf("%d.json.gz", g.ID))
 
-	require.Eventually(t, func() bool { _, err := os.Stat(file); return err == nil }, eventually, 10*time.Millisecond)
+		after(t, fastTuning().snapshotCheck, func() bool { _, err := os.Stat(file); return err == nil }, "the synced library is saved at the next check")
 
-	require.NoError(t, a.DB().KodiInstances().Delete(ctx, inst.id))
-	require.NoError(t, a.RemoveInstance(ctx, inst.id))
+		require.NoError(t, a.DB().KodiInstances().Delete(ctx, inst.id))
+		require.NoError(t, a.RemoveInstance(ctx, inst.id))
 
-	assert.Empty(t, a.Groups())
-	assert.NoFileExists(t, file, "a deleted library's snapshot goes with it")
+		assert.Empty(t, a.Groups())
+		assert.NoFileExists(t, file, "a deleted library's snapshot goes with it")
+	})
 }
 
 func TestReloadInstance(t *testing.T) {
-	h := newHarness(t, true)
-	h.waitIndexed(t)
-	ctx := t.Context()
-	old := h.instance(t)
+	inBubble(t, func(t *testing.T) {
+		h := newHarness(t, true)
+		h.waitIndexed(t)
+		ctx := t.Context()
+		old := h.instance(t)
 
-	require.ErrorIs(t, h.app.ReloadInstance(ctx, unknownInstance), store.ErrNotFound)
+		require.ErrorIs(t, h.app.ReloadInstance(ctx, unknownInstance), store.ErrNotFound)
 
-	rec := old.Record
-	rec.Timezone = "Australia/Melbourne"
-	require.NoError(t, h.app.DB().KodiInstances().Update(ctx, &rec))
-	require.NoError(t, h.app.ReloadInstance(ctx, rec.ID))
+		rec := old.Record
+		rec.Timezone = "Australia/Melbourne"
+		require.NoError(t, h.app.DB().KodiInstances().Update(ctx, &rec))
+		require.NoError(t, h.app.ReloadInstance(ctx, rec.ID))
 
-	inst := h.instance(t)
-	assert.NotSame(t, old, inst)
-	assert.Equal(t, "Australia/Melbourne", inst.Record.Timezone)
-	assert.Positive(t, inst.Index.Len(), "the title index stays warm across the reload")
+		inst := h.instance(t)
+		assert.NotSame(t, old, inst)
+		assert.Equal(t, "Australia/Melbourne", inst.Record.Timezone)
+		assert.Positive(t, inst.Index.Len(), "the title index stays warm across the reload")
 
-	select {
-	case <-old.done:
-	default:
-		t.Fatal("the replaced runtime is stopped")
-	}
+		select {
+		case <-old.done:
+		default:
+			t.Fatal("the replaced runtime is stopped")
+		}
 
-	// A saved password whose secret is missing can't be used.
-	rec.PasswordSecretRef = "kodi/Lounge/missing"
-	require.NoError(t, h.app.DB().KodiInstances().Update(ctx, &rec))
-	require.ErrorContains(t, h.app.ReloadInstance(ctx, rec.ID), "reading password")
-	assert.Same(t, inst, h.instance(t), "a runtime that can't be built doesn't replace the running one")
+		// A saved password whose secret is missing can't be used.
+		rec.PasswordSecretRef = "kodi/Lounge/missing"
+		require.NoError(t, h.app.DB().KodiInstances().Update(ctx, &rec))
+		require.ErrorContains(t, h.app.ReloadInstance(ctx, rec.ID), "reading password")
+		assert.Same(t, inst, h.instance(t), "a runtime that can't be built doesn't replace the running one")
+	})
 }
 
 func TestNothingConnectsBeforeRun(t *testing.T) {
-	lounge, bedroom := fakekodi.New(t, fakekodi.Options{}), fakekodi.New(t, fakekodi.Options{})
+	lounge, bedroom := newKodi(t, fakekodi.Options{}), newKodi(t, fakekodi.Options{})
 
 	cfg := config.Defaults()
 	cfg.DataDir = t.TempDir()
@@ -198,6 +206,58 @@ func TestSavingTheMACNeedsKodiAndTheRow(t *testing.T) {
 
 	_, err = h.app.DB().KodiInstances().Get(ctx, inst.id)
 	require.ErrorIs(t, err, store.ErrNotFound, "an instance deleted meanwhile isn't brought back by saving its MAC")
+}
+
+func TestTheMACIsLearnedOnceTheConnectionSettles(t *testing.T) {
+	inBubble(t, func(t *testing.T) {
+		h := newHarness(t, true)
+		ctx := t.Context()
+		inst := h.instance(t)
+		delay := defaultTuning().learnMACDelay
+
+		stored := func() string {
+			rec, err := h.app.DB().KodiInstances().Get(ctx, inst.id)
+			require.NoError(t, err)
+
+			return rec.MAC
+		}
+
+		after(t, delay-time.Millisecond, func() bool { return inst.Waker.MAC() == nil && stored() == "" }, "the MAC address isn't asked for while the connection settles")
+		assert.Zero(t, macAsks(h.kodi))
+
+		after(t, time.Millisecond, func() bool { return stored() == "dc:a6:32:4b:19:0e" }, "it's read and saved once the delay has passed")
+		assert.Equal(t, "dc:a6:32:4b:19:0e", inst.Waker.MAC().String())
+	})
+}
+
+func TestAnInstanceStoppedEarlyDoesntLearnItsMAC(t *testing.T) {
+	inBubble(t, func(t *testing.T) {
+		h := newHarness(t, true)
+		ctx := t.Context()
+		inst := h.instance(t)
+
+		synctest.Wait()
+		require.NoError(t, h.app.DB().KodiInstances().Delete(ctx, inst.id))
+		require.NoError(t, h.app.RemoveInstance(ctx, inst.id))
+
+		time.Sleep(defaultTuning().learnMACDelay)
+		synctest.Wait()
+		assert.Nil(t, inst.Waker.MAC(), "a stopped instance stops waiting to learn its MAC address")
+		assert.Zero(t, macAsks(h.kodi))
+	})
+}
+
+// macAsks counts the times a fake was asked for its MAC address.
+func macAsks(srv *fakekodi.Server) int {
+	n := 0
+
+	for _, c := range srv.CallsTo("XBMC.GetInfoLabels") {
+		if strings.Contains(string(c.Params), "Network.MacAddress") {
+			n++
+		}
+	}
+
+	return n
 }
 
 func TestTimezone(t *testing.T) {

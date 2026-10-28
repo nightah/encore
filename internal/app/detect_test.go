@@ -3,7 +3,7 @@ package app
 import (
 	"fmt"
 	"testing"
-	"time"
+	"testing/synctest"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -14,28 +14,24 @@ import (
 )
 
 func TestOnPlayerChangeHearsPlaybackNotifications(t *testing.T) {
-	h := newHarness(t, true)
-	id := h.instance(t).id
+	inBubble(t, func(t *testing.T) {
+		h := newHarness(t, true)
+		id := h.instance(t).id
 
-	heard := make(chan int64, 16)
-	h.app.OnPlayerChange(func(instanceID int64) { heard <- instanceID })
+		heard := make(chan int64, 16)
+		h.app.OnPlayerChange(func(instanceID int64) { heard <- instanceID })
 
-	connected(t, h.kodi)
+		connected(t, h.kodi)
 
-	for _, method := range []string{"Player.OnPlay", "Player.OnPause", "Player.OnResume", "Player.OnStop", "Player.OnSeek", "Player.OnSpeedChanged", "Application.OnVolumeChanged"} {
-		// A library notification first, which isn't about playback; notifications arrive in order.
-		h.kodi.Notify("VideoLibrary.OnScanStarted", nil)
-		h.kodi.Notify(method, map[string]any{"item": map[string]any{"type": "movie", "id": 6}, "player": map[string]any{"playerid": 1}})
+		for _, method := range []string{"Player.OnPlay", "Player.OnPause", "Player.OnResume", "Player.OnStop", "Player.OnSeek", "Player.OnSpeedChanged", "Application.OnVolumeChanged"} {
+			h.kodi.Notify("VideoLibrary.OnScanStarted", nil)
+			h.kodi.Notify(method, map[string]any{"item": map[string]any{"type": "movie", "id": 6}, "player": map[string]any{"playerid": 1}})
+			synctest.Wait()
 
-		select {
-		case got := <-heard:
-			assert.Equal(t, id, got, method)
-		case <-time.After(eventually):
-			t.Fatalf("%s wasn't heard", method)
+			require.Len(t, heard, 1, "%s is heard, and the library notification isn't", method)
+			assert.Equal(t, id, <-heard, method)
 		}
-
-		assert.Empty(t, heard, "only playback changes are reported")
-	}
+	})
 }
 
 func TestPlayerChangeWithoutAListener(t *testing.T) {
@@ -127,41 +123,43 @@ func TestObservationMerge(t *testing.T) {
 }
 
 func TestASampleTooSmallToTellKeepsAMemberInItsGroup(t *testing.T) {
-	lib := testLibrary(30, 0, "2024-01-01 10:00:00")
-	lounge, bedroom := fakekodi.New(t, fakekodi.Options{Library: lib}), fakekodi.New(t, fakekodi.Options{Library: lib})
-	a, _ := runApp(t, t.TempDir(), fastTuning(), kodiConfig("Lounge", lounge, ""), kodiConfig("Bedroom", bedroom, ""))
+	inBubble(t, func(t *testing.T) {
+		lib := testLibrary(30, 0, "2024-01-01 10:00:00")
+		lounge, bedroom := newKodi(t, fakekodi.Options{Library: lib}), newKodi(t, fakekodi.Options{Library: lib})
+		a, _ := runApp(t, t.TempDir(), fastTuning(), kodiConfig("Lounge", lounge, ""), kodiConfig("Bedroom", bedroom, ""))
 
-	require.Eventually(t, func() bool {
-		g, _ := a.groupOf("Lounge")
-		return len(g.Members) == 2 && a.fingerprintedAll("Lounge", "Bedroom")
-	}, eventually, 10*time.Millisecond)
+		settled(t, func() bool {
+			g, _ := a.groupOf("Lounge")
+			return len(g.Members) == 2 && a.fingerprintedAll("Lounge", "Bedroom")
+		})
 
-	loungeID, inst := a.instanceNamed(t, "Lounge").id, a.instanceNamed(t, "Bedroom")
+		loungeID, inst := a.instanceNamed(t, "Lounge").id, a.instanceNamed(t, "Bedroom")
 
-	small := func(id int) *kodi.LibraryFingerprint {
-		return &kodi.LibraryFingerprint{Movies: []kodi.FingerprintItem{{ID: id, File: fmt.Sprintf("nfs://nas/movies/%d.mkv", id), DateAdded: "2026-01-01 10:00:00"}}}
-	}
-
-	for _, c := range []struct {
-		name         string
-		lounge, mine *kodi.LibraryFingerprint
-	}{
-		{"an empty sample, as while Kodi rebuilds its library", nil, &kodi.LibraryFingerprint{}},
-		{"two libraries too small to compare", small(1), small(2)},
-	} {
-		a.planMu.Lock()
-
-		if c.lounge != nil {
-			a.mu.Lock()
-			a.prints[loungeID] = c.lounge
-			a.mu.Unlock()
+		small := func(id int) *kodi.LibraryFingerprint {
+			return &kodi.LibraryFingerprint{Movies: []kodi.FingerprintItem{{ID: id, File: fmt.Sprintf("nfs://nas/movies/%d.mkv", id), DateAdded: "2026-01-01 10:00:00"}}}
 		}
 
-		a.fingerprinted(t.Context(), inst, c.mine)
-		a.planMu.Unlock()
+		for _, c := range []struct {
+			name         string
+			lounge, mine *kodi.LibraryFingerprint
+		}{
+			{"an empty sample, as while Kodi rebuilds its library", nil, &kodi.LibraryFingerprint{}},
+			{"two libraries too small to compare", small(1), small(2)},
+		} {
+			a.planMu.Lock()
 
-		g, _ := a.groupOf("Bedroom")
-		assert.ElementsMatch(t, []string{"Lounge", "Bedroom"}, memberNames(g), c.name)
-		assert.Empty(t, g.Reason, c.name)
-	}
+			if c.lounge != nil {
+				a.mu.Lock()
+				a.prints[loungeID] = c.lounge
+				a.mu.Unlock()
+			}
+
+			a.fingerprinted(t.Context(), inst, c.mine)
+			a.planMu.Unlock()
+
+			g, _ := a.groupOf("Bedroom")
+			assert.ElementsMatch(t, []string{"Lounge", "Bedroom"}, memberNames(g), c.name)
+			assert.Empty(t, g.Reason, c.name)
+		}
+	})
 }

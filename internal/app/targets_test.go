@@ -5,7 +5,6 @@ import (
 	"errors"
 	"net"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -18,54 +17,58 @@ import (
 )
 
 func TestContentSettingsShapeTheLibrary(t *testing.T) {
-	h := newHarness(t, true)
-	h.waitIndexed(t)
-	ctx := t.Context()
-	id := h.instance(t).id
-	movie := media.Ref{Kind: media.KindMovie, ID: 6}
+	inBubble(t, func(t *testing.T) {
+		h := newHarness(t, true)
+		h.waitIndexed(t)
+		ctx := t.Context()
+		id := h.instance(t).id
+		movie := media.Ref{Kind: media.KindMovie, ID: 6}
 
-	content := func(groups ...string) {
-		h.app.SetSettings(func(context.Context) (*config.Config, error) {
-			eff := *h.app.cfg
-			eff.Alexa.Content = groups
+		content := func(groups ...string) {
+			h.app.SetSettings(func(context.Context) (*config.Config, error) {
+				eff := *h.app.cfg
+				eff.Alexa.Content = groups
 
-			return &eff, nil
-		})
-	}
+				return &eff, nil
+			})
+		}
 
-	content(config.ContentTV)
+		content(config.ContentTV)
 
-	assert.False(t, h.app.Findable(id, movie), "turning movies off takes them out of the library")
-	assert.True(t, h.app.Findable(id, media.Ref{Kind: media.KindTVShow, ID: 1}))
+		assert.False(t, h.app.Findable(id, movie), "turning movies off takes them out of the library")
+		assert.True(t, h.app.Findable(id, media.Ref{Kind: media.KindTVShow, ID: 1}))
 
-	target, err := h.app.Target(ctx, testDevice)
-	require.NoError(t, err)
-	assert.Equal(t, []media.Content{media.ContentMovies, media.ContentMusic}, target.Disabled)
+		target, err := h.app.Target(ctx, testDevice)
+		require.NoError(t, err)
+		assert.Equal(t, []media.Content{media.ContentMovies, media.ContentMusic}, target.Disabled)
 
-	content(config.ContentMovies, config.ContentTV, config.ContentMusic)
+		content(config.ContentMovies, config.ContentTV, config.ContentMusic)
 
-	require.Eventually(t, func() bool { return h.app.Findable(id, movie) }, eventually, 10*time.Millisecond, "turning movies on fetches them from Kodi straight away")
+		settled(t, func() bool { return h.app.Findable(id, movie) }, "turning movies on fetches them from Kodi straight away")
 
-	target, err = h.app.Target(ctx, testDevice)
-	require.NoError(t, err)
-	assert.Empty(t, target.Disabled)
+		target, err = h.app.Target(ctx, testDevice)
+		require.NoError(t, err)
+		assert.Empty(t, target.Disabled)
+	})
 }
 
 func TestUnreadableSettingsFallBackToTheStartupConfiguration(t *testing.T) {
-	h := newHarness(t, true)
-	h.waitIndexed(t)
+	inBubble(t, func(t *testing.T) {
+		h := newHarness(t, true)
+		h.waitIndexed(t)
 
-	h.app.cfg.Alexa.QueueLimit = 12
-	h.app.SetSettings(func(context.Context) (*config.Config, error) { return nil, errors.New("settings table locked") })
+		h.app.cfg.Alexa.QueueLimit = 12
+		h.app.SetSettings(func(context.Context) (*config.Config, error) { return nil, errors.New("settings table locked") })
 
-	target, err := h.app.Target(t.Context(), testDevice)
-	require.NoError(t, err)
-	assert.Equal(t, 12, target.QueueLimit)
-	assert.True(t, h.app.Findable(h.instance(t).id, media.Ref{Kind: media.KindMovie, ID: 6}), "the library keeps the startup content")
+		target, err := h.app.Target(t.Context(), testDevice)
+		require.NoError(t, err)
+		assert.Equal(t, 12, target.QueueLimit)
+		assert.True(t, h.app.Findable(h.instance(t).id, media.Ref{Kind: media.KindMovie, ID: 6}), "the library keeps the startup content")
+	})
 }
 
 func TestTargetIsTheLinkedInstanceBeforeTheDefault(t *testing.T) {
-	lounge, bedroom := fakekodi.New(t, fakekodi.Options{}), fakekodi.New(t, fakekodi.Options{})
+	lounge, bedroom := newKodi(t, fakekodi.Options{}), newKodi(t, fakekodi.Options{})
 	lc := kodiConfig("Lounge", lounge, "")
 	lc.Default = true
 	a, _ := runApp(t, t.TempDir(), fastTuning(), lc, kodiConfig("Bedroom", bedroom, ""))
@@ -248,20 +251,22 @@ func TestCutArticle(t *testing.T) {
 }
 
 func TestEndToEndRoomTargeting(t *testing.T) {
-	h := newHarness(t, false)
-	h.waitIndexed(t)
+	inBubble(t, func(t *testing.T) {
+		h := newHarness(t, false)
+		h.waitIndexed(t)
 
-	instances, err := h.app.DB().KodiInstances().List(t.Context())
-	require.NoError(t, err)
-	require.NoError(t, h.app.DB().Rooms().Create(t.Context(), &store.Room{Name: "Lounge Room", KodiInstanceID: instances[0].ID}))
+		instances, err := h.app.DB().KodiInstances().List(t.Context())
+		require.NoError(t, err)
+		require.NoError(t, h.app.DB().Rooms().Create(t.Context(), &store.Room{Name: "Lounge Room", KodiInstanceID: instances[0].ID}))
 
-	// The device is unlinked, but naming the room reaches its Kodi.
-	resp := h.say(t, "PartyMode", "Room", "lounge room")
-	assert.Equal(t, "Starting party mode.", speech(resp))
-	assert.Len(t, h.kodi.CallsTo("Player.Open"), 1)
+		// The device is unlinked, but naming the room reaches its Kodi.
+		resp := h.say(t, "PartyMode", "Room", "lounge room")
+		assert.Equal(t, "Starting party mode.", speech(resp))
+		assert.Len(t, h.kodi.CallsTo("Player.Open"), 1)
 
-	resp = h.say(t, "PartyMode", "Room", "attic")
-	assert.Equal(t, "I don't know a room called attic.", speech(resp))
+		resp = h.say(t, "PartyMode", "Room", "attic")
+		assert.Equal(t, "I don't know a room called attic.", speech(resp))
+	})
 }
 
 func TestDeviceNameRecordsTheEcho(t *testing.T) {

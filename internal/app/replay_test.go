@@ -118,39 +118,41 @@ func TestDryRunCallsAreACopy(t *testing.T) {
 }
 
 func TestDryRunTargets(t *testing.T) {
-	h := newHarness(t, true)
-	h.waitIndexed(t)
-	ctx := t.Context()
-	inst := h.instance(t)
-	inst.Waker.SetMAC(net.HardwareAddr{0xdc, 0xa6, 0x32, 0x4b, 0x19, 0x0e})
+	inBubble(t, func(t *testing.T) {
+		h := newHarness(t, true)
+		h.waitIndexed(t)
+		ctx := t.Context()
+		inst := h.instance(t)
+		inst.Waker.SetMAC(net.HardwareAddr{0xdc, 0xa6, 0x32, 0x4b, 0x19, 0x0e})
 
-	run := &DryRun{}
-	targets := DryRunTargets{App: h.app, Run: run}
+		run := &DryRun{}
+		targets := DryRunTargets{App: h.app, Run: run}
 
-	target, err := targets.Target(ctx, testDevice)
-	require.NoError(t, err)
-	assert.Equal(t, "Lounge", target.Name, "an unknown device gets the default instance")
-	assert.Nil(t, target.Wake, "a dry run never wakes Kodi")
-	assert.NotNil(t, target.Matcher)
+		target, err := targets.Target(ctx, testDevice)
+		require.NoError(t, err)
+		assert.Equal(t, "Lounge", target.Name, "an unknown device gets the default instance")
+		assert.Nil(t, target.Wake, "a dry run never wakes Kodi")
+		assert.NotNil(t, target.Matcher)
 
-	items, err := target.Backend.Library(ctx, media.KindMovie)
-	require.NoError(t, err)
-	assert.Len(t, items, 7, "reads still reach Kodi")
+		items, err := target.Backend.Library(ctx, media.KindMovie)
+		require.NoError(t, err)
+		assert.Len(t, items, 7, "reads still reach Kodi")
 
-	require.NoError(t, target.Backend.Play(ctx, media.Ref{Kind: media.KindMovie, ID: 6}, media.PlayOptions{}))
-	assert.Empty(t, h.kodi.CallsTo("Player.Open"), "writes don't")
-	require.Len(t, run.Calls(), 1)
-	assert.Equal(t, "Player.Open", run.Calls()[0].Method)
+		require.NoError(t, target.Backend.Play(ctx, media.Ref{Kind: media.KindMovie, ID: 6}, media.PlayOptions{}))
+		assert.Empty(t, h.kodi.CallsTo("Player.Open"), "writes don't")
+		require.Len(t, run.Calls(), 1)
+		assert.Equal(t, "Player.Open", run.Calls()[0].Method)
 
-	_, err = h.app.DB().EchoDevices().GetByAlexaID(ctx, testDevice)
-	require.ErrorIs(t, err, store.ErrNotFound, "a replay doesn't record the device as seen")
+		_, err = h.app.DB().EchoDevices().GetByAlexaID(ctx, testDevice)
+		require.ErrorIs(t, err, store.ErrNotFound, "a replay doesn't record the device as seen")
 
-	name, err := targets.DeviceName(ctx, testDevice)
-	require.NoError(t, err)
-	assert.Empty(t, name)
+		name, err := targets.DeviceName(ctx, testDevice)
+		require.NoError(t, err)
+		assert.Empty(t, name)
 
-	_, err = h.app.DB().EchoDevices().GetByAlexaID(ctx, testDevice)
-	require.ErrorIs(t, err, store.ErrNotFound, "nor does asking its name")
+		_, err = h.app.DB().EchoDevices().GetByAlexaID(ctx, testDevice)
+		require.ErrorIs(t, err, store.ErrNotFound, "nor does asking its name")
+	})
 }
 
 func TestDryRunTargetsFollowLinksAndRooms(t *testing.T) {
