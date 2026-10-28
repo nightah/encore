@@ -59,12 +59,8 @@ export function clearSetupProgress() {
 }
 
 export function useSetupProgress(): SetupProgress | null {
-  return useSyncExternalStore(
-    (listener) => {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
-    read,
-    () => null,
-  );
+  return useSyncExternalStore((listener) => {
+    listeners.add(listener);
+    return () => listeners.delete(listener);
+  }, read);
 }
