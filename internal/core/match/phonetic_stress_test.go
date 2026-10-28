@@ -134,7 +134,7 @@ func distractors(code string, words []string, seed uint64) distractorSet {
 	return set
 }
 
-// distractorPlays returns, for each absent title that played, the title it played.
+// distractorPlays returns, for each absent title that played, the title it played, keyed by seed, position and query so a title drawn twice counts twice.
 func distractorPlays(t *testing.T, code, retr string, sets []distractorSet) (plays map[string]string, asks int) {
 	t.Helper()
 
@@ -145,14 +145,14 @@ func distractorPlays(t *testing.T, code, retr string, sets []distractorSet) (pla
 		require.NoError(t, err)
 		require.NoError(t, ix.Upsert(set.docs...))
 
-		for _, q := range set.queries {
+		for j, q := range set.queries {
 			res, err := ix.Search(t.Context(), Query{Text: q})
 			require.NoError(t, err)
 
 			switch res.Decision {
 			case DecisionPlay:
 				best, _ := res.Best()
-				plays[fmt.Sprintf("%d/%s", i, q)] = best.Doc.Title
+				plays[fmt.Sprintf("%d/%03d/%s", i, j, q)] = best.Doc.Title
 			case DecisionAsk:
 				asks++
 			}
