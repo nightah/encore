@@ -165,9 +165,23 @@ func TestRestoreList(t *testing.T) {
 
 	lines := strings.Split(strings.TrimSpace(out.String()), "\n")
 	require.Len(t, lines, 3)
-	assert.True(t, strings.HasPrefix(lines[0], "KEY"))
-	assert.True(t, strings.HasPrefix(lines[1], f.backup), "newest first")
-	assert.True(t, strings.HasPrefix(lines[2], older))
+	assert.Equal(t, []string{"KEY", "TIME", "SIZE"}, strings.Fields(lines[0]))
+
+	objects, err := f.blobs.List(t.Context(), config.Defaults().Storage.Backups.Prefix)
+	require.NoError(t, err)
+
+	sizes := map[string]int64{}
+	for _, o := range objects {
+		sizes[o.Key] = o.Size
+	}
+
+	for i, key := range []string{f.backup, older} {
+		taken, ok := blobstore.BackupTime(key)
+		require.True(t, ok, key)
+
+		want := strings.Fields(key + " " + taken.Local().Format(time.DateTime) + " " + formatSize(sizes[key]))
+		assert.Equal(t, want, strings.Fields(lines[i+1]), "newest first, with when it was taken and its size")
+	}
 }
 
 func TestRestoreUsesStorageSavedInTheDatabase(t *testing.T) {
@@ -176,17 +190,20 @@ func TestRestoreUsesStorageSavedInTheDatabase(t *testing.T) {
 	// Move storage in the web interface: the override lives in the current database.
 	elsewhere := t.TempDir()
 	db := openStore(t, f.dbPath())
-	require.NoError(t, db.Settings().Set(t.Context(), "config.overrides", map[string]any{"storage.local.path": elsewhere}))
+	require.NoError(t, db.Settings().Set(t.Context(), "config.overrides", map[string]any{"storage.local.path": elsewhere, "storage.backups.prefix": "Lounge"}))
 	require.NoError(t, db.Close())
 
 	moved, err := blobstore.NewLocal(elsewhere)
 	require.NoError(t, err)
 
 	key := putBackup(t, moved, f.dbPath(), restoreNow)
+	renamed := "Lounge/" + filepath.Base(key)
+	require.NoError(t, moved.Put(t.Context(), renamed, strings.NewReader("x"), 1))
 
 	var out bytes.Buffer
 	require.NoError(t, f.restorer(&out).list(t.Context()))
-	assert.Contains(t, out.String(), key)
+	assert.Contains(t, out.String(), renamed, "the saved prefix is used")
+	assert.NotContains(t, out.String(), key, "not the configured prefix")
 	assert.NotContains(t, out.String(), f.backup, "the configured location is overridden")
 }
 

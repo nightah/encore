@@ -179,14 +179,21 @@ func TestServeReportsAListenFailureOnce(t *testing.T) {
 }
 
 func TestServeRejectsInvalidFlags(t *testing.T) {
-	for _, args := range [][]string{
-		{"serve", "--log.level", "loud"},
-		{"serve", "--log.format", "fancy"},
-		{"serve", "--server.address", ""},
-		{"serve", "extra"},
+	for _, tc := range []struct {
+		args []string
+		want string
+	}{
+		{[]string{"serve", "--log.level", "loud"}, `log.level "loud" must be debug, info, warn or error`},
+		{[]string{"serve", "--log.format", "fancy"}, `log.format "fancy" must be auto, pretty, text or json`},
+		{[]string{"serve", "--server.address", ""}, "server.address must not be empty"},
+		{[]string{"serve", "extra"}, `unknown command "extra"`},
 	} {
-		_, _, err := runCLI(t, args...)
-		require.Error(t, err, args)
+		dataDir := t.TempDir()
+		t.Setenv("ENCORE_DATA_DIR", dataDir)
+
+		_, _, err := runCLI(t, tc.args...)
+		require.ErrorContains(t, err, tc.want, tc.args)
+		assert.NoFileExists(t, store.DefaultPath(dataDir), "%v: nothing starts on invalid flags", tc.args)
 	}
 }
 

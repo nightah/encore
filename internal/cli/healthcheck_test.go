@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"fmt"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -63,11 +64,13 @@ func TestHealthcheckHealthy(t *testing.T) {
 }
 
 func TestHealthcheckUnhealthy(t *testing.T) {
-	address, _ := healthServer(t, http.StatusServiceUnavailable)
+	for _, status := range []int{http.StatusNoContent, http.StatusFound, http.StatusNotFound, http.StatusInternalServerError, http.StatusServiceUnavailable} {
+		address, _ := healthServer(t, status)
 
-	_, _, err := runCLI(t, "healthcheck", "--server.address", address)
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "status 503")
+		_, _, err := runCLI(t, "healthcheck", "--server.address", address)
+		require.Error(t, err, "only 200 is healthy, not %d", status)
+		assert.Contains(t, err.Error(), fmt.Sprintf("status %d", status))
+	}
 }
 
 func TestHealthcheckNothingListening(t *testing.T) {

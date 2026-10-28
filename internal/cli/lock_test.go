@@ -40,3 +40,25 @@ func TestLockDataDirReportsAnUnusableLockFile(t *testing.T) {
 	require.NotErrorIs(t, err, errLocked)
 	assert.Contains(t, err.Error(), "opening lock file")
 }
+
+func TestLockDataDirNamesTheHolderOnlyWhenItsPIDIsReadable(t *testing.T) {
+	dir := t.TempDir()
+
+	lock, err := lockDataDir(dir)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = lock.Close() })
+
+	for _, tc := range []struct{ contents, want string }{
+		{"4242\n", "another Encore (pid 4242) is using the data directory "},
+		{" 4242 \r\n", "another Encore (pid 4242) is using the data directory "},
+		{"", "another Encore is using the data directory "},
+		{"encore\n", "another Encore is using the data directory "},
+		{"42abc\n", "another Encore is using the data directory "},
+	} {
+		require.NoError(t, os.WriteFile(filepath.Join(dir, lockFileName), []byte(tc.contents), 0o600))
+
+		_, err := lockDataDir(dir)
+		require.ErrorIs(t, err, errLocked, "%q", tc.contents)
+		assert.Contains(t, err.Error(), tc.want+dir, "%q", tc.contents)
+	}
+}

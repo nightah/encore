@@ -3,6 +3,8 @@ package cli
 import (
 	"bytes"
 	"context"
+	"encoding/json"
+	"io"
 	"io/fs"
 	"log/slog"
 	"os"
@@ -164,4 +166,59 @@ func TestStatelessSaverSavesOnShutdownAndReleasesTheStorage(t *testing.T) {
 
 	_, err = blobs.Get(t.Context(), statestore.KeyOwner)
 	assert.ErrorIs(t, err, blobstore.ErrNotFound, "the owner marker is removed on a clean shutdown")
+}
+
+// ownerClaims passes everything to Store and sends the owner named by each owner marker written.
+type ownerClaims struct {
+	blobstore.Store
+
+	owners chan string
+}
+
+func (s *ownerClaims) Put(ctx context.Context, key string, r io.Reader, size int64) error {
+	if key != statestore.KeyOwner {
+		return s.Store.Put(ctx, key, r, size)
+	}
+
+	b, err := io.ReadAll(r)
+	if err != nil {
+		return err
+	}
+
+	var marker struct{ Owner string }
+	if err := json.Unmarshal(b, &marker); err != nil {
+		return err
+	}
+
+	select {
+	case s.owners <- marker.Owner:
+	default:
+	}
+
+	return s.Store.Put(ctx, key, bytes.NewReader(b), int64(len(b)))
+}
+
+func TestStatelessSaverClaimsTheStorageUnderTheHostName(t *testing.T) {
+	host, err := os.Hostname()
+	require.NoError(t, err)
+
+	cfg, _ := statelessConfig(t)
+
+	run, err := prepareStateless(t.Context(), cfg, slog.New(slog.DiscardHandler))
+	require.NoError(t, err)
+	t.Cleanup(run.cleanup)
+
+	claims := &ownerClaims{Store: run.blobs, owners: make(chan string, 1)}
+	run.blobs = claims
+
+	db := openStore(t, store.DefaultPath(cfg.DataDir))
+	t.Cleanup(func() { _ = db.Close() })
+
+	ctx, cancel := context.WithCancel(t.Context())
+	done := run.startSaver(ctx, db, slog.New(slog.DiscardHandler))
+
+	assert.Equal(t, host, <-claims.owners, "restore names the host in its warning that Encore may still be running")
+
+	cancel()
+	<-done
 }
