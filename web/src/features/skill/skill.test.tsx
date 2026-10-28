@@ -191,6 +191,34 @@ describe("Alexa skill page", () => {
     await waitFor(() => expect(log.find((r) => r.method === "POST")?.body).toEqual(body));
   });
 
+  it("points to the timeline for a deploy that fails without saying why", async () => {
+    const user = userEvent.setup();
+    renderApp("/alexa-skill");
+    await user.click(await screen.findByRole("button", { name: "Redeploy" }));
+    await screen.findByText(/^Deploying: /);
+    const deployId = Object.keys(getDb().deploys)[0] ?? "";
+
+    FakeEventSource.emit("deploy", {
+      at: new Date().toISOString(),
+      deploy_id: deployId,
+      message: "",
+      state: "failed",
+      step: "build",
+    });
+
+    expect(await screen.findByText("Deploy failed: see the timeline for the failed step")).toBeInTheDocument();
+  });
+
+  it("shows a dash for Amazon details it doesn't know", async () => {
+    const db = getDb();
+    db.skill.amazon = { ...db.skill.amazon, connected: true, profile_client_id: "", vendor_id: "" };
+    renderApp("/alexa-skill");
+    const section = await screen.findByRole("region", { name: /Amazon/ });
+    const value = (label: string) => within(section).getByText(label).nextElementSibling;
+    expect(value("Vendor")).toHaveTextContent(/^-$/);
+    expect(value("Security profile")).toHaveTextContent(/^-$/);
+  });
+
   it("explains a deploy that fails", async () => {
     const user = userEvent.setup();
     renderApp("/alexa-skill");

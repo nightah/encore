@@ -70,6 +70,13 @@ describe("reportError", () => {
     expect(clientErrors.at(-1)?.message).toBe("error 9");
   });
 
+  it("sends an empty stack for an error that has none", async () => {
+    const error = new Error("no stack");
+    error.stack = undefined;
+    await reportError("render", error);
+    expect(clientErrors[0]).toMatchObject({ message: "no stack", stack: "" });
+  });
+
   it("keeps reports small and never empty", async () => {
     const error = new Error("x".repeat(5000));
     error.stack = "s".repeat(20_000);
