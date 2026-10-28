@@ -54,7 +54,7 @@ lint-go: ## Lint Go (root, tools and benchmarks modules) and interaction models
 	cd benchmarks && $(GOLANGCI) run --config ../.golangci.yml ./...
 	$(GO) run ./cmd/encore gen lint
 
-lint-repo: ## Repository-wide checks, as CI runs them: editorconfig, typos, secrets, sorted language files, shell scripts and the image scripts', MSW worker's, mutation go wrapper's, next version, release commit and release version scripts' tests, Dockerfiles, workflows and Go vulnerabilities
+lint-repo: ## Repository-wide checks, as CI runs them: editorconfig, typos, secrets, sorted language files, shell scripts and the image scripts', MSW worker's, mutation go wrapper's, next version, release commit, release version and Go coverage scripts' tests, Dockerfiles, workflows and Go vulnerabilities
 	$(GO) tool -modfile=tools/go.mod actionlint
 	git ls-files -z | xargs -0 $(GO) tool -modfile=tools/go.mod editorconfig-checker
 	$(GO) tool -modfile=tools/go.mod govulncheck ./...
@@ -64,6 +64,7 @@ lint-repo: ## Repository-wide checks, as CI runs them: editorconfig, typos, secr
 	typos --format brief
 	yamllint --strict .
 	zizmor --no-progress .github/workflows
+	.github/scripts/go-coverage_test.sh
 	.github/scripts/image-delete-untagged_test.sh
 	.github/scripts/image-superseded_test.sh
 	.github/scripts/image-tag_test.sh

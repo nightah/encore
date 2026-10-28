@@ -102,19 +102,26 @@ export default defineConfig(({ mode }) => ({
     strictPort: true,
   },
   test: {
-    // `pnpm test:coverage` (CI) writes coverage/lcov.info for Codecov; generated code, the mock API and test helpers aren't counted.
+    // `pnpm test:coverage` (CI) writes coverage/lcov.info for Codecov and fails below the thresholds; generated code, the mock API, test helpers and main.tsx's bootstrapping (each piece it calls is tested on its own) aren't counted, as in .codecov.yml.
     coverage: {
       exclude: [
         "src/api/generated/**",
         "src/mocks/**",
         "src/test/**",
         "src/dev/**",
+        "src/main.tsx",
         "src/routeTree.gen.ts",
         "**/*.test.{ts,tsx}",
       ],
       include: ["src/**/*.{ts,tsx}"],
       provider: "v8",
       reporter: ["text-summary", "lcov"],
+      thresholds: {
+        branches: 94,
+        functions: 95,
+        lines: 95,
+        statements: 95,
+      },
     },
     css: false,
     environment: "jsdom",
