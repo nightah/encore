@@ -35,7 +35,7 @@ jobs:
       ENCORE_CONTRACT_KODI_VERSION: ${{ matrix.kodi }}
     steps:
       - name: Harden the runner (audit all outbound calls)
-        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -133,7 +133,7 @@ jobs:
       ENCORE_CONTRACT_S3_REGION: us-east-1
     steps:
       - name: Harden the runner (audit all outbound calls)
-        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -195,7 +195,7 @@ jobs:
       SMAPI_VENDOR_ID: ${{ secrets.SMAPI_VENDOR_ID }}
     steps:
       - name: Harden the runner (audit all outbound calls)
-        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -247,7 +247,7 @@ jobs:
     continue-on-error: true
     steps:
       - name: Harden the runner (audit all outbound calls)
-        uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
