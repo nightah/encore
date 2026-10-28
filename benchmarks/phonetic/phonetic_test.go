@@ -148,19 +148,24 @@ func TestParityLong(t *testing.T) {
 	}
 }
 
-// corpusWords returns every distinct lowercase word in the matcher's ASR and phonetic corpora: real titles in five languages and what speech recognition heard for them.
+// corpusWords returns every distinct lowercase word in the matcher's ASR, phonetic and grown corpora: real titles in five languages and what speech recognition heard for them.
 func corpusWords(tb testing.TB) []string {
 	tb.Helper()
 
 	files, err := filepath.Glob("../../internal/core/match/testdata/*.yaml")
 	require.NoError(tb, err)
 
-	more, err := filepath.Glob("../../internal/core/match/testdata/phonetic/*.yaml")
-	require.NoError(tb, err)
+	for _, dir := range []string{"phonetic", "grown"} {
+		more, err := filepath.Glob("../../internal/core/match/testdata/" + dir + "/*.yaml")
+		require.NoError(tb, err)
+		require.NotEmpty(tb, more, dir)
+
+		files = append(files, more...)
+	}
 
 	seen := map[string]bool{}
 
-	for _, f := range append(files, more...) {
+	for _, f := range files {
 		raw, err := os.ReadFile(f)
 		require.NoError(tb, err)
 
@@ -175,7 +180,7 @@ func corpusWords(tb testing.TB) []string {
 	}
 
 	slices.Sort(words)
-	require.Greater(tb, len(words), 1000)
+	require.Greater(tb, len(words), 4000)
 
 	return words
 }
