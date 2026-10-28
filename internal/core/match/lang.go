@@ -245,6 +245,11 @@ func spanish() *language {
 		compounds["veinti"+u] = 21 + i
 	}
 
+	hundredsOf := suffixed(map[string]int{
+		"doscient": 200, "trescient": 300, "cuatrocient": 400, "quinient": 500, "seiscient": 600, "setecient": 700,
+		"ochocient": 800, "novecient": 900,
+	}, "os", "as")
+
 	return &language{
 		code:     "es",
 		half:     "y medio",
@@ -256,11 +261,12 @@ func spanish() *language {
 				"cero", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve", "diez",
 				"once", "doce", "trece", "catorce", "quince", "dieciseis", "diecisiete", "dieciocho", "diecinueve",
 			},
-			tens:      []string{"veinte", "treinta", "cuarenta", "cincuenta", "sesenta", "setenta", "ochenta", "noventa"},
-			hundreds:  []string{"cien", "ciento"},
-			thousands: []string{"mil"},
-			cont:      map[string]int{"un": 1, "una": 1},
-			compounds: compounds,
+			tens:       []string{"veinte", "treinta", "cuarenta", "cincuenta", "sesenta", "setenta", "ochenta", "noventa"},
+			hundreds:   []string{"cien", "ciento"},
+			hundredsOf: hundredsOf,
+			thousands:  []string{"mil"},
+			cont:       map[string]int{"un": 1, "una": 1},
+			compounds:  compounds,
 			ordinals: merge(
 				suffixed(map[string]int{
 					"primer": 1, "segund": 2, "tercer": 3, "cuart": 4, "quint": 5, "sext": 6, "septim": 7,
