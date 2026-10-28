@@ -421,6 +421,34 @@ func TestTimeoutIsUnreachable(t *testing.T) {
 	}
 }
 
+func TestCancelledCallKeepsWebSocket(t *testing.T) {
+	s := fakekodi.New(t, fakekodi.Options{})
+	tr := NewTransport(testConfig(t, s), nil)
+	runTransport(t, tr)
+
+	ws := tr.conn()
+	require.NotNil(t, ws)
+
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+
+	// The websocket library picks between a done context and its write lock at random, so repeat until the write path is all but certain to have been taken.
+	for range 100 {
+		err := tr.Call(ctx, kodirpc.MethodJSONRPCPing, nil, nil)
+		require.ErrorIs(t, err, context.Canceled)
+		require.NotErrorIs(t, err, media.ErrUnreachable, "a cancelled caller is not an unreachable Kodi")
+	}
+
+	select {
+	case <-ws.done:
+		t.Fatalf("a cancelled caller closed the shared websocket: %v", ws.err)
+	case <-time.After(100 * time.Millisecond):
+	}
+
+	assert.Same(t, ws, tr.conn())
+	require.NoError(t, ping(t.Context(), tr))
+}
+
 func TestClientVersionGate(t *testing.T) {
 	omega := fakekodi.New(t, fakekodi.Options{})
 	c := NewClient(testConfig(t, omega), nil)
