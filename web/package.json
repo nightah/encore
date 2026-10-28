@@ -43,7 +43,7 @@
     "node": ">=24"
   },
   "name": "encore-web",
-  "packageManager": "pnpm@12.12.1",
+  "packageManager": "pnpm@12.15.0",
   "private": true,
   "scripts": {
     "build": "vite build",
