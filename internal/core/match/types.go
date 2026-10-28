@@ -129,9 +129,8 @@ type invertedRetriever struct {
 	mu   sync.RWMutex
 	lang *language
 	postingSet
-	// live counts live slots; kinds counts live slots per kind.
-	live  int
-	kinds map[media.Kind]int
+	// live counts live slots.
+	live int
 	// compacting is the compaction under way, if any.
 	compacting *compaction
 	// maxSlots is slotLimit, lowered in tests.

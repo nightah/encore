@@ -12,8 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
-
-	"github.com/nightah/encore/internal/core/media"
 )
 
 // invModel is what an inverted index should hold: the live entries by ID, and the order they were last written in.
@@ -47,7 +45,7 @@ func (m *invModel) entries() []*entry {
 	return out
 }
 
-// checkInverted checks everything retrieval scores depend on against the model: the live slots and their IDs, document counts per kind and per term, and postings in slot order.
+// checkInverted checks everything retrieval scores depend on against the model: the live slots and their IDs, document counts per term, and postings in slot order.
 func checkInverted(t require.TestingT, inv *invertedRetriever, m *invModel) {
 	if h, ok := t.(interface{ Helper() }); ok {
 		h.Helper()
@@ -70,7 +68,6 @@ func checkInverted(t require.TestingT, inv *invertedRetriever, m *invModel) {
 	require.Equal(t, inv.live, alive, "live slots")
 	require.Equal(t, len(inv.slots)-alive, inv.dead, "tombstones")
 
-	kinds := make(map[media.Kind]int)
 	want := [termFields]map[string]int32{}
 
 	for f := range termFields {
@@ -83,8 +80,6 @@ func checkInverted(t require.TestingT, inv *invertedRetriever, m *invModel) {
 		require.True(t, inv.slots[s].alive, "%s is a tombstone", id)
 		require.Same(t, e, inv.slots[s].entry, "%s", id)
 
-		kinds[e.doc.Kind]++
-
 		terms := inv.lang.docTerms(e)
 		for f := range termFields {
 			for i, term := range terms[f] {
@@ -94,8 +89,6 @@ func checkInverted(t require.TestingT, inv *invertedRetriever, m *invModel) {
 			}
 		}
 	}
-
-	require.Equal(t, kinds, inv.kinds, "kinds")
 
 	for f := range termFields {
 		pf := &inv.fields[f]

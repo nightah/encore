@@ -82,14 +82,12 @@ type refClause struct {
 	total int
 }
 
-// refRanking is the retrieval query scored Doc by Doc, straight from its definition and without postings: the fixed reference the inverted index is checked against. It returns every match, best first.
+// refRanking is the retrieval query scored Doc by Doc, straight from its definition and without postings: the fixed reference the inverted index is checked against. A kind filter only filters. It returns every match, best first.
 func refRanking(l *language, docs []refDoc, q *form, kinds []media.Kind, k int) []scoredID {
 	df := [termFields]map[string]int{}
 	for f := range termFields {
 		df[f] = make(map[string]int)
 	}
-
-	kindDocs := make(map[media.Kind]int)
 
 	for _, d := range docs {
 		for f := range termFields {
@@ -97,8 +95,6 @@ func refRanking(l *language, docs []refDoc, q *form, kinds []media.Kind, k int) 
 				df[f][t]++
 			}
 		}
-
-		kindDocs[d.kind]++
 	}
 
 	vocab := make([]string, 0, len(df[termWords]))
@@ -169,21 +165,7 @@ func refRanking(l *language, docs []refDoc, q *form, kinds []media.Kind, k int) 
 				continue
 			}
 
-			score := sum * float64(matched) / float64(len(clauses))
-
-			if len(kinds) > 0 {
-				same := 0
-				for _, k := range kinds {
-					if k == d.kind {
-						same++
-					}
-				}
-
-				idf := 1 + math.Log(n/float64(kindDocs[d.kind]+1))
-				score += float64(same) * idf * idf * float64(same) / float64(len(kinds))
-			}
-
-			out = append(out, scoredID{d.id, score})
+			out = append(out, scoredID{d.id, sum * float64(matched) / float64(len(clauses))})
 		}
 
 		slices.SortStableFunc(out, func(a, b scoredID) int { return compareFloat(b.score, a.score) })
@@ -687,4 +669,29 @@ func TestInvertedNoCandidatesWanted(t *testing.T) {
 	ids, err := inv.candidates(t.Context(), &qf, nil, 0)
 	require.NoError(t, err)
 	assert.Empty(t, ids)
+}
+
+// TestInvertedKindFilterOnlyFilters filters a library of many films, one show and one song to films and shows. Retrieval used to add each allowed kind's IDF to its Docs' scores, as bleve did, so the rare show gained on the films; now the filter only removes the song, and every other Doc keeps its unfiltered score and rank.
+func TestInvertedKindFilterOnlyFilters(t *testing.T) {
+	l := languageFor("en")
+	inv := newInvertedRetriever(l)
+
+	docs := []Doc{
+		{ID: "film", Kind: media.KindMovie, Title: "Star Light"},
+		{ID: "show", Kind: media.KindTVShow, Title: "Star Light Show"},
+		{ID: "song", Kind: media.KindSong, Title: "Star Light"},
+	}
+
+	for i := range 30 {
+		docs = append(docs, Doc{ID: fmt.Sprintf("filler%d", i), Kind: media.KindMovie, Title: fmt.Sprintf("Star Filler %d", i)})
+	}
+
+	require.NoError(t, inv.upsert(entriesOf(l, docs)))
+
+	qf := l.newForm(l.normalizeSpelled("star light", false))
+	all := invertedRanking(inv, &qf, nil, 100)
+	want := slices.DeleteFunc(slices.Clone(all), func(h scoredID) bool { return h.id == "song" })
+
+	assert.Len(t, want, len(all)-1)
+	assert.Equal(t, want, invertedRanking(inv, &qf, []media.Kind{media.KindMovie, media.KindTVShow}, 100))
 }

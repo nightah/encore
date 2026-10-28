@@ -31,44 +31,8 @@ import (
 
 // scaleRetrievers builds each retriever the harness compares against exhaustive scoring.
 var scaleRetrievers = map[string]func(*language) (retriever, error){
-	RetrieverInverted:    func(l *language) (retriever, error) { return newInvertedRetriever(l), nil },
-	RetrieverTrigram:     func(*language) (retriever, error) { return newTrigramRetriever(), nil },
-	"inverted-nokindidf": func(l *language) (retriever, error) { return noKindIDFRetriever{newInvertedRetriever(l)}, nil },
-}
-
-// noKindIDFRetriever ranks like the inverted index without the IDF of the kind filter, which the index adds to every Doc of an allowed kind so that rarer kinds rank a little higher. It measures what that term is worth.
-type noKindIDFRetriever struct{ *invertedRetriever }
-
-func (r noKindIDFRetriever) candidates(_ context.Context, q *form, kinds []media.Kind, k int) ([]string, error) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
-	// Rank every match without a filter, then keep the allowed kinds: the same as filtering without adding a score.
-	filtered := func(clauses []queryClause) []slotHit {
-		var out []slotHit
-
-		for _, h := range r.run(clauses, nil, len(r.slots)) {
-			if len(kinds) == 0 || slices.Contains(kinds, r.slots[h.slot].entry.doc.Kind) {
-				out = append(out, h)
-			}
-		}
-
-		return out
-	}
-
-	clauses := r.wordClauses(q)
-
-	hits := filtered(clauses)
-	if len(hits) < min(k, ngramFallbackHits) {
-		hits = filtered(append(clauses, r.trigramClause(q)))
-	}
-
-	ids := make([]string, 0, min(k, len(hits)))
-	for _, h := range hits[:min(k, len(hits))] {
-		ids = append(ids, r.slots[h.slot].entry.doc.ID)
-	}
-
-	return ids, nil
+	RetrieverInverted: func(l *language) (retriever, error) { return newInvertedRetriever(l), nil },
+	RetrieverTrigram:  func(*language) (retriever, error) { return newTrigramRetriever(), nil },
 }
 
 // scaleKindFilter is the kind filter ENCORE_MATCH_KINDS asks for, and whether it also applies to the ASR corpus cases.
@@ -768,74 +732,5 @@ func BenchmarkSearchScale(b *testing.B) {
 			b.ReportMetric(float64(percentile(lat, 0.5).Microseconds())/1000, "p50-ms")
 			b.ReportMetric(float64(percentile(lat, 0.99).Microseconds())/1000, "p99-ms")
 		})
-	}
-}
-
-// TestKindIDFCorpus compares, on every ASR corpus suite, Search with and without the kind filter's IDF in retrieval: each case with its own kind filter, with PlayMedia's films-and-shows filter, and with all six kinds. It is opt-in, with the scale harness.
-func TestKindIDFCorpus(t *testing.T) {
-	if os.Getenv("ENCORE_MATCH_SCALE") == "" {
-		t.Skip("set ENCORE_MATCH_SCALE to run the kind IDF comparison")
-	}
-
-	filters := map[string][]media.Kind{
-		"own":       nil,
-		"playmedia": {media.KindMovie, media.KindTVShow},
-		"all":       {media.KindMovie, media.KindTVShow, media.KindArtist, media.KindAlbum, media.KindSong, media.KindMusicVideo},
-	}
-
-	for _, suite := range loadCorpus(t).Suites {
-		l := languageFor(suite.Lang)
-		build := func(r retriever) *Index {
-			ix, err := New(suite.Lang, Config{})
-			require.NoError(t, err)
-
-			ix.ret = r
-			require.NoError(t, ix.Upsert(suite.docs()...))
-
-			return ix
-		}
-
-		with, without := build(newInvertedRetriever(l)), build(noKindIDFRetriever{newInvertedRetriever(l)})
-
-		for _, name := range []string{"own", "playmedia", "all"} {
-			var same, correctWith, correctWithout, total int
-
-			for _, c := range suite.Cases {
-				q := c.query()
-				if name != "own" {
-					q.Kinds = filters[name]
-				}
-
-				a, err := with.Search(t.Context(), q)
-				require.NoError(t, err)
-
-				b, err := without.Search(t.Context(), q)
-				require.NoError(t, err)
-
-				total++
-
-				oa, ob := outcomes([]Result{a})[0], outcomes([]Result{b})[0]
-				if oa.decision == ob.decision && slices.Equal(oa.top, ob.top) {
-					same++
-				} else {
-					t.Logf("[%s/%s] %q: with %v %v, without %v %v", suite.Name, name, c.Heard, oa.decision, first(oa.top), ob.decision, first(ob.top))
-				}
-
-				if name == "own" {
-					if c.check(a) == "" {
-						correctWith++
-					}
-
-					if c.check(b) == "" {
-						correctWithout++
-					}
-				}
-			}
-
-			t.Logf("KINDIDF suite=%s filter=%s identical=%d/%d correct_with=%d correct_without=%d", suite.Name, name, same, total, correctWith, correctWithout)
-		}
-
-		require.NoError(t, with.Close())
-		require.NoError(t, without.Close())
 	}
 }

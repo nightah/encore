@@ -14,7 +14,6 @@ func newInvertedRetriever(l *language) *invertedRetriever {
 	r := &invertedRetriever{
 		lang:       l,
 		postingSet: newPostingSet(),
-		kinds:      make(map[media.Kind]int),
 		maxSlots:   slotLimit,
 	}
 	r.background = r.wg.Go
@@ -125,7 +124,6 @@ func (r *invertedRetriever) upsertChunk(entries []*entry) error {
 		}
 
 		r.add(e, &terms[i])
-		r.kinds[e.doc.Kind]++
 		r.live++
 	}
 
@@ -259,15 +257,8 @@ func (r *invertedRetriever) removeChunk(ids []string) {
 
 // kill tombstones a slot, whose entry has terms, and takes it out of the document counts, so scores are as if it had never been indexed. Its postings stay until a compaction drops them. Callers hold mu.
 func (r *invertedRetriever) kill(s uint32, terms *termSet) {
-	kind := r.slots[s].entry.doc.Kind
-
 	r.tombstone(s, terms)
 	r.live--
-	r.kinds[kind]--
-
-	if r.kinds[kind] == 0 {
-		delete(r.kinds, kind)
-	}
 
 	if r.compacting != nil {
 		r.compacting.killed = append(r.compacting.killed, s)
@@ -594,7 +585,7 @@ func (r *invertedRetriever) trigramClause(q *form) queryClause {
 	return c
 }
 
-// run scores every slot matching at least one clause. A clause scores the sum of its matching terms times the share of its terms that matched; the query scores the sum of its clauses times the share of clauses that matched. A kind filter adds the kind's IDF, so rarer kinds rank a little higher.
+// run scores every slot matching at least one clause. A clause scores the sum of its matching terms times the share of its terms that matched; the query scores the sum of its clauses times the share of clauses that matched. A kind filter only filters.
 func (r *invertedRetriever) run(clauses []queryClause, kinds []media.Kind, k int) []slotHit {
 	acc := r.accumulator()
 	defer r.release(acc)
@@ -646,44 +637,15 @@ func (r *invertedRetriever) run(clauses []queryClause, kinds []media.Kind, k int
 		acc.clauseTouched = acc.clauseTouched[:0]
 	}
 
-	kindScore := make(map[media.Kind]float64, len(kinds))
-
-	for _, kind := range kinds {
-		if _, ok := kindScore[kind]; ok {
-			continue
-		}
-
-		n := 0
-		for _, k := range kinds {
-			if k == kind {
-				n++
-			}
-		}
-
-		idf := 1 + math.Log(docs/float64(r.kinds[kind]+1))
-		kindScore[kind] = float64(n) * idf * idf * float64(n) / float64(len(kinds))
-	}
-
 	top := make(topHits, 0, k)
 
 	for _, s := range acc.touched {
 		slot := &r.slots[s]
-		if !slot.alive {
+		if !slot.alive || len(kinds) > 0 && !slices.Contains(kinds, slot.entry.doc.Kind) {
 			continue
 		}
 
-		sc := acc.score[s] * float64(acc.matched[s]) / float64(len(clauses))
-
-		if len(kinds) > 0 {
-			ks, ok := kindScore[slot.entry.doc.Kind]
-			if !ok {
-				continue
-			}
-
-			sc += ks
-		}
-
-		top.offer(slotHit{slot: s, score: sc}, k)
+		top.offer(slotHit{slot: s, score: acc.score[s] * float64(acc.matched[s]) / float64(len(clauses))}, k)
 	}
 
 	return top.sorted()
