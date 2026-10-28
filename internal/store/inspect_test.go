@@ -1,8 +1,12 @@
 package store
 
 import (
+	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -47,4 +51,49 @@ func TestInspectFile(t *testing.T) {
 
 	_, err = InspectFile(ctx, junk)
 	require.Error(t, err)
+}
+
+func TestInspectFileCorruptDatabase(t *testing.T) {
+	db, _ := openTest(t, Options{})
+	ctx := t.Context()
+
+	for i := range 200 {
+		require.NoError(t, db.Settings().Set(ctx, fmt.Sprintf("key-%03d", i), strings.Repeat("x", 200)))
+	}
+
+	path := filepath.Join(t.TempDir(), "copy.db")
+	require.NoError(t, db.BackupTo(ctx, path))
+
+	raw, err := os.ReadFile(path)
+	require.NoError(t, err)
+	require.Greater(t, len(raw), 8*4096)
+
+	// Scribble over the last pages, where the settings rows live, leaving the header and schema intact.
+	for i := len(raw) - 3*4096; i < len(raw); i += 7 {
+		raw[i] ^= 0x5a
+	}
+
+	require.NoError(t, os.WriteFile(path, raw, 0o600))
+
+	_, err = InspectFile(ctx, path)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), path, "the error names the file")
+}
+
+func TestSchemaVersionMatchesMigrations(t *testing.T) {
+	v, err := SchemaVersion()
+	require.NoError(t, err)
+
+	names, err := fs.Glob(migrationFiles, "migrations/*.sql")
+	require.NoError(t, err)
+	require.NotEmpty(t, names)
+
+	newest := slices.Max(names)
+	assert.True(t, strings.HasPrefix(filepath.Base(newest), fmt.Sprintf("%05d_", v)), "%d is the newest of %v", v, names)
+
+	db, _ := openTest(t, Options{})
+
+	var applied int64
+	require.NoError(t, db.read.QueryRowContext(t.Context(), `SELECT MAX(version_id) FROM goose_db_version`).Scan(&applied))
+	assert.Equal(t, v, applied, "Open migrates to the newest version")
 }
