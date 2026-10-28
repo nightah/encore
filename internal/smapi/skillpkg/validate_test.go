@@ -1,7 +1,9 @@
 package skillpkg
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -61,6 +63,53 @@ func TestEncodeModelLimits(t *testing.T) {
 			assert.NotEmpty(t, data)
 			assert.Empty(t, warnings)
 		})
+	}
+}
+
+// modelOfSize returns a model whose encoding is exactly size bytes, padded with one long sample.
+func modelOfSize(t *testing.T, size int) *skillmodel.InteractionModel {
+	t.Helper()
+
+	m := modelWithValue("lounge")
+	base, err := json.Marshal(m)
+	require.NoError(t, err)
+
+	m.InteractionModel.LanguageModel.Intents[0].Samples = []string{strings.Repeat("a", size-len(base)+len(`"play"`)-len(`""`))}
+
+	data, err := json.Marshal(m)
+	require.NoError(t, err)
+	require.Len(t, data, size)
+
+	return m
+}
+
+func TestEncodeModelSizeBoundaries(t *testing.T) {
+	for _, tc := range []struct {
+		size    int
+		warning bool
+		err     bool
+	}{
+		{size: WarnModelBytes},
+		{size: WarnModelBytes + 1, warning: true},
+		{size: MaxModelBytes, warning: true},
+		{size: MaxModelBytes + 1, err: true},
+	} {
+		data, warnings, err := encodeModel("en-AU", modelOfSize(t, tc.size))
+		if tc.err {
+			require.ErrorContains(t, err, fmt.Sprintf("interaction model is %d bytes, over Amazon's %d byte limit", tc.size, MaxModelBytes))
+			assert.Nil(t, data)
+
+			continue
+		}
+
+		require.NoError(t, err, tc.size)
+		assert.Len(t, data, tc.size)
+
+		if tc.warning {
+			assert.Equal(t, []string{fmt.Sprintf("locale en-AU: interaction model is %d bytes, close to Amazon's %d byte limit", tc.size, MaxModelBytes)}, warnings)
+		} else {
+			assert.Empty(t, warnings, tc.size)
+		}
 	}
 }
 
