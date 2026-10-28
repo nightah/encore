@@ -208,6 +208,24 @@ describe("skill hooks", () => {
     expect(invalidated(keys.libraries)).toBe(true);
   });
 
+  it("doesn't make up a skill from a save sent before the skill has loaded", async () => {
+    const requests = recordRequests();
+    const { result } = renderHook(() => ({ content: useSaveSkillContent(), settings: useSaveSkillSettings(null) }), {
+      wrapper,
+    });
+
+    act(() => result.current.content.mutate(["music"]));
+    act(() => result.current.settings.mutate(skillSettingsFrom(getDb().skill, { skill_name: "Cinema" })));
+    expect(cachedSkill()).toBeUndefined();
+
+    await waitFor(() => expect(result.current.content.isSuccess).toBe(true));
+    await waitFor(() => expect(result.current.settings.isPending).toBe(false));
+    expect(cachedSkill()).toBeUndefined();
+    expect(requests.map((r) => `${r.method} ${r.path}`)).toEqual(
+      expect.arrayContaining(["PUT /skill/content", "PUT /skill/settings"]),
+    );
+  });
+
   it.each([
     [true, { force: true }],
     [false, {}],
