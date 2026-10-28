@@ -1,5 +1,10 @@
 package match
 
+import (
+	"slices"
+	"strings"
+)
+
 // scoreAlias rates how well alias a matches query q, in [0, 1]. It gives up early, returning a negative score, once the alias provably can't beat floor.
 func (ix *Index) scoreAlias(q *form, a *alias, floor float64) scored {
 	if !a.derived && q.norm == a.norm {
@@ -9,12 +14,16 @@ func (ix *Index) scoreAlias(q *form, a *alias, floor float64) scored {
 	compact := ratio(q.compact, a.compact)
 	// Whole-string shortcuts ignore word boundaries, and phonetic keys ignore digits, so they only apply when the numbers agree: "toy story 4" is not "Toy Story".
 	numbers := numbersAgree(q, &a.form)
+	// A query number the alias does not carry marks a missing sequel ("crocodile dundee 2" / "Crocodile Dundee").
+	numbersDiffer := !numbers && !digitsWithin(q, &a.form)
 
 	if q.spelled != "" || a.spelled != "" {
 		// Matching as spelled out means the numbers were words in both ("zwei ohr küken" / "Zweiohrküken").
 		if spelled := ratio(q.spelledCompact(), a.spelledCompact()); spelled > compact {
 			compact = spelled
 			numbers = numbers || spelled >= ix.cfg.CompactCoverage
+			// A number word that sounds like a title word ("tears four fears") is no sequel, but a written digit still is ("uno 2" / "uno").
+			numbersDiffer = numbersDiffer && (!numbers || strings.ContainsAny(q.spelledCompact(), "0123456789"))
 		}
 	}
 
@@ -72,9 +81,10 @@ func (ix *Index) scoreAlias(q *form, a *alias, floor float64) scored {
 	}
 
 	return scored{
-		score:      min(f, nonExactCap),
-		soundAlike: soundAlike,
-		bd:         Breakdown{Alias: a.text, TokenSet: s, JaroWinkler: jw, OSA: osa, Phonetic: ph},
+		score:         min(f, nonExactCap),
+		soundAlike:    soundAlike,
+		numbersDiffer: numbersDiffer,
+		bd:            Breakdown{Alias: a.text, TokenSet: s, JaroWinkler: jw, OSA: osa, Phonetic: ph},
 	}
 }
 
@@ -132,6 +142,17 @@ func keysIntersect(a, b []string) bool {
 // numbersAgree reports whether two forms carry the same numbers. A spoken "1" also agrees with no number at all, since first instalments rarely carry one.
 func numbersAgree(q, a *form) bool {
 	return q.digits == a.digits || (q.digits == "1" && a.digits == "")
+}
+
+// digitsWithin reports whether every number in q is also one of a's ("uno la llegada" / "uno 2: La llegada").
+func digitsWithin(q, a *form) bool {
+	for _, t := range q.toks {
+		if isDigits(t) && !slices.Contains(a.toks, t) {
+			return false
+		}
+	}
+
+	return true
 }
 
 // coverage is the weighted share of query tokens that something in the alias accounts for. Numbers must match exactly (or be a "1" against an unnumbered title); words may be a small typo or a phonetic match away.

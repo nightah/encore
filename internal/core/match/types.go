@@ -295,7 +295,9 @@ type scored struct {
 	exact bool
 	// soundAlike is set when the alias won on sound alone: the strings sound identical but their text is not close enough to score as well.
 	soundAlike bool
-	bd         Breakdown
+	// numbersDiffer is set when the query carries a number and the alias does not carry the same ones ("crocodile dundee 2" against "Crocodile Dundee"): a missing sequel, which may be asked about but never played. A title's own number the query leaves out ("star wars a new hope") does not count.
+	numbersDiffer bool
+	bd            Breakdown
 }
 
 // form is a normalised string with everything the scorer needs precomputed.
