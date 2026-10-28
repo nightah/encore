@@ -25,6 +25,7 @@ require (
 	github.com/fatih/color v1.19.0 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.15 // indirect
+	github.com/gkampitakis/ciinfo v0.3.4 // indirect
 	github.com/go-openapi/jsonpointer v0.23.1 // indirect
 	github.com/go-openapi/swag/jsonname v0.26.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
@@ -65,7 +66,7 @@ require (
 
 tool (
 	github.com/air-verse/air
-	github.com/editorconfig-checker/editorconfig-checker/v3/cmd/editorconfig-checker
+	github.com/editorconfig-checker/editorconfig-checker/v4/cmd/editorconfig-checker
 	github.com/rhysd/actionlint/cmd/actionlint
 	golang.org/x/vuln/cmd/govulncheck
 )

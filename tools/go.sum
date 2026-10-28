@@ -74,8 +74,8 @@ github.com/dlclark/regexp2/v2 v2.2.1/go.mod h1:avUrQvPaLz2DrFNHJF0taWAFFX2C1GMSS
 github.com/dprotaso/go-yit v0.0.0-20191028211022-135eb7262960/go.mod h1:9HQzr9D/0PGwMEbC3d5AB7oi67+h4TsQqItC1GVYG58=
 github.com/dprotaso/go-yit v0.0.0-20220510233725-9ba8df137936 h1:PRxIJD8XjimM5aTknUK9w6DHLDox2r2M3DI4i2pnd3w=
 github.com/dprotaso/go-yit v0.0.0-20220510233725-9ba8df137936/go.mod h1:ttYvX5qlB+mlV1okblJqcSMtR4c52UKxDiX9GRBS8+Q=
-github.com/editorconfig-checker/editorconfig-checker/v3 v3.11.3 h1:15rFaYche1gMPQDp5hHKitDvjOJgQWqtu6+paDyEosc=
-github.com/editorconfig-checker/editorconfig-checker/v3 v3.11.3/go.mod h1:aCyoUbMGeHKjKYEtZuQk27golxutD/3o1DeP/x+p6eI=
+github.com/editorconfig-checker/editorconfig-checker/v4 v4.0.2 h1:Q3K6NmNP9L+A8UBQ+swykFNcnvIjTpQlfByv09CJH4w=
+github.com/editorconfig-checker/editorconfig-checker/v4 v4.0.2/go.mod h1:DcfI0deg/0mEE5yuYotV4EfSa2ZiKr/BxhC9X6+7VSc=
 github.com/editorconfig/editorconfig-core-go/v2 v2.6.4 h1:CHwUbBVVyKWRX9kt5A/OtwhYUJB32DrFp9xzmjR6cac=
 github.com/editorconfig/editorconfig-core-go/v2 v2.6.4/go.mod h1:JWRVKHdVW+dkv6F8p+xGCa6a+TyMrqsFbFkSs/aQkrQ=
 github.com/evanw/esbuild v0.28.1 h1:ds+yuRyUaZGx++GR56CrCeuXh8PVhVM4xq8v7PNELFc=
