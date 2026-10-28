@@ -554,6 +554,18 @@ describe("Unlinked Echo banner", () => {
     expect(region).not.toHaveTextContent("today");
   });
 
+  it("quotes the Echo's first request, not its latest", async () => {
+    const db = getDb();
+    const first = db.requests.find((r) => r.device_id === 5);
+    if (!first) throw new Error("the sample has a request from Echo 5");
+    db.requests.unshift({ ...first, heard: "stop", id: 9001, time: new Date().toISOString() });
+    renderApp("/echo-devices");
+
+    const region = await banner();
+    await waitFor(() => expect(region).toHaveTextContent("“pause”"));
+    expect(region).not.toHaveTextContent("stop");
+  });
+
   it("leaves out what was heard while it isn't known", async () => {
     const db = getDb();
     db.requests = db.requests.filter((r) => r.device_id !== 5);
