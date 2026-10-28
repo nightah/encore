@@ -66,7 +66,9 @@ function EchoDevicesPage() {
           <h2 id="dev-h" className="px-4.5 pt-4 pb-1.5 font-display font-semibold text-lg">
             {t("table.title")}
           </h2>
-          <p className="px-4.5 pb-2 text-[13px] text-muted">{t("table.identifyHint", { invocation })}</p>
+          {invocation ? (
+            <p className="px-4.5 pb-2 text-[13px] text-muted">{t("table.identifyHint", { invocation })}</p>
+          ) : null}
           <p aria-live="polite" className="sr-only">
             {identified !== null ? t("table.spokeTo", { name: identifiedName || t("table.anUnnamedEcho") }) : ""}
           </p>

@@ -159,6 +159,59 @@ describe("setup wizard", () => {
     expect(screen.queryByText(/Request received/)).not.toBeInTheDocument();
   });
 
+  it("waits for the skill settings before saying what to ask Alexa", async () => {
+    resetDb("configured");
+    getDb().skill = { ...getDb().skill, invocation: "kodi", invocation_name: "kodi" };
+    window.localStorage.setItem(
+      SETUP_STORAGE_KEY,
+      JSON.stringify({ done: [1, 2, 3, 4, 5], skipped: [], step: 6, waitingSince: new Date().toISOString() }),
+    );
+    let answer: (() => void) | undefined;
+    server.use(
+      http.get(
+        "*/api/v1/skill",
+        () =>
+          new Promise<Response>((resolve) => {
+            answer = () => resolve(HttpResponse.json(getDb().skill));
+          }),
+      ),
+    );
+    renderApp("/setup");
+
+    await heading("Say hello");
+    await waitFor(() => expect(answer).toBeDefined());
+    expect(screen.queryByText(/ask encore/)).not.toBeInTheDocument();
+    expect(screen.getByText("Loading…")).toBeInTheDocument();
+
+    answer?.();
+    expect(await screen.findByText("“Alexa, ask kodi what's playing.”")).toBeInTheDocument();
+    expect(screen.getByText(/if “ask kodi” isn't recognised/)).toBeInTheDocument();
+    expect(screen.queryByText(/ask encore/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Loading…")).not.toBeInTheDocument();
+  });
+
+  it("says the skill settings didn't load instead of guessing what to ask Alexa", async () => {
+    resetDb("configured");
+    getDb().skill = { ...getDb().skill, invocation: "kodi", invocation_name: "kodi" };
+    window.localStorage.setItem(
+      SETUP_STORAGE_KEY,
+      JSON.stringify({ done: [1, 2, 3, 4, 5], skipped: [], step: 6, waitingSince: new Date().toISOString() }),
+    );
+    failWith("get", "/skill", 500, "boom");
+    const user = userEvent.setup();
+    const { queryClient } = renderApp("/setup");
+
+    await heading("Say hello");
+    await waitFor(() => expect(queryClient.getQueryState(keys.skill)?.status).toBe("error"));
+    expect(screen.queryByText(/ask encore/)).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("boom");
+
+    server.resetHandlers();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByText("“Alexa, ask kodi what's playing.”")).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
   it("shows the network search until Kodi is found, and offers another search when none is", async () => {
     resetDb("configured");
     window.localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify({ done: [1, 2], skipped: [], step: 3 }));

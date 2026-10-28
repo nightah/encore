@@ -264,7 +264,9 @@ function RecentRequests({ overview }: { overview: Overview }) {
           </tbody>
         </Table>
       ) : (
-        <p className="px-4.5 pt-2 pb-5 text-muted">{t("recent.empty", { invocation })}</p>
+        <p className="px-4.5 pt-2 pb-5 text-muted">
+          {invocation ? t("recent.empty", { invocation }) : t("recent.emptyNoInvocation")}
+        </p>
       )}
     </section>
   );

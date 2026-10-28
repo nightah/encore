@@ -36,6 +36,28 @@ describe("Echo devices page", () => {
     expect(await screen.findByText(/Alexa, ask kodi which device this is/)).toBeInTheDocument();
   });
 
+  it("doesn't guess the invocation name in the hint before the skill settings load", async () => {
+    getDb().skill = { ...getDb().skill, invocation: "kodi", invocation_name: "kodi" };
+    let answer: (() => void) | undefined;
+    server.use(
+      http.get(
+        "*/api/v1/skill",
+        () =>
+          new Promise<Response>((resolve) => {
+            answer = () => resolve(HttpResponse.json(getDb().skill));
+          }),
+      ),
+    );
+    renderApp("/echo-devices");
+
+    await screen.findByRole("table", { name: "Devices" });
+    await waitFor(() => expect(answer).toBeDefined());
+    expect(screen.queryByText(/Alexa, ask encore/)).not.toBeInTheDocument();
+
+    answer?.();
+    expect(await screen.findByText(/Alexa, ask kodi which device this is/)).toBeInTheDocument();
+  });
+
   it("links an unlinked Echo and removes the banner", async () => {
     const user = userEvent.setup();
     const log = recordRequests();

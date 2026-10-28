@@ -58,9 +58,10 @@ export function useSkill() {
 }
 
 /** What people say to reach the skill, "Alexa, ask <name> to…": encore or kodi as chosen, in the first enabled locale. */
-export function useInvocationName(): string {
+export function useInvocationName(): string | undefined {
   const { data: skill } = useSkill();
-  return skill?.invocation_name || "encore";
+  // Undefined until the skill loads: guessing "encore" would tell people who chose "kodi" the wrong thing to say.
+  return skill ? skill.invocation_name || "encore" : undefined;
 }
 
 export function useAuthorize(enabled = true) {

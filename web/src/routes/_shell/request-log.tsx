@@ -171,7 +171,11 @@ function RequestLogPage() {
         <EmptyState
           title={filters.q || filters.device || filters.outcome ? t("empty.filteredTitle") : t("empty.noneTitle")}
         >
-          {filters.q || filters.device || filters.outcome ? t("empty.filtered") : t("empty.none", { invocation })}
+          {filters.q || filters.device || filters.outcome
+            ? t("empty.filtered")
+            : invocation
+              ? t("empty.none", { invocation })
+              : t("empty.noneNoInvocation")}
         </EmptyState>
       ) : null}
 

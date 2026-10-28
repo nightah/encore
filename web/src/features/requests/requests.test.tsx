@@ -194,6 +194,18 @@ describe("Request log", () => {
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
+  it("doesn't guess the invocation name in the empty log when the skill settings didn't load", async () => {
+    getDb().requests = [];
+    getDb().skill = { ...getDb().skill, invocation: "kodi", invocation_name: "kodi" };
+    failWith("get", "/skill", 500, "boom");
+    const { queryClient } = renderApp("/request-log");
+
+    expect(await screen.findByText("No requests yet")).toBeInTheDocument();
+    await waitFor(() => expect(queryClient.getQueryState(keys.skill)?.status).toBe("error"));
+    expect(screen.queryByText(/ask encore/)).not.toBeInTheDocument();
+    expect(screen.getByText("Requests appear here as soon as an Echo talks to Encore.")).toBeInTheDocument();
+  });
+
   it("names a filtered Echo that's no longer in the device list by its id", async () => {
     renderApp("/request-log?device=99");
     await screen.findByText("No matching requests");
