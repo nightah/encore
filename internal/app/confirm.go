@@ -62,6 +62,16 @@ func (a *App) split(ctx context.Context, g *group, leaving []*Instance, reason s
 	repo := a.db.LibraryGroups()
 	rec, ev := g.rec, g.ev.clone()
 
+	saved := false
+	fail := func(err error) error {
+		// Members already saved in groups of their own run that way, so the running groups match the database.
+		if saved {
+			err = errors.Join(err, a.plan(ctx))
+		}
+
+		return err
+	}
+
 	for _, inst := range leaving {
 		var others []int64
 
@@ -75,9 +85,10 @@ func (a *App) split(ctx context.Context, g *group, leaving []*Instance, reason s
 		solo := store.LibraryGroup{Name: inst.name, State: store.GroupSolo, SourceInstanceID: inst.id, Evidence: own.encode()}
 
 		if err := repo.Save(ctx, &solo, []int64{inst.id}); err != nil {
-			return err
+			return fail(err)
 		}
 
+		saved = true
 		ev.Confirmed = slices.DeleteFunc(ev.Confirmed, func(id int64) bool { return id == inst.id })
 		if !slices.Contains(ev.Vetoed, inst.id) {
 			ev.Vetoed = append(ev.Vetoed, inst.id)
@@ -90,7 +101,7 @@ func (a *App) split(ctx context.Context, g *group, leaving []*Instance, reason s
 	rec.Evidence = ev.encode()
 
 	if err := repo.Save(ctx, &rec, nil); err != nil {
-		return err
+		return fail(err)
 	}
 
 	return a.plan(ctx)
