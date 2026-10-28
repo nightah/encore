@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"io"
@@ -9,6 +10,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"regexp"
+	"sync"
 	"testing"
 	"testing/fstest"
 
@@ -16,6 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nightah/encore/internal/basepath"
+	"github.com/nightah/encore/internal/buildinfo"
 	"github.com/nightah/encore/internal/config"
 )
 
@@ -222,4 +225,238 @@ func TestAPIDocs(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, do(t, h, http.MethodGet, "/api/docs/LICENSE").Code, "only the page's assets are served")
 	assert.Equal(t, http.StatusNotFound, do(t, h, http.MethodGet, "/api/elsewhere").Code)
 	assert.Equal(t, http.StatusOK, do(t, h, http.MethodGet, "/encore-is-not-mounted-here").Code, "the SPA still answers outside /api/")
+}
+
+func TestHealthzReportsTheVersionUncached(t *testing.T) {
+	h := newTestServer(t, config.Server{BasePath: "/"}, Deps{})
+
+	rec := do(t, h, http.MethodGet, PathHealthz)
+	assert.Equal(t, "no-store", rec.Header().Get("Cache-Control"))
+
+	var body map[string]string
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body))
+	assert.Equal(t, map[string]string{"status": "ok", "version": buildinfo.Get().Version}, body)
+}
+
+func TestSecurityHeadersOnEveryResponse(t *testing.T) {
+	h := newTestServer(t, config.Server{BasePath: "/"}, Deps{})
+
+	for _, target := range []string{PathHealthz, "/api/v1/nope", "/", "/api/"} {
+		rec := do(t, h, http.MethodGet, target)
+		assert.Equal(t, "nosniff", rec.Header().Get("X-Content-Type-Options"), target)
+		assert.Equal(t, "same-origin", rec.Header().Get("Referrer-Policy"), target)
+		assert.Equal(t, "DENY", rec.Header().Get("X-Frame-Options"), target)
+	}
+}
+
+func TestAlexaErrorsAreJSON(t *testing.T) {
+	h := newTestServer(t, config.Server{BasePath: "/"}, Deps{})
+
+	for method, want := range map[string]int{http.MethodPost: http.StatusServiceUnavailable, http.MethodGet: http.StatusMethodNotAllowed, http.MethodPut: http.StatusMethodNotAllowed} {
+		rec := do(t, h, method, PathAlexa)
+		assert.Equal(t, want, rec.Code, method)
+		assert.Equal(t, "application/json", rec.Header().Get("Content-Type"), method)
+
+		var body map[string]string
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body), method)
+		assert.NotEmpty(t, body["error"], method)
+	}
+
+	assert.Equal(t, http.MethodPost, do(t, h, http.MethodGet, PathAlexa).Header().Get("Allow"))
+}
+
+func TestSPAServesIndexOnlyAsTheShell(t *testing.T) {
+	spa, err := newSPAHandler(fstest.MapFS{
+		"index.html":   {Data: []byte(`<html><head><script nonce="{{ .CSPNonce }}"></script></head></html>`)},
+		"static/a.css": {Data: []byte("a{}")},
+	}, slog.New(slog.DiscardHandler))
+	require.NoError(t, err)
+
+	for _, target := range []string{"/", "/static", "/./kodi/../settings"} {
+		rec := do(t, spa, http.MethodGet, target)
+		require.Equal(t, http.StatusOK, rec.Code, target)
+		assert.NotContains(t, rec.Body.String(), nonceMarker, target)
+		assert.Contains(t, rec.Body.String(), `<base href="/">`, target)
+		assert.NotEmpty(t, rec.Header().Get("Content-Security-Policy"), target)
+	}
+
+	for _, target := range []string{"/index.html", "/kodi/../index.html"} {
+		rec := do(t, spa, http.MethodGet, target)
+		assert.Equal(t, http.StatusNotFound, rec.Code, target)
+		assert.NotContains(t, rec.Body.String(), nonceMarker, "%s: index.html is never served raw, without its nonce", target)
+	}
+}
+
+func TestSPAHeadRequests(t *testing.T) {
+	spa, err := newSPAHandler(fstest.MapFS{
+		"index.html":   {Data: []byte(`<html><head></head></html>`)},
+		"static/a.css": {Data: []byte("a{}")},
+	}, slog.New(slog.DiscardHandler))
+	require.NoError(t, err)
+
+	rec := do(t, spa, http.MethodHead, "/kodi")
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Empty(t, rec.Body.String(), "HEAD has no body")
+	assert.Equal(t, "text/html; charset=utf-8", rec.Header().Get("Content-Type"))
+	assert.Contains(t, rec.Header().Get("Content-Security-Policy"), "'nonce-")
+
+	rec = do(t, spa, http.MethodHead, "/static/a.css")
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Contains(t, rec.Header().Get("Cache-Control"), "immutable")
+
+	rec = do(t, spa, http.MethodDelete, "/")
+	assert.Equal(t, http.StatusMethodNotAllowed, rec.Code)
+	assert.Equal(t, "GET, HEAD", rec.Header().Get("Allow"))
+}
+
+func TestSPAWithoutAUI(t *testing.T) {
+	spa, err := newSPAHandler(nil, slog.New(slog.DiscardHandler))
+	require.NoError(t, err)
+
+	for _, target := range []string{"/", "/settings"} {
+		rec := do(t, spa, http.MethodGet, target)
+		require.Equal(t, http.StatusOK, rec.Code, target)
+		assert.Equal(t, placeholderIndex, rec.Body.String(), "%s: the placeholder is served as is, without a base href", target)
+	}
+
+	assert.Equal(t, http.StatusNotFound, do(t, spa, http.MethodGet, "/static/app.js").Code)
+}
+
+func TestSPAPlaceholderLogsWhyAssetsAreMissing(t *testing.T) {
+	var logs bytes.Buffer
+
+	_, err := newSPAHandler(fstest.MapFS{}, slog.New(slog.NewTextHandler(&logs, nil)))
+	require.NoError(t, err)
+	assert.Contains(t, logs.String(), "web interface assets not found")
+}
+
+func TestSPARejectsAnUnreadableIndex(t *testing.T) {
+	_, err := newSPAHandler(fstest.MapFS{"index.html/child": {Data: []byte("x")}}, slog.New(slog.DiscardHandler))
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "reading embedded index.html")
+}
+
+func TestWithBaseHref(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		name, index, href, want string
+	}{
+		{"first in head", `<html><head><title>x</title></head></html>`, "/encore/", `<html><head><base href="/encore/"><title>x</title></head></html>`},
+		{"upper case head", `<HTML><HEAD></HEAD></HTML>`, "/", `<HTML><HEAD><base href="/"></HEAD></HTML>`},
+		{"escaped", `<head></head>`, `/a"b<c>/`, `<head><base href="/a&#34;b&lt;c&gt;/"></head>`},
+		{"no head", `<html><body></body></html>`, "/encore/", `<html><body></body></html>`},
+		{"head with attributes isn't matched", `<head lang="en"></head>`, "/", `<head lang="en"></head>`},
+		{"empty", ``, "/", ``},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.want, string(withBaseHref([]byte(tc.index), tc.href)))
+		})
+	}
+}
+
+func TestContentSecurityPolicyUsesTheNonce(t *testing.T) {
+	t.Parallel()
+
+	csp := contentSecurityPolicy("abc")
+	assert.Contains(t, csp, "script-src 'self' 'nonce-abc'")
+	assert.Contains(t, csp, "style-src 'self' 'nonce-abc'")
+	assert.Contains(t, csp, "frame-ancestors 'none'")
+	assert.Contains(t, csp, "object-src 'none'")
+	assert.NotContains(t, csp, "unsafe-inline")
+}
+
+func TestNewNonceIsRandomAndURLSafeEnough(t *testing.T) {
+	t.Parallel()
+
+	seen := map[string]bool{}
+
+	for range 100 {
+		n, err := newNonce()
+		require.NoError(t, err)
+		assert.Regexp(t, `^[A-Za-z0-9+/]{24}$`, n, "18 random bytes in unpadded base64")
+		assert.False(t, seen[n], "nonces don't repeat")
+		seen[n] = true
+	}
+}
+
+func TestRunListensUntilCancelled(t *testing.T) {
+	srv, err := New(config.Server{Address: "127.0.0.1:0", BasePath: "/"}, slog.New(slog.DiscardHandler), Deps{})
+	require.NoError(t, err)
+
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+
+	assert.NoError(t, srv.Run(ctx), "a cancelled server shuts down cleanly")
+}
+
+func TestRunReportsAnAddressInUse(t *testing.T) {
+	busy, err := net.Listen("tcp", "127.0.0.1:0")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = busy.Close() })
+
+	srv, err := New(config.Server{Address: busy.Addr().String(), BasePath: "/"}, slog.New(slog.DiscardHandler), Deps{})
+	require.NoError(t, err)
+
+	err = srv.Run(t.Context())
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "listening on "+busy.Addr().String())
+}
+
+func TestServeReturnsWhenTheListenerFails(t *testing.T) {
+	srv, err := New(config.Server{BasePath: "/"}, slog.New(slog.DiscardHandler), Deps{})
+	require.NoError(t, err)
+
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	require.NoError(t, err)
+	require.NoError(t, ln.Close())
+
+	err = srv.Serve(t.Context(), ln)
+	require.Error(t, err, "a dead listener ends Serve without waiting for cancellation")
+	assert.NotErrorIs(t, err, http.ErrServerClosed)
+}
+
+func TestServeLogsTheAddressAndBasePath(t *testing.T) {
+	var logs syncBuffer
+
+	srv, err := New(config.Server{BasePath: "/encore/"}, slog.New(slog.NewTextHandler(&logs, nil)), Deps{})
+	require.NoError(t, err)
+
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	require.NoError(t, err)
+
+	ctx, cancel := context.WithCancel(t.Context())
+	done := make(chan error, 1)
+
+	go func() { done <- srv.Serve(ctx, ln) }()
+
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "http://"+ln.Addr().String()+PathHealthz, http.NoBody)
+	require.NoError(t, err)
+	resp, err := http.DefaultClient.Do(req)
+	require.NoError(t, err)
+	require.NoError(t, resp.Body.Close())
+
+	cancel()
+	require.NoError(t, <-done)
+	assert.Contains(t, logs.String(), "address="+ln.Addr().String())
+	assert.Contains(t, logs.String(), "base_path=/encore/")
+}
+
+type syncBuffer struct {
+	mu  sync.Mutex
+	buf bytes.Buffer
+}
+
+func (b *syncBuffer) Write(p []byte) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	return b.buf.Write(p)
+}
+
+func (b *syncBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	return b.buf.String()
 }
