@@ -142,8 +142,7 @@ func (f *fixture) setup(t *testing.T) *http.Cookie {
 }
 
 func TestPasswordHash(t *testing.T) {
-	h, err := HashPassword("hunter2hunter2")
-	require.NoError(t, err)
+	h := HashPassword("hunter2hunter2")
 	assert.True(t, strings.HasPrefix(h, "$argon2id$v=19$m=19456,t=2,p=1$"))
 
 	ok, err := VerifyPassword(h, "hunter2hunter2")
@@ -157,9 +156,7 @@ func TestPasswordHash(t *testing.T) {
 	_, err = VerifyPassword("$2a$10$bcrypt", "x")
 	require.Error(t, err)
 
-	other, err := HashPassword("hunter2hunter2")
-	require.NoError(t, err)
-	assert.NotEqual(t, h, other, "salts differ")
+	assert.NotEqual(t, h, HashPassword("hunter2hunter2"), "salts differ")
 
 	require.Error(t, ValidatePassword("short"))
 	require.NoError(t, ValidatePassword("long enough!"))

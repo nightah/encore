@@ -12,8 +12,7 @@ import (
 )
 
 func TestVerifyPasswordRejectsMalformedHashes(t *testing.T) {
-	good, err := HashPassword("correct horse battery")
-	require.NoError(t, err)
+	good := HashPassword("correct horse battery")
 
 	parts := strings.Split(good, "$")
 	with := func(i int, v string) string {

@@ -318,12 +318,7 @@ func (a *API) rotateSecrets(ctx context.Context) error {
 		return huma.Error409Conflict("the secrets key comes from " + map[string]string{"config": "secrets.key (or ENCORE_SECRETS_KEY_FILE)", "file": "secrets.key_file"}[src] + "; generate a new key, run Encore with it, and rotate there")
 	}
 
-	key, err := secrets.GenerateKey()
-	if err != nil {
-		return err
-	}
-
-	if err := a.app.Secrets().Rotate(ctx, key); err != nil {
+	if err := a.app.Secrets().Rotate(ctx, secrets.GenerateKey()); err != nil {
 		return err
 	}
 

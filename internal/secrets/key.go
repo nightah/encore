@@ -14,13 +14,11 @@ import (
 )
 
 // GenerateKey returns a new random key.
-func GenerateKey() ([]byte, error) {
+func GenerateKey() []byte {
 	k := make([]byte, KeySize)
-	if _, err := rand.Read(k); err != nil {
-		return nil, fmt.Errorf("generating key: %w", err)
-	}
+	_, _ = rand.Read(k) // crypto/rand.Read never returns an error.
 
-	return k, nil
+	return k
 }
 
 // ParseKey decodes a standard base64 key and checks its length. The error never contains the input.

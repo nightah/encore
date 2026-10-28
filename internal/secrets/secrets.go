@@ -160,10 +160,7 @@ func (s *Store) loadManagedKey(ctx context.Context) ([]byte, error) {
 		return nil, fmt.Errorf("secrets: %d key(s) are in use but %s is missing; restore it or set secrets.key", len(ids), s.managedFile)
 	}
 
-	key, err := GenerateKey()
-	if err != nil {
-		return nil, err
-	}
+	key := GenerateKey()
 
 	if err := writeKeyFile(s.managedFile, key); err != nil {
 		clear(key)

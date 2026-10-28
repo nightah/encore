@@ -60,9 +60,7 @@ func TestCreateAdminNeverReplacesAnExistingAccount(t *testing.T) {
 	token := f.svc.setupToken
 
 	// Another Encore, or a restored database, created the account after this one generated its setup token.
-	hash, err := HashPassword("the real admin's password")
-	require.NoError(t, err)
-	require.NoError(t, f.db.Settings().Set(t.Context(), adminSetting, admin{Username: "owner", PasswordHash: hash}))
+	require.NoError(t, f.db.Settings().Set(t.Context(), adminSetting, admin{Username: "owner", PasswordHash: HashPassword("the real admin's password")}))
 
 	rec := httptest.NewRecorder()
 	require.ErrorIs(t, f.svc.CreateAdmin(t.Context(), rec, request(http.MethodPost, "/"), token, "intruder", "correct horse battery"), ErrAdminExists)

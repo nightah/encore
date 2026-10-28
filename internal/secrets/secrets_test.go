@@ -29,10 +29,7 @@ func openDB(t *testing.T, dir string) *store.DB {
 func testKey(t *testing.T) []byte {
 	t.Helper()
 
-	k, err := GenerateKey()
-	require.NoError(t, err)
-
-	return k
+	return GenerateKey()
 }
 
 func TestPutGetDelete(t *testing.T) {

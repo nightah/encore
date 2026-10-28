@@ -470,8 +470,7 @@ func TestNewNonceIsRandomAndURLSafeEnough(t *testing.T) {
 	seen := map[string]bool{}
 
 	for range 100 {
-		n, err := newNonce()
-		require.NoError(t, err)
+		n := newNonce()
 		assert.Regexp(t, `^[A-Za-z0-9+/]{24}$`, n, "18 random bytes in unpadded base64")
 		assert.False(t, seen[n], "nonces don't repeat")
 		seen[n] = true

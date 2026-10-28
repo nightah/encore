@@ -288,17 +288,15 @@ func TestRestoreAcceptsOlderSchema(t *testing.T) {
 }
 
 func TestRestoreRefusesWrongKey(t *testing.T) {
-	right, err := secrets.GenerateKey()
-	require.NoError(t, err)
+	right := secrets.GenerateKey()
 
 	f := newFixture(t, secrets.EncodeKey(right))
 
-	wrong, err := secrets.GenerateKey()
-	require.NoError(t, err)
+	wrong := secrets.GenerateKey()
 
 	f.cfg.Secrets.Key = secrets.EncodeKey(wrong)
 
-	err = f.restorer(io.Discard).restore(t.Context(), "")
+	err := f.restorer(io.Discard).restore(t.Context(), "")
 	require.ErrorIs(t, err, secrets.ErrUnknownKey)
 	assert.Contains(t, err.Error(), "cannot decrypt")
 	assert.NotContains(t, err.Error(), "hunter2")
@@ -433,8 +431,7 @@ func TestServeLockExcludesASecondHolder(t *testing.T) {
 func TestRestoreStateless(t *testing.T) {
 	ctx := t.Context()
 
-	key, err := secrets.GenerateKey()
-	require.NoError(t, err)
+	key := secrets.GenerateKey()
 
 	f := newFixture(t, secrets.EncodeKey(key))
 	f.cfg.Stateless = true
@@ -443,7 +440,7 @@ func TestRestoreStateless(t *testing.T) {
 	// The saved state is the current database ("after").
 	db := openStore(t, f.dbPath())
 	saver := &statestore.Saver{DB: db, Store: f.blobs, Log: slog.New(slog.DiscardHandler), Owner: "pod-1"}
-	_, err = saver.Save(ctx)
+	_, err := saver.Save(ctx)
 	require.NoError(t, err)
 	require.NoError(t, db.Close())
 
@@ -490,8 +487,7 @@ func TestRestoreStateless(t *testing.T) {
 	assert.NoFileExists(t, f.dbPath(), "stateless restore doesn't write a local database")
 
 	// A wrong key is refused before anything is uploaded.
-	wrong, err := secrets.GenerateKey()
-	require.NoError(t, err)
+	wrong := secrets.GenerateKey()
 
 	f.cfg.Secrets.Key = secrets.EncodeKey(wrong)
 	err = f.restorer(io.Discard).restore(ctx, "")
@@ -620,11 +616,9 @@ func TestRestoreOpenFailures(t *testing.T) {
 		require.NoError(t, os.WriteFile(file, nil, 0o600))
 		r.cfg.DataDir = filepath.Join(file, "data")
 
-		key, err := secrets.GenerateKey()
-		require.NoError(t, err)
-		r.cfg.Secrets.Key = secrets.EncodeKey(key)
+		r.cfg.Secrets.Key = secrets.EncodeKey(secrets.GenerateKey())
 
-		err = r.list(t.Context())
+		err := r.list(t.Context())
 		require.Error(t, err)
 		require.NotErrorIs(t, err, errLocked)
 		assert.Contains(t, err.Error(), "creating data directory")

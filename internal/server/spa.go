@@ -132,12 +132,7 @@ func (h *spaHandler) exists(name string) bool {
 }
 
 func (h *spaHandler) serveIndex(w http.ResponseWriter, r *http.Request) {
-	nonce, err := newNonce()
-	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
-
-		return
-	}
+	nonce := newNonce()
 
 	index := h.index
 	if h.baseHref {
@@ -173,11 +168,9 @@ func contentSecurityPolicy(nonce string) string {
 	}, "; ")
 }
 
-func newNonce() (string, error) {
+func newNonce() string {
 	b := make([]byte, 18)
-	if _, err := rand.Read(b); err != nil {
-		return "", err
-	}
+	_, _ = rand.Read(b) // crypto/rand.Read never returns an error.
 
-	return base64.RawStdEncoding.EncodeToString(b), nil
+	return base64.RawStdEncoding.EncodeToString(b)
 }
