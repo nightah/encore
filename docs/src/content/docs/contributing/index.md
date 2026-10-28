@@ -68,6 +68,7 @@ The scope becomes the pull request's `area/<scope>` label.
 | `auth` | Sign-in, sessions and admin accounts (`internal/auth`) |
 | `backups` | Scheduled backups and `encore restore` |
 | `basepath` | The request base path (`internal/basepath`) |
+| `benchmarks` | The comparisons with replaced libraries (`benchmarks/`) |
 | `blobstore` | The local, S3 and WebDAV storage backends (`internal/blobstore`) |
 | `buildinfo` | Version and build details (`internal/buildinfo`) |
 | `cli` | The commands (`cmd/encore`, `internal/cli`) |

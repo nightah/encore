@@ -36,6 +36,7 @@ export default {
         "auth",
         "backups",
         "basepath",
+        "benchmarks",
         "blobstore",
         "buildinfo",
         "cli",
