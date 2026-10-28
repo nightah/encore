@@ -310,11 +310,20 @@ func TestReconnectBackoff(t *testing.T) {
 			got := gaps(dials.times())
 			require.GreaterOrEqual(t, len(got), 10, "a refused WebSocket keeps being retried")
 
+			var belowCeiling, aboveFloor bool
+
 			for i, g := range got {
 				// Equal jitter: between half and all of the backoff.
 				assert.GreaterOrEqual(t, g, backoff(i)/2, "retry %d", i+1)
 				assert.LessOrEqual(t, g, backoff(i), "retry %d", i+1)
+
+				belowCeiling = belowCeiling || g < backoff(i)
+				aboveFloor = aboveFloor || g > backoff(i)/2
 			}
+
+			// The wait is drawn from the whole window, so the retries of many clients spread out; all of ten draws landing on one end is vanishingly unlikely.
+			assert.True(t, belowCeiling, "the jitter never shortened a wait")
+			assert.True(t, aboveFloor, "the jitter never lengthened a wait")
 
 			cancel()
 			<-done
@@ -370,6 +379,21 @@ func TestReconnectBackoff(t *testing.T) {
 			require.Len(t, times, refused+3)
 			assert.GreaterOrEqual(t, times[refused+2].Sub(dropped), minWait/2)
 			assert.LessOrEqual(t, times[refused+2].Sub(dropped), minWait)
+
+			// Up for exactly the maximum backoff isn't longer than it, so the doubled backoff is kept.
+			time.Sleep(time.Until(times[refused+2].Add(maxWait)))
+
+			dropped = time.Now()
+			s.DropConnections()
+			time.Sleep(2 * minWait)
+			synctest.Wait()
+
+			require.True(t, tr.Connected())
+
+			times = dials.times()
+			require.Len(t, times, refused+4)
+			assert.GreaterOrEqual(t, times[refused+3].Sub(dropped), minWait, "a connection that lasted only the maximum backoff doesn't reset it")
+			assert.LessOrEqual(t, times[refused+3].Sub(dropped), 2*minWait)
 
 			cancel()
 			<-done
