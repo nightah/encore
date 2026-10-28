@@ -136,7 +136,8 @@ export function InstanceDialog({ open, onOpenChange, instance, prefill }: Instan
   });
 
   const title = instance ? t("dialog.editTitle", { name: instance.name }) : t("dialog.addTitle");
-  const hasFieldErrors = failure instanceof ApiError && Object.keys(failure.fieldErrors).length > 0;
+  // Only errors shown next to a field; any other failure (such as one for the whole body) goes in the alert.
+  const hasFieldErrors = failure instanceof ApiError && Object.keys(failure.fieldErrors).some((name) => name in EMPTY);
 
   return (
     <Dialog

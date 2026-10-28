@@ -128,6 +128,7 @@ describe("Kodi instances page", () => {
 
     expect(await within(dialog).findByText("Another Kodi instance already uses this name.")).toBeInTheDocument();
     expect(within(dialog).getByRole("textbox", { name: "Name" })).toHaveAttribute("aria-invalid", "true");
+    expect(within(dialog).queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("prefills the add dialog from a discovered instance and adds it", async () => {
@@ -770,5 +771,33 @@ describe("Kodi instance dialog", () => {
 
     expect(await within(dialog).findByRole("alert")).not.toBeEmptyDOMElement();
     expect(dialog).toBeInTheDocument();
+  });
+
+  it("shows a validation error the form has no field for", async () => {
+    server.use(
+      http.post("*/api/v1/kodi/instances", () =>
+        HttpResponse.json(
+          {
+            detail: "Name and URL are required.",
+            errors: [{ location: "body", message: "name and url are required" }],
+            status: 422,
+            title: "Unprocessable Entity",
+            type: "about:blank",
+          },
+          { headers: { "Content-Type": "application/problem+json" }, status: 422 },
+        ),
+      ),
+    );
+    const user = userEvent.setup();
+    renderApp("/kodi");
+    await card("Lounge");
+
+    await user.click(screen.getByRole("button", { name: "Add Kodi manually" }));
+    const dialog = await screen.findByRole("dialog", { name: "Add a Kodi instance" });
+    await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "Garage");
+    await user.type(within(dialog).getByRole("textbox", { name: "JSON-RPC URL" }), "http://192.168.1.60:8080/jsonrpc");
+    await user.click(within(dialog).getByRole("button", { name: "Add Kodi instance" }));
+
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent("Name and URL are required.");
   });
 });
