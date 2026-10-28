@@ -1,6 +1,6 @@
 name: Release
 
-# Pushing a vX.Y.Z tag releases that commit: tag the merged "release: vX.Y.Z" commit, whose package.json versions must match (make version VERSION=X.Y.Z).
+# Pushing a vX.Y.Z tag releases that commit. tag-release.yml pushes it when a release pull request's "release: vX.Y.Z (#N)" commit is merged to main; a tag pushed any other way is refused unless it points at that same commit.
 on:
   push:
     tags: ['v*.*.*']
@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   verify:
-    name: Check the version
+    name: Check the tag
     runs-on: ubuntu-26.04
     timeout-minutes: 5
     steps:
@@ -24,20 +24,28 @@ jobs:
         with:
           egress-policy: audit
 
+      # Full history, so the tagged commit can be checked against main.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          fetch-depth: 0
           persist-credentials: false
 
-      - name: Tag matches the stamped version
+      # A release branch's own "release: vX.Y.Z" commit isn't the one the squash merge puts on main; tagging it releases a commit main never had.
+      - name: Tag is on main
         run: |
-          want="${GITHUB_REF_NAME#v}"
-          for f in web/package.json docs/package.json; do
-            got="$(jq -r .version "$f")"
-            if [ "$got" != "$want" ]; then
-              echo "::error file=$f::version is $got, but the tag is $GITHUB_REF_NAME. Run 'make version VERSION=$want' in the release commit."
-              exit 1
-            fi
-          done
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::$GITHUB_REF_NAME points at ${GITHUB_SHA::8}, which isn't on main. Delete the tag; merging the release pull request tags the right commit."
+            exit 1
+          fi
+
+      # Only the merged "release: vX.Y.Z (#N)" commit for this version, with both package.json files stamped to it, is released; a later commit on main carries the same version but isn't the release.
+      - name: Tag is the release commit
+        run: |
+          version="$(.github/scripts/release-commit.sh "$GITHUB_SHA")"
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::$GITHUB_REF_NAME points at ${GITHUB_SHA::8} ($(git log -1 --format=%s "$GITHUB_SHA")), not the merged \"release: $GITHUB_REF_NAME (#N)\" commit. Delete the tag; merging the release pull request tags the right commit."
+            exit 1
+          fi
 
   # Builds, publishes and attests the release in a reusable workflow, so the provenance names it as the signer (SLSA Build Level 3). The permissions are the most its jobs may use; each job takes only what it needs.
   build:
