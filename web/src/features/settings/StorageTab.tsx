@@ -31,7 +31,7 @@ interface Values {
   backup_prefix: string;
 }
 
-const mapping: FieldMapping<Values> = {
+const mapping = {
   backend: { path: "storage.backend" },
   backup_keep: {
     apply: (v, p) => setPath(p, "storage.backups.keep", Number(v)),
@@ -65,7 +65,7 @@ const mapping: FieldMapping<Values> = {
     apply: (v, p) => setPath(p, "storage.s3.sse", v ? "AES256" : ""),
     path: "storage.s3.sse",
   },
-};
+} satisfies FieldMapping<Values>;
 
 const toValues = (s: Settings): Values => ({
   backend: s.storage.backend,
@@ -118,10 +118,7 @@ export function StorageTab({
   const backend = useWatch({ control: form.control, name: "backend" });
   const customCa = useWatch({ control: form.control, name: "s3_custom_ca" });
   const dirty = form.formState.isDirty;
-  const managed = (key: keyof Values) => {
-    const path = mapping[key]?.path;
-    return path ? isManaged(settings, path) : false;
-  };
+  const managed = (key: keyof typeof mapping) => isManaged(settings, mapping[key].path);
   const current = settings.storage.backups.schedule;
   const schedules: Array<[string, string]> = SCHEDULES.map(([value, key]) => [
     value,

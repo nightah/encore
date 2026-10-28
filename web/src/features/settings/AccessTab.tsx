@@ -72,7 +72,7 @@ const list = (text: string, separator: RegExp) =>
     .map((s) => s.trim())
     .filter(Boolean);
 
-const mapping: FieldMapping<Values> = {
+const mapping = {
   break_glass: { path: "auth.oidc.break_glass" },
   header_admin_group: { path: "auth.header.admin_group" },
   header_groups_header: { path: "auth.header.groups_header" },
@@ -103,7 +103,7 @@ const mapping: FieldMapping<Values> = {
     apply: (v, p) => setPath(p, "auth.local.session_hours", Number(v)),
     path: "auth.local.session_hours",
   },
-};
+} satisfies FieldMapping<Values>;
 
 const toValues = (s: Settings): Values => ({
   break_glass: s.auth.oidc.break_glass,
@@ -171,10 +171,7 @@ export function AccessTab({
   };
   const clientId = useWatch({ control: form.control, name: "oidc_client_id" }) || "encore";
   const errors = form.formState.errors;
-  const managed = (key: keyof Values) => {
-    const path = mapping[key]?.path;
-    return path ? isManaged(settings, path) : false;
-  };
+  const managed = (key: keyof typeof mapping) => isManaged(settings, mapping[key].path);
   const values = toValues(settings);
   // Shown with both OpenID Connect and trusted headers; it's one setting.
   const breakGlass = (

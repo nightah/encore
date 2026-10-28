@@ -13,7 +13,8 @@ export type FieldMapping<V> = {
 
 export function setPath(target: Record<string, unknown>, path: string, value: unknown): void {
   const parts = path.split(".");
-  const last = parts.pop() ?? path;
+  // split always returns at least one part.
+  const last = parts.pop() as string;
   let node = target;
   for (const part of parts) {
     if (typeof node[part] !== "object" || node[part] === null) node[part] = {};
