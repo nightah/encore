@@ -46,6 +46,13 @@ describe("root error screen", () => {
 
   afterEach(() => vi.unstubAllGlobals());
 
+  /** Renders an error that is reported and waits for its report: anything reported before it would have arrived first. */
+  async function expectOnlyLaterReports() {
+    render(<RootError error={new TypeError("sentinel is undefined")} reset={vi.fn()} />);
+    await waitFor(() => expect(clientErrors.length).toBeGreaterThan(0));
+    expect(clientErrors.map((r) => r.message)).toEqual(["sentinel is undefined"]);
+  }
+
   it("says the page broke, reports the error and reloads on Try again", async () => {
     const user = userEvent.setup();
     const reset = vi.fn();
@@ -68,17 +75,17 @@ describe("root error screen", () => {
 
     expect(screen.getByRole("heading", { name: "Encore isn't responding" })).toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent("The Encore server could not be reached.");
-    // Give a report the chance to be sent, then check none was.
-    await new Promise((resolve) => setTimeout(resolve, 20));
-    expect(clientErrors).toHaveLength(0);
+    await expectOnlyLaterReports();
   });
 
-  it("reloads once for a stale part of the app instead of reporting it", async () => {
-    const error = new TypeError("Failed to fetch dynamically imported module: /static/kodi-abc.js");
-    render(<RootError error={error} reset={vi.fn()} />);
+  it.each([
+    "Failed to fetch dynamically imported module: /static/kodi-abc.js",
+    "error loading dynamically imported module: /static/kodi-abc.js",
+    "Importing a module script failed.",
+  ])("reloads once for a stale part of the app instead of reporting it (%s)", async (message) => {
+    render(<RootError error={new TypeError(message)} reset={vi.fn()} />);
     expect(reload).toHaveBeenCalledOnce();
-    await new Promise((resolve) => setTimeout(resolve, 20));
-    expect(clientErrors).toHaveLength(0);
+    await expectOnlyLaterReports();
   });
 
   it("shows the error, and reports it, when a stale part keeps failing after the reload", async () => {

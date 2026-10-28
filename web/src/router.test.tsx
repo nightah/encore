@@ -84,7 +84,7 @@ describe("createQueryClient", () => {
   });
 });
 
-function Trigger({ meta, fail }: { meta?: MutationMeta; fail?: unknown }) {
+function Trigger({ meta, fail, name = "Run" }: { meta?: MutationMeta; fail?: unknown; name?: string }) {
   const mutation = useMutation({
     ...(meta ? { meta } : {}),
     mutationFn: async () => {
@@ -94,7 +94,7 @@ function Trigger({ meta, fail }: { meta?: MutationMeta; fail?: unknown }) {
   });
   return (
     <button type="button" onClick={() => mutation.mutate()}>
-      Run
+      {name}
     </button>
   );
 }
@@ -105,10 +105,17 @@ describe("mutation toasts", () => {
       <QueryClientProvider client={createQueryClient()}>
         <ToastProvider>
           <Trigger {...props} />
+          <Trigger name="Sentinel" meta={{ success: "Sentinel done." }} />
         </ToastProvider>
       </QueryClientProvider>,
     );
     return userEvent.setup();
+  }
+
+  /** Runs a mutation that does toast and waits for it: a toast from the mutation before it would be showing by then. */
+  async function runSentinel(user: ReturnType<typeof userEvent.setup>) {
+    await user.click(screen.getByRole("button", { name: "Sentinel" }));
+    await screen.findByText("Sentinel done.");
   }
 
   it("shows the success message a mutation names", async () => {
@@ -120,9 +127,9 @@ describe("mutation toasts", () => {
   it("shows nothing for a success without a message", async () => {
     const user = renderTrigger({});
     await user.click(screen.getByRole("button", { name: "Run" }));
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    await runSentinel(user);
     expect(screen.queryByText("That didn't work")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Dismiss" })).not.toBeInTheDocument();
+    expect(screen.getAllByLabelText("Dismiss")).toHaveLength(1);
   });
 
   it("shows a failure with the server's explanation", async () => {
@@ -140,7 +147,7 @@ describe("mutation toasts", () => {
       meta: { inline: true, success: "Saved." },
     });
     await user.click(screen.getByRole("button", { name: "Run" }));
-    await new Promise((resolve) => setTimeout(resolve, 20));
+    await runSentinel(user);
     expect(screen.queryByText("Shown next to the field.")).not.toBeInTheDocument();
     expect(screen.queryByText("Saved.")).not.toBeInTheDocument();
   });

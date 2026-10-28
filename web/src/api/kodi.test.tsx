@@ -139,9 +139,8 @@ describe("libraries", () => {
       initialProps: { id: undefined as number | undefined },
       wrapper,
     });
-    await new Promise((resolve) => setTimeout(resolve, 20));
-    expect(requests).toHaveLength(0);
     expect(result.current.fetchStatus).toBe("idle");
+    expect(requests).toHaveLength(0);
 
     const id = getDb().libraries[0]?.id ?? 0;
     rerender({ id });
