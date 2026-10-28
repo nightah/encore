@@ -73,9 +73,50 @@ func TestLintLocaleRules(t *testing.T) {
 
 func TestLintAcceptsValidInvocations(t *testing.T) {
 	for _, inv := range []string{"encore test", "kodi's remote", "t.v. remote", "my reopen box"} {
-		got := messages(Lint(load(t, map[string]string{"locales/en-US.yaml": "language: en\nskill_name: Encore\ninvocation: " + inv + "\n"})), Error)
-		assert.Empty(t, got, inv)
+		findings := Lint(load(t, map[string]string{"locales/en-US.yaml": "language: en\nskill_name: Encore\ninvocation: " + inv + "\n"}))
+		assert.Empty(t, messages(findings, Error), inv)
+		assert.False(t, containsSubstring(messages(findings, Warning), "one-word"), "%s has more than one word", inv)
 	}
+}
+
+func TestLintOrdersErrorsBeforeWarningsInOnePlace(t *testing.T) {
+	// The one-word warning is found before the missing skill name, so only sorting puts the error first.
+	src := load(t, map[string]string{"locales/en-US.yaml": "language: en\ninvocation: encore\n"})
+
+	var got []string
+
+	for _, f := range Lint(src) {
+		if f.Locale == "en-US" && f.Intent == "" {
+			got = append(got, f.String())
+		}
+	}
+
+	assert.Equal(t, []string{
+		"error: en-US: skill_name is required",
+		`warning: en-US: one-word invocation name "encore" is fine for a private skill but would need brand proof to certify`,
+	}, got)
+}
+
+func TestLintSharedWordingNamesTheFirstIntent(t *testing.T) {
+	src := load(t, map[string]string{"locales/en-US.yaml": "language: en\nskill_name: Encore\ninvocation: encore test\nutterances:\n  ViewRoom:\n    - \"put on {Room}\"\n"})
+	src.Model.Intents = append(src.Model.Intents, Intent{Name: "ViewGenre", Slots: []Slot{{Name: "Genre", Type: "KODI_ROOM"}}})
+
+	lang := src.Languages["en"]
+	lang.Utterances["ViewGenre"] = []string{"put on {Genre}"}
+	src.Languages["en"] = lang
+
+	shared := map[string]string{}
+
+	for _, f := range Lint(src) {
+		if f.Locale == "en-US" && strings.Contains(f.Message, "same wording") {
+			shared[f.Intent] = f.Message
+		}
+	}
+
+	assert.Equal(t, map[string]string{
+		"ViewRoom":  `sample "put on {Room}" has the same wording as a WatchMovie sample; Alexa will choose between them by slot value alone`,
+		"ViewGenre": `sample "put on {Genre}" has the same wording as a WatchMovie sample; Alexa will choose between them by slot value alone`,
+	}, shared)
 }
 
 func TestLintUnknownLanguageSkipsSampleChecks(t *testing.T) {
