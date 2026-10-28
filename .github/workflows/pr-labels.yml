@@ -21,7 +21,7 @@ permissions: {}
 jobs:
   title:
     name: Check Title
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     permissions:
       contents: read  # check out the base branch for commitlint and its config
@@ -55,7 +55,7 @@ jobs:
 
   label:
     name: Apply Labels
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     permissions:
       pull-requests: write  # add and remove the pull request's labels

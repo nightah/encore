@@ -22,7 +22,7 @@ permissions:
 jobs:
   kodi-contract:
     name: Kodi contract (${{ matrix.kodi }})
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -123,7 +123,7 @@ jobs:
 
   store-contract:
     name: Storage contract (MinIO)
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     env:
       ENCORE_CONTRACT_S3_ENDPOINT: http://127.0.0.1:9000
@@ -184,7 +184,7 @@ jobs:
   smapi-live:
     name: SMAPI live
     if: github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     environment: smapi-live
     env:
@@ -241,7 +241,7 @@ jobs:
     if: >-
       (github.event_name == 'schedule' && github.event.schedule == '0 17 * * 0') ||
       (github.event_name == 'workflow_dispatch' && inputs.mutation)
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 60
     # Informational only; surviving mutants should not fail the nightly.
     continue-on-error: true
