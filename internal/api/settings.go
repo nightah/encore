@@ -294,7 +294,7 @@ func (a *API) runBackups(ctx context.Context) {
 		case <-a.opts.after(wait):
 		}
 
-		if !sched.Enabled() || a.now().Before(due) {
+		if !sched.Enabled() || a.now().Before(due) || a.scheduleChanged(ctx, spec) {
 			continue
 		}
 
@@ -304,6 +304,13 @@ func (a *API) runBackups(ctx context.Context) {
 
 		due = sched.Due(a.now(), a.now())
 	}
+}
+
+// scheduleChanged reports whether the backup schedule is no longer spec, so a due time worked out under spec no longer applies.
+func (a *API) scheduleChanged(ctx context.Context, spec string) bool {
+	eff, err := a.prefs.Effective(ctx)
+
+	return err != nil || eff.Storage.Backups.Schedule != spec
 }
 
 func (a *API) rotateSecrets(ctx context.Context) error {

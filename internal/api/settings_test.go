@@ -185,6 +185,47 @@ func TestScheduledBackupsWaitForTheNextDueTime(t *testing.T) {
 	assert.Equal(t, 2, backups(), "the next interval came due")
 }
 
+func TestScheduledBackupsFollowAChangedSchedule(t *testing.T) {
+	waits := make(chan time.Duration, 100)
+	wake := make(chan time.Time)
+
+	h := newHarness(t, harnessOpts{noKodi: true, env: []string{"ENCORE_STORAGE_LOCAL_PATH=" + t.TempDir()}, mutate: func(o *Options) {
+		db := o.App.DB().Settings()
+		require.NoError(t, db.Set(t.Context(), overridesSetting, map[string]any{"storage.backups.schedule": "every@24h"}))
+		require.NoError(t, db.Set(t.Context(), lastBackupSetting, time.Now().Add(-2*time.Hour).UTC()))
+		o.after = func(d time.Duration) <-chan time.Time {
+			waits <- d
+
+			return wake
+		}
+	}})
+	c := h.admin()
+
+	backups := func() int { return strings.Count(h.logs.String(), `msg="database backed up"`) }
+	step := func() time.Duration {
+		wake <- time.Now()
+
+		return <-waits
+	}
+	schedule := func(s string) {
+		c.json(http.MethodPatch, "/api/v1/settings", map[string]any{"storage": map[string]any{"backups": map[string]any{"schedule": s}}}, http.StatusOK, nil)
+	}
+
+	assert.Equal(t, time.Hour, <-waits, "a backup a day away is checked on hourly, to pick up a changed schedule")
+
+	schedule("every@1h")
+	assert.Equal(t, time.Second, step(), "the new interval is measured from the last backup, so it is already overdue")
+	assert.Zero(t, backups(), "the wake-up that noticed the change was not a due time")
+
+	assert.InDelta(t, time.Hour, step(), float64(time.Minute))
+	assert.Equal(t, 1, backups())
+
+	schedule("off")
+	h.skew.Store(int64(2 * time.Hour))
+	assert.Equal(t, time.Hour, step(), "with backups off it still wakes hourly")
+	assert.Equal(t, 1, backups(), "a due time from before backups were turned off is dropped")
+}
+
 func TestScheduledBackupFailureIsLogged(t *testing.T) {
 	notADir := filepath.Join(t.TempDir(), "file")
 	require.NoError(t, os.WriteFile(notADir, nil, 0o600))
