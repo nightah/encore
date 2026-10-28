@@ -210,6 +210,9 @@ jobs:
       - name: MSW worker script
         run: .github/scripts/msw-worker_test.sh
 
+      - name: Mutation go wrapper
+        run: .github/scripts/mutation-go_test.sh
+
       - name: Next version script
         run: .github/scripts/next-version_test.sh
 
