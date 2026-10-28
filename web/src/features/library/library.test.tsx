@@ -1,7 +1,11 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 
+import { keys } from "@api/keys";
+import { getDb } from "@mocks/handlers";
+import { server } from "@mocks/node";
 import { failWith, recordRequests, renderApp } from "@test/utils";
 
 describe("Library page", () => {
@@ -93,5 +97,38 @@ describe("Library page", () => {
       const syncs = log.filter((r) => r.method === "POST" && r.path.endsWith("/sync")).map((r) => r.path);
       expect(syncs.sort()).toEqual(["/kodi/instances/1/sync", "/kodi/instances/3/sync"]);
     });
+  });
+
+  it("waits for the settings before saying there's no backup", async () => {
+    let answer: () => void = () => {};
+    server.use(
+      http.get(
+        "*/api/v1/settings",
+        () =>
+          new Promise<Response>((resolve) => {
+            answer = () => resolve(HttpResponse.json(getDb().settings));
+          }),
+      ),
+    );
+    renderApp("/library");
+
+    const tiles = await screen.findByRole("region", { name: "Library summary" });
+    expect(within(tiles).queryByText(/no backup yet/)).not.toBeInTheDocument();
+    expect(within(tiles).getByText("Loading…")).toBeInTheDocument();
+
+    answer();
+    expect(await within(tiles).findByText(/last backup/)).toBeInTheDocument();
+    expect(within(tiles).getByText("S3-compatible")).toBeInTheDocument();
+    expect(within(tiles).queryByText("Loading…")).not.toBeInTheDocument();
+  });
+
+  it("doesn't say there's no backup when the settings didn't load", async () => {
+    failWith("get", "/settings", 500, "boom");
+    const { queryClient } = renderApp("/library");
+
+    const tiles = await screen.findByRole("region", { name: "Library summary" });
+    await waitFor(() => expect(queryClient.getQueryState(keys.settings)?.status).toBe("error"));
+    expect(within(tiles).queryByText(/no backup yet/)).not.toBeInTheDocument();
+    expect(within(tiles).queryByText("Loading…")).not.toBeInTheDocument();
   });
 });

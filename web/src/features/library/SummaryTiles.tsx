@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 
 import type { Instance, Library, Settings } from "@api/generated/model";
 import { StatTile } from "@components/ui/Card";
+import { Skeleton } from "@components/ui/States";
 import i18n from "@i18n/index";
 import { formatNumber, formatRelative, hostPort } from "@lib/format";
 
@@ -20,13 +21,16 @@ export function SummaryTiles({
   libraries,
   instances,
   settings,
+  settingsPending,
 }: {
   library: Library;
   libraries: Library[];
   instances: Instance[] | undefined;
   settings: Settings | undefined;
+  settingsPending: boolean;
 }) {
   const { t } = useTranslation("library");
+  const { t: tc } = useTranslation("common");
   const source = instances?.find((i) => i.id === library.source_instance_id);
   const episodes = source?.library?.episodes;
   const synced = libraries
@@ -50,15 +54,29 @@ export function SummaryTiles({
         value={formatNumber(libraries.length)}
         detail={synced ? t("summary.synced", { when: formatRelative(synced) }) : t("summary.notSynced")}
       />
+      {/* Without the settings there's no telling where backups go or when the last ran, so the tile doesn't claim there's none. */}
       <StatTile
         label={t("summary.backups")}
-        value={store.label}
-        detail={[
-          store.where,
-          lastBackup ? t("summary.lastBackup", { when: formatRelative(lastBackup) }) : t("summary.noBackup"),
-        ]
-          .filter(Boolean)
-          .join(" · ")}
+        value={
+          settingsPending ? (
+            <span role="status" className="flex flex-1">
+              <span className="sr-only">{tc("loading")}</span>
+              <Skeleton className="h-6 w-full max-w-28" />
+            </span>
+          ) : (
+            store.label
+          )
+        }
+        detail={
+          settings
+            ? [
+                store.where,
+                lastBackup ? t("summary.lastBackup", { when: formatRelative(lastBackup) }) : t("summary.noBackup"),
+              ]
+                .filter(Boolean)
+                .join(" · ")
+            : undefined
+        }
       />
     </section>
   );

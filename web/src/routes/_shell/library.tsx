@@ -47,7 +47,7 @@ function LibraryPage() {
   const { t } = useTranslation("library");
   const { data: libraries, error, isPending, refetch } = useLibraries();
   const { data: instances } = useInstances();
-  const { data: settings } = useSettings();
+  const { data: settings, isPending: settingsPending } = useSettings();
   const syncAll = useSyncAll();
   const [selectedId, setSelectedId] = useState<number | undefined>();
 
@@ -88,7 +88,13 @@ function LibraryPage() {
               </Select>
             </Field>
           ) : null}
-          <SummaryTiles library={library} libraries={libraries} instances={instances} settings={settings} />
+          <SummaryTiles
+            library={library}
+            libraries={libraries}
+            instances={instances}
+            settings={settings}
+            settingsPending={settingsPending}
+          />
           <div className="flex flex-wrap items-start gap-4.5">
             <MatchTester key={library.id} libraryId={library.id} />
             <RecentlyAdded libraryId={library.id} />
