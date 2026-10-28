@@ -92,6 +92,25 @@ describe("Kodi instances", () => {
     expect(defaults).toEqual(getDb().instances.map((i) => [i.id, i.id === 2]));
   });
 
+  it("moves the default in the cached list at once, without waiting for the refetch", async () => {
+    queryClient.setQueryData<Instance[]>(keys.instances, [
+      { default_for_unlinked: true, id: 1 } as Instance,
+      { default_for_unlinked: false, id: 2 } as Instance,
+      { default_for_unlinked: false, id: 3 } as Instance,
+    ]);
+    const { result } = renderHook(() => useMakeDefaultInstance(), { wrapper });
+
+    await act(() => result.current.mutateAsync(2));
+
+    const defaults = queryClient.getQueryData<Instance[]>(keys.instances)?.map((i) => [i.id, i.default_for_unlinked]);
+    expect(defaults).toEqual([
+      [1, false],
+      [2, true],
+      [3, false],
+    ]);
+    expect(invalidated(keys.instances)).toBe(true);
+  });
+
   it("tests, syncs and wakes an instance by id", async () => {
     const requests = recordRequests();
     const { result } = renderHook(

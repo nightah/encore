@@ -2,7 +2,8 @@ import type { ReactNode } from "react";
 
 import { QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it } from "vitest";
+import { HttpResponse, http } from "msw";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { setCsrfToken } from "@api/client";
 import type { SkillInfo } from "@api/generated/model";
@@ -12,6 +13,7 @@ import {
   skillPackageUrl,
   skillSettingsFrom,
   useActiveDeploy,
+  useDeploy,
   useDisconnectAmazon,
   useInvocationName,
   usePasteAmazon,
@@ -22,6 +24,7 @@ import {
   useStartDeploy,
 } from "@api/skill";
 import { getDb } from "@mocks/handlers";
+import { server } from "@mocks/node";
 import { createQueryClient } from "@src/router";
 import { recordRequests } from "@test/utils";
 
@@ -151,6 +154,13 @@ describe("skill hooks", () => {
     await waitFor(() => expect(result.current).toBe("kodi"));
   });
 
+  it("names the invocation encore when the server sends none", async () => {
+    getDb().skill.invocation_name = "";
+    const { result } = renderHook(() => ({ name: useInvocationName(), skill: useSkill() }), { wrapper });
+    await waitFor(() => expect(result.current.skill.isSuccess).toBe(true));
+    expect(result.current.name).toBe("encore");
+  });
+
   it("shows saved settings at once, marks the skill as needing a deploy and refetches", async () => {
     const { result } = renderHook(() => ({ save: useSaveSkillSettings(), skill: useSkill() }), { wrapper });
     await waitFor(() => expect(result.current.skill.isSuccess).toBe(true));
@@ -217,5 +227,41 @@ describe("skill hooks", () => {
 
   it("links the skill package for download", () => {
     expect(skillPackageUrl()).toBe("/api/v1/skill/package");
+  });
+});
+
+describe("useDeploy", () => {
+  afterEach(() => vi.useRealTimers());
+
+  it("polls a running deploy every three seconds and stops once it ends", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const states: Array<"in_progress" | "succeeded"> = ["in_progress", "in_progress", "succeeded"];
+    let fetches = 0;
+    server.use(
+      http.get("*/api/v1/skill/deploy/:id", ({ params }) =>
+        HttpResponse.json({ error: "", events: [], id: params.id, state: states[Math.min(fetches++, 2)] }),
+      ),
+    );
+    const { result } = renderHook(() => useDeploy("d-1"), { wrapper });
+    await waitFor(() => expect(result.current.data?.state).toBe("in_progress"));
+    expect(fetches).toBe(1);
+
+    await act(() => vi.advanceTimersByTimeAsync(2_900));
+    expect(fetches).toBe(1);
+    await act(() => vi.advanceTimersByTimeAsync(200));
+    await waitFor(() => expect(fetches).toBe(2));
+    await act(() => vi.advanceTimersByTimeAsync(3_000));
+    await waitFor(() => expect(result.current.data?.state).toBe("succeeded"));
+
+    await act(() => vi.advanceTimersByTimeAsync(10_000));
+    expect(fetches).toBe(3);
+  });
+
+  it("fetches nothing without a deploy to follow", async () => {
+    const requests = recordRequests();
+    const { result } = renderHook(() => useDeploy(undefined), { wrapper });
+    await act(async () => {});
+    expect(result.current.fetchStatus).toBe("idle");
+    expect(requests).toEqual([]);
   });
 });
