@@ -277,26 +277,43 @@ func TestPlayerChangesCoalesce(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())
 	cache.ctx = ctx
 
+	// Refreshes are run by hand instead of after playerSettle.
+	var scheduled []func()
+
+	cache.afterFunc = func(d time.Duration, f func()) {
+		assert.Equal(t, playerSettle, d, "a change is read once Kodi has had time to settle")
+
+		scheduled = append(scheduled, f)
+	}
+
+	refreshing := func() bool {
+		cache.mu.Lock()
+		defer cache.mu.Unlock()
+
+		return cache.refreshing[lounge]
+	}
+
 	pings := len(h.kodi.CallsTo("JSONRPC.Ping"))
 
 	for range 5 {
 		cache.playerChanged(lounge)
 	}
 
-	settled := func() bool {
-		cache.mu.Lock()
-		defer cache.mu.Unlock()
+	require.Len(t, scheduled, 1, "a burst of changes schedules one refresh")
+	assert.True(t, refreshing())
+	assert.Len(t, h.kodi.CallsTo("JSONRPC.Ping"), pings, "nothing is read before it runs")
 
-		return len(cache.refreshing) == 0
-	}
-
-	require.Eventually(t, func() bool { return settled() && len(h.kodi.CallsTo("JSONRPC.Ping")) > pings }, 5*time.Second, 10*time.Millisecond)
+	scheduled[0]()
+	assert.False(t, refreshing(), "a refresh that ran makes way for the next")
 	assert.Len(t, h.kodi.CallsTo("JSONRPC.Ping"), pings+1, "a burst of changes is read once")
+
+	cache.playerChanged(lounge)
+	require.Len(t, scheduled, 2, "a change after the refresh schedules another")
 
 	// After the poll stops, a scheduled refresh does nothing.
 	cancel()
-	cache.playerChanged(lounge)
-	require.Eventually(t, settled, 5*time.Second, 10*time.Millisecond)
+	scheduled[1]()
+	assert.False(t, refreshing())
 	assert.Len(t, h.kodi.CallsTo("JSONRPC.Ping"), pings+1)
 }
 

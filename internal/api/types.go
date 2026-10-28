@@ -1053,6 +1053,8 @@ type statusCache struct {
 	// ctx is run's context while it runs; refreshing holds the instances with a refresh already scheduled.
 	ctx        context.Context
 	refreshing map[int64]bool
+	// afterFunc runs a scheduled refresh: time.AfterFunc, or a test's hand-stepped stand-in.
+	afterFunc func(d time.Duration, f func())
 }
 
 type statusEntry struct {
