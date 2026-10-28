@@ -48,6 +48,7 @@ export default {
         "docsgen",
         "e2e",
         "fakekodi",
+        "fuzzy",
         "i18n",
         "kodi",
         "layout",
