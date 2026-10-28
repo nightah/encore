@@ -12,11 +12,11 @@ import (
 )
 
 func TestValidateUsername(t *testing.T) {
-	for _, ok := range []string{"admin", "a", "household.admin@example.com", "Zoë", strings.Repeat("a", 64)} {
+	for _, ok := range []string{"admin", "a", "household.admin@example.com", "Zoë", strings.Repeat("a", 64), strings.Repeat("ü", 64), strings.Repeat("管理", 20)} {
 		require.NoError(t, ValidateUsername(ok), ok)
 	}
 
-	for _, bad := range []string{"", strings.Repeat("a", 65), "house hold", "admin\t", "\nadmin", "ad\x00min", "ad min", "admin "} {
+	for _, bad := range []string{"", strings.Repeat("a", 65), strings.Repeat("ü", 65), "house hold", "admin\t", "\nadmin", "ad\x00min", "ad min", "admin "} {
 		require.Error(t, ValidateUsername(bad), "%q", bad)
 	}
 }

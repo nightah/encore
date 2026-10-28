@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 	"unicode"
+	"unicode/utf8"
 
 	"github.com/nightah/encore/internal/secrets"
 	"github.com/nightah/encore/internal/store"
@@ -49,7 +50,7 @@ func (s *Service) SetupRequired(ctx context.Context) (bool, error) {
 
 // ValidateUsername checks an admin username.
 func ValidateUsername(name string) error {
-	if name == "" || len(name) > 64 {
+	if name == "" || utf8.RuneCountInString(name) > 64 {
 		return errors.New("username must be 1 to 64 characters")
 	}
 
