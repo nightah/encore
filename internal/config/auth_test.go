@@ -65,6 +65,20 @@ func TestAuthValidation(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestAuthValidationMessages(t *testing.T) {
+	for env, want := range map[string]string{
+		"ENCORE_AUTH_HEADER_GROUPS_HEADER=Remote: Groups": `auth.header.groups_header "Remote: Groups" is not a header name`,
+		"ENCORE_AUTH_OIDC_ISSUER=https://[::1":            "auth.oidc.issuer: is not a valid URL",
+		"ENCORE_AUTH_OIDC_REDIRECT_URI=ftp://encore/cb":   `auth.oidc.redirect_uri: "ftp://encore/cb" must be an http or https URL`,
+	} {
+		_, err := Load(Options{Environ: environ(env)})
+		require.ErrorContains(t, err, want, env)
+	}
+
+	_, err := Load(Options{Environ: environ("ENCORE_AUTH_HEADER_GROUPS_HEADER=Remote-Groups")})
+	require.NoError(t, err, "a valid groups header")
+}
+
 func TestManagedKeys(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "encore.yml")
 	require.NoError(t, os.WriteFile(path, []byte("storage:\n  backend: local\nkodi:\n  - name: Lounge\n    url: http://kodi:8080/jsonrpc\n"), 0o600))
