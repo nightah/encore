@@ -69,13 +69,28 @@ func runApp(t *testing.T, dataDir string, tune tuning, kodis ...config.KodiInsta
 	cfg.DataDir = dataDir
 	cfg.Kodi = kodis
 
+	a := openApp(t, &cfg, tune)
+
+	return a, startApp(t, a)
+}
+
+func openApp(t *testing.T, cfg *config.Config, tune tuning) *App {
+	t.Helper()
+
 	log := slog.New(slog.DiscardHandler)
 	if os.Getenv("ENCORE_TEST_LOG") != "" {
 		log = slog.New(slog.NewTextHandler(t.Output(), &slog.HandlerOptions{Level: slog.LevelDebug}))
 	}
 
-	a, err := newApp(t.Context(), &cfg, log, tune)
+	a, err := newApp(t.Context(), cfg, log, tune)
 	require.NoError(t, err)
+
+	return a
+}
+
+// startApp runs a; the returned func stops and closes it, as cleanup does.
+func startApp(t *testing.T, a *App) func() {
+	t.Helper()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan struct{})
@@ -93,7 +108,7 @@ func runApp(t *testing.T, dataDir string, tune tuning, kodis ...config.KodiInsta
 	})
 	t.Cleanup(stop)
 
-	return a, stop
+	return stop
 }
 
 func (a *App) instanceNamed(t *testing.T, name string) *Instance {
@@ -605,4 +620,137 @@ func TestUnsuitableSnapshotsAreSkipped(t *testing.T) {
 	a, _ = runApp(t, dir, fastTuning(), kodiConfig("Lounge", srv, ""))
 	time.Sleep(100 * time.Millisecond)
 	assert.Zero(t, a.instanceNamed(t, "Lounge").Index.Len())
+}
+
+func TestAThirdSharingInstanceJoinsTheGroup(t *testing.T) {
+	lib := testLibrary(30, 0, "2024-01-01 10:00:00")
+	lounge, bedroom, study := fakekodi.New(t, fakekodi.Options{Library: lib}), fakekodi.New(t, fakekodi.Options{Library: lib}), fakekodi.New(t, fakekodi.Options{Library: lib})
+
+	a, _ := runApp(t, t.TempDir(), fastTuning(), kodiConfig("Lounge", lounge, ""), kodiConfig("Bedroom", bedroom, ""), kodiConfig("Study", study, ""))
+
+	require.Eventually(t, func() bool { return len(a.Groups()) == 1 && len(a.Groups()[0].Members) == 3 }, eventually, 10*time.Millisecond)
+
+	// Whichever pair sampled first formed the group; the third joins it without taking it over.
+	g := a.Groups()[0]
+	assert.Equal(t, a.instanceNamed(t, g.Name).id, g.SourceID, "the group is named after its source")
+	assert.Equal(t, store.GroupLikelyShared, g.State)
+	assert.Equal(t, "60 of 60 sampled items match", g.Evidence)
+	assert.ElementsMatch(t, []string{"Lounge", "Bedroom", "Study"}, memberNames(g))
+}
+
+func TestAChangeMostMembersMissedSplitsOffItsInstance(t *testing.T) {
+	// Three databases built identically from the same files fool the fingerprint, but not playback.
+	lounge := fakekodi.New(t, fakekodi.Options{Library: testLibrary(30, 0, "2024-01-01 10:00:00")})
+	bedroom := fakekodi.New(t, fakekodi.Options{Library: testLibrary(30, 0, "2024-01-01 10:00:00")})
+	study := fakekodi.New(t, fakekodi.Options{Library: testLibrary(30, 0, "2024-01-01 10:00:00")})
+
+	a, _ := runApp(t, t.TempDir(), fastTuning(), kodiConfig("Lounge", lounge, ""), kodiConfig("Bedroom", bedroom, ""), kodiConfig("Study", study, ""))
+
+	require.Eventually(t, func() bool { g, _ := a.groupOf("Lounge"); return len(g.Members) == 3 }, eventually, 10*time.Millisecond)
+	require.Eventually(t, func() bool { return hasTitle(a.instanceNamed(t, "Study").Catalog, "Film Number 3") }, eventually, 10*time.Millisecond)
+
+	connected(t, study)
+	require.True(t, study.SetPlayState("movie", 3, fakekodi.PlayState{Resume: 1200, LastPlayed: time.Now().Truncate(time.Second)}))
+
+	require.Eventually(t, func() bool { return len(a.Groups()) == 2 }, eventually, 10*time.Millisecond)
+
+	st, _ := a.groupOf("Study")
+	assert.Equal(t, []string{"Study"}, memberNames(st), "the one Kodi whose change nobody saw is the odd one out")
+	assert.Contains(t, st.Reason, "a change to “Film Number 3” on Study wasn't seen on")
+
+	rest, _ := a.groupOf("Lounge")
+	assert.ElementsMatch(t, []string{"Lounge", "Bedroom"}, memberNames(rest), "the others still agree with each other")
+}
+
+func TestConfiguredSeparationSurvivesRestarts(t *testing.T) {
+	lib := testLibrary(30, 0, "2024-01-01 10:00:00")
+	lounge, study := fakekodi.New(t, fakekodi.Options{Library: lib}), fakekodi.New(t, fakekodi.Options{Library: lib})
+	dir := t.TempDir()
+	kodis := []config.KodiInstance{kodiConfig("Lounge", lounge, ""), kodiConfig("Study", study, "none")}
+
+	a, stop := runApp(t, dir, fastTuning(), kodis...)
+	first, _ := a.groupOf("Study")
+	stop()
+
+	a, _ = runApp(t, dir, fastTuning(), kodis...)
+	require.Eventually(t, func() bool { return a.fingerprintedAll("Lounge", "Study") }, eventually, 10*time.Millisecond)
+
+	again, _ := a.groupOf("Study")
+	assert.Equal(t, first.ID, again.ID, "the config file's group is found again, not made anew")
+	assert.Equal(t, []string{"Study"}, memberNames(again), "the same database, but kept apart")
+	assert.Equal(t, "kept separate by the config file", again.Evidence)
+}
+
+func TestGroupChangesReportDatabaseFailures(t *testing.T) {
+	lounge := fakekodi.New(t, fakekodi.Options{Library: testLibrary(30, 0, "2024-01-01 10:00:00")})
+	bedroom := fakekodi.New(t, fakekodi.Options{Library: testLibrary(30, 100, "2024-03-09 18:00:00")})
+
+	a, _ := runApp(t, t.TempDir(), fastTuning(), kodiConfig("Lounge", lounge, ""), kodiConfig("Bedroom", bedroom, ""))
+	loungeID, bedroomID := a.instanceNamed(t, "Lounge").id, a.instanceNamed(t, "Bedroom").id
+	ctx := t.Context()
+
+	require.Eventually(t, func() bool { return a.fingerprintedAll("Lounge", "Bedroom") }, eventually, 10*time.Millisecond)
+
+	both, err := a.GroupInstances(ctx, "Whole house", loungeID, bedroomID)
+	require.NoError(t, err)
+
+	before := a.Groups()
+
+	require.NoError(t, a.DB().Close())
+
+	_, err = a.GroupInstances(ctx, "", loungeID)
+	require.Error(t, err)
+	require.Error(t, a.SetGroupSource(ctx, both, bedroomID))
+	require.Error(t, a.SplitInstance(ctx, loungeID))
+	require.Error(t, a.ResetLibraryGroup(ctx, loungeID))
+	require.Error(t, a.ReloadInstance(ctx, loungeID))
+	require.Error(t, a.RemoveInstance(ctx, bedroomID))
+
+	assert.Equal(t, memberNames(before[0]), memberNames(a.Groups()[0]), "groups change in memory only once saved")
+}
+
+func TestUserGroupEdgeCases(t *testing.T) {
+	lounge := fakekodi.New(t, fakekodi.Options{Library: testLibrary(30, 0, "2024-01-01 10:00:00")})
+	bedroom := fakekodi.New(t, fakekodi.Options{Library: testLibrary(30, 100, "2024-03-09 18:00:00")})
+
+	a, _ := runApp(t, t.TempDir(), fastTuning(), kodiConfig("Lounge", lounge, ""), kodiConfig("Bedroom", bedroom, ""))
+	loungeID, bedroomID := a.instanceNamed(t, "Lounge").id, a.instanceNamed(t, "Bedroom").id
+	ctx := t.Context()
+
+	require.Eventually(t, func() bool { return a.fingerprintedAll("Lounge", "Bedroom") }, eventually, 10*time.Millisecond)
+
+	_, err := a.GroupInstances(ctx, "", loungeID, unknownInstance)
+	require.ErrorIs(t, err, store.ErrNotFound)
+	require.ErrorIs(t, a.ResetLibraryGroup(ctx, unknownInstance), store.ErrNotFound)
+	require.NoError(t, a.ResetLibraryGroup(ctx, loungeID), "a detected group has nothing to reset")
+
+	// Grouping one instance, however often it's named, keeps it on its own by choice.
+	solo, err := a.GroupInstances(ctx, "", loungeID, loungeID)
+	require.NoError(t, err)
+
+	g, _ := a.groupOf("Lounge")
+	assert.Equal(t, solo, g.ID)
+	assert.Equal(t, store.GroupSolo, g.State)
+	assert.True(t, g.Manual)
+	assert.Equal(t, "Lounge", g.Name, "an unnamed group is named after its source")
+
+	require.NoError(t, a.SetGroupSource(ctx, solo, loungeID), "the source already")
+
+	// The first instance named leads the group, and names it.
+	both, err := a.GroupInstances(ctx, "", bedroomID, loungeID)
+	require.NoError(t, err)
+
+	g, _ = a.groupOf("Lounge")
+	assert.Equal(t, both, g.ID)
+	assert.Equal(t, "Bedroom", g.Name)
+	assert.Equal(t, bedroomID, g.SourceID)
+
+	require.NoError(t, a.SplitInstance(ctx, loungeID))
+
+	split, _ := a.groupOf("Lounge")
+	require.NoError(t, a.SplitInstance(ctx, loungeID))
+
+	again, _ := a.groupOf("Lounge")
+	assert.Equal(t, split.ID, again.ID, "splitting an instance already on its own keeps its group")
+	assert.Len(t, a.Groups(), 2)
 }
