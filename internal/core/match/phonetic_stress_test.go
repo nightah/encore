@@ -128,7 +128,7 @@ func TestPhoneticDistractors(t *testing.T) {
 			}
 		}
 
-		for _, retr := range []string{RetrieverBleve, RetrieverTrigram} {
+		for _, retr := range []string{RetrieverInverted, RetrieverTrigram} {
 			for _, enc := range evalEncoders {
 				if enc.name == "none" {
 					continue

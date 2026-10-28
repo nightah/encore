@@ -103,7 +103,7 @@ func TestFuzzyPortsMatchProduction(t *testing.T) {
 	}
 }
 
-// withPhonetic swaps a language's phonetic function until the test ends. The bleve filter and the trigram retriever read it when an index is built, so it must be set before New. Tests in this package do not run in parallel, so swapping the shared language is safe.
+// withPhonetic swaps a language's phonetic function until the test ends. The inverted index and the trigram retriever read it when an index is built, so it must be set before New. Tests in this package do not run in parallel, so swapping the shared language is safe.
 func withPhonetic(t testing.TB, code string, fn phoneticFunc) {
 	t.Helper()
 
@@ -215,7 +215,7 @@ func TestPhoneticEval(t *testing.T) {
 
 	var table strings.Builder
 
-	for _, retr := range []string{RetrieverBleve, RetrieverTrigram} {
+	for _, retr := range []string{RetrieverInverted, RetrieverTrigram} {
 		for _, code := range codes {
 			var base []evalOutcome
 
