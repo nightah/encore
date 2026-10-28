@@ -754,6 +754,26 @@ func TestKodiPasswordLifecycle(t *testing.T) {
 	require.ErrorIs(t, err, secrets.ErrNotFound)
 }
 
+func TestTestingAKodiInstanceWhosePasswordWasLost(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+	den := fakekodi.New(t, fakekodi.Options{Username: "kodi", Password: "s3cret"})
+
+	var inst Instance
+
+	c.json(http.MethodPost, "/api/v1/kodi/instances", map[string]string{"name": "Den", "url": den.URL(), "username": "kodi", "password": "s3cret"}, http.StatusCreated, &inst)
+
+	// The record still names its password, but the secret is gone, as a partial restore can leave it.
+	require.NoError(t, h.app.Secrets().Delete(t.Context(), "kodi/Den/password"))
+
+	p := c.do(http.MethodPost, fmt.Sprintf("/api/v1/kodi/instances/%d/test", inst.ID), nil).problem(t)
+	assert.Equal(t, http.StatusConflict, p.Status, "the instance exists, so it isn't reported as not found")
+	assert.Equal(t, "the saved password for this Kodi instance is missing; enter it again", p.Detail)
+
+	c.json(http.MethodGet, fmt.Sprintf("/api/v1/kodi/instances/%d", inst.ID), nil, http.StatusOK, &inst)
+	assert.Equal(t, "Den", inst.Name, "the instance is still there")
+}
+
 func TestDiscoverErrors(t *testing.T) {
 	h := newHarness(t, harnessOpts{noKodi: true, discover: func(context.Context) ([]kodi.Instance, error) {
 		return nil, errors.New("multicast is blocked")

@@ -597,7 +597,12 @@ func (a *API) testInstance(ctx context.Context, id int64) ([]Check, error) {
 
 	if rec.PasswordSecretRef != "" {
 		b, err := a.app.Secrets().Get(ctx, rec.PasswordSecretRef)
-		if err != nil {
+
+		switch {
+		case errors.Is(err, secrets.ErrNotFound):
+			// Not the instance's absence: a 404 would tell the web interface it was deleted.
+			return nil, huma.Error409Conflict("the saved password for this Kodi instance is missing; enter it again")
+		case err != nil:
 			return nil, err
 		}
 
