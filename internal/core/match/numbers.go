@@ -1,6 +1,7 @@
 package match
 
 import (
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -15,7 +16,7 @@ func (l *language) numbers(toks []string) []string {
 	for i := 0; i < len(toks); {
 		v, n, ordinal := l.parseNumber(toks, i)
 		if n == 0 {
-			out = append(out, toks[i])
+			out = append(out, l.ordinalDigits(toks[i]))
 			spoken = append(spoken, false)
 			i++
 
@@ -254,4 +255,18 @@ func (l *language) fusedPiece(s, rest string) (string, bool) {
 	}
 
 	return "", false
+}
+
+// ordinalDigits returns the digits of an ordinal written with them ("6th" -> "6", "5eme" -> "5"), or tok unchanged.
+func (l *language) ordinalDigits(tok string) string {
+	d := strings.IndexFunc(tok, func(r rune) bool { return r < '0' || r > '9' })
+	if d <= 0 {
+		return tok
+	}
+
+	if slices.Contains(l.ordSuffixes, tok[d:]) {
+		return tok[:d]
+	}
+
+	return tok
 }

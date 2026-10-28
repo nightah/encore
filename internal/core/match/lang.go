@@ -137,11 +137,12 @@ func merge(ms ...map[string]int) map[string]int {
 
 func english() *language {
 	return &language{
-		code:     "en",
-		half:     "and a half",
-		and:      "and",
-		articles: set("the", "a", "an"),
-		stop:     set("the", "a", "an", "of", "and", "in", "on", "to", "for", "at", "with"),
+		code:        "en",
+		half:        "and a half",
+		and:         "and",
+		articles:    set("the", "a", "an"),
+		stop:        set("the", "a", "an", "of", "and", "in", "on", "to", "for", "at", "with"),
+		ordSuffixes: []string{"st", "nd", "rd", "th"},
 		nums: numTable{
 			units: []string{
 				"zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
@@ -210,12 +211,13 @@ func german() *language {
 
 func french() *language {
 	return &language{
-		code:     "fr",
-		half:     "et demi",
-		and:      "et",
-		articles: set("le", "la", "les", "l", "un", "une"),
-		stop:     set("le", "la", "les", "l", "un", "une", "de", "des", "du", "d", "et", "en", "au", "aux"),
-		elide:    true,
+		code:        "fr",
+		half:        "et demi",
+		and:         "et",
+		articles:    set("le", "la", "les", "l", "un", "une"),
+		stop:        set("le", "la", "les", "l", "un", "une", "de", "des", "du", "d", "et", "en", "au", "aux"),
+		elide:       true,
+		ordSuffixes: []string{"e", "eme", "er", "re", "ere"},
 		nums: numTable{
 			units: []string{
 				"zero", "", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "",
@@ -251,11 +253,12 @@ func spanish() *language {
 	}, "os", "as")
 
 	return &language{
-		code:     "es",
-		half:     "y medio",
-		and:      "y",
-		articles: set("el", "la", "los", "las", "un", "una"),
-		stop:     set("el", "la", "los", "las", "un", "una", "de", "del", "y", "en", "al"),
+		code:        "es",
+		half:        "y medio",
+		and:         "y",
+		articles:    set("el", "la", "los", "las", "un", "una"),
+		stop:        set("el", "la", "los", "las", "un", "una", "de", "del", "y", "en", "al"),
+		ordSuffixes: []string{"o", "a", "er"},
 		nums: numTable{
 			units: []string{
 				"cero", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve", "diez",
@@ -306,12 +309,13 @@ func italian() *language {
 	}
 
 	return &language{
-		code:     "it",
-		half:     "e mezzo",
-		and:      "e",
-		articles: set("il", "lo", "la", "i", "gli", "le", "l", "un", "uno", "una"),
-		stop:     set("il", "lo", "la", "i", "gli", "le", "l", "un", "uno", "una", "di", "e", "del", "della", "in"),
-		elide:    true,
+		code:        "it",
+		half:        "e mezzo",
+		and:         "e",
+		articles:    set("il", "lo", "la", "i", "gli", "le", "l", "un", "uno", "una"),
+		stop:        set("il", "lo", "la", "i", "gli", "le", "l", "un", "uno", "una", "di", "e", "del", "della", "in"),
+		elide:       true,
+		ordSuffixes: []string{"o", "a"},
 		nums: numTable{
 			units: []string{
 				"zero", "", "due", "tre", "quattro", "cinque", "sei", "sette", "otto", "nove", "dieci",

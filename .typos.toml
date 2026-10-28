@@ -50,8 +50,9 @@ catalog = "catalog"
 locale = "en"
 
 [default.extend-words]
-# Language codes (ISO 639-2 fre), time zones (IST) and number words in the matcher's German, French, Spanish and Italian word lists.
+# Language codes (ISO 639-2 fre), time zones (IST), number words in the matcher's German, French, Spanish and Italian word lists and the ordinal suffixes it reads after digits (2nd).
 fre = "fre"
+nd = "nd"
 ist = "ist"
 ein = "ein"
 als = "als"

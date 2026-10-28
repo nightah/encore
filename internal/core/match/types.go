@@ -350,6 +350,8 @@ type language struct {
 	// elide splits on apostrophes ("l'amour" -> "l amour") instead of joining ("ocean's" -> "oceans").
 	elide bool
 	nums  map[string]numWord
+	// ordSuffixes are what follows the digits of an ordinal written with them ("6th", "5e", "2º" once folded to "2o").
+	ordSuffixes []string
 	// fused splits numbers written as one word ("millenovecentonovantadue") into the number words they are made of; elided maps a number word's shortened form inside such a word ("cent" in "centottanta") to its full form.
 	fused  bool
 	elided map[string]string
