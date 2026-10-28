@@ -9,7 +9,6 @@ const (
 
 // Retriever names for Config.Retriever.
 const (
-	RetrieverBleve    = "bleve"
 	RetrieverInverted = "inverted"
 	RetrieverTrigram  = "trigram"
 )
@@ -34,22 +33,11 @@ const (
 	compactRatio   = 4
 )
 
-// Index fields. Docs carry every alias form in each text field.
-const (
-	fieldNorm  = "title_norm"
-	fieldNgram = "title_ngram"
-	fieldPhon  = "title_phon"
-	fieldKind  = "kind"
-)
-
 // Query clause boosts: exact-ish words count most, sound-alikes next, shared trigrams least.
 const (
 	boostNorm  = 3
 	boostPhon  = 2
 	boostNgram = 1
-	batchSize  = 2000
-	// fuzzyPrefix pins the first letter of fuzzy words, which keeps term expansion cheap; first-letter errors are left to the phonetic clause.
-	fuzzyPrefix = 1
 	// ngramFallbackHits is how few word and phonetic hits trigger the trigram clause.
 	ngramFallbackHits = 10
 )

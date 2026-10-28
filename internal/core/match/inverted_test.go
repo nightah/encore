@@ -206,7 +206,7 @@ func refRanking(l *language, docs []refDoc, q *form, kinds []media.Kind, k int) 
 	return run(append(clauses, c))
 }
 
-// assertSameRanking checks that got, a top k, is a valid top k of want, a full ranking: the same scores rank by rank, up to a constant factor (bleve multiplies every score by a query norm), and every Doc in got has its score in want. Docs with equal scores may come in any order, and either side may break a tie at the cut-off differently.
+// assertSameRanking checks that got, a top k, is a valid top k of want, a full ranking: the same scores rank by rank, up to a constant factor, and every Doc in got has its score in want. Docs with equal scores may come in any order, and either side may break a tie at the cut-off differently.
 func assertSameRanking(t require.TestingT, want, got []scoredID, k int, msgAndArgs ...any) {
 	if h, ok := t.(interface{ Helper() }); ok {
 		h.Helper()
@@ -330,7 +330,7 @@ func genDiffKinds() *rapid.Generator[[]media.Kind] {
 			return nil
 		}
 
-		// Repeats are allowed: they weigh that kind more, in bleve as here.
+		// Repeats are allowed: they weigh that kind more.
 		return rapid.SliceOfN(rapid.SampledFrom(diffKinds), 1, 3).Draw(t, "kinds")
 	})
 }
@@ -502,7 +502,7 @@ func TestInvertedCompaction(t *testing.T) {
 	}
 }
 
-// TestInvertedKeepsUnsegmentedScripts covers titles in scripts written without spaces, which bleve's tokenizer split into single characters or dropped: the inverted index keeps each normalised word whole, so a near miss still retrieves them.
+// TestInvertedKeepsUnsegmentedScripts covers titles in scripts written without spaces, which segmenting words by Unicode rules, as bleve did, splits into single characters or drops: the inverted index keeps each normalised word whole, so a near miss still retrieves them.
 func TestInvertedKeepsUnsegmentedScripts(t *testing.T) {
 	docs := []Doc{
 		{ID: "spirited", Kind: media.KindMovie, Title: "千と千尋の神隠し"},

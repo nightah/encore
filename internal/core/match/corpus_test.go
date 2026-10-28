@@ -117,7 +117,7 @@ func describe(res Result) string {
 func TestASRCorpus(t *testing.T) {
 	c := loadCorpus(t)
 
-	for _, retr := range []string{RetrieverBleve, RetrieverInverted, RetrieverTrigram} {
+	for _, retr := range []string{RetrieverInverted, RetrieverTrigram} {
 		t.Run(retr, func(t *testing.T) {
 			// wrongPlays counts the costly failure: starting the wrong thing instead of asking.
 			total, correct, wrongPlays := 0, 0, 0

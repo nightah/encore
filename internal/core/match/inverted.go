@@ -262,7 +262,7 @@ func (r *invertedRetriever) compact() {
 	r.slots, r.freqs, r.buckets, r.dead = slots, freqs, buckets, 0
 }
 
-// candidates mirrors the query the bleve retriever ran: a disjunction of fuzzy words and exact phonetic keys, with a trigram clause added when that finds too little. Scores are TF-IDF with coordination factors, so the more clauses a Doc matches the better.
+// candidates runs a disjunction of fuzzy words and exact phonetic keys, with a trigram clause added when that finds too little; trigram postings are long, so they are only read when needed. Scores are TF-IDF with coordination factors, so the more clauses a Doc matches the better.
 func (r *invertedRetriever) candidates(ctx context.Context, q *form, kinds []media.Kind, k int) ([]string, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
@@ -377,7 +377,7 @@ func (r *invertedRetriever) trigramClause(q *form) queryClause {
 	return c
 }
 
-// run scores every slot matching at least one clause. A clause scores the sum of its matching terms times the share of its terms that matched; the query scores the sum of its clauses times the share of clauses that matched. A kind filter adds a kind's IDF, so rarer kinds rank a little higher, as in bleve.
+// run scores every slot matching at least one clause. A clause scores the sum of its matching terms times the share of its terms that matched; the query scores the sum of its clauses times the share of clauses that matched. A kind filter adds the kind's IDF, so rarer kinds rank a little higher.
 func (r *invertedRetriever) run(clauses []queryClause, kinds []media.Kind, k int) []slotHit {
 	acc := r.accumulator()
 	defer r.release(acc)
@@ -591,3 +591,15 @@ func (h topHits) sorted() []slotHit {
 }
 
 func (r *invertedRetriever) close() error { return nil }
+
+// fuzziness allows more edits in longer words; short words and numbers must match exactly.
+func fuzziness(t string) int {
+	switch n := utf8.RuneCountInString(t); {
+	case isDigits(t) || n <= 3:
+		return 0
+	case n <= 6:
+		return 1
+	default:
+		return 2
+	}
+}

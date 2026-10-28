@@ -27,11 +27,10 @@ import (
 //
 //	ENCORE_MATCH_SCALE=10000,100000,500000 go test ./internal/core/match -run TestRetrieverScale -v -timeout 1h
 //
-// ENCORE_MATCH_RETRIEVERS limits which retrievers run (comma-separated names from scaleRetrievers). Files built with the retrieverbench tag register experimental retrievers.
+// ENCORE_MATCH_RETRIEVERS limits which retrievers run (comma-separated names from scaleRetrievers).
 
 // scaleRetrievers builds each retriever the harness compares against exhaustive scoring.
 var scaleRetrievers = map[string]func(*language) (retriever, error){
-	RetrieverBleve:    func(l *language) (retriever, error) { return newBleveRetriever(l) },
 	RetrieverInverted: func(l *language) (retriever, error) { return newInvertedRetriever(l), nil },
 	RetrieverTrigram:  func(*language) (retriever, error) { return newTrigramRetriever(), nil },
 }

@@ -5,8 +5,6 @@ import (
 	"sync"
 	"unicode/utf8"
 
-	"github.com/blevesearch/bleve/v2"
-
 	"github.com/nightah/encore/internal/core/media"
 )
 
@@ -92,7 +90,7 @@ type Config struct {
 	// DerivedPenalty multiplies scores against shortened titles, such as "Dune" for "Dune: Part Two".
 	DerivedPenalty float64
 
-	// Retriever selects candidate retrieval: RetrieverInverted (default), RetrieverBleve, or RetrieverTrigram for tiny libraries.
+	// Retriever selects candidate retrieval: RetrieverInverted (default) or RetrieverTrigram for tiny libraries.
 	Retriever string
 }
 
@@ -126,15 +124,7 @@ type retriever interface {
 	close() error
 }
 
-// phoneticFilter replaces each token with its phonetic keys at the same position.
-type phoneticFilter struct{ fn phoneticFunc }
-
-type bleveRetriever struct {
-	lang *language
-	idx  bleve.Index
-}
-
-// invertedRetriever is an in-memory inverted index over words, phonetic keys and trigrams, scored like bleve's TF-IDF so it ranks candidates the same way. Replaced or deleted Docs are tombstoned and leave the document counts at once; their postings are dropped by compaction once they are a quarter of the slots.
+// invertedRetriever is an in-memory inverted index over words, phonetic keys and trigrams, ranked by TF-IDF with coordination factors. Replaced or deleted Docs are tombstoned and leave the document counts at once; their postings are dropped by compaction once they are a quarter of the slots.
 type invertedRetriever struct {
 	mu    sync.RWMutex
 	lang  *language

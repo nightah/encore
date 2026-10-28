@@ -30,7 +30,7 @@ func newIndex(t *testing.T, retr string, docs ...Doc) *Index {
 func retrievers(t *testing.T, fn func(t *testing.T, retr string)) {
 	t.Helper()
 
-	for _, r := range []string{RetrieverBleve, RetrieverInverted, RetrieverTrigram} {
+	for _, r := range []string{RetrieverInverted, RetrieverTrigram} {
 		t.Run(r, func(t *testing.T) { fn(t, r) })
 	}
 }
@@ -115,7 +115,7 @@ func TestSearchKindsAndLimit(t *testing.T) {
 	})
 }
 
-// TestDefaultRetrieverFindsUnsegmentedScripts searches titles in scripts written without spaces with a letter missing. bleve's tokenizer split them into single characters or dropped them, so only an exact title found them.
+// TestDefaultRetrieverFindsUnsegmentedScripts searches titles in scripts written without spaces with a letter missing. Segmenting them into words by Unicode rules, as bleve did, splits them into single characters or drops them, so only an exact title would find them.
 func TestDefaultRetrieverFindsUnsegmentedScripts(t *testing.T) {
 	ix, err := New("en", Config{})
 	require.NoError(t, err)
