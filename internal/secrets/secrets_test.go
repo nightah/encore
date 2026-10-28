@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -757,23 +756,22 @@ func TestPutDuringRotate(t *testing.T) {
 
 	<-entered
 
+	// The Put holds the lock a rotation takes for the whole of its write, so the rotation can't start until the row is written.
+	if s.writeMu.TryLock() {
+		s.writeMu.Unlock()
+		close(release)
+		t.Fatal("a rotation could start while a Put was between sealing and writing")
+	}
+
 	next := testKey(t)
 	nextID := KeyID(next)
 	rotated := make(chan error, 1)
 
 	go func() { rotated <- s.Rotate(ctx, next) }()
 
-	// Rotate must wait for the in-flight Put. If it finishes first the bug is shown; otherwise give it a moment to start before letting the Put go.
-	select {
-	case err := <-rotated:
-		require.NoError(t, err)
-		close(release)
-		require.NoError(t, <-putDone)
-	case <-time.After(200 * time.Millisecond):
-		close(release)
-		require.NoError(t, <-putDone)
-		require.NoError(t, <-rotated)
-	}
+	close(release)
+	require.NoError(t, <-putDone)
+	require.NoError(t, <-rotated)
 
 	repo.beforePut = nil
 
