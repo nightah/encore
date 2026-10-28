@@ -266,3 +266,25 @@ func TestRetrieversAgree(t *testing.T) {
 		}
 	}
 }
+
+// TestDefaultPoolFindsSplitTitlesAtScale searches a 100k-Doc scale library for "mo ana". "mo" and "ana" are common enough there that a pool of 200 left Moana out and asked about a song instead; exhaustive scoring plays it.
+func TestDefaultPoolFindsSplitTitlesAtScale(t *testing.T) {
+	if testing.Short() {
+		t.Skip("builds a 100k-Doc library")
+	}
+
+	suite := englishSuite(t)
+
+	ix, err := New("en", Config{})
+	require.NoError(t, err)
+
+	t.Cleanup(func() { assert.NoError(t, ix.Close()) })
+	require.NoError(t, ix.Upsert(scaleDocs(100_000, suite.docs(), 1)...))
+
+	res, err := ix.Search(t.Context(), Query{Text: "mo ana"})
+	require.NoError(t, err)
+
+	best, _ := res.Best()
+	assert.Equal(t, DecisionPlay, res.Decision, describe(res))
+	assert.Equal(t, "moana", best.Doc.ID)
+}

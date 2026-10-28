@@ -8,7 +8,7 @@ func DefaultConfig() Config {
 		PlayMargin:      0.10,
 		TieMargin:       0.02,
 		AskScore:        0.60,
-		CandidatePool:   200,
+		CandidatePool:   800,
 		Limit:           10,
 		MaxBoost:        0.05,
 		CoveragePenalty: 0.5,
