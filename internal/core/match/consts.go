@@ -1,5 +1,7 @@
 package match
 
+import "math"
+
 // Decisions.
 const (
 	DecisionNotFound Decision = iota
@@ -31,6 +33,15 @@ const (
 	// Tombstoned slots are compacted once there are at least compactMinDead of them and they are 1/compactRatio of all slots.
 	compactMinDead = 1024
 	compactRatio   = 4
+	// writeChunk is how many Docs a write changes per hold of the write lock.
+	writeChunk = 256
+	// compactChunk is how many slots or terms a compaction reads per hold of the read lock.
+	compactChunk = 4096
+	// A compaction catches up with concurrent writes without the write lock for up to catchUpRounds rounds, until a round has at most catchUpOps writes to replay; the rest are replayed under the write lock.
+	catchUpRounds = 8
+	catchUpOps    = 64
+	// droppedSlot marks a slot a compaction leaves out.
+	droppedSlot = math.MaxUint32
 )
 
 // Query clause boosts: exact-ish words count most, sound-alikes next, shared trigrams least.

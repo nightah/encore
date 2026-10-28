@@ -446,6 +446,7 @@ func TestInvertedCompaction(t *testing.T) {
 
 		dead := inv.dead
 		require.NoError(t, inv.remove(gone))
+		inv.wg.Wait()
 
 		if inv.dead < dead+len(gone) {
 			compactions++
@@ -604,6 +605,7 @@ func TestInvertedConcurrentUse(t *testing.T) {
 
 		dead := inv.deadSlots()
 		require.NoError(t, ix.Delete(ids...))
+		inv.wg.Wait()
 
 		if inv.deadSlots() < dead+len(ids) {
 			compactions++

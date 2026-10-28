@@ -123,6 +123,93 @@ func BenchmarkSearch100k(b *testing.B) {
 	b.ReportMetric(pct(0.99), "p99-ms")
 }
 
+// BenchmarkInvertedCompact deletes a quarter of a scale library (ENCORE_MATCH_BENCH_SCALE, default 100000) and waits for the compaction that triggers, while a reader keeps retrieving candidates. pause-ms is the longest the reader waited for one retrieval meanwhile, read-ms its median retrieval on the idle index, and write-ms how long the delete took to return.
+func BenchmarkInvertedCompact(b *testing.B) {
+	suite := englishSuite(b)
+	l := languageFor("en")
+	qf := l.newForm(l.normalizeSpelled("starlight lover", false))
+
+	for _, n := range scaleSizes(b, "ENCORE_MATCH_BENCH_SCALE", []int{100_000}) {
+		docs := scaleDocs(n, suite.docs(), 1)
+
+		entries := make([]*entry, len(docs))
+		for i, d := range docs {
+			entries[i] = l.newEntry(d)
+		}
+
+		gone := make([]string, 0, n/4+1)
+		for i := 0; i < n; i += 4 {
+			gone = append(gone, docs[i].ID)
+		}
+
+		b.Run(fmt.Sprintf("n=%d", n), func(b *testing.B) {
+			var pauses, idle, writes []time.Duration
+
+			for b.Loop() {
+				b.StopTimer()
+
+				inv := newInvertedRetriever(l)
+				require.NoError(b, inv.upsert(entries))
+				runtime.GC()
+
+				for range 20 {
+					t := time.Now()
+					_, err := inv.candidates(b.Context(), &qf, nil, 200)
+					require.NoError(b, err)
+
+					idle = append(idle, time.Since(t))
+				}
+
+				stop := make(chan struct{})
+				worst := make(chan time.Duration)
+
+				go func() {
+					var w time.Duration
+
+					for {
+						select {
+						case <-stop:
+							worst <- w
+
+							return
+						default:
+						}
+
+						t := time.Now()
+						if _, err := inv.candidates(b.Context(), &qf, nil, 200); err != nil {
+							b.Error(err)
+						}
+
+						w = max(w, time.Since(t))
+					}
+				}()
+
+				b.StartTimer()
+
+				t := time.Now()
+
+				require.NoError(b, inv.remove(gone))
+
+				writes = append(writes, time.Since(t))
+
+				inv.wg.Wait()
+
+				b.StopTimer()
+				close(stop)
+
+				pauses = append(pauses, <-worst)
+
+				require.Less(b, inv.deadSlots(), len(gone), "no compaction ran")
+				b.StartTimer()
+			}
+
+			b.ReportMetric(float64(percentile(pauses, 0.5).Microseconds())/1000, "pause-ms")
+			b.ReportMetric(float64(percentile(idle, 0.5).Microseconds())/1000, "read-ms")
+			b.ReportMetric(float64(percentile(writes, 0.5).Microseconds())/1000, "write-ms")
+		})
+	}
+}
+
 // BenchmarkScore measures scoring alone: misspelled queries against 1000 synthetic entries, without retrieval.
 func BenchmarkScore(b *testing.B) {
 	ix, err := New("en", Config{})

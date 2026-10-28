@@ -124,22 +124,56 @@ type retriever interface {
 	close() error
 }
 
-// invertedRetriever is an in-memory inverted index over words, phonetic keys and trigrams, ranked by TF-IDF with coordination factors. Replaced or deleted Docs are tombstoned and leave the document counts at once; their postings are dropped by compaction once they are a quarter of the slots.
+// invertedRetriever is an in-memory inverted index over words, phonetic keys and trigrams, ranked by TF-IDF with coordination factors. Replaced or deleted Docs are tombstoned and leave the document counts at once; once they are a quarter of the slots, a compaction in the background rebuilds the postings without them.
 type invertedRetriever struct {
-	mu    sync.RWMutex
-	lang  *language
+	mu   sync.RWMutex
+	lang *language
+	postingSet
+	// live counts live slots; kinds counts live slots per kind.
+	live  int
+	kinds map[media.Kind]int
+	// compacting is the compaction under way, if any.
+	compacting *compaction
+	// maxSlots is slotLimit, lowered in tests.
+	maxSlots int
+	// background runs compactions, tracked by wg; tests replace it to run them when they choose.
+	background func(func())
+	wg         sync.WaitGroup
+	pool       sync.Pool
+}
+
+// postingSet is the part of the inverted index that compaction rebuilds.
+type postingSet struct {
 	slots []invertedSlot
 	byID  map[string]uint32
-	// live counts live slots, dead tombstoned ones; kinds counts live slots per kind.
-	live, dead int
-	kinds      map[media.Kind]int
-	fields     [termFields]postingField
+	// dead counts tombstoned slots.
+	dead   int
+	fields [termFields]postingField
 	// buckets groups word term IDs by first rune and length in runes, for fuzzy expansion.
 	buckets map[wordBucket][]uint32
 	// freqs holds term frequencies of tfOverflow and above, which do not fit in a posting.
 	freqs map[freqKey]uint32
-	pool  sync.Pool
 }
+
+// compaction is a postingSet being rebuilt without tombstones while the index stays in use. Kills made meanwhile are logged in it, and it replays them and the slots added since it began before it is swapped in.
+type compaction struct {
+	// base is how many slots there were when it began.
+	base uint32
+	set  postingSet
+	// remap maps the index's slots to set's, droppedSlot for those left out.
+	remap []uint32
+	// killed logs the index's slots killed since it began, appended under the index's write lock; replayed is how many of them it has applied.
+	killed   []uint32
+	replayed int
+	// done is closed once it is swapped in.
+	done chan struct{}
+}
+
+// termSet is an entry's terms per field.
+type termSet [termFields][]string
+
+// termCache holds the terms of entries a write is about to replace or delete.
+type termCache map[*entry]*termSet
 
 type invertedSlot struct {
 	entry *entry

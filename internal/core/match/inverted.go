@@ -11,22 +11,32 @@ import (
 
 func newInvertedRetriever(l *language) *invertedRetriever {
 	r := &invertedRetriever{
-		lang:    l,
-		byID:    make(map[string]uint32),
-		kinds:   make(map[media.Kind]int),
-		buckets: make(map[wordBucket][]uint32),
-		freqs:   make(map[freqKey]uint32),
+		lang:       l,
+		postingSet: newPostingSet(),
+		kinds:      make(map[media.Kind]int),
+		maxSlots:   slotLimit,
 	}
-
-	for i := range r.fields {
-		r.fields[i].ids = make(map[string]uint32)
-	}
+	r.background = r.wg.Go
 
 	return r
 }
 
+func newPostingSet() postingSet {
+	p := postingSet{
+		byID:    make(map[string]uint32),
+		buckets: make(map[wordBucket][]uint32),
+		freqs:   make(map[freqKey]uint32),
+	}
+
+	for i := range p.fields {
+		p.fields[i].ids = make(map[string]uint32)
+	}
+
+	return p
+}
+
 // docTerms lists an entry's terms per field, repeated as often as they occur: the distinct words of every alias, the phonetic keys of each word and of each alias with spaces removed, and the trigrams of those compact aliases.
-func (l *language) docTerms(e *entry) (terms [termFields][]string) {
+func (l *language) docTerms(e *entry) (terms termSet) {
 	var compacts []string
 
 	for i := range e.aliases {
@@ -75,49 +85,112 @@ func lengthNorm(n int) float32 {
 	return float32(1 / math.Sqrt(float64(n)))
 }
 
+// upsert writes entries writeChunk at a time, working out their terms before taking the write lock, so searches wait for no more than one chunk's postings to change.
 func (r *invertedRetriever) upsert(entries []*entry) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	for _, e := range entries {
-		if old, ok := r.byID[e.doc.ID]; ok {
-			r.kill(old)
+	for chunk := range slices.Chunk(entries, writeChunk) {
+		if err := r.upsertChunk(chunk); err != nil {
+			return err
 		}
-
-		if len(r.slots) >= slotLimit {
-			r.compact()
-		}
-
-		slot := uint32(len(r.slots)) //nolint:gosec // compact keeps the slot count below slotLimit.
-		r.byID[e.doc.ID] = slot
-
-		terms := r.lang.docTerms(e)
-
-		var norms [termFields]float32
-
-		for f := range termFields {
-			norms[f] = lengthNorm(len(terms[f]))
-
-			for _, t := range terms[f] {
-				r.addPosting(f, t, slot)
-			}
-		}
-
-		r.slots = append(r.slots, invertedSlot{entry: e, alive: true, norms: norms})
-		r.kinds[e.doc.Kind]++
-		r.live++
-	}
-
-	if r.dead >= compactMinDead && r.dead*compactRatio >= len(r.slots) {
-		r.compact()
 	}
 
 	return nil
 }
 
+func (r *invertedRetriever) upsertChunk(entries []*entry) error {
+	terms := make([]termSet, len(entries))
+	ids := make([]string, len(entries))
+
+	for i, e := range entries {
+		terms[i] = r.lang.docTerms(e)
+		ids[i] = e.doc.ID
+	}
+
+	old := r.currentTerms(ids)
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	for i, e := range entries {
+		if s, ok := r.byID[e.doc.ID]; ok {
+			r.kill(s, old.of(r.lang, r.slots[s].entry))
+		}
+
+		for len(r.slots) >= r.maxSlots {
+			if r.dead == 0 {
+				return errIndexFull
+			}
+
+			r.waitCompaction()
+		}
+
+		r.add(e, &terms[i])
+		r.kinds[e.doc.Kind]++
+		r.live++
+	}
+
+	r.maybeCompact()
+
+	return nil
+}
+
+// currentTerms returns the terms of the Docs that ids name now, which a write about to replace or delete them needs, working them out under the read lock only.
+func (r *invertedRetriever) currentTerms(ids []string) termCache {
+	r.mu.RLock()
+
+	var entries []*entry
+
+	for _, id := range ids {
+		if s, ok := r.byID[id]; ok {
+			entries = append(entries, r.slots[s].entry)
+		}
+	}
+
+	r.mu.RUnlock()
+
+	c := make(termCache, len(entries))
+
+	for _, e := range entries {
+		t := r.lang.docTerms(e)
+		c[e] = &t
+	}
+
+	return c
+}
+
+// of returns e's terms, working them out if a write raced currentTerms.
+func (c termCache) of(l *language, e *entry) *termSet {
+	if t, ok := c[e]; ok {
+		return t
+	}
+
+	t := l.docTerms(e)
+
+	return &t
+}
+
+// add indexes e, whose terms are given, in a new slot.
+func (p *postingSet) add(e *entry, terms *termSet) uint32 {
+	slot := uint32(len(p.slots)) //nolint:gosec // upsert keeps the slot count below slotLimit.
+	p.byID[e.doc.ID] = slot
+
+	var norms [termFields]float32
+
+	for f := range termFields {
+		norms[f] = lengthNorm(len(terms[f]))
+
+		for _, t := range terms[f] {
+			p.addPosting(f, t, slot)
+		}
+	}
+
+	p.slots = append(p.slots, invertedSlot{entry: e, alive: true, norms: norms})
+
+	return slot
+}
+
 // addPosting counts one occurrence of term in slot, which is the newest slot, so its posting, if any, is the last one.
-func (r *invertedRetriever) addPosting(f termField, term string, slot uint32) {
-	pf := &r.fields[f]
+func (p *postingSet) addPosting(f termField, term string, slot uint32) {
+	pf := &p.fields[f]
 
 	id, ok := pf.ids[term]
 	if !ok {
@@ -129,26 +202,26 @@ func (r *invertedRetriever) addPosting(f termField, term string, slot uint32) {
 
 		if f == termWords {
 			b := wordBucketOf(term)
-			r.buckets[b] = append(r.buckets[b], id)
+			p.buckets[b] = append(p.buckets[b], id)
 		}
 	}
 
-	p := pf.post[id]
-	if n := len(p); n == 0 || p[n-1]&slotMask != slot {
-		pf.post[id] = append(p, slot|1<<slotBits)
+	post := pf.post[id]
+	if n := len(post); n == 0 || post[n-1]&slotMask != slot {
+		pf.post[id] = append(post, slot|1<<slotBits)
 		pf.live[id]++
 
 		return
 	}
 
-	switch tf := p[len(p)-1] >> slotBits; {
+	switch tf := post[len(post)-1] >> slotBits; {
 	case tf < tfOverflow-1:
-		p[len(p)-1] += 1 << slotBits
+		post[len(post)-1] += 1 << slotBits
 	case tf == tfOverflow-1:
-		p[len(p)-1] += 1 << slotBits
-		r.freqs[freqKey{f, id, slot}] = tfOverflow
+		post[len(post)-1] += 1 << slotBits
+		p.freqs[freqKey{f, id, slot}] = tfOverflow
 	default:
-		r.freqs[freqKey{f, id, slot}]++
+		p.freqs[freqKey{f, id, slot}]++
 	}
 }
 
@@ -158,39 +231,55 @@ func wordBucketOf(w string) wordBucket {
 	return wordBucket{first: c, runes: utf8.RuneCountInString(w)}
 }
 
+// remove deletes ids writeChunk at a time, like upsert.
 func (r *invertedRetriever) remove(ids []string) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	for _, id := range ids {
-		if s, ok := r.byID[id]; ok {
-			r.kill(s)
-			delete(r.byID, id)
-		}
-	}
-
-	if r.dead >= compactMinDead && r.dead*compactRatio >= len(r.slots) {
-		r.compact()
+	for chunk := range slices.Chunk(ids, writeChunk) {
+		r.removeChunk(chunk)
 	}
 
 	return nil
 }
 
-// kill tombstones a slot and takes it out of the document counts, so scores are as if it had never been indexed. Its postings stay until compact. Callers hold mu.
-func (r *invertedRetriever) kill(s uint32) {
-	slot := &r.slots[s]
-	slot.alive = false
-	r.dead++
-	r.live--
-	r.kinds[slot.entry.doc.Kind]--
+func (r *invertedRetriever) removeChunk(ids []string) {
+	old := r.currentTerms(ids)
 
-	if r.kinds[slot.entry.doc.Kind] == 0 {
-		delete(r.kinds, slot.entry.doc.Kind)
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	for _, id := range ids {
+		if s, ok := r.byID[id]; ok {
+			r.kill(s, old.of(r.lang, r.slots[s].entry))
+			delete(r.byID, id)
+		}
 	}
 
-	terms := r.lang.docTerms(slot.entry)
+	r.maybeCompact()
+}
+
+// kill tombstones a slot, whose entry has terms, and takes it out of the document counts, so scores are as if it had never been indexed. Its postings stay until a compaction drops them. Callers hold mu.
+func (r *invertedRetriever) kill(s uint32, terms *termSet) {
+	kind := r.slots[s].entry.doc.Kind
+
+	r.tombstone(s, terms)
+	r.live--
+	r.kinds[kind]--
+
+	if r.kinds[kind] == 0 {
+		delete(r.kinds, kind)
+	}
+
+	if r.compacting != nil {
+		r.compacting.killed = append(r.compacting.killed, s)
+	}
+}
+
+// tombstone marks slot s, whose entry has terms, dead and takes it out of its terms' live counts.
+func (p *postingSet) tombstone(s uint32, terms *termSet) {
+	p.slots[s].alive = false
+	p.dead++
+
 	for f := range termFields {
-		pf := &r.fields[f]
+		pf := &p.fields[f]
 
 		for i, t := range terms[f] {
 			if !slices.Contains(terms[f][:i], t) {
@@ -200,66 +289,193 @@ func (r *invertedRetriever) kill(s uint32) {
 	}
 }
 
-// compact drops tombstoned slots from the postings and terms no live Doc has from the vocabulary. Callers hold mu.
-func (r *invertedRetriever) compact() {
-	remap := make([]uint32, len(r.slots))
-	slots := make([]invertedSlot, 0, r.live)
+// maybeCompact starts a compaction once tombstones are a quarter of the slots, unless one is running. Callers hold mu.
+func (r *invertedRetriever) maybeCompact() {
+	if r.compacting == nil && r.dead >= compactMinDead && r.dead*compactRatio >= len(r.slots) {
+		r.startCompaction()
+	}
+}
 
-	for i, s := range r.slots {
-		if !s.alive {
-			remap[i] = math.MaxUint32
+// startCompaction compacts in the background. Callers hold mu.
+func (r *invertedRetriever) startCompaction() *compaction {
+	c := r.beginCompaction()
+	r.background(func() { r.compactInto(c) })
 
-			continue
-		}
+	return c
+}
 
-		remap[i] = uint32(len(slots)) //nolint:gosec // bounded by len(r.slots).
-		r.byID[s.entry.doc.ID] = remap[i]
-		slots = append(slots, s)
+// waitCompaction waits for a compaction, starting one if none is running. Callers hold mu, which is released while waiting.
+func (r *invertedRetriever) waitCompaction() {
+	c := r.compacting
+	if c == nil {
+		c = r.startCompaction()
 	}
 
-	freqs := make(map[freqKey]uint32)
-	buckets := make(map[wordBucket][]uint32)
+	r.mu.Unlock()
+	<-c.done
+	r.mu.Lock()
+}
+
+// beginCompaction starts logging kills for a compaction of the slots there are now. Callers hold mu.
+func (r *invertedRetriever) beginCompaction() *compaction {
+	c := &compaction{base: uint32(len(r.slots)), set: newPostingSet(), done: make(chan struct{})} //nolint:gosec // bounded by slotLimit.
+	r.compacting = c
+
+	return c
+}
+
+// compactInto builds postings without tombstones while searches and writes go on, taking the read lock a chunk at a time, catches up with the writes made meanwhile, and swaps the result in under a short write lock.
+func (r *invertedRetriever) compactInto(c *compaction) {
+	r.collectSlots(c)
 
 	for f := range termFields {
-		old := r.fields[f]
-		pf := postingField{ids: make(map[string]uint32)}
+		r.collectPostings(c, f)
+	}
 
-		for id, term := range old.terms {
-			if old.live[id] == 0 {
+	for range catchUpRounds {
+		if r.catchUp(c) <= catchUpOps {
+			break
+		}
+	}
+
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	r.swap(c)
+}
+
+// collectSlots keeps the slots that were there when c began and are live when read, numbering them anew.
+func (r *invertedRetriever) collectSlots(c *compaction) {
+	for start := uint32(0); start < c.base; start += compactChunk {
+		r.mu.RLock()
+
+		for s := start; s < min(start+compactChunk, c.base); s++ {
+			slot := r.slots[s]
+			if !slot.alive {
+				c.remap = append(c.remap, droppedSlot)
+
 				continue
 			}
 
-			nid := uint32(len(pf.terms)) //nolint:gosec // bounded by len(old.terms).
-			post := make([]uint32, 0, old.live[id])
+			ns := uint32(len(c.set.slots)) //nolint:gosec // bounded by c.base.
+			c.remap = append(c.remap, ns)
+			c.set.byID[slot.entry.doc.ID] = ns
+			c.set.slots = append(c.set.slots, slot)
+		}
 
-			for _, p := range old.post[id] {
-				s := remap[p&slotMask]
-				if s == math.MaxUint32 {
+		r.mu.RUnlock()
+	}
+}
+
+// collectPostings copies one field's postings of the slots collectSlots kept, dropping terms none of them has. Postings of later slots are left to catchUp: they come last, as postings are in slot order.
+func (r *invertedRetriever) collectPostings(c *compaction, f termField) {
+	dst := &c.set.fields[f]
+
+	for start, done := 0, false; !done; start += compactChunk {
+		r.mu.RLock()
+
+		src := &r.fields[f]
+		end := min(start+compactChunk, len(src.terms))
+		done = end == len(src.terms)
+
+		for id := start; id < end; id++ {
+			nid := uint32(len(dst.terms)) //nolint:gosec // bounded by len(src.terms).
+			post := make([]uint32, 0, max(src.live[id], 0))
+
+			for _, p := range src.post[id] {
+				old := p & slotMask
+				if old >= c.base {
+					break
+				}
+
+				s := c.remap[old]
+				if s == droppedSlot {
 					continue
 				}
 
 				if p>>slotBits == tfOverflow {
-					freqs[freqKey{f, nid, s}] = r.freqs[freqKey{f, uint32(id), p & slotMask}]
+					c.set.freqs[freqKey{f, nid, s}] = r.freqs[freqKey{f, uint32(id), old}]
 				}
 
 				post = append(post, s|p&^slotMask)
 			}
 
-			pf.ids[term] = nid
-			pf.terms = append(pf.terms, term)
-			pf.post = append(pf.post, post)
-			pf.live = append(pf.live, old.live[id])
+			if len(post) == 0 {
+				continue
+			}
+
+			term := src.terms[id]
+			dst.ids[term] = nid
+			dst.terms = append(dst.terms, term)
+			dst.post = append(dst.post, post)
+			dst.live = append(dst.live, int32(len(post))) //nolint:gosec // bounded by slotLimit.
 
 			if f == termWords {
 				b := wordBucketOf(term)
-				buckets[b] = append(buckets[b], nid)
+				c.set.buckets[b] = append(c.set.buckets[b], nid)
 			}
 		}
 
-		r.fields[f] = pf
+		r.mu.RUnlock()
+	}
+}
+
+// catchUp replays the writes made since c last caught up, under the read lock only, and returns how many there were.
+func (r *invertedRetriever) catchUp(c *compaction) int {
+	r.mu.RLock()
+	added, killed := r.pending(c)
+	r.mu.RUnlock()
+
+	c.apply(r.lang, added, killed)
+
+	return len(added) + len(killed)
+}
+
+// swap replays the last writes and makes c the index. Callers hold mu.
+func (r *invertedRetriever) swap(c *compaction) {
+	added, killed := r.pending(c)
+	c.apply(r.lang, added, killed)
+
+	r.postingSet = c.set
+	r.compacting = nil
+	close(c.done)
+
+	r.maybeCompact()
+}
+
+// pending returns the writes c has yet to replay: the entries of slots added since it last caught up, and the slots killed. Callers hold mu for reading.
+func (r *invertedRetriever) pending(c *compaction) (added []*entry, killed []uint32) {
+	for s := len(c.remap); s < len(r.slots); s++ {
+		added = append(added, r.slots[s].entry)
 	}
 
-	r.slots, r.freqs, r.buckets, r.dead = slots, freqs, buckets, 0
+	killed = slices.Clone(c.killed[c.replayed:])
+	c.replayed = len(c.killed)
+
+	return added, killed
+}
+
+// apply replays writes on c: slots added, which were live when written, then slots killed, which may include some of those.
+func (c *compaction) apply(l *language, added []*entry, killed []uint32) {
+	for _, e := range added {
+		t := l.docTerms(e)
+		c.remap = append(c.remap, c.set.add(e, &t))
+	}
+
+	for _, s := range killed {
+		ns := c.remap[s]
+		if ns == droppedSlot {
+			continue
+		}
+
+		e := c.set.slots[ns].entry
+		t := l.docTerms(e)
+		c.set.tombstone(ns, &t)
+
+		if c.set.byID[e.doc.ID] == ns {
+			delete(c.set.byID, e.doc.ID)
+		}
+	}
 }
 
 // candidates runs a disjunction of fuzzy words and exact phonetic keys, with a trigram clause added when that finds too little; trigram postings are long, so they are only read when needed. Scores are TF-IDF with coordination factors, so the more clauses a Doc matches the better.
@@ -590,7 +806,12 @@ func (h topHits) sorted() []slotHit {
 	return out
 }
 
-func (r *invertedRetriever) close() error { return nil }
+// close waits for a running compaction.
+func (r *invertedRetriever) close() error {
+	r.wg.Wait()
+
+	return nil
+}
 
 // fuzziness allows more edits in longer words; short words and numbers must match exactly.
 func fuzziness(t string) int {
