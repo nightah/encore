@@ -47,6 +47,7 @@ func New(t testing.TB, opts Options) *Server {
 		calls:       map[string]int{},
 		failLocales: map[string]string{},
 		unreported:  map[string]bool{},
+		unimported:  map[string]bool{},
 		uploads:     map[string][]byte{},
 		skills:      map[string]*Skill{},
 		imports:     map[string]*importJob{},
@@ -85,6 +86,14 @@ func (s *Server) UnreportLocale(locale string) {
 	defer s.mu.Unlock()
 
 	s.unreported[locale] = true
+}
+
+// UnimportLocale leaves locale's model out of an import's resources unless it fails, as ImportWithoutModels does for every locale.
+func (s *Server) UnimportLocale(locale string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.unimported[locale] = true
 }
 
 func (s *Server) localeKey(locale string) string {

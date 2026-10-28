@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"net/http/httputil"
 	"net/url"
+	"slices"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -369,6 +370,24 @@ func TestDeployTrustsTheImportsBuild(t *testing.T) {
 	assert.Equal(t, smapi.StatusSucceeded, res.Locales["en-GB"].Status)
 	assert.Equal(t, smapi.StatusSucceeded, res.Locales["en-US"].Status)
 	assert.Contains(t, h.timeline(), "build:done")
+}
+
+// The import reports one locale built and leaves the other to the skill status, which in turn doesn't list the one already built. Each answer is taken from where it was given.
+func TestDeployCombinesTheImportAndTheSkillStatus(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+	h.fake.UnimportLocale("en-US")
+	h.fake.UnreportLocale("en-GB")
+
+	res, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
+	require.NoError(t, err)
+	assert.Equal(t, smapi.StatusSucceeded, res.Locales["en-GB"].Status, "built, as the import said, though the skill status never mentions it")
+	assert.Equal(t, smapi.StatusSucceeded, res.Locales["en-US"].Status, "built, as the skill status said")
+	assert.Contains(t, h.timeline(), "build:done")
+
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	assert.True(t, slices.ContainsFunc(h.events, func(ev deploy.Event) bool { return ev.Step == deploy.StepBuild && ev.State == deploy.StateRunning }), "en-US's build was polled for")
 }
 
 // The live API: redeploying an unchanged model reports it SKIPPED in the import, and the unfiltered skill status lists no models. The deploy must still succeed.
