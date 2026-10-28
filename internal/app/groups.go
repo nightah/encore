@@ -346,7 +346,7 @@ func (a *App) plan(ctx context.Context) error {
 	}
 
 	if err := a.rebuildGroups(ctx); err != nil {
-		return err
+		return fmt.Errorf("rebuilding library groups: %w", err)
 	}
 
 	for _, id := range deleted {
