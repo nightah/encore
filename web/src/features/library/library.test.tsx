@@ -132,6 +132,39 @@ describe("Library page", () => {
     expect(within(tiles).queryByText("Loading…")).not.toBeInTheDocument();
   });
 
+  it("syncs a library without a source from its first member, and skips one with neither", async () => {
+    const user = userEvent.setup();
+    const log = recordRequests();
+    const [shared, solo] = getDb().libraries;
+    if (!shared || !solo) throw new Error("the sample has two libraries");
+    getDb().libraries = [
+      { ...shared, members: [{ instance_id: 2, name: "Bedroom" }], source_instance_id: 0 },
+      { ...solo, id: 5, members: [], name: "Empty", source_instance_id: 0 },
+    ];
+    renderApp("/library");
+    await user.click(await screen.findByRole("button", { name: "Sync all now" }));
+    expect(await screen.findByText("Library sync started. Counts update when it finishes.")).toBeInTheDocument();
+    const syncs = log.filter((r) => r.method === "POST" && r.path.endsWith("/sync")).map((r) => r.path);
+    expect(syncs).toEqual(["/kodi/instances/2/sync"]);
+  });
+
+  it("opens on the larger library when none is shared, without a picker for just one", async () => {
+    const [, solo] = getDb().libraries;
+    if (!solo) throw new Error("the sample has two libraries");
+    getDb().libraries = [
+      { ...solo, counts: { movies: 10, shows: 2, songs: 0 }, id: 7, name: "Small" },
+      { ...solo, counts: { movies: 900, shows: 40, songs: 0 }, id: 8, name: "Large" },
+    ];
+    const { unmount } = renderApp("/library");
+    expect(await screen.findByRole("combobox", { name: "Library" })).toHaveValue("8");
+    unmount();
+
+    getDb().libraries = [{ ...solo, id: 7, name: "Small" }];
+    renderApp("/library");
+    expect(await screen.findByRole("region", { name: "Library summary" })).toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: "Library" })).not.toBeInTheDocument();
+  });
+
   it("points to adding a Kodi instance when there is no library", async () => {
     getDb().libraries = [];
     renderApp("/library");
