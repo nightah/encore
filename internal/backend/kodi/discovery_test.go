@@ -10,7 +10,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/miekg/dns"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/ipv4"
@@ -38,7 +37,7 @@ func (p packetBrowser) Browse(_ context.Context, services []string, _ time.Durat
 }
 
 // repeatedAnswers are two Kodi instances' answers as a MikroTik mDNS repeater passed them on: one packet per Kodi, answering both service types, with the host's addresses between the two services' records. Only the IPv6 prefix differs from the capture.
-func repeatedAnswers(t *testing.T) [][]byte {
+func repeatedAnswers(t testing.TB) [][]byte {
 	t.Helper()
 
 	f, err := os.Open("testdata/mdns/repeated-answers.hex")
@@ -59,25 +58,6 @@ func repeatedAnswers(t *testing.T) [][]byte {
 	require.NoError(t, sc.Err())
 
 	return out
-}
-
-func pack(t *testing.T, response bool, rrs ...string) []byte {
-	t.Helper()
-
-	msg := new(dns.Msg)
-	msg.Response = response
-
-	for _, s := range rrs {
-		rr, err := dns.NewRR(s)
-		require.NoError(t, err)
-
-		msg.Answer = append(msg.Answer, rr)
-	}
-
-	b, err := msg.Pack()
-	require.NoError(t, err)
-
-	return b
 }
 
 func TestDiscoverMergesServices(t *testing.T) {
@@ -137,51 +117,55 @@ func TestDiscoverRepeatedAnswers(t *testing.T) {
 
 func TestMDNSAnswersAcrossPackets(t *testing.T) {
 	answers := newMDNSAnswers()
+	services := []string{ServiceJSONRPC}
 
-	answers.add(pack(t, true,
-		`_xbmc-jsonrpc._tcp.local. 4500 IN PTR Kodi\ \(den\)._xbmc-jsonrpc._tcp.local.`,
-		`Kodi\ \(den\)._xbmc-jsonrpc._tcp.local. 120 IN SRV 0 0 9090 Den.local.`,
-	))
+	answers.add(newPacket(flagResponse).
+		answer("_xbmc-jsonrpc._tcp.local.", typePTR, 4500, ptrData("Kodi (den)._xbmc-jsonrpc._tcp.local.")).
+		answer("Kodi (den)._xbmc-jsonrpc._tcp.local.", typeSRV, 120, srvData(9090, "Den.local.")).
+		bytes())
 
-	got := answers.entries([]string{ServiceJSONRPC})
+	got := answers.entries(services)
 	require.Len(t, got, 1)
 	assert.Empty(t, got[0].Addrs, "the address hasn't arrived yet")
 
-	q := answers.query([]string{ServiceJSONRPC})
-	assert.Equal(t, []dns.Question{
-		{Name: "_xbmc-jsonrpc._tcp.local.", Qtype: dns.TypePTR, Qclass: dns.ClassINET},
-		{Name: "den.local.", Qtype: dns.TypeA, Qclass: dns.ClassINET},
-		{Name: "den.local.", Qtype: dns.TypeAAAA, Qclass: dns.ClassINET},
-	}, q.Question, "asks again for the missing address")
+	q, err := answers.query(services)
+	require.NoError(t, err)
+	assert.Equal(t, expectedQuery(t, services, "den.local."), q, "asks again for the missing address")
 
-	answers.add(pack(t, true, `den.local. 120 IN A 192.168.1.30`))
+	answers.add(newPacket(flagResponse).answer("den.local.", typeA, 120, ipData("192.168.1.30")).bytes())
 
-	got = answers.entries([]string{ServiceJSONRPC})
+	got = answers.entries(services)
 	assert.Equal(t, []ServiceEntry{{Service: ServiceJSONRPC, Instance: "Kodi (den)", Host: "Den.local.", Addrs: []net.IP{net.ParseIP("192.168.1.30").To4()}, Port: 9090}}, got)
-	assert.Len(t, answers.query([]string{ServiceJSONRPC}).Question, 1)
+
+	q, err = answers.query(services)
+	require.NoError(t, err)
+	assert.Equal(t, expectedQuery(t, services), q)
 }
 
 func TestMDNSAnswersIgnoresQueriesAndGoodbyes(t *testing.T) {
 	answers := newMDNSAnswers()
 
 	// Another host's query carrying a known answer is not an answer.
-	answers.add(pack(t, false, `Kodi._xbmc-jsonrpc._tcp.local. 120 IN SRV 0 0 9090 kodi.local.`))
+	answers.add(newPacket(0).answer("Kodi._xbmc-jsonrpc._tcp.local.", typeSRV, 120, srvData(9090, "kodi.local.")).bytes())
 	assert.Empty(t, answers.entries([]string{ServiceJSONRPC}))
 
-	answers.add(pack(t, true,
-		`_xbmc-jsonrpc._tcp.local. 4500 IN PTR Kodi._xbmc-jsonrpc._tcp.local.`,
-		`_xbmc-jsonrpc._tcp.local. 4500 IN PTR Gone._xbmc-jsonrpc._tcp.local.`,
-		`Gone._xbmc-jsonrpc._tcp.local. 120 IN SRV 0 0 9090 gone.local.`,
-		`_xbmc-jsonrpc._tcp.local. 0 IN PTR Gone._xbmc-jsonrpc._tcp.local.`,
-		`BRAVIA._googlecast._tcp.local. 120 IN SRV 0 0 8009 bravia.local.`,
-	))
+	answers.add(newPacket(flagResponse).
+		answer("_xbmc-jsonrpc._tcp.local.", typePTR, 4500, ptrData("Kodi._xbmc-jsonrpc._tcp.local.")).
+		answer("_xbmc-jsonrpc._tcp.local.", typePTR, 4500, ptrData("Gone._xbmc-jsonrpc._tcp.local.")).
+		answer("Gone._xbmc-jsonrpc._tcp.local.", typeSRV, 120, srvData(9090, "gone.local.")).
+		answer("_xbmc-jsonrpc._tcp.local.", typePTR, 0, ptrData("Gone._xbmc-jsonrpc._tcp.local.")).
+		answer("BRAVIA._googlecast._tcp.local.", typeSRV, 120, srvData(8009, "bravia.local.")).
+		bytes())
 	assert.Empty(t, answers.entries([]string{ServiceJSONRPC}), "Kodi has no SRV record yet and Gone said goodbye")
 
-	answers.add(pack(t, true, `kodi._XBMC-JSONRPC._tcp.local. 120 IN SRV 0 0 9090 kodi.local.`))
+	answers.add(newPacket(flagResponse).answer("kodi._XBMC-JSONRPC._tcp.local.", typeSRV, 120, srvData(9090, "kodi.local.")).bytes())
 	got := answers.entries([]string{ServiceJSONRPC})
 	require.Len(t, got, 1, "names match whatever their case")
 	assert.Equal(t, "kodi", got[0].Instance)
 	assert.Equal(t, 9090, got[0].Port)
+
+	answers.add(newPacket(flagResponse).answer("kodi._xbmc-jsonrpc._tcp.local.", typeSRV, 0, srvData(9090, "kodi.local.")).bytes())
+	assert.Empty(t, answers.entries([]string{ServiceJSONRPC}), "an SRV goodbye removes the instance")
 }
 
 func TestInstanceName(t *testing.T) {
@@ -235,8 +219,8 @@ func TestMDNSBrowserLoopback(t *testing.T) {
 				return
 			}
 
-			msg := new(dns.Msg)
-			if msg.Unpack(buf[:n]) != nil || msg.Response {
+			// Answer queries only: a header with QR clear.
+			if n < 12 || buf[2]&0x80 != 0 {
 				continue
 			}
 
