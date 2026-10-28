@@ -8,11 +8,12 @@ import { E2E_ECHO_ID, realServer } from "@e2e/real/env";
 /**
  * Starts a fake Kodi and a fresh Encore (empty data directory) for the real-server specs, and stops both afterwards.
  *
- * Encore is built first: the UI with `vite build` (into internal/server/dist, which the binary embeds), then the binary with `go build` into the run's temporary directory, so the specs always test the current code. Set `E2E_ENCORE_BIN` to use a binary you've already built instead, relative to the repository root (CI does, from its build step). The fake Kodi is built with `go build` too. The one-time setup token is read from Encore's log and handed to the specs as `E2E_SETUP_TOKEN`; it is never printed.
+ * Encore is built first: the UI with `vite build` (into internal/server/dist, which the binary embeds), then the binary with `go build` into the run's temporary directory, so the specs always test the current code. Set `E2E_ENCORE_BIN` to use a binary you've already built instead, relative to the repository root (CI does, from its build step). The fake Kodi is built with `go build` too, unless `E2E_FAKEKODI_BIN` names one, also relative to the repository root. The one-time setup token is read from Encore's log and handed to the specs as `E2E_SETUP_TOKEN`; it is never printed.
  */
 export default async function globalSetup() {
   const repo = resolve(import.meta.dirname, "../../..");
   const prebuilt = process.env.E2E_ENCORE_BIN;
+  const prebuiltKodi = process.env.E2E_FAKEKODI_BIN;
   const dataDir = await mkdtemp(join(tmpdir(), "encore-e2e-"));
   // One unlinked Echo, so the devices page has something to link (no Alexa request can reach a test server).
   await writeFile(join(dataDir, "encore.yml"), `devices:\n  - id: ${E2E_ECHO_ID}\n    name: ""\n`);
@@ -38,11 +39,17 @@ export default async function globalSetup() {
       });
     }
 
-    const fakeKodi = join(dataDir, "fakekodi");
-    execFileSync("go", ["build", "-o", fakeKodi, "./internal/backend/kodi/fakekodi/cmd/fakekodi"], {
-      cwd: repo,
-      stdio: "inherit",
-    });
+    let fakeKodi: string;
+
+    if (prebuiltKodi) {
+      fakeKodi = resolve(repo, prebuiltKodi);
+    } else {
+      fakeKodi = join(dataDir, "fakekodi");
+      execFileSync("go", ["build", "-o", fakeKodi, "./internal/backend/kodi/fakekodi/cmd/fakekodi"], {
+        cwd: repo,
+        stdio: "inherit",
+      });
+    }
     const kodi = spawn(fakeKodi, ["-addr", realServer.kodiAddr], {
       stdio: ["ignore", "inherit", "inherit"],
     });

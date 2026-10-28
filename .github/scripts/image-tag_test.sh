@@ -16,7 +16,6 @@ expect() {
 
 expect fix/abc fix-abc
 expect feat/kodi/queue feat-kodi-queue
-expect renovate/github.com-coder-websocket-1.x renovate-github.com-coder-websocket-1.x
 expect i18n i18n
 expect "docs/what's new" docs-what-s-new
 expect fix//double fix-double
@@ -37,6 +36,10 @@ expect PR12 "<none>"
 expect sha256-abc.sig "<none>"
 expect / "<none>"
 expect "" "<none>"
+
+# Renovate's branches get no image.
+expect renovate/github.com-coder-websocket-1.x "<none>"
+expect renovate-ish renovate-ish
 
 # Near misses are still branches.
 expect PR-notes PR-notes

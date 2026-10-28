@@ -1,6 +1,6 @@
 name: Clean up images
 
-# Deletes a test image from ghcr.io/nightah/encore once it's no longer needed: a branch's when the branch is deleted (including when its pull request merges), a fork's PR<number> when its pull request closes. Only a version whose one tag is that tag is deleted, so release images and anything else sharing the version are left alone.
+# Deletes a test image from ghcr.io/nightah/encore once it's no longer needed: a branch's when the branch is deleted (including when its pull request merges), a fork's PR<number> when its pull request closes. Only a version whose one tag is that tag is deleted, so release images and anything else sharing the version are left alone; its platform manifests, which the registry keeps as untagged versions of their own, go with it.
 on:
   delete:
   pull_request_target: # zizmor: ignore[dangerous-triggers] only the base branch is checked out, and nothing from the pull request runs
@@ -42,6 +42,23 @@ jobs:
           fi
           echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
 
+      # Read before the manifest list is deleted, when it can still be looked up by tag.
+      - name: Find the platform manifests
+        id: manifests
+        if: steps.tag.outputs.tag != ''
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY,,}:${TAG}"
+          if skopeo inspect --raw --creds "${GITHUB_ACTOR}:${GH_TOKEN}" "docker://${image}" > "${RUNNER_TEMP}/manifest.json" 2> /dev/null; then
+            {
+              echo "sha256:$(sha256sum < "${RUNNER_TEMP}/manifest.json" | cut -d' ' -f1)"
+              jq -r '.manifests[]?.digest' "${RUNNER_TEMP}/manifest.json"
+            } > "${RUNNER_TEMP}/digests.txt"
+            echo "digests=${RUNNER_TEMP}/digests.txt" >> "${GITHUB_OUTPUT}"
+          fi
+
       - name: Delete
         if: steps.tag.outputs.tag != ''
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -70,3 +87,11 @@ jobs:
               await github.rest.packages.deletePackageVersionForUser({ ...pkg, package_version_id: version.id });
               core.info(`Deleted ${process.env.TAG} (version ${version.id})`);
             }
+
+      # Once the manifest list is gone; left alone if it's still there because another tag shares it.
+      - name: Delete the platform manifests
+        if: steps.manifests.outputs.digests != ''
+        env:
+          DIGESTS: ${{ steps.manifests.outputs.digests }}
+          GH_TOKEN: ${{ github.token }}
+        run: .github/scripts/image-delete-untagged.sh "${GITHUB_REPOSITORY_OWNER}" "${GITHUB_REPOSITORY#*/}" < "${DIGESTS}"

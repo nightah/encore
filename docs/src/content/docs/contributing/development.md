@@ -91,12 +91,13 @@ With `ENCORE_CONTRACT_KODI_LIBRARY` also set, the voice tests in `internal/app` 
 
 Every branch pushed to the repository, and every pull request from a fork, gets a container image to try the change in, for the same platforms as releases:
 
-- A branch is published as `ghcr.io/nightah/encore:<branch>`, with each run of characters a tag can't hold turned into `-`, so `fix/abc` becomes `fix-abc` (`.github/scripts/image-tag.sh`). A branch whose name could take over a release or pull request tag, such as `1.2` or `latest`, gets no image.
+- The main branch is published as `ghcr.io/nightah/encore:main`, with `main-<commit>` as its version.
+- A branch is published as `ghcr.io/nightah/encore:<branch>`, with each run of characters a tag can't hold turned into `-`, so `fix/abc` becomes `fix-abc` (`.github/scripts/image-tag.sh`). A branch whose name could take over a release or pull request tag, such as `1.2` or `latest`, gets no image, and neither do Renovate's `renovate/…` branches.
 - A pull request from a fork is published as `ghcr.io/nightah/encore:PR<number>` once a maintainer approves the `pr-images` environment for its run.
 
-The pull request gets a comment with the `docker pull` command, updated on every push. Branches that only change `docs/` aren't built. A branch's image is deleted with the branch, and a fork's when its pull request closes.
+The pull request gets a comment with the `docker pull` command, updated on every push. A branch or pull request that only changes `docs/` gets no image, since it would be main's. A branch's image is deleted with the branch, and a fork's when its pull request closes. An image a tag moves off is deleted when the new one is published, and a run whose commit has since been superseded publishes nothing.
 
-The build (`.github/workflows/images.yml`) has no write access, so it can run a fork's code; publishing (`images-publish.yml`) runs from the default branch and only copies the built image to the registry.
+CI builds the image (the Image job in `.github/workflows/ci-jobs.yml`) from the same binaries it tested, with no write access, so it can run a fork's code; publishing (`images-publish.yml`) runs from the default branch and only copies the built image to the registry.
 
 ## Releasing
 
