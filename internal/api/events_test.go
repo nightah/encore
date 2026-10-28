@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	"github.com/stretchr/testify/assert"
@@ -330,30 +331,38 @@ func TestStreamEndsWhenAWriteFails(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			a := streamAPI(tc.heartbeat)
-			a.events.publish("request", 1)
-			a.events.publish("request", 2)
+			synctest.Test(t, func(t *testing.T) {
+				a := streamAPI(tc.heartbeat)
+				a.events.publish("request", 1)
+				a.events.publish("request", 2)
 
-			w := &failingWriter{ResponseRecorder: httptest.NewRecorder(), limit: tc.limit}
-			done := make(chan struct{})
+				w := &failingWriter{ResponseRecorder: httptest.NewRecorder(), limit: tc.limit}
+				done := make(chan struct{})
 
-			go func() {
-				defer close(done)
-				a.stream(t.Context(), w, tc.lastID)
-			}()
+				go func() {
+					defer close(done)
+					a.stream(t.Context(), w, tc.lastID)
+				}()
 
-			if tc.live {
-				require.Eventually(t, func() bool { return a.events.clientCount() == 1 }, 5*time.Second, time.Millisecond)
-				a.events.publish("request", 3)
-			}
+				synctest.Wait()
 
-			select {
-			case <-done:
-			case <-time.After(10 * time.Second):
-				t.Fatal("the stream kept running after a write failed")
-			}
+				if tc.live {
+					require.Equal(t, 1, a.events.clientCount())
+					a.events.publish("request", 3)
+				}
 
-			assert.Zero(t, a.events.clientCount(), "and unsubscribed")
+				// The heartbeat is the only write that needs time to pass.
+				time.Sleep(tc.heartbeat)
+				synctest.Wait()
+
+				select {
+				case <-done:
+				default:
+					t.Fatal("the stream kept running after a write failed")
+				}
+
+				assert.Zero(t, a.events.clientCount(), "and unsubscribed")
+			})
 		})
 	}
 }
@@ -361,42 +370,35 @@ func TestStreamEndsWhenAWriteFails(t *testing.T) {
 func TestStreamWritesBacklogAndEvents(t *testing.T) {
 	t.Parallel()
 
-	a := streamAPI(time.Hour)
-	a.events.publish("request", map[string]string{"heard": "dune"})
-	a.events.publish("request", map[string]string{"heard": "arrival"})
+	synctest.Test(t, func(t *testing.T) {
+		a := streamAPI(time.Hour)
+		a.events.publish("request", map[string]string{"heard": "dune"})
+		a.events.publish("request", map[string]string{"heard": "arrival"})
 
-	ctx, cancel := context.WithCancel(t.Context())
-	w := httptest.NewRecorder()
-	done := make(chan struct{})
+		ctx, cancel := context.WithCancel(t.Context())
+		w := httptest.NewRecorder()
+		done := make(chan struct{})
 
-	go func() {
-		defer close(done)
-		a.stream(ctx, w, "1")
-	}()
+		go func() {
+			defer close(done)
+			a.stream(ctx, w, "1")
+		}()
 
-	require.Eventually(t, func() bool { return a.events.clientCount() == 1 }, 5*time.Second, time.Millisecond)
-	a.events.publish("deploy", map[string]string{"step": "package"})
+		synctest.Wait()
+		require.Equal(t, 1, a.events.clientCount())
+		a.events.publish("deploy", map[string]string{"step": "package"})
+		synctest.Wait()
 
-	require.Eventually(t, func() bool {
-		a.events.mu.Lock()
-		defer a.events.mu.Unlock()
+		cancel()
+		<-done
 
-		for c := range a.events.clients {
-			return len(c.ch) == 0
-		}
-
-		return false
-	}, 5*time.Second, time.Millisecond)
-
-	cancel()
-	<-done
-
-	assert.Equal(t, "retry: 3000\n\n"+
-		"id: 2\nevent: request\ndata: {\"heard\":\"arrival\"}\n\n"+
-		"id: 3\nevent: deploy\ndata: {\"step\":\"package\"}\n\n", w.Body.String())
-	assert.Equal(t, "text/event-stream", w.Header().Get("Content-Type"))
-	assert.Equal(t, "no-store", w.Header().Get("Cache-Control"))
-	assert.Zero(t, a.events.clientCount())
+		assert.Equal(t, "retry: 3000\n\n"+
+			"id: 2\nevent: request\ndata: {\"heard\":\"arrival\"}\n\n"+
+			"id: 3\nevent: deploy\ndata: {\"step\":\"package\"}\n\n", w.Body.String())
+		assert.Equal(t, "text/event-stream", w.Header().Get("Content-Type"))
+		assert.Equal(t, "no-store", w.Header().Get("Cache-Control"))
+		assert.Zero(t, a.events.clientCount())
+	})
 }
 
 func TestStreamIgnoresAMalformedLastEventID(t *testing.T) {
@@ -417,29 +419,34 @@ func TestStreamIgnoresAMalformedLastEventID(t *testing.T) {
 func TestStreamEndsWhenTheClientIsDropped(t *testing.T) {
 	t.Parallel()
 
-	a := streamAPI(time.Hour)
-	done := make(chan struct{})
+	synctest.Test(t, func(t *testing.T) {
+		a := streamAPI(time.Hour)
+		done := make(chan struct{})
 
-	go func() {
-		defer close(done)
-		a.stream(t.Context(), httptest.NewRecorder(), "")
-	}()
+		go func() {
+			defer close(done)
+			a.stream(t.Context(), httptest.NewRecorder(), "")
+		}()
 
-	require.Eventually(t, func() bool { return a.events.clientCount() == 1 }, 5*time.Second, time.Millisecond)
+		synctest.Wait()
+		require.Equal(t, 1, a.events.clientCount())
 
-	// A client too slow for clientBuffer events is dropped by the hub.
-	a.events.mu.Lock()
-	for c := range a.events.clients {
-		delete(a.events.clients, c)
-		close(c.dropped)
-	}
-	a.events.mu.Unlock()
+		// A client too slow for clientBuffer events is dropped by the hub.
+		a.events.mu.Lock()
+		for c := range a.events.clients {
+			delete(a.events.clients, c)
+			close(c.dropped)
+		}
+		a.events.mu.Unlock()
 
-	select {
-	case <-done:
-	case <-time.After(10 * time.Second):
-		t.Fatal("a dropped client's stream kept running")
-	}
+		synctest.Wait()
+
+		select {
+		case <-done:
+		default:
+			t.Fatal("a dropped client's stream kept running")
+		}
+	})
 }
 
 func TestEventsNeedASignIn(t *testing.T) {
