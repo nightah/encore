@@ -12,7 +12,7 @@ ARG GO_VERSION=1.27
 ARG PNPM_VERSION=12.15.0
 
 # ---- web: build the SPA once, on the build host's architecture ----
-FROM --platform=$BUILDPLATFORM node:${NODE_VERSION}-bookworm-slim AS web
+FROM --platform=$BUILDPLATFORM node:${NODE_VERSION}-trixie-slim AS web
 ARG PNPM_VERSION
 # corepack is not shipped in the Node 24+ images; install pnpm explicitly.
 RUN npm install -g pnpm@${PNPM_VERSION}
@@ -33,7 +33,7 @@ ARG version=dev
 ARG commit=""
 ARG build_date=""
 WORKDIR /src
-# No separate `go mod download`: it would also fetch tool dependencies (air) that the build never uses; go build fetches only what Encore needs into the same cache.
+# No separate `go mod download` layer: the module cache mount below already keeps modules between builds, so that layer would cache nothing, and go mod download also fetches modules ./cmd/encore never builds (test-only ones such as testify and rapid, and ones behind other platforms or cgo). go build fetches only what this target needs.
 COPY . .
 COPY --from=web /src/internal/server/dist/ ./internal/server/dist/
 RUN --mount=type=cache,target=/go/pkg/mod \
