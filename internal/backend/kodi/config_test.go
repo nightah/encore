@@ -21,6 +21,18 @@ func TestConfigFromURLsRejects(t *testing.T) {
 	}
 }
 
+func TestConfigFromURLsDoesNotLeakPasswords(t *testing.T) {
+	for name, urls := range map[string][2]string{
+		"HTTP URL":      {"http://kodi:hunter2@media.lan:port/", ""},            // trufflehog:ignore
+		"WebSocket URL": {"http://media.lan/", "ws://kodi:hunter2@media.lan:%"}, // trufflehog:ignore
+	} {
+		_, err := ConfigFromURLs(urls[0], urls[1])
+
+		require.Error(t, err, name)
+		assert.NotContains(t, err.Error(), "hunter2", "%s: the error is logged, so it mustn't carry the password", name)
+	}
+}
+
 func TestConfigDefaults(t *testing.T) {
 	c := Config{Host: "media.lan"}.withDefaults()
 

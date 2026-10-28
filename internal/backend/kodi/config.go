@@ -1,6 +1,7 @@
 package kodi
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"net/url"
@@ -9,7 +10,7 @@ import (
 
 // ConfigFromURLs builds a Config from an HTTP JSON-RPC URL such as http://kodi:8080/jsonrpc and an optional WebSocket URL; credentials in the HTTP URL's userinfo are used for basic auth.
 func ConfigFromURLs(httpURL, wsURL string) (Config, error) {
-	u, err := url.Parse(httpURL)
+	u, err := parseURL(httpURL)
 	if err != nil {
 		return Config{}, fmt.Errorf("parsing Kodi URL: %w", err)
 	}
@@ -29,7 +30,7 @@ func ConfigFromURLs(httpURL, wsURL string) (Config, error) {
 		return cfg.withDefaults(), nil
 	}
 
-	w, err := url.Parse(wsURL)
+	w, err := parseURL(wsURL)
 	if err != nil {
 		return Config{}, fmt.Errorf("parsing Kodi WebSocket URL: %w", err)
 	}
@@ -39,6 +40,18 @@ func ConfigFromURLs(httpURL, wsURL string) (Config, error) {
 	}
 
 	return cfg.withDefaults(), nil
+}
+
+// parseURL is url.Parse with errors that leave out the URL, which may hold a password.
+func parseURL(raw string) (*url.URL, error) {
+	u, err := url.Parse(raw)
+
+	var urlErr *url.Error
+	if errors.As(err, &urlErr) {
+		return nil, urlErr.Err
+	}
+
+	return u, err
 }
 
 func portOf(u *url.URL, fallback int) (int, error) {
