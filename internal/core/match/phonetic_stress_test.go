@@ -19,35 +19,17 @@ import (
 	"github.com/nightah/encore/internal/core/media"
 )
 
-// vocabulary is every distinct normalised word of at least three letters in Encore's own translations for a language (i18n/lang and the web UI locales): real words of the language that nobody chose to suit an encoder.
+// vocabulary is the words a language's synthetic titles are made of: every distinct normalised word of at least three letters in Encore's own translations (i18n/lang and the web UI locales), real words of the language that nobody chose to suit an encoder. They were frozen into testdata/distractors on 29 October 2026, so a translation update never moves what TestPhoneticDistractors measures.
 func vocabulary(t *testing.T, l *language) []string {
 	t.Helper()
 
-	var paths []string
+	raw, err := os.ReadFile(filepath.Join("testdata", "distractors", l.code+".txt"))
+	require.NoError(t, err)
 
-	for _, pattern := range []string{"../../../i18n/lang/" + l.code + "/*.yaml", "../../../web/src/i18n/locales/" + l.code + "/*.json"} {
-		m, err := filepath.Glob(pattern)
-		require.NoError(t, err)
+	words := strings.Fields(string(raw))
+	require.NotEmpty(t, words, "no vocabulary for %s", l.code)
 
-		paths = append(paths, m...)
-	}
-
-	require.NotEmpty(t, paths, "no translations for %s", l.code)
-
-	seen := map[string]bool{}
-
-	for _, p := range paths {
-		raw, err := os.ReadFile(p)
-		require.NoError(t, err)
-
-		for _, tok := range l.normalize(string(raw), false) {
-			if len(tok) >= 3 && !strings.ContainsAny(tok, "0123456789") {
-				seen[tok] = true
-			}
-		}
-	}
-
-	return slices.Sorted(maps.Keys(seen))
+	return words
 }
 
 // collisions counts the pairs of distinct words that share a phonetic key, the over-merging that can make different titles sound alike.
