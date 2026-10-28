@@ -65,6 +65,9 @@ const (
 	DefaultResendInterval = 5 * time.Second
 )
 
+// probeRequest asks for Kodi's version; ProbeVersion matches the reply by its id.
+const probeRequest = `{"jsonrpc":"2.0","id":1,"method":"Application.GetProperties","params":{"properties":["version"]}}`
+
 // Library pages of a thousand items with a dozen fields stay well below this per-message cap.
 const wsReadLimit = 64 << 20
 
