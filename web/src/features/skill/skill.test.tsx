@@ -1,8 +1,10 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { HttpResponse, http } from "msw";
 import { describe, expect, it, vi } from "vitest";
 
+import { keys } from "@api/keys";
 import { DEPLOY_STEPS } from "@features/skill/timeline";
 import { getDb } from "@mocks/handlers";
 import { server } from "@mocks/node";
@@ -106,6 +108,40 @@ describe("Alexa skill page", () => {
 
     await waitFor(() => expect(log.some((r) => r.method === "GET" && r.path === "/skill/deploy/d-running")).toBe(true));
     expect(await screen.findByRole("button", { name: /Deploying/ })).toBeDisabled();
+  });
+
+  it("keeps a streamed step that arrives while the deploy is still loading", async () => {
+    const db = getDb();
+    if (db.skill.last_deploy) db.skill.last_deploy = { ...db.skill.last_deploy, id: "d-running", state: "in_progress" };
+    db.deploys["d-running"] = { error: "", events: [], id: "d-running", state: "in_progress" };
+    let answer: (() => void) | undefined;
+    server.use(
+      http.get(
+        "*/api/v1/skill/deploy/d-running",
+        () =>
+          new Promise<Response>((resolve) => {
+            // The server's answer from before the step happened.
+            answer = () => resolve(HttpResponse.json({ error: "", events: [], id: "d-running", state: "in_progress" }));
+          }),
+        { once: true },
+      ),
+    );
+    const { queryClient } = renderApp("/alexa-skill");
+    await waitFor(() => expect(answer).toBeDefined());
+
+    FakeEventSource.emit("deploy", {
+      at: new Date().toISOString(),
+      deploy_id: "d-running",
+      message: "Amazon rejected the interaction model.",
+      state: "failed",
+      step: "build",
+    });
+    expect(await screen.findByText("Deploy failed: Amazon rejected the interaction model.")).toBeInTheDocument();
+
+    answer?.();
+    await waitFor(() => expect(queryClient.isFetching({ queryKey: keys.deploy("d-running") })).toBe(0));
+    expect(screen.getByText("Deploy failed: Amazon rejected the interaction model.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Redeploy" })).toBeEnabled();
   });
 
   it("redeploys and follows progress from the event stream", async () => {
