@@ -103,6 +103,10 @@ func TestBackupRejectsBadArguments(t *testing.T) {
 	_, err = blobstore.Backup(ctx, db, s, "../escape", 3)
 	require.ErrorIs(t, err, blobstore.ErrInvalidKey)
 
+	_, err = blobstore.Backup(ctx, fileDB{dir: t.TempDir(), err: assert.AnError}, s, "../escape", 3)
+	require.ErrorIs(t, err, blobstore.ErrInvalidKey)
+	require.NotErrorIs(t, err, assert.AnError, "a bad prefix is refused before the database is copied")
+
 	key, err := blobstore.Backup(ctx, db, s, "", 3)
 	require.NoError(t, err)
 	assert.True(t, strings.HasPrefix(key, "encore-"), "an empty prefix writes at the root")

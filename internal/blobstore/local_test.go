@@ -152,6 +152,26 @@ func TestLocalDeleteLeavesDirectories(t *testing.T) {
 	assert.Equal(t, "dir/file", objs[0].Key)
 }
 
+func TestLocalListSortsByKeyNotByDirectory(t *testing.T) {
+	s, err := blobstore.NewLocal(filepath.Join(t.TempDir(), "blobs"))
+	require.NoError(t, err)
+
+	ctx := t.Context()
+	for _, k := range []string{"a/b", "a-c", "a.d/e"} {
+		require.NoError(t, s.Put(ctx, k, strings.NewReader("x"), 1))
+	}
+
+	objs, err := s.List(ctx, "a")
+	require.NoError(t, err)
+
+	keys := make([]string, 0, len(objs))
+	for _, o := range objs {
+		keys = append(keys, o.Key)
+	}
+
+	assert.Equal(t, []string{"a-c", "a.d/e", "a/b"}, keys, "'-' and '.' sort before '/', unlike a directory walk")
+}
+
 func TestLocalListSkipsInternalFiles(t *testing.T) {
 	dir := filepath.Join(t.TempDir(), "blobs")
 	s, err := blobstore.NewLocal(dir)
