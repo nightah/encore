@@ -16,7 +16,7 @@ func (a *App) ApplyConfiguredRoomsAndDevices(ctx context.Context) error {
 
 	instances, err := a.db.KodiInstances().List(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("listing kodi instances: %w", err)
 	}
 
 	instanceID := map[string]int64{}
@@ -32,7 +32,7 @@ func (a *App) ApplyConfiguredRoomsAndDevices(ctx context.Context) error {
 	for _, d := range a.cfg.Devices {
 		dev, err := a.db.EchoDevices().Declare(ctx, d.ID)
 		if err != nil {
-			return err
+			return fmt.Errorf("device %q: %w", d.ID, err)
 		}
 
 		dev.DisplayName, dev.KodiInstanceID, dev.RoomID = d.Name, instanceID[d.Kodi], roomID[d.Room]
@@ -48,7 +48,7 @@ func (a *App) ApplyConfiguredRoomsAndDevices(ctx context.Context) error {
 func (a *App) applyConfiguredRooms(ctx context.Context, instanceID map[string]int64) (map[string]int64, error) {
 	existing, err := a.db.Rooms().List(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("listing rooms: %w", err)
 	}
 
 	byName := map[string]store.Room{}
