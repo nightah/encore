@@ -863,3 +863,94 @@ func TestStoredFormatIsStable(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "hunter2", string(got))
 }
+
+func TestRotateRefusesAShortKeyBeforeStagingIt(t *testing.T) {
+	dir := t.TempDir()
+	db := openDB(t, dir)
+	ctx := t.Context()
+
+	s, err := Open(ctx, db.SecretRows(), Options{DataDir: dir})
+	require.NoError(t, err)
+	require.NoError(t, s.Put(ctx, "a", []byte("alpha")))
+
+	before := s.KeyID()
+
+	require.EqualError(t, s.Rotate(ctx, make([]byte, KeySize-1)), "key must be 32 bytes")
+	assert.NoFileExists(t, filepath.Join(dir, KeyFileName+".new"), "nothing is staged for the next start to pick up")
+	assert.Equal(t, before, s.KeyID())
+
+	got, err := s.Get(ctx, "a")
+	require.NoError(t, err)
+	assert.Equal(t, "alpha", string(got))
+}
+
+func TestOpenReportsAnInterruptedRotationItCannotComplete(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("root ignores directory permissions")
+	}
+
+	dir := t.TempDir()
+	db := openDB(t, filepath.Join(dir, "db"))
+	keyDir := filepath.Join(dir, "keys")
+	keyFile := filepath.Join(keyDir, KeyFileName)
+	ctx := t.Context()
+
+	s, err := Open(ctx, db.SecretRows(), Options{DataDir: keyDir})
+	require.NoError(t, err)
+	require.NoError(t, s.Put(ctx, "a", []byte("alpha")))
+
+	// The database committed the rotation, but the new key never replaced the old file.
+	old, err := os.ReadFile(keyFile)
+	require.NoError(t, err)
+
+	next := testKey(t)
+	require.NoError(t, s.Rotate(ctx, bytes.Clone(next)))
+	require.NoError(t, os.WriteFile(keyFile, old, 0o600))
+	require.NoError(t, writeKeyFile(keyFile+".new", next))
+
+	require.NoError(t, os.Chmod(keyDir, 0o500))
+	t.Cleanup(func() { _ = os.Chmod(keyDir, 0o700) })
+
+	_, err = Open(ctx, db.SecretRows(), Options{DataDir: keyDir})
+	require.ErrorContains(t, err, "completing key rotation: rename ")
+	assert.FileExists(t, keyFile+".new", "the staged key is kept for the next try")
+
+	require.NoError(t, os.Chmod(keyDir, 0o700))
+
+	s2, err := Open(ctx, db.SecretRows(), Options{DataDir: keyDir})
+	require.NoError(t, err)
+	assert.Equal(t, KeyID(next), s2.KeyID())
+
+	got, err := s2.Get(ctx, "a")
+	require.NoError(t, err)
+	assert.Equal(t, "alpha", string(got))
+}
+
+func TestOpenCompletesAStagedKeyThatIsAlreadyCurrent(t *testing.T) {
+	dir := t.TempDir()
+	db := openDB(t, dir)
+	keyFile := filepath.Join(dir, KeyFileName)
+	ctx := t.Context()
+
+	s, err := Open(ctx, db.SecretRows(), Options{DataDir: dir})
+	require.NoError(t, err)
+	require.NoError(t, s.Put(ctx, "a", []byte("alpha")))
+
+	// A copy of the current key left as if it were being rotated to, such as by an operator restoring files by hand.
+	current, err := os.ReadFile(keyFile)
+	require.NoError(t, err)
+	require.NoError(t, os.WriteFile(keyFile+".new", current, 0o600))
+
+	s2, err := Open(ctx, db.SecretRows(), Options{DataDir: dir})
+	require.NoError(t, err)
+	assert.Equal(t, s.KeyID(), s2.KeyID())
+	assert.NoFileExists(t, keyFile+".new")
+
+	after, err := os.ReadFile(keyFile)
+	require.NoError(t, err)
+	assert.Equal(t, current, after)
+
+	got, err := s2.Get(ctx, "a")
+	require.NoError(t, err)
+	assert.Equal(t, "alpha", string(got))
+}
