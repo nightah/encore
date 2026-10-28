@@ -41,14 +41,55 @@ func newSPAHandler(fsys fs.FS, log *slog.Logger) (*spaHandler, error) {
 func withBaseHref(index []byte, href string) []byte {
 	tag := []byte(`<base href="` + html.EscapeString(href) + `">`)
 
-	i := bytes.Index(bytes.ToLower(index), []byte("<head>"))
+	i := headEnd(index)
 	if i < 0 {
 		return index
 	}
 
-	i += len("<head>")
-
 	return slices.Concat(index[:i], tag, index[i:])
+}
+
+// headEnd is the offset just past the <head> start tag, whatever its case and attributes, or -1 if there is none. Tags that only start with "head", like <header>, are passed over.
+func headEnd(index []byte) int {
+	// Lower only ASCII: bytes.ToLower can change a non-ASCII character's length, and the offsets must hold in index.
+	lower := bytes.Clone(index)
+	for i, c := range lower {
+		if 'A' <= c && c <= 'Z' {
+			lower[i] = c + 'a' - 'A'
+		}
+	}
+
+	for off := 0; ; {
+		i := bytes.Index(lower[off:], []byte("<head"))
+		if i < 0 {
+			return -1
+		}
+
+		off += i + len("<head")
+		if off < len(lower) && strings.IndexByte(tagNameEnd, lower[off]) >= 0 {
+			return tagEnd(lower, off)
+		}
+	}
+}
+
+// tagEnd is the offset just past the > that closes the tag whose attributes start at off, skipping any > inside quoted values, or -1 if the tag never closes.
+func tagEnd(b []byte, off int) int {
+	var quote byte
+
+	for i := off; i < len(b); i++ {
+		switch c := b[i]; {
+		case quote != 0:
+			if c == quote {
+				quote = 0
+			}
+		case c == '"' || c == '\'':
+			quote = c
+		case c == '>':
+			return i + 1
+		}
+	}
+
+	return -1
 }
 
 func (h *spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {

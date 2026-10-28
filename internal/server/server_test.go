@@ -358,7 +358,17 @@ func TestWithBaseHref(t *testing.T) {
 		{"upper case head", `<HTML><HEAD></HEAD></HTML>`, "/", `<HTML><HEAD><base href="/"></HEAD></HTML>`},
 		{"escaped", `<head></head>`, `/a"b<c>/`, `<head><base href="/a&#34;b&lt;c&gt;/"></head>`},
 		{"no head", `<html><body></body></html>`, "/encore/", `<html><body></body></html>`},
-		{"head with attributes isn't matched", `<head lang="en"></head>`, "/", `<head lang="en"></head>`},
+		{"head with an attribute", `<head lang="en"></head>`, "/", `<head lang="en"><base href="/"></head>`},
+		{"head with a bare attribute", `<head data-x></head>`, "/", `<head data-x><base href="/"></head>`},
+		{"upper case head with attributes", `<HEAD LANG="en" data-x></HEAD>`, "/", `<HEAD LANG="en" data-x><base href="/"></HEAD>`},
+		{"head with a > in an attribute", `<head data-x="a>b" data-y='c>d'></head>`, "/", `<head data-x="a>b" data-y='c>d'><base href="/"></head>`},
+		{"head with a newline before the attributes", "<head\n\tlang=\"en\">", "/", "<head\n\tlang=\"en\"><base href=\"/\">"},
+		{"self-closing head", `<head/><title>x</title>`, "/", `<head/><base href="/"><title>x</title>`},
+		{"header before head", `<header class="x"></header><head lang="en"></head>`, "/", `<header class="x"></header><head lang="en"><base href="/"></head>`},
+		{"header only", `<html><body><header></header><HEADER id="h"></HEADER></body></html>`, "/", `<html><body><header></header><HEADER id="h"></HEADER></body></html>`},
+		{"unclosed head tag", `<head lang="en`, "/", `<head lang="en`},
+		{"head at the end", `<head`, "/", `<head`},
+		{"non-ASCII that lowers to another length before head", "<!-- \u212a\u0130 --><HEAD>", "/", "<!-- \u212a\u0130 --><HEAD><base href=\"/\">"},
 		{"empty", ``, "/", ``},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
