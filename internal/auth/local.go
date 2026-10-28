@@ -2,9 +2,11 @@ package auth
 
 import (
 	"context"
+	"crypto/rand"
 	"crypto/subtle"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -249,16 +251,16 @@ func (s *Service) EnrollTOTP(ctx context.Context) (secret, url string, err error
 		return "", "", errors.New("create the admin account first")
 	}
 
-	key, err := totp.Generate(totp.GenerateOpts{Issuer: "Encore", AccountName: a.Username})
+	secret, url, err = newTOTPKey(a.Username, rand.Reader)
 	if err != nil {
 		return "", "", fmt.Errorf("generating TOTP secret: %w", err)
 	}
 
-	if err := s.secrets.Put(ctx, totpPendingRef, []byte(key.Secret())); err != nil {
+	if err := s.secrets.Put(ctx, totpPendingRef, []byte(secret)); err != nil {
 		return "", "", err
 	}
 
-	return key.Secret(), key.URL(), nil
+	return secret, url, nil
 }
 
 // ConfirmTOTP finishes enrolment with a code from the authenticator app.
@@ -322,24 +324,9 @@ func (s *Service) checkTOTP(ctx context.Context, ref, code string) error {
 	}
 	defer clear(secret)
 
-	now := s.now()
-	opts := totp.ValidateOpts{Period: 30, Skew: 1, Digits: otp.DigitsSix, Algorithm: otp.AlgorithmSHA1}
-
-	ok, err := totp.ValidateCustom(strings.TrimSpace(code), string(secret), now, opts)
-	if err != nil || !ok {
+	step, ok := totpStep(string(secret), code, s.now())
+	if !ok {
 		return ErrBadTOTP
-	}
-
-	// Find which step matched, so the same code cannot be replayed within its window.
-	step := int64(0)
-
-	for _, offset := range []int64{0, -1, 1} {
-		t := now.Add(time.Duration(offset*30) * time.Second)
-		if want, err := totp.GenerateCodeCustom(string(secret), t, opts); err == nil && want == strings.TrimSpace(code) {
-			step = t.Unix() / 30
-
-			break
-		}
 	}
 
 	s.mu.Lock()
@@ -352,4 +339,45 @@ func (s *Service) checkTOTP(ctx context.Context, ref, code string) error {
 	s.lastTOTP = step
 
 	return nil
+}
+
+// newTOTPKey makes a random secret for account and its otpauth:// URL.
+func newTOTPKey(account string, r io.Reader) (secret, url string, err error) {
+	key, err := totp.Generate(totp.GenerateOpts{Issuer: "Encore", AccountName: account, Rand: r})
+	if err != nil {
+		return "", "", err
+	}
+
+	return key.Secret(), key.URL(), nil
+}
+
+var totpOpts = totp.ValidateOpts{Period: 30, Skew: 1, Digits: otp.DigitsSix, Algorithm: otp.AlgorithmSHA1}
+
+// totpCode returns the code for the base32 secret at t.
+func totpCode(secret string, t time.Time) (string, error) {
+	return totp.GenerateCodeCustom(secret, t, totpOpts)
+}
+
+// totpStep reports whether code is valid for secret at now, allowing one step of clock skew, and returns the time step it matched so the caller can reject a replay.
+func totpStep(secret, code string, now time.Time) (int64, bool) {
+	code = strings.TrimSpace(code)
+
+	ok, err := totp.ValidateCustom(code, secret, now, totpOpts)
+	if err != nil || !ok {
+		return 0, false
+	}
+
+	// Find which step matched, so the same code cannot be replayed within its window.
+	step := int64(0)
+
+	for _, offset := range []int64{0, -1, 1} {
+		t := now.Add(time.Duration(offset*30) * time.Second)
+		if want, err := totpCode(secret, t); err == nil && want == code {
+			step = t.Unix() / 30
+
+			break
+		}
+	}
+
+	return step, true
 }

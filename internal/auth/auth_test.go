@@ -13,7 +13,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/pquerna/otp/totp"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -242,7 +241,7 @@ func TestTOTP(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, strings.HasPrefix(otpURL, "otpauth://totp/Encore:admin?"))
 
-	code, err := totp.GenerateCode(secret, f.clock())
+	code, err := totpCode(secret, f.clock())
 	require.NoError(t, err)
 
 	require.ErrorIs(t, f.svc.ConfirmTOTP(t.Context(), "000000"), ErrBadTOTP)
@@ -261,7 +260,7 @@ func TestTOTP(t *testing.T) {
 
 	f.advance(30 * time.Second)
 
-	code, err = totp.GenerateCode(secret, f.clock())
+	code, err = totpCode(secret, f.clock())
 	require.NoError(t, err)
 	require.NoError(t, login(code))
 }
