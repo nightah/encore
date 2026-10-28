@@ -28,29 +28,58 @@ func TestGetUsesTheLinkerValues(t *testing.T) {
 	}, Get())
 }
 
+func setBuildInfo(t *testing.T, bi *debug.BuildInfo, ok bool) {
+	t.Helper()
+
+	old := readBuildInfo
+	readBuildInfo = func() (*debug.BuildInfo, bool) { return bi, ok }
+
+	t.Cleanup(func() { readBuildInfo = old })
+}
+
+func vcsStamp(revision, at string) *debug.BuildInfo {
+	return &debug.BuildInfo{Settings: []debug.BuildSetting{
+		{Key: "-trimpath", Value: "true"},
+		{Key: "vcs.revision", Value: revision},
+		{Key: "vcs.time", Value: at},
+		{Key: "vcs.modified", Value: "false"},
+	}}
+}
+
 func TestGetFallsBackToTheVCSStampWithoutALinkerCommit(t *testing.T) {
-	setLinkerValues(t, "dev", "", "2026-01-01")
+	setLinkerValues(t, "dev", "", "")
+	setBuildInfo(t, vcsStamp("fedcba9876543210fedcba9876543210fedcba98", "2026-10-27T22:00:00Z"), true)
 
-	var wantCommit, wantDate string
+	assert.Equal(t, Info{
+		Version:   "dev",
+		Commit:    "fedcba9876543210fedcba9876543210fedcba98",
+		Date:      "2026-10-27T22:00:00Z",
+		GoVersion: runtime.Version(),
+	}, Get())
+}
 
-	wantDate = "2026-01-01"
-
-	if bi, ok := debug.ReadBuildInfo(); ok {
-		for _, s := range bi.Settings {
-			switch s.Key {
-			case "vcs.revision":
-				wantCommit = s.Value
-			case "vcs.time":
-				wantDate = s.Value
-			}
-		}
-	}
+func TestGetPrefersTheLinkerCommitOverTheVCSStamp(t *testing.T) {
+	setLinkerValues(t, "v1.2.3", "0123456789abcdef", "2026-10-28")
+	setBuildInfo(t, vcsStamp("fedcba9876543210", "2026-10-27T22:00:00Z"), true)
 
 	got := Get()
-	assert.Equal(t, "dev", got.Version)
-	assert.Equal(t, wantCommit, got.Commit)
-	assert.Equal(t, wantDate, got.Date)
-	assert.Equal(t, runtime.Version(), got.GoVersion)
+	assert.Equal(t, "0123456789abcdef", got.Commit)
+	assert.Equal(t, "2026-10-28", got.Date, "the date comes from the same source as the commit")
+}
+
+func TestGetWithoutAnyStamp(t *testing.T) {
+	setLinkerValues(t, "dev", "", "2026-10-28")
+
+	for name, bi := range map[string]*debug.BuildInfo{
+		"no build info":   nil,
+		"no VCS settings": {Settings: []debug.BuildSetting{{Key: "-trimpath", Value: "true"}}},
+	} {
+		t.Run(name, func(t *testing.T) {
+			setBuildInfo(t, bi, bi != nil)
+
+			assert.Equal(t, Info{Version: "dev", Date: "2026-10-28", GoVersion: runtime.Version()}, Get(), "the linker date is kept when there is nothing to replace it")
+		})
+	}
 }
 
 func TestInfoString(t *testing.T) {

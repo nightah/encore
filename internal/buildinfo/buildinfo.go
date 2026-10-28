@@ -13,6 +13,9 @@ var (
 	Date    = ""
 )
 
+// readBuildInfo is debug.ReadBuildInfo, replaced in tests because test binaries carry no VCS stamp.
+var readBuildInfo = debug.ReadBuildInfo
+
 // Get returns the build metadata, falling back to the VCS stamp embedded by the Go toolchain when the binary was built without ldflags.
 func Get() Info {
 	info := Info{Version: Version, Commit: Commit, Date: Date, GoVersion: runtime.Version()}
@@ -21,7 +24,7 @@ func Get() Info {
 		return info
 	}
 
-	if bi, ok := debug.ReadBuildInfo(); ok {
+	if bi, ok := readBuildInfo(); ok {
 		for _, s := range bi.Settings {
 			switch s.Key {
 			case "vcs.revision":
