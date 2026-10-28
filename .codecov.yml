@@ -1,10 +1,10 @@
 # Codecov (https://codecov.io): coverage from CI's Go and Web jobs, shown by the README's coverage badge.
 coverage:
   status:
-    # The overall figure must stay at 95% (CI checks the same minimum for Go and in Vitest for web); a pull request's own lines are reported, not enforced.
+    # The overall figure must stay at 97% (CI checks at least that for Go, and Vitest more for web); a pull request's own lines are reported, not enforced.
     project:
       default:
-        target: 95%
+        target: 97%
     patch:
       default:
         informational: true

@@ -115,7 +115,7 @@ jobs:
 
       # The same figure Codecov shows (its ignore list applies), checked after the upload so a drop is still reported there.
       - name: Coverage minimum
-        run: .github/scripts/go-coverage.sh coverage.out 95
+        run: .github/scripts/go-coverage.sh coverage.out 97
 
       - name: Lint interaction models
         run: go run ./cmd/encore gen lint
