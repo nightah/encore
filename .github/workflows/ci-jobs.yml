@@ -210,6 +210,9 @@ jobs:
       - name: Next version script
         run: .github/scripts/next-version_test.sh
 
+      - name: Release commit script
+        run: .github/scripts/release-commit_test.sh
+
       # Needs pnpm and node for the package.json edits.
       - name: Release version script
         run: .github/scripts/release-version_test.sh

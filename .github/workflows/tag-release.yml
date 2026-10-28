@@ -1,0 +1,80 @@
+name: Tag release
+
+# Merging a release pull request releases it: when its squash-merged "release: vX.Y.Z (#N)" commit lands on main, this tags the commit vX.Y.Z, and that tag push starts release.yml. The tag is pushed as the encore-release-tagger GitHub App, because a tag pushed with this workflow's own GITHUB_TOKEN wouldn't start other workflows; the app is also what may create v* tags past the tag ruleset. Its client ID and private key live in the release-tag environment, which only main can use.
+on:
+  push:
+    branches: [main]
+  # Re-runs the same checks on main's latest commit, for when a tag push failed after the merge.
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  find:
+    name: Find the release
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Prints nothing, so tags nothing, unless this is a merged release commit whose package.json versions match.
+      - name: Release version
+        id: release
+        run: |
+          version="$(.github/scripts/release-commit.sh "${GITHUB_SHA}")"
+          if [ -z "${version}" ]; then
+            echo "${GITHUB_SHA::8} isn't a release commit; nothing to tag."
+          else
+            tagged="$(git ls-remote --tags origin "refs/tags/v${version}" | cut -f1)"
+            if [ "${tagged}" = "${GITHUB_SHA}" ]; then
+              echo "v${version} already points at ${GITHUB_SHA::8}; nothing to do."
+              version=""
+            elif [ -n "${tagged}" ]; then
+              echo "::error::v${version} already exists at ${tagged::8}. A version is released once; make version starts the next one."
+              exit 1
+            fi
+          fi
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+
+  tag:
+    name: Tag v${{ needs.find.outputs.version }}
+    needs: find
+    if: needs.find.outputs.version != ''
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    environment: release-tag
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: audit
+
+      - name: App token
+        id: app
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+
+      - name: Push the tag
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          VERSION: ${{ needs.find.outputs.version }}
+        run: |
+          gh api "repos/${GITHUB_REPOSITORY}/git/refs" -f ref="refs/tags/v${VERSION}" -f sha="${GITHUB_SHA}" > /dev/null
+          echo "Tagged ${GITHUB_SHA::8} as v${VERSION}; release.yml takes it from here."
