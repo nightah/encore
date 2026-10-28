@@ -423,6 +423,27 @@ func TestHTTPFallbackWhileWebSocketDown(t *testing.T) {
 	})
 }
 
+// A WebSocket can close between a call picking it and sending on it; the call, which never reached Kodi, goes over HTTP instead.
+func TestCallOnAClosingWebSocketGoesOverHTTP(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		s := newFake(t, fakekodi.Options{})
+		tr := NewTransport(testConfig(t, s), nil)
+
+		ws, err := tr.dial(t.Context())
+		require.NoError(t, err)
+
+		// The transport still holds the connection, as it does until its loop notices the close.
+		ws.close(errors.New("dropped"))
+		tr.setConn(ws)
+		require.True(t, tr.Connected())
+
+		before := len(s.Calls())
+		require.NoError(t, ping(t.Context(), tr))
+		require.Len(t, s.Calls(), before+1, "the call is sent once")
+		assert.False(t, s.Calls()[before].WebSocket, "over HTTP")
+	})
+}
+
 func TestHeartbeatDropsDeadConnection(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
 		const heartbeat, timeout = 50 * time.Millisecond, 100 * time.Millisecond
