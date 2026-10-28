@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
@@ -546,7 +546,7 @@ describe("Access settings", () => {
     await user.selectOptions(await screen.findByLabelText("Session length"), "24");
     await saveChanges(user);
 
-    expect(await screen.findByRole("alert")).not.toBeEmptyDOMElement();
+    expect(await screen.findByRole("alert")).toHaveTextContent("The Encore server could not be reached.");
     expect(screen.getByRole("button", { name: "Save changes" })).toBeEnabled();
   });
 });
@@ -730,6 +730,23 @@ describe("Storage settings", () => {
 
     await waitFor(() => expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled());
     expect(log.some((r) => r.method === "PATCH")).toBe(false);
+  });
+
+  it("saves path-style addressing on and server-side encryption off", async () => {
+    Object.assign(getDb().settings.storage.s3, { addressing: "auto", has_secret_key: false, sse: "AES256" });
+    const user = userEvent.setup();
+    const log = recordRequests();
+    renderApp("/settings?tab=storage");
+
+    expect(await screen.findByText("Encrypted at rest.")).toBeInTheDocument();
+    expect(screen.getByLabelText("Secret key")).toHaveAttribute("placeholder", "");
+    await user.click(screen.getByRole("checkbox", { name: "Path-style addressing" }));
+    await user.click(screen.getByRole("checkbox", { name: "Server-side encryption" }));
+    await saveChanges(user);
+
+    await waitFor(() =>
+      expect(log.find((r) => r.method === "PATCH")?.body).toEqual({ storage: { s3: { addressing: "path", sse: "" } } }),
+    );
   });
 
   it("says which key encrypts the stored S3 secret", async () => {
@@ -949,6 +966,22 @@ describe("Import and export", () => {
     expect(log.find((r) => r.method === "POST")?.path).toBe("/config/import");
     // Cleared, so choosing the same file again imports it again.
     expect(input).toHaveValue("");
+  });
+
+  it("lists nothing as skipped when everything was applied", async () => {
+    const user = userEvent.setup();
+    renderApp("/settings?tab=backup");
+    await user.upload(await screen.findByLabelText("Import configuration…"), new File(["kodi:\n"], "encore.yml"));
+    expect(await screen.findByText("Imported kodi.")).toBeInTheDocument();
+    expect(screen.queryByText(/^Skipped/)).not.toBeInTheDocument();
+  });
+
+  it("imports nothing when the file picker is cancelled", async () => {
+    const log = recordRequests();
+    renderApp("/settings?tab=backup");
+    fireEvent.change(await screen.findByLabelText("Import configuration…"), { target: { files: [] } });
+    expect(log.some((r) => r.method === "POST")).toBe(false);
+    expect(screen.queryByText("Importing…")).not.toBeInTheDocument();
   });
 
   it("says when a file imported nothing", async () => {

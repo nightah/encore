@@ -374,7 +374,9 @@ describe("Kodi instance card", () => {
   it("names the library source when an HTTP-only instance shares a library", async () => {
     renderApp("/kodi");
     const bedroom = await card("Bedroom");
-    expect(bedroom.getByText(/Library updates still arrive through Lounge \(the library source\)/)).toBeInTheDocument();
+    expect(
+      await bedroom.findByText(/Library updates still arrive through Lounge \(the library source\)/),
+    ).toBeInTheDocument();
     expect(bedroom.getByText("Shared with Lounge")).toBeInTheDocument();
   });
 
@@ -389,7 +391,7 @@ describe("Kodi instance card", () => {
     renderApp("/kodi");
     const lounge = await card("Lounge");
 
-    expect(lounge.getByText("2,184 movies · 312 shows · shared with Bedroom")).toBeInTheDocument();
+    expect(await lounge.findByText("2,184 movies · 312 shows · shared with Bedroom")).toBeInTheDocument();
     expect(lounge.getByText("Conclave (2024) · findable")).toBeInTheDocument();
     expect(lounge.getByText(/^Every 15 min · next \d/)).toBeInTheDocument();
     expect(lounge.getByText("Kodi 21.3 · API 13.5")).toBeInTheDocument();
@@ -769,7 +771,7 @@ describe("Kodi instance dialog", () => {
     const dialog = await screen.findByRole("dialog", { name: "Edit Lounge" });
     await user.click(within(dialog).getByRole("button", { name: "Save" }));
 
-    expect(await within(dialog).findByRole("alert")).not.toBeEmptyDOMElement();
+    expect(await within(dialog).findByRole("alert")).toHaveTextContent("The Encore server could not be reached.");
     expect(dialog).toBeInTheDocument();
   });
 

@@ -635,6 +635,22 @@ describe("setup admin step", () => {
     expect(screen.getByRole("heading", { level: 1, name: "Create the admin account" })).toBeInTheDocument();
   });
 
+  it("says when Encore couldn't be reached to create the account", async () => {
+    resetDb("fresh");
+    server.use(http.post("*/api/v1/setup/admin", () => HttpResponse.error()));
+    const user = userEvent.setup();
+    renderApp("/setup");
+    await heading("Create the admin account");
+
+    await user.type(screen.getByLabelText("Setup token"), "K7QF-2M9X-PL4D");
+    await user.type(screen.getByLabelText("Password"), "correct-horse-battery");
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    const alert = await screen.findByRole("alert");
+    expect(alert).toHaveTextContent("The Encore server could not be reached.");
+    expect(screen.getByRole("heading", { level: 1, name: "Create the admin account" })).toBeInTheDocument();
+  });
+
   it("says the account exists when you return to it after creating it", async () => {
     startAt(1, { done: [1] });
     const user = userEvent.setup();
@@ -761,7 +777,7 @@ describe("setup Kodi step", () => {
     await heading("Add your first Kodi");
 
     expect(await screen.findByRole("radio", { name: /Enter an address manually/ })).toBeChecked();
-    expect(screen.getByText(/Already added: Lounge, Bedroom, Kids' room/)).toBeInTheDocument();
+    expect(await screen.findByText(/Already added: Lounge, Bedroom, Kids' room/)).toBeInTheDocument();
     await user.type(screen.getByLabelText("Name"), " Garage ");
     await user.type(screen.getByLabelText("JSON-RPC address"), " http://192.168.1.60:8080/jsonrpc ");
     await user.clear(screen.getByLabelText("Kodi username"));
@@ -882,8 +898,9 @@ describe("setup Kodi step", () => {
     renderApp("/setup");
     await heading("Add your first Kodi");
 
+    const again = await screen.findByRole("button", { name: "Search again" });
     getDb().discovered = [{ host: "192.168.1.60", http_port: 8080, name: "Garage", version: "21.3", ws_port: 9090 }];
-    await user.click(await screen.findByRole("button", { name: "Search again" }));
+    await user.click(again);
 
     expect(await screen.findByRole("radio", { name: /Garage/ })).toBeChecked();
     expect(screen.getByText("192.168.1.60 · Kodi 21.3 · WebSocket :9090")).toBeInTheDocument();
@@ -969,7 +986,9 @@ describe("setup Amazon step", () => {
     await user.type(await screen.findByLabelText("Client secret"), "lwa-secret");
     await user.click(screen.getByRole("button", { name: "Authorise with Amazon" }));
 
-    expect(await screen.findByRole("alert")).not.toBeEmptyDOMElement();
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Save the Login with Amazon client ID and secret first.",
+    );
     expect(screen.getByRole("button", { name: "Authorise with Amazon" })).toBeEnabled();
   });
 
@@ -983,6 +1002,37 @@ describe("setup Amazon step", () => {
 
     expect(await screen.findByText("https://home.example.org/api/v1/oauth/lwa/callback")).toBeInTheDocument();
     expect(screen.getByText("Under Web Settings, add this Allowed Return URL:")).toBeInTheDocument();
+  });
+
+  it("lists no return URL when neither Amazon nor the skill endpoint gives one", async () => {
+    startAt(4);
+    getDb().skill.amazon.connected = false;
+    getDb().skill.endpoint.url = "not a url";
+    failWith("get", "/skill/amazon/authorize", 500, "Amazon is unavailable.");
+    renderApp("/setup");
+    await heading("Connect your Amazon developer account");
+
+    expect(await screen.findByText("Under Web Settings, add this Allowed Return URL:")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Copy return URL" })).not.toBeInTheDocument();
+  });
+
+  it("connects with a pasted refresh token without HTTPS", async () => {
+    startAt(4);
+    const db = getDb();
+    db.skill.amazon.connected = false;
+    db.publicUrl = "http://encore.lan:8080";
+    const user = userEvent.setup();
+    const log = recordRequests();
+    renderApp("/setup");
+    await heading("Connect your Amazon developer account");
+
+    await user.click(await screen.findByText(/No HTTPS callback/));
+    await user.click(screen.getByRole("radio", { name: "Paste a refresh token" }));
+    await user.type(screen.getByLabelText("Refresh token"), " Atzr|token ");
+    await user.click(screen.getByRole("button", { name: "Connect" }));
+
+    expect(await screen.findByText(/Connected to Amazon \(vendor/)).toBeInTheDocument();
+    expect(log.find((r) => r.path === "/skill/amazon/paste")?.body).toEqual({ refresh_token: "Atzr|token" });
   });
 
   it("pastes a redirect URL with Enter, and starts afresh when switching to a refresh token", async () => {
@@ -1091,6 +1141,22 @@ describe("setup deploy step", () => {
     await user.click(screen.getByRole("radio", { name: "kodi" }));
     expect(screen.getByText("“Alexa, ask kodi to…”")).toBeInTheDocument();
     expect(screen.queryByText(/French uses “kodi”/)).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ["locales", "body.locales_enabled", "choose at least one locale"],
+    ["content", "body.content", "choose at least one of movies, tv or music"],
+  ])("puts a rejected %s choice under it", async (_name, location, message) => {
+    startAt(5);
+    server.use(http.put("*/api/v1/skill/settings", () => problem422([{ location, message }], "validation failed")));
+    const user = userEvent.setup();
+    renderApp("/setup");
+    await heading("Deploy the skill");
+
+    await user.click(await screen.findByRole("button", { name: "Deploy skill" }));
+
+    expect(await screen.findByText(message)).toBeInTheDocument();
+    expect(within(screen.getByRole("region", { name: "Step 5: Deploy skill" })).queryByRole("alert")).toBeNull();
   });
 
   it("puts a rejected invocation under it", async () => {
@@ -1240,6 +1306,27 @@ describe("setup hello step", () => {
 
     await waitFor(() => expect(router.state.location.pathname).toBe("/"));
     expect(log.some((r) => r.method === "PATCH")).toBe(false);
+  });
+
+  it("shows why the Echo couldn't be named when it isn't about the name", async () => {
+    startAt(6);
+    const user = userEvent.setup();
+    const { router } = renderApp("/setup");
+    await heading("Say hello");
+    await waitFor(() => expect(FakeEventSource.open).toBeGreaterThan(0));
+    FakeEventSource.emit("request", {
+      device_id: 5,
+      device_name: "",
+      simulated: false,
+      time: new Date().toISOString(),
+    });
+    failWith("patch", "/devices/5", 500, "Database is locked.");
+
+    await user.type(await screen.findByLabelText("Echo name"), "Lounge Echo Show");
+    await user.click(screen.getByRole("button", { name: "Finish" }));
+
+    expect(await screen.findByLabelText("Echo name")).toHaveAccessibleDescription(/Database is locked\./);
+    expect(router.state.location.pathname).toBe("/setup");
   });
 
   it("stays on the step when the Echo's name is rejected", async () => {
