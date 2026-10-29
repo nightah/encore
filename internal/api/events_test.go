@@ -177,6 +177,14 @@ func TestPlayerChangeRefreshesStatus(t *testing.T) {
 	// Polling every hour: a quick update can only come from Kodi's notification.
 	h := newHarness(t, harnessOpts{mutate: func(o *Options) { o.StatusInterval = time.Hour }})
 	c := h.admin()
+	lounge := h.loungeID()
+
+	// Kodi only tells instances it has a WebSocket to, so playback before it connects would go unheard.
+	require.Eventually(t, func() bool {
+		st, err := h.app.InstanceStatus(t.Context(), lounge, false)
+
+		return err == nil && st.Connected
+	}, 10*time.Second, 20*time.Millisecond)
 
 	ctx, cancel := context.WithCancel(t.Context())
 	defer cancel()
