@@ -46,8 +46,8 @@ The pages below are generated from the interaction model Encore deploys, so they
 
 - [English](/encore/voice-commands/en/): `en-AU`, `en-CA`, `en-GB`, `en-IN`, `en-US`
 - [German](/encore/voice-commands/de/): `de-DE`
-- [French](/encore/voice-commands/fr/): `fr-FR`
-- [Spanish](/encore/voice-commands/es/): `es-ES`
+- [French](/encore/voice-commands/fr/): `fr-CA`, `fr-FR`
+- [Spanish](/encore/voice-commands/es/): `es-ES`, `es-MX`, `es-US`
 - [Italian](/encore/voice-commands/it/): `it-IT`
 
 Your Echo has to use one of these languages, and that locale has to be deployed; see [locales](/encore/guides/deploy-skill/#locales).
