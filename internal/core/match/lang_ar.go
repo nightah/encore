@@ -58,7 +58,7 @@ func arabic() *language {
 		split:            arabicSplit(nums),
 		romanize:         romanizeArabic,
 		stop: romanizeSet(
-			"في", "من", "علي", "عن", "الي", "مع", "و", "يا", "ف", "ب", "ل", "ذا", "زا",
+			"في", "من", "عن", "مع", "و", "يا", "ف", "ب", "ل", "ذا", "زا",
 			"the", "a", "an", "of", "and", "in", "on", "to", "for", "at", "with",
 		),
 		ordSuffixes: []string{"st", "nd", "rd", "th"},
