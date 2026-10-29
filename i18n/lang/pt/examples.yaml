@@ -1,0 +1,72 @@
+# Example values for the dynamic slot types in model.yaml (pt): deploys replace them with what is set up in Encore. Chosen for this language rather than translated, so not on Crowdin.
+
+KODI_MUSIC_VIDEO:
+  - {value: evidências}
+  - {value: garota de ipanema}
+  - {value: envolver}
+  - {value: bohemian rhapsody}
+  - {value: thriller}
+
+# Examples only, extended from the library when available.
+KODI_PLAYLIST:
+  - {value: viagem, synonyms: [viagem de carro]}
+  - {value: festa}
+  - {value: academia, synonyms: [treino, malhação]}
+  - {value: relaxar, synonyms: [relax]}
+  - {value: crianças, synonyms: [infantil]}
+  - {value: jantar}
+  - {value: mais tocadas, synonyms: [favoritas]}
+
+# Examples only: deploys replace them with the rooms set up in Encore. Utterances supply the article ("na sala", "no quarto").
+KODI_ROOM:
+  - {value: sala}
+  - {value: sala de estar}
+  - {value: quarto}
+  - {value: quarto do casal, synonyms: [suíte]}
+  - {value: quarto das crianças}
+  - {value: cozinha}
+  - {value: escritório}
+  - {value: sala de jantar}
+  - {value: home theater, synonyms: [cinema]}
+  - {value: varanda}
+  - {value: área gourmet}
+  - {value: garagem}
+
+# Examples only, extended from the library when available. Values are nouns, so they fit "um filme de {Genre}" and "toca um pouco de {Genre}".
+MEDIA_GENRE:
+  - {value: ação}
+  - {value: aventura}
+  - {value: animação, synonyms: [desenho, desenho animado]}
+  - {value: comédia, synonyms: [humor]}
+  - {value: policial, synonyms: [crime]}
+  - {value: documentário, synonyms: [documentários]}
+  - {value: drama}
+  - {value: família}
+  - {value: fantasia}
+  - {value: terror, synonyms: [horror]}
+  - {value: infantil, synonyms: [criança]}
+  - {value: mistério}
+  - {value: romance, synonyms: [romântico]}
+  - {value: ficção científica}
+  - {value: suspense, synonyms: [thriller]}
+  - {value: guerra}
+  - {value: faroeste, synonyms: [western, bangue-bangue]}
+  - {value: rock}
+  - {value: pop}
+  - {value: jazz}
+  - {value: música clássica, synonyms: [clássica, erudita]}
+  - {value: hip hop, synonyms: [rap]}
+  - {value: sertanejo, synonyms: [sertanejo universitário, música sertaneja]}
+  - {value: samba}
+  - {value: pagode}
+  - {value: forró}
+  - {value: funk}
+  - {value: m. p. b., synonyms: [música popular brasileira]}
+  - {value: bossa nova}
+  - {value: axé}
+  - {value: eletrônica, synonyms: [música eletrônica]}
+  - {value: gospel}
+  - {value: reggae}
+  - {value: blues}
+  - {value: metal, synonyms: [heavy metal]}
+  - {value: trilha sonora, synonyms: [trilhas sonoras]}

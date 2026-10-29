@@ -63,7 +63,7 @@ func TestSlotIDsResolveLocally(t *testing.T) {
 	assert.Equal(t, "recentepisodes", h.Speech.SlotID("en-GB", "LIBRARY_SECTION", "new episodes"))
 	assert.Equal(t, "counterclockwise", h.Speech.SlotID("en-US", "ROTATE_DIRECTION", "anti clockwise"))
 	assert.Equal(t, "bedroom", h.Speech.SlotID("en-AU", "KODI_ROOM", "bedroom"), "values without an ID are their own ID")
-	assert.Equal(t, "up", h.Speech.SlotID("pt-BR", "NAV_DIRECTION", "up"), "unknown locales fall back")
+	assert.Equal(t, "up", h.Speech.SlotID("xx-XX", "NAV_DIRECTION", "up"), "unknown locales fall back")
 	assert.Empty(t, h.Speech.SlotID("en-AU", "NAV_ACTION", "sideways"))
 }
 

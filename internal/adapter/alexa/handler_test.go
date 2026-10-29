@@ -283,7 +283,7 @@ func TestSpeechDurations(t *testing.T) {
 func TestSpeechUnknownLocaleFallsBack(t *testing.T) {
 	h, _, _ := newHandler(t)
 
-	got := h.Speech.Render("pt-BR", actions.Message{ID: "playback.playing_movie", Params: map[string]string{"title": "Dune"}})
+	got := h.Speech.Render("xx-XX", actions.Message{ID: "playback.playing_movie", Params: map[string]string{"title": "Dune"}})
 	assert.Equal(t, "Playing Dune.", got)
 }
 
