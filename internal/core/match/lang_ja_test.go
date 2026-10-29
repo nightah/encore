@@ -165,3 +165,21 @@ func TestPropNormalizeJapaneseRomanizes(t *testing.T) {
 		}
 	})
 }
+
+// TestSplitAloneKeepsWordCoverage checks that a spaced language with a split hook still covers query words by whole words only: substring coverage belongs to unspaced languages.
+func TestSplitAloneKeepsWordCoverage(t *testing.T) {
+	ix, err := New("en", Config{})
+	require.NoError(t, err)
+
+	q := ix.lang.newForm([]string{"toyst"}, "")
+	a := alias{form: ix.lang.newForm([]string{"toy", "story"}, ""), text: "Toy Story"}
+	want := ix.scoreAlias(&q, &a, -1)
+
+	split := *ix.lang
+	split.split = func(toks []string) []string { return toks }
+	ix.lang = &split
+	assert.Equal(t, want, ix.scoreAlias(&q, &a, -1))
+
+	split.unspaced = true
+	assert.Greater(t, ix.scoreAlias(&q, &a, -1).score, want.score, "an unspaced language covers a word inside the title")
+}

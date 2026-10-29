@@ -21,6 +21,7 @@ func japanese() *language {
 		// パート, シーズン, チャプター and ボリューム as romanized, their English spellings, and 第, which comes before a number ("第2部").
 		parts:    set("pato", "shizun", "chaputa", "boryumu", "part", "season", "chapter", "vol", "volume", "第"),
 		split:    splitJapanese,
+		unspaced: true,
 		romanize: romanizeKana,
 		phonetic: phoneticKeysOf(en.Encoder{}),
 	}
