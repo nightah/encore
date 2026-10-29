@@ -43,7 +43,7 @@ func (l *language) numbers(toks []string) []string {
 
 // parseNumber reads the longest number starting at toks[i], returning its value, the tokens consumed (0 if none) and whether it ended on an ordinal.
 func (l *language) parseNumber(toks []string, i int) (val, n int, ordinal bool) {
-	mill, total, cur := 0, 0, 0
+	mill, total, cur, scale := 0, 0, 0, 0
 	st := stStart
 	j := i
 
@@ -126,11 +126,13 @@ loop:
 			cur = 0
 			st = stThousand
 		case numMillion:
-			if mill > 0 || total > 0 {
+			// A smaller scale may follow a larger one ("ek crore bees lakh"); an equal or larger one starts a new number.
+			if total > 0 || (mill > 0 && w.val >= scale) {
 				break loop
 			}
 
-			mill = max(cur, 1) * w.val
+			mill += max(cur, 1) * w.val
+			scale = w.val
 			cur = 0
 			st = stMillion
 		}
