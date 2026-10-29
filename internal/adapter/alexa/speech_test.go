@@ -93,7 +93,7 @@ func TestSpokenList(t *testing.T) {
 	assert.Equal(t, "Dune", spokenList("en", []string{"Dune"}))
 	assert.Equal(t, "Dune and Alien", spokenList("en", []string{"Dune", "Alien"}))
 	assert.Equal(t, "Dune, Alien und Heat", spokenList("de", []string{"Dune", "Alien", "Heat"}))
-	assert.Equal(t, "Dune and Alien", spokenList("ja", []string{"Dune", "Alien"}), "a language without its own word uses English")
+	assert.Equal(t, "Dune and Alien", spokenList("xx", []string{"Dune", "Alien"}), "a language without its own word uses English")
 }
 
 func TestParseDurationRejectsUnitsInTheWrongPart(t *testing.T) {

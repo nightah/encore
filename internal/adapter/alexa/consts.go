@@ -33,3 +33,11 @@ const fallbackLocale = "en-US"
 
 // certChainURLHeader carries the URL of the certificate chain Alexa signed a request with.
 const certChainURLHeader = "SignatureCertChainUrl"
+
+// Places of a pattern's optional room group: none, ending the pattern, starting it, or between a slot and the rest.
+const (
+	roomNone roomPlace = iota
+	roomLast
+	roomFirst
+	roomMiddle
+)
