@@ -138,6 +138,7 @@ func TestNormalize(t *testing.T) {
 		{"it", "ottocento ottantatré", "883"},
 		{"it", "centottanta", "180"},
 		{"it", "millenovecentottantotto", "1988"},
+		{"it", "milione milioni", "1000000 1000000"},
 		{"it", "centouno", "101"},
 		{"it", "centuno", "101"},
 		{"it", "duemila", "2000"},

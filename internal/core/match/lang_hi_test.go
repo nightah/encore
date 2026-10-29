@@ -76,6 +76,9 @@ func TestNormalizeHindi(t *testing.T) {
 		{"दस lakh", "1000000"},
 		{"ek crore", "10000000"},
 		{"दो करोड़", "20000000"},
+		{"एक करोड़ बीस लाख", "12000000"},
+		{"दो करोड़ पाँच लाख दस हज़ार", "20510000"},
+		{"दो लाख करोड़", "200000 10000000"},
 		// Ordinals, in words and in digits with a suffix.
 		{"पहला", "1"},
 		{"Pehla Nasha", "1 nasha"},
