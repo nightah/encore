@@ -2,6 +2,7 @@ package match
 
 import (
 	"context"
+	"strings"
 	"sync"
 	"unicode/utf8"
 
@@ -351,6 +352,8 @@ type language struct {
 	articlePrefixMin int
 	// folds maps lowercase letters to what the language compares them as, applied by tokenize after NFKD and ahead of the shared letterFolds: spelling variants of one sound (Arabic "ٱ" -> "ا", "ة" -> "ه", "ى" -> "ي") or a second script for the same sounds (katakana -> hiragana). A letter whose script keeps its combining marks is recomposed after folding, so a fold of "カ" to "か" still gives "が" for "ガ".
 	folds map[rune]string
+	// respell rewrites the string before tokenize decomposes it, for spellings NFKD would lose or a sign the language reads as words: Portuguese "ç" is "ss", not the "c" NFKD leaves of it, and "%" is "por cento". Nil leaves the string as it is.
+	respell *strings.Replacer
 	// split breaks tokenize's tokens into words for a script written without spaces (Japanese), and runs before fused articles, letter runs and whole-word articles are handled. Nil leaves the tokens as they are.
 	split func(toks []string) []string
 	// unspaced marks a language written without spaces between words (Japanese), where a segmenter's word boundaries are guesses: a query word of at least minUnspacedCover runes then counts as covered when it appears anywhere inside the title. A language that splits tokens for other reasons (fused clitics, letter runs) leaves it false.

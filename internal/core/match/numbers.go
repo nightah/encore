@@ -147,7 +147,7 @@ loop:
 	return mill + total + cur, j - i, false
 }
 
-// conjFollows reports whether a conjunction in state st, with cur read so far, is part of the number, given the word after it ("hundred and one", "vingt et un", "soixante et onze", "neun und neunzig").
+// conjFollows reports whether a conjunction in state st, with cur read so far, is part of the number, given the word after it ("hundred and one", "vingt et un", "soixante et onze", "neun und neunzig", "mil e quinhentos").
 func (l *language) conjFollows(st numState, cur int, next string) bool {
 	w, ok := l.nums[next]
 	if !ok {
@@ -155,8 +155,11 @@ func (l *language) conjFollows(st numState, cur int, next string) bool {
 	}
 
 	switch st {
-	case stHundred, stThousand, stMillion:
+	case stHundred:
 		return w.kind == numUnit || w.kind == numTens || w.kind == numCompound
+	case stThousand, stMillion:
+		// "mil e quinhentos": Portuguese joins hundreds to thousands with "e" too.
+		return w.kind == numUnit || w.kind == numTens || w.kind == numCompound || w.kind == numHundred
 	case stTens:
 		return w.kind == numUnit && (w.val < 10 || (l.vigesimal && cur%100 == 60 && w.val == 11))
 	case stUnit:
