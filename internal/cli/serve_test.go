@@ -296,7 +296,7 @@ func TestServeStopsWhenStartupFails(t *testing.T) {
 				db := openStore(t, store.DefaultPath(dataDir))
 				study := store.Room{Name: "Study"}
 				require.NoError(t, db.Rooms().Create(t.Context(), &study))
-				_, err := db.Rooms().AddAlias(t.Context(), study.ID, "den")
+				_, err := db.Rooms().AddAlias(t.Context(), study.ID, "den", store.SpokenRoom)
 				require.NoError(t, err)
 				require.NoError(t, db.Close())
 

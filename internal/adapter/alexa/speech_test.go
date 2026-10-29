@@ -43,6 +43,13 @@ func TestNewSpeechRequiresFallbackLocale(t *testing.T) {
 	assert.Equal(t, "Bye.", s.Render("en-AU", actions.Message{ID: "goodbye"}))
 }
 
+func TestNewSpeechRejectsBrokenRoomPhrase(t *testing.T) {
+	_, err := NewSpeech(speechSources(t, map[string]string{
+		"en-US": "language: en\nutterances:\n  WatchMovie:\n    - \"play {Movie} [(in|on the {Room}]\"\n",
+	}), slog.New(slog.DiscardHandler))
+	require.ErrorContains(t, err, "locale en-US")
+}
+
 func TestNewSpeechRejectsLocaleWithoutLanguage(t *testing.T) {
 	_, err := NewSpeech(speechSources(t, map[string]string{"en-US": "language: en\n", "xx-XX": "language: xx\n"}), slog.New(slog.DiscardHandler))
 	require.ErrorContains(t, err, `unknown language "xx"`)

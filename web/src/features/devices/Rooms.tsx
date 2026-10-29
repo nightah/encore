@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 
-import { Pencil, X } from "lucide-react";
+import { House, Pencil, Tv, X } from "lucide-react";
 import { Trans, useTranslation } from "react-i18next";
 
 import { errorMessage } from "@api/client";
 import { useAddRoomAlias, useCreateRoom, useDeleteRoom, useDeleteRoomAlias, useUpdateRoom } from "@api/devices";
-import type { Instance, Room } from "@api/generated/model";
+import { type Instance, type Room, RoomAliasKind } from "@api/generated/model";
 import { Button, IconButton } from "@components/ui/Button";
 import { cn, focusRing } from "@components/ui/cn";
 import { Dialog } from "@components/ui/Dialog";
@@ -27,7 +27,15 @@ export function RoomsSection({ rooms, instances }: { rooms: Room[]; instances: I
         <Button onClick={() => setDialog({})}>{t("rooms.add")}</Button>
       </div>
       <p className="text-muted">
-        <Trans t={t} i18nKey="rooms.intro" components={{ b: <b /> }} />
+        <Trans
+          t={t}
+          i18nKey="rooms.intro"
+          components={{
+            b: <b />,
+            device: <KindPill kind={RoomAliasKind.device} className="pr-2.5 align-middle" />,
+            room: <KindPill kind={RoomAliasKind.room} className="pr-2.5 align-middle" />,
+          }}
+        />
       </p>
       {rooms.length === 0 ? <p className="text-muted">{t("rooms.empty")}</p> : null}
       <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-3">
@@ -45,11 +53,34 @@ export function RoomsSection({ rooms, instances }: { rooms: Room[]; instances: I
   );
 }
 
+const kindStyle: Record<RoomAliasKind, string> = {
+  [RoomAliasKind.device]: "bg-ask-bg text-ask",
+  [RoomAliasKind.room]: "bg-info-bg text-info",
+};
+
+/** A spoken name's pill, coloured and marked with an icon by kind so rooms and devices tell apart at a glance. */
+function KindPill({ kind, children, className }: { kind: RoomAliasKind; children?: ReactNode; className?: string }) {
+  const Icon = kind === RoomAliasKind.device ? Tv : House;
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full py-0.5 pl-2 font-medium text-[12.5px]",
+        kindStyle[kind],
+        className,
+      )}
+    >
+      <Icon aria-hidden="true" className="size-3.5" />
+      {children}
+    </span>
+  );
+}
+
 function RoomCard({ room, instance, onEdit }: { room: Room; instance: Instance | undefined; onEdit: () => void }) {
   const { t } = useTranslation("devices");
   const add = useAddRoomAlias();
   const remove = useDeleteRoomAlias();
   const [alias, setAlias] = useState("");
+  const [kind, setKind] = useState<RoomAliasKind>(RoomAliasKind.room);
 
   return (
     <div className="flex flex-col gap-2 rounded-[10px] border border-line p-3.5">
@@ -71,47 +102,53 @@ function RoomCard({ room, instance, onEdit }: { room: Room; instance: Instance |
       </div>
       <ul aria-label={t("rooms.card.aliases", { name: room.name })} className="flex flex-wrap gap-1.5">
         {room.aliases.map((a) => (
-          <li
-            key={a.id}
-            className="inline-flex items-center gap-1 rounded-full bg-neutral-bg py-0.5 pr-1 pl-2.5 font-medium text-[12.5px] text-neutral"
-          >
-            {a.alias}
-            <button
-              type="button"
-              aria-label={t("rooms.card.removeAlias", { alias: a.alias })}
-              onClick={() => remove.mutate({ aliasId: a.id, roomId: room.id })}
-              className={cn(
-                "relative inline-flex size-5 items-center justify-center rounded-full hover:bg-black/10 after:absolute after:-inset-3 after:content-['']",
-                focusRing,
-              )}
-            >
-              <X aria-hidden="true" className="size-3" />
-            </button>
+          <li key={a.id}>
+            <KindPill kind={a.kind} className="pr-1">
+              <span className="sr-only">{t(`rooms.kind.${a.kind}`)}: </span>
+              <span>{a.alias}</span>
+              <button
+                type="button"
+                aria-label={t("rooms.card.removeAlias", { alias: a.alias })}
+                onClick={() => remove.mutate({ aliasId: a.id, roomId: room.id })}
+                className={cn(
+                  "relative inline-flex size-5 items-center justify-center rounded-full hover:bg-black/10 after:absolute after:-inset-3 after:content-['']",
+                  focusRing,
+                )}
+              >
+                <X aria-hidden="true" className="size-3" />
+              </button>
+            </KindPill>
           </li>
         ))}
       </ul>
       <form
-        className="flex gap-2"
+        className="flex flex-wrap gap-2"
         onSubmit={(event) => {
           event.preventDefault();
           if (!alias.trim()) return;
-          add.mutate({ alias: alias.trim(), roomId: room.id }, { onSuccess: () => setAlias("") });
+          add.mutate({ alias: alias.trim(), kind, roomId: room.id }, { onSuccess: () => setAlias("") });
         }}
       >
         <Field
           label={t("rooms.card.addAliasLabel", { name: room.name })}
           hideLabel
-          className="flex-1"
+          className="basis-full"
           error={add.error ? errorMessage(add.error) : undefined}
         >
           <Input
-            placeholder={t("rooms.card.addAliasPlaceholder")}
+            placeholder={t(`rooms.card.placeholder.${kind}`)}
             value={alias}
             onChange={(event) => {
               setAlias(event.target.value);
               if (add.error) add.reset();
             }}
           />
+        </Field>
+        <Field label={t("rooms.card.kindLabel", { name: room.name })} hideLabel className="flex-1">
+          <Select value={kind} onChange={(event) => setKind(event.target.value as RoomAliasKind)}>
+            <option value={RoomAliasKind.room}>{t("rooms.kind.room")}</option>
+            <option value={RoomAliasKind.device}>{t("rooms.kind.device")}</option>
+          </Select>
         </Field>
         <Button type="submit" pending={add.isPending} aria-label={t("rooms.card.addAliasButton", { name: room.name })}>
           {t("rooms.card.add")}

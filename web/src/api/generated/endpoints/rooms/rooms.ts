@@ -109,7 +109,7 @@ export const getAddRoomAliasUrl = (id: number) => {
 };
 
 /**
- * @summary Add another spoken name for a room
+ * @summary Add another spoken name for a room, or for a device in it
  */
 export const addRoomAlias = async (
   id: number,

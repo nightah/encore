@@ -93,11 +93,12 @@ func (a *API) registerRooms(api huma.API) {
 			return nil, a.problemFor(ctx, a.app.DB().Rooms().Delete(ctx, in.ID))
 		})
 
-	huma.Register(api, protected(huma.Operation{OperationID: "addRoomAlias", Method: http.MethodPost, Path: Prefix + "/rooms/{id}/aliases", Tags: []string{"rooms"}, Summary: "Add another spoken name for a room", DefaultStatus: http.StatusCreated}),
+	huma.Register(api, protected(huma.Operation{OperationID: "addRoomAlias", Method: http.MethodPost, Path: Prefix + "/rooms/{id}/aliases", Tags: []string{"rooms"}, Summary: "Add another spoken name for a room, or for a device in it", DefaultStatus: http.StatusCreated}),
 		func(ctx context.Context, in *struct {
 			ID   int64 `path:"id"`
 			Body struct {
 				Alias string `json:"alias" minLength:"1" maxLength:"64"`
+				Kind  string `json:"kind,omitempty" enum:"room,device" default:"room"`
 			}
 		},
 		) (*body[RoomAlias], error) {
@@ -105,12 +106,12 @@ func (a *API) registerRooms(api huma.API) {
 				return nil, a.problemFor(ctx, err)
 			}
 
-			al, err := a.app.DB().Rooms().AddAlias(ctx, in.ID, strings.TrimSpace(in.Body.Alias))
+			al, err := a.app.DB().Rooms().AddAlias(ctx, in.ID, strings.TrimSpace(in.Body.Alias), store.SpokenKind(in.Body.Kind))
 			if err != nil {
 				return nil, a.problemFor(ctx, err)
 			}
 
-			return &body[RoomAlias]{Body: RoomAlias{ID: al.ID, Alias: al.Alias}}, nil
+			return &body[RoomAlias]{Body: RoomAlias{ID: al.ID, Alias: al.Alias, Kind: string(al.Kind)}}, nil
 		})
 
 	huma.Register(api, protected(huma.Operation{OperationID: "deleteRoomAlias", Method: http.MethodDelete, Path: Prefix + "/rooms/{id}/aliases/{alias_id}", Tags: []string{"rooms"}, Summary: "Remove a room alias", DefaultStatus: http.StatusNoContent}),
@@ -136,7 +137,7 @@ func (a *API) room(ctx context.Context, r store.Room) (Room, error) {
 
 	out := Room{ID: r.ID, Name: r.Name, KodiInstanceID: idPtr(r.KodiInstanceID), Aliases: make([]RoomAlias, 0, len(aliases))}
 	for _, al := range aliases {
-		out.Aliases = append(out.Aliases, RoomAlias{ID: al.ID, Alias: al.Alias})
+		out.Aliases = append(out.Aliases, RoomAlias{ID: al.ID, Alias: al.Alias, Kind: string(al.Kind)})
 	}
 
 	return out, nil

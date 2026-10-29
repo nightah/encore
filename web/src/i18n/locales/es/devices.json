@@ -34,11 +34,15 @@
       "add": "Añadir",
       "addAliasButton": "Añadir nombre hablado a {{name}}",
       "addAliasLabel": "Añadir un nombre hablado para {{name}}",
-      "addAliasPlaceholder": "Añadir nombre hablado",
       "aliases": "Nombres hablados de {{name}}",
       "edit": "Editar habitación {{name}}",
+      "kindLabel": "Tipo de nombre hablado para {{name}}",
       "kodi": "→ Kodi «{{name}}»",
       "noKodi": "→ ninguna instancia de Kodi",
+      "placeholder": {
+        "device": "Nombre del dispositivo, p. ej. tele",
+        "room": "Nombre de la sala, p. ej. salón"
+      },
       "removeAlias": "Quitar el nombre hablado «{{alias}}»"
     },
     "dialog": {
@@ -63,7 +67,11 @@
       "save": "Guardar"
     },
     "empty": "Aún no hay habitaciones.",
-    "intro": "Estos nombres se añaden al modelo de interacción de la skill, para que Alexa los reconozca en «pon Bluey <b>en el cuarto de los niños</b>».",
+    "intro": "Estos nombres se añaden al modelo de interacción de la skill, para que Alexa reconozca una <room>sala</room> en «pon Bluey <b>en el cuarto de los niños</b>» y un <device>dispositivo</device> en «pon Bluey <b>en la tele</b>».",
+    "kind": {
+      "device": "Dispositivo",
+      "room": "Sala"
+    },
     "title": "Habitaciones y nombres hablados"
   },
   "table": {

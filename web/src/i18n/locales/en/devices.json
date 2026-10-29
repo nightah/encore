@@ -34,11 +34,15 @@
       "add": "Add",
       "addAliasButton": "Add spoken name to {{name}}",
       "addAliasLabel": "Add a spoken name for {{name}}",
-      "addAliasPlaceholder": "Add spoken name",
       "aliases": "Spoken names for {{name}}",
       "edit": "Edit room {{name}}",
+      "kindLabel": "Kind of spoken name for {{name}}",
       "kodi": "→ Kodi “{{name}}”",
       "noKodi": "→ no Kodi instance",
+      "placeholder": {
+        "device": "Device name, e.g. TV",
+        "room": "Room name, e.g. living room"
+      },
       "removeAlias": "Remove spoken name “{{alias}}”"
     },
     "dialog": {
@@ -63,7 +67,11 @@
       "save": "Save"
     },
     "empty": "No rooms yet.",
-    "intro": "These names are added to the skill's interaction model, so Alexa recognises them in “play Bluey <b>in the kids' room</b>”.",
+    "intro": "These names are added to the skill's interaction model, so Alexa recognises a <room>room</room> in “play Bluey <b>in the kids' room</b>” and a <device>device</device> in “play Bluey <b>on the TV</b>”.",
+    "kind": {
+      "device": "Device",
+      "room": "Room"
+    },
     "title": "Rooms and spoken names"
   },
   "table": {

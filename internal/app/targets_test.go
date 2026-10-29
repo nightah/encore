@@ -220,7 +220,7 @@ func TestTargetForRoom(t *testing.T) {
 
 	bedroom := store.Room{Name: "Bedroom", KodiInstanceID: instances[0].ID}
 	require.NoError(t, h.app.DB().Rooms().Create(ctx, &bedroom))
-	_, err = h.app.DB().Rooms().AddAlias(ctx, bedroom.ID, "main bedroom")
+	_, err = h.app.DB().Rooms().AddAlias(ctx, bedroom.ID, "main bedroom", store.SpokenRoom)
 	require.NoError(t, err)
 	require.NoError(t, h.app.DB().Rooms().Create(ctx, &store.Room{Name: "Kitchen"}))
 

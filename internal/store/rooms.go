@@ -33,7 +33,7 @@ func scanRoomAlias(s scanner) (RoomAlias, error) {
 		created int64
 	)
 
-	if err := s.Scan(&a.ID, &a.RoomID, &a.Alias, &a.Normalised, &created); err != nil {
+	if err := s.Scan(&a.ID, &a.RoomID, &a.Alias, &a.Normalised, &created, &a.Kind); err != nil {
 		return RoomAlias{}, mapErr(err)
 	}
 
@@ -144,17 +144,17 @@ func (r Rooms) Resolve(ctx context.Context, spoken string) (Room, error) {
 	return room, nil
 }
 
-// AddAlias adds a spoken alias to a room. It returns ErrConflict if the alias already names any room.
-func (r Rooms) AddAlias(ctx context.Context, roomID int64, alias string) (RoomAlias, error) {
-	a := RoomAlias{RoomID: roomID, Alias: alias, Normalised: Normalise(alias), CreatedAt: r.db.stamp()}
+// AddAlias adds a spoken alias of the given kind to a room. It returns ErrConflict if the alias already names any room.
+func (r Rooms) AddAlias(ctx context.Context, roomID int64, alias string, kind SpokenKind) (RoomAlias, error) {
+	a := RoomAlias{RoomID: roomID, Alias: alias, Normalised: Normalise(alias), CreatedAt: r.db.stamp(), Kind: kind}
 
 	err := r.db.tx(ctx, func(tx *sql.Tx) error {
 		if err := roomNameFree(ctx, tx, a.Normalised, 0); err != nil {
 			return err
 		}
 
-		err := tx.QueryRowContext(ctx, `INSERT INTO room_aliases (room_id, alias, normalised, created_at) VALUES (?, ?, ?, ?) RETURNING id`,
-			a.RoomID, a.Alias, a.Normalised, toMillis(a.CreatedAt)).Scan(&a.ID)
+		err := tx.QueryRowContext(ctx, `INSERT INTO room_aliases (room_id, alias, normalised, created_at, kind) VALUES (?, ?, ?, ?, ?) RETURNING id`,
+			a.RoomID, a.Alias, a.Normalised, toMillis(a.CreatedAt), a.Kind).Scan(&a.ID)
 		if err != nil {
 			return mapErr(err)
 		}
@@ -180,5 +180,5 @@ func (r Rooms) RemoveAlias(ctx context.Context, aliasID int64) error {
 // Aliases returns a room's aliases.
 func (r Rooms) Aliases(ctx context.Context, roomID int64) ([]RoomAlias, error) {
 	return queryAll(ctx, r.db.read, scanRoomAlias,
-		`SELECT id, room_id, alias, normalised, created_at FROM room_aliases WHERE room_id = ? ORDER BY normalised`, roomID)
+		`SELECT id, room_id, alias, normalised, created_at, kind FROM room_aliases WHERE room_id = ? ORDER BY normalised`, roomID)
 }

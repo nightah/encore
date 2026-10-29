@@ -79,7 +79,15 @@ type Speech struct {
 	languages map[string]string
 	// slotIDs maps locale, slot type and normalised value or synonym to the value's ID.
 	slotIDs map[string]map[string]map[string]string
-	log     *slog.Logger
+	// roomPhrases holds, per locale, the words its utterances put between another slot and {Room} ("in the", "im"), lowercased and split into words.
+	roomPhrases map[string][][]string
+	log         *slog.Logger
+}
+
+// RoomSplit is one way of reading a search query as a title followed by a room.
+type RoomSplit struct {
+	Title string
+	Room  string
 }
 
 type slots struct {

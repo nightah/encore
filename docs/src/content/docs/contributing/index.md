@@ -122,6 +122,15 @@ Signing off your commits with `git commit -s` ([Developer Certificate of Origin]
 
 The schema lives in `internal/store/migrations/`. The files are embedded in the binary, and [goose](https://github.com/pressly/goose) applies any that haven't run each time Encore opens its database, so upgrading Encore upgrades the database in place.
 
+| Migration | What it does |
+| --- | --- |
+| `00001_init.sql` | The initial schema. |
+| `00002_room_alias_kind.sql` | Marks each spoken name for a room as another name for the room or a device in it. |
+
+:::note
+Until 1.0.0, migrations are added for every schema change so development databases upgrade in place. When 1.0.0 is released they'll all be reset into a single migration for the 1.0.0 schema, and databases from earlier development builds won't upgrade.
+:::
+
 - **Never edit a migration that has been released.** Installations have already run it. Add a new file with the next number and a short description, such as `00002_room_icons.sql`.
 - **Write both directions.** `-- +goose Up` makes the change; `-- +goose Down` undoes it. Up must work on any database the previous release could have written, with data in it.
 - **Follow the existing tables.** `STRICT` tables, timestamps as Unix milliseconds in an `INTEGER`, booleans as `INTEGER` 0/1 with a `CHECK`, and `NOT NULL` with a default where a value always exists. Foreign keys are enforced.

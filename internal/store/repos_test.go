@@ -182,14 +182,14 @@ func TestRoomsAndAliases(t *testing.T) {
 	require.ErrorIs(t, repo.Create(ctx, &Room{Name: "living-room"}), ErrConflict)
 	require.ErrorIs(t, repo.Create(ctx, &Room{Name: "!!"}), ErrInvalid)
 
-	a, err := repo.AddAlias(ctx, lounge.ID, "The Lounge")
+	a, err := repo.AddAlias(ctx, lounge.ID, "The Lounge", SpokenRoom)
 	require.NoError(t, err)
 	assert.Equal(t, "the lounge", a.Normalised)
 
-	_, err = repo.AddAlias(ctx, bed.ID, "the  LOUNGE")
+	_, err = repo.AddAlias(ctx, bed.ID, "the  LOUNGE", SpokenRoom)
 	require.ErrorIs(t, err, ErrConflict, "an alias can name only one room")
 
-	_, err = repo.AddAlias(ctx, bed.ID, "living room")
+	_, err = repo.AddAlias(ctx, bed.ID, "living room", SpokenRoom)
 	require.ErrorIs(t, err, ErrConflict, "an alias cannot shadow another room's name")
 
 	bed.Name = "the lounge"
@@ -206,14 +206,28 @@ func TestRoomsAndAliases(t *testing.T) {
 	_, err = repo.Resolve(ctx, "garage")
 	require.ErrorIs(t, err, ErrNotFound)
 
+	tv, err := repo.AddAlias(ctx, lounge.ID, "TV", SpokenDevice)
+	require.NoError(t, err)
+
+	got, err = repo.Resolve(ctx, "tv")
+	require.NoError(t, err)
+	assert.Equal(t, lounge.ID, got.ID, "a device resolves to its room")
+
+	_, err = repo.AddAlias(ctx, lounge.ID, "hall", "speaker")
+	require.ErrorIs(t, err, ErrInvalid)
+
 	aliases, err := repo.Aliases(ctx, lounge.ID)
 	require.NoError(t, err)
-	require.Len(t, aliases, 1)
+	require.Len(t, aliases, 2)
+	assert.Equal(t, SpokenRoom, aliases[0].Kind)
+	assert.Equal(t, SpokenDevice, aliases[1].Kind)
+
+	require.NoError(t, repo.RemoveAlias(ctx, tv.ID))
 
 	require.NoError(t, repo.RemoveAlias(ctx, a.ID))
 	require.ErrorIs(t, repo.RemoveAlias(ctx, a.ID), ErrNotFound)
 
-	_, err = repo.AddAlias(ctx, lounge.ID, "front room")
+	_, err = repo.AddAlias(ctx, lounge.ID, "front room", SpokenRoom)
 	require.NoError(t, err)
 	require.NoError(t, repo.Delete(ctx, lounge.ID))
 
@@ -713,10 +727,10 @@ func TestRoomsGetAndUpdate(t *testing.T) {
 	require.ErrorIs(t, repo.Update(ctx, &Room{ID: 999, Name: "Garage"}), ErrNotFound)
 	require.ErrorIs(t, repo.Delete(ctx, 999), ErrNotFound)
 
-	_, err = repo.AddAlias(ctx, 999, "attic")
+	_, err = repo.AddAlias(ctx, 999, "attic", SpokenRoom)
 	require.ErrorIs(t, err, ErrInvalid, "an alias needs an existing room")
 
-	_, err = repo.AddAlias(ctx, room.ID, "...")
+	_, err = repo.AddAlias(ctx, room.ID, "...", SpokenRoom)
 	require.ErrorIs(t, err, ErrInvalid)
 }
 

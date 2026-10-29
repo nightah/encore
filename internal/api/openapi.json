@@ -20,6 +20,14 @@
             "maxLength": 64,
             "minLength": 1,
             "type": "string"
+          },
+          "kind": {
+            "default": "room",
+            "enum": [
+              "room",
+              "device"
+            ],
+            "type": "string"
           }
         },
         "required": [
@@ -2420,11 +2428,19 @@
           "id": {
             "format": "int64",
             "type": "integer"
+          },
+          "kind": {
+            "enum": [
+              "room",
+              "device"
+            ],
+            "type": "string"
           }
         },
         "required": [
           "id",
-          "alias"
+          "alias",
+          "kind"
         ],
         "type": "object"
       },
@@ -5383,7 +5399,7 @@
             "session": []
           }
         ],
-        "summary": "Add another spoken name for a room",
+        "summary": "Add another spoken name for a room, or for a device in it",
         "tags": [
           "rooms"
         ]

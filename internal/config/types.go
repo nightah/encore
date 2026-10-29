@@ -221,6 +221,8 @@ type Room struct {
 	Kodi string `koanf:"kodi"`
 	// Aliases are other spoken names for the room, e.g. "living room" for the lounge.
 	Aliases []string `koanf:"aliases"`
+	// Devices are spoken names for devices in the room, e.g. "TV" for "…on the TV".
+	Devices []string `koanf:"devices"`
 }
 
 // Device declares an Echo in the config file, linking it to a Kodi instance (and optionally a room) without the web interface.

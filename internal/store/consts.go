@@ -35,6 +35,14 @@ const (
 
 const requestLogColumns = `id, ts, request_id, device_id, locale, intent, slots, match_info, kodi_calls, timing, speech, outcome, duration_ms, simulated`
 
+// Spoken name kinds.
+const (
+	// SpokenRoom is another name for the room, said as "in the lounge room".
+	SpokenRoom SpokenKind = "room"
+	// SpokenDevice names a device in the room, said as "on the TV".
+	SpokenDevice SpokenKind = "device"
+)
+
 const roomColumns = `id, name, kodi_instance_id, created_at, updated_at`
 
 const secretColumns = `id, key_id, nonce, ciphertext, created_at, updated_at` //nolint:gosec // column names, not a credential
