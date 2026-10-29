@@ -165,6 +165,7 @@ A `Request` (the detail) adds:
 ```text
 {
   "slots": {},
+  "via": {"spoken": "TV", "kind": "room|device", "room": "Lounge"},
   "match": {"normalized": "…", "decision": "play|ask|not_found", "margin": 0.12, "target": "…", "error": "",
     "candidates": [{"title", "year", "kind", "media_id", "score", "breakdown": {"alias", "token_set", "jaro_winkler", "osa", "phonetic", "boost"}}]},
   "kodi_calls": [{"method": "Player.Open", "ms": 41, "ok": true}],
@@ -173,7 +174,7 @@ A `Request` (the detail) adds:
 }
 ```
 
-`kodi_calls` are the JSON-RPC calls the request made, in order. `timing` is `null` for entries logged before Encore recorded it. A logged candidate's `kind` and `media_id` are looked up in the target instance's index when the entry predates them.
+`slots` are kept as Alexa sent them. `via` is the room or device the request named, from the Room slot or the end of a search: `spoken` is the name that matched (the room's own name when that was said), `kind` whether it names the room or a device in it, and `room` the room. It is `null` when the request named none, or for entries logged before Encore recorded it; a room without its own Kodi instance plays on the Echo's, so `target` can differ from `room`. `kodi_calls` are the JSON-RPC calls the request made, in order. `timing` is `null` for entries logged before Encore recorded it. A logged candidate's `kind` and `media_id` are looked up in the target instance's index when the entry predates them.
 
 | Method | Path | Notes |
 | --- | --- | --- |

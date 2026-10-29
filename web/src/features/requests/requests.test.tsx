@@ -460,7 +460,7 @@ describe("Request log", () => {
     expect(screen.queryByText(/Room =/)).not.toBeInTheDocument();
   });
 
-  it("names a device said in the Room slot, and the room it picked", async () => {
+  it("names a device said in the Room slot, and its room", async () => {
     const request = getDb().requests.find((r) => r.id === 1001);
     if (!request) throw new Error("no sample request");
     request.slots = { Command: "stop", Room: "TV" };
@@ -474,7 +474,7 @@ describe("Request log", () => {
     expect(via).toHaveTextContent("TV device in Lounge");
   });
 
-  it("says which room another name for it picked, keeping the Room slot", async () => {
+  it("says which room another name for it names, keeping the Room slot", async () => {
     const request = getDb().requests.find((r) => r.id === 1001);
     if (!request) throw new Error("no sample request");
     request.slots = { Command: "stop", Room: "lounge room" };
@@ -488,7 +488,7 @@ describe("Request log", () => {
     );
   });
 
-  it("shows just the room when its own name picked it", async () => {
+  it("shows just the room when its own name was said", async () => {
     const request = getDb().requests.find((r) => r.id === 1001);
     if (!request) throw new Error("no sample request");
     request.slots = { Command: "stop", Room: "lounge" };

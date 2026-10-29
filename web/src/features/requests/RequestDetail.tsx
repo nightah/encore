@@ -30,7 +30,7 @@ function describeSlots(slots: Detail["slots"], via: Via | null): string {
     : "-";
 }
 
-/** The room name that picked the target: a device in a room, another name for a room, or the room itself. */
+/** The room or device the request named: a device in a room, another name for a room, or the room itself. */
 function ViaLine({ via }: { via: Via }) {
   const room = <KindPill kind={RoomAliasKind.room} className="pr-2.5" />;
   if (via.kind === RoomAliasKind.room && via.spoken === via.room) {

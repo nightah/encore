@@ -48,7 +48,7 @@ type LogEntry struct {
 	Intent    string
 	Slots     map[string]string
 	Target    string
-	// Via is the room name in the request that picked Target, if one did.
+	// Via is the room or device the request named, if it named one.
 	Via      actions.Via
 	Match    *match.Result
 	Speech   string

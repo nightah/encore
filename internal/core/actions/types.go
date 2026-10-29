@@ -46,11 +46,11 @@ type Target struct {
 	ConfirmSound bool
 	// Disabled lists the content groups the skill was set up without; the zero value allows everything.
 	Disabled []media.Content
-	// Via is set when a room named in the request picked the target.
+	// Via is set when the request named a room or device; a room without its own Kodi instance plays on the Echo's, so the target can be another room's.
 	Via Via
 }
 
-// Via is the room name a request said that picked its target, e.g. "TV", a device in the lounge.
+// Via is the room name a request said, e.g. "TV", a device in the lounge.
 type Via struct {
 	// Spoken is the name that matched, Kind "room" or "device", and Room the name of the room it belongs to.
 	Spoken, Kind, Room string

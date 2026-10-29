@@ -536,7 +536,7 @@ type RequestDetail struct {
 	RequestSummary
 
 	Slots     map[string]string `json:"slots"`
-	Via       Nullable[Via]     `json:"via" doc:"The room name in the request that picked its Kodi instance; null when none did, or for requests logged before Encore recorded it"`
+	Via       Nullable[Via]     `json:"via" doc:"The room or device the request named; null when it named none, or for requests logged before Encore recorded it. A room without its own Kodi instance plays on the Echo's, so the target can differ from this room"`
 	Match     Nullable[Match]   `json:"match"`
 	KodiCalls []KodiCall        `json:"kodi_calls"`
 	Timing    Nullable[Timing]  `json:"timing" doc:"How long each phase took; null for requests logged before Encore recorded it"`
