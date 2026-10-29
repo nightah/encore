@@ -183,6 +183,7 @@
     "results": "Risultati del test di connessione",
     "rpc": "Indirizzo JSON-RPC",
     "searchAgain": "Cerca di nuovo",
+    "searchFailed": "",
     "searching": "Ricerca di Kodi nella tua rete.",
     "submit": "Aggiungi e verifica",
     "testFailed": "Il test di connessione non è stato eseguito: {{error}}",
