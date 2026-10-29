@@ -14,10 +14,14 @@ afterEach(() => vi.restoreAllMocks());
 describe("browserLanguage", () => {
   it.each([
     [["de-AT", "en"], "de"],
-    [["pt-BR", "fr-CA", "de"], "fr"],
+    [["pt-BR", "fr-CA", "de"], "pt"],
+    [["zh-CN", "fr-CA", "de"], "fr"],
+    [["ar-SA"], "ar"],
+    [["nl-BE"], "nl"],
     [["IT"], "it"],
     [["es-419"], "es"],
-    [["ja", "zh-Hant"], "en"],
+    [["ja", "zh-Hant"], "ja"],
+    [["ko", "zh-Hant"], "en"],
     [[], "en"],
   ])("picks the first supported language of %j", (languages, expected) => {
     browserPrefers(languages);
