@@ -61,6 +61,10 @@ func TestLintLocaleRules(t *testing.T) {
 		"empty invocation":         {locale: "language: en\nskill_name: Encore\n", want: `invocation name "" must be lowercase letters`},
 		"trailing period":          {locale: "language: en\nskill_name: Encore\ninvocation: encore.\n", want: "must be lowercase letters"},
 		"reserved word, any place": {locale: "language: en\nskill_name: Encore\ninvocation: my echo remote\n", want: `contains the reserved word "echo"`},
+		"synonyms for an unknown value": {
+			locale: "language: en\nskill_name: Encore\ninvocation: encore test\ntypes:\n  KODI_ROOM:\n    attic: [loft]\n",
+			want:   "error: en-US: synonyms given for value attic of slot type KODI_ROOM, which has no value with that ID",
+		},
 	}
 
 	for name, tt := range tests {
