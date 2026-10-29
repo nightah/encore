@@ -204,19 +204,11 @@ func (l *language) spellLetters(toks []string) []string {
 		}
 
 		start := i
-		if start > 0 && j-start > 2 && l.letterWords[toks[start]] {
+		if start > 0 && j-start > 2 && l.letterWords[toks[start]] && l.spells(toks[start+1:j]) {
 			start++
 		}
 
-		names := 0
-
-		for _, tok := range toks[start:j] {
-			if len(tok) > 1 && !l.letterWords[tok] {
-				names++
-			}
-		}
-
-		if j-start >= 2 && names >= 2 {
+		if l.spells(toks[start:j]) {
 			for k := start; k < j; k++ {
 				if letter, ok := l.letterNames[toks[k]]; ok {
 					toks[k] = letter
@@ -228,6 +220,22 @@ func (l *language) spellLetters(toks []string) []string {
 	}
 
 	return toks
+}
+
+// spells reports whether a run of letter names reads as a spelled acronym: two or more names that are no other word, or three or more names none of which is a single letter.
+func (l *language) spells(run []string) bool {
+	names, letters := 0, 0
+
+	for _, tok := range run {
+		switch {
+		case len(tok) == 1:
+			letters++
+		case !l.letterWords[tok]:
+			names++
+		}
+	}
+
+	return len(run) >= 2 && names >= 2 || len(run) >= 3 && letters == 0
 }
 
 // joinLetters merges runs of two or more single-letter tokens, so "E.T." and "M*A*S*H" become "et" and "mash".

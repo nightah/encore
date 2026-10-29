@@ -361,7 +361,7 @@ type language struct {
 	// romanize writes a token in Latin letters, so a title and a request in different scripts meet in one form (Devanagari "दंगल" and Latin "Dangal" both "dangal"). It runs after split and articlePrefixes, so articles, stop words, number words and parts are listed as romanize writes them. A token it can't write (kanji) is returned unchanged; one it returns empty is dropped and one with spaces becomes several tokens. Nil leaves tokens in their script.
 	romanize func(tok string) string
 	stop     map[string]bool
-	// letterNames maps the names of letters to the letters ("erre" -> "r"), so an acronym spelled out by name ("erre be de") reads as its letters ("rbd"). Only a run of two or more letter names with at least two names that are no other word of the language (not letterWords) is read this way, so "de" or "te" alone in a title stays a word, and a run that follows another word leaves out a leading letterWord, the preposition before the acronym ("concierto de erre be de").
+	// letterNames maps the names of letters to the letters ("erre" -> "r"), so an acronym spelled out by name ("erre be de") reads as its letters ("rbd"). Only a run with at least two names that are no other word of the language (not letterWords), or a run of three or more names none of which is a single letter ("de ve de"), is read this way, so "de" or "te" alone in a title stays a word, and a run that follows another word leaves out a leading letterWord, the preposition before the acronym ("concierto de erre be de").
 	letterNames map[string]string
 	letterWords map[string]bool
 	// elide splits on apostrophes ("l'amour" -> "l amour") instead of joining ("ocean's" -> "oceans").

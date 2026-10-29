@@ -25,11 +25,19 @@ func TestNormalizeSpanish(t *testing.T) {
 		{"concierto de erre be de", "concierto de rbd"},
 		{"el disco de te cu eme", "disco de tqm"},
 		{"jota balvin", "jota balvin"},
+		{"de ve de", "dvd"},
+		{"de ve des", "de ve des"},
+		{"el concierto en de ve de", "concierto en dvd"},
+		{"el concierto de de ve de", "concierto de dvd"},
 		// Common words that are also letter names stay words unless two other letter names spell with them.
 		{"te de", "te de"},
 		{"ese de ahí", "ese de ahi"},
 		{"la ele", "ele"},
 		{"cu eme", "qm"},
+		{"ve", "ve"},
+		{"ve a casa", "ve a casa"},
+		{"ve de ahí", "ve de ahi"},
+		{"ve te", "ve te"},
 	} {
 		assert.Equal(t, tc.want, Normalize("es-MX", tc.in), tc.in)
 	}
