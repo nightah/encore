@@ -1,6 +1,7 @@
 package docsgen
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -123,12 +124,33 @@ func voiceData(src *skillmodel.Sources, lang string, titles map[string]string) m
 			continue
 		}
 
-		types = append(types, VoiceType{Name: t.Name, Dynamic: t.Dynamic, Values: append(slices.Clone(t.Values), l.Types[t.Name]...)})
+		vt := VoiceType{Name: t.Name, Dynamic: t.Dynamic, Values: append(slices.Clone(t.Values), l.Types[t.Name]...)}
+
+		for _, loc := range locales {
+			if extra := localeSynonyms(vt.Values, src.Locales[loc.Locale].Types[t.Name]); len(extra) > 0 {
+				vt.Extra = append(vt.Extra, LocaleValues{Locale: loc.Locale, Values: extra})
+			}
+		}
+
+		types = append(types, vt)
 	}
 
 	return map[string]any{
 		"Lang": lang, "Name": name, "Locales": locales, "Sections": sections, "Builtins": builtins, "Types": types,
 	}
+}
+
+// localeSynonyms lists the values a locale adds synonyms to, in the type's order, each with only the synonyms the locale adds.
+func localeSynonyms(values []skillmodel.SlotValue, synonyms map[string][]string) []skillmodel.SlotValue {
+	var out []skillmodel.SlotValue
+
+	for _, v := range values {
+		if extra := synonyms[cmp.Or(v.ID, v.Value)]; len(extra) > 0 {
+			out = append(out, skillmodel.SlotValue{ID: v.ID, Value: v.Value, Synonyms: extra})
+		}
+	}
+
+	return out
 }
 
 // slotsIn gives each slot the type the language's locales use: its fallback when every one of them lacks its built-in type (Dutch has no AMAZON.SearchQuery), its type otherwise.

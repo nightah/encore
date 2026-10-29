@@ -63,4 +63,8 @@ Custom slot types accept these words and their synonyms. Alexa can also pass on 
 Filled at deploy time.{{if .Values}} Examples:{{end}}
 {{end}}
 {{range .Values}}- {{.Value}}{{with .Synonyms}} ({{join . ", "}}){{end}}
-{{end}}{{end}}
+{{end}}{{range .Extra}}
+Also in `{{.Locale}}`:
+
+{{range .Values}}- {{.Value}} ({{join .Synonyms ", "}})
+{{end}}{{end}}{{end}}

@@ -95,6 +95,14 @@ type VoiceType struct {
 	Name    string
 	Dynamic bool
 	Values  []skillmodel.SlotValue
+	// Extra are the synonyms only some locales add, by locale.
+	Extra []LocaleValues
+}
+
+// LocaleValues are one locale's additional synonyms for a slot type: each value it adds to, with only the synonyms it adds.
+type LocaleValues struct {
+	Locale string
+	Values []skillmodel.SlotValue
 }
 
 // APISection is one area of the admin API: an OpenAPI tag.
