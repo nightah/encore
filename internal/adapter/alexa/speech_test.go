@@ -12,6 +12,7 @@ import (
 	"pgregory.net/rapid"
 
 	"github.com/nightah/encore/internal/core/actions"
+	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/skillmodel"
 )
 
@@ -48,6 +49,23 @@ func TestNewSpeechRejectsBrokenRoomPhrase(t *testing.T) {
 		"en-US": "language: en\nutterances:\n  WatchMovie:\n    - \"play {Movie} [(in|on the {Room}]\"\n",
 	}), slog.New(slog.DiscardHandler))
 	require.ErrorContains(t, err, "locale en-US")
+}
+
+func TestNewSpeechRejectsBrokenQueryCarrier(t *testing.T) {
+	_, err := NewSpeech(speechSources(t, map[string]string{
+		"en-US": "language: en\nutterances:\n  PlayMedia:\n    - \"(play|put on {Query}\"\n",
+	}), slog.New(slog.DiscardHandler))
+	require.ErrorContains(t, err, "locale en-US")
+}
+
+func TestQueryFormsRejectBrokenTVSample(t *testing.T) {
+	model := skillmodel.Model{Intents: []skillmodel.Intent{{Name: "WatchLatestEpisode", Content: media.ContentTV}}}
+
+	_, err := queryForms(model, map[string][]string{
+		"PlayMedia":          {"play {Query}"},
+		"WatchLatestEpisode": {"play the (latest|newest episode of {Show}"},
+	})
+	require.Error(t, err)
 }
 
 func TestNewSpeechRejectsLocaleWithoutLanguage(t *testing.T) {

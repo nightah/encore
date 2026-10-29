@@ -81,7 +81,20 @@ type Speech struct {
 	slotIDs map[string]map[string]map[string]string
 	// roomPhrases holds, per locale, the words its utterances put between another slot and {Room} ("in the", "im"), lowercased and split into words.
 	roomPhrases map[string][][]string
-	log         *slog.Logger
+	// queryForms holds, per locale, the TV intents' samples as they'd reach PlayMedia's search query, most specific first.
+	queryForms map[string][]queryForm
+	log        *slog.Logger
+}
+
+// queryForm is one TV intent sample with PlayMedia's carrier phrase ("play", "put on") taken off the front: "the next episode of {Show}" for WatchNextEpisode.
+type queryForm struct {
+	intent string
+	// words are the sample's lowercased words; a slot is its "{Name}" reference.
+	words []string
+	// numbers names the slots that take a number.
+	numbers map[string]bool
+	// literals counts the words that aren't slots, so the most specific form is tried first.
+	literals int
 }
 
 // RoomSplit is one way of reading a search query as a title followed by a room.

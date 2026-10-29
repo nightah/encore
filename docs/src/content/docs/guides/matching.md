@@ -17,6 +17,8 @@ The rules for a library follow its Kodi instance's `language` (English by defaul
 
 [`alexa.deep_search`](/encore/reference/configuration/#alexadeep_search) (on by default) makes "play X" search music as well as films and TV when the request doesn't say what kind of title it is.
 
+A "play X" request whose words are one of the skill's episode commands, such as "play the next episode of Bluey" or "play season 2 episode 4 of Bluey", isn't searched as a title: Encore runs that command and matches only the show's name ("Bluey"). Alexa sends a request this way when it doesn't recognise the show, so without it the whole phrase would be searched and found nothing. Numbers only count as numbers here when Alexa writes them as digits.
+
 ## The match tester
 
 On the **Library** page's match tester, type what Alexa would hear, choose a library and optionally the kinds of title, and see the normalised query, the decision (play, ask or not found), the margin between the top two, and every candidate with a breakdown of its score. It runs against the live index without touching Kodi.

@@ -138,11 +138,18 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, entry *LogEn
 		err    error
 	)
 
+	// The slot holding a search query's title, which may end with a room.
+	var title string
+
+	if intent.Name == "PlayMedia" {
+		intent, title = h.Speech.Reinterpret(locale, intent)
+	}
+
 	switch room := strings.TrimSpace(intent.Slots["Room"].Value); {
 	case room != "":
 		target, err = h.Targets.TargetForRoom(ctx, entry.DeviceID, room)
-	case intent.Name == "PlayMedia":
-		target, intent, err = h.targetInQuery(ctx, entry.DeviceID, locale, intent)
+	case title != "":
+		target, intent, err = h.targetInQuery(ctx, entry.DeviceID, locale, intent, title)
 	default:
 		target, err = h.Targets.Target(ctx, entry.DeviceID)
 	}
@@ -178,9 +185,9 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, entry *LogEn
 	return h.respond(locale, o, target.ConfirmSound), &o
 }
 
-// targetInQuery finds a room named at the end of a search query. An AMAZON.SearchQuery slot can't share an utterance with another slot, so "play frozen in the lounge" arrives as the query "frozen in the lounge"; when its ending names a known room, the room is taken off the query and its Kodi instance is the target.
-func (h *Handler) targetInQuery(ctx context.Context, deviceID, locale string, intent Intent) (actions.Target, Intent, error) {
-	for _, split := range h.Speech.RoomSplits(locale, intent.Slots["Query"].Value) {
+// targetInQuery finds a room named at the end of a search query's title slot. An AMAZON.SearchQuery slot can't share an utterance with another slot, so "play frozen in the lounge" arrives as the query "frozen in the lounge"; when its ending names a known room, the room is taken off the title and its Kodi instance is the target.
+func (h *Handler) targetInQuery(ctx context.Context, deviceID, locale string, intent Intent, title string) (actions.Target, Intent, error) {
+	for _, split := range h.Speech.RoomSplits(locale, intent.Slots[title].Value) {
 		target, err := h.Targets.TargetForRoom(ctx, deviceID, split.Room)
 
 		switch {
@@ -191,7 +198,7 @@ func (h *Handler) targetInQuery(ctx context.Context, deviceID, locale string, in
 		}
 
 		slots := maps.Clone(intent.Slots)
-		slots["Query"] = Slot{Name: "Query", Value: split.Title}
+		slots[title] = Slot{Name: title, Value: split.Title}
 
 		return target, Intent{Name: intent.Name, Slots: slots}, nil
 	}

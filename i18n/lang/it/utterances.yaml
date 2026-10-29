@@ -249,6 +249,10 @@ WatchEpisode:
   play_episode_season_2: "(metti|guarda|riproduci) l'episodio {Episode} della stagione {Season} di {Show}"
   play_season_episode: "(metti|mettere|guarda|guardare|riproduci|riprodurre) {Show} stagione {Season} episodio {Episode} [(in|nel|nella) {Room}]"
   play_season_episode_2: "(metti|mettere|guarda|guardare|riproduci|riprodurre) la stagione {Season} episodio {Episode} di {Show} [(in|nel|nella) {Room}]"
+WatchFirstEpisode:
+  play_first: "(metti|guarda) {Show} dall'inizio"
+  play_first_episode: "(metti|mettere|guarda|guardare|riproduci|riprodurre) il primo episodio di {Show} [(in|nel|nella) {Room}]"
+  play_first_episode_2: "(metti|mettere|guarda|guardare|riproduci|riprodurre) il primissimo episodio di {Show} [(in|nel|nella) {Room}]"
 WatchLatestEpisode:
   play_latest: "(metti|guarda) il nuovo episodio di {Show}"
   play_latest_episode: "(metti|mettere|guarda|guardare|riproduci|riprodurre) l'ultimo episodio di {Show} [(in|nel|nella) {Room}]"

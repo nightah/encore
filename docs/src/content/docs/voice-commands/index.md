@@ -24,6 +24,18 @@ In French the invocation name is always "kodi" ("Alexa, demande à kodi de …")
 
 Commands that start playback accept a room at the end: "play Dune in the bedroom" plays on the bedroom's Kodi instance, whichever Echo you're talking to. See [Echo devices and rooms](/encore/guides/echo-devices/).
 
+## Episodes
+
+Ask for an episode of a show by where it falls, or by its number:
+
+- "play the next episode of Bluey" plays the first one you haven't watched ("play Bluey from where I left off" too)
+- "play the first episode of Bluey" or "play Bluey from the start"
+- "play the latest episode of Bluey" ("newest", "most recent" and "last" work too)
+- "play a random episode of Bluey"
+- "play Bluey season 2 episode 4"
+
+The first and latest episodes skip specials (season 0) unless a show has nothing else. Alexa sometimes hears these as a plain "play …" search rather than an episode command, usually when it doesn't recognise the show's name; Encore spots the episode command's wording in the search and runs it anyway, so either way the right episode plays.
+
 ## Finding titles
 
 Encore matches what Alexa heard against your own library, so it copes with numbering ("rocky two"), subtitles ("endgame") and titles Alexa doesn't know. When two titles are close, it asks which one you meant. See [matching and aliases](/encore/guides/matching/).

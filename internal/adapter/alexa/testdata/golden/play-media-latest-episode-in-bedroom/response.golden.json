@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "response": {
+    "outputSpeech": {
+      "type": "PlainText",
+      "text": "Playing Severance, season 2, episode 5, Trojan's Horse."
+    },
+    "card": {
+      "type": "Simple",
+      "title": "Encore",
+      "content": "Playing Severance, season 2, episode 5, Trojan's Horse."
+    },
+    "shouldEndSession": true
+  }
+}
+

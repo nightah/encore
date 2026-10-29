@@ -13,6 +13,7 @@ import (
 
 	"github.com/nightah/encore/i18n"
 	"github.com/nightah/encore/internal/core/actions"
+	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/skillmodel"
 )
 
@@ -205,6 +206,73 @@ func TestRoomSplits(t *testing.T) {
 	} {
 		assert.Equal(t, tc.want, speech.RoomSplits(tc.locale, tc.query), "%s %q", tc.locale, tc.query)
 	}
+}
+
+func TestReinterpret(t *testing.T) {
+	src, err := skillmodel.Load(i18n.FS)
+	require.NoError(t, err)
+
+	speech, err := NewSpeech(src, slog.New(slog.DiscardHandler))
+	require.NoError(t, err)
+
+	type want struct {
+		intent, title string
+		slots         map[string]string
+	}
+
+	for _, tc := range []struct {
+		locale, query string
+		want          want
+	}{
+		{"en-AU", "the next episode of bluey", want{"WatchNextEpisode", "Show", map[string]string{"Show": "bluey"}}},
+		{"en-AU", "next episode of bluey in the lounge", want{"WatchNextEpisode", "Show", map[string]string{"Show": "bluey in the lounge"}}},
+		{"en-AU", "bluey from where I left off", want{"WatchNextEpisode", "Show", map[string]string{"Show": "bluey"}}},
+		{"en-AU", "The Latest Episode of Bluey", want{"WatchLatestEpisode", "Show", map[string]string{"Show": "Bluey"}}},
+		{"en-AU", "the 1st episode of bluey", want{"WatchFirstEpisode", "Show", map[string]string{"Show": "bluey"}}},
+		{"en-AU", "the first episode of bluey", want{"WatchFirstEpisode", "Show", map[string]string{"Show": "bluey"}}},
+		{"en-AU", "a random episode of bluey", want{"WatchRandomEpisode", "Show", map[string]string{"Show": "bluey"}}},
+		{"en-AU", "season 2 episode 4 of severance", want{"WatchEpisode", "Show", map[string]string{"Show": "severance", "Season": "2", "Episode": "4"}}},
+		{"en-AU", "season two episode four of severance", want{"PlayMedia", "Query", map[string]string{"Query": "season two episode four of severance"}}},
+		{"en-AU", "bluey", want{"PlayMedia", "Query", map[string]string{"Query": "bluey"}}},
+		{"en-AU", "the next episode of", want{"PlayMedia", "Query", map[string]string{"Query": "the next episode of"}}},
+		{"en-AU", "the man in the iron mask", want{"PlayMedia", "Query", map[string]string{"Query": "the man in the iron mask"}}},
+		{"de-DE", "die nächste folge von bluey", want{"WatchNextEpisode", "Show", map[string]string{"Show": "bluey"}}},
+		{"xx-XX", "the next episode of bluey", want{"WatchNextEpisode", "Show", map[string]string{"Show": "bluey"}}},
+	} {
+		in := Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.query}}}
+		got, title := speech.Reinterpret(tc.locale, in)
+
+		values := map[string]string{}
+		for name, slot := range got.Slots {
+			values[name] = slot.Value
+		}
+
+		assert.Equal(t, tc.want, want{got.Name, title, values}, "%s %q", tc.locale, tc.query)
+	}
+}
+
+func TestEpisodeInSearchQuery(t *testing.T) {
+	t.Run("an unknown room stays part of the show", func(t *testing.T) {
+		h, lounge, bedroom, rec := newRoomHandler(t)
+
+		req := mustRead(t, "testdata/golden/play-media-latest-episode-in-bedroom/request.json")
+		req = bytes.Replace(req, []byte(`in the bedroom"`), []byte(`in the attic"`), 1)
+
+		serveBody(t, h, req)
+		assert.Empty(t, bedroom.Calls())
+		assert.Empty(t, lounge.Calls(), "no show is called \"severance in the attic\"")
+
+		require.Len(t, rec.entries, 1)
+		assert.Equal(t, "Lounge", rec.entries[0].Target)
+		assert.Equal(t, "the latest episode of severance in the attic", rec.entries[0].Slots["Query"], "the log keeps what was heard")
+	})
+
+	t.Run("declined without TV", func(t *testing.T) {
+		h, backend := withDisabled(t, false, media.ContentTV)
+		res := serveBody(t, h, mustRead(t, "testdata/golden/play-media-next-episode/request.json"))
+		assert.Contains(t, string(res), "This skill is set up without that kind of title.")
+		assert.Empty(t, backend.Calls())
+	})
 }
 
 func TestFollowupRoundTrip(t *testing.T) {

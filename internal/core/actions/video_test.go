@@ -89,6 +89,13 @@ func TestLatestEpisode(t *testing.T) {
 	assert.Equal(t, "Trojan's Horse", o.Say.Params["title"])
 }
 
+func TestFirstEpisode(t *testing.T) {
+	target, _, _ := newTarget()
+
+	o := newService().FirstEpisode(t.Context(), target, "severance", nil)
+	assert.Equal(t, "Who Is Alive?", o.Say.Params["title"])
+}
+
 func TestContinueWatching(t *testing.T) {
 	target, backend, _ := newTarget()
 
@@ -192,6 +199,7 @@ func TestShowsNotFound(t *testing.T) {
 	svc := seeded()
 
 	for name, o := range map[string]Outcome{
+		"first episode":  svc.FirstEpisode(t.Context(), target, "the bear", nil),
 		"latest episode": svc.LatestEpisode(t.Context(), target, "the bear", nil),
 		"random episode": svc.RandomEpisode(t.Context(), target, "the bear", nil),
 		"shuffle show":   svc.ShuffleShow(t.Context(), target, "the bear", nil),
@@ -213,10 +221,13 @@ func TestShowsWithoutEpisodes(t *testing.T) {
 	assert.Equal(t, "tv.no_episodes", o.Say.ID)
 	assert.Equal(t, map[string]string{"show": "Andor"}, o.Say.Params)
 
+	o = svc.FirstEpisode(t.Context(), target, "andor", nil)
+	assert.Equal(t, "tv.no_episodes", o.Say.ID)
+
 	o = svc.RandomEpisode(t.Context(), target, "andor", nil)
 	assert.Equal(t, "tv.no_episodes", o.Say.ID)
 
-	assert.Equal(t, []string{"Episodes 30", "Episodes 30"}, backend.Calls())
+	assert.Equal(t, []string{"Episodes 30", "Episodes 30", "Episodes 30"}, backend.Calls())
 }
 
 func TestLatestEpisodeIgnoresSpecials(t *testing.T) {
@@ -231,6 +242,21 @@ func TestLatestEpisodeIgnoresSpecials(t *testing.T) {
 	target, backend, _ = newTarget(show, special)
 	o := newService().LatestEpisode(t.Context(), target, "andor", nil)
 	assert.Equal(t, "Behind the Scenes", o.Say.Params["title"], "a show of only specials plays its last special")
+	assert.Equal(t, "Play episode/300 resume", lastCall(backend.Calls()))
+}
+
+func TestFirstEpisodeIgnoresSpecials(t *testing.T) {
+	special := media.Item{Kind: media.KindEpisode, ID: 300, ShowID: 30, ShowTitle: "Andor", Season: 0, Episode: 1, Title: "Behind the Scenes"}
+	first := media.Item{Kind: media.KindEpisode, ID: 301, ShowID: 30, ShowTitle: "Andor", Season: 1, Episode: 1, Title: "Kassa"}
+	show := media.Item{Kind: media.KindTVShow, ID: 30, Title: "Andor"}
+
+	target, backend, _ := newTarget(show, special, first)
+	newService().FirstEpisode(t.Context(), target, "andor", nil)
+	assert.Equal(t, "Play episode/301 resume", lastCall(backend.Calls()), "the special sorts first but isn't the first episode")
+
+	target, backend, _ = newTarget(show, special)
+	o := newService().FirstEpisode(t.Context(), target, "andor", nil)
+	assert.Equal(t, "Behind the Scenes", o.Say.Params["title"], "a show of only specials plays its first special")
 	assert.Equal(t, "Play episode/300 resume", lastCall(backend.Calls()))
 }
 
