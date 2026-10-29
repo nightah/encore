@@ -210,6 +210,7 @@ func (s *Speech) Reinterpret(locale string, intent Intent) (Intent, string) {
 var ordinals = map[string]map[string]string{
 	"en": {"1st": "first"},
 	"nl": {"1e": "eerste", "1ste": "eerste"},
+	"pt": {"1º": "primeiro", "1°": "primeiro"},
 }
 
 // queryForms collects the samples of each TV intent that start with one of PlayMedia's carrier phrases, without it and without a room, most specific first. Samples that are only a slot after the carrier, such as "play {Show}", are left out: any query would match them.
@@ -608,7 +609,7 @@ func languageName(locale, code string) string {
 	return code
 }
 
-var listAnd = map[string]string{"en": "and", "de": "und", "fr": "et", "es": "y", "it": "e", "ar": "و", "hi": "और", "ja": "と", "nl": "en"}
+var listAnd = map[string]string{"en": "and", "de": "und", "fr": "et", "es": "y", "it": "e", "ar": "و", "hi": "और", "ja": "と", "nl": "en", "pt": "e"}
 
 // listCommas are the list separators of languages that don't write ", ".
 var listCommas = map[string]string{"ar": "، ", "ja": "、"}
@@ -663,6 +664,7 @@ var durationWords = map[string][5]string{
 	"hi": {"घंटा", "घंटे", "मिनट", "मिनट", "एक मिनट से कम"},
 	"ja": {"時間", "時間", "分", "分", "1分未満"},
 	"nl": {"uur", "uur", "minuut", "minuten", "minder dan een minuut"},
+	"pt": {"hora", "horas", "minuto", "minutos", "menos de um minuto"},
 }
 
 // durationCounts word a count of a duration unit in languages that don't say the number, a space and the singular for one or the plural otherwise, given the unit's singular and plural.
