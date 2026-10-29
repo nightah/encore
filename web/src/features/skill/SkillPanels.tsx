@@ -237,7 +237,7 @@ export function ModelTitlesCard({ skill }: { skill: Skill }) {
     <Section id="size-h" title={t("titles.title")}>
       {size ? (
         <>
-          <ul className="flex list-disc flex-col gap-0.5 pl-4.5 text-[13px] text-muted">
+          <ul className="flex list-disc flex-col gap-0.5 ps-4.5 text-[13px] text-muted">
             <li>
               <Trans
                 t={t}
@@ -371,7 +371,7 @@ export function WarningsCard({ warnings }: { warnings: string[] }) {
   return (
     <Callout tone="warn" role="note" className="flex-col gap-1">
       <span className="font-semibold">{t("warnings.title")}</span>
-      <ul className="flex list-disc flex-col gap-0.5 pl-4.5">
+      <ul className="flex list-disc flex-col gap-0.5 ps-4.5">
         {warnings.map((warning) => (
           <li key={warning}>{warning}</li>
         ))}

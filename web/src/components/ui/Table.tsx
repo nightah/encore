@@ -28,7 +28,7 @@ export function Th({ className, ...props }: ComponentProps<"th">) {
     <th
       scope="col"
       className={cn(
-        "whitespace-nowrap border-line border-b px-4 py-2.5 text-left font-medium font-mono text-[11.5px] text-muted uppercase tracking-[0.06em]",
+        "whitespace-nowrap border-line border-b px-4 py-2.5 text-start font-medium font-mono text-[11.5px] text-muted uppercase tracking-[0.06em]",
         className,
       )}
       {...props}

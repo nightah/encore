@@ -33,8 +33,8 @@ export function RoomsSection({ rooms, instances }: { rooms: Room[]; instances: I
           i18nKey="rooms.intro"
           components={{
             b: <b />,
-            device: <KindPill kind={RoomAliasKind.device} className="pr-2.5 align-middle" />,
-            room: <KindPill kind={RoomAliasKind.room} className="pr-2.5 align-middle" />,
+            device: <KindPill kind={RoomAliasKind.device} className="pe-2.5 align-middle" />,
+            room: <KindPill kind={RoomAliasKind.room} className="pe-2.5 align-middle" />,
           }}
         />
       </p>
@@ -73,7 +73,7 @@ function RoomCard({ room, instance, onEdit }: { room: Room; instance: Instance |
         <IconButton
           label={t("rooms.card.edit", { name: room.name })}
           variant="ghost"
-          className="-mt-2 -mr-2"
+          className="-mt-2 -me-2"
           onClick={onEdit}
         >
           <Pencil aria-hidden="true" className="size-4" />
@@ -82,7 +82,7 @@ function RoomCard({ room, instance, onEdit }: { room: Room; instance: Instance |
       <ul aria-label={t("rooms.card.aliases", { name: room.name })} className="flex flex-wrap gap-1.5">
         {room.aliases.map((a) => (
           <li key={a.id}>
-            <KindPill kind={a.kind} className="pr-1">
+            <KindPill kind={a.kind} className="pe-1">
               <span className="sr-only">{t(`rooms.kind.${a.kind}`)}: </span>
               <span>{a.alias}</span>
               <button
@@ -182,7 +182,7 @@ function RoomDialog({
       footer={
         confirmDelete && room ? (
           <>
-            <span className="mr-auto self-center">{t("rooms.dialog.confirmRemove", { name: room.name })}</span>
+            <span className="me-auto self-center">{t("rooms.dialog.confirmRemove", { name: room.name })}</span>
             <Button onClick={() => setConfirmDelete(false)}>{t("rooms.dialog.keep")}</Button>
             <Button
               variant="danger"
@@ -195,7 +195,7 @@ function RoomDialog({
         ) : (
           <>
             {room ? (
-              <Button variant="danger" className="mr-auto" onClick={() => setConfirmDelete(true)}>
+              <Button variant="danger" className="me-auto" onClick={() => setConfirmDelete(true)}>
                 {t("rooms.dialog.removeEllipsis")}
               </Button>
             ) : null}
