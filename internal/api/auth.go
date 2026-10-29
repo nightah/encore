@@ -15,14 +15,14 @@ import (
 )
 
 func (a *API) registerAuth(api huma.API) {
-	huma.Register(api, public(huma.Operation{OperationID: "getAuthState", Method: http.MethodGet, Path: Prefix + "/auth/state", Tags: []string{"auth"}, Summary: "Sign-in state and CSRF token"}),
+	huma.Register(api, public(huma.Operation{OperationID: "getAuthState", Method: http.MethodGet, Path: Prefix + "/auth/state", Tags: []string{"auth"}, Summary: "Sign-in state and CSRF token", Description: "Also sets the per-browser CSRF cookie the token is bound to."}),
 		func(ctx context.Context, _ *struct{}) (*body[AuthState], error) {
 			st, err := a.authState(ctx)
 
 			return &body[AuthState]{Body: st}, a.problemFor(ctx, err)
 		})
 
-	huma.Register(api, public(huma.Operation{OperationID: "createAdmin", Method: http.MethodPost, Path: Prefix + "/setup/admin", Tags: []string{"auth"}, Summary: "Create the first admin account", Description: "Only before an admin exists. The one-time setup token is printed in the server log at startup.", DefaultStatus: http.StatusNoContent}),
+	huma.Register(api, public(huma.Operation{OperationID: "createAdmin", Method: http.MethodPost, Path: Prefix + "/setup/admin", Tags: []string{"auth"}, Summary: "Create the first admin account", Description: "Only before an admin exists; 409 once one does. The one-time setup token is printed in the server log at startup. Signs in as the new admin.", DefaultStatus: http.StatusNoContent}),
 		func(ctx context.Context, in *struct {
 			Body struct {
 				SetupToken string `json:"setup_token" minLength:"1"`
@@ -37,7 +37,7 @@ func (a *API) registerAuth(api huma.API) {
 			return nil, a.authProblem(ctx, err)
 		})
 
-	huma.Register(api, public(huma.Operation{OperationID: "login", Method: http.MethodPost, Path: Prefix + "/auth/login", Tags: []string{"auth"}, Summary: "Sign in with a username and password", DefaultStatus: http.StatusNoContent}),
+	huma.Register(api, public(huma.Operation{OperationID: "login", Method: http.MethodPost, Path: Prefix + "/auth/login", Tags: []string{"auth"}, Summary: "Sign in with a username and password", Description: "Sets the session cookie. 401 on bad credentials, 429 while locked out. With TOTP on, a login without a code answers 401 with `errors[0].location` set to `body.totp`.", DefaultStatus: http.StatusNoContent}),
 		func(ctx context.Context, in *struct {
 			Body struct {
 				Username string `json:"username" minLength:"1" maxLength:"64"`
@@ -59,7 +59,7 @@ func (a *API) registerAuth(api huma.API) {
 			return nil, a.problemFor(ctx, a.auth.Logout(ri.w, ri.r))
 		})
 
-	huma.Register(api, public(huma.Operation{OperationID: "oidcLogin", Method: http.MethodGet, Path: Prefix + "/auth/oidc/login", Tags: []string{"auth"}, Summary: "Start OpenID Connect sign-in", DefaultStatus: http.StatusFound}),
+	huma.Register(api, public(huma.Operation{OperationID: "oidcLogin", Method: http.MethodGet, Path: Prefix + "/auth/oidc/login", Tags: []string{"auth"}, Summary: "Start OpenID Connect sign-in", Description: "Redirects to the OpenID Connect provider.", DefaultStatus: http.StatusFound}),
 		func(ctx context.Context, _ *struct{}) (*redirect, error) {
 			ri := info(ctx)
 
@@ -91,7 +91,7 @@ func (a *API) registerAuth(api huma.API) {
 			return &redirect{Status: http.StatusFound, Location: basepath.From(ctx)}, nil
 		})
 
-	huma.Register(api, protected(huma.Operation{OperationID: "changePassword", Method: http.MethodPut, Path: Prefix + "/auth/password", Tags: []string{"auth"}, Summary: "Change the local admin password", Description: "Signs out every other session.", DefaultStatus: http.StatusNoContent}),
+	huma.Register(api, protected(huma.Operation{OperationID: "changePassword", Method: http.MethodPut, Path: Prefix + "/auth/password", Tags: []string{"auth"}, Summary: "Change the local admin password", Description: "Signs out every other session. 401 if the current password is wrong.", DefaultStatus: http.StatusNoContent}),
 		func(ctx context.Context, in *struct {
 			Body struct {
 				CurrentPassword string `json:"current_password" minLength:"1" maxLength:"1024"`
@@ -113,7 +113,7 @@ func (a *API) registerAuth(api huma.API) {
 			return out, a.authProblem(ctx, err)
 		})
 
-	huma.Register(api, protected(huma.Operation{OperationID: "confirmTOTP", Method: http.MethodPost, Path: Prefix + "/auth/totp/confirm", Tags: []string{"auth"}, Summary: "Finish TOTP enrolment with a code", DefaultStatus: http.StatusNoContent}),
+	huma.Register(api, protected(huma.Operation{OperationID: "confirmTOTP", Method: http.MethodPost, Path: Prefix + "/auth/totp/confirm", Tags: []string{"auth"}, Summary: "Finish TOTP enrolment with a code", Description: "401 on a wrong code. From then on, a login needs a code.", DefaultStatus: http.StatusNoContent}),
 		func(ctx context.Context, in *struct {
 			Body struct {
 				Code string `json:"code" minLength:"6" maxLength:"16"`

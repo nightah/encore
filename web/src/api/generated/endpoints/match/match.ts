@@ -41,7 +41,7 @@ export const getCreateAliasUrl = () => {
 };
 
 /**
- * The alias is added to the skill model on the next deploy.
+ * Used for matching straight away, and added to the skill model on the next deploy.
  * @summary Add a spoken alias for a title
  */
 export const createAlias = async (
@@ -89,6 +89,7 @@ export const getTestMatchUrl = () => {
 };
 
 /**
+ * Candidates are scored as in the request log.
  * @summary Test how a spoken title is matched
  */
 export const testMatch = async (

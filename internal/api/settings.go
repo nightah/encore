@@ -44,7 +44,7 @@ func (a *API) registerSettings(api huma.API) {
 			return &body[Settings]{Body: s}, a.problemFor(ctx, err)
 		})
 
-	huma.Register(api, protected(huma.Operation{OperationID: "updateSettings", Method: http.MethodPatch, Path: Prefix + "/settings", Tags: []string{"settings"}, Summary: "Change settings", Description: "A partial settings document. Secrets are write-only (secret_key, password, client_secret); an empty string removes one. Keys managed by config are refused with 409. Changing auth.mode signs out every other session."}),
+	huma.Register(api, protected(huma.Operation{OperationID: "updateSettings", Method: http.MethodPatch, Path: Prefix + "/settings", Tags: []string{"settings"}, Summary: "Change settings", Description: "A partial settings document. Secrets are write-only (`secret_key`, `password`, `client_secret`); an empty string removes one. Read-only fields may be sent back and are ignored. Keys in `managed` answer 409 and invalid values 422; in both cases nothing is saved. Changing `auth.mode` signs out every other session, and switching to `header` from a connection that isn't from a trusted proxy is refused with 409."}),
 		func(ctx context.Context, in *struct{ Body SettingsPatch }) (*body[Settings], error) {
 			if err := a.patchSettings(ctx, in.Body); err != nil {
 				return nil, a.settingsProblem(ctx, err)

@@ -24,7 +24,7 @@ export const getExportConfigUrl = (params?: ExportConfigParams) => {
 };
 
 /**
- * Settings and Kodi instances in encore.yml form. Secrets are left out unless include_secrets=true, which needs a sign-in within the last 15 minutes (or a trusted-header request).
+ * Auth, storage, `alexa.locales`, trusted proxies and Kodi instances in `encore.yml` form. Secrets are left out unless `include_secrets=true`, which needs a sign-in within the last 15 minutes (403 otherwise); trusted-header requests always qualify.
  * @summary Export the configuration as encore.yml
  */
 export const exportConfig = async (
@@ -42,7 +42,7 @@ export const getImportConfigUrl = () => {
 };
 
 /**
- * Applies the settings and Kodi instances it contains. Keys managed by config, and keys the web interface cannot change, are skipped.
+ * Applies the settings and Kodi instances it contains; Kodi instances are added or updated by name. Keys managed by config, and keys the web interface can't change, are skipped. Invalid values answer 422 and nothing is saved.
  * @summary Import an encore.yml
  */
 export const importConfig = async (
@@ -90,7 +90,7 @@ export const getUpdateSettingsUrl = () => {
 };
 
 /**
- * A partial settings document. Secrets are write-only (secret_key, password, client_secret); an empty string removes one. Keys managed by config are refused with 409. Changing auth.mode signs out every other session.
+ * A partial settings document. Secrets are write-only (`secret_key`, `password`, `client_secret`); an empty string removes one. Read-only fields may be sent back and are ignored. Keys in `managed` answer 409 and invalid values 422; in both cases nothing is saved. Changing `auth.mode` signs out every other session, and switching to `header` from a connection that isn't from a trusted proxy is refused with 409.
  * @summary Change settings
  */
 export const updateSettings = async (

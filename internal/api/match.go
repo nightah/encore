@@ -13,7 +13,7 @@ import (
 )
 
 func (a *API) registerMatch(api huma.API) {
-	huma.Register(api, protected(huma.Operation{OperationID: "testMatch", Method: http.MethodPost, Path: Prefix + "/match", Tags: []string{"match"}, Summary: "Test how a spoken title is matched"}),
+	huma.Register(api, protected(huma.Operation{OperationID: "testMatch", Method: http.MethodPost, Path: Prefix + "/match", Tags: []string{"match"}, Summary: "Test how a spoken title is matched", Description: "Candidates are scored as in the request log."}),
 		func(ctx context.Context, in *struct {
 			Body struct {
 				LibraryID int64    `json:"library_id"`
@@ -69,7 +69,7 @@ func (a *API) registerMatch(api huma.API) {
 			return &body[[]TitleAlias]{Body: out}, nil
 		})
 
-	huma.Register(api, protected(huma.Operation{OperationID: "createAlias", Method: http.MethodPost, Path: Prefix + "/aliases", Tags: []string{"match"}, Summary: "Add a spoken alias for a title", Description: "The alias is added to the skill model on the next deploy.", DefaultStatus: http.StatusCreated}),
+	huma.Register(api, protected(huma.Operation{OperationID: "createAlias", Method: http.MethodPost, Path: Prefix + "/aliases", Tags: []string{"match"}, Summary: "Add a spoken alias for a title", Description: "Used for matching straight away, and added to the skill model on the next deploy.", DefaultStatus: http.StatusCreated}),
 		func(ctx context.Context, in *struct {
 			Body struct {
 				LibraryID int64  `json:"library_id"`

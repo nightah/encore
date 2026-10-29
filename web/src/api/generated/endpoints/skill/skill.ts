@@ -39,7 +39,7 @@ export const getLwaCallbackUrl = (params?: LwaCallbackParams) => {
 };
 
 /**
- * Public; checked against the state of a pending authorisation. Redirects to the page that started it (the Alexa skill page or the setup wizard).
+ * Checked against the state of a pending authorisation. Redirects to the page that started it (the Alexa skill page or the setup wizard).
  * @summary Finish Login with Amazon
  */
 export const lwaCallback = async (
@@ -97,7 +97,7 @@ export const getAuthorizeAmazonUrl = (params?: AuthorizeAmazonParams) => {
 };
 
 /**
- * return_urls must be listed under the security profile's Allowed Return URLs. Over HTTPS the consent page returns to Encore's callback; otherwise to the local address, whose URL the user pastes back. Until the client ID and secret are saved, url is empty and only return_urls is filled in, so they can be shown while the security profile is being created.
+ * return_urls must be listed under the security profile's Allowed Return URLs. Over HTTPS the consent page returns to Encore's callback; otherwise to the local address, whose URL the user pastes back. Until the client ID and secret are saved, url is empty and only return_urls is filled in, so they can be shown while the security profile is being created. A pending authorisation's state and PKCE verifier stay on the server for 15 minutes.
  * @summary Get the Login with Amazon consent URL
  */
 export const authorizeAmazon = async (
@@ -149,7 +149,7 @@ export const getPasteAmazonAuthorizationUrl = () => {
 };
 
 /**
- * Either the address the browser was sent to after consenting (redirect_url), or a refresh token from `ask util generate-lwa-tokens` (refresh_token).
+ * Either the address the browser was sent to after consenting (`redirect_url`), or a refresh token from `ask util generate-lwa-tokens` (`refresh_token`). 422 if Amazon rejects it.
  * @summary Finish Login with Amazon by pasting
  */
 export const pasteAmazonAuthorization = async (
@@ -217,7 +217,7 @@ export const getDeploySkillUrl = () => {
 };
 
 /**
- * Runs in the background, one deploy at a time; progress arrives as deploy events and from GET /skill/deploy/{id}. Refused with 422 until every privacy question is answered.
+ * Runs in the background, one deploy at a time; progress arrives as deploy events and from `GET /skill/deploy/{id}`. 422 until every privacy question is answered and the endpoint is `https://`; 409 when Amazon isn't connected or a deploy is already running.
  * @summary Deploy the skill to your Amazon developer account
  */
 export const deploySkill = async (
@@ -280,6 +280,7 @@ export const getUpdateSkillSettingsUrl = () => {
 };
 
 /**
+ * Leave out `content` to keep it.
  * @summary Change the skill's settings
  */
 export const updateSkillSettings = async (

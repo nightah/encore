@@ -8,7 +8,9 @@
 import type { ViaKind } from "./viaKind.ts";
 
 export interface Via {
+  /** Whether it names the room or a device in it */
   kind: ViaKind;
   room: string;
+  /** The name that matched; the room's own name when that was said */
   spoken: string;
 }

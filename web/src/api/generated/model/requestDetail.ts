@@ -24,12 +24,15 @@ export interface RequestDetail {
   heard: string;
   id: number;
   intent: string;
+  /** The JSON-RPC calls the request made, in order */
   kodi_calls: KodiCall[];
   locale: string;
+  /** A logged candidate's kind and media_id are looked up in the target instance's index when the entry predates them */
   match: Match | null;
   outcome: RequestDetailOutcome;
   /** Sent by Amazon's simulator during a deploy's smoke test, not by an Echo */
   simulated: boolean;
+  /** The slots Alexa filled, as it sent them */
   slots: RequestDetailSlots;
   speech: string;
   /** The Kodi instance that handled it */
@@ -37,6 +40,6 @@ export interface RequestDetail {
   time: string;
   /** How long each phase took; null for requests logged before Encore recorded it */
   timing: Timing | null;
-  /** The room or device the request named; null when it named none, or for requests logged before Encore recorded it. A room without its own Kodi instance plays on the Echo's, so the target can differ from this room */
+  /** The room or device the request named, from the Room slot or the end of a search; null when it named none, or for requests logged before Encore recorded it. A room without its own Kodi instance plays on the Echo's, so the target can differ from this room */
   via: Via | null;
 }

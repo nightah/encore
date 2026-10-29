@@ -10,5 +10,6 @@ import type { RoomAliasKind } from "./roomAliasKind.ts";
 export interface RoomAlias {
   alias: string;
   id: number;
+  /** room for another name for the room, device for a device in it */
   kind: RoomAliasKind;
 }

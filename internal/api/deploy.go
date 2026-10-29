@@ -44,7 +44,7 @@ func (d *deployRecord) view() Deploy {
 func (a *API) registerDeploy(api huma.API) {
 	s := a.skill
 
-	huma.Register(api, protected(huma.Operation{OperationID: "deploySkill", Method: http.MethodPost, Path: Prefix + "/skill/deploy", Tags: []string{"skill"}, Summary: "Deploy the skill to your Amazon developer account", Description: "Runs in the background, one deploy at a time; progress arrives as deploy events and from GET /skill/deploy/{id}. Refused with 422 until every privacy question is answered.", DefaultStatus: http.StatusAccepted}),
+	huma.Register(api, protected(huma.Operation{OperationID: "deploySkill", Method: http.MethodPost, Path: Prefix + "/skill/deploy", Tags: []string{"skill"}, Summary: "Deploy the skill to your Amazon developer account", Description: "Runs in the background, one deploy at a time; progress arrives as deploy events and from `GET /skill/deploy/{id}`. 422 until every privacy question is answered and the endpoint is `https://`; 409 when Amazon isn't connected or a deploy is already running.", DefaultStatus: http.StatusAccepted}),
 		func(ctx context.Context, in *struct {
 			Body *struct {
 				Force bool `json:"force,omitempty" doc:"Deploy even when nothing changed"`

@@ -535,18 +535,18 @@ type RequestSummary struct {
 type RequestDetail struct {
 	RequestSummary
 
-	Slots     map[string]string `json:"slots"`
-	Via       Nullable[Via]     `json:"via" doc:"The room or device the request named; null when it named none, or for requests logged before Encore recorded it. A room without its own Kodi instance plays on the Echo's, so the target can differ from this room"`
-	Match     Nullable[Match]   `json:"match"`
-	KodiCalls []KodiCall        `json:"kodi_calls"`
+	Slots     map[string]string `json:"slots" doc:"The slots Alexa filled, as it sent them"`
+	Via       Nullable[Via]     `json:"via" doc:"The room or device the request named, from the Room slot or the end of a search; null when it named none, or for requests logged before Encore recorded it. A room without its own Kodi instance plays on the Echo's, so the target can differ from this room"`
+	Match     Nullable[Match]   `json:"match" doc:"A logged candidate's kind and media_id are looked up in the target instance's index when the entry predates them"`
+	KodiCalls []KodiCall        `json:"kodi_calls" doc:"The JSON-RPC calls the request made, in order"`
 	Timing    Nullable[Timing]  `json:"timing" doc:"How long each phase took; null for requests logged before Encore recorded it"`
 	Speech    string            `json:"speech"`
 }
 
 // Via is a room name said in a request ("on the TV"): the name that matched, whether it names the room or a device in it, and the room. Spoken equals Room when the room's own name was said.
 type Via struct {
-	Spoken string `json:"spoken"`
-	Kind   string `json:"kind" enum:"room,device"`
+	Spoken string `json:"spoken" doc:"The name that matched; the room's own name when that was said"`
+	Kind   string `json:"kind" enum:"room,device" doc:"Whether it names the room or a device in it"`
 	Room   string `json:"room"`
 }
 
@@ -648,7 +648,7 @@ type Room struct {
 type RoomAlias struct {
 	ID    int64  `json:"id"`
 	Alias string `json:"alias"`
-	Kind  string `json:"kind" enum:"room,device"`
+	Kind  string `json:"kind" enum:"room,device" doc:"room for another name for the room, device for a device in it"`
 }
 
 type roomAliasPath struct {
@@ -662,7 +662,7 @@ type Settings struct {
 	Auth     AuthSettings    `json:"auth"`
 	Storage  StorageSettings `json:"storage"`
 	Secrets  SecretsInfo     `json:"secrets"`
-	Features Features        `json:"features"`
+	Features Features        `json:"features" doc:"The alexa.deep_search, alexa.shutdown_quits, alexa.confirm_sound and alexa.queue_limit config keys"`
 	Logging  LoggingSettings `json:"logging"`
 	Locale   LocaleSettings  `json:"locale"`
 	Managed  []string        `json:"managed" doc:"Dotted keys set by encore.yml or ENCORE_* variables; shown read-only"`
@@ -971,14 +971,14 @@ type SkillInfo struct {
 	Amazon           AmazonConnection     `json:"amazon"`
 	SkillID          string               `json:"skill_id"`
 	State            string               `json:"state" enum:"live,not_deployed,deploying,failed"`
-	Invocation       string               `json:"invocation" enum:"encore,kodi"`
+	Invocation       string               `json:"invocation" enum:"encore,kodi" doc:"encore uses each locale's own name for it (\"kodi\" in French); kodi is \"kodi\" in every locale"`
 	InvocationName   string               `json:"invocation_name" doc:"What people say, \"Alexa, ask <invocation_name> to…\", in the first enabled locale"`
-	SkillName        string               `json:"skill_name"`
+	SkillName        string               `json:"skill_name" doc:"Empty uses each locale's default"`
 	LocalesAvailable []string             `json:"locales_available"`
 	LocalesEnabled   []string             `json:"locales_enabled"`
 	Content          []string             `json:"content" enum:"movies,tv,music" doc:"What the skill can play; music includes music videos"`
 	Endpoint         SkillEndpointInfo    `json:"endpoint"`
-	Privacy          Privacy              `json:"privacy"`
+	Privacy          Privacy              `json:"privacy" doc:"Each answer is null until it's given; deploys are refused until all are answered"`
 	LastDeploy       Nullable[LastDeploy] `json:"last_deploy"`
 	NeedsDeploy      bool                 `json:"needs_deploy"`
 	UpdateReason     string               `json:"update_reason" enum:"none,settings,library" doc:"Why needs_deploy is set: the skill's settings changed, or only the library titles in the model"`

@@ -14,3 +14,6 @@ const CrowdinProject = "https://crowdin.com/project/encore"
 
 // SourceEditURL is where the English utterances, the source every translation starts from, are edited.
 const SourceEditURL = "https://github.com/nightah/encore/edit/main/i18n/lang/en/utterances.yaml"
+
+// apiPrefix is where the admin API's routes start; the endpoints page lists paths below it.
+const apiPrefix = "/api/v1"

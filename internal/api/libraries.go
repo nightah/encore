@@ -41,7 +41,7 @@ func (a *API) registerLibraries(api huma.API) {
 			return &body[Library]{Body: lib}, a.libraryProblem(ctx, err)
 		})
 
-	huma.Register(api, protected(huma.Operation{OperationID: "groupLibrary", Method: http.MethodPost, Path: Prefix + "/libraries/group", Tags: []string{"libraries"}, Summary: "Group Kodi instances that share a library"}),
+	huma.Register(api, protected(huma.Operation{OperationID: "groupLibrary", Method: http.MethodPost, Path: Prefix + "/libraries/group", Tags: []string{"libraries"}, Summary: "Group Kodi instances that share a library", Description: "A manual group, which detection never undoes."}),
 		func(ctx context.Context, in *struct {
 			Body struct {
 				InstanceIDs []int64 `json:"instance_ids" minItems:"2"`
