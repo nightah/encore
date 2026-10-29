@@ -17,6 +17,11 @@ var languages = map[string]*language{
 	"fr": french(),
 	"es": spanish(),
 	"it": italian(),
+	"ar": arabic(),
+	"hi": hindi(),
+	"ja": japanese(),
+	"nl": dutch(),
+	"pt": portuguese(),
 }
 
 // Languages lists the language codes with their own title-matching rules, sorted.

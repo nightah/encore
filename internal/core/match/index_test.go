@@ -115,7 +115,7 @@ func TestUnspeakableTitleFoundByAlias(t *testing.T) {
 }
 
 func TestLanguages(t *testing.T) {
-	assert.Equal(t, []string{"de", "en", "es", "fr", "it"}, Languages())
+	assert.Equal(t, []string{"ar", "de", "en", "es", "fr", "hi", "it", "ja", "nl", "pt"}, Languages())
 }
 
 func TestSearchKindsAndLimit(t *testing.T) {
