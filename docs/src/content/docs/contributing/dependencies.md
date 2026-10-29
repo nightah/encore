@@ -1,25 +1,25 @@
 ---
 title: Dependencies and benchmarks
-description: Why Encore implements its search index, edit distances, TOTP and phonetic matching itself, how each replacement was checked, and what it measured.
+description: Why Encore implements its search index, edit distances, TOTP and phonetic matching itself, how each replacement was checked, and what was measured.
 ---
 
-Encore keeps its dependencies few, because every library is code that ships in the binary, needs watching for security fixes and has to keep fitting how Encore uses it. In October 2026 every library was reviewed for recency, maintenance and fit. Five were replaced with code in Encore's own tree and two were kept. This page explains each decision, how the replacement was shown to behave the same, and what was measured.
+Encore tries to keep as few dependencies as possible. Every library ships in the binary, needs watching for security fixes and has to keep fitting how Encore uses it. In October 2026 every library was reviewed for recency, maintenance and fit: five were replaced with code in Encore's own tree and two were kept. This page explains each decision, how each replacement was checked to behave the same, and what was measured.
 
 The code that compares Encore's implementations with the libraries is public, in the [`benchmarks/`](https://github.com/nightah/encore/tree/main/benchmarks) directory: a Go module of its own, so the replaced libraries never return to Encore's `go.mod`. Its [README](https://github.com/nightah/encore/tree/main/benchmarks#readme) has the exact commands, and the raw output of every run published here is kept next to it.
 
 ## At a glance
 
-| Library | What Encore used it for | Now | Why it went |
+| Library | What Encore used it for | Now | Why it was replaced |
 | --- | --- | --- | --- |
 | [bleve](https://github.com/blevesearch/bleve) | Finding candidate titles for a voice request | An in-memory inverted index in `internal/core/match` | 27 modules and about 8 MB of binary for one query shape; the in-tree index retrieves 7 to 10 times faster with a fraction of the allocations |
-| [go-edlib](https://github.com/hbollon/go-edlib) | Jaro-Winkler and optimal string alignment distance when scoring titles | Two functions in `internal/core/match` | Two functions from a general library, on the review's maintenance watch list; the in-tree ones give identical results without allocating |
-| [pquerna/otp](https://github.com/pquerna/otp) | TOTP for the local admin account | RFC 6238 on the standard library, in `internal/auth` | One fixed set of options out of a configurable library, on the review's maintenance watch list, which also linked in a barcode library Encore never used |
-| [PhonoGrams/double_metaphone](https://github.com/PhonoGrams/double_metaphone) | English sound-alike keys | `internal/fuzzy/phonetic/en`, ported with identical output | A small library on the review's maintenance watch list; the port is about five times faster, with one allocation per word instead of eleven |
-| [f1monkey/phonetic](https://github.com/f1monkey/phonetic) | German sound-alike keys (Kölner Phonetik) | `internal/fuzzy/phonetic/de`, ported with identical output | Pulled in `golang.org/x/exp` for one helper; the port is about four times faster and doesn't allocate |
+| [go-edlib](https://github.com/hbollon/go-edlib) | Jaro-Winkler and optimal string alignment distance when scoring titles | Two functions in `internal/core/match` | Two functions from a general library with few releases and little recent activity; the in-tree ones give identical results without allocating |
+| [pquerna/otp](https://github.com/pquerna/otp) | TOTP for the local admin account | RFC 6238 on the standard library, in `internal/auth` | One fixed set of options out of a configurable library with few releases and little recent activity, which also linked in a barcode library Encore never used |
+| [PhonoGrams/double_metaphone](https://github.com/PhonoGrams/double_metaphone) | English sound-alike keys | `internal/fuzzy/phonetic/en`, a port that gives the same keys | A small library with few releases and little recent activity; the port is about five times faster, with one allocation per word instead of eleven |
+| [f1monkey/phonetic](https://github.com/f1monkey/phonetic) | German sound-alike keys (Kölner Phonetik) | `internal/fuzzy/phonetic/de`, a port that gives the same keys | Pulled in `golang.org/x/exp` for one helper; the port is about four times faster and doesn't allocate |
 | [miekg/dns](https://github.com/miekg/dns) | Finding Kodi instances with mDNS | Kept | Its successor is larger and fails on names Kodi instances can have |
 | [gowebdav](https://github.com/studio-b12/gowebdav) | WebDAV backups | Kept | The alternative sends uploads Nextcloud can store as empty files |
 
-`golang.org/x/exp` left with f1monkey/phonetic, which was the only thing that needed it. Encore also gained French and Spanish phonetic encoders that no library offered.
+Removing f1monkey/phonetic also removed `golang.org/x/exp`, which only it needed. Encore also gained French and Spanish phonetic encoders that no library offered.
 
 ## How the replacements were checked
 
@@ -34,30 +34,15 @@ Each replacement followed the same steps, so that what Encore does for its users
 
 When Alexa hears a title, Encore first narrows the library to several hundred candidates and then scores each one carefully. bleve, a full-text search engine, found those candidates: fuzzy word matches, sound-alike keys and, when those found little, character trigrams, ranked by TF-IDF.
 
-**Why it was replaced.** Encore used one query shape of a general search engine, and paid for all of it: bleve and its storage formats were 27 modules and about 8 MB of a 38.6 MB binary. Search allocated tens of thousands of objects per request at large library sizes, and bleve's tokenizer split titles in scripts written without spaces (Chinese, Japanese kana) into single characters and dropped Thai, so a near miss of such a title found nothing.
+**Why it was replaced.** Encore used one kind of query from a full search engine, but shipped all of it: bleve and its storage formats were 27 modules and about 8 MB of a 38.5 MB binary. Search allocated tens of thousands of objects per request at large library sizes, and bleve's tokenizer split titles in scripts written without spaces (Chinese, Japanese kana) into single characters and dropped Thai, so a near miss of such a title found nothing.
 
 **What replaced it.** An in-memory inverted index over the same words, phonetic keys and trigrams, running the same query and scoring it the same way, coordination factors included, so it ranks candidates as bleve did. Words in scripts without spaces stay whole. Deleted titles are dropped from the index by a compaction that runs in the background, so a large library change never blocks voice requests.
 
-**How it was checked.** Differential tests compared the two retrievers' full rankings on the corpus libraries with every case and title as a query, on a 10,000-title synthetic library, and on generated libraries (accented, Cyrillic, Greek, Hebrew and Arabic words, stop words, numbers, very short and very long titles, duplicates, kind filters) after runs of updates and deletes. Before bleve was removed, the rankings for every corpus case were pinned as fixed expectations. The index is also checked against a reference scorer that scores every title straight from the query's definition, and a state-machine test interleaves updates, deletes and every step of a compaction. In `benchmarks/`, bleve as Encore last shipped it (commit `96d0dfaa`) runs through the same matcher, and the parity tests check that it returns the same candidates and the same results.
+**How it was checked.** Differential tests compared the two retrievers' full rankings on the corpus libraries with every case and title as a query, on a 10,000-title synthetic library, and on generated libraries (accented, Cyrillic, Greek, Hebrew and Arabic words, stop words, numbers, very short and very long titles, duplicates, kind filters) after runs of updates and deletes. Before bleve was removed, the rankings for every corpus case were pinned as fixed expectations. The index is also checked against a reference scorer that scores every title straight from the query's definition, and a state-machine test interleaves updates, deletes and every step of a compaction. In `benchmarks/`, bleve set up as Encore v0.1.2 shipped it runs through the same matcher, and the parity tests check that it returns the same candidates and the same results.
 
 ### Results
 
-Bleve against the in-tree index on 28 October 2026, at commit `f8b8a770` against `96d0dfaa`, with the candidate pool of 200 that both used then. Go 1.27, 8 interleaved rounds, `-benchtime 3496x`, compared with benchstat (every difference p=0.000). The machine was also running other work (load average 4.8 to 12.1).
-
-| Benchmark | bleve | In-tree | Change |
-| --- | --- | --- | --- |
-| Search, 100k titles | 2195 µs | 879 µs | −60% |
-| Search, scale library, 100k | 2060 µs | 793 µs | −62% |
-| Search, scale library, 500k | 6101 µs | 1648 µs | −73% |
-| Candidates only, 100k | 1481 µs | 162 µs | −89% |
-| Candidates only, 500k | 5763 µs | 609 µs | −89% |
-| Search p99, 100k titles | 7.45 ms | 2.59 ms | −65% |
-| Search p99, scale library, 500k | 36.25 ms | 14.88 ms | −59% |
-| Candidates p99, 500k | 37.87 ms | 3.61 ms | −90% |
-| Memory per search, scale library, 500k | 3689 KiB | 206 KiB | −94% |
-| Allocations per search, scale library, 500k | 32,626 | 427 | −99% |
-
-The same comparison rerun from `benchmarks/` on 29 October 2026 at commit `1473776f`, with today's default pool of 800 candidates. Go 1.27.3 on an AMD Ryzen 9 9950X3D, 8 interleaved rounds, `-benchtime 1000x` (`3x` for building), compared with benchstat (every difference p=0.000). The machine was also running other work (load average 3.6 to 6.4). Whole searches take longer than in the first table because the scorer now gets 800 candidates instead of 200; retrieval alone is comparable.
+From `benchmarks/` on 29 October 2026, with Go 1.27.3 on an AMD Ryzen 9 9950X3D, at the default pool of 800 candidates: 8 interleaved rounds, `-benchtime 1000x` (`3x` for building), compared with benchstat (every difference p=0.000). The machine was also running other work (load average 3.6 to 6.4). At the old pool of 200 candidates, retrieval was 89% faster and whole searches 60–73% faster.
 
 | Benchmark | bleve | In-tree | Change |
 | --- | --- | --- | --- |
@@ -78,7 +63,7 @@ The *scale library* is synthetic titles whose common words follow a Zipf distrib
 
 ### Compaction
 
-Deleted titles leave tombstones in the index. Once they are a quarter of it, a compaction rebuilds the index without them. The first version ran it during the delete, under the lock every voice request needs; it now runs in the background and swaps the result in at the end. Measured with `BenchmarkInvertedCompact` in `internal/core/match`, which deletes a quarter of a scale library while a reader keeps retrieving candidates, at commit `bed8e145` against its parent, 8 interleaved rounds:
+Deleted titles leave tombstones in the index. Once they are a quarter of it, a compaction rebuilds the index without them. It used to run during the delete, under the lock every voice request needs; it now runs in the background and swaps the result in at the end. Measured with `BenchmarkInvertedCompact` in `internal/core/match`, which deletes a quarter of a scale library while a reader keeps retrieving candidates, before and after the change, 8 interleaved rounds:
 
 | Library | Longest wait for a request, before | After |
 | --- | --- | --- |
@@ -89,7 +74,7 @@ The background compaction costs memory while it runs: the peak heap during a qua
 
 ### Candidate pool
 
-The scorer used to get 200 candidates. At 100,000 titles and more, common words could fill that pool with other titles before the right one, so it was measured at 200, 400, 800 and 1600 with the scale harness (`TestRetrieverScale`, commit `18b3b66f`), counting agreement with scoring every title exhaustively over 874 queries and the corpus cases decided correctly:
+The scorer used to get 200 candidates. At 100,000 titles and more, common words could fill that pool with other titles before the right one, so it was measured at 200, 400, 800 and 1600 with the scale harness (`TestRetrieverScale`), counting agreement with scoring every title exhaustively over 874 queries and the corpus cases decided correctly:
 
 | Library | Pool | Agreement | Corpus cases right (of 174) | Search p50 | Search p99 |
 | --- | --- | --- | --- | --- | --- |
@@ -108,7 +93,7 @@ The scorer used to get 200 candidates. At 100,000 titles and more, common words 
 
 Scoring compares the request with each candidate title by Jaro-Winkler similarity and optimal string alignment distance. Encore used those two functions of go-edlib, a general library of string distances.
 
-**Why it was replaced.** Two short functions didn't justify a dependency on a library the review had on its maintenance watch list, and go-edlib allocated on every call, several times per candidate per request.
+**Why it was replaced.** Two short functions didn't justify a dependency on a library with few releases and little recent activity, and go-edlib allocated on every call, several times per candidate per request.
 
 **What replaced it.** Rune-based implementations in `internal/core/match/similarity.go` that decode strings of up to 64 characters into stack buffers, so scoring doesn't allocate.
 
@@ -121,7 +106,7 @@ Scoring compares the request with each candidate title by Jaro-Winkler similarit
 | Jaro-Winkler | 125.8 ns, 312 B, 2 allocations | 58.4 ns, no allocations | −54% |
 | Optimal string alignment | 505.5 ns, 476 B, 4 allocations | 292.1 ns, no allocations | −42% |
 
-When it was replaced (commit `6a81dce1`), scoring alone took 27% less time with 92% fewer allocations, and a search over 100,000 titles allocated 39% fewer objects.
+When it was replaced, scoring alone took 27% less time with 92% fewer allocations, and a search over 100,000 titles allocated 39% fewer objects.
 
 ## TOTP: pquerna/otp
 
@@ -144,9 +129,9 @@ The local admin account can require a code from an authenticator app (TOTP). Enc
 
 Sound-alike matching finds titles that are spelt differently from what Alexa heard but sound the same. Each word gets one or more phonetic keys, and words with the same key match. English used Double Metaphone from PhonoGrams/double_metaphone, and German used Kölner Phonetik from f1monkey/phonetic. French, Spanish and Italian used English Double Metaphone.
 
-**Why they were replaced.** Both are small libraries, and double_metaphone was on the review's maintenance watch list. They allocated several objects per word, which adds up when a library of 100,000 titles is indexed, and f1monkey/phonetic needed `golang.org/x/exp` for one helper. Owning the encoders also made room for languages no library covered.
+**Why they were replaced.** Both are small libraries, and double_metaphone has had few releases and little recent activity. They allocated several objects per word, which adds up when a library of 100,000 titles is indexed, and f1monkey/phonetic needed `golang.org/x/exp` for one helper. With its own encoders, Encore could also add French and Spanish, which no library covered.
 
-**What replaced them.** `internal/fuzzy/phonetic`, with one package per language: `en` and `de` are ports of the two libraries (Apache-2.0 and MIT, with their notices kept) with identical output, and `fr` and `es` are new encoders written from each language's spelling rules. French merges silent final consonants and plural marks, silent h and the -er/-é endings; Spanish merges b and v, silent h, ll and y, soft c, z and s, and a final s or d that many speakers drop. Each language names its own encoder, so adding a language package never changes another's keys.
+**What replaced them.** `internal/fuzzy/phonetic`, with one package per language: `en` and `de` are ports of the two libraries (Apache-2.0 and MIT, with their notices kept) that give the same keys, and `fr` and `es` are new encoders written from each language's spelling rules. French merges silent final consonants and plural marks, silent h and the -er/-é endings; Spanish merges b and v, silent h, ll and y, soft c, z and s, and a final s or d that many speakers drop. Each language names its own encoder, so adding a language package never changes another's keys.
 
 **How they were checked.** While the libraries were still present, differential tests compared the ports with them on every word of up to four letters, rapid-generated words, invalid UTF-8 and long words. Before the libraries were removed, their output was captured: a digest over every word of up to four letters, a list of about 2000 English and 1600 German generated words, and the keys of every word in the test corpora in all five languages. `benchmarks/phonetic` keeps the side-by-side comparison, adding every word of the matcher's test corpora.
 
@@ -157,13 +142,13 @@ Sound-alike matching finds titles that are spelt differently from what Alexa hea
 | English (Double Metaphone) | 444 ns, 208 B, 11 allocations | 80 ns, 5 B, 1 allocation | −82% |
 | German (Kölner Phonetik) | 161 ns, 134 B, 3 allocations | 42 ns, 4 B, no allocations | −74% |
 
-When the French and Spanish encoders were added they took about 60 and 50 ns per word, against 79 ns for Double Metaphone.
+In an earlier run, the French and Spanish encoders took about 60 and 50 ns per word, against 79 ns for Double Metaphone in the same run.
 
 ### Accuracy by language
 
 <!-- phonetic-results -->
 
-Each language has phonetic test corpora: real titles and the ways a speech recogniser plausibly mishears them, tagged by the spelling-to-sound confusion each models, with exact titles, near neighbours, missing sequels and absent titles as controls. A case counts as right when Encore makes the expected decision: plays the right title, asks, or says it's not found. A wrong play, starting a different title, is the worst outcome, so it is counted on its own.
+Each language has phonetic test corpora: real titles and the ways a speech recogniser plausibly mishears them, tagged by the spelling-to-sound confusion each models, with exact titles, near neighbours, missing sequels and absent titles as controls. A case counts as right when Encore makes the expected decision: plays the right title, asks, or says it's not found. A wrong play, starting a title you didn't ask for, is the worst outcome, so it is counted on its own.
 
 There are two sets of corpora, scored separately:
 
@@ -180,25 +165,27 @@ There are two sets of corpora, scored separately:
 
 #### Grown set
 
-Each row compares the encoder Encore uses for the language with English Double Metaphone on every language, which is what French, Spanish and Italian had before they had encoders of their own, and with no phonetic keys at all, which shows how much the phonetic layer contributes. *Gains and losses* count the cases the language's encoder decides right and English doesn't, and the reverse. The difference is in percentage points of cases decided right, with a 95% interval for paired proportions; *p* is the exact McNemar test on the cases where the two disagree. An encoder is adopted only when it gains with an interval that excludes zero.
+How each language's encoder does on the grown set:
 
-| Language | Encoder | Cases right | Wrong plays | Asks | With English Double Metaphone | With no phonetic keys | Gains / losses against English | Difference (95% interval) | p |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| English | Double Metaphone | 463 of 509 (91.0%) | 1 | 60 | same | 404 | none | none | none |
-| German | Kölner Phonetik, with a final *-er* keyed as *-a* | 535 of 580 (92.2%) | 1 | 35 | 539 (92.9%), 1 wrong | 463 | +5 / −9 | −0.7 (−2.0 to +0.6) | 0.42 |
-| Spanish | Spanish rules | 418 of 458 (91.3%) | 2 | 39 | 387 (84.5%), 2 wrong | 349 | +37 / −6 | +6.8 (+4.0 to +9.5) | 1.6 × 10⁻⁶ |
-| French | French rules | 408 of 441 (92.5%) | 2 | 36 | 390 (88.4%), 2 wrong | 355 | +21 / −3 | +4.1 (+1.9 to +6.2) | 0.0003 |
-| Italian | English Double Metaphone | 343 of 364 (94.2%) | 1 | 25 | same | 297 | none | none | none |
+| Language | Encoder | Cases right | Wrong plays | Asks |
+| --- | --- | --- | --- | --- |
+| English | Double Metaphone | 463 of 509 (91.0%) | 1 | 60 |
+| German | Kölner Phonetik, with a final *-er* keyed as *-a* | 535 of 580 (92.2%) | 1 | 35 |
+| Spanish | Spanish rules | 418 of 458 (91.3%) | 2 | 39 |
+| French | French rules | 408 of 441 (92.5%) | 2 | 36 |
+| Italian | English Double Metaphone | 343 of 364 (94.2%) | 1 | 25 |
 
-These include three changes made after the grown set was first scored, none of them to an encoder: the label correction above, numbers the normaliser now reads, and the German *-er* rule. The first published results, at commit `0a5742b5`, were:
+The same cases with English Double Metaphone instead, which is what French, Spanish and Italian had before they had encoders of their own, and with no sound-alike keys at all, which shows how much they contribute. *Gains / losses* count the cases the language's encoder gets right and Double Metaphone doesn't, and the reverse. An encoder is kept only when its gain holds up: the 95% interval of the difference must not include zero.
 
-| Language | Then | Now | What changed |
-| --- | --- | --- | --- |
-| English | 462, 1 wrong | 463, 1 wrong | Ordinals written with digits read as the number ("the 6th sense" meets *The Sixth Sense*) |
-| German | 521, 2 wrong | 535, 1 wrong | The label correction (+1, and its wrong play); numbers written as one word, such as "neunzehnhundertvierundfünfzig" and "zweihundertsieben", and "neun und neunzig" (+5); the final *-er* rule (+8) |
-| Spanish | 416, 2 wrong | 418, 2 wrong | The hundreds from "doscientos" to "novecientos" (+2) |
-| French | 406, 2 wrong | 408, 2 wrong | Ordinals written with digits ("le 5ème élément", "le 5e élément") |
-| Italian | 332, 2 wrong | 343, 1 wrong | Numbers written as one word, such as "millenovecentonovantadue" and "ottoottotre", with "novecento" and the other whole hundreds (+9, one of them a wrong play); ½ read as "e mezzo" (+2) |
+| Language | With Double Metaphone | With no sound-alike keys | Gains / losses | Difference (95% interval) | p |
+| --- | --- | --- | --- | --- | --- |
+| German | 539 (92.9%), 1 wrong | 463 | +5 / −9 | −0.7 points (−2.0 to +0.6) | 0.42 |
+| Spanish | 387 (84.5%), 2 wrong | 349 | +37 / −6 | +6.8 points (+4.0 to +9.5) | 1.6 × 10⁻⁶ |
+| French | 390 (88.4%), 2 wrong | 355 | +21 / −3 | +4.1 points (+1.9 to +6.2) | 0.0003 |
+
+English and Italian use Double Metaphone already; without sound-alike keys they get 404 and 297 right.
+
+These counts include three fixes made after the grown set was first scored, none of them to an encoder: one corrected label, numbers the normaliser now reads in every language, and the German *-er* rule. Together they added 1 case in English, 14 in German, 2 in Spanish, 2 in French and 11 in Italian, and removed two wrong plays.
 
 #### Original set
 
@@ -212,11 +199,11 @@ These include three changes made after the grown set was first scored, none of t
 
 None of the changes above moved a case in the original set.
 
-#### Absent titles
+#### Titles that aren't in the library
 
-Sound-alike keys find more titles, and can also make Encore play a title that wasn't asked for. To measure that with words nobody chose to suit an encoder, `TestPhoneticDistractors` builds five libraries of 2,000 synthetic titles per language from the words of Encore's own translations, and asks for 400 other such titles that are not in each, 2,000 absent titles per language. Any play is a wrong play. The words were frozen into `testdata/distractors/` on 29 October 2026, so a translation update doesn't move the counts, and CI fails a change that makes production play more absent titles than below.
+A request for a title your library doesn't have should never play something else. Sound-alike keys find more titles, and can also make Encore play one that wasn't asked for. To measure that with words nobody chose to suit an encoder, `TestPhoneticDistractors` builds five libraries of 2,000 synthetic titles per language from the words of Encore's own translations, and asks for 400 other such titles that are not in each: 2,000 requests per language for titles that aren't there. Any play is a wrong play. The words were frozen into `testdata/distractors/` on 29 October 2026, so a translation update doesn't move the counts, and CI fails a change that makes Encore play more of them than below.
 
-| Language | Wrong plays with English Double Metaphone | With the language's encoder | Difference |
+| Language | Wrong plays with Double Metaphone | With the language's encoder | Difference |
 | --- | --- | --- | --- |
 | English | 62 | 62 | 0 |
 | German | 115 | 102 | −13 |
@@ -228,30 +215,47 @@ None of the changes since the first results moved these counts.
 
 #### What was decided
 
-- **English** keeps Double Metaphone.
-- **Spanish and French** keep their own rules. On the grown set they decide 31 and 18 more cases right than English Double Metaphone, with intervals well clear of zero and no more wrong plays. Spanish makes 6 more wrong plays per 2,000 absent titles, a cost worth paying for 37 gains; French makes 2 fewer.
-- **Italian** stays on English Double Metaphone, and no Italian encoder was built. English already decides all 96 grown cases in the classes an Italian encoder would model (double consonants, c and g before e and i, gn and gli, z and s, silent h, dropped accents), so an encoder had nothing to gain there. Most of what it missed were number forms the normaliser didn't parse: Italian writes numbers as one word ("millenovecentonovantadue", "centoventisei", "ottocento ottantatré"), and *8½* is said "otto e mezzo". The normaliser now splits such words into the number words they're made of, with the whole hundreds ("duecento" to "novecento"), "mila", "milione" and "cento" dropping its *o* before a vowel ("centottanta"), and reads ½ as each language says "and a half", which is a rule for every title with ½, not for one film. That decided 11 more cases. Of the 21 left, three are requests for *Franco126*, whose number is joined to its name, one says "1" for "una", and the rest are a real word heard instead of the title word, words split or merged, letter names and absent titles, which no spelling-to-sound rule reaches. No published Italian phonetic algorithm was found to adopt either: Italian adaptations of Soundex and Metaphone are ad hoc rule sets. This will be revisited if a corpus shows Italian misses that sound-alike keys would fix.
-- **German** keeps Kölner Phonetik, and now keys a final *-er* as the *-a* it is spoken as. On the grown set English Double Metaphone decided 12 more cases right (+17 / −5), an interval that excluded zero, and 8 of its gains were a final *-er* heard as *-a* ("lieda" for *Lieder*, "rolla" for *Roller*, "es war somma"): Kölner Phonetik codes the *r* and Double Metaphone, as Encore uses it, also keys a word without a final *r*. Encore now drops the *r* of a final *-er* in words of four letters or more before keying German. That decides all 8, and leaves English 4 ahead (+9 / −5), a difference whose interval now includes zero, with no wrong plays added on either set and the same 102 per 2,000 absent titles, against English's 115. Keeping Kölner Phonetik's key and adding the *r*-less one beside it decided the same cases with 103. Nothing in the corpora called for treating *-ern* as *-an*. The rule is in the matcher, not in `internal/fuzzy/phonetic/de`, which still gives f1monkey/phonetic's codes. Most of English's remaining gains are English loanwords and names ("skuter" for *Scooter*, "kraftklup" for *Kraftklub*), which a German rule shouldn't chase.
+**English** keeps Double Metaphone.
+
+**Spanish and French** keep their own rules. On the grown set they get 31 and 18 more cases right than Double Metaphone, with no more wrong plays. Spanish plays 6 more titles per 2,000 that aren't in the library, a fair trade for 37 more correct answers; French plays 2 fewer.
+
+##### Italian
+
+Italian stays on Double Metaphone, and no Italian encoder was built. Double Metaphone already gets right all 96 grown cases in the sounds an Italian encoder would handle: double consonants, c and g before e and i, gn and gli, z and s, silent h and dropped accents. No published Italian phonetic algorithm was found to adopt either; the Italian versions of Soundex and Metaphone are ad hoc rule sets.
+
+Most of what Italian missed was numbers. Italian writes them as one word ("millenovecentonovantadue", "centoventisei"), and *8½* is said "otto e mezzo". The normaliser now splits such words into their number words and reads ½ as each language says "and a half", for every title with ½. That got 11 more cases right.
+
+Of the 21 still missed, three ask for *Franco126*, whose number is joined to its name, and one says "1" for "una". The rest are a real word heard instead of the title's, words split or merged, letter names and titles that aren't in the library, which sound-alike rules can't fix. Italian will get rules of its own if a corpus shows misses they would fix.
+
+##### German
+
+German keeps Kölner Phonetik, and now treats a final *-er* as the *-a* it is spoken as.
+
+On the grown set Double Metaphone first got 12 more German cases right, a gap that held up statistically. 8 of its wins were a final *-er* heard as *-a*: "lieda" for *Lieder*, "rolla" for *Roller*, "es war somma". Kölner Phonetik codes that *r*, so those words didn't match.
+
+Encore now drops the *r* of a final *-er* in German words of four letters or more before keying them. That fixes all 8 and leaves Double Metaphone 4 ahead, which is within noise. No wrong plays were added, and German still plays 102 titles per 2,000 that aren't in the library, against Double Metaphone's 115. The rule lives in the matcher, so `internal/fuzzy/phonetic/de` still gives the original library's codes.
+
+Most of Double Metaphone's remaining German wins are English loanwords and names ("skuter" for *Scooter*, "kraftklup" for *Kraftklub*), which a German rule shouldn't chase.
 
 French keys merge spellings that are different titles as well as mishearings (*mot* and *mots*, *son* and *sont*), so in French a top candidate that only sounds like the request must lead the runner-up clearly before Encore plays it; otherwise Alexa asks.
 
-The grown set also exposed a matcher bug that no encoder could fix: asking for a sequel the library doesn't have ("crocodile dundee two", "die vorstadtkrokodile 2") played the original. Encore now asks instead (commit `d1857c0e`), which removed 6 wrong plays from the grown set and decided 4 more cases right; the numbers above include it.
+The grown set also exposed a matcher bug that no encoder could fix: asking for a sequel the library doesn't have ("crocodile dundee two", "die vorstadtkrokodile 2") played the original. Encore now asks instead, which removed 6 wrong plays from the grown set and decided 4 more cases right; the numbers above include it.
 
-Measured on 29 October 2026 at commit `8773cd20`; the inverted index and the simpler trigram retriever give the same counts everywhere, and the trigram retriever's absent-title plays differ by at most one.
+Measured on 29 October 2026; the inverted index and the simpler trigram retriever give the same counts everywhere, and the trigram retriever's wrong plays for titles that aren't in the library differ by at most one.
 
 #### Rerunning the evaluation
 
-Both tests are in `internal/core/match` rather than `benchmarks/`, because they swap the encoder inside the matcher, which only the package's own tests can reach, and there is no library to compare with. Both are also gates: `TestPhoneticEval` holds production to the grown-set counts above (`grownFloor`) and runs with the rest of the tests, and `TestPhoneticDistractors` holds it to the absent-title counts (`distractorCeiling`) in a CI step of its own, so a change that loses accuracy fails its own pull request. From the repository root:
+Both tests are in `internal/core/match` rather than `benchmarks/`, because they swap the encoder inside the matcher, which only the package's own tests can reach, and there is no library to compare with. Both are also gates: `TestPhoneticEval` holds production to the grown-set counts above (`grownFloor`) and runs with the rest of the tests, and `TestPhoneticDistractors` holds it to the counts for titles that aren't in the library (`distractorCeiling`) in a CI step of its own, so a change that loses accuracy fails its own pull request. From the repository root:
 
 ```sh
 # Both corpus sets, every encoder and retriever: a table of cases right, wrong plays, asks and gains and losses against English, then every case each encoder wins or loses.
 go test -run TestPhoneticEval -v ./internal/core/match/
 
-# Absent-title wrong plays per language (about two minutes, far longer under the race detector, so it is behind a build tag and CI runs it without -race).
+# Wrong plays for titles that aren't in the library, per language (about two minutes, far longer under the race detector, so it is behind a build tag and CI runs it without -race).
 go test -tags phoneticeval -run TestPhoneticDistractors -v ./internal/core/match/
 ```
 
-The intervals and p-values come from the gains and losses in the first table: for *b* gains and *c* losses over *n* cases, the difference is (*b* − *c*) / *n*, and *p* is the two-sided binomial probability of a split at least as uneven as *b* to *c*. The ported encoders' parity with the libraries they replaced is checked over every word of both corpus sets by `benchmarks/phonetic`.
+The intervals and p-values come from the gains and losses: for *b* gains and *c* losses over *n* cases, the difference is (*b* − *c*) / *n* with a 95% interval for paired proportions, and *p* is the exact McNemar test, the two-sided binomial probability of a split at least as uneven as *b* to *c*. The ported encoders' parity with the libraries they replaced is checked over every word of both corpus sets by `benchmarks/phonetic`.
 
 <!-- /phonetic-results -->
 
@@ -267,7 +271,7 @@ Backups to WebDAV use gowebdav. The alternative considered, emersion's go-webdav
 
 ## Binary size
 
-A stripped linux/amd64 build without the web interface (`CGO_ENABLED=0 go build -tags noui -trimpath -ldflags '-s -w' ./cmd/encore`, Go 1.27.3) was 38,531,232 bytes before the review (commit `754a911a`) and is 30,150,816 bytes after it (commit `1473776f`), 22% smaller. Encore's `go.mod` lists 58 modules instead of 92. Most of the difference is bleve: dropping it alone took 8.4 MB off.
+A stripped linux/amd64 build without the web interface (`CGO_ENABLED=0 go build -tags noui -trimpath -ldflags '-s -w' ./cmd/encore`, Go 1.27.3) was 38,531,232 bytes before the review (Encore v0.1.2) and is 30,150,816 bytes after it, 22% smaller. Encore's `go.mod` lists 58 modules instead of 92. Most of the difference is bleve: dropping it alone took 8.4 MB off.
 
 ## Reproducing the numbers
 
