@@ -106,7 +106,7 @@ ListenToSong:
   play_song_from: "アルバム[の]{Album}の{Song}という曲を(再生して|かけて)[ください]"
   play_track_by: "{Artist}のトラック[の]{Song}を(再生して|かけて)[ください]"
 ListenToSongOrAlbum:
-  play_by: "[{Room}で]({Artist}の(曲|アルバム)の|{Artist}が歌う){Title}を(再生して|かけて|流して|聴かせて)[ください]"
+  play_by: "[{Room}で]({Artist}の曲の|{Artist}が歌う){Title}を(再生して|かけて|流して|聴かせて)[ください]"
 Mute:
   mute: "ミュート[して]"
   mute_tv: "(テレビ|コディ|音|音声)を(ミュートして|消音して|ミュート解除して)[ください]"
