@@ -101,8 +101,8 @@
     "goToAmazon": "Amazon खाते पर जाएँ",
     "heading": "स्किल डिप्लॉय करें",
     "invocation": {
+      "elsewhere": "{{locales}} में “{{name}}” बोला जाता है।",
       "example": "“Alexa, {{name}} से…”",
-      "french": "फ़्रेंच में “kodi” इस्तेमाल होता है, क्योंकि फ़्रेंच में “encore” का मतलब “फिर से” होता है।",
       "label": "इनवोकेशन नाम"
     },
     "locales": {

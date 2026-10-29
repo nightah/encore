@@ -1,6 +1,7 @@
 import type { RecentTitle, Room, Settings, SkillInfo } from "@api/generated/model";
 import {
   LOCALES,
+  LOCALE_INVOCATIONS,
   type MockDb,
   type Scenario,
   ago,
@@ -101,6 +102,7 @@ function skill(now: number, fresh: boolean): SkillInfo {
           state: "succeeded",
           warnings: [],
         },
+    locale_invocations: LOCALE_INVOCATIONS,
     locales_available: LOCALES,
     locales_enabled: ["en-AU"],
     model_size: fresh

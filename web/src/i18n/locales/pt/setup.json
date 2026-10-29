@@ -101,8 +101,8 @@
     "goToAmazon": "Ir para a conta da Amazon",
     "heading": "Implantar a skill",
     "invocation": {
+      "elsewhere": "Em {{locales}}, as pessoas dizem “{{name}}”.",
       "example": "“Alexa, peça para {{name}}…”",
-      "french": "O francês usa “kodi”, já que “encore” significa “de novo” em francês.",
       "label": "Nome de invocação"
     },
     "locales": {

@@ -101,8 +101,8 @@
     "goToAmazon": "Naar Amazon-account",
     "heading": "De skill uitrollen",
     "invocation": {
+      "elsewhere": "In {{locales}} zeg je “{{name}}”.",
       "example": "“Alexa, vraag {{name}} om…”",
-      "french": "Frans gebruikt “kodi”, omdat “encore” in het Frans “nog eens” betekent.",
       "label": "Aanroepnaam"
     },
     "locales": {

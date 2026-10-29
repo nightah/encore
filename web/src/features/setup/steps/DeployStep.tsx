@@ -5,7 +5,7 @@ import { RadioGroup } from "@base-ui/react/radio-group";
 import { useTranslation } from "react-i18next";
 
 import { ApiError, errorMessage } from "@api/client";
-import type { Privacy } from "@api/generated/model";
+import type { LocaleInvocation, Privacy } from "@api/generated/model";
 import {
   skillSettingsFrom,
   useActiveDeploy,
@@ -123,7 +123,7 @@ export function DeployStep({ nav }: StepProps) {
         <InvocationChoice
           value={currentInvocation}
           disabled={locked}
-          french={currentLocales.includes("fr-FR")}
+          elsewhere={spokenElsewhere(skill.locale_invocations, currentLocales, currentInvocation)}
           error={fieldErrors.invocation}
           onChange={setInvocation}
         />
@@ -288,21 +288,39 @@ function YesNo({
   );
 }
 
+/** The enabled locales that say the chosen invocation differently (French says kodi for both, Japanese writes it in katakana), grouped by what they say, in locale order. */
+export function spokenElsewhere(
+  invocations: readonly LocaleInvocation[],
+  enabled: readonly string[],
+  choice: Invocation,
+): { name: string; locales: string[] }[] {
+  const out: { name: string; locales: string[] }[] = [];
+  for (const entry of invocations) {
+    const name = entry[choice];
+    if (!enabled.includes(entry.locale) || name === choice) continue;
+    const group = out.find((g) => g.name === name);
+    if (group) group.locales.push(entry.locale);
+    else out.push({ locales: [entry.locale], name });
+  }
+  return out;
+}
+
 /** The invocation name: encore or kodi, nothing else. */
 function InvocationChoice({
   value,
   disabled,
-  french,
+  elsewhere,
   error,
   onChange,
 }: {
   value: Invocation;
   disabled?: boolean;
-  french: boolean;
+  elsewhere: { name: string; locales: string[] }[];
   error?: string;
   onChange: (value: Invocation) => void;
 }) {
-  const { t } = useTranslation("setup");
+  const { t, i18n } = useTranslation("setup");
+  const list = new Intl.ListFormat(i18n.language, { type: "conjunction" });
   const id = useId();
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
@@ -331,12 +349,12 @@ function InvocationChoice({
       </RadioGroup>
       <span className="text-[13px] text-muted">
         {t("deploy.invocation.example", { name: value })}
-        {value === "encore" && french ? (
-          <>
+        {elsewhere.map(({ name, locales }) => (
+          <span key={name}>
             <br />
-            {t("deploy.invocation.french")}
-          </>
-        ) : null}
+            {t("deploy.invocation.elsewhere", { locales: list.format(locales), name })}
+          </span>
+        ))}
       </span>
       {error ? <span className="text-[13px] text-bad">{error}</span> : null}
     </div>
