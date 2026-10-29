@@ -2187,6 +2187,7 @@
             "type": "string"
           },
           "kodi_calls": {
+            "description": "The JSON-RPC calls the request made, in order",
             "items": {
               "$ref": "#/components/schemas/KodiCall"
             },
@@ -2196,6 +2197,7 @@
             "type": "string"
           },
           "match": {
+            "description": "A logged candidate's kind and media_id are looked up in the target instance's index when the entry predates them",
             "oneOf": [
               {
                 "$ref": "#/components/schemas/Match"
@@ -2224,6 +2226,7 @@
             "additionalProperties": {
               "type": "string"
             },
+            "description": "The slots Alexa filled, as it sent them",
             "type": "object"
           },
           "speech": {
@@ -2249,7 +2252,7 @@
             ]
           },
           "via": {
-            "description": "The room or device the request named; null when it named none, or for requests logged before Encore recorded it. A room without its own Kodi instance plays on the Echo's, so the target can differ from this room",
+            "description": "The room or device the request named, from the Room slot or the end of a search; null when it named none, or for requests logged before Encore recorded it. A room without its own Kodi instance plays on the Echo's, so the target can differ from this room",
             "oneOf": [
               {
                 "$ref": "#/components/schemas/Via"
@@ -2442,6 +2445,7 @@
             "type": "integer"
           },
           "kind": {
+            "description": "room for another name for the room, device for a device in it",
             "enum": [
               "room",
               "device"
@@ -2640,7 +2644,8 @@
             "$ref": "#/components/schemas/AuthSettings"
           },
           "features": {
-            "$ref": "#/components/schemas/Features"
+            "$ref": "#/components/schemas/Features",
+            "description": "The alexa.deep_search, alexa.shutdown_quits, alexa.confirm_sound and alexa.queue_limit config keys"
           },
           "locale": {
             "$ref": "#/components/schemas/LocaleSettings"
@@ -2748,6 +2753,7 @@
             "$ref": "#/components/schemas/SkillEndpointInfo"
           },
           "invocation": {
+            "description": "encore uses each locale's own name for it (\"kodi\" in French); kodi is \"kodi\" in every locale",
             "enum": [
               "encore",
               "kodi"
@@ -2794,12 +2800,14 @@
             "type": "boolean"
           },
           "privacy": {
-            "$ref": "#/components/schemas/Privacy"
+            "$ref": "#/components/schemas/Privacy",
+            "description": "Each answer is null until it's given; deploys are refused until all are answered"
           },
           "skill_id": {
             "type": "string"
           },
           "skill_name": {
+            "description": "Empty uses each locale's default",
             "type": "string"
           },
           "state": {
@@ -3202,6 +3210,7 @@
         "additionalProperties": false,
         "properties": {
           "kind": {
+            "description": "Whether it names the room or a device in it",
             "enum": [
               "room",
               "device"
@@ -3212,6 +3221,7 @@
             "type": "string"
           },
           "spoken": {
+            "description": "The name that matched; the room's own name when that was said",
             "type": "string"
           }
         },
@@ -3350,7 +3360,7 @@
         ]
       },
       "post": {
-        "description": "The alias is added to the skill model on the next deploy.",
+        "description": "Used for matching straight away, and added to the skill model on the next deploy.",
         "operationId": "createAlias",
         "requestBody": {
           "content": {
@@ -3437,6 +3447,7 @@
     },
     "/api/v1/auth/login": {
       "post": {
+        "description": "Sets the session cookie. 401 on bad credentials, 429 while locked out. With TOTP on, a login without a code answers 401 with `errors[0].location` set to `body.totp`.",
         "operationId": "login",
         "requestBody": {
           "content": {
@@ -3558,6 +3569,7 @@
     },
     "/api/v1/auth/oidc/login": {
       "get": {
+        "description": "Redirects to the OpenID Connect provider.",
         "operationId": "oidcLogin",
         "responses": {
           "302": {
@@ -3589,7 +3601,7 @@
     },
     "/api/v1/auth/password": {
       "put": {
-        "description": "Signs out every other session.",
+        "description": "Signs out every other session. 401 if the current password is wrong.",
         "operationId": "changePassword",
         "requestBody": {
           "content": {
@@ -3629,6 +3641,7 @@
     },
     "/api/v1/auth/state": {
       "get": {
+        "description": "Also sets the per-browser CSRF cookie the token is bound to.",
         "operationId": "getAuthState",
         "responses": {
           "200": {
@@ -3660,6 +3673,7 @@
     },
     "/api/v1/auth/totp/confirm": {
       "post": {
+        "description": "401 on a wrong code. From then on, a login needs a code.",
         "operationId": "confirmTOTP",
         "requestBody": {
           "content": {
@@ -3810,7 +3824,7 @@
     },
     "/api/v1/config/export": {
       "get": {
-        "description": "Settings and Kodi instances in encore.yml form. Secrets are left out unless include_secrets=true, which needs a sign-in within the last 15 minutes (or a trusted-header request).",
+        "description": "Auth, storage, `alexa.locales`, trusted proxies and Kodi instances in `encore.yml` form. Secrets are left out unless `include_secrets=true`, which needs a sign-in within the last 15 minutes (403 otherwise); trusted-header requests always qualify.",
         "operationId": "exportConfig",
         "parameters": [
           {
@@ -3869,7 +3883,7 @@
     },
     "/api/v1/config/import": {
       "post": {
-        "description": "Applies the settings and Kodi instances it contains. Keys managed by config, and keys the web interface cannot change, are skipped.",
+        "description": "Applies the settings and Kodi instances it contains; Kodi instances are added or updated by name. Keys managed by config, and keys the web interface can't change, are skipped. Invalid values answer 422 and nothing is saved.",
         "operationId": "importConfig",
         "requestBody": {
           "content": {
@@ -4098,6 +4112,7 @@
     },
     "/api/v1/kodi/discovered": {
       "get": {
+        "description": "Instances already added are left out.",
         "operationId": "listDiscoveredKodi",
         "responses": {
           "200": {
@@ -4174,6 +4189,7 @@
         ]
       },
       "post": {
+        "description": "Credentials in the URL are moved to `username` and `password`. An empty `websocket_url` disables live updates.",
         "operationId": "createKodiInstance",
         "requestBody": {
           "content": {
@@ -4220,6 +4236,7 @@
     },
     "/api/v1/kodi/instances/{id}": {
       "delete": {
+        "description": "409 for an instance declared in config.",
         "operationId": "deleteKodiInstance",
         "parameters": [
           {
@@ -4303,6 +4320,7 @@
         ]
       },
       "patch": {
+        "description": "Takes any of the fields it was added with. 409 for an instance declared in config.",
         "operationId": "updateKodiInstance",
         "parameters": [
           {
@@ -4462,6 +4480,7 @@
     },
     "/api/v1/kodi/instances/{id}/sync": {
       "post": {
+        "description": "Runs in the background.",
         "operationId": "syncKodiInstance",
         "parameters": [
           {
@@ -4556,6 +4575,7 @@
     },
     "/api/v1/kodi/instances/{id}/wake": {
       "post": {
+        "description": "409 when no MAC address is known.",
         "operationId": "wakeKodiInstance",
         "parameters": [
           {
@@ -4642,6 +4662,7 @@
     },
     "/api/v1/libraries/group": {
       "post": {
+        "description": "A manual group, which detection never undoes.",
         "operationId": "groupLibrary",
         "requestBody": {
           "content": {
@@ -4857,6 +4878,7 @@
     },
     "/api/v1/match": {
       "post": {
+        "description": "Candidates are scored as in the request log.",
         "operationId": "testMatch",
         "requestBody": {
           "content": {
@@ -4903,7 +4925,7 @@
     },
     "/api/v1/oauth/lwa/callback": {
       "get": {
-        "description": "Public; checked against the state of a pending authorisation. Redirects to the page that started it (the Alexa skill page or the setup wizard).",
+        "description": "Checked against the state of a pending authorisation. Redirects to the page that started it (the Alexa skill page or the setup wizard).",
         "operationId": "lwaCallback",
         "parameters": [
           {
@@ -5386,6 +5408,7 @@
     },
     "/api/v1/rooms/{id}/aliases": {
       "post": {
+        "description": "409 if the spoken name is already used by a room or one of its names.",
         "operationId": "addRoomAlias",
         "parameters": [
           {
@@ -5526,7 +5549,7 @@
         ]
       },
       "patch": {
-        "description": "A partial settings document. Secrets are write-only (secret_key, password, client_secret); an empty string removes one. Keys managed by config are refused with 409. Changing auth.mode signs out every other session.",
+        "description": "A partial settings document. Secrets are write-only (`secret_key`, `password`, `client_secret`); an empty string removes one. Read-only fields may be sent back and are ignored. Keys in `managed` answer 409 and invalid values 422; in both cases nothing is saved. Changing `auth.mode` signs out every other session, and switching to `header` from a connection that isn't from a trusted proxy is refused with 409.",
         "operationId": "updateSettings",
         "requestBody": {
           "content": {
@@ -5675,7 +5698,7 @@
     },
     "/api/v1/setup/admin": {
       "post": {
-        "description": "Only before an admin exists. The one-time setup token is printed in the server log at startup.",
+        "description": "Only before an admin exists; 409 once one does. The one-time setup token is printed in the server log at startup. Signs in as the new admin.",
         "operationId": "createAdmin",
         "requestBody": {
           "content": {
@@ -5710,7 +5733,7 @@
     },
     "/api/v1/setup/reachability": {
       "post": {
-        "description": "Probes the public URL the way Alexa would: an unsigned POST to /api/v1/alexa must be answered 400 by encore; the TLS certificate must be trusted and the endpoint must accept TLS 1.2, the only version Alexa offers; and, for information, whether other /api/v1 routes are reachable through the proxy too (they always need a sign-in). Needs an admin session, or before the admin account exists, the setup token.",
+        "description": "Probes the public URL the way Alexa would: an unsigned POST to `/api/v1/alexa` must be answered 400 by Encore; the TLS certificate must be trusted and the endpoint must accept TLS 1.2, the only version Alexa offers; and, for information, whether other `/api/v1` routes are reachable through the proxy too (they always need a sign-in). Redirects are not followed. Needs an admin session or, before the admin account exists, the setup token (403 if it's wrong). A certificate that expires within 14 days is only a warning.",
         "operationId": "checkReachability",
         "requestBody": {
           "content": {
@@ -5817,7 +5840,7 @@
     },
     "/api/v1/skill/amazon/authorize": {
       "get": {
-        "description": "return_urls must be listed under the security profile's Allowed Return URLs. Over HTTPS the consent page returns to Encore's callback; otherwise to the local address, whose URL the user pastes back. Until the client ID and secret are saved, url is empty and only return_urls is filled in, so they can be shown while the security profile is being created.",
+        "description": "return_urls must be listed under the security profile's Allowed Return URLs. Over HTTPS the consent page returns to Encore's callback; otherwise to the local address, whose URL the user pastes back. Until the client ID and secret are saved, url is empty and only return_urls is filled in, so they can be shown while the security profile is being created. A pending authorisation's state and PKCE verifier stay on the server for 15 minutes.",
         "operationId": "authorizeAmazon",
         "parameters": [
           {
@@ -5921,7 +5944,7 @@
     },
     "/api/v1/skill/amazon/paste": {
       "post": {
-        "description": "Either the address the browser was sent to after consenting (redirect_url), or a refresh token from `ask util generate-lwa-tokens` (refresh_token).",
+        "description": "Either the address the browser was sent to after consenting (`redirect_url`), or a refresh token from `ask util generate-lwa-tokens` (`refresh_token`). 422 if Amazon rejects it.",
         "operationId": "pasteAmazonAuthorization",
         "requestBody": {
           "content": {
@@ -6008,7 +6031,7 @@
     },
     "/api/v1/skill/deploy": {
       "post": {
-        "description": "Runs in the background, one deploy at a time; progress arrives as deploy events and from GET /skill/deploy/{id}. Refused with 422 until every privacy question is answered.",
+        "description": "Runs in the background, one deploy at a time; progress arrives as deploy events and from `GET /skill/deploy/{id}`. 422 until every privacy question is answered and the endpoint is `https://`; 409 when Amazon isn't connected or a deploy is already running.",
         "operationId": "deploySkill",
         "requestBody": {
           "content": {
@@ -6151,6 +6174,7 @@
     },
     "/api/v1/skill/settings": {
       "put": {
+        "description": "Leave out `content` to keep it.",
         "operationId": "updateSkillSettings",
         "requestBody": {
           "content": {
@@ -6195,5 +6219,58 @@
         ]
       }
     }
-  }
+  },
+  "tags": [
+    {
+      "name": "auth",
+      "x-displayName": "Auth and setup"
+    },
+    {
+      "description": "The dashboard: the skill's state, the public address, the libraries, today's requests, and what needs attention.",
+      "name": "overview",
+      "x-displayName": "Overview"
+    },
+    {
+      "name": "kodi",
+      "x-displayName": "Kodi instances"
+    },
+    {
+      "description": "Kodi instances that read one shared library are grouped so Encore syncs it once. See [shared libraries](/encore/guides/shared-libraries/).",
+      "name": "libraries",
+      "x-displayName": "Shared libraries"
+    },
+    {
+      "name": "devices",
+      "x-displayName": "Echo devices"
+    },
+    {
+      "description": "Rooms and their spoken names, used for \"play Bluey in the kids' room\" and \"stop on the TV\". See [rooms](/encore/guides/echo-devices/#rooms).",
+      "name": "rooms",
+      "x-displayName": "Rooms"
+    },
+    {
+      "name": "skill",
+      "x-displayName": "Alexa skill"
+    },
+    {
+      "description": "See the [request log](/encore/guides/request-log/).",
+      "name": "requests",
+      "x-displayName": "Request log"
+    },
+    {
+      "description": "See [matching](/encore/guides/matching/).",
+      "name": "match",
+      "x-displayName": "Library and match tester"
+    },
+    {
+      "description": "Config wins over the web interface: keys set in config are listed in `managed` and can't be changed here.",
+      "name": "settings",
+      "x-displayName": "Settings"
+    },
+    {
+      "description": "See the [event stream](/encore/reference/api/#event-stream).",
+      "name": "events",
+      "x-displayName": "Events"
+    }
+  ]
 }

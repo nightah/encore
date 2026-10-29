@@ -24,9 +24,8 @@ import (
 
 func (a *API) registerConfigIO(api huma.API) {
 	huma.Register(api, protected(huma.Operation{
-		OperationID: "exportConfig", Method: http.MethodGet, Path: Prefix + "/config/export", Tags: []string{"settings"}, Summary: "Export the configuration as encore.yml",
-		Description: "Settings and Kodi instances in encore.yml form. Secrets are left out unless include_secrets=true, which needs a sign-in within the last 15 minutes (or a trusted-header request).",
-		Responses:   map[string]*huma.Response{"200": {Description: "encore.yml", Content: map[string]*huma.MediaType{"application/yaml": {Schema: &huma.Schema{Type: huma.TypeString}}}}},
+		OperationID: "exportConfig", Method: http.MethodGet, Path: Prefix + "/config/export", Tags: []string{"settings"}, Summary: "Export the configuration as encore.yml", Description: "Auth, storage, `alexa.locales`, trusted proxies and Kodi instances in `encore.yml` form. Secrets are left out unless `include_secrets=true`, which needs a sign-in within the last 15 minutes (403 otherwise); trusted-header requests always qualify.",
+		Responses: map[string]*huma.Response{"200": {Description: "encore.yml", Content: map[string]*huma.MediaType{"application/yaml": {Schema: &huma.Schema{Type: huma.TypeString}}}}},
 	}),
 		func(ctx context.Context, in *struct {
 			IncludeSecrets bool `query:"include_secrets"`
@@ -57,8 +56,8 @@ func (a *API) registerConfigIO(api huma.API) {
 		})
 
 	huma.Register(api, protected(huma.Operation{
-		OperationID: "importConfig", Method: http.MethodPost, Path: Prefix + "/config/import", Tags: []string{"settings"}, Summary: "Import an encore.yml",
-		Description: "Applies the settings and Kodi instances it contains. Keys managed by config, and keys the web interface cannot change, are skipped.", MaxBodyBytes: maxImportBytes,
+		OperationID: "importConfig", Method: http.MethodPost, Path: Prefix + "/config/import", Tags: []string{"settings"}, Summary: "Import an encore.yml", Description: "Applies the settings and Kodi instances it contains; Kodi instances are added or updated by name. Keys managed by config, and keys the web interface can't change, are skipped. Invalid values answer 422 and nothing is saved.",
+		MaxBodyBytes: maxImportBytes,
 	}),
 		func(ctx context.Context, in *struct {
 			RawBody []byte `contentType:"application/yaml"`

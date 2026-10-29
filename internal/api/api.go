@@ -167,9 +167,27 @@ func humaConfig() huma.Config {
 	// No $schema links in responses: the web client is generated from the document instead.
 	cfg.CreateHooks = nil
 	cfg.Transformers = []huma.Transformer{nonNilTransformer}
+	// The endpoints reference page has a section per tag, in this order, titled by x-displayName.
+	cfg.Tags = []*huma.Tag{
+		apiTag("auth", "Auth and setup", ""),
+		apiTag("overview", "Overview", "The dashboard: the skill's state, the public address, the libraries, today's requests, and what needs attention."),
+		apiTag("kodi", "Kodi instances", ""),
+		apiTag("libraries", "Shared libraries", "Kodi instances that read one shared library are grouped so Encore syncs it once. See [shared libraries](/encore/guides/shared-libraries/)."),
+		apiTag("devices", "Echo devices", ""),
+		apiTag("rooms", "Rooms", "Rooms and their spoken names, used for \"play Bluey in the kids' room\" and \"stop on the TV\". See [rooms](/encore/guides/echo-devices/#rooms)."),
+		apiTag("skill", "Alexa skill", ""),
+		apiTag("requests", "Request log", "See the [request log](/encore/guides/request-log/)."),
+		apiTag("match", "Library and match tester", "See [matching](/encore/guides/matching/)."),
+		apiTag("settings", "Settings", "Config wins over the web interface: keys set in config are listed in `managed` and can't be changed here."),
+		apiTag("events", "Events", "See the [event stream](/encore/reference/api/#event-stream)."),
+	}
 	cfg.Components.SecuritySchemes = map[string]*huma.SecurityScheme{
 		"session": {Type: "apiKey", In: "cookie", Name: auth.SessionCookie, Description: "Admin session; trusted-header requests from server.trusted_proxies are accepted too."},
 	}
 
 	return cfg
+}
+
+func apiTag(name, title, description string) *huma.Tag {
+	return &huma.Tag{Name: name, Description: description, Extensions: map[string]any{"x-displayName": title}}
 }

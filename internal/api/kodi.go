@@ -42,7 +42,7 @@ func (a *API) registerKodi(api huma.API) {
 			return &body[[]Instance]{Body: out}, a.problemFor(ctx, err)
 		})
 
-	huma.Register(api, protected(huma.Operation{OperationID: "createKodiInstance", Method: http.MethodPost, Path: Prefix + "/kodi/instances", Tags: []string{"kodi"}, Summary: "Add a Kodi instance", DefaultStatus: http.StatusCreated}),
+	huma.Register(api, protected(huma.Operation{OperationID: "createKodiInstance", Method: http.MethodPost, Path: Prefix + "/kodi/instances", Tags: []string{"kodi"}, Summary: "Add a Kodi instance", Description: "Credentials in the URL are moved to `username` and `password`. An empty `websocket_url` disables live updates.", DefaultStatus: http.StatusCreated}),
 		func(ctx context.Context, in *struct{ Body InstanceInput }) (*body[Instance], error) {
 			inst, err := a.createInstance(ctx, in.Body)
 
@@ -56,7 +56,7 @@ func (a *API) registerKodi(api huma.API) {
 			return &body[Instance]{Body: inst}, a.problemFor(ctx, err)
 		})
 
-	huma.Register(api, protected(huma.Operation{OperationID: "updateKodiInstance", Method: http.MethodPatch, Path: Prefix + "/kodi/instances/{id}", Tags: []string{"kodi"}, Summary: "Change a Kodi instance"}),
+	huma.Register(api, protected(huma.Operation{OperationID: "updateKodiInstance", Method: http.MethodPatch, Path: Prefix + "/kodi/instances/{id}", Tags: []string{"kodi"}, Summary: "Change a Kodi instance", Description: "Takes any of the fields it was added with. 409 for an instance declared in config."}),
 		func(ctx context.Context, in *struct {
 			ID   int64 `path:"id"`
 			Body InstanceInput
@@ -67,7 +67,7 @@ func (a *API) registerKodi(api huma.API) {
 			return &body[Instance]{Body: inst}, a.problemFor(ctx, err)
 		})
 
-	huma.Register(api, protected(huma.Operation{OperationID: "deleteKodiInstance", Method: http.MethodDelete, Path: Prefix + "/kodi/instances/{id}", Tags: []string{"kodi"}, Summary: "Remove a Kodi instance", DefaultStatus: http.StatusNoContent}),
+	huma.Register(api, protected(huma.Operation{OperationID: "deleteKodiInstance", Method: http.MethodDelete, Path: Prefix + "/kodi/instances/{id}", Tags: []string{"kodi"}, Summary: "Remove a Kodi instance", Description: "409 for an instance declared in config.", DefaultStatus: http.StatusNoContent}),
 		func(ctx context.Context, in *idPath) (*struct{}, error) {
 			return nil, a.problemFor(ctx, a.deleteInstance(ctx, in.ID))
 		})
@@ -82,7 +82,7 @@ func (a *API) registerKodi(api huma.API) {
 			return out, a.problemFor(ctx, err)
 		})
 
-	huma.Register(api, protected(huma.Operation{OperationID: "syncKodiInstance", Method: http.MethodPost, Path: Prefix + "/kodi/instances/{id}/sync", Tags: []string{"kodi"}, Summary: "Reload a Kodi instance's library", DefaultStatus: http.StatusAccepted}),
+	huma.Register(api, protected(huma.Operation{OperationID: "syncKodiInstance", Method: http.MethodPost, Path: Prefix + "/kodi/instances/{id}/sync", Tags: []string{"kodi"}, Summary: "Reload a Kodi instance's library", Description: "Runs in the background.", DefaultStatus: http.StatusAccepted}),
 		func(ctx context.Context, in *idPath) (*body[Accepted], error) {
 			if _, err := a.app.InstanceStatus(ctx, in.ID, false); err != nil {
 				return nil, a.problemFor(ctx, err)
@@ -101,7 +101,7 @@ func (a *API) registerKodi(api huma.API) {
 			return &body[Accepted]{Body: Accepted{ID: id}}, nil
 		})
 
-	huma.Register(api, protected(huma.Operation{OperationID: "wakeKodiInstance", Method: http.MethodPost, Path: Prefix + "/kodi/instances/{id}/wake", Tags: []string{"kodi"}, Summary: "Wake a Kodi instance with Wake-on-LAN", DefaultStatus: http.StatusAccepted}),
+	huma.Register(api, protected(huma.Operation{OperationID: "wakeKodiInstance", Method: http.MethodPost, Path: Prefix + "/kodi/instances/{id}/wake", Tags: []string{"kodi"}, Summary: "Wake a Kodi instance with Wake-on-LAN", Description: "409 when no MAC address is known.", DefaultStatus: http.StatusAccepted}),
 		func(ctx context.Context, in *idPath) (*body[Accepted], error) {
 			st, err := a.app.InstanceStatus(ctx, in.ID, false)
 			if err != nil {
@@ -130,7 +130,7 @@ func (a *API) registerKodi(api huma.API) {
 			return nil, a.problemFor(ctx, a.app.DB().KodiInstances().SetDefault(ctx, in.ID))
 		})
 
-	huma.Register(api, protected(huma.Operation{OperationID: "listDiscoveredKodi", Method: http.MethodGet, Path: Prefix + "/kodi/discovered", Tags: []string{"kodi"}, Summary: "Find Kodi instances on the network with mDNS"}),
+	huma.Register(api, protected(huma.Operation{OperationID: "listDiscoveredKodi", Method: http.MethodGet, Path: Prefix + "/kodi/discovered", Tags: []string{"kodi"}, Summary: "Find Kodi instances on the network with mDNS", Description: "Instances already added are left out."}),
 		func(ctx context.Context, _ *struct{}) (*body[[]DiscoveredInstance], error) {
 			out, err := a.discover(ctx)
 

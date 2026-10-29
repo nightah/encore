@@ -435,7 +435,7 @@ func (a *API) registerSkill(api huma.API) {
 			return &body[SkillInfo]{Body: out}, a.problemFor(ctx, err)
 		})
 
-	huma.Register(api, protected(huma.Operation{OperationID: "updateSkillSettings", Method: http.MethodPut, Path: Prefix + "/skill/settings", Tags: []string{"skill"}, Summary: "Change the skill's settings"}),
+	huma.Register(api, protected(huma.Operation{OperationID: "updateSkillSettings", Method: http.MethodPut, Path: Prefix + "/skill/settings", Tags: []string{"skill"}, Summary: "Change the skill's settings", Description: "Leave out `content` to keep it."}),
 		func(ctx context.Context, in *struct{ Body SkillSettingsInput }) (*body[SkillInfo], error) {
 			if err := s.saveSettings(ctx, in.Body); err != nil {
 				return nil, a.settingsProblem(ctx, err)
@@ -474,7 +474,7 @@ func (a *API) registerSkill(api huma.API) {
 			return nil, a.problemFor(ctx, s.saveCredentials(ctx, strings.TrimSpace(in.Body.ClientID), strings.TrimSpace(in.Body.ClientSecret)))
 		})
 
-	huma.Register(api, protected(huma.Operation{OperationID: "authorizeAmazon", Method: http.MethodGet, Path: Prefix + "/skill/amazon/authorize", Tags: []string{"skill"}, Summary: "Get the Login with Amazon consent URL", Description: "return_urls must be listed under the security profile's Allowed Return URLs. Over HTTPS the consent page returns to Encore's callback; otherwise to the local address, whose URL the user pastes back. Until the client ID and secret are saved, url is empty and only return_urls is filled in, so they can be shown while the security profile is being created."}),
+	huma.Register(api, protected(huma.Operation{OperationID: "authorizeAmazon", Method: http.MethodGet, Path: Prefix + "/skill/amazon/authorize", Tags: []string{"skill"}, Summary: "Get the Login with Amazon consent URL", Description: "return_urls must be listed under the security profile's Allowed Return URLs. Over HTTPS the consent page returns to Encore's callback; otherwise to the local address, whose URL the user pastes back. Until the client ID and secret are saved, url is empty and only return_urls is filled in, so they can be shown while the security profile is being created. A pending authorisation's state and PKCE verifier stay on the server for 15 minutes."}),
 		func(ctx context.Context, in *struct {
 			ReturnURL string `query:"return_url" doc:"One of return_urls, to choose the flow explicitly"`
 			Then      string `query:"then" enum:"alexa-skill,setup" default:"alexa-skill" doc:"The page the callback returns to"`
@@ -485,7 +485,7 @@ func (a *API) registerSkill(api huma.API) {
 			return &body[AuthorizeInfo]{Body: out}, a.problemFor(ctx, err)
 		})
 
-	huma.Register(api, public(huma.Operation{OperationID: "lwaCallback", Method: http.MethodGet, Path: lwaCallbackPath, Tags: []string{"skill"}, Summary: "Finish Login with Amazon", Description: "Public; checked against the state of a pending authorisation. Redirects to the page that started it (the Alexa skill page or the setup wizard).", DefaultStatus: http.StatusFound}),
+	huma.Register(api, public(huma.Operation{OperationID: "lwaCallback", Method: http.MethodGet, Path: lwaCallbackPath, Tags: []string{"skill"}, Summary: "Finish Login with Amazon", Description: "Checked against the state of a pending authorisation. Redirects to the page that started it (the Alexa skill page or the setup wizard).", DefaultStatus: http.StatusFound}),
 		func(ctx context.Context, in *struct {
 			Code             string `query:"code"`
 			State            string `query:"state"`
@@ -505,7 +505,7 @@ func (a *API) registerSkill(api huma.API) {
 			return &redirect{Status: http.StatusFound, Location: page + "?amazon=connected"}, nil
 		})
 
-	huma.Register(api, protected(huma.Operation{OperationID: "pasteAmazonAuthorization", Method: http.MethodPost, Path: Prefix + "/skill/amazon/paste", Tags: []string{"skill"}, Summary: "Finish Login with Amazon by pasting", Description: "Either the address the browser was sent to after consenting (redirect_url), or a refresh token from `ask util generate-lwa-tokens` (refresh_token).", DefaultStatus: http.StatusNoContent}),
+	huma.Register(api, protected(huma.Operation{OperationID: "pasteAmazonAuthorization", Method: http.MethodPost, Path: Prefix + "/skill/amazon/paste", Tags: []string{"skill"}, Summary: "Finish Login with Amazon by pasting", Description: "Either the address the browser was sent to after consenting (`redirect_url`), or a refresh token from `ask util generate-lwa-tokens` (`refresh_token`). 422 if Amazon rejects it.", DefaultStatus: http.StatusNoContent}),
 		func(ctx context.Context, in *struct {
 			Body struct {
 				RedirectURL  string `json:"redirect_url,omitempty"`

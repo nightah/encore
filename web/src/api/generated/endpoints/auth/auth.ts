@@ -27,6 +27,7 @@ export const getLoginUrl = () => {
 };
 
 /**
+ * Sets the session cookie. 401 on bad credentials, 429 while locked out. With TOTP on, a login without a code answers 401 with `errors[0].location` set to `body.totp`.
  * @summary Sign in with a username and password
  */
 export const login = async (loginRequest: LoginRequest, options?: Parameters<typeof orvalFetch>[1]): Promise<void> => {
@@ -101,6 +102,7 @@ export const getOidcLoginUrl = () => {
 };
 
 /**
+ * Redirects to the OpenID Connect provider.
  * @summary Start OpenID Connect sign-in
  */
 export const oidcLogin = async (options?: Parameters<typeof orvalFetch>[1]): Promise<ErrorModel> => {
@@ -115,7 +117,7 @@ export const getChangePasswordUrl = () => {
 };
 
 /**
- * Signs out every other session.
+ * Signs out every other session. 401 if the current password is wrong.
  * @summary Change the local admin password
  */
 export const changePassword = async (
@@ -149,6 +151,7 @@ export const getGetAuthStateUrl = () => {
 };
 
 /**
+ * Also sets the per-browser CSRF cookie the token is bound to.
  * @summary Sign-in state and CSRF token
  */
 export const getAuthState = async (options?: Parameters<typeof orvalFetch>[1]): Promise<AuthState> => {
@@ -163,6 +166,7 @@ export const getConfirmTOTPUrl = () => {
 };
 
 /**
+ * 401 on a wrong code. From then on, a login needs a code.
  * @summary Finish TOTP enrolment with a code
  */
 export const confirmTOTP = async (
@@ -278,7 +282,7 @@ export const getCreateAdminUrl = () => {
 };
 
 /**
- * Only before an admin exists. The one-time setup token is printed in the server log at startup.
+ * Only before an admin exists; 409 once one does. The one-time setup token is printed in the server log at startup. Signs in as the new admin.
  * @summary Create the first admin account
  */
 export const createAdmin = async (
@@ -312,7 +316,7 @@ export const getCheckReachabilityUrl = () => {
 };
 
 /**
- * Probes the public URL the way Alexa would: an unsigned POST to /api/v1/alexa must be answered 400 by encore; the TLS certificate must be trusted and the endpoint must accept TLS 1.2, the only version Alexa offers; and, for information, whether other /api/v1 routes are reachable through the proxy too (they always need a sign-in). Needs an admin session, or before the admin account exists, the setup token.
+ * Probes the public URL the way Alexa would: an unsigned POST to `/api/v1/alexa` must be answered 400 by Encore; the TLS certificate must be trusted and the endpoint must accept TLS 1.2, the only version Alexa offers; and, for information, whether other `/api/v1` routes are reachable through the proxy too (they always need a sign-in). Redirects are not followed. Needs an admin session or, before the admin account exists, the setup token (403 if it's wrong). A certificate that expires within 14 days is only a warning.
  * @summary Check Encore's public address
  */
 export const checkReachability = async (

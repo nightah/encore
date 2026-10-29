@@ -6,6 +6,9 @@
  * OpenAPI spec version: 1
  */
 
+/**
+ * Whether it names the room or a device in it
+ */
 export type ViaKind = (typeof ViaKind)[keyof typeof ViaKind];
 
 export const ViaKind = {

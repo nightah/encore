@@ -14,6 +14,7 @@ export const getListDiscoveredKodiUrl = () => {
 };
 
 /**
+ * Instances already added are left out.
  * @summary Find Kodi instances on the network with mDNS
  */
 export const listDiscoveredKodi = async (options?: Parameters<typeof orvalFetch>[1]): Promise<DiscoveredInstance[]> => {
@@ -42,6 +43,7 @@ export const getCreateKodiInstanceUrl = () => {
 };
 
 /**
+ * Credentials in the URL are moved to `username` and `password`. An empty `websocket_url` disables live updates.
  * @summary Add a Kodi instance
  */
 export const createKodiInstance = async (
@@ -75,6 +77,7 @@ export const getDeleteKodiInstanceUrl = (id: number) => {
 };
 
 /**
+ * 409 for an instance declared in config.
  * @summary Remove a Kodi instance
  */
 export const deleteKodiInstance = async (id: number, options?: Parameters<typeof orvalFetch>[1]): Promise<void> => {
@@ -103,6 +106,7 @@ export const getUpdateKodiInstanceUrl = (id: number) => {
 };
 
 /**
+ * Takes any of the fields it was added with. 409 for an instance declared in config.
  * @summary Change a Kodi instance
  */
 export const updateKodiInstance = async (
@@ -182,6 +186,7 @@ export const getSyncKodiInstanceUrl = (id: number) => {
 };
 
 /**
+ * Runs in the background.
  * @summary Reload a Kodi instance's library
  */
 export const syncKodiInstance = async (id: number, options?: Parameters<typeof orvalFetch>[1]): Promise<Accepted> => {
@@ -210,6 +215,7 @@ export const getWakeKodiInstanceUrl = (id: number) => {
 };
 
 /**
+ * 409 when no MAC address is known.
  * @summary Wake a Kodi instance with Wake-on-LAN
  */
 export const wakeKodiInstance = async (id: number, options?: Parameters<typeof orvalFetch>[1]): Promise<Accepted> => {

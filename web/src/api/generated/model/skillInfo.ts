@@ -20,6 +20,7 @@ export interface SkillInfo {
   /** What the skill can play; music includes music videos */
   content: SkillInfoContentItem[];
   endpoint: SkillEndpointInfo;
+  /** encore uses each locale's own name for it ("kodi" in French); kodi is "kodi" in every locale */
   invocation: SkillInfoInvocation;
   /** What people say, "Alexa, ask <invocation_name> to…", in the first enabled locale */
   invocation_name: string;
@@ -28,8 +29,10 @@ export interface SkillInfo {
   locales_enabled: string[];
   model_size: ModelSize | null;
   needs_deploy: boolean;
+  /** Each answer is null until it's given; deploys are refused until all are answered */
   privacy: Privacy;
   skill_id: string;
+  /** Empty uses each locale's default */
   skill_name: string;
   state: SkillInfoState;
   /** Why needs_deploy is set: the skill's settings changed, or only the library titles in the model */

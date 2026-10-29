@@ -6,6 +6,9 @@
  * OpenAPI spec version: 1
  */
 
+/**
+ * room for another name for the room, device for a device in it
+ */
 export type RoomAliasKind = (typeof RoomAliasKind)[keyof typeof RoomAliasKind];
 
 export const RoomAliasKind = {

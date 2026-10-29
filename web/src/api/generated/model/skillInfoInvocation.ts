@@ -6,6 +6,9 @@
  * OpenAPI spec version: 1
  */
 
+/**
+ * encore uses each locale's own name for it ("kodi" in French); kodi is "kodi" in every locale
+ */
 export type SkillInfoInvocation = (typeof SkillInfoInvocation)[keyof typeof SkillInfoInvocation];
 
 export const SkillInfoInvocation = {

@@ -35,6 +35,7 @@ export const getGroupLibraryUrl = () => {
 };
 
 /**
+ * A manual group, which detection never undoes.
  * @summary Group Kodi instances that share a library
  */
 export const groupLibrary = async (

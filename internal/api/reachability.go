@@ -18,8 +18,7 @@ import (
 
 func (a *API) registerReachability(api huma.API) {
 	huma.Register(api, public(huma.Operation{
-		OperationID: "checkReachability", Method: http.MethodPost, Path: Prefix + "/setup/reachability", Tags: []string{"auth"}, Summary: "Check Encore's public address",
-		Description: "Probes the public URL the way Alexa would: an unsigned POST to /api/v1/alexa must be answered 400 by encore; the TLS certificate must be trusted and the endpoint must accept TLS 1.2, the only version Alexa offers; and, for information, whether other /api/v1 routes are reachable through the proxy too (they always need a sign-in). Needs an admin session, or before the admin account exists, the setup token.",
+		OperationID: "checkReachability", Method: http.MethodPost, Path: Prefix + "/setup/reachability", Tags: []string{"auth"}, Summary: "Check Encore's public address", Description: "Probes the public URL the way Alexa would: an unsigned POST to `/api/v1/alexa` must be answered 400 by Encore; the TLS certificate must be trusted and the endpoint must accept TLS 1.2, the only version Alexa offers; and, for information, whether other `/api/v1` routes are reachable through the proxy too (they always need a sign-in). Redirects are not followed. Needs an admin session or, before the admin account exists, the setup token (403 if it's wrong). A certificate that expires within 14 days is only a warning.",
 	}),
 		func(ctx context.Context, in *struct {
 			Body struct {

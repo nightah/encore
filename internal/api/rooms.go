@@ -93,7 +93,7 @@ func (a *API) registerRooms(api huma.API) {
 			return nil, a.problemFor(ctx, a.app.DB().Rooms().Delete(ctx, in.ID))
 		})
 
-	huma.Register(api, protected(huma.Operation{OperationID: "addRoomAlias", Method: http.MethodPost, Path: Prefix + "/rooms/{id}/aliases", Tags: []string{"rooms"}, Summary: "Add another spoken name for a room, or for a device in it", DefaultStatus: http.StatusCreated}),
+	huma.Register(api, protected(huma.Operation{OperationID: "addRoomAlias", Method: http.MethodPost, Path: Prefix + "/rooms/{id}/aliases", Tags: []string{"rooms"}, Summary: "Add another spoken name for a room, or for a device in it", Description: "409 if the spoken name is already used by a room or one of its names.", DefaultStatus: http.StatusCreated}),
 		func(ctx context.Context, in *struct {
 			ID   int64 `path:"id"`
 			Body struct {

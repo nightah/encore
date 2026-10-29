@@ -6,4 +6,7 @@
  * OpenAPI spec version: 1
  */
 
+/**
+ * The slots Alexa filled, as it sent them
+ */
 export type RequestDetailSlots = { [key: string]: string };

@@ -109,6 +109,7 @@ export const getAddRoomAliasUrl = (id: number) => {
 };
 
 /**
+ * 409 if the spoken name is already used by a room or one of its names.
  * @summary Add another spoken name for a room, or for a device in it
  */
 export const addRoomAlias = async (

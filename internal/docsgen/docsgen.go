@@ -7,6 +7,8 @@ import (
 	"embed"
 	"fmt"
 	"io"
+	"io/fs"
+	"os"
 	"path/filepath"
 	"strings"
 	"text/template"
@@ -36,6 +38,18 @@ func Generate(root string) (map[string][]byte, error) {
 	}
 
 	out[ContentDir+"/reference/cli.md"] = cmd
+
+	spec, err := fs.ReadFile(os.DirFS(root), "internal/api/openapi.json")
+	if err != nil {
+		return nil, err
+	}
+
+	endpoints, err := APIEndpoints(spec)
+	if err != nil {
+		return nil, fmt.Errorf("API endpoints: %w", err)
+	}
+
+	out[ContentDir+"/reference/api/endpoints.md"] = endpoints
 
 	src, err := skillmodel.Load(i18n.FS)
 	if err != nil {
