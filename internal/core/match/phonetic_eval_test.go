@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nightah/encore/internal/fuzzy/phonetic"
+	_ "github.com/nightah/encore/internal/fuzzy/phonetic/ar"
 	"github.com/nightah/encore/internal/fuzzy/phonetic/de"
 	"github.com/nightah/encore/internal/fuzzy/phonetic/en"
 	_ "github.com/nightah/encore/internal/fuzzy/phonetic/es"
@@ -266,13 +267,13 @@ func discordant(out, ref []evalOutcome) (gains, losses int) {
 }
 
 // fuzzyGate is how many more correct decisions than English Double Metaphone internal/fuzzy must make per language on the original corpora, and production on both sets where it has its own encoder (ownEncoder): the French and Spanish encoders earn their place only with a measurable gain.
-var fuzzyGate = map[string]int{"fr": 3, "es": 3}
+var fuzzyGate = map[string]int{"fr": 3, "es": 3, "ar": 3}
 
 // evalFull adds what TestPhoneticEval reports without gating: the trigram retriever, the "none" encoder and internal/fuzzy on the grown corpora. The phoneticeval build tag sets it, so the race-detector run of the package keeps only what the gates need.
 var evalFull bool
 
 // ownEncoder lists the gated languages production keys with their own encoder. Production is held to the same gate there, on both corpus sets, so a language that lost its encoder would fail.
-var ownEncoder = map[string]bool{"es": true, "fr": true}
+var ownEncoder = map[string]bool{"es": true, "fr": true, "ar": true}
 
 // grownFloor is what production must still do on each language's grown corpus, under either retriever: decide at least correct cases right and make at most wrong wrong plays. They are the counts measured when they were set. Raise them when a change gains; lower one only with the evidence that the accuracy tables in docs/src/content/docs/contributing/dependencies.md are updated with.
 var grownFloor = map[string]evalScore{
@@ -281,7 +282,7 @@ var grownFloor = map[string]evalScore{
 	"es": {correct: 418, wrong: 3},
 	"fr": {correct: 408, wrong: 3},
 	"it": {correct: 343, wrong: 1},
-	"ar": {correct: 0, wrong: 1000},
+	"ar": {correct: 347, wrong: 5},
 	"hi": {correct: 0, wrong: 1000},
 	"ja": {correct: 0, wrong: 1000},
 	"nl": {correct: 0, wrong: 1000},
