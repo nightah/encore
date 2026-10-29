@@ -28,6 +28,7 @@ func NewSpeech(src *skillmodel.Sources, log *slog.Logger) (*Speech, error) {
 		languages:   map[string]string{},
 		slotIDs:     map[string]map[string]map[string]string{},
 		roomPhrases: map[string][][]string{},
+		roomAfter:   map[string][][]string{},
 		queryForms:  map[string][]queryForm{},
 		log:         log,
 	}
@@ -54,6 +55,10 @@ func NewSpeech(src *skillmodel.Sources, log *slog.Logger) (*Speech, error) {
 		}
 
 		if s.roomPhrases[locale], err = roomPhrases(utterances); err != nil {
+			return nil, fmt.Errorf("locale %s: %w", locale, err)
+		}
+
+		if s.roomAfter[locale], err = roomPostpositions(utterances); err != nil {
 			return nil, fmt.Errorf("locale %s: %w", locale, err)
 		}
 
@@ -127,11 +132,11 @@ func (s *Speech) SlotID(locale, typ, heard string) string {
 	return ids[typ][match.Normalize(s.languages[locale], heard)]
 }
 
-// RoomSplits returns the ways query can be read as "<title> <room phrase> <room>", using the phrases locale's utterances put before {Room}, longest room first. The caller decides which room, if any, is real.
+// RoomSplits returns the ways query can be read as "<title> <room phrase> <room>", using the phrases locale's utterances put before {Room}, longest room first. Where its utterances put a postposition after {Room} instead ("[{Room} में]"), it also reads query as "<room> <postposition> <title>" and "<title> <room> <postposition>", longest room first. The caller decides which room, if any, is real.
 func (s *Speech) RoomSplits(locale, query string) []RoomSplit {
 	phrases, ok := s.roomPhrases[locale]
 	if !ok {
-		phrases = s.roomPhrases[fallbackLocale]
+		locale, phrases = fallbackLocale, s.roomPhrases[fallbackLocale]
 	}
 
 	words := strings.Fields(query)
@@ -146,6 +151,23 @@ func (s *Speech) RoomSplits(locale, query string) []RoomSplit {
 			}
 
 			out = append(out, RoomSplit{Title: strings.Join(words[:i], " "), Room: strings.Join(words[end:], " ")})
+		}
+	}
+
+	for _, post := range s.roomAfter[locale] {
+		for k := len(words) - len(post) - 1; k >= 1; k-- {
+			if wordsEqual(words[k:k+len(post)], post) {
+				out = append(out, RoomSplit{Title: strings.Join(words[k+len(post):], " "), Room: strings.Join(words[:k], " ")})
+			}
+		}
+
+		end := len(words) - len(post)
+		if end < 2 || !wordsEqual(words[end:], post) {
+			continue
+		}
+
+		for i := 1; i < end; i++ {
+			out = append(out, RoomSplit{Title: strings.Join(words[:i], " "), Room: strings.Join(words[i:end], " ")})
 		}
 	}
 
@@ -194,9 +216,9 @@ var ordinals = map[string]map[string]string{
 	"en": {"1st": "first"},
 }
 
-// queryForms collects the samples of each TV intent that start with one of PlayMedia's carrier phrases, without it and without a room, most specific first. Samples that are only a slot after the carrier, such as "play {Show}", are left out: any query would match them.
+// queryForms collects the samples of each TV intent that start with one of PlayMedia's carrier phrases, or end with one where the language puts the verb last ("{Query} चलाओ"), without it and without a room, most specific first. Samples that are only a slot beside the carrier, such as "play {Show}", are left out: any query would match them.
 func queryForms(model skillmodel.Model, utterances map[string][]string) ([]queryForm, error) {
-	var carriers [][]string
+	var carriers, trailing [][]string
 
 	for _, pattern := range utterances["PlayMedia"] {
 		samples, err := skillmodel.Expand(pattern)
@@ -205,8 +227,13 @@ func queryForms(model skillmodel.Model, utterances map[string][]string) ([]query
 		}
 
 		for _, sample := range samples {
-			if words := strings.Fields(strings.ToLower(sample)); len(words) > 1 && words[len(words)-1] == "{query}" {
+			words := strings.Fields(strings.ToLower(sample))
+
+			switch {
+			case len(words) > 1 && words[len(words)-1] == "{query}":
 				carriers = append(carriers, words[:len(words)-1])
+			case len(words) > 1 && words[0] == "{query}":
+				trailing = append(trailing, words[1:])
 			}
 		}
 	}
@@ -235,7 +262,7 @@ func queryForms(model skillmodel.Model, utterances map[string][]string) ([]query
 			}
 
 			for _, sample := range samples {
-				if form, ok := newQueryForm(in.Name, sample, carriers, numbers); ok {
+				if form, ok := newQueryForm(in.Name, sample, carriers, trailing, numbers); ok {
 					out = append(out, form)
 				}
 			}
@@ -247,7 +274,7 @@ func queryForms(model skillmodel.Model, utterances map[string][]string) ([]query
 	return out, nil
 }
 
-func newQueryForm(intent, sample string, carriers [][]string, numbers map[string]bool) (queryForm, bool) {
+func newQueryForm(intent, sample string, carriers, trailing [][]string, numbers map[string]bool) (queryForm, bool) {
 	if strings.Contains(sample, "{Room}") {
 		return queryForm{}, false
 	}
@@ -255,23 +282,32 @@ func newQueryForm(intent, sample string, carriers [][]string, numbers map[string
 	words := strings.Fields(sample)
 
 	for _, carrier := range carriers {
-		if len(words) <= len(carrier) || !wordsEqual(words, carrier) {
-			continue
+		if len(words) > len(carrier) && wordsEqual(words, carrier) {
+			return newForm(intent, words[len(carrier):], numbers)
 		}
+	}
 
-		form := queryForm{intent: intent, words: words[len(carrier):], numbers: numbers}
-
-		for i, w := range form.words {
-			if !isSlotRef(w) {
-				form.words[i] = strings.ToLower(w)
-				form.literals++
-			}
+	for _, carrier := range trailing {
+		if start := len(words) - len(carrier); start > 0 && wordsEqual(words[start:], carrier) {
+			return newForm(intent, words[:start], numbers)
 		}
-
-		return form, form.literals > 0
 	}
 
 	return queryForm{}, false
+}
+
+// newForm is the query form of a sample's words without its carrier phrase, which must keep at least one word that isn't a slot.
+func newForm(intent string, words []string, numbers map[string]bool) (queryForm, bool) {
+	form := queryForm{intent: intent, words: words, numbers: numbers}
+
+	for i, w := range form.words {
+		if !isSlotRef(w) {
+			form.words[i] = strings.ToLower(w)
+			form.literals++
+		}
+	}
+
+	return form, form.literals > 0
 }
 
 // match reads words as the form, returning each slot's words; a number slot takes one word that is a number.
@@ -353,6 +389,63 @@ func roomPhrases(utterances map[string][]string) ([][]string, error) {
 	return out, nil
 }
 
+// roomPostpositions collects the words that follow {Room} inside an optional group that starts with it, such as "में" from "[{Room} में]", where a language puts the room's postposition after it.
+func roomPostpositions(utterances map[string][]string) ([][]string, error) {
+	seen := map[string]bool{}
+
+	var out [][]string
+
+	for _, intent := range slices.Sorted(maps.Keys(utterances)) {
+		for _, pattern := range utterances[intent] {
+			group, ok := roomPostposition(pattern)
+			if !ok {
+				continue
+			}
+
+			phrases, err := skillmodel.Expand(group)
+			if err != nil {
+				return nil, err
+			}
+
+			for _, phrase := range phrases {
+				if phrase = strings.ToLower(phrase); !seen[phrase] {
+					seen[phrase] = true
+					out = append(out, strings.Fields(phrase))
+				}
+			}
+		}
+	}
+
+	return out, nil
+}
+
+// roomPostposition returns what follows {Room} inside the optional group that starts with it, "में" for "[{Room} में] ...".
+func roomPostposition(pattern string) (string, bool) {
+	start := strings.Index(pattern, "[{Room} ")
+	if start < 0 {
+		return "", false
+	}
+
+	depth := 0
+
+	for i := start + 1; i < len(pattern); i++ {
+		switch pattern[i] {
+		case '[':
+			depth++
+		case ']':
+			if depth == 0 {
+				group := strings.TrimSpace(pattern[start+len("[{Room}") : i])
+
+				return group, group != ""
+			}
+
+			depth--
+		}
+	}
+
+	return "", false
+}
+
 // roomGroup returns what comes before {Room} inside the optional group that ends a pattern with it, "(in|on) the" for "... [(in|on) the {Room}]".
 func roomGroup(pattern string) (string, bool) {
 	end := strings.LastIndex(pattern, "{Room}]")
@@ -417,13 +510,30 @@ func slotIDs(lang string, types map[string][]skillmodel.SlotValue) map[string]ma
 	return out
 }
 
-// spokenTime words a clock time: twelve-hour with am or pm in English, as people say it, and 24-hour elsewhere.
+// spokenTime words a clock time as people say it: twelve-hour with am or pm in English, twelve-hour after the part of the day and before "बजे" in Hindi ("रात 9:30 बजे"), and 24-hour elsewhere.
 func spokenTime(lang string, t time.Time) string {
-	if lang == "en" {
+	switch lang {
+	case "en":
 		return t.Format("3:04 pm")
+	case "hi":
+		return hindiDayPart(t.Hour()) + " " + t.Format("3:04") + " बजे"
 	}
 
 	return t.Format("15:04")
+}
+
+// hindiDayPart is the part of the day Hindi names before a twelve-hour time: सुबह (morning) from 4, दोपहर (afternoon) from noon, शाम (evening) from 4 pm and रात (night) from 8 pm.
+func hindiDayPart(hour int) string {
+	switch {
+	case hour >= 4 && hour < 12:
+		return "सुबह"
+	case hour >= 12 && hour < 16:
+		return "दोपहर"
+	case hour >= 16 && hour < 20:
+		return "शाम"
+	default:
+		return "रात"
+	}
 }
 
 // languageName names a language code (BCP 47 or ISO 639-2) in the locale's language, e.g. "fre" is "French" in English and "Französisch" in German.
@@ -450,7 +560,7 @@ func languageName(locale, code string) string {
 	return code
 }
 
-var listAnd = map[string]string{"en": "and", "de": "und", "fr": "et", "es": "y", "it": "e", "ar": "و"}
+var listAnd = map[string]string{"en": "and", "de": "und", "fr": "et", "es": "y", "it": "e", "ar": "و", "hi": "और"}
 
 // listCommas are the list separators of languages that don't write ", ".
 var listCommas = map[string]string{"ar": "، "}
@@ -492,6 +602,7 @@ var durationWords = map[string][5]string{
 	"es": {"hora", "horas", "minuto", "minutos", "menos de un minuto"},
 	"it": {"ora", "ore", "minuto", "minuti", "meno di un minuto"},
 	"ar": {"ساعة", "ساعات", "دقيقة", "دقائق", "أقل من دقيقة"},
+	"hi": {"घंटा", "घंटे", "मिनट", "मिनट", "एक मिनट से कम"},
 }
 
 // durationCounts word a count of a duration unit in languages whose nouns take more forms after a number than one and many, given the unit's singular and plural.
