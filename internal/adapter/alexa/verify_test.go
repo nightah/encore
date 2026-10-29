@@ -12,6 +12,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"encoding/pem"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -23,6 +24,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -662,4 +664,81 @@ func TestVerifiedBodySizeLimitIsInclusive(t *testing.T) {
 	got = 0
 	assert.Equal(t, http.StatusBadRequest, serve(t, h, append(padded, ' '), "sig").Code)
 	assert.Zero(t, got)
+}
+
+func TestWarmVerifierFillsTheCertificateCache(t *testing.T) {
+	pki := newTestPKI(t)
+
+	var fetches atomic.Int32
+
+	v := verifierServing(t, pki, func(r *http.Request) (*http.Response, error) {
+		fetches.Add(1)
+
+		return bundleFrom(pki.bundle)(r)
+	})
+
+	WarmVerifier(t.Context(), v, testCertURL, slog.New(slog.DiscardHandler))
+	require.Equal(t, int32(1), fetches.Load(), "warming downloads the chain")
+
+	h := Verified(v, testSkillID, slog.New(slog.DiscardHandler), func(w http.ResponseWriter, _ *http.Request, _ []byte) { w.WriteHeader(http.StatusOK) })
+	body := envelope(testSkillID, fixedNow)
+	require.Equal(t, http.StatusOK, serve(t, h, body, pki.sign(t, body)).Code)
+	assert.Equal(t, int32(1), fetches.Load(), "the first request finds the chain already cached")
+}
+
+func TestWarmVerifierIsBestEffort(t *testing.T) {
+	pki := newTestPKI(t)
+
+	var fetches atomic.Int32
+
+	v := verifierServing(t, pki, func(*http.Request) (*http.Response, error) {
+		fetches.Add(1)
+
+		return nil, errors.New("no route to host")
+	})
+
+	var logs bytes.Buffer
+
+	log := slog.New(slog.NewTextHandler(&logs, nil))
+
+	WarmVerifier(t.Context(), v, "", log)
+	assert.Zero(t, fetches.Load(), "with no stored URL there is nothing to warm")
+	assert.Empty(t, logs.String())
+
+	WarmVerifier(t.Context(), v, testCertURL, log)
+	assert.Contains(t, logs.String(), "couldn't warm the Alexa certificate cache", "a failed warm is logged, not fatal")
+}
+
+func TestRememberCertURL(t *testing.T) {
+	const rotated = "https://s3.amazonaws.com/echo.api/echo-api-cert-13.pem"
+
+	var (
+		reject bool
+		seen   []string
+	)
+
+	v := RememberCertURL(verifierFunc(func(context.Context, []byte, http.Header) error {
+		if reject {
+			return errors.New("bad signature")
+		}
+
+		return nil
+	}), testCertURL, func(_ context.Context, url string) { seen = append(seen, url) })
+
+	verify := func(url string) error { return v.Verify(t.Context(), nil, signed("sig", url)) }
+
+	require.NoError(t, verify(testCertURL))
+	assert.Empty(t, seen, "the stored URL isn't stored again")
+
+	reject = true
+	require.Error(t, verify(rotated))
+	assert.Empty(t, seen, "a request that fails verification can't choose the URL")
+
+	reject = false
+	require.NoError(t, verify(""))
+	assert.Empty(t, seen, "a request without the header leaves the stored URL alone")
+
+	require.NoError(t, verify(rotated))
+	require.NoError(t, verify(rotated))
+	assert.Equal(t, []string{rotated}, seen, "a rotated certificate is stored once")
 }
