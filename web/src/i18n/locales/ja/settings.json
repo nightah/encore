@@ -1,0 +1,366 @@
+{
+  "access": {
+    "breakGlass": {
+      "hint": "プロバイダーやプロキシが故障しても、ユーザー名とパスワードでサインインできます。これをオフにしていてロックアウトされた場合は、ENCORE_BREAK_GLASS=true を設定してください。",
+      "label": "ローカルパスワードを緊急用ログインとして残す",
+      "managed": "ENCORE_BREAK_GLASS または encore.yml で設定されているため、ここでは変更できません。"
+    },
+    "cancel": "キャンセル",
+    "header": {
+      "adminGroup": {
+        "label": "管理者グループ"
+      },
+      "groupsHeader": {
+        "label": "グループヘッダー"
+      },
+      "strip": "プロキシは受信リクエストからこれらのヘッダーを削除する必要があります。",
+      "trustedProxies": {
+        "hint": "その他のアドレスからのヘッダーは無視されます。カンマで区切ってください。",
+        "label": "信頼済みプロキシのアドレス"
+      },
+      "userHeader": {
+        "label": "ユーザーヘッダー",
+        "required": "ユーザー名を含むヘッダーを入力してください。"
+      }
+    },
+    "local": {
+      "lockout": {
+        "5/15": "5 回失敗で 15 分間",
+        "10/60": "10 回失敗で 1 時間",
+        "custom": "{{attempts}} 回失敗で {{minutes}} 分間",
+        "label": "ロックアウトの条件"
+      },
+      "password": {
+        "change": "パスワードを変更…",
+        "hint": "argon2id ハッシュとして保存されます。",
+        "label": "パスワード"
+      },
+      "session": {
+        "days_other": "{{count}} 日",
+        "hours_other": "{{count}} 時間",
+        "label": "セッションの長さ"
+      },
+      "totp": {
+        "hint": "2 段階目として認証アプリを使用します。",
+        "label": "ワンタイムコード（TOTP）を必須にする"
+      },
+      "username": {
+        "hint": "管理者アカウントの作成時に設定されます。",
+        "label": "ユーザー名"
+      }
+    },
+    "mode": {
+      "header": {
+        "hint": "フォワード認証プロキシからの Remote-User",
+        "label": "信頼済みプロキシヘッダー"
+      },
+      "legend": "サインイン方法",
+      "local": {
+        "hint": "argon2id、レート制限あり",
+        "label": "ローカルパスワード"
+      },
+      "oidc": {
+        "hint": "例：Authelia、Authentik、Keycloak",
+        "label": "OpenID Connect"
+      }
+    },
+    "oidc": {
+      "adminGroup": {
+        "hint": "groups クレームにこの値がないユーザーは拒否されます。",
+        "label": "管理者グループ"
+      },
+      "clientId": {
+        "label": "クライアント ID",
+        "required": "クライアント ID を入力してください。"
+      },
+      "clientSecret": {
+        "empty": "PKCE のみを使う公開クライアントの場合は空欄のままにしてください。",
+        "label": "クライアントシークレット",
+        "stored": "シークレットは保存済みです。置き換えるには新しいものを入力してください。"
+      },
+      "groupsClaim": {
+        "label": "グループクレーム"
+      },
+      "issuer": {
+        "hint": "Encore はここからプロバイダーのディスカバリードキュメントを読み込みます。",
+        "hintPreset": "{{shape}}。Encore はここからディスカバリードキュメントを読み込みます。",
+        "invalid": "発行者 URL を入力してください（例：https://auth.example.net）。",
+        "label": "発行者 URL"
+      },
+      "provider": {
+        "hint": "一般的なスコープとグループクレームを入力し、プロバイダー側の設定を下に表示します。",
+        "label": "プロバイダー",
+        "other": "その他"
+      },
+      "providers": {
+        "authelia": {
+          "digest": "ここにはダイジェストを入れます。ランダムなパスワードは Encore のクライアントシークレットに入れます。",
+          "generate": "次のコマンドで両方を生成します：",
+          "issuerHint": "Authelia のアドレス（例：https://auth.example.com）",
+          "snippetTitle": "このクライアントを Authelia の設定の identity_providers.oidc に追加します"
+        },
+        "authentik": {
+          "copySecret": "プロバイダーの Client Secret を Encore にコピーします。上記のスラッグの発行者は\n{{issuer}} です。",
+          "issuerHint": "アプリケーションの OpenID 発行者（例：https://authentik.example.com/application/o/encore/）",
+          "scopesNote": "（既定値。profile に groups が含まれます）",
+          "snippetTitle": "Authentik で Applications > Applications > Create with provider を開きます"
+        },
+        "keycloak": {
+          "issuerHint": "レルムのアドレス（例：https://keycloak.example.com/realms/home）",
+          "snippetTitle": "Keycloak で Clients > Import client にこれを貼り付け、Credentials タブのシークレットを Encore にコピーします"
+        }
+      },
+      "redirectUri": {
+        "copy": "リダイレクト URI をコピー",
+        "label": "プロバイダーに登録するリダイレクト URI"
+      },
+      "saveToTest": "テストするには、OpenID Connect を選択した状態で保存してください。",
+      "scopes": {
+        "hint": "スペースで区切ります。",
+        "label": "スコープ"
+      },
+      "snippetLabel": "{{provider}} の設定",
+      "testSignIn": "サインインをテスト"
+    },
+    "password": {
+      "changed": "パスワードを変更しました。",
+      "confirm": {
+        "label": "新しいパスワード（確認）",
+        "mismatch": "パスワードが一致しません。"
+      },
+      "current": {
+        "label": "現在のパスワード",
+        "required": "現在のパスワードを入力してください。"
+      },
+      "description": "このブラウザーではサインインしたままになります。他のセッションはサインアウトされます。",
+      "new": {
+        "hint": "12 文字以上。",
+        "label": "新しいパスワード",
+        "tooShort": "12 文字以上にしてください。"
+      },
+      "submit": "パスワードを変更",
+      "title": "パスワードを変更"
+    },
+    "title": "管理者アクセス",
+    "totp": {
+      "code": "コード",
+      "copySecret": "シークレットをコピー",
+      "off": "オフにする",
+      "offDescription": "確認のため、認証アプリのコードを入力してください。",
+      "offTitle": "ワンタイムコードをオフにする",
+      "on": "オンにする",
+      "onDescription": "認証アプリに Encore を追加し、表示されたコードを入力してください。",
+      "onTitle": "ワンタイムコードをオンにする",
+      "openApp": "認証アプリで開く",
+      "secret": "シークレット",
+      "turnedOff": "ワンタイムコードをオフにしました。",
+      "turnedOn": "ワンタイムコードをオンにしました。"
+    }
+  },
+  "backup": {
+    "export": "設定をエクスポート",
+    "import": "設定をインポート…",
+    "imported": "{{items}}をインポートしました。",
+    "importedNothing": "何もインポートされませんでした。",
+    "importing": "インポート中…",
+    "includeSecrets": {
+      "hint": "同じ暗号化キーを持つ別の Encore だけが読み取れます。",
+      "label": "シークレットを含める（暗号化）"
+    },
+    "intro": "Kodi インスタンス、デバイスの割り当て、部屋、エイリアス、設定を含む YAML です。シークレットは、暗号化して含めることを選ばない限り除外されます。",
+    "skillPackage": "スキルパッケージをダウンロード",
+    "skipped": "スキップ：{{items}}。",
+    "title": "インポートとエクスポート"
+  },
+  "features": {
+    "auto_deploy": {
+      "hint": "ライブラリの新しいタイトル、設定、または Encore のアップグレードでスキルが変わると再デプロイします。デプロイに失敗すると、手動でデプロイするまで一時停止します。",
+      "title": "スキルの変更を自動でデプロイ"
+    },
+    "auto_deploy_minutes": {
+      "hint_hours_other": "変更は 2 回の確認以内に反映されます（約 {{count, number}} 時間）。",
+      "hint_minutes_other": "変更は 2 回の確認以内に反映されます（約 {{count, number}} 分）。",
+      "hintInvalid": "1～{{max}} 分で指定してください。",
+      "title": "変更を確認する間隔",
+      "unit": "分"
+    },
+    "confirm_sound": {
+      "hint": "一時停止や音量アップなどのコマンドの後、無音ではなく短い音を Alexa が鳴らします",
+      "title": "コマンドを音で確認"
+    },
+    "deep_search": {
+      "hint": "種類が指定されていない場合、すべてのメディアの種類を検索します",
+      "title": "「X を再生」のディープ検索"
+    },
+    "queue_limit": {
+      "hint": "シャッフルやキューで一度に再生する最大項目数です。大きなライブラリでも応答を速く保てます",
+      "title": "キューの上限"
+    },
+    "shutdown_quits": {
+      "hint": "デバイスの電源を切る代わりに",
+      "title": "「シャットダウン」で Kodi を終了"
+    },
+    "title": "オプション機能"
+  },
+  "general": {
+    "basePath": {
+      "hint": "Encore をサブパス（例：/encore）で提供するプロキシ向けです。Encore は引き続き / でも応答します。変更後はスキルを再度デプロイしてください。",
+      "label": "ベースパス"
+    },
+    "defaultLocale": {
+      "label": "既定のロケール"
+    },
+    "language": {
+      "auto": "ブラウザーに合わせる（{{language}}）",
+      "hint": "このブラウザーにのみ保存されます。",
+      "label": "言語"
+    },
+    "logLevel": {
+      "debug": "デバッグ：各 Kodi 呼び出しを含むすべて",
+      "error": "エラー：失敗のみ",
+      "hint": "再起動せずにすぐ反映されます。",
+      "info": "情報：Encore の動作（既定）",
+      "label": "ログレベル",
+      "warn": "警告：問題のみ"
+    },
+    "sections": {
+      "appearance": "外観",
+      "locale": "ロケール",
+      "logging": "ログ",
+      "server": "サーバー"
+    },
+    "theme": {
+      "dark": {
+        "hint": "ネイビー、夜間に目に優しい",
+        "label": "ダーク"
+      },
+      "legend": "テーマ",
+      "light": {
+        "hint": "クールグレーの作業領域",
+        "label": "ライト"
+      },
+      "note": "このブラウザーにのみ保存されます。各ページのヘッダーにある太陽/月のボタンで切り替えると、すぐに保存されます。",
+      "system": {
+        "hint": "デバイスのライト/ダーク設定に従います",
+        "label": "システムに合わせる"
+      }
+    },
+    "timezone": {
+      "hint": "「午後 9:47 に終わります」のような応答に使用されます。",
+      "label": "タイムゾーン"
+    },
+    "title": "一般"
+  },
+  "page": {
+    "description": "<badge/> が付いた項目は <code>encore.yml</code> または <code>ENCORE_*</code> 変数で設定されており、ここでは変更できません。",
+    "save": "変更を保存",
+    "sections": "設定のセクション",
+    "title": "設定"
+  },
+  "secrets": {
+    "encrypted": "暗号化の対象：Login with Amazon のリフレッシュトークンとクライアントシークレット、Kodi のパスワード、ストレージの認証情報。",
+    "keyId": {
+      "label": "有効なキー ID",
+      "rotated": "{{keyId}}（{{date}} にローテーション）"
+    },
+    "rotate": {
+      "button": "暗号化キーをローテーション…",
+      "cancel": "キャンセル",
+      "confirm": "キーをローテーション",
+      "description": "Encore は新しいキーを作成し、保存済みのすべてのシークレットをそのキーで再暗号化します。これまでに作成したバックアップには引き続き古いキーが必要ですが、Encore が保持します。",
+      "title": "暗号化キーをローテーションしますか？"
+    },
+    "source": {
+      "config": "encore.yml で設定",
+      "file": "キーファイルから読み込み（ENCORE_ENCRYPTION_KEY_FILE）",
+      "generated": "Encore が生成し、データディレクトリに保存",
+      "label": "暗号化キーの取得元"
+    },
+    "title": "シークレット"
+  },
+  "storage": {
+    "backend": {
+      "legend": "バックエンド",
+      "local": "ローカルディスク",
+      "localHint": "/data ボリューム（既定）",
+      "s3": "S3 互換",
+      "webdavHint": "Nextcloud、ownCloud など"
+    },
+    "backups": {
+      "folder": {
+        "hint": "上記の保存場所の中のフォルダーです。最上位にする場合は空欄のままにしてください。保存先を変更すると、すぐにバックアップが 1 回実行されます。",
+        "label": "バックアップフォルダー"
+      },
+      "hint": "データベースと設定のエクスポート。シークレットは除外されます。",
+      "keep": {
+        "count_other": "{{count}} 件のバックアップ",
+        "label": "保持数"
+      },
+      "label": "バックアップ",
+      "last": {
+        "label": "最終バックアップ",
+        "never": "なし",
+        "run": "今すぐバックアップ"
+      },
+      "schedules": {
+        "daily": "毎日 03:00",
+        "off": "オフ",
+        "weekly": "毎週日曜日 03:00"
+      },
+      "snapshot": {
+        "label": "ライブラリのスナップショット",
+        "value": "15 分ごとと各同期後に保存され、高速なウォームスタートに使用されます"
+      }
+    },
+    "intro": "Encore がライブラリのスナップショット、バックアップ、エクスポートしたスキルパッケージを保存する場所です。音声リクエストがこのストレージを待つことはありません。ライブのインデックスはメモリ上に保持されます。",
+    "local": {
+      "hint": "コンテナーを再起動してもスナップショットが残るよう、ここにボリュームをマウントしてください。",
+      "label": "データディレクトリ"
+    },
+    "s3": {
+      "accessKey": "アクセスキー",
+      "bucket": "バケット",
+      "caBundle": "CA 証明書（PEM）",
+      "customCa": "カスタム CA 証明書",
+      "endpoint": {
+        "hint": "AWS S3 の場合は空欄のままにしてください。MinIO、Silo、Garage、Ceph RGW、SeaweedFS、R2、B2 で動作します。",
+        "label": "エンドポイント URL"
+      },
+      "pathStyle": "パススタイルのアドレス指定",
+      "prefix": "プレフィックス",
+      "region": "リージョン",
+      "secretKey": {
+        "hint": "保存時に暗号化されます。",
+        "label": "シークレットキー",
+        "stored": "キー {{keyId}} で暗号化して保存済みです。置き換えるには新しいものを入力してください。"
+      },
+      "sse": "サーバー側暗号化"
+    },
+    "test": {
+      "button": "接続をテスト",
+      "failed": "テストオブジェクトを書き込めませんでした。",
+      "ok": "テストオブジェクトの書き込み、読み取り、削除が {{ms}} ミリ秒で完了しました",
+      "saveFirst": "テストするには変更を保存してください。"
+    },
+    "title": "ストレージ",
+    "webdav": {
+      "password": {
+        "hint": "Nextcloud のセキュリティ設定で作成してください。保存時に暗号化されます。",
+        "label": "アプリパスワード"
+      },
+      "url": {
+        "hint": "Nextcloud、ownCloud、または任意の WebDAV サーバー。",
+        "label": "WebDAV URL"
+      },
+      "username": "ユーザー名"
+    }
+  },
+  "tabs": {
+    "access": "アクセス",
+    "backup": "インポートとエクスポート",
+    "features": "機能",
+    "general": "一般",
+    "secrets": "シークレット",
+    "storage": "ストレージ"
+  }
+}

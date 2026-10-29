@@ -1,0 +1,92 @@
+{
+  "attention": {
+    "empty": "किसी चीज़ पर आपका ध्यान ज़रूरी नहीं है।",
+    "links": {
+      "needsDeploy": "अभी अपडेट करें",
+      "open": "खोलें",
+      "unlinkedDevice": "डिवाइस लिंक करें"
+    },
+    "title": "ध्यान देने की ज़रूरत"
+  },
+  "description": "Alexa को आपके Kodi इंस्टेंस तक पहुँचने के लिए जो कुछ चाहिए, एक नज़र में। सिर्फ़ देखने के लिए: बदलाव हर सेक्शन के अपने पेज पर होते हैं।",
+  "instances": {
+    "asleep": {
+      "addMac": "इसका MAC पता जोड़ें, ताकि वॉइस अनुरोध इसे जगा सकें।",
+      "manage": "Kodi पेज पर प्रबंधित करें",
+      "plain": "स्लीप में।",
+      "since": "{{time}} से स्लीप में।",
+      "willWake": "वॉइस अनुरोध इसे अपने-आप जगा देंगे।"
+    },
+    "empty": {
+      "action": "Kodi पेज पर एक जोड़ें",
+      "body": "एक Kodi इंस्टेंस जोड़ें, ताकि Alexa के पास नियंत्रित करने के लिए कुछ हो।",
+      "title": "अभी कोई Kodi इंस्टेंस नहीं है"
+    },
+    "episode": "S{{season}} · E{{episode}} “{{title}}”",
+    "idle": "कुछ नहीं चल रहा।",
+    "offline": {
+      "test": "Kodi पेज पर इसे टेस्ट करें",
+      "text": "जवाब नहीं दे रहा। जाँचें कि Kodi चल रहा है और उस तक पहुँचा जा सकता है।"
+    },
+    "progress": "प्रगति {{percent}} प्रतिशत",
+    "title": "Kodi इंस्टेंस"
+  },
+  "ms": "{{ms}} ms",
+  "openRequestLog": "अनुरोध लॉग खोलें",
+  "recent": {
+    "columns": {
+      "echo": "Echo",
+      "heard": "सुना गया",
+      "result": "नतीजा",
+      "time": "समय"
+    },
+    "empty": "अभी कोई अनुरोध नहीं। “Alexa, {{invocation}} से पूछो क्या चल रहा है” बोलें।",
+    "emptyNoInvocation": "अभी कोई अनुरोध नहीं।",
+    "open": "लॉग में {{time}} वाला अनुरोध खोलें",
+    "title": "हाल के अनुरोध",
+    "viewAll": "सभी देखें"
+  },
+  "status": {
+    "endpoint": {
+      "label": "सार्वजनिक एंडपॉइंट",
+      "notReachable": "{{host}} तक बाहर से नहीं पहुँचा जा सकता",
+      "reachable": "{{host}} तक पहुँचा जा सकता है",
+      "unreachable": "पहुँच से बाहर"
+    },
+    "label": "स्थिति",
+    "libraries": {
+      "and": " और ",
+      "count_one": "{{count, number}} लाइब्रेरी",
+      "count_other": "{{count, number}} लाइब्रेरी",
+      "label": "लाइब्रेरी",
+      "noneShared": "कोई साझा नहीं",
+      "notSynced": "अभी सिंक नहीं हुआ",
+      "shared_one": "{{count}} साझा",
+      "shared_other": "{{count}} साझा",
+      "shareOne": "{{names}} एक लाइब्रेरी साझा करते हैं",
+      "synced": "सिंक हुआ {{when}}"
+    },
+    "requests": {
+      "detail": "{{failed}} विफल · मीडियन {{ms}} ms",
+      "label": "आज के अनुरोध"
+    },
+    "skill": {
+      "label": "Alexa स्किल",
+      "locales_one": "{{count, number}} लोकेल",
+      "locales_other": "{{count, number}} लोकेल",
+      "stage": {
+        "development": "डेवलपमेंट स्टेज",
+        "live": "लाइव स्टेज",
+        "other": "{{stage}} स्टेज"
+      },
+      "state": {
+        "deploying": "डिप्लॉय हो रहा है…",
+        "failed": "डिप्लॉय विफल",
+        "live": "लाइव",
+        "not_deployed": "डिप्लॉय नहीं हुआ"
+      },
+      "updatePending": "अपडेट बाकी"
+    }
+  },
+  "title": "अवलोकन"
+}

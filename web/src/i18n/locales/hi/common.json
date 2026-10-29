@@ -1,0 +1,122 @@
+{
+  "actions": {
+    "close": "बंद करें",
+    "copied": "कॉपी हो गया",
+    "copy": "कॉपी करें",
+    "copyNamed": "{{label}} कॉपी करें",
+    "copyWithText": "{{label}}: {{text}}",
+    "dismiss": "हटाएँ",
+    "tryAgain": "फिर से कोशिश करें"
+  },
+  "check": {
+    "auth": "क्रेडेंशियल",
+    "library": "लाइब्रेरी",
+    "ping": "HTTP पर JSON-RPC"
+  },
+  "error": {
+    "generic": "कुछ गड़बड़ हो गई।",
+    "http": "अनुरोध HTTP {{status}} के साथ विफल रहा।",
+    "lwaCredentials": "पहले Login with Amazon का क्लाइंट ID और सीक्रेट सेव करें।",
+    "noConnection": "Encore सर्वर तक नहीं पहुँचा जा सका।",
+    "pageFailed": "इस पेज पर कुछ गड़बड़ हो गई",
+    "unreachable": "Encore जवाब नहीं दे रहा है"
+  },
+  "field": {
+    "managed": "कॉन्फ़िग से नियंत्रित",
+    "managedSuffix": ", कॉन्फ़िग से नियंत्रित"
+  },
+  "heard": {
+    "quoted": "“{{text}}”",
+    "suffix": ": “{{text}}”"
+  },
+  "infoTip": {
+    "label": "जानकारी: {{label}}"
+  },
+  "instance": {
+    "asleep": "स्लीप में",
+    "connectedHttp": "कनेक्टेड · सिर्फ़ HTTP",
+    "connectedWebSocket": "कनेक्टेड · WebSocket",
+    "httpOnly": "सिर्फ़ HTTP",
+    "idle": "निष्क्रिय",
+    "macSaved": "MAC सेव है",
+    "noMac": "कोई MAC पता नहीं",
+    "offline": "ऑफ़लाइन",
+    "paused": "रुका हुआ",
+    "playing": "चल रहा है",
+    "versionUnknown": "Encore के Kodi तक पहुँचने पर पता चलेगा"
+  },
+  "loading": "लोड हो रहा है…",
+  "nav": {
+    "alexaSkill": "Alexa स्किल",
+    "echoDevices": "Echo डिवाइस",
+    "kodi": "Kodi",
+    "label": "मुख्य",
+    "library": "लाइब्रेरी",
+    "overview": "अवलोकन",
+    "requestLog": "अनुरोध लॉग",
+    "settings": "सेटिंग्स"
+  },
+  "notFound": {
+    "back": "अवलोकन पर वापस जाएँ",
+    "title": "पेज नहीं मिला"
+  },
+  "outcome": {
+    "asked": "पूछा कि कौन-सा",
+    "error": "त्रुटि",
+    "not_found": "नहीं मिला",
+    "ok": "हो गया",
+    "played": "चलाया गया",
+    "unlinked": "डिवाइस लिंक नहीं है"
+  },
+  "request": {
+    "simulator": "Amazon सिम्युलेटर",
+    "unnamedEcho": "बिना नाम का Echo"
+  },
+  "setupBanner": {
+    "continue": "सेटअप जारी रखें",
+    "message": "सेटअप अभी पूरा नहीं हुआ है। आप 6 में से चरण {{step}} पर हैं।"
+  },
+  "shell": {
+    "signedInAs": "<name>{{name}}</name> के रूप में साइन इन हैं",
+    "signOut": "साइन आउट करें",
+    "skipToContent": "सामग्री पर जाएँ"
+  },
+  "theme": {
+    "toDark": "डार्क मोड पर जाएँ",
+    "toLight": "लाइट मोड पर जाएँ"
+  },
+  "time": {
+    "hoursAgo": "{{value}} घंटे पहले",
+    "inHours": "{{value}} घंटे में",
+    "inMinutes": "{{value}} मिनट में",
+    "justNow": "अभी-अभी",
+    "minutesAgo": "{{value}} मिनट पहले",
+    "never": "कभी नहीं",
+    "seconds": "{{value}} सेकंड",
+    "soon": "बस थोड़ी देर में"
+  },
+  "toast": {
+    "aliasSaved": "उपनाम सेव हो गया। अगले अपडेट में इसे स्किल मॉडल में जोड़ दिया जाएगा।",
+    "amazonConnected": "Amazon से कनेक्ट हो गया।",
+    "amazonDisconnected": "Amazon टोकन भुला दिए गए।",
+    "backupStarted": "बैकअप शुरू हो गया।",
+    "defaultInstance": "बिना लिंक वाले Echo अब इस Kodi इंस्टेंस को नियंत्रित करते हैं।",
+    "echoForgotten": "Echo भुला दिया गया। अगर यह फिर से कोई अनुरोध भेजता है, तो यह वापस दिखेगा।",
+    "echoSaved": "Echo सेव हो गया।",
+    "failed": "यह काम नहीं किया",
+    "instanceAdded": "Kodi इंस्टेंस जोड़ा गया।",
+    "instanceRemoved": "Kodi इंस्टेंस हटाया गया।",
+    "instanceSaved": "Kodi इंस्टेंस सेव हो गया।",
+    "libraryGrouped": "लाइब्रेरी साझा की गई। Encore अब इन इंस्टेंस को एक मानकर इंडेक्स करता है।",
+    "librarySource": "लाइब्रेरी स्रोत बदल गया।",
+    "librarySplit": "लाइब्रेरी अलग की गई। Encore अब हर इंस्टेंस को अलग से इंडेक्स करता है।",
+    "roomAdded": "कमरा जोड़ा गया।",
+    "roomRemoved": "कमरा हटाया गया।",
+    "roomSaved": "कमरा सेव हो गया।",
+    "secretsRotated": "एन्क्रिप्शन कुंजी बदल दी गई। सेव किए गए सीक्रेट फिर से एन्क्रिप्ट किए गए।",
+    "settingsSaved": "सेटिंग्स सेव हो गईं।",
+    "skillSaved": "स्किल सेटिंग्स सेव हो गईं।",
+    "syncStarted": "लाइब्रेरी सिंक शुरू हो गया। पूरा होने पर गिनती अपडेट होगी।",
+    "wakeSent": "Wake-on-LAN पैकेट भेजा गया। Kodi के जवाब का इंतज़ार है।"
+  }
+}

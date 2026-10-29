@@ -1,0 +1,92 @@
+{
+  "attention": {
+    "empty": "Niets vraagt om je aandacht.",
+    "links": {
+      "needsDeploy": "Nu bijwerken",
+      "open": "Openen",
+      "unlinkedDevice": "Apparaat koppelen"
+    },
+    "title": "Vraagt aandacht"
+  },
+  "description": "Alles wat Alexa nodig heeft om je Kodi-instanties te bereiken, in één oogopslag. Alleen lezen: wijzigingen doe je op de pagina van elk onderdeel.",
+  "instances": {
+    "asleep": {
+      "addMac": "Voeg het MAC-adres toe zodat spraakverzoeken hem kunnen wekken.",
+      "manage": "Beheren op de Kodi-pagina",
+      "plain": "Slaapt.",
+      "since": "Slaapt sinds {{time}}.",
+      "willWake": "Spraakverzoeken wekken hem automatisch."
+    },
+    "empty": {
+      "action": "Voeg er een toe op de Kodi-pagina",
+      "body": "Voeg een Kodi-instantie toe zodat Alexa iets heeft om te bedienen.",
+      "title": "Nog geen Kodi-instanties"
+    },
+    "episode": "S{{season}} · A{{episode}} “{{title}}”",
+    "idle": "Er speelt niets.",
+    "offline": {
+      "test": "Test hem op de Kodi-pagina",
+      "text": "Antwoordt niet. Controleer of Kodi draait en bereikbaar is."
+    },
+    "progress": "Voortgang {{percent}} procent",
+    "title": "Kodi-instanties"
+  },
+  "ms": "{{ms}} ms",
+  "openRequestLog": "Verzoekenlogboek openen",
+  "recent": {
+    "columns": {
+      "echo": "Echo",
+      "heard": "Gehoord",
+      "result": "Resultaat",
+      "time": "Tijd"
+    },
+    "empty": "Nog geen verzoeken. Zeg “Alexa, vraag {{invocation}} wat er speelt.”",
+    "emptyNoInvocation": "Nog geen verzoeken.",
+    "open": "Het verzoek van {{time}} openen in het logboek",
+    "title": "Recente verzoeken",
+    "viewAll": "Alles bekijken"
+  },
+  "status": {
+    "endpoint": {
+      "label": "Openbaar endpoint",
+      "notReachable": "{{host}} is niet bereikbaar van buitenaf",
+      "reachable": "{{host}} bereikbaar",
+      "unreachable": "Onbereikbaar"
+    },
+    "label": "Status",
+    "libraries": {
+      "and": " en ",
+      "count_one": "{{count, number}} bibliotheek",
+      "count_other": "{{count, number}} bibliotheken",
+      "label": "Bibliotheken",
+      "noneShared": "geen gedeeld",
+      "notSynced": "Nog niet gesynchroniseerd",
+      "shared_one": "{{count}} gedeeld",
+      "shared_other": "{{count}} gedeeld",
+      "shareOne": "{{names}} delen er één",
+      "synced": "Gesynchroniseerd {{when}}"
+    },
+    "requests": {
+      "detail": "{{failed}} mislukt · mediaan {{ms}} ms",
+      "label": "Verzoeken vandaag"
+    },
+    "skill": {
+      "label": "Alexa-skill",
+      "locales_one": "{{count, number}} taalregio",
+      "locales_other": "{{count, number}} taalregio's",
+      "stage": {
+        "development": "Ontwikkelingsfase",
+        "live": "Livefase",
+        "other": "Fase {{stage}}"
+      },
+      "state": {
+        "deploying": "Uitrollen…",
+        "failed": "Uitrol mislukt",
+        "live": "Live",
+        "not_deployed": "Niet uitgerold"
+      },
+      "updatePending": "update in behandeling"
+    }
+  },
+  "title": "Overzicht"
+}

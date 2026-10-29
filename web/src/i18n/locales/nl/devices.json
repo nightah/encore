@@ -1,0 +1,108 @@
+{
+  "controlsKodi": "Bedient Kodi",
+  "dialog": {
+    "cancel": "Annuleren",
+    "confirmForget": "Deze Echo vergeten? Hij komt terug, niet gekoppeld, zodra hij weer een verzoek stuurt.",
+    "editEcho": "Echo bewerken",
+    "editTitle": "{{name}} bewerken",
+    "fields": {
+      "kodi": {
+        "hint": "Zeg “…op de tv in de slaapkamer” om dit voor één verzoek te overschrijven."
+      },
+      "name": {
+        "hint": "Alexa deelt geen apparaatnamen, dus geef het hier een naam.",
+        "label": "Naam"
+      },
+      "room": {
+        "label": "Kamer",
+        "none": "Geen kamer"
+      }
+    },
+    "forget": "Apparaat vergeten",
+    "forgetEllipsis": "Apparaat vergeten…",
+    "keep": "Behouden",
+    "save": "Opslaan"
+  },
+  "notLinked": "Niet gekoppeld",
+  "page": {
+    "description": "Elke Echo bedient standaard één Kodi. Zeg “…op de tv in de slaapkamer” om dit voor één verzoek te overschrijven.",
+    "title": "Echo-apparaten en kamers"
+  },
+  "rooms": {
+    "add": "Kamer toevoegen",
+    "card": {
+      "add": "Toevoegen",
+      "addAliasButton": "Gesproken naam toevoegen aan {{name}}",
+      "addAliasLabel": "Een gesproken naam toevoegen voor {{name}}",
+      "aliases": "Gesproken namen voor {{name}}",
+      "edit": "Kamer {{name}} bewerken",
+      "kindLabel": "Soort gesproken naam voor {{name}}",
+      "kodi": "→ Kodi “{{name}}”",
+      "noKodi": "→ geen Kodi-instantie",
+      "placeholder": {
+        "device": "Apparaatnaam, bijv. tv",
+        "room": "Kamernaam, bijv. woonkamer"
+      },
+      "removeAlias": "Gesproken naam “{{alias}}” verwijderen"
+    },
+    "dialog": {
+      "addTitle": "Een kamer toevoegen",
+      "cancel": "Annuleren",
+      "confirmRemove": "{{name}} en de gesproken namen ervan verwijderen? Echo's in deze kamer blijven aan hun Kodi gekoppeld.",
+      "editTitle": "{{name}} bewerken",
+      "fields": {
+        "kodi": {
+          "hint": "Waar “…in de keuken” afspeelt.",
+          "label": "Kodi-instantie",
+          "none": "Geen"
+        },
+        "name": {
+          "label": "Naam",
+          "placeholder": "Keuken"
+        }
+      },
+      "keep": "Behouden",
+      "remove": "Kamer verwijderen",
+      "removeEllipsis": "Verwijderen…",
+      "save": "Opslaan"
+    },
+    "empty": "Nog geen kamers.",
+    "intro": "Deze namen worden aan het interactiemodel van de skill toegevoegd, zodat Alexa een <room>kamer</room> herkent in “speel Bluey <b>in de kinderkamer</b>” en een <device>apparaat</device> in “speel Bluey <b>op de tv</b>”.",
+    "kind": {
+      "device": "Apparaat",
+      "room": "Kamer"
+    },
+    "title": "Kamers en gesproken namen"
+  },
+  "table": {
+    "anUnnamedEcho": "een naamloze Echo",
+    "columns": {
+      "actions": "Acties",
+      "controls": "Bedient",
+      "lastRequest": "Laatste verzoek",
+      "name": "Naam",
+      "room": "Kamer",
+      "today": "Vandaag"
+    },
+    "edit": "Bewerken",
+    "editNamed": "{{name}} bewerken",
+    "empty": "Nog geen Echo's. Ze verschijnen hier na hun eerste verzoek aan de skill.",
+    "identified": "Dit is de Echo waartegen je net sprak",
+    "identifyHint": "Weet je niet welke Echo welke is? Zeg “Alexa, vraag {{invocation}} welk apparaat dit is” en hij wordt hier gemarkeerd.",
+    "spokeTo": "Je sprak net tegen {{name}}.",
+    "title": "Apparaten"
+  },
+  "unlinked": {
+    "deviceName": "Apparaatnaam",
+    "firstRequest": {
+      "other": "Eerste verzoek {{when}}{{heard}}. Apparaat <mono>{{id}}</mono>",
+      "today": "Eerste verzoek vandaag om {{when}}{{heard}}. Apparaat <mono>{{id}}</mono>"
+    },
+    "link": "Apparaat koppelen",
+    "linked": "Echo gekoppeld.",
+    "placeholder": "Keuken Dot",
+    "title": "Nieuwe Echo gehoord: nog niet aan een Kodi gekoppeld",
+    "titleIdentified": "Dit is de Echo waartegen je net sprak: nog niet aan een Kodi gekoppeld"
+  },
+  "unnamed": "Naamloze Echo"
+}

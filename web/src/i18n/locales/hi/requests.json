@@ -1,0 +1,73 @@
+{
+  "detail": {
+    "alexaSaid": "Alexa ने कहा",
+    "callFailed": "(विफल)",
+    "candidates": {
+      "label": "मिलान के उम्मीदवार",
+      "none": "कोई उम्मीदवार नहीं।",
+      "score": "{{title}}: स्कोर {{score}}",
+      "unlinked": "यह Echo किसी Kodi इंस्टेंस से लिंक नहीं है, और बिना लिंक वाले Echo के लिए कोई डिफ़ॉल्ट सेट नहीं है।"
+    },
+    "copied": "कॉपी हो गया",
+    "copy": "JSON कॉपी करें",
+    "intent": "इंटेंट",
+    "kodiCalls": "Kodi कॉल",
+    "loading": "अनुरोध लोड हो रहा है…",
+    "noCalls": "कोई नहीं।",
+    "replay": "दोबारा चलाएँ (ड्राई रन)",
+    "replayResult": {
+      "label": "दोबारा चलाने का नतीजा",
+      "noCalls": "कोई Kodi कॉल नहीं।",
+      "title": "मौजूदा इंडेक्स पर दोबारा चलाएँ (Kodi को छुआ नहीं जाता)",
+      "topMatch": "सबसे अच्छा मिलान: {{title}}, {{score}}।",
+      "wouldCall": "यह कॉल करेगा",
+      "wouldSay": "Alexa कहेगा: “{{speech}}”"
+    },
+    "silent": "कुछ नहीं (चुप)।",
+    "slots": "स्लॉट",
+    "target": {
+      "label": "लक्ष्य Kodi",
+      "none": "कोई नहीं",
+      "unlinked": "कोई नहीं (डिवाइस लिंक नहीं है)"
+    },
+    "timing": {
+      "fallback": "Encore {{encore}} · Kodi {{kodi}} · कुल {{total}}",
+      "label": "समय",
+      "split": "सत्यापन {{verify}} · मिलान {{match}} · Kodi {{kodi}} · कुल {{total}}"
+    },
+    "via": {
+      "alias": "<spoken>{{spoken}}</spoken> <room>{{room}}</room> का दूसरा नाम",
+      "device": "<spoken>{{spoken}}</spoken> <room>{{room}}</room> में डिवाइस"
+    }
+  },
+  "empty": {
+    "filtered": "कोई दूसरी खोज आज़माएँ या फ़िल्टर हटाएँ।",
+    "filteredTitle": "कोई मेल खाता अनुरोध नहीं",
+    "none": "जैसे ही कोई Echo Encore से बात करता है, अनुरोध यहाँ दिखने लगते हैं। “Alexa, {{invocation}} से पूछो क्या चल रहा है” बोलें।",
+    "noneNoInvocation": "जैसे ही कोई Echo Encore से बात करता है, अनुरोध यहाँ दिखने लगते हैं।",
+    "noneTitle": "अभी कोई अनुरोध नहीं"
+  },
+  "filters": {
+    "allDevices": "सभी Echo",
+    "allOutcomes": "सभी नतीजे",
+    "device": "Echo डिवाइस",
+    "deviceById": "Echo #{{id}}",
+    "label": "अनुरोध फ़िल्टर करें",
+    "outcome": "नतीजा",
+    "search": "जो सुना गया उसमें खोजें",
+    "unnamedDevice": "बिना नाम का Echo"
+  },
+  "list": {
+    "label": "अनुरोध",
+    "loading": "अनुरोध लोड हो रहे हैं…",
+    "loadOlder": "पुराने अनुरोध लोड करें"
+  },
+  "live": {
+    "off": "फिर से कनेक्ट हो रहा है…",
+    "on": "लाइव",
+    "retention": "आख़िरी 500 अनुरोध या 7 दिन रखे जाते हैं"
+  },
+  "newRequest": "{{device}} से नया अनुरोध{{heard}}",
+  "title": "अनुरोध लॉग",
+  "unnamedDevice": "एक बिना नाम का Echo"
+}

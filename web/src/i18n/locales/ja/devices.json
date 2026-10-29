@@ -1,0 +1,108 @@
+{
+  "controlsKodi": "操作する Kodi",
+  "dialog": {
+    "cancel": "キャンセル",
+    "confirmForget": "この Echo の登録を解除しますか？次にリクエストを送ったとき、リンクされていない状態で再び表示されます。",
+    "editEcho": "Echo を編集",
+    "editTitle": "{{name}}を編集",
+    "fields": {
+      "kodi": {
+        "hint": "「…寝室のテレビで」と言うと、そのリクエストだけ切り替えられます。"
+      },
+      "name": {
+        "hint": "Alexa はデバイス名を共有しないため、ここで名前を付けてください。",
+        "label": "名前"
+      },
+      "room": {
+        "label": "部屋",
+        "none": "部屋なし"
+      }
+    },
+    "forget": "デバイスの登録を解除",
+    "forgetEllipsis": "デバイスの登録を解除…",
+    "keep": "残す",
+    "save": "保存"
+  },
+  "notLinked": "未リンク",
+  "page": {
+    "description": "各 Echo は既定で 1 台の Kodi を操作します。「…寝室のテレビで」と言うと、そのリクエストだけ切り替えられます。",
+    "title": "Echo デバイスと部屋"
+  },
+  "rooms": {
+    "add": "部屋を追加",
+    "card": {
+      "add": "追加",
+      "addAliasButton": "{{name}}に呼び名を追加",
+      "addAliasLabel": "{{name}}の呼び名を追加",
+      "aliases": "{{name}}の呼び名",
+      "edit": "部屋「{{name}}」を編集",
+      "kindLabel": "{{name}}の呼び名の種類",
+      "kodi": "→ Kodi「{{name}}」",
+      "noKodi": "→ Kodi インスタンスなし",
+      "placeholder": {
+        "device": "デバイス名（例：テレビ）",
+        "room": "部屋の名前（例：リビング）"
+      },
+      "removeAlias": "呼び名「{{alias}}」を削除"
+    },
+    "dialog": {
+      "addTitle": "部屋を追加",
+      "cancel": "キャンセル",
+      "confirmRemove": "{{name}}とその呼び名を削除しますか？この部屋の Echo は Kodi とのリンクを維持します。",
+      "editTitle": "{{name}}を編集",
+      "fields": {
+        "kodi": {
+          "hint": "「…キッチンで」と言ったときに再生する場所です。",
+          "label": "Kodi インスタンス",
+          "none": "なし"
+        },
+        "name": {
+          "label": "名前",
+          "placeholder": "キッチン"
+        }
+      },
+      "keep": "残す",
+      "remove": "部屋を削除",
+      "removeEllipsis": "削除…",
+      "save": "保存"
+    },
+    "empty": "まだ部屋がありません。",
+    "intro": "これらの名前はスキルの対話モデルに追加されるため、Alexa は「<b>子ども部屋で</b>ブルーイを再生して」の<room>部屋</room>や、「<b>テレビで</b>ブルーイを再生して」の<device>デバイス</device>を認識できます。",
+    "kind": {
+      "device": "デバイス",
+      "room": "部屋"
+    },
+    "title": "部屋と呼び名"
+  },
+  "table": {
+    "anUnnamedEcho": "名前のない Echo",
+    "columns": {
+      "actions": "操作",
+      "controls": "操作対象",
+      "lastRequest": "最後のリクエスト",
+      "name": "名前",
+      "room": "部屋",
+      "today": "今日"
+    },
+    "edit": "編集",
+    "editNamed": "{{name}}を編集",
+    "empty": "まだ Echo がありません。スキルへの最初のリクエスト後にここに表示されます。",
+    "identified": "今話しかけた Echo です",
+    "identifyHint": "どの Echo がどれかわからない場合は、「アレクサ、{{invocation}}でこれはどのデバイス？」と話しかけると、ここで強調表示されます。",
+    "spokeTo": "{{name}}に今話しかけました。",
+    "title": "デバイス"
+  },
+  "unlinked": {
+    "deviceName": "デバイス名",
+    "firstRequest": {
+      "other": "{{when}}に最初のリクエスト{{heard}}。デバイス <mono>{{id}}</mono>",
+      "today": "今日の {{when}} に最初のリクエスト{{heard}}。デバイス <mono>{{id}}</mono>"
+    },
+    "link": "デバイスをリンク",
+    "linked": "Echo をリンクしました。",
+    "placeholder": "キッチンの Dot",
+    "title": "新しい Echo を検出：まだ Kodi にリンクされていません",
+    "titleIdentified": "今話しかけた Echo です：まだ Kodi にリンクされていません"
+  },
+  "unnamed": "名前のない Echo"
+}

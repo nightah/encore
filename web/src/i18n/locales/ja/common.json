@@ -1,0 +1,122 @@
+{
+  "actions": {
+    "close": "閉じる",
+    "copied": "コピーしました",
+    "copy": "コピー",
+    "copyNamed": "{{label}}をコピー",
+    "copyWithText": "{{label}}：{{text}}",
+    "dismiss": "閉じる",
+    "tryAgain": "再試行"
+  },
+  "check": {
+    "auth": "認証情報",
+    "library": "ライブラリ",
+    "ping": "HTTP 経由の JSON-RPC"
+  },
+  "error": {
+    "generic": "問題が発生しました。",
+    "http": "リクエストが HTTP {{status}} で失敗しました。",
+    "lwaCredentials": "先に Login with Amazon のクライアント ID とシークレットを保存してください。",
+    "noConnection": "Encore サーバーに接続できませんでした。",
+    "pageFailed": "このページで問題が発生しました",
+    "unreachable": "Encore が応答していません"
+  },
+  "field": {
+    "managed": "設定ファイルで管理",
+    "managedSuffix": "、設定ファイルで管理"
+  },
+  "heard": {
+    "quoted": "「{{text}}」",
+    "suffix": "：「{{text}}」"
+  },
+  "infoTip": {
+    "label": "{{label}}について"
+  },
+  "instance": {
+    "asleep": "スリープ中",
+    "connectedHttp": "接続済み · HTTP のみ",
+    "connectedWebSocket": "接続済み · WebSocket",
+    "httpOnly": "HTTP のみ",
+    "idle": "待機中",
+    "macSaved": "MAC 保存済み",
+    "noMac": "MAC アドレスなし",
+    "offline": "オフライン",
+    "paused": "一時停止中",
+    "playing": "再生中",
+    "versionUnknown": "Encore が Kodi に接続するまで不明"
+  },
+  "loading": "読み込み中…",
+  "nav": {
+    "alexaSkill": "Alexa スキル",
+    "echoDevices": "Echo デバイス",
+    "kodi": "Kodi",
+    "label": "メイン",
+    "library": "ライブラリ",
+    "overview": "概要",
+    "requestLog": "リクエストログ",
+    "settings": "設定"
+  },
+  "notFound": {
+    "back": "概要に戻る",
+    "title": "ページが見つかりません"
+  },
+  "outcome": {
+    "asked": "どれか確認",
+    "error": "エラー",
+    "not_found": "見つかりません",
+    "ok": "完了",
+    "played": "再生",
+    "unlinked": "デバイス未リンク"
+  },
+  "request": {
+    "simulator": "Amazon シミュレーター",
+    "unnamedEcho": "名前のない Echo"
+  },
+  "setupBanner": {
+    "continue": "セットアップを続ける",
+    "message": "セットアップはまだ完了していません。現在 6 ステップ中ステップ {{step}} です。"
+  },
+  "shell": {
+    "signedInAs": "<name>{{name}}</name> としてサインイン中",
+    "signOut": "サインアウト",
+    "skipToContent": "コンテンツへスキップ"
+  },
+  "theme": {
+    "toDark": "ダークモードに切り替え",
+    "toLight": "ライトモードに切り替え"
+  },
+  "time": {
+    "hoursAgo": "{{value}} 時間前",
+    "inHours": "{{value}} 時間後",
+    "inMinutes": "{{value}} 分後",
+    "justNow": "たった今",
+    "minutesAgo": "{{value}} 分前",
+    "never": "なし",
+    "seconds": "{{value}} 秒",
+    "soon": "まもなく"
+  },
+  "toast": {
+    "aliasSaved": "エイリアスを保存しました。次回の更新でスキルモデルに追加されます。",
+    "amazonConnected": "Amazon に接続しました。",
+    "amazonDisconnected": "Amazon のトークンを削除しました。",
+    "backupStarted": "バックアップを開始しました。",
+    "defaultInstance": "リンクされていない Echo は、今後この Kodi インスタンスを操作します。",
+    "echoForgotten": "Echo の登録を解除しました。再度リクエストを送ると、また表示されます。",
+    "echoSaved": "Echo を保存しました。",
+    "failed": "うまくいきませんでした",
+    "instanceAdded": "Kodi インスタンスを追加しました。",
+    "instanceRemoved": "Kodi インスタンスを削除しました。",
+    "instanceSaved": "Kodi インスタンスを保存しました。",
+    "libraryGrouped": "ライブラリを共有しました。Encore はこれらのインスタンスをひとつとしてインデックスします。",
+    "librarySource": "ライブラリソースを変更しました。",
+    "librarySplit": "ライブラリを分割しました。Encore は各インスタンスを個別にインデックスします。",
+    "roomAdded": "部屋を追加しました。",
+    "roomRemoved": "部屋を削除しました。",
+    "roomSaved": "部屋を保存しました。",
+    "secretsRotated": "暗号化キーをローテーションしました。保存済みのシークレットは再暗号化されました。",
+    "settingsSaved": "設定を保存しました。",
+    "skillSaved": "スキルの設定を保存しました。",
+    "syncStarted": "ライブラリの同期を開始しました。完了すると件数が更新されます。",
+    "wakeSent": "Wake-on-LAN パケットを送信しました。Kodi の応答を待っています。"
+  }
+}

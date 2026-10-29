@@ -1,0 +1,126 @@
+{
+  "amazon": {
+    "connect": "Conectar no assistente de configuração",
+    "disconnect": "Desconectar",
+    "disconnectDialog": {
+      "cancel": "Cancelar",
+      "confirm": "Desconectar",
+      "description": "O Encore esquece os tokens do Login with Amazon. A skill continua funcionando nos seus Echos, mas você não poderá implantar de novo até autorizar novamente.",
+      "title": "Desconectar da Amazon?"
+    },
+    "needsReauthorise": "A Amazon deixou de aceitar o token do Encore. Autorize novamente para continuar implantando.",
+    "notConnected": "O Encore implanta a skill com o seu próprio perfil de segurança do Login with Amazon. Conecte-o para implantar.",
+    "profile": "Perfil de segurança",
+    "reauthorise": "Autorizar novamente",
+    "title": "Conta de desenvolvedor da Amazon",
+    "vendor": "Fornecedor"
+  },
+  "autoDeployPaused": {
+    "resume": "Implante a skill manualmente depois de corrigir o problema para retomá-las.",
+    "title": "As implantações automáticas estão pausadas"
+  },
+  "content": {
+    "movies": "Filmes",
+    "music": "Música",
+    "musicHint": "Inclui videoclipes",
+    "tv": "Séries de TV"
+  },
+  "locales": {
+    "build": {
+      "failed": "Falhou",
+      "in_progress": "Compilando",
+      "succeeded": "Concluído"
+    },
+    "columns": {
+      "build": "Compilação",
+      "built": "Compilado em",
+      "locale": "Localidade",
+      "size": "Tamanho (de {{limit}})",
+      "titles": "Títulos da biblioteca"
+    },
+    "content": {
+      "hint": "Deixar um de fora remove os comandos de voz dele da skill. Música inclui videoclipes.",
+      "keepOne": "Mantenha pelo menos um entre filmes, séries de TV ou música.",
+      "legend": "O que ela pode reproduzir"
+    },
+    "empty": "Nada compilado ainda. Implante a skill para compilar um modelo para cada localidade ativada.",
+    "enabled": {
+      "hint": "Somente as localidades ativadas são compiladas e implantadas. Um Echo só pode usar a skill se o idioma dele corresponder a uma delas. As alterações valem na próxima implantação.",
+      "keepOne": "Mantenha pelo menos uma localidade ativada.",
+      "legend": "Localidades"
+    },
+    "needsDeploy": {
+      "automatic": "Há alterações desde a última implantação. O Encore as implanta automaticamente quando elas se estabilizarem.",
+      "library": "Há novos títulos na biblioteca desde a última implantação. O Encore já os encontra; implante novamente para adicioná-los ao modelo da skill.",
+      "settings": "As configurações mudaram desde a última implantação. Implante novamente para aplicá-las."
+    },
+    "saved": "Localidades salvas. Elas valem na próxima implantação.",
+    "sizeUsed": "{{locale}}: {{used}} de {{limit}} usados",
+    "title": "Modelo de interação por localidade"
+  },
+  "page": {
+    "deploy": {
+      "deploying": "Implantando…",
+      "failed": "Falha na implantação: {{reason}}",
+      "failedStep": "veja na linha do tempo a etapa que falhou",
+      "progress": "Implantação {{percent}}% concluída",
+      "redeploy": "Implantar novamente",
+      "running": "Implantando: {{step}} ({{percent}}% concluído)",
+      "starting": "iniciando",
+      "succeeded": "Implantação concluída. A skill está ativada para testes nos seus Echos."
+    },
+    "description": "A skill privada “{{name}}” na sua conta de desenvolvedor da Amazon. Estágio de desenvolvimento: funciona nos Echos conectados à sua conta.",
+    "export": "Exportar pacote da skill",
+    "title": "Skill da Alexa"
+  },
+  "timeline": {
+    "amazon": {
+      "connected": "Conectada",
+      "notConnected": "Não conectada",
+      "reauthorise": "Autorize novamente para continuar implantando",
+      "title": "Conta da Amazon",
+      "vendor": "Fornecedor {{vendor}} · conectada"
+    },
+    "created": {
+      "creating": "Criando…",
+      "firstDeploy": "Criada na primeira implantação",
+      "title": "Skill criada"
+    },
+    "endpoint": {
+      "title": "Endpoint"
+    },
+    "label": "Status da implantação",
+    "models": {
+      "building": "Compilando {{locales}}…",
+      "built": "Compilado: {{locales}}",
+      "failed": "A última compilação falhou",
+      "notBuilt": "Ainda não compilado",
+      "title": "Modelos"
+    },
+    "state": {
+      "busy": "em andamento",
+      "fail": "precisa de atenção",
+      "ok": "concluído",
+      "pending": "não iniciado"
+    },
+    "testing": {
+      "failed": "Não ativada: corrija a etapa que falhou e implante novamente",
+      "firstDeploy": "Após a primeira implantação",
+      "passed": "Teste rápido aprovado {{time}}",
+      "title": "Ativada para testes",
+      "waiting": "Aguardando o teste rápido"
+    }
+  },
+  "titles": {
+    "empty": "Exibido após a primeira implantação.",
+    "inModel_one": "<count>{{n}} título</count> no modelo (em andamento e recentes primeiro)",
+    "inModel_other": "<count>{{n}} títulos</count> no modelo (em andamento e recentes primeiro)",
+    "limit": "O modelo de cada localidade precisa ficar abaixo do limite de {{limit}} da Amazon.",
+    "serverOnly_one": "<count>{{n}} título</count> com correspondência só no servidor",
+    "serverOnly_other": "<count>{{n}} títulos</count> com correspondência só no servidor",
+    "title": "Títulos no modelo"
+  },
+  "warnings": {
+    "title": "Avisos da última implantação"
+  }
+}

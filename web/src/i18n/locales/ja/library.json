@@ -1,0 +1,93 @@
+{
+  "empty": {
+    "action": "Kodi インスタンスを追加",
+    "body": "Encore は追加した各 Kodi インスタンスからライブラリのインデックスを作成します。",
+    "title": "まだライブラリがありません"
+  },
+  "explain": {
+    "askOne": "{{top}}のスコアは {{score}} で判定しきれないため、Alexa が確認します。",
+    "askTwo": "{{top}}と{{second}}のスコア差が {{margin}} 以内のため、Alexa がどちらか確認します。",
+    "notFound": "最高スコアは{{top}}の {{score}} で、再生に必要な 0.60 に届きません。",
+    "nothing": "このライブラリには近いものがありません。",
+    "playOne": "{{top}}のスコアは {{score}} で、近い候補はこれだけです。",
+    "playTwo": "{{top}}のスコアは {{score}} で、次点を {{margin}} 上回っています。"
+  },
+  "kinds": {
+    "album": "アルバム",
+    "artist": "アーティスト",
+    "episode": "エピソード",
+    "movie": "映画",
+    "musicvideo": "ミュージックビデオ",
+    "playlist": "プレイリスト",
+    "song": "曲",
+    "tvshow": "テレビ番組"
+  },
+  "matchTester": {
+    "addAlias": "「{{query}}」を最上位の結果のエイリアスとして追加",
+    "aliasEntry": "「{{alias}}」→ {{title}}",
+    "aliases": "あなたのエイリアス",
+    "aliasHint": "エイリアスは Encore に保存され、次回の再同期でスキルモデルに追加されます。",
+    "candidates": "照合候補",
+    "columns": {
+      "alias": "一致したエイリアス",
+      "boost": "ブースト",
+      "candidate": "候補",
+      "phonetic": "音声的類似度",
+      "score": "スコア",
+      "tokenSet": "トークンセット"
+    },
+    "heard": "Alexa が聞き取った内容",
+    "mediaType": "メディアの種類",
+    "noAlias": "サーバーがどのタイトルかを示さなかったため、ここではエイリアスを設定できません。",
+    "normalized": "正規化されたクエリ",
+    "removeAlias": "エイリアス {{alias}} を削除",
+    "test": "テスト",
+    "title": "照合テスター",
+    "try": "例：",
+    "types": {
+      "any": "すべて",
+      "movies": "映画",
+      "music": "音楽",
+      "shows": "テレビ番組"
+    }
+  },
+  "page": {
+    "description": "Encore が Kodi のライブラリについて把握している内容と、Alexa が聞き取った内容との照合方法です。",
+    "library": "ライブラリ",
+    "syncAll": "今すぐすべて同期",
+    "syncStarted": "ライブラリの同期を開始しました。完了すると件数が更新されます。",
+    "title": "ライブラリ"
+  },
+  "recent": {
+    "body": "新しいタイトルは Kodi に追加されてから数秒で検索できるようになります。すぐに動的エンティティとして Alexa に送られ、次回の再同期でスキルモデルに追加されます。",
+    "live": "Kodi イベントからライブ更新",
+    "nothing": "最近追加されたものはありません。",
+    "status": {
+      "findable": "音声で検索可能",
+      "inModel": "スキルモデルに追加済み",
+      "waiting": "次回の更新待ち"
+    },
+    "title": "最近追加されたもの"
+  },
+  "summary": {
+    "backups": "バックアップ",
+    "episodes_other": "{{count, number}} エピソード",
+    "label": "ライブラリの概要",
+    "lastBackup": "最終バックアップ {{when}}",
+    "libraries": "ライブラリ",
+    "localDisk": "ローカルディスク",
+    "movies": "映画",
+    "music": "音楽",
+    "noBackup": "バックアップなし",
+    "notSynced": "未同期",
+    "s3": "S3 互換",
+    "shows": "テレビ番組",
+    "songs": "曲",
+    "synced": "{{when}}に同期"
+  },
+  "verdict": {
+    "ask": "確認する",
+    "not_found": "見つかりません",
+    "play": "再生する"
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "detail": {
+    "alexaSaid": "A Alexa disse",
+    "callFailed": "(falhou)",
+    "candidates": {
+      "label": "Candidatos à correspondência",
+      "none": "Nenhum candidato.",
+      "score": "{{title}}: pontuação {{score}}",
+      "unlinked": "Este Echo não está vinculado a uma instância do Kodi, e não há um padrão definido para Echos não vinculados."
+    },
+    "copied": "Copiado",
+    "copy": "Copiar JSON",
+    "intent": "Intent",
+    "kodiCalls": "Chamadas ao Kodi",
+    "loading": "Carregando a solicitação…",
+    "noCalls": "Nenhuma.",
+    "replay": "Repetir (simulação)",
+    "replayResult": {
+      "label": "Resultado da repetição",
+      "noCalls": "Nenhuma chamada ao Kodi.",
+      "title": "Repetição com o índice atual (o Kodi não é acionado)",
+      "topMatch": "Melhor correspondência: {{title}}, {{score}}.",
+      "wouldCall": "Chamaria",
+      "wouldSay": "A Alexa diria: “{{speech}}”"
+    },
+    "silent": "Nada (silêncio).",
+    "slots": "Slots",
+    "target": {
+      "label": "Kodi de destino",
+      "none": "Nenhum",
+      "unlinked": "Nenhum (dispositivo não vinculado)"
+    },
+    "timing": {
+      "fallback": "Encore {{encore}} · Kodi {{kodi}} · total {{total}}",
+      "label": "Tempos",
+      "split": "verificação {{verify}} · correspondência {{match}} · Kodi {{kodi}} · total {{total}}"
+    },
+    "via": {
+      "alias": "<spoken>{{spoken}}</spoken> outro nome para <room>{{room}}</room>",
+      "device": "<spoken>{{spoken}}</spoken> dispositivo em <room>{{room}}</room>"
+    }
+  },
+  "empty": {
+    "filtered": "Tente outra busca ou limpe os filtros.",
+    "filteredTitle": "Nenhuma solicitação correspondente",
+    "none": "As solicitações aparecem aqui assim que um Echo fala com o Encore. Diga “Alexa, pergunte para {{invocation}} o que está tocando.”",
+    "noneNoInvocation": "As solicitações aparecem aqui assim que um Echo fala com o Encore.",
+    "noneTitle": "Nenhuma solicitação ainda"
+  },
+  "filters": {
+    "allDevices": "Todos os Echos",
+    "allOutcomes": "Todos os resultados",
+    "device": "Dispositivo Echo",
+    "deviceById": "Echo nº {{id}}",
+    "label": "Filtrar solicitações",
+    "outcome": "Resultado",
+    "search": "Buscar no que foi ouvido",
+    "unnamedDevice": "Echo sem nome"
+  },
+  "list": {
+    "label": "Solicitações",
+    "loading": "Carregando solicitações…",
+    "loadOlder": "Carregar solicitações mais antigas"
+  },
+  "live": {
+    "off": "Reconectando…",
+    "on": "Ao vivo",
+    "retention": "mantidas as últimas 500 solicitações ou 7 dias"
+  },
+  "newRequest": "Nova solicitação de {{device}}{{heard}}",
+  "title": "Registro de solicitações",
+  "unnamedDevice": "um Echo sem nome"
+}
