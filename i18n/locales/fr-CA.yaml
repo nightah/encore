@@ -1,0 +1,90 @@
+# fr-CA inherits lang/fr, which is written for France; this overlay adds what Québécois speakers say and replaces responses that sound European. Alexa says "vous" in Canadian French too.
+# "encore" means "again" (and "still") in Québec French as in France, so fr-CA uses "kodi" even when encore is chosen, as fr-FR does.
+#
+# Utterances add "fais jouer" (play), "fais-moi entendre", "écouter" for watching ("écouter un film", "qu'est-ce qu'on écoute"), "l'émission" and "le téléroman" for a series, "la toune" for a song, "le vidéoclip", "pèse sur" (press), "mets ça sur pause" and "l'ordi". Responses say "liste de lecture" for a playlist, "vidéoclip" for a music video and "compétence" for a skill, as Amazon and the Office québécois de la langue française do in Canada.
+
+invocation: kodi
+language: fr
+
+responses:
+  content.disabled: "Cette compétence est configurée sans ce type de contenu. Vous pouvez l'activer dans les réglages de la compétence Alexa d'Encore."
+  music.no_videos_by: "Vous n'avez aucun vidéoclip de {artist}."
+  music.no_videos_genre_by: "Vous n'avez aucun vidéoclip du genre {genre} de {artist}."
+  music.playing_video: "Je lance le vidéoclip {title} de {artist}."
+  music.shuffling_videos: "Je lance des vidéoclips en lecture aléatoire."
+  playlist.not_found: "Je n'ai pas trouvé de liste de lecture appelée {playlist}."
+  playlist.playing: "Je lance la liste de lecture {playlist}."
+  playlist.shuffling: "Je lance la liste de lecture {playlist} en lecture aléatoire."
+  whatsnew.music_videos: "Vous avez les vidéoclips {titles}."
+  whatsnew.music_videos_more: "Vous avez les vidéoclips {titles}, et d'autres encore."
+
+skill_name: Encore
+
+types:
+  LIBRARY_SECTION:
+    musicvideos: [vidéoclips, mes vidéoclips]
+    tvshows: [mes émissions, téléromans]
+  MEDIA_TYPE:
+    musicvideo: [vidéoclips]
+    song: [toune, tounes]
+    tvshow: [téléroman, téléromans]
+  REPEAT_MODE:
+    all: [la liste de lecture]
+  SUBTITLE_ACTION:
+    "off": [ferme, fermer]
+    "on": [ouvre, ouvrir]
+
+utterances:
+  AMAZON.PauseIntent:
+    - "(mets|mettre) (ça|la télé|kodi|la vidéo|le film|l'émission) sur pause"
+    - "(pèse|peser) sur pause"
+  ListenToAlbum:
+    - "(fais jouer|faire jouer|fais-moi entendre) l'album {Album} [(dans le|dans la|au|à la) {Room}]"
+    - "(fais jouer|faire jouer|fais-moi entendre) l'album {Album} (de|par) {Artist} [(dans le|dans la|au|à la) {Room}]"
+  ListenToArtist:
+    - "(fais jouer|faire jouer|fais-moi entendre) (de la musique|des chansons|des tounes) (de|par) {Artist} [(dans le|dans la|au|à la) {Room}]"
+  ListenToGenre:
+    - "(fais jouer|faire jouer|fais-moi entendre) (de la musique|des chansons|des tounes) {Genre} [(dans le|dans la|au|à la) {Room}]"
+  ListenToSong:
+    - "(mets|mettre|joue|jouer|fais jouer|faire jouer|fais-moi entendre) (la toune|la chanson|le morceau) {Song} [(dans le|dans la|au|à la) {Room}]"
+    - "(mets|mettre|fais jouer|faire jouer|fais-moi entendre) (la toune|la chanson|le morceau) {Song} (de|par) {Artist}"
+  ListenToSongOrAlbum:
+    - "(fais jouer|faire jouer|fais-moi entendre) {Title} (de|par) {Artist} [(dans le|dans la|au|à la) {Room}]"
+  Navigate:
+    - "(pèse sur|peser sur) {NavAction}"
+    - "(pèse sur|peser sur) {NavAction} {Count} fois"
+  PlayMedia:
+    - "(fais jouer|faire jouer) {Query}"
+  PlayPlaylist:
+    - "(fais jouer|faire jouer) (la|ma) (playlist|liste de lecture) {Playlist} [(dans le|dans la|au|à la) {Room}]"
+  Power:
+    - "{PowerAction} l'ordi"
+  Recommend:
+    - "qu'est-ce qu'on écoute [ce soir]"
+    - "qu'est-ce que je (devrais|pourrais) écouter comme (film|série|émission)"
+  WatchEpisode:
+    - "(fais jouer|faire jouer) {Show} saison {Season} épisode {Episode} [(dans le|dans la|au|à la) {Room}]"
+    - "(fais jouer|faire jouer) l'épisode {Episode} de la saison {Season} de {Show} [(dans le|dans la|au|à la) {Room}]"
+  WatchFirstEpisode:
+    - "(fais jouer|faire jouer) le premier épisode de {Show} [(dans le|dans la|au|à la) {Room}]"
+  WatchLatestEpisode:
+    - "(fais jouer|faire jouer) le (dernier|nouvel) épisode de {Show} [(dans le|dans la|au|à la) {Room}]"
+  WatchMovie:
+    - "(fais jouer|faire jouer) le film {Movie} [(dans le|dans la|au|à la) {Room}]"
+    - "je (veux|voudrais) écouter le film {Movie}"
+    - "on (écoute|va écouter) le film {Movie}"
+  WatchMusicVideo:
+    - "(mets|mettre|fais jouer|faire jouer|montre-moi) le vidéoclip [de] {MusicVideo} [(dans le|dans la|au|à la) {Room}]"
+    - "(mets|mettre|fais jouer|faire jouer|montre-moi) le vidéoclip [de] {MusicVideo} par {Artist}"
+  WatchNextEpisode:
+    - "(mets|mettre|fais jouer|faire jouer) (l'émission|le téléroman) {Show} [(dans le|dans la|au|à la) {Room}]"
+    - "(fais jouer|faire jouer) (le prochain épisode|l'épisode suivant) de {Show} [(dans le|dans la|au|à la) {Room}]"
+    - "(continue|continuer) (l'émission|le téléroman) {Show} [(dans le|dans la|au|à la) {Room}]"
+  WatchRandomEpisode:
+    - "(fais jouer|faire jouer) un épisode (au hasard|aléatoire) de {Show} [(dans le|dans la|au|à la) {Room}]"
+  WatchRandomMovie:
+    - "(fais jouer|faire jouer) un film [(de|du genre) {Genre}] au hasard [(dans le|dans la|au|à la) {Room}]"
+    - "je (veux|voudrais) écouter un film [(de|du genre) {Genre}]"
+  WatchRandomShow:
+    - "(mets|mettre|fais jouer|faire jouer) une émission [(de|du genre) {Genre}] au hasard [(dans le|dans la|au|à la) {Room}]"
+    - "je (veux|voudrais) écouter une (émission|série) [(de|du genre) {Genre}]"

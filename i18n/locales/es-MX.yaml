@@ -1,0 +1,79 @@
+# es-MX inherits lang/es, which is written for Spain; this overlay adds what Mexican speakers say and replaces responses that sound Peninsular. Alexa uses tú in Mexico too. "encore" is not a Spanish word, so it doesn't clash with anything Alexa understands. es-US carries the same overlay; change both together.
+#
+# Utterances add "la rola" (a song), "la compu" and "la computadora" for the computer, "dale play", "en mi {Room}" ("en mi recámara", "en mi cuarto"), "quiero seguir viendo" and "el capítulo nuevo". Responses use the preterite where Spain uses the perfect ("no encontré", not "no he encontrado"), "está bien" for "vale", "configuración" for "ajustes", "video" for "vídeo" and "cuarto" for "habitación".
+
+invocation: encore
+language: es
+
+responses:
+  addon.not_found: "No encontré ningún complemento llamado {addon}."
+  content.disabled: "Esta skill está configurada sin ese tipo de contenido. Puedes activarlo en la configuración de la skill de Alexa de Encore."
+  error.device_unlinked: "Este Echo todavía no está vinculado a ninguna instancia de Kodi. Abre la configuración de Encore para elegir una."
+  error.generic: "Lo siento, algo falló al comunicarme con Kodi."
+  error.unknown_room: "No conozco ningún cuarto llamado {room}."
+  fallback: "Lo siento, no te entendí. Intenta decir: pon la película {example}."
+  favourite.not_found: "No encontré ningún favorito llamado {favourite}."
+  goodbye: "Está bien."
+  launch.welcome: "Encore está listo. ¿Qué quieres ver?"
+  library.clean_both: "Limpiando tus bibliotecas de video y de música."
+  library.clean_video: "Limpiando tu biblioteca de video."
+  library.empty: "No encontré nada parecido en tu biblioteca."
+  library.no_genre: "No encontré nada del género {genre} en tu biblioteca."
+  library.scan_both: "Actualizando tus bibliotecas de video y de música."
+  library.scan_video: "Actualizando tu biblioteca de video."
+  match.cancelled: "Está bien, olvídalo."
+  match.not_found: "No encontré {query} en tu biblioteca."
+  movie.no_trailer: "No encontré ningún tráiler de {title}."
+  music.no_genre_by: "No encontré música {genre} de {artist}."
+  music.not_found_by: "No encontré {title} de {artist}."
+  music.not_found_on: "No encontré {title} en el álbum {album}."
+  playlist.not_found: "No encontré ninguna lista llamada {playlist}."
+  remote.no_text: "No entendí qué quieres escribir."
+  streams.audio_unknown: "Cambié el audio."
+  tv.no_episode: "No encontré el episodio {episode} de la temporada {season} de {show}."
+
+skill_name: Encore
+
+types:
+  LIBRARY_SECTION:
+    movies: [mis pelis]
+    tvshows: [programas, mis programas]
+  MEDIA_TYPE:
+    song: [rola, rolas]
+  NAV_ACTION:
+    select: [okey, ok, enter]
+  SEEK_SIZE:
+    big: [un buen rato, un montón]
+    small: [tantito, un tantito]
+
+utterances:
+  ContinueWatching:
+    - "(quiero|queremos) seguir viendo [en (el|la|mi) {Room}]"
+  ListenToSong:
+    - "(pon|ponme|reproduce) la rola {Song} [en (el|la|mi) {Room}]"
+    - "(pon|ponme|reproduce) la rola {Song} de {Artist} [en (el|la|mi) {Room}]"
+    - "(quiero escuchar|escuchar) la rola {Song} [de {Artist}]"
+  ListenToSongOrAlbum:
+    - "dale play a {Title} de {Artist} [en (el|la|mi) {Room}]"
+  PlayMedia:
+    - "dale play a {Query}"
+  Power:
+    - "{PowerAction} (la computadora|la compu)"
+    - "pon (la computadora|la compu) (a|en) {PowerAction}"
+  RoomControl:
+    - "{Command} en mi {Room}"
+    - "{Command} [la] (tele|kodi|música|película|peli|serie) en mi {Room}"
+  WatchEpisode:
+    - "quiero ver el (capítulo|episodio) {Episode} de la temporada {Season} de {Show} [en (el|la|mi) {Room}]"
+  WatchLatestEpisode:
+    - "(pon|ponme|reproduce) el (capítulo|episodio) nuevo de {Show} [en (el|la|mi) {Room}]"
+  WatchMovie:
+    - "(pon|ponme|reproduce) la (película|peli) {Movie} en mi {Room}"
+    - "(quiero|queremos) ver la peli {Movie}"
+    - "vamos a ver la peli {Movie}"
+  WatchNextEpisode:
+    - "(quiero|queremos) seguir viendo {Show} [en (el|la|mi) {Room}]"
+    - "(pon|ponme|reproduce) el (siguiente|próximo) capítulo de la serie {Show} [en (el|la|mi) {Room}]"
+    - "(sigue|continúa) con la serie {Show} [en (el|la|mi) {Room}]"
+  WatchRandomShow:
+    - "(pon|ponme) un programa (al azar|cualquiera) [en (el|la|mi) {Room}]"
