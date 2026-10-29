@@ -71,7 +71,7 @@ func (ix *Index) scoreAlias(q *form, a *alias, floor float64) scored {
 
 	cov := 1.0
 	if (compact < ix.cfg.CompactCoverage || !numbers) && !homophone {
-		cov = coverage(q, &a.form, ix.lang.split != nil)
+		cov = coverage(q, &a.form, ix.lang.unspaced)
 	}
 
 	f *= 1 - ix.cfg.CoveragePenalty*(1-cov)
