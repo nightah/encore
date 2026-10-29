@@ -152,6 +152,17 @@ type Finding struct {
 type linter struct {
 	src      *Sources
 	findings []Finding
+	// script is the rules of the language of the locale being checked.
+	script scriptRules
+}
+
+// scriptRules are the invocation name and sample rules of the languages written in one script.
+type scriptRules struct {
+	// invocation reports whether a name uses only what Amazon allows in the script, and message says what that is.
+	invocation func(name string) bool
+	message    string
+	// unspaced scripts write words without spaces (Japanese): particles attach straight to a slot, a reserved word counts anywhere in a name, and a name has no words to count.
+	unspaced bool
 }
 
 type sampleOwner struct {

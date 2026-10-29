@@ -7,6 +7,8 @@ import (
 	"sort"
 	"strings"
 
+	"golang.org/x/text/unicode/norm"
+
 	"github.com/nightah/encore/internal/core/media"
 )
 
@@ -39,11 +41,80 @@ func (f Finding) String() string {
 var (
 	slotRef        = regexp.MustCompile(`\{([^{}]*)\}`)
 	placeholderRef = regexp.MustCompile(`\{([A-Za-z_][A-Za-z0-9_]*)\}`)
-	// Amazon accepts letters, apostrophes, periods (for "t.v."), hyphens and spaces in samples. Digits must be spelled out.
-	sampleChars    = regexp.MustCompile(`^[\p{L}' .\-]*$`)
-	invocationRule = regexp.MustCompile(`^[a-z][a-z' .]*[a-z]$`)
-	reservedWords  = []string{"alexa", "amazon", "echo", "skill", "app", "launch", "ask", "tell", "open"}
+	// Amazon accepts letters, apostrophes, periods (for "t.v."), hyphens and spaces in samples. Digits must be spelled out. Combining marks are letters' vowel signs in Devanagari.
+	sampleChars = regexp.MustCompile(`^[\p{L}\p{M}' .\-]*$`)
+
+	latinInvocation = regexp.MustCompile(`^\p{Ll}[\p{Ll}' .]*\p{Ll}$`)
+	latinOnly       = regexp.MustCompile(`^[\p{Latin}' .]*$`)
+	// latinWord is a lowercase Latin word among words of another script: an English word in Hindi, a loanword in Arabic.
+	latinWord      = regexp.MustCompile(`^\p{Latin}[\p{Latin}'.]*$`)
+	devanagariWord = regexp.MustCompile(`^[\p{Devanagari}\p{M}]+$`)
+	arabicWord     = regexp.MustCompile(`^[\p{Arabic}\p{M}]+$`)
+	// Japanese names are kana and kanji, with an acronym's Latin letters each lowercase and followed by a space.
+	japaneseInvocation = regexp.MustCompile(`^(?:[a-z] |[\p{Hiragana}\p{Katakana}\p{Han}ー])*[\p{Hiragana}\p{Katakana}\p{Han}ー]$`)
+	digit              = regexp.MustCompile(`\p{N}`)
+
+	// reservedWords are banned from invocation names in every language: Amazon's own names and English launch words.
+	reservedWords = []string{"alexa", "amazon", "echo", "skill", "app", "launch", "ask", "tell", "open"}
+
+	// languageReserved are each language's own spellings of the banned names and the launch words Amazon lists for it.
+	languageReserved = map[string][]string{
+		"ar": {"اليكسا", "امازون", "ايكو", "تطبيق", "افتحي", "شغلي"},
+		"fr": {"appli", "application"},
+		"hi": {"अलेक्सा", "एलेक्सा", "ऐलेक्सा", "ऐमेज़ोन", "ऐको", "स्किल", "ऐप"},
+		"ja": {"アレクサ", "アマゾン", "エコー", "スキル", "アプリ", "起動して", "使って", "開いて", "スタート", "開始", "実行"},
+		"nl": {"start", "speel", "open", "vraag"},
+		"pt": {"aplicativo", "começar", "iniciar", "abrir"},
+	}
+
+	// scripts are the rules of the languages not written in Latin script, by language; every other language follows latinScript.
+	scripts = map[string]scriptRules{
+		"ar": {
+			invocation: wordsOf(arabicWord),
+			message:    "must be Arabic words, or lowercase Latin for loanwords Arabic can't spell, separated by single spaces",
+		},
+		"hi": {
+			invocation: wordsOf(devanagariWord),
+			message:    "must be Devanagari words, or lowercase Latin for English words, separated by single spaces",
+		},
+		"ja": {
+			invocation: japaneseInvocation.MatchString,
+			message:    "must be Hiragana, Katakana or Kanji, with Latin letters only for acronyms, each lowercase and followed by a space",
+			unspaced:   true,
+		},
+	}
+
+	latinScript = scriptRules{
+		invocation: func(name string) bool { return latinInvocation.MatchString(name) && latinOnly.MatchString(name) },
+		message:    "must be lowercase letters, spaces, apostrophes or periods",
+	}
 )
+
+// scriptOf returns the rules for a language's script.
+func scriptOf(language string) scriptRules {
+	if s, ok := scripts[language]; ok {
+		return s
+	}
+
+	return latinScript
+}
+
+// wordsOf accepts names of single-space-separated words, each either a native word or a lowercase Latin one, and no digits.
+func wordsOf(native *regexp.Regexp) func(string) bool {
+	return func(name string) bool {
+		if name == "" || digit.MatchString(name) {
+			return false
+		}
+
+		for w := range strings.SplitSeq(name, " ") {
+			if !native.MatchString(w) && (!latinWord.MatchString(w) || w != strings.ToLower(w)) {
+				return false
+			}
+		}
+
+		return true
+	}
+}
 
 // Lint checks the sources for problems that would fail an Alexa model build, cause intents to collide, or leave responses untranslated.
 func Lint(src *Sources) []Finding {
@@ -214,10 +285,11 @@ func (l *linter) locale(locale string) {
 		return
 	}
 
-	l.invocation(locale, loc.Invocation)
+	l.script = scriptOf(loc.Language)
+	l.invocation(locale, loc.Language, loc.Invocation)
 
 	if loc.KodiInvocation != "" {
-		l.invocation(locale, loc.KodiInvocation)
+		l.invocation(locale, loc.Language, loc.KodiInvocation)
 	}
 
 	if loc.SkillName == "" {
@@ -256,22 +328,27 @@ func (l *linter) locale(locale string) {
 	}
 }
 
-func (l *linter) invocation(locale, name string) {
-	if !invocationRule.MatchString(name) {
-		l.add(Error, locale, "", "invocation name %q must be lowercase letters, spaces, apostrophes or periods", name)
+func (l *linter) invocation(locale, language, name string) {
+	script := l.script
+	name = norm.NFC.String(name)
+
+	if !script.invocation(name) {
+		l.add(Error, locale, "", "invocation name %q %s", name, script.message)
 
 		return
 	}
 
-	for _, w := range strings.Fields(name) {
-		for _, r := range reservedWords {
-			if w == r {
-				l.add(Error, locale, "", "invocation name %q contains the reserved word %q", name, r)
-			}
+	words := strings.Fields(name)
+
+	for _, r := range append(slices.Clone(reservedWords), languageReserved[language]...) {
+		r = norm.NFC.String(r)
+
+		if slices.Contains(words, r) || script.unspaced && strings.Contains(name, r) {
+			l.add(Error, locale, "", "invocation name %q contains the reserved word %q", name, r)
 		}
 	}
 
-	if len(strings.Fields(name)) == 1 {
+	if !script.unspaced && len(words) == 1 {
 		l.add(Warning, locale, "", "one-word invocation name %q is fine for a private skill but would need brand proof to certify", name)
 	}
 }
@@ -284,9 +361,9 @@ func (l *linter) sample(locale string, in Intent, pattern, sample string, exact,
 
 	refs := slotRef.FindAllStringSubmatch(sample, -1)
 
-	// Amazon fails to parse a slot joined to other text, such as the possessive "{Artist}'s".
+	// Amazon fails to parse a slot joined to other text, such as the possessive "{Artist}'s". Japanese writes no spaces, and its particles follow the slot directly ("{Movie}を再生して").
 	for _, loc := range slotRef.FindAllStringIndex(sample, -1) {
-		if (loc[0] > 0 && sample[loc[0]-1] != ' ') || (loc[1] < len(sample) && sample[loc[1]] != ' ') {
+		if !l.script.unspaced && ((loc[0] > 0 && sample[loc[0]-1] != ' ') || (loc[1] < len(sample) && sample[loc[1]] != ' ')) {
 			l.add(Error, locale, in.Name, "sample %q joins slot %s to other text; Amazon needs a space on each side (rephrase possessives such as \"{Artist}'s\")", sample, sample[loc[0]:loc[1]])
 		}
 	}

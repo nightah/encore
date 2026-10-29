@@ -253,3 +253,180 @@ func TestPlaceholders(t *testing.T) {
 		assert.Equal(t, want, placeholders(in), in)
 	}
 }
+
+// lintLocale lints a test locale, xx-XX, of language with the given invocation name and, for a language other than English, utterances, returning the locale's findings.
+func lintLocale(t *testing.T, language, invocation, utterances string) (errs, warnings []string) {
+	t.Helper()
+
+	files := map[string]string{"locales/xx-XX.yaml": "language: " + language + "\nskill_name: Encore\ninvocation: \"" + invocation + "\"\n"}
+	if language != ReferenceLanguage {
+		files["lang/"+language+"/utterances.yaml"] = utterances
+		files["lang/"+language+"/responses.yaml"] = "{}"
+	}
+
+	for _, f := range Lint(load(t, files)) {
+		switch {
+		case f.Locale != "xx-XX":
+		case f.Severity == Error:
+			errs = append(errs, f.Message)
+		default:
+			warnings = append(warnings, f.Message)
+		}
+	}
+
+	return errs, warnings
+}
+
+func TestLintInvocationPerScript(t *testing.T) {
+	tests := []struct {
+		language, invocation string
+		// want is part of the error the name must raise; empty means it must raise none.
+		want string
+	}{
+		// Latin script: lowercase letters with their accents, spaces, apostrophes and periods.
+		{"en", "encore test", ""},
+		{"en", "t.v. remote", ""},
+		{"en", "Encore Test", "must be lowercase letters, spaces, apostrophes or periods"},
+		{"en", "encore 2", "must be lowercase letters, spaces, apostrophes or periods"},
+		{"en", "encore.", "must be lowercase letters, spaces, apostrophes or periods"},
+		{"en", "", `invocation name "" must be lowercase letters`},
+		{"de", "fernbedienung für kodi", ""},
+		{"de", "große leinwand", ""},
+		{"pt", "sessão de pipoca", ""},
+		{"pt", "pipoca já", ""},
+		{"pt", "Pipoca Já", "must be lowercase letters"},
+		{"fr", "télé kodi", ""},
+		{"fr", "кино пульт", "must be lowercase letters"},
+		{"nl", "n. o. s. kijken", ""},
+		// Japanese: kana and kanji, ー, and acronyms as lowercase letters each followed by a space.
+		{"ja", "アンコール", ""},
+		{"ja", "映画のリモコン", ""},
+		{"ja", "えんこーる", ""},
+		{"ja", "a b c ニュース", ""},
+		{"ja", "encore", "must be Hiragana, Katakana or Kanji"},
+		{"ja", "ab ニュース", "must be Hiragana, Katakana or Kanji"},
+		{"ja", "アンコール a", "must be Hiragana, Katakana or Kanji"},
+		{"ja", "アンコール 映画", "must be Hiragana, Katakana or Kanji"},
+		{"ja", "アンコール1", "must be Hiragana, Katakana or Kanji"},
+		// Hindi: Devanagari words with their vowel signs, and lowercase Latin for English words.
+		{"hi", "एनकोर", ""},
+		{"hi", "मेरा टीवी", ""},
+		{"hi", "कोडी remote", ""},
+		{"hi", "encore test", ""},
+		{"hi", "एनकोर Remote", "must be Devanagari words"},
+		{"hi", "एनकोर २", "must be Devanagari words"},
+		{"hi", "एनकोर  रिमोट", "must be Devanagari words"},
+		// Arabic: Arabic words, and lowercase Latin for loanwords.
+		{"ar", "انكور", ""},
+		{"ar", "kodi ريموت", ""},
+		{"ar", "انكور ٢", "must be Arabic words"},
+		{"ar", "Kodi", "must be Arabic words"},
+		{"ar", "ريموت ", "must be Arabic words"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.language+"/"+tt.invocation, func(t *testing.T) {
+			errs, _ := lintLocale(t, tt.language, tt.invocation, "{}")
+			if tt.want == "" {
+				assert.False(t, containsSubstring(errs, "invocation name"), "got %q", errs)
+			} else {
+				assert.True(t, containsSubstring(errs, tt.want), "want %q, got %q", tt.want, errs)
+			}
+		})
+	}
+}
+
+func TestLintReservedWordsPerLanguage(t *testing.T) {
+	tests := []struct {
+		language, invocation string
+	}{
+		{"en", "my echo remote"},
+		{"de", "alexa kino"},
+		{"fr", "appli kodi"},
+		{"fr", "application télé"},
+		{"pt", "abrir filmes"},
+		{"pt", "aplicativo kodi"},
+		{"pt", "começar cinema"},
+		{"nl", "speel films"},
+		{"nl", "kodi skill"},
+		{"ja", "アレクサリモコン"},
+		{"ja", "映画を開始"},
+		{"ja", "アマゾン映画"},
+		{"hi", "अलेक्सा रिमोट"},
+		{"hi", "कोडी app"},
+		// Hindi's nukta is reserved whether written as one code point or two.
+		{"hi", "ऐमेज़ोन टीवी"},
+		{"hi", "ऐमेज़ोन टीवी"},
+		{"ar", "افتحي انكور"},
+		{"ar", "امازون ريموت"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.language+"/"+tt.invocation, func(t *testing.T) {
+			errs, _ := lintLocale(t, tt.language, tt.invocation, "{}")
+			assert.True(t, containsSubstring(errs, "contains the reserved word"), "got %q", errs)
+		})
+	}
+
+	for _, tt := range []struct{ language, invocation string }{{"en", "speel films"}, {"de", "abrir filmes"}, {"ja", "アンコール"}, {"fr", "kodi"}} {
+		errs, _ := lintLocale(t, tt.language, tt.invocation, "{}")
+		assert.False(t, containsSubstring(errs, "reserved word"), "%s %q is reserved only in other languages: %q", tt.language, tt.invocation, errs)
+	}
+}
+
+func TestLintOneWordInvocationWarning(t *testing.T) {
+	for _, tt := range []struct {
+		language, invocation string
+		warn                 bool
+	}{
+		{"en", "encore", true},
+		{"en", "encore test", false},
+		{"hi", "एनकोर", true},
+		{"ar", "انكور", true},
+		{"ja", "アンコール", false},
+	} {
+		_, warnings := lintLocale(t, tt.language, tt.invocation, "{}")
+		assert.Equal(t, tt.warn, containsSubstring(warnings, "one-word invocation"), "%s %q: %q", tt.language, tt.invocation, warnings)
+	}
+}
+
+func TestLintSamplesPerScript(t *testing.T) {
+	tests := []struct {
+		language, sample string
+		// want is part of the error the sample must raise; empty means it must raise none.
+		want string
+	}{
+		{"hi", "{Movie} चलाओ", ""},
+		{"hi", "फ़िल्म {Movie} दिखाओ", ""},
+		{"hi", "play करो {Movie}", ""},
+		{"hi", "{Movie} चलाओ २", "spell out numbers"},
+		{"hi", "{Movie}को चलाओ", "joins slot {Movie} to other text"},
+		{"ja", "{Movie}を再生して", ""},
+		{"ja", "映画の{Movie}を見せて", ""},
+		{"ja", "{Movie}を2回再生", "spell out numbers"},
+		{"de", "spiele {Movie}s", "joins slot {Movie} to other text"},
+		{"pt", "assistir {Movie}", ""},
+		{"ar", "شغل {Movie}", ""},
+		{"ar", "شغل{Movie}", "joins slot {Movie} to other text"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.language+"/"+tt.sample, func(t *testing.T) {
+			errs, _ := lintLocale(t, tt.language, "encore test", "WatchMovie:\n  play: \""+tt.sample+"\"\n")
+
+			var samples []string
+
+			for _, e := range errs {
+				if strings.HasPrefix(e, "sample ") {
+					samples = append(samples, e)
+				}
+			}
+
+			if tt.want == "" {
+				assert.Empty(t, samples)
+			} else {
+				assert.True(t, containsSubstring(samples, tt.want), "want %q, got %q", tt.want, samples)
+			}
+		})
+	}
+}
