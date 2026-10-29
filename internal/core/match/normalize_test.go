@@ -262,6 +262,13 @@ func TestLanguageHooks(t *testing.T) {
 		{"prefix minimum", func(l *language) { l.articlePrefixes = []string{"al"}; l.articlePrefixMin = 3 }, "alto alfoo", "alto foo"},
 		{"prefix never empties", func(l *language) { l.articlePrefixes = []string{"al"} }, "al", "al"},
 		{"prefix before articles", func(l *language) { l.articlePrefixes = []string{"x"} }, "xthe matrix", "matrix"},
+		{"romanize", func(l *language) { l.romanize = strings.ToUpper }, "abc de", "ABC DE"},
+		{"romanize drops empty", func(l *language) { l.romanize = func(t string) string { return strings.TrimPrefix(t, "x") } }, "x abc", "abc"},
+		{"romanize splits", func(l *language) { l.romanize = func(t string) string { return t + " " + t } }, "ab", "ab ab"},
+		{"romanize after prefixes", func(l *language) {
+			l.articlePrefixes = []string{"ال"}
+			l.romanize = func(t string) string { return map[string]string{"ملك": "malik", "الملك": "almalik"}[t] }
+		}, "الملك", "malik"},
 		{"prefix runes", func(l *language) { l.articlePrefixes = []string{"ال"}; l.articlePrefixMin = 2 }, "الملك الم", "ملك الم"},
 	}
 
