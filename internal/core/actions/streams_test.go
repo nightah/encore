@@ -139,7 +139,7 @@ func TestStreamMessage(t *testing.T) {
 }
 
 func TestStreamIn(t *testing.T) {
-	streams := []media.Stream{{Index: 3, Language: ""}, {Index: 4, Language: "ger"}, {Index: 5, Language: "fre"}, {Index: 6, Language: "fra"}}
+	streams := []media.Stream{{Index: 3, Language: ""}, {Index: 4, Language: "ger"}, {Index: 5, Language: "fre"}, {Index: 6, Language: "fra"}, {Index: 7, Language: "eng"}}
 
 	for _, tc := range []struct {
 		spoken, listener string
@@ -152,6 +152,13 @@ func TestStreamIn(t *testing.T) {
 		{"deutsch", "", 4, true},
 		{"German", "not a language", 4, true},
 		{"fr", "en", 5, true},
+		// Hindi with and without the nukta, which recognisers write either way.
+		{"फ़्रेंच", "hi-IN", 5, true},
+		{"फ्रेंच", "hi-IN", 5, true},
+		{"अंग्रेजी", "hi-IN", 7, true},
+		{"अंग्रेज़ी", "hi-IN", 7, true},
+		{"الفرنسية", "ar-SA", 5, true},
+		{"フランス語", "ja-JP", 5, true},
 		{"", "en", 0, false},
 		{"klingon", "en", 0, false},
 	} {

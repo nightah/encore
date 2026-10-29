@@ -31,3 +31,6 @@ const globalSearchAddon = "script.globalsearch"
 
 // lastShows is how many recently watched shows "continue watching" tries before giving up.
 const lastShows = 5
+
+// nukta is the Devanagari sign that marks a borrowed sound (फ़ f, ज़ z), which streamKey drops.
+const nukta = "\u093c"
