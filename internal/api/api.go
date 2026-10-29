@@ -133,7 +133,7 @@ func (a *API) Simulating() bool { return a.skill.simulating() }
 // OpenAPI returns the generated OpenAPI document.
 func (a *API) OpenAPI() *huma.OpenAPI { return a.humaAPI.OpenAPI() }
 
-// Run feeds the event stream (request log, Kodi status, attention list) and runs scheduled backups until ctx is done, then waits for background work.
+// Run feeds the event stream (request log, Kodi status, attention list) and runs scheduled backups and automatic skill deploys until ctx is done, then waits for background work.
 func (a *API) Run(ctx context.Context) {
 	a.runMu.Lock()
 	a.runCtx = ctx
@@ -144,6 +144,7 @@ func (a *API) Run(ctx context.Context) {
 	wg.Go(func() { a.watchRequests(ctx) })
 	wg.Go(func() { a.status.run(ctx) })
 	wg.Go(func() { a.runBackups(ctx) })
+	wg.Go(func() { a.skill.runAutoDeploy(ctx) })
 
 	wg.Wait()
 	a.bg.Wait()

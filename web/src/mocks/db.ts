@@ -72,6 +72,8 @@ function skill(now: number, fresh: boolean): SkillInfo {
           profile_client_id: "amzn1.application-oa2-client.4f1c8d2b7a6e4e92a",
           vendor_id: "M2X8K4P1QF",
         },
+    auto_deploy: !fresh,
+    auto_deploy_paused: "",
     content: ["movies", "tv", "music"],
     endpoint: {
       url: "https://encore.example.net/api/v1/alexa",
@@ -82,6 +84,7 @@ function skill(now: number, fresh: boolean): SkillInfo {
       ? null
       : {
           at: ago(40 * MIN, now),
+          automatic: false,
           error: "",
           hash: "9c1e4f7a",
           id: "d-42",
@@ -160,7 +163,14 @@ function settings(now: number): Settings {
         scopes: ["openid", "profile", "email", "groups"],
       },
     },
-    features: { confirm_sound: true, deep_search: true, queue_limit: 100, shutdown_quits: false },
+    features: {
+      auto_deploy: true,
+      auto_deploy_minutes: 5,
+      confirm_sound: true,
+      deep_search: true,
+      queue_limit: 100,
+      shutdown_quits: false,
+    },
     locale: { default_locale: "en-AU", timezone: "Australia/Melbourne" },
     logging: { level: "info" },
     managed: ["auth.header.trusted_proxies", "secrets.key_source", "storage.local.path"],

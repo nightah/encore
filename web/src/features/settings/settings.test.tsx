@@ -1,10 +1,10 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { HttpResponse, http } from "msw";
+import { HttpResponse, delay, getResponse, http } from "msw";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { OIDC_PRESETS } from "@features/settings/oidcProviders";
-import { getDb } from "@mocks/handlers";
+import { getDb, handlers } from "@mocks/handlers";
 import { server } from "@test/server";
 import { failWith, recordRequests, renderApp } from "@test/utils";
 import { THEME_STORAGE_KEY, initTheme } from "@theme/store";
@@ -364,6 +364,69 @@ describe("Settings page", () => {
     await waitFor(() => expect(getDb().settings.features.shutdown_quits).toBe(!before));
   });
 
+  it("offers automatic skill deploys, on by default, after deep search", async () => {
+    const user = userEvent.setup();
+    const log = recordRequests();
+    renderApp("/settings?tab=features");
+    const toggle = await screen.findByRole("switch", { name: "Deploy skill changes automatically" });
+    expect(toggle).toBeChecked();
+    expect(screen.getByText(/A failed deploy pauses this until you deploy by hand/)).toBeInTheDocument();
+    const switches = screen.getAllByRole("switch");
+    expect(switches[switches.indexOf(toggle) - 1]).toHaveAccessibleName("Deep search for “play X”");
+
+    await user.click(toggle);
+    await waitFor(() => expect(getDb().settings.features.auto_deploy).toBe(false));
+    expect(log.find((r) => r.method === "PATCH")?.body).toEqual({ features: { auto_deploy: false } });
+  });
+
+  it("sets how often automatic deploys check, in fractions of a minute too, saying how soon a change goes live, only while they're on", async () => {
+    const user = userEvent.setup();
+    const log = recordRequests();
+    renderApp("/settings?tab=features");
+    const field = await screen.findByRole("spinbutton", { name: /Check for changes every/ });
+    expect(field).toHaveValue(5);
+    expect(screen.getByText("A change goes live within two checks (about 10 minutes).")).toBeInTheDocument();
+
+    await user.clear(field);
+    await user.type(field, "30");
+    expect(screen.getByText("A change goes live within two checks (about 1 hour).")).toBeInTheDocument();
+    await user.clear(field);
+    await user.type(field, "1441");
+    expect(screen.getByText("From 1 to 1440 minutes.")).toBeInTheDocument();
+    await user.tab();
+    expect(field).toHaveValue(5);
+    expect(log.some((r) => r.method === "PATCH")).toBe(false);
+
+    await user.clear(field);
+    await user.type(field, "2.3");
+    expect(screen.getByText("A change goes live within two checks (about 4.6 minutes).")).toBeInTheDocument();
+    // The saved settings reach the page only after the mock database has them, as on a slow network.
+    server.use(
+      http.patch("*/api/v1/settings", async ({ request }) => {
+        const response = await getResponse(handlers, request);
+        await delay(300);
+        return response;
+      }),
+    );
+    await user.clear(field);
+    await user.type(field, "2.5{Enter}");
+    // The saved value remounts the field, so wait for the page to have it rather than the mock database, and query afresh.
+    await waitFor(() => {
+      const saved = screen.getByRole("spinbutton", { name: /Check for changes every/ });
+      expect(saved).not.toBe(field);
+      expect(saved).toBeEnabled();
+      expect(saved).toHaveValue(2.5);
+    });
+    expect(getDb().settings.features.auto_deploy_minutes).toBe(2.5);
+    expect(log.find((r) => r.method === "PATCH")?.body).toEqual({ features: { auto_deploy_minutes: 2.5 } });
+    expect(screen.getByText("A change goes live within two checks (about 5 minutes).")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("switch", { name: "Deploy skill changes automatically" }));
+    await waitFor(() =>
+      expect(screen.queryByRole("spinbutton", { name: /Check for changes every/ })).not.toBeInTheDocument(),
+    );
+  });
+
   it("saves the queue limit when the field is left, and ignores numbers out of range", async () => {
     const user = userEvent.setup();
     const log = recordRequests();
@@ -371,10 +434,12 @@ describe("Settings page", () => {
     const field = await screen.findByRole("spinbutton", { name: /Queue limit/ });
     expect(field).toHaveValue(100);
 
-    await user.clear(field);
-    await user.type(field, "0");
-    await user.tab();
-    expect(field).toHaveValue(100);
+    for (const typed of ["0", "2.5"]) {
+      await user.clear(field);
+      await user.type(field, typed);
+      await user.tab();
+      expect(field).toHaveValue(100);
+    }
     expect(log.some((r) => r.method === "PATCH")).toBe(false);
 
     await user.clear(field);

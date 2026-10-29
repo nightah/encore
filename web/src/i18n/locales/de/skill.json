@@ -15,6 +15,10 @@
     "title": "Amazon-Entwicklerkonto",
     "vendor": "Vendor-ID"
   },
+  "autoDeployPaused": {
+    "resume": "Stelle den Skill von Hand bereit, sobald das behoben ist, um sie fortzusetzen.",
+    "title": "Automatische Bereitstellungen sind pausiert"
+  },
   "content": {
     "movies": "Filme",
     "music": "Musik",
@@ -46,6 +50,7 @@
       "legend": "Gebietsschemas"
     },
     "needsDeploy": {
+      "automatic": "Seit der letzten Bereitstellung gibt es Änderungen. Encore stellt sie automatisch bereit, sobald sie sich gesetzt haben.",
       "library": "Seit der letzten Bereitstellung sind neue Titel in der Mediathek. Encore findet sie bereits; stelle den Skill erneut bereit, um sie ins Skill-Modell aufzunehmen.",
       "settings": "Die Einstellungen haben sich seit der letzten Bereitstellung geändert. Stelle den Skill erneut bereit, um sie zu übernehmen."
     },

@@ -7,7 +7,14 @@ import { Page } from "@components/Page";
 import { AnchorButton, Button } from "@components/ui/Button";
 import { Progress } from "@components/ui/Meter";
 import { ErrorState, LoadingBlock } from "@components/ui/States";
-import { AmazonCard, LocalesPanel, ModelTitlesCard, Timeline, WarningsCard } from "@features/skill/SkillPanels";
+import {
+  AmazonCard,
+  AutoDeployPausedCard,
+  LocalesPanel,
+  ModelTitlesCard,
+  Timeline,
+  WarningsCard,
+} from "@features/skill/SkillPanels";
 import { deployFraction } from "@features/skill/timeline";
 
 export const Route = createFileRoute("/_shell/alexa-skill")({
@@ -74,6 +81,7 @@ function AlexaSkillPage() {
               </div>
             ) : null}
           </div>
+          {running ? null : <AutoDeployPausedCard skill={skill} />}
           <WarningsCard warnings={skill.last_deploy?.warnings ?? []} />
           <div className="flex flex-wrap items-start gap-4.5">
             <LocalesPanel skill={skill} deploying={running} />

@@ -83,10 +83,44 @@ describe("Alexa skill page", () => {
   });
 
   it("says when only new library titles are waiting for a deploy", async () => {
-    getDb().skill = { ...getDb().skill, needs_deploy: true, update_reason: "library" };
+    getDb().skill = { ...getDb().skill, auto_deploy: false, needs_deploy: true, update_reason: "library" };
     renderApp("/alexa-skill");
     expect(await screen.findByText(/New library titles since the last deploy/)).toBeInTheDocument();
     expect(screen.queryByText(/Settings changed since the last deploy/)).not.toBeInTheDocument();
+  });
+
+  it("says to redeploy when settings changed and automatic deploys are off", async () => {
+    getDb().skill = { ...getDb().skill, auto_deploy: false, needs_deploy: true, update_reason: "settings" };
+    renderApp("/alexa-skill");
+    expect(
+      await screen.findByText("Settings changed since the last deploy. Redeploy to apply them."),
+    ).toBeInTheDocument();
+  });
+
+  it("says a pending change will deploy by itself when automatic deploys are on", async () => {
+    getDb().skill = { ...getDb().skill, auto_deploy: true, needs_deploy: true, update_reason: "library" };
+    renderApp("/alexa-skill");
+    expect(
+      await screen.findByText("Changes since the last deploy. Encore deploys them automatically once they settle."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/New library titles since the last deploy/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("explains why automatic deploys are paused and how to resume them", async () => {
+    getDb().skill = {
+      ...getDb().skill,
+      auto_deploy: true,
+      auto_deploy_paused: "deploy: build failed: en-AU: slot value too long",
+      needs_deploy: true,
+      update_reason: "library",
+    };
+    renderApp("/alexa-skill");
+    const alert = await screen.findByRole("alert");
+    expect(within(alert).getByText("Automatic deploys are paused")).toBeInTheDocument();
+    expect(within(alert).getByText(/slot value too long/)).toBeInTheDocument();
+    expect(within(alert).getByText(/Deploy the skill by hand/)).toBeInTheDocument();
+    expect(screen.getByText(/New library titles since the last deploy/)).toBeInTheDocument();
   });
 
   it("refuses to disable the last enabled locale", async () => {

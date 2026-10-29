@@ -175,6 +175,19 @@
     "title": "Importa ed esporta"
   },
   "features": {
+    "auto_deploy": {
+      "hint": "Distribuisce di nuovo la skill quando nuovi titoli della libreria, le impostazioni o un aggiornamento di Encore la cambiano. Una distribuzione non riuscita sospende questa funzione finché non distribuisci a mano.",
+      "title": "Distribuisci automaticamente le modifiche alla skill"
+    },
+    "auto_deploy_minutes": {
+      "hint_hours_one": "Una modifica è attiva entro due controlli (circa {{count, number}} ora).",
+      "hint_hours_other": "Una modifica è attiva entro due controlli (circa {{count, number}} ore).",
+      "hint_minutes_one": "Una modifica è attiva entro due controlli (circa {{count, number}} minuto).",
+      "hint_minutes_other": "Una modifica è attiva entro due controlli (circa {{count, number}} minuti).",
+      "hintInvalid": "Da 1 a {{max}} minuti.",
+      "title": "Cerca modifiche ogni",
+      "unit": "min"
+    },
     "confirm_sound": {
       "hint": "Alexa riproduce un breve suono dopo comandi come pausa o alza il volume, invece di restare in silenzio",
       "title": "Conferma i comandi con un suono"

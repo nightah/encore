@@ -20,7 +20,7 @@ import (
 func (d *deployRecord) summary() LastDeploy {
 	return LastDeploy{
 		ID: d.ID, At: d.At, State: d.State, Hash: d.Hash, Error: d.Error,
-		Locales: nonNilLocales(d.Locales), Warnings: nonNil(d.Warnings),
+		Locales: nonNilLocales(d.Locales), Warnings: nonNil(d.Warnings), Automatic: d.Automatic,
 	}
 }
 
@@ -53,7 +53,7 @@ func (a *API) registerDeploy(api huma.API) {
 		) (*body[Accepted], error) {
 			force := in.Body != nil && in.Body.Force
 
-			id, err := s.startDeploy(ctx, force)
+			id, err := s.startDeploy(ctx, force, false)
 
 			return &body[Accepted]{Body: Accepted{ID: id}}, a.problemFor(ctx, err)
 		})
@@ -146,7 +146,8 @@ func (d *deployRecord) clone() *deployRecord {
 	return &c
 }
 
-func (s *skillService) startDeploy(ctx context.Context, force bool) (string, error) {
+// startDeploy checks a deploy can run and starts it in the background. automatic marks one that alexa.auto_deploy started.
+func (s *skillService) startDeploy(ctx context.Context, force, automatic bool) (string, error) {
 	opts, ss, err := s.packageOptions(ctx, false)
 	if err != nil {
 		return "", err
@@ -194,7 +195,7 @@ func (s *skillService) startDeploy(ctx context.Context, force bool) (string, err
 	}
 
 	id := jobID("d")
-	rec := &deployRecord{ID: id, At: s.a.now().UTC(), State: "in_progress"}
+	rec := &deployRecord{ID: id, At: s.a.now().UTC(), State: "in_progress", Automatic: automatic}
 	s.running = id
 	s.deploys[id] = rec
 	s.order = append(s.order, id)
@@ -204,6 +205,8 @@ func (s *skillService) startDeploy(ctx context.Context, force bool) (string, err
 		s.order = s.order[1:]
 	}
 	s.mu.Unlock()
+
+	s.rememberEndpoint(ctx, opts.Endpoint.URI)
 
 	req := deploy.Request{State: state, Package: opts, Force: force, Simulate: true}
 	if loc, err := s.a.localeSettings(ctx); err == nil {
@@ -271,6 +274,14 @@ func (s *skillService) runDeploy(ctx context.Context, d *deploy.Deployer, rec *d
 
 	if errors.Is(err, lwa.ErrReauthorise) {
 		_ = s.a.app.DB().Settings().Set(context.WithoutCancel(ctx), reauthKey, true)
+	}
+
+	// A failed automatic deploy pauses the rest until someone looks; any deploy that succeeds resumes them.
+	switch {
+	case err == nil:
+		s.setAutoDeployPaused(context.WithoutCancel(ctx), "")
+	case rec.Automatic:
+		s.setAutoDeployPaused(context.WithoutCancel(ctx), err.Error())
 	}
 
 	s.mu.Lock()

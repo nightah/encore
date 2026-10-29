@@ -15,6 +15,10 @@
     "title": "Cuenta de desarrollador de Amazon",
     "vendor": "ID de proveedor"
   },
+  "autoDeployPaused": {
+    "resume": "Despliega la skill a mano cuando esté arreglado para reanudarlos.",
+    "title": "Los despliegues automáticos están en pausa"
+  },
   "content": {
     "movies": "Películas",
     "music": "Música",
@@ -46,6 +50,7 @@
       "legend": "Configuraciones regionales"
     },
     "needsDeploy": {
+      "automatic": "Hay cambios desde el último despliegue. Encore los despliega automáticamente cuando se estabilizan.",
       "library": "Hay títulos nuevos en la biblioteca desde el último despliegue. Encore ya los encuentra; vuelve a desplegar para añadirlos al modelo de la skill.",
       "settings": "La configuración ha cambiado desde el último despliegue. Vuelve a desplegar para aplicarla."
     },

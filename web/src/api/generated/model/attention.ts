@@ -8,7 +8,7 @@
 
 export interface Attention {
   detail: string;
-  /** unlinked_device, amazon_not_connected, amazon_reauthorise, privacy_unanswered, skill_not_deployed, needs_deploy, deploy_failed, instance_offline, kodi_unauthorized, no_instances */
+  /** unlinked_device, amazon_not_connected, amazon_reauthorise, privacy_unanswered, skill_not_deployed, needs_deploy, deploy_failed, auto_deploy_paused, instance_offline, kodi_unauthorized, no_instances */
   kind: string;
   /** A web interface route: /echo-devices, /kodi, /alexa-skill, /request-log, /library or /settings */
   link: string;

@@ -202,6 +202,29 @@ func (c *Client) SkillStatus(ctx context.Context, skillID string) (*SkillStatus,
 	return &out, nil
 }
 
+// SkillEndpoint returns the HTTPS endpoint in the development stage's manifest: where Alexa sends the skill's requests. It is "" if the manifest names none.
+func (c *Client) SkillEndpoint(ctx context.Context, skillID string) (string, error) {
+	var out struct {
+		Manifest struct {
+			APIs struct {
+				Custom struct {
+					Endpoint struct {
+						URI string `json:"uri"`
+					} `json:"endpoint"`
+				} `json:"custom"`
+			} `json:"apis"`
+		} `json:"manifest"`
+	}
+
+	if err := decode("get skill manifest", func() (*http.Response, error) {
+		return c.api.GetSkillManifestV1(ctx, skillID, StageDevelopment)
+	}, &out); err != nil {
+		return "", err
+	}
+
+	return out.Manifest.APIs.Custom.Endpoint.URI, nil
+}
+
 // EnableDevelopment enables the skill's development stage for testing on the user's devices.
 func (c *Client) EnableDevelopment(ctx context.Context, skillID string) error {
 	return do("enable skill", func() (*http.Response, error) {

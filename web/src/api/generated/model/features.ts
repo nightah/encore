@@ -7,6 +7,10 @@
  */
 
 export interface Features {
+  /** Redeploy the skill on its own when what would be deployed changes; a failed automatic deploy pauses this until a deploy started by hand succeeds */
+  auto_deploy: boolean;
+  /** How often auto_deploy looks for changes, in minutes that can be fractional; a change goes live within two checks */
+  auto_deploy_minutes: number;
   /** A short sound answers commands that have nothing to say, such as pause or volume up */
   confirm_sound: boolean;
   /** "Play X" also searches music when the request doesn't say what kind of title X is */

@@ -75,6 +75,9 @@ const (
 	invocationKodi   = "kodi"
 )
 
+// autoDeployTick is the longest the auto-deploy loop waits before reading alexa.auto_deploy_minutes again, so a changed interval applies within a tick.
+const autoDeployTick = time.Minute
+
 // simulateGrace keeps the window open briefly after the smoke test, for the session-ended request that follows its launch.
 const simulateGrace = 15 * time.Second
 
@@ -86,6 +89,10 @@ const (
 	lastDeployKey    = "skill.last_deploy"
 	skillIDKey       = "alexa.skill_id"
 	reauthKey        = "skill.lwa.needs_reauthorise"
+	// autoDeployPausedKey holds why automatic deploys are paused, or nothing when they aren't.
+	autoDeployPausedKey = "skill.auto_deploy_paused"
+	// deployEndpointKey holds the endpoint the skill was last deployed with, for deploys that start without a browser request to derive it from.
+	deployEndpointKey = "skill.deploy_endpoint"
 
 	lwaSecretRef = "skill/lwa/client_secret" //nolint:gosec // a secret's ID in internal/secrets, not a credential
 	lwaTokenRef  = "skill/lwa/token"         //nolint:gosec // as above

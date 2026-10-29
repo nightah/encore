@@ -14,14 +14,23 @@ func TestAlexaVoiceOptions(t *testing.T) {
 	require.NoError(t, err)
 	assert.False(t, cfg.Alexa.ShutdownQuits)
 	assert.Equal(t, DefaultQueueLimit, cfg.Alexa.QueueLimit)
+	assert.True(t, cfg.Alexa.AutoDeploy, "skill changes deploy by themselves unless turned off")
+	assert.InDelta(t, DefaultAutoDeployMinutes, cfg.Alexa.AutoDeployMinutes, 0)
 
-	cfg, err = Load(Options{Environ: environ("ENCORE_ALEXA_SHUTDOWN_QUITS=true", "ENCORE_ALEXA_QUEUE_LIMIT=250")})
+	cfg, err = Load(Options{Environ: environ("ENCORE_ALEXA_SHUTDOWN_QUITS=true", "ENCORE_ALEXA_QUEUE_LIMIT=250", "ENCORE_ALEXA_AUTO_DEPLOY=false", "ENCORE_ALEXA_AUTO_DEPLOY_MINUTES=2.5")})
 	require.NoError(t, err)
 	assert.True(t, cfg.Alexa.ShutdownQuits)
 	assert.Equal(t, 250, cfg.Alexa.QueueLimit)
+	assert.False(t, cfg.Alexa.AutoDeploy)
+	assert.InDelta(t, 2.5, cfg.Alexa.AutoDeployMinutes, 0)
 
 	_, err = Load(Options{Environ: environ("ENCORE_ALEXA_QUEUE_LIMIT=0")})
 	require.ErrorContains(t, err, "alexa.queue_limit")
+
+	for _, n := range []string{"0", "0.5", "1441"} {
+		_, err = Load(Options{Environ: environ("ENCORE_ALEXA_AUTO_DEPLOY_MINUTES=" + n)})
+		require.ErrorContains(t, err, "alexa.auto_deploy_minutes", n)
+	}
 }
 
 func TestKodiShutdownQuitsOverride(t *testing.T) {

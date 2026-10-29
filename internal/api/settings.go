@@ -138,7 +138,7 @@ func (a *API) settings(ctx context.Context) (Settings, error) {
 			KeyID:     a.app.Secrets().KeyID(),
 			RotatedAt: a.timeSetting(ctx, rotatedAtSetting),
 		},
-		Features: Features{DeepSearch: eff.Alexa.DeepSearch, ShutdownQuits: eff.Alexa.ShutdownQuits, ConfirmSound: eff.Alexa.ConfirmSound, QueueLimit: eff.Alexa.QueueLimit},
+		Features: Features{DeepSearch: eff.Alexa.DeepSearch, ShutdownQuits: eff.Alexa.ShutdownQuits, ConfirmSound: eff.Alexa.ConfirmSound, QueueLimit: eff.Alexa.QueueLimit, AutoDeploy: eff.Alexa.AutoDeploy, AutoDeployMinutes: eff.Alexa.AutoDeployMinutes},
 		Logging:  LoggingSettings{Level: eff.Log.Level},
 		Locale:   loc,
 		Managed:  a.prefs.ManagedList(),

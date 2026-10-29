@@ -15,7 +15,7 @@ import type { StorageSettings } from "./storageSettings.ts";
 
 export interface Settings {
   auth: AuthSettings;
-  /** The alexa.deep_search, alexa.shutdown_quits, alexa.confirm_sound and alexa.queue_limit config keys */
+  /** The alexa.deep_search, alexa.shutdown_quits, alexa.confirm_sound, alexa.queue_limit, alexa.auto_deploy and alexa.auto_deploy_minutes config keys */
   features: Features;
   locale: LocaleSettings;
   logging: LoggingSettings;

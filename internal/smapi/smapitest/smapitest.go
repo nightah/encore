@@ -80,6 +80,14 @@ func (s *Server) FailLocale(locale, message string) {
 	s.failLocales[locale] = message
 }
 
+// PassLocale undoes FailLocale.
+func (s *Server) PassLocale(locale string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	delete(s.failLocales, locale)
+}
+
 // UnreportLocale leaves locale out of the skill status entirely.
 func (s *Server) UnreportLocale(locale string) {
 	s.mu.Lock()

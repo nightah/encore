@@ -112,6 +112,15 @@ alexa:
 - **The same skill is updated.** Encore remembers the skill ID. If it's lost, for example after reinstalling, it finds the skill by name instead of creating a duplicate. If you deleted the skill in the developer console, the next deploy creates a new one.
 - **Model size.** Amazon limits each interaction model to 1.5 MB. Encore includes the most recently added or played titles up to a per-kind limit that keeps the largest locale well under it; titles left out are still found by Encore's matcher. The Alexa skill page shows each locale's size against the limit.
 
+### Automatic redeploys
+
+With **Deploy skill changes automatically** on under **Settings › Features**, as it is by default, Encore redeploys the skill by itself whenever what it would deploy changes: new library titles, rooms or aliases, changed skill settings, or an Encore upgrade that changes the interaction model. To deploy only by hand, turn it off there or set [`alexa.auto_deploy`](/encore/reference/configuration/#alexaauto_deploy) to `false` (`ENCORE_ALEXA_AUTO_DEPLOY=false`).
+
+- **Encore checks every 5 minutes** and deploys a change once it has stayed the same for a whole check, so a library sync or a run of settings changes is deployed once, after it settles. A change goes live within two checks, about 10 minutes. Change how often it checks with **Check for changes every** beneath the switch, from 1 minute to 1440 (a day) and fractions such as 2.5 allowed, or with [`alexa.auto_deploy_minutes`](/encore/reference/configuration/#alexaauto_deploy_minutes) (`ENCORE_ALEXA_AUTO_DEPLOY_MINUTES`).
+- **Only a skill you've already deployed is redeployed.** The first deploy is always yours, as is reconnecting to Amazon when it asks.
+- **A failure pauses automatic deploys.** The overview shows "Automatic deploys are paused" with Amazon's reason, and the Alexa skill page shows it too. Fix the cause, then deploy by hand: once a deploy succeeds, automatic deploys resume.
+- **Without a configured endpoint**, an automatic deploy reuses the one the skill was last deployed with, since there's no browser request to work it out from. If Encore has no record of it, for example for a skill deployed by an older version, it reads it from the skill at Amazon.
+
 ## Without SMAPI: export the package
 
 The Alexa skill page can download the skill package as a zip (`skill-package/` plus `ask-resources.json`), for importing in the [Alexa developer console](https://developer.amazon.com/alexa/console/ask) or deploying with `ask deploy`. When you deploy by hand, set [`alexa.skill_id`](/encore/reference/configuration/#alexaskill_id) to the new skill's ID so Encore rejects requests for any other skill; until a skill ID is known, Encore accepts requests for any skill and logs a warning.

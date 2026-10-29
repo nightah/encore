@@ -26,6 +26,7 @@ func (s *Server) routes() http.Handler {
 	api("GET /v1/skills/{a}/{b}", s.handleSkillGet)
 	api("PUT /v1/skills/{skillId}/stages/{stage}/enablement", s.handleEnable)
 	api("GET /v1/skills/{skillId}/stages/{stage}/enablement", s.handleGetEnablement)
+	api("GET /v1/skills/{skillId}/stages/{stage}/manifest", s.handleGetManifest)
 	api("POST /v2/skills/{skillId}/stages/{stage}/simulations", s.handleSimulate)
 	api("GET /v2/skills/{skillId}/stages/{stage}/simulations/{simId}", s.handleGetSimulation)
 

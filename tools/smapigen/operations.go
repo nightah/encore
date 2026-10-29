@@ -8,6 +8,7 @@ var operations = []string{
 	// Skills.
 	"listSkillsForVendorV1", // GET /v1/skills
 	"getSkillStatusV1",      // GET /v1/skills/{skillId}/status
+	"getSkillManifestV1",    // GET /v1/skills/{skillId}/stages/{stage}/manifest
 
 	// Skill packages, which create and update the skill.
 	"createUploadUrlV1",    // POST /v1/skills/uploads
