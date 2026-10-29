@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import { QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { HttpResponse, http } from "msw";
+import { HttpResponse, delay, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { setCsrfToken } from "@api/client";
@@ -256,9 +256,12 @@ describe("useDeploy", () => {
     const states: Array<"in_progress" | "succeeded"> = ["in_progress", "in_progress", "succeeded"];
     let fetches = 0;
     server.use(
-      http.get("*/api/v1/skill/deploy/:id", ({ params }) =>
-        HttpResponse.json({ error: "", events: [], id: params.id, state: states[Math.min(fetches++, 2)] }),
-      ),
+      http.get("*/api/v1/skill/deploy/:id", async ({ params }) => {
+        const state = states[Math.min(fetches++, 2)];
+        // The second answer is slow, so it lands after the poll that asked for it has started the clock again.
+        if (fetches === 2) await delay(1_500);
+        return HttpResponse.json({ error: "", events: [], id: params.id, state });
+      }),
     );
     const { result } = renderHook(() => useDeploy("d-1"), { wrapper });
     await waitFor(() => expect(result.current.data?.state).toBe("in_progress"));
@@ -268,6 +271,9 @@ describe("useDeploy", () => {
     expect(fetches).toBe(1);
     await act(() => vi.advanceTimersByTimeAsync(200));
     await waitFor(() => expect(fetches).toBe(2));
+    // Every answer restarts the three-second wait, so let the second one land before moving the clock on.
+    await act(() => vi.advanceTimersByTimeAsync(1_500));
+    await waitFor(() => expect(result.current.isFetching).toBe(false));
     await act(() => vi.advanceTimersByTimeAsync(3_000));
     await waitFor(() => expect(result.current.data?.state).toBe("succeeded"));
 

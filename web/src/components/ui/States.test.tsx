@@ -67,12 +67,18 @@ describe("CopyButton", () => {
   it("copies its text, reads it out in its name and confirms for two seconds", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    // A slow clipboard, so the test has to wait for the copy rather than race it.
+    const write = navigator.clipboard.writeText.bind(navigator.clipboard);
+    vi.spyOn(navigator.clipboard, "writeText").mockImplementation(async (text) => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      return write(text);
+    });
     render(<CopyButton text="https://encore.example.net/alexa" label="Endpoint" />);
 
     await user.click(screen.getByRole("button", { name: "Endpoint: https://encore.example.net/alexa" }));
 
+    expect(await screen.findByRole("button", { name: "Copied" })).toBeInTheDocument();
     expect(await navigator.clipboard.readText()).toBe("https://encore.example.net/alexa");
-    expect(screen.getByRole("button", { name: "Copied" })).toBeInTheDocument();
 
     act(() => vi.advanceTimersByTime(2000));
     expect(screen.getByRole("button", { name: "Endpoint: https://encore.example.net/alexa" })).toBeInTheDocument();
