@@ -23,6 +23,8 @@ func TestOpenPhraseLanguages(t *testing.T) {
 		"de-DE": "öffne encore",
 		"de":    "öffne encore",
 		"es-ES": "",
+		"es-MX": "",
+		"es-US": "",
 		"":      "",
 	} {
 		assert.Equal(t, want, deploy.OpenPhrase(locale, "encore"), locale)
@@ -33,7 +35,7 @@ func TestDeploySkipsSimulationWithoutSupportedLocale(t *testing.T) {
 	h := newHarness(t, smapitest.Options{})
 
 	req := h.request(deploy.State{})
-	req.Package.Locales = []string{"es-ES", "it-IT"}
+	req.Package.Locales = []string{"es-ES", "es-MX", "es-US", "it-IT"}
 
 	res, err := h.deployer.Deploy(t.Context(), req)
 	require.NoError(t, err)
