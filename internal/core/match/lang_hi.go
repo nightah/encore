@@ -219,6 +219,11 @@ func (h hindiRomanizer) word(w string) string {
 	var b strings.Builder
 
 	for i, u := range units {
+		if u.cons == "v" && i > 0 && units[i-1].cons != "" && !units[i-1].voiced() {
+			// व after a consonant whose vowel speech drops is w too ("दिलवाले" Dilwale).
+			u.cons = "w"
+		}
+
 		b.WriteString(u.cons)
 
 		switch {
@@ -337,7 +342,7 @@ func (h hindiRomanizer) vowel(r rune, v string) string {
 	return v
 }
 
-// deleteSchwas drops the inherent vowels Hindi speech leaves out, working right to left as the rule in Ohala, Aspects of Hindi Phonology (1983), does and as Narasimhan, Sproat and Kiraz, "Schwa-deletion in Hindi text-to-speech synthesis" (2004), apply it: the last one, unless the word is one syllable or ends in a consonant cluster closed by y, r, l or v ("मित्र" mitra), and one between a vowel and a consonant that has a vowel of its own ("धड़कन" dhadkan, "दिलवाले" dilvale). A vowel nasalised with an anusvara counts as closed by a consonant, so "ज़िंदगी" keeps its schwa (zindagi, not zindgi).
+// deleteSchwas drops the inherent vowels Hindi speech leaves out, working right to left as the rule in Ohala, Aspects of Hindi Phonology (1983), does and as Narasimhan, Sproat and Kiraz, "Schwa-deletion in Hindi text-to-speech synthesis" (2004), apply it: the last one, unless the word is one syllable or ends in a consonant cluster closed by y, r, l or v ("मित्र" mitra), and one between a vowel and a consonant that has a vowel of its own ("धड़कन" dhadkan, "दिलवाले" dilwale). A vowel nasalised with an anusvara counts as closed by a consonant, so "ज़िंदगी" keeps its schwa (zindagi, not zindgi).
 func deleteSchwas(units []hindiUnit) {
 	last := len(units) - 1
 
