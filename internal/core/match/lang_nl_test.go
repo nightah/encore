@@ -81,7 +81,10 @@ func TestNormalizeDutch(t *testing.T) {
 		{"het 2e seizoen", "2 seizoen"},
 		{"21ste eeuw", "21 eeuw"},
 		{"8ste", "8"},
-		{"5th", "5th"},
+		{"The 6th Day", "6 day"},
+		{"the sixth day", "6 day"},
+		{"21st century", "21 century"},
+		{"second hand", "2 hand"},
 		// Parts before a number.
 		{"de godfather deel twee", "godfather 2"},
 		{"The Godfather Part II", "godfather 2"},
