@@ -657,6 +657,44 @@ func TestSkillLocalesFollowShippedOnes(t *testing.T) {
 	assert.NotEmpty(t, info.SkillName)
 }
 
+func TestInvocationNamePrefersTheLatinName(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+
+	var info SkillInfo
+
+	c.json(http.MethodGet, "/api/v1/skill", nil, http.StatusOK, &info)
+	require.Equal(t, "ar-SA", info.LocalesEnabled[0], "every locale is enabled, and the first writes the names in its own script")
+	assert.Equal(t, "encore", info.InvocationName)
+
+	for _, tc := range []struct {
+		invocation string
+		locales    []string
+		want       string
+	}{
+		{"kodi", nil, "kodi"},
+		{"encore", []string{"ar-SA", "en-AU"}, "encore"},
+		{"kodi", []string{"ja-JP", "en-AU"}, "kodi"},
+		{"encore", []string{"ar-SA"}, "انكور"},
+		{"kodi", []string{"ar-SA"}, "كودي"},
+		{"encore", []string{"ja-JP", "ar-SA"}, "アンコール"},
+		{"encore", []string{"fr-FR", "ar-SA"}, "kodi"},
+	} {
+		settings := deployableSettings()
+		settings["invocation"] = tc.invocation
+		settings["locales_enabled"] = tc.locales
+
+		if tc.locales == nil {
+			settings["locales_enabled"] = info.LocalesAvailable
+		}
+
+		var got SkillInfo
+
+		c.json(http.MethodPut, "/api/v1/skill/settings", settings, http.StatusOK, &got)
+		assert.Equal(t, tc.want, got.InvocationName, "%s in %v", tc.invocation, tc.locales)
+	}
+}
+
 func TestAmazonCredentials(t *testing.T) {
 	h := newHarness(t, harnessOpts{noKodi: true})
 	c := h.admin()
@@ -1016,4 +1054,11 @@ func TestDeployRefusesStoredSettingsThatNoLongerBuild(t *testing.T) {
 	assert.Contains(t, p.Detail, "too short")
 	assert.NotContains(t, p.Detail, "skillpkg:")
 	assert.Zero(t, h.smapi.Exchanges(), "nothing reaches Amazon")
+}
+
+func TestInvocationNameSkipsUnknownLocales(t *testing.T) {
+	spellings := []LocaleInvocation{{Locale: "ja-JP", Encore: "アンコール", Kodi: "コディ"}}
+
+	assert.Equal(t, "アンコール", invocationName(spellings, []string{"xx-XX", "ja-JP"}, "encore"), "a locale with no spellings is passed over")
+	assert.Equal(t, "kodi", invocationName(spellings, []string{"xx-XX"}, "kodi"), "with no spelling at all, the choice itself")
 }

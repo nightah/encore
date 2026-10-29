@@ -52,17 +52,36 @@ func localeInvocations(src *skillmodel.Sources) []LocaleInvocation {
 	return out
 }
 
-// spokenInvocation is what people say in locale for the stored choice: the locale's spelling of kodi when that is chosen, and "" for Encore's own name, which the package build fills in.
-func spokenInvocation(src *skillmodel.Sources, locale, stored string) string {
-	if stored != invocationKodi {
-		return ""
+// invocationName is the one spelling of the stored choice the interface shows: its Latin name when any enabled locale says it that way, else the first enabled locale's own spelling.
+func invocationName(spellings []LocaleInvocation, locales []string, stored string) string {
+	choice := invocationChoice(stored)
+	first := ""
+
+	for _, name := range locales {
+		i := slices.IndexFunc(spellings, func(l LocaleInvocation) bool { return l.Locale == name })
+		if i < 0 {
+			continue
+		}
+
+		spoken := spellings[i].Encore
+		if choice == invocationKodi {
+			spoken = spellings[i].Kodi
+		}
+
+		if spoken == choice {
+			return choice
+		}
+
+		if first == "" {
+			first = spoken
+		}
 	}
 
-	if loc, ok := src.Locales[locale]; ok && loc.KodiInvocation != "" {
-		return loc.KodiInvocation
+	if first == "" {
+		return choice
 	}
 
-	return invocationKodi
+	return first
 }
 
 func loadSources() (*skillmodel.Sources, error) {
@@ -370,7 +389,6 @@ func (s *skillService) info(ctx context.Context) (SkillInfo, error) {
 		},
 		SkillID:           s.storedSkillID(),
 		Invocation:        invocationChoice(ss.Invocation),
-		InvocationName:    spokenInvocation(s.a.opts.Sources, firstOr(locales, ""), ss.Invocation),
 		SkillName:         ss.SkillName,
 		LocalesAvailable:  s.a.opts.Sources.LocaleNames(),
 		LocalesEnabled:    locales,
@@ -380,11 +398,11 @@ func (s *skillService) info(ctx context.Context) (SkillInfo, error) {
 		Privacy:           ss.Privacy,
 	}
 
-	if out.InvocationName == "" || out.SkillName == "" {
+	out.InvocationName = invocationName(out.LocaleInvocations, locales, ss.Invocation)
+
+	if out.SkillName == "" {
 		if loc, ok := s.a.opts.Sources.Locales[firstOr(locales, "en-US")]; ok {
-			if out.SkillName == "" {
-				out.SkillName = loc.SkillName
-			}
+			out.SkillName = loc.SkillName
 		}
 	}
 
@@ -397,10 +415,6 @@ func (s *skillService) info(ctx context.Context) (SkillInfo, error) {
 
 	if opts, _, err := s.packageOptions(ctx, true); err == nil {
 		if pkg, err := skillpkg.Build(s.a.opts.Sources, opts); err == nil {
-			if out.InvocationName == "" {
-				out.InvocationName = pkg.Invocation(firstOr(pkg.Locales(), ""))
-			}
-
 			out.ModelSize = Some(s.modelSize(ctx, pkg, opts))
 		}
 	}

@@ -7,7 +7,7 @@ files:
   - source: /i18n/lang/en/responses.yaml
     translation: /i18n/lang/%two_letters_code%/%original_file_name%
     skip_untranslated_strings: true
-    # Crowdin names some languages by a regional variant (pt-BR, es-ES); each maps to the directory Encore keeps the language in, so a second variant can never write over it.
+    # Each Crowdin language maps to the directory Encore keeps it in (pt-BR to pt, es-ES to es). Add only these variants as target languages: any other variant of the same language (es-MX, pt-PT, fr-CA) would export to that directory too.
     languages_mapping: &languages
       two_letters_code:
         ar: ar
