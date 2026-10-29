@@ -1,6 +1,6 @@
 //go:build phoneticeval
 
-// TestPhoneticCollisions only logs, and TestPhoneticDistractors holds production to wrong-play ceilings. TestPhoneticDistractors takes about two minutes, and more than the ten minutes go test allows by default under the race detector, so both sit behind a build tag: CI runs TestPhoneticDistractors on every push and pull request in a step of its own without -race (.github/workflows/ci-jobs.yml). By hand: go test -tags phoneticeval -run 'TestPhonetic(Collisions|Distractors)' -v ./internal/core/match/
+// TestPhoneticCollisions only logs, and TestPhoneticDistractors holds production to wrong-play ceilings. TestPhoneticDistractors takes about two minutes, and more than the ten minutes go test allows by default under the race detector, so both sit behind a build tag, which also runs TestPhoneticEval in full (evalFull): CI runs TestPhoneticDistractors and TestPhoneticEval on every push and pull request in a job of its own without -race (.github/workflows/ci-go.yml). By hand: go test -tags phoneticeval -run 'TestPhonetic(Eval|Collisions|Distractors)' -v ./internal/core/match/
 
 package match
 

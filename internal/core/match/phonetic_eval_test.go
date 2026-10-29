@@ -268,6 +268,9 @@ func discordant(out, ref []evalOutcome) (gains, losses int) {
 // fuzzyGate is how many more correct decisions than English Double Metaphone internal/fuzzy must make per language on the original corpora, and production on both sets where it has its own encoder (ownEncoder): the French and Spanish encoders earn their place only with a measurable gain.
 var fuzzyGate = map[string]int{"fr": 3, "es": 3}
 
+// evalFull adds what TestPhoneticEval reports without gating: the trigram retriever, the "none" encoder and internal/fuzzy on the grown corpora. The phoneticeval build tag sets it, so the race-detector run of the package keeps only what the gates need.
+var evalFull bool
+
 // ownEncoder lists the gated languages production keys with their own encoder. Production is held to the same gate there, on both corpus sets, so a language that lost its encoder would fail.
 var ownEncoder = map[string]bool{"es": true, "fr": true}
 
@@ -280,14 +283,19 @@ var grownFloor = map[string]evalScore{
 	"it": {correct: 343, wrong: 1},
 }
 
-// TestPhoneticEval measures match accuracy per corpus set and language through the real pipeline (normalise, alias, retrieve, score, decide) with each candidate phonetic encoder swapped in. It logs a table with each encoder's gains and losses against English Double Metaphone, the production encoder's misses and every case another encoder gains or loses against it; run it with -v to read them. On the grown corpora production is held to grownFloor. On both sets, production in the languages listed in ownEncoder is held to fuzzyGate against English Double Metaphone with no wrong plays added. On the original corpora internal/fuzzy is held to fuzzyGate too, and must not lose a decision or add a wrong play against production; on the grown ones it is only reported, as German production adds a rule to it there (germanKeys).
+// TestPhoneticEval measures match accuracy per corpus set and language through the real pipeline (normalise, alias, retrieve, score, decide) with each candidate phonetic encoder swapped in. It logs a table with each encoder's gains and losses against English Double Metaphone, the production encoder's misses and every case another encoder gains or loses against it; run it with -v to read them. On the grown corpora production is held to grownFloor. On both sets, production in the languages listed in ownEncoder is held to fuzzyGate against English Double Metaphone with no wrong plays added. On the original corpora internal/fuzzy is held to fuzzyGate too, and must not lose a decision or add a wrong play against production; on the grown ones it is only reported, as German production adds a rule to it there (germanKeys). Without the phoneticeval build tag it runs only the inverted retriever and the encoders the gates compare (evalFull).
 func TestPhoneticEval(t *testing.T) {
 	var table strings.Builder
 
 	for _, set := range []string{corpusOriginal, corpusGrown} {
 		suites := evalSuites(t, set)
 
-		for _, retr := range []string{RetrieverInverted, RetrieverTrigram} {
+		retrievers := []string{RetrieverInverted}
+		if evalFull {
+			retrievers = append(retrievers, RetrieverTrigram)
+		}
+
+		for _, retr := range retrievers {
 			for _, code := range slices.Sorted(maps.Keys(suites)) {
 				evalLanguage(t, &table, set, retr, code, suites[code])
 			}
@@ -306,6 +314,10 @@ func evalLanguage(t *testing.T, table *strings.Builder, set, retr, code string, 
 	var names []string
 
 	for _, enc := range evalEncoders {
+		if !evalFull && (enc.name == "none" || enc.name == "fuzzy" && set == corpusGrown) {
+			continue
+		}
+
 		fn := enc.keys(code)
 		if fn == nil && enc.name != "current" {
 			continue

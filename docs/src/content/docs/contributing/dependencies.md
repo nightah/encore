@@ -245,11 +245,11 @@ Measured on 29 October 2026; the inverted index and the simpler trigram retrieve
 
 #### Rerunning the evaluation
 
-Both tests are in `internal/core/match` rather than `benchmarks/`, because they swap the encoder inside the matcher, which only the package's own tests can reach, and there is no library to compare with. Both are also gates: `TestPhoneticEval` holds production to the grown-set counts above (`grownFloor`) and runs with the rest of the tests, and `TestPhoneticDistractors` holds it to the counts for titles that aren't in the library (`distractorCeiling`) in a CI step of its own, so a change that loses accuracy fails its own pull request. From the repository root:
+Both tests are in `internal/core/match` rather than `benchmarks/`, because they swap the encoder inside the matcher, which only the package's own tests can reach, and there is no library to compare with. Both are also gates: `TestPhoneticEval` holds production to the grown-set counts above (`grownFloor`) and runs with the rest of the tests, keeping only the encoders its gates compare, and `TestPhoneticDistractors` holds it to the counts for titles that aren't in the library (`distractorCeiling`). Both run in full, without the race detector, in a CI job of their own, so a change that loses accuracy fails its own pull request. From the repository root:
 
 ```sh
-# Both corpus sets, every encoder and retriever: a table of cases right, wrong plays, asks and gains and losses against English, then every case each encoder wins or loses.
-go test -run TestPhoneticEval -v ./internal/core/match/
+# Both corpus sets, every encoder and retriever: a table of cases right, wrong plays, asks and gains and losses against English, then every case each encoder wins or loses. Without the tag it runs only the inverted index and the encoders the gates compare.
+go test -tags phoneticeval -run TestPhoneticEval -v ./internal/core/match/
 
 # Wrong plays for titles that aren't in the library, per language (about two minutes, far longer under the race detector, so it is behind a build tag and CI runs it without -race).
 go test -tags phoneticeval -run TestPhoneticDistractors -v ./internal/core/match/
