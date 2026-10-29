@@ -40,12 +40,14 @@
     "filtered": "Prueba con otra búsqueda o quita los filtros.",
     "filteredTitle": "No hay solicitudes que coincidan",
     "none": "Las solicitudes aparecen aquí en cuanto un Echo habla con Encore. Di «Alexa, pregúntale a {{invocation}} qué está sonando».",
+    "noneNoInvocation": "Las solicitudes aparecen aquí en cuanto un Echo habla con Encore.",
     "noneTitle": "Aún no hay solicitudes"
   },
   "filters": {
     "allDevices": "Todos los Echo",
     "allOutcomes": "Todos los resultados",
     "device": "Dispositivo Echo",
+    "deviceById": "Echo n.º {{id}}",
     "label": "Filtrar solicitudes",
     "outcome": "Resultado",
     "search": "Buscar en lo que se oyó",

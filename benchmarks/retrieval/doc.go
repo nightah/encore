@@ -1,0 +1,4 @@
+// Package retrieval compares Encore's in-tree inverted index with a bleve retriever, through the same match.Index. The bleve retriever has the mapping, analyzers and query Encore used with bleve and is plugged in with match.NewWithRetriever, so normalising, scoring and deciding are shared and only candidate retrieval differs.
+//
+// The parity tests check that the in-tree inverted index and bleve hand the scorer the same candidates, so the two differ in speed and memory but not in what Encore plays. They hold for Search with no kind filter or one kind, as the corpus cases have: with a filter of several kinds, bleve adds the filter's IDF to each candidate's score and the inverted index doesn't. Retrieval only needs recall: the order of candidates with equal retrieval scores, which bleve breaks by its internal document order, never reaches the user, because every candidate is re-scored and sorted by its own score.
+package retrieval

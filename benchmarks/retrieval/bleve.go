@@ -1,12 +1,11 @@
-package match
+package retrieval
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"slices"
 	"strings"
-	"unicode/utf8"
+	"sync"
 
 	"github.com/blevesearch/bleve/v2"
 	"github.com/blevesearch/bleve/v2/analysis"
@@ -19,22 +18,52 @@ import (
 	"github.com/blevesearch/bleve/v2/registry"
 	"github.com/blevesearch/bleve/v2/search/query"
 
+	"github.com/nightah/encore/internal/core/match"
 	"github.com/nightah/encore/internal/core/media"
 )
 
-func phoneticFilterName(code string) string { return "encore_phonetic_" + code }
+// filters records the phonetic token filters registered in bleve's global registry, one per language, so each is registered once.
+var (
+	filtersMu sync.Mutex
+	filters   = map[string]bool{}
+)
 
-func init() {
-	for code, l := range languages {
-		err := registry.RegisterTokenFilter(phoneticFilterName(code), func(map[string]any, *registry.Cache) (analysis.TokenFilter, error) {
-			return phoneticFilter{fn: l.phonetic}, nil
-		})
-		if err != nil {
-			panic(fmt.Sprintf("match: registering phonetic filter: %v", err))
+// NewBleve returns a factory for match.NewWithRetriever that retrieves candidates with bleve, set up as Encore used it. lang names the phonetic token filter registered for the language, since bleve's registry is global.
+func NewBleve(lang string) func(phonetic func(string) []string) (match.Retriever, error) {
+	return func(phonetic func(string) []string) (match.Retriever, error) {
+		name := "encore_phonetic_" + lang
+
+		filtersMu.Lock()
+		if !filters[name] {
+			err := registry.RegisterTokenFilter(name, func(map[string]any, *registry.Cache) (analysis.TokenFilter, error) {
+				return phoneticFilter{fn: phonetic}, nil
+			})
+			if err != nil {
+				filtersMu.Unlock()
+
+				return nil, fmt.Errorf("registering phonetic filter: %w", err)
+			}
+
+			filters[name] = true
 		}
+		filtersMu.Unlock()
+
+		m, err := bleveMapping(name)
+		if err != nil {
+			return nil, err
+		}
+
+		// An empty path with scorch keeps segments in memory at a fraction of NewMemOnly's footprint.
+		idx, err := bleve.NewUsing("", m, scorch.Name, scorch.Name, nil)
+		if err != nil {
+			return nil, fmt.Errorf("creating bleve index: %w", err)
+		}
+
+		return &Bleve{idx: idx}, nil
 	}
 }
 
+// Filter replaces each token with its phonetic keys at the same position.
 func (f phoneticFilter) Filter(in analysis.TokenStream) analysis.TokenStream {
 	out := make(analysis.TokenStream, 0, len(in))
 
@@ -49,35 +78,20 @@ func (f phoneticFilter) Filter(in analysis.TokenStream) analysis.TokenStream {
 	return out
 }
 
-func newBleveRetriever(l *language) (*bleveRetriever, error) {
-	m, err := bleveMapping(l)
-	if err != nil {
-		return nil, err
-	}
-
-	// An empty path with scorch keeps segments in memory at a fraction of NewMemOnly's footprint.
-	idx, err := bleve.NewUsing("", m, scorch.Name, scorch.Name, nil)
-	if err != nil {
-		return nil, fmt.Errorf("match: creating bleve index: %w", err)
-	}
-
-	return &bleveRetriever{lang: l, idx: idx}, nil
-}
-
-func bleveMapping(l *language) (*mapping.IndexMappingImpl, error) {
+func bleveMapping(phoneticFilter string) (*mapping.IndexMappingImpl, error) {
 	m := bleve.NewIndexMapping()
 	m.StoreDynamic = false
 	m.IndexDynamic = false
 	m.DocValuesDynamic = false
 
 	if err := m.AddCustomTokenFilter("encore_ngram3", map[string]any{"type": ngram.Name, "min": 3.0, "max": 3.0}); err != nil {
-		return nil, fmt.Errorf("match: ngram filter: %w", err)
+		return nil, fmt.Errorf("ngram filter: %w", err)
 	}
 
 	analyzers := map[string][]string{
 		"encore_norm":  nil,
 		"encore_ngram": {"encore_ngram3"},
-		"encore_phon":  {phoneticFilterName(l.code)},
+		"encore_phon":  {phoneticFilter},
 	}
 
 	for name, filters := range analyzers {
@@ -87,7 +101,7 @@ func bleveMapping(l *language) (*mapping.IndexMappingImpl, error) {
 		}
 
 		if err := m.AddCustomAnalyzer(name, cfg); err != nil {
-			return nil, fmt.Errorf("match: analyzer %s: %w", name, err)
+			return nil, fmt.Errorf("analyzer %s: %w", name, err)
 		}
 	}
 
@@ -120,17 +134,18 @@ func bleveMapping(l *language) (*mapping.IndexMappingImpl, error) {
 	return m, nil
 }
 
-func (r *bleveRetriever) upsert(entries []*entry) error {
+// Upsert indexes docs in batches.
+func (r *Bleve) Upsert(docs []match.RetrievalDoc) error {
 	b := r.idx.NewBatch()
 
-	for _, e := range entries {
-		if err := b.Index(e.doc.ID, bleveDoc(e)); err != nil {
-			return fmt.Errorf("match: indexing %q: %w", e.doc.ID, err)
+	for _, d := range docs {
+		if err := b.Index(d.ID, bleveDoc(d)); err != nil {
+			return fmt.Errorf("indexing %q: %w", d.ID, err)
 		}
 
 		if b.Size() >= batchSize {
 			if err := r.idx.Batch(b); err != nil {
-				return fmt.Errorf("match: indexing batch: %w", err)
+				return fmt.Errorf("indexing batch: %w", err)
 			}
 
 			b.Reset()
@@ -139,61 +154,47 @@ func (r *bleveRetriever) upsert(entries []*entry) error {
 
 	if b.Size() > 0 {
 		if err := r.idx.Batch(b); err != nil {
-			return fmt.Errorf("match: indexing batch: %w", err)
+			return fmt.Errorf("indexing batch: %w", err)
 		}
 	}
 
 	return nil
 }
 
-// bleveDoc flattens an entry's aliases: distinct words for the word and phonetic fields, plus each alias with spaces removed for trigrams and whole-string phonetics. Term frequencies don't matter because hits are re-scored.
-func bleveDoc(e *entry) map[string]any {
-	var words, compacts []string
-
-	for i := range e.aliases {
-		a := &e.aliases[i]
-		for _, t := range a.toks {
-			if !slices.Contains(words, t) {
-				words = append(words, t)
-			}
-		}
-
-		if !slices.Contains(compacts, a.compact) {
-			compacts = append(compacts, a.compact)
-		}
-	}
-
+// bleveDoc puts the words in the word and phonetic fields, and each alias with spaces removed in the trigram and phonetic fields. Term frequencies don't matter because hits are re-scored.
+func bleveDoc(d match.RetrievalDoc) map[string]any {
 	return map[string]any{
-		fieldNorm:  strings.Join(words, " "),
-		fieldNgram: compacts,
-		fieldPhon:  append(words, compacts...),
-		fieldKind:  string(e.doc.Kind),
+		fieldNorm:  strings.Join(d.Words, " "),
+		fieldNgram: d.Compacts,
+		fieldPhon:  append(append([]string(nil), d.Words...), d.Compacts...),
+		fieldKind:  string(d.Kind),
 	}
 }
 
-func (r *bleveRetriever) remove(ids []string) error {
+// Remove deletes Docs by ID.
+func (r *Bleve) Remove(ids []string) error {
 	b := r.idx.NewBatch()
 	for _, id := range ids {
 		b.Delete(id)
 	}
 
 	if err := r.idx.Batch(b); err != nil {
-		return fmt.Errorf("match: deleting: %w", err)
+		return fmt.Errorf("deleting: %w", err)
 	}
 
 	return nil
 }
 
-// candidates runs a word and phonetic query first. Trigram postings are long, so the trigram clause is only added when that finds too little.
-func (r *bleveRetriever) candidates(ctx context.Context, q *form, kinds []media.Kind, k int) ([]string, error) {
-	clauses := r.wordClauses(q)
+// Candidates runs a word and phonetic query first. Trigram postings are long, so the trigram clause is only added when that finds too little.
+func (r *Bleve) Candidates(ctx context.Context, q match.RetrievalQuery, kinds []media.Kind, k int) ([]string, error) {
+	clauses := wordClauses(q)
 
 	ids, err := r.search(ctx, clauses, kinds, k)
 	if err != nil || len(ids) >= min(k, ngramFallbackHits) {
 		return ids, err
 	}
 
-	nq := bleve.NewMatchQuery(q.compact)
+	nq := bleve.NewMatchQuery(q.Compact)
 	nq.SetField(fieldNgram)
 	nq.SetBoost(boostNgram)
 
@@ -201,28 +202,14 @@ func (r *bleveRetriever) candidates(ctx context.Context, q *form, kinds []media.
 }
 
 // wordClauses matches words fuzzily and phonetic keys exactly.
-func (r *bleveRetriever) wordClauses(q *form) []query.Query {
-	terms := r.lang.queryTokens(q)
-	clauses := make([]query.Query, 0, 2*len(terms)+1)
-	keys := make([]string, 0, len(terms)+1)
+func wordClauses(q match.RetrievalQuery) []query.Query {
+	clauses := make([]query.Query, 0, len(q.Terms)+len(q.Keys))
 
-	for i, t := range q.toks {
-		if !slices.Contains(terms, t) {
-			continue
-		}
-
-		for _, k := range q.keys[i] {
-			if !slices.Contains(keys, k) {
-				keys = append(keys, k)
-			}
-		}
-	}
-
-	for _, t := range terms {
-		if fz := fuzziness(t); fz > 0 {
-			fq := bleve.NewFuzzyQuery(t)
+	for _, t := range q.Terms {
+		if t.Fuzziness > 0 {
+			fq := bleve.NewFuzzyQuery(t.Text)
 			fq.SetField(fieldNorm)
-			fq.SetFuzziness(fz)
+			fq.SetFuzziness(t.Fuzziness)
 			fq.SetPrefix(fuzzyPrefix)
 			fq.SetBoost(boostNorm)
 			clauses = append(clauses, fq)
@@ -230,19 +217,13 @@ func (r *bleveRetriever) wordClauses(q *form) []query.Query {
 			continue
 		}
 
-		tq := bleve.NewTermQuery(t)
+		tq := bleve.NewTermQuery(t.Text)
 		tq.SetField(fieldNorm)
 		tq.SetBoost(boostNorm)
 		clauses = append(clauses, tq)
 	}
 
-	for _, k := range q.compactKeys {
-		if !slices.Contains(keys, k) {
-			keys = append(keys, k)
-		}
-	}
-
-	for _, k := range keys {
+	for _, k := range q.Keys {
 		tq := bleve.NewTermQuery(k)
 		tq.SetField(fieldPhon)
 		tq.SetBoost(boostPhon)
@@ -252,7 +233,7 @@ func (r *bleveRetriever) wordClauses(q *form) []query.Query {
 	return clauses
 }
 
-func (r *bleveRetriever) search(ctx context.Context, clauses []query.Query, kinds []media.Kind, k int) ([]string, error) {
+func (r *Bleve) search(ctx context.Context, clauses []query.Query, kinds []media.Kind, k int) ([]string, error) {
 	var root query.Query = bleve.NewDisjunctionQuery(clauses...)
 
 	if len(kinds) > 0 {
@@ -272,7 +253,7 @@ func (r *bleveRetriever) search(ctx context.Context, clauses []query.Query, kind
 			return nil, ctxErr
 		}
 
-		return nil, fmt.Errorf("match: searching: %w", err)
+		return nil, fmt.Errorf("searching: %w", err)
 	}
 
 	ids := make([]string, len(res.Hits))
@@ -283,22 +264,11 @@ func (r *bleveRetriever) search(ctx context.Context, clauses []query.Query, kind
 	return ids, nil
 }
 
-func (r *bleveRetriever) close() error {
+// Close closes the bleve index.
+func (r *Bleve) Close() error {
 	if err := r.idx.Close(); err != nil {
-		return fmt.Errorf("match: closing bleve index: %w", err)
+		return fmt.Errorf("closing bleve index: %w", err)
 	}
 
 	return nil
-}
-
-// fuzziness allows more edits in longer words; short words and numbers must match exactly.
-func fuzziness(t string) int {
-	switch n := utf8.RuneCountInString(t); {
-	case isDigits(t) || n <= 3:
-		return 0
-	case n <= 6:
-		return 1
-	default:
-		return 2
-	}
 }

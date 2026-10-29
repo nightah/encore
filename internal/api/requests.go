@@ -161,7 +161,7 @@ func toSummary(e store.RequestLogEntry, devs map[string]store.EchoDevice) Reques
 		Simulated: e.Simulated,
 	}
 
-	// Entries logged before every request got an outcome (session ends, launches) have none.
+	// An entry logged without an outcome (a session end or launch) is reported as ok.
 	if s.Outcome == "" {
 		s.Outcome = "ok"
 	}

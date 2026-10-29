@@ -4,11 +4,12 @@ import { HttpResponse, delay, http } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import type { RequestDetail } from "@api/generated/model";
+import { keys } from "@api/keys";
 import { SETUP_STORAGE_KEY, getSetupProgress } from "@lib/setupProgress";
 import { getDb, resetDb } from "@mocks/handlers";
 import { server } from "@mocks/node";
 import { FakeEventSource } from "@test/eventSource";
-import { recordRequests, renderApp } from "@test/utils";
+import { failWith, recordRequests, renderApp } from "@test/utils";
 
 async function heading(name: string | RegExp) {
   return screen.findByRole("heading", { level: 1, name }, { timeout: 4000 });
@@ -39,7 +40,7 @@ describe("setup wizard", () => {
 
     await heading("Tell us your public address");
     expect(getDb().admin?.username).toBe("admin");
-    expect(screen.getByLabelText("Public base URL")).toHaveValue("https://encore.example.net");
+    expect(await screen.findByLabelText("Public base URL")).toHaveValue("https://encore.example.net");
     await user.click(screen.getByRole("button", { name: "Check address" }));
     const checks = await screen.findByRole("list", { name: "Reachability check results" });
     expect(within(checks).getAllByRole("listitem")).toHaveLength(3);
@@ -158,6 +159,59 @@ describe("setup wizard", () => {
     expect(screen.queryByText(/Request received/)).not.toBeInTheDocument();
   });
 
+  it("waits for the skill settings before saying what to ask Alexa", async () => {
+    resetDb("configured");
+    getDb().skill = { ...getDb().skill, invocation: "kodi", invocation_name: "kodi" };
+    window.localStorage.setItem(
+      SETUP_STORAGE_KEY,
+      JSON.stringify({ done: [1, 2, 3, 4, 5], skipped: [], step: 6, waitingSince: new Date().toISOString() }),
+    );
+    let answer: (() => void) | undefined;
+    server.use(
+      http.get(
+        "*/api/v1/skill",
+        () =>
+          new Promise<Response>((resolve) => {
+            answer = () => resolve(HttpResponse.json(getDb().skill));
+          }),
+      ),
+    );
+    renderApp("/setup");
+
+    await heading("Say hello");
+    await waitFor(() => expect(answer).toBeDefined());
+    expect(screen.queryByText(/ask encore/)).not.toBeInTheDocument();
+    expect(screen.getByText("Loading…")).toBeInTheDocument();
+
+    answer?.();
+    expect(await screen.findByText("“Alexa, ask kodi what's playing.”")).toBeInTheDocument();
+    expect(screen.getByText(/if “ask kodi” isn't recognised/)).toBeInTheDocument();
+    expect(screen.queryByText(/ask encore/)).not.toBeInTheDocument();
+    expect(screen.queryByText("Loading…")).not.toBeInTheDocument();
+  });
+
+  it("says the skill settings didn't load instead of guessing what to ask Alexa", async () => {
+    resetDb("configured");
+    getDb().skill = { ...getDb().skill, invocation: "kodi", invocation_name: "kodi" };
+    window.localStorage.setItem(
+      SETUP_STORAGE_KEY,
+      JSON.stringify({ done: [1, 2, 3, 4, 5], skipped: [], step: 6, waitingSince: new Date().toISOString() }),
+    );
+    failWith("get", "/skill", 500, "boom");
+    const user = userEvent.setup();
+    const { queryClient } = renderApp("/setup");
+
+    await heading("Say hello");
+    await waitFor(() => expect(queryClient.getQueryState(keys.skill)?.status).toBe("error"));
+    expect(screen.queryByText(/ask encore/)).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("boom");
+
+    server.resetHandlers();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByText("“Alexa, ask kodi what's playing.”")).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
   it("shows the network search until Kodi is found, and offers another search when none is", async () => {
     resetDb("configured");
     window.localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify({ done: [1, 2], skipped: [], step: 3 }));
@@ -179,6 +233,19 @@ describe("setup wizard", () => {
     expect(await screen.findByRole("button", { name: "Search again" })).toBeInTheDocument();
     expect(screen.queryByText(/Searching for Kodi/)).not.toBeInTheDocument();
     expect(screen.getByText(/No Kodi answered on your network/)).toBeInTheDocument();
+  });
+
+  it("says the network search failed instead of that no Kodi answered", async () => {
+    resetDb("configured");
+    window.localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify({ done: [1, 2], skipped: [], step: 3 }));
+    failWith("get", "/kodi/discovered", 503, "mDNS is unavailable");
+    const { queryClient } = renderApp("/setup");
+
+    await heading("Add your first Kodi");
+    await waitFor(() => expect(queryClient.getQueryState(keys.discovered)?.status).toBe("error"));
+    expect(screen.queryByText(/No Kodi answered on your network/)).not.toBeInTheDocument();
+    expect(screen.getByText(/Encore couldn't search your network for Kodi/)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Search again" })).toBeInTheDocument();
   });
 
   it("skips steps and remembers progress", async () => {
@@ -210,11 +277,127 @@ describe("setup wizard", () => {
     const requests = recordRequests();
     const { queryClient } = renderApp("/setup");
     await heading("Tell us your public address");
-    await user.click(screen.getByRole("button", { name: "Check address" }));
+    await user.click(await screen.findByRole("button", { name: "Check address" }));
 
     await waitFor(() => expect(requests.some((r) => r.method === "PUT" && r.path === "/skill/settings")).toBe(true));
     await waitFor(() => expect(queryClient.isMutating()).toBe(0));
     expect(screen.queryByText("Skill settings saved.")).not.toBeInTheDocument();
+  });
+
+  it("waits for the skill settings before showing the address", async () => {
+    resetDb("configured");
+    window.localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify({ done: [1], skipped: [], step: 2 }));
+    let answer: () => void = () => {};
+    server.use(
+      http.get(
+        "*/api/v1/skill",
+        () =>
+          new Promise<Response>((resolve) => {
+            answer = () => resolve(HttpResponse.json(getDb().skill));
+          }),
+      ),
+    );
+    renderApp("/setup");
+
+    await heading("Tell us your public address");
+    expect(screen.queryByLabelText("Public base URL")).not.toBeInTheDocument();
+    expect(await screen.findByRole("status")).toHaveTextContent("Loading…");
+    expect(screen.queryByRole("button", { name: "Check address" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Skip for now" })).toBeEnabled();
+
+    answer();
+    expect(await screen.findByLabelText("Public base URL")).toHaveValue("https://encore.example.net");
+    expect(screen.getByRole("button", { name: "Check address" })).toBeEnabled();
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+  });
+
+  it("says the skill settings didn't load instead of showing an empty address", async () => {
+    resetDb("configured");
+    window.localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify({ done: [1], skipped: [], step: 2 }));
+    failWith("get", "/skill", 500, "boom");
+    const user = userEvent.setup();
+    const { queryClient } = renderApp("/setup");
+
+    await heading("Tell us your public address");
+    await waitFor(() => expect(queryClient.getQueryState(keys.skill)?.status).toBe("error"));
+    expect(screen.queryByLabelText("Public base URL")).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("boom");
+    expect(screen.getByRole("button", { name: "Skip for now" })).toBeEnabled();
+
+    server.resetHandlers();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByLabelText("Public base URL")).toHaveValue("https://encore.example.net");
+  });
+
+  it("waits for the skill settings before offering to connect Amazon", async () => {
+    resetDb("configured");
+    window.localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify({ done: [1, 2, 3], skipped: [], step: 4 }));
+    const requests = recordRequests();
+    let answer: () => void = () => {};
+    server.use(
+      http.get(
+        "*/api/v1/skill",
+        () =>
+          new Promise<Response>((resolve) => {
+            answer = () => resolve(HttpResponse.json(getDb().skill));
+          }),
+      ),
+    );
+    renderApp("/setup");
+
+    // The configured sample is already connected, so the sign-in form must never show.
+    await heading("Connect your Amazon developer account");
+    expect(screen.queryByLabelText("Client ID")).not.toBeInTheDocument();
+    expect(await screen.findByRole("status")).toHaveTextContent("Loading…");
+    expect(screen.getByRole("button", { name: "Skip for now" })).toBeEnabled();
+
+    answer();
+    expect(await screen.findByText(/Connected to Amazon \(vendor M2X8K4P1QF\)/)).toBeInTheDocument();
+    expect(screen.queryByLabelText("Client ID")).not.toBeInTheDocument();
+    expect(requests.some((r) => r.path.startsWith("/skill/amazon/authorize"))).toBe(false);
+  });
+
+  it("says the skill settings didn't load instead of asking to connect Amazon", async () => {
+    resetDb("configured");
+    window.localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify({ done: [1, 2, 3], skipped: [], step: 4 }));
+    failWith("get", "/skill", 500, "boom");
+    const { queryClient } = renderApp("/setup");
+
+    await heading("Connect your Amazon developer account");
+    await waitFor(() => expect(queryClient.getQueryState(keys.skill)?.status).toBe("error"));
+    expect(screen.queryByLabelText("Client ID")).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("boom");
+    expect(screen.getByRole("button", { name: "Skip for now" })).toBeEnabled();
+  });
+
+  it("shows the deploy step loading, and why it didn't load, with a way to move on", async () => {
+    resetDb("configured");
+    window.localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify({ done: [1, 2, 3, 4], skipped: [], step: 5 }));
+    let answer: () => void = () => {};
+    server.use(
+      http.get(
+        "*/api/v1/skill",
+        () =>
+          new Promise<Response>((resolve) => {
+            answer = () => resolve(HttpResponse.json(getDb().skill));
+          }),
+      ),
+    );
+    const first = renderApp("/setup");
+
+    await heading("Deploy the skill");
+    expect(await screen.findByRole("status")).toHaveTextContent("Loading…");
+    expect(screen.getByRole("button", { name: "Back" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Skip for now" })).toBeEnabled();
+    answer();
+    expect(await screen.findByRole("button", { name: "Deploy skill" })).toBeInTheDocument();
+    first.unmount();
+
+    failWith("get", "/skill", 500, "boom");
+    renderApp("/setup");
+    await heading("Deploy the skill");
+    expect(await screen.findByRole("alert")).toHaveTextContent("boom");
+    expect(screen.getByRole("button", { name: "Skip for now" })).toBeEnabled();
   });
 
   it("resumes where you left off and offers it from the shell", async () => {
@@ -281,7 +464,7 @@ describe("setup wizard", () => {
     resetDb("configured");
     window.localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify({ done: [1, 2], skipped: [], step: 3 }));
     const requests = recordRequests();
-    // The skill's settings arrive after the step renders, as they can on a busy machine, so the boxes are first shown unticked and disabled.
+    // The skill's settings arrive after the step renders, as they can on a busy machine, so the boxes show only once they're in.
     server.use(
       http.get("*/skill", async () => {
         await delay(100);
@@ -303,6 +486,53 @@ describe("setup wizard", () => {
     await user.click(screen.getByRole("checkbox", { name: "Movies" }));
     await waitFor(() => expect(getDb().skill.content).toEqual(["tv"]));
     expect(screen.getByRole("checkbox", { name: "TV shows" })).toHaveAttribute("aria-disabled", "true");
+  });
+
+  it("waits for the skill settings before showing what the skill can play on the Kodi step", async () => {
+    resetDb("configured");
+    window.localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify({ done: [1, 2], skipped: [], step: 3 }));
+    let answer: (() => void) | undefined;
+    server.use(
+      http.get(
+        "*/api/v1/skill",
+        () =>
+          new Promise<Response>((resolve) => {
+            answer = () => resolve(HttpResponse.json(getDb().skill));
+          }),
+      ),
+    );
+    renderApp("/setup");
+
+    await heading("Add your first Kodi");
+    await waitFor(() => expect(answer).toBeDefined());
+    const content = screen.getByRole("group", { name: "What it can play" });
+    expect(within(content).queryByRole("checkbox", { checked: false })).not.toBeInTheDocument();
+    expect(within(content).getByRole("status")).toHaveTextContent("Loading…");
+
+    answer?.();
+    expect(await within(content).findByRole("checkbox", { name: "Movies" })).toBeChecked();
+    expect(within(content).getByRole("checkbox", { name: "TV shows" })).toBeChecked();
+    expect(within(content).getByRole("checkbox", { name: /Music/ })).toBeChecked();
+    expect(within(content).queryByRole("status")).not.toBeInTheDocument();
+  });
+
+  it("says the skill settings didn't load instead of showing nothing the skill can play", async () => {
+    resetDb("configured");
+    window.localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify({ done: [1, 2], skipped: [], step: 3 }));
+    failWith("get", "/skill", 500, "boom");
+    const user = userEvent.setup();
+    const { queryClient } = renderApp("/setup");
+
+    await heading("Add your first Kodi");
+    await waitFor(() => expect(queryClient.getQueryState(keys.skill)?.status).toBe("error"));
+    const content = screen.getByRole("group", { name: "What it can play" });
+    expect(within(content).queryByRole("checkbox")).not.toBeInTheDocument();
+    expect(within(content).getByRole("alert")).toHaveTextContent("boom");
+
+    server.resetHandlers();
+    await user.click(within(content).getByRole("button", { name: "Try again" }));
+    expect(await within(content).findByRole("checkbox", { name: "Movies" })).toBeChecked();
+    expect(within(content).queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("asks a signed-out admin to sign in before resuming", async () => {

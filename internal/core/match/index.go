@@ -20,8 +20,8 @@ func New(lang string, cfg Config) (*Index, error) {
 	)
 
 	switch cfg.Retriever {
-	case RetrieverBleve:
-		ret, err = newBleveRetriever(l)
+	case RetrieverInverted:
+		ret = newInvertedRetriever(l)
 	case RetrieverTrigram:
 		ret = newTrigramRetriever()
 	default:
@@ -199,6 +199,8 @@ func (ix *Index) Search(ctx context.Context, q Query) (Result, error) {
 
 	cands := make([]Candidate, 0, len(entries))
 	exact := make(map[string]bool)
+	soundAlike := make(map[string]bool)
+	numbersDiffer := make(map[string]bool)
 
 	for _, e := range entries {
 		if len(q.Kinds) > 0 && !slices.Contains(q.Kinds, e.doc.Kind) {
@@ -216,6 +218,14 @@ func (ix *Index) Search(ctx context.Context, q Query) (Result, error) {
 			exact[e.doc.ID] = true
 		}
 
+		if best.soundAlike {
+			soundAlike[e.doc.ID] = true
+		}
+
+		if best.numbersDiffer {
+			numbersDiffer[e.doc.ID] = true
+		}
+
 		boost := min(max(e.doc.Boost+q.Hints[e.doc.ID], 0), ix.cfg.MaxBoost)
 		best.bd.Boost = boost
 
@@ -231,7 +241,17 @@ func (ix *Index) Search(ctx context.Context, q Query) (Result, error) {
 		)
 	})
 
-	res.Decision, res.Margin = ix.cfg.decide(cands, len(exact))
+	cfg := ix.cfg
+	if ix.lang.soundAlikeLead && len(cands) > 0 && soundAlike[cands[0].Doc.ID] {
+		cfg.TieMargin = max(cfg.TieMargin, cfg.PlayMargin)
+	}
+
+	res.Decision, res.Margin = cfg.decide(cands, len(exact))
+
+	// A number the best title lacks is a missing sequel or another instalment: ask rather than start the wrong one.
+	if res.Decision == DecisionPlay && numbersDiffer[cands[0].Doc.ID] {
+		res.Decision = DecisionAsk
+	}
 
 	limit := q.Limit
 	if limit <= 0 {

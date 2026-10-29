@@ -1,10 +1,11 @@
 /// <reference types="vitest/config" />
-import { readFileSync, writeFileSync } from "node:fs";
+import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
+import { msw } from "msw/vite";
 import { type Plugin, defineConfig } from "vite";
 
 // Relative, unlike the rest of the code: Vite loads this file before its aliases exist. The extension is for Vite's native config loader.
@@ -26,21 +27,10 @@ function keepGitkeep(): Plugin {
 }
 
 /**
- * `pnpm dev:mock` (`vite --mode mock`) serves the API from MSW in the browser. The service worker script lives in `mocks/` rather than `public/` so it never ships in production builds; this plugin serves it at the app root in mock mode only.
+ * `pnpm dev:mock` (`vite --mode mock`) serves the API from MSW in the browser. msw's plugin serves its service worker straight from the installed package, so the worker always matches the msw the page runs. `apply: "serve"` keeps it out of builds: in worker-only mode the plugin would otherwise emit the worker into any build it's part of.
  */
 function mockServiceWorker(): Plugin {
-  const file = resolve(root, "mocks/mockServiceWorker.js");
-  return {
-    apply: "serve",
-    configureServer(server) {
-      server.middlewares.use("/mockServiceWorker.js", (_req, res) => {
-        res.setHeader("Content-Type", "text/javascript");
-        res.setHeader("Service-Worker-Allowed", "/");
-        res.end(readFileSync(file));
-      });
-    },
-    name: "encore:mock-service-worker",
-  };
+  return { ...msw({ mode: "worker-only" }), apply: "serve" };
 }
 
 export default defineConfig(({ mode }) => ({
@@ -52,7 +42,7 @@ export default defineConfig(({ mode }) => ({
     outDir,
     sourcemap: false,
   },
-  // One dependency cache per mode: the dev server and a mock-mode server (pnpm dev:mock, the mock e2e run) pre-bundle differently, and sharing a cache made each rebuild it under the other, breaking open pages ("error loading dynamically imported module").
+  // One dependency cache per mode: the dev server and a mock-mode server (pnpm dev:mock, the mock e2e run) pre-bundle differently, and a shared cache would make each rebuild it under the other, breaking open pages ("error loading dynamically imported module").
   cacheDir: resolve(root, "node_modules/.vite", mode),
   optimizeDeps: { include: baseUIEntries(root) },
   plugins: [

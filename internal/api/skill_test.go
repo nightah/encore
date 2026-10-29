@@ -428,7 +428,7 @@ func TestDeployMarksSimulatorWindow(t *testing.T) {
 
 	assert.True(t, h.api.Simulating(), "the session-ended request after the smoke test still counts as the simulator's")
 
-	// Every log line names one component; the deploy's used to say component=api component=deploy.
+	// Every log line names one component, never two such as component=api component=deploy.
 	logs := h.logs.String()
 	assert.Contains(t, logs, `msg="skill deploy step" component=deploy deploy=`)
 

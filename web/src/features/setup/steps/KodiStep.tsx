@@ -12,7 +12,7 @@ import { Button } from "@components/ui/Button";
 import { Checkbox, Field, FieldGrid, Input, RadioCards } from "@components/ui/Field";
 import { Callout } from "@components/ui/States";
 import { Searching } from "@features/kodi/Searching";
-import { CheckList, StepFooter, StepHeading, type StepProps } from "@features/setup/shared";
+import { CheckList, StepFooter, StepHeading, StepPending, type StepProps } from "@features/setup/shared";
 import { CONTENT, toggleContent } from "@features/skill/content";
 import { formatDuration } from "@lib/format";
 
@@ -38,7 +38,8 @@ export function KodiStep({ nav }: StepProps) {
   const { data: instances = [] } = useInstances();
   const create = useCreateInstance();
   const test = useTestInstance();
-  const { data: skill } = useSkill();
+  const skillQuery = useSkill();
+  const skill = skillQuery.data;
   const saveContent = useSaveSkillContent();
   const content = skill?.content ?? [];
 
@@ -154,7 +155,13 @@ export function KodiStep({ nav }: StepProps) {
       <StepHeading
         intro={
           <>
-            {searching ? t("kodi.searching") : discovered.length ? t("kodi.found") : t("kodi.notFound")}
+            {searching
+              ? t("kodi.searching")
+              : discovered.length
+                ? t("kodi.found")
+                : discovery.isError
+                  ? t("kodi.searchFailed")
+                  : t("kodi.notFound")}
             <br />
             {t("kodi.remoteControl")}
           </>
@@ -169,18 +176,23 @@ export function KodiStep({ nav }: StepProps) {
 
       <fieldset className="flex min-w-0 flex-col gap-1.5">
         <legend className="mb-1.5 font-medium">{t("content.legend")}</legend>
-        <div className="flex flex-col gap-2.5">
-          {CONTENT.map((c) => (
-            <Checkbox
-              key={c.value}
-              label={c.label}
-              hint={c.hint}
-              checked={content.includes(c.value)}
-              disabled={!skill || (content.length === 1 && content[0] === c.value)}
-              onCheckedChange={(checked) => saveContent.mutate(toggleContent(content, c.value, checked))}
-            />
-          ))}
-        </div>
+        {/* What's ticked comes from the skill, so the boxes wait for it rather than showing nothing ticked. */}
+        {skill ? (
+          <div className="flex flex-col gap-2.5">
+            {CONTENT.map((c) => (
+              <Checkbox
+                key={c.value}
+                label={c.label}
+                hint={c.hint}
+                checked={content.includes(c.value)}
+                disabled={content.length === 1 && content[0] === c.value}
+                onCheckedChange={(checked) => saveContent.mutate(toggleContent(content, c.value, checked))}
+              />
+            ))}
+          </div>
+        ) : (
+          <StepPending error={skillQuery.error} onRetry={() => skillQuery.refetch()} />
+        )}
         <span className="text-[13px] text-muted">{t("kodi.contentNote")}</span>
         {saveContent.error ? (
           <span role="alert" className="text-[13px] text-bad">

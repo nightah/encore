@@ -5,8 +5,6 @@ import (
 	"sync"
 	"unicode/utf8"
 
-	"github.com/blevesearch/bleve/v2"
-
 	"github.com/nightah/encore/internal/core/media"
 )
 
@@ -92,7 +90,7 @@ type Config struct {
 	// DerivedPenalty multiplies scores against shortened titles, such as "Dune" for "Dune: Part Two".
 	DerivedPenalty float64
 
-	// Retriever selects candidate retrieval: RetrieverBleve (default) or RetrieverTrigram for tiny libraries.
+	// Retriever selects candidate retrieval: RetrieverInverted (default) or RetrieverTrigram for tiny libraries.
 	Retriever string
 }
 
@@ -126,15 +124,159 @@ type retriever interface {
 	close() error
 }
 
-// phoneticFilter replaces each token with its phonetic keys at the same position.
-type phoneticFilter struct{ fn phoneticFunc }
-
-type bleveRetriever struct {
-	lang *language
-	idx  bleve.Index
+// Retriever is candidate retrieval supplied from outside the package through NewWithRetriever, for the benchmarks module to compare other implementations with the in-tree inverted index. Encore never uses one.
+type Retriever interface {
+	// Upsert adds docs, replacing any with the same ID.
+	Upsert(docs []RetrievalDoc) error
+	// Remove deletes Docs by ID; unknown IDs are ignored.
+	Remove(ids []string) error
+	// Candidates returns up to k Doc IDs likely to match q, best first, restricted to kinds when non-empty.
+	Candidates(ctx context.Context, q RetrievalQuery, kinds []media.Kind, k int) ([]string, error)
+	// Close releases the retriever.
+	Close() error
 }
 
-// trigramRetriever is a dependency-free inverted index over character trigrams and phonetic keys. It is meant for small libraries and as a cross-check for bleve; deleted slots are tombstoned, not reclaimed.
+// RetrievalDoc is what a Retriever indexes for one Doc: the distinct normalised words of all its aliases, and each alias with spaces removed.
+type RetrievalDoc struct {
+	ID       string
+	Kind     media.Kind
+	Words    []string
+	Compacts []string
+}
+
+// RetrievalQuery is what a Retriever searches with: the query words worth searching for (stop words left out unless that is all there is), the distinct phonetic keys of those words and of the whole query, and the query with spaces removed, for trigrams.
+type RetrievalQuery struct {
+	Terms   []RetrievalTerm
+	Keys    []string
+	Compact string
+}
+
+// RetrievalTerm is one query word and how many edits a fuzzy match of it may make; zero means it must match exactly. Fuzzy matches keep the word's first rune.
+type RetrievalTerm struct {
+	Text      string
+	Fuzziness int
+}
+
+// externalRetriever adapts a Retriever to the index.
+type externalRetriever struct {
+	lang *language
+	r    Retriever
+}
+
+// invertedRetriever is an in-memory inverted index over words, phonetic keys and trigrams, ranked by TF-IDF with coordination factors. Replaced or deleted Docs are tombstoned and leave the document counts at once; once they are a quarter of the slots, a compaction in the background rebuilds the postings without them.
+type invertedRetriever struct {
+	mu   sync.RWMutex
+	lang *language
+	postingSet
+	// live counts live slots.
+	live int
+	// compacting is the compaction under way, if any.
+	compacting *compaction
+	// maxSlots is slotLimit, lowered in tests.
+	maxSlots int
+	// background runs compactions, tracked by wg; tests replace it to run them when they choose.
+	background func(func())
+	wg         sync.WaitGroup
+	pool       sync.Pool
+}
+
+// postingSet is the part of the inverted index that compaction rebuilds.
+type postingSet struct {
+	slots []invertedSlot
+	byID  map[string]uint32
+	// dead counts tombstoned slots.
+	dead   int
+	fields [termFields]postingField
+	// buckets groups word term IDs by first rune and length in runes, for fuzzy expansion.
+	buckets map[wordBucket][]uint32
+	// freqs holds term frequencies of tfOverflow and above, which do not fit in a posting.
+	freqs map[freqKey]uint32
+}
+
+// compaction is a postingSet being rebuilt without tombstones while the index stays in use. Kills made meanwhile are logged in it, and it replays them and the slots added since it began before it is swapped in.
+type compaction struct {
+	// base is how many slots there were when it began.
+	base uint32
+	set  postingSet
+	// remap maps the index's slots to set's, droppedSlot for those left out.
+	remap []uint32
+	// killed logs the index's slots killed since it began, appended under the index's write lock; replayed is how many of them it has applied.
+	killed   []uint32
+	replayed int
+	// done is closed once it is swapped in.
+	done chan struct{}
+}
+
+// termSet is an entry's terms per field.
+type termSet [termFields][]string
+
+// termCache holds the terms of entries a write is about to replace or delete.
+type termCache map[*entry]*termSet
+
+type invertedSlot struct {
+	entry *entry
+	alive bool
+	// norms are 1/sqrt(number of terms) per field.
+	norms [termFields]float32
+}
+
+// termField is one of the inverted index's fields.
+type termField uint8
+
+// postingField maps terms to IDs and IDs to postings. A posting is a slot in its low slotBits bits and the term's frequency in that slot, capped at tfOverflow, above them; postings are in slot order.
+type postingField struct {
+	ids   map[string]uint32
+	terms []string
+	post  [][]uint32
+	// live counts the live slots that have each term.
+	live []int32
+}
+
+type wordBucket struct {
+	first rune
+	runes int
+}
+
+type freqKey struct {
+	field termField
+	term  uint32
+	slot  uint32
+}
+
+// queryClause is one disjunct of the retrieval query: its terms are alternatives (fuzzy expansions of a word, or a query's trigrams), and total is how many there are, for the coordination factor.
+type queryClause struct {
+	field termField
+	boost float64
+	terms []clauseTerm
+	total int
+}
+
+type clauseTerm struct {
+	id     uint32
+	weight float64
+	// count is how many of the clause's alternatives are this term, as when a trigram repeats in the query.
+	count int
+}
+
+type slotHit struct {
+	slot  uint32
+	score float64
+}
+
+// topHits is a min-heap of the best hits so far.
+type topHits []slotHit
+
+// accumulator holds per-slot scores for one search; clauseScore and clauseCount collect one clause's alternatives before they are folded in.
+type accumulator struct {
+	score         []float64
+	matched       []uint32
+	touched       []uint32
+	clauseScore   []float64
+	clauseCount   []uint32
+	clauseTouched []uint32
+}
+
+// trigramRetriever is a dependency-free inverted index over character trigrams and phonetic keys. It is meant for small libraries and as a cross-check for the inverted index; deleted slots are tombstoned, not reclaimed.
 type trigramRetriever struct {
 	mu       sync.RWMutex
 	slots    []trigramSlot
@@ -151,7 +293,11 @@ type trigramSlot struct {
 type scored struct {
 	score float64
 	exact bool
-	bd    Breakdown
+	// soundAlike is set when the alias won on sound alone: the strings sound identical but their text is not close enough to score as well.
+	soundAlike bool
+	// numbersDiffer is set when the query carries a number and the alias does not carry the same ones ("crocodile dundee 2" against "Crocodile Dundee"): a missing sequel, which may be asked about but never played. A title's own number the query leaves out ("star wars a new hope") does not count.
+	numbersDiffer bool
+	bd            Breakdown
 }
 
 // form is a normalised string with everything the scorer needs precomputed.
@@ -195,22 +341,36 @@ type numWord struct {
 }
 
 type language struct {
-	code     string
-	and      string
+	code string
+	and  string
+	// half is how the language says "and a half", which "½" reads as ("8½" -> "8 e mezzo").
+	half     string
 	articles map[string]bool
 	stop     map[string]bool
 	// elide splits on apostrophes ("l'amour" -> "l amour") instead of joining ("ocean's" -> "oceans").
-	elide    bool
-	nums     map[string]numWord
-	conj     map[string]bool
-	parts    map[string]bool
-	phonetic phoneticFunc
+	elide bool
+	nums  map[string]numWord
+	// ordSuffixes are what follows the digits of an ordinal written with them ("6th", "5e", "2º" once folded to "2o").
+	ordSuffixes []string
+	// fused splits numbers written as one word ("millenovecentonovantadue") into the number words they are made of; elided maps a number word's shortened form inside such a word ("cent" in "centottanta") to its full form.
+	fused  bool
+	elided map[string]string
+	// unitsFirst reads a unit, "und" and a tens as one number, as German says them ("neun und neunzig" 99).
+	unitsFirst bool
+	conj       map[string]bool
+	parts      map[string]bool
+	phonetic   phoneticFunc
+	// soundAlikeLead makes a top candidate that won on sound alone (scored.soundAlike) lead by Config.PlayMargin to play, not just Config.TieMargin. It suits an encoder that merges spellings differing only in silent letters, which different titles often do.
+	soundAlikeLead bool
 }
 
 // numTable builds a number vocabulary from ordered lists where index i means value i (units) or (i+2)*10 (tens).
 type numTable struct {
-	units, tens          []string
-	hundreds, thousands  []string
+	units, tens         []string
+	hundreds, thousands []string
+	millions            []string
+	// hundredsOf are words for a whole number of hundreds ("duecento" 200).
+	hundredsOf           map[string]int
 	cont                 map[string]int
 	ordinals             map[string]int
 	compounds            map[string]int

@@ -3,9 +3,10 @@ version: "2"
 
 run:
   timeout: 5m
-  # Lint contract/live test files too so they do not rot between nightlies.
+  # Lint contract/live and on-demand evaluation test files too so they do not rot between runs.
   build-tags:
     - contract
+    - phoneticeval
     - smapi_live
 
 linters:
@@ -111,7 +112,8 @@ formatters:
       sections:
         - standard
         - default
-        - localmodule
+        # Not localmodule: the benchmarks module imports the root module's packages, which goimports' local-prefixes groups with its own.
+        - prefix(github.com/nightah/encore)
     gofumpt:
       extra:
         group-params: true

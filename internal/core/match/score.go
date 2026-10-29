@@ -1,7 +1,8 @@
 package match
 
 import (
-	edlib "github.com/hbollon/go-edlib"
+	"slices"
+	"strings"
 )
 
 // scoreAlias rates how well alias a matches query q, in [0, 1]. It gives up early, returning a negative score, once the alias provably can't beat floor.
@@ -13,12 +14,16 @@ func (ix *Index) scoreAlias(q *form, a *alias, floor float64) scored {
 	compact := ratio(q.compact, a.compact)
 	// Whole-string shortcuts ignore word boundaries, and phonetic keys ignore digits, so they only apply when the numbers agree: "toy story 4" is not "Toy Story".
 	numbers := numbersAgree(q, &a.form)
+	// A query number the alias does not carry marks a missing sequel ("crocodile dundee 2" / "Crocodile Dundee").
+	numbersDiffer := !numbers && !digitsWithin(q, &a.form)
 
 	if q.spelled != "" || a.spelled != "" {
 		// Matching as spelled out means the numbers were words in both ("zwei ohr küken" / "Zweiohrküken").
 		if spelled := ratio(q.spelledCompact(), a.spelledCompact()); spelled > compact {
 			compact = spelled
 			numbers = numbers || spelled >= ix.cfg.CompactCoverage
+			// A number word that sounds like a title word ("tears four fears") is no sequel, but a written digit still is ("uno 2" / "uno").
+			numbersDiffer = numbersDiffer && (!numbers || strings.ContainsAny(q.spelledCompact(), "0123456789"))
 		}
 	}
 
@@ -26,6 +31,8 @@ func (ix *Index) scoreAlias(q *form, a *alias, floor float64) scored {
 
 	// Sounding the same as a whole is the typical ASR failure, so it counts as near-identical text.
 	homophone := numbers && keysIntersect(q.compactKeys, a.compactKeys)
+	soundAlike := homophone && q.compact != a.compact
+
 	if homophone {
 		s = max(s, homophoneSet)
 	}
@@ -49,12 +56,12 @@ func (ix *Index) scoreAlias(q *form, a *alias, floor float64) scored {
 		s = max(s, partialFactor*partialRatio(q.norm, a.norm))
 	}
 
-	jw := float64(edlib.JaroWinklerSimilarity(q.norm, a.norm))
+	jw := jaroWinkler(q.norm, a.norm)
 	osa := osaSimilarity(q.norm, a.norm)
 
 	if q.sorted != "" || a.sorted != "" {
 		qs, as := q.sortedNorm(), a.sortedNorm()
-		jw = max(jw, float64(edlib.JaroWinklerSimilarity(qs, as)))
+		jw = max(jw, jaroWinkler(qs, as))
 		osa = max(osa, osaSimilarity(qs, as))
 	}
 
@@ -74,8 +81,10 @@ func (ix *Index) scoreAlias(q *form, a *alias, floor float64) scored {
 	}
 
 	return scored{
-		score: min(f, nonExactCap),
-		bd:    Breakdown{Alias: a.text, TokenSet: s, JaroWinkler: jw, OSA: osa, Phonetic: ph},
+		score:         min(f, nonExactCap),
+		soundAlike:    soundAlike,
+		numbersDiffer: numbersDiffer,
+		bd:            Breakdown{Alias: a.text, TokenSet: s, JaroWinkler: jw, OSA: osa, Phonetic: ph},
 	}
 }
 
@@ -85,7 +94,7 @@ func osaSimilarity(a, b string) float64 {
 		return 1
 	}
 
-	return 1 - float64(edlib.OSADamerauLevenshteinDistance(a, b))/float64(n)
+	return 1 - float64(osaDistance(a, b))/float64(n)
 }
 
 // phoneticOverlap is the share of tokens on each side whose phonetic keys appear on the other, weighted towards the query, or 1 when the whole strings sound alike.
@@ -135,6 +144,17 @@ func numbersAgree(q, a *form) bool {
 	return q.digits == a.digits || (q.digits == "1" && a.digits == "")
 }
 
+// digitsWithin reports whether every number in q is also one of a's ("uno la llegada" / "uno 2: La llegada").
+func digitsWithin(q, a *form) bool {
+	for _, t := range q.toks {
+		if isDigits(t) && !slices.Contains(a.toks, t) {
+			return false
+		}
+	}
+
+	return true
+}
+
 // coverage is the weighted share of query tokens that something in the alias accounts for. Numbers must match exactly (or be a "1" against an unnumbered title); words may be a small typo or a phonetic match away.
 func coverage(q, a *form) float64 {
 	total, hit := 0, 0
@@ -182,9 +202,9 @@ func tokenMatches(t, u string, tk, uk []string) bool {
 	n := runeLen(t)
 
 	switch {
-	case n >= 8 && edlib.OSADamerauLevenshteinDistance(t, u) <= 2:
+	case n >= 8 && osaDistance(t, u) <= 2:
 		return true
-	case n >= 4 && edlib.OSADamerauLevenshteinDistance(t, u) <= 1:
+	case n >= 4 && osaDistance(t, u) <= 1:
 		return true
 	case n >= 3 && keysIntersect(tk, uk):
 		return true

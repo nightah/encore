@@ -41,6 +41,7 @@
       "time": "Time"
     },
     "empty": "No requests yet. Say “Alexa, ask {{invocation}} what's playing.”",
+    "emptyNoInvocation": "No requests yet.",
     "open": "Open the {{time}} request in the log",
     "title": "Recent requests",
     "viewAll": "View all"

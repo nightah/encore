@@ -68,6 +68,7 @@ The scope becomes the pull request's `area/<scope>` label.
 | `auth` | Sign-in, sessions and admin accounts (`internal/auth`) |
 | `backups` | Scheduled backups and `encore restore` |
 | `basepath` | The request base path (`internal/basepath`) |
+| `benchmarks` | The comparisons with replaced libraries (`benchmarks/`) |
 | `blobstore` | The local, S3 and WebDAV storage backends (`internal/blobstore`) |
 | `buildinfo` | Version and build details (`internal/buildinfo`) |
 | `cli` | The commands (`cmd/encore`, `internal/cli`) |
@@ -80,6 +81,7 @@ The scope becomes the pull request's `area/<scope>` label.
 | `docsgen` | The generated reference pages (`internal/docsgen`) |
 | `e2e` | The Playwright tests (`web/e2e`) |
 | `fakekodi` | The fake Kodi used in tests (`internal/backend/kodi/fakekodi`) |
+| `fuzzy` | The fuzzy matching library: phonetic encoders per language (`internal/fuzzy`) |
 | `i18n` | The interaction model and translations (`i18n/`, the web interface's locales) |
 | `kodi` | The Kodi backend (`internal/backend/kodi`) |
 | `layout` | The package layout test (`internal/layout`) |

@@ -19,7 +19,7 @@ jobs:
   go:
     name: Go
     runs-on: ubuntu-26.04
-    timeout-minutes: 20
+    timeout-minutes: 25
     permissions:
       contents: read # check out the code
       id-token: write # upload coverage to Codecov without a token (OIDC)
@@ -78,6 +78,10 @@ jobs:
       - name: Test
         # -coverpkg credits code to whichever package's tests run it, so code tested through its callers counts.
         run: go test -race -coverpkg=./... -coverprofile=coverage.out -covermode=atomic ./...
+
+      # The matcher's accuracy is gated here, on every push and pull request, so a regression fails the change that causes it rather than a later nightly. The Test step already runs TestPhoneticEval, which holds production to its floors on the grown corpora. TestPhoneticDistractors, which holds production's wrong plays for titles a library doesn't have to their ceilings, takes about two minutes, and under the race detector, which has little to find in a test that runs one search at a time, more than the ten minutes go test allows by default, so it sits behind a build tag and runs in this step without -race. It is a step of the Go job rather than a job of its own so it is part of a check that branch protection already requires.
+      - name: Phonetic distractors
+        run: go test -tags phoneticeval -count=1 -run TestPhoneticDistractors ./internal/core/match/
 
       - name: Coverage summary
         if: always()
@@ -207,6 +211,9 @@ jobs:
           .github/scripts/image-superseded_test.sh
           .github/scripts/image-tag_test.sh
 
+      - name: Mutation go wrapper
+        run: .github/scripts/mutation-go_test.sh
+
       - name: Next version script
         run: .github/scripts/next-version_test.sh
 
@@ -260,6 +267,47 @@ jobs:
             ~/go/pkg/mod
             ~/.cache/go-build
           key: ${{ steps.cache.outputs.cache-primary-key }}
+
+  # benchmarks/ is a separate Go module that compares in-tree code with external libraries (bleve, go-edlib, pquerna/otp, the phonetic libraries), so they never enter Encore's go.mod. It imports Encore's internal packages, so a change there can break it: this job lints it and runs its parity tests in short mode, beside the Go job rather than in it. The nightly workflow runs them in full; the benchmarks themselves are only run by hand (benchmarks/README.md).
+  benchmarks:
+    name: Benchmarks module
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: benchmarks/go.mod
+          cache: false
+
+      # The Go job's cache from main, which holds Encore's own modules and builds; the benchmark libraries are downloaded each time rather than kept in a cache of their own.
+      - name: Restore the Go cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: go-test-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('go.mod', 'go.sum', 'tools/go.mod', 'tools/go.sum') }}
+          restore-keys: go-test-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
+        with:
+          version: ${{ env.GOLANGCI_LINT_VERSION }}
+          working-directory: benchmarks
+          args: --config=../.golangci.yml
+
+      - name: Parity tests
+        working-directory: benchmarks
+        run: go test -short ./...
 
   web:
     name: Web

@@ -48,7 +48,7 @@ pnpm dev:mock       # http://localhost:3000, API served by MSW in the browser
 - `?mock=fresh` starts from a first run (setup required; the setup token is `K7QF-2M9X-PL4D`).
 - `?mock=configured` resets to the sample home. Its admin password is `correct-horse-battery`.
 
-The worker script lives in `mocks/mockServiceWorker.js` (not `public/`) and is served only in mock mode, so production builds never contain it; `import.meta.env.MODE === "mock"` is static, so the mock code is dropped from builds too. Tests use the same handlers through `msw/node` (`src/mocks/node.ts`). After upgrading msw, refresh the worker with `pnpm exec msw init mocks --no-save`.
+msw's Vite plugin (`msw/vite`, worker-only mode) serves the worker script straight from the installed msw, in mock mode and only from the dev server, so it always matches msw and production builds never contain it; `import.meta.env.MODE === "mock"` is static, so the mock code is dropped from builds too. Tests use the same handlers through `msw/node` (`src/mocks/node.ts`).
 
 ## Build
 
@@ -145,7 +145,7 @@ The client is generated from the server's OpenAPI 3.1 spec, `internal/api/openap
 
 ## Stack
 
-React 19.3, Vite 8 with `@vitejs/plugin-react`, TypeScript 7 (native `tsc`, installed as `@typescript/native` aliased to `typescript@7`), Tailwind CSS 4.3 with `@tailwindcss/vite`, Base UI (`@base-ui/react`), lucide-react, TanStack Router (file-based) and TanStack Query 5, react-hook-form and zod 4, Biome, Vitest with Testing Library and jsdom, Playwright. Fonts are self-hosted from Fontsource: Bricolage Grotesque, IBM Plex Sans and IBM Plex Mono.
+React 19.3, Vite 8 with `@vitejs/plugin-react`, TypeScript 7 (the native `tsc`), Tailwind CSS 4.3 with `@tailwindcss/vite`, Base UI (`@base-ui/react`), lucide-react, TanStack Router (file-based) and TanStack Query 5, react-hook-form and zod 4, Biome, Vitest with Testing Library and jsdom, Playwright. Fonts are self-hosted from Fontsource: Bricolage Grotesque, IBM Plex Sans and IBM Plex Mono.
 
 ## Brand
 

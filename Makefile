@@ -46,14 +46,15 @@ icons: ## Render the Alexa skill icons (108 and 512 px PNG) from docs/brand/logo
 generate: ## Regenerate Kodi JSON-RPC and SMAPI clients, the OpenAPI document and the docs reference pages (which docs builds also regenerate)
 	$(GO) generate ./...
 
-lint: lint-go lint-web lint-repo ## Lint Go (both modules), web, and repository-wide files
+lint: lint-go lint-web lint-repo ## Lint Go (all three modules), web, and repository-wide files
 
-lint-go: ## Lint Go (root + tools module) and interaction models
+lint-go: ## Lint Go (root, tools and benchmarks modules) and interaction models
 	$(GOLANGCI) run ./...
 	cd tools && $(GOLANGCI) run --config ../.golangci.yml ./...
+	cd benchmarks && $(GOLANGCI) run --config ../.golangci.yml ./...
 	$(GO) run ./cmd/encore gen lint
 
-lint-repo: ## Repository-wide checks, as CI runs them: editorconfig, typos, secrets, sorted language files, shell scripts and the image scripts', next version, release commit and release version scripts' tests, Dockerfiles, workflows and Go vulnerabilities
+lint-repo: ## Repository-wide checks, as CI runs them: editorconfig, typos, secrets, sorted language files, shell scripts and the image scripts', MSW worker's, mutation go wrapper's, next version, release commit and release version scripts' tests, Dockerfiles, workflows and Go vulnerabilities
 	$(GO) tool -modfile=tools/go.mod actionlint
 	git ls-files -z | xargs -0 $(GO) tool -modfile=tools/go.mod editorconfig-checker
 	$(GO) tool -modfile=tools/go.mod govulncheck ./...
@@ -66,6 +67,7 @@ lint-repo: ## Repository-wide checks, as CI runs them: editorconfig, typos, secr
 	.github/scripts/image-delete-untagged_test.sh
 	.github/scripts/image-superseded_test.sh
 	.github/scripts/image-tag_test.sh
+	.github/scripts/mutation-go_test.sh
 	.github/scripts/next-version_test.sh
 	.github/scripts/release-commit_test.sh
 	.github/scripts/release-version_test.sh
@@ -82,10 +84,18 @@ test-go: ## Run Go tests with the race detector
 test-tools: ## Run tools module tests
 	cd tools && $(GO) test ./...
 
+test-benchmarks: ## Run the benchmarks module's parity tests: the in-tree code against bleve, go-edlib, pquerna/otp and the phonetic libraries
+	cd benchmarks && $(GO) test ./...
+
+bench: ## Run the benchmarks module's comparisons once and summarise them with benchstat (see benchmarks/README.md to reproduce the published numbers)
+	cd benchmarks && $(GO) test -run '^$$' -bench . -benchtime 100x ./retrieval > bench-retrieval.txt
+	cd benchmarks && for p in editdistance totp phonetic; do $(GO) test -run '^$$' -bench . ./$$p > bench-$$p.txt || exit 1; done
+	cd benchmarks && for p in retrieval editdistance totp phonetic; do $(GO) tool benchstat -col /impl bench-$$p.txt || exit 1; done
+
 test-web: web-install ## Run web unit tests
 	$(PNPM) -C web test
 
-test-contract: ## Run contract tests (needs a real Kodi and MinIO; see the development docs)
+test-contract: ## Run contract tests (needs a real Kodi, MinIO and WebDAV server; see the development docs)
 	$(GO) test -tags contract -count=1 ./internal/backend/kodi/... ./internal/blobstore/... ./internal/app/
 
 web-install: ## Install web dependencies (frozen lockfile)
@@ -128,9 +138,9 @@ docker: ## Build a local container image (encore:dev)
 	$(DOCKER) build --build-arg version=$(VERSION) -t $(IMAGE) .
 
 clean: ## Remove build outputs (keeps internal/server/dist/.gitkeep)
-	rm -rf bin dist coverage.out web/playwright-report web/test-results docs/dist docs/.astro
+	rm -rf bin dist coverage.out benchmarks/bench-*.txt web/playwright-report web/test-results docs/dist docs/.astro
 	find internal/server/dist -mindepth 1 ! -name .gitkeep -exec rm -rf {} +
 
-.PHONY: help version patch minor major icons generate lint lint-go lint-repo lint-web test test-go test-tools test-web \
+.PHONY: help version patch minor major icons generate lint lint-go lint-repo lint-web test test-go test-tools test-benchmarks bench test-web \
 	test-contract web-install web-build build build-noui run dev web-dev docs-install docs docs-dev \
 	docker clean

@@ -32,36 +32,47 @@ function EchoDevicesPage() {
   const [editing, setEditing] = useState<Device | undefined>();
   const instanceList = instances.data ?? [];
   const roomList = rooms.data ?? [];
-  const unlinked = devices.data?.filter((d) => d.kodi_instance_id === null) ?? [];
+  // Each Echo's Kodi and room come from the other two lists, so the page waits for all three: an Echo isn't "Not linked" just because the Kodi instances haven't loaded yet.
+  const deviceList = instances.data && rooms.data ? devices.data : undefined;
+  const queries = [devices, instances, rooms];
+  const error = queries.find((q) => q.error)?.error;
+  const unlinked = deviceList?.filter((d) => d.kodi_instance_id === null) ?? [];
   const identified = useIdentifiedEcho();
   const identifiedName = devices.data?.find((d) => d.id === identified)?.name;
 
   return (
     <Page title={t("page.title")} description={t("page.description")}>
-      {devices.isPending ? <LoadingBlock /> : null}
-      {devices.error ? <ErrorState error={devices.error} onRetry={() => devices.refetch()} /> : null}
+      {!deviceList && !error ? <LoadingBlock /> : null}
+      {error ? (
+        <ErrorState
+          error={error}
+          onRetry={() => {
+            for (const q of queries) if (q.error) void q.refetch();
+          }}
+        />
+      ) : null}
 
-      {instances.data
-        ? unlinked.map((device) => (
-            <UnlinkedBanner
-              key={device.id}
-              device={device}
-              instances={instanceList}
-              identified={device.id === identified}
-            />
-          ))
-        : null}
+      {unlinked.map((device) => (
+        <UnlinkedBanner
+          key={device.id}
+          device={device}
+          instances={instanceList}
+          identified={device.id === identified}
+        />
+      ))}
 
-      {devices.data ? (
+      {deviceList ? (
         <section aria-labelledby="dev-h" className="flex flex-col rounded-xl border border-line bg-surface">
           <h2 id="dev-h" className="px-4.5 pt-4 pb-1.5 font-display font-semibold text-lg">
             {t("table.title")}
           </h2>
-          <p className="px-4.5 pb-2 text-[13px] text-muted">{t("table.identifyHint", { invocation })}</p>
+          {invocation ? (
+            <p className="px-4.5 pb-2 text-[13px] text-muted">{t("table.identifyHint", { invocation })}</p>
+          ) : null}
           <p aria-live="polite" className="sr-only">
             {identified !== null ? t("table.spokeTo", { name: identifiedName || t("table.anUnnamedEcho") }) : ""}
           </p>
-          {devices.data.length === 0 ? (
+          {deviceList.length === 0 ? (
             <p className="px-4.5 pt-1 pb-5 text-muted">{t("table.empty")}</p>
           ) : (
             <Table aria-labelledby="dev-h">
@@ -78,7 +89,7 @@ function EchoDevicesPage() {
                 </tr>
               </thead>
               <tbody>
-                {devices.data.map((device) => {
+                {deviceList.map((device) => {
                   const kodi = instanceList.find((i) => i.id === device.kodi_instance_id);
                   const room = roomList.find((r) => r.id === device.room_id);
                   const name = device.name || t("unnamed");
@@ -123,7 +134,7 @@ function EchoDevicesPage() {
         </section>
       ) : null}
 
-      {rooms.data ? <RoomsSection rooms={roomList} instances={instanceList} /> : null}
+      {deviceList ? <RoomsSection rooms={roomList} instances={instanceList} /> : null}
 
       <DeviceDialog device={editing} onClose={() => setEditing(undefined)} rooms={roomList} instances={instanceList} />
     </Page>

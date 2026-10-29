@@ -1,0 +1,942 @@
+# Grown set: testdata/grown is a held-out set of corpora, kept apart from the original set (asr_corpus.yaml and phonetic/). TestASRCorpus and TestPhoneticEval score both sets and report them separately.
+#
+# English (en-AU, en-GB, en-US) phonetic evaluation corpus for TestPhoneticEval, a second library alongside the English suite in asr_corpus.yaml. Same schema; cases are scored, not asserted, so there is no xfail.
+#
+# Library: real, well-known English-language films, series, artists, albums and songs (titles as published, with their original release years), with near neighbours so a wrong play is possible: remakes and same-title items of another kind (A Star Is Born, Aladdin, Fargo, Purple Rain, Bohemian Rhapsody), sequels and numbered siblings (21 and 22 Jump Street, Adele's 21, 25 and 30), shared words (Brave/Braveheart, Sunshine/Little Miss Sunshine, Mad Max/Mad Men, Top Gun/Top Gear, Knight and Day/The Dark Knight) and shared first names (Billie Holiday, Billie Eilish, Billy Joel, Billy Idol; Stevie Wonder and Stevie Nicks; Olivia Rodrigo and Olivia Newton-John; Leonard Cohen and Lynyrd Skynyrd).
+#
+# Cases: what a speech recogniser plausibly writes when an English speaker asks for the title. Each mishearing is tagged, by the section it sits in, with the confusion it models. The classes come from English's deep orthography, where one sound has many spellings, and from the documented error patterns of speech recognisers, whose language model prefers a frequent in-vocabulary word or spelling over an out-of-vocabulary name:
+#   - homophones and real-word substitutions (knight/night, Bourne/born, rain/reign, Kane/cane, Lorde/lord, Sia/see a, U2/you too, Def Leppard/deaf leopard, Lynyrd Skynyrd/Leonard Skinner)
+#   - word splits and merges in compounds and brand names (Goodfellas/good fellas, Radiohead/radio head, Good Will/goodwill, Nevermind/never mind)
+#   - vowel spellings and the unstressed schwa (ee/ea/ie, -ance/-ence, -er/-or/-ar, a/o in apocalypse, ei/ie in Springsteen)
+#   - consonant spellings and silent letters (ph/f, c/k/ck, s/z, ps-, h after r, the c in arctic, th/t, j/y)
+#   - doubled and single consonants (Forrest/forest, Paddington/Padington, Mamma/mama, Aladdin/Aladin)
+#   - connected-speech reductions and accent effects: American t-flapping (Notting/nothing), Australian and British non-rhoticity (Mirror/Mira), consonant-cluster reduction (sixth/six), g-dropping (Singin'/singing), of/o', used to/use to, clipped titles (Parks and Rec, Les Mis)
+#   - foreign-name spellings and regional titles (Ratatouille, Lebowski, Moulin Rouge, Tchaikovsky, Björk, Sinéad, Zootropolis, Dunkerque)
+#   - number forms: digits, words, homophones of digits (too/two/to, four/for, sum/some), years read as pairs, hundreds read with "and", ordinals and spellings like Boyz II Men
+#   - letters, acronyms, symbols and abbreviations (R.E.M., INXS/in excess, NCIS, &/and, +, !, $, Mr./mister, Inc.)
+#   - inflection, articles and dropped or added words (plural and possessive s, a leading "the", a surname alone, a subtitle alone)
+# Controls (exact titles, including deliberate same-title ambiguity that should ask) and absent titles (not_found for titles sharing words with the library, ask for missing sequels as asr_corpus.yaml does) keep the decision thresholds honest.
+#
+# Cases describe what a listener hears; don't change a case to suit an encoder's results, or the comparison stops meaning anything (see docs/src/content/docs/contributing/dependencies.md).
+suites:
+  - name: english library two
+    lang: en
+    library:
+      # Movies.
+      - {id: darkknight, kind: movie, title: "The Dark Knight", year: 2008}
+      - {id: darkknightrises, kind: movie, title: "The Dark Knight Rises", year: 2012}
+      - {id: batmanbegins, kind: movie, title: "Batman Begins", year: 2005}
+      - {id: batman1989, kind: movie, title: "Batman", year: 1989}
+      - {id: thebatman, kind: movie, title: "The Batman", year: 2022}
+      - {id: knightday, kind: movie, title: "Knight and Day", year: 2010}
+      - {id: bourne1, kind: movie, title: "The Bourne Identity", year: 2002}
+      - {id: bourne2, kind: movie, title: "The Bourne Supremacy", year: 2004}
+      - {id: bourne3, kind: movie, title: "The Bourne Ultimatum", year: 2007}
+      - {id: star1954, kind: movie, title: "A Star Is Born", year: 1954}
+      - {id: star2018, kind: movie, title: "A Star Is Born", year: 2018}
+      - {id: singin, kind: movie, title: "Singin' in the Rain", year: 1952}
+      - {id: purplerainfilm, kind: movie, title: "Purple Rain", year: 1984}
+      - {id: rainman, kind: movie, title: "Rain Man", year: 1988}
+      - {id: ferris, kind: movie, title: "Ferris Bueller's Day Off", year: 1986}
+      - {id: groundhog, kind: movie, title: "Groundhog Day", year: 1993}
+      - {id: independence, kind: movie, title: "Independence Day", year: 1996}
+      - {id: dayafter, kind: movie, title: "The Day After Tomorrow", year: 2004}
+      - {id: goodfellas, kind: movie, title: "Goodfellas", year: 1990}
+      - {id: goodwill, kind: movie, title: "Good Will Hunting", year: 1997}
+      - {id: jurassic, kind: movie, title: "Jurassic Park", year: 1993}
+      - {id: lostworld, kind: movie, title: "The Lost World: Jurassic Park", year: 1997}
+      - {id: jurassicworld, kind: movie, title: "Jurassic World", year: 2015}
+      - {id: gladiator, kind: movie, title: "Gladiator", year: 2000}
+      - {id: gladiator2, kind: movie, title: "Gladiator II", year: 2024}
+      - {id: alien, kind: movie, title: "Alien", year: 1979}
+      - {id: aliens, kind: movie, title: "Aliens", year: 1986}
+      - {id: alien3, kind: movie, title: "Alien³", year: 1992}
+      - {id: terminator, kind: movie, title: "The Terminator", year: 1984}
+      - {id: t2, kind: movie, title: "Terminator 2: Judgment Day", year: 1991}
+      - {id: predator, kind: movie, title: "Predator", year: 1987}
+      - {id: psycho, kind: movie, title: "Psycho", year: 1960}
+      - {id: exorcist, kind: movie, title: "The Exorcist", year: 1973}
+      - {id: ratatouille, kind: movie, title: "Ratatouille", year: 2007}
+      - {id: beetlejuice, kind: movie, title: "Beetlejuice", year: 1988}
+      - {id: gattaca, kind: movie, title: "Gattaca", year: 1997}
+      - {id: tenet, kind: movie, title: "Tenet", year: 2020}
+      - {id: memento, kind: movie, title: "Memento", year: 2000}
+      - {id: dunkirk, kind: movie, title: "Dunkirk", year: 2017}
+      - {id: oppenheimer, kind: movie, title: "Oppenheimer", year: 2023}
+      - {id: barbie, kind: movie, title: "Barbie", year: 2023}
+      - {id: eeaao, kind: movie, title: "Everything Everywhere All at Once", year: 2022}
+      - {id: parasite, kind: movie, title: "Parasite", year: 2019}
+      - {id: arrival, kind: movie, title: "Arrival", year: 2016}
+      - {id: her, kind: movie, title: "Her", year: 2013}
+      - {id: heat, kind: movie, title: "Heat", year: 1995}
+      - {id: thing, kind: movie, title: "The Thing", year: 1982}
+      - {id: rearwindow, kind: movie, title: "Rear Window", year: 1954}
+      - {id: vertigo, kind: movie, title: "Vertigo", year: 1958}
+      - {id: casablanca, kind: movie, title: "Casablanca", year: 1942}
+      - {id: kane, kind: movie, title: "Citizen Kane", year: 1941}
+      - {id: chinatown, kind: movie, title: "Chinatown", year: 1974}
+      - {id: taxidriver, kind: movie, title: "Taxi Driver", year: 1976}
+      - {id: ragingbull, kind: movie, title: "Raging Bull", year: 1980}
+      - {id: apocalypse, kind: movie, title: "Apocalypse Now", year: 1979}
+      - {id: deerhunter, kind: movie, title: "The Deer Hunter", year: 1978}
+      - {id: platoon, kind: movie, title: "Platoon", year: 1986}
+      - {id: ryan, kind: movie, title: "Saving Private Ryan", year: 1998}
+      - {id: gump, kind: movie, title: "Forrest Gump", year: 1994}
+      - {id: titanic, kind: movie, title: "Titanic", year: 1997}
+      - {id: braveheart, kind: movie, title: "Braveheart", year: 1995}
+      - {id: brave, kind: movie, title: "Brave", year: 2012}
+      - {id: gravity, kind: movie, title: "Gravity", year: 2013}
+      - {id: martian, kind: movie, title: "The Martian", year: 2015}
+      - {id: madmax, kind: movie, title: "Mad Max", year: 1979}
+      - {id: furyroad, kind: movie, title: "Mad Max: Fury Road", year: 2015}
+      - {id: sixthsense, kind: movie, title: "The Sixth Sense", year: 1999}
+      - {id: ghost, kind: movie, title: "Ghost", year: 1990}
+      - {id: prettywoman, kind: movie, title: "Pretty Woman", year: 1990}
+      - {id: notting, kind: movie, title: "Notting Hill", year: 1999}
+      - {id: loveactually, kind: movie, title: "Love Actually", year: 2003}
+      - {id: fourweddings, kind: movie, title: "Four Weddings and a Funeral", year: 1994}
+      - {id: bridget, kind: movie, title: "Bridget Jones's Diary", year: 2001}
+      - {id: meangirls, kind: movie, title: "Mean Girls", year: 2004}
+      - {id: clueless, kind: movie, title: "Clueless", year: 1995}
+      - {id: grease, kind: movie, title: "Grease", year: 1978}
+      - {id: hairspray, kind: movie, title: "Hairspray", year: 2007}
+      - {id: lesmis, kind: movie, title: "Les Misérables", year: 2012}
+      - {id: showman, kind: movie, title: "The Greatest Showman", year: 2017}
+      - {id: mammamia, kind: movie, title: "Mamma Mia!", year: 2008}
+      - {id: mammamia2, kind: movie, title: "Mamma Mia! Here We Go Again", year: 2018}
+      - {id: topgun, kind: movie, title: "Top Gun", year: 1986}
+      - {id: maverick, kind: movie, title: "Top Gun: Maverick", year: 2022}
+      - {id: diehard, kind: movie, title: "Die Hard", year: 1988}
+      - {id: diehard2, kind: movie, title: "Die Hard 2", year: 1990}
+      - {id: lethal, kind: movie, title: "Lethal Weapon", year: 1987}
+      - {id: fugitive, kind: movie, title: "The Fugitive", year: 1993}
+      - {id: speed, kind: movie, title: "Speed", year: 1994}
+      - {id: jumanji, kind: movie, title: "Jumanji", year: 1995}
+      - {id: jumanji2, kind: movie, title: "Jumanji: Welcome to the Jungle", year: 2017}
+      - {id: hook, kind: movie, title: "Hook", year: 1991}
+      - {id: goonies, kind: movie, title: "The Goonies", year: 1985}
+      - {id: gremlins, kind: movie, title: "Gremlins", year: 1984}
+      - {id: scissorhands, kind: movie, title: "Edward Scissorhands", year: 1990}
+      - {id: nightmare, kind: movie, title: "The Nightmare Before Christmas", year: 1993}
+      - {id: homealone, kind: movie, title: "Home Alone", year: 1990}
+      - {id: homealone2, kind: movie, title: "Home Alone 2: Lost in New York", year: 1992}
+      - {id: elf, kind: movie, title: "Elf", year: 2003}
+      - {id: babe, kind: movie, title: "Babe", year: 1995}
+      - {id: dundee, kind: movie, title: "Crocodile Dundee", year: 1986}
+      - {id: castle, kind: movie, title: "The Castle", year: 1997}
+      - {id: muriel, kind: movie, title: "Muriel's Wedding", year: 1994}
+      - {id: happyfeet, kind: movie, title: "Happy Feet", year: 2006}
+      - {id: moulinrouge, kind: movie, title: "Moulin Rouge!", year: 2001}
+      - {id: gatsby, kind: movie, title: "The Great Gatsby", year: 2013}
+      - {id: romeo, kind: movie, title: "Romeo + Juliet", year: 1996}
+      - {id: elvis, kind: movie, title: "Elvis", year: 2022}
+      - {id: bohofilm, kind: movie, title: "Bohemian Rhapsody", year: 2018}
+      - {id: rocketman, kind: movie, title: "Rocketman", year: 2019}
+      - {id: walktheline, kind: movie, title: "Walk the Line", year: 2005}
+      - {id: ray, kind: movie, title: "Ray", year: 2004}
+      - {id: socialnetwork, kind: movie, title: "The Social Network", year: 2010}
+      - {id: moneyball, kind: movie, title: "Moneyball", year: 2011}
+      - {id: zodiac, kind: movie, title: "Zodiac", year: 2007}
+      - {id: gonegirl, kind: movie, title: "Gone Girl", year: 2014}
+      - {id: fightclub, kind: movie, title: "Fight Club", year: 1999}
+      - {id: nocountry, kind: movie, title: "No Country for Old Men", year: 2007}
+      - {id: blood, kind: movie, title: "There Will Be Blood", year: 2007}
+      - {id: lebowski, kind: movie, title: "The Big Lebowski", year: 1998}
+      - {id: fargofilm, kind: movie, title: "Fargo", year: 1996}
+      - {id: juno, kind: movie, title: "Juno", year: 2007}
+      - {id: missunshine, kind: movie, title: "Little Miss Sunshine", year: 2006}
+      - {id: eternal, kind: movie, title: "Eternal Sunshine of the Spotless Mind", year: 2004}
+      - {id: sunshine, kind: movie, title: "Sunshine", year: 2007}
+      - {id: catchme, kind: movie, title: "Catch Me If You Can", year: 2002}
+      - {id: days28, kind: movie, title: "28 Days Later", year: 2002}
+      - {id: tenthings, kind: movie, title: "10 Things I Hate About You", year: 1999}
+      - {id: slave, kind: movie, title: "12 Years a Slave", year: 2013}
+      - {id: jump21, kind: movie, title: "21 Jump Street", year: 2012}
+      - {id: jump22, kind: movie, title: "22 Jump Street", year: 2014}
+      - {id: ff1, kind: movie, title: "The Fast and the Furious", year: 2001}
+      - {id: ff2, kind: movie, title: "2 Fast 2 Furious", year: 2003}
+      - {id: dates50, kind: movie, title: "50 First Dates", year: 2004}
+      - {id: s300, kind: movie, title: "300", year: 2006}
+      - {id: apollo13, kind: movie, title: "Apollo 13", year: 1995}
+      - {id: mile8, kind: movie, title: "8 Mile", year: 2002}
+      - {id: summer500, kind: movie, title: "(500) Days of Summer", year: 2009}
+      - {id: hours127, kind: movie, title: "127 Hours", year: 2010}
+      - {id: w1917, kind: movie, title: "1917", year: 2019}
+      - {id: monsters, kind: movie, title: "Monsters, Inc.", year: 2001}
+      - {id: monstersu, kind: movie, title: "Monsters University", year: 2013}
+      - {id: nemo, kind: movie, title: "Finding Nemo", year: 2003}
+      - {id: dory, kind: movie, title: "Finding Dory", year: 2016}
+      - {id: incredibles, kind: movie, title: "The Incredibles", year: 2004}
+      - {id: incredibles2, kind: movie, title: "Incredibles 2", year: 2018}
+      - {id: zootopia, kind: movie, title: "Zootopia", aliases: ["Zootropolis"], year: 2016}
+      - {id: encanto, kind: movie, title: "Encanto", year: 2021}
+      - {id: paddington, kind: movie, title: "Paddington", year: 2014}
+      - {id: paddington2, kind: movie, title: "Paddington 2", year: 2017}
+      - {id: wallace, kind: movie, title: "Wallace & Gromit: The Curse of the Were-Rabbit", year: 2005}
+      - {id: chickenrun, kind: movie, title: "Chicken Run", year: 2000}
+      - {id: irongiant, kind: movie, title: "The Iron Giant", year: 1999}
+      - {id: fantasia, kind: movie, title: "Fantasia", year: 1940}
+      - {id: bb1991, kind: movie, title: "Beauty and the Beast", year: 1991}
+      - {id: bb2017, kind: movie, title: "Beauty and the Beast", year: 2017}
+      - {id: aladdin1992, kind: movie, title: "Aladdin", year: 1992}
+      - {id: aladdin2019, kind: movie, title: "Aladdin", year: 2019}
+      - {id: mulan, kind: movie, title: "Mulan", year: 1998}
+      - {id: cars, kind: movie, title: "Cars", year: 2006}
+      - {id: cars2, kind: movie, title: "Cars 2", year: 2011}
+      # TV shows.
+      - {id: fargotv, kind: tvshow, title: "Fargo", year: 2014}
+      - {id: sopranos, kind: tvshow, title: "The Sopranos", year: 1999}
+      - {id: madmen, kind: tvshow, title: "Mad Men", year: 2007}
+      - {id: walkingdead, kind: tvshow, title: "The Walking Dead", year: 2010}
+      - {id: lost, kind: tvshow, title: "Lost", year: 2004}
+      - {id: twinpeaks, kind: tvshow, title: "Twin Peaks", year: 1990}
+      - {id: xfiles, kind: tvshow, title: "The X-Files", year: 1993}
+      - {id: buffy, kind: tvshow, title: "Buffy the Vampire Slayer", year: 1997}
+      - {id: frasier, kind: tvshow, title: "Frasier", year: 1993}
+      - {id: cheers, kind: tvshow, title: "Cheers", year: 1982}
+      - {id: arrested, kind: tvshow, title: "Arrested Development", year: 2003}
+      - {id: parks, kind: tvshow, title: "Parks and Recreation", year: 2009}
+      - {id: bigbang, kind: tvshow, title: "The Big Bang Theory", year: 2007}
+      - {id: himym, kind: tvshow, title: "How I Met Your Mother", year: 2005}
+      - {id: greys, kind: tvshow, title: "Grey's Anatomy", year: 2005}
+      - {id: er, kind: tvshow, title: "ER", year: 1994}
+      - {id: ncis, kind: tvshow, title: "NCIS", year: 2003}
+      - {id: csi, kind: tvshow, title: "CSI: Crime Scene Investigation", year: 2000}
+      - {id: goodplace, kind: tvshow, title: "The Good Place", year: 2016}
+      - {id: goodwife, kind: tvshow, title: "The Good Wife", year: 2009}
+      - {id: schitts, kind: tvshow, title: "Schitt's Creek", year: 2015}
+      - {id: kathkim, kind: tvshow, title: "Kath & Kim", year: 2002}
+      - {id: neighbours, kind: tvshow, title: "Neighbours", year: 1985}
+      - {id: homeaway, kind: tvshow, title: "Home and Away", year: 1988}
+      - {id: peaky, kind: tvshow, title: "Peaky Blinders", year: 2013}
+      - {id: downton, kind: tvshow, title: "Downton Abbey", year: 2010}
+      - {id: lineofduty, kind: tvshow, title: "Line of Duty", year: 2012}
+      - {id: bakeoff, kind: tvshow, title: "The Great British Bake Off", year: 2010}
+      - {id: topgear, kind: tvshow, title: "Top Gear", year: 2002}
+      - {id: blackmirror, kind: tvshow, title: "Black Mirror", year: 2011}
+      - {id: severance, kind: tvshow, title: "Severance", year: 2022}
+      - {id: bear, kind: tvshow, title: "The Bear", year: 2022}
+      - {id: yellowstone, kind: tvshow, title: "Yellowstone", year: 2018}
+      - {id: ozark, kind: tvshow, title: "Ozark", year: 2017}
+      - {id: euphoria, kind: tvshow, title: "Euphoria", year: 2019}
+      - {id: squidgame, kind: tvshow, title: "Squid Game", year: 2021}
+      - {id: lastofus, kind: tvshow, title: "The Last of Us", year: 2023}
+      - {id: hotd, kind: tvshow, title: "House of the Dragon", year: 2022}
+      - {id: truedetective, kind: tvshow, title: "True Detective", year: 2014}
+      - {id: witcher, kind: tvshow, title: "The Witcher", year: 2019}
+      - {id: wednesday, kind: tvshow, title: "Wednesday", year: 2022}
+      - {id: dexter, kind: tvshow, title: "Dexter", year: 2006}
+      - {id: suits, kind: tvshow, title: "Suits", year: 2011}
+      - {id: veep, kind: tvshow, title: "Veep", year: 2012}
+      - {id: taskmaster, kind: tvshow, title: "Taskmaster", year: 2015}
+      - {id: survivor, kind: tvshow, title: "Survivor", year: 2000}
+      - {id: shogun, kind: tvshow, title: "Shōgun", year: 2024}
+      - {id: daredevil, kind: tvshow, title: "Daredevil", year: 2015}
+      - {id: loki, kind: tvshow, title: "Loki", year: 2021}
+      - {id: wandavision, kind: tvshow, title: "WandaVision", year: 2021}
+      - {id: boys, kind: tvshow, title: "The Boys", year: 2019}
+      - {id: biglittlelies, kind: tvshow, title: "Big Little Lies", year: 2017}
+      - {id: killingeve, kind: tvshow, title: "Killing Eve", year: 2018}
+      - {id: mrrobot, kind: tvshow, title: "Mr. Robot", year: 2015}
+      - {id: mrbean, kind: tvshow, title: "Mr. Bean", year: 1990}
+      - {id: fawlty, kind: tvshow, title: "Fawlty Towers", year: 1975}
+      - {id: blackadder, kind: tvshow, title: "Blackadder", year: 1983}
+      - {id: onlyfools, kind: tvshow, title: "Only Fools and Horses", year: 1981}
+      # Artists.
+      - {id: prince, kind: artist, title: "Prince"}
+      - {id: u2, kind: artist, title: "U2"}
+      - {id: rem, kind: artist, title: "R.E.M."}
+      - {id: sia, kind: artist, title: "Sia"}
+      - {id: lorde, kind: artist, title: "Lorde"}
+      - {id: hozier, kind: artist, title: "Hozier"}
+      - {id: seal, kind: artist, title: "Seal"}
+      - {id: gaga, kind: artist, title: "Lady Gaga"}
+      - {id: kesha, kind: artist, title: "Ke$ha"}
+      - {id: pnk, kind: artist, title: "P!nk"}
+      - {id: pinkfloyd, kind: artist, title: "Pink Floyd"}
+      - {id: sheeran, kind: artist, title: "Ed Sheeran"}
+      - {id: adele, kind: artist, title: "Adele"}
+      - {id: drake, kind: artist, title: "Drake"}
+      - {id: rihanna, kind: artist, title: "Rihanna"}
+      - {id: shakira, kind: artist, title: "Shakira"}
+      - {id: bjork, kind: artist, title: "Björk"}
+      - {id: sinead, kind: artist, title: "Sinéad O'Connor"}
+      - {id: tchaikovsky, kind: artist, title: "Pyotr Ilyich Tchaikovsky"}
+      - {id: mozart, kind: artist, title: "Wolfgang Amadeus Mozart"}
+      - {id: beethoven, kind: artist, title: "Ludwig van Beethoven"}
+      - {id: fleetwood, kind: artist, title: "Fleetwood Mac"}
+      - {id: stones, kind: artist, title: "The Rolling Stones"}
+      - {id: who, kind: artist, title: "The Who"}
+      - {id: doors, kind: artist, title: "The Doors"}
+      - {id: police, kind: artist, title: "The Police"}
+      - {id: cure, kind: artist, title: "The Cure"}
+      - {id: killers, kind: artist, title: "The Killers"}
+      - {id: arctic, kind: artist, title: "Arctic Monkeys"}
+      - {id: radiohead, kind: artist, title: "Radiohead"}
+      - {id: oasis, kind: artist, title: "Oasis"}
+      - {id: blur, kind: artist, title: "Blur"}
+      - {id: nirvana, kind: artist, title: "Nirvana"}
+      - {id: pearljam, kind: artist, title: "Pearl Jam"}
+      - {id: foo, kind: artist, title: "Foo Fighters"}
+      - {id: metallica, kind: artist, title: "Metallica"}
+      - {id: megadeth, kind: artist, title: "Megadeth"}
+      - {id: defleppard, kind: artist, title: "Def Leppard"}
+      - {id: skynyrd, kind: artist, title: "Lynyrd Skynyrd"}
+      - {id: ccr, kind: artist, title: "Creedence Clearwater Revival"}
+      - {id: ewf, kind: artist, title: "Earth, Wind & Fire"}
+      - {id: simon, kind: artist, title: "Simon & Garfunkel"}
+      - {id: halloates, kind: artist, title: "Hall & Oates"}
+      - {id: tff, kind: artist, title: "Tears for Fears"}
+      - {id: duran, kind: artist, title: "Duran Duran"}
+      - {id: kylie, kind: artist, title: "Kylie Minogue"}
+      - {id: inxs, kind: artist, title: "INXS"}
+      - {id: midnightoil, kind: artist, title: "Midnight Oil"}
+      - {id: crowded, kind: artist, title: "Crowded House"}
+      - {id: tame, kind: artist, title: "Tame Impala"}
+      - {id: gotye, kind: artist, title: "Gotye"}
+      - {id: menatwork, kind: artist, title: "Men at Work"}
+      - {id: powderfinger, kind: artist, title: "Powderfinger"}
+      - {id: silverchair, kind: artist, title: "Silverchair"}
+      - {id: paulkelly, kind: artist, title: "Paul Kelly"}
+      - {id: missy, kind: artist, title: "Missy Higgins"}
+      - {id: barnes, kind: artist, title: "Jimmy Barnes"}
+      - {id: coldchisel, kind: artist, title: "Cold Chisel"}
+      - {id: coldplay, kind: artist, title: "Coldplay"}
+      - {id: holiday, kind: artist, title: "Billie Holiday"}
+      - {id: eilish, kind: artist, title: "Billie Eilish"}
+      - {id: joel, kind: artist, title: "Billy Joel"}
+      - {id: idol, kind: artist, title: "Billy Idol"}
+      - {id: elton, kind: artist, title: "Elton John"}
+      - {id: lennon, kind: artist, title: "John Lennon"}
+      - {id: legend, kind: artist, title: "John Legend"}
+      - {id: mayer, kind: artist, title: "John Mayer"}
+      - {id: springsteen, kind: artist, title: "Bruce Springsteen"}
+      - {id: dylan, kind: artist, title: "Bob Dylan"}
+      - {id: marley, kind: artist, title: "Bob Marley"}
+      - {id: mj, kind: artist, title: "Michael Jackson"}
+      - {id: janet, kind: artist, title: "Janet Jackson"}
+      - {id: whitney, kind: artist, title: "Whitney Houston"}
+      - {id: mariah, kind: artist, title: "Mariah Carey"}
+      - {id: celine, kind: artist, title: "Céline Dion"}
+      - {id: wonder, kind: artist, title: "Stevie Wonder"}
+      - {id: nicks, kind: artist, title: "Stevie Nicks"}
+      - {id: dua, kind: artist, title: "Dua Lipa"}
+      - {id: rodrigo, kind: artist, title: "Olivia Rodrigo"}
+      - {id: onj, kind: artist, title: "Olivia Newton-John"}
+      - {id: styles, kind: artist, title: "Harry Styles"}
+      - {id: bruno, kind: artist, title: "Bruno Mars"}
+      - {id: postmalone, kind: artist, title: "Post Malone"}
+      - {id: kendrick, kind: artist, title: "Kendrick Lamar"}
+      - {id: kanye, kind: artist, title: "Kanye West"}
+      - {id: lilnas, kind: artist, title: "Lil Nas X"}
+      - {id: doja, kind: artist, title: "Doja Cat"}
+      - {id: khalid, kind: artist, title: "Khalid"}
+      - {id: joni, kind: artist, title: "Joni Mitchell"}
+      - {id: phoebe, kind: artist, title: "Phoebe Bridgers"}
+      - {id: lizzo, kind: artist, title: "Lizzo"}
+      - {id: mumford, kind: artist, title: "Mumford & Sons"}
+      - {id: imagine, kind: artist, title: "Imagine Dragons"}
+      - {id: pilots, kind: artist, title: "Twenty One Pilots"}
+      - {id: maroon5, kind: artist, title: "Maroon 5"}
+      - {id: the1975, kind: artist, title: "The 1975"}
+      - {id: sos, kind: artist, title: "5 Seconds of Summer"}
+      - {id: sum41, kind: artist, title: "Sum 41"}
+      - {id: ub40, kind: artist, title: "UB40"}
+      - {id: jackson5, kind: artist, title: "The Jackson 5"}
+      - {id: eurythmics, kind: artist, title: "Eurythmics"}
+      - {id: siouxsie, kind: artist, title: "Siouxsie and the Banshees"}
+      - {id: boyz, kind: artist, title: "Boyz II Men"}
+      - {id: outkast, kind: artist, title: "OutKast"}
+      - {id: wutang, kind: artist, title: "Wu-Tang Clan"}
+      - {id: deadmau5, kind: artist, title: "deadmau5"}
+      - {id: aha, kind: artist, title: "a-ha"}
+      - {id: eagles, kind: artist, title: "Eagles"}
+      - {id: cohen, kind: artist, title: "Leonard Cohen"}
+      - {id: katebush, kind: artist, title: "Kate Bush"}
+      - {id: dolly, kind: artist, title: "Dolly Parton"}
+      - {id: bryan, kind: artist, title: "Bryan Adams"}
+      - {id: ariana, kind: artist, title: "Ariana Grande"}
+      - {id: whitestripes, kind: artist, title: "The White Stripes"}
+      # Albums.
+      - {id: thriller, kind: album, title: "Thriller", year: 1982}
+      - {id: rumours, kind: album, title: "Rumours", year: 1977}
+      - {id: darkside, kind: album, title: "The Dark Side of the Moon", year: 1973}
+      - {id: nevermind, kind: album, title: "Nevermind", year: 1991}
+      - {id: okcomputer, kind: album, title: "OK Computer", year: 1997}
+      - {id: borntorun, kind: album, title: "Born to Run", year: 1975}
+      - {id: bornusa, kind: album, title: "Born in the U.S.A.", year: 1984}
+      - {id: adele21, kind: album, title: "21", year: 2011}
+      - {id: adele25, kind: album, title: "25", year: 2015}
+      - {id: adele30, kind: album, title: "30", year: 2021}
+      - {id: lemonade, kind: album, title: "Lemonade", year: 2016}
+      - {id: pralbum, kind: album, title: "Purple Rain", year: 1984}
+      - {id: hounds, kind: album, title: "Hounds of Love", year: 1985}
+      - {id: blue, kind: album, title: "Blue", year: 1971}
+      - {id: graceland, kind: album, title: "Graceland", year: 1986}
+      - {id: diesel, kind: album, title: "Diesel and Dust", year: 1987}
+      - {id: kick, kind: album, title: "Kick", year: 1987}
+      - {id: currents, kind: album, title: "Currents", year: 2015}
+      - {id: whatever, kind: album, title: "Whatever People Say I Am, That's What I'm Not", year: 2006}
+      - {id: am, kind: album, title: "AM", year: 2013}
+      - {id: parachutes, kind: album, title: "Parachutes", year: 2000}
+      # Songs.
+      - {id: bohosong, kind: song, title: "Bohemian Rhapsody", year: 1975}
+      - {id: hallelujah, kind: song, title: "Hallelujah", year: 1984}
+      - {id: wonderwall, kind: song, title: "Wonderwall", year: 1995}
+      - {id: teenspirit, kind: song, title: "Smells Like Teen Spirit", year: 1991}
+      - {id: hotelcal, kind: song, title: "Hotel California", year: 1976}
+      - {id: stairway, kind: song, title: "Stairway to Heaven", year: 1971}
+      - {id: heyjude, kind: song, title: "Hey Jude", year: 1968}
+      - {id: billiejean, kind: song, title: "Billie Jean", year: 1982}
+      - {id: rolling, kind: song, title: "Rolling in the Deep", year: 2010}
+      - {id: somebody, kind: song, title: "Somebody That I Used to Know", year: 2011}
+      - {id: downunder, kind: song, title: "Down Under", year: 1981}
+      - {id: tearusapart, kind: song, title: "Never Tear Us Apart", year: 1988}
+      - {id: sweetchild, kind: song, title: "Sweet Child o' Mine", year: 1987}
+      - {id: brightside, kind: song, title: "Mr. Brightside", year: 2003}
+      - {id: sevennation, kind: song, title: "Seven Nation Army", year: 2003}
+      - {id: shapeofyou, kind: song, title: "Shape of You", year: 2017}
+      - {id: badguy, kind: song, title: "Bad Guy", year: 2019}
+      - {id: blinding, kind: song, title: "Blinding Lights", year: 2019}
+      - {id: uptown, kind: song, title: "Uptown Funk", year: 2014}
+      - {id: despacito, kind: song, title: "Despacito", year: 2017}
+      - {id: gangnam, kind: song, title: "Gangnam Style", year: 2012}
+      - {id: royals, kind: song, title: "Royals", year: 2013}
+      - {id: chandelier, kind: song, title: "Chandelier", year: 2014}
+      - {id: takeonme, kind: song, title: "Take On Me", year: 1985}
+      - {id: halo, kind: song, title: "Halo", year: 2008}
+      - {id: umbrella, kind: song, title: "Umbrella", year: 2007}
+      - {id: rhiannon, kind: song, title: "Rhiannon", year: 1975}
+      - {id: respect, kind: song, title: "Respect", year: 1967}
+      - {id: ironic, kind: song, title: "Ironic", year: 1995}
+      - {id: creep, kind: song, title: "Creep", year: 1992}
+      - {id: yellow, kind: song, title: "Yellow", year: 2000}
+      - {id: nc2u, kind: song, title: "Nothing Compares 2 U", year: 1990}
+      - {id: rings7, kind: song, title: "7 Rings", year: 2019}
+      - {id: ninetofive, kind: song, title: "9 to 5", year: 1980}
+      - {id: prince1999, kind: song, title: "1999", year: 1982}
+      - {id: summer69, kind: song, title: "Summer of '69", year: 1984}
+    cases:
+      # Controls: the title as written.
+      - {heard: "the dark knight", want: play, id: darkknight}
+      - {heard: "batman begins", want: play, id: batmanbegins}
+      - {heard: "knight and day", want: play, id: knightday}
+      - {heard: "the bourne identity", want: play, id: bourne1}
+      - {heard: "groundhog day", want: play, id: groundhog}
+      - {heard: "alien", want: play, id: alien}
+      - {heard: "aliens", want: play, id: aliens}
+      - {heard: "brave", want: play, id: brave}
+      - {heard: "braveheart", want: play, id: braveheart}
+      - {heard: "sunshine", want: play, id: sunshine}
+      - {heard: "little miss sunshine", want: play, id: missunshine}
+      - {heard: "heat", want: play, id: heat}
+      - {heard: "her", want: play, id: her}
+      - {heard: "cars", want: play, id: cars}
+      - {heard: "mad max", want: play, id: madmax}
+      - {heard: "the castle", want: play, id: castle}
+      - {heard: "the good place", want: play, id: goodplace}
+      - {heard: "the good wife", want: play, id: goodwife}
+      - {heard: "home and away", want: play, id: homeaway}
+      - {heard: "black mirror", want: play, id: blackmirror}
+      - {heard: "the last of us", want: play, id: lastofus}
+      - {heard: "lost", want: play, id: lost}
+      - {heard: "prince", want: play, id: prince}
+      - {heard: "pink floyd", want: play, id: pinkfloyd}
+      - {heard: "adele", want: play, id: adele}
+      - {heard: "the who", want: play, id: who}
+      - {heard: "oasis", want: play, id: oasis}
+      - {heard: "midnight oil", want: play, id: midnightoil}
+      - {heard: "men at work", want: play, id: menatwork}
+      - {heard: "stevie wonder", want: play, id: wonder}
+      - {heard: "kate bush", want: play, id: katebush}
+      - {heard: "thriller", want: play, id: thriller}
+      - {heard: "hotel california", want: play, id: hotelcal}
+      - {heard: "take on me", want: play, id: takeonme}
+      - {heard: "shape of you", want: play, id: shapeofyou}
+      - {heard: "rolling in the deep", want: play, id: rolling}
+      - {heard: "blue", want: play, id: blue, kinds: [album]}
+      - {heard: "yellow", want: play, id: yellow, kinds: [song]}
+      - {heard: "21 jump street", want: play, id: jump21}
+      - {heard: "2 fast 2 furious", want: play, id: ff2}
+      - {heard: "the fast and the furious", want: play, id: ff1}
+      - {heard: "jurassic park", want: play, id: jurassic}
+      - {heard: "gladiator", want: play, id: gladiator}
+      - {heard: "the terminator", want: play, id: terminator}
+      - {heard: "predator", want: play, id: predator}
+      - {heard: "titanic", want: play, id: titanic}
+      - {heard: "gravity", want: play, id: gravity}
+      - {heard: "the martian", want: play, id: martian}
+      - {heard: "ghost", want: play, id: ghost}
+      - {heard: "elf", want: play, id: elf}
+      - {heard: "hook", want: play, id: hook}
+      - {heard: "speed", want: play, id: speed}
+      - {heard: "ray", want: play, id: ray}
+      - {heard: "elvis", want: play, id: elvis}
+      - {heard: "fight club", want: play, id: fightclub}
+      - {heard: "catch me if you can", want: play, id: catchme}
+      - {heard: "the day after tomorrow", want: play, id: dayafter}
+      - {heard: "vertigo", want: play, id: vertigo}
+      - {heard: "dexter", want: play, id: dexter}
+      - {heard: "suits", want: play, id: suits}
+      - {heard: "cheers", want: play, id: cheers}
+      - {heard: "the boys", want: play, id: boys}
+      - {heard: "seal", want: play, id: seal}
+      - {heard: "drake", want: play, id: drake}
+      - {heard: "the doors", want: play, id: doors}
+      - {heard: "coldplay", want: play, id: coldplay}
+      - {heard: "creep", want: play, id: creep}
+      - {heard: "kick", want: play, id: kick, kinds: [album]}
+      # Controls: one title shared by two items, or a shared first name, so the right answer is to ask.
+      - {heard: "a star is born", want: ask, among: [star1954, star2018]}
+      - {heard: "beauty and the beast", want: ask, among: [bb1991, bb2017]}
+      - {heard: "aladdin", want: ask, among: [aladdin1992, aladdin2019]}
+      - {heard: "purple rain", want: ask, among: [purplerainfilm, pralbum]}
+      - {heard: "bohemian rhapsody", want: ask, among: [bohofilm, bohosong]}
+      - {heard: "fargo", want: ask, among: [fargofilm, fargotv]}
+      - {heard: "fargo", want: play, id: fargotv, kinds: [tvshow]}
+      - {heard: "purple rain", want: play, id: pralbum, kinds: [album]}
+      - {heard: "bohemian rhapsody", want: play, id: bohosong, kinds: [song]}
+      - {heard: "stevie", want: ask, among: [wonder, nicks]}
+      - {heard: "olivia", want: ask, among: [rodrigo, onj]}
+      - {heard: "bourne", want: ask, among: [bourne1, bourne2, bourne3]}
+      # Homophones and real-word substitutions.
+      - {heard: "the dark night", want: play, id: darkknight}
+      - {heard: "the dark night rises", want: play, id: darkknightrises}
+      - {heard: "night and day", want: play, id: knightday}
+      - {heard: "the born identity", want: play, id: bourne1}
+      - {heard: "the borne supremacy", want: play, id: bourne2}
+      - {heard: "the born ultimatum", want: play, id: bourne3}
+      - {heard: "a star is bourne", want: ask, among: [star1954, star2018]}
+      - {heard: "bourne to run", want: play, id: borntorun}
+      - {heard: "purple reign", want: play, id: purplerainfilm, kinds: [movie]}
+      - {heard: "reign man", want: play, id: rainman}
+      - {heard: "greece", want: play, id: grease}
+      - {heard: "the dear hunter", want: play, id: deerhunter}
+      - {heard: "citizen cane", want: play, id: kane}
+      - {heard: "the bare", want: play, id: bear}
+      - {heard: "low key", want: play, id: loki}
+      - {heard: "tenant", want: play, id: tenet}
+      - {heard: "juneau", want: play, id: juno}
+      - {heard: "twin peeks", want: play, id: twinpeaks}
+      - {heard: "happy feat", want: play, id: happyfeet}
+      - {heard: "dye hard", want: play, id: diehard}
+      - {heard: "the martin", want: play, id: martian}
+      - {heard: "saving privet ryan", want: play, id: ryan}
+      - {heard: "rear widow", want: play, id: rearwindow}
+      - {heard: "gray's anatomy", want: play, id: greys}
+      - {heard: "faulty towers", want: play, id: fawlty}
+      - {heard: "downtown abbey", want: play, id: downton}
+      - {heard: "mister been", want: play, id: mrbean}
+      - {heard: "monsters ink", want: play, id: monsters}
+      - {heard: "eternal sunshine of the spotless mine", want: play, id: eternal}
+      - {heard: "bridget jones dairy", want: play, id: bridget}
+      - {heard: "mural's wedding", want: play, id: muriel}
+      - {heard: "hall and oats", want: play, id: halloates}
+      - {heard: "mumford and suns", want: play, id: mumford}
+      - {heard: "def leopard", want: play, id: defleppard}
+      - {heard: "deaf leopard", want: play, id: defleppard}
+      - {heard: "leonard skinner", want: play, id: skynyrd}
+      - {heard: "lord", want: play, id: lorde, kinds: [artist]}
+      - {heard: "see a", want: play, id: sia, kinds: [artist]}
+      - {heard: "hosier", want: play, id: hozier}
+      - {heard: "you too", want: play, id: u2, kinds: [artist]}
+      - {heard: "food fighters", want: play, id: foo}
+      - {heard: "stevie knicks", want: play, id: nicks}
+      - {heard: "johnny mitchell", want: play, id: joni}
+      - {heard: "billy idle", want: play, id: idol}
+      - {heard: "brian adams", want: play, id: bryan}
+      - {heard: "harry stiles", want: play, id: styles}
+      - {heard: "bob dillon", want: play, id: dylan}
+      - {heard: "maria carey", want: play, id: mariah}
+      - {heard: "olivia rodriguez", want: play, id: rodrigo}
+      - {heard: "phoebe bridges", want: play, id: phoebe}
+      - {heard: "tame impaler", want: play, id: tame}
+      - {heard: "gaultier", want: play, id: gotye, kinds: [artist]}
+      - {heard: "outcast", want: play, id: outkast, kinds: [artist]}
+      - {heard: "dead mouse", want: play, id: deadmau5}
+      - {heard: "your rhythmics", want: play, id: eurythmics}
+      - {heard: "smells like team spirit", want: play, id: teenspirit}
+      - {heard: "currants", want: play, id: currents, kinds: [album]}
+      - {heard: "shits creek", want: play, id: schitts}
+      # Word splits and merges.
+      - {heard: "good fellas", want: play, id: goodfellas}
+      - {heard: "goodwill hunting", want: play, id: goodwill}
+      - {heard: "brave heart", want: play, id: braveheart}
+      - {heard: "beetle juice", want: play, id: beetlejuice}
+      - {heard: "ground hog day", want: play, id: groundhog}
+      - {heard: "edward scissor hands", want: play, id: scissorhands}
+      - {heard: "the night mare before christmas", want: play, id: nightmare}
+      - {heard: "rocket man", want: play, id: rocketman}
+      - {heard: "money ball", want: play, id: moneyball}
+      - {heard: "clue less", want: play, id: clueless}
+      - {heard: "hair spray", want: play, id: hairspray}
+      - {heard: "the greatest show man", want: play, id: showman}
+      - {heard: "casa blanca", want: play, id: casablanca}
+      - {heard: "china town", want: play, id: chinatown}
+      - {heard: "zoo topia", want: play, id: zootopia}
+      - {heard: "en canto", want: play, id: encanto}
+      - {heard: "yellow stone", want: play, id: yellowstone}
+      - {heard: "task master", want: play, id: taskmaster}
+      - {heard: "dare devil", want: play, id: daredevil}
+      - {heard: "wanda vision", want: play, id: wandavision}
+      - {heard: "black adder", want: play, id: blackadder}
+      - {heard: "the great british bakeoff", want: play, id: bakeoff}
+      - {heard: "the witch her", want: play, id: witcher}
+      - {heard: "o zark", want: play, id: ozark}
+      - {heard: "radio head", want: play, id: radiohead}
+      - {heard: "powder finger", want: play, id: powderfinger}
+      - {heard: "silver chair", want: play, id: silverchair}
+      - {heard: "fleet wood mac", want: play, id: fleetwood}
+      - {heard: "creedence clear water revival", want: play, id: ccr}
+      - {heard: "lady ga ga", want: play, id: gaga}
+      - {heard: "do a lipa", want: play, id: dua}
+      - {heard: "never mind", want: play, id: nevermind, kinds: [album]}
+      - {heard: "grace land", want: play, id: graceland}
+      - {heard: "wonder wall", want: play, id: wonderwall}
+      - {heard: "up town funk", want: play, id: uptown}
+      - {heard: "gang nam style", want: play, id: gangnam}
+      - {heard: "never tear us a part", want: play, id: tearusapart}
+      - {heard: "stair way to heaven", want: play, id: stairway}
+      # Vowel spellings and the unstressed schwa.
+      - {heard: "the gooneys", want: play, id: goonies}
+      - {heard: "independance day", want: play, id: independence}
+      - {heard: "severence", want: play, id: severance}
+      - {heard: "apocolypse now", want: play, id: apocalypse}
+      - {heard: "arrested developement", want: play, id: arrested}
+      - {heard: "wensday", want: play, id: wednesday}
+      - {heard: "jumanjee", want: play, id: jumanji}
+      - {heard: "momento", want: play, id: memento}
+      - {heard: "peeky blinders", want: play, id: peaky}
+      - {heard: "mad max furry road", want: play, id: furyroad}
+      - {heard: "crocodile dundy", want: play, id: dundee}
+      - {heard: "nervana", want: play, id: nirvana}
+      - {heard: "ed shearin", want: play, id: sheeran}
+      - {heard: "bruce springstein", want: play, id: springsteen}
+      - {heard: "whitney huston", want: play, id: whitney}
+      - {heard: "john lennin", want: play, id: lennon}
+      - {heard: "john meyer", want: play, id: mayer}
+      - {heard: "jimmy barns", want: play, id: barnes}
+      - {heard: "bob marly", want: play, id: marley}
+      - {heard: "missy higgens", want: play, id: missy}
+      - {heard: "simon and garfunkle", want: play, id: simon}
+      - {heard: "cold chisle", want: play, id: coldchisel}
+      - {heard: "kylie minog", want: play, id: kylie}
+      - {heard: "credence clearwater revival", want: play, id: ccr}
+      - {heard: "woo tang clan", want: play, id: wutang}
+      - {heard: "dua leepa", want: play, id: dua}
+      - {heard: "kanya west", want: play, id: kanye}
+      - {heard: "leonard coen", want: play, id: cohen}
+      - {heard: "dolly partin", want: play, id: dolly}
+      # Consonant spellings and silent letters.
+      - {heard: "sycho", want: play, id: psycho}
+      - {heard: "psyco", want: play, id: psycho}
+      - {heard: "the exorsist", want: play, id: exorcist}
+      - {heard: "gattaka", want: play, id: gattaca}
+      - {heard: "cath and kim", want: play, id: kathkim}
+      - {heard: "euforia", want: play, id: euphoria}
+      - {heard: "frazier", want: play, id: frasier}
+      - {heard: "artic monkeys", want: play, id: arctic}
+      - {heard: "megadeath", want: play, id: megadeth}
+      - {heard: "lynard skynard", want: play, id: skynyrd}
+      - {heard: "shandelier", want: play, id: chandelier}
+      - {heard: "despasito", want: play, id: despacito}
+      - {heard: "halleluyah", want: play, id: hallelujah}
+      - {heard: "rianna", want: play, id: rihanna}
+      - {heard: "rianon", want: play, id: rhiannon}
+      - {heard: "doja kat", want: play, id: doja}
+      - {heard: "khaled", want: play, id: khalid}
+      - {heard: "wu tang klan", want: play, id: wutang}
+      - {heard: "eurhythmics", want: play, id: eurythmics}
+      - {heard: "elton jon", want: play, id: elton}
+      - {heard: "gangham style", want: play, id: gangnam}
+      # Doubled and single consonants.
+      - {heard: "forest gump", want: play, id: gump}
+      - {heard: "jurrasic park", want: play, id: jurassic}
+      - {heard: "padington", want: play, id: paddington}
+      - {heard: "mama mia", want: play, id: mammamia}
+      - {heard: "aladin", want: ask, among: [aladdin1992, aladdin2019]}
+      - {heard: "openheimer", want: play, id: oppenheimer}
+      - {heard: "appolo 13", want: play, id: apollo13}
+      - {heard: "metalica", want: play, id: metallica}
+      - {heard: "kendrick lamarr", want: play, id: kendrick}
+      - {heard: "arianna grande", want: play, id: ariana}
+      - {heard: "lizo", want: play, id: lizzo}
+      - {heard: "umbrela", want: play, id: umbrella}
+      - {heard: "wallace and grommit curse of the were rabbit", want: play, id: wallace}
+      - {heard: "def lepard", want: play, id: defleppard}
+      # Connected-speech reductions and accent effects.
+      - {heard: "nothing hill", want: play, id: notting}
+      - {heard: "black mira", want: play, id: blackmirror}
+      - {heard: "the six sense", want: play, id: sixthsense}
+      - {heard: "singing in the rain", want: play, id: singin}
+      - {heard: "singing in the reign", want: play, id: singin}
+      - {heard: "sweet child of mine", want: play, id: sweetchild}
+      - {heard: "sweet child o mine", want: play, id: sweetchild}
+      - {heard: "somebody that i use to know", want: play, id: somebody}
+      - {heard: "there'll be blood", want: play, id: blood}
+      - {heard: "parks and rec", want: play, id: parks}
+      - {heard: "les mis", want: play, id: lesmis}
+      - {heard: "paul jam", want: play, id: pearljam}
+      # Foreign-name spellings and regional titles.
+      - {heard: "ratatooey", want: play, id: ratatouille}
+      - {heard: "rat a too ee", want: play, id: ratatouille}
+      - {heard: "ferris buller's day off", want: play, id: ferris}
+      - {heard: "ferris bueler day off", want: play, id: ferris}
+      - {heard: "the big lebowsky", want: play, id: lebowski}
+      - {heard: "the big le bowski", want: play, id: lebowski}
+      - {heard: "moolan rouge", want: play, id: moulinrouge}
+      - {heard: "moo lan", want: play, id: mulan}
+      - {heard: "oppenhimer", want: play, id: oppenheimer}
+      - {heard: "dunkerque", want: play, id: dunkirk}
+      - {heard: "zootropolis", want: play, id: zootopia}
+      - {heard: "shogun", want: play, id: shogun}
+      - {heard: "bjork", want: play, id: bjork}
+      - {heard: "byork", want: play, id: bjork}
+      - {heard: "sinead o'connor", want: play, id: sinead}
+      - {heard: "shinade o connor", want: play, id: sinead}
+      - {heard: "celine dion", want: play, id: celine}
+      - {heard: "celine deon", want: play, id: celine}
+      - {heard: "chaikovsky", want: play, id: tchaikovsky}
+      - {heard: "tchaikovski", want: play, id: tchaikovsky}
+      - {heard: "peter tchaikovsky", want: play, id: tchaikovsky}
+      - {heard: "ludwig von beethoven", want: play, id: beethoven}
+      - {heard: "suzie and the banshees", want: play, id: siouxsie}
+      - {heard: "shakeera", want: play, id: shakira}
+      - {heard: "les miserables", want: play, id: lesmis}
+      # Number forms.
+      - {heard: "twenty one jump street", want: play, id: jump21}
+      - {heard: "twenty two jump street", want: play, id: jump22}
+      - {heard: "two fast two furious", want: play, id: ff2}
+      - {heard: "too fast too furious", want: play, id: ff2}
+      - {heard: "fifty first dates", want: play, id: dates50}
+      - {heard: "three hundred", want: play, id: s300}
+      - {heard: "apollo thirteen", want: play, id: apollo13}
+      - {heard: "eight mile", want: play, id: mile8}
+      - {heard: "five hundred days of summer", want: play, id: summer500}
+      - {heard: "one hundred and twenty seven hours", want: play, id: hours127}
+      - {heard: "a hundred and twenty seven hours", want: play, id: hours127}
+      - {heard: "nineteen seventeen", want: play, id: w1917}
+      - {heard: "ten things i hate about you", want: play, id: tenthings}
+      - {heard: "twelve years a slave", want: play, id: slave}
+      - {heard: "twenty eight days later", want: play, id: days28}
+      - {heard: "4 weddings and a funeral", want: play, id: fourweddings}
+      - {heard: "the 6th sense", want: play, id: sixthsense}
+      - {heard: "terminator two", want: play, id: t2}
+      - {heard: "terminator two judgement day", want: play, id: t2}
+      - {heard: "alien three", want: play, id: alien3}
+      - {heard: "die hard two", want: play, id: diehard2}
+      - {heard: "home alone two", want: play, id: homealone2}
+      - {heard: "cars two", want: play, id: cars2}
+      - {heard: "incredibles two", want: play, id: incredibles2}
+      - {heard: "the incredibles two", want: play, id: incredibles2}
+      - {heard: "paddington two", want: play, id: paddington2}
+      - {heard: "gladiator two", want: play, id: gladiator2}
+      - {heard: "gladiator 2", want: play, id: gladiator2}
+      - {heard: "a star is born nineteen fifty four", want: play, id: star1954}
+      - {heard: "a star is born twenty eighteen", want: play, id: star2018}
+      - {heard: "beauty and the beast twenty seventeen", want: play, id: bb2017}
+      - {heard: "beauty and the beast nineteen ninety one", want: play, id: bb1991}
+      - {heard: "aladdin twenty nineteen", want: play, id: aladdin2019}
+      - {heard: "aladdin 1992", want: play, id: aladdin1992}
+      - {heard: "batman nineteen eighty nine", want: play, id: batman1989}
+      - {heard: "fargo nineteen ninety six", want: play, id: fargofilm}
+      - {heard: "21 pilots", want: play, id: pilots}
+      - {heard: "maroon five", want: play, id: maroon5}
+      - {heard: "the nineteen seventy five", want: play, id: the1975}
+      - {heard: "five seconds of summer", want: play, id: sos}
+      - {heard: "some forty one", want: play, id: sum41}
+      - {heard: "sum forty one", want: play, id: sum41}
+      - {heard: "u b forty", want: play, id: ub40}
+      - {heard: "the jackson five", want: play, id: jackson5}
+      - {heard: "boys to men", want: play, id: boyz}
+      - {heard: "boyz two men", want: play, id: boyz}
+      - {heard: "tears four fears", want: play, id: tff}
+      - {heard: "7 nation army", want: play, id: sevennation}
+      - {heard: "nothing compares to you", want: play, id: nc2u}
+      - {heard: "nothing compares two u", want: play, id: nc2u}
+      - {heard: "seven rings", want: play, id: rings7}
+      - {heard: "nine to five", want: play, id: ninetofive}
+      - {heard: "nineteen ninety nine", want: play, id: prince1999, kinds: [song]}
+      - {heard: "summer of sixty nine", want: play, id: summer69}
+      - {heard: "twenty one", want: play, id: adele21, kinds: [album]}
+      - {heard: "twenty five", want: play, id: adele25, kinds: [album]}
+      - {heard: "thirty", want: play, id: adele30, kinds: [album]}
+      - {heard: "dead mau five", want: play, id: deadmau5}
+      - {heard: "u two", want: play, id: u2}
+      # Letters, acronyms, symbols and abbreviations.
+      - {heard: "r e m", want: play, id: rem}
+      - {heard: "rem", want: play, id: rem, kinds: [artist]}
+      - {heard: "in excess", want: play, id: inxs}
+      - {heard: "i n x s", want: play, id: inxs}
+      - {heard: "e r", want: play, id: er, kinds: [tvshow]}
+      - {heard: "n c i s", want: play, id: ncis}
+      - {heard: "c s i", want: play, id: csi}
+      - {heard: "csi crime scene investigation", want: play, id: csi}
+      - {heard: "the x files", want: play, id: xfiles}
+      - {heard: "the ex files", want: play, id: xfiles}
+      - {heard: "okay computer", want: play, id: okcomputer}
+      - {heard: "o k computer", want: play, id: okcomputer}
+      - {heard: "born in the u s a", want: play, id: bornusa}
+      - {heard: "born in the usa", want: play, id: bornusa}
+      - {heard: "a m", want: play, id: am, kinds: [album]}
+      - {heard: "mister robot", want: play, id: mrrobot}
+      - {heard: "mister bean", want: play, id: mrbean}
+      - {heard: "mister brightside", want: play, id: brightside}
+      - {heard: "mr bright side", want: play, id: brightside}
+      - {heard: "kesha", want: play, id: kesha}
+      - {heard: "pink", want: play, id: pnk, kinds: [artist]}
+      - {heard: "earth wind and fire", want: play, id: ewf}
+      - {heard: "simon and garfunkel", want: play, id: simon}
+      - {heard: "kath and kim", want: play, id: kathkim}
+      - {heard: "romeo and juliet", want: play, id: romeo}
+      - {heard: "wallace and gromit the curse of the were rabbit", want: play, id: wallace}
+      - {heard: "monsters inc", want: play, id: monsters}
+      - {heard: "mamma mia here we go again", want: play, id: mammamia2}
+      - {heard: "a ha", want: play, id: aha}
+      - {heard: "aha", want: play, id: aha, kinds: [artist]}
+      - {heard: "wu tang clan", want: play, id: wutang}
+      - {heard: "little nas x", want: play, id: lilnas}
+      - {heard: "ferris buellers day off", want: play, id: ferris}
+      - {heard: "schitts creek", want: play, id: schitts}
+      - {heard: "greys anatomy", want: play, id: greys}
+      - {heard: "muriels wedding", want: play, id: muriel}
+      # Inflection, articles and dropped or added words.
+      - {heard: "the rolling stone", want: play, id: stones}
+      - {heard: "rolling stones", want: play, id: stones}
+      - {heard: "pretty women", want: play, id: prettywoman}
+      - {heard: "gone girls", want: play, id: gonegirl}
+      - {heard: "squid games", want: play, id: squidgame}
+      - {heard: "house of dragons", want: play, id: hotd}
+      - {heard: "imagine dragon", want: play, id: imagine}
+      - {heard: "blinding light", want: play, id: blinding}
+      - {heard: "goonies", want: play, id: goonies}
+      - {heard: "gremlin", want: play, id: gremlins}
+      - {heard: "killers", want: play, id: killers, kinds: [artist]}
+      - {heard: "the eagles", want: play, id: eagles}
+      - {heard: "white stripes", want: play, id: whitestripes}
+      - {heard: "walking dead", want: play, id: walkingdead}
+      - {heard: "big bang theory", want: play, id: bigbang}
+      - {heard: "iron giant", want: play, id: irongiant}
+      - {heard: "social network", want: play, id: socialnetwork}
+      - {heard: "sopranos", want: play, id: sopranos}
+      - {heard: "no country for old man", want: play, id: nocountry}
+      - {heard: "mad man", want: play, id: madmen}
+      - {heard: "only fools and horse", want: play, id: onlyfools}
+      - {heard: "everything everywhere at once", want: play, id: eeaao}
+      - {heard: "how i met you mother", want: play, id: himym}
+      - {heard: "mozart", want: play, id: mozart}
+      - {heard: "beethoven", want: play, id: beethoven}
+      - {heard: "kanye", want: play, id: kanye}
+      - {heard: "eternal sunshine", want: play, id: eternal}
+      - {heard: "the lost world", want: play, id: lostworld}
+      - {heard: "jumanji welcome to the jungle", want: play, id: jumanji2}
+      - {heard: "top gun maverick", want: play, id: maverick}
+      - {heard: "fury road", want: play, id: furyroad}
+      - {heard: "nightmare before christmas", want: play, id: nightmare}
+      - {heard: "great british bake off", want: play, id: bakeoff}
+      - {heard: "neighbors", want: play, id: neighbours}
+      - {heard: "rumors", want: play, id: rumours}
+      - {heard: "dark side of the moon", want: play, id: darkside}
+      - {heard: "billy holiday", want: play, id: holiday}
+      - {heard: "billy eilish", want: play, id: eilish}
+      - {heard: "billie joel", want: play, id: joel}
+      - {heard: "billy jean", want: play, id: billiejean}
+      # Absent: missing sequels and instalments ask, as in asr_corpus.yaml.
+      - {heard: "jurassic park three", want: ask}
+      - {heard: "jurassic world dominion", want: ask}
+      - {heard: "home alone three", want: ask}
+      - {heard: "die hard three", want: ask}
+      - {heard: "terminator three", want: ask}
+      - {heard: "alien four", want: ask}
+      - {heard: "mad max two", want: ask}
+      - {heard: "predator two", want: ask}
+      - {heard: "gremlins two", want: ask}
+      - {heard: "crocodile dundee two", want: ask}
+      - {heard: "babe two", want: ask}
+      - {heard: "cars three", want: ask}
+      - {heard: "paddington three", want: ask}
+      - {heard: "incredibles three", want: ask}
+      - {heard: "gladiator three", want: ask}
+      - {heard: "mamma mia three", want: ask}
+      - {heard: "twenty three jump street", want: ask}
+      - {heard: "the bourne legacy", want: ask}
+      - {heard: "jumanji the next level", want: ask}
+      - {heard: "bridget jones the edge of reason", want: ask}
+      - {heard: "fantasia two thousand", want: ask}
+      - {heard: "the batman part two", want: ask}
+      - {heard: "mean girls two", want: ask}
+      - {heard: "happy feet two", want: ask}
+      - {heard: "grease two", want: ask}
+      - {heard: "speed two", want: ask}
+      - {heard: "paddington in peru", want: ask}
+      - {heard: "top gun three", want: ask}
+      # Absent: titles that share words or first names with the library but aren't in it.
+      - {heard: "the dark crystal", want: not_found}
+      - {heard: "the dark tower", want: not_found}
+      - {heard: "knight rider", want: not_found}
+      - {heard: "the night manager", want: not_found}
+      - {heard: "the good doctor", want: not_found}
+      - {heard: "good morning vietnam", want: not_found}
+      - {heard: "home improvement", want: not_found}
+      - {heard: "mad about you", want: not_found}
+      - {heard: "top chef", want: not_found}
+      - {heard: "the big short", want: not_found}
+      - {heard: "big fish", want: not_found}
+      - {heard: "pretty little liars", want: not_found}
+      - {heard: "lost in translation", want: not_found}
+      - {heard: "the lost boys", want: not_found}
+      - {heard: "black swan", want: not_found}
+      - {heard: "star trek", want: not_found}
+      - {heard: "men in black", want: not_found}
+      - {heard: "police academy", want: not_found}
+      - {heard: "midnight express", want: not_found}
+      - {heard: "hotel transylvania", want: not_found}
+      - {heard: "deadwood", want: not_found}
+      - {heard: "squid ink pasta recipe", want: not_found}
+      - {heard: "november rain", want: not_found}
+      - {heard: "purple haze", want: not_found}
+      - {heard: "highway to hell", want: not_found}
+      - {heard: "yellow submarine", want: not_found}
+      - {heard: "sweet caroline", want: not_found}
+      - {heard: "hey there delilah", want: not_found}
+      - {heard: "dancing queen", want: not_found}
+      - {heard: "the royal tenenbaums", want: not_found}
+      - {heard: "billy elliot", want: not_found}
+      - {heard: "michael buble", want: not_found}
+      - {heard: "stevie ray vaughan", want: not_found}
+      - {heard: "harry potter", want: not_found}
+      - {heard: "john wick", want: not_found}
+      - {heard: "olivia colman", want: not_found}
+      - {heard: "the beatles", want: not_found, kinds: [artist]}
+      - {heard: "taylor swift", want: not_found}
+      - {heard: "led zeppelin", want: not_found}
+      - {heard: "game of thrones", want: not_found}
+      - {heard: "stranger things", want: not_found}
+      - {heard: "the office", want: not_found}
+      - {heard: "jaws", want: not_found}
+      - {heard: "toy story", want: not_found}
+      - {heard: "what's the weather tomorrow", want: not_found}
+      - {heard: "set a timer for ten minutes", want: not_found}
+      - {heard: "the cranberries", want: not_found}
+      - {heard: "the beach boys", want: not_found}
+      - {heard: "blue velvet", want: not_found}
+      - {heard: "the shining", want: not_found}
+      - {heard: "good omens", want: not_found}
+      - {heard: "the bachelor", want: not_found}
+      - {heard: "jimmy buffett", want: not_found}
+      - {heard: "paul simon", want: not_found}
+      - {heard: "bobby darin", want: not_found}
+      - {heard: "pink panther", want: not_found}
+      - {heard: "red hot chili peppers", want: not_found}
+      - {heard: "the bee gees", want: not_found}
+      - {heard: "blondie", want: not_found}
+      - {heard: "kylie jenner", want: not_found}
+      - {heard: "gone with the wind", want: not_found}
+      - {heard: "the iron lady", want: not_found}
+      - {heard: "deadpool", want: not_found}
+      - {heard: "the sound of music", want: not_found}
+      - {heard: "the hunger games", want: not_found}
+      - {heard: "the bodyguard", want: not_found}
+      - {heard: "the pianist", want: not_found}
+      - {heard: "the godfather", want: not_found}
+      - {heard: "the crown", want: not_found}

@@ -26,6 +26,15 @@ const (
 	totpPendingRef = "auth/totp_pending"
 )
 
+// TOTP parameters (RFC 6238 defaults, which every authenticator app supports): HMAC-SHA1, six digits, 30-second steps, one step of clock skew either way, and a 160-bit secret.
+const (
+	totpIssuer     = "Encore"
+	totpDigits     = 6
+	totpPeriod     = 30
+	totpSkew       = 1
+	totpSecretSize = 20
+)
+
 // ipAttemptFactor lets one address make this many times the per-account attempts, so a household behind one NAT is not locked out by one typo-prone member, while a single host still cannot guess freely.
 const ipAttemptFactor = 4
 

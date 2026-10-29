@@ -50,10 +50,11 @@ function LiveIndicator() {
 
 function RequestLogPage() {
   const { t } = useTranslation("requests");
+  const { t: tc } = useTranslation("common");
   const invocation = useInvocationName();
   const search = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
-  const { data: devices } = useDevices();
+  const devices = useDevices();
   const [query, setQuery] = useState(search.q ?? "");
   const [announcement, setAnnouncement] = useState("");
 
@@ -78,6 +79,11 @@ function RequestLogPage() {
 
   const items = data?.pages.flatMap((page) => page.items) ?? [];
   const selectedId = search.id ?? items[0]?.id;
+  // A filtered Echo that isn't in the device list (still loading, failed to load, or since forgotten) still gets an option, so the filter never reads "All Echos" while the log is narrowed to one.
+  const missingDevice =
+    search.device !== undefined && !devices.data?.some((device) => device.id === search.device)
+      ? search.device
+      : undefined;
 
   return (
     <Page title={t("title")} description={<LiveIndicator />}>
@@ -113,7 +119,12 @@ function RequestLogPage() {
             className="w-auto text-[15px]"
           >
             <option value="">{t("filters.allDevices")}</option>
-            {devices?.map((device) => (
+            {missingDevice !== undefined ? (
+              <option value={missingDevice}>
+                {devices.isPending ? tc("loading") : t("filters.deviceById", { id: missingDevice })}
+              </option>
+            ) : null}
+            {devices.data?.map((device) => (
               <option key={device.id} value={device.id}>
                 {device.name || t("filters.unnamedDevice")}
               </option>
@@ -152,6 +163,7 @@ function RequestLogPage() {
         {announcement}
       </p>
 
+      {devices.error ? <ErrorState error={devices.error} onRetry={() => devices.refetch()} /> : null}
       {error ? <ErrorState error={error} onRetry={() => refetch()} /> : null}
       {isPending ? <LoadingBlock label={t("list.loading")} /> : null}
 
@@ -159,7 +171,11 @@ function RequestLogPage() {
         <EmptyState
           title={filters.q || filters.device || filters.outcome ? t("empty.filteredTitle") : t("empty.noneTitle")}
         >
-          {filters.q || filters.device || filters.outcome ? t("empty.filtered") : t("empty.none", { invocation })}
+          {filters.q || filters.device || filters.outcome
+            ? t("empty.filtered")
+            : invocation
+              ? t("empty.none", { invocation })
+              : t("empty.noneNoInvocation")}
         </EmptyState>
       ) : null}
 

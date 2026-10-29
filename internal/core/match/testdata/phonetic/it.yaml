@@ -1,0 +1,127 @@
+# Italian (it-IT) phonetic evaluation corpus for TestPhoneticEval. Same schema as asr_corpus.yaml; cases are scored, not asserted, so there is no xfail.
+#
+# Library: real, well-known Italian films, series and artists (titles as published, with their original release years), with near neighbours (shared first names, shared words) so a wrong play is possible.
+#
+# Cases: what a speech recogniser plausibly writes when an Italian speaker asks for the title. Each mishearing is tagged with the confusion it models. The classes are documented Italian spelling-to-sound ambiguities: geminate consonants that northern speakers and ASR shorten or lengthen (bella/bela, Ramazzotti/Ramazotti), c and g before e/i and the redundant i of cie/gie/scie, ch and gh, gn/ni and gli/li, z/s and qu/cu, silent h, the English or Danish spellings of foreign names, plus word splits and merges and real-word substitutions (Negramaro/negro amaro, l'amica/la mica, Sfera Ebbasta/e basta). Controls (exact titles) and absent titles (not_found, missing sequels) keep the decision thresholds honest.
+#
+# Cases describe what a listener hears; don't change a case to suit an encoder's results, or the comparison stops meaning anything (see docs/src/content/docs/contributing/dependencies.md).
+suites:
+  - name: italian library
+    lang: it
+    library:
+      - {id: vitabella, kind: movie, title: "La vita è bella", year: 1997}
+      - {id: bellezza, kind: movie, title: "La grande bellezza", year: 2013}
+      - {id: paradiso, kind: movie, title: "Nuovo Cinema Paradiso", year: 1988}
+      - {id: ladri, kind: movie, title: "Ladri di biciclette", year: 1948}
+      - {id: dolcevita, kind: movie, title: "La dolce vita", year: 1960}
+      - {id: perfetti, kind: movie, title: "Perfetti sconosciuti", year: 2016}
+      - {id: quovado, kind: movie, title: "Quo vado?", year: 2016}
+      - {id: fantozzi, kind: movie, title: "Fantozzi", year: 1975}
+      - {id: mediterraneo, kind: movie, title: "Mediterraneo", year: 1991}
+      - {id: pinocchio, kind: movie, title: "Pinocchio", year: 2019}
+      - {id: smetto, kind: movie, title: "Smetto quando voglio", year: 2014}
+      - {id: chiamami, kind: movie, title: "Chiamami col tuo nome", year: 2017}
+      - {id: gattopardo, kind: movie, title: "Il gattopardo", year: 1963}
+      - {id: buono, kind: movie, title: "Il buono, il brutto, il cattivo", year: 1966}
+      - {id: gomorra, kind: tvshow, title: "Gomorra - La serie", year: 2014}
+      - {id: montalbano, kind: tvshow, title: "Il commissario Montalbano", year: 1999}
+      - {id: amica, kind: tvshow, title: "L'amica geniale", year: 2018}
+      - {id: suburra, kind: tvshow, title: "Suburra - La serie", year: 2017}
+      - {id: donmatteo, kind: tvshow, title: "Don Matteo", year: 2000}
+      - {id: boris, kind: tvshow, title: "Boris", year: 2007}
+      - {id: skam, kind: tvshow, title: "Skam Italia", year: 2018}
+      - {id: marefuori, kind: tvshow, title: "Mare fuori", year: 2020}
+      - {id: posto, kind: tvshow, title: "Un posto al sole", year: 1996}
+      - {id: romanzo, kind: tvshow, title: "Romanzo criminale - La serie", year: 2008}
+      - {id: vasco, kind: artist, title: "Vasco Rossi"}
+      - {id: pausini, kind: artist, title: "Laura Pausini"}
+      - {id: ramazzotti, kind: artist, title: "Eros Ramazzotti"}
+      - {id: zucchero, kind: artist, title: "Zucchero"}
+      - {id: maneskin, kind: artist, title: "Måneskin"}
+      - {id: einaudi, kind: artist, title: "Ludovico Einaudi"}
+      - {id: morandi, kind: artist, title: "Gianni Morandi"}
+      - {id: dalla, kind: artist, title: "Lucio Dalla"}
+      - {id: battisti, kind: artist, title: "Lucio Battisti"}
+      - {id: jovanotti, kind: artist, title: "Jovanotti"}
+      - {id: ligabue, kind: artist, title: "Ligabue"}
+      - {id: mina, kind: artist, title: "Mina"}
+      - {id: bocelli, kind: artist, title: "Andrea Bocelli"}
+      - {id: tiziano, kind: artist, title: "Tiziano Ferro"}
+      - {id: elisa, kind: artist, title: "Elisa"}
+      - {id: negramaro, kind: artist, title: "Negramaro"}
+      - {id: gigi, kind: artist, title: "Gigi D'Alessio"}
+      - {id: mengoni, kind: artist, title: "Marco Mengoni"}
+      - {id: sfera, kind: artist, title: "Sfera Ebbasta"}
+      - {id: ultimo, kind: artist, title: "Ultimo"}
+      - {id: annalisa, kind: artist, title: "Annalisa"}
+      - {id: giorgia, kind: artist, title: "Giorgia"}
+      - {id: celentano, kind: artist, title: "Adriano Celentano"}
+      - {id: deandre, kind: artist, title: "Fabrizio De André"}
+      - {id: modugno, kind: artist, title: "Domenico Modugno"}
+      - {id: pooh, kind: artist, title: "Pooh"}
+    cases:
+      # Controls: the title as written.
+      - {heard: "la vita è bella", want: play, id: vitabella}
+      - {heard: "gomorra", want: play, id: gomorra}
+      - {heard: "vasco rossi", want: play, id: vasco}
+      - {heard: "zucchero", want: play, id: zucchero}
+      - {heard: "il commissario montalbano", want: play, id: montalbano}
+      - {heard: "måneskin", want: play, id: maneskin}
+      - {heard: "chiamami col tuo nome", want: play, id: chiamami}
+      - {heard: "mina", want: play, id: mina}
+      - {heard: "il gattopardo", want: play, id: gattopardo}
+      # Geminates shortened or lengthened.
+      - {heard: "la vita è bela", want: play, id: vitabella}
+      - {heard: "la grande belleza", want: play, id: bellezza}
+      - {heard: "eros ramazotti", want: play, id: ramazzotti}
+      - {heard: "eros ramazzoti", want: play, id: ramazzotti}
+      - {heard: "gomora", want: play, id: gomorra}
+      - {heard: "subura", want: play, id: suburra}
+      - {heard: "il commisario montalbano", want: play, id: montalbano}
+      - {heard: "il gatopardo", want: play, id: gattopardo}
+      - {heard: "fantozi", want: play, id: fantozzi}
+      - {heard: "lucio batisti", want: play, id: battisti}
+      - {heard: "jovanoti", want: play, id: jovanotti}
+      - {heard: "andrea boccelli", want: play, id: bocelli}
+      - {heard: "lucio dala", want: play, id: dalla}
+      - {heard: "don mateo", want: play, id: donmatteo}
+      - {heard: "tiziano fero", want: play, id: tiziano}
+      - {heard: "mediteraneo", want: play, id: mediterraneo}
+      - {heard: "perfeti sconosciuti", want: play, id: perfetti}
+      - {heard: "ladri di biciclete", want: play, id: ladri}
+      # c / g before e and i, ch / gh, cie / ce.
+      - {heard: "pinochio", want: play, id: pinocchio}
+      - {heard: "adriano cielentano", want: play, id: celentano}
+      - {heard: "la dolcie vita", want: play, id: dolcevita}
+      - {heard: "georgia", want: play, id: giorgia}
+      - {heard: "giani morandi", want: play, id: morandi}
+      # gn / ni, gli / li, z / s, qu / cu, sc / sk.
+      - {heard: "domenico modunio", want: play, id: modugno}
+      - {heard: "smetto quando volio", want: play, id: smetto}
+      - {heard: "romanso criminale", want: play, id: romanzo}
+      - {heard: "cuo vado", want: play, id: quovado}
+      - {heard: "scam italia", want: play, id: skam}
+      - {heard: "nuovo cinema paradizo", want: play, id: paradiso}
+      # Silent h and foreign spellings.
+      - {heard: "pu", want: play, id: pooh}
+      - {heard: "moneskin", want: play, id: maneskin}
+      - {heard: "lodovico einaudi", want: play, id: einaudi}
+      # Real-word substitutions, splits and merges.
+      - {heard: "negro amaro", want: play, id: negramaro}
+      - {heard: "la mica geniale", want: play, id: amica}
+      - {heard: "sfera e basta", want: play, id: sfera}
+      - {heard: "luccio dalla", want: play, id: dalla}
+      - {heard: "anna lisa", want: play, id: annalisa}
+      - {heard: "liga bue", want: play, id: ligabue}
+      - {heard: "gigi dalessio", want: play, id: gigi}
+      - {heard: "fabrizio deandré", want: play, id: deandre}
+      - {heard: "marco mengone", want: play, id: mengoni}
+      # Ambiguous or missing: ask.
+      - {heard: "lucio", want: ask, among: [dalla, battisti]}
+      - {heard: "fantozzi due", want: ask}
+      # Absent titles.
+      - {heard: "la piovra", want: not_found}
+      - {heard: "i soliti ignoti", want: not_found}
+      - {heard: "rino gaetano", want: not_found}
+      - {heard: "il postino", want: not_found}
+      - {heard: "maccio capatonda", want: not_found}

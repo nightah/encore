@@ -17,12 +17,15 @@ extend-exclude = [
   "tools/kodigen/schema/",
   "*.gen.go",
   "web/src/api/generated/",
-  "web/mocks/mockServiceWorker.js",
   "pnpm-lock.yaml",
   "go.sum",
   "go.mod",
   # Speech-recognition test data spells titles the way Alexa mishears them.
   "internal/core/match/testdata/",
+  # Random words that pin the phonetic encoders' codes.
+  "internal/fuzzy/phonetic/*/testdata/",
+  # Double Metaphone's rules match letter sequences ("PN", "ALLE"), not words.
+  "internal/fuzzy/phonetic/en/metaphone.go",
 ]
 
 # Prose is Australian English.
@@ -47,8 +50,9 @@ catalog = "catalog"
 locale = "en"
 
 [default.extend-words]
-# Language codes (ISO 639-2 fre), time zones (IST) and number words in the matcher's German, French, Spanish and Italian word lists.
+# Language codes (ISO 639-2 fre), time zones (IST), number words in the matcher's German, French, Spanish and Italian word lists and the ordinal suffixes it reads after digits (2nd).
 fre = "fre"
+nd = "nd"
 ist = "ist"
 ein = "ein"
 als = "als"

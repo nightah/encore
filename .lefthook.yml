@@ -42,6 +42,13 @@ pre-commit:
             glob: "*.go"
             exclude:
               - "tools/**"
+              - "benchmarks/**"
+            stage_fixed: true
+
+          - name: golangci-lint (benchmarks)
+            root: "benchmarks/"
+            run: golangci-lint run --config ../.golangci.yml --fix ./...
+            glob: "*.go"
             stage_fixed: true
 
           - name: golangci-lint (tools)

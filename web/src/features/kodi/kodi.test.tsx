@@ -3,10 +3,11 @@ import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 
+import { keys } from "@api/keys";
 import { getDb } from "@mocks/handlers";
 import { server } from "@mocks/node";
 import { FakeEventSource } from "@test/eventSource";
-import { recordRequests, renderApp } from "@test/utils";
+import { failWith, recordRequests, renderApp } from "@test/utils";
 
 async function card(name: string) {
   return within(await screen.findByRole("article", { name }));
@@ -216,5 +217,37 @@ describe("Kodi instances page", () => {
     await waitFor(() =>
       expect(log.find((r) => r.path === "/libraries/group")?.body).toEqual({ instance_ids: [1, 2, 3] }),
     );
+  });
+
+  it("waits for the shared libraries before saying who an instance shares with", async () => {
+    let answer: () => void = () => {};
+    server.use(
+      http.get(
+        "*/api/v1/libraries",
+        () =>
+          new Promise<Response>((resolve) => {
+            answer = () => resolve(HttpResponse.json(getDb().libraries));
+          }),
+      ),
+    );
+    const { queryClient } = renderApp("/kodi");
+
+    await waitFor(() => expect(queryClient.getQueryState(keys.instances)?.status).toBe("success"));
+    expect(screen.queryByText(/^Shared with/)).not.toBeInTheDocument();
+    expect(screen.getByText("Loading…")).toBeInTheDocument();
+
+    answer();
+    expect(await (await card("Lounge")).findByText("Shared with Bedroom")).toBeInTheDocument();
+    expect(screen.queryByText("Loading…")).not.toBeInTheDocument();
+  });
+
+  it("says the shared libraries didn't load instead of sharing with no one", async () => {
+    failWith("get", "/libraries", 500, "boom");
+    const { queryClient } = renderApp("/kodi");
+
+    await waitFor(() => expect(queryClient.getQueryState(keys.libraries)?.status).toBe("error"));
+    await waitFor(() => expect(queryClient.getQueryState(keys.instances)?.status).toBe("success"));
+    expect(screen.queryByText(/^Shared with/)).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("boom");
   });
 });

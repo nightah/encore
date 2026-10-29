@@ -1,7 +1,11 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
 
+import { keys } from "@api/keys";
+import { getDb } from "@mocks/handlers";
+import { server } from "@mocks/node";
 import { FakeEventSource } from "@test/eventSource";
 import { failWith, recordRequests, renderApp } from "@test/utils";
 
@@ -147,5 +151,67 @@ describe("Request log", () => {
     renderApp("/request-log");
 
     expect(await screen.findByRole("alert")).toHaveTextContent("The request log database is locked.");
+  });
+
+  it("doesn't show all Echos in the device filter while the Echo names load", async () => {
+    let answer: (() => void) | undefined;
+    server.use(
+      http.get(
+        "*/api/v1/devices",
+        () =>
+          new Promise<Response>((resolve) => {
+            answer = () => resolve(HttpResponse.json(getDb().devices));
+          }),
+      ),
+    );
+    renderApp("/request-log?device=2");
+    await requestList();
+    await waitFor(() => expect(answer).toBeDefined());
+
+    const filter = screen.getByLabelText<HTMLSelectElement>("Echo device");
+    expect(filter.selectedOptions[0]).not.toHaveTextContent("All Echos");
+    expect(filter.selectedOptions[0]).toHaveTextContent("Loading…");
+
+    answer?.();
+    await waitFor(() => expect(filter.selectedOptions[0]).toHaveTextContent("Bedroom Echo"));
+    expect(within(filter).queryByText("Loading…")).not.toBeInTheDocument();
+  });
+
+  it("keeps the filtered Echo selected and says the Echos didn't load when they fail", async () => {
+    const user = userEvent.setup();
+    failWith("get", "/devices", 500, "boom");
+    const { queryClient } = renderApp("/request-log?device=2");
+    await requestList();
+
+    await waitFor(() => expect(queryClient.getQueryState(keys.devices)?.status).toBe("error"));
+    const filter = screen.getByLabelText<HTMLSelectElement>("Echo device");
+    expect(filter.selectedOptions[0]).toHaveTextContent("Echo #2");
+    expect(screen.getByRole("alert")).toHaveTextContent("boom");
+
+    server.resetHandlers();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    await waitFor(() => expect(filter.selectedOptions[0]).toHaveTextContent("Bedroom Echo"));
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  it("doesn't guess the invocation name in the empty log when the skill settings didn't load", async () => {
+    getDb().requests = [];
+    getDb().skill = { ...getDb().skill, invocation: "kodi", invocation_name: "kodi" };
+    failWith("get", "/skill", 500, "boom");
+    const { queryClient } = renderApp("/request-log");
+
+    expect(await screen.findByText("No requests yet")).toBeInTheDocument();
+    await waitFor(() => expect(queryClient.getQueryState(keys.skill)?.status).toBe("error"));
+    expect(screen.queryByText(/ask encore/)).not.toBeInTheDocument();
+    expect(screen.getByText("Requests appear here as soon as an Echo talks to Encore.")).toBeInTheDocument();
+  });
+
+  it("names a filtered Echo that's no longer in the device list by its id", async () => {
+    renderApp("/request-log?device=99");
+    await screen.findByText("No matching requests");
+
+    const filter = screen.getByLabelText<HTMLSelectElement>("Echo device");
+    await waitFor(() => expect(within(filter).getByText("Bedroom Echo")).toBeInTheDocument());
+    expect(filter.selectedOptions[0]).toHaveTextContent("Echo #99");
   });
 });

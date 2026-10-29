@@ -183,6 +183,7 @@
     "results": "Ergebnisse des Verbindungstests",
     "rpc": "JSON-RPC-Adresse",
     "searchAgain": "Erneut suchen",
+    "searchFailed": "Encore konnte dein Netzwerk nicht nach Kodi durchsuchen, gib die Adresse daher unten ein.",
     "searching": "Suche nach Kodi in deinem Netzwerk.",
     "submit": "Hinzufügen und testen",
     "testFailed": "Der Verbindungstest wurde nicht ausgeführt: {{error}}",

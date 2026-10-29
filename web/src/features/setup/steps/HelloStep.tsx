@@ -9,11 +9,11 @@ import { useUpdateDevice } from "@api/devices";
 import { useServerEvent } from "@api/events";
 import type { RequestSummary } from "@api/generated/model";
 import { listRequests } from "@api/requests";
-import { useInvocationName } from "@api/skill";
+import { useInvocationName, useSkill } from "@api/skill";
 import { Button } from "@components/ui/Button";
 import { Dot } from "@components/ui/Card";
 import { Field, Input } from "@components/ui/Field";
-import { StepFooter, StepHeading, type StepProps } from "@features/setup/shared";
+import { StepFooter, StepHeading, StepPending, type StepProps } from "@features/setup/shared";
 import { formatClock } from "@lib/format";
 import { getSetupProgress, saveSetupProgress } from "@lib/setupProgress";
 
@@ -47,6 +47,7 @@ export function HelloStep({ nav }: StepProps) {
 
   const update = useUpdateDevice(t("hello.named"));
   const [name, setName] = useState("");
+  const skillQuery = useSkill();
   const invocation = useInvocationName();
 
   const finish = async () => {
@@ -73,9 +74,14 @@ export function HelloStep({ nav }: StepProps) {
       className="flex flex-col gap-4.5"
     >
       <StepHeading intro={t("hello.intro")}>{t("hello.heading")}</StepHeading>
-      <p className="font-display font-semibold text-[26px] leading-tight sm:text-[30px]">
-        {t("hello.phrase", { invocation })}
-      </p>
+      {/* The phrase names the skill as chosen, so it waits for the skill rather than guessing. */}
+      {invocation ? (
+        <p className="font-display font-semibold text-[26px] leading-tight sm:text-[30px]">
+          {t("hello.phrase", { invocation })}
+        </p>
+      ) : (
+        <StepPending error={skillQuery.error} onRetry={() => skillQuery.refetch()} />
+      )}
 
       <div aria-live="polite">
         {received ? (
@@ -103,7 +109,7 @@ export function HelloStep({ nav }: StepProps) {
         </Field>
       ) : null}
 
-      <p className="text-[13px] text-muted">{t("hello.alexaPlus", { invocation })}</p>
+      {invocation ? <p className="text-[13px] text-muted">{t("hello.alexaPlus", { invocation })}</p> : null}
 
       <StepFooter
         nav={{ ...nav, canSkip: false }}

@@ -40,12 +40,14 @@
     "filtered": "Versuch es mit einer anderen Suche oder setz die Filter zurück.",
     "filteredTitle": "Keine passenden Anfragen",
     "none": "Anfragen erscheinen hier, sobald ein Echo mit Encore spricht. Sag „Alexa, frag {{invocation}}, was läuft.“",
+    "noneNoInvocation": "Anfragen erscheinen hier, sobald ein Echo mit Encore spricht.",
     "noneTitle": "Noch keine Anfragen"
   },
   "filters": {
     "allDevices": "Alle Echos",
     "allOutcomes": "Alle Ergebnisse",
     "device": "Echo-Gerät",
+    "deviceById": "Echo Nr. {{id}}",
     "label": "Anfragen filtern",
     "outcome": "Ergebnis",
     "search": "Gehörtes durchsuchen",

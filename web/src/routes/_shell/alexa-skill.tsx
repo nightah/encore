@@ -37,7 +37,7 @@ function AlexaSkillPage() {
   return (
     <Page
       title={t("page.title")}
-      description={t("page.description", { name: invocation })}
+      description={invocation ? t("page.description", { name: invocation }) : undefined}
       actions={
         <>
           <AnchorButton href={skillPackageUrl()} download="encore-skill.zip">

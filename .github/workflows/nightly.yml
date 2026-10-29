@@ -1,5 +1,6 @@
 name: Nightly
 
+# The nightly runs what needs something outside the tree: real Kodi, MinIO, rclone and Nextcloud servers, Amazon's live API, the pinned libraries the benchmarks module compares the in-tree code with, and the slow mutation run. A change to Encore's own code or test data should never fail here first: its gates, the matcher's accuracy on the corpora and on absent titles included, run in CI (ci-jobs.yml) on every push and pull request.
 on:
   schedule:
     # Daily at 17:00 UTC, split so Sunday's run can be told apart: every job runs on both schedules, mutation testing only on the Sunday one.
@@ -122,20 +123,36 @@ jobs:
         run: docker logs kodi || true
 
   store-contract:
-    name: Storage contract (MinIO)
+    name: Storage contract (MinIO, rclone and Nextcloud WebDAV)
     runs-on: ubuntu-26.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     env:
       ENCORE_CONTRACT_S3_ENDPOINT: http://127.0.0.1:9000
       ENCORE_CONTRACT_S3_ACCESS_KEY: minioadmin
       ENCORE_CONTRACT_S3_SECRET_KEY: minioadmin
       ENCORE_CONTRACT_S3_BUCKET: encore-contract
       ENCORE_CONTRACT_S3_REGION: us-east-1
+      ENCORE_CONTRACT_WEBDAV_URL: http://127.0.0.1:8081/
+      ENCORE_CONTRACT_WEBDAV_USERNAME: encore
+      ENCORE_CONTRACT_WEBDAV_PASSWORD: encore-contract
+      # Nextcloud's admin is the same account, and its WebDAV root is that user's files.
+      NEXTCLOUD_URL: http://127.0.0.1:8082
+      NEXTCLOUD_WEBDAV_URL: http://127.0.0.1:8082/remote.php/dav/files/encore/
     steps:
       - name: Harden the runner (audit all outbound calls)
         uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
+
+      # Started first so the image pull and the SQLite install overlap the Go setup; "Wait for Nextcloud" checks on it later.
+      - name: Start Nextcloud
+        run: |
+          docker run -d --name nextcloud -p 8082:80 \
+            -e SQLITE_DATABASE=nextcloud \
+            -e NEXTCLOUD_ADMIN_USER="${ENCORE_CONTRACT_WEBDAV_USERNAME}" \
+            -e NEXTCLOUD_ADMIN_PASSWORD="${ENCORE_CONTRACT_WEBDAV_PASSWORD}" \
+            -e NEXTCLOUD_TRUSTED_DOMAINS=127.0.0.1 \
+            nextcloud:35.0.2-apache
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -173,12 +190,52 @@ jobs:
           docker logs minio
           exit 1
 
+      - name: Start rclone WebDAV
+        run: |
+          docker run -d --name rclone -p 8081:80 rclone/rclone:1.75.2 \
+            serve webdav /data --addr :80 \
+            --user "${ENCORE_CONTRACT_WEBDAV_USERNAME}" --pass "${ENCORE_CONTRACT_WEBDAV_PASSWORD}"
+          for _ in $(seq 1 30); do
+            if curl -fsS -o /dev/null -u "${ENCORE_CONTRACT_WEBDAV_USERNAME}:${ENCORE_CONTRACT_WEBDAV_PASSWORD}" \
+                 -X PROPFIND -H 'Depth: 0' "${ENCORE_CONTRACT_WEBDAV_URL}"; then
+              echo "rclone is up"
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs rclone
+          exit 1
+
+      # The image installs Nextcloud before it starts Apache, so status.php reporting it installed means the install is done; the PROPFIND then checks the account's WebDAV root.
+      - name: Wait for Nextcloud
+        run: |
+          for _ in $(seq 1 90); do
+            if curl -fsS "${NEXTCLOUD_URL}/status.php" | grep -q '"installed":true,"maintenance":false' &&
+               curl -fsS -o /dev/null -u "${ENCORE_CONTRACT_WEBDAV_USERNAME}:${ENCORE_CONTRACT_WEBDAV_PASSWORD}" \
+                 -X PROPFIND -H 'Depth: 0' "${NEXTCLOUD_WEBDAV_URL}"; then
+              echo "Nextcloud is up"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::Nextcloud did not come up"
+          docker logs nextcloud
+          exit 1
+
       - name: Contract tests
         run: go test -tags contract -count=1 -v ./internal/blobstore/...
 
-      - name: MinIO logs
+      - name: WebDAV contract tests (Nextcloud)
+        env:
+          ENCORE_CONTRACT_WEBDAV_URL: ${{ env.NEXTCLOUD_WEBDAV_URL }}
+        run: go test -tags contract -count=1 -run TestWebDAVServerContract -v ./internal/blobstore/...
+
+      - name: MinIO, rclone and Nextcloud logs
         if: failure()
-        run: docker logs minio || true
+        run: |
+          docker logs minio || true
+          docker logs rclone || true
+          docker logs nextcloud || true
 
   # Calls Amazon's live Skill Management API, read-only, with a maintainer-owned LWA security profile and refresh token. The secrets live in the smapi-live environment, which only main can deploy to, and the job runs only on main's schedule or a manual run. Without the secrets its steps are skipped rather than failed.
   smapi-live:
@@ -235,6 +292,42 @@ jobs:
         if: steps.secret.outputs.present == 'true'
         run: go test -tags smapi_live -count=1 -v ./internal/smapi/...
 
+  # CI runs the benchmarks module's parity tests in short mode; this runs them all, including the comparison with bleve over a 10,000-title library. The benchmarks themselves are only run by hand (benchmarks/README.md).
+  benchmarks:
+    name: Benchmarks module parity
+    runs-on: ubuntu-26.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: benchmarks
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: benchmarks/go.mod
+          cache: false
+
+      # CI's test cache from main (ci-jobs.yml); nightly runs never save their own.
+      - name: Restore the Go cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: go-test-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('go.mod', 'go.sum', 'tools/go.mod', 'tools/go.sum') }}
+          restore-keys: go-test-${{ runner.os }}-${{ runner.arch }}-
+
+      - name: Parity tests
+        run: go test -count=1 ./...
+
   mutation:
     name: Mutation testing (gremlins)
     # Weekly: only on the Sunday schedule, or on demand.
@@ -243,7 +336,7 @@ jobs:
       (github.event_name == 'workflow_dispatch' && inputs.mutation)
     runs-on: ubuntu-26.04
     timeout-minutes: 60
-    # Informational only; surviving mutants should not fail the nightly.
+    # Advisory only: the score is reported, never gated (no thresholds), and surviving mutants don't fail the nightly.
     continue-on-error: true
     steps:
       - name: Harden the runner (audit all outbound calls)
@@ -271,19 +364,37 @@ jobs:
           restore-keys: go-test-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Run gremlins
+        env:
+          # Uncached: gremlins times every mutant against its coverage run, and one served from the test cache in ~0s times every mutant out (go-gremlins/gremlins#267).
+          GOFLAGS: -count=1
         run: |
           go install github.com/go-gremlins/gremlins/cmd/gremlins@v0.6.0
+          # mutation-go.sh stands in for go, so a mutant that doesn't compile is NOT VIABLE rather than KILLED (go-gremlins/gremlins#321).
+          MUTATION_GO="$(command -v go)"
+          export MUTATION_GO
+          mkdir -p "${RUNNER_TEMP}/mutation-bin"
+          ln -s "${GITHUB_WORKSPACE}/.github/scripts/mutation-go.sh" "${RUNNER_TEMP}/mutation-bin/go"
+          export PATH="${RUNNER_TEMP}/mutation-bin:${PATH}"
           # gremlins takes a directory and tests every package below it, i.e. the equivalent of ./internal/core/...
+          # The default timeout of 3x the coverage run times out mutants on a busy runner; 10x keeps the results stable between runs.
           set -o pipefail
-          gremlins unleash ./internal/core | tee gremlins.txt
+          gremlins unleash --timeout-coefficient 10 --output gremlins.json ./internal/core | tee gremlins.txt
 
       - name: Mutation summary
         if: always()
         run: |
-          [ -f gremlins.txt ] || exit 0
+          [ -f gremlins.json ] || exit 0
           {
-            echo "### Mutation testing (internal/core)"
+            echo "### Mutation testing (internal/core, advisory)"
+            echo
+            jq -r '"| Efficacy | Mutant coverage | Killed | Lived | Not covered | Not viable |",
+              "| --- | --- | --- | --- | --- | --- |",
+              "| \(.test_efficacy * 100 | round / 100)% | \(.mutations_coverage * 100 | round / 100)% | \(.mutants_killed) | \(.mutants_lived) | \(.mutants_not_covered) | \(.mutants_not_viable) |"' gremlins.json
+            echo
+            echo '<details><summary>Lived mutants</summary>'
+            echo
             echo '```'
-            tail -n 20 gremlins.txt
+            grep -E '^ *LIVED ' gremlins.txt || true
             echo '```'
+            echo '</details>'
           } >> "${GITHUB_STEP_SUMMARY}"

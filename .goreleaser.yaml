@@ -56,7 +56,7 @@ checksum:
 sboms:
   - id: archives
     artifacts: archive
-    # syft is installed by the workflow (anchore/sbom-action/download-syft).
+    # syft is installed by the release workflow (anchore/sbom-action/download-syft, pinned by SYFT_VERSION).
 
 dockers_v2:
   - id: encore

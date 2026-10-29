@@ -162,7 +162,7 @@ func (m MDNSBrowser) Browse(ctx context.Context, services []string, timeout time
 	answers := newMDNSAnswers()
 
 	query := func() error {
-		msg, err := answers.query(services).Pack()
+		msg, err := answers.query(services)
 		if err != nil {
 			return err
 		}
@@ -325,8 +325,8 @@ func newMDNSAnswers() *mdnsAnswers {
 	return &mdnsAnswers{instances: map[string]map[string]bool{}, srv: map[string]*dns.SRV{}, addrs: map[string][]net.IP{}}
 }
 
-// query asks for each service type's instances and for the addresses of hosts already named by an SRV record but not yet resolved.
-func (a *mdnsAnswers) query(services []string) *dns.Msg {
+// query packs a query asking for each service type's instances and for the addresses of hosts already named by an SRV record but not yet resolved.
+func (a *mdnsAnswers) query(services []string) ([]byte, error) {
 	msg := new(dns.Msg)
 	msg.RecursionDesired = false
 
@@ -351,7 +351,7 @@ func (a *mdnsAnswers) query(services []string) *dns.Msg {
 			dns.Question{Name: h, Qtype: dns.TypeAAAA, Qclass: dns.ClassINET})
 	}
 
-	return msg
+	return msg.Pack()
 }
 
 // add records every PTR, SRV, A and AAAA record in an answer. Queries, including other hosts' queries carrying known answers, are ignored.

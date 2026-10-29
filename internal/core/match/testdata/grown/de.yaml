@@ -1,0 +1,884 @@
+# Grown set: testdata/grown is a held-out set of corpora, kept apart from the original set (asr_corpus.yaml and phonetic/). TestASRCorpus and TestPhoneticEval score both sets and report them separately.
+#
+# German (de-DE) evaluation corpus, second batch: two more German libraries for TestPhoneticEval in the same schema as asr_corpus.yaml and phonetic/de.yaml. Cases are scored, not asserted, so there is no xfail.
+#
+# Libraries: real, well-known German-language films, series, artists, albums and songs, titled as published with their original release years. Each library carries near neighbours so a wrong play is possible: numbered sequels and remakes (Die wilden Kerle 1 to 3, Deutschland 83 and 86, Ku'damm 56 and 59, two Emil und die Detektive, two Das fliegende Klassenzimmer, Heidi and Wickie as both film and series), shared words (four SOKO spin-offs, Das Traumschiff and (T)Raumschiff Surprise, Über den Wolken, Wolke 7 and Lila Wolken, Lieder and Leiser) and shared first names (Peter, Nina, Max, Wolfgang, Reinhard and Rainhard, Andrea and Andreas, Lena and Lea).
+#
+# Cases: what a speech recogniser plausibly writes when a German speaker asks for the title. Every mishearing sits under a section tagged with the confusion class it models. The classes are documented German spelling-to-sound ambiguities and typical recogniser errors:
+# [fd] final devoicing (Auslautverhärtung): b/p, d/t, g/k written either way at the end of a syllable, and -ig said as -ich.
+# [fv] f/v/ph and w/v: v is /f/ in native words and /v/ in loans, w is /v/, pf reduced to f in northern speech.
+# [diph] diphthong spellings: ei/ai/ay/ey for /aɪ/, eu/äu/oi/oy for /ɔʏ/.
+# [len] vowel length and consonant doubling: ie/i, silent lengthening h, aa/ee/oo, ss/s, ll/l, tt/t, mm/m.
+# [uml] umlaut transcription and unrounding: ä/ae/e, ö/oe/e, ü/ue/u/i.
+# [sib] sibilants and affricates: ß/ss/s, z/ts/tz, s/z, st/sp said as scht/schp, sch/sh, tsch/ch.
+# [kx] k sounds: c/k/ck, x/ks/cks/chs, ch read as /k/, silent k in kn for non-native speakers.
+# [ch] ch said as sch (Rhineland and Hessian coronalisation of the ich-laut) or as k/tsch in loans.
+# [rvoc] r vocalisation and schwa loss: -er heard as -a, -en reduced to -n, colloquial is for ist, dropped e.
+# [split] compounds and multi-word names split or merged, hyphens dropped.
+# [rws] real-word substitution: the recogniser picks a common dictionary word that sounds the same or nearly so.
+# [foreign] foreign-name and loanword spellings: English, French, Spanish and Polish names written as a German speaker says them, or German readings of English spellings.
+# [num] number and symbol forms: digits, number words, compound number words, Roman numerals, years, + said as und.
+# [init] initialisms and letter names spelled out.
+# [short] the title as people say it: a dropped subtitle or leading part.
+#
+# Controls (exact titles, lowercased as a recogniser writes them) and absent titles (ask for missing numbered sequels, as asr_corpus.yaml does; not_found for spin-offs, near-miss titles not in the library and well-known titles that are simply absent) keep the decision thresholds honest.
+#
+# Cases describe what a listener hears; don't change a case to suit an encoder's results, or the comparison stops meaning anything (see docs/src/content/docs/contributing/dependencies.md).
+suites:
+  - name: german film and series library
+    lang: de
+    library:
+      # Films.
+      - {id: metropolis, kind: movie, title: "Metropolis", year: 1927}
+      - {id: m, kind: movie, title: "M – Eine Stadt sucht einen Mörder", year: 1931}
+      - {id: nosferatu, kind: movie, title: "Nosferatu – Eine Symphonie des Grauens", year: 1922}
+      - {id: caligari, kind: movie, title: "Das Cabinet des Dr. Caligari", year: 1920}
+      - {id: blaueengel, kind: movie, title: "Der blaue Engel", year: 1930}
+      - {id: blechtrommel, kind: movie, title: "Die Blechtrommel", year: 1979}
+      - {id: himmelberlin, kind: movie, title: "Der Himmel über Berlin", year: 1987}
+      - {id: fitzcarraldo, kind: movie, title: "Fitzcarraldo", year: 1982}
+      - {id: aguirre, kind: movie, title: "Aguirre, der Zorn Gottes", year: 1972}
+      - {id: mariabraun, kind: movie, title: "Die Ehe der Maria Braun", year: 1979}
+      - {id: angst, kind: movie, title: "Angst essen Seele auf", year: 1974}
+      - {id: gegendiewand, kind: movie, title: "Gegen die Wand", year: 2004}
+      - {id: soulkitchen, kind: movie, title: "Soul Kitchen", year: 2009}
+      - {id: fettejahre, kind: movie, title: "Die fetten Jahre sind vorbei", year: 2004}
+      - {id: rose, kind: movie, title: "Der Name der Rose", year: 1986}
+      - {id: weisseband, kind: movie, title: "Das weiße Band", year: 2009}
+      - {id: victoria, kind: movie, title: "Victoria", year: 2015}
+      - {id: ohboy, kind: movie, title: "Oh Boy", year: 2012}
+      - {id: barfuss, kind: movie, title: "Barfuss", year: 2005}
+      - {id: knockin, kind: movie, title: "Knockin' on Heaven's Door", year: 1997}
+      - {id: bewegtemann, kind: movie, title: "Der bewegte Mann", year: 1994}
+      - {id: manta, kind: movie, title: "Manta, Manta", year: 1991}
+      - {id: werner, kind: movie, title: "Werner – Beinhart!", year: 1990}
+      - {id: otto, kind: movie, title: "Otto – Der Film", year: 1985}
+      - {id: surprise, kind: movie, title: "(T)Raumschiff Surprise – Periode 1", year: 2004}
+      - {id: wickie2009, kind: movie, title: "Wickie und die starken Männer", year: 2009}
+      - {id: wolke, kind: movie, title: "Die Wolke", year: 2006}
+      - {id: krabat, kind: movie, title: "Krabat", year: 2008}
+      - {id: krokodile, kind: movie, title: "Die Vorstadtkrokodile", year: 2009}
+      - {id: kerle1, kind: movie, title: "Die wilden Kerle", year: 2003}
+      - {id: kerle2, kind: movie, title: "Die wilden Kerle 2", year: 2005}
+      - {id: kerle3, kind: movie, title: "Die wilden Kerle 3", year: 2006}
+      - {id: huibuh, kind: movie, title: "Hui Buh – Das Schlossgespenst", year: 2006}
+      - {id: jimknopf, kind: movie, title: "Jim Knopf und Lukas der Lokomotivführer", year: 2018}
+      - {id: sams, kind: movie, title: "Das Sams", year: 2001}
+      - {id: emil1931, kind: movie, title: "Emil und die Detektive", year: 1931}
+      - {id: emil2001, kind: movie, title: "Emil und die Detektive", year: 2001}
+      - {id: klassenzimmer1954, kind: movie, title: "Das fliegende Klassenzimmer", year: 1954}
+      - {id: klassenzimmer2003, kind: movie, title: "Das fliegende Klassenzimmer", year: 2003}
+      - {id: puenktchen, kind: movie, title: "Pünktchen und Anton", year: 1999}
+      - {id: koepenick, kind: movie, title: "Der Hauptmann von Köpenick", year: 1956}
+      - {id: stalingrad, kind: movie, title: "Stalingrad", year: 1993}
+      - {id: sophiescholl, kind: movie, title: "Sophie Scholl – Die letzten Tage", year: 2005}
+      - {id: schtonk, kind: movie, title: "Schtonk!", year: 1992}
+      - {id: rubbeldiekatz, kind: movie, title: "Rubbeldiekatz", year: 2011}
+      - {id: maennerherzen, kind: movie, title: "Männerherzen", year: 2009}
+      - {id: frischeluft, kind: movie, title: "Der Junge muss an die frische Luft", year: 2018}
+      - {id: wiederda, kind: movie, title: "Er ist wieder da", year: 2015}
+      - {id: kaenguru, kind: movie, title: "Die Känguru-Chroniken", year: 2020}
+      - {id: heidi2015, kind: movie, title: "Heidi", year: 2015}
+      - {id: tschick, kind: movie, title: "Tschick", year: 2016}
+      - {id: ballon, kind: movie, title: "Ballon", year: 2018}
+      - {id: kaninchen, kind: movie, title: "Als Hitler das rosa Kaninchen stahl", year: 2019}
+      # Series.
+      - {id: derrick, kind: tvshow, title: "Derrick", year: 1974}
+      - {id: deralte, kind: tvshow, title: "Der Alte", year: 1977}
+      - {id: fallfuerzwei, kind: tvshow, title: "Ein Fall für zwei", year: 1981}
+      - {id: schwarzwaldklinik, kind: tvshow, title: "Die Schwarzwaldklinik", year: 1985}
+      - {id: lindenstrasse, kind: tvshow, title: "Lindenstraße", year: 1985}
+      - {id: traumschiff, kind: tvshow, title: "Das Traumschiff", year: 1981}
+      - {id: bergdoktor, kind: tvshow, title: "Der Bergdoktor", year: 2008}
+      - {id: himmelswillen, kind: tvshow, title: "Um Himmels Willen", year: 2002}
+      - {id: grossstadtrevier, kind: tvshow, title: "Großstadtrevier", year: 1986}
+      - {id: sokomuenchen, kind: tvshow, title: "SOKO München", aliases: ["SOKO 5113"], year: 1978}
+      - {id: sokoleipzig, kind: tvshow, title: "SOKO Leipzig", year: 2001}
+      - {id: sokokoeln, kind: tvshow, title: "SOKO Köln", year: 2003}
+      - {id: sokowismar, kind: tvshow, title: "SOKO Wismar", year: 2004}
+      - {id: cobra11, kind: tvshow, title: "Alarm für Cobra 11 – Die Autobahnpolizei", year: 1996}
+      - {id: bulle, kind: tvshow, title: "Der Bulle von Tölz", year: 1996}
+      - {id: rosenheimcops, kind: tvshow, title: "Die Rosenheim-Cops", year: 2002}
+      - {id: rex, kind: tvshow, title: "Kommissar Rex", year: 1994}
+      - {id: drugsonline, kind: tvshow, title: "How to Sell Drugs Online (Fast)", year: 2019}
+      - {id: deutschland83, kind: tvshow, title: "Deutschland 83", year: 2015}
+      - {id: deutschland86, kind: tvshow, title: "Deutschland 86", year: 2018}
+      - {id: kudamm56, kind: tvshow, title: "Ku'damm 56", year: 2016}
+      - {id: kudamm59, kind: tvshow, title: "Ku'damm 59", year: 2018}
+      - {id: charite, kind: tvshow, title: "Charité", year: 2017}
+      - {id: alexanderplatz, kind: tvshow, title: "Berlin Alexanderplatz", year: 1980}
+      - {id: heimat, kind: tvshow, title: "Heimat – Eine deutsche Chronik", year: 1984}
+      - {id: weissensee, kind: tvshow, title: "Weissensee", year: 2010}
+      - {id: jerks, kind: tvshow, title: "Jerks", year: 2017}
+      - {id: roteband, kind: tvshow, title: "Club der roten Bänder", year: 2015}
+      - {id: fourblocks, kind: tvshow, title: "4 Blocks", year: 2017}
+      - {id: dogsofberlin, kind: tvshow, title: "Dogs of Berlin", year: 2018}
+      - {id: unorthodox, kind: tvshow, title: "Unorthodox", year: 2020}
+      - {id: biohackers, kind: tvshow, title: "Biohackers", year: 2020}
+      - {id: pfefferkoerner, kind: tvshow, title: "Die Pfefferkörner", year: 1999}
+      - {id: einstein, kind: tvshow, title: "Schloss Einstein", year: 1998}
+      - {id: elefant, kind: tvshow, title: "Die Sendung mit dem Elefanten", year: 2007}
+      - {id: sandmaennchen, kind: tvshow, title: "Unser Sandmännchen", year: 1959}
+      - {id: wickie1974, kind: tvshow, title: "Wickie und die starken Männer", year: 1974}
+      - {id: heidi1974, kind: tvshow, title: "Heidi", year: 1974}
+    cases:
+      # Controls: the title as written.
+      - {heard: "metropolis", want: play, id: metropolis}
+      - {heard: "m eine stadt sucht einen mörder", want: play, id: m}
+      - {heard: "der blaue engel", want: play, id: blaueengel}
+      - {heard: "die blechtrommel", want: play, id: blechtrommel}
+      - {heard: "fitzcarraldo", want: play, id: fitzcarraldo}
+      - {heard: "gegen die wand", want: play, id: gegendiewand}
+      - {heard: "soul kitchen", want: play, id: soulkitchen}
+      - {heard: "der name der rose", want: play, id: rose}
+      - {heard: "victoria", want: play, id: victoria}
+      - {heard: "manta manta", want: play, id: manta}
+      - {heard: "krabat", want: play, id: krabat}
+      - {heard: "das sams", want: play, id: sams}
+      - {heard: "tschick", want: play, id: tschick}
+      - {heard: "die wilden kerle", want: play, id: kerle1}
+      - {heard: "die wilden kerle 2", want: play, id: kerle2}
+      - {heard: "derrick", want: play, id: derrick}
+      - {heard: "das traumschiff", want: play, id: traumschiff}
+      - {heard: "der bergdoktor", want: play, id: bergdoktor}
+      - {heard: "soko leipzig", want: play, id: sokoleipzig}
+      - {heard: "deutschland 83", want: play, id: deutschland83}
+      - {heard: "jerks", want: play, id: jerks}
+      - {heard: "unorthodox", want: play, id: unorthodox}
+      - {heard: "heidi", want: play, id: heidi2015, kinds: [movie]}
+      - {heard: "heidi", want: play, id: heidi1974, kinds: [tvshow]}
+      - {heard: "wickie und die starken männer", want: play, id: wickie1974, kinds: [tvshow]}
+      - {heard: "aguirre der zorn gottes", want: play, id: aguirre}
+      - {heard: "die ehe der maria braun", want: play, id: mariabraun}
+      - {heard: "angst essen seele auf", want: play, id: angst}
+      - {heard: "die fetten jahre sind vorbei", want: play, id: fettejahre}
+      - {heard: "oh boy", want: play, id: ohboy}
+      - {heard: "barfuss", want: play, id: barfuss}
+      - {heard: "der bewegte mann", want: play, id: bewegtemann}
+      - {heard: "pünktchen und anton", want: play, id: puenktchen}
+      - {heard: "der hauptmann von köpenick", want: play, id: koepenick}
+      - {heard: "stalingrad", want: play, id: stalingrad}
+      - {heard: "rubbeldiekatz", want: play, id: rubbeldiekatz}
+      - {heard: "ballon", want: play, id: ballon}
+      - {heard: "kommissar rex", want: play, id: rex}
+      - {heard: "berlin alexanderplatz", want: play, id: alexanderplatz}
+      - {heard: "die pfefferkörner", want: play, id: pfefferkoerner}
+      # [fd] Final devoicing and -ig as -ich.
+      - {heard: "gegen die want", want: play, id: gegendiewand}
+      - {heard: "das weisse bant", want: play, id: weisseband}
+      - {heard: "stalingrat", want: play, id: stalingrad}
+      - {heard: "der bewekte mann", want: play, id: bewegtemann}
+      - {heard: "krabad", want: play, id: krabat}
+      - {heard: "der berkdoktor", want: play, id: bergdoktor}
+      - {heard: "doks of berlin", want: play, id: dogsofberlin}
+      - {heard: "die fetten jahre sint vorbei", want: play, id: fettejahre}
+      - {heard: "der alde", want: play, id: deralte}
+      - {heard: "soko leipzich", want: play, id: sokoleipzig}
+      # [fv] f/v/ph, w/v, pf as f.
+      - {heard: "wiktoria", want: play, id: victoria}
+      - {heard: "sofie scholl die letzten tage", want: play, id: sophiescholl}
+      - {heard: "die forstadtkrokodile", want: play, id: krokodile}
+      - {heard: "die fetten jahre sind forbei", want: play, id: fettejahre}
+      - {heard: "emil und die detektiwe 1931", want: play, id: emil1931}
+      - {heard: "die fefferkörner", want: play, id: pfefferkoerner}
+      - {heard: "die sendung mit dem elephanten", want: play, id: elefant}
+      - {heard: "großstadtrefier", want: play, id: grossstadtrevier}
+      # [diph] ei/ai, eu/oi, oy/oi.
+      - {heard: "haimat", want: play, id: heimat}
+      - {heard: "werner bainhart", want: play, id: werner}
+      - {heard: "oh boi", want: play, id: ohboy}
+      - {heard: "schloss ainstein", want: play, id: einstein}
+      # [len] Vowel length and doubled consonants.
+      - {heard: "metropolies", want: play, id: metropolis}
+      - {heard: "die blechtromel", want: play, id: blechtrommel}
+      - {heard: "angst essen sele auf", want: play, id: angst}
+      - {heard: "die ee der maria braun", want: play, id: mariabraun}
+      - {heard: "die fetten jare sind vorbei", want: play, id: fettejahre}
+      - {heard: "der nahme der rose", want: play, id: rose}
+      - {heard: "oto der film", want: play, id: otto}
+      - {heard: "hui bu das schlossgespenst", want: play, id: huibuh}
+      - {heard: "jim knopf und lukas der lokomotivfürer", want: play, id: jimknopf}
+      - {heard: "das fliegende klassenzimer 1954", want: play, id: klassenzimmer1954}
+      - {heard: "als hitler das rosa kaninchen stal", want: play, id: kaninchen}
+      - {heard: "balon", want: play, id: ballon}
+      - {heard: "derik", want: play, id: derrick}
+      - {heard: "das traumschif", want: play, id: traumschiff}
+      - {heard: "charitee", want: play, id: charite}
+      - {heard: "weisensee", want: play, id: weissensee}
+      - {heard: "soko wissmar", want: play, id: sokowismar}
+      - {heard: "der bule von tölz", want: play, id: bulle}
+      - {heard: "wicki und die starken männer", want: play, id: wickie1974, kinds: [tvshow]}
+      - {heard: "aguire der zorn gottes", want: play, id: aguirre}
+      # [uml] Umlaut transcription and unrounding.
+      - {heard: "der himmel ueber berlin", want: play, id: himmelberlin}
+      - {heard: "punktchen und anton", want: play, id: puenktchen}
+      - {heard: "der hauptmann von koepenick", want: play, id: koepenick}
+      - {heard: "die kenguru chroniken", want: play, id: kaenguru}
+      - {heard: "der bulle von telz", want: play, id: bulle}
+      - {heard: "club der roten bender", want: play, id: roteband}
+      - {heard: "unser sandmenchen", want: play, id: sandmaennchen}
+      - {heard: "soko koeln", want: play, id: sokokoeln}
+      - {heard: "jörks", want: play, id: jerks}
+      # [sib] ß/ss/s, z/ts, st/sp as scht/schp, sch/sh, tsch/ch.
+      - {heard: "barfuß", want: play, id: barfuss}
+      - {heard: "lindenstrasse", want: play, id: lindenstrasse}
+      - {heard: "das weiße bant", want: play, id: weisseband}
+      - {heard: "weißensee", want: play, id: weissensee}
+      - {heard: "hui buh das schloßgespenst", want: play, id: huibuh}
+      - {heard: "der junge muß an die frische luft", want: play, id: frischeluft}
+      - {heard: "schloß einstein", want: play, id: einstein}
+      - {heard: "grossstadtrevier", want: play, id: grossstadtrevier}
+      - {heard: "der bulle von tölts", want: play, id: bulle}
+      - {heard: "männerhertzen", want: play, id: maennerherzen}
+      - {heard: "stonk", want: play, id: schtonk}
+      - {heard: "nossferatu", want: play, id: nosferatu}
+      - {heard: "chick", want: play, id: tschick}
+      # [kx] c/k/ck, x/ks/cks, ch as k.
+      - {heard: "das kabinett des doktor caligari", want: play, id: caligari}
+      - {heard: "das cabinet des dr kaligari", want: play, id: caligari}
+      - {heard: "fitzkaraldo", want: play, id: fitzcarraldo}
+      - {heard: "viktoria", want: play, id: victoria}
+      - {heard: "der hauptmann von köpenik", want: play, id: koepenick}
+      - {heard: "jim knopf und lucas der lokomotivführer", want: play, id: jimknopf}
+      - {heard: "kommissar recks", want: play, id: rex}
+      - {heard: "die rosenheim kops", want: play, id: rosenheimcops}
+      - {heard: "alarm für kobra 11", want: play, id: cobra11}
+      - {heard: "klub der roten bänder", want: play, id: roteband}
+      - {heard: "4 blox", want: play, id: fourblocks}
+      - {heard: "die schwarzwaldklinick", want: play, id: schwarzwaldklinik}
+      - {heard: "wikki und die starken männer", want: play, id: wickie2009, kinds: [movie]}
+      - {heard: "die känguruh kroniken", want: play, id: kaenguru}
+      - {heard: "tschik", want: play, id: tschick}
+      # [ch] ch said as sch, or Ch- read as sch in loans.
+      - {heard: "als hitler das rosa kaninschen stahl", want: play, id: kaninchen}
+      - {heard: "scharité", want: play, id: charite}
+      - {heard: "unser sandmännschen", want: play, id: sandmaennchen}
+      - {heard: "pünktschen und anton", want: play, id: puenktchen}
+      # [rvoc] r vocalisation and schwa loss.
+      - {heard: "der blaue engl", want: play, id: blaueengel}
+      - {heard: "der himmel üba berlin", want: play, id: himmelberlin}
+      - {heard: "angst essn seele auf", want: play, id: angst}
+      - {heard: "werna beinhart", want: play, id: werner}
+      - {heard: "die wildn kerle", want: play, id: kerle1}
+      - {heard: "er is wieder da", want: play, id: wiederda}
+      - {heard: "er ist wida da", want: play, id: wiederda}
+      - {heard: "die pfefferkörna", want: play, id: pfefferkoerner}
+      - {heard: "um himmels willn", want: play, id: himmelswillen}
+      - {heard: "der jung muss an die frische luft", want: play, id: frischeluft}
+      # [split] Compounds and names split or merged.
+      - {heard: "metro polis", want: play, id: metropolis}
+      - {heard: "die blech trommel", want: play, id: blechtrommel}
+      - {heard: "fitz carraldo", want: play, id: fitzcarraldo}
+      - {heard: "bar fuss", want: play, id: barfuss}
+      - {heard: "die vorstadt krokodile", want: play, id: krokodile}
+      - {heard: "huibuh das schlossgespenst", want: play, id: huibuh}
+      - {heard: "rubbel die katz", want: play, id: rubbeldiekatz}
+      - {heard: "männer herzen", want: play, id: maennerherzen}
+      - {heard: "die schwarzwald klinik", want: play, id: schwarzwaldklinik}
+      - {heard: "linden straße", want: play, id: lindenstrasse}
+      - {heard: "das traum schiff", want: play, id: traumschiff}
+      - {heard: "der berg doktor", want: play, id: bergdoktor}
+      - {heard: "um himmelswillen", want: play, id: himmelswillen}
+      - {heard: "groß stadt revier", want: play, id: grossstadtrevier}
+      - {heard: "die rosenheimcops", want: play, id: rosenheimcops}
+      - {heard: "berlin alexander platz", want: play, id: alexanderplatz}
+      - {heard: "weissen see", want: play, id: weissensee}
+      - {heard: "bio hackers", want: play, id: biohackers}
+      - {heard: "schloss ein stein", want: play, id: einstein}
+      - {heard: "kudamm 56", want: play, id: kudamm56}
+      # [rws] Real-word substitution.
+      - {heard: "der blaue enkel", want: play, id: blaueengel}
+      - {heard: "das weise band", want: play, id: weisseband}
+      - {heard: "dogs off berlin", want: play, id: dogsofberlin}
+      - {heard: "traumschiff surprise", want: play, id: surprise}
+      - {heard: "die wilden kerne", want: play, id: kerle1}
+      - {heard: "gegen die wahn", want: play, id: gegendiewand}
+      - {heard: "der bewegte man", want: play, id: bewegtemann}
+      # [foreign] Foreign-name and loanword spellings.
+      - {heard: "soul kitschen", want: play, id: soulkitchen}
+      - {heard: "sol kitchen", want: play, id: soulkitchen}
+      - {heard: "knocking on heavens door", want: play, id: knockin}
+      - {heard: "nocking on hevens door", want: play, id: knockin}
+      - {heard: "agire der zorn gottes", want: play, id: aguirre}
+      - {heard: "nosferatou", want: play, id: nosferatu}
+      - {heard: "raumschiff sürprise", want: play, id: surprise}
+      - {heard: "raumschiff surpreis", want: play, id: surprise}
+      - {heard: "hau tu sell drags online", want: play, id: drugsonline}
+      - {heard: "unortodox", want: play, id: unorthodox}
+      - {heard: "bio häckers", want: play, id: biohackers}
+      - {heard: "ballong", want: play, id: ballon}
+      - {heard: "die rosenheim kopps", want: play, id: rosenheimcops}
+      - {heard: "dschörks", want: play, id: jerks}
+      # [num] Number forms and years.
+      - {heard: "die wilden kerle drei", want: play, id: kerle3}
+      - {heard: "die wilden kerle zwei", want: play, id: kerle2}
+      - {heard: "die wilden kerle teil 2", want: play, id: kerle2}
+      - {heard: "die wilden kerle eins", want: play, id: kerle1}
+      - {heard: "die wilden kerle iii", want: play, id: kerle3}
+      - {heard: "deutschland dreiundachtzig", want: play, id: deutschland83}
+      - {heard: "deutschland sechsundachtzig", want: play, id: deutschland86}
+      - {heard: "deutschland acht sechs", want: play, id: deutschland86}
+      - {heard: "kudamm sechsundfünfzig", want: play, id: kudamm56}
+      - {heard: "ku damm neunundfünfzig", want: play, id: kudamm59}
+      - {heard: "alarm für cobra elf", want: play, id: cobra11}
+      - {heard: "vier blocks", want: play, id: fourblocks}
+      - {heard: "four blocks", want: play, id: fourblocks}
+      - {heard: "soko fünf eins eins drei", want: play, id: sokomuenchen}
+      - {heard: "emil und die detektive neunzehnhunderteinunddreißig", want: play, id: emil1931}
+      - {heard: "emil und die detektive zweitausendeins", want: play, id: emil2001}
+      - {heard: "emil und die detektive 2001", want: play, id: emil2001}
+      - {heard: "das fliegende klassenzimmer 2003", want: play, id: klassenzimmer2003}
+      - {heard: "das fliegende klassenzimmer neunzehnhundertvierundfünfzig", want: play, id: klassenzimmer1954}
+      - {heard: "raumschiff surprise periode eins", want: play, id: surprise}
+      - {heard: "ein fall für 2", want: play, id: fallfuerzwei}
+      # [init] Initialisms and letter names.
+      - {heard: "em eine stadt sucht einen mörder", want: play, id: m}
+      - {heard: "s o k o köln", want: play, id: sokokoeln}
+      # [short] The title as people say it.
+      - {heard: "eine stadt sucht einen mörder", want: play, id: m}
+      - {heard: "nosferatu", want: play, id: nosferatu}
+      - {heard: "heimat", want: play, id: heimat}
+      - {heard: "jim knopf", want: play, id: jimknopf}
+      - {heard: "hui buh", want: play, id: huibuh}
+      - {heard: "alarm für cobra 11", want: play, id: cobra11}
+      - {heard: "how to sell drugs online", want: play, id: drugsonline}
+      - {heard: "die känguru chroniken", want: play, id: kaenguru}
+      - {heard: "sophie scholl", want: play, id: sophiescholl}
+      - {heard: "werner", want: play, id: werner}
+      # Absent: missing sequels, spin-offs and remakes.
+      - {heard: "die wilden kerle 4", want: ask}
+      - {heard: "die wilden kerle fünf", want: ask}
+      - {heard: "deutschland 89", want: ask}
+      - {heard: "kudamm 63", want: ask}
+      - {heard: "soko kitzbühel", want: not_found}
+      - {heard: "soko stuttgart", want: not_found}
+      - {heard: "soko wien", want: not_found}
+      - {heard: "die zweite heimat", want: not_found}
+      - {heard: "otto der außerfriesische", want: not_found}
+      - {heard: "werner eiskalt", want: not_found}
+      - {heard: "manta manta zwoter teil", want: not_found}
+      - {heard: "sams in gefahr", want: not_found}
+      - {heard: "hui buh und das hexenschloss", want: not_found}
+      - {heard: "jim knopf und die wilde 13", want: not_found}
+      - {heard: "emil und die drei zwillinge", want: not_found}
+      - {heard: "nosferatu phantom der nacht", want: not_found}
+      # Absent: near-miss titles that share words.
+      - {heard: "die bergretter", want: not_found}
+      - {heard: "das traumhotel", want: not_found}
+      - {heard: "der kommissar", want: not_found}
+      - {heard: "kommissar dupin", want: not_found}
+      - {heard: "babylon berlin", want: not_found}
+      - {heard: "das weiße rauschen", want: not_found}
+      - {heard: "der junge im gestreiften pyjama", want: not_found}
+      - {heard: "ein herz und eine seele", want: not_found}
+      - {heard: "die sendung mit der maus", want: not_found}
+      # Absent: well-known titles not in this library.
+      - {heard: "das boot", want: not_found}
+      - {heard: "lola rennt", want: not_found}
+      - {heard: "bang boom bang", want: not_found}
+      - {heard: "absolute giganten", want: not_found}
+      - {heard: "kleine haie", want: not_found}
+      - {heard: "der totmacher", want: not_found}
+      - {heard: "halbe treppe", want: not_found}
+      - {heard: "marienhof", want: not_found}
+      - {heard: "notruf hafenkante", want: not_found}
+      - {heard: "polizeiruf 110", want: not_found}
+      - {heard: "in aller freundschaft", want: not_found}
+      - {heard: "die wilden hühner", want: not_found}
+      - {heard: "die vorstadtkrokodile 2", want: ask}
+      - {heard: "die vorstadtkrokodile 3", want: ask}
+      - {heard: "sams im glück", want: not_found}
+      - {heard: "der hauptmann", want: play, id: koepenick}
+      - {heard: "der alte affe angst", want: not_found}
+      - {heard: "der kommissar und das meer", want: not_found}
+      - {heard: "berlin berlin", want: not_found}
+      - {heard: "victoria und abdul", want: not_found}
+      - {heard: "die feuerzangenbowle", want: not_found}
+      - {heard: "der schuh des manitu", want: not_found}
+      - {heard: "toni erdmann", want: not_found}
+      - {heard: "das leben der anderen", want: not_found}
+      - {heard: "good bye lenin", want: not_found}
+      - {heard: "die unendliche geschichte", want: not_found}
+      - {heard: "das parfum", want: not_found}
+      - {heard: "keinohrhasen", want: not_found}
+      - {heard: "türkisch für anfänger", want: not_found}
+      - {heard: "stromberg", want: not_found}
+      - {heard: "der tatortreiniger", want: not_found}
+      - {heard: "die biene maja", want: not_found}
+      - {heard: "löwenzahn", want: not_found}
+
+  - name: german music library
+    lang: de
+    library:
+      # Artists.
+      - {id: westernhagen, kind: artist, title: "Marius Müller-Westernhagen"}
+      - {id: maffay, kind: artist, title: "Peter Maffay"}
+      - {id: schilling, kind: artist, title: "Peter Schilling"}
+      - {id: alexander, kind: artist, title: "Peter Alexander"}
+      - {id: mey, kind: artist, title: "Reinhard Mey"}
+      - {id: fendrich, kind: artist, title: "Rainhard Fendrich"}
+      - {id: wecker, kind: artist, title: "Konstantin Wecker"}
+      - {id: hagen, kind: artist, title: "Nina Hagen"}
+      - {id: chuba, kind: artist, title: "Nina Chuba"}
+      - {id: falco, kind: artist, title: "Falco"}
+      - {id: ambros, kind: artist, title: "Wolfgang Ambros"}
+      - {id: niedecken, kind: artist, title: "Wolfgang Niedecken"}
+      - {id: bap, kind: artist, title: "BAP"}
+      - {id: eoc, kind: artist, title: "Element of Crime"}
+      - {id: tocotronic, kind: artist, title: "Tocotronic"}
+      - {id: prinzen, kind: artist, title: "Die Prinzen"}
+      - {id: prinzpi, kind: artist, title: "Prinz Pi"}
+      - {id: pur, kind: artist, title: "Pur"}
+      - {id: juli, kind: artist, title: "Juli"}
+      - {id: rosenstolz, kind: artist, title: "Rosenstolz"}
+      - {id: ichundich, kind: artist, title: "Ich + Ich"}
+      - {id: herre, kind: artist, title: "Max Herre"}
+      - {id: mutzke, kind: artist, title: "Max Mutzke"}
+      - {id: freundeskreis, kind: artist, title: "Freundeskreis"}
+      - {id: sido, kind: artist, title: "Sido"}
+      - {id: savas, kind: artist, title: "Kool Savas"}
+      - {id: samy, kind: artist, title: "Samy Deluxe"}
+      - {id: deichkind, kind: artist, title: "Deichkind"}
+      - {id: casper, kind: artist, title: "Casper"}
+      - {id: marteria, kind: artist, title: "Marteria"}
+      - {id: kraftklub, kind: artist, title: "Kraftklub"}
+      - {id: connor, kind: artist, title: "Sarah Connor"}
+      - {id: lena, kind: artist, title: "Lena"}
+      - {id: lea, kind: artist, title: "Lea"}
+      - {id: berg, kind: artist, title: "Andrea Berg"}
+      - {id: gabalier, kind: artist, title: "Andreas Gabalier"}
+      - {id: heino, kind: artist, title: "Heino"}
+      - {id: heintje, kind: artist, title: "Heintje"}
+      - {id: royblack, kind: artist, title: "Roy Black"}
+      - {id: scooter, kind: artist, title: "Scooter"}
+      - {id: moderntalking, kind: artist, title: "Modern Talking"}
+      - {id: alphaville, kind: artist, title: "Alphaville"}
+      - {id: trio, kind: artist, title: "Trio"}
+      - {id: eav, kind: artist, title: "Erste Allgemeine Verunsicherung", aliases: ["EAV"]}
+      - {id: bendzko, kind: artist, title: "Tim Bendzko"}
+      - {id: oerding, kind: artist, title: "Johannes Oerding"}
+      - {id: tawil, kind: artist, title: "Adel Tawil"}
+      - {id: apache, kind: artist, title: "Apache 207"}
+      - {id: capitalbra, kind: artist, title: "Capital Bra"}
+      - {id: shirin, kind: artist, title: "Shirin David"}
+      - {id: neubauten, kind: artist, title: "Einstürzende Neubauten"}
+      - {id: leandros, kind: artist, title: "Vicky Leandros"}
+      - {id: nicole, kind: artist, title: "Nicole"}
+      - {id: drafi, kind: artist, title: "Drafi Deutscher"}
+      - {id: rosenberg, kind: artist, title: "Marianne Rosenberg"}
+      - {id: lucilectric, kind: artist, title: "Lucilectric"}
+      - {id: foolsgarden, kind: artist, title: "Fools Garden"}
+      - {id: djoetzi, kind: artist, title: "DJ Ötzi"}
+      # Albums.
+      - {id: mitk, kind: album, title: "Mit K", year: 2012}
+      - {id: zumglueck, kind: album, title: "Zum Glück in die Zukunft", year: 2010}
+      - {id: xoxo, kind: album, title: "XOXO", year: 2011}
+      - {id: hinterland, kind: album, title: "Hinterland", year: 2013}
+      - {id: befehl, kind: album, title: "Befehl von ganz unten", year: 2012}
+      - {id: kapitulation, kind: album, title: "Kapitulation", year: 2007}
+      - {id: grausam, kind: album, title: "Das Leben ist grausam", year: 1991}
+      - {id: maske, kind: album, title: "Maske", year: 2004}
+      - {id: quadratur, kind: album, title: "Quadratur des Kreises", year: 1997}
+      - {id: abenteuerland, kind: album, title: "Abenteuerland", year: 1995}
+      - {id: halleluja, kind: album, title: "Halleluja", year: 1989}
+      - {id: esistjuli, kind: album, title: "Es ist Juli", year: 2004}
+      # Songs.
+      - {id: luftballons, kind: song, title: "99 Luftballons", year: 1983}
+      - {id: majortom, kind: song, title: "Major Tom (Völlig losgelöst)", year: 1983}
+      - {id: amadeus, kind: song, title: "Rock Me Amadeus", year: 1985}
+      - {id: kommissar, kind: song, title: "Der Kommissar", year: 1981}
+      - {id: jeanny, kind: song, title: "Jeanny", year: 1985}
+      - {id: dadada, kind: song, title: "Da Da Da", year: 1982}
+      - {id: wolken, kind: song, title: "Über den Wolken", year: 1974}
+      - {id: wolke7, kind: song, title: "Wolke 7", year: 2012}
+      - {id: lilawolken, kind: song, title: "Lila Wolken", year: 2012}
+      - {id: siebenbruecken, kind: song, title: "Über sieben Brücken musst du gehn", year: 1980}
+      - {id: frieden, kind: song, title: "Ein bisschen Frieden", year: 1982}
+      - {id: theo, kind: song, title: "Theo, wir fahr'n nach Lodz", year: 1974}
+      - {id: marmor, kind: song, title: "Marmor, Stein und Eisen bricht", year: 1965}
+      - {id: gehoert, kind: song, title: "Er gehört zu mir", year: 1975}
+      - {id: liebedasleben, kind: song, title: "Ich liebe das Leben", year: 1975}
+      - {id: satellite, kind: song, title: "Satellite", year: 2010}
+      - {id: hulapalu, kind: song, title: "Hulapalu", year: 2015}
+      - {id: geklaut, kind: song, title: "Alles nur geklaut", year: 1993}
+      - {id: kuessen, kind: song, title: "Küssen verboten", year: 1992}
+      - {id: lemontree, kind: song, title: "Lemon Tree", year: 1995}
+      - {id: maedchen, kind: song, title: "Mädchen", year: 1994}
+      - {id: welle, kind: song, title: "Perfekte Welle", year: 2004}
+      - {id: geilezeit, kind: song, title: "Geile Zeit", year: 2004}
+      - {id: selbenstern, kind: song, title: "Vom selben Stern", year: 2007}
+      - {id: bleiben, kind: song, title: "So soll es bleiben", year: 2008}
+      - {id: liebeistalles, kind: song, title: "Liebe ist alles", year: 2004}
+      - {id: bilder, kind: song, title: "Bilder im Kopf", year: 2012}
+      - {id: astronaut, kind: song, title: "Astronaut", year: 2015}
+      - {id: lieder, kind: song, title: "Lieder", year: 2013}
+      - {id: leiser, kind: song, title: "Leiser", year: 2017}
+      - {id: jemand, kind: song, title: "Ist da jemand", year: 2017}
+      - {id: weltretten, kind: song, title: "Nur noch kurz die Welt retten", year: 2011}
+      - {id: anton, kind: song, title: "Anton aus Tirol", year: 1999}
+      - {id: einstern, kind: song, title: "Ein Stern (... der deinen Namen trägt)", year: 2007}
+      - {id: fatamorgana, kind: song, title: "Fata Morgana", year: 1986}
+      - {id: bankueberfall, kind: song, title: "Ba-Ba-Banküberfall", year: 1985}
+      - {id: hyper, kind: song, title: "Hyper Hyper", year: 1994}
+      - {id: fish, kind: song, title: "How Much Is the Fish?", year: 1998}
+      - {id: louie, kind: song, title: "Brother Louie", year: 1986}
+      - {id: heartsoul, kind: song, title: "You're My Heart, You're My Soul", year: 1984}
+      - {id: japan, kind: song, title: "Big in Japan", year: 1984}
+      - {id: foreveryoung, kind: song, title: "Forever Young", year: 1984}
+      - {id: skifoan, kind: song, title: "Skifoan", year: 1976}
+      - {id: macho, kind: song, title: "Macho Macho", year: 1988}
+      - {id: enzian, kind: song, title: "Blau blüht der Enzian", year: 1972}
+      - {id: ganzinweiss, kind: song, title: "Ganz in Weiß", year: 1966}
+      - {id: schoen, kind: song, title: "Wie schön du bist", year: 2015}
+      - {id: wildberry, kind: song, title: "Wildberry Lillet", year: 2022}
+      - {id: roller, kind: song, title: "Roller", year: 2019}
+      - {id: berlinlebt, kind: song, title: "Berlin lebt", year: 2018}
+      - {id: tausendmal, kind: song, title: "Du hast mich tausendmal belogen", year: 2001}
+      - {id: gutenacht, kind: song, title: "Gute Nacht, Freunde", year: 1972}
+      - {id: willy, kind: song, title: "Willy", year: 1977}
+      - {id: farbfilm, kind: song, title: "Du hast den Farbfilm vergessen", year: 1974}
+      - {id: sommer, kind: song, title: "Es war Sommer", year: 1976}
+      - {id: kneipe, kind: song, title: "Die kleine Kneipe", year: 1976}
+      - {id: weckmich, kind: song, title: "Weck mich auf", year: 2001}
+      - {id: anna, kind: song, title: "Anna", aliases: ["A-N-N-A"], year: 1997}
+      - {id: remmidemmi, kind: song, title: "Remmidemmi (Yippie Yippie Yeah)", year: 2006}
+      - {id: leidergeil, kind: song, title: "Leider geil", year: 2012}
+      - {id: liam, kind: song, title: "Songs für Liam", year: 2012}
+      - {id: ascheregen, kind: song, title: "Im Ascheregen", year: 2011}
+      - {id: kids, kind: song, title: "Kids (2 Finger an den Kopf)", year: 2014}
+      - {id: cantwait, kind: song, title: "Can't Wait Until Tonight", year: 2004}
+      - {id: verdamp, kind: song, title: "Verdamp lang her", year: 1981}
+    cases:
+      # Controls: the title as written.
+      - {heard: "falco", want: play, id: falco}
+      - {heard: "nina hagen", want: play, id: hagen}
+      - {heard: "nina chuba", want: play, id: chuba}
+      - {heard: "reinhard mey", want: play, id: mey}
+      - {heard: "rainhard fendrich", want: play, id: fendrich}
+      - {heard: "deichkind", want: play, id: deichkind}
+      - {heard: "kraftklub", want: play, id: kraftklub}
+      - {heard: "lena", want: play, id: lena}
+      - {heard: "lea", want: play, id: lea}
+      - {heard: "heino", want: play, id: heino}
+      - {heard: "heintje", want: play, id: heintje}
+      - {heard: "scooter", want: play, id: scooter}
+      - {heard: "99 luftballons", want: play, id: luftballons}
+      - {heard: "da da da", want: play, id: dadada}
+      - {heard: "über den wolken", want: play, id: wolken}
+      - {heard: "wolke 7", want: play, id: wolke7}
+      - {heard: "lemon tree", want: play, id: lemontree}
+      - {heard: "perfekte welle", want: play, id: welle}
+      - {heard: "satellite", want: play, id: satellite}
+      - {heard: "hulapalu", want: play, id: hulapalu}
+      - {heard: "mit k", want: play, id: mitk}
+      - {heard: "xoxo", want: play, id: xoxo}
+      - {heard: "abenteuerland", want: play, id: abenteuerland}
+      - {heard: "leider geil", want: play, id: leidergeil}
+      - {heard: "lieder", want: play, id: lieder}
+      - {heard: "theo wir fahrn nach lodz", want: play, id: theo}
+      - {heard: "leiser", want: play, id: leiser}
+      - {heard: "maske", want: play, id: maske}
+      - {heard: "skifoan", want: play, id: skifoan}
+      - {heard: "wie schön du bist", want: play, id: schoen}
+      - {heard: "peter maffay", want: play, id: maffay}
+      - {heard: "peter schilling", want: play, id: schilling}
+      - {heard: "peter alexander", want: play, id: alexander}
+      - {heard: "max herre", want: play, id: herre}
+      - {heard: "max mutzke", want: play, id: mutzke}
+      - {heard: "wolfgang ambros", want: play, id: ambros}
+      - {heard: "andrea berg", want: play, id: berg}
+      - {heard: "andreas gabalier", want: play, id: gabalier}
+      - {heard: "sarah connor", want: play, id: connor}
+      - {heard: "sido", want: play, id: sido}
+      - {heard: "casper", want: play, id: casper}
+      - {heard: "hinterland", want: play, id: hinterland}
+      - {heard: "rock me amadeus", want: play, id: amadeus}
+      - {heard: "der kommissar", want: play, id: kommissar}
+      - {heard: "lila wolken", want: play, id: lilawolken}
+      # [fd] Final devoicing and -ig as -ich.
+      - {heard: "kraftklup", want: play, id: kraftklub}
+      - {heard: "deichkint", want: play, id: deichkind}
+      - {heard: "andrea berk", want: play, id: berg}
+      - {heard: "marianne rosenberk", want: play, id: rosenberg}
+      - {heard: "abenteuerlant", want: play, id: abenteuerland}
+      - {heard: "befehl von ganz unden", want: play, id: befehl}
+      - {heard: "major tom völlich losgelöst", want: play, id: majortom}
+      - {heard: "alles nur geklaud", want: play, id: geklaut}
+      - {heard: "geile zeid", want: play, id: geilezeit}
+      - {heard: "berlin lept", want: play, id: berlinlebt}
+      - {heard: "ist da jemant", want: play, id: jemand}
+      - {heard: "nur noch kurz die weld retten", want: play, id: weltretten}
+      - {heard: "astronaud", want: play, id: astronaut}
+      - {heard: "sonks für liam", want: play, id: liam}
+      - {heard: "elemend of crime", want: play, id: eoc}
+      # [fv] f/v/ph and w/v.
+      - {heard: "vie schön du bist", want: play, id: schoen}
+      - {heard: "wicky leandros", want: play, id: leandros}
+      - {heard: "ferdamp lang her", want: play, id: verdamp}
+      - {heard: "forewer young", want: play, id: foreveryoung}
+      - {heard: "volfgang ambros", want: play, id: ambros}
+      - {heard: "alfaville", want: play, id: alphaville}
+      - {heard: "alfawille", want: play, id: alphaville}
+      - {heard: "über den volken", want: play, id: wolken}
+      - {heard: "perfekte velle", want: play, id: welle}
+      - {heard: "fom selben stern", want: play, id: selbenstern}
+      - {heard: "du hast den farbfilm fergessen", want: play, id: farbfilm}
+      - {heard: "villy", want: play, id: willy}
+      - {heard: "adel tavil", want: play, id: tawil}
+      - {heard: "kool sawas", want: play, id: savas}
+      - {heard: "shirin dawid", want: play, id: shirin}
+      - {heard: "falko", want: play, id: falco}
+      # [diph] ei/ai/ay, eu/äu/oi.
+      - {heard: "reinhard mai", want: play, id: mey}
+      - {heard: "reinhard fendrich", want: play, id: fendrich}
+      - {heard: "rainhard mey", want: play, id: mey}
+      - {heard: "peter mafai", want: play, id: maffay}
+      - {heard: "peter maffei", want: play, id: maffay}
+      - {heard: "haino", want: play, id: heino}
+      - {heard: "haintje", want: play, id: heintje}
+      - {heard: "daichkind", want: play, id: deichkind}
+      - {heard: "laider gail", want: play, id: leidergeil}
+      - {heard: "laiser", want: play, id: leiser}
+      - {heard: "froindeskreis", want: play, id: freundeskreis}
+      - {heard: "freundeskrais", want: play, id: freundeskreis}
+      - {heard: "ainstürzende noibauten", want: play, id: neubauten}
+      - {heard: "gaile zeit", want: play, id: geilezeit}
+      - {heard: "so soll es blaiben", want: play, id: bleiben}
+      - {heard: "marmor stein und aisen bricht", want: play, id: marmor}
+      - {heard: "gute nacht froinde", want: play, id: gutenacht}
+      - {heard: "drafi doitscher", want: play, id: drafi}
+      - {heard: "roi black", want: play, id: royblack}
+      # [len] Vowel length and doubled consonants.
+      - {heard: "ein bisschen friden", want: play, id: frieden}
+      - {heard: "jeany", want: play, id: jeanny}
+      - {heard: "der komissar", want: play, id: kommissar}
+      - {heard: "das leben ist grausamm", want: play, id: grausam}
+      - {heard: "wolfgang nidecken", want: play, id: niedecken}
+      - {heard: "max here", want: play, id: herre}
+      - {heard: "sammy deluxe", want: play, id: samy}
+      - {heard: "sara connor", want: play, id: connor}
+      - {heard: "andreas gabbalier", want: play, id: gabalier}
+      - {heard: "adel tawill", want: play, id: tawil}
+      - {heard: "nur noch kurz die welt reten", want: play, id: weltretten}
+      - {heard: "so sol es bleiben", want: play, id: bleiben}
+      - {heard: "libe ist alles", want: play, id: liebeistalles}
+      - {heard: "er gehöhrt zu mir", want: play, id: gehoert}
+      - {heard: "fatta morgana", want: play, id: fatamorgana}
+      - {heard: "hullapalu", want: play, id: hulapalu}
+      - {heard: "remidemi", want: play, id: remmidemmi}
+      - {heard: "im aschereegen", want: play, id: ascheregen}
+      - {heard: "lilla wolken", want: play, id: lilawolken}
+      - {heard: "anton aus tiroll", want: play, id: anton}
+      - {heard: "ein stern der deinen nahmen trägt", want: play, id: einstern}
+      - {heard: "draffi deutscher", want: play, id: drafi}
+      - {heard: "puhr", want: play, id: pur}
+      # [uml] Umlaut transcription and unrounding.
+      - {heard: "kuessen verboten", want: play, id: kuessen}
+      - {heard: "medchen", want: play, id: maedchen}
+      - {heard: "maedchen", want: play, id: maedchen}
+      - {heard: "ueber sieben bruecken musst du gehen", want: play, id: siebenbruecken}
+      - {heard: "dj oetzi", want: play, id: djoetzi}
+      - {heard: "einstuerzende neubauten", want: play, id: neubauten}
+      - {heard: "er gehert zu mir", want: play, id: gehoert}
+      - {heard: "wie schoen du bist", want: play, id: schoen}
+      - {heard: "marius mueller westernhagen", want: play, id: westernhagen}
+      - {heard: "johannes örding", want: play, id: oerding}
+      - {heard: "songs fuer liam", want: play, id: liam}
+      - {heard: "zum glueck in die zukunft", want: play, id: zumglueck}
+      - {heard: "blau blyht der enzian", want: play, id: enzian}
+      # [sib] ß/ss/s, z/ts, st/sp as scht/schp, sch/sh.
+      - {heard: "rosenstols", want: play, id: rosenstolz}
+      - {heard: "max mutske", want: play, id: mutzke}
+      - {heard: "tim benzko", want: play, id: bendzko}
+      - {heard: "sum glück in die zukunft", want: play, id: zumglueck}
+      - {heard: "schifoan", want: play, id: skifoan}
+      - {heard: "vom selben schtern", want: play, id: selbenstern}
+      - {heard: "ein bißchen frieden", want: play, id: frieden}
+      - {heard: "ein bischen frieden", want: play, id: frieden}
+      - {heard: "ganz in weiss", want: play, id: ganzinweiss}
+      - {heard: "ganz in weis", want: play, id: ganzinweiss}
+      - {heard: "nur noch kurtz die welt retten", want: play, id: weltretten}
+      - {heard: "die prinsen", want: play, id: prinzen}
+      - {heard: "prints pi", want: play, id: prinzpi}
+      - {heard: "peter shilling", want: play, id: schilling}
+      - {heard: "schirin david", want: play, id: shirin}
+      - {heard: "kapitulazion", want: play, id: kapitulation}
+      # [kx] c/k/ck, x/ks, kn, qu.
+      - {heard: "konstantin wekker", want: play, id: wecker}
+      - {heard: "constantin wecker", want: play, id: wecker}
+      - {heard: "peter aleksander", want: play, id: alexander}
+      - {heard: "tokotronik", want: play, id: tocotronic}
+      - {heard: "sarah konnor", want: play, id: connor}
+      - {heard: "perfeckte welle", want: play, id: welle}
+      - {heard: "die kleine neipe", want: play, id: kneipe}
+      - {heard: "nikol", want: play, id: nicole}
+      - {heard: "lutsilektrik", want: play, id: lucilectric}
+      - {heard: "kwadratur des kreises", want: play, id: quadratur}
+      # [ch] ch said as sch, or Ch- read as k/tsch.
+      - {heard: "isch liebe das leben", want: play, id: liebedasleben}
+      - {heard: "isch und isch", want: play, id: ichundich}
+      - {heard: "nina tschuba", want: play, id: chuba}
+      - {heard: "nina kuba", want: play, id: chuba}
+      - {heard: "apatsche 207", want: play, id: apache}
+      # [rvoc] r vocalisation and schwa loss.
+      - {heard: "lieda", want: play, id: lieder}
+      - {heard: "rolla", want: play, id: roller}
+      - {heard: "es war somma", want: play, id: sommer}
+      - {heard: "bilda im kopf", want: play, id: bilder}
+      - {heard: "mamor stein und eisen bricht", want: play, id: marmor}
+      - {heard: "marius müller westernhagn", want: play, id: westernhagen}
+      - {heard: "peter alexanda", want: play, id: alexander}
+      - {heard: "andreas gabalia", want: play, id: gabalier}
+      - {heard: "materia", want: play, id: marteria}
+      - {heard: "liebe is alles", want: play, id: liebeistalles}
+      - {heard: "is da jemand", want: play, id: jemand}
+      - {heard: "über den wolkn", want: play, id: wolken}
+      - {heard: "lila wolkn", want: play, id: lilawolken}
+      - {heard: "du hast mich tausendmal belogn", want: play, id: tausendmal}
+      - {heard: "über sieben brücken musst du gehen", want: play, id: siebenbruecken}
+      - {heard: "theo wir fahren nach lodz", want: play, id: theo}
+      - {heard: "ich liebe das lebn", want: play, id: liebedasleben}
+      # [split] Compounds and names split or merged.
+      - {heard: "kraft club", want: play, id: kraftklub}
+      - {heard: "deich kind", want: play, id: deichkind}
+      - {heard: "rosen stolz", want: play, id: rosenstolz}
+      - {heard: "toko tronik", want: play, id: tocotronic}
+      - {heard: "alpha ville", want: play, id: alphaville}
+      - {heard: "dadada", want: play, id: dadada}
+      - {heard: "ba ba banküberfall", want: play, id: bankueberfall}
+      - {heard: "hula palu", want: play, id: hulapalu}
+      - {heard: "remmi demmi", want: play, id: remmidemmi}
+      - {heard: "im asche regen", want: play, id: ascheregen}
+      - {heard: "du hast den farb film vergessen", want: play, id: farbfilm}
+      - {heard: "du hast mich tausend mal belogen", want: play, id: tausendmal}
+      - {heard: "abenteuer land", want: play, id: abenteuerland}
+      - {heard: "freundes kreis", want: play, id: freundeskreis}
+      - {heard: "wild berry lillet", want: play, id: wildberry}
+      - {heard: "lucy lectric", want: play, id: lucilectric}
+      - {heard: "luft ballons", want: play, id: luftballons}
+      # [rws] Real-word substitution.
+      - {heard: "kissen verboten", want: play, id: kuessen}
+      - {heard: "kasper", want: play, id: casper}
+      - {heard: "weg mich auf", want: play, id: weckmich}
+      - {heard: "verdammt lang her", want: play, id: verdamp}
+      - {heard: "fools garten", want: play, id: foolsgarden}
+      - {heard: "satellit", want: play, id: satellite}
+      - {heard: "lemon three", want: play, id: lemontree}
+      - {heard: "cool savas", want: play, id: savas}
+      - {heard: "kapital bra", want: play, id: capitalbra}
+      - {heard: "your my heart your my soul", want: play, id: heartsoul}
+      - {heard: "skifahren", want: play, id: skifoan}
+      - {heard: "prinz pie", want: play, id: prinzpi}
+      # [foreign] Foreign-name and loanword spellings.
+      - {heard: "mayor tom", want: play, id: majortom}
+      - {heard: "mädscher tom völlig losgelöst", want: play, id: majortom}
+      - {heard: "rock mi amadeus", want: play, id: amadeus}
+      - {heard: "dschenni", want: play, id: jeanny}
+      - {heard: "heiper heiper", want: play, id: hyper}
+      - {heard: "hüper hüper", want: play, id: hyper}
+      - {heard: "hau matsch is se fisch", want: play, id: fish}
+      - {heard: "how much is de fish", want: play, id: fish}
+      - {heard: "brada lui", want: play, id: louie}
+      - {heard: "brother louis", want: play, id: louie}
+      - {heard: "modan torking", want: play, id: moderntalking}
+      - {heard: "element of kreim", want: play, id: eoc}
+      - {heard: "skuter", want: play, id: scooter}
+      - {heard: "roy bleck", want: play, id: royblack}
+      - {heard: "lemmon tri", want: play, id: lemontree}
+      - {heard: "fuls garden", want: play, id: foolsgarden}
+      - {heard: "sattelait", want: play, id: satellite}
+      - {heard: "wild berry lille", want: play, id: wildberry}
+      - {heard: "kent weit antil tunait", want: play, id: cantwait}
+      - {heard: "can't wait until tonite", want: play, id: cantwait}
+      - {heard: "theo wir fahrn nach lotsch", want: play, id: theo}
+      - {heard: "teo wir fahrn nach lodz", want: play, id: theo}
+      - {heard: "samy de lux", want: play, id: samy}
+      - {heard: "july", want: play, id: juli}
+      - {heard: "es ist july", want: play, id: esistjuli}
+      - {heard: "hallelujah", want: play, id: halleluja}
+      - {heard: "big in dschäpän", want: play, id: japan}
+      - {heard: "anton aus tyrol", want: play, id: anton}
+      # [num] Number and symbol forms.
+      - {heard: "neunundneunzig luftballons", want: play, id: luftballons}
+      - {heard: "neun und neunzig luftballons", want: play, id: luftballons}
+      - {heard: "wolke sieben", want: play, id: wolke7}
+      - {heard: "volke sieben", want: play, id: wolke7}
+      - {heard: "über 7 brücken musst du gehn", want: play, id: siebenbruecken}
+      - {heard: "du hast mich 1000 mal belogen", want: play, id: tausendmal}
+      - {heard: "kids zwei finger an den kopf", want: play, id: kids}
+      - {heard: "kids 2 finger an den kopf", want: play, id: kids}
+      - {heard: "apache zwei null sieben", want: play, id: apache}
+      - {heard: "apache zweihundertsieben", want: play, id: apache}
+      - {heard: "apache two oh seven", want: play, id: apache}
+      - {heard: "ich und ich", want: play, id: ichundich}
+      - {heard: "ich plus ich", want: play, id: ichundich}
+      # [init] Initialisms and letter names.
+      - {heard: "e a v", want: play, id: eav}
+      - {heard: "b a p", want: play, id: bap}
+      - {heard: "a n n a", want: play, id: anna}
+      - {heard: "didschei ötzi", want: play, id: djoetzi}
+      - {heard: "x o x o", want: play, id: xoxo}
+      - {heard: "mit ka", want: play, id: mitk}
+      # [short] The title as people say it.
+      - {heard: "major tom", want: play, id: majortom}
+      - {heard: "westernhagen", want: play, id: westernhagen}
+      - {heard: "über sieben brücken", want: play, id: siebenbruecken}
+      - {heard: "ein stern", want: play, id: einstern}
+      - {heard: "remmidemmi", want: play, id: remmidemmi}
+      - {heard: "ein stern der deinen namen trägt", want: play, id: einstern}
+      # Absent: missing sequels and near-miss titles that share words.
+      - {heard: "wolke 4", want: not_found}
+      - {heard: "wolke neun", want: not_found}
+      - {heard: "sieben tage lang", want: not_found}
+      - {heard: "zum glück in die zukunft 2", want: ask}
+      - {heard: "ein bisschen spaß muss sein", want: not_found}
+      - {heard: "verdammt ich lieb dich", want: not_found}
+      - {heard: "nur ein wort", want: not_found}
+      - {heard: "kraftwerk", want: not_found}
+      - {heard: "max raabe", want: not_found}
+      - {heard: "peter fox", want: not_found}
+      - {heard: "sarah lombardi", want: not_found}
+      - {heard: "andreas bourani", want: not_found}
+      - {heard: "wolfgang petry", want: not_found}
+      - {heard: "die ärzte", want: not_found}
+      - {heard: "haus am see", want: not_found}
+      - {heard: "auf uns", want: not_found}
+      # Absent: well-known artists and songs not in this library.
+      - {heard: "rammstein", want: not_found}
+      - {heard: "herbert grönemeyer", want: not_found}
+      - {heard: "helene fischer", want: not_found}
+      - {heard: "udo jürgens", want: not_found}
+      - {heard: "nena", want: not_found}
+      - {heard: "die toten hosen", want: not_found}
+      - {heard: "die fantastischen vier", want: not_found}
+      - {heard: "griechischer wein", want: not_found}
+      - {heard: "atemlos durch die nacht", want: not_found}
+      - {heard: "skandal im sperrbezirk", want: not_found}
+      - {heard: "tage wie diese", want: not_found}
+      - {heard: "durch den monsun", want: not_found}
+      - {heard: "schrei nach liebe", want: not_found}
+      - {heard: "ich war noch niemals in new york", want: not_found}
+      - {heard: "cordula grün", want: not_found}
+      - {heard: "80 millionen", want: not_found}
+      - {heard: "ein kompliment", want: not_found}
+      - {heard: "tausendmal du", want: not_found}
+      - {heard: "1000 und 1 nacht", want: not_found}
+      - {heard: "ich will keine schokolade", want: not_found}
+      - {heard: "schöner fremder mann", want: not_found}
+      - {heard: "leise rieselt der schnee", want: not_found}
+      - {heard: "purple schulz", want: not_found}
+      - {heard: "bushido", want: not_found}
+      - {heard: "kollegah", want: not_found}
+      - {heard: "blue system", want: not_found}
+      - {heard: "dieter bohlen", want: not_found}
+      - {heard: "heinz rudolf kunze", want: not_found}
+      - {heard: "rex gildo", want: not_found}
+      - {heard: "andrea jürgens", want: not_found}
+      - {heard: "max giesinger", want: not_found}
+      - {heard: "tabaluga", want: not_found}
+      - {heard: "mark forster", want: not_found}
+      - {heard: "cro", want: not_found}
+      - {heard: "silbermond", want: not_found}
+      - {heard: "revolverheld", want: not_found}
+      - {heard: "seeed", want: not_found}
+      - {heard: "wincent weiss", want: not_found}

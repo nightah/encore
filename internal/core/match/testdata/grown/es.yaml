@@ -1,0 +1,809 @@
+# Grown set: testdata/grown is a held-out set of corpora, kept apart from the original set (asr_corpus.yaml and phonetic/). TestASRCorpus and TestPhoneticEval score both sets and report them separately.
+#
+# Spanish (es) phonetic evaluation corpus, second set, for TestPhoneticEval. Same schema as asr_corpus.yaml; cases are scored, not asserted, so there is no xfail.
+#
+# Libraries: two suites of real, well-known Spanish-language titles (Spain, Mexico, Argentina, Chile, Colombia, Cuba, Puerto Rico) with their original release years. Suite one is film and television, suite two is music (artists, albums and songs). Each library deliberately carries near neighbours that share words, first names or franchise names (Torrente 1 to 3, Padre no hay más que uno 1 and 2, Tadeo Jones 1 and 2, Velvet and Velvet Colección, La casa de papel and Berlín, Rocío Jurado and Rocío Dúrcal, Los Rodríguez and La Mala Rodríguez, Fito Páez and Fito & Fitipaldis, Luis Miguel, Luis Fonsi and Juan Luis Guerra, Dani Martín, Vanesa Martín and Ricky Martin, Vivir así es morir de amor and Vivir mi vida, the album and the song both called Mediterráneo) so that a wrong play is possible.
+#
+# Cases: what a speech recogniser plausibly writes when a Spanish speaker asks for the title. Each mishearing sits under a comment naming the confusion class it models. The classes follow the orthography-to-sound ambiguities documented in the RAE and ASALE Ortografía de la lengua española (2010) and Nueva gramática, Fonética y fonología (2011), and in Hualde, The Sounds of Spanish (2005):
+# - Betacism: b and v are one phoneme /b/ ([b] or [β]); w in loanwords also surfaces as /b/ or /gu/.
+# - Silent h: h is never pronounced, so ASR adds or drops it freely, often producing a real word (ola/hola, echo/hecho).
+# - Yeísmo: ll and y merge for most speakers (rallando/rayando, yerro/hierro); hie- and ye- coincide.
+# - Seseo and ceceo: c before e/i, z and s merge to /s/ (seseo, Andalusia, Canaries, all of Latin America) or to /θ/ (ceceo).
+# - Aspiration or loss of syllable-final s, which also deletes plural markers (los santos > lo santo).
+# - Loss of intervocalic and final d (-ado > -ao, -ido > -ío, de > e, sociedad > sociedá), including titles that already carry the elision (Corazón partío, Chambao) and the hypercorrection that restores a d that is not there.
+# - Jota: g before e/i and j are both /x/; English-trained recognisers also write j as h or y.
+# - Velar spellings: /k/ as c, qu or k; /g/ before e/i as gu, and gu reduced to g or w.
+# - Tap and trill: r and rr confused in writing.
+# - Nasal assimilation: n before p/b is pronounced [m] and m before p is written n.
+# - Consonant cluster reduction: cc > c, x > s before consonants, epenthetic e before s+consonant in loanwords (Ska > eska).
+# - Letter names and digits: hache, ge, jota, ce, pe for single letters; digits, number words and years read out in full.
+# - Foreign names and words spelled as a Spanish speaker says them (Bad Bunny > bad bani, Biutiful > beautiful, Raphael > Rafael, Kase.O > case o).
+# - Word splits and merges, including resegmentations that produce real words (la que se avecina > la que sea vecina).
+# - Real-word substitutions: the recogniser lands on a common word near the title word (cesto for Sesto, águila for Agila).
+# - Diacritic, ñ and punctuation loss.
+# Controls are exact titles. Ambiguous cases ask, naming the candidates that must be offered. Absent cases are titles not in the library: unrelated titles, near-miss titles that share words with a library title (not_found), and missing sequels of a franchise the library holds (ask, following the precedent of "torrente dos" in phonetic/es.yaml).
+#
+# Cases describe what a listener hears; don't change a case to suit an encoder's results, or the comparison stops meaning anything (see docs/src/content/docs/contributing/dependencies.md).
+suites:
+  - name: spanish film and television
+    lang: es
+    library:
+      # Films.
+      - {id: amores, kind: movie, title: "Amores perros", year: 2000}
+      - {id: tumama, kind: movie, title: "Y tu mamá también", year: 2001}
+      - {id: roma, kind: movie, title: "Roma", year: 2018}
+      - {id: espinazo, kind: movie, title: "El espinazo del diablo", year: 2001}
+      - {id: mariposas, kind: movie, title: "La lengua de las mariposas", year: 1999}
+      - {id: lunes, kind: movie, title: "Los lunes al sol", year: 2002}
+      - {id: tedoy, kind: movie, title: "Te doy mis ojos", year: 2003}
+      - {id: tesis, kind: movie, title: "Tesis", year: 1996}
+      - {id: bestia, kind: movie, title: "El día de la bestia", year: 1995}
+      - {id: jamon, kind: movie, title: "Jamón, jamón", year: 1992}
+      - {id: belle, kind: movie, title: "Belle Époque", year: 1992}
+      - {id: circulo, kind: movie, title: "Los amantes del Círculo Polar", year: 1998}
+      - {id: lucia, kind: movie, title: "Lucía y el sexo", year: 2001}
+      - {id: balada, kind: movie, title: "Balada triste de trompeta", year: 2010}
+      - {id: brujas, kind: movie, title: "Las brujas de Zugarramurdi", year: 2013}
+      - {id: rec, kind: movie, title: "[REC]", year: 2007}
+      - {id: bola, kind: movie, title: "El Bola", year: 2000}
+      - {id: santos, kind: movie, title: "Los santos inocentes", year: 1984}
+      - {id: atame, kind: movie, title: "¡Átame!", year: 1989}
+      - {id: flor, kind: movie, title: "La flor de mi secreto", year: 1995}
+      - {id: dolor, kind: movie, title: "Dolor y gloria", year: 2019}
+      - {id: julieta, kind: movie, title: "Julieta", year: 2016}
+      - {id: abrazos, kind: movie, title: "Los abrazos rotos", year: 2009}
+      - {id: malaedu, kind: movie, title: "La mala educación", year: 2004}
+      - {id: carne, kind: movie, title: "Carne trémula", year: 1997}
+      - {id: kika, kind: movie, title: "Kika", year: 1993}
+      - {id: tacones, kind: movie, title: "Tacones lejanos", year: 1991}
+      - {id: piel, kind: movie, title: "La piel que habito", year: 2011}
+      - {id: madres, kind: movie, title: "Madres paralelas", year: 2021}
+      - {id: todomadre, kind: movie, title: "Todo sobre mi madre", year: 1999}
+      - {id: angel, kind: movie, title: "El ángel exterminador", year: 1962}
+      - {id: viridiana, kind: movie, title: "Viridiana", year: 1961}
+      - {id: olvidados, kind: movie, title: "Los olvidados", year: 1950}
+      - {id: cria, kind: movie, title: "Cría cuervos", year: 1976}
+      - {id: colmena, kind: movie, title: "El espíritu de la colmena", year: 1973}
+      - {id: sur, kind: movie, title: "El sur", year: 1983}
+      - {id: marshall, kind: movie, title: "¡Bienvenido, Mister Marshall!", year: 1953}
+      - {id: verdugo, kind: movie, title: "El verdugo", year: 1963}
+      - {id: reinas, kind: movie, title: "Nueve reinas", year: 2000}
+      - {id: novia, kind: movie, title: "El hijo de la novia", year: 2001}
+      - {id: contratiempo, kind: movie, title: "Contratiempo", year: 2016}
+      - {id: isla, kind: movie, title: "La isla mínima", year: 2014}
+      - {id: ira, kind: movie, title: "Tarde para la ira", year: 2016}
+      - {id: reino, kind: movie, title: "El reino", year: 2018}
+      - {id: nieve, kind: movie, title: "La sociedad de la nieve", year: 2023}
+      - {id: imposible, kind: movie, title: "Lo imposible", year: 2012}
+      - {id: monstruo, kind: movie, title: "Un monstruo viene a verme", year: 2016}
+      - {id: handia, kind: movie, title: "Handia", year: 2017}
+      - {id: blancanieves, kind: movie, title: "Blancanieves", year: 2012}
+      - {id: patron, kind: movie, title: "El buen patrón", year: 2021}
+      - {id: desconocidos, kind: movie, title: "Perfectos desconocidos", year: 2017}
+      - {id: tresmetros, kind: movie, title: "Tres metros sobre el cielo", year: 2010}
+      - {id: ganas, kind: movie, title: "Tengo ganas de ti", year: 2012}
+      - {id: padre1, kind: movie, title: "Padre no hay más que uno", year: 2019}
+      - {id: padre2, kind: movie, title: "Padre no hay más que uno 2: La llegada de la suegra", year: 2020}
+      - {id: torrente1, kind: movie, title: "Torrente, el brazo tonto de la ley", year: 1998}
+      - {id: torrente2, kind: movie, title: "Torrente 2: Misión en Marbella", year: 2001}
+      - {id: torrente3, kind: movie, title: "Torrente 3: El protector", year: 2005}
+      - {id: mortadelo, kind: movie, title: "La gran aventura de Mortadelo y Filemón", year: 2003}
+      - {id: tadeo1, kind: movie, title: "Las aventuras de Tadeo Jones", year: 2012}
+      - {id: tadeo2, kind: movie, title: "Tadeo Jones 2: El secreto del rey Midas", year: 2017}
+      - {id: chocolate, kind: movie, title: "Como agua para chocolate", year: 1992}
+      - {id: nobles, kind: movie, title: "Nosotros los Nobles", year: 2013}
+      - {id: devoluciones, kind: movie, title: "No se aceptan devoluciones", year: 2013}
+      - {id: amaro, kind: movie, title: "El crimen del padre Amaro", year: 2002}
+      - {id: biutiful, kind: movie, title: "Biutiful", year: 2010}
+      - {id: babel, kind: movie, title: "Babel", year: 2006}
+      - {id: carroza, kind: movie, title: "Esperando la carroza", year: 1985}
+      - {id: oficial, kind: movie, title: "La historia oficial", year: 1985}
+      - {id: argentina, kind: movie, title: "Argentina, 1985", year: 2022}
+      - {id: fantastica, kind: movie, title: "Una mujer fantástica", year: 2017}
+      # Series.
+      - {id: medico, kind: tvshow, title: "Médico de familia", year: 1995}
+      - {id: farmacia, kind: tvshow, title: "Farmacia de guardia", year: 1991}
+      - {id: paco, kind: tvshow, title: "Los hombres de Paco", year: 2005}
+      - {id: fisica, kind: tvshow, title: "Física o química", year: 2008}
+      - {id: internado, kind: tvshow, title: "El internado", year: 2007}
+      - {id: aguila, kind: tvshow, title: "Águila Roja", year: 2009}
+      - {id: barco, kind: tvshow, title: "El barco", year: 2011}
+      - {id: farina, kind: tvshow, title: "Fariña", year: 2018}
+      - {id: patria, kind: tvshow, title: "Patria", year: 2020}
+      - {id: hierro, kind: tvshow, title: "Hierro", year: 2019}
+      - {id: antidisturbios, kind: tvshow, title: "Antidisturbios", year: 2020}
+      - {id: peste, kind: tvshow, title: "La peste", year: 2018}
+      - {id: cable, kind: tvshow, title: "Las chicas del cable", year: 2017}
+      - {id: reserva, kind: tvshow, title: "Gran Reserva", year: 2010}
+      - {id: amar, kind: tvshow, title: "Amar es para siempre", year: 2013}
+      - {id: principe, kind: tvshow, title: "El príncipe", year: 2014}
+      - {id: merli, kind: tvshow, title: "Merlí", year: 2015}
+      - {id: machos, kind: tvshow, title: "Machos alfa", year: 2022}
+      - {id: valeria, kind: tvshow, title: "Valeria", year: 2020}
+      - {id: skyrojo, kind: tvshow, title: "Sky Rojo", year: 2021}
+      - {id: papel, kind: tvshow, title: "La casa de papel", year: 2017}
+      - {id: berlin, kind: tvshow, title: "Berlín", year: 2023}
+      - {id: vecino, kind: tvshow, title: "El vecino", year: 2019}
+      - {id: alliabajo, kind: tvshow, title: "Allí abajo", year: 2015}
+      - {id: avecina, kind: tvshow, title: "La que se avecina", year: 2007}
+      - {id: aqui, kind: tvshow, title: "Aquí no hay quien viva", year: 2003}
+      - {id: chavo, kind: tvshow, title: "El Chavo del Ocho", year: 1973}
+      - {id: chapulin, kind: tvshow, title: "El Chapulín Colorado", year: 1973}
+      - {id: cuervos, kind: tvshow, title: "Club de Cuervos", year: 2015}
+      - {id: betty, kind: tvshow, title: "Yo soy Betty, la fea", year: 1999}
+      - {id: cafe, kind: tvshow, title: "Café con aroma de mujer", year: 1994}
+      - {id: simuladores, kind: tvshow, title: "Los simuladores", year: 2002}
+      - {id: marginal, kind: tvshow, title: "El marginal", year: 2016}
+      - {id: velvet, kind: tvshow, title: "Velvet", year: 2014}
+      - {id: velvetcol, kind: tvshow, title: "Velvet Colección", year: 2017}
+      - {id: carlos, kind: tvshow, title: "Carlos, rey emperador", year: 2015}
+      - {id: votajuan, kind: tvshow, title: "Vota Juan", year: 2019}
+      - {id: pueblo, kind: tvshow, title: "El pueblo", year: 2019}
+      - {id: mira, kind: tvshow, title: "Mira lo que has hecho", year: 2018}
+      - {id: hache, kind: tvshow, title: "Hache", year: 2019}
+    cases:
+      # Controls: the title as written.
+      - {heard: "amores perros", want: play, id: amores}
+      - {heard: "y tu mamá también", want: play, id: tumama}
+      - {heard: "roma", want: play, id: roma}
+      - {heard: "tesis", want: play, id: tesis}
+      - {heard: "el día de la bestia", want: play, id: bestia}
+      - {heard: "los santos inocentes", want: play, id: santos}
+      - {heard: "dolor y gloria", want: play, id: dolor}
+      - {heard: "julieta", want: play, id: julieta}
+      - {heard: "la piel que habito", want: play, id: piel}
+      - {heard: "madres paralelas", want: play, id: madres}
+      - {heard: "nueve reinas", want: play, id: reinas}
+      - {heard: "la isla mínima", want: play, id: isla}
+      - {heard: "el reino", want: play, id: reino}
+      - {heard: "la sociedad de la nieve", want: play, id: nieve}
+      - {heard: "padre no hay más que uno", want: play, id: padre1}
+      - {heard: "fariña", want: play, id: farina}
+      - {heard: "patria", want: play, id: patria}
+      - {heard: "velvet", want: play, id: velvet}
+      - {heard: "velvet colección", want: play, id: velvetcol}
+      - {heard: "la casa de papel", want: play, id: papel}
+      - {heard: "berlín", want: play, id: berlin}
+      - {heard: "el internado", want: play, id: internado}
+      - {heard: "la gran aventura de mortadelo y filemón", want: play, id: mortadelo}
+      - {heard: "yo soy betty la fea", want: play, id: betty}
+      # Betacism: b and v.
+      - {heard: "el berdugo", want: play, id: verdugo}
+      - {heard: "biridiana", want: play, id: viridiana}
+      - {heard: "baleria", want: play, id: valeria}
+      - {heard: "el becino", want: play, id: vecino}
+      - {heard: "bota juan", want: play, id: votajuan}
+      - {heard: "la sociedad de la niebe", want: play, id: nieve}
+      - {heard: "un monstruo biene a berme", want: play, id: monstruo}
+      - {heard: "bienbenido mister marshall", want: play, id: marshall}
+      - {heard: "nuebe reinas", want: play, id: reinas}
+      - {heard: "vavel", want: play, id: babel}
+      - {heard: "el varco", want: play, id: barco}
+      - {heard: "verlín", want: play, id: berlin}
+      - {heard: "valada triste de trompeta", want: play, id: balada}
+      - {heard: "los avrazos rotos", want: play, id: abrazos}
+      - {heard: "el chabo del ocho", want: play, id: chavo}
+      - {heard: "belbet colección", want: play, id: velvetcol}
+      - {heard: "el día de la vestia", want: play, id: bestia}
+      - {heard: "cría cuerbos", want: play, id: cria}
+      - {heard: "club de cuerbos", want: play, id: cuervos}
+      - {heard: "gran reserba", want: play, id: reserva}
+      - {heard: "el puevlo", want: play, id: pueblo}
+      - {heard: "las chicas del cavle", want: play, id: cable}
+      - {heard: "antidisturvios", want: play, id: antidisturbios}
+      # Silent h, dropped or added.
+      - {heard: "el ijo de la novia", want: play, id: novia}
+      - {heard: "ierro", want: play, id: hierro}
+      - {heard: "los ombres de paco", want: play, id: paco}
+      - {heard: "mira lo que as echo", want: play, id: mira}
+      - {heard: "ache", want: play, id: hache}
+      - {heard: "andia", want: play, id: handia}
+      - {heard: "la piel que abito", want: play, id: piel}
+      - {heard: "aquí no ay quien viva", want: play, id: aqui}
+      - {heard: "la istoria oficial", want: play, id: oficial}
+      - {heard: "hallí abajo", want: play, id: alliabajo}
+      # Yeísmo: ll and y, hie and ye.
+      - {heard: "ayí abajo", want: play, id: alliabajo}
+      - {heard: "padre no hay más que uno dos la yegada de la suegra", want: play, id: padre2}
+      - {heard: "llo soy betty la fea", want: play, id: betty}
+      - {heard: "torrente dos misión en marbeya", want: play, id: torrente2}
+      - {heard: "yerro", want: play, id: hierro}
+      # Seseo and ceceo: c, z and s.
+      - {heard: "tezis", want: play, id: tesis}
+      - {heard: "esperando la carrosa", want: play, id: carroza}
+      - {heard: "las brujas de sugarramurdi", want: play, id: brujas}
+      - {heard: "la sosiedad de la nieve", want: play, id: nieve}
+      - {heard: "el zur", want: play, id: sur}
+      - {heard: "los amantes del sírculo polar", want: play, id: circulo}
+      - {heard: "la mala educasión", want: play, id: malaedu}
+      - {heard: "farmasia de guardia", want: play, id: farmacia}
+      - {heard: "el prínsipe", want: play, id: principe}
+      - {heard: "el espinaso del diablo", want: play, id: espinazo}
+      - {heard: "tres metros sobre el sielo", want: play, id: tresmetros}
+      # Aspirated or dropped syllable-final s.
+      - {heard: "lo santo inocente", want: play, id: santos}
+      - {heard: "lo lune al sol", want: play, id: lunes}
+      - {heard: "la chica del cable", want: play, id: cable}
+      - {heard: "perfecto desconocido", want: play, id: desconocidos}
+      - {heard: "los abrazo roto", want: play, id: abrazos}
+      - {heard: "las bruja de zugarramurdi", want: play, id: brujas}
+      - {heard: "lo simuladore", want: play, id: simuladores}
+      - {heard: "nosotro lo nobles", want: play, id: nobles}
+      - {heard: "tre metro sobre el cielo", want: play, id: tresmetros}
+      - {heard: "la aventura de tadeo jones", want: play, id: tadeo1}
+      - {heard: "te doy mi ojo", want: play, id: tedoy}
+      # Lost intervocalic or final d.
+      - {heard: "el crimen del pare amaro", want: play, id: amaro}
+      - {heard: "médico e familia", want: play, id: medico}
+      - {heard: "farmacia e guardia", want: play, id: farmacia}
+      - {heard: "la sociedá de la nieve", want: play, id: nieve}
+      - {heard: "los olvidaos", want: play, id: olvidados}
+      - {heard: "el día e la bestia", want: play, id: bestia}
+      - {heard: "el hijo e la novia", want: play, id: novia}
+      - {heard: "no se aceptan devolusiones", want: play, id: devoluciones}
+      # Jota: g before e/i and j; x and cluster reduction.
+      - {heard: "el ánjel exterminador", want: play, id: angel}
+      - {heard: "el ángel esterminador", want: play, id: angel}
+      - {heard: "lucía y el seso", want: play, id: lucia}
+      - {heard: "café con aroma de muger", want: play, id: cafe}
+      - {heard: "el marjinal", want: play, id: marginal}
+      - {heard: "tacones lehanos", want: play, id: tacones}
+      # Velar spellings: c, qu, k, gu.
+      - {heard: "quica", want: play, id: kika}
+      - {heard: "física o kímica", want: play, id: fisica}
+      - {heard: "aquí no hay kien viva", want: play, id: aqui}
+      - {heard: "farmacia de wardia", want: play, id: farmacia}
+      - {heard: "ágila roja", want: play, id: aguila}
+      - {heard: "la ke se avecina", want: play, id: avecina}
+      - {heard: "como awa para chocolate", want: play, id: chocolate}
+      # Tap and trill; ñ.
+      - {heard: "torente dos misión en marbella", want: play, id: torrente2}
+      - {heard: "esperando la caroza", want: play, id: carroza}
+      - {heard: "hiero", want: play, id: hierro}
+      - {heard: "farina", want: play, id: farina}
+      # Nasal assimilation: n and m before p and b.
+      - {heard: "balada triste de tronpeta", want: play, id: balada}
+      - {heard: "lo inposible", want: play, id: imposible}
+      - {heard: "contratienpo", want: play, id: contratiempo}
+      - {heard: "carlos rey enperador", want: play, id: carlos}
+      # Word splits, merges and resegmentations.
+      - {heard: "a mores perros", want: play, id: amores}
+      - {heard: "blanca nieves", want: play, id: blancanieves}
+      - {heard: "anti disturbios", want: play, id: antidisturbios}
+      - {heard: "contra tiempo", want: play, id: contratiempo}
+      - {heard: "lacasa de papel", want: play, id: papel}
+      - {heard: "allí a bajo", want: play, id: alliabajo}
+      - {heard: "y tu mamá tan bien", want: play, id: tumama}
+      - {heard: "la que sea vecina", want: play, id: avecina}
+      - {heard: "mira lo que a hecho", want: play, id: mira}
+      - {heard: "amares para siempre", want: play, id: amar}
+      - {heard: "macho salfa", want: play, id: machos}
+      # Real-word substitutions and the conjunction y written i.
+      - {heard: "color y gloria", want: play, id: dolor}
+      - {heard: "el reno", want: play, id: reino}
+      - {heard: "el marco", want: play, id: barco}
+      - {heard: "lucía i el sexo", want: play, id: lucia}
+      - {heard: "i tu mamá también", want: play, id: tumama}
+      - {heard: "mortadelo i filemón", want: play, id: mortadelo}
+      # Foreign names and words as a Spanish speaker says them.
+      - {heard: "beautiful", want: play, id: biutiful}
+      - {heard: "bel época", want: play, id: belle}
+      - {heard: "hamón hamón", want: play, id: jamon}
+      - {heard: "machos alpha", want: play, id: machos}
+      - {heard: "eskái rojo", want: play, id: skyrojo}
+      - {heard: "las aventuras de tadeo yons", want: play, id: tadeo1}
+      - {heard: "bienvenido míster marsal", want: play, id: marshall}
+      - {heard: "merly", want: play, id: merli}
+      - {heard: "yo soy beti la fea", want: play, id: betty}
+      # Letter names, digits and numbers.
+      - {heard: "h", want: play, id: hache}
+      - {heard: "rec", want: play, id: rec}
+      - {heard: "erre e ce", want: play, id: rec}
+      - {heard: "el chavo del 8", want: play, id: chavo}
+      - {heard: "3 metros sobre el cielo", want: play, id: tresmetros}
+      - {heard: "9 reinas", want: play, id: reinas}
+      - {heard: "argentina mil novecientos ochenta y cinco", want: play, id: argentina}
+      - {heard: "arjentina ochenta y cinco", want: play, id: argentina}
+      - {heard: "torrente 2", want: play, id: torrente2}
+      - {heard: "torrente tres", want: play, id: torrente3}
+      - {heard: "torrente uno", want: play, id: torrente1}
+      - {heard: "padre no hay más que uno dos", want: play, id: padre2}
+      - {heard: "padre no hay más que uno 2", want: play, id: padre2}
+      - {heard: "tadeo jones dos", want: play, id: tadeo2}
+      # Subtitles, partial titles and reordering.
+      - {heard: "torrente el protector", want: play, id: torrente3}
+      - {heard: "torrente misión en marbella", want: play, id: torrente2}
+      - {heard: "torrente el brazo tonto de la ley", want: play, id: torrente1}
+      - {heard: "padre no hay más que uno la llegada de la suegra", want: play, id: padre2}
+      - {heard: "tadeo jones el secreto del rey midas", want: play, id: tadeo2}
+      - {heard: "mortadelo y filemón la gran aventura", want: play, id: mortadelo}
+      - {heard: "betty la fea", want: play, id: betty}
+      # Diacritics dropped.
+      - {heard: "fisica o quimica", want: play, id: fisica}
+      - {heard: "aguila roja", want: play, id: aguila}
+      - {heard: "medico de familia", want: play, id: medico}
+      - {heard: "carne tremula", want: play, id: carne}
+      - {heard: "atame", want: play, id: atame}
+      - {heard: "cafe con aroma de mujer", want: play, id: cafe}
+      # Ambiguous: ask among the franchise.
+      - {heard: "torrente", want: ask, among: [torrente1, torrente2, torrente3]}
+      - {heard: "tadeo jones", want: ask, among: [tadeo1, tadeo2]}
+      # Missing sequels: the franchise is here, the instalment is not.
+      - {heard: "torrente cuatro", want: ask}
+      - {heard: "torrente cinco", want: ask}
+      - {heard: "padre no hay más que uno tres", want: ask}
+      - {heard: "tadeo jones tres", want: ask}
+      - {heard: "rec dos", want: ask}
+      # Near-miss titles not in the library: they share words with a library title.
+      - {heard: "la casa de las flores", want: not_found}
+      - {heard: "el secreto de puente viejo", want: not_found}
+      - {heard: "las chicas de oro", want: not_found}
+      - {heard: "amar en tiempos revueltos", want: not_found}
+      - {heard: "la reina del sur", want: not_found}
+      - {heard: "la isla de las tentaciones", want: not_found}
+      - {heard: "el príncipe del rap", want: not_found}
+      - {heard: "volver", want: not_found}
+      - {heard: "hable con ella", want: not_found}
+      - {heard: "los otros", want: not_found}
+      - {heard: "la piel fría", want: not_found}
+      - {heard: "el bar", want: not_found}
+      - {heard: "los amantes pasajeros", want: not_found}
+      - {heard: "secretos del corazón", want: not_found}
+      - {heard: "el internado las cumbres", want: not_found}
+      - {heard: "física o química el reencuentro", want: not_found}
+      - {heard: "águila roja la película", want: not_found}
+      - {heard: "el chavo animado", want: not_found}
+      - {heard: "betty en nueva york", want: not_found}
+      # Absent titles.
+      - {heard: "mar adentro", want: not_found}
+      - {heard: "mujeres al borde de un ataque de nervios", want: not_found}
+      - {heard: "celda 211", want: not_found}
+      - {heard: "el niño", want: not_found}
+      - {heard: "el autor", want: not_found}
+      - {heard: "toy boy", want: not_found}
+      - {heard: "la catedral del mar", want: not_found}
+      - {heard: "el embarcadero", want: not_found}
+      - {heard: "los serrano", want: not_found}
+      - {heard: "élite", want: not_found}
+      - {heard: "vis a vis", want: not_found}
+      - {heard: "relatos salvajes", want: not_found}
+      - {heard: "el orfanato", want: not_found}
+      - {heard: "abre los ojos", want: not_found}
+      - {heard: "el laberinto del fauno", want: not_found}
+      - {heard: "la casa de bernarda alba", want: not_found}
+      - {heard: "los girasoles ciegos", want: not_found}
+      - {heard: "la vaquilla", want: not_found}
+      - {heard: "ocho apellidos vascos", want: not_found}
+      - {heard: "el hoyo", want: not_found}
+      - {heard: "cuéntame cómo pasó", want: not_found}
+      - {heard: "el ministerio del tiempo", want: not_found}
+      - {heard: "hospital central", want: not_found}
+      - {heard: "verano azul", want: not_found}
+      - {heard: "narcos", want: not_found}
+      - {heard: "el tiempo para mañana", want: not_found}
+
+  - name: spanish music
+    lang: es
+    library:
+      # Artists.
+      - {id: camaron, kind: artist, title: "Camarón de la Isla"}
+      - {id: pacolucia, kind: artist, title: "Paco de Lucía"}
+      - {id: jurado, kind: artist, title: "Rocío Jurado"}
+      - {id: durcal, kind: artist, title: "Rocío Dúrcal"}
+      - {id: pantoja, kind: artist, title: "Isabel Pantoja"}
+      - {id: lolaflores, kind: artist, title: "Lola Flores"}
+      - {id: raphael, kind: artist, title: "Raphael"}
+      - {id: camilo, kind: artist, title: "Camilo Sesto"}
+      - {id: nino, kind: artist, title: "Nino Bravo"}
+      - {id: bose, kind: artist, title: "Miguel Bosé"}
+      - {id: hombresg, kind: artist, title: "Hombres G"}
+      - {id: radiofutura, kind: artist, title: "Radio Futura"}
+      - {id: nachapop, kind: artist, title: "Nacha Pop"}
+      - {id: planetas, kind: artist, title: "Los Planetas"}
+      - {id: lesbian, kind: artist, title: "Love of Lesbian"}
+      - {id: izal, kind: artist, title: "Izal"}
+      - {id: extremoduro, kind: artist, title: "Extremoduro"}
+      - {id: marea, kind: artist, title: "Marea"}
+      - {id: suaves, kind: artist, title: "Los Suaves"}
+      - {id: cantoloco, kind: artist, title: "El Canto del Loco"}
+      - {id: amaral, kind: artist, title: "Amaral"}
+      - {id: danimartin, kind: artist, title: "Dani Martín"}
+      - {id: vanesa, kind: artist, title: "Vanesa Martín"}
+      - {id: ricky, kind: artist, title: "Ricky Martin"}
+      - {id: leiva, kind: artist, title: "Leiva"}
+      - {id: ultimo, kind: artist, title: "El Último de la Fila"}
+      - {id: jarabe, kind: artist, title: "Jarabe de Palo"}
+      - {id: ketama, kind: artist, title: "Ketama"}
+      - {id: chambao, kind: artist, title: "Chambao"}
+      - {id: bebe, kind: artist, title: "Bebe"}
+      - {id: malu, kind: artist, title: "Malú"}
+      - {id: rozalen, kind: artist, title: "Rozalén"}
+      - {id: pablolopez, kind: artist, title: "Pablo López"}
+      - {id: carrasco, kind: artist, title: "Manuel Carrasco"}
+      - {id: serrat, kind: artist, title: "Joan Manuel Serrat"}
+      - {id: sabina, kind: artist, title: "Joaquín Sabina"}
+      - {id: badbunny, kind: artist, title: "Bad Bunny"}
+      - {id: shakira, kind: artist, title: "Shakira"}
+      - {id: juanes, kind: artist, title: "Juanes"}
+      - {id: mana, kind: artist, title: "Maná"}
+      - {id: soda, kind: artist, title: "Soda Stereo"}
+      - {id: cerati, kind: artist, title: "Gustavo Cerati"}
+      - {id: tacvba, kind: artist, title: "Café Tacvba"}
+      - {id: guerra, kind: artist, title: "Juan Luis Guerra"}
+      - {id: luismiguel, kind: artist, title: "Luis Miguel"}
+      - {id: fonsi, kind: artist, title: "Luis Fonsi"}
+      - {id: yankee, kind: artist, title: "Daddy Yankee"}
+      - {id: balvin, kind: artist, title: "J Balvin"}
+      - {id: karolg, kind: artist, title: "Karol G"}
+      - {id: delrio, kind: artist, title: "Los del Río"}
+      - {id: ketchup, kind: artist, title: "Las Ketchup"}
+      - {id: mago, kind: artist, title: "Mägo de Oz"}
+      - {id: skap, kind: artist, title: "Ska-P"}
+      - {id: chunguitos, kind: artist, title: "Los Chunguitos"}
+      - {id: alaska, kind: artist, title: "Alaska y Dinarama"}
+      - {id: duncan, kind: artist, title: "Duncan Dhu"}
+      - {id: ellabaila, kind: artist, title: "Ella Baila Sola"}
+      - {id: lori, kind: artist, title: "Lori Meyers"}
+      - {id: vivasuecia, kind: artist, title: "Viva Suecia"}
+      - {id: celtas, kind: artist, title: "Celtas Cortos"}
+      - {id: rodriguez, kind: artist, title: "Los Rodríguez"}
+      - {id: calamaro, kind: artist, title: "Andrés Calamaro"}
+      - {id: malarodriguez, kind: artist, title: "La Mala Rodríguez"}
+      - {id: fitopaez, kind: artist, title: "Fito Páez"}
+      - {id: fito, kind: artist, title: "Fito & Fitipaldis"}
+      - {id: yatra, kind: artist, title: "Sebastián Yatra"}
+      - {id: lafourcade, kind: artist, title: "Natalia Lafourcade"}
+      - {id: venegas, kind: artist, title: "Julieta Venegas"}
+      - {id: bizarrap, kind: artist, title: "Bizarrap"}
+      - {id: peluso, kind: artist, title: "Nathy Peluso"}
+      - {id: hevia, kind: artist, title: "Hevia"}
+      - {id: kaseo, kind: artist, title: "Kase.O"}
+      - {id: violadores, kind: artist, title: "Violadores del Verso"}
+      - {id: manuchao, kind: artist, title: "Manu Chao"}
+      - {id: monica, kind: artist, title: "Mónica Naranjo"}
+      - {id: rosalia, kind: artist, title: "Rosalía"}
+      - {id: tangana, kind: artist, title: "C. Tangana"}
+      - {id: sanz, kind: artist, title: "Alejandro Sanz"}
+      - {id: mecano, kind: artist, title: "Mecano"}
+      - {id: enrique, kind: artist, title: "Enrique Iglesias"}
+      - {id: heroes, kind: artist, title: "Héroes del Silencio"}
+      - {id: oreja, kind: artist, title: "La Oreja de Van Gogh"}
+      - {id: antoniovega, kind: artist, title: "Antonio Vega"}
+      # Albums.
+      - {id: madrileno, kind: album, title: "El Madrileño", year: 2021}
+      - {id: malquerer, kind: album, title: "El mal querer", year: 2018}
+      - {id: motomami, kind: album, title: "Motomami", year: 2022}
+      - {id: verano, kind: album, title: "Un verano sin ti", year: 2022}
+      - {id: pies, kind: album, title: "Pies descalzos", year: 1995}
+      - {id: ladrones, kind: album, title: "¿Dónde están los ladrones?", year: 1998}
+      - {id: mas, kind: album, title: "Más", year: 1997}
+      - {id: almaaire, kind: album, title: "El alma al aire", year: 2000}
+      - {id: agila, kind: album, title: "Agila", year: 1996}
+      - {id: leyinnata, kind: album, title: "La ley innata", year: 2008}
+      - {id: senderos, kind: album, title: "Senderos de traición", year: 1990}
+      - {id: avalancha, kind: album, title: "Avalancha", year: 1995}
+      - {id: leyenda, kind: album, title: "La leyenda del tiempo", year: 1979}
+      - {id: descanso, kind: album, title: "Descanso dominical", year: 1988}
+      - {id: cieloysuelo, kind: album, title: "Entre el cielo y el suelo", year: 1986}
+      - {id: lagrimas, kind: album, title: "Lágrimas negras", year: 2003}
+      - {id: misangre, kind: album, title: "Mi sangre", year: 2004}
+      - {id: cancionanimal, kind: album, title: "Canción animal", year: 1990}
+      - {id: bocanada, kind: album, title: "Bocanada", year: 1999}
+      - {id: romance, kind: album, title: "Romance", year: 1991}
+      - {id: dormida, kind: album, title: "Lo que te conté mientras te hacías la dormida", year: 2003}
+      - {id: diecinueve, kind: album, title: "19 días y 500 noches", year: 1999}
+      - {id: fisicaquimica, kind: album, title: "Física y química", year: 1992}
+      - {id: mediterraneoalb, kind: album, title: "Mediterráneo", year: 1971}
+      - {id: bachata, kind: album, title: "Bachata rosa", year: 1990}
+      - {id: clandestino, kind: album, title: "Clandestino", year: 1998}
+      # Songs.
+      - {id: despacito, kind: song, title: "Despacito", year: 2017}
+      - {id: macarena, kind: song, title: "Macarena", year: 1993}
+      - {id: asereje, kind: song, title: "Aserejé", year: 2002}
+      - {id: bailando, kind: song, title: "Bailando", year: 2014}
+      - {id: gasolina, kind: song, title: "Gasolina", year: 2004}
+      - {id: bamba, kind: song, title: "La bamba", year: 1958}
+      - {id: dosaguas, kind: song, title: "Entre dos aguas", year: 1973}
+      - {id: volando, kind: song, title: "Volando voy", year: 1979}
+      - {id: ola, kind: song, title: "Como una ola", year: 1981}
+      - {id: hoyno, kind: song, title: "Hoy no me puedo levantar", year: 1981}
+      - {id: chicaayer, kind: song, title: "La chica de ayer", year: 1980}
+      - {id: devuelveme, kind: song, title: "Devuélveme a mi chica", year: 1985}
+      - {id: gigantes, kind: song, title: "Lucha de gigantes", year: 1987}
+      - {id: insurreccion, kind: song, title: "Insurrección", year: 1988}
+      - {id: flaca, kind: song, title: "La flaca", year: 1996}
+      - {id: depende, kind: song, title: "Depende", year: 1998}
+      - {id: espinado, kind: song, title: "Corazón espinado", year: 1999}
+      - {id: rayando, kind: song, title: "Rayando el sol", year: 1990}
+      - {id: clavado, kind: song, title: "Clavado en un bar", year: 1997}
+      - {id: ligera, kind: song, title: "De música ligera", year: 1990}
+      - {id: persiana, kind: song, title: "Persiana americana", year: 1986}
+      - {id: camisa, kind: song, title: "La camisa negra", year: 2004}
+      - {id: ojala, kind: song, title: "Ojalá que llueva café", year: 1989}
+      - {id: partio, kind: song, title: "Corazón partío", year: 1997}
+      - {id: mediterraneo, kind: song, title: "Mediterráneo", year: 1971}
+      - {id: lasdiez, kind: song, title: "Y nos dieron las diez", year: 1992}
+      - {id: granoche, kind: song, title: "Mi gran noche", year: 1967}
+      - {id: aquel, kind: song, title: "Yo soy aquel", year: 1966}
+      - {id: libre, kind: song, title: "Libre", year: 1972}
+      - {id: beso, kind: song, title: "Un beso y una flor", year: 1972}
+      - {id: vivirasi, kind: song, title: "Vivir así es morir de amor", year: 1978}
+      - {id: vivirmivida, kind: song, title: "Vivir mi vida", year: 2013}
+      - {id: bandido, kind: song, title: "Amante bandido", year: 1984}
+      - {id: tusa, kind: song, title: "Tusa", year: 2019}
+      - {id: provenza, kind: song, title: "Provenza", year: 2022}
+      - {id: migente, kind: song, title: "Mi gente", year: 2017}
+      - {id: malamente, kind: song, title: "Malamente", year: 2018}
+      - {id: altura, kind: song, title: "Con altura", year: 2019}
+      - {id: bichota, kind: song, title: "Bichota", year: 2020}
+      - {id: adios, kind: song, title: "A Dios le pido", year: 2002}
+      - {id: malo, kind: song, title: "Malo", year: 2004}
+      - {id: sobrevivire, kind: song, title: "Sobreviviré", year: 2000}
+      - {id: hijoluna, kind: song, title: "Hijo de la luna", year: 1986}
+      - {id: navajas, kind: song, title: "Cruz de navajas", year: 1986}
+      - {id: mujercontra, kind: song, title: "Mujer contra mujer", year: 1988}
+      - {id: zapatillas, kind: song, title: "Zapatillas", year: 2005}
+      - {id: sindocumentos, kind: song, title: "Sin documentos", year: 1993}
+      - {id: lamento, kind: song, title: "Lamento boliviano", year: 1994}
+      - {id: colorespe, kind: song, title: "Color esperanza", year: 2001}
+      - {id: bonito, kind: song, title: "Me porto bonito", year: 2022}
+      - {id: titi, kind: song, title: "Tití me preguntó", year: 2022}
+    cases:
+      # Controls: the title as written.
+      - {heard: "rosalía", want: play, id: rosalia}
+      - {heard: "bad bunny", want: play, id: badbunny}
+      - {heard: "shakira", want: play, id: shakira}
+      - {heard: "juanes", want: play, id: juanes}
+      - {heard: "despacito", want: play, id: despacito}
+      - {heard: "macarena", want: play, id: macarena}
+      - {heard: "la bamba", want: play, id: bamba}
+      - {heard: "el mal querer", want: play, id: malquerer}
+      - {heard: "motomami", want: play, id: motomami}
+      - {heard: "un verano sin ti", want: play, id: verano}
+      - {heard: "la camisa negra", want: play, id: camisa}
+      - {heard: "hijo de la luna", want: play, id: hijoluna}
+      - {heard: "los planetas", want: play, id: planetas}
+      - {heard: "izal", want: play, id: izal}
+      - {heard: "extremoduro", want: play, id: extremoduro}
+      - {heard: "amaral", want: play, id: amaral}
+      - {heard: "maná", want: play, id: mana}
+      - {heard: "soda stereo", want: play, id: soda}
+      - {heard: "luis miguel", want: play, id: luismiguel}
+      - {heard: "luis fonsi", want: play, id: fonsi}
+      - {heard: "rocío jurado", want: play, id: jurado}
+      - {heard: "rocío dúrcal", want: play, id: durcal}
+      - {heard: "fito páez", want: play, id: fitopaez}
+      - {heard: "paco de lucía", want: play, id: pacolucia}
+      - {heard: "19 días y 500 noches", want: play, id: diecinueve}
+      - {heard: "mi gran noche", want: play, id: granoche}
+      - {heard: "malo", want: play, id: malo}
+      - {heard: "marea", want: play, id: marea}
+      - {heard: "cruz de navajas", want: play, id: navajas}
+      - {heard: "mi sangre", want: play, id: misangre}
+      - {heard: "mediterráneo", want: play, id: mediterraneo, kinds: [song]}
+      - {heard: "mediterráneo", want: play, id: mediterraneoalb, kinds: [album]}
+      # Betacism: b and v.
+      - {heard: "bolando boy", want: play, id: volando}
+      - {heard: "un berano sin ti", want: play, id: verano}
+      - {heard: "abalancha", want: play, id: avalancha}
+      - {heard: "vocanada", want: play, id: bocanada}
+      - {heard: "vailando", want: play, id: bailando}
+      - {heard: "debuélveme a mi chica", want: play, id: devuelveme}
+      - {heard: "bibir así es morir de amor", want: play, id: vivirasi}
+      - {heard: "bibir mi bida", want: play, id: vivirmivida}
+      - {heard: "amante vandido", want: play, id: bandido}
+      - {heard: "un veso y una flor", want: play, id: beso}
+      - {heard: "livre", want: play, id: libre}
+      - {heard: "nino brabo", want: play, id: nino}
+      - {heard: "jarave de palo", want: play, id: jarabe}
+      - {heard: "biba suecia", want: play, id: vivasuecia}
+      - {heard: "vichota", want: play, id: bichota}
+      - {heard: "probenza", want: play, id: provenza}
+      - {heard: "sobrebibiré", want: play, id: sobrevivire}
+      - {heard: "julieta benegas", want: play, id: venegas}
+      - {heard: "clabado en un bar", want: play, id: clavado}
+      - {heard: "veve", want: play, id: bebe}
+      - {heard: "miguel vosé", want: play, id: bose}
+      - {heard: "isavel pantoja", want: play, id: pantoja}
+      - {heard: "la vamba", want: play, id: bamba}
+      - {heard: "vachata rosa", want: play, id: bachata}
+      - {heard: "lamento bolibiano", want: play, id: lamento}
+      - {heard: "me porto vonito", want: play, id: bonito}
+      - {heard: "antonio bega", want: play, id: antoniovega}
+      - {heard: "joaquín savina", want: play, id: sabina}
+      # Silent h, dropped or added.
+      - {heard: "ombres g", want: play, id: hombresg}
+      - {heard: "oy no me puedo levantar", want: play, id: hoyno}
+      - {heard: "ijo de la luna", want: play, id: hijoluna}
+      - {heard: "éroes del silencio", want: play, id: heroes}
+      - {heard: "como una hola", want: play, id: ola}
+      - {heard: "lo que te conté mientras te asías la dormida", want: play, id: dormida}
+      - {heard: "ebia", want: play, id: hevia}
+      - {heard: "hizal", want: play, id: izal}
+      # Yeísmo: ll and y.
+      - {heard: "rallando el sol", want: play, id: rayando}
+      - {heard: "ojalá que yueva café", want: play, id: ojala}
+      - {heard: "la chica de aller", want: play, id: chicaayer}
+      - {heard: "llo soy aquel", want: play, id: aquel}
+      - {heard: "eya baila sola", want: play, id: ellabaila}
+      - {heard: "sebastián llatra", want: play, id: yatra}
+      - {heard: "zapatiyas", want: play, id: zapatillas}
+      - {heard: "leyva", want: play, id: leiva}
+      # Seseo and ceceo: c, z and s.
+      - {heard: "corasón espinado", want: play, id: espinado}
+      - {heard: "crus de navajas", want: play, id: navajas}
+      - {heard: "alejandro sans", want: play, id: sanz}
+      - {heard: "rosalén", want: play, id: rozalen}
+      - {heard: "sapatillas", want: play, id: zapatillas}
+      - {heard: "acerejé", want: play, id: asereje}
+      - {heard: "despasito", want: play, id: despacito}
+      - {heard: "paco de lusía", want: play, id: pacolucia}
+      - {heard: "seltas cortos", want: play, id: celtas}
+      - {heard: "gazolina", want: play, id: gasolina}
+      - {heard: "isal", want: play, id: izal}
+      - {heard: "tuza", want: play, id: tusa}
+      - {heard: "romanse", want: play, id: romance}
+      - {heard: "pies descalsos", want: play, id: pies}
+      - {heard: "senderos de traisión", want: play, id: senderos}
+      - {heard: "descanzo dominical", want: play, id: descanso}
+      - {heard: "entre el sielo y el suelo", want: play, id: cieloysuelo}
+      - {heard: "cansión animal", want: play, id: cancionanimal}
+      - {heard: "color esperansa", want: play, id: colorespe}
+      - {heard: "lola florez", want: play, id: lolaflores}
+      - {heard: "pablo lopes", want: play, id: pablolopez}
+      - {heard: "gustabo serati", want: play, id: cerati}
+      # Aspirated or dropped syllable-final s.
+      - {heard: "lo planeta", want: play, id: planetas}
+      - {heard: "lo suave", want: play, id: suaves}
+      - {heard: "lo chunguito", want: play, id: chunguitos}
+      - {heard: "la ketchup", want: play, id: ketchup}
+      - {heard: "pie descalzo", want: play, id: pies}
+      - {heard: "celta corto", want: play, id: celtas}
+      - {heard: "lo del río", want: play, id: delrio}
+      - {heard: "lo rodríguez", want: play, id: rodriguez}
+      - {heard: "y nos dieron la die", want: play, id: lasdiez}
+      - {heard: "lágrima negra", want: play, id: lagrimas}
+      - {heard: "sin documento", want: play, id: sindocumentos}
+      - {heard: "enrique iglesia", want: play, id: enrique}
+      # Lost intervocalic d, the -ao and -ío elisions, and the hypercorrection back.
+      - {heard: "corazón partido", want: play, id: partio}
+      - {heard: "clavao en un bar", want: play, id: clavado}
+      - {heard: "amante bandío", want: play, id: bandido}
+      - {heard: "violaores del verso", want: play, id: violadores}
+      - {heard: "el canto el loco", want: play, id: cantoloco}
+      - {heard: "a dios le pío", want: play, id: adios}
+      - {heard: "chambado", want: play, id: chambao}
+      - {heard: "la leyenda el tiempo", want: play, id: leyenda}
+      # Jota: g before e/i and j.
+      - {heard: "lucha de jigantes", want: play, id: gigantes}
+      - {heard: "de música lijera", want: play, id: ligera}
+      - {heard: "mi jente", want: play, id: migente}
+      - {heard: "mujer contra muger", want: play, id: mujercontra}
+      - {heard: "harabe de palo", want: play, id: jarabe}
+      - {heard: "mónica naranho", want: play, id: monica}
+      # Velar spellings: c, qu, k, gu.
+      - {heard: "el mal kerer", want: play, id: malquerer}
+      - {heard: "quetama", want: play, id: ketama}
+      - {heard: "carol g", want: play, id: karolg}
+      - {heard: "kamarón de la isla", want: play, id: camaron}
+      - {heard: "mekano", want: play, id: mecano}
+      - {heard: "andrés kalamaro", want: play, id: calamaro}
+      - {heard: "juan luis gerra", want: play, id: guerra}
+      - {heard: "la flaka", want: play, id: flaca}
+      # Tap and trill; cluster reduction.
+      - {heard: "manuel carasco", want: play, id: carrasco}
+      - {heard: "insurreción", want: play, id: insurreccion}
+      - {heard: "insuresión", want: play, id: insurreccion}
+      - {heard: "esca pe", want: play, id: skap}
+      # Foreign names and words as a Spanish speaker says them.
+      - {heard: "bad bani", want: play, id: badbunny}
+      - {heard: "lori mayers", want: play, id: lori}
+      - {heard: "lov of lesbian", want: play, id: lesbian}
+      - {heard: "love of lesvian", want: play, id: lesbian}
+      - {heard: "dancan du", want: play, id: duncan}
+      - {heard: "nati peluso", want: play, id: peluso}
+      - {heard: "bisarrap", want: play, id: bizarrap}
+      - {heard: "natalia lafurcade", want: play, id: lafourcade}
+      - {heard: "manu chau", want: play, id: manuchao}
+      - {heard: "rafael", want: play, id: raphael}
+      - {heard: "dadi yanqui", want: play, id: yankee}
+      - {heard: "riqui martin", want: play, id: ricky}
+      - {heard: "jey balvin", want: play, id: balvin}
+      - {heard: "karol yi", want: play, id: karolg}
+      - {heard: "café tacuba", want: play, id: tacvba}
+      - {heard: "aserehé", want: play, id: asereje}
+      - {heard: "case o", want: play, id: kaseo}
+      - {heard: "la oreja de ban go", want: play, id: oreja}
+      - {heard: "alaska i dinarama", want: play, id: alaska}
+      # Letter names and digits.
+      - {heard: "hombres ge", want: play, id: hombresg}
+      - {heard: "jota balvin", want: play, id: balvin}
+      - {heard: "karol ge", want: play, id: karolg}
+      - {heard: "ce tangana", want: play, id: tangana}
+      - {heard: "se tangana", want: play, id: tangana}
+      - {heard: "ska pe", want: play, id: skap}
+      - {heard: "kase o", want: play, id: kaseo}
+      - {heard: "diecinueve días y quinientas noches", want: play, id: diecinueve}
+      - {heard: "y nos dieron las 10", want: play, id: lasdiez}
+      - {heard: "entre 2 aguas", want: play, id: dosaguas}
+      # Word splits, merges and resegmentations.
+      - {heard: "extremo duro", want: play, id: extremoduro}
+      - {heard: "moto mami", want: play, id: motomami}
+      - {heard: "a ser ejé", want: play, id: asereje}
+      - {heard: "des pacito", want: play, id: despacito}
+      - {heard: "con al tura", want: play, id: altura}
+      - {heard: "adiós le pido", want: play, id: adios}
+      - {heard: "la ley y nata", want: play, id: leyinnata}
+      - {heard: "persianamericana", want: play, id: persiana}
+      - {heard: "mala mente", want: play, id: malamente}
+      - {heard: "de pende", want: play, id: depende}
+      - {heard: "nachapop", want: play, id: nachapop}
+      - {heard: "radiofutura", want: play, id: radiofutura}
+      # Real-word substitutions.
+      - {heard: "camilo cesto", want: play, id: camilo}
+      - {heard: "águila", want: play, id: agila}
+      - {heard: "juan manuel serrat", want: play, id: serrat}
+      - {heard: "bebé", want: play, id: bebe}
+      # Diacritics, ñ and punctuation dropped; article added.
+      - {heard: "mago de oz", want: play, id: mago}
+      - {heard: "el madrileno", want: play, id: madrileno}
+      - {heard: "mas", want: play, id: mas}
+      - {heard: "donde estan los ladrones", want: play, id: ladrones}
+      - {heard: "titi me pregunto", want: play, id: titi}
+      - {heard: "el ultimo de la fila", want: play, id: ultimo}
+      - {heard: "malu", want: play, id: malu}
+      - {heard: "fisica y quimica", want: play, id: fisicaquimica}
+      - {heard: "asereje", want: play, id: asereje}
+      - {heard: "la macarena", want: play, id: macarena}
+      # Ambiguous: ask among the neighbours.
+      - {heard: "mediterráneo", want: ask, among: [mediterraneo, mediterraneoalb]}
+      - {heard: "rocío", want: ask, among: [jurado, durcal]}
+      - {heard: "rodríguez", want: ask, among: [rodriguez, malarodriguez]}
+      - {heard: "fito", want: ask, among: [fitopaez, fito]}
+      - {heard: "martín", want: ask, among: [danimartin, vanesa, ricky]}
+      # Near-miss titles not in the library: they share words or names with a library title.
+      - {heard: "pablo alborán", want: not_found}
+      - {heard: "julio iglesias", want: not_found}
+      - {heard: "los chichos", want: not_found}
+      - {heard: "manolo garcía", want: not_found}
+      - {heard: "despechá", want: not_found}
+      - {heard: "la tortura", want: not_found}
+      - {heard: "corazón contento", want: not_found}
+      - {heard: "un año más", want: not_found}
+      - {heard: "los ángeles", want: not_found}
+      - {heard: "la casa azul", want: not_found}
+      - {heard: "los secretos", want: not_found}
+      - {heard: "luis cepeda", want: not_found}
+      - {heard: "marc anthony", want: not_found}
+      - {heard: "alejandro fernández", want: not_found}
+      - {heard: "vicente fernández", want: not_found}
+      - {heard: "vivir sin aire", want: not_found}
+      - {heard: "en el muelle de san blas", want: not_found}
+      - {heard: "la noche de anoche", want: not_found}
+      - {heard: "soy gitano", want: not_found}
+      - {heard: "entre dos tierras", want: not_found}
+      - {heard: "como camarón", want: not_found}
+      # Absent titles.
+      - {heard: "estopa", want: not_found}
+      - {heard: "los rebeldes", want: not_found}
+      - {heard: "waka waka", want: not_found}
+      - {heard: "la bicicleta", want: not_found}
+      - {heard: "dákiti", want: not_found}
+      - {heard: "carlos vives", want: not_found}
+      - {heard: "juan magán", want: not_found}
+      - {heard: "morat", want: not_found}
+      - {heard: "mon laferte", want: not_found}
+      - {heard: "pereza", want: not_found}
+      - {heard: "nena daconte", want: not_found}
+      - {heard: "melendi", want: not_found}
+      - {heard: "david bisbal", want: not_found}
+      - {heard: "vetusta morla", want: not_found}
+      - {heard: "sidonie", want: not_found}
+      - {heard: "aitana", want: not_found}
+      - {heard: "quevedo", want: not_found}
+      - {heard: "camela", want: not_found}
+      - {heard: "el arrebato", want: not_found}
+      - {heard: "la quinta estación", want: not_found}
+      - {heard: "dvicio", want: not_found}
+      - {heard: "la gozadera", want: not_found}
+      - {heard: "pon algo de música", want: not_found}

@@ -1,0 +1,72 @@
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/editdistance
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkJaroWinkler/impl=edlib-32         	 9520496	       121.2 ns/op	     312 B/op	       2 allocs/op
+BenchmarkJaroWinkler/impl=intree-32        	20847610	        57.82 ns/op	       0 B/op	       0 allocs/op
+BenchmarkOSADistance/impl=edlib-32         	 2422270	       496.2 ns/op	     476 B/op	       4 allocs/op
+BenchmarkOSADistance/impl=intree-32        	 4165708	       296.1 ns/op	       0 B/op	       0 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/editdistance
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkJaroWinkler/impl=edlib-32         	 8956766	       122.7 ns/op	     312 B/op	       2 allocs/op
+BenchmarkJaroWinkler/impl=intree-32        	20616520	        57.63 ns/op	       0 B/op	       0 allocs/op
+BenchmarkOSADistance/impl=edlib-32         	 2389359	       497.5 ns/op	     476 B/op	       4 allocs/op
+BenchmarkOSADistance/impl=intree-32        	 4138762	       288.5 ns/op	       0 B/op	       0 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/editdistance
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkJaroWinkler/impl=edlib-32         	 9060435	       127.8 ns/op	     312 B/op	       2 allocs/op
+BenchmarkJaroWinkler/impl=intree-32        	20486542	        58.08 ns/op	       0 B/op	       0 allocs/op
+BenchmarkOSADistance/impl=edlib-32         	 2375822	       508.6 ns/op	     476 B/op	       4 allocs/op
+BenchmarkOSADistance/impl=intree-32        	 4068220	       290.8 ns/op	       0 B/op	       0 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/editdistance
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkJaroWinkler/impl=edlib-32         	 9472647	       129.3 ns/op	     312 B/op	       2 allocs/op
+BenchmarkJaroWinkler/impl=intree-32        	20221245	        58.80 ns/op	       0 B/op	       0 allocs/op
+BenchmarkOSADistance/impl=edlib-32         	 2384780	       512.1 ns/op	     476 B/op	       4 allocs/op
+BenchmarkOSADistance/impl=intree-32        	 4076932	       296.5 ns/op	       0 B/op	       0 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/editdistance
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkJaroWinkler/impl=edlib-32         	 9713840	       121.1 ns/op	     312 B/op	       2 allocs/op
+BenchmarkJaroWinkler/impl=intree-32        	20770316	        57.98 ns/op	       0 B/op	       0 allocs/op
+BenchmarkOSADistance/impl=edlib-32         	 2404846	       502.3 ns/op	     476 B/op	       4 allocs/op
+BenchmarkOSADistance/impl=intree-32        	 4141722	       287.8 ns/op	       0 B/op	       0 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/editdistance
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkJaroWinkler/impl=edlib-32         	 8748222	       128.6 ns/op	     312 B/op	       2 allocs/op
+BenchmarkJaroWinkler/impl=intree-32        	19641519	        59.59 ns/op	       0 B/op	       0 allocs/op
+BenchmarkOSADistance/impl=edlib-32         	 2299136	       497.6 ns/op	     476 B/op	       4 allocs/op
+BenchmarkOSADistance/impl=intree-32        	 3946378	       290.8 ns/op	       0 B/op	       0 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/editdistance
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkJaroWinkler/impl=edlib-32         	 8778224	       124.8 ns/op	     312 B/op	       2 allocs/op
+BenchmarkJaroWinkler/impl=intree-32        	19847754	        59.36 ns/op	       0 B/op	       0 allocs/op
+BenchmarkOSADistance/impl=edlib-32         	 2386504	       519.6 ns/op	     476 B/op	       4 allocs/op
+BenchmarkOSADistance/impl=intree-32        	 4033261	       295.8 ns/op	       0 B/op	       0 allocs/op
+PASS
+goos: linux
+goarch: amd64
+pkg: github.com/nightah/encore/benchmarks/editdistance
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor          
+BenchmarkJaroWinkler/impl=edlib-32         	 9160574	       126.8 ns/op	     312 B/op	       2 allocs/op
+BenchmarkJaroWinkler/impl=intree-32        	20070765	        58.92 ns/op	       0 B/op	       0 allocs/op
+BenchmarkOSADistance/impl=edlib-32         	 2356440	       513.3 ns/op	     476 B/op	       4 allocs/op
+BenchmarkOSADistance/impl=intree-32        	 4077040	       293.4 ns/op	       0 B/op	       0 allocs/op
+PASS

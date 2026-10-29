@@ -41,6 +41,7 @@
       "time": "Heure"
     },
     "empty": "Aucune demande pour l'instant. Dites « Alexa, demande à {{invocation}} ce qui passe. »",
+    "emptyNoInvocation": "Aucune demande pour l'instant.",
     "open": "Ouvrir la demande de {{time}} dans le journal",
     "title": "Demandes récentes",
     "viewAll": "Tout afficher"

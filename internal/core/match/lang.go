@@ -4,6 +4,11 @@ import (
 	"maps"
 	"slices"
 	"strings"
+
+	"github.com/nightah/encore/internal/fuzzy/phonetic/de"
+	"github.com/nightah/encore/internal/fuzzy/phonetic/en"
+	"github.com/nightah/encore/internal/fuzzy/phonetic/es"
+	"github.com/nightah/encore/internal/fuzzy/phonetic/fr"
 )
 
 var languages = map[string]*language{
@@ -65,8 +70,16 @@ func (t numTable) build() map[string]numWord {
 		m[w] = numWord{val: 100, kind: numHundred}
 	}
 
+	for w, v := range t.hundredsOf {
+		m[w] = numWord{val: v, kind: numHundred}
+	}
+
 	for _, w := range t.thousands {
 		m[w] = numWord{val: 1000, kind: numThousand}
+	}
+
+	for _, w := range t.millions {
+		m[w] = numWord{val: 1_000_000, kind: numMillion}
 	}
 
 	for w, v := range t.compounds {
@@ -124,10 +137,12 @@ func merge(ms ...map[string]int) map[string]int {
 
 func english() *language {
 	return &language{
-		code:     "en",
-		and:      "and",
-		articles: set("the", "a", "an"),
-		stop:     set("the", "a", "an", "of", "and", "in", "on", "to", "for", "at", "with"),
+		code:        "en",
+		half:        "and a half",
+		and:         "and",
+		articles:    set("the", "a", "an"),
+		stop:        set("the", "a", "an", "of", "and", "in", "on", "to", "for", "at", "with"),
+		ordSuffixes: []string{"st", "nd", "rd", "th"},
 		nums: numTable{
 			units: []string{
 				"zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
@@ -146,7 +161,7 @@ func english() *language {
 		}.build(),
 		conj:     set("and"),
 		parts:    set("part", "chapter", "volume", "vol"),
-		phonetic: metaphoneKeys,
+		phonetic: phoneticKeysOf(en.Encoder{}),
 	}
 }
 
@@ -168,6 +183,7 @@ func german() *language {
 
 	return &language{
 		code:     "de",
+		half:     "einhalb",
 		and:      "und",
 		articles: set("der", "die", "das", "ein", "eine"),
 		stop:     set("der", "die", "das", "ein", "eine", "und", "von", "im", "in", "den", "dem", "des", "zu", "mit"),
@@ -185,19 +201,23 @@ func german() *language {
 			compounds:  compounds,
 			ordinals:   suffixed(ordStems, "e", "er", "en", "es", "em"),
 		}.build(),
-		conj:     set("und"),
-		parts:    set("teil", "kapitel"),
-		phonetic: cologneKeys,
+		fused:      true,
+		unitsFirst: true,
+		conj:       set("und"),
+		parts:      set("teil", "kapitel"),
+		phonetic:   germanKeys(de.Encoder{}),
 	}
 }
 
 func french() *language {
 	return &language{
-		code:     "fr",
-		and:      "et",
-		articles: set("le", "la", "les", "l", "un", "une"),
-		stop:     set("le", "la", "les", "l", "un", "une", "de", "des", "du", "d", "et", "en", "au", "aux"),
-		elide:    true,
+		code:        "fr",
+		half:        "et demi",
+		and:         "et",
+		articles:    set("le", "la", "les", "l", "un", "une"),
+		stop:        set("le", "la", "les", "l", "un", "une", "de", "des", "du", "d", "et", "en", "au", "aux"),
+		elide:       true,
+		ordSuffixes: []string{"e", "eme", "er", "re", "ere"},
 		nums: numTable{
 			units: []string{
 				"zero", "", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "",
@@ -214,9 +234,10 @@ func french() *language {
 				"onzieme": 11, "douzieme": 12, "vingtieme": 20,
 			},
 		}.build(),
-		conj:     set("et"),
-		parts:    set("partie", "chapitre"),
-		phonetic: metaphoneKeys,
+		conj:           set("et"),
+		parts:          set("partie", "chapitre"),
+		phonetic:       phoneticKeysOf(fr.Encoder{}),
+		soundAlikeLead: true,
 	}
 }
 
@@ -226,21 +247,29 @@ func spanish() *language {
 		compounds["veinti"+u] = 21 + i
 	}
 
+	hundredsOf := suffixed(map[string]int{
+		"doscient": 200, "trescient": 300, "cuatrocient": 400, "quinient": 500, "seiscient": 600, "setecient": 700,
+		"ochocient": 800, "novecient": 900,
+	}, "os", "as")
+
 	return &language{
-		code:     "es",
-		and:      "y",
-		articles: set("el", "la", "los", "las", "un", "una"),
-		stop:     set("el", "la", "los", "las", "un", "una", "de", "del", "y", "en", "al"),
+		code:        "es",
+		half:        "y medio",
+		and:         "y",
+		articles:    set("el", "la", "los", "las", "un", "una"),
+		stop:        set("el", "la", "los", "las", "un", "una", "de", "del", "y", "en", "al"),
+		ordSuffixes: []string{"o", "a", "er"},
 		nums: numTable{
 			units: []string{
 				"cero", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve", "diez",
 				"once", "doce", "trece", "catorce", "quince", "dieciseis", "diecisiete", "dieciocho", "diecinueve",
 			},
-			tens:      []string{"veinte", "treinta", "cuarenta", "cincuenta", "sesenta", "setenta", "ochenta", "noventa"},
-			hundreds:  []string{"cien", "ciento"},
-			thousands: []string{"mil"},
-			cont:      map[string]int{"un": 1, "una": 1},
-			compounds: compounds,
+			tens:       []string{"veinte", "treinta", "cuarenta", "cincuenta", "sesenta", "setenta", "ochenta", "noventa"},
+			hundreds:   []string{"cien", "ciento"},
+			hundredsOf: hundredsOf,
+			thousands:  []string{"mil"},
+			cont:       map[string]int{"un": 1, "una": 1},
+			compounds:  compounds,
 			ordinals: merge(
 				suffixed(map[string]int{
 					"primer": 1, "segund": 2, "tercer": 3, "cuart": 4, "quint": 5, "sext": 6, "septim": 7,
@@ -251,7 +280,7 @@ func spanish() *language {
 		}.build(),
 		conj:     set("y"),
 		parts:    set("parte", "capitulo"), //nolint:misspell // Spanish for "chapter".
-		phonetic: metaphoneKeys,
+		phonetic: phoneticKeysOf(es.Encoder{}),
 	}
 }
 
@@ -270,29 +299,44 @@ func italian() *language {
 		}
 	}
 
+	// "cento" and its multiples drop their final o before a vowel inside a word ("centottanta" 180, "novecentuno" 901).
+	hundredsOf := map[string]int{}
+	elided := map[string]string{"cent": "cento"}
+
+	for i, u := range units[1:] {
+		hundredsOf[u+"cento"] = (i + 2) * 100
+		elided[u+"cent"] = u + "cento"
+	}
+
 	return &language{
-		code:     "it",
-		and:      "e",
-		articles: set("il", "lo", "la", "i", "gli", "le", "l", "un", "uno", "una"),
-		stop:     set("il", "lo", "la", "i", "gli", "le", "l", "un", "uno", "una", "di", "e", "del", "della", "in"),
-		elide:    true,
+		code:        "it",
+		half:        "e mezzo",
+		and:         "e",
+		articles:    set("il", "lo", "la", "i", "gli", "le", "l", "un", "uno", "una"),
+		stop:        set("il", "lo", "la", "i", "gli", "le", "l", "un", "uno", "una", "di", "e", "del", "della", "in"),
+		elide:       true,
+		ordSuffixes: []string{"o", "a"},
 		nums: numTable{
 			units: []string{
 				"zero", "", "due", "tre", "quattro", "cinque", "sei", "sette", "otto", "nove", "dieci",
 				"undici", "dodici", "tredici", "quattordici", "quindici", "sedici", "diciassette", "diciotto", "diciannove",
 			},
-			tens:      []string{"venti", "trenta", "quaranta", "cinquanta", "sessanta", "settanta", "ottanta", "novanta"},
-			hundreds:  []string{"cento"},
-			thousands: []string{"mille"},
-			cont:      map[string]int{"un": 1, "uno": 1, "una": 1},
-			compounds: compounds,
+			tens:       []string{"venti", "trenta", "quaranta", "cinquanta", "sessanta", "settanta", "ottanta", "novanta"},
+			hundreds:   []string{"cento"},
+			hundredsOf: hundredsOf,
+			thousands:  []string{"mille", "mila"},
+			millions:   []string{"milione", "milioni"},
+			cont:       map[string]int{"un": 1, "uno": 1, "una": 1},
+			compounds:  compounds,
 			ordinals: suffixed(map[string]int{
 				"prim": 1, "second": 2, "terz": 3, "quart": 4, "quint": 5, "sest": 6, "settim": 7, "ottav": 8,
 				"non": 9, "decim": 10,
 			}, "o", "a"),
 		}.build(),
+		fused:    true,
+		elided:   elided,
 		conj:     set("e"),
 		parts:    set("parte", "capitolo"),
-		phonetic: metaphoneKeys,
+		phonetic: phoneticKeysOf(en.Encoder{}),
 	}
 }

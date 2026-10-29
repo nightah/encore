@@ -58,16 +58,31 @@ func NewWebDAV(cfg config.StorageWebDAV) (*WebDAV, error) {
 }
 
 // client returns a gowebdav client whose requests are bound to ctx. gowebdav has no context support, so each operation gets its own lightweight client with a transport that attaches ctx to every request it sends.
+//
+// The authorizer is preemptive: gowebdav's negotiating ones send a fresh client's first request twice and copy every non-seekable upload into memory in case it has to be resent.
 func (w *WebDAV) client(ctx context.Context) *gowebdav.Client {
-	c := gowebdav.NewAuthClient(w.url, gowebdav.NewEmptyAuth())
+	c := gowebdav.NewAuthClient(w.url, gowebdav.NewPreemptiveAuth(davAuth{header: w.auth}))
 	c.SetTransport(ctxTransport{ctx: ctx, base: w.transport})
-
-	if w.auth != "" {
-		c.SetHeader("Authorization", w.auth)
-	}
 
 	return c
 }
+
+func (a davAuth) Authorize(_ *http.Client, r *http.Request, _ string) error {
+	if a.header != "" {
+		r.Header.Set("Authorization", a.header)
+	}
+
+	return nil
+}
+
+// Verify never asks for a retry; a failure surfaces as the operation's own status error.
+func (davAuth) Verify(*http.Client, *http.Response, string) (redo bool, err error) {
+	return false, nil
+}
+
+func (a davAuth) Clone() gowebdav.Authenticator { return a }
+
+func (davAuth) Close() error { return nil }
 
 func (t ctxTransport) RoundTrip(r *http.Request) (*http.Response, error) {
 	return t.base.RoundTrip(r.WithContext(t.ctx))
@@ -123,15 +138,31 @@ func spool(ctx context.Context, r io.Reader) (*os.File, int64, error) {
 	return f, n, nil
 }
 
-// Get implements Store.
+// Get implements Store. It costs a PROPFIND before the GET: what a GET on a collection returns is up to the server (RFC 4918 section 9.4), and Nextcloud answers with a 200 and an HTML notice that would pass for the object, so only the resource type tells a collection apart reliably.
 func (w *WebDAV) Get(ctx context.Context, key string) (io.ReadCloser, error) {
 	if err := ValidateKey(key); err != nil {
 		return nil, err
 	}
 
-	rc, err := w.client(ctx).ReadStream(w.remotePath(key))
+	c := w.client(ctx)
+	p := w.remotePath(key)
+
+	collection, err := isCollection(c, p)
 	if err != nil {
-		// 405 is the answer to GET on a collection, which is not an object.
+		if gowebdav.IsErrNotFound(err) {
+			return nil, fmt.Errorf("%w: %s", ErrNotFound, key)
+		}
+
+		return nil, fmt.Errorf("downloading %s: %w", key, describeWebDAV(ctx, err))
+	}
+
+	if collection {
+		return nil, fmt.Errorf("%w: %s", ErrNotFound, key)
+	}
+
+	rc, err := c.ReadStream(p)
+	if err != nil {
+		// The key can be deleted, or replaced by a collection (405 from x/net/webdav and rclone), after the PROPFIND.
 		if gowebdav.IsErrNotFound(err) || gowebdav.IsErrCode(err, http.StatusMethodNotAllowed) {
 			return nil, fmt.Errorf("%w: %s", ErrNotFound, key)
 		}
@@ -140,6 +171,33 @@ func (w *WebDAV) Get(ctx context.Context, key string) (io.ReadCloser, error) {
 	}
 
 	return rc, nil
+}
+
+// isCollection reports whether p is a collection, using a Depth: 0 PROPFIND.
+func isCollection(c *gowebdav.Client, p string) (bool, error) {
+	fi, err := c.Stat(p)
+	if err != nil {
+		// Apache's mod_dir redirects a collection's URL without the trailing slash to the one with it, and net/http follows a 301 with a GET, which fails (403, or a 200 listing that is not a multistatus); the URL with the slash settles it. Only error paths pay for the second PROPFIND.
+		var status gowebdav.StatusError
+		if errors.As(err, &status) && status.Status != http.StatusNotFound && status.Status != http.StatusUnauthorized {
+			if dir, dirErr := c.Stat(p + "/"); dirErr == nil && isDir(dir) {
+				return true, nil
+			}
+		}
+
+		return false, err
+	}
+
+	return isDir(fi), nil
+}
+
+// isDir guards against the nil *File that gowebdav's Stat returns when the multistatus has no successful propstat; the GET decides then.
+func isDir(fi os.FileInfo) bool {
+	if f, ok := fi.(*gowebdav.File); ok && f == nil {
+		return false
+	}
+
+	return fi.IsDir()
 }
 
 // Delete implements Store.

@@ -49,7 +49,7 @@
       "semanticCommitType": "fix"
     },
     {
-      "description": "Go toolchain: the go directives in both modules and the Dockerfile's GO_VERSION bump together",
+      "description": "Go toolchain: the go directives in every module (root, tools/, benchmarks/) and the Dockerfile's GO_VERSION bump together",
       "matchManagers": [
         "gomod",
         "custom.regex"
@@ -69,6 +69,34 @@
       ],
       "groupName": "tools module",
       "automerge": false
+    },
+    {
+      "description": "benchmarks/ module (comparisons with external libraries, never shipped): separate group, never automerge",
+      "matchManagers": [
+        "gomod"
+      ],
+      "matchFileNames": [
+        "benchmarks/go.mod"
+      ],
+      "groupName": "benchmarks module",
+      "automerge": false
+    },
+    {
+      "description": "benchmarks/ module: the compared libraries stay pinned at the versions the in-tree code reproduces, so the comparisons and the published numbers stay comparable",
+      "matchManagers": [
+        "gomod"
+      ],
+      "matchFileNames": [
+        "benchmarks/go.mod"
+      ],
+      "matchDepNames": [
+        "github.com/blevesearch/bleve/v2",
+        "github.com/hbollon/go-edlib",
+        "github.com/pquerna/otp",
+        "github.com/PhonoGrams/double_metaphone",
+        "github.com/f1monkey/phonetic"
+      ],
+      "enabled": false
     },
     {
       "description": "Web: group devDependencies (non-major)",
@@ -209,6 +237,15 @@
       ],
       "groupName": "ci tools",
       "semanticCommitType": "ci"
+    },
+    {
+      "description": "Release tools: GoReleaser and syft, pinned in the release workflow, bump together",
+      "matchDepNames": [
+        "goreleaser/goreleaser",
+        "anchore/syft"
+      ],
+      "groupName": "release tools",
+      "semanticCommitType": "ci"
     }
   ],
   "customManagers": [
@@ -272,6 +309,30 @@
         "GOLANGCI_LINT_VERSION: (?<currentValue>v\\S+)"
       ],
       "depNameTemplate": "golangci/golangci-lint",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "description": "GoReleaser version in the release workflow",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/.+\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "GORELEASER_VERSION: (?<currentValue>v\\S+)"
+      ],
+      "depNameTemplate": "goreleaser/goreleaser",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "description": "syft version in the release workflow (it generates the release SBOMs)",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/.+\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "SYFT_VERSION: (?<currentValue>v\\S+)"
+      ],
+      "depNameTemplate": "anchore/syft",
       "datasourceTemplate": "github-releases"
     },
     {
