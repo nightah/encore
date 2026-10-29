@@ -28,6 +28,7 @@ func (Encoder) Keys(dst []string, word string) []string {
 	encode(&primary, word[:n])
 	encode(&full, word)
 
+	start := len(dst)
 	dst = skeleton.Append(dst, word, &primary, &full)
 
 	if onset := soundedOnset(word); onset != "" {
@@ -38,7 +39,7 @@ func (Encoder) Keys(dst []string, word string) []string {
 
 		encode(&alt, string(append(append(buf[:0], onset...), word[1:n]...)))
 
-		if k := alt.Bytes(); !slices.ContainsFunc(dst, func(d string) bool { return d == string(k) }) {
+		if k := alt.Bytes(); !slices.ContainsFunc(dst[start:], func(d string) bool { return d == string(k) }) {
 			dst = append(dst, string(k))
 		}
 	}
