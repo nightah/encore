@@ -1012,7 +1012,9 @@ export const handlers = [
         { location: "body.locales_enabled", message: "Enable at least one locale." },
       ]);
     }
-    const first = [...input.locales_enabled].sort()[0];
+    const spellings = input.locales_enabled.flatMap(
+      (locale) => db.skill.locale_invocations.find((l) => l.locale === locale)?.[invocation] ?? [],
+    );
     db.skill = {
       ...db.skill,
       content: input.content ?? db.skill.content,
@@ -1022,8 +1024,8 @@ export const handlers = [
           }
         : db.skill.endpoint,
       invocation,
-      // The server reports what people say in the first enabled locale.
-      invocation_name: db.skill.locale_invocations.find((l) => l.locale === first)?.[invocation] ?? invocation,
+      // The server reports the Latin name when any enabled locale says it, else the first enabled locale's spelling.
+      invocation_name: spellings.includes(invocation) ? invocation : (spellings[0] ?? invocation),
       locales_enabled: input.locales_enabled,
       needs_deploy: true,
       privacy: input.privacy ?? db.skill.privacy,

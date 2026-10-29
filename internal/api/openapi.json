@@ -2814,7 +2814,7 @@
             "type": "string"
           },
           "invocation_name": {
-            "description": "What people say, \"Alexa, ask \u003cinvocation_name\u003e to…\", in the first enabled locale",
+            "description": "What people say, \"Alexa, ask \u003cinvocation_name\u003e to…\": the Latin name when any enabled locale says it, else the first enabled locale's spelling",
             "type": "string"
           },
           "last_deploy": {

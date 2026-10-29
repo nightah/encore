@@ -31,8 +31,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 }
 
 function ToastList() {
-  const { t } = useTranslation("common");
+  const { t, i18n } = useTranslation("common");
   const { toasts } = Toast.useToastManager();
+  // The viewport sits at the inline end, so a sideways swipe dismisses toward that edge.
+  const sideways = i18n.dir() === "rtl" ? "left" : "right";
   return toasts.map((toast) => {
     const error = toast.type === "error";
     const Icon = error ? CircleAlert : CircleCheck;
@@ -40,6 +42,7 @@ function ToastList() {
       <Toast.Root
         key={toast.id}
         toast={toast}
+        swipeDirection={["down", sideways]}
         className="rounded-xl border border-line bg-surface text-ink shadow-lg transition-[opacity,translate] data-ending-style:translate-y-2 data-starting-style:translate-y-2 data-ending-style:opacity-0 data-starting-style:opacity-0"
       >
         <Toast.Content className="flex items-start gap-3 p-3.5">
