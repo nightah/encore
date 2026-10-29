@@ -25,7 +25,7 @@ export interface SkillInfo {
   /** What the skill can play; music includes music videos */
   content: SkillInfoContentItem[];
   endpoint: SkillEndpointInfo;
-  /** encore uses each locale's own name for it ("kodi" in French); kodi is "kodi" in every locale */
+  /** encore uses each locale's own name for it ("kodi" in French and Brazilian Portuguese, "انكور" in Arabic, "アンコール" in Japanese); kodi is "kodi", or "كودي" and "コディ" where the name must be in the language's script. locale_invocations lists both choices for every locale */
   invocation: SkillInfoInvocation;
   /** What people say, "Alexa, ask <invocation_name> to…", in the first enabled locale */
   invocation_name: string;

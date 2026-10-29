@@ -7,7 +7,7 @@
  */
 
 /**
- * encore uses each locale's own name for it ("kodi" in French); kodi is "kodi" in every locale
+ * encore uses each locale's own name for it ("kodi" in French and Brazilian Portuguese, "انكور" in Arabic, "アンコール" in Japanese); kodi is "kodi", or "كودي" and "コディ" where the name must be in the language's script. locale_invocations lists both choices for every locale
  */
 export type SkillInfoInvocation = (typeof SkillInfoInvocation)[keyof typeof SkillInfoInvocation];
 

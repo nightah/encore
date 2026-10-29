@@ -52,8 +52,10 @@ locale = "en-au"
 [type.md.extend-words]
 # typos reads licence (the Australian noun) as a misspelling.
 licence = "licence"
-# French examples in the contributing guide's notes for each language.
+# Examples in the contributing guide's notes for each language: French and Québécois ("avance", "pèse sur"), Dutch ("ik wil").
 avance = "avance"
+sur = "sur"
+wil = "wil"
 # HTML attributes, HTTP status names, Amazon's button labels and API field names keep their own spelling.
 center = "center"
 unauthorized = "unauthorized"

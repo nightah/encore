@@ -18,11 +18,11 @@ Open the skill and then speak, or say it all at once:
 
 After a remote-style command such as "down" or "select", the skill stays open so you can say the next one without the wake word.
 
-In French the invocation name is always "kodi" ("Alexa, demande à kodi de …"), because "encore" on its own means "again". The invocation name can be changed on the Alexa skill page.
+In French the invocation name is always "kodi" ("Alexa, demande à kodi de …"), because "encore" on its own means "again". Brazilian Portuguese uses "kodi" too, since Portuguese reads "encore" as "en-có-ri", which the recogniser hears as "âncora". Arabic and Japanese write the name in their own script: "انكور" ("كودي" when named after Kodi), as in "أليكسا، افتحي انكور", and "アンコール" ("コディ"), as in 「アンコールを開いて」. The invocation name can be changed on the Alexa skill page.
 
 ## Rooms
 
-Commands that start playback accept a room at the end: "play Dune in the bedroom" plays on the bedroom's Kodi instance, whichever Echo you're talking to. See [Echo devices and rooms](/encore/guides/echo-devices/).
+Commands that start playback accept a room at the end: "play Dune in the bedroom" plays on the bedroom's Kodi instance, whichever Echo you're talking to. In Japanese and Hindi the room comes first or before the verb: 「リビングで映画デューンを再生して」, "बेडरूम में शोले चलाओ". See [Echo devices and rooms](/encore/guides/echo-devices/).
 
 ## Episodes
 
@@ -49,5 +49,10 @@ The pages below are generated from the interaction model Encore deploys, so they
 - [French](/encore/voice-commands/fr/): `fr-CA`, `fr-FR`
 - [Spanish](/encore/voice-commands/es/): `es-ES`, `es-MX`, `es-US`
 - [Italian](/encore/voice-commands/it/): `it-IT`
+- [Dutch](/encore/voice-commands/nl/): `nl-NL`
+- [Portuguese](/encore/voice-commands/pt/): `pt-BR`
+- [Arabic](/encore/voice-commands/ar/): `ar-SA`
+- [Hindi](/encore/voice-commands/hi/): `hi-IN`
+- [Japanese](/encore/voice-commands/ja/): `ja-JP`
 
 Your Echo has to use one of these languages, and that locale has to be deployed; see [locales](/encore/guides/deploy-skill/#locales).
