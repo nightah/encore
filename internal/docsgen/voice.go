@@ -20,6 +20,7 @@ var languageNames = map[string]string{
 	"es": "Spanish (Español)",
 	"it": "Italian (Italiano)",
 	"ar": "Arabic (العربية)",
+	"hi": "Hindi (हिन्दी)",
 }
 
 // VoiceCommands renders one voice command page per language, keyed by language code. modelFS is the i18n directory, read again for the section comments in model.yaml.
