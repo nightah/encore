@@ -23,6 +23,7 @@ skill_name: Encore
 types:
   LIBRARY_SECTION:
     musicvideos: [vidéoclips, mes vidéoclips]
+    recentmusicvideos: [vidéoclips ajoutés récemment, nouveaux vidéoclips, derniers vidéoclips, vidéoclips récents]
     tvshows: [mes émissions, téléromans]
   MEDIA_TYPE:
     musicvideo: [vidéoclips]
