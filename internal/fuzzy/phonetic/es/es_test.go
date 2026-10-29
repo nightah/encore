@@ -58,6 +58,11 @@ func TestKeys(t *testing.T) {
 }
 
 // TestHomophones pins the Spanish spellings of one sound that English Double Metaphone keeps apart.
+func TestKeysAppendsToDst(t *testing.T) {
+	assert.Equal(t, []string{"JL", "AL", "JL"}, Encoder{}.Keys([]string{"JL"}, "hola"), "a key already in dst from another word doesn't hide this word's")
+	assert.Equal(t, []string{"BR", "BR", "BRS", "GR"}, Encoder{}.Keys([]string{"BR"}, "weros"))
+}
+
 func TestHomophones(t *testing.T) {
 	for _, pair := range [][2]string{
 		{"vis", "bis"},
