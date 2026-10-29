@@ -154,6 +154,9 @@ func (a *App) runGroup(ctx context.Context, g *group) {
 		g.backend.evaluate(ctx)
 	}
 
+	// The catalog as restored or carried over needs no saving; read it before the sync below can change it.
+	saved := g.catalog.Stats()
+
 	var wg sync.WaitGroup
 
 	wg.Go(func() {
@@ -166,7 +169,7 @@ func (a *App) runGroup(ctx context.Context, g *group) {
 		wg.Go(func() { g.backend.supervise(ctx) })
 	}
 
-	wg.Go(func() { a.keepSnapshots(ctx, g) })
+	wg.Go(func() { a.keepSnapshots(ctx, g, saved) })
 
 	wg.Wait()
 }

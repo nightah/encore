@@ -119,6 +119,47 @@ func TestTheLibraryIsSavedOnShutdown(t *testing.T) {
 	})
 }
 
+// The first sync can finish before the goroutine keeping snapshots starts; it is still saved, as it changed the catalog from what was restored.
+func TestASyncThatFinishesFirstIsStillSaved(t *testing.T) {
+	inBubble(t, func(t *testing.T) {
+		srv := newKodi(t, fakekodi.Options{})
+
+		cfg := config.Defaults()
+		cfg.DataDir = t.TempDir()
+		cfg.Kodi = []config.KodiInstance{kodiConfig("Lounge", srv, "")}
+
+		a := openApp(t, &cfg, fastTuning())
+		counted := &countingStore{Store: a.blobs}
+		a.blobs = counted
+
+		t.Cleanup(func() { assert.NoError(t, a.Close()) })
+
+		inst := a.instanceNamed(t, "Lounge")
+
+		a.mu.RLock()
+		g := inst.group
+		a.mu.RUnlock()
+
+		// The sync wins the race with the goroutine keeping snapshots.
+		saved := g.catalog.Stats()
+		require.NoError(t, g.catalog.Sync(t.Context()))
+
+		ctx, cancel := context.WithCancel(t.Context())
+		done := make(chan struct{})
+
+		go func() {
+			defer close(done)
+
+			a.keepSnapshots(ctx, g, saved)
+		}()
+
+		after(t, fastTuning().snapshotCheck, func() bool { return counted.puts.Load() == 1 }, "the sync is saved at the next check")
+
+		cancel()
+		<-done
+	})
+}
+
 func TestSnapshotsAreDisabledWhenTheStoreCantOpen(t *testing.T) {
 	inBubble(t, func(t *testing.T) {
 		srv := newKodi(t, fakekodi.Options{})
