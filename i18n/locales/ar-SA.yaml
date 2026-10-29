@@ -1,0 +1,6 @@
+# ar-SA inherits lang/ar. Amazon wants an Arabic invocation name in Arabic letters, Latin only for a loanword Arabic can't spell, so "encore" is written as Saudi speakers say it, "انكور". The initial alef has no hamza because Alexa's Arabic speech recognition writes a word-initial alef bare, as most people type it. The kodi invocation choice is spelled "كودي" for the same reason.
+
+invocation: انكور
+kodi_invocation: كودي
+language: ar
+skill_name: Encore
