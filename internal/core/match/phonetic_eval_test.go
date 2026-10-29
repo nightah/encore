@@ -280,8 +280,8 @@ var ownEncoder = map[string]bool{"es": true, "fr": true, "ar": true, "pt": true}
 var grownFloor = map[string]evalScore{
 	"de": {correct: 535, wrong: 1},
 	"en": {correct: 463, wrong: 1},
-	"es": {correct: 418, wrong: 3},
-	"fr": {correct: 408, wrong: 3},
+	"es": {correct: 752, wrong: 3},
+	"fr": {correct: 737, wrong: 3},
 	"it": {correct: 343, wrong: 1},
 	"ar": {correct: 347, wrong: 5},
 	"hi": {correct: 331, wrong: 5},
