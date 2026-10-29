@@ -71,6 +71,11 @@ func TestLintLocaleRules(t *testing.T) {
 	}
 }
 
+func TestLintChecksTheKodiInvocation(t *testing.T) {
+	got := messages(Lint(load(t, map[string]string{"locales/en-US.yaml": "language: en\nskill_name: Encore\ninvocation: encore test\nkodi_invocation: kodi 2\n"})), Error)
+	assert.True(t, containsSubstring(got, `invocation name "kodi 2" must be lowercase letters`), "got %q", got)
+}
+
 func TestLintAcceptsValidInvocations(t *testing.T) {
 	for _, inv := range []string{"encore test", "kodi's remote", "t.v. remote", "my reopen box"} {
 		findings := Lint(load(t, map[string]string{"locales/en-US.yaml": "language: en\nskill_name: Encore\ninvocation: " + inv + "\n"}))

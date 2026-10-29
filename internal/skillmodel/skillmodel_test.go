@@ -341,3 +341,22 @@ func TestBuildWithoutContentGroups(t *testing.T) {
 	assert.NotContains(t, intents, "WatchEpisode")
 	assert.Contains(t, intents, "WatchRandomMovie")
 }
+
+func TestBuildKodiInvocationUsesTheLocaleSpelling(t *testing.T) {
+	src := load(t, map[string]string{
+		"locales/en-GB.yaml": "language: en\nskill_name: Encore\ninvocation: encore test\nkodi_invocation: kodi player\n",
+	})
+
+	for _, tt := range []struct {
+		locale, choice, want string
+	}{
+		{"en-GB", InvocationKodi, "kodi player"},
+		{"en-GB", "", "encore test"},
+		{"en-GB", "telly", "telly"},
+		{"en-US", InvocationKodi, "kodi"},
+	} {
+		m, err := Build(src, tt.locale, BuildOptions{Invocation: tt.choice})
+		require.NoError(t, err)
+		assert.Equal(t, tt.want, m.InteractionModel.LanguageModel.InvocationName, "%s with %q", tt.locale, tt.choice)
+	}
+}
