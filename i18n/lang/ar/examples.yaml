@@ -62,7 +62,7 @@ MEDIA_GENRE:
   - {value: بوب}
   - {value: جاز}
   - {value: كلاسيكي, synonyms: [موسيقى كلاسيكية]}
-  - {value: هيب هوب, synonyms: [راب]}
+  - {value: هيب هوب}
   - {value: إلكترونية, synonyms: [دانس]}
   - {value: بلوز}
   - {value: ميتال}

@@ -450,7 +450,13 @@ func languageName(locale, code string) string {
 	return code
 }
 
-var listAnd = map[string]string{"en": "and", "de": "und", "fr": "et", "es": "y", "it": "e"}
+var listAnd = map[string]string{"en": "and", "de": "und", "fr": "et", "es": "y", "it": "e", "ar": "و"}
+
+// listCommas are the list separators of languages that don't write ", ".
+var listCommas = map[string]string{"ar": "، "}
+
+// listAndJoins report, for the languages that write "and" joined to the word after it, whether it joins the last item of a list.
+var listAndJoins = map[string]func(item string) bool{"ar": startsArabic}
 
 func spokenList(lang string, items []string) string {
 	and, ok := listAnd[lang]
@@ -465,7 +471,17 @@ func spokenList(lang string, items []string) string {
 		return items[0]
 	}
 
-	return strings.Join(items[:len(items)-1], ", ") + " " + and + " " + items[len(items)-1]
+	comma, ok := listCommas[lang]
+	if !ok {
+		comma = ", "
+	}
+
+	last := items[len(items)-1]
+	if join := listAndJoins[lang]; join == nil || !join(last) {
+		and += " "
+	}
+
+	return strings.Join(items[:len(items)-1], comma) + " " + and + last
 }
 
 // durationWords holds the words for spoken durations per language: hour, hours, minute, minutes, and the phrase for under a minute.
@@ -475,7 +491,14 @@ var durationWords = map[string][5]string{
 	"fr": {"heure", "heures", "minute", "minutes", "moins d'une minute"},
 	"es": {"hora", "horas", "minuto", "minutos", "menos de un minuto"},
 	"it": {"ora", "ore", "minuto", "minuti", "meno di un minuto"},
+	"ar": {"ساعة", "ساعات", "دقيقة", "دقائق", "أقل من دقيقة"},
 }
+
+// durationCounts word a count of a duration unit in languages whose nouns take more forms after a number than one and many, given the unit's singular and plural.
+var durationCounts = map[string]func(n int, one, many string) string{"ar": arabicCount}
+
+// durationJoins are what joins the hours to the minutes in languages that say more than a space between them, such as Arabic's "and".
+var durationJoins = map[string]string{"ar": " و"}
 
 func spokenDuration(lang string, d time.Duration) string {
 	w, ok := durationWords[lang]
@@ -488,12 +511,9 @@ func spokenDuration(lang string, d time.Duration) string {
 		return w[4]
 	}
 
-	unit := func(n int, one, many string) string {
-		if n == 1 {
-			return "1 " + one
-		}
-
-		return strconv.Itoa(n) + " " + many
+	unit, ok := durationCounts[lang]
+	if !ok {
+		unit = countUnit
 	}
 
 	var parts []string
@@ -506,5 +526,19 @@ func spokenDuration(lang string, d time.Duration) string {
 		parts = append(parts, unit(m, w[2], w[3]))
 	}
 
-	return strings.Join(parts, " ")
+	sep, ok := durationJoins[lang]
+	if !ok {
+		sep = " "
+	}
+
+	return strings.Join(parts, sep)
+}
+
+// countUnit words n of a unit with the singular for one and the plural for any other count, as most languages count.
+func countUnit(n int, one, many string) string {
+	if n == 1 {
+		return "1 " + one
+	}
+
+	return strconv.Itoa(n) + " " + many
 }
