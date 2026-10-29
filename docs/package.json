@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "go -C .. generate ./internal/docsgen && astro build",
-    "dev": "go -C .. generate ./internal/docsgen && astro dev",
+    "dev": "go -C .. generate ./internal/api && go -C .. generate ./internal/docsgen && astro dev",
     "format": "biome check --write . && sort-package-json package.json",
     "lint": "biome check . && sort-package-json --check package.json",
     "preview": "astro preview"

@@ -1,4 +1,6 @@
 // @ts-check
+import { spawn } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import starlight from "@astrojs/starlight";
 import { defineConfig } from "astro/config";
 import starlightLinksValidator from "starlight-links-validator";
@@ -7,10 +9,70 @@ import starlightOpenAPI, { createOpenAPISidebarGroup } from "starlight-openapi";
 // The admin API's operations, generated from the OpenAPI document the server commits (internal/api/openapi.json).
 const apiGroup = createOpenAPISidebarGroup();
 
+const repo = fileURLToPath(new URL("..", import.meta.url));
+
+// The Go sources and translations the generated reference pages are built from; tests and generated output don't count.
+const sources = /\/(internal\/.+(?<!_test)\.go|i18n\/.+\.ya?ml)$/;
+
+/**
+ * In `astro dev`, regenerates the OpenAPI document and the reference pages (configuration, CLI, API endpoints, voice commands) whenever the code or translations they come from change, so open pages follow without a restart. `astro build` is untouched: its script generates the pages once.
+ * @returns {import("astro").AstroIntegration}
+ */
+function regenerateReferencePages() {
+  return {
+    hooks: {
+      "astro:server:setup": ({ server, logger }) => {
+        /** @type {NodeJS.Timeout | undefined} */
+        let timer;
+        let running = false;
+        let again = false;
+
+        const run = () => {
+          if (running) {
+            again = true;
+            return;
+          }
+          running = true;
+          const child = spawn(
+            "sh",
+            ["-c", "go generate ./internal/api && go generate ./internal/docsgen"],
+            { cwd: repo },
+          );
+          let output = "";
+          child.stdout.on("data", (chunk) => {
+            output += chunk;
+          });
+          child.stderr.on("data", (chunk) => {
+            output += chunk;
+          });
+          child.on("close", (code) => {
+            running = false;
+            if (code === 0) logger.info("reference pages regenerated");
+            else logger.error(`regenerating the reference pages failed:\n${output}`);
+            if (again) {
+              again = false;
+              run();
+            }
+          });
+        };
+
+        server.watcher.add([`${repo}internal`, `${repo}i18n`]);
+        server.watcher.on("all", (_event, file) => {
+          if (!sources.test(file)) return;
+          clearTimeout(timer);
+          timer = setTimeout(run, 300);
+        });
+      },
+    },
+    name: "encore:regenerate-reference-pages",
+  };
+}
+
 // Published to GitHub Pages at https://nightah.github.io/encore/. Pages link to each other with relative links, so the base path only lives here.
 export default defineConfig({
   base: "/encore",
   integrations: [
+    regenerateReferencePages(),
     starlight({
       customCss: ["./src/styles/theme.css"],
       description: "Control Kodi with Alexa. Self-hosted, set up from a web interface.",
