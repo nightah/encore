@@ -69,7 +69,10 @@ func TestDutchRoomSplits(t *testing.T) {
 	}{
 		{"flodder in de woonkamer", []RoomSplit{{"flodder", "woonkamer"}}},
 		{"flodder in het kantoor", []RoomSplit{{"flodder", "kantoor"}}},
-		{"flodder op de zolder", []RoomSplit{{"flodder", "zolder"}}},
+		// The bare "op" reads "de zolder" as the room too; no room is called that, so the caller moves on.
+		{"flodder op de zolder", []RoomSplit{{"flodder", "zolder"}, {"flodder", "de zolder"}}},
+		{"flodder op zolder", []RoomSplit{{"flodder", "zolder"}}},
+		{"flodder op kantoor", []RoomSplit{{"flodder", "kantoor"}}},
 		{"flodder in amerika", nil},
 		{"in de woonkamer", nil},
 	} {
