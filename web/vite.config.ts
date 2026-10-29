@@ -76,24 +76,7 @@ export default defineConfig(({ mode }) => ({
     keepGitkeep(),
     mode === "mock" ? mockServiceWorker() : null,
   ],
-  resolve: {
-    // One alias per top-level folder: @api/…, @components/…; @src for files directly in src.
-    alias: {
-      "@api": resolve(root, "src/api"),
-      "@components": resolve(root, "src/components"),
-      "@dev": resolve(root, "src/dev"),
-      "@e2e": resolve(root, "e2e"),
-      "@features": resolve(root, "src/features"),
-      "@i18n": resolve(root, "src/i18n"),
-      "@lib": resolve(root, "src/lib"),
-      "@mocks": resolve(root, "src/mocks"),
-      "@routes": resolve(root, "src/routes"),
-      "@src": resolve(root, "src"),
-      "@styles": resolve(root, "src/styles"),
-      "@test": resolve(root, "src/test"),
-      "@theme": resolve(root, "src/theme"),
-    },
-  },
+  resolve: { tsconfigPaths: true },
   server: {
     // Extra hostnames the dev server answers to, comma-separated, for reaching it through a reverse proxy (e.g. VITE_ALLOWED_HOSTS=dev.example.net). Vite rejects other Host headers.
     allowedHosts: process.env.VITE_ALLOWED_HOSTS?.split(",")
