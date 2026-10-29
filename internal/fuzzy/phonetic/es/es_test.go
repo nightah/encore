@@ -19,7 +19,7 @@ func TestKeys(t *testing.T) {
 	}{
 		// Betacism, silent h, yeísmo, seseo.
 		{"volver", []string{"BLBR"}},
-		{"hola", []string{"AL"}},
+		{"hola", []string{"AL", "JL"}},
 		{"ella", []string{"AY"}},
 		{"llamas", []string{"YM", "YMS"}},
 		{"celda", []string{"SLT"}},
@@ -36,8 +36,15 @@ func TestKeys(t *testing.T) {
 		{"iglesias", []string{"AGLS", "AGLSS"}},
 		{"madrid", []string{"MTR", "MTRT"}},
 		{"bis", []string{"BS"}},
-		{"hay", []string{"A"}},
+		{"hay", []string{"A", "J"}},
 		{"yo", []string{"Y"}},
+		// An h or w onset also keyed as the jota or gu a recogniser may have written that way.
+		{"hose", []string{"AS", "JS"}},
+		{"huan", []string{"AN", "JN"}},
+		{"weros", []string{"BR", "BRS", "GR"}},
+		{"jose", []string{"JS"}},
+		{"hjalmar", []string{"JLMR"}},
+		{"hh", []string{"hh"}},
 		// Pass-through and fallback.
 		{"211", []string{"211"}},
 		{"h", []string{"h"}},
@@ -64,6 +71,11 @@ func TestHomophones(t *testing.T) {
 		{"bunbury", "bumbury"},
 		{"llamas", "yamas"},
 		{"celda", "selda"},
+		{"jose", "hose"},
+		{"jefe", "hefe"},
+		{"japon", "hapon"},
+		{"gueros", "weros"},
+		{"gueros", "wueros"},
 	} {
 		a, b := Encoder{}.Keys(nil, pair[0]), Encoder{}.Keys(nil, pair[1])
 		assert.True(t, shareKey(a, b), "%s %q and %s %q should share a key", pair[0], a, pair[1], b)
@@ -80,7 +92,7 @@ func TestPropKeysContract(t *testing.T) {
 		keys := Encoder{}.Keys(nil, word)
 
 		require.NotEmpty(t, keys)
-		require.LessOrEqual(t, len(keys), 2)
+		require.LessOrEqual(t, len(keys), 3)
 		require.Equal(t, keys, Encoder{}.Keys(nil, word), "deterministic")
 
 		for i, k := range keys {
@@ -106,7 +118,7 @@ func TestPropKeysContract(t *testing.T) {
 func TestKeysAllocations(t *testing.T) {
 	dst := make([]string, 0, 3)
 
-	for word, want := range map[string]float64{"iglesias": 2, "volver": 1, "211": 0} {
+	for word, want := range map[string]float64{"iglesias": 2, "volver": 1, "211": 0, "hola": 2, "hay": 0} {
 		got := testing.AllocsPerRun(100, func() { dst = Encoder{}.Keys(dst[:0], word) })
 		assert.InDelta(t, want, got, 0, "%s: only the returned keys allocate", word)
 	}
