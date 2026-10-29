@@ -5,8 +5,8 @@ import { describe, expect, it } from "vitest";
 
 import { keys } from "@api/keys";
 import { getDb } from "@mocks/handlers";
-import { server } from "@mocks/node";
-import { failWith, recordRequests, renderApp } from "@test/utils";
+import { server } from "@test/server";
+import { failWith, findEnabledButton, recordRequests, renderApp } from "@test/utils";
 
 describe("Library page", () => {
   it("shows the summary tiles for the shared library", async () => {
@@ -54,11 +54,11 @@ describe("Library page", () => {
     const log = recordRequests();
     renderApp("/library");
 
-    await user.type(await screen.findByRole("textbox", { name: "What Alexa heard" }), "hot fuzzy");
+    await user.type(await screen.findByRole("textbox", { name: "What Alexa heard" }), "  Hot Fuzzy ");
     await user.click(screen.getByRole("button", { name: "Test" }));
     expect(await screen.findByText("Not found")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Add “hot fuzzy” as an alias for the top result" }));
+    await user.click(screen.getByRole("button", { name: "Add “Hot Fuzzy” as an alias for the top result" }));
 
     await waitFor(() =>
       expect(log.find((r) => r.method === "POST" && r.path === "/aliases")?.body).toEqual({
@@ -92,7 +92,7 @@ describe("Library page", () => {
     const user = userEvent.setup();
     const log = recordRequests();
     renderApp("/library");
-    await user.click(await screen.findByRole("button", { name: "Sync all now" }));
+    await user.click(await findEnabledButton({ name: "Sync all now" }));
     await waitFor(() => {
       const syncs = log.filter((r) => r.method === "POST" && r.path.endsWith("/sync")).map((r) => r.path);
       expect(syncs.sort()).toEqual(["/kodi/instances/1/sync", "/kodi/instances/3/sync"]);
@@ -130,5 +130,176 @@ describe("Library page", () => {
     await waitFor(() => expect(queryClient.getQueryState(keys.settings)?.status).toBe("error"));
     expect(within(tiles).queryByText(/no backup yet/)).not.toBeInTheDocument();
     expect(within(tiles).queryByText("Loading…")).not.toBeInTheDocument();
+  });
+
+  it("syncs a library without a source from its first member, and skips one with neither", async () => {
+    const user = userEvent.setup();
+    const log = recordRequests();
+    const [shared, solo] = getDb().libraries;
+    if (!shared || !solo) throw new Error("the sample has two libraries");
+    getDb().libraries = [
+      { ...shared, members: [{ instance_id: 2, name: "Bedroom" }], source_instance_id: 0 },
+      { ...solo, id: 5, members: [], name: "Empty", source_instance_id: 0 },
+    ];
+    renderApp("/library");
+    await user.click(await findEnabledButton({ name: "Sync all now" }));
+    expect(await screen.findByText("Library sync started. Counts update when it finishes.")).toBeInTheDocument();
+    const syncs = log.filter((r) => r.method === "POST" && r.path.endsWith("/sync")).map((r) => r.path);
+    expect(syncs).toEqual(["/kodi/instances/2/sync"]);
+  });
+
+  it("opens on the larger library when none is shared, without a picker for just one", async () => {
+    const [, solo] = getDb().libraries;
+    if (!solo) throw new Error("the sample has two libraries");
+    getDb().libraries = [
+      { ...solo, counts: { movies: 10, shows: 2, songs: 0 }, id: 7, name: "Small" },
+      { ...solo, counts: { movies: 900, shows: 40, songs: 0 }, id: 8, name: "Large" },
+    ];
+    const { unmount } = renderApp("/library");
+    expect(await screen.findByRole("combobox", { name: "Library" })).toHaveValue("8");
+    unmount();
+
+    getDb().libraries = [{ ...solo, id: 7, name: "Small" }];
+    renderApp("/library");
+    expect(await screen.findByRole("region", { name: "Library summary" })).toBeInTheDocument();
+    expect(screen.queryByRole("combobox", { name: "Library" })).not.toBeInTheDocument();
+  });
+
+  it("points to adding a Kodi instance when there is no library", async () => {
+    getDb().libraries = [];
+    renderApp("/library");
+    expect(await screen.findByText("No libraries yet")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Add a Kodi instance" })).toHaveAttribute("href", "/kodi");
+    expect(screen.getByRole("button", { name: "Sync all now" })).toBeDisabled();
+    expect(screen.queryByRole("combobox", { name: "Library" })).not.toBeInTheDocument();
+  });
+
+  it("switches the page to another library", async () => {
+    const user = userEvent.setup();
+    const log = recordRequests();
+    renderApp("/library");
+    const picker = await screen.findByRole("combobox", { name: "Library" });
+    const other = getDb().libraries.find((l) => l.id !== 3);
+    if (!other) throw new Error("no second library");
+
+    await user.selectOptions(picker, String(other.id));
+
+    expect(picker).toHaveValue(String(other.id));
+    const tiles = screen.getByRole("region", { name: "Library summary" });
+    expect(within(tiles).getByText(other.counts.movies.toLocaleString("en-GB"))).toBeInTheDocument();
+    await waitFor(() => expect(log.some((r) => r.path.startsWith(`/libraries/${other.id}/recent`))).toBe(true));
+  });
+
+  it("restricts the match tester to the chosen media type and ignores an empty query", async () => {
+    const user = userEvent.setup();
+    const log = recordRequests();
+    renderApp("/library");
+    const heard = await screen.findByRole("textbox", { name: "What Alexa heard" });
+
+    await user.click(screen.getByRole("button", { name: "Test" }));
+    await user.type(heard, "   ");
+    await user.click(screen.getByRole("button", { name: "Test" }));
+    expect(log.some((r) => r.path === "/match")).toBe(false);
+
+    await user.clear(heard);
+    await user.type(heard, " seinfield ");
+    await user.selectOptions(screen.getByRole("combobox", { name: "Media type" }), "shows");
+    await user.click(screen.getByRole("button", { name: "Test" }));
+
+    await waitFor(() =>
+      expect(log.find((r) => r.path === "/match")?.body).toEqual({
+        kinds: ["tvshow", "episode"],
+        library_id: 3,
+        query: "seinfield",
+      }),
+    );
+  });
+
+  it("says when nothing comes close, without offering an alias", async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.post("*/api/v1/match", () =>
+        HttpResponse.json({ candidates: [], decision: "not_found", margin: 0, normalized: "zzz" }),
+      ),
+    );
+    renderApp("/library");
+    await user.type(await screen.findByRole("textbox", { name: "What Alexa heard" }), "zzz");
+    await user.click(screen.getByRole("button", { name: "Test" }));
+
+    expect(await screen.findByText("Nothing in this library comes close.")).toBeInTheDocument();
+    expect(screen.queryByRole("table", { name: "Match candidates" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /as an alias/ })).not.toBeInTheDocument();
+  });
+
+  it("won't alias a result the server can't name", async () => {
+    const user = userEvent.setup();
+    const log = recordRequests();
+    server.use(
+      http.post("*/api/v1/match", () =>
+        HttpResponse.json({
+          candidates: [
+            {
+              breakdown: { alias: "", boost: 0, jaro_winkler: 0.9, phonetic: 1, token_set: 0.9 },
+              kind: "movie",
+              media_id: 0,
+              score: 0.93,
+              title: "Rocky II",
+              year: 1979,
+            },
+          ],
+          decision: "play",
+          margin: 1,
+          normalized: "rocky two",
+        }),
+      ),
+    );
+    renderApp("/library");
+    await user.type(await screen.findByRole("textbox", { name: "What Alexa heard" }), "rocky two");
+    await user.click(screen.getByRole("button", { name: "Test" }));
+
+    const add = await screen.findByRole("button", { name: "Add “rocky two” as an alias for the top result" });
+    expect(add).toBeDisabled();
+    expect(
+      screen.getByText("The server didn't say which title this is, so it can't be aliased here."),
+    ).toBeInTheDocument();
+    expect(log.some((r) => r.method === "POST" && r.path === "/aliases")).toBe(false);
+  });
+
+  it("removes an alias", async () => {
+    const user = userEvent.setup();
+    const alias = getDb().aliases.find((a) => a.library_id === 3);
+    if (!alias) throw new Error("no sample alias");
+    renderApp("/library");
+
+    await user.click(await screen.findByRole("button", { name: `Remove alias ${alias.alias}` }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("button", { name: `Remove alias ${alias.alias}` })).not.toBeInTheDocument(),
+    );
+    expect(getDb().aliases.some((a) => a.id === alias.id)).toBe(false);
+  });
+
+  it("says when nothing was added recently", async () => {
+    getDb().recent = {};
+    renderApp("/library");
+    expect(await screen.findByText("Nothing added recently.")).toBeInTheDocument();
+  });
+
+  it("shows an error when recent titles can't load", async () => {
+    failWith("get", "/libraries/3/recent", 503, "Kodi is asleep.");
+    renderApp("/library");
+    const recent = await screen.findByRole("region", { name: "Recently added" });
+    expect(await within(recent).findByRole("alert", {}, { timeout: 4000 })).toHaveTextContent("Kodi is asleep.");
+  });
+
+  it("offers to retry when the libraries can't be loaded", async () => {
+    const user = userEvent.setup();
+    failWith("get", "/libraries", 500, "Index is rebuilding.");
+    renderApp("/library");
+    expect(await screen.findByRole("alert", {}, { timeout: 4000 })).toHaveTextContent("Index is rebuilding.");
+
+    server.resetHandlers();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByRole("region", { name: "Library summary" })).toBeInTheDocument();
   });
 });

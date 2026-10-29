@@ -43,10 +43,9 @@ export function SharedLibraryPanel({
   const setSource = useSetLibrarySource();
   const split = useSplitLibrary();
   const [splitOpen, setSplitOpen] = useState(false);
-  const defaultSplit =
-    library.members.find((m) => m.instance_id !== library.source_instance_id)?.instance_id ??
-    library.members[0]?.instance_id;
-  const [splitId, setSplitId] = useState(String(defaultSplit ?? ""));
+  // Only shared libraries get this panel, so there is always a member besides the source.
+  const defaultSplit = String(library.members.find((m) => m.instance_id !== library.source_instance_id)?.instance_id);
+  const [splitId, setSplitId] = useState(defaultSplit);
   const selectId = useId();
   const headingId = `library-${library.id}-h`;
   // Encore reads from another member while the source is unreachable.
@@ -74,7 +73,7 @@ export function SharedLibraryPanel({
           {onAddInstance ? <Button onClick={onAddInstance}>{t("library.share.add")}</Button> : null}
           <Button
             onClick={() => {
-              setSplitId(String(defaultSplit ?? ""));
+              setSplitId(defaultSplit);
               setSplitOpen(true);
             }}
           >
@@ -109,7 +108,7 @@ export function SharedLibraryPanel({
 
       <Dialog
         open={splitOpen}
-        onOpenChange={setSplitOpen}
+        onClose={() => setSplitOpen(false)}
         title={t("library.split.title")}
         description={t("library.split.description")}
         footer={

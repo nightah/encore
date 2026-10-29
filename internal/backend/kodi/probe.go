@@ -30,15 +30,7 @@ func ProbeVersion(ctx context.Context, host string, wsPort int) (string, error) 
 
 	defer func() { _ = c.CloseNow() }()
 
-	req, err := json.Marshal(map[string]any{
-		"jsonrpc": "2.0", "id": 1, "method": "Application.GetProperties",
-		"params": map[string]any{"properties": []string{"version"}},
-	})
-	if err != nil {
-		return "", err
-	}
-
-	if err := c.Write(ctx, websocket.MessageText, req); err != nil {
+	if err := c.Write(ctx, websocket.MessageText, []byte(probeRequest)); err != nil {
 		return "", fmt.Errorf("kodi: %w", err)
 	}
 

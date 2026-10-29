@@ -2,6 +2,7 @@ package fakekodi
 
 import (
 	"encoding/json"
+	"net/http"
 	"net/http/httptest"
 	"sync"
 	"time"
@@ -38,11 +39,24 @@ type Server struct {
 	mac       string
 	wsOff     bool
 	addr      string
+	// network is set for a fake on an in-memory Network, which reaches it at host while down is false.
+	network *Network
+	host    string
+	down    bool
 
 	// afterAccept, when set before the server starts, runs between a WebSocket handshake and the client being registered, so tests can widen that gap.
 	afterAccept func()
 
 	httpServer *httptest.Server
+}
+
+// Network is an in-memory network of fakes, for tests that run in a testing/synctest bubble: its Client reaches each fake by the host in the fake's URLs, and nothing listens on a real socket. Create a bubble's fakes inside it.
+type Network struct {
+	client *http.Client
+
+	mu      sync.Mutex
+	servers map[string]*Server
+	made    int
 }
 
 // HandlerFunc answers one method call. params is the raw params member, which may be absent.

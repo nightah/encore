@@ -70,6 +70,8 @@ export function DeployStep({ nav }: StepProps) {
   const unanswered = PRIVACY_QUESTIONS.filter((key) => currentPrivacy[key] === null).length;
 
   const fieldErrors = save.error instanceof ApiError ? save.error.fieldErrors : {};
+  // Errors this step shows beside a field; any other (such as the stored endpoint's) goes in the alert.
+  const shownBesideField = ["invocation", "locales_enabled", "content"].some((key) => key in fieldErrors);
   const events = deploy.data?.events ?? [];
   const failed = deploy.data?.state === "failed" ? events.find((e) => e.state === "failed") : undefined;
   const succeeded = deploy.data?.state === "succeeded";
@@ -205,7 +207,7 @@ export function DeployStep({ nav }: StepProps) {
             {t("deploy.failed", { message: failed.message || t("deploy.noDetails"), step: failed.step })}
           </Callout>
         ) : null}
-        {(save.error && Object.keys(fieldErrors).length === 0) || start.error ? (
+        {(save.error && !shownBesideField) || start.error ? (
           <p role="alert" className="rounded-[10px] bg-bad-bg px-3.5 py-2.5 text-bad">
             {errorMessage(save.error ?? start.error)}
           </p>

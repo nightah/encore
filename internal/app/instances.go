@@ -58,6 +58,11 @@ func (a *App) applyConfiguredInstances(ctx context.Context) error {
 		}
 
 		if err != nil {
+			// A password the stored row doesn't refer to would be left behind.
+			if ref := rec.PasswordSecretRef; ref != "" && ref != byName[c.Name].PasswordSecretRef {
+				err = errors.Join(err, a.secrets.Delete(ctx, ref))
+			}
+
 			return fmt.Errorf("kodi instance %q: %w", c.Name, err)
 		}
 
@@ -105,6 +110,7 @@ func (a *App) newInstance(ctx context.Context, rec store.KodiInstance) (*Instanc
 		Path:             rec.Path,
 		Username:         rec.Username,
 		DisableWebSocket: rec.WSPort == 0,
+		HTTPClient:       a.tune.kodiClient,
 	}
 
 	if rec.PasswordSecretRef != "" {
@@ -155,13 +161,13 @@ func (i *Instance) language() string {
 }
 
 // run keeps only the connection; the library is kept by the instance's group.
-func (i *Instance) run(ctx context.Context) {
+func (i *Instance) run(ctx context.Context, learnMACDelay time.Duration) {
 	// Waited for, so nothing writes to the database once the instance has stopped.
 	var wg sync.WaitGroup
 	defer wg.Wait()
 
 	if i.Waker.MAC() == nil {
-		wg.Go(func() { i.learnMAC(ctx) })
+		wg.Go(func() { i.learnMAC(ctx, learnMACDelay) })
 	}
 
 	if err := i.Client.Run(ctx); err != nil && !errors.Is(err, context.Canceled) {
@@ -169,11 +175,11 @@ func (i *Instance) run(ctx context.Context) {
 	}
 }
 
-func (i *Instance) learnMAC(ctx context.Context) {
+func (i *Instance) learnMAC(ctx context.Context, delay time.Duration) {
 	select {
 	case <-ctx.Done():
 		return
-	case <-time.After(learnMACDelay):
+	case <-time.After(delay):
 	}
 
 	i.saveMAC(ctx)

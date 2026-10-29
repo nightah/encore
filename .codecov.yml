@@ -1,11 +1,10 @@
 # Codecov (https://codecov.io): coverage from CI's Go and Web jobs, shown by the README's coverage badge.
 coverage:
   status:
-    # The overall figure may dip by a point without failing a check; a pull request's own lines are reported, not enforced.
+    # The overall figure must stay at 97% (CI checks at least that for Go, and Vitest more for web); a pull request's own lines are reported, not enforced.
     project:
       default:
-        target: auto
-        threshold: 1%
+        target: 97%
     patch:
       default:
         informational: true
@@ -21,9 +20,10 @@ flags:
       - web/src/
     carryforward: true
 
-# Generated code and test helpers aren't Encore's code to test.
+# Generated code, test helpers and the entry points that only hand over to tested code aren't Encore's code to test. .github/scripts/go-coverage.sh reads this list too, and web/vite.config.ts's coverage.exclude matches its web entries.
 ignore:
   - "**/*.gen.go"
+  - "cmd/encore/main.go"
   - "internal/backend/kodi/kodirpc/"
   - "internal/backend/kodi/fakekodi/"
   - "internal/smapi/smapiclient/"
@@ -32,8 +32,12 @@ ignore:
   - "internal/blobstore/blobstoretest/"
   - "internal/testkit/"
   - "web/src/api/generated/"
+  - "web/src/dev/"
+  - "web/src/lib/pageLocation.ts"
+  - "web/src/main.tsx"
   - "web/src/mocks/"
   - "web/src/routeTree.gen.ts"
+  - "web/src/test/"
 
 comment:
   layout: "condensed_header, diff, flags"

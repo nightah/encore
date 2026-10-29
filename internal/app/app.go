@@ -47,7 +47,7 @@ func newApp(ctx context.Context, cfg *config.Config, log *slog.Logger, tune tuni
 	}
 
 	if err := a.applyConfiguredInstances(ctx); err != nil {
-		return nil, errors.Join(err, a.Close())
+		return nil, errors.Join(fmt.Errorf("applying kodi instances: %w", err), a.Close())
 	}
 
 	if err := a.applyConfiguredGroups(ctx); err != nil {
@@ -55,7 +55,7 @@ func newApp(ctx context.Context, cfg *config.Config, log *slog.Logger, tune tuni
 	}
 
 	if err := a.loadInstances(ctx); err != nil {
-		return nil, errors.Join(err, a.Close())
+		return nil, errors.Join(fmt.Errorf("loading kodi instances: %w", err), a.Close())
 	}
 
 	a.planMu.Lock()

@@ -57,16 +57,41 @@ func NewServer(opts Options) *Server {
 	return s
 }
 
-// URL is the HTTP JSON-RPC endpoint, e.g. http://127.0.0.1:1234/jsonrpc.
-func (s *Server) URL() string { return s.httpServer.URL + "/jsonrpc" }
+// URL is the HTTP JSON-RPC endpoint, e.g. http://127.0.0.1:1234/jsonrpc, or http://kodi1.test:8080/jsonrpc on a Network.
+func (s *Server) URL() string {
+	if s.network != nil {
+		return "http://" + s.host + ":8080/jsonrpc"
+	}
+
+	return s.httpServer.URL + "/jsonrpc"
+}
 
 // WebSocketURL is the WebSocket JSON-RPC endpoint.
 func (s *Server) WebSocketURL() string {
+	if s.network != nil {
+		return "ws://" + s.host + ":9090/jsonrpc"
+	}
+
 	return "ws" + strings.TrimPrefix(s.httpServer.URL, "http") + "/jsonrpc"
 }
 
-// Close stops the server and disconnects WebSocket clients.
+// Client returns an HTTP client that reaches the server; on a Network it reaches every fake there.
+func (s *Server) Client() *http.Client {
+	if s.network != nil {
+		return s.network.Client()
+	}
+
+	return s.httpServer.Client()
+}
+
+// Close stops the server and disconnects WebSocket clients. On a Network the fake refuses connections from then on.
 func (s *Server) Close() {
+	if s.network != nil {
+		s.setDown(true)
+
+		return
+	}
+
 	s.DropConnections()
 
 	if s.httpServer != nil {
@@ -77,6 +102,14 @@ func (s *Server) Close() {
 // Restart stops the server and starts it again on the same address, as when Kodi restarts. Library and player state survive.
 func (s *Server) Restart(t testing.TB) {
 	t.Helper()
+
+	if s.network != nil {
+		s.setDown(true)
+		s.setDown(false)
+
+		return
+	}
+
 	s.Close()
 
 	var ln net.Listener

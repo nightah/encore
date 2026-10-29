@@ -8,6 +8,7 @@ import { useAuthState } from "@api/auth";
 import { ApiError, errorMessage } from "@api/client";
 import { useEventStream } from "@api/events";
 import { Button } from "@components/ui/Button";
+import { pageLocation } from "@lib/pageLocation";
 import { reportError } from "@lib/reportError";
 import { isStaleModuleError, reloadForStaleModule } from "@lib/staleReload";
 
@@ -78,7 +79,7 @@ function RootError({ error, reset }: ErrorComponentProps) {
         variant="primary"
         onClick={() => {
           reset();
-          window.location.reload();
+          pageLocation.reload();
         }}
       >
         {t("actions.tryAgain")}

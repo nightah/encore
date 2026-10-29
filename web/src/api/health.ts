@@ -8,8 +8,8 @@ export interface Health {
   version?: string;
 }
 
-export function health(signal?: AbortSignal): Promise<Health> {
-  return orvalFetch<Health>("/healthz", { signal: signal ?? null });
+export function health(signal: AbortSignal): Promise<Health> {
+  return orvalFetch<Health>("/healthz", { signal });
 }
 
 const healthQuery = queryOptions({

@@ -14,65 +14,46 @@ func (b *Backend) Queue(ctx context.Context, refs []media.Ref) error {
 		return fmt.Errorf("kodi: nothing to queue: %w", media.ErrNotFound)
 	}
 
-	playlist, err := playlistFor(refs[0].Kind)
-	if err != nil {
-		return err
-	}
+	var playlist kodirpc.PlaylistID
 
 	items := make([]kodirpc.PlaylistItem, len(refs))
 
 	for i, r := range refs {
-		p, err := playlistFor(r.Kind)
+		p, item, err := queueEntry(r)
 
 		switch {
 		case err != nil:
 			return err
-		case p != playlist:
+		case i > 0 && p != playlist:
 			return errMixedQueue
 		}
 
-		if items[i], err = playlistItem(r); err != nil {
-			return err
-		}
+		playlist, items[i] = p, item
 	}
 
 	return b.queue(ctx, playlist, items)
 }
 
-func playlistFor(kind media.Kind) (kodirpc.PlaylistID, error) {
-	switch kind {
-	case media.KindSong:
-		return audioPlaylist, nil
-	case media.KindMovie, media.KindEpisode, media.KindMusicVideo:
-		return videoPlaylist, nil
-	}
-
-	return 0, fmt.Errorf("kodi: can't queue %q: %w", kind, errUnsupportedKind)
-}
-
-func playlistItem(r media.Ref) (kodirpc.PlaylistItem, error) {
+// queueEntry is the playlist r is queued on and its item there.
+func queueEntry(r media.Ref) (kodirpc.PlaylistID, kodirpc.PlaylistItem, error) {
 	id := kodirpc.LibraryID(r.ID)
 
 	switch r.Kind {
 	case media.KindSong:
-		return kodirpc.NewPlaylistItemFromSongID(kodirpc.PlaylistItemSongID{SongID: id}), nil
+		return audioPlaylist, kodirpc.NewPlaylistItemFromSongID(kodirpc.PlaylistItemSongID{SongID: id}), nil
 	case media.KindMovie:
-		return kodirpc.NewPlaylistItemFromMovieID(kodirpc.PlaylistItemMovieID{MovieID: id}), nil
+		return videoPlaylist, kodirpc.NewPlaylistItemFromMovieID(kodirpc.PlaylistItemMovieID{MovieID: id}), nil
 	case media.KindEpisode:
-		return kodirpc.NewPlaylistItemFromEpisodeID(kodirpc.PlaylistItemEpisodeID{EpisodeID: id}), nil
+		return videoPlaylist, kodirpc.NewPlaylistItemFromEpisodeID(kodirpc.PlaylistItemEpisodeID{EpisodeID: id}), nil
 	case media.KindMusicVideo:
-		return kodirpc.NewPlaylistItemFromMusicvideoID(kodirpc.PlaylistItemMusicvideoID{MusicvideoID: id}), nil
+		return videoPlaylist, kodirpc.NewPlaylistItemFromMusicvideoID(kodirpc.PlaylistItemMusicvideoID{MusicvideoID: id}), nil
 	}
 
-	return kodirpc.PlaylistItem{}, fmt.Errorf("kodi: can't queue %q: %w", r.Kind, errUnsupportedKind)
+	return 0, kodirpc.PlaylistItem{}, fmt.Errorf("kodi: can't queue %q: %w", r.Kind, errUnsupportedKind)
 }
 
-// Replaces playlist with items and starts it from the top. The order is the caller's: Kodi's own shuffle is not used because it ignores long playlists.
+// Replaces playlist with items, which callers make sure there are, and starts it from the top. The order is the caller's: Kodi's own shuffle is not used because it ignores long playlists.
 func (b *Backend) queue(ctx context.Context, playlist kodirpc.PlaylistID, items []kodirpc.PlaylistItem) error {
-	if len(items) == 0 {
-		return fmt.Errorf("kodi: nothing to queue: %w", media.ErrNotFound)
-	}
-
 	if _, err := b.c.PlaylistClear(ctx, kodirpc.PlaylistClearParams{PlaylistID: playlist}); err != nil {
 		return err
 	}
@@ -125,10 +106,8 @@ func (b *Backend) playShuffled(ctx context.Context, ref media.Ref, opts media.Pl
 				items[i] = kodirpc.NewPlaylistItemFromEpisodeID(kodirpc.PlaylistItemEpisodeID{EpisodeID: kodirpc.LibraryID(episodes[i].ID)})
 			}
 		}
-	case media.KindPlaylist:
+	default: // media.KindPlaylist: Play shuffles no other kinds.
 		items, playlist, err = b.playlistEntries(ctx, ref.ID)
-	default:
-		return fmt.Errorf("kodi: can't shuffle %q: %w", ref.Kind, errUnsupportedKind)
 	}
 
 	if err != nil {

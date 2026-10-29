@@ -48,7 +48,7 @@ pnpm dev:mock       # http://localhost:3000, API served by MSW in the browser
 - `?mock=fresh` starts from a first run (setup required; the setup token is `K7QF-2M9X-PL4D`).
 - `?mock=configured` resets to the sample home. Its admin password is `correct-horse-battery`.
 
-msw's Vite plugin (`msw/vite`, worker-only mode) serves the worker script straight from the installed msw, in mock mode and only from the dev server, so it always matches msw and production builds never contain it; `import.meta.env.MODE === "mock"` is static, so the mock code is dropped from builds too. Tests use the same handlers through `msw/node` (`src/mocks/node.ts`).
+msw's Vite plugin (`msw/vite`, worker-only mode) serves the worker script straight from the installed msw, in mock mode and only from the dev server, so it always matches msw and production builds never contain it; `import.meta.env.MODE === "mock"` is static, so the mock code is dropped from builds too. Tests use the same handlers, answering the test page's `fetch` calls without the worker (`src/test/server.ts`).
 
 ## Build
 
@@ -66,12 +66,12 @@ Assets use relative URLs (`base: "./"`) so the Go server can mount the UI under 
 pnpm lint           # Biome lint + format check
 pnpm format         # Biome: apply formatting and safe fixes
 pnpm typecheck      # TypeScript 7 (native compiler)
-pnpm test           # Vitest + Testing Library (jsdom)
+pnpm test           # Vitest + Testing Library, in headless Chromium
 pnpm test:e2e:mock  # Playwright against `vite --mode mock` (started for you)
 pnpm test:e2e       # Playwright against the real binary and a fake Kodi (started for you)
 ```
 
-Unit and screen tests (Vitest + Testing Library + jsdom) render the whole app with `renderApp()` from `src/test/utils.tsx` against the MSW handlers. `recordRequests()` captures method, path, CSRF header and body; `failWith()` makes one endpoint return problem+json; `FakeEventSource.emit()` (`src/test/eventSource.ts`) delivers SSE events, and the mock's own simulated events are forwarded to it.
+Unit and screen tests (Vitest browser mode + Testing Library) run in headless Chromium through Playwright, so install it once with `pnpm exec playwright install chromium` (`make test` does). Files named `*.node.test.ts` read the repository or start servers, so they run in Node instead; the browser and node projects are in `vite.config.ts`. The tests render the whole app with `renderApp()` from `src/test/utils.tsx` against the MSW handlers. `recordRequests()` captures method, path, CSRF header and body; `failWith()` makes one endpoint return problem+json; `FakeEventSource.emit()` (`src/test/eventSource.ts`) delivers SSE events, and the mock's own simulated events are forwarded to it. A test waits for what it acts on (`findBy…`, `waitFor`, `findEnabledButton()`) rather than assuming the mock API has answered. After each test the setup waits for the app's requests to finish, so none lands in the next test, and `pageLocation` (`src/lib/pageLocation.ts`) stands in for reloads and redirects, which would take the test page with them.
 
 Specs directly in `e2e/` run in both modes; `e2e/mock/` only against the mock API and `e2e/real/` only against the real server.
 
@@ -110,7 +110,7 @@ Check every image before committing it: the patterns catch the usual details, no
 
 ## Layout
 
-Import through the folder aliases, never relative paths: `@api/…`, `@components/…`, `@features/…`, `@lib/…` and so on for each folder in `src/`, `@src/…` for the files directly in `src/` (`App`, `router`, `basePath`), and `@e2e/…` in the Playwright specs. They are declared in `tsconfig.json` and `vite.config.ts`, and Biome's `noRestrictedImports` fails on a relative import. Biome also sorts imports into groups: `react` first, then Node built-ins and packages, then the aliases, each group separated by a blank line, with named imports in case-sensitive order (digits, capitals, then lower case). Object keys are kept sorted too, so nothing may depend on their order: put an ordered list in an array (as `CHECK_ORDER` does), give callbacks that TypeScript would otherwise infer from a neighbouring option an explicit parameter type (as `getNextPageParam` does), and make overlapping proxy rules exclude each other instead of relying on which is listed first. Generated code (`src/api/generated/`, `routeTree.gen.ts`) is left as its generators write it.
+Import through the folder aliases, never relative paths: `@api/…`, `@components/…`, `@features/…`, `@lib/…` and so on for each folder in `src/`, `@src/…` for the files directly in `src/` (`App`, `router`, `basePath`), and `@e2e/…` in the Playwright specs. They are declared once, in `tsconfig.json`'s `paths`, which Vite reads too (`resolve.tsconfigPaths`), and Biome's `noRestrictedImports` fails on a relative import. Biome also sorts imports into groups: `react` first, then Node built-ins and packages, then the aliases, each group separated by a blank line, with named imports in case-sensitive order (digits, capitals, then lower case). Object keys are kept sorted too, so nothing may depend on their order: put an ordered list in an array (as `CHECK_ORDER` does), give callbacks that TypeScript would otherwise infer from a neighbouring option an explicit parameter type (as `getNextPageParam` does), and make overlapping proxy rules exclude each other instead of relying on which is listed first. Generated code (`src/api/generated/`, `routeTree.gen.ts`) is left as its generators write it.
 
 | Path                   | What                                                                                                                            |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
@@ -145,7 +145,7 @@ The client is generated from the server's OpenAPI 3.1 spec, `internal/api/openap
 
 ## Stack
 
-React 19.3, Vite 8 with `@vitejs/plugin-react`, TypeScript 7 (the native `tsc`), Tailwind CSS 4.3 with `@tailwindcss/vite`, Base UI (`@base-ui/react`), lucide-react, TanStack Router (file-based) and TanStack Query 5, react-hook-form and zod 4, Biome, Vitest with Testing Library and jsdom, Playwright. Fonts are self-hosted from Fontsource: Bricolage Grotesque, IBM Plex Sans and IBM Plex Mono.
+React 19.3, Vite 8 with `@vitejs/plugin-react`, TypeScript 7 (the native `tsc`), Tailwind CSS 4.3 with `@tailwindcss/vite`, Base UI (`@base-ui/react`), lucide-react, TanStack Router (file-based) and TanStack Query 5, react-hook-form and zod 4, Biome, Vitest (browser mode, with Playwright) and Testing Library, Playwright. Fonts are self-hosted from Fontsource: Bricolage Grotesque, IBM Plex Sans and IBM Plex Mono.
 
 ## Brand
 

@@ -6,11 +6,10 @@ export function Card({ className, ...props }: ComponentProps<"div">) {
   return <div className={cn("rounded-xl border border-line bg-surface", className)} {...props} />;
 }
 
-/** A labelled card section: `<section aria-labelledby>` with an h2 and optional actions. */
+/** A labelled card section: `<section aria-labelledby>` with an h2. */
 export function Section({
   id,
   title,
-  actions,
   className,
   children,
   titleClassName,
@@ -18,7 +17,6 @@ export function Section({
 }: {
   id: string;
   title: ReactNode;
-  actions?: ReactNode;
   className?: string;
   titleClassName?: string;
   children?: ReactNode;
@@ -33,7 +31,6 @@ export function Section({
         <h2 id={id} className={cn("font-display font-semibold text-lg", titleClassName)}>
           {title}
         </h2>
-        {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
       </div>
       {children}
     </Tag>

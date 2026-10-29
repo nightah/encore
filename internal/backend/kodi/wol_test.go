@@ -8,6 +8,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	"github.com/stretchr/testify/assert"
@@ -52,7 +53,7 @@ func TestSendUDP(t *testing.T) {
 }
 
 func TestLearnMAC(t *testing.T) {
-	s := fakekodi.New(t, fakekodi.Options{})
+	s := newFake(t, fakekodi.Options{})
 	w := &Waker{Client: NewClient(testConfig(t, s), nil)}
 
 	require.NoError(t, w.Learn(t.Context()))
@@ -94,45 +95,158 @@ func (p *packetLog) count() int {
 }
 
 func TestWakeAndWait(t *testing.T) {
-	s := fakekodi.New(t, fakekodi.Options{})
+	synctest.Test(t, func(t *testing.T) {
+		s := newFake(t, fakekodi.Options{})
 
-	var awake atomic.Bool
+		var awake atomic.Bool
 
-	s.Handle("JSONRPC.Ping", func(json.RawMessage) (any, *fakekodi.Error) {
-		if !awake.Load() {
-			return nil, &fakekodi.Error{Code: -32100, Message: "asleep"}
+		s.Handle("JSONRPC.Ping", func(json.RawMessage) (any, *fakekodi.Error) {
+			if !awake.Load() {
+				return nil, &fakekodi.Error{Code: -32100, Message: "asleep"}
+			}
+
+			return "pong", nil
+		})
+
+		cfg := testConfig(t, s)
+		cfg.DisableWebSocket = true
+
+		log := &packetLog{onSend: func() { awake.Store(true) }}
+		w := &Waker{
+			Client:         NewClient(cfg, nil),
+			Broadcast:      "192.168.1.255",
+			Send:           log.send,
+			PollInterval:   10 * time.Millisecond,
+			ResendInterval: time.Second,
 		}
+		w.SetMAC(net.HardwareAddr{0xdc, 0xa6, 0x32, 0x4b, 0x19, 0x0e})
 
-		return "pong", nil
+		start := time.Now()
+		require.NoError(t, w.WakeAndWait(t.Context(), 2*time.Second))
+		assert.Equal(t, w.PollInterval, time.Since(start), "the first poll after the packet finds Kodi awake")
+		require.Equal(t, 1, log.count())
+		assert.Equal(t, "192.168.1.255:9", log.addrs[0])
+
+		want, err := MagicPacket(w.MAC())
+		require.NoError(t, err)
+		assert.Equal(t, want, log.packets[0])
+
+		start = time.Now()
+		require.NoError(t, w.WakeAndWait(t.Context(), time.Second))
+		assert.Equal(t, 1, log.count(), "an awake Kodi gets no packet")
+		assert.Zero(t, time.Since(start), "nor any wait")
 	})
-
-	cfg := testConfig(t, s)
-	cfg.DisableWebSocket = true
-
-	log := &packetLog{onSend: func() { awake.Store(true) }}
-	w := &Waker{
-		Client:         NewClient(cfg, nil),
-		Broadcast:      "192.168.1.255",
-		Send:           log.send,
-		PollInterval:   10 * time.Millisecond,
-		ResendInterval: time.Second,
-	}
-	w.SetMAC(net.HardwareAddr{0xdc, 0xa6, 0x32, 0x4b, 0x19, 0x0e})
-
-	require.NoError(t, w.WakeAndWait(t.Context(), 2*time.Second))
-	require.Equal(t, 1, log.count())
-	assert.Equal(t, "192.168.1.255:9", log.addrs[0])
-
-	want, err := MagicPacket(w.MAC())
-	require.NoError(t, err)
-	assert.Equal(t, want, log.packets[0])
-
-	require.NoError(t, w.WakeAndWait(t.Context(), time.Second))
-	assert.Equal(t, 1, log.count(), "an awake Kodi gets no packet")
 }
 
 func TestWakeAndWaitTimesOut(t *testing.T) {
-	s := fakekodi.New(t, fakekodi.Options{})
+	synctest.Test(t, func(t *testing.T) {
+		s := newFake(t, fakekodi.Options{})
+		s.Handle("JSONRPC.Ping", func(json.RawMessage) (any, *fakekodi.Error) {
+			return nil, &fakekodi.Error{Code: -32100, Message: "asleep"}
+		})
+
+		cfg := testConfig(t, s)
+		cfg.DisableWebSocket = true
+
+		log := &packetLog{}
+		w := &Waker{
+			Client:         NewClient(cfg, nil),
+			Broadcast:      "10.0.0.255:7",
+			Send:           log.send,
+			PollInterval:   10 * time.Millisecond,
+			ResendInterval: 50 * time.Millisecond,
+		}
+		w.SetMAC(net.HardwareAddr{1, 2, 3, 4, 5, 6})
+
+		// The deadline falls between polls, so the last resend is at 250ms.
+		start := time.Now()
+		err := w.WakeAndWait(t.Context(), 295*time.Millisecond)
+		require.ErrorIs(t, err, media.ErrUnreachable)
+		assert.Equal(t, 295*time.Millisecond, time.Since(start), "it gives up at the timeout")
+		assert.Equal(t, 6, log.count(), "the packet is repeated every resend interval")
+		assert.Equal(t, "10.0.0.255:7", log.addrs[0])
+
+		require.Error(t, (&Waker{Client: w.Client}).Wake(t.Context()), "no MAC, no packet")
+	})
+}
+
+func TestSendUDPBadAddress(t *testing.T) {
+	require.Error(t, SendUDP(t.Context(), "no port here", []byte("x")))
+}
+
+func TestMACAddressReplies(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		reply func(json.RawMessage) (any, *fakekodi.Error)
+		err   string
+	}{
+		{"too long", macReply("00:00:00:00:fe:80:00:00"), "instead of a MAC address"},
+		{"failing", func(json.RawMessage) (any, *fakekodi.Error) {
+			return nil, &fakekodi.Error{Code: CodeInternalError, Message: "x"}
+		}, "XBMC.GetInfoLabels"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			s := newFake(t, fakekodi.Options{})
+			s.Handle("XBMC.GetInfoLabels", tc.reply)
+
+			known := net.HardwareAddr{1, 2, 3, 4, 5, 6}
+			w := &Waker{Client: NewClient(testConfig(t, s), nil)}
+			w.SetMAC(known)
+
+			err := w.Learn(t.Context())
+
+			require.ErrorContains(t, err, tc.err)
+			assert.Equal(t, known, w.MAC(), "a failed lookup keeps the address already known")
+		})
+	}
+}
+
+func macReply(mac string) func(json.RawMessage) (any, *fakekodi.Error) {
+	return func(json.RawMessage) (any, *fakekodi.Error) { return map[string]string{"Network.MacAddress": mac}, nil }
+}
+
+func TestWakeAddressAndFailures(t *testing.T) {
+	log := &packetLog{}
+	w := &Waker{Send: log.send}
+	w.SetMAC(net.HardwareAddr{1, 2, 3, 4, 5, 6})
+
+	require.NoError(t, w.Wake(t.Context()))
+	assert.Equal(t, DefaultBroadcast, log.addrs[0], "the default broadcast address")
+
+	w.Send = func(context.Context, string, []byte) error { return errNotSent }
+	err := w.Wake(t.Context())
+	require.ErrorIs(t, err, errNotSent)
+	require.ErrorContains(t, err, "sending to "+DefaultBroadcast)
+
+	w.SetMAC(net.HardwareAddr{1, 2, 3, 4, 5, 6, 7, 8})
+	require.ErrorContains(t, w.Wake(t.Context()), "6-byte MAC", "an EUI-64 address can't be woken")
+}
+
+func TestWakeSendsOverUDPByDefault(t *testing.T) {
+	conn, err := net.ListenPacket("udp", "127.0.0.1:0")
+	require.NoError(t, err)
+
+	defer conn.Close()
+
+	mac := net.HardwareAddr{1, 2, 3, 4, 5, 6}
+	w := &Waker{Broadcast: conn.LocalAddr().String()}
+	w.SetMAC(mac)
+
+	require.NoError(t, w.Wake(t.Context()))
+
+	require.NoError(t, conn.SetReadDeadline(time.Now().Add(2*time.Second)))
+
+	buf := make([]byte, 128)
+	n, _, err := conn.ReadFrom(buf)
+	require.NoError(t, err)
+
+	want, err := MagicPacket(mac)
+	require.NoError(t, err)
+	assert.Equal(t, want, buf[:n], "the magic packet arrives without a Send of its own")
+}
+
+func TestWakeAndWaitStops(t *testing.T) {
+	s := newFake(t, fakekodi.Options{})
 	s.Handle("JSONRPC.Ping", func(json.RawMessage) (any, *fakekodi.Error) {
 		return nil, &fakekodi.Error{Code: -32100, Message: "asleep"}
 	})
@@ -140,20 +254,24 @@ func TestWakeAndWaitTimesOut(t *testing.T) {
 	cfg := testConfig(t, s)
 	cfg.DisableWebSocket = true
 
-	log := &packetLog{}
-	w := &Waker{
-		Client:         NewClient(cfg, nil),
-		Broadcast:      "10.0.0.255:7",
-		Send:           log.send,
-		PollInterval:   10 * time.Millisecond,
-		ResendInterval: 50 * time.Millisecond,
-	}
-	w.SetMAC(net.HardwareAddr{1, 2, 3, 4, 5, 6})
+	t.Run("without a MAC", func(t *testing.T) {
+		w := &Waker{Client: NewClient(cfg, nil), PollInterval: time.Millisecond}
 
-	err := w.WakeAndWait(t.Context(), 300*time.Millisecond)
-	require.ErrorIs(t, err, media.ErrUnreachable)
-	assert.GreaterOrEqual(t, log.count(), 2, "the packet is repeated")
-	assert.Equal(t, "10.0.0.255:7", log.addrs[0])
+		require.ErrorContains(t, w.WakeAndWait(t.Context(), time.Second), "MAC address unknown")
+	})
 
-	require.Error(t, (&Waker{Client: w.Client}).Wake(t.Context()), "no MAC, no packet")
+	t.Run("when the caller gives up", func(t *testing.T) {
+		log := &packetLog{}
+		w := &Waker{Client: NewClient(cfg, nil), Send: log.send, PollInterval: 5 * time.Millisecond}
+		w.SetMAC(net.HardwareAddr{1, 2, 3, 4, 5, 6})
+
+		ctx, cancel := context.WithCancel(t.Context())
+		log.onSend = cancel
+
+		err := w.WakeAndWait(ctx, time.Minute)
+
+		require.ErrorIs(t, err, context.Canceled)
+		require.NotErrorIs(t, err, media.ErrUnreachable, "giving up isn't Kodi failing to wake")
+		assert.Equal(t, 1, log.count(), "the default resend interval doesn't repeat the packet straight away")
+	})
 }

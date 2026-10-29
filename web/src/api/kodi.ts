@@ -1,4 +1,4 @@
-import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, skipToken, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   createKodiInstance,
@@ -122,8 +122,7 @@ export function useLibraries() {
 
 export function useRecentTitles(libraryId: number | undefined, limit = 20) {
   return useQuery({
-    enabled: libraryId !== undefined,
-    queryFn: ({ signal }) => listRecentTitles(libraryId ?? 0, { limit }, { signal }),
+    queryFn: libraryId === undefined ? skipToken : ({ signal }) => listRecentTitles(libraryId, { limit }, { signal }),
     queryKey: keys.recent(libraryId ?? 0, limit),
   });
 }

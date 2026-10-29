@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
+	"sync"
 
 	"github.com/spf13/cobra"
 
@@ -98,29 +99,7 @@ func newServeCommand() *cobra.Command {
 				return err
 			}
 
-			appDone := make(chan struct{})
-
-			go func() {
-				defer close(appDone)
-
-				_ = a.Run(ctx)
-			}()
-
-			adminDone := make(chan struct{})
-
-			go func() {
-				defer close(adminDone)
-
-				admin.Run(ctx)
-			}()
-
-			err = srv.Run(ctx)
-
-			cancel()
-			<-adminDone
-			<-appDone
-
-			if err != nil {
+			if err := runAll(ctx, cancel, srv.Run, func(ctx context.Context) { _ = a.Run(ctx) }, admin.Run); err != nil {
 				log.Error("server stopped", slog.Any("error", err))
 
 				return errSilent
@@ -137,6 +116,22 @@ func newServeCommand() *cobra.Command {
 	cmd.Flags().String("log.format", "", "log format: auto, pretty (coloured), text or json (default \"auto\": pretty on a terminal, text otherwise)")
 
 	return cmd
+}
+
+// runAll runs every task alongside serve and, once serve returns, cancels them and waits for each to stop before returning serve's error, so nothing they still use is closed under them.
+func runAll(ctx context.Context, cancel context.CancelFunc, serve func(context.Context) error, tasks ...func(context.Context)) error {
+	var wg sync.WaitGroup
+
+	for _, task := range tasks {
+		wg.Go(func() { task(ctx) })
+	}
+
+	err := serve(ctx)
+
+	cancel()
+	wg.Wait()
+
+	return err
 }
 
 func newVoice(log *slog.Logger) (*voice, error) {

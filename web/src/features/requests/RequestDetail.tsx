@@ -116,7 +116,7 @@ function ReplayResult({ replay }: { replay: Replay }) {
               key={index}
               className="wrap-anywhere rounded-lg bg-soft px-3 py-2 font-mono text-[13px]"
             >
-              {call.method} {typeof call.params === "string" ? call.params : JSON.stringify(call.params)}
+              {call.method} {JSON.stringify(call.params)}
             </code>
           ))
         ) : (
@@ -143,7 +143,6 @@ export function RequestDetailPane({ id }: { id: number }) {
     );
   }
   if (error) return <ErrorState error={error} onRetry={() => refetch()} />;
-  if (!detail) return null;
 
   const slots = describeSlots(detail.slots);
   const timing = timingParts(detail);

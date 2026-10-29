@@ -140,3 +140,17 @@ func TestContractBackend(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, c.Transport().Connected())
 }
+
+// nextEvent waits for the real Kodi to report an event.
+func nextEvent(t *testing.T, events <-chan media.Event) media.Event {
+	t.Helper()
+
+	select {
+	case ev := <-events:
+		return ev
+	case <-time.After(2 * time.Second):
+		t.Fatal("no event")
+
+		return media.Event{}
+	}
+}

@@ -50,4 +50,13 @@ describe("zodResolver", () => {
     );
     expect(result.errors).toEqual({ name: { message: "Choose another name.", type: "custom" } });
   });
+
+  it("keeps a form-wide refinement as the root error, so the form doesn't submit", async () => {
+    const pair = z
+      .object({ from: z.number(), to: z.number() })
+      .refine((v) => v.from < v.to, { message: "The range is back to front." });
+    const result = await zodResolver(pair)({ from: 5, to: 1 }, undefined, options);
+    expect(result.values).toEqual({});
+    expect(result.errors).toEqual({ root: { message: "The range is back to front.", type: "custom" } });
+  });
 });

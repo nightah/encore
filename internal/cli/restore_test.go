@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"io"
 	"log/slog"
 	"os"
@@ -164,9 +165,23 @@ func TestRestoreList(t *testing.T) {
 
 	lines := strings.Split(strings.TrimSpace(out.String()), "\n")
 	require.Len(t, lines, 3)
-	assert.True(t, strings.HasPrefix(lines[0], "KEY"))
-	assert.True(t, strings.HasPrefix(lines[1], f.backup), "newest first")
-	assert.True(t, strings.HasPrefix(lines[2], older))
+	assert.Equal(t, []string{"KEY", "TIME", "SIZE"}, strings.Fields(lines[0]))
+
+	objects, err := f.blobs.List(t.Context(), config.Defaults().Storage.Backups.Prefix)
+	require.NoError(t, err)
+
+	sizes := map[string]int64{}
+	for _, o := range objects {
+		sizes[o.Key] = o.Size
+	}
+
+	for i, key := range []string{f.backup, older} {
+		taken, ok := blobstore.BackupTime(key)
+		require.True(t, ok, key)
+
+		want := strings.Fields(key + " " + taken.Local().Format(time.DateTime) + " " + formatSize(sizes[key]))
+		assert.Equal(t, want, strings.Fields(lines[i+1]), "newest first, with when it was taken and its size")
+	}
 }
 
 func TestRestoreUsesStorageSavedInTheDatabase(t *testing.T) {
@@ -175,17 +190,20 @@ func TestRestoreUsesStorageSavedInTheDatabase(t *testing.T) {
 	// Move storage in the web interface: the override lives in the current database.
 	elsewhere := t.TempDir()
 	db := openStore(t, f.dbPath())
-	require.NoError(t, db.Settings().Set(t.Context(), "config.overrides", map[string]any{"storage.local.path": elsewhere}))
+	require.NoError(t, db.Settings().Set(t.Context(), "config.overrides", map[string]any{"storage.local.path": elsewhere, "storage.backups.prefix": "Lounge"}))
 	require.NoError(t, db.Close())
 
 	moved, err := blobstore.NewLocal(elsewhere)
 	require.NoError(t, err)
 
 	key := putBackup(t, moved, f.dbPath(), restoreNow)
+	renamed := "Lounge/" + filepath.Base(key)
+	require.NoError(t, moved.Put(t.Context(), renamed, strings.NewReader("x"), 1))
 
 	var out bytes.Buffer
 	require.NoError(t, f.restorer(&out).list(t.Context()))
-	assert.Contains(t, out.String(), key)
+	assert.Contains(t, out.String(), renamed, "the saved prefix is used")
+	assert.NotContains(t, out.String(), key, "not the configured prefix")
 	assert.NotContains(t, out.String(), f.backup, "the configured location is overridden")
 }
 
@@ -270,17 +288,15 @@ func TestRestoreAcceptsOlderSchema(t *testing.T) {
 }
 
 func TestRestoreRefusesWrongKey(t *testing.T) {
-	right, err := secrets.GenerateKey()
-	require.NoError(t, err)
+	right := secrets.GenerateKey()
 
 	f := newFixture(t, secrets.EncodeKey(right))
 
-	wrong, err := secrets.GenerateKey()
-	require.NoError(t, err)
+	wrong := secrets.GenerateKey()
 
 	f.cfg.Secrets.Key = secrets.EncodeKey(wrong)
 
-	err = f.restorer(io.Discard).restore(t.Context(), "")
+	err := f.restorer(io.Discard).restore(t.Context(), "")
 	require.ErrorIs(t, err, secrets.ErrUnknownKey)
 	assert.Contains(t, err.Error(), "cannot decrypt")
 	assert.NotContains(t, err.Error(), "hunter2")
@@ -415,8 +431,7 @@ func TestServeLockExcludesASecondHolder(t *testing.T) {
 func TestRestoreStateless(t *testing.T) {
 	ctx := t.Context()
 
-	key, err := secrets.GenerateKey()
-	require.NoError(t, err)
+	key := secrets.GenerateKey()
 
 	f := newFixture(t, secrets.EncodeKey(key))
 	f.cfg.Stateless = true
@@ -425,7 +440,7 @@ func TestRestoreStateless(t *testing.T) {
 	// The saved state is the current database ("after").
 	db := openStore(t, f.dbPath())
 	saver := &statestore.Saver{DB: db, Store: f.blobs, Log: slog.New(slog.DiscardHandler), Owner: "pod-1"}
-	_, err = saver.Save(ctx)
+	_, err := saver.Save(ctx)
 	require.NoError(t, err)
 	require.NoError(t, db.Close())
 
@@ -472,10 +487,439 @@ func TestRestoreStateless(t *testing.T) {
 	assert.NoFileExists(t, f.dbPath(), "stateless restore doesn't write a local database")
 
 	// A wrong key is refused before anything is uploaded.
-	wrong, err := secrets.GenerateKey()
-	require.NoError(t, err)
+	wrong := secrets.GenerateKey()
 
 	f.cfg.Secrets.Key = secrets.EncodeKey(wrong)
 	err = f.restorer(io.Discard).restore(ctx, "")
 	require.ErrorIs(t, err, secrets.ErrUnknownKey)
+}
+
+func TestRestoreRefusesATruncatedDownload(t *testing.T) {
+	f := newFixture(t, "")
+
+	raw, err := os.ReadFile(f.dbPath())
+	require.NoError(t, err)
+
+	var gz bytes.Buffer
+
+	zw := gzip.NewWriter(&gz)
+	_, err = zw.Write(raw)
+	require.NoError(t, err)
+	require.NoError(t, zw.Close())
+
+	half := gz.Bytes()[:gz.Len()/2]
+	key := config.Defaults().Storage.Backups.Prefix + "/encore-" + time.Now().Add(time.Hour).UTC().Format("20060102T150405.000Z") + ".db.gz"
+	require.NoError(t, f.blobs.Put(t.Context(), key, bytes.NewReader(half), int64(len(half))))
+
+	err = f.restorer(io.Discard).restore(t.Context(), "")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "decompressing backup "+key)
+
+	f.assertUntouched(t)
+}
+
+func TestRestoreStopsWhenTheAnswerCannotBeRead(t *testing.T) {
+	f := newFixture(t, "")
+	errBroken := errors.New("terminal went away")
+
+	r := f.restorer(io.Discard)
+	r.yes = false
+	r.interactive = true
+	r.in = failingIO{errBroken}
+
+	require.ErrorIs(t, r.restore(t.Context(), ""), errBroken)
+	f.assertUntouched(t)
+}
+
+func TestRestoreCommandValidatesItsArguments(t *testing.T) {
+	for _, tc := range []struct {
+		args []string
+		want string
+	}{
+		{[]string{"restore"}, "name a backup key, or pass --latest or --list"},
+		{[]string{"restore", "--latest", "Encore/encore-1.db.gz"}, "name a backup key, or pass --latest or --list"},
+		{[]string{"restore", "--list", "Encore/encore-1.db.gz"}, "--list takes no backup key"},
+		{[]string{"restore", "--list", "--latest"}, "--list takes no backup key"},
+		{[]string{"restore", "one", "two"}, "accepts at most 1 arg"},
+	} {
+		_, _, err := runCLI(t, tc.args...)
+		require.Error(t, err, tc.args)
+		assert.Contains(t, err.Error(), tc.want, tc.args)
+	}
+}
+
+func TestRestoreCommand(t *testing.T) {
+	f := newFixture(t, "")
+	t.Setenv("ENCORE_DATA_DIR", f.cfg.DataDir)
+
+	out, _, err := runCLI(t, "restore", "--list")
+	require.NoError(t, err)
+	assert.Contains(t, out, f.backup)
+
+	_, _, err = runCLI(t, "restore", "--latest")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "input is not a terminal; pass --yes", "piped input can't confirm")
+	f.assertUntouched(t)
+
+	out, _, err = runCLI(t, "restore", f.backup, "-y")
+	require.NoError(t, err)
+	assert.Contains(t, out, "Restored "+f.backup)
+	assert.Equal(t, "before", marker(t, f.dbPath()))
+}
+
+func TestRestoreCommandReportsAConfigError(t *testing.T) {
+	_, _, err := runCLI(t, "restore", "--list", "--config", filepath.Join(t.TempDir(), "missing.yml"))
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "missing.yml")
+}
+
+func emptyRestorer(t *testing.T) *restorer {
+	t.Helper()
+
+	cfg := config.Defaults()
+	cfg.DataDir = t.TempDir()
+
+	return &restorer{cfg: &cfg, in: strings.NewReader(""), out: io.Discard, yes: true, now: func() time.Time { return restoreNow }}
+}
+
+func TestRestoreListWithNoBackups(t *testing.T) {
+	r := emptyRestorer(t)
+	r.cfg.Storage.Backend = ""
+
+	var out bytes.Buffer
+	r.out = &out
+
+	require.NoError(t, r.list(t.Context()))
+	assert.Equal(t, "No backups under \"Encore\" in local storage.\n", out.String())
+}
+
+func TestRestoreLatestWithNoBackups(t *testing.T) {
+	r := emptyRestorer(t)
+
+	err := r.restore(t.Context(), "")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), `there are no backups under "Encore"`)
+	assert.NoFileExists(t, store.DefaultPath(r.cfg.DataDir))
+}
+
+func TestRestoreOpenFailures(t *testing.T) {
+	t.Run("invalid secrets key", func(t *testing.T) {
+		r := emptyRestorer(t)
+		r.cfg.Secrets.Key = "not a key"
+
+		require.Error(t, r.list(t.Context()))
+	})
+
+	t.Run("data directory can't be created", func(t *testing.T) {
+		r := emptyRestorer(t)
+		file := filepath.Join(r.cfg.DataDir, "file")
+		require.NoError(t, os.WriteFile(file, nil, 0o600))
+		r.cfg.DataDir = filepath.Join(file, "data")
+
+		r.cfg.Secrets.Key = secrets.EncodeKey(secrets.GenerateKey())
+
+		err := r.list(t.Context())
+		require.Error(t, err)
+		require.NotErrorIs(t, err, errLocked)
+		assert.Contains(t, err.Error(), "creating data directory")
+	})
+
+	t.Run("unreadable current database", func(t *testing.T) {
+		r := emptyRestorer(t)
+		require.NoError(t, os.WriteFile(store.DefaultPath(r.cfg.DataDir), bytes.Repeat([]byte("junk "), 1024), 0o600))
+
+		err := r.list(t.Context())
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "opening the current database for its storage settings")
+	})
+
+	t.Run("unknown storage backend", func(t *testing.T) {
+		r := emptyRestorer(t)
+		r.cfg.Storage.Backend = "floppy"
+
+		err := r.list(t.Context())
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "opening storage")
+
+		lock, err := lockDataDir(r.cfg.DataDir)
+		require.NoError(t, err, "the lock is released after a failed open")
+		require.NoError(t, lock.Close())
+	})
+
+	t.Run("unknown state storage backend", func(t *testing.T) {
+		r := emptyRestorer(t)
+		r.cfg.Stateless = true
+		r.cfg.Storage.Backend = "floppy"
+
+		err := r.list(t.Context())
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "opening state storage")
+	})
+}
+
+func TestRestoreReportsAStorageFailure(t *testing.T) {
+	if os.Geteuid() == 0 {
+		t.Skip("root reads any directory")
+	}
+
+	r := emptyRestorer(t)
+
+	backups := filepath.Join(t.TempDir(), "blobs", "Encore")
+	require.NoError(t, os.MkdirAll(backups, 0o700))
+	require.NoError(t, os.Chmod(backups, 0))
+	t.Cleanup(func() { _ = os.Chmod(backups, 0o700) })
+
+	r.cfg.Storage.Local.Path = filepath.Dir(backups)
+
+	err := r.list(t.Context())
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "listing backups")
+
+	err = r.restore(t.Context(), "")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "listing backups")
+}
+
+// statelessFixture is a fixture in stateless mode whose saved state is the "after" database, with no local database.
+func statelessFixture(t *testing.T) *fixture {
+	t.Helper()
+
+	f := newFixture(t, "")
+	f.cfg.Stateless = true
+	f.cfg.Storage.Local.Path = filepath.Join(f.cfg.DataDir, blobstore.LocalDirName)
+
+	db := openStore(t, f.dbPath())
+	_, err := (&statestore.Saver{DB: db, Store: f.blobs, Log: slog.New(slog.DiscardHandler), Owner: "pod-1"}).Save(t.Context())
+	require.NoError(t, err)
+	require.NoError(t, db.Close())
+	require.NoError(t, os.Remove(f.dbPath()))
+
+	return f
+}
+
+func (f *fixture) setOwner(t *testing.T, at time.Time) {
+	t.Helper()
+
+	b, err := json.Marshal(map[string]any{"owner": "pod-2", "heartbeat": at})
+	require.NoError(t, err)
+	require.NoError(t, f.blobs.Put(t.Context(), statestore.KeyOwner, bytes.NewReader(b), int64(len(b))))
+}
+
+func (f *fixture) savedMarker(t *testing.T) string {
+	t.Helper()
+
+	path := store.DefaultPath(t.TempDir())
+	ok, err := statestore.Restore(t.Context(), f.blobs, path)
+	require.NoError(t, err)
+	require.True(t, ok)
+
+	return marker(t, path)
+}
+
+func TestRestoreStatelessRefusesAnUnreadableOwnerMarker(t *testing.T) {
+	f := statelessFixture(t)
+	require.NoError(t, f.blobs.Put(t.Context(), statestore.KeyOwner, strings.NewReader("{"), 1))
+
+	err := f.restorer(io.Discard).list(t.Context())
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "owner marker")
+}
+
+func TestRestoreStatelessRefusesAnUnreadableSavedState(t *testing.T) {
+	f := statelessFixture(t)
+	junk := []byte("not gzip")
+	require.NoError(t, f.blobs.Put(t.Context(), statestore.KeyDatabase, bytes.NewReader(junk), int64(len(junk))))
+
+	require.Error(t, f.restorer(io.Discard).list(t.Context()))
+}
+
+// ownerStartsOnConfirm answers the confirmation prompt, but only after another Encore claimed the storage.
+type ownerStartsOnConfirm struct {
+	t      *testing.T
+	f      *fixture
+	answer io.Reader
+}
+
+func (r *ownerStartsOnConfirm) Read(p []byte) (int, error) {
+	if r.answer == nil {
+		r.f.setOwner(r.t, restoreNow)
+		r.answer = strings.NewReader("y\n")
+	}
+
+	return r.answer.Read(p)
+}
+
+func TestRestoreStatelessChecksTheOwnerAgainBeforeUploading(t *testing.T) {
+	f := statelessFixture(t)
+
+	r := f.restorer(io.Discard)
+	r.yes = false
+	r.interactive = true
+	r.in = &ownerStartsOnConfirm{t: t, f: f}
+
+	err := r.restore(t.Context(), "")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), `the Encore on "pod-2"`)
+	assert.Equal(t, "after", f.savedMarker(t), "the saved state was not replaced")
+}
+
+func TestRestoreConfirm(t *testing.T) {
+	for _, tc := range []struct {
+		input string
+		want  bool
+	}{
+		{"y\n", true},
+		{"Y\n", true},
+		{"yes\n", true},
+		{"  YES  \r\n", true},
+		{"y", true},
+		{"n\n", false},
+		{"no\n", false},
+		{"\n", false},
+		{"", false},
+		{"yeah\n", false},
+		{"ja\n", false},
+		{"n\ny\n", false},
+	} {
+		var out bytes.Buffer
+
+		r := &restorer{in: strings.NewReader(tc.input), out: &out}
+		ok, err := r.confirm("Replace? [y/N] ")
+		require.NoError(t, err, "%q", tc.input)
+		assert.Equal(t, tc.want, ok, "%q", tc.input)
+		assert.Equal(t, "Replace? [y/N] ", out.String())
+	}
+}
+
+type failingIO struct{ err error }
+
+func (f failingIO) Read([]byte) (int, error)  { return 0, f.err }
+func (f failingIO) Write([]byte) (int, error) { return 0, f.err }
+
+func TestRestoreConfirmFailures(t *testing.T) {
+	errBroken := errors.New("broken pipe")
+
+	_, err := (&restorer{in: failingIO{errBroken}, out: io.Discard}).confirm("?")
+	require.ErrorIs(t, err, errBroken, "a failed read is not a no")
+
+	_, err = (&restorer{in: strings.NewReader("y\n"), out: failingIO{errBroken}}).confirm("?")
+	require.ErrorIs(t, err, errBroken, "the prompt must be shown before reading an answer")
+}
+
+func TestVerifyBackupRejectsAForeignDatabase(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "other.db")
+
+	raw, err := sql.Open("sqlite", path)
+	require.NoError(t, err)
+	_, err = raw.ExecContext(t.Context(), `CREATE TABLE notes (body TEXT)`)
+	require.NoError(t, err)
+	require.NoError(t, raw.Close())
+
+	err = verifyBackup(t.Context(), path, nil)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "not an Encore database")
+}
+
+func TestVerifyBackupWithoutSecretsNeedsNoKey(t *testing.T) {
+	path := store.DefaultPath(t.TempDir())
+	require.NoError(t, openStore(t, path).Close())
+
+	require.NoError(t, verifyBackup(t.Context(), path, nil))
+}
+
+func TestVerifyBackupMissingFile(t *testing.T) {
+	require.Error(t, verifyBackup(t.Context(), filepath.Join(t.TempDir(), "missing.db"), nil))
+}
+
+func TestSwapDatabaseRefusesToOverwriteAnEarlierCopy(t *testing.T) {
+	dir := t.TempDir()
+	db := filepath.Join(dir, "encore.db")
+	restored := filepath.Join(dir, "restored")
+
+	for _, path := range []string{db, restored, db + ".before-restore-20261026T093000Z-shm"} {
+		require.NoError(t, os.WriteFile(path, []byte(filepath.Base(path)), 0o600))
+	}
+
+	_, err := swapDatabase(db, restored, restoreNow)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "already exists")
+
+	b, err := os.ReadFile(db)
+	require.NoError(t, err)
+	assert.Equal(t, "encore.db", string(b), "nothing was moved")
+	assert.FileExists(t, restored)
+}
+
+func TestSwapDatabaseWithoutACurrentDatabase(t *testing.T) {
+	dir := t.TempDir()
+	db := filepath.Join(dir, "encore.db")
+	restored := filepath.Join(dir, "restored")
+	require.NoError(t, os.WriteFile(restored, []byte("restored"), 0o600))
+
+	old, err := swapDatabase(db, restored, restoreNow)
+	require.NoError(t, err)
+	assert.Empty(t, old, "there was nothing to move aside")
+
+	b, err := os.ReadFile(db)
+	require.NoError(t, err)
+	assert.Equal(t, "restored", string(b))
+}
+
+func TestRemoveDBRemovesItsCompanionFiles(t *testing.T) {
+	dir := t.TempDir()
+	db := filepath.Join(dir, "x.db")
+
+	for _, sfx := range []string{"", "-wal", "-shm"} {
+		require.NoError(t, os.WriteFile(db+sfx, nil, 0o600))
+	}
+
+	other := filepath.Join(dir, "x.db.before-restore-1")
+	require.NoError(t, os.WriteFile(other, nil, 0o600))
+
+	removeDB(db)
+
+	for _, sfx := range []string{"", "-wal", "-shm"} {
+		assert.NoFileExists(t, db+sfx)
+	}
+
+	assert.FileExists(t, other, "only the database's own files are removed")
+	assert.NotPanics(t, func() { removeDB(db) }, "removing again is harmless")
+}
+
+func TestIsTerminal(t *testing.T) {
+	assert.False(t, isTerminal(strings.NewReader("y\n")), "a reader that isn't a file")
+
+	f, err := os.CreateTemp(t.TempDir(), "in")
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = f.Close() })
+	assert.False(t, isTerminal(f), "a regular file")
+
+	r, w, err := os.Pipe()
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = r.Close(); _ = w.Close() })
+	assert.False(t, isTerminal(r), "a pipe")
+}
+
+func TestFormatSize(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		n    int64
+		want string
+	}{
+		{0, "0 B"},
+		{1, "1 B"},
+		{1023, "1023 B"},
+		{1024, "1.0 KiB"},
+		{1536, "1.5 KiB"},
+		{1 << 20, "1.0 MiB"},
+		{3*1<<20 + 1<<19, "3.5 MiB"},
+		{5 << 30, "5.0 GiB"},
+		{1 << 40, "1.0 TiB"},
+		{1 << 50, "1.0 PiB"},
+		{1 << 60, "1.0 EiB"},
+		{1<<63 - 1, "8.0 EiB"},
+	} {
+		assert.Equal(t, tc.want, formatSize(tc.n), "%d", tc.n)
+	}
 }

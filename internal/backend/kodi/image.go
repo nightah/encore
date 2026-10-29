@@ -34,6 +34,8 @@ func (c *Client) Image(ctx context.Context, ref string) (body io.ReadCloser, con
 		return nil, "", unreachable("image", err)
 	}
 
+	c.t.noteAuth(resp.StatusCode)
+
 	switch {
 	case resp.StatusCode == http.StatusUnauthorized:
 		_ = resp.Body.Close()

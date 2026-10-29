@@ -1,6 +1,7 @@
 package alexa
 
 import (
+	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -78,7 +79,13 @@ func parseDuration(s string) (time.Duration, bool) {
 				return 0, false
 			}
 
-			total += time.Duration(n * float64(unit))
+			// A duration past time.Duration's range (about 292 years) would wrap around, so it is unreadable too.
+			v := n * float64(unit)
+			if v >= float64(math.MaxInt64-total) {
+				return 0, false
+			}
+
+			total += time.Duration(v)
 		}
 	}
 

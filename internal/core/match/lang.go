@@ -218,13 +218,14 @@ func french() *language {
 		stop:        set("le", "la", "les", "l", "un", "une", "de", "des", "du", "d", "et", "en", "au", "aux"),
 		elide:       true,
 		ordSuffixes: []string{"e", "eme", "er", "re", "ere"},
+		vigesimal:   true,
 		nums: numTable{
 			units: []string{
 				"zero", "", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "",
 				"onze", "douze", "treize", "quatorze", "quinze", "seize",
 			},
 			tens:      []string{"vingt", "trente", "quarante", "cinquante", "soixante"}, //nolint:misspell // French number words.
-			extraTen:  map[string]int{"dix": 10},
+			extraTen:  map[string]int{"dix": 10, "vingts": 20},
 			hundreds:  []string{"cent", "cents"},
 			thousands: []string{"mille"},
 			cont:      map[string]int{"un": 1, "une": 1},

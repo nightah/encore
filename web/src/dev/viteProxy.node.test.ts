@@ -6,8 +6,6 @@ import { join, resolve } from "node:path";
 import { type ViteDevServer, createServer } from "vite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { server as mockApi } from "@mocks/node";
-
 // The dev server's /api/v1/events proxy must pass the stream through with its headers: without Content-Type: text/event-stream, the browser's EventSource rejects it and the UI gets no live updates.
 describe("dev server event stream proxy", () => {
   let backend: Server;
@@ -15,9 +13,6 @@ describe("dev server event stream proxy", () => {
   let port: number;
 
   beforeAll(async () => {
-    // These requests go to real servers, not the mock API.
-    mockApi.close();
-
     backend = createHttpServer((_req, res) => {
       res.writeHead(200, { "Content-Type": "text/event-stream" });
       res.write("event: hello\ndata: {}\n\n");
@@ -41,7 +36,6 @@ describe("dev server event stream proxy", () => {
     backend?.closeAllConnections();
     backend?.close();
     delete process.env.ENCORE_API_URL;
-    mockApi.listen({ onUnhandledFrame: "error" });
   });
 
   it("keeps the event stream's content type and delivers events", async () => {

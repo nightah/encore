@@ -1,4 +1,4 @@
-import { infiniteQueryOptions, useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
+import { infiniteQueryOptions, skipToken, useInfiniteQuery, useMutation, useQuery } from "@tanstack/react-query";
 
 import { getRequest, listRequests, replayRequest } from "@api/generated/endpoints/requests/requests";
 import type { RequestPage, RequestSummaryOutcome } from "@api/generated/model";
@@ -41,12 +41,11 @@ export function useRequests(filters: RequestFilters) {
 
 export function useRequest(id: number | undefined) {
   return useQuery({
-    enabled: id !== undefined,
-    queryFn: ({ signal }) => getRequest(id ?? 0, { signal }),
+    queryFn: id === undefined ? skipToken : ({ signal }) => getRequest(id, { signal }),
     queryKey: keys.request(id ?? 0),
   });
 }
 
 export function useReplayRequest() {
-  return useMutation({ mutationFn: (id: number) => replayRequest(id) });
+  return useMutation({ meta: { inline: true }, mutationFn: (id: number) => replayRequest(id) });
 }

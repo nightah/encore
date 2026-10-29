@@ -16,7 +16,7 @@ func (t *Transport) dial(ctx context.Context) (*wsConn, error) {
 	ctx, cancel := context.WithTimeout(ctx, t.cfg.Timeout)
 	defer cancel()
 
-	c, resp, err := websocket.Dial(ctx, t.cfg.WebSocketURL(), nil)
+	c, resp, err := websocket.Dial(ctx, t.cfg.WebSocketURL(), &websocket.DialOptions{HTTPClient: t.http})
 	if resp != nil && resp.Body != nil {
 		_ = resp.Body.Close()
 	}

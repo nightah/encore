@@ -54,7 +54,7 @@ lint-go: ## Lint Go (root, tools and benchmarks modules) and interaction models
 	cd benchmarks && $(GOLANGCI) run --config ../.golangci.yml ./...
 	$(GO) run ./cmd/encore gen lint
 
-lint-repo: ## Repository-wide checks, as CI runs them: editorconfig, typos, secrets, sorted language files, shell scripts and the image scripts', MSW worker's, mutation go wrapper's, next version, release commit and release version scripts' tests, Dockerfiles, workflows and Go vulnerabilities
+lint-repo: ## Repository-wide checks, as CI runs them: editorconfig, typos, secrets, sorted language files, shell scripts and the image scripts', MSW worker's, mutation go wrapper's, next version, release commit, release version and Go coverage scripts' tests, Dockerfiles, workflows and Go vulnerabilities
 	$(GO) tool -modfile=tools/go.mod actionlint
 	git ls-files -z | xargs -0 $(GO) tool -modfile=tools/go.mod editorconfig-checker
 	$(GO) tool -modfile=tools/go.mod govulncheck ./...
@@ -64,6 +64,7 @@ lint-repo: ## Repository-wide checks, as CI runs them: editorconfig, typos, secr
 	typos --format brief
 	yamllint --strict .
 	zizmor --no-progress .github/workflows
+	.github/scripts/go-coverage_test.sh
 	.github/scripts/image-delete-untagged_test.sh
 	.github/scripts/image-superseded_test.sh
 	.github/scripts/image-tag_test.sh
@@ -92,7 +93,7 @@ bench: ## Run the benchmarks module's comparisons once and summarise them with b
 	cd benchmarks && for p in editdistance totp phonetic; do $(GO) test -run '^$$' -bench . ./$$p > bench-$$p.txt || exit 1; done
 	cd benchmarks && for p in retrieval editdistance totp phonetic; do $(GO) tool benchstat -col /impl bench-$$p.txt || exit 1; done
 
-test-web: web-install ## Run web unit tests
+test-web: web-browser ## Run web unit tests (in headless Chromium)
 	$(PNPM) -C web test
 
 test-contract: ## Run contract tests (needs a real Kodi, MinIO and WebDAV server; see the development docs)
@@ -100,6 +101,9 @@ test-contract: ## Run contract tests (needs a real Kodi, MinIO and WebDAV server
 
 web-install: ## Install web dependencies (frozen lockfile)
 	$(PNPM) -C web install --frozen-lockfile
+
+web-browser: web-install ## Install the Chromium the web tests run in (skips the download once installed)
+	$(PNPM) -C web exec playwright install chromium
 
 web-build: web-install ## Build the SPA into internal/server/dist
 	$(PNPM) -C web build
@@ -142,5 +146,5 @@ clean: ## Remove build outputs (keeps internal/server/dist/.gitkeep)
 	find internal/server/dist -mindepth 1 ! -name .gitkeep -exec rm -rf {} +
 
 .PHONY: help version patch minor major icons generate lint lint-go lint-repo lint-web test test-go test-tools test-benchmarks bench test-web \
-	test-contract web-install web-build build build-noui run dev web-dev docs-install docs docs-dev \
+	test-contract web-install web-browser web-build build build-noui run dev web-dev docs-install docs docs-dev \
 	docker clean

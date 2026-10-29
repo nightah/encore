@@ -78,7 +78,8 @@ function RequestLogPage() {
   });
 
   const items = data?.pages.flatMap((page) => page.items) ?? [];
-  const selectedId = search.id ?? items[0]?.id;
+  const first = items[0];
+  const selectedId = search.id ?? first?.id;
   // A filtered Echo that isn't in the device list (still loading, failed to load, or since forgotten) still gets an option, so the filter never reads "All Echos" while the log is narrowed to one.
   const missingDevice =
     search.device !== undefined && !devices.data?.some((device) => device.id === search.device)
@@ -179,7 +180,7 @@ function RequestLogPage() {
         </EmptyState>
       ) : null}
 
-      {items.length ? (
+      {first ? (
         <div className="flex flex-wrap items-start gap-4.5">
           <section
             aria-label={t("list.label")}
@@ -208,7 +209,7 @@ function RequestLogPage() {
             aria-labelledby="det-h"
             className="min-w-0 flex-[1.3_1_460px] rounded-xl border border-line bg-surface p-5 min-[1000px]:sticky min-[1000px]:top-6"
           >
-            {selectedId !== undefined ? <RequestDetailPane key={selectedId} id={selectedId} /> : null}
+            <RequestDetailPane key={selectedId} id={search.id ?? first.id} />
           </section>
         </div>
       ) : null}

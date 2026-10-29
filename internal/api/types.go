@@ -56,6 +56,8 @@ type Options struct {
 	Heartbeat time.Duration
 	// StatusInterval is how often Kodi instances are polled for the event stream; zero means 10 seconds.
 	StatusInterval time.Duration
+	// after waits between scheduled backup checks; nil means time.After. Tests replace it to step through the schedule.
+	after func(time.Duration) <-chan time.Time
 }
 
 // API is the admin API.
@@ -1051,6 +1053,8 @@ type statusCache struct {
 	// ctx is run's context while it runs; refreshing holds the instances with a refresh already scheduled.
 	ctx        context.Context
 	refreshing map[int64]bool
+	// afterFunc runs a scheduled refresh: time.AfterFunc, or a test's hand-stepped stand-in.
+	afterFunc func(d time.Duration, f func())
 }
 
 type statusEntry struct {

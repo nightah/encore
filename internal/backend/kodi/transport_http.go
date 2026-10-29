@@ -40,6 +40,8 @@ func (t *Transport) httpCall(ctx context.Context, id int64, method string, param
 		_ = resp.Body.Close()
 	}()
 
+	t.noteAuth(resp.StatusCode)
+
 	switch {
 	case resp.StatusCode == http.StatusUnauthorized:
 		return unreachable(method, ErrUnauthorized)

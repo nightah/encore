@@ -1,6 +1,8 @@
 package match
 
 import (
+	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -60,6 +62,15 @@ func TestNormalize(t *testing.T) {
 		{"en", "Harry Potter and the Deathly Hallows Part 1", "harry potter and the deathly hallows 1"},
 		{"en", "Chapter", "chapter"},
 		{"en", "hundred and", "100 and"},
+		{"en", "twenty eleven", "2011"},
+		{"en", "one twenty", "1 20"},
+		{"en", "two hundred hundred", "200 100"},
+		{"en", "one thousand thousand", "1000 1000"},
+		{"en", "two thousand five thousand", "2005 1000"},
+		{"en", "two thousand one hundred thousand", "2100 1000"},
+		{"en", "nineteen twentieth", "19 20"},
+		{"en", "twenty and twelve", "20 and 12"},
+		{"en", "twenty and one", "21"},
 		// German: umlauts, ß, articles, compounds and ordinals.
 		{"de", "Die Brücke", "brucke"},
 		{"de", "Der Schuh des Manitu", "schuh des manitu"},
@@ -86,6 +97,7 @@ func TestNormalize(t *testing.T) {
 		{"de", "Du hast mich tausendmal belogen", "du hast mich tausendmal belogen"},
 		{"de", "Elfenbein", "elfenbein"},
 		{"de", "Achtung", "achtung"},
+		{"de", "zweiundzwanzig drei", "22 3"},
 		// French: elision and articles.
 		{"fr", "L'Auberge espagnole", "auberge espagnole"},
 		{"fr", "Le Fabuleux Destin d'Amélie Poulain", "fabuleux destin d amelie poulain"},
@@ -98,6 +110,8 @@ func TestNormalize(t *testing.T) {
 		{"es", "El Laberinto del Fauno", "laberinto del fauno"},
 		{"es", "Veintiuno", "21"},
 		{"es", "treinta y uno", "31"},
+		{"es", "uno veintiuno", "1 21"},
+		{"es", "veinte veintiuno", "2021"},
 		{"es", "La Casa de Papel parte dos", "casa de papel 2"},
 		// Spanish hundreds from doscientos to novecientos, in either gender.
 		{"es", "argentina mil novecientos ochenta y cinco", "argentina 1985"},
@@ -199,6 +213,7 @@ func TestShortenings(t *testing.T) {
 		{"Dune: Part Two", []string{"Dune", "Part Two"}},
 		{"Star Wars: Episode IV - A New Hope", []string{"Star Wars", "Episode IV - A New Hope", "Star Wars: Episode IV", "A New Hope"}},
 		{"The Office (US)", []string{"The Office"}},
+		{"The Office (US", []string{"The Office"}},
 		{"Seinfeld", nil},
 	}
 
@@ -210,4 +225,57 @@ func TestShortenings(t *testing.T) {
 func TestUmlautVariant(t *testing.T) {
 	assert.Equal(t, "Die Bruecke", umlautVariant("Die Brücke"))
 	assert.Equal(t, "Oel und Aepfel", umlautVariant("Öl und Äpfel"))
+}
+
+func TestNormalizeFrenchSeventyToNinetyNine(t *testing.T) {
+	spelled := map[int]string{
+		70: "soixante-dix", 71: "soixante et onze", 72: "soixante-douze", 73: "soixante-treize", 74: "soixante-quatorze",
+		75: "soixante-quinze", 76: "soixante-seize", 77: "soixante-dix-sept", 78: "soixante-dix-huit", 79: "soixante-dix-neuf",
+		80: "quatre-vingts", 81: "quatre-vingt-un", 82: "quatre-vingt-deux", 83: "quatre-vingt-trois", 84: "quatre-vingt-quatre",
+		85: "quatre-vingt-cinq", 86: "quatre-vingt-six", 87: "quatre-vingt-sept", 88: "quatre-vingt-huit", 89: "quatre-vingt-neuf",
+		90: "quatre-vingt-dix", 91: "quatre-vingt-onze", 92: "quatre-vingt-douze", 93: "quatre-vingt-treize", 94: "quatre-vingt-quatorze",
+		95: "quatre-vingt-quinze", 96: "quatre-vingt-seize", 97: "quatre-vingt-dix-sept", 98: "quatre-vingt-dix-huit", 99: "quatre-vingt-dix-neuf",
+	}
+
+	for v := 70; v <= 99; v++ {
+		s, ok := spelled[v]
+		if !assert.True(t, ok, "missing %d", v) {
+			continue
+		}
+
+		want := strconv.Itoa(v)
+
+		// Traditional spelling, spoken words split by spaces, and the 1990 reform's hyphens everywhere ("soixante-et-onze").
+		for _, in := range []string{s, strings.ReplaceAll(s, "-", " "), strings.ReplaceAll(s, " ", "-")} {
+			assert.Equal(t, want, Normalize("fr", in), in)
+		}
+	}
+}
+
+func TestNormalizeFrenchVigesimal(t *testing.T) {
+	tests := []struct {
+		in, want string
+	}{
+		{"quatre-vingt", "80"},
+		{"quatre vingts dix", "90"},
+		{"Le Tour du monde en quatre-vingts jours", "tour du monde en 80 jours"},
+		{"cent quatre-vingts", "180"},
+		{"deux cent soixante-dix-sept", "277"},
+		{"mille neuf cent quatre-vingt-dix-neuf", "1999"},
+		{"dix-neuf cent quatre-vingt-quatre", "1984"},
+		{"soixante et un", "61"},
+		{"soixante-dix onze", "70 11"},
+		{"soixante-dix-sept dix", "77 10"},
+		{"quatre-vingt-dix-neuf vingt", "99 20"},
+		{"vingt quatre vingt", "24 20"},
+		{"vingt et onze", "20 et 11"},
+		{"quatre-vingt et onze", "80 et 11"},
+		{"quarante dix", "40 10"}, //nolint:misspell // French number words.
+		{"trente douze", "30 12"},
+		{"cinq vingts", "5 20"},
+	}
+
+	for _, tt := range tests {
+		assert.Equal(t, tt.want, Normalize("fr", tt.in), tt.in)
+	}
 }

@@ -15,12 +15,17 @@ var (
 	ErrUnauthorized = errors.New("kodi: unauthorized")
 	// ErrNotImage means an image reference isn't one of Kodi's image:// URLs.
 	ErrNotImage = errors.New("kodi: not an image:// reference")
+	// ErrHTTPPort means the Kodi URL names a port outside 1 to 65535.
+	ErrHTTPPort = errors.New("the Kodi URL's port must be between 1 and 65535")
+	// ErrWebSocketPort means the Kodi WebSocket URL names a port outside 1 to 65535.
+	ErrWebSocketPort = errors.New("the Kodi WebSocket URL's port must be between 1 and 65535")
 )
 
 var (
 	errUnsupportedKind = errors.New("unsupported kind")
 	errMixedQueue      = errors.New("kodi: a queue can't mix songs and video")
 	errFavouriteType   = errors.New("kodi: this kind of favourite can't be opened remotely")
+	errNoHost          = errors.New("no host to connect to")
 	// The request never left the process, so retrying it over HTTP is safe.
 	errNotSent = errors.New("request not sent")
 

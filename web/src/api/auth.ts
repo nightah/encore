@@ -13,8 +13,8 @@ import type { AuthState, CheckReachabilityRequest, CreateAdminRequest, LoginRequ
 import { keys } from "@api/keys";
 
 /** GET /auth/state (public). Also stores the CSRF token for later writes. */
-async function getAuthState(signal?: AbortSignal): Promise<AuthState> {
-  const state = await fetchAuthState({ signal: signal ?? null });
+async function getAuthState(signal: AbortSignal): Promise<AuthState> {
+  const state = await fetchAuthState({ signal });
   setCsrfToken(state.csrf_token);
   return state;
 }

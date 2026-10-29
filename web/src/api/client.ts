@@ -1,4 +1,4 @@
-import type { ErrorModel } from "@api/generated/model";
+import type { ErrorDetail, ErrorModel } from "@api/generated/model";
 import i18n from "@i18n/index";
 import { basePath } from "@src/basePath";
 
@@ -34,6 +34,16 @@ export class ApiError extends Error {
   }
 }
 
+/** The problem's validation errors, or none when `error` isn't an ApiError (a bug thrown in a submit handler, say). */
+export function problemErrorsOf(error: unknown): ErrorDetail[] {
+  return error instanceof ApiError ? (error.problem?.errors ?? []) : [];
+}
+
+/** `ApiError.fieldErrors` for any error: none when it isn't an ApiError. */
+export function fieldErrorsOf(error: unknown): Record<string, string> {
+  return error instanceof ApiError ? error.fieldErrors : {};
+}
+
 /** The message for a failed response: the problem's detail or title, or a generic one. */
 export function problemMessage(body: unknown, status: number): string {
   const problem = isProblem(body) ? body : undefined;
@@ -43,7 +53,7 @@ export function problemMessage(body: unknown, status: number): string {
 /** A short, human message for any error thrown by the API layer. */
 export function errorMessage(error: unknown): string {
   if (error instanceof ApiError) {
-    return error.problem?.detail ?? error.problem?.title ?? error.message;
+    return error.problem?.detail || error.problem?.title || error.message;
   }
   if (error instanceof Error) return error.message;
   return i18n.t("error.generic");

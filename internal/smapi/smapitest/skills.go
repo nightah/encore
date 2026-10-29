@@ -237,7 +237,7 @@ func (s *Server) handleImportStatus(w http.ResponseWriter, id string) {
 
 	for _, loc := range job.locales {
 		_, bad := job.failed[loc]
-		if s.opts.ImportWithoutModels && !bad {
+		if (s.opts.ImportWithoutModels || s.unimported[loc]) && !bad {
 			continue
 		}
 

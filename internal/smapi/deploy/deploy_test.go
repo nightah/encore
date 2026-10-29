@@ -3,8 +3,15 @@ package deploy_test
 import (
 	"archive/zip"
 	"bytes"
+	"errors"
+	"log/slog"
 	"net/http"
+	"net/http/httptest"
+	"net/http/httputil"
+	"net/url"
+	"slices"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -23,10 +30,41 @@ import (
 
 type harness struct {
 	fake     *smapitest.Server
+	proxy    *httptest.Server
 	deployer *deploy.Deployer
 
-	mu     sync.Mutex
-	events []deploy.Event
+	mu        sync.Mutex
+	events    []deploy.Event
+	overrides map[string]http.HandlerFunc
+}
+
+// override answers SMAPI requests matching pattern (a ServeMux pattern, e.g. "GET /v1/skills") with h instead of the fake.
+func (h *harness) override(pattern string, handler http.HandlerFunc) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	h.overrides[pattern] = handler
+}
+
+// serve routes a request to its override, or else to the fake.
+func (h *harness) serve(fake http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h.mu.Lock()
+
+		mux := http.NewServeMux()
+		for pattern, handler := range h.overrides {
+			mux.HandleFunc(pattern, handler)
+		}
+		h.mu.Unlock()
+
+		if _, pattern := mux.Handler(r); pattern != "" {
+			mux.ServeHTTP(w, r)
+
+			return
+		}
+
+		fake.ServeHTTP(w, r)
+	})
 }
 
 func newHarness(t *testing.T, opts smapitest.Options) *harness {
@@ -48,8 +86,16 @@ func newHarness(t *testing.T, opts smapitest.Options) *harness {
 	store := &lwa.MemoryStore{}
 	require.NoError(t, store.Save(t.Context(), &oauth2.Token{RefreshToken: o.RefreshToken}))
 
+	h := &harness{fake: fake, overrides: map[string]http.HandlerFunc{}}
+
+	target, err := url.Parse(fake.URL)
+	require.NoError(t, err)
+
+	h.proxy = httptest.NewServer(h.serve(httputil.NewSingleHostReverseProxy(target)))
+	t.Cleanup(h.proxy.Close)
+
 	client, err := smapi.New(lc.TokenSource(store), smapi.Options{
-		BaseURL: fake.URL,
+		BaseURL: h.proxy.URL,
 		Retry:   smapi.RetryPolicy{Base: time.Millisecond, Max: 2 * time.Millisecond, MaxRetryAfter: time.Millisecond},
 		Poll:    smapi.PollConfig{Interval: time.Millisecond, MaxInterval: 2 * time.Millisecond, Timeout: 10 * time.Second},
 	})
@@ -58,7 +104,9 @@ func newHarness(t *testing.T, opts smapitest.Options) *harness {
 	src, err := skillmodel.Load(i18n.FS)
 	require.NoError(t, err)
 
-	return &harness{fake: fake, deployer: deploy.New(client, src)}
+	h.deployer = deploy.New(client, src)
+
+	return h
 }
 
 func (h *harness) request(state deploy.State) deploy.Request {
@@ -245,6 +293,52 @@ func TestDeployLocaleKeysWithUnderscores(t *testing.T) {
 	assert.Equal(t, smapi.StatusSucceeded, res.Locales["en-US"].Status)
 }
 
+// When only the skill status reports builds, its underscore keys must still be matched to the package's locales.
+func TestDeployReadsUnderscoreKeysFromSkillStatus(t *testing.T) {
+	h := newHarness(t, smapitest.Options{UnderscoreLocales: true, ImportWithoutModels: true})
+
+	res, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
+	require.NoError(t, err)
+	assert.Equal(t, smapi.StatusSucceeded, res.Locales["en-GB"].Status)
+	assert.Equal(t, smapi.StatusSucceeded, res.Locales["en-US"].Status)
+	assert.NotContains(t, res.Locales, "en_GB")
+
+	h.fake.FailLocale("en-GB", "Sample utterance conflicts")
+
+	req := h.request(res.State)
+	req.Force = true
+
+	_, err = h.deployer.Deploy(t.Context(), req)
+
+	var de *deploy.Error
+	require.ErrorAs(t, err, &de)
+	require.Contains(t, de.Locales, "en-GB")
+	assert.Contains(t, de.Locales["en-GB"][0].Message, "Sample utterance conflicts")
+}
+
+// A locale absent from the skill status counts as failed after exactly missingLocalePolls polls once the manifest has built.
+func TestDeployGivesUpOnUnreportedLocaleAfterTenPolls(t *testing.T) {
+	h := newHarness(t, smapitest.Options{ImportWithoutModels: true})
+	h.fake.UnreportLocale("en-GB")
+
+	_, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
+	require.ErrorIs(t, err, deploy.ErrBuildFailed)
+
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	// Each build poll reports progress with the locales' states.
+	polls := 0
+
+	for _, ev := range h.events {
+		if ev.Step == deploy.StepBuild && ev.State == deploy.StateRunning && ev.Locales != nil {
+			polls++
+		}
+	}
+
+	assert.Equal(t, 10, polls)
+}
+
 // A failed import whose locale never reports a build must fail with the import's errors at once, not wait out the poll timeout.
 func TestDeployFailedImportDoesNotWait(t *testing.T) {
 	h := newHarness(t, smapitest.Options{})
@@ -276,6 +370,24 @@ func TestDeployTrustsTheImportsBuild(t *testing.T) {
 	assert.Equal(t, smapi.StatusSucceeded, res.Locales["en-GB"].Status)
 	assert.Equal(t, smapi.StatusSucceeded, res.Locales["en-US"].Status)
 	assert.Contains(t, h.timeline(), "build:done")
+}
+
+// The import reports one locale built and leaves the other to the skill status, which in turn doesn't list the one already built. Each answer is taken from where it was given.
+func TestDeployCombinesTheImportAndTheSkillStatus(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+	h.fake.UnimportLocale("en-US")
+	h.fake.UnreportLocale("en-GB")
+
+	res, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
+	require.NoError(t, err)
+	assert.Equal(t, smapi.StatusSucceeded, res.Locales["en-GB"].Status, "built, as the import said, though the skill status never mentions it")
+	assert.Equal(t, smapi.StatusSucceeded, res.Locales["en-US"].Status, "built, as the skill status said")
+	assert.Contains(t, h.timeline(), "build:done")
+
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	assert.True(t, slices.ContainsFunc(h.events, func(ev deploy.Event) bool { return ev.Step == deploy.StepBuild && ev.State == deploy.StateRunning }), "en-US's build was polled for")
 }
 
 // The live API: redeploying an unchanged model reports it SKIPPED in the import, and the unfiltered skill status lists no models. The deploy must still succeed.
@@ -394,9 +506,12 @@ func TestResync(t *testing.T) {
 	sk, _ := h.fake.Skill(second.State.SkillID)
 	assert.Contains(t, string(sk.Models["en-US"]), "Ronin")
 
-	third, err := h.deployer.Resync(t.Context(), h.request(second.State), movies)
+	forced := h.request(second.State)
+	forced.Force = true
+
+	third, err := h.deployer.Resync(t.Context(), forced, movies)
 	require.NoError(t, err)
-	assert.True(t, third.Skipped)
+	assert.True(t, third.Skipped, "a resync never redeploys an unchanged package, even when the request says force")
 	assert.False(t, second.State.NeedsDeploy(pkg.Hash()))
 }
 
@@ -476,4 +591,284 @@ func TestDeploySimulationGivesUp(t *testing.T) {
 	require.NoError(t, err, "a failed smoke test is a warning, not a failed deploy")
 	require.Len(t, res.Warnings, 1)
 	assert.Contains(t, res.Warnings[0], "did not resolve to any intent")
+}
+
+func writeJSON(w http.ResponseWriter, status int, body string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_, _ = w.Write([]byte(body))
+}
+
+func reject(w http.ResponseWriter, _ *http.Request) {
+	writeJSON(w, http.StatusBadRequest, `{"message":"rejected by test"}`)
+}
+
+func TestDeployStopsAtFailingStep(t *testing.T) {
+	existing := deploy.State{VendorID: smapitest.DefaultVendorID}
+
+	for name, tc := range map[string]struct {
+		pattern string
+		state   bool
+		want    deploy.Step
+	}{
+		"vendors":         {pattern: "GET /v1/vendors", want: deploy.StepVendor},
+		"list skills":     {pattern: "GET /v1/skills", want: deploy.StepSkill},
+		"upload URL":      {pattern: "POST /v1/skills/uploads", want: deploy.StepUpload},
+		"new import":      {pattern: "POST /v1/skills/imports", want: deploy.StepImport},
+		"existing import": {pattern: "POST /v1/skills/{id}/imports", state: true, want: deploy.StepImport},
+		"import status":   {pattern: "GET /v1/skills/imports/{id}", want: deploy.StepImport},
+		"enable":          {pattern: "PUT /v1/skills/{id}/stages/{stage}/enablement", want: deploy.StepEnable},
+	} {
+		t.Run(name, func(t *testing.T) {
+			h := newHarness(t, smapitest.Options{})
+
+			state := deploy.State{}
+			if tc.state {
+				state = existing
+				state.SkillID = h.fake.AddSkill(smapitest.DefaultVendorID, nil)
+			}
+
+			h.override(tc.pattern, reject)
+
+			res, err := h.deployer.Deploy(t.Context(), h.request(state))
+			assert.Equal(t, http.StatusBadRequest, smapi.StatusCode(err))
+			assert.Contains(t, err.Error(), "rejected by test")
+			assert.Equal(t, string(tc.want)+":failed", h.timeline()[len(h.timeline())-1], "the failing step is the last one reported")
+			assert.Empty(t, res.State.Hash, "a failed deploy never records a hash")
+
+			if tc.state {
+				assert.Equal(t, state.SkillID, res.State.SkillID, "the skill is kept for a retry")
+			}
+		})
+	}
+}
+
+func TestDeployBuildStatusErrorFailsBuild(t *testing.T) {
+	h := newHarness(t, smapitest.Options{ImportWithoutModels: true})
+	h.override("GET /v1/skills/{id}/status", reject)
+
+	_, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
+	assert.Equal(t, http.StatusBadRequest, smapi.StatusCode(err))
+	assert.Equal(t, "build:failed", h.timeline()[len(h.timeline())-1])
+}
+
+func TestDeployUploadRejectedByS3(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+	h.override("POST /v1/skills/uploads", func(w http.ResponseWriter, _ *http.Request) {
+		writeJSON(w, http.StatusCreated, `{"uploadUrl":"`+h.proxy.URL+`/s3/denied?X-Amz-Signature=secret"}`)
+	})
+	h.override("PUT /s3/{id}", func(w http.ResponseWriter, _ *http.Request) {
+		http.Error(w, "<Error><Code>AccessDenied</Code></Error>", http.StatusForbidden)
+	})
+
+	_, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
+	assert.Equal(t, http.StatusForbidden, smapi.StatusCode(err))
+	assert.Equal(t, "upload:failed", h.timeline()[len(h.timeline())-1])
+	assert.Equal(t, 0, h.fake.Calls("POST /v1/skills/imports"))
+}
+
+func TestDeployNoDeveloperAccount(t *testing.T) {
+	h := newHarness(t, smapitest.Options{Vendors: []smapitest.Vendor{}})
+
+	_, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
+
+	var vc *deploy.VendorChoiceError
+	require.ErrorAs(t, err, &vc)
+	assert.Empty(t, vc.Vendors)
+	assert.Contains(t, err.Error(), "no Alexa developer account")
+	assert.Contains(t, h.timeline(), "vendor:failed")
+}
+
+func TestVendorChoiceErrorMessage(t *testing.T) {
+	err := &deploy.VendorChoiceError{Vendors: []smapi.Vendor{{ID: "A"}, {ID: "B"}, {ID: "C"}}}
+	assert.Equal(t, "deploy: this Amazon account belongs to 3 developer accounts; choose a vendor ID", err.Error())
+}
+
+func TestDeployIgnoresSkillsThatCannotBeUpdated(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+	h.override("GET /v1/skills", func(w http.ResponseWriter, _ *http.Request) {
+		writeJSON(w, http.StatusOK, `{"skills":[
+			{"skillId":"live","stage":"live","apis":["custom"],"nameByLocale":{"en-US":"Encore"}},
+			{"skillId":"smarthome","stage":"development","apis":["smartHome"],"nameByLocale":{"en-US":"Encore"}},
+			{"skillId":"other-name","stage":"development","apis":["custom"],"nameByLocale":{"en-US":"Encore Two"}},
+			{"skillId":"other-locale","nameByLocale":{"de-DE":"Encore"}}
+		]}`)
+	})
+
+	res, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
+	require.NoError(t, err)
+	assert.NotContains(t, []string{"live", "smarthome", "other-name", "other-locale"}, res.State.SkillID)
+	assert.Equal(t, 1, h.fake.Calls("POST /v1/skills/imports"), "a new skill is created")
+	assert.Equal(t, 0, h.fake.Calls("POST /v1/skills/{skillId}/imports"), "no listed skill is updated")
+	assert.Empty(t, res.Warnings)
+}
+
+func TestDeployMatchesSkillWithoutStageOrAPIs(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+	existing := h.fake.AddSkill(smapitest.DefaultVendorID, nil)
+	h.override("GET /v1/skills", func(w http.ResponseWriter, _ *http.Request) {
+		writeJSON(w, http.StatusOK, `{"skills":[{"skillId":"`+existing+`","nameByLocale":{"en-GB":"Encore"}}]}`)
+	})
+
+	res, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
+	require.NoError(t, err)
+	assert.Equal(t, existing, res.State.SkillID)
+}
+
+func TestDeployWaitsForBuildAfterImport(t *testing.T) {
+	h := newHarness(t, smapitest.Options{ImportWithoutModels: true})
+
+	res, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
+	require.NoError(t, err)
+	assert.NotEmpty(t, res.State.Hash)
+	assert.Equal(t, smapi.StatusSucceeded, res.Locales["en-GB"].Status)
+	assert.Equal(t, smapi.StatusSucceeded, res.Locales["en-US"].Status)
+	assert.GreaterOrEqual(t, h.fake.Calls("GET /v1/skills/{a}/{b}"), 3, "the build is polled while it is pending")
+
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	var running, done []deploy.Event
+
+	for _, ev := range h.events {
+		if ev.Step == deploy.StepBuild && ev.State == deploy.StateRunning && ev.Locales != nil {
+			running = append(running, ev)
+		}
+
+		if ev.Step == deploy.StepBuild && ev.State == deploy.StateDone {
+			done = append(done, ev)
+		}
+	}
+
+	require.NotEmpty(t, running, "build progress carries per-locale state")
+	assert.Equal(t, smapi.StatusInProgress, running[0].Locales["en-GB"].Status)
+	require.Len(t, done, 1)
+	assert.Empty(t, done[0].Message, "the build was waited for, not done during the import")
+	assert.Equal(t, smapi.StatusSucceeded, done[0].Locales["en-US"].Status)
+}
+
+func TestDeployBuildFailedWithoutDetails(t *testing.T) {
+	h := newHarness(t, smapitest.Options{ImportWithoutModels: true})
+	h.override("GET /v1/skills/{id}/status", func(w http.ResponseWriter, _ *http.Request) {
+		writeJSON(w, http.StatusOK, `{"interactionModel":{"en-US":{"lastUpdateRequest":{"status":"FAILED"}},"en-GB":{"lastUpdateRequest":{"status":"SUCCEEDED"}}}}`)
+	})
+
+	_, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
+	require.ErrorIs(t, err, deploy.ErrBuildFailed)
+
+	var de *deploy.Error
+	require.ErrorAs(t, err, &de)
+	assert.Equal(t, map[string][]smapi.Problem{"en-US": {{Message: "build failed without details"}}}, de.Locales)
+}
+
+func TestDeployWaitsForManifest(t *testing.T) {
+	h := newHarness(t, smapitest.Options{ImportWithoutModels: true})
+
+	var polls atomic.Int32
+
+	h.override("GET /v1/skills/{id}/status", func(w http.ResponseWriter, _ *http.Request) {
+		manifest := "SUCCEEDED"
+		if polls.Add(1) <= 2 {
+			manifest = "IN_PROGRESS"
+		}
+
+		writeJSON(w, http.StatusOK, `{"manifest":{"lastUpdateRequest":{"status":"`+manifest+`"}},"interactionModel":{"en-US":{"lastUpdateRequest":{"status":"SUCCEEDED"}},"en-GB":{"lastUpdateRequest":{"status":"SUCCEEDED"}}}}`)
+	})
+
+	_, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
+	require.NoError(t, err)
+	assert.Equal(t, int32(3), polls.Load(), "built models still wait for the manifest")
+}
+
+func TestDeployReportsImportWarnings(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+	skillID := h.fake.AddSkill(smapitest.DefaultVendorID, nil)
+	h.override("GET /v1/skills/imports/{id}", func(w http.ResponseWriter, _ *http.Request) {
+		writeJSON(w, http.StatusOK, `{"status":"SUCCEEDED","warnings":[{"code":"W1","message":"icon is small"}],"skill":{"skillId":"`+skillID+`","resources":[
+			{"name":"InteractionModel.en-US","status":"SUCCEEDED","warnings":[{"message":"slot unused"}]},
+			{"name":"interactionModels.en_GB","status":"SKIPPED"},
+			{"name":"InteractionModel.fr-FR","status":"SUCCEEDED"},
+			{"name":"Manifest","status":"SUCCEEDED"}
+		]}}`)
+	})
+
+	res, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{VendorID: smapitest.DefaultVendorID, SkillID: skillID}))
+	require.NoError(t, err)
+	assert.Equal(t, []string{"W1: icon is small"}, res.Warnings)
+	assert.Equal(t, []smapi.Problem{{Message: "slot unused"}}, res.Locales["en-US"].Warnings)
+	assert.Equal(t, smapi.StatusSucceeded, res.Locales["en-GB"].Status, "a skipped model is the one already built")
+	assert.NotContains(t, res.Locales, "fr-FR", "locales outside the package are ignored")
+	assert.Equal(t, 0, h.fake.Calls("GET /v1/skills/{a}/{b}"), "every locale was built during the import")
+}
+
+func TestDeployFailedImportWithoutLocaleBuilds(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+	h.override("GET /v1/skills/imports/{id}", func(w http.ResponseWriter, _ *http.Request) {
+		writeJSON(w, http.StatusOK, `{"status":"FAILED","errors":[{"code":"INVALID_MANIFEST","message":"bad icon"}],"skill":{"resources":[]}}`)
+	})
+
+	_, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
+
+	var de *deploy.Error
+	require.ErrorAs(t, err, &de)
+	assert.Equal(t, deploy.StepImport, de.Step)
+	assert.Equal(t, []smapi.Problem{{Code: "INVALID_MANIFEST", Message: "bad icon"}}, de.Problems)
+	require.NotErrorIs(t, err, deploy.ErrBuildFailed)
+	assert.Equal(t, 0, h.fake.Calls("GET /v1/skills/{a}/{b}"), "without a skill ID there is no build to ask about")
+}
+
+func TestDeployLogsAmazonsStatuses(t *testing.T) {
+	h := newHarness(t, smapitest.Options{ImportWithoutModels: true})
+
+	var buf bytes.Buffer
+
+	req := h.request(deploy.State{})
+	req.Log = slog.New(slog.NewTextHandler(&buf, &slog.HandlerOptions{Level: slog.LevelDebug}))
+
+	_, err := h.deployer.Deploy(t.Context(), req)
+	require.NoError(t, err)
+	assert.Contains(t, buf.String(), "skill import status")
+	assert.Contains(t, buf.String(), "skill build status")
+	assert.Contains(t, buf.String(), "skill simulation")
+}
+
+func TestDeployWithoutProgressCallback(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+
+	req := h.request(deploy.State{})
+	req.Progress = nil
+
+	res, err := h.deployer.Deploy(t.Context(), req)
+	require.NoError(t, err)
+	assert.NotEmpty(t, res.State.Hash)
+}
+
+func TestErrorMessage(t *testing.T) {
+	for name, tc := range map[string]struct {
+		err  *deploy.Error
+		want string
+	}{
+		"no details": {err: &deploy.Error{Step: deploy.StepImport}, want: "deploy: import failed: no details reported"},
+		"problems":   {err: &deploy.Error{Step: deploy.StepImport, Problems: []smapi.Problem{{Code: "A", Message: "a"}, {Message: "b"}}}, want: "deploy: import failed: A: a; b"},
+		"locales sorted": {
+			err:  &deploy.Error{Step: deploy.StepBuild, Locales: map[string][]smapi.Problem{"en-US": {{Message: "x"}, {Message: "y"}}, "de-DE": {{Message: "z"}}}},
+			want: "deploy: build failed: de-DE: z; en-US: x; y",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			assert.Equal(t, tc.want, tc.err.Error())
+			assert.Equal(t, len(tc.err.Locales) > 0, errors.Is(tc.err, deploy.ErrBuildFailed))
+		})
+	}
+}
+
+func TestExportPackageInvalidOptions(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+
+	opts := h.request(deploy.State{}).Package
+	opts.Locales = nil
+
+	var buf bytes.Buffer
+	require.Error(t, h.deployer.ExportPackage(&buf, opts))
+	assert.Zero(t, buf.Len())
 }

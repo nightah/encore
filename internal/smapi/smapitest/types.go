@@ -24,7 +24,9 @@ type Server struct {
 	injectN     int
 	failLocales map[string]string
 	// unreported are locales left out of the skill status, as when a failed import is rolled back before Amazon records a build.
-	unreported  map[string]bool
+	unreported map[string]bool
+	// unimported are locales left out of an import's resources, so their builds are known only from the skill status.
+	unimported  map[string]bool
 	uploads     map[string][]byte
 	skills      map[string]*Skill
 	order       []string

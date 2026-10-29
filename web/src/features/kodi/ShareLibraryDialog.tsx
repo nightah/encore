@@ -11,7 +11,7 @@ import { Checkbox } from "@components/ui/Field";
 
 interface ShareLibraryDialogProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onClose: () => void;
   instances: Instance[];
   libraries: Library[];
   /** Instances ticked when the dialog opens, such as an existing group's members. */
@@ -19,7 +19,7 @@ interface ShareLibraryDialogProps {
 }
 
 /** Groups Kodi instances that use one Kodi database (such as MySQL) into a shared library. The first ticked instance becomes the library source. */
-export function ShareLibraryDialog({ open, onOpenChange, instances, libraries, initial }: ShareLibraryDialogProps) {
+export function ShareLibraryDialog({ open, onClose, instances, libraries, initial }: ShareLibraryDialogProps) {
   const { t } = useTranslation("kodi");
   const group = useGroupLibrary();
   const [selected, setSelected] = useState<number[]>(initial ?? []);
@@ -46,17 +46,17 @@ export function ShareLibraryDialog({ open, onOpenChange, instances, libraries, i
   return (
     <Dialog
       open={open}
-      onOpenChange={onOpenChange}
+      onClose={onClose}
       title={t("library.share.title")}
       description={t("library.share.description")}
       footer={
         <>
-          <Button onClick={() => onOpenChange(false)}>{t("library.share.cancel")}</Button>
+          <Button onClick={onClose}>{t("library.share.cancel")}</Button>
           <Button
             variant="primary"
             disabled={selected.length < 2}
             pending={group.isPending}
-            onClick={() => group.mutate(selected, { onSuccess: () => onOpenChange(false) })}
+            onClick={() => group.mutate(selected, { onSuccess: onClose })}
           >
             {t("library.share.confirm", { count: selected.length })}
           </Button>

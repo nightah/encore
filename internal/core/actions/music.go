@@ -307,15 +307,13 @@ func (s *Service) musicVideos(ctx context.Context, t Target, req MusicRequest) (
 		videos = filter(videos, func(it media.Item) bool { return byArtist(lang, it, req.Artist) })
 	}
 
+	// pool returns some videos or none at all, so only the artist can leave none.
 	if len(videos) == 0 {
-		switch {
-		case g != "" && req.Artist != "":
+		if g != "" {
 			return nil, done(say("music.no_videos_genre_by", map[string]string{"genre": g, "artist": req.Artist})), false
-		case req.Artist != "":
-			return nil, done(say("music.no_videos_by", map[string]string{"artist": req.Artist})), false
-		default:
-			return nil, done(say("library.empty", nil)), false
 		}
+
+		return nil, done(say("music.no_videos_by", map[string]string{"artist": req.Artist})), false
 	}
 
 	return videos, Outcome{}, true

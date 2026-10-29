@@ -91,6 +91,33 @@ func TestIndexRejectsBadInput(t *testing.T) {
 	assert.Empty(t, res.Candidates)
 }
 
+func TestIndexNormalizesInItsLanguage(t *testing.T) {
+	de, err := New("de-AT", Config{})
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = de.Close() })
+
+	assert.Equal(t, "arzte", de.Normalize("Die Ärzte"), "German drops its article")
+	assert.Equal(t, "die arzte", newIndex(t, RetrieverTrigram).Normalize("Die Ärzte"), "English doesn't")
+}
+
+func TestUnspeakableTitleFoundByAlias(t *testing.T) {
+	retrievers(t, func(t *testing.T, retr string) {
+		ix := newIndex(t, retr, Doc{ID: "x", Kind: media.KindMovie, Title: "?!", Aliases: []string{"Interrobang"}})
+
+		res, err := ix.Search(t.Context(), Query{Text: "interrobang"})
+		require.NoError(t, err)
+
+		best, ok := res.Best()
+		require.True(t, ok)
+		assert.Equal(t, "x", best.Doc.ID)
+		assert.Equal(t, "Interrobang", best.Breakdown.Alias)
+	})
+}
+
+func TestLanguages(t *testing.T) {
+	assert.Equal(t, []string{"de", "en", "es", "fr", "it"}, Languages())
+}
+
 func TestSearchKindsAndLimit(t *testing.T) {
 	retrievers(t, func(t *testing.T, retr string) {
 		ix := newIndex(t, retr,

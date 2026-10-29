@@ -51,7 +51,7 @@ func (b *groupBackend) Search(ctx context.Context, kind media.Kind, title string
 	return b.current().Backend.Search(ctx, kind, title)
 }
 
-// Subscribe implements media.Backend, merging every member's events. Connection events count only from the active member; the others just prompt a check of which member should be active.
+// Subscribe implements media.Backend, merging every member's events until ctx is done. Connection events count only from the active member; the others just prompt a check of which member should be active. A member's subscription reconnects by itself and ends only with ctx.
 func (b *groupBackend) Subscribe(ctx context.Context, fn func(media.Event)) error {
 	b.mu.Lock()
 	b.emit = fn
@@ -60,22 +60,7 @@ func (b *groupBackend) Subscribe(ctx context.Context, fn func(media.Event)) erro
 	var wg sync.WaitGroup
 
 	for _, m := range b.members {
-		wg.Go(func() {
-			for {
-				err := m.Backend.Subscribe(ctx, func(ev media.Event) { b.forward(m, ev) })
-				if ctx.Err() != nil {
-					return
-				}
-
-				b.log.Warn("kodi subscription ended", "member", m.name, "error", err)
-
-				select {
-				case <-ctx.Done():
-					return
-				case <-time.After(resubscribeDelay):
-				}
-			}
-		})
+		wg.Go(func() { _ = m.Backend.Subscribe(ctx, func(ev media.Event) { b.forward(m, ev) }) })
 	}
 
 	wg.Wait()

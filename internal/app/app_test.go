@@ -8,6 +8,8 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -20,6 +22,7 @@ import (
 	"github.com/nightah/encore/internal/backend/kodi/fakekodi"
 	"github.com/nightah/encore/internal/config"
 	"github.com/nightah/encore/internal/core/actions"
+	"github.com/nightah/encore/internal/secrets"
 	"github.com/nightah/encore/internal/skillmodel"
 	"github.com/nightah/encore/internal/store"
 )
@@ -35,15 +38,15 @@ type harness struct {
 func newHarness(t *testing.T, def bool) *harness {
 	t.Helper()
 
-	kodi := fakekodi.New(t, fakekodi.Options{})
-	h := startHarness(t, config.KodiInstance{Name: "Lounge", URL: kodi.URL(), WebSocketURL: kodi.WebSocketURL(), Default: def})
+	kodi := newKodi(t, fakekodi.Options{})
+	h := startHarness(t, onFakes(defaultTuning()), config.KodiInstance{Name: "Lounge", URL: kodi.URL(), WebSocketURL: kodi.WebSocketURL(), Default: def})
 	h.kodi = kodi
 
 	return h
 }
 
 // startHarness runs an App with one configured Kodi instance, fake or real, and the Alexa handler in front of it.
-func startHarness(t *testing.T, kodi config.KodiInstance) *harness {
+func startHarness(t *testing.T, tune tuning, kodi config.KodiInstance) *harness {
 	t.Helper()
 
 	cfg := config.Defaults()
@@ -52,7 +55,7 @@ func startHarness(t *testing.T, kodi config.KodiInstance) *harness {
 
 	log := slog.New(slog.DiscardHandler)
 
-	a, err := New(t.Context(), &cfg, log)
+	a, err := newApp(t.Context(), &cfg, log, tune)
 	require.NoError(t, err)
 
 	ctx, cancel := context.WithCancel(t.Context())
@@ -90,7 +93,7 @@ func (h *harness) waitIndexed(t *testing.T) {
 	require.Len(t, h.app.instances, 1)
 
 	for _, inst := range h.app.instances {
-		require.Eventually(t, func() bool { return inst.Index.Len() > 0 }, 5*time.Second, 10*time.Millisecond)
+		settled(t, func() bool { return inst.Index.Len() > 0 }, "the library is indexed")
 	}
 }
 
@@ -121,57 +124,83 @@ func speech(resp alexa.ResponseEnvelope) string {
 }
 
 func TestEndToEndPlayMovie(t *testing.T) {
-	h := newHarness(t, true)
-	h.waitIndexed(t)
+	inBubble(t, func(t *testing.T) {
+		h := newHarness(t, true)
+		h.waitIndexed(t)
 
-	resp := h.say(t, "WatchMovie", "Movie", "hot fuzz")
-	assert.Equal(t, "Playing Hot Fuzz.", speech(resp))
+		resp := h.say(t, "WatchMovie", "Movie", "hot fuzz")
+		assert.Equal(t, "Playing Hot Fuzz.", speech(resp))
 
-	calls := h.kodi.CallsTo("Player.Open")
-	require.Len(t, calls, 1)
-	assert.Contains(t, string(calls[0].Params), `"movieid":6`)
+		calls := h.kodi.CallsTo("Player.Open")
+		require.Len(t, calls, 1)
+		assert.Contains(t, string(calls[0].Params), `"movieid":6`)
 
-	dev, err := h.app.DB().EchoDevices().GetByAlexaID(t.Context(), testDevice)
-	require.NoError(t, err)
-	assert.EqualValues(t, 1, dev.RequestCount)
+		dev, err := h.app.DB().EchoDevices().GetByAlexaID(t.Context(), testDevice)
+		require.NoError(t, err)
+		assert.EqualValues(t, 1, dev.RequestCount)
 
-	require.Eventually(t, func() bool {
-		entries, err := h.app.DB().RequestLog().List(t.Context(), store.RequestLogQuery{})
-		return err == nil && len(entries) == 1 && entries[0].Outcome == "played"
-	}, 2*time.Second, 10*time.Millisecond)
+		settled(t, func() bool {
+			entries, err := h.app.DB().RequestLog().List(t.Context(), store.RequestLogQuery{})
+			return err == nil && len(entries) == 1 && entries[0].Outcome == "played"
+		})
+	})
 }
 
 func TestEndToEndAmbiguousTitleAsks(t *testing.T) {
-	h := newHarness(t, true)
-	h.waitIndexed(t)
+	inBubble(t, func(t *testing.T) {
+		h := newHarness(t, true)
+		h.waitIndexed(t)
 
-	resp := h.say(t, "WatchMovie", "Movie", "dune")
+		resp := h.say(t, "WatchMovie", "Movie", "dune")
 
-	assert.Contains(t, speech(resp), "Did you mean")
-	assert.Empty(t, h.kodi.CallsTo("Player.Open"))
-	require.NotNil(t, resp.Response.ShouldEndSession)
-	assert.False(t, *resp.Response.ShouldEndSession)
+		assert.Contains(t, speech(resp), "Did you mean")
+		assert.Empty(t, h.kodi.CallsTo("Player.Open"))
+		require.NotNil(t, resp.Response.ShouldEndSession)
+		assert.False(t, *resp.Response.ShouldEndSession)
+	})
 }
 
 func TestEndToEndNextEpisode(t *testing.T) {
-	h := newHarness(t, true)
-	h.waitIndexed(t)
+	inBubble(t, func(t *testing.T) {
+		h := newHarness(t, true)
+		h.waitIndexed(t)
 
-	resp := h.say(t, "WatchNextEpisode", "Show", "severance")
-	assert.Contains(t, speech(resp), "Severance, season 2, episode 4")
+		resp := h.say(t, "WatchNextEpisode", "Show", "severance")
+		assert.Contains(t, speech(resp), "Severance, season 2, episode 4")
 
-	calls := h.kodi.CallsTo("Player.Open")
-	require.Len(t, calls, 1)
-	assert.Contains(t, string(calls[0].Params), `"episodeid":102`)
+		calls := h.kodi.CallsTo("Player.Open")
+		require.Len(t, calls, 1)
+		assert.Contains(t, string(calls[0].Params), `"episodeid":102`)
+	})
 }
 
 func TestEndToEndUnlinkedDevice(t *testing.T) {
-	h := newHarness(t, false)
-	h.waitIndexed(t)
+	inBubble(t, func(t *testing.T) {
+		h := newHarness(t, false)
+		h.waitIndexed(t)
 
-	resp := h.say(t, "WatchMovie", "Movie", "hot fuzz")
-	assert.Contains(t, speech(resp), "isn't linked to a Kodi")
-	assert.Empty(t, h.kodi.CallsTo("Player.Open"))
+		resp := h.say(t, "WatchMovie", "Movie", "hot fuzz")
+		assert.Contains(t, speech(resp), "isn't linked to a Kodi")
+		assert.Empty(t, h.kodi.CallsTo("Player.Open"))
+	})
+}
+
+func TestNewRefusesToStartWithoutTheGeneratedKey(t *testing.T) {
+	cfg := config.Defaults()
+	cfg.DataDir = t.TempDir()
+
+	a, err := New(t.Context(), &cfg, slog.New(slog.DiscardHandler))
+	require.NoError(t, err)
+	require.NoError(t, a.Secrets().Put(t.Context(), "test/secret", []byte("hunter2")))
+	require.NoError(t, a.Close())
+
+	// The key Encore generated next to the database is lost, but the secrets it sealed are still there.
+	require.NoError(t, os.Remove(filepath.Join(cfg.DataDir, secrets.KeyFileName)))
+
+	_, err = New(t.Context(), &cfg, slog.New(slog.DiscardHandler))
+	require.ErrorContains(t, err, "opening secrets: ")
+	require.ErrorContains(t, err, "is missing; restore it or set secrets.key")
+	assert.NoFileExists(t, filepath.Join(cfg.DataDir, secrets.KeyFileName), "no new key replaces the lost one")
 }
 
 func TestConfiguredInstancesAreReconciled(t *testing.T) {

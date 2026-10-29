@@ -44,7 +44,7 @@ func (a *App) WakeInstance(ctx context.Context, id int64, timeout time.Duration)
 func (a *App) TestConnection(ctx context.Context, rec store.KodiInstance, password string) []Check {
 	cfg := kodi.Config{
 		Scheme: rec.Scheme, Host: rec.Host, Port: rec.Port, Path: rec.Path, WebSocketPort: rec.WSPort,
-		Username: rec.Username, Password: password, Timeout: testTimeout, DisableWebSocket: true,
+		Username: rec.Username, Password: password, Timeout: testTimeout, DisableWebSocket: true, HTTPClient: a.tune.kodiClient,
 	}
 
 	httpClient := kodi.NewClient(cfg, nil)
@@ -66,11 +66,16 @@ func (a *App) TestConnection(ctx context.Context, rec store.KodiInstance, passwo
 
 	authCheck := Check{Name: "auth", OK: pingErr == nil, Duration: ping.Duration}
 
+	// Why the library isn't read: the credentials were refused, or Kodi did not answer at all.
+	skipped := ""
+
 	switch {
 	case errors.Is(pingErr, kodi.ErrUnauthorized):
 		authCheck.Detail = "Kodi rejected the username or password"
+		skipped = "not checked: " + authCheck.Detail
 	case pingErr != nil:
 		authCheck.Detail = "not checked: Kodi did not answer"
+		skipped = authCheck.Detail
 	}
 
 	checks = append(checks, authCheck)
@@ -91,7 +96,7 @@ func (a *App) TestConnection(ctx context.Context, rec store.KodiInstance, passwo
 			lib.OK, lib.Detail = true, strconv.Itoa(r.Limits.Total)+" movies"
 		}
 	} else {
-		lib.Detail = "not checked: Kodi did not answer"
+		lib.Detail = skipped
 	}
 
 	return append(checks, lib)

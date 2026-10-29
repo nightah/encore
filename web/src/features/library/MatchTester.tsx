@@ -46,7 +46,8 @@ export function MatchTester({ libraryId }: { libraryId: number }) {
 
   const top = tested?.result.candidates[0];
   const topKind = top ? aliasKind(top.kind) : undefined;
-  const canAlias = !!top && top.media_id > 0 && !!topKind;
+  // What an alias for the top result would point at, if the server can name it.
+  const aliasTarget = top && top.media_id > 0 && topKind ? { kind: topKind, media_id: top.media_id } : undefined;
 
   return (
     <section
@@ -141,22 +142,23 @@ export function MatchTester({ libraryId }: { libraryId: number }) {
             {top ? (
               <div className="flex flex-wrap items-center gap-2.5">
                 <Button
-                  disabled={!canAlias}
+                  disabled={!aliasTarget}
                   pending={createAlias.isPending}
-                  onClick={() => {
-                    if (!topKind || top.media_id <= 0) return;
-                    createAlias.mutate({
-                      alias: tested.query.toLowerCase(),
-                      kind: topKind,
-                      library_id: libraryId,
-                      media_id: top.media_id,
-                    });
-                  }}
+                  onClick={
+                    aliasTarget
+                      ? () =>
+                          createAlias.mutate({
+                            ...aliasTarget,
+                            alias: tested.query.toLowerCase(),
+                            library_id: libraryId,
+                          })
+                      : undefined
+                  }
                 >
                   {t("matchTester.addAlias", { query: tested.query })}
                 </Button>
                 <span className="text-[13px] text-muted">
-                  {canAlias ? t("matchTester.aliasHint") : t("matchTester.noAlias")}
+                  {aliasTarget ? t("matchTester.aliasHint") : t("matchTester.noAlias")}
                 </span>
               </div>
             ) : null}

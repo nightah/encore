@@ -97,6 +97,9 @@ const infoEvery = 10 * time.Minute
 // playerSettle lets Kodi finish a change (and a burst, such as a seek) before its status is read.
 const playerSettle = 250 * time.Millisecond
 
+// portRangeMessage is the 422's message for a Kodi URL whose port is outside 1 to 65535, which is refused before anything is saved.
+const portRangeMessage = "the port must be between 1 and 65535"
+
 // The values of Instance.Shutdown.
 const (
 	shutdownInherit  = "inherit"

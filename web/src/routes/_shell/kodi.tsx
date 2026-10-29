@@ -111,7 +111,7 @@ function KodiPage() {
 
       <ShareLibraryDialog
         open={share.open}
-        onOpenChange={(open) => setShare((current) => ({ ...current, open }))}
+        onClose={() => setShare((current) => ({ ...current, open: false }))}
         instances={instances.data ?? []}
         libraries={libraries.data ?? []}
         initial={share.initial}
@@ -119,9 +119,7 @@ function KodiPage() {
 
       <InstanceDialog
         open={dialog.mode !== "closed"}
-        onOpenChange={(open) => {
-          if (!open) setDialog({ mode: "closed" });
-        }}
+        onClose={() => setDialog({ mode: "closed" })}
         // A snapshot from when the dialog opened, so live updates don't reset the form mid-edit.
         instance={dialog.mode === "edit" ? dialog.instance : undefined}
         prefill={dialog.mode === "add" ? dialog.prefill : undefined}

@@ -13,16 +13,14 @@ import (
 )
 
 // HashPassword returns an argon2id hash of password in the PHC string format.
-func HashPassword(password string) (string, error) {
+func HashPassword(password string) string {
 	salt := make([]byte, argonSaltLen)
-	if _, err := rand.Read(salt); err != nil {
-		return "", fmt.Errorf("generating salt: %w", err)
-	}
+	_, _ = rand.Read(salt) // crypto/rand.Read never returns an error.
 
 	key := argon2.IDKey([]byte(password), salt, argonTime, argonMemory, argonThreads, argonKeyLen)
 
 	return fmt.Sprintf("$argon2id$v=%d$m=%d,t=%d,p=%d$%s$%s", argon2.Version, argonMemory, argonTime, argonThreads,
-		base64.RawStdEncoding.EncodeToString(salt), base64.RawStdEncoding.EncodeToString(key)), nil
+		base64.RawStdEncoding.EncodeToString(salt), base64.RawStdEncoding.EncodeToString(key))
 }
 
 // VerifyPassword reports whether password matches hash, in constant time for a given hash.
@@ -76,11 +74,4 @@ func ValidatePassword(password string) error {
 }
 
 // dummyHash is verified against when the username is unknown, so a failed sign-in takes as long either way.
-var dummyHash = sync.OnceValue(func() string {
-	h, err := HashPassword("encore-dummy-password")
-	if err != nil {
-		panic(err) // unreachable: crypto/rand does not fail
-	}
-
-	return h
-})
+var dummyHash = sync.OnceValue(func() string { return HashPassword("encore-dummy-password") })

@@ -26,7 +26,7 @@ type TabId = (typeof TABS)[number];
 const FORM_TABS: ReadonlySet<TabId> = new Set(["general", "access", "storage"]);
 
 const searchSchema = z.object({
-  tab: z.enum(TABS).optional(),
+  tab: z.enum(TABS).optional().catch(undefined),
 });
 
 export const Route = createFileRoute("/_shell/settings")({

@@ -102,4 +102,9 @@ func TestTimeRemaining(t *testing.T) {
 
 	backend.SetPlaying(&media.NowPlaying{Item: testkit.SampleLibrary()[3], Position: 120*time.Minute + 30*time.Second, Duration: 121 * time.Minute})
 	assert.Equal(t, "player.nearly_over", svc.TimeRemaining(t.Context(), target).Say.ID)
+
+	backend.SetPlaying(&media.NowPlaying{Item: testkit.SampleLibrary()[3], Position: 120 * time.Minute, Duration: 121 * time.Minute})
+	o = svc.TimeRemaining(t.Context(), target)
+	assert.Equal(t, "player.remaining", o.Say.ID, "a whole minute left is still said")
+	assert.Equal(t, time.Minute, o.Say.Durations["remaining"])
 }

@@ -18,6 +18,7 @@ import { Table, Td, Th } from "@components/ui/Table";
 import { CONTENT, type Content, toggleContent } from "@features/skill/content";
 import { type MarkState, buildTimeline, shortId } from "@features/skill/timeline";
 import { formatDayOrClock, formatMegabytes, formatNumber } from "@lib/format";
+import { pageLocation } from "@lib/pageLocation";
 
 const markStyles: Record<MarkState, string> = {
   busy: "bg-accent text-primary-ink",
@@ -267,7 +268,7 @@ export function AmazonCard({ skill }: { skill: Skill }) {
     setAuthError(undefined);
     try {
       const { url } = await getAuthorize();
-      window.location.assign(url);
+      pageLocation.assign(url);
     } catch (error) {
       setAuthError(errorMessage(error));
       setAuthorizing(false);
@@ -320,7 +321,7 @@ export function AmazonCard({ skill }: { skill: Skill }) {
       ) : null}
       <Dialog
         open={confirming}
-        onOpenChange={setConfirming}
+        onClose={() => setConfirming(false)}
         title={t("amazon.disconnectDialog.title")}
         description={t("amazon.disconnectDialog.description")}
         footer={

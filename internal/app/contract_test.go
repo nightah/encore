@@ -27,7 +27,7 @@ func contractHarness(t *testing.T) *harness {
 		t.Skip("ENCORE_CONTRACT_KODI_URL and ENCORE_CONTRACT_KODI_LIBRARY must be set")
 	}
 
-	h := startHarness(t, config.KodiInstance{Name: "Lounge", URL: url, WebSocketURL: os.Getenv("ENCORE_CONTRACT_KODI_WS_URL"), Default: true})
+	h := startHarness(t, defaultTuning(), config.KodiInstance{Name: "Lounge", URL: url, WebSocketURL: os.Getenv("ENCORE_CONTRACT_KODI_WS_URL"), Default: true})
 
 	require.Eventually(t, func() bool {
 		h.app.mu.RLock()

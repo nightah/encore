@@ -18,7 +18,8 @@ export async function orvalFetch<T>(url: string, init: RequestInit = {}): Promis
   try {
     response = await fetch(`${API_BASE}${path}`, { ...init, credentials: "same-origin", headers });
   } catch (cause) {
-    if (cause instanceof DOMException && cause.name === "AbortError") throw cause;
+    // By name: an abort reason from another realm (such as a test DOM) is not an instance of this realm's DOMException.
+    if ((cause as { name?: unknown } | null)?.name === "AbortError") throw cause;
     throw new ApiError(i18n.t("error.noConnection"), 0, cause);
   }
 

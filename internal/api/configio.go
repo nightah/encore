@@ -129,10 +129,9 @@ func (a *API) exportConfig(ctx context.Context, withSecrets bool) ([]byte, error
 		return nil, err
 	}
 
+	// A confmap provider never fails to load.
 	k := koanf.New(".")
-	if err := k.Load(confmap.Provider(flatValues(eff, withSecrets), "."), nil); err != nil {
-		return nil, err
-	}
+	_ = k.Load(confmap.Provider(flatValues(eff, withSecrets), "."), nil)
 
 	doc := k.Raw()
 
@@ -188,10 +187,9 @@ func (a *API) importConfig(ctx context.Context, raw []byte) (ImportResult, error
 		return res, fieldError("body", "is not valid YAML: "+err.Error(), nil)
 	}
 
+	// A confmap provider never fails to load.
 	k := koanf.New(".")
-	if err := k.Load(confmap.Provider(parsed, ""), nil); err != nil {
-		return res, err
-	}
+	_ = k.Load(confmap.Provider(parsed, ""), nil)
 
 	var ch []Change
 

@@ -7,7 +7,7 @@ import (
 )
 
 func TestClean(t *testing.T) {
-	for in, want := range map[string]string{"": "/", "/": "/", "/encore": "/encore/", "encore/": "/encore/", "/media/encore/": "/media/encore/"} {
+	for in, want := range map[string]string{"": "/", "/": "/", "/encore": "/encore/", "encore/": "/encore/", "/media/encore/": "/media/encore/", "//encore//": "/encore/", "///": "/"} {
 		assert.Equal(t, want, Clean(in), in)
 	}
 }

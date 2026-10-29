@@ -103,3 +103,54 @@ func TestBestName(t *testing.T) {
 	_, ok := bestName("en", names, "spotify")
 	assert.False(t, ok)
 }
+
+func TestBestNameRanks(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		names  []string
+		spoken string
+		want   int
+		ok     bool
+	}{
+		{"exact beats an earlier prefix", []string{"Radio National News", "Radio National"}, "radio national", 1, true},
+		{"spacing beats a prefix", []string{"YouTube Music", "You Tube"}, "youtube", 1, true},
+		{"prefix beats contains", []string{"Classic Radio", "Radio Classics"}, "radio", 1, true},
+		{"contains beats contained", []string{"ABC", "Kids ABC Shows"}, "abc shows", 1, true},
+		{"the first of equals wins", []string{"Radio One", "Radio Two"}, "radio", 0, true},
+		{"unnamed entries are skipped", []string{"", "???", "Radio"}, "radio", 2, true},
+		{"blank spoken name", []string{"Radio"}, "  ", 0, false},
+		{"no names", nil, "radio", 0, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			i, ok := bestName("en", tc.names, tc.spoken)
+			assert.Equal(t, tc.ok, ok)
+
+			if tc.ok {
+				assert.Equal(t, tc.want, i)
+			}
+		})
+	}
+}
+
+func TestShowSectionWithoutTheGenreView(t *testing.T) {
+	target, backend, _ := newTarget()
+	target, _ = failing(target, backend, media.ErrNotFound, "ShowView")
+
+	o := newService().ShowSection(t.Context(), target, media.SectionAlbums, "rock")
+
+	assert.Equal(t, "library.no_genre", o.Say.ID, "Kodi has no view for the genre")
+	assert.Equal(t, "rock", o.Say.Params["genre"])
+	assert.True(t, o.EndSession)
+}
+
+func TestOpenFavouriteThatFails(t *testing.T) {
+	target, backend, _ := newTarget()
+	backend.SetFavourites(media.Favourite{Title: "Radio National", Type: "media"})
+	target, _ = failing(target, backend, errBoom, "OpenFavourite")
+
+	o := newService().OpenFavourite(t.Context(), target, "radio national")
+
+	assert.Equal(t, "favourite.cant_open", o.Say.ID)
+	assert.Equal(t, map[string]string{"favourite": "Radio National"}, o.Say.Params)
+	assert.ErrorIs(t, o.Err, errBoom, "the cause is kept for the log")
+}

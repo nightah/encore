@@ -20,7 +20,6 @@ import (
 	"github.com/nightah/encore/internal/app"
 	"github.com/nightah/encore/internal/backend/kodi"
 	"github.com/nightah/encore/internal/core/match"
-	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/secrets"
 	"github.com/nightah/encore/internal/store"
 )
@@ -222,12 +221,7 @@ func (a *API) toInstance(ctx context.Context, rec store.KodiInstance, st app.Ins
 	inst.Library.Movies, inst.Library.Shows, inst.Library.Episodes, inst.Library.Songs = st.Counts.Movies, st.Counts.Shows, st.Counts.Episodes, st.Counts.Songs
 
 	if n := st.Newest; n != nil {
-		title := n.Title
-		if n.Kind == media.KindEpisode && n.ShowTitle != "" {
-			title = n.ShowTitle + ": " + n.Title
-		}
-
-		inst.Library.NewestTitle = Some(NewestTitle{Title: title, Year: n.Year, Findable: a.app.Findable(rec.ID, n.Ref())})
+		inst.Library.NewestTitle = Some(NewestTitle{Title: listedTitle(*n), Year: n.Year, Findable: a.app.Findable(rec.ID, n.Ref())})
 	}
 
 	if np := st.NowPlaying; np != nil {
@@ -324,13 +318,23 @@ func applyInstanceInput(rec *store.KodiInstance, in InstanceInput, creating bool
 		if wsRaw != "" {
 			w, err := url.Parse(wsRaw)
 			if err != nil || (w.Scheme != "ws" && w.Scheme != "wss") || w.Hostname() == "" {
-				return nil, fieldError("body.websocket_url", "must be a ws(s) URL such as ws://192.168.1.20:9090/jsonrpc", wsRaw)
+				return nil, fieldError("body.websocket_url", "must be a ws(s) URL such as ws://192.168.1.20:9090/jsonrpc", redactURL(wsRaw))
 			}
 		}
 
 		kc, err := kodi.ConfigFromURLs(httpRaw, wsRaw)
-		if err != nil {
-			return nil, fieldError("body.url", err.Error(), redactURL(httpRaw))
+
+		switch {
+		case errors.Is(err, kodi.ErrWebSocketPort):
+			return nil, fieldError("body.websocket_url", portRangeMessage, redactURL(wsRaw))
+		case err != nil:
+			// The checks above leave only the port for the backend to refuse, but its message is kept for anything else.
+			msg := err.Error()
+			if errors.Is(err, kodi.ErrHTTPPort) {
+				msg = portRangeMessage
+			}
+
+			return nil, fieldError("body.url", msg, redactURL(httpRaw))
 		}
 
 		rec.Scheme, rec.Host, rec.Port, rec.Path = kc.Scheme, kc.Host, kc.Port, kc.Path
@@ -425,12 +429,7 @@ func shutdownOf(q *bool) string {
 }
 
 func redactURL(raw string) string {
-	u, err := url.Parse(raw)
-	if err != nil || u.User == nil {
-		return raw
-	}
-
-	return u.Redacted()
+	return kodi.RedactURL(raw)
 }
 
 func (a *API) createInstance(ctx context.Context, in InstanceInput) (Instance, error) {
@@ -598,7 +597,12 @@ func (a *API) testInstance(ctx context.Context, id int64) ([]Check, error) {
 
 	if rec.PasswordSecretRef != "" {
 		b, err := a.app.Secrets().Get(ctx, rec.PasswordSecretRef)
-		if err != nil {
+
+		switch {
+		case errors.Is(err, secrets.ErrNotFound):
+			// Not the instance's absence: a 404 would tell the web interface it was deleted.
+			return nil, huma.Error409Conflict("the saved password for this Kodi instance is missing; enter it again")
+		case err != nil:
 			return nil, err
 		}
 

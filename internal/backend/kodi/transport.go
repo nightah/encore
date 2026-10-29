@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/nightah/encore/internal/backend/kodi/kodirpc"
 	"github.com/nightah/encore/internal/core/media"
 )
 
@@ -37,6 +38,29 @@ func NewTransport(cfg Config, log *slog.Logger) *Transport {
 
 // Call implements kodirpc.Caller over the WebSocket when connected, HTTP otherwise.
 func (t *Transport) Call(ctx context.Context, method string, params, result any) error {
+	return t.call(ctx, method, params, result, false)
+}
+
+// PingHTTP sends JSONRPC.Ping over HTTP even while the WebSocket is up. Kodi authenticates only HTTP, so this is how the credentials are checked; the answer is also recorded for HTTPAuth.
+func (t *Transport) PingHTTP(ctx context.Context) error {
+	var res kodirpc.JSONRPCPingResult
+
+	return t.call(ctx, kodirpc.MethodJSONRPCPing, kodirpc.JSONRPCPingParams{}, &res, true)
+}
+
+// HTTPAuth reports what Kodi's web server made of the credentials on the last HTTP request it answered, a JSON-RPC call or an image.
+func (t *Transport) HTTPAuth() HTTPAuth { return HTTPAuth(t.auth.Load()) }
+
+func (t *Transport) noteAuth(status int) {
+	switch status {
+	case http.StatusOK:
+		t.auth.Store(int32(HTTPAuthAccepted))
+	case http.StatusUnauthorized:
+		t.auth.Store(int32(HTTPAuthRefused))
+	}
+}
+
+func (t *Transport) call(ctx context.Context, method string, params, result any, httpOnly bool) error {
 	if _, ok := ctx.Deadline(); !ok {
 		var cancel context.CancelFunc
 
@@ -50,7 +74,7 @@ func (t *Transport) Call(ctx context.Context, method string, params, result any)
 
 	var err error
 
-	if ws := t.conn(); ws != nil {
+	if ws := t.conn(); ws != nil && !httpOnly {
 		via = "ws"
 
 		err = ws.call(ctx, id, method, params, result)

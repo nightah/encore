@@ -1,7 +1,9 @@
 package store
 
 import (
+	"context"
 	"encoding/json"
+	"strconv"
 	"testing"
 	"time"
 
@@ -319,6 +321,28 @@ func TestRequestLogRetentionByCount(t *testing.T) {
 	assert.Equal(t, "d", page[0].RequestID)
 }
 
+func TestRequestLogDefaults(t *testing.T) {
+	db, _ := openTest(t, Options{})
+	ctx := t.Context()
+	repo := db.RequestLog()
+
+	assert.Equal(t, RequestLogRetention{MaxEntries: DefaultRequestLogMaxEntries, MaxAge: DefaultRequestLogMaxAge}, db.retention, "unset limits take the defaults")
+
+	for i := range 101 {
+		require.NoError(t, repo.Insert(ctx, &RequestLogEntry{RequestID: strconv.Itoa(i)}))
+	}
+
+	list, err := repo.List(ctx, RequestLogQuery{})
+	require.NoError(t, err)
+	require.Len(t, list, 100, "a page holds 100 entries unless asked otherwise")
+	assert.Equal(t, "100", list[0].RequestID, "newest first")
+	assert.Equal(t, "1", list[99].RequestID)
+
+	list, err = repo.List(ctx, RequestLogQuery{Limit: -1, BeforeID: -5})
+	require.NoError(t, err)
+	assert.Len(t, list, 100, "negative values mean the defaults too")
+}
+
 func TestRequestLogRetentionByAge(t *testing.T) {
 	db, clk := openTest(t, Options{RequestLog: RequestLogRetention{MaxAge: time.Hour}})
 	ctx := t.Context()
@@ -458,6 +482,32 @@ func TestSessions(t *testing.T) {
 	assert.EqualValues(t, 1, n)
 }
 
+func TestSessionsExpireAtTheirExpiryInstant(t *testing.T) {
+	db, clk := openTest(t, Options{})
+	ctx := t.Context()
+	repo := db.Sessions()
+
+	require.NoError(t, repo.Create(ctx, &Session{IDHash: []byte{1}, Username: "admin", ExpiresAt: clk.Now().Add(time.Hour)}))
+
+	clk.Advance(time.Hour - time.Millisecond)
+
+	_, err := repo.Get(ctx, []byte{1})
+	require.NoError(t, err, "a session is valid until its last millisecond")
+
+	n, err := repo.DeleteExpired(ctx)
+	require.NoError(t, err)
+	assert.Zero(t, n)
+
+	clk.Advance(time.Millisecond)
+
+	_, err = repo.Get(ctx, []byte{1})
+	require.ErrorIs(t, err, ErrNotFound, "a session is over at its expiry time")
+
+	n, err = repo.DeleteExpired(ctx)
+	require.NoError(t, err)
+	assert.EqualValues(t, 1, n, "and is swept at that same instant")
+}
+
 func TestSecretRows(t *testing.T) {
 	db, clk := openTest(t, Options{})
 	ctx := t.Context()
@@ -507,6 +557,30 @@ func TestSecretRows(t *testing.T) {
 	require.ErrorIs(t, err, ErrNotFound)
 }
 
+func TestSecretRowsRewriteCancelledPartWay(t *testing.T) {
+	db, _ := openTest(t, Options{})
+	repo := db.SecretRows()
+
+	for _, id := range []string{"a", "b"} {
+		require.NoError(t, repo.Put(t.Context(), SecretRow{ID: id, KeyID: "k1", Nonce: []byte{1}, Ciphertext: []byte{2}}))
+	}
+
+	ctx, cancel := context.WithCancel(t.Context())
+
+	err := repo.Rewrite(ctx, func(r *SecretRow) error {
+		r.KeyID = "k2"
+
+		cancel()
+
+		return nil
+	})
+	require.ErrorIs(t, err, context.Canceled)
+
+	ids, err := repo.KeyIDs(t.Context())
+	require.NoError(t, err)
+	assert.Equal(t, []string{"k1"}, ids, "a cancelled rewrite saves nothing")
+}
+
 func TestRequestLogSimulated(t *testing.T) {
 	db, _ := openTest(t, Options{})
 	ctx := t.Context()
@@ -520,4 +594,193 @@ func TestRequestLogSimulated(t *testing.T) {
 	require.Len(t, got, 2)
 	assert.False(t, got[0].Simulated)
 	assert.True(t, got[1].Simulated, "kept through the round trip")
+}
+
+func TestEchoDevicesDeclare(t *testing.T) {
+	db, clk := openTest(t, Options{})
+	ctx := t.Context()
+	repo := db.EchoDevices()
+
+	declared := clk.Now()
+
+	d, err := repo.Declare(ctx, "amzn1.ask.device.D")
+	require.NoError(t, err)
+	assert.NotZero(t, d.ID)
+	assert.Zero(t, d.RequestCount, "declaring is not a request")
+	assert.Equal(t, declared, d.FirstSeen)
+
+	d.DisplayName = "Kitchen Echo"
+	require.NoError(t, repo.Update(ctx, &d))
+
+	clk.Advance(time.Hour)
+
+	again, err := repo.Declare(ctx, "amzn1.ask.device.D")
+	require.NoError(t, err)
+	assert.Equal(t, d.ID, again.ID, "declaring twice returns the same device")
+	assert.Equal(t, "Kitchen Echo", again.DisplayName, "and changes nothing")
+	assert.Equal(t, declared, again.LastSeen)
+	assert.Zero(t, again.RequestCount)
+
+	seen, err := repo.Seen(ctx, "amzn1.ask.device.D")
+	require.NoError(t, err)
+	assert.EqualValues(t, 1, seen.RequestCount)
+	assert.Equal(t, clk.Now(), seen.LastSeen)
+
+	_, err = repo.Declare(ctx, "")
+	require.ErrorIs(t, err, ErrInvalid)
+
+	_, err = repo.Get(ctx, 999)
+	require.ErrorIs(t, err, ErrNotFound)
+
+	_, err = repo.GetByAlexaID(ctx, "amzn1.ask.device.unknown")
+	require.ErrorIs(t, err, ErrNotFound)
+
+	require.ErrorIs(t, repo.Update(ctx, &EchoDevice{ID: 999}), ErrNotFound)
+}
+
+func TestKodiInstancesFailedSetDefaultKeepsThePreviousOne(t *testing.T) {
+	db, _ := openTest(t, Options{})
+	ctx := t.Context()
+	repo := db.KodiInstances()
+
+	a := newKodi("a")
+	a.IsDefaultForUnlinked = true
+	require.NoError(t, repo.Create(ctx, a))
+
+	require.ErrorIs(t, repo.SetDefault(ctx, 999), ErrNotFound)
+
+	def, err := repo.Default(ctx)
+	require.NoError(t, err, "the default is only cleared when the new one is set")
+	assert.Equal(t, a.ID, def.ID)
+
+	b := newKodi("b")
+	require.NoError(t, repo.Create(ctx, b))
+
+	b.IsDefaultForUnlinked = true
+	require.NoError(t, repo.Update(ctx, b))
+
+	def, err = repo.Default(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, b.ID, def.ID, "updating an instance to be the default replaces the old one")
+
+	missing := newKodi("missing")
+	missing.ID, missing.IsDefaultForUnlinked = 999, true
+	require.ErrorIs(t, repo.Update(ctx, missing), ErrNotFound)
+
+	def, err = repo.Default(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, b.ID, def.ID, "a failed update rolls back clearing the default")
+}
+
+func TestRoomsGetAndUpdate(t *testing.T) {
+	db, clk := openTest(t, Options{})
+	ctx := t.Context()
+	repo := db.Rooms()
+
+	room := &Room{Name: "Lounge"}
+	require.NoError(t, repo.Create(ctx, room))
+
+	got, err := repo.Get(ctx, room.ID)
+	require.NoError(t, err)
+	assert.Equal(t, *room, got)
+
+	_, err = repo.Get(ctx, 999)
+	require.ErrorIs(t, err, ErrNotFound)
+
+	clk.Advance(time.Minute)
+
+	room.Name = "LOUNGE"
+	require.NoError(t, repo.Update(ctx, room), "a room may keep its own name")
+
+	room.Name = "Family Room"
+	require.NoError(t, repo.Update(ctx, room))
+	assert.Equal(t, clk.Now(), room.UpdatedAt)
+
+	got, err = repo.Resolve(ctx, "family room")
+	require.NoError(t, err)
+	assert.Equal(t, room.ID, got.ID)
+
+	_, err = repo.Resolve(ctx, "lounge")
+	require.ErrorIs(t, err, ErrNotFound, "the old name is released")
+
+	room.Name = "?!"
+	require.ErrorIs(t, repo.Update(ctx, room), ErrInvalid)
+
+	room.Name, room.KodiInstanceID = "Family Room", 999
+	require.ErrorIs(t, repo.Update(ctx, room), ErrInvalid, "the Kodi instance must exist")
+
+	require.ErrorIs(t, repo.Create(ctx, &Room{Name: "Garage", KodiInstanceID: 999}), ErrInvalid)
+	require.ErrorIs(t, repo.Update(ctx, &Room{ID: 999, Name: "Garage"}), ErrNotFound)
+	require.ErrorIs(t, repo.Delete(ctx, 999), ErrNotFound)
+
+	_, err = repo.AddAlias(ctx, 999, "attic")
+	require.ErrorIs(t, err, ErrInvalid, "an alias needs an existing room")
+
+	_, err = repo.AddAlias(ctx, room.ID, "...")
+	require.ErrorIs(t, err, ErrInvalid)
+}
+
+func TestRequestLogInsertKeepsGivenTime(t *testing.T) {
+	db, _ := openTest(t, Options{})
+	ctx := t.Context()
+
+	melbourne, err := time.LoadLocation("Australia/Melbourne")
+	require.NoError(t, err)
+
+	at := time.Date(2026, 10, 26, 21, 30, 0, 123456789, melbourne)
+	e := &RequestLogEntry{Time: at}
+	require.NoError(t, db.RequestLog().Insert(ctx, e))
+	assert.Equal(t, at.UTC().Truncate(time.Millisecond), e.Time)
+
+	got, err := db.RequestLog().Get(ctx, e.ID)
+	require.NoError(t, err)
+	assert.Equal(t, e.Time, got.Time)
+}
+
+func TestRequestLogFailedInsertIsNotPublished(t *testing.T) {
+	db, _ := openTest(t, Options{})
+
+	calls := 0
+	db.RequestLog().Subscribe(func(RequestLogEntry) { calls++ })
+
+	require.Error(t, db.RequestLog().Insert(t.Context(), &RequestLogEntry{Match: json.RawMessage(`not json`)}))
+	assert.Zero(t, calls, "subscribers only see committed entries")
+}
+
+func TestSettingsEncodingErrors(t *testing.T) {
+	db, _ := openTest(t, Options{})
+	ctx := t.Context()
+	repo := db.Settings()
+
+	require.ErrorContains(t, repo.Set(ctx, "bad", make(chan int)), "encoding setting")
+
+	_, err := repo.Raw(ctx, "bad")
+	require.ErrorIs(t, err, ErrNotFound, "nothing is stored")
+
+	require.NoError(t, repo.Set(ctx, "n", "not a number"))
+
+	v, err := Setting(ctx, repo, "n", 42)
+	require.Error(t, err)
+	assert.Equal(t, 42, v, "the default is returned with the error")
+}
+
+func TestLibraryGroupsSaveIsAtomic(t *testing.T) {
+	db, _ := openTest(t, Options{})
+	ctx := t.Context()
+	groups := db.LibraryGroups()
+
+	_, err := groups.Get(ctx, 999)
+	require.ErrorIs(t, err, ErrNotFound)
+
+	require.ErrorIs(t, groups.Save(ctx, &LibraryGroup{ID: 999}, nil), ErrNotFound)
+
+	g := &LibraryGroup{Name: "Shared"}
+	require.ErrorIs(t, groups.Save(ctx, g, []int64{999}), ErrNotFound, "every member must exist")
+
+	list, err := groups.List(ctx)
+	require.NoError(t, err)
+	assert.Empty(t, list, "a failed save creates no group")
+
+	require.ErrorIs(t, groups.Save(ctx, &LibraryGroup{State: "bogus"}, nil), ErrInvalid)
+	require.ErrorIs(t, groups.Save(ctx, &LibraryGroup{Evidence: json.RawMessage(`{`)}, nil), ErrInvalid)
 }

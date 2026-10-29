@@ -1,3 +1,4 @@
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import type { TFunction } from "i18next";
 import { LogIn } from "lucide-react";
@@ -5,8 +6,8 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
-import { authStateQuery, useAuthState, useLogin } from "@api/auth";
-import { ApiError, errorMessage } from "@api/client";
+import { authStateQuery, useLogin } from "@api/auth";
+import { ApiError, errorMessage, fieldErrorsOf } from "@api/client";
 import { AuthFrame } from "@components/AuthFrame";
 import { AnchorButton, Button } from "@components/ui/Button";
 import { Field, Input } from "@components/ui/Field";
@@ -36,6 +37,7 @@ const loginSchema = (t: TFunction<"auth">) =>
     username: z.string().trim().min(1, t("login.errors.username")),
   });
 type LoginForm = z.infer<ReturnType<typeof loginSchema>>;
+const EMPTY: LoginForm = { password: "", totp: "", username: "" };
 
 /** Only same-app paths are allowed as a post-login destination. */
 function safeRedirect(target: string | undefined): string {
@@ -46,10 +48,11 @@ function LoginPage() {
   const { t } = useTranslation("auth");
   const { redirect: target, error: signInError } = Route.useSearch();
   const navigate = useNavigate();
-  const { data: auth } = useAuthState();
+  // Loaded by beforeLoad, so this never suspends.
+  const { data: auth } = useSuspenseQuery(authStateQuery);
   const login = useLogin();
   const form = useForm<LoginForm>({
-    defaultValues: { password: "", totp: "", username: "" },
+    defaultValues: EMPTY,
     resolver: zodResolver(loginSchema(t)),
   });
 
@@ -62,8 +65,7 @@ function LoginPage() {
       });
       await navigate({ to: safeRedirect(target) });
     } catch (error) {
-      const fields = error instanceof ApiError ? error.fieldErrors : {};
-      for (const [name, message] of Object.entries(fields)) {
+      for (const [name, message] of Object.entries(fieldErrorsOf(error))) {
         if (!(name in values)) continue;
         form.setError(name as keyof LoginForm, {
           message: name === "totp" ? t("login.errors.totp") : message,
@@ -72,7 +74,7 @@ function LoginPage() {
     }
   });
 
-  const mode = auth?.mode ?? "local";
+  const mode = auth.mode;
   const errors = form.formState.errors;
 
   return (
@@ -85,7 +87,7 @@ function LoginPage() {
           </p>
         ) : null}
 
-        {mode === "oidc" && auth?.oidc_login_url ? (
+        {mode === "oidc" && auth.oidc_login_url ? (
           <div className="flex flex-col gap-3">
             <p className="text-muted">{t("login.oidc.intro")}</p>
             <AnchorButton variant="primary" href={auth.oidc_login_url}>
@@ -97,7 +99,7 @@ function LoginPage() {
 
         {mode === "header" ? <p className="text-muted">{t("login.header")}</p> : null}
 
-        {(auth?.local_login ?? mode === "local") ? (
+        {auth.local_login ? (
           <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
             <Field label={t("login.username")} error={errors.username?.message}>
               <Input autoComplete="username" autoFocus {...form.register("username")} />
@@ -108,7 +110,7 @@ function LoginPage() {
             <Field label={t("login.totp.label")} hint={t("login.totp.hint")} error={errors.totp?.message}>
               <Input inputMode="numeric" autoComplete="one-time-code" mono {...form.register("totp")} />
             </Field>
-            {login.error && Object.keys((login.error as ApiError).fieldErrors ?? {}).length === 0 ? (
+            {login.error && !Object.keys(fieldErrorsOf(login.error)).some((name) => name in EMPTY) ? (
               <p role="alert" className="rounded-[10px] bg-bad-bg px-3.5 py-2.5 text-bad">
                 {login.error instanceof ApiError && login.error.status === 429
                   ? t("login.tooManyAttempts")

@@ -59,8 +59,8 @@ export function checkLabel(check: Pick<Check, "name" | "detail">): string {
 }
 
 /** "13.5.0" → "13.5" */
-function shortApi(version: string | null | undefined): string {
-  return version ? version.split(".").slice(0, 2).join(".") : "";
+function shortApi(version: string): string {
+  return version.split(".").slice(0, 2).join(".");
 }
 
 /** "Kodi 21.3 · API 13.5", leaving out what isn't known; Encore learns both once it reaches Kodi. */
@@ -87,7 +87,14 @@ export function instanceStatus(instance: Instance): { label: string; tone: Tone 
       return { label: i18n.t("instance.asleep"), tone: "neutral" };
     case "offline":
       return { label: i18n.t("instance.offline"), tone: "bad" };
+    default:
+      return unknownState(instance);
   }
+}
+
+/** A state this UI doesn't know (from a newer server) shows as-is rather than breaking the page. */
+function unknownState(instance: Instance): { label: string; tone: Tone } {
+  return { label: instance.status.state, tone: "neutral" };
 }
 
 /** Connection pill on the Kodi page: "Connected · WebSocket", "Connected · HTTP only", "Asleep", "Offline". */
@@ -101,6 +108,8 @@ export function connectionStatus(instance: Instance): { label: string; tone: Ton
       return { label: i18n.t("instance.asleep"), tone: "neutral" };
     case "offline":
       return { label: i18n.t("instance.offline"), tone: "bad" };
+    default:
+      return unknownState(instance);
   }
 }
 

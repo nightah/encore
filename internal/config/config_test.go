@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -158,13 +159,10 @@ func TestStatelessValidation(t *testing.T) {
 	require.ErrorContains(t, err, "secrets.key")
 
 	cfg.Storage.Backend = "s3"
-	cfg.Storage.S3 = StorageS3{Bucket: "encore", AccessKey: "a", SecretKey: "b", Region: "us-east-1"}
+	cfg.Storage.S3 = StorageS3{Endpoint: "https://s3.amazonaws.com", Bucket: "encore", AccessKey: "a", SecretKey: "b", Region: "us-east-1", Addressing: AddressingAuto}
 	cfg.Secrets.Key = "c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0MTI="
 
-	err = cfg.Validate()
-	if err != nil {
-		assert.NotContains(t, err.Error(), "stateless")
-	}
+	require.NoError(t, cfg.Validate())
 }
 
 func TestRoomsAndDevicesValidation(t *testing.T) {
@@ -286,4 +284,286 @@ func TestReservedBasePathsCoverRoutes(t *testing.T) {
 
 	assert.Contains(t, ReservedBasePaths, "api")
 	assert.Contains(t, ReservedBasePaths, "static", "Vite's build.assetsDir")
+}
+
+func TestLoadReportsAMissingOrMalformedFile(t *testing.T) {
+	_, err := Load(Options{File: filepath.Join(t.TempDir(), "missing.yml"), Environ: environ()})
+	require.ErrorContains(t, err, "missing.yml")
+
+	bad := filepath.Join(t.TempDir(), "bad.yml")
+	require.NoError(t, os.WriteFile(bad, []byte("server: [\n"), 0o600))
+
+	_, err = Load(Options{File: bad, Environ: environ()})
+	require.ErrorContains(t, err, "bad.yml")
+}
+
+func TestLoadRejectsAValueOfTheWrongType(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "encore.yml")
+	require.NoError(t, os.WriteFile(path, []byte("alexa:\n  queue_limit: lots\n"), 0o600))
+
+	_, err := Load(Options{File: path, Environ: environ()})
+	require.ErrorContains(t, err, "decoding configuration")
+}
+
+func TestLoadReadsTheProcessEnvironmentByDefault(t *testing.T) {
+	t.Setenv("ENCORE_SERVER_ADDRESS", ":7777")
+
+	cfg, err := Load(Options{})
+	require.NoError(t, err)
+	assert.Equal(t, ":7777", cfg.Server.Address)
+	assert.True(t, cfg.Managed("server.address"))
+}
+
+func TestLoadOnlyReadsFlagsThatWereSet(t *testing.T) {
+	flags := pflag.NewFlagSet("test", pflag.ContinueOnError)
+	flags.String("server.address", ":9999", "")
+	flags.String("log.level", "", "")
+	require.NoError(t, flags.Parse([]string{"--log.level", "debug"}))
+
+	cfg, err := Load(Options{Flags: flags, Environ: environ()})
+	require.NoError(t, err)
+	assert.Equal(t, "debug", cfg.Log.Level)
+	assert.Equal(t, Defaults().Server.Address, cfg.Server.Address, "a flag's own default doesn't override the configuration")
+	assert.Equal(t, []string{"log.level"}, cfg.ManagedKeys())
+}
+
+func TestDefaultsAreValid(t *testing.T) {
+	cfg := Defaults()
+	require.NoError(t, cfg.Validate())
+}
+
+func TestValidateRequiresTheEssentials(t *testing.T) {
+	cfg := Defaults()
+	cfg.Server.Address = ""
+	cfg.DataDir = ""
+	cfg.Alexa.Content = nil
+	cfg.Alexa.QueueLimit = 0
+
+	err := cfg.Validate()
+	require.Error(t, err)
+
+	for _, want := range []string{"server.address must not be empty", "data_dir must not be empty", "alexa.content must list at least one", "alexa.queue_limit 0 must be at least 1"} {
+		require.ErrorContains(t, err, want)
+	}
+}
+
+func TestValidateKodiTimezoneAndLanguage(t *testing.T) {
+	cfg := Defaults()
+	cfg.Kodi = []KodiInstance{
+		{Name: "Lounge", URL: "http://kodi/jsonrpc", Timezone: "Australia/Melbourne", Language: "de", MAC: "dc:a6:32:4b:19:0e", WebSocketURL: "wss://kodi:9090/jsonrpc"},
+		{Name: "Bedroom", URL: "https://kodi/jsonrpc", Timezone: "Australia/Narnia", Language: "klingon"},
+	}
+
+	err := cfg.Validate()
+	require.Error(t, err)
+	require.ErrorContains(t, err, `kodi[1].timezone "Australia/Narnia" is not a known IANA time zone`)
+	require.ErrorContains(t, err, `kodi[1].language "klingon" must be one of`)
+	assert.NotContains(t, err.Error(), "kodi[0]", "a valid instance has no errors")
+}
+
+func TestValidateKodiURLs(t *testing.T) {
+	for _, tc := range []struct {
+		url, ws string
+		ok      bool
+	}{
+		{"http://kodi:8080/jsonrpc", "", true},
+		{"https://kodi/jsonrpc", "ws://kodi:9090/jsonrpc", true},
+		{"kodi:8080", "", false},
+		{"http:///jsonrpc", "", false},
+		{"", "", false},
+		{"http://kodi/jsonrpc", "wss:///jsonrpc", false},
+		{"http://kodi/jsonrpc", "ws://[::1", false},
+		{"http://%zz", "", false},
+	} {
+		cfg := Defaults()
+		cfg.Kodi = []KodiInstance{{Name: "Lounge", URL: tc.url, WebSocketURL: tc.ws}}
+
+		if tc.ok {
+			assert.NoError(t, cfg.Validate(), "%s %s", tc.url, tc.ws)
+		} else {
+			assert.Error(t, cfg.Validate(), "%s %s", tc.url, tc.ws)
+		}
+	}
+}
+
+func TestValidateKodiNeverEchoesURLPassword(t *testing.T) {
+	for name, k := range map[string]KodiInstance{
+		"unparsable url":           {Name: "Lounge", URL: "http://kodi:hunter2@media.lan:80a/jsonrpc"},                                         // trufflehog:ignore
+		"http websocket url":       {Name: "Lounge", URL: "http://media.lan/jsonrpc", WebSocketURL: "http://kodi:hunter2@media.lan:9090/"},     // trufflehog:ignore
+		"unparsable websocket url": {Name: "Lounge", URL: "http://media.lan/jsonrpc", WebSocketURL: "ws://kodi:hunter2@media.lan:90a/jsonrpc"}, // trufflehog:ignore
+	} {
+		cfg := Defaults()
+		cfg.Kodi = []KodiInstance{k}
+
+		err := cfg.Validate()
+		require.Error(t, err, name)
+		assert.NotContains(t, err.Error(), "hunter2", "%s: the error is logged, so it mustn't carry the password", name)
+		assert.Contains(t, err.Error(), "kodi:xxxxx@", "%s: the URL is still shown, redacted", name)
+	}
+}
+
+func TestValidateKodiPorts(t *testing.T) {
+	for name, tc := range map[string]struct {
+		port string
+		ok   bool
+	}{
+		"lowest":      {port: "1", ok: true},
+		"highest":     {port: "65535", ok: true},
+		"one over":    {port: "65536"},
+		"far over":    {port: "99999"},
+		"overflows":   {port: "99999999999999999999"},
+		"zero":        {port: "0"},
+		"negative":    {port: "-1"},
+		"non-numeric": {port: "http"},
+	} {
+		for setting, k := range map[string]KodiInstance{
+			"kodi[0].url":           {Name: "Lounge", URL: "http://kodi:hunter2@media.lan:" + tc.port + "/jsonrpc"},                                         // trufflehog:ignore
+			"kodi[0].websocket_url": {Name: "Lounge", URL: "http://media.lan/jsonrpc", WebSocketURL: "ws://kodi:hunter2@media.lan:" + tc.port + "/jsonrpc"}, // trufflehog:ignore
+		} {
+			t.Run(name+"/"+setting, func(t *testing.T) {
+				cfg := Defaults()
+				cfg.Kodi = []KodiInstance{k}
+
+				err := cfg.Validate()
+				if tc.ok {
+					require.NoError(t, err)
+
+					return
+				}
+
+				require.ErrorContains(t, err, setting)
+				assert.NotContains(t, err.Error(), "hunter2", "credentials never reach the error")
+			})
+		}
+	}
+}
+
+func TestValidateKodiPortErrorsLeaveOutTheURL(t *testing.T) {
+	for setting, k := range map[string]KodiInstance{
+		"kodi[0].url":           {Name: "Lounge", URL: "http://kodi:hunter2@media.lan:99999/jsonrpc"},                                     // trufflehog:ignore
+		"kodi[0].websocket_url": {Name: "Lounge", URL: "http://media.lan/jsonrpc", WebSocketURL: "ws://kodi:hunter2@media.lan:0/jsonrpc"}, // trufflehog:ignore
+	} {
+		cfg := Defaults()
+		cfg.Kodi = []KodiInstance{k}
+
+		err := cfg.Validate()
+		require.ErrorContains(t, err, setting+" port must be between 1 and 65535")
+		assert.NotContains(t, err.Error(), "media.lan", "the URL is left out")
+	}
+}
+
+func TestValidateKodiHostFromURLs(t *testing.T) {
+	cfg := Defaults()
+	cfg.Kodi = []KodiInstance{{Name: "Lounge", URL: "http://kodi:hunter2@:8080/jsonrpc"}} // trufflehog:ignore
+
+	err := cfg.Validate()
+	require.ErrorContains(t, err, "kodi[0]: parsing Kodi URL: no host to connect to", "the scheme check passes it, the backend doesn't")
+	assert.NotContains(t, err.Error(), "hunter2")
+}
+
+func TestLoadRefusesAKodiPortOutOfRange(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "encore.yml")
+	require.NoError(t, os.WriteFile(path, []byte(`
+kodi:
+  - name: Lounge
+    url: http://kodi:hunter2@media.lan:99999/ # trufflehog:ignore
+    websocket_url: ws://media.lan:9090/jsonrpc
+`), 0o600))
+
+	_, err := Load(Options{File: path, Environ: environ()})
+	require.ErrorContains(t, err, "kodi[0].url port must be between 1 and 65535")
+	assert.NotContains(t, err.Error(), "hunter2")
+	assert.NotContains(t, err.Error(), "media.lan")
+}
+
+func TestRoomsNeedNames(t *testing.T) {
+	cfg := Defaults()
+	cfg.Rooms = []Room{{Name: ""}}
+
+	require.ErrorContains(t, cfg.Validate(), "rooms[0].name must not be empty")
+}
+
+func TestDevicesMustNameAKnownKodiInstance(t *testing.T) {
+	cfg := Defaults()
+	cfg.Kodi = []KodiInstance{{Name: "Lounge", URL: "http://kodi/jsonrpc"}}
+	cfg.Devices = []Device{{ID: "amzn1.ask.device.A", Kodi: "Lounge"}, {ID: "amzn1.ask.device.B", Kodi: "Attic"}}
+
+	err := cfg.Validate()
+	require.ErrorContains(t, err, `devices[1].kodi "Attic" is not a Kodi instance in the kodi list`)
+	assert.NotContains(t, err.Error(), "devices[0]")
+}
+
+func TestIsEnvList(t *testing.T) {
+	for _, key := range []string{"server.trusted_proxies", "alexa.locales", "alexa.content", "auth.oidc.scopes"} {
+		assert.True(t, IsEnvList(key), key)
+	}
+
+	assert.False(t, IsEnvList("server.address"))
+	assert.False(t, IsEnvList(""))
+}
+
+func TestEnvAliases(t *testing.T) {
+	aliases := EnvAliases()
+	assert.Equal(t, map[string]string{"BREAK_GLASS": "auth.break_glass"}, aliases)
+
+	aliases["BREAK_GLASS"] = "changed"
+	assert.Equal(t, "auth.break_glass", EnvAliases()["BREAK_GLASS"], "callers get a copy")
+
+	cfg, err := Load(Options{Environ: environ("ENCORE_BREAK_GLASS=true")})
+	require.NoError(t, err)
+	assert.True(t, cfg.Managed("auth.break_glass"), "the alias sets its key")
+}
+
+func TestManagedMatchesWholeKeySegments(t *testing.T) {
+	cfg, err := Load(Options{Environ: environ("ENCORE_STORAGE_S3_SSE_KMS_KEY_ID=key-1")})
+	require.NoError(t, err)
+
+	assert.True(t, cfg.Managed("storage.s3.sse_kms_key_id"))
+	assert.True(t, cfg.Managed("storage.s3"), "a parent of a set key")
+	assert.True(t, cfg.Managed("storage"))
+	assert.False(t, cfg.Managed("storage.s"), "a prefix of a segment is not a parent")
+	assert.False(t, cfg.Managed("stor"))
+	assert.False(t, cfg.Managed("storage.s3.sse_kms"), "a prefix of the last segment")
+	assert.False(t, cfg.Managed("storage.s3.sse"), "a sibling whose name starts the set key's")
+	assert.False(t, cfg.Managed("storage.webdav"))
+	assert.False(t, cfg.Managed(""))
+}
+
+func TestEnvListsIgnoreEmptyEntries(t *testing.T) {
+	cfg, err := Load(Options{Environ: environ("ENCORE_ALEXA_LOCALES= en-AU,,en-GB , ", "ENCORE_ALEXA_CONTENT=,movies,")})
+	require.NoError(t, err, "stray commas and spaces are not entries")
+	assert.Equal(t, []string{"en-AU", "en-GB"}, cfg.Alexa.Locales)
+	assert.Equal(t, []string{"movies"}, cfg.Alexa.Content)
+
+	assert.Empty(t, splitList(""))
+	assert.Empty(t, splitList(" , ,"))
+	assert.Equal(t, []string{"10.0.0.0/8"}, splitList("10.0.0.0/8"))
+}
+
+func TestAlexaLocalesMustBeWholeLocaleCodes(t *testing.T) {
+	for _, locale := range []string{"xen-AUx", "en-AU ", "en-au", "EN-AU", "en_AU", "eng-AUS", "en-AU-x", ""} {
+		cfg := Defaults()
+		cfg.Alexa.Locales = []string{locale}
+
+		require.ErrorContains(t, cfg.Validate(), fmt.Sprintf("alexa.locales: %q is not a locale", locale), "%q", locale)
+	}
+
+	cfg := Defaults()
+	cfg.Alexa.Locales = []string{"en-AU", "fr-CA", "pt-BR"}
+	require.NoError(t, cfg.Validate())
+}
+
+func TestStatelessAcceptsRemoteStorageAndAKey(t *testing.T) {
+	for name, edit := range map[string]func(*Config){
+		"key":      func(c *Config) { c.Secrets.Key = "c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0c2VjcmV0MTI=" },
+		"key file": func(c *Config) { c.Secrets.KeyFile = "/run/secrets/encore_key" },
+	} {
+		cfg := Defaults()
+		cfg.Stateless = true
+		cfg.Storage.Backend = BackendS3
+		cfg.Storage.S3 = StorageS3{Endpoint: "https://s3.ap-southeast-2.amazonaws.com", Bucket: "encore", AccessKey: "a", SecretKey: "b", Region: "ap-southeast-2", Addressing: AddressingAuto}
+		edit(&cfg)
+
+		require.NoError(t, cfg.Validate(), name)
+	}
 }

@@ -28,6 +28,7 @@ func defaultTuning() tuning {
 		pingTimeout:       2 * time.Second,
 		snapshotEvery:     5 * time.Minute,
 		snapshotCheck:     15 * time.Second,
+		learnMACDelay:     5 * time.Second,
 	}
 }
 
@@ -345,7 +346,7 @@ func (a *App) plan(ctx context.Context) error {
 	}
 
 	if err := a.rebuildGroups(ctx); err != nil {
-		return err
+		return fmt.Errorf("rebuilding library groups: %w", err)
 	}
 
 	for _, id := range deleted {

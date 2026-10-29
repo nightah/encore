@@ -161,9 +161,7 @@ function RoomDialog({
   return (
     <Dialog
       open={open}
-      onOpenChange={(next) => {
-        if (!next) close();
-      }}
+      onClose={close}
       title={room ? t("rooms.dialog.editTitle", { name: room.name }) : t("rooms.dialog.addTitle")}
       footer={
         confirmDelete && room ? (

@@ -7,6 +7,8 @@ export interface SetupProgress {
   /** Steps finished or skipped. */
   done: number[];
   skipped: number[];
+  /** The furthest step shown, so going back to an earlier step can jump forward to it again. */
+  reached?: number;
   /** When step 6 started waiting for the first request. */
   waitingSince?: string;
 }
@@ -57,12 +59,8 @@ export function clearSetupProgress() {
 }
 
 export function useSetupProgress(): SetupProgress | null {
-  return useSyncExternalStore(
-    (listener) => {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
-    },
-    read,
-    () => null,
-  );
+  return useSyncExternalStore((listener) => {
+    listeners.add(listener);
+    return () => listeners.delete(listener);
+  }, read);
 }

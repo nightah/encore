@@ -35,7 +35,7 @@ export function SecretsTab({ settings }: { settings: Settings }) {
       </div>
       <Dialog
         open={open}
-        onOpenChange={setOpen}
+        onClose={() => setOpen(false)}
         title={t("secrets.rotate.title")}
         description={t("secrets.rotate.description")}
         footer={

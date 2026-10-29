@@ -291,10 +291,10 @@ func (a *API) runBackups(ctx context.Context) {
 		select {
 		case <-ctx.Done():
 			return
-		case <-time.After(wait):
+		case <-a.opts.after(wait):
 		}
 
-		if !sched.Enabled() || a.now().Before(due) {
+		if !sched.Enabled() || a.now().Before(due) || a.scheduleChanged(ctx, spec) {
 			continue
 		}
 
@@ -306,17 +306,19 @@ func (a *API) runBackups(ctx context.Context) {
 	}
 }
 
+// scheduleChanged reports whether the backup schedule is no longer spec, so a due time worked out under spec no longer applies.
+func (a *API) scheduleChanged(ctx context.Context, spec string) bool {
+	eff, err := a.prefs.Effective(ctx)
+
+	return err != nil || eff.Storage.Backups.Schedule != spec
+}
+
 func (a *API) rotateSecrets(ctx context.Context) error {
 	if src := keySource(a.app.Config()); src != "generated" {
 		return huma.Error409Conflict("the secrets key comes from " + map[string]string{"config": "secrets.key (or ENCORE_SECRETS_KEY_FILE)", "file": "secrets.key_file"}[src] + "; generate a new key, run Encore with it, and rotate there")
 	}
 
-	key, err := secrets.GenerateKey()
-	if err != nil {
-		return err
-	}
-
-	if err := a.app.Secrets().Rotate(ctx, key); err != nil {
+	if err := a.app.Secrets().Rotate(ctx, secrets.GenerateKey()); err != nil {
 		return err
 	}
 

@@ -122,6 +122,54 @@ func TestConfigSectionsCoverEveryKey(t *testing.T) {
 	assert.Contains(t, keys["storage.s3.sse"].Doc, "`storage.s3.sse_kms_key_id`")
 }
 
+func TestCode(t *testing.T) {
+	t.Parallel()
+
+	for in, want := range map[string]string{
+		"":                 "``",
+		"server.address":   "`server.address`",
+		"a`b":              "``a`b``",
+		"a``b":             "```a``b```",
+		"`start":           "`` `start ``",
+		"end`":             "`` end` ``",
+		"{Movie} [please]": "`{Movie} [please]`",
+	} {
+		assert.Equal(t, want, code(in), "%q", in)
+	}
+}
+
+func TestCell(t *testing.T) {
+	t.Parallel()
+
+	assert.Equal(t, `a \| b`, cell("a | b"))
+	assert.Equal(t, "one two", cell("one\ntwo"))
+	assert.Equal(t, `\|\| x`, cell("||\nx"))
+	assert.Empty(t, cell(""))
+}
+
+func TestProse(t *testing.T) {
+	t.Parallel()
+
+	assert.Equal(t, "play &lt;title&gt; now", prose("play <title> now"))
+	assert.Equal(t, "a & b", prose("a & b"), "only angle brackets start tags")
+}
+
+func TestGenerateWritesEveryPageUnderTheContentDir(t *testing.T) {
+	t.Setenv("ENCORE_CONFIG", "")
+
+	files, err := Generate(root)
+	require.NoError(t, err)
+
+	for _, path := range []string{ContentDir + "/reference/configuration.md", ContentDir + "/reference/cli.md", ContentDir + "/voice-commands/en.md"} {
+		assert.Contains(t, files, path)
+	}
+
+	for path := range files {
+		assert.True(t, strings.HasPrefix(path, ContentDir+"/"), path)
+		assert.True(t, strings.HasSuffix(path, ".md"), path)
+	}
+}
+
 func TestFlagDefaultsFromUsage(t *testing.T) {
 	set := pflag.NewFlagSet("test", pflag.ContinueOnError)
 	set.String("server.address", "", `listen address (default ":8080")`)

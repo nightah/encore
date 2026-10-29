@@ -42,6 +42,10 @@ func New(ctx context.Context, opts Options) (*API, error) {
 		opts.StatusInterval = 10 * time.Second
 	}
 
+	if opts.after == nil {
+		opts.after = time.After
+	}
+
 	if opts.Sources == nil {
 		src, err := loadSources()
 		if err != nil {

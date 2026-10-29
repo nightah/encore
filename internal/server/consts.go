@@ -32,6 +32,9 @@ const apiDocsCSP = "default-src 'none'; script-src 'self'; style-src 'self' 'uns
 // nonceMarker is replaced in index.html with the per-request CSP nonce.
 const nonceMarker = "{{ .CSPNonce }}"
 
+// tagNameEnd holds the bytes that can end an HTML tag's name: the tag's close, a self-closing slash or whitespace.
+const tagNameEnd = ">/ \t\n\r\f"
+
 // hashedAssetsDir is Vite's build.assetsDir (web/vite.config.ts). Files in it carry content hashes in their names, so they can be cached forever.
 const hashedAssetsDir = "static"
 

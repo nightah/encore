@@ -6,8 +6,6 @@ import { join, resolve } from "node:path";
 import { type ViteDevServer, createServer, resolveConfig } from "vite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { server as mockApi } from "@mocks/node";
-
 const configFile = resolve(process.cwd(), "vite.config.ts");
 
 async function startVite(mode: string): Promise<{ port: number; vite: ViteDevServer }> {
@@ -43,8 +41,6 @@ describe("mock service worker", () => {
   let dev: { port: number; vite: ViteDevServer };
 
   beforeAll(async () => {
-    // These requests go to real servers, not the mock API.
-    mockApi.close();
     mock = await startVite("mock");
     dev = await startVite("development");
   }, 30_000);
@@ -52,7 +48,6 @@ describe("mock service worker", () => {
   afterAll(async () => {
     await mock?.vite.close();
     await dev?.vite.close();
-    mockApi.listen({ onUnhandledFrame: "error" });
   });
 
   it("serves the installed msw's worker in mock mode", async () => {

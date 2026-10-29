@@ -87,14 +87,11 @@ func (c *Client) FromRefreshToken(ctx context.Context, refreshToken string) (*oa
 	return c.refresh(ctx, refreshToken)
 }
 
+// LWA leaves refresh_token out of a refresh's response; oauth2 then keeps the one refreshed with, as TestFromRefreshToken checks.
 func (c *Client) refresh(ctx context.Context, refreshToken string) (*oauth2.Token, error) {
 	tok, err := c.oauth.TokenSource(c.ctx(ctx), &oauth2.Token{RefreshToken: refreshToken}).Token()
 	if err != nil {
 		return nil, mapError("refreshing access token", err)
-	}
-
-	if tok.RefreshToken == "" {
-		tok.RefreshToken = refreshToken
 	}
 
 	return tok, nil

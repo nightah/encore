@@ -4,7 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -188,4 +191,38 @@ func TestPollStopsOnError(t *testing.T) {
 func TestNewRequiresTokenSource(t *testing.T) {
 	_, err := smapi.New(nil, smapi.Options{})
 	require.Error(t, err)
+}
+
+func TestNewDefaultsToAmazon(t *testing.T) {
+	var asked []string
+
+	hc := &http.Client{Transport: roundTripFunc(func(r *http.Request) (*http.Response, error) {
+		asked = append(asked, r.URL.Scheme+"://"+r.URL.Host)
+
+		return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Content-Type": {"application/json"}}, Body: io.NopCloser(strings.NewReader(`{"vendors":[]}`)), Request: r}, nil
+	})}
+
+	c, err := smapi.New(oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "x"}), smapi.Options{HTTPClient: hc})
+	require.NoError(t, err)
+
+	_, err = c.Vendors(t.Context())
+	require.NoError(t, err)
+	assert.Equal(t, []string{smapi.BaseURL}, asked, "without a base URL, requests go to Amazon's SMAPI")
+}
+
+func TestTruncatedResponse(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		// The body promised is longer than the one sent before the connection drops.
+		w.Header().Set("Content-Length", "100")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"vendors":[`))
+	}))
+	t.Cleanup(srv.Close)
+
+	c, err := smapi.New(oauth2.StaticTokenSource(&oauth2.Token{AccessToken: "x"}), smapi.Options{BaseURL: srv.URL, Retry: fastRetry})
+	require.NoError(t, err)
+
+	_, err = c.Vendors(t.Context())
+	require.ErrorIs(t, err, io.ErrUnexpectedEOF)
+	assert.ErrorContains(t, err, "reading response")
 }

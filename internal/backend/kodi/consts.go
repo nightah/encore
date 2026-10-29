@@ -29,6 +29,19 @@ const (
 	CodeUnavailable    = -32097
 )
 
+// What Kodi's web server last made of the configured credentials.
+const (
+	// HTTPAuthUnknown means no HTTP request has had an answer yet.
+	HTTPAuthUnknown HTTPAuth = iota
+	// HTTPAuthAccepted means the last answered HTTP request was let in.
+	HTTPAuthAccepted
+	// HTTPAuthRefused means the last answered HTTP request was refused with 401.
+	HTTPAuthRefused
+)
+
+// maxPort is the highest TCP port a Kodi URL may name.
+const maxPort = 65535
+
 // DefaultPageSize is how many items one library request asks for.
 const DefaultPageSize = 1000
 
@@ -61,6 +74,9 @@ const (
 	DefaultPollInterval   = time.Second
 	DefaultResendInterval = 5 * time.Second
 )
+
+// probeRequest asks for Kodi's version; ProbeVersion matches the reply by its id.
+const probeRequest = `{"jsonrpc":"2.0","id":1,"method":"Application.GetProperties","params":{"properties":["version"]}}`
 
 // Library pages of a thousand items with a dozen fields stay well below this per-message cap.
 const wsReadLimit = 64 << 20

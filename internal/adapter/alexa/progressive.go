@@ -25,13 +25,11 @@ func (p *Progressive) Send(ctx context.Context, env *RequestEnvelope, text strin
 		return nil
 	}
 
-	body, err := json.Marshal(map[string]any{
+	// Maps of strings always marshal.
+	body, _ := json.Marshal(map[string]any{
 		"header":    map[string]string{"requestId": env.Request.RequestID},
 		"directive": map[string]string{"type": "VoicePlayer.Speak", "speech": text},
 	})
-	if err != nil {
-		return err
-	}
 
 	ctx, cancel := context.WithTimeout(ctx, progressiveTimeout)
 	defer cancel()

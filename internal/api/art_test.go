@@ -3,7 +3,9 @@ package api
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
@@ -11,6 +13,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nightah/encore/internal/backend/kodi/fakekodi"
 )
 
 func TestNowPlayingArt(t *testing.T) {
@@ -55,4 +59,49 @@ func TestArtContentType(t *testing.T) {
 	} {
 		assert.Equal(t, want, artContentType(ct), ct)
 	}
+}
+
+func TestArtHeadersAndFailures(t *testing.T) {
+	h := newHarness(t, harnessOpts{})
+	c := h.admin()
+	lounge := h.loungeID()
+
+	img := c.do(http.MethodGet, artURL(lounge, "image://fake/movie-1-poster.png/"), nil)
+	require.Equal(t, http.StatusOK, img.status)
+	assert.Equal(t, "private, max-age=86400", img.header.Get("Cache-Control"), "the browser keeps artwork for a day, privately")
+	assert.Equal(t, "nosniff", img.header.Get("X-Content-Type-Options"))
+
+	p := c.do(http.MethodGet, artURL(lounge, "image://elsewhere/missing.png/"), nil).problem(t)
+	assert.Equal(t, http.StatusBadGateway, p.Status, "Kodi has no such image")
+
+	assert.Equal(t, http.StatusUnprocessableEntity, c.do(http.MethodGet, fmt.Sprintf("/api/v1/kodi/instances/%d/art", lounge), nil).status, "ref is required")
+	assert.Equal(t, http.StatusUnprocessableEntity, c.do(http.MethodGet, artURL(lounge, "image://"+strings.Repeat("a", 2048)), nil).status, "ref is bounded")
+}
+
+// A Kodi instance, or something posing as one, can't serve a page that would run on Encore's origin.
+func TestArtFromKodiIsNeverAPage(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+
+	den := fakekodi.New(t, fakekodi.Options{})
+	hostile := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/image/") {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			_, _ = io.WriteString(w, "<script>alert(document.cookie)</script>")
+
+			return
+		}
+
+		den.ServeHTTP(w, r)
+	}))
+	t.Cleanup(hostile.Close)
+
+	var inst Instance
+
+	c.json(http.MethodPost, "/api/v1/kodi/instances", map[string]string{"name": "Den", "url": hostile.URL + "/jsonrpc"}, http.StatusCreated, &inst)
+
+	resp := c.do(http.MethodGet, artURL(inst.ID, "image://fake/x.svg/"), nil)
+	require.Equal(t, http.StatusOK, resp.status)
+	assert.Equal(t, "application/octet-stream", resp.header.Get("Content-Type"))
+	assert.Equal(t, artCSP, resp.header.Get("Content-Security-Policy"))
 }

@@ -17,8 +17,6 @@ const (
 	missed
 )
 
-const resubscribeDelay = 5 * time.Second
-
 // Library group detection thresholds.
 const (
 	fingerprintSample       = kodi.DefaultFingerprintSample
@@ -41,9 +39,6 @@ const (
 
 // wakeBudget is how long a voice request waits for a woken Kodi. Alexa allows about eight seconds per response, so this leaves room for the action itself.
 const wakeBudget = 5 * time.Second
-
-// learnMACDelay gives a new connection time to settle before the MAC address is read for Wake-on-LAN.
-const learnMACDelay = 5 * time.Second
 
 // recorderBuffer is how many entries may wait for the database before new ones are dropped. Recording must never slow down a voice response.
 const recorderBuffer = 64

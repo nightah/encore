@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 
 import { useAuthState, useSetupAdmin } from "@api/auth";
-import { ApiError, errorMessage } from "@api/client";
+import { errorMessage, fieldErrorsOf } from "@api/client";
 import { Button } from "@components/ui/Button";
 import { Field, FieldGrid, Input } from "@components/ui/Field";
 import { Callout } from "@components/ui/States";
@@ -18,13 +18,14 @@ const schema = (t: TFunction<"setup">) =>
     username: z.string().trim().min(1, t("admin.errors.username")),
   });
 type Values = z.infer<ReturnType<typeof schema>>;
+const DEFAULTS: Values = { password: "", setup_token: "", username: "admin" };
 
 export function AdminStep({ nav }: StepProps) {
   const { t } = useTranslation("setup");
   const { data: auth } = useAuthState();
   const setup = useSetupAdmin();
   const form = useForm<Values>({
-    defaultValues: { password: "", setup_token: "", username: "admin" },
+    defaultValues: DEFAULTS,
     resolver: zodResolver(schema(t)),
   });
   const errors = form.formState.errors;
@@ -53,16 +54,15 @@ export function AdminStep({ nav }: StepProps) {
       await setup.mutateAsync(values);
       nav.done();
     } catch (error) {
-      if (error instanceof ApiError) {
-        for (const [name, message] of Object.entries(error.fieldErrors)) {
-          if (name in values) form.setError(name as keyof Values, { message });
-        }
+      for (const [name, message] of Object.entries(fieldErrorsOf(error))) {
+        if (name in values) form.setError(name as keyof Values, { message });
       }
     }
   });
 
   const generalError =
-    setup.error instanceof ApiError && Object.keys(setup.error.fieldErrors).length === 0
+    // Shown unless an error went next to a field.
+    setup.error && !Object.keys(fieldErrorsOf(setup.error)).some((name) => name in DEFAULTS)
       ? errorMessage(setup.error)
       : null;
 

@@ -179,6 +179,13 @@ func playlistID(path string) int {
 
 // Also remembers each playlist's path for Play.
 func (b *Backend) playlistItems(ctx context.Context) ([]media.Item, error) {
+	items, _, err := b.listPlaylists(ctx)
+
+	return items, err
+}
+
+// listPlaylists lists the playlists and remembers their files, which it also returns so a caller needn't read them back.
+func (b *Backend) listPlaylists(ctx context.Context) ([]media.Item, map[int]playlistFile, error) {
 	var out []media.Item
 
 	paths := map[int]playlistFile{}
@@ -191,7 +198,7 @@ func (b *Backend) playlistItems(ctx context.Context) ([]media.Item, error) {
 				continue
 			}
 
-			return nil, fmt.Errorf("listing playlists: %w", err)
+			return nil, nil, fmt.Errorf("listing playlists: %w", err)
 		}
 
 		for i := range r.Files {
@@ -210,7 +217,7 @@ func (b *Backend) playlistItems(ctx context.Context) ([]media.Item, error) {
 	b.playlists = paths
 	b.mu.Unlock()
 
-	return out, nil
+	return out, paths, nil
 }
 
 func isRPCError(err error) bool {
@@ -244,15 +251,12 @@ func (b *Backend) playlistFile(ctx context.Context, id int) (playlistFile, error
 		return pl, nil
 	}
 
-	if _, err := b.playlistItem(ctx, id); err != nil {
+	_, paths, err := b.listPlaylists(ctx)
+	if err != nil {
 		return playlistFile{}, err
 	}
 
-	b.mu.Lock()
-	pl, ok = b.playlists[id]
-	b.mu.Unlock()
-
-	if !ok {
+	if pl, ok = paths[id]; !ok {
 		return playlistFile{}, fmt.Errorf("kodi: playlist %d: %w", id, media.ErrNotFound)
 	}
 

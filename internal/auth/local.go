@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 	"unicode"
+	"unicode/utf8"
 
 	"github.com/nightah/encore/internal/secrets"
 	"github.com/nightah/encore/internal/store"
@@ -49,7 +50,7 @@ func (s *Service) SetupRequired(ctx context.Context) (bool, error) {
 
 // ValidateUsername checks an admin username.
 func ValidateUsername(name string) error {
-	if name == "" || len(name) > 64 {
+	if name == "" || utf8.RuneCountInString(name) > 64 {
 		return errors.New("username must be 1 to 64 characters")
 	}
 
@@ -96,12 +97,7 @@ func (s *Service) CreateAdmin(ctx context.Context, w http.ResponseWriter, r *htt
 		return &InputError{Field: "password", Err: err}
 	}
 
-	hash, err := HashPassword(password)
-	if err != nil {
-		return err
-	}
-
-	if err := s.db.Settings().Set(ctx, adminSetting, admin{Username: username, PasswordHash: hash, CreatedAt: s.now().UTC()}); err != nil {
+	if err := s.db.Settings().Set(ctx, adminSetting, admin{Username: username, PasswordHash: HashPassword(password), CreatedAt: s.now().UTC()}); err != nil {
 		return err
 	}
 
@@ -225,9 +221,7 @@ func (s *Service) ChangePassword(ctx context.Context, r *http.Request, current, 
 		return &InputError{Field: "new_password", Err: err}
 	}
 
-	if a.PasswordHash, err = HashPassword(next); err != nil {
-		return err
-	}
+	a.PasswordHash = HashPassword(next)
 
 	if err := s.db.Settings().Set(ctx, adminSetting, a); err != nil {
 		return err

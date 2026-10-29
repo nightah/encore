@@ -1,0 +1,482 @@
+package app
+
+import (
+	"bytes"
+	"log/slog"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/nightah/encore/internal/adapter/alexa"
+	"github.com/nightah/encore/internal/backend/kodi/fakekodi"
+	"github.com/nightah/encore/internal/config"
+	"github.com/nightah/encore/internal/core/match"
+	"github.com/nightah/encore/internal/core/media"
+	"github.com/nightah/encore/internal/secrets"
+	"github.com/nightah/encore/internal/store"
+	"github.com/nightah/encore/internal/testkit"
+)
+
+// faultyConfig returns a config whose data directory already holds a database, with a fault injector for it, so New can be failed part way through.
+func faultyConfig(t *testing.T, kodis ...config.KodiInstance) (*config.Config, *testkit.Faults) {
+	t.Helper()
+
+	cfg := config.Defaults()
+	cfg.DataDir = t.TempDir()
+	cfg.Kodi = kodis
+
+	db, err := store.Open(t.Context(), store.Options{Path: store.DefaultPath(cfg.DataDir)})
+	require.NoError(t, err)
+	require.NoError(t, db.Close())
+
+	return &cfg, testkit.NewFaults(t, store.DefaultPath(cfg.DataDir))
+}
+
+// inspectDB opens the data directory's database after New has failed and closed it. The caller closes it.
+func inspectDB(t *testing.T, cfg *config.Config) *store.DB {
+	t.Helper()
+
+	db, err := store.Open(t.Context(), store.Options{Path: store.DefaultPath(cfg.DataDir)})
+	require.NoError(t, err)
+
+	return db
+}
+
+func instanceNames(t *testing.T, db *store.DB) []string {
+	t.Helper()
+
+	list, err := db.KodiInstances().List(t.Context())
+	require.NoError(t, err)
+
+	names := []string{}
+	for _, k := range list {
+		names = append(names, k.Name)
+	}
+
+	return names
+}
+
+// assertNothingOpenIn fails when the process still has a file under dir open, as it would if a failed New left its database open. It needs /proc, so it checks nothing elsewhere.
+func assertNothingOpenIn(t *testing.T, dir string) {
+	t.Helper()
+
+	fds, err := os.ReadDir("/proc/self/fd")
+	if err != nil {
+		return
+	}
+
+	for _, fd := range fds {
+		if target, err := os.Readlink("/proc/self/fd/" + fd.Name()); err == nil {
+			assert.False(t, strings.HasPrefix(target, dir+string(filepath.Separator)), "%s is still open", target)
+		}
+	}
+}
+
+func secretIDs(t *testing.T, cfg *config.Config, db *store.DB, ids ...string) []string {
+	t.Helper()
+
+	key, err := secrets.ReadKey(secrets.Options{DataDir: cfg.DataDir})
+	require.NoError(t, err)
+
+	sec, err := secrets.OpenWithKey(db.SecretRows(), key)
+	require.NoError(t, err)
+
+	defer sec.Close()
+
+	var found []string
+
+	for _, id := range ids {
+		if _, err := sec.Get(t.Context(), id); err == nil {
+			found = append(found, id)
+		} else {
+			require.ErrorIs(t, err, store.ErrNotFound)
+		}
+	}
+
+	return found
+}
+
+func TestNewReportsDatabaseFailuresWhileApplyingTheConfig(t *testing.T) {
+	lounge := config.KodiInstance{Name: "Lounge", URL: "http://127.0.0.1:1/jsonrpc", Password: "correct horse", Default: true}
+	bedroom := config.KodiInstance{Name: "Bedroom", URL: "http://127.0.0.1:2/jsonrpc", Password: "hunter2"}
+	grouped := func(k config.KodiInstance, group string) config.KodiInstance { k.LibraryGroup = group; return k }
+
+	testCases := []struct {
+		name  string
+		kodi  []config.KodiInstance
+		fault testkit.Fault
+		// extra faults are injected alongside fault.
+		extra []testkit.Fault
+		// earlier, when set, is the config of a successful start before the failing one.
+		earlier []config.KodiInstance
+		// setup prepares the database before the failing start.
+		setup func(t *testing.T, db *store.DB)
+		want  string
+		after func(t *testing.T, cfg *config.Config, db *store.DB)
+	}{
+		{
+			name:  "listing the Kodi instances",
+			kodi:  []config.KodiInstance{lounge},
+			fault: testkit.Fault{Op: testkit.Read, Table: "kodi_instances"},
+			want:  "applying kodi instances: querying",
+			after: func(t *testing.T, _ *config.Config, db *store.DB) {
+				assert.Empty(t, instanceNames(t, db))
+			},
+		},
+		{
+			name:  "storing a password",
+			kodi:  []config.KodiInstance{lounge},
+			fault: testkit.Fault{Op: testkit.Insert, Table: "secrets"},
+			want:  `kodi instance "Lounge": storing password: storing secret "kodi/Lounge/password"`,
+			after: func(t *testing.T, _ *config.Config, db *store.DB) {
+				assert.Empty(t, instanceNames(t, db), "an instance isn't saved without its password")
+			},
+		},
+		{
+			name:  "creating the second instance",
+			kodi:  []config.KodiInstance{lounge, bedroom},
+			fault: testkit.Fault{Op: testkit.Insert, Table: "kodi_instances", Nth: 2},
+			want:  `kodi instance "Bedroom": creating kodi instance: `,
+			after: func(t *testing.T, cfg *config.Config, db *store.DB) {
+				assert.Equal(t, []string{"Lounge"}, instanceNames(t, db), "the instances before it are kept")
+				assert.Equal(t, []string{"kodi/Lounge/password"}, secretIDs(t, cfg, db, "kodi/Lounge/password", "kodi/Bedroom/password"),
+					"the password of an instance that wasn't saved isn't left behind")
+			},
+		},
+		{
+			name:  "removing the password of an instance that wasn't saved",
+			kodi:  []config.KodiInstance{bedroom},
+			fault: testkit.Fault{Op: testkit.Insert, Table: "kodi_instances"},
+			extra: []testkit.Fault{{Op: testkit.Delete, Table: "secrets"}},
+			// Both failures are reported.
+			want: "creating kodi instance: constraint failed: " + testkit.FaultMessage + " on INSERT kodi_instances (1811)\n" +
+				`deleting secret "kodi/Bedroom/password": constraint failed: ` + testkit.FaultMessage + " on DELETE secrets",
+		},
+		{
+			name:    "updating an instance",
+			earlier: []config.KodiInstance{bedroom},
+			kodi:    []config.KodiInstance{bedroom},
+			fault:   testkit.Fault{Op: testkit.Update, Table: "kodi_instances"},
+			want:    `kodi instance "Bedroom": updating kodi instance`,
+			after: func(t *testing.T, cfg *config.Config, db *store.DB) {
+				assert.Equal(t, []string{"Bedroom"}, instanceNames(t, db))
+				assert.Equal(t, []string{"kodi/Bedroom/password"}, secretIDs(t, cfg, db, "kodi/Bedroom/password"), "the saved instance keeps its password")
+			},
+		},
+		{
+			name:    "giving an instance a password",
+			earlier: []config.KodiInstance{{Name: "Bedroom", URL: bedroom.URL}},
+			kodi:    []config.KodiInstance{bedroom},
+			fault:   testkit.Fault{Op: testkit.Update, Table: "kodi_instances"},
+			want:    `kodi instance "Bedroom": updating kodi instance`,
+			after: func(t *testing.T, cfg *config.Config, db *store.DB) {
+				assert.Empty(t, secretIDs(t, cfg, db, "kodi/Bedroom/password"), "a password the saved instance doesn't use isn't left behind")
+			},
+		},
+		{
+			name:  "making an instance the default",
+			kodi:  []config.KodiInstance{lounge},
+			fault: testkit.Fault{Op: testkit.Update, Table: "kodi_instances", When: "NEW.is_default_for_unlinked = 1"},
+			want:  `kodi instance "Lounge": setting default kodi instance`,
+			after: func(t *testing.T, _ *config.Config, db *store.DB) {
+				_, err := db.KodiInstances().Default(t.Context())
+				require.ErrorIs(t, err, store.ErrNotFound, "no instance is half made the default")
+			},
+		},
+		{
+			name:  "listing the Kodi instances for their library groups",
+			fault: testkit.Fault{Op: testkit.Read, Table: "kodi_instances"},
+			want:  "applying library groups: querying",
+		},
+		{
+			name:  "listing the library groups",
+			kodi:  []config.KodiInstance{lounge},
+			fault: testkit.Fault{Op: testkit.Read, Table: "library_groups"},
+			want:  "applying library groups: querying",
+		},
+		{
+			name:  "saving a configured library group",
+			kodi:  []config.KodiInstance{grouped(lounge, "Whole house"), grouped(bedroom, "Whole house")},
+			fault: testkit.Fault{Op: testkit.Insert, Table: "library_groups"},
+			want:  `applying library groups: library group "Whole house": creating library group: `,
+			after: func(t *testing.T, _ *config.Config, db *store.DB) {
+				groups, err := db.LibraryGroups().List(t.Context())
+				require.NoError(t, err)
+				assert.Empty(t, groups)
+			},
+		},
+		{
+			name:  "keeping an instance out of every library group",
+			kodi:  []config.KodiInstance{grouped(lounge, config.LibraryGroupNone)},
+			fault: testkit.Fault{Op: testkit.Insert, Table: "library_groups"},
+			want:  `applying library groups: kodi instance "Lounge": creating library group: `,
+		},
+		{
+			name:    "dissolving a library group the config no longer declares",
+			earlier: []config.KodiInstance{grouped(lounge, "Whole house"), grouped(bedroom, "Whole house")},
+			kodi:    []config.KodiInstance{lounge, bedroom},
+			fault:   testkit.Fault{Op: testkit.Delete, Table: "library_groups"},
+			want:    "applying library groups: deleting library group",
+			after: func(t *testing.T, _ *config.Config, db *store.DB) {
+				groups, err := db.LibraryGroups().List(t.Context())
+				require.NoError(t, err)
+				require.Len(t, groups, 1, "the group is kept until it can be dissolved")
+				assert.Equal(t, "Whole house", groups[0].Name)
+			},
+		},
+		{
+			name:  "loading the Kodi instances",
+			kodi:  []config.KodiInstance{lounge},
+			fault: testkit.Fault{Op: testkit.Read, Table: "kodi_instances", Nth: 3},
+			want:  "loading kodi instances: querying",
+			after: func(t *testing.T, _ *config.Config, db *store.DB) {
+				assert.Equal(t, []string{"Lounge"}, instanceNames(t, db), "the config was applied before the runtimes were prepared")
+			},
+		},
+		{
+			name:  "listing the Kodi instances to reconcile their library groups",
+			kodi:  []config.KodiInstance{lounge},
+			fault: testkit.Fault{Op: testkit.Read, Table: "kodi_instances", Nth: 4},
+			want:  "reconciling library groups: querying",
+		},
+		{
+			name:  "listing the library groups to reconcile them",
+			kodi:  []config.KodiInstance{lounge},
+			fault: testkit.Fault{Op: testkit.Read, Table: "library_groups", Nth: 2},
+			want:  "reconciling library groups: querying",
+		},
+		{
+			name:  "giving an instance a library of its own",
+			kodi:  []config.KodiInstance{lounge},
+			fault: testkit.Fault{Op: testkit.Insert, Table: "library_groups"},
+			want:  `reconciling library groups: kodi instance "Lounge": creating library group: `,
+		},
+		{
+			name:    "correcting a library group",
+			earlier: []config.KodiInstance{grouped(lounge, "Whole house"), grouped(bedroom, "Whole house")},
+			kodi:    []config.KodiInstance{grouped(lounge, "Whole house"), bedroom},
+			// The config file's group shrinks to one member, so reconciling makes it solo.
+			fault: testkit.Fault{Op: testkit.Update, Table: "library_groups", When: "NEW.state = 'solo'"},
+			want:  "reconciling library groups: updating library group",
+		},
+		{
+			name: "removing empty library groups",
+			kodi: []config.KodiInstance{lounge},
+			setup: func(t *testing.T, db *store.DB) {
+				require.NoError(t, db.LibraryGroups().Save(t.Context(), &store.LibraryGroup{Name: "Abandoned"}, nil))
+			},
+			fault: testkit.Fault{Op: testkit.Delete, Table: "library_groups"},
+			want:  "reconciling library groups: deleting empty library groups",
+			after: func(t *testing.T, _ *config.Config, db *store.DB) {
+				groups, err := db.LibraryGroups().List(t.Context())
+				require.NoError(t, err)
+				require.Len(t, groups, 2, "the empty group stays until it can be removed")
+			},
+		},
+		{
+			name:  "listing the library groups to start them",
+			kodi:  []config.KodiInstance{lounge},
+			fault: testkit.Fault{Op: testkit.Read, Table: "library_groups", Nth: 3},
+			want:  "rebuilding library groups: querying",
+		},
+		{
+			name:  "listing the Kodi instances to start their library groups",
+			kodi:  []config.KodiInstance{lounge},
+			fault: testkit.Fault{Op: testkit.Read, Table: "kodi_instances", Nth: 6},
+			want:  "rebuilding library groups: querying",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg, faults := faultyConfig(t, tc.earlier...)
+
+			if tc.earlier != nil {
+				a, err := New(t.Context(), cfg, slog.New(slog.DiscardHandler))
+				require.NoError(t, err)
+				require.NoError(t, a.Close())
+			}
+
+			if tc.setup != nil {
+				db := inspectDB(t, cfg)
+				tc.setup(t, db)
+				require.NoError(t, db.Close())
+			}
+
+			cfg.Kodi = tc.kodi
+			faults.Inject(append([]testkit.Fault{tc.fault}, tc.extra...)...)
+
+			_, err := New(t.Context(), cfg, slog.New(slog.DiscardHandler))
+			require.ErrorContains(t, err, tc.want)
+			assertNothingOpenIn(t, cfg.DataDir)
+
+			if tc.fault.Op == testkit.Read {
+				require.ErrorContains(t, err, testkit.ReadFaultMessage)
+			} else {
+				require.ErrorContains(t, err, testkit.FaultMessage)
+			}
+
+			faults.Clear()
+
+			if tc.after != nil {
+				db := inspectDB(t, cfg)
+				tc.after(t, cfg, db)
+				require.NoError(t, db.Close())
+			}
+
+			// New closed everything it opened, and the config is applied in full once the database works again.
+			a, err := New(t.Context(), cfg, slog.New(slog.DiscardHandler))
+			require.NoError(t, err)
+
+			t.Cleanup(func() { assert.NoError(t, a.Close()) })
+
+			want := []string{}
+			for _, k := range tc.kodi {
+				want = append(want, k.Name)
+			}
+
+			assert.ElementsMatch(t, want, instanceNames(t, a.DB()))
+			assert.Len(t, a.InstanceIDs(), len(tc.kodi), "every instance has a runtime")
+		})
+	}
+}
+
+func TestNewReportsDatabasesItCannotOpen(t *testing.T) {
+	t.Run("the database", func(t *testing.T) {
+		cfg := config.Defaults()
+		cfg.DataDir = t.TempDir()
+
+		// A directory where the database file should be.
+		require.NoError(t, os.Mkdir(store.DefaultPath(cfg.DataDir), 0o700))
+
+		_, err := New(t.Context(), &cfg, slog.New(slog.DiscardHandler))
+		require.ErrorContains(t, err, "opening database: ")
+	})
+
+	t.Run("the secrets", func(t *testing.T) {
+		cfg, faults := faultyConfig(t)
+		faults.Inject(testkit.Fault{Op: testkit.Read, Table: "secrets"})
+
+		_, err := New(t.Context(), cfg, slog.New(slog.DiscardHandler))
+		require.ErrorContains(t, err, "opening secrets: checking for existing secrets: querying: "+testkit.ReadFaultMessage)
+		assertNothingOpenIn(t, cfg.DataDir)
+
+		faults.Clear()
+
+		// Nothing was half set up: once the database works, New succeeds.
+		a, err := New(t.Context(), cfg, slog.New(slog.DiscardHandler))
+		require.NoError(t, err)
+		require.NoError(t, a.Close())
+	})
+}
+
+func TestIndexFailuresAreLogged(t *testing.T) {
+	var logs bytes.Buffer
+
+	a := newBareApp(t)
+	a.log = slog.New(slog.NewTextHandler(&logs, nil))
+
+	inst := detachedInstance(t, a, "Lounge", fakekodi.New(t, fakekodi.Options{}))
+
+	g, err := a.newGroup(store.LibraryGroup{ID: 1, State: store.GroupSolo}, evidence{}, []*Instance{inst}, inst)
+	require.NoError(t, err)
+
+	added := media.Item{Kind: media.KindMovie, ID: 1, Title: "Hot Fuzz"}
+
+	g.indexChanges("Lounge", []media.Item{added}, nil)
+	assert.Equal(t, 1, g.index.Len())
+	assert.Empty(t, logs.String())
+
+	require.NoError(t, g.close())
+
+	// A change arriving after the index closed, as when a group is rebuilt during a sync, is logged rather than lost silently or fatal.
+	g.indexChanges("Lounge", []media.Item{added}, []media.Ref{{Kind: media.KindMovie, ID: 2}})
+
+	out := logs.String()
+	assert.Contains(t, out, `level=ERROR msg="updating the title index" library_group=1 instance=Lounge backend=kodi error="`+match.ErrClosed.Error()+`"`)
+	assert.Contains(t, out, `level=ERROR msg="removing titles from the index" library_group=1 instance=Lounge backend=kodi error="`+match.ErrClosed.Error()+`"`)
+}
+
+func TestRequestsReportDatabaseFailures(t *testing.T) {
+	const device = "amzn1.ask.device.A"
+
+	testCases := []struct {
+		name  string
+		fault testkit.Fault
+		call  func(t *testing.T, a *App) error
+		want  string
+	}{
+		{
+			name:  "finding the default Kodi instance for an unlinked device",
+			fault: testkit.Fault{Op: testkit.Read, Table: "kodi_instances"},
+			call: func(t *testing.T, a *App) error {
+				_, err := a.Target(t.Context(), device)
+
+				return err
+			},
+			want: "getting default kodi instance: ",
+		},
+		{
+			name:  "finding the default Kodi instance for a dry run",
+			fault: testkit.Fault{Op: testkit.Read, Table: "kodi_instances"},
+			call: func(t *testing.T, a *App) error {
+				_, err := DryRunTargets{App: a, Run: &DryRun{}}.Target(t.Context(), device)
+
+				return err
+			},
+			want: "getting default kodi instance: ",
+		},
+		{
+			name:  "recording the device that named a room",
+			fault: testkit.Fault{Op: testkit.Insert, Table: "echo_devices"},
+			call: func(t *testing.T, a *App) error {
+				_, err := a.TargetForRoom(t.Context(), device, "bedroom")
+
+				return err
+			},
+			want: "recording echo device: ",
+		},
+		{
+			name:  "reading room aliases for the skill model",
+			fault: testkit.Fault{Op: testkit.Read, Table: "room_aliases"},
+			call: func(t *testing.T, a *App) error {
+				_, err := a.SlotValues(t.Context())
+
+				return err
+			},
+			want: "querying: ",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg, faults := faultyConfig(t, config.KodiInstance{Name: "Lounge", URL: "http://127.0.0.1:1/jsonrpc", Default: true})
+			cfg.Rooms = []config.Room{{Name: "Bedroom", Kodi: "Lounge"}}
+
+			a, err := New(t.Context(), cfg, slog.New(slog.DiscardHandler))
+			require.NoError(t, err)
+
+			t.Cleanup(func() { assert.NoError(t, a.Close()) })
+			require.NoError(t, a.ApplyConfiguredRoomsAndDevices(t.Context()))
+
+			faults.Inject(tc.fault)
+
+			err = tc.call(t, a)
+			require.ErrorContains(t, err, tc.want)
+			require.NotErrorIs(t, err, alexa.ErrUnlinked, "a database failure isn't mistaken for an unlinked device")
+
+			if tc.fault.Op == testkit.Read {
+				require.ErrorContains(t, err, testkit.ReadFaultMessage)
+			} else {
+				require.ErrorContains(t, err, testkit.FaultMessage)
+			}
+
+			faults.Clear()
+			require.NoError(t, tc.call(t, a), "it works again with the database")
+		})
+	}
+}

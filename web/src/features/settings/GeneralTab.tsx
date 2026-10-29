@@ -9,7 +9,7 @@ import { useSkill } from "@api/skill";
 import { Field, Input, RadioCards, Select } from "@components/ui/Field";
 import { FormError } from "@features/settings/FormError";
 import { type FieldMapping, type FormState, useSettingsForm } from "@features/settings/form";
-import { LANGUAGES, type Language, browserLanguage, setLanguage, storedLanguage } from "@i18n/index";
+import { LANGUAGES, LANGUAGE_NAMES, type Language, browserLanguage, setLanguage, storedLanguage } from "@i18n/index";
 import { type ThemePreference, endThemePreview, previewTheme, setThemePreference, useTheme } from "@theme/store";
 
 interface Values {
@@ -74,7 +74,7 @@ export function GeneralTab({
     await setLanguage(language === "auto" ? undefined : language);
     return onSubmit(event);
   };
-  const browser = LANGUAGES.find((l) => l.code === browserLanguage())?.name ?? "English";
+  const browser = LANGUAGE_NAMES[browserLanguage()];
 
   return (
     <form id={formId} onSubmit={submit} noValidate className="flex flex-col gap-6">

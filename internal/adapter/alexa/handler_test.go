@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"log/slog"
@@ -441,6 +442,24 @@ func TestContentDisabled(t *testing.T) {
 		assert.Contains(t, backend.Calls(), "Play album/41 resume")
 	})
 
+	t.Run("play X is declined with neither films nor shows", func(t *testing.T) {
+		h, backend := withDisabled(t, false, media.ContentMovies, media.ContentTV)
+		res := serveBody(t, h, mustRead(t, "testdata/golden/play-media-not-found/request.json"))
+		assert.Contains(t, string(res), declined, "without deep search, play X looks only for films and shows")
+		assert.Empty(t, backend.Calls())
+	})
+
+	t.Run("a recommendation of an unknown type is any video", func(t *testing.T) {
+		h, _ := withDisabled(t, false, media.ContentMovies, media.ContentTV)
+		res := serveBody(t, h, intentRequest(t, "Recommend", map[string]slotSpec{"MediaType": {"podcasts", "podcast"}}))
+
+		var resp ResponseEnvelope
+		require.NoError(t, json.Unmarshal(res, &resp))
+		followup, err := json.Marshal(resp.SessionAttributes["followup"])
+		require.NoError(t, err)
+		assert.JSONEq(t, `{"recommend":{"kinds":["musicvideo"]}}`, string(followup), "a music video is the video left")
+	})
+
 	t.Run("a movie recommendation is declined without movies", func(t *testing.T) {
 		h, _ := withDisabled(t, false, media.ContentMovies)
 		res := serveBody(t, h, mustRead(t, "testdata/golden/recommend-movie/request.json"))
@@ -499,4 +518,278 @@ func TestConfirmSound(t *testing.T) {
 	assert.Equal(t, map[string]any{"type": "SSML", "ssml": `<speak><audio src="` + ConfirmSoundURL + `"/></speak>`}, speech(true, "fullscreen"), "a command with nothing to say plays the sound")
 	assert.Nil(t, speech(false, "fullscreen"), "silence when it is off")
 	assert.Equal(t, "PlainText", speech(true, "watch-movie-in-bedroom")["type"], "a spoken answer stays spoken")
+}
+
+func TestServeBodyRejectsUndecodableEnvelope(t *testing.T) {
+	h, backend, rec := newHandler(t)
+
+	for _, body := range []string{"", "{", `{"request":"IntentRequest"}`, `[]`} {
+		w := httptest.NewRecorder()
+		h.ServeBody(w, httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/api/v1/alexa", nil), []byte(body))
+
+		assert.Equal(t, http.StatusBadRequest, w.Code, body)
+	}
+
+	assert.Empty(t, backend.Calls())
+	assert.Empty(t, rec.entries, "nothing is logged for a request Encore could not read")
+}
+
+func TestServeBodyIgnoresOtherRequestTypes(t *testing.T) {
+	h, backend, rec := newHandler(t)
+
+	req := bytes.Replace(mustRead(t, "testdata/golden/play-media-not-found/request.json"), []byte(`"type": "IntentRequest"`), []byte(`"type": "AudioPlayer.PlaybackStarted"`), 1)
+
+	var resp map[string]any
+	require.NoError(t, json.Unmarshal(serveBody(t, h, req), &resp))
+
+	assert.Equal(t, map[string]any{"version": "1.0", "response": map[string]any{}}, resp, "an empty response acknowledges an event")
+	assert.Empty(t, backend.Calls())
+	require.Len(t, rec.entries, 1)
+	assert.Equal(t, "AudioPlayer.PlaybackStarted", rec.entries[0].Type)
+	assert.Equal(t, "ok", rec.entries[0].Outcome)
+}
+
+type failingNames struct {
+	fakeTargets
+
+	err error
+}
+
+func (f failingNames) DeviceName(context.Context, string) (string, error) { return "", f.err }
+
+func TestIdentifyEchoReportsLookupFailure(t *testing.T) {
+	h, _, rec := newHandler(t)
+	boom := errors.New("database locked")
+	h.Targets = failingNames{fakeTargets: h.Targets.(fakeTargets), err: boom}
+
+	var resp ResponseEnvelope
+	require.NoError(t, json.Unmarshal(serveBody(t, h, mustRead(t, "testdata/golden/identify-echo-named/request.json")), &resp))
+
+	assert.True(t, *resp.Response.ShouldEndSession)
+	assert.NotContains(t, resp.Response.OutputSpeech.Text, "Lounge Echo")
+	require.Len(t, rec.entries, 1)
+	assert.Equal(t, "error", rec.entries[0].Outcome)
+	require.ErrorIs(t, rec.entries[0].Err, boom)
+}
+
+func TestSpokenIDSuffix(t *testing.T) {
+	for in, want := range map[string]string{
+		"amzn1.ask.device.AMAXYZSJY": "S J Y",
+		"AB":                         "A B",
+		"":                           "",
+		"device-äöü":                 "ä ö ü",
+		"ABCD":                       "B C D",
+		"ABC":                        "A B C",
+	} {
+		assert.Equal(t, want, spokenIDSuffix(in), in)
+	}
+}
+
+func TestHandlerClockDefaultsToNow(t *testing.T) {
+	h, _, rec := newHandler(t)
+	h.Now = nil
+
+	before := time.Now()
+
+	serveBody(t, h, mustRead(t, "testdata/golden/help/request.json"))
+
+	require.Len(t, rec.entries, 1)
+	assert.False(t, rec.entries[0].Time.Before(before), "entries are stamped with the wall clock when no clock is set")
+}
+
+func TestHandlerWithoutRecorder(t *testing.T) {
+	h, backend, _ := newHandler(t)
+	h.Recorder = nil
+
+	serveBody(t, h, mustRead(t, "testdata/golden/watch-movie-unique/request.json"))
+	assert.NotEmpty(t, backend.Calls())
+}
+
+// sleepyBackend is unreachable until woken, as a Kodi instance on a sleeping PC is.
+type sleepyBackend struct {
+	*testkit.Backend
+
+	mu    sync.Mutex
+	awake bool
+}
+
+func (b *sleepyBackend) Play(ctx context.Context, ref media.Ref, opts media.PlayOptions) error {
+	b.mu.Lock()
+	awake := b.awake
+	b.mu.Unlock()
+
+	if !awake {
+		return media.ErrUnreachable
+	}
+
+	return b.Backend.Play(ctx, ref, opts)
+}
+
+func (b *sleepyBackend) wake(context.Context) error {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	b.awake = true
+
+	return nil
+}
+
+func TestProgressiveResponseWhileWaking(t *testing.T) {
+	for name, status := range map[string]int{"delivered": http.StatusNoContent, "refused": http.StatusForbidden} {
+		t.Run(name, func(t *testing.T) {
+			var (
+				mu     sync.Mutex
+				speech []string
+			)
+
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				var body struct {
+					Directive map[string]string `json:"directive"`
+				}
+
+				if assert.NoError(t, json.NewDecoder(r.Body).Decode(&body)) {
+					mu.Lock()
+					speech = append(speech, body.Directive["speech"])
+					mu.Unlock()
+				}
+
+				w.WriteHeader(status)
+			}))
+			t.Cleanup(srv.Close)
+
+			h, backend, _ := newHandler(t)
+			sleepy := &sleepyBackend{Backend: backend}
+			ft := h.Targets.(fakeTargets)
+			ft.target.Backend = sleepy
+			ft.target.Wake = sleepy.wake
+			h.Targets = ft
+			h.Progressive = NewProgressive(srv.Client())
+
+			var env RequestEnvelope
+			require.NoError(t, json.Unmarshal(mustRead(t, "testdata/golden/watch-movie-unique/request.json"), &env))
+			env.Context.System.APIEndpoint = srv.URL
+			env.Context.System.APIAccessToken = "token"
+
+			body, err := json.Marshal(env)
+			require.NoError(t, err)
+
+			var resp ResponseEnvelope
+			require.NoError(t, json.Unmarshal(serveBody(t, h, body), &resp))
+
+			mu.Lock()
+			defer mu.Unlock()
+
+			assert.Equal(t, []string{"Waking Lounge…"}, speech)
+			assert.Equal(t, []string{"Play movie/4 resume"}, backend.Calls(), "the action is retried once the Kodi instance is awake, whether or not Alexa took the interim speech")
+		})
+	}
+
+	t.Run("without progressive responses", func(t *testing.T) {
+		h, backend, _ := newHandler(t)
+		sleepy := &sleepyBackend{Backend: backend}
+		ft := h.Targets.(fakeTargets)
+		ft.target.Backend = sleepy
+		ft.target.Wake = sleepy.wake
+		h.Targets = ft
+		require.Nil(t, h.Progressive)
+
+		// Alexa offers an endpoint for progressive responses, which goes unused.
+		var env RequestEnvelope
+		require.NoError(t, json.Unmarshal(mustRead(t, "testdata/golden/watch-movie-unique/request.json"), &env))
+		env.Context.System.APIEndpoint = "http://127.0.0.1:1"
+		env.Context.System.APIAccessToken = "token"
+
+		body, err := json.Marshal(env)
+		require.NoError(t, err)
+
+		var resp ResponseEnvelope
+		require.NoError(t, json.Unmarshal(serveBody(t, h, body), &resp))
+		assert.Equal(t, []string{"Play movie/4 resume"}, backend.Calls(), "the Kodi instance is woken all the same, with nothing said meanwhile")
+	})
+}
+
+func TestProgressiveSendFailures(t *testing.T) {
+	env := func(endpoint string) *RequestEnvelope {
+		e := &RequestEnvelope{}
+		e.Request.RequestID = "req-1"
+		e.Context.System.APIEndpoint = endpoint
+		e.Context.System.APIAccessToken = "token"
+
+		return e
+	}
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusTooManyRequests) }))
+	t.Cleanup(srv.Close)
+
+	err := NewProgressive(srv.Client()).Send(t.Context(), env(srv.URL), "Waking Lounge…")
+	require.EqualError(t, err, "sending progressive response: status 429")
+
+	err = NewProgressive(nil).Send(t.Context(), env("http://127.0.0.1:1"), "Waking Lounge…")
+	require.ErrorContains(t, err, "sending progressive response:")
+
+	err = NewProgressive(nil).Send(t.Context(), env("http://exa mple.com"), "Waking Lounge…")
+	require.Error(t, err)
+
+	called := false
+	quiet := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { called = true }))
+	t.Cleanup(quiet.Close)
+
+	require.NoError(t, NewProgressive(quiet.Client()).Send(t.Context(), env(quiet.URL), ""), "nothing to say sends nothing")
+
+	noToken := env(quiet.URL)
+	noToken.Context.System.APIAccessToken = ""
+	require.NoError(t, NewProgressive(quiet.Client()).Send(t.Context(), noToken, "hi"))
+	assert.False(t, called)
+}
+
+func TestProgressiveSendGivesUpQuickly(t *testing.T) {
+	block := make(chan struct{})
+	srv := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+		select {
+		case <-block:
+		case <-r.Context().Done():
+		}
+	}))
+	t.Cleanup(func() {
+		close(block)
+		srv.Close()
+	})
+
+	e := &RequestEnvelope{}
+	e.Context.System.APIEndpoint = srv.URL
+	e.Context.System.APIAccessToken = "token"
+
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+
+	err := NewProgressive(srv.Client()).Send(ctx, e, "hi")
+	require.ErrorIs(t, err, context.Canceled, "a progressive response never outlives the request")
+}
+
+func TestDescribeOutcome(t *testing.T) {
+	msg := actions.Message{ID: "x"}
+
+	for want, o := range map[string]actions.Outcome{
+		"error":     {Err: errors.New("x"), Played: &media.Item{}},
+		"played":    {Played: &media.Item{}},
+		"asked":     {Pending: []actions.Choice{{}}},
+		"not_found": {Say: actions.Message{ID: "match.not_found"}},
+		"ok":        {Say: msg},
+	} {
+		assert.Equal(t, want, describeOutcome(o))
+	}
+
+	assert.Equal(t, "asked", describeOutcome(actions.Outcome{Followup: &actions.Followup{}}))
+}
+
+func TestSessionValueIgnoresMalformedAttributes(t *testing.T) {
+	assert.Nil(t, pendingChoices(nil))
+	assert.Nil(t, pendingChoices(map[string]any{sessionPending: "not a list"}))
+	assert.Nil(t, sessionFollowupOf(map[string]any{sessionFollowup: []any{1, 2}}))
+	assert.Nil(t, sessionFollowupOf(map[string]any{sessionFollowup: func() {}}), "a value that cannot be encoded is ignored")
+}
+
+func TestSlotValues(t *testing.T) {
+	assert.Nil(t, slotValues(nil))
+	assert.Equal(t, map[string]string{"Movie": "dune"}, slotValues(map[string]Slot{"Movie": {Value: "dune"}, "Room": {}}), "empty slots are left out")
 }

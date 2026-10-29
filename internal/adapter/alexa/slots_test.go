@@ -2,6 +2,7 @@ package alexa
 
 import (
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 
@@ -34,6 +35,19 @@ func TestParseDuration(t *testing.T) {
 		_, ok := parseDuration(bad)
 		assert.False(t, ok, bad)
 	}
+}
+
+// A duration too long for time.Duration is unreadable, not a wrapped or platform-dependent value.
+func TestParseDurationRejectsOverflow(t *testing.T) {
+	for _, in := range []string{"P7000Y", "P300Y", "P250Y250Y250Y", "PT9999999999999H", "P1" + strings.Repeat("0", 400) + "D", "PT9223372036.854775808S"} {
+		d, ok := parseDuration(in)
+		assert.False(t, ok, in)
+		assert.Zero(t, d, in)
+	}
+
+	d, ok := parseDuration("P290Y")
+	assert.True(t, ok, "the longest durations that fit are still read")
+	assert.Equal(t, 290*8766*time.Hour, d)
 }
 
 func TestSlotIDsResolveLocally(t *testing.T) {

@@ -79,7 +79,7 @@ func (a *App) startInstance(inst *Instance) {
 
 		var wg sync.WaitGroup
 
-		wg.Go(func() { inst.run(ctx) })
+		wg.Go(func() { inst.run(ctx, a.tune.learnMACDelay) })
 		wg.Go(func() { a.watchInstance(ctx, inst) })
 		wg.Wait()
 	}()

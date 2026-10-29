@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"log/slog"
+	"net/http"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -84,7 +85,7 @@ type InstanceStatus struct {
 	Connected bool
 	// Reachable means Kodi answered a JSON-RPC ping, over either transport.
 	Reachable bool
-	// Unauthorized means Kodi refused the configured credentials.
+	// Unauthorized means Kodi's web server refused the configured credentials. Kodi may still answer over the WebSocket, which it doesn't authenticate, but images and the HTTP fallback fail.
 	Unauthorized bool
 	// CanWake means a MAC address is known for Wake-on-LAN.
 	CanWake     bool
@@ -158,7 +159,7 @@ type fingerprintEvidence struct {
 	At           time.Time `json:"at"`
 }
 
-// tuning holds the timings of library groups, shortened by tests.
+// tuning holds the timings of library groups and Kodi connections, which tests shorten or run on a fake clock, and the client tests route Kodi traffic through.
 type tuning struct {
 	fingerprintSample int
 	minSample         int
@@ -174,7 +175,11 @@ type tuning struct {
 	// snapshotEvery limits how often a library snapshot is written; snapshotCheck is how often the need is checked.
 	snapshotEvery time.Duration
 	snapshotCheck time.Duration
+	// learnMACDelay gives a new connection time to settle before the MAC address is read for Wake-on-LAN.
+	learnMACDelay time.Duration
 	catalog       library.Options
+	// kodiClient, when set, carries every request to Kodi; tests route it to fakes in memory.
+	kodiClient *http.Client
 }
 
 // groupBackend is the backend a library group's catalog syncs from. Library reads go to the active member: the group's source while it's reachable, otherwise another reachable member, so a sleeping source isn't woken just to sync. Library events from every member reach the catalog, since with a shared database only the Kodi instance that made a change reports it.

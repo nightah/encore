@@ -22,7 +22,7 @@ func (c *statusCache) playerChanged(id int64) {
 	c.refreshing[id] = true
 	c.mu.Unlock()
 
-	time.AfterFunc(playerSettle, func() {
+	c.afterFunc(playerSettle, func() {
 		c.mu.Lock()
 		delete(c.refreshing, id)
 		c.mu.Unlock()
@@ -42,7 +42,10 @@ func (c *statusCache) playerChanged(id int64) {
 }
 
 func newStatusCache(a *API) *statusCache {
-	return &statusCache{a: a, entries: map[int64]statusEntry{}, published: map[string]string{}, gens: map[int64]uint64{}, refreshing: map[int64]bool{}}
+	return &statusCache{
+		a: a, entries: map[int64]statusEntry{}, published: map[string]string{}, gens: map[int64]uint64{}, refreshing: map[int64]bool{},
+		afterFunc: func(d time.Duration, f func()) { time.AfterFunc(d, f) },
+	}
 }
 
 // get returns a recent status, probing Kodi when the cached one is stale.

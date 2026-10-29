@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io"
 	"testing"
+	"testing/synctest"
 	"time"
 
 	"github.com/stretchr/testify/assert"
@@ -21,7 +22,7 @@ var aest = time.FixedZone("AEST", 10*60*60)
 func newBackend(t *testing.T, opts fakekodi.Options, bopts BackendOptions) (*Backend, *fakekodi.Server) {
 	t.Helper()
 
-	s := fakekodi.New(t, opts)
+	s := newFake(t, opts)
 
 	if bopts.Location == nil {
 		bopts.Location = aest
@@ -439,6 +440,14 @@ func TestSeek(t *testing.T) {
 	}
 
 	require.Error(t, b.Seek(ctx, media.Seek{Step: "sideways"}))
+
+	seeks := len(s.CallsTo("Player.Seek"))
+	require.NoError(t, b.Seek(ctx, media.Seek{}), "a seek by nothing is no seek")
+	assert.Len(t, s.CallsTo("Player.Seek"), seeks, "and Kodi isn't asked")
+
+	before := -5 * time.Second
+	require.NoError(t, b.Seek(ctx, media.Seek{To: &before}))
+	assert.JSONEq(t, `{"playerid":1,"value":{"time":{}}}`, lastParams(t, s, "Player.Seek"), "a position before the start seeks to the start")
 }
 
 func TestVolume(t *testing.T) {
@@ -468,6 +477,27 @@ func TestVolume(t *testing.T) {
 	}
 }
 
+func TestVolumeSendsOnlyLevelsKodiAccepts(t *testing.T) {
+	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+	ctx := t.Context()
+	level := func(n int) *int { return &n }
+
+	for _, tc := range []struct {
+		name   string
+		change media.VolumeChange
+		sent   string
+	}{
+		{"a step below zero", media.VolumeChange{Step: -150}, `{"volume":0}`},
+		{"a negative level", media.VolumeChange{Set: level(-5)}, `{"volume":0}`},
+		{"a step past the top", media.VolumeChange{Step: 150}, `{"volume":100}`},
+		{"a level past the top", media.VolumeChange{Set: level(101)}, `{"volume":100}`},
+	} {
+		_, err := b.Volume(ctx, tc.change)
+		require.NoError(t, err, tc.name)
+		assert.JSONEq(t, tc.sent, lastParams(t, s, "Application.SetVolume"), tc.name)
+	}
+}
+
 func collectEvents(t *testing.T, b *Backend) <-chan media.Event {
 	t.Helper()
 
@@ -489,13 +519,15 @@ func collectEvents(t *testing.T, b *Backend) <-chan media.Event {
 	return events
 }
 
-func nextEvent(t *testing.T, events <-chan media.Event) media.Event {
+// heard returns the event the backend reported once everything has settled, failing if there is none.
+func heard(t *testing.T, events <-chan media.Event) media.Event {
 	t.Helper()
+	synctest.Wait()
 
 	select {
 	case ev := <-events:
 		return ev
-	case <-time.After(2 * time.Second):
+	default:
 		t.Fatal("no event")
 
 		return media.Event{}
@@ -503,43 +535,48 @@ func nextEvent(t *testing.T, events <-chan media.Event) media.Event {
 }
 
 func TestSubscribe(t *testing.T) {
-	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
-	events := collectEvents(t, b)
+	synctest.Test(t, func(t *testing.T) {
+		b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+		events := collectEvents(t, b)
 
-	require.Equal(t, media.Event{Kind: media.EventConnected}, nextEvent(t, events))
+		require.Equal(t, media.Event{Kind: media.EventConnected}, heard(t, events))
 
-	s.Notify("VideoLibrary.OnUpdate", map[string]any{"id": 7, "type": "movie", "added": true})
-	assert.Equal(t, media.Event{Kind: media.EventItemUpdated, Ref: media.Ref{Kind: media.KindMovie, ID: 7}}, nextEvent(t, events))
+		s.Notify("VideoLibrary.OnUpdate", map[string]any{"id": 7, "type": "movie", "added": true})
+		assert.Equal(t, media.Event{Kind: media.EventItemUpdated, Ref: media.Ref{Kind: media.KindMovie, ID: 7}}, heard(t, events))
 
-	s.Notify("GUI.OnScreensaverActivated", map[string]any{})
-	s.Notify("VideoLibrary.OnRemove", map[string]any{"id": 103, "type": "episode"})
-	assert.Equal(t, media.Event{Kind: media.EventItemRemoved, Ref: media.Ref{Kind: media.KindEpisode, ID: 103}}, nextEvent(t, events),
-		"notifications encore doesn't use are dropped")
+		s.Notify("GUI.OnScreensaverActivated", map[string]any{})
+		s.Notify("VideoLibrary.OnRemove", map[string]any{"id": 103, "type": "episode"})
+		assert.Equal(t, media.Event{Kind: media.EventItemRemoved, Ref: media.Ref{Kind: media.KindEpisode, ID: 103}}, heard(t, events),
+			"notifications encore doesn't use are dropped")
 
-	s.Notify("AudioLibrary.OnUpdate", map[string]any{"id": 2, "type": "song"})
-	assert.Equal(t, media.Event{Kind: media.EventItemUpdated, Ref: media.Ref{Kind: media.KindSong, ID: 2}}, nextEvent(t, events))
+		s.Notify("AudioLibrary.OnUpdate", map[string]any{"id": 2, "type": "song"})
+		assert.Equal(t, media.Event{Kind: media.EventItemUpdated, Ref: media.Ref{Kind: media.KindSong, ID: 2}}, heard(t, events))
 
-	s.Notify("VideoLibrary.OnScanFinished", nil)
-	assert.Equal(t, media.Event{Kind: media.EventLibraryScanned}, nextEvent(t, events))
+		s.Notify("VideoLibrary.OnScanFinished", nil)
+		assert.Equal(t, media.Event{Kind: media.EventLibraryScanned}, heard(t, events))
 
-	s.Notify("AudioLibrary.OnCleanFinished", nil)
-	assert.Equal(t, media.Event{Kind: media.EventLibraryScanned}, nextEvent(t, events))
+		s.Notify("AudioLibrary.OnCleanFinished", nil)
+		assert.Equal(t, media.Event{Kind: media.EventLibraryScanned}, heard(t, events))
 
-	require.NoError(t, b.Play(t.Context(), media.Ref{Kind: media.KindMovie, ID: 6}, media.PlayOptions{}))
-	assert.Equal(t, media.Event{Kind: media.EventPlaybackStarted, Ref: media.Ref{Kind: media.KindMovie, ID: 6}}, nextEvent(t, events))
+		require.NoError(t, b.Play(t.Context(), media.Ref{Kind: media.KindMovie, ID: 6}, media.PlayOptions{}))
+		assert.Equal(t, media.Event{Kind: media.EventPlaybackStarted, Ref: media.Ref{Kind: media.KindMovie, ID: 6}}, heard(t, events))
 
-	require.NoError(t, b.Transport(t.Context(), media.TransportStop))
-	assert.Equal(t, media.Event{Kind: media.EventPlaybackStopped, Ref: media.Ref{Kind: media.KindMovie, ID: 6}}, nextEvent(t, events))
+		require.NoError(t, b.Transport(t.Context(), media.TransportStop))
+		assert.Equal(t, media.Event{Kind: media.EventPlaybackStopped, Ref: media.Ref{Kind: media.KindMovie, ID: 6}}, heard(t, events))
 
-	s.Notify("System.OnQuit", map[string]any{"exitcode": 0})
-	assert.Equal(t, media.Event{Kind: media.EventDisconnected}, nextEvent(t, events))
+		s.Notify("System.OnQuit", map[string]any{"exitcode": 0})
+		assert.Equal(t, media.Event{Kind: media.EventDisconnected}, heard(t, events))
 
-	s.Notify("System.OnWake", nil)
-	assert.Equal(t, media.Event{Kind: media.EventConnected}, nextEvent(t, events))
+		s.Notify("System.OnWake", nil)
+		assert.Equal(t, media.Event{Kind: media.EventConnected}, heard(t, events))
 
-	s.DropConnections()
-	assert.Equal(t, media.Event{Kind: media.EventDisconnected}, nextEvent(t, events))
-	assert.Equal(t, media.Event{Kind: media.EventConnected}, nextEvent(t, events), "reconnects and says so")
+		s.DropConnections()
+		assert.Equal(t, media.Event{Kind: media.EventDisconnected}, heard(t, events))
+		assert.Empty(t, events, "nothing more until the transport reconnects")
+
+		time.Sleep(b.Client().Transport().cfg.ReconnectMin)
+		assert.Equal(t, media.Event{Kind: media.EventConnected}, heard(t, events), "reconnects and says so")
+	})
 }
 
 func TestTranslate(t *testing.T) {
@@ -553,6 +590,12 @@ func TestTranslate(t *testing.T) {
 		{"VideoLibrary.OnUpdate", `{"data":{"item":{"id":9,"type":"musicvideo"},"playcount":1}}`, media.Event{Kind: media.EventItemUpdated, Ref: media.Ref{Kind: media.KindMusicVideo, ID: 9}}, true},
 		{"VideoLibrary.OnUpdate", `{"data":{"id":2,"type":"set"}}`, media.Event{}, false},
 		{"VideoLibrary.OnUpdate", `not json`, media.Event{}, false},
+		{"VideoLibrary.OnUpdate", `{"data":{"id":0,"type":"movie"}}`, media.Event{}, false},
+		{"VideoLibrary.OnRemove", `{"data":{"item":{"type":"episode"}}}`, media.Event{}, false},
+		{"VideoLibrary.OnScanFinished", `{}`, media.Event{Kind: media.EventLibraryScanned}, true},
+		{"Player.OnPlay", `{"data":{"item":{"type":"movie","id":0}}}`, media.Event{Kind: media.EventPlaybackStarted}, true},
+		{"Player.OnPlay", `{"data":{"item":{"type":"episode","id":7}}}`, media.Event{Kind: media.EventPlaybackStarted, Ref: media.Ref{Kind: media.KindEpisode, ID: 7}}, true},
+		{"System.OnWake", `{}`, media.Event{Kind: media.EventConnected}, true},
 		{"AudioLibrary.OnRemove", `{"data":{"id":5,"type":"album"}}`, media.Event{Kind: media.EventItemRemoved, Ref: media.Ref{Kind: media.KindAlbum, ID: 5}}, true},
 		{"Player.OnPlay", `{"data":{"item":{"type":"channel","id":3},"player":{"playerid":1}}}`, media.Event{Kind: media.EventPlaybackStarted}, true},
 		{"Player.OnStop", `{"data":{"end":true}}`, media.Event{Kind: media.EventPlaybackStopped}, true},
@@ -592,4 +635,240 @@ func TestNowPlayingArtAndImage(t *testing.T) {
 
 	_, _, err = b.Client().Image(ctx, "http://192.0.2.1/secret")
 	require.ErrorIs(t, err, ErrNotImage, "only image:// references are fetched")
+}
+
+func TestActivePlayerPrefersVideoThenAudio(t *testing.T) {
+	for _, tc := range []struct {
+		name    string
+		players string
+		want    string
+	}{
+		{"video first", `[{"playerid":2,"type":"picture"},{"playerid":0,"type":"audio"},{"playerid":1,"type":"video"}]`, `{"playerid":1,"shuffle":true}`},
+		{"then audio", `[{"playerid":2,"type":"picture"},{"playerid":0,"type":"audio"}]`, `{"playerid":0,"shuffle":true}`},
+		{"then anything", `[{"playerid":2,"type":"picture"}]`, `{"playerid":2,"shuffle":true}`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+			s.Handle("Player.GetActivePlayers", func(json.RawMessage) (any, *fakekodi.Error) { return json.RawMessage(tc.players), nil })
+			s.Handle("Player.SetShuffle", func(json.RawMessage) (any, *fakekodi.Error) { return "OK", nil })
+
+			require.NoError(t, b.SetShuffle(t.Context(), true))
+			assert.JSONEq(t, tc.want, lastParams(t, s, "Player.SetShuffle"))
+		})
+	}
+}
+
+func TestNowPlayingNothing(t *testing.T) {
+	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+
+	np, err := b.NowPlaying(t.Context())
+
+	require.NoError(t, err)
+	assert.Nil(t, np, "nothing playing is not an error")
+	assert.Empty(t, s.CallsTo("Player.GetItem"))
+}
+
+func TestNowPlayingOutsideTheLibrary(t *testing.T) {
+	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+	playing(t, b)
+
+	s.Handle("Player.GetItem", func(json.RawMessage) (any, *fakekodi.Error) {
+		return json.RawMessage(`{"item":{"type":"channel","id":42,"label":"ABC News","duration":0,"runtime":1800}}`), nil
+	})
+	s.Handle("Player.GetProperties", func(json.RawMessage) (any, *fakekodi.Error) {
+		return json.RawMessage(`{"speed":1,"time":{"hours":0,"minutes":5,"seconds":0,"milliseconds":0}}`), nil
+	})
+
+	np, err := b.NowPlaying(t.Context())
+	require.NoError(t, err)
+	require.NotNil(t, np)
+
+	assert.Equal(t, media.Item{Title: "ABC News", Runtime: 30 * time.Minute}, np.Item, "no kind and no ID for something outside the library")
+	assert.Equal(t, 5*time.Minute, np.Position)
+	assert.Equal(t, 30*time.Minute, np.Duration, "without a total time the runtime is the duration")
+	assert.False(t, np.Paused)
+}
+
+func TestNowPlayingKinds(t *testing.T) {
+	for typ, kind := range map[string]media.Kind{"movie": media.KindMovie, "episode": media.KindEpisode, "musicvideo": media.KindMusicVideo, "song": media.KindSong} {
+		m := mapper{zone: newZone(aest)}
+
+		it := m.playing(&kodirpc.ListItemAll{ListItemBase: kodirpc.ListItemBase{ID: 7, Type: kodirpc.ListItemBaseType(typ), Title: "T"}})
+
+		assert.Equal(t, kind, it.Kind, typ)
+		assert.Equal(t, 7, it.ID, typ)
+	}
+}
+
+func TestParseTime(t *testing.T) {
+	m := mapper{zone: newZone(aest)}
+
+	assert.Equal(t, at("2024-06-01 10:00:00"), m.parseTime("2024-06-01 10:00:00"))
+	assert.True(t, m.parseTime("").IsZero())
+	assert.True(t, m.parseTime("yesterday").IsZero(), "a malformed date is no date")
+	assert.True(t, m.parseTime("2024-06-01").IsZero())
+	assert.Zero(t, globalDuration(nil))
+}
+
+func TestSearchEachKind(t *testing.T) {
+	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+
+	for _, tc := range []struct {
+		kind   media.Kind
+		title  string
+		method string
+		field  string
+		want   []string
+	}{
+		{media.KindTVShow, "office", "VideoLibrary.GetTVShows", "title", []string{"The Office (US)", "The Office (UK)"}},
+		{media.KindMusicVideo, "rhapsody", "VideoLibrary.GetMusicVideos", "title", []string{"Bohemian Rhapsody"}},
+		{media.KindAlbum, "abbey", "AudioLibrary.GetAlbums", "album", []string{"Abbey Road"}},
+		{media.KindSong, "love", "AudioLibrary.GetSongs", "title", []string{"Love of My Life"}},
+		{media.KindSong, "zzz", "AudioLibrary.GetSongs", "title", []string{}},
+	} {
+		items, err := b.Search(t.Context(), tc.kind, tc.title)
+		require.NoError(t, err, tc.kind)
+		assert.ElementsMatch(t, tc.want, titles(items), tc.kind)
+		assert.Contains(t, lastParams(t, s, tc.method), `"filter":{"operator":"contains","value":"`+tc.title+`","field":"`+tc.field+`"}`, tc.kind)
+	}
+}
+
+func TestPlaylistsSkipFoldersAndUnreachableKodi(t *testing.T) {
+	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+
+	s.Handle("Files.GetDirectory", func(params json.RawMessage) (any, *fakekodi.Error) {
+		if bytes.Contains(params, []byte("Mix.m3u")) {
+			return json.RawMessage(`{"files":[{"file":"/m/1.flac","filetype":"file","label":"1"},{"file":"/m/sub/","filetype":"directory","label":"sub"},{"file":"","filetype":"file","label":"stream"}]}`), nil
+		}
+
+		if bytes.Contains(params, []byte("music")) {
+			return json.RawMessage(`{"files":[{"file":"special://profile/playlists/music/Mix.m3u","filetype":"file","label":""},{"file":"special://profile/playlists/music/Old/","filetype":"directory","label":"Old"}]}`), nil
+		}
+
+		return nil, &fakekodi.Error{Code: CodeInvalidParams, Message: "no such folder"}
+	})
+
+	items, err := b.Library(t.Context(), media.KindPlaylist)
+	require.NoError(t, err, "a missing playlist folder means no playlists there")
+	require.Len(t, items, 1, "folders aren't playlists")
+	assert.Equal(t, "special://profile/playlists/music/Mix.m3u", items[0].Title, "the path stands in for a missing label")
+
+	require.NoError(t, b.Play(t.Context(), items[0].Ref(), media.PlayOptions{Shuffle: true}))
+	assert.JSONEq(t, `{"playlistid":0,"item":[{"file":"/m/1.flac"}]}`, lastParams(t, s, "Playlist.Add"), "only playable files are queued")
+
+	_, err = b.Item(t.Context(), media.Ref{Kind: media.KindPlaylist, ID: 12345})
+	require.ErrorIs(t, err, media.ErrNotFound)
+
+	s.Close()
+
+	_, err = b.Library(t.Context(), media.KindPlaylist)
+	require.ErrorIs(t, err, media.ErrUnreachable, "an unreachable Kodi isn't an empty one")
+}
+
+func TestPlaylistsOfAnUnreachableKodi(t *testing.T) {
+	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+
+	playlists, err := b.Library(t.Context(), media.KindPlaylist)
+	require.NoError(t, err)
+	require.NotEmpty(t, playlists)
+
+	known := playlists[0].Ref()
+
+	s.Close()
+
+	_, err = b.Search(t.Context(), media.KindPlaylist, "road")
+	require.ErrorIs(t, err, media.ErrUnreachable, "no playlists found is not the same as none there")
+
+	_, err = b.Item(t.Context(), known)
+	require.ErrorIs(t, err, media.ErrUnreachable, "a playlist is looked up afresh")
+
+	err = b.Play(t.Context(), media.Ref{Kind: media.KindPlaylist, ID: known.ID + 1}, media.PlayOptions{})
+	require.ErrorIs(t, err, media.ErrUnreachable, "an unknown playlist is looked for, and Kodi can't be asked")
+}
+
+func TestShuffleAPlaylistKodiCantRead(t *testing.T) {
+	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+
+	playlists, err := b.Library(t.Context(), media.KindPlaylist)
+	require.NoError(t, err)
+	require.NotEmpty(t, playlists)
+
+	// The folders still list, but the playlist itself can't be read.
+	s.Handle("Files.GetDirectory", func(params json.RawMessage) (any, *fakekodi.Error) {
+		if bytes.Contains(params, []byte(`"directory":"special://profile/playlists/`)) && !bytes.Contains(params, []byte(`/"`)) {
+			return nil, &fakekodi.Error{Code: CodeInternalError, Message: "Internal error."}
+		}
+
+		return nil, &fakekodi.Error{Code: CodeInvalidParams, Message: "no such folder"}
+	})
+
+	err = b.Play(t.Context(), playlists[0].Ref(), media.PlayOptions{Shuffle: true})
+	require.ErrorContains(t, err, "reading playlist special://profile/playlists/")
+	assert.Empty(t, s.CallsTo("Playlist.Clear"), "the queue is left alone")
+}
+
+func TestItemWithoutDetails(t *testing.T) {
+	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+
+	// Kodi answers, but with no movie in the reply.
+	s.Handle("VideoLibrary.GetMovieDetails", func(json.RawMessage) (any, *fakekodi.Error) { return map[string]any{}, nil })
+
+	_, err := b.Item(t.Context(), media.Ref{Kind: media.KindMovie, ID: 1})
+	require.ErrorIs(t, err, media.ErrNotFound)
+	assert.ErrorContains(t, err, "movie 1")
+}
+
+func TestShuffleEmptyContainer(t *testing.T) {
+	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+	s.Update(func(l *fakekodi.Library) { l.Songs = nil })
+
+	err := b.Play(t.Context(), media.Ref{Kind: media.KindArtist, ID: 1}, media.PlayOptions{Shuffle: true})
+
+	require.ErrorIs(t, err, media.ErrNotFound)
+	assert.Empty(t, s.CallsTo("Playlist.Clear"), "the queue is left alone")
+}
+
+func TestZoneIsLearnedFromKodi(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		labels func(now time.Time) map[string]string
+		offset int
+	}{
+		{"date and time", func(now time.Time) map[string]string {
+			local := now.In(time.FixedZone("", 11*3600))
+
+			return map[string]string{clockLabel: local.Format("03:04:05 PM"), dateLabel: local.Format(time.DateOnly)}
+		}, 11 * 3600},
+		{"time only", func(now time.Time) map[string]string {
+			return map[string]string{clockLabel: now.In(time.FixedZone("", 10*3600)).Format("15:04:05"), dateLabel: ""}
+		}, 10 * 3600},
+		{"unreadable clock", func(time.Time) map[string]string { return map[string]string{clockLabel: "soon"} }, -1},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			s := fakekodi.New(t, fakekodi.Options{})
+			b := NewBackend(NewClient(testConfig(t, s), nil), BackendOptions{})
+			now := time.Date(2026, 10, 28, 9, 30, 0, 0, time.UTC)
+			b.m.zone.now = func() time.Time { return now }
+			s.Handle(kodirpc.MethodXBMCGetInfoLabels, func(json.RawMessage) (any, *fakekodi.Error) { return tc.labels(now), nil })
+
+			movies, err := b.Library(t.Context(), media.KindMovie)
+			require.NoError(t, err)
+
+			_, offset := movies[0].DateAdded.Zone()
+
+			if tc.offset < 0 {
+				_, local := time.Date(2019, 3, 2, 10, 0, 0, 0, time.Local).Zone()
+				assert.Equal(t, local, offset, "the server's own zone stays the guess")
+
+				return
+			}
+
+			assert.Equal(t, tc.offset, offset, "dates are read in Kodi's zone")
+			assert.Equal(t, 10, movies[0].DateAdded.Hour())
+
+			_, err = b.Library(t.Context(), media.KindMovie)
+			require.NoError(t, err)
+			assert.Len(t, s.CallsTo(kodirpc.MethodXBMCGetInfoLabels), 1, "the zone is learned once, not on every read")
+		})
+	}
 }

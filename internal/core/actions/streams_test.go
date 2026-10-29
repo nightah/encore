@@ -107,4 +107,59 @@ func TestLanguageTag(t *testing.T) {
 	for in, want := range map[string]string{"eng": "en", "fre": "fr", "fra": "fr", "ger": "de", "pt-BR": "pt", "en-AU": "en", "": "", "xx": "", "und": "", "not a code": ""} {
 		assert.Equal(t, want, languageTag(in), in)
 	}
+
+	// Tags that parse but name no language: a private-use tag, and an undetermined one whose region (Antarctica) suggests none.
+	for _, in := range []string{"x-dub", "und-AQ"} {
+		assert.Empty(t, languageTag(in), in)
+	}
+}
+
+func TestStreamMessage(t *testing.T) {
+	for _, tc := range []struct {
+		name      string
+		cur       *media.Stream
+		id        string
+		params    map[string]string
+		languages map[string]string
+	}{
+		{"unknown stream", nil, "streams.audio_unknown", nil, nil},
+		{"language", &media.Stream{Language: "fre", Name: "Dub"}, "streams.audio_language", nil, map[string]string{"language": "fr"}},
+		{"name only", &media.Stream{Name: "Commentary"}, "streams.audio_named", map[string]string{"name": "Commentary"}, nil},
+		{"unknown language and name", &media.Stream{Language: "xx"}, "streams.audio_unknown", nil, nil},
+		{"nothing at all", &media.Stream{}, "streams.audio_unknown", nil, nil},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			msg := streamMessage("streams.audio", tc.cur)
+
+			assert.Equal(t, tc.id, msg.ID)
+			assert.Equal(t, tc.params, msg.Params)
+			assert.Equal(t, tc.languages, msg.Languages)
+		})
+	}
+}
+
+func TestStreamIn(t *testing.T) {
+	streams := []media.Stream{{Index: 3, Language: ""}, {Index: 4, Language: "ger"}, {Index: 5, Language: "fre"}, {Index: 6, Language: "fra"}}
+
+	for _, tc := range []struct {
+		spoken, listener string
+		want             int
+		ok               bool
+	}{
+		{"french", "en-AU", 5, true},
+		{"Französisch", "de-DE", 5, true},
+		{"allemand", "fr", 4, true},
+		{"deutsch", "", 4, true},
+		{"German", "not a language", 4, true},
+		{"fr", "en", 5, true},
+		{"", "en", 0, false},
+		{"klingon", "en", 0, false},
+	} {
+		i, ok := streamIn(streams, tc.spoken, tc.listener)
+		assert.Equal(t, tc.ok, ok, tc.spoken)
+		assert.Equal(t, tc.want, i, tc.spoken)
+	}
+
+	_, ok := streamIn(nil, "french", "en")
+	assert.False(t, ok)
 }
