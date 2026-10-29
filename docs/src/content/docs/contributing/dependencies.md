@@ -129,9 +129,9 @@ The local admin account can require a code from an authenticator app (TOTP). Enc
 
 Sound-alike matching finds titles that are spelt differently from what Alexa heard but sound the same. Each word gets one or more phonetic keys, and words with the same key match. English used Double Metaphone from PhonoGrams/double_metaphone, and German used Kölner Phonetik from f1monkey/phonetic. French, Spanish and Italian used English Double Metaphone.
 
-**Why they were replaced.** Both are small libraries, and double_metaphone has had few releases and little recent activity. They allocated several objects per word, which adds up when a library of 100,000 titles is indexed, and f1monkey/phonetic needed `golang.org/x/exp` for one helper. With its own encoders, Encore could also add French and Spanish, which no library covered.
+**Why they were replaced.** Both are small libraries, and double_metaphone has had few releases and little recent activity. They allocated several objects per word, which adds up when a library of 100,000 titles is indexed, and f1monkey/phonetic needed `golang.org/x/exp` for one helper. With its own encoders, Encore could also add French, Spanish, Brazilian Portuguese and Arabic, which no library covered.
 
-**What replaced them.** `internal/fuzzy/phonetic`, with one package per language: `en` and `de` are ports of the two libraries (Apache-2.0 and MIT, with their notices kept) that give the same keys, and `fr` and `es` are new encoders written from each language's spelling rules. French merges silent final consonants and plural marks, silent h and the -er/-é endings; Spanish merges b and v, silent h, ll and y, soft c, z and s, and a final s or d that many speakers drop. Each language names its own encoder, so adding a language package never changes another's keys.
+**What replaced them.** `internal/fuzzy/phonetic`, with one package per language: `en` and `de` are ports of the two libraries (Apache-2.0 and MIT, with their notices kept) that give the same keys, and `fr`, `es`, `pt` and `ar` are new encoders written from each language's spelling rules. French merges silent final consonants and plural marks, silent h and the -er/-é endings; Spanish merges b and v, silent h, ll and y, soft c, z and s, and a final s or d that many speakers drop; Brazilian Portuguese merges d and t before i with j and ch, ch and x, lh and li, nh and ni, a final l with u and the nasal endings; Arabic, keyed on the Latin consonant skeleton the matcher writes, adds keys that merge the consonants Arabic dialects interchange. Each language names its own encoder, so adding a language package never changes another's keys.
 
 **How they were checked.** While the libraries were still present, differential tests compared the ports with them on every word of up to four letters, rapid-generated words, invalid UTF-8 and long words. Before the libraries were removed, their output was captured: a digest over every word of up to four letters, a list of about 2000 English and 1600 German generated words, and the keys of every word in the test corpora in all five languages. `benchmarks/phonetic` keeps the side-by-side comparison, adding every word of the matcher's test corpora.
 
@@ -152,8 +152,9 @@ Each language has phonetic test corpora: real titles and the ways a speech recog
 
 There are two sets of corpora, scored separately:
 
-- **The original set** (`internal/core/match/testdata/asr_corpus.yaml` and `testdata/phonetic/`): 457 cases, frozen before any in-tree encoder was evaluated. It gates CI: a change that makes an encoder lose cases there fails the tests.
+- **The original set** (`internal/core/match/testdata/asr_corpus.yaml` and `testdata/phonetic/`): 457 cases in the first five languages, frozen before any in-tree encoder was evaluated, and 600 more in Arabic, Hindi, Japanese, Dutch and Portuguese, added in October 2026 when those languages joined. It is the set encoders are developed on, and it gates CI: a change that makes an encoder lose cases there fails the tests.
 - **The grown set** (`testdata/grown/`): 2,352 cases over 1,345 library entries in 9 suites, added in October 2026 because the original set was too small to decide some languages. Italian, for one, had only 57 cases, so English Double Metaphone making 56 of them said little about whether Italian needed rules of its own. Each file was written blind, without running any encoder or reading its source, and committed before any evaluation ran; nothing in it was changed to suit an encoder. One label was corrected since: "der hauptmann" expected nothing to be found, but *Der Hauptmann von Köpenick* is in that library, and the corpora treat a title's distinctive opening words as a request for it ("pulp" plays *Pulp Fiction*), so it now expects that title. The grown set gates CI too: production must decide at least as many cases right in each language, and make no more wrong plays, than in the table below.
+- **The new languages and regional locales**, added in October 2026: each new language has a development set in `testdata/phonetic/` and a held-out set in `testdata/grown/`, written together from the language's documented spelling-to-sound confusions and the way its recogniser writes titles, by writers who never saw an encoder, before any encoder was chosen for it. Latin American Spanish (`es-419.yaml`, for `es-MX` and `es-US`) and Québec French (`fr-CA.yaml`) have held-out sets only, scored with the Spanish and French rules. Encoders were developed on the development sets, and each held-out set was scored once the candidate was final. The grown set now holds 5,247 cases over 2,833 library entries in 27 suites; no case in the earlier files changed.
 
 | Language | Original set | Grown set | Grown library entries |
 | --- | --- | --- | --- |
@@ -162,6 +163,13 @@ There are two sets of corpora, scored separately:
 | Spanish | 55 | 458 | 271 |
 | French | 63 | 441 | 247 |
 | Italian | 57 | 364 | 212 |
+| Dutch | 120 | 435 | 199 |
+| Brazilian Portuguese | 118 | 440 | 228 |
+| Arabic | 121 | 421 | 179 |
+| Hindi | 121 | 418 | 231 |
+| Japanese | 120 | 440 | 180 |
+| Latin American Spanish (Spanish) | none | 381 | 277 |
+| Québec French (French) | none | 360 | 194 |
 
 #### Grown set
 
@@ -171,19 +179,26 @@ How each language's encoder does on the grown set:
 | --- | --- | --- | --- | --- |
 | English | Double Metaphone | 463 of 509 (91.0%) | 1 | 60 |
 | German | Kölner Phonetik, with a final *-er* keyed as *-a* | 535 of 580 (92.2%) | 1 | 35 |
-| Spanish | Spanish rules | 418 of 458 (91.3%) | 2 | 39 |
-| French | French rules | 408 of 441 (92.5%) | 2 | 36 |
+| Spanish | Spanish rules | 752 of 839 (89.6%): 420 of 458 in Spain, 332 of 381 in Latin America | 3 | 89 |
+| French | French rules | 737 of 801 (92.0%): 408 of 441 in France, 329 of 360 in Québec | 3 | 77 |
 | Italian | English Double Metaphone | 343 of 364 (94.2%) | 1 | 25 |
+| Dutch | English Double Metaphone | 401 of 435 (92.2%) | 4 | 28 |
+| Brazilian Portuguese | Brazilian Portuguese rules | 402 of 440 (91.4%) | 3 | 39 |
+| Arabic | Arabic rules, over Latin letters | 347 of 421 (82.4%) | 5 | 40 |
+| Hindi | English Double Metaphone, over Latin letters | 331 of 418 (79.2%) | 5 | 61 |
+| Japanese | English Double Metaphone, over Latin letters | 262 of 440 (59.5%) | 4 | 72 |
 
-The same cases with English Double Metaphone instead, which is what French, Spanish and Italian had before they had encoders of their own, and with no sound-alike keys at all, which shows how much they contribute. *Gains / losses* count the cases the language's encoder gets right and Double Metaphone doesn't, and the reverse. An encoder is kept only when its gain holds up: the 95% interval of the difference must not include zero.
+The same cases with English Double Metaphone instead, which is what French and Spanish had before they had encoders of their own, and what Italian, Dutch, Hindi and Japanese still use, and with no sound-alike keys at all, which shows how much they contribute. *Gains / losses* count the cases the language's encoder gets right and Double Metaphone doesn't, and the reverse. An encoder is kept only when its gain holds up and costs nothing: the 95% interval of the difference must not include zero, and it must add no wrong plays, which the tests enforce for every language with an encoder of its own.
 
 | Language | With Double Metaphone | With no sound-alike keys | Gains / losses | Difference (95% interval) | p |
 | --- | --- | --- | --- | --- | --- |
 | German | 539 (92.9%), 1 wrong | 463 | +5 / −9 | −0.7 points (−2.0 to +0.6) | 0.42 |
-| Spanish | 387 (84.5%), 2 wrong | 349 | +37 / −6 | +6.8 points (+4.0 to +9.5) | 1.6 × 10⁻⁶ |
-| French | 390 (88.4%), 2 wrong | 355 | +21 / −3 | +4.1 points (+1.9 to +6.2) | 0.0003 |
+| Spanish | 697 (83.1%), 3 wrong | 627 | +66 / −11 | +6.6 points (+4.6 to +8.6) | 1.0 × 10⁻¹⁰ |
+| French | 711 (88.8%), 3 wrong | 640 | +35 / −9 | +3.2 points (+1.6 to +4.9) | 1.1 × 10⁻⁴ |
+| Brazilian Portuguese | 367 (83.4%), 3 wrong | 318 | +37 / −2 | +8.0 points (+5.3 to +10.6) | 2.8 × 10⁻⁹ |
+| Arabic | 329 (78.1%), 5 wrong | 258 | +18 / −0 | +4.3 points (+2.3 to +6.2) | 7.6 × 10⁻⁶ |
 
-English and Italian use Double Metaphone already; without sound-alike keys they get 404 and 297 right.
+English, Italian, Dutch, Hindi and Japanese use Double Metaphone already; without sound-alike keys they get 404, 297, 332, 206 and 247 right. Spanish and French count their regional suites; on Spain's and France's files alone they are +38 / −6 and +21 / −3 against Double Metaphone, and on the Latin American and Québec files +28 / −5 (+6.0 points, +3.1 to +8.9) and +14 / −6 (+2.2 points, −0.2 to +4.6). Arabic, Hindi and Japanese are scored after the matcher writes them in Latin letters; in their own scripts Double Metaphone keys nothing, and Arabic, for one, gets 234 right either way.
 
 These counts include three fixes made after the grown set was first scored, none of them to an encoder: one corrected label, numbers the normaliser now reads in every language, and the German *-er* rule. Together they added 1 case in English, 14 in German, 2 in Spanish, 2 in French and 11 in Italian, and removed two wrong plays.
 
@@ -196,12 +211,17 @@ These counts include three fixes made after the grown set was first scored, none
 | Spanish | Spanish rules | 51 of 55 | 1 | 44 | 41 | +7 / −0 | +12.7 (+3.9 to +21.5) | 0.016 |
 | French | French rules | 61 of 63 | 0 | 55 | 48 | +6 / −0 | +9.5 (+2.3 to +16.8) | 0.031 |
 | Italian | English Double Metaphone | 56 of 57 | 0 | same | 49 | none | none | none |
+| Dutch | English Double Metaphone | 109 of 120 | 0 | same | 84 | none | none | none |
+| Brazilian Portuguese | Brazilian Portuguese rules | 107 of 118 | 0 | 93 | 77 | +14 / −0 | +11.9 (+5.9 to +17.8) | 0.0001 |
+| Arabic | Arabic rules, over Latin letters | 114 of 121 | 0 | 109 | 86 | +5 / −0 | +4.1 (+0.6 to +7.7) | 0.063 |
+| Hindi | English Double Metaphone, over Latin letters | 109 of 121 | 1 | same | 73 | none | none | none |
+| Japanese | English Double Metaphone, over Latin letters | 80 of 120 | 0 | same | 71 | none | none | none |
 
-None of the changes above moved a case in the original set.
+None of the changes above moved a case in the first five languages' original set.
 
 #### Titles that aren't in the library
 
-A request for a title your library doesn't have should never play something else. Sound-alike keys find more titles, and can also make Encore play one that wasn't asked for. To measure that with words nobody chose to suit an encoder, `TestPhoneticDistractors` builds five libraries of 2,000 synthetic titles per language from the words of Encore's own translations, and asks for 400 other such titles that are not in each: 2,000 requests per language for titles that aren't there. Any play is a wrong play. The words were frozen into `testdata/distractors/` on 29 October 2026, so a translation update doesn't move the counts, and CI fails a change that makes Encore play more of them than below.
+A request for a title your library doesn't have should never play something else. Sound-alike keys find more titles, and can also make Encore play one that wasn't asked for. To measure that with words nobody chose to suit an encoder, `TestPhoneticDistractors` builds five libraries of 2,000 synthetic titles per language from the words of Encore's own translations, and asks for 400 other such titles that are not in each: 2,000 requests per language for titles that aren't there. Any play is a wrong play. The words were frozen into `testdata/distractors/` on 29 October 2026, and the new languages' on 30 October 2026 from their finished translations, so a translation update doesn't move the counts, and CI fails a change that makes Encore play more of them than below.
 
 | Language | Wrong plays with Double Metaphone | With the language's encoder | Difference |
 | --- | --- | --- | --- |
@@ -210,6 +230,11 @@ A request for a title your library doesn't have should never play something else
 | Spanish | 114 | 120 | +6 |
 | French | 75 | 73 | −2 |
 | Italian | 94 | 94 | 0 |
+| Dutch | 115 | 115 | 0 |
+| Brazilian Portuguese | 95 | 95 | 0 |
+| Arabic | 86 | 84 | −2 |
+| Hindi | 92 | 92 | 0 |
+| Japanese | 80 | 80 | 0 |
 
 None of the changes since the first results moved these counts.
 
@@ -237,11 +262,35 @@ Encore now drops the *r* of a final *-er* in German words of four letters or mor
 
 Most of Double Metaphone's remaining German wins are English loanwords and names ("skuter" for *Scooter*, "kraftklup" for *Kraftklub*), which a German rule shouldn't chase.
 
+##### Dutch
+
+Dutch keeps English Double Metaphone. Rules of Encore's own were written from Dutch spelling-to-sound correspondences and recogniser confusions (ij and ei, au and ou, g and ch, final d said as t, v and f, z and s, sch, double vowels, ui, eu and oe, the silent n of -en, w and v, c as k or s); there is no published Dutch Double Metaphone to start from. They gained 3 development cases and lost none (+2.5 points, −0.3 to +5.3, p = 0.25), but on the held-out set they gained 2 and lost 4 (−0.5 points, −1.6 to +0.6, p = 0.69) and played one more absent title, so they weren't shipped. What Dutch needed was its numbers, said units first and often written as one word ("eenentwintig", "negentienhonderdvierentachtig"), and English numbers and ordinals, since Dutch libraries keep English titles as published.
+
+##### Brazilian Portuguese
+
+Brazilian Portuguese has an encoder of its own (`internal/fuzzy/phonetic/pt`), written from Cristófaro Silva (1999), Mattoso Câmara (1970) and Barbosa and Albano (2004) on the consonant skeleton the Spanish encoder uses. Double Metaphone keeps apart what Brazilians say alike: d and t before i ("Tim" heard as "Chim"), ch and x, lh and li, nh and ni, a final l said as u ("Brasil", "Brasiu"), the nasal endings -m, -n and -ão, and the i Brazilians put inside consonant clusters ("adivogado"). The encoder gains 14 development cases and 37 held-out ones for 2 losses, with the same 3 wrong plays and no more absent titles played. The Spanish encoder was measured too and did no better (365 of 440 held out, +7 / −9), as it merges b and v, which Brazilians keep apart, and reads x as s.
+
+##### Arabic
+
+Arabic is matched in Latin letters, with an encoder of its own on top (`internal/fuzzy/phonetic/ar`). Alexa's ar-SA recogniser writes Arabic script, while Saudi libraries mix Arabic titles with English ones asked for in Arabic letters ("تايتانك" for *Titanic*). In Arabic script Double Metaphone keys nothing: it decides 88 development and 234 held-out cases, exactly as many as no sound-alike keys. The matcher therefore folds the letters written several ways for one sound (hamza seats, ة and ه, ى and ي), strips the article ال and its fused forms, and writes each word as a Latin consonant skeleton, the short vowels Arabic doesn't write left out. That alone takes Double Metaphone to 109 and 329. The encoder keeps Double Metaphone's key and adds one that merges the consonants Gulf, Najdi, Cairene and Levantine speech interchange (ق, ج and g; the interdentals and sibilants; خ and ح) and one that says ق as the glottal stop of Cairo, which gains 18 held-out cases and loses none.
+
+##### Hindi
+
+Hindi is matched in Latin letters with English Double Metaphone. Alexa's hi-IN recogniser writes Hindi in Devanagari, while Indian libraries mostly hold romanised Bollywood and English titles, so the matcher writes Devanagari the way film titles are spelt: schwa deletion after Ohala (1983) and Narasimhan, Sproat and Kiraz (2004), nukta letters as their Perso-Arabic sounds, anusvara as the nasal of the next consonant, and व as w after a consonant. That takes the held-out set from 110 to 331 of 418. Hindi rules over the Latin form, written from Masica (1991), Ohala (1983), Kachru (2006) and Sailaja (2009) (Double Metaphone after folding aspirates, sh to s, z to j, w to v and q to k), gained 21 held-out cases and lost 7 (+3.3 points, +0.9 to +5.8, p = 0.013), a gain that holds up, but they added a wrong play ("चस्मे बदूर" plays where Encore should ask) and two plays of absent titles, so they weren't shipped. A review found व written as v after a consonant whose vowel is dropped (दिलवाले as "dilvale", which missed *Dilwale*), which was fixed after the held-out set was first scored; it gained one case and changed no encoder's standing.
+
+##### Japanese
+
+Japanese is matched in Latin letters with English Double Metaphone. Titles and requests are split into words with a port of TinySegmenter (BSD licence, chosen over splitting at script changes and a particle-aware splitter on the development set), and kana is written in Hepburn romaji without long vowels, so a word spelt in hiragana, katakana or Latin letters meets itself; kanji stay as written, since reading them takes a dictionary. Without romaji Double Metaphone has nothing to key, and held-out accuracy falls from 262 to 207 of 440. Japanese rules for the way Japanese writes English loanwords and the recogniser's confusions (l and r, v and b, th and s, si and shi, tu and tsu, long vowels) gained 20 held-out cases and lost 3 (p = 0.0005), but added a wrong play, so they weren't shipped. Most Japanese misses are kanji homophones and kanji spellings of katakana titles, which only a reading dictionary would reach.
+
+##### Latin American Spanish and Québec French
+
+The regional held-out sets are scored with the Spanish and French rules, which beat Double Metaphone on them as well: +28 / −5 in Latin America (+6.0 points, +3.1 to +8.9) and +14 / −6 in Québec (+2.2 points, −0.2 to +4.6, an interval that touches zero, so French's regional lead is only suggestive). Their misses led to five small additions: Spanish acronyms read by letter name ("erre be de" is *RBD*, "de ve de" *DVD*, with the Latin American "ve"), "veintiún" and Québec "troé" read as numbers, "volume" dropped before a number as "part" is, a Spanish key for an h or w that stands for the jota or gu ("hosé" finds *José*, "weros" *Güeros*), and a French key for a w after a velar, the Québec "quoi" ("kwè"). Because they were drawn from the held-out misses themselves, their gains there (+16 / −0 in Spanish, +4 / −0 in French) are in-sample and not confirmatory; they were kept because they lose no case in any corpus and add no wrong play and no play of an absent title. Québec's affrication of t and d before i and u was tried and dropped: it gained one case and lost another.
+
 French keys merge spellings that are different titles as well as mishearings (*mot* and *mots*, *son* and *sont*), so in French a top candidate that only sounds like the request must lead the runner-up clearly before Encore plays it; otherwise Alexa asks.
 
 The grown set also exposed a matcher bug that no encoder could fix: asking for a sequel the library doesn't have ("crocodile dundee two", "die vorstadtkrokodile 2") played the original. Encore now asks instead, which removed 6 wrong plays from the grown set and decided 4 more cases right; the numbers above include it.
 
-Measured on 29 October 2026; the inverted index and the simpler trigram retriever give the same counts everywhere, and the trigram retriever's wrong plays for titles that aren't in the library differ by at most one.
+Measured on 29 October 2026, and for the new languages and regional suites on 30 October 2026; the inverted index and the simpler trigram retriever give the same counts everywhere, and the trigram retriever's wrong plays for titles that aren't in the library differ by at most one.
 
 #### Rerunning the evaluation
 
