@@ -30,7 +30,7 @@ func contractClient(t *testing.T) (*Client, bool) {
 	require.NoError(t, err)
 
 	cfg.DisableWebSocket = wsURL == ""
-	cfg.ReconnectMin = 50 * time.Millisecond
+	cfg.ReconnectMin, cfg.ReconnectMax = 50*time.Millisecond, time.Second
 
 	return NewClient(cfg, nil), wsURL != ""
 }
@@ -141,14 +141,14 @@ func TestContractBackend(t *testing.T) {
 	assert.True(t, c.Transport().Connected())
 }
 
-// nextEvent waits for the real Kodi to report an event.
+// nextEvent waits for the real Kodi to report an event. The wait is generous because Kodi's WebSocket can come up after its HTTP server, which is all CI waits for.
 func nextEvent(t *testing.T, events <-chan media.Event) media.Event {
 	t.Helper()
 
 	select {
 	case ev := <-events:
 		return ev
-	case <-time.After(2 * time.Second):
+	case <-time.After(30 * time.Second):
 		t.Fatal("no event")
 
 		return media.Event{}
