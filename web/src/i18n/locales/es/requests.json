@@ -24,7 +24,7 @@
       "wouldSay": "Alexa diría: «{{speech}}»"
     },
     "silent": "Nada (en silencio).",
-    "slotRaw": "Slot (sin procesar)",
+    "slots": "",
     "target": {
       "label": "Kodi de destino",
       "none": "Ninguno",
@@ -34,18 +34,24 @@
       "fallback": "Encore {{encore}} · Kodi {{kodi}} · total {{total}}",
       "label": "Tiempos",
       "split": "verificación {{verify}} · búsqueda {{match}} · Kodi {{kodi}} · total {{total}}"
+    },
+    "via": {
+      "alias": "",
+      "device": ""
     }
   },
   "empty": {
     "filtered": "Prueba con otra búsqueda o quita los filtros.",
     "filteredTitle": "No hay solicitudes que coincidan",
     "none": "Las solicitudes aparecen aquí en cuanto un Echo habla con Encore. Di «Alexa, pregúntale a {{invocation}} qué está sonando».",
+    "noneNoInvocation": "",
     "noneTitle": "Aún no hay solicitudes"
   },
   "filters": {
     "allDevices": "Todos los Echo",
     "allOutcomes": "Todos los resultados",
     "device": "Dispositivo Echo",
+    "deviceById": "",
     "label": "Filtrar solicitudes",
     "outcome": "Resultado",
     "search": "Buscar en lo que se oyó",
