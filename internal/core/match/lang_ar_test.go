@@ -195,3 +195,18 @@ func TestPropArabicNormalizeIsLatinOrScript(t *testing.T) {
 		require.Equal(t, strings.Join(strings.Fields(got), " "), got)
 	})
 }
+
+// The name Ali (علي) is written like the preposition على once alif maqsura folds, and إلى is written ali too, so neither is a stop word: "محمد علي" searches for both words.
+func TestArabicQueryTokensKeepAli(t *testing.T) {
+	l := languages["ar"]
+
+	for in, want := range map[string][]string{
+		"محمد علي":       {"mhmd", "ali"},
+		"علي بابا":       {"ali", "baba"},
+		"رحلة إلى القمر": {"rhla", "ali", "qmr"},
+		"بيت في المدينة": {"bit", "mdina"},
+	} {
+		qf := l.newForm(l.normalizeSpelled(in, false))
+		assert.Equal(t, want, l.queryTokens(&qf), in)
+	}
+}
