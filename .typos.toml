@@ -36,6 +36,8 @@ extend-exclude = [
   "internal/fuzzy/phonetic/*/testdata/",
   # Double Metaphone's rules match letter sequences ("PN", "ALLE"), not words.
   "internal/fuzzy/phonetic/en/metaphone.go",
+  # TinySegmenter's weights are keyed by character classes ("HOM", "ONN"), not words.
+  "internal/fuzzy/tinyseg/weights.go",
 ]
 
 # Prose is Australian English.
