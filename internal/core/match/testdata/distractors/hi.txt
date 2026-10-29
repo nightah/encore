@@ -493,7 +493,7 @@ edittitle
 edmin
 edres
 edresing
-edvenchar
+edwenchar
 eject
 ejectmedia
 eksaport
@@ -580,7 +580,6 @@ fon
 for
 forget
 forgetellipsis
-forvard
 forward
 found
 frainchaizi
@@ -735,7 +734,7 @@ intents
 intro
 invalid
 invocation
-invokeshan
+inwokeshan
 ise
 iska
 iske
@@ -1124,7 +1123,7 @@ nearly
 needsdeploy
 needsreauthorise
 net
-netvark
+netwark
 never
 nevi
 new
@@ -1262,7 +1261,7 @@ pasathru
 passed
 passthrough
 password
-pasvard
+pasward
 pata
 pate
 path
@@ -1864,7 +1863,7 @@ types
 typetext
 udahran
 ulti
-ummidvar
+ummidwar
 umra
 unanswered
 unavailable
