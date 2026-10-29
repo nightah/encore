@@ -36,18 +36,18 @@
         "label": "كلمة المرور"
       },
       "session": {
-        "days_zero": "{{count}} يوم",
-        "days_one": "{{count}} يوم",
-        "days_two": "{{count}} يومان",
         "days_few": "{{count}} أيام",
         "days_many": "{{count}} يومًا",
+        "days_one": "{{count}} يوم",
         "days_other": "{{count}} يوم",
-        "hours_zero": "{{count}} ساعة",
-        "hours_one": "{{count}} ساعة",
-        "hours_two": "{{count}} ساعتان",
+        "days_two": "{{count}} يومان",
+        "days_zero": "{{count}} يوم",
         "hours_few": "{{count}} ساعات",
         "hours_many": "{{count}} ساعة",
+        "hours_one": "{{count}} ساعة",
         "hours_other": "{{count}} ساعة",
+        "hours_two": "{{count}} ساعتان",
+        "hours_zero": "{{count}} ساعة",
         "label": "مدة الجلسة"
       },
       "totp": {
@@ -313,12 +313,12 @@
       },
       "hint": "قاعدة البيانات مع تصدير الإعدادات. تُستبعد الأسرار.",
       "keep": {
-        "count_zero": "{{count}} نسخة احتياطية",
-        "count_one": "{{count}} نسخة احتياطية",
-        "count_two": "{{count}} نسختان احتياطيتان",
         "count_few": "{{count}} نسخ احتياطية",
         "count_many": "{{count}} نسخة احتياطية",
+        "count_one": "{{count}} نسخة احتياطية",
         "count_other": "{{count}} نسخة احتياطية",
+        "count_two": "{{count}} نسختان احتياطيتان",
+        "count_zero": "{{count}} نسخة احتياطية",
         "label": "الاحتفاظ بـ"
       },
       "label": "النسخ الاحتياطية",
