@@ -7,9 +7,9 @@
 //	lang/<language>/responses.yaml   response strings keyed by message ID
 //	lang/<language>/types.yaml       values of static custom slot types, which are words and so per language, keyed by value ID
 //	lang/<language>/examples.yaml    example values of dynamic slot types (rooms, playlists, genres), chosen per language rather than translated
-//	locales/<locale>.yaml            locale overlay: language, invocation name, extras
+//	locales/<locale>.yaml            locale overlay: language, invocation name, extra utterances and synonyms, response overrides
 //
-// A locale inherits everything from its language and may add utterances or override responses, so en-GB can say "film" where en-US says "movie".
+// A locale inherits everything from its language and may add utterances, override responses or add synonyms to static slot type values, so en-GB can say "film" where en-US says "movie".
 //
 // Utterances and slot values are keyed so Crowdin can translate them entry by entry, and each entry may hold several lines, so a language can say one thing in as many ways as it needs:
 //

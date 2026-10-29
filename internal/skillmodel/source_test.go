@@ -2,6 +2,7 @@ package skillmodel
 
 import (
 	"io/fs"
+	"strings"
 	"testing"
 	"testing/fstest"
 
@@ -84,6 +85,83 @@ func TestTypesSynonymsAndIDs(t *testing.T) {
 		{ID: "lounge", Value: "lounge", Synonyms: []string{"living room"}},
 		{ID: "bedroom", Value: "bedroom", Synonyms: []string{"main bedroom", "master bedroom"}},
 	}, types["KODI_ROOM"], "the model's values come first, then the language's, keyed by entry")
+}
+
+func TestTypesLocaleSynonyms(t *testing.T) {
+	src := load(t, map[string]string{
+		"lang/en/types.yaml": "KODI_ROOM:\n  bedroom: |-\n    bedroom\n    main bedroom\n",
+		"locales/en-AU.yaml": baseFiles["locales/en-AU.yaml"] + "types:\n  KODI_ROOM:\n    bedroom: [master bedroom]\n    lounge: [front room, lounge room]\n",
+	})
+
+	au, err := src.Types("en-AU")
+	require.NoError(t, err)
+	assert.Equal(t, []SlotValue{
+		{ID: "lounge", Value: "lounge", Synonyms: []string{"living room", "front room", "lounge room"}},
+		{ID: "bedroom", Value: "bedroom", Synonyms: []string{"main bedroom", "master bedroom"}},
+	}, au["KODI_ROOM"], "the locale's synonyms follow the model's and the language's, on the model's values too")
+
+	us, err := src.Types("en-US")
+	require.NoError(t, err)
+	assert.Equal(t, []SlotValue{
+		{ID: "lounge", Value: "lounge", Synonyms: []string{"living room"}},
+		{ID: "bedroom", Value: "bedroom", Synonyms: []string{"main bedroom"}},
+	}, us["KODI_ROOM"], "one locale's synonyms never leak into another's")
+	assert.Equal(t, []string{"living room"}, src.Model.Types[0].Values[0].Synonyms, "the model's values stay untouched")
+	assert.Equal(t, []string{"main bedroom"}, src.Languages["en"].Types["KODI_ROOM"][0].Synonyms, "the language's values stay untouched")
+}
+
+func TestBuildTakesLocaleSynonyms(t *testing.T) {
+	src := load(t, map[string]string{"locales/en-AU.yaml": baseFiles["locales/en-AU.yaml"] + "types:\n  KODI_ROOM:\n    lounge: [front room]\n"})
+
+	m, err := Build(src, "en-AU", BuildOptions{})
+	require.NoError(t, err)
+
+	types := m.InteractionModel.LanguageModel.Types
+	require.Len(t, types, 1)
+	assert.Equal(t, []string{"living room", "front room"}, types[0].Values[0].Name.Synonyms)
+}
+
+func TestTypesLocaleSynonymsByValueWithoutID(t *testing.T) {
+	src := load(t, map[string]string{
+		"model.yaml":         strings.Replace(baseFiles["model.yaml"], "{id: lounge, value: lounge,", "{value: lounge,", 1),
+		"locales/en-AU.yaml": baseFiles["locales/en-AU.yaml"] + "types:\n  KODI_ROOM:\n    lounge: [front room]\n",
+	})
+
+	au, err := src.Types("en-AU")
+	require.NoError(t, err)
+	assert.Equal(t, []string{"living room", "front room"}, au["KODI_ROOM"][0].Synonyms, "a value without an ID is its own ID")
+}
+
+func TestTypesLocaleSynonymsErrors(t *testing.T) {
+	tests := map[string]struct {
+		model, types, want string
+	}{
+		"undeclared type": {
+			types: "  KODI_ZONE:\n    upstairs: [up]\n",
+			want:  "locale en-AU: synonyms given for slot type KODI_ZONE, which model.yaml doesn't declare",
+		},
+		"dynamic type": {
+			model: strings.Replace(baseFiles["model.yaml"], "  - name: KODI_ROOM\n", "  - name: KODI_ROOM\n    dynamic: true\n", 1),
+			types: "  KODI_ROOM:\n    lounge: [front room]\n",
+			want:  "locale en-AU: synonyms given for dynamic slot type KODI_ROOM, whose values come from Encore at build time",
+		},
+		"unknown value": {
+			types: "  KODI_ROOM:\n    attic: [loft]\n",
+			want:  "locale en-AU: synonyms given for value attic of slot type KODI_ROOM, which has no value with that ID",
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			overrides := map[string]string{"locales/en-AU.yaml": baseFiles["locales/en-AU.yaml"] + "types:\n" + tt.types}
+			if tt.model != "" {
+				overrides["model.yaml"] = tt.model
+			}
+
+			_, err := load(t, overrides).Types("en-AU")
+			require.EqualError(t, err, tt.want)
+		})
+	}
 }
 
 func TestUtterancesDoNotAliasLanguage(t *testing.T) {

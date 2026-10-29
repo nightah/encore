@@ -337,6 +337,10 @@ func (l *linter) locale(locale string) {
 		l.add(Error, locale, "", "skill_name is required")
 	}
 
+	if _, err := l.src.Types(locale); err != nil {
+		l.add(Error, locale, "", "%v", strings.TrimPrefix(err.Error(), "locale "+locale+": "))
+	}
+
 	utterances, _ := l.src.Utterances(locale)
 
 	for intent := range utterances {

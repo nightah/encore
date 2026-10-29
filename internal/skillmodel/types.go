@@ -72,6 +72,8 @@ type Locale struct {
 	KodiInvocation string              `yaml:"kodi_invocation"`
 	Utterances     map[string][]string `yaml:"utterances"`
 	Responses      map[string]string   `yaml:"responses"`
+	// Types adds synonyms to static slot type values, by type name and value ID, for the words the locale's speakers use where its language's types.yaml has others ("computadora" beside "ordenador").
+	Types map[string]map[string][]string `yaml:"types"`
 }
 
 // keyedSection is one intent or slot type of a keyed file, its entries in file order.
