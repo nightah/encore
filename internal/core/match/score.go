@@ -71,7 +71,7 @@ func (ix *Index) scoreAlias(q *form, a *alias, floor float64) scored {
 
 	cov := 1.0
 	if (compact < ix.cfg.CompactCoverage || !numbers) && !homophone {
-		cov = coverage(q, &a.form)
+		cov = coverage(q, &a.form, ix.lang.split != nil)
 	}
 
 	f *= 1 - ix.cfg.CoveragePenalty*(1-cov)
@@ -155,8 +155,8 @@ func digitsWithin(q, a *form) bool {
 	return true
 }
 
-// coverage is the weighted share of query tokens that something in the alias accounts for. Numbers must match exactly (or be a "1" against an unnumbered title); words may be a small typo or a phonetic match away.
-func coverage(q, a *form) float64 {
+// coverage is the weighted share of query tokens that something in the alias accounts for. Numbers must match exactly (or be a "1" against an unnumbered title); words may be a small typo or a phonetic match away. In a language written without spaces (unspaced), whose word boundaries are a segmenter's guess, a word the alias spells with its spaces removed counts too ("toisutori" in "toi sutori 3").
+func coverage(q, a *form, unspaced bool) float64 {
 	total, hit := 0, 0
 
 	for i, t := range q.toks {
@@ -173,6 +173,12 @@ func coverage(q, a *form) float64 {
 		}
 
 		total += w
+
+		if unspaced && !isDigits(t) && runeLen(t) >= minUnspacedCover && strings.Contains(a.compact, t) {
+			hit += w
+
+			continue
+		}
 
 		for j, u := range a.toks {
 			if tokenMatches(t, u, q.keys[i], a.keys[j]) {
