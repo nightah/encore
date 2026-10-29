@@ -28,18 +28,18 @@ func japanese() *language {
 	}
 }
 
-// splitJapanese segments each token into words: runs of digits and Latin letters stand alone, and the rest is segmented by TinySegmenter. Two of the segmenter's splits are undone (rejoin), a reading of a number or letter at the end of a katakana word becomes a word of its own ("トイストーリーフォー"), and kanji numerals become digits (kanjiNumbers).
+// splitJapanese segments each token into words: runs of digits, of Latin letters and of any other script but Japanese stand alone, and the Japanese runs are segmented by TinySegmenter. Two of the segmenter's splits are undone (rejoin), a reading of a number or letter at the end of a katakana word becomes a word of its own ("トイストーリーフォー"), kanji numerals become digits (kanjiNumbers), and a kanji word is split again as it would be on its own (stableKanji).
 func splitJapanese(toks []string) []string {
 	out := make([]string, 0, len(toks)*2)
 
 	for _, tok := range toks {
 		start := len(out)
 
-		for _, run := range latinRuns(tok) {
-			if r, _ := utf8.DecodeRuneInString(run); r < utf8.RuneSelf || unicode.Is(unicode.Latin, r) {
-				out = append(out, run)
+		for _, run := range scriptRuns(tok) {
+			if r, _ := utf8.DecodeRuneInString(run); isJapanese(r) {
+				out = tinyseg.Append(out, dropMarks(run))
 			} else {
-				out = tinyseg.Append(out, run)
+				out = append(out, run)
 			}
 		}
 
@@ -51,11 +51,11 @@ func splitJapanese(toks []string) []string {
 		words = append(words, splitReading(w)...)
 	}
 
-	return ordinals(kanjiNumbers(words))
+	return stableKanji(ordinals(kanjiNumbers(words)))
 }
 
-// latinRuns splits tok where digits and Latin letters meet the Japanese scripts, and digits meet letters ("ストーリー3", "official髭男dism").
-func latinRuns(tok string) []string {
+// scriptRuns splits tok where digits, Latin letters, the Japanese scripts and other scripts meet ("ストーリー3", "official髭男dism"). A combining mark belongs to the run of the letter before it.
+func scriptRuns(tok string) []string {
 	var out []string
 
 	from, prev := 0, -1
@@ -64,10 +64,14 @@ func latinRuns(tok string) []string {
 		class := 0
 
 		switch {
+		case unicode.Is(unicode.M, r) && prev >= 0:
+			class = prev
 		case r >= '0' && r <= '9':
 			class = 1
 		case r < utf8.RuneSelf || unicode.Is(unicode.Latin, r):
 			class = 2
+		case isJapanese(r):
+			class = 3
 		}
 
 		if prev >= 0 && class != prev {
@@ -79,6 +83,80 @@ func latinRuns(tok string) []string {
 	}
 
 	return append(out, tok[from:])
+}
+
+// isJapanese reports whether r is written in a Japanese script: kanji, kana, the long-vowel mark, the kanji repetition mark or a kana voicing mark.
+func isJapanese(r rune) bool {
+	return r == 'ー' || r == '々' || r == '\u3099' || r == '\u309a' || unicode.In(r, unicode.Han, unicode.Hiragana, unicode.Katakana)
+}
+
+// dropMarks drops the combining marks tokenize could not compose with the kana or kanji before them ("か゚"): the segmenter and romanization would leave each as a word of its own.
+func dropMarks(run string) string {
+	if !strings.ContainsFunc(run, isMark) {
+		return run
+	}
+
+	return strings.Map(func(r rune) rune {
+		if isMark(r) {
+			return -1
+		}
+
+		return r
+	}, run)
+}
+
+func isMark(r rune) bool { return unicode.Is(unicode.M, r) }
+
+// stableKanji splits each run of kanji in a word as the segmenter splits it on its own, and reads a kanji numeral after kana as a number, until nothing changes, so normalising the words again leaves them as they are. In context the segmenter can keep together kanji it splits alone ("いい日旅立ち" gives "日旅立", and "日旅立" alone gives "日" "旅立"), and romanization leaves each run of kanji a word of its own. Kana before or after the run stay on the first and last of its words.
+func stableKanji(words []string) []string {
+	for changed := true; changed; {
+		changed = false
+		out := make([]string, 0, len(words))
+
+		for _, w := range words {
+			from, to, pieces := unstableKanji(w)
+			if pieces == nil {
+				out = append(out, w)
+
+				continue
+			}
+
+			pieces[0] = w[:from] + pieces[0]
+			pieces[len(pieces)-1] += w[to:]
+			out = append(out, pieces...)
+			changed = true
+		}
+
+		words = ordinals(kanjiNumbers(out))
+	}
+
+	return words
+}
+
+// unstableKanji finds the first run of kanji in w that splitJapanese would split or read as a number on its own ("ぁ零"), and returns where it is in w and the words it splits into.
+func unstableKanji(w string) (from, to int, pieces []string) {
+	from = -1
+
+	for i, r := range w + " " {
+		if i < len(w) && !isKana(r) && isJapanese(r) {
+			if from < 0 {
+				from = i
+			}
+
+			continue
+		}
+
+		if from >= 0 {
+			run := w[from:i]
+			if pieces = kanjiNumbers(rejoin(tinyseg.Segment(run))); len(pieces) != 1 || pieces[0] != run {
+				return from, i, pieces
+			}
+		}
+
+		from = -1
+	}
+
+	return 0, 0, nil
 }
 
 // rejoin undoes two of the segmenter's splits: a word that starts with a small kana or ー belongs to the word before it ("うっせ" "ぇわ"), and so does a kanji numeral after one ("千" "九" "百" for 千九百).

@@ -192,3 +192,45 @@ func TestSplitAloneKeepsWordCoverage(t *testing.T) {
 	split.unspaced = true
 	assert.Greater(t, ix.scoreAlias(&q, &a, -1).score, want.score, "an unspaced language covers a word inside the title")
 }
+
+// TestNormalizeJapaneseIdempotent checks that only the Japanese scripts are segmented, a run in another script staying one word and a combining mark on the letter before it, and that normalising the result again changes nothing.
+func TestNormalizeJapaneseIdempotent(t *testing.T) {
+	for _, tc := range []struct {
+		in, want string
+	}{
+		{"Москва", "москва"},
+		{"Ελλάδα", "ελλαδα"},
+		{"दिल चाहता है", "दिल चाहता है"},
+		{"ᛮ̀", "ᛮ̀"},
+		{"モスクワМосква", "mosukuwa москва"},
+		{"ア́", "a"},
+		{"日́本", "日本"},
+		{"テ̀スト", "tesuto"},
+		{"か゚", "ka"},
+		// A kanji word is split as the segmenter splits it alone, and a kanji numeral after kana is read.
+		{"いい日旅立ち", "i 日 旅立 chi"},
+		{"二十世紀少年", "20 世 紀 少年"},
+		{"ぁ零", "a 0"},
+	} {
+		got := Normalize("ja", tc.in)
+		assert.Equal(t, tc.want, got, tc.in)
+		assert.Equal(t, got, Normalize("ja", got), "normalising %q again", tc.in)
+	}
+
+	for _, in := range []string{"한국 영화", "千と千尋の神隠し", "鬼滅の刃無限列車編"} {
+		got := Normalize("ja", in)
+		assert.Equal(t, got, Normalize("ja", got), "normalising %q again", in)
+	}
+}
+
+// TestPropNormalizeJapaneseIdempotent checks that Japanese normalisation is idempotent on text that mixes kana, kanji, numerals, other scripts and combining marks, which the general property test rarely draws.
+func TestPropNormalizeJapaneseIdempotent(t *testing.T) {
+	rapid.Check(t, func(t *rapid.T) {
+		s := rapid.StringMatching(`[ぁ-ゖァ-ヶー々一-龠〇零十百千万億第部0-9a-zА-яα-ωअ-ह\x{093F}\x{0300}\x{3099}\x{309A}・ ]{0,40}`).Draw(t, "s")
+		once := Normalize("ja", s)
+
+		if twice := Normalize("ja", once); twice != once {
+			t.Fatalf("Normalize(%q) = %q but Normalize(%q) = %q", s, once, once, twice)
+		}
+	})
+}
