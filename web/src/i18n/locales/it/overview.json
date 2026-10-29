@@ -41,6 +41,7 @@
       "time": "Ora"
     },
     "empty": "Ancora nessuna richiesta. Di' “Alexa, chiedi a {{invocation}} cosa c'è in riproduzione.”",
+    "emptyNoInvocation": "",
     "open": "Apri la richiesta delle {{time}} nel registro",
     "title": "Richieste recenti",
     "viewAll": "Vedi tutte"
