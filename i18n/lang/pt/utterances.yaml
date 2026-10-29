@@ -20,10 +20,10 @@ AudioPassthrough:
   toggle_passthrough: "(alterna|alternar|muda|mudar) [o] passthrough [de áudio]"
   turn_passthrough: "(liga|ligar|desliga|desligar|ativa|ativar|desativa|desativar) [o] passthrough [de áudio]"
 AudioStream:
-  audio: "{Step} (áudio|faixa de áudio|idioma do áudio|trilha sonora)"
+  audio: "{Step} (áudio|faixa de áudio|idioma do áudio|trilha sonora)\n(áudio|faixa de áudio|idioma do áudio|trilha sonora) {Step}"
   audio_2: "(dublado|versão dublada|dublagem) em {Language}"
   audio_3: "áudio em {Language}"
-  language: "{Step} idioma"
+  language: "{Step} idioma\nidioma {Step}"
   play: "(coloca|colocar|deixa|deixar|passa|passar) em {Language}"
   switch_audio: "(muda|mudar|troca|trocar|coloca|colocar) (o áudio|a faixa de áudio|o idioma|a trilha sonora|a dublagem) (para|em) {Language}"
 BingeShow:
