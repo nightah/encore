@@ -1522,6 +1522,26 @@
         ],
         "type": "object"
       },
+      "LocaleInvocation": {
+        "additionalProperties": false,
+        "properties": {
+          "encore": {
+            "type": "string"
+          },
+          "kodi": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "locale",
+          "encore",
+          "kodi"
+        ],
+        "type": "object"
+      },
       "LocalePatch": {
         "additionalProperties": true,
         "properties": {
@@ -2786,7 +2806,7 @@
             "$ref": "#/components/schemas/SkillEndpointInfo"
           },
           "invocation": {
-            "description": "encore uses each locale's own name for it (\"kodi\" in French); kodi is \"kodi\" in every locale",
+            "description": "encore uses each locale's own name for it (\"kodi\" in French); kodi is each locale's spelling of \"kodi\" (see locale_invocations)",
             "enum": [
               "encore",
               "kodi"
@@ -2806,6 +2826,13 @@
                 "type": "null"
               }
             ]
+          },
+          "locale_invocations": {
+            "description": "What people say in each available locale for each invocation choice",
+            "items": {
+              "$ref": "#/components/schemas/LocaleInvocation"
+            },
+            "type": "array"
           },
           "locales_available": {
             "items": {
@@ -2871,6 +2898,7 @@
           "skill_name",
           "locales_available",
           "locales_enabled",
+          "locale_invocations",
           "content",
           "endpoint",
           "privacy",
