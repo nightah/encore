@@ -11,6 +11,10 @@ extend-exclude = [
   "i18n/lang/ja/",
   "i18n/lang/nl/",
   "i18n/lang/pt/",
+  # Regional overlays on those translations.
+  "i18n/locales/es-MX.yaml",
+  "i18n/locales/es-US.yaml",
+  "i18n/locales/fr-CA.yaml",
   "docs/src/content/docs/voice-commands/",
   "web/src/i18n/locales/de/",
   "web/src/i18n/locales/es/",

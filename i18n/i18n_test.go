@@ -155,6 +155,21 @@ func TestEmbeddedLocalesAndLanguagesMatch(t *testing.T) {
 	}
 }
 
+// es-US carries es-MX's overlay (see the comment in each file), so a change to one must reach the other.
+func TestUSSpanishFollowsMexicanSpanish(t *testing.T) {
+	overlay := func(name string) map[string]any {
+		b, err := fs.ReadFile(FS, "locales/"+name+".yaml")
+		require.NoError(t, err)
+
+		var out map[string]any
+		require.NoError(t, yaml.Unmarshal(b, &out), name)
+
+		return out
+	}
+
+	assert.Equal(t, overlay("es-MX"), overlay("es-US"))
+}
+
 func styleName(s yaml.Style) string {
 	switch s {
 	case yaml.DoubleQuotedStyle:
