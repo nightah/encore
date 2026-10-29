@@ -2,6 +2,9 @@ package alexa
 
 import (
 	"log/slog"
+	"maps"
+	"slices"
+	"strings"
 	"testing"
 	"time"
 
@@ -145,5 +148,33 @@ func TestHindiReinterpret(t *testing.T) {
 		assert.Equal(t, tc.intent, got.Name, tc.query)
 		assert.Equal(t, tc.title, title, tc.query)
 		assert.Equal(t, tc.slots, values, tc.query)
+	}
+}
+
+func TestTrailingCarrierLeavesGermanFormsAlone(t *testing.T) {
+	src, err := skillmodel.Load(i18n.FS)
+	require.NoError(t, err)
+
+	utterances, err := src.Utterances("de-DE")
+	require.NoError(t, err)
+
+	got, err := queryForms(src.Model, utterances)
+	require.NoError(t, err)
+
+	leading := maps.Clone(utterances)
+	leading["PlayMedia"] = slices.DeleteFunc(slices.Clone(utterances["PlayMedia"]), func(p string) bool { return strings.Contains(p, "{Query} abspielen") })
+	require.Len(t, leading["PlayMedia"], len(utterances["PlayMedia"])-1)
+
+	want, err := queryForms(src.Model, leading)
+	require.NoError(t, err)
+
+	// No German TV sample ends in "abspielen", so "{Query} abspielen" adds no form.
+	assert.Equal(t, want, got)
+
+	speech := hindiSpeech(t)
+
+	for query, intent := range map[string]string{"die nächste folge von dark": "WatchNextEpisode", "dark": "PlayMedia", "dark abspielen": "PlayMedia"} {
+		got, _ := speech.Reinterpret("de-DE", Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: query}}})
+		assert.Equal(t, intent, got.Name, query)
 	}
 }
