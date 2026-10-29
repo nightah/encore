@@ -23,7 +23,7 @@ AudioStream:
   audio: "{Step} (الصوت|المسار الصوتي|لغة الصوت|الدبلجة)\n(المسار الصوتي|لغة الصوت) {Step}"
   audio_2: "(الصوت|المسار الصوتي|الدبلجة) باللغة {Language}"
   audio_3: "(الدبلجة|لغة الصوت) {Language}"
-  language: "{Step} اللغة"
+  language: "{Step} اللغة\nاللغة {Step}"
   play: "(شغلي|شغل) باللغة {Language}"
   switch_audio: "(غيري|بدلي|حطي|خلي) (المسار الصوتي|لغة الصوت|اللغة|الدبلجة) (إلى|على) {Language}\n(غيري|بدلي) الصوت (إلى|على) {Language}"
 BingeShow:
@@ -218,8 +218,9 @@ StereoscopicMode:
   toggle_stereoscopic_mode: "(فعلي|الغي|بدلي) (الوضع ثلاثي الأبعاد|وضع الثري دي|الوضع المجسم)"
   turn_stereoscopic_mode: "(شغلي|طفي) (الثري دي|الأبعاد الثلاثية)"
 Subtitles:
-  subtitle_language: "{SubtitleAction} لغة الترجمة"
+  subtitle_language: "{SubtitleAction} لغة الترجمة\nلغة الترجمة {SubtitleAction}"
   subtitles: "{SubtitleAction} (الترجمة|الترجمه|السب تايتل)"
+  subtitles_2: "(الترجمة|الترجمه) {SubtitleAction}"
   subtitles_3: "(الترجمة|ترجمة) {Language}"
   switch_subtitles: "(غيري|بدلي|حطي|خلي) الترجمة (إلى|على) {Language}"
   turn_subtitles_2: "(شغلي|حطي|اعرضي|فعلي) (الترجمة|ترجمة) (باللغة|بلغة) {Language}"

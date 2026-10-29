@@ -234,11 +234,14 @@ SEEK_SIZE:
 STREAM_STEP:
   next: |-
     التالي
+    التالية
     غيري
     بدلي
     الثاني
+    الثانية
   previous: |-
     السابق
+    السابقة
     اللي قبل
 SUBTITLE_ACTION:
   download: |-
@@ -248,8 +251,10 @@ SUBTITLE_ACTION:
     ابحثي عن
     جيبي
   next: |-
+    التالية
     غيري
     بدلي
+    الثانية
   "off": |-
     طفي
     اقفلي
