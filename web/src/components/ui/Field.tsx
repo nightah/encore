@@ -19,7 +19,7 @@ export function Input({ className, mono, ...props }: ComponentProps<"input"> & {
 }
 
 export function Select({ className, ...props }: ComponentProps<"select">) {
-  return <select className={cn(control, focusRing, "pr-8", className)} {...props} />;
+  return <select className={cn(control, focusRing, "pe-8", className)} {...props} />;
 }
 
 export function Textarea({ className, ...props }: ComponentProps<"textarea">) {
@@ -159,7 +159,7 @@ export function Switch({
         focusRing,
       )}
     >
-      <BaseSwitch.Thumb className="size-4.5 rounded-full bg-surface shadow-sm transition-transform data-checked:translate-x-5" />
+      <BaseSwitch.Thumb className="size-4.5 rounded-full bg-surface shadow-sm transition-transform data-checked:translate-x-5 rtl:data-checked:-translate-x-5" />
     </BaseSwitch.Root>
   );
 }

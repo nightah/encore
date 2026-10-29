@@ -155,7 +155,7 @@ export function InstanceDialog({ open, onClose, instance, prefill }: InstanceDia
       footer={
         confirmRemove && instance ? (
           <>
-            <span className="mr-auto self-center">{t("dialog.confirmRemove", { name: instance.name })}</span>
+            <span className="me-auto self-center">{t("dialog.confirmRemove", { name: instance.name })}</span>
             <Button onClick={() => setConfirmRemove(false)}>{t("dialog.keep")}</Button>
             <Button
               variant="danger"
@@ -168,7 +168,7 @@ export function InstanceDialog({ open, onClose, instance, prefill }: InstanceDia
         ) : (
           <>
             {instance && !managed ? (
-              <Button variant="danger" className="mr-auto" onClick={() => setConfirmRemove(true)}>
+              <Button variant="danger" className="me-auto" onClick={() => setConfirmRemove(true)}>
                 {t("dialog.removeEllipsis")}
               </Button>
             ) : null}

@@ -24,7 +24,7 @@ export function KindPill({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full py-0.5 pl-2 font-medium text-[12.5px]",
+        "inline-flex items-center gap-1 rounded-full py-0.5 ps-2 font-medium text-[12.5px]",
         kindStyle[kind],
         className,
       )}

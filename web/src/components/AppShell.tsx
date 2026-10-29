@@ -20,7 +20,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="flex min-h-dvh flex-row pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]">
       <a
         href="#main"
-        className="sr-only z-50 rounded-md bg-surface px-3 py-2 text-ink focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
+        className="sr-only z-50 rounded-md bg-surface px-3 py-2 text-ink focus:not-sr-only focus:fixed focus:start-2 focus:top-2"
       >
         {t("shell.skipToContent")}
       </a>
@@ -82,9 +82,9 @@ function RailFooter() {
         <button
           type="button"
           onClick={signOut}
-          className="-ml-2 mt-1 inline-flex min-h-11 w-fit items-center gap-2 rounded-lg px-2 text-[#c3ccd6] outline-none hover:bg-[#212a35] hover:text-white focus-visible:outline-2 focus-visible:outline-rail-accent"
+          className="-ms-2 mt-1 inline-flex min-h-11 w-fit items-center gap-2 rounded-lg px-2 text-[#c3ccd6] outline-none hover:bg-[#212a35] hover:text-white focus-visible:outline-2 focus-visible:outline-rail-accent"
         >
-          <LogOut aria-hidden="true" className="size-4" />
+          <LogOut aria-hidden="true" className="size-4 rtl:-scale-x-100" />
           {t("shell.signOut")}
         </button>
       ) : null}
@@ -111,7 +111,7 @@ function SetupBanner() {
           className="inline-flex min-h-11 items-center gap-1.5 font-medium text-link underline-offset-2 hover:underline"
         >
           {t("setupBanner.continue")}
-          <ArrowRight aria-hidden="true" className="size-4" />
+          <ArrowRight aria-hidden="true" className="size-4 rtl:-scale-x-100" />
         </Link>
       </div>
     </div>

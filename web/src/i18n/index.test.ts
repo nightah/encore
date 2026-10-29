@@ -59,6 +59,14 @@ describe("setLanguage", () => {
     expect(i18n.t("actions.tryAgain")).not.toBe("Try again");
   });
 
+  it("sets the document's direction with its language", async () => {
+    await i18n.changeLanguage("ar");
+    expect(document.documentElement.lang).toBe("ar");
+    expect(document.documentElement.dir).toBe("rtl");
+    await setLanguage("fr");
+    expect(document.documentElement.dir).toBe("ltr");
+  });
+
   it("forgets the choice and follows the browser for undefined", async () => {
     window.localStorage.setItem(STORAGE_KEY, "fr");
     browserPrefers(["de-DE"]);

@@ -91,7 +91,7 @@ function LoginPage() {
           <div className="flex flex-col gap-3">
             <p className="text-muted">{t("login.oidc.intro")}</p>
             <AnchorButton variant="primary" href={auth.oidc_login_url}>
-              <LogIn aria-hidden="true" className="size-4" />
+              <LogIn aria-hidden="true" className="size-4 rtl:-scale-x-100" />
               {t("login.oidc.button")}
             </AnchorButton>
           </div>

@@ -54,7 +54,7 @@ export function DeviceDialog({ device, onClose, rooms, instances }: DeviceDialog
       footer={
         confirmForget && device ? (
           <>
-            <span className="mr-auto self-center">{t("dialog.confirmForget")}</span>
+            <span className="me-auto self-center">{t("dialog.confirmForget")}</span>
             <Button onClick={() => setConfirmForget(false)}>{t("dialog.keep")}</Button>
             <Button
               variant="danger"
@@ -66,7 +66,7 @@ export function DeviceDialog({ device, onClose, rooms, instances }: DeviceDialog
           </>
         ) : (
           <>
-            <Button variant="danger" className="mr-auto" onClick={() => setConfirmForget(true)}>
+            <Button variant="danger" className="me-auto" onClick={() => setConfirmForget(true)}>
               {t("dialog.forgetEllipsis")}
             </Button>
             <Button onClick={close}>{t("dialog.cancel")}</Button>

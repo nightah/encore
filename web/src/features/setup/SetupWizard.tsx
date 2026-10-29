@@ -107,7 +107,7 @@ export function SetupWizard() {
                 >
                   {isDone ? <Check className="size-4" strokeWidth={3} /> : n}
                 </span>
-                <span className="flex flex-col text-left">
+                <span className="flex flex-col text-start">
                   <span className="font-semibold">{t(`steps.${key}.title`)}</span>
                   <span className="text-[13px] text-muted">
                     {isSkipped ? t("wizard.skipped") : t(`steps.${key}.sub`)}

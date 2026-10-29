@@ -166,7 +166,7 @@ export function InstanceCard({ instance, library, onEdit }: InstanceCardProps) {
                   {checkLabel(check)}
                 </span>
                 {check.ok ? (
-                  <span className="ml-auto font-mono text-[13px] text-muted">{t("card.ms", { ms: check.ms })}</span>
+                  <span className="ms-auto font-mono text-[13px] text-muted">{t("card.ms", { ms: check.ms })}</span>
                 ) : null}
               </li>
             ))}

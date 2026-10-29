@@ -25,7 +25,7 @@ export function RequestRow({
       aria-expanded={expands ? selected : undefined}
       onClick={() => onSelect(request.id)}
       className={cn(
-        "grid min-h-11 w-full cursor-pointer grid-cols-[56px_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 border-line-soft border-b px-4 py-3 text-left text-sm outline-none hover:bg-soft focus-visible:outline-2 focus-visible:outline-focus focus-visible:-outline-offset-2",
+        "grid min-h-11 w-full cursor-pointer grid-cols-[56px_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 border-line-soft border-b px-4 py-3 text-start text-sm outline-none hover:bg-soft focus-visible:outline-2 focus-visible:outline-focus focus-visible:-outline-offset-2",
         selected && "bg-selected hover:bg-selected",
       )}
     >

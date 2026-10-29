@@ -197,7 +197,7 @@ function AliasList({ libraryId }: { libraryId: number }) {
         {aliases.map((alias) => (
           <li
             key={alias.id}
-            className="inline-flex items-center gap-1 rounded-full bg-neutral-bg py-0.5 pr-0.5 pl-3 text-[13px] text-neutral"
+            className="inline-flex items-center gap-1 rounded-full bg-neutral-bg py-0.5 ps-3 pe-0.5 text-[13px] text-neutral"
           >
             <span>{t("matchTester.aliasEntry", { alias: alias.alias, title: alias.title })}</span>
             <button
