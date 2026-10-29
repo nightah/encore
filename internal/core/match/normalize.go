@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"strings"
 	"unicode"
+	"unicode/utf8"
 
 	"golang.org/x/text/unicode/norm"
 )
@@ -22,7 +23,12 @@ func (l *language) normalize(s string, aggressive bool) []string {
 
 // normalizeSpelled also returns the tokens before numbers were rewritten, joined without spaces, so compounds such as "Zweiohrküken" still meet "zwei ohr küken".
 func (l *language) normalizeSpelled(s string, aggressive bool) (toks []string, spelled string) {
-	toks = joinLetters(l.tokenize(s))
+	toks = l.tokenize(s)
+	if l.split != nil {
+		toks = l.split(toks)
+	}
+
+	toks = joinLetters(l.stripPrefixes(toks))
 
 	// Articles go first so a numeral straight after one ("The II") isn't taken as following a word.
 	for len(toks) > 1 && l.articles[toks[0]] {
@@ -37,35 +43,112 @@ func (l *language) normalizeSpelled(s string, aggressive bool) (toks []string, s
 }
 
 func (l *language) tokenize(s string) []string {
-	var b strings.Builder
-
 	// NFKD would make "8½" "81⁄2", so ½ is read as words first.
 	s = strings.ReplaceAll(s, "½", " "+l.half+" ")
 
-	b.Grow(len(s))
+	b := make([]byte, 0, len(s))
+
+	// cluster is where the last letter of a script that keeps its marks starts in b, or -1; kept is set once a mark follows it, so the letter and its marks are recomposed (か and U+3099 back to が).
+	cluster, kept := -1, false
 
 	for _, r := range norm.NFKD.String(s) {
+		if unicode.Is(unicode.M, r) {
+			switch {
+			case cluster >= 0:
+				b = utf8.AppendRune(b, r)
+				kept = true
+			case !unicode.Is(unicode.Mn, r):
+				b = append(b, ' ')
+			}
+
+			continue
+		}
+
+		if kept {
+			b = append(b[:cluster], norm.NFC.Bytes(b[cluster:])...)
+		}
+
+		cluster, kept = -1, false
+
 		switch {
-		case unicode.Is(unicode.Mn, r):
+		case r == tatweel:
 		case r == '&':
-			b.WriteString(" " + l.and + " ")
+			b = append(b, " "+l.and+" "...)
 		case isApostrophe(r):
 			if l.elide {
-				b.WriteByte(' ')
+				b = append(b, ' ')
 			}
-		case unicode.IsLetter(r) || unicode.IsDigit(r):
+		case unicode.IsDigit(r):
+			b = utf8.AppendRune(b, asciiDigit(r))
+		case unicode.IsLetter(r):
+			if keepsMarks(r) {
+				cluster = len(b)
+			}
+
 			r = unicode.ToLower(r)
-			if f, ok := letterFolds[r]; ok {
-				b.WriteString(f)
+			if f, ok := l.folds[r]; ok {
+				b = append(b, f...)
+			} else if f, ok := letterFolds[r]; ok {
+				b = append(b, f...)
 			} else {
-				b.WriteRune(r)
+				b = utf8.AppendRune(b, r)
 			}
 		default:
-			b.WriteByte(' ')
+			b = append(b, ' ')
 		}
 	}
 
-	return strings.Fields(b.String())
+	if kept {
+		b = append(b[:cluster], norm.NFC.Bytes(b[cluster:])...)
+	}
+
+	return strings.Fields(string(b))
+}
+
+// keepsMarks reports whether the combining marks after a letter are part of its spelling. Latin, Greek and Cyrillic marks are accents and Arabic and Hebrew ones are vowel points, which titles and speech recognition leave out as often as not, so they are dropped. In Devanagari and the other Indic scripts marks are vowels, nasalisation and virama, and in kana they voice the consonant (か, が), so they stay.
+func keepsMarks(r rune) bool {
+	if r < 0x0370 {
+		return false
+	}
+
+	return !unicode.In(r, unicode.Latin, unicode.Greek, unicode.Cyrillic, unicode.Arabic, unicode.Hebrew, unicode.Common, unicode.Inherited)
+}
+
+// asciiDigit folds a decimal digit of any script ("٣", "७") to its ASCII digit. Unicode encodes each script's digits as a run of ten from zero, some scripts' runs back to back, so a digit's value is its offset from the start of the unbroken run of digits it is in, modulo ten.
+func asciiDigit(r rune) rune {
+	if r <= '9' {
+		return r
+	}
+
+	lo := r
+	for unicode.IsDigit(lo - 1) {
+		lo--
+	}
+
+	return '0' + (r-lo)%10
+}
+
+// stripPrefixes removes the longest of the language's articlePrefixes from each token that keeps at least articlePrefixMin runes, and always at least one, without it.
+func (l *language) stripPrefixes(toks []string) []string {
+	if len(l.articlePrefixes) == 0 {
+		return toks
+	}
+
+	least := max(l.articlePrefixMin, 1)
+
+	for i, tok := range toks {
+		cut := 0
+
+		for _, p := range l.articlePrefixes {
+			if len(p) > cut && strings.HasPrefix(tok, p) && utf8.RuneCountInString(tok[len(p):]) >= least {
+				cut = len(p)
+			}
+		}
+
+		toks[i] = tok[cut:]
+	}
+
+	return toks
 }
 
 // letterFolds covers letters NFKD does not decompose.

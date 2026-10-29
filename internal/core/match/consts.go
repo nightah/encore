@@ -73,6 +73,9 @@ const (
 	maxFused = 64
 )
 
+// tatweel is the Arabic kashida (U+0640), which stretches a word for justification and is dropped.
+const tatweel = 'ـ'
+
 const (
 	numUnit     numKind = iota // 0-19
 	numTens                    // 20, 30, ... (and French "dix")

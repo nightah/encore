@@ -346,7 +346,14 @@ type language struct {
 	// half is how the language says "and a half", which "½" reads as ("8½" -> "8 e mezzo").
 	half     string
 	articles map[string]bool
-	stop     map[string]bool
+	// articlePrefixes are articles written fused to the word, as Arabic writes "ال" ("الملك" -> "ملك", with "وال" and "بال" for "and the" and "with the"). Each token loses the longest one it starts with, as long as at least articlePrefixMin runes (and never fewer than one) remain, so a short word that merely starts the same way survives. Whole-word articles stay in articles.
+	articlePrefixes  []string
+	articlePrefixMin int
+	// folds maps lowercase letters to what the language compares them as, applied by tokenize after NFKD and ahead of the shared letterFolds: spelling variants of one sound (Arabic "ٱ" -> "ا", "ة" -> "ه", "ى" -> "ي") or a second script for the same sounds (katakana -> hiragana). A letter whose script keeps its combining marks is recomposed after folding, so a fold of "カ" to "か" still gives "が" for "ガ".
+	folds map[rune]string
+	// split breaks tokenize's tokens into words for a script written without spaces (Japanese), and runs before fused articles, letter runs and whole-word articles are handled. Nil leaves the tokens as they are.
+	split func(toks []string) []string
+	stop  map[string]bool
 	// elide splits on apostrophes ("l'amour" -> "l amour") instead of joining ("ocean's" -> "oceans").
 	elide bool
 	// vigesimal counts on in twenties past sixty, as French does ("soixante-dix" 70, "quatre-vingts" 80, "quatre-vingt-onze" 91).
