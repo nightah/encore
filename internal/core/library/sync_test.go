@@ -101,6 +101,22 @@ func TestEpisodesAreNotCachedOnError(t *testing.T) {
 	assert.Equal(t, 2, b.count("Episodes"))
 }
 
+func TestEpisodesFetchedDuringAFullSyncAreNotCached(t *testing.T) {
+	b := seed()
+	c, _ := newCatalog(b, newClock(), Options{})
+	b.duringEpisodes = func() { require.NoError(t, c.Sync(t.Context())) }
+
+	eps, err := c.Episodes(t.Context(), 10)
+	require.NoError(t, err)
+	assert.Equal(t, []int{101, 102}, ids(eps), "the caller still gets what Kodi returned")
+
+	b.duringEpisodes = nil
+
+	_, err = c.Episodes(t.Context(), 10)
+	require.NoError(t, err)
+	assert.Equal(t, 2, b.count("Episodes"), "episodes fetched across a full sync may be stale, so they weren't cached")
+}
+
 func TestRefreshEpisode(t *testing.T) {
 	b := seed()
 	c, _ := newCatalog(b, newClock(), Options{})
