@@ -75,8 +75,8 @@ func toRow(e alexa.LogEntry) store.RequestLogEntry {
 		row.KodiCalls, _ = json.Marshal(calls)
 	}
 
-	// Calls made in parallel would add up to more than the request took, so Kodi's share is capped at what matching left.
-	kodi := min(kodiTime(e.KodiCalls), max(0, e.Duration-e.MatchTime))
+	// Calls made in parallel would add up to more than the request took, so Kodi's share is capped at what verifying and matching left.
+	kodi := min(kodiTime(e.KodiCalls), max(0, e.Duration-e.Verify-e.MatchTime))
 	row.Timing, _ = json.Marshal(loggedTiming{VerifyMS: e.Verify.Milliseconds(), MatchMS: e.MatchTime.Milliseconds(), KodiMS: kodi.Milliseconds()})
 
 	if e.Match != nil {

@@ -124,6 +124,11 @@ func TestRecorderRow(t *testing.T) {
 		assert.JSONEq(t, `{"verify_ms":0,"match_ms":20,"kodi_ms":0}`, string(row.Timing))
 	})
 
+	t.Run("verifying is not time Kodi could have had", func(t *testing.T) {
+		row := toRow(alexa.LogEntry{Duration: 900 * time.Millisecond, Verify: 650 * time.Millisecond, KodiCalls: []media.Call{{Method: "Player.Open", Duration: 400 * time.Millisecond}}})
+		assert.JSONEq(t, `{"verify_ms":650,"match_ms":0,"kodi_ms":250}`, string(row.Timing))
+	})
+
 	t.Run("only the top candidates are logged", func(t *testing.T) {
 		res := &match.Result{Normalized: "dune", Decision: match.DecisionAsk, Margin: 0.01}
 		for i := range maxLoggedCandidates + 3 {
@@ -155,7 +160,7 @@ func TestRecorderLogsCandidateRefs(t *testing.T) {
 
 func TestRecorderLogsCallsAndTiming(t *testing.T) {
 	row := toRow(alexa.LogEntry{
-		Intent: "WatchMovie", Duration: 300 * time.Millisecond, Verify: 3 * time.Millisecond, MatchTime: 20 * time.Millisecond,
+		Intent: "WatchMovie", Duration: 303 * time.Millisecond, Verify: 3 * time.Millisecond, MatchTime: 20 * time.Millisecond,
 		KodiCalls: []media.Call{{Method: "Player.Open", Duration: 200 * time.Millisecond}, {Method: "Player.GetItem", Duration: 150 * time.Millisecond, Err: io.EOF}},
 	})
 
