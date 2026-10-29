@@ -97,7 +97,7 @@ func TestSpeechTimesLanguagesAndLists(t *testing.T) {
 	list := actions.Message{ID: "whatsnew.movies", Lists: map[string][]string{"titles": {"Dune", "Alien", "Heat"}}}
 	assert.Equal(t, "You have Dune, Alien and Heat to watch.", h.Speech.Render("en-AU", list))
 
-	assert.Equal(t, "15:04", spokenTime("de", time.Date(1, 1, 1, 15, 4, 0, 0, time.UTC)))
+	assert.Equal(t, "15:04", spokenTime("de-DE", "de", time.Date(1, 1, 1, 15, 4, 0, 0, time.UTC)))
 	assert.Equal(t, "Französisch", languageName("de-DE", "fre"))
 	assert.Equal(t, "xx-nonsense", languageName("en-AU", "xx-nonsense"), "unknown codes are said as they are")
 	assert.Equal(t, "A und B", spokenList("de", []string{"A", "B"}))

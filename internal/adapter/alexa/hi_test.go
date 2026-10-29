@@ -70,7 +70,7 @@ func TestHindiTimes(t *testing.T) {
 		20: "रात 8:05 बजे",
 		23: "रात 11:05 बजे",
 	} {
-		assert.Equal(t, want, spokenTime("hi", time.Date(1, 1, 1, hour, 5, 0, 0, time.UTC)), hour)
+		assert.Equal(t, want, spokenTime("hi-IN", "hi", time.Date(1, 1, 1, hour, 5, 0, 0, time.UTC)), hour)
 	}
 }
 

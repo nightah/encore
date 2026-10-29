@@ -1,6 +1,6 @@
 # es-US inherits lang/es, which is written for Spain; this overlay adds what US Hispanic speakers say and replaces responses that sound Peninsular. Most of them speak Mexican Spanish, and Alexa uses tú in the US too, so the overlay is the same as es-MX's; change both together. "encore" is not a Spanish word, and US Spanish speakers know it from English, so it doesn't clash with anything Alexa understands.
 #
-# Utterances add "la rola" (a song), "la compu" and "la computadora" for the computer, "dale play", "en mi {Room}" ("en mi recámara", "en mi cuarto"), "quiero seguir viendo" and "el capítulo nuevo". Responses use the preterite where Spain uses the perfect ("no encontré", not "no he encontrado"), "está bien" for "vale", "configuración" for "ajustes", "video" for "vídeo" and "cuarto" for "habitación".
+# Utterances add "la rola" (a song), "la compu" and "la computadora" for the computer, "dale play", "en mi {Room}" ("en mi recámara", "en mi cuarto"), "quiero seguir viendo" and "el capítulo nuevo". Responses use the preterite where Spain uses the perfect ("no encontré", not "no he encontrado"), "está bien" for "vale", "configuración" for "ajustes", "video" for "vídeo" and "cuarto" for "habitación". Times are read on the twelve-hour clock ("3:04 p. m."), so the end time follows "hora de término" rather than "a las", which would have to be "a la" at one o'clock, and comes before a semicolon, since "p. m." already ends in a period.
 
 invocation: encore
 language: es
@@ -27,6 +27,7 @@ responses:
   music.no_genre_by: "No encontré música {genre} de {artist}."
   music.not_found_by: "No encontré {title} de {artist}."
   music.not_found_on: "No encontré {title} en el álbum {album}."
+  player.remaining_until: "Hora de término: {end}; termina en {remaining}."
   playlist.not_found: "No encontré ninguna lista llamada {playlist}."
   remote.no_text: "No entendí qué quieres escribir."
   streams.audio_unknown: "Cambié el audio."
