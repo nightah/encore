@@ -216,6 +216,10 @@ func (l *linter) locale(locale string) {
 
 	l.invocation(locale, loc.Invocation)
 
+	if loc.KodiInvocation != "" {
+		l.invocation(locale, loc.KodiInvocation)
+	}
+
 	if loc.SkillName == "" {
 		l.add(Error, locale, "", "skill_name is required")
 	}

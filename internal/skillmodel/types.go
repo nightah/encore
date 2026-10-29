@@ -60,11 +60,13 @@ type Language struct {
 
 // Locale is a per-locale overlay on its language.
 type Locale struct {
-	Language   string              `yaml:"language"`
-	SkillName  string              `yaml:"skill_name"`
-	Invocation string              `yaml:"invocation"`
-	Utterances map[string][]string `yaml:"utterances"`
-	Responses  map[string]string   `yaml:"responses"`
+	Language   string `yaml:"language"`
+	SkillName  string `yaml:"skill_name"`
+	Invocation string `yaml:"invocation"`
+	// KodiInvocation is how the locale writes the "kodi" invocation choice (InvocationKodi), for a language whose script can't use the Latin name. Empty means "kodi".
+	KodiInvocation string              `yaml:"kodi_invocation"`
+	Utterances     map[string][]string `yaml:"utterances"`
+	Responses      map[string]string   `yaml:"responses"`
 }
 
 // keyedSection is one intent or slot type of a keyed file, its entries in file order.
@@ -123,7 +125,7 @@ type ModelTypeValue struct {
 
 // BuildOptions are the user-specific inputs to a build.
 type BuildOptions struct {
-	// Invocation overrides the locale's default invocation name.
+	// Invocation overrides the locale's default invocation name. InvocationKodi picks the locale's own spelling of it (Locale.KodiInvocation).
 	Invocation string
 	// SlotValues supplies values per slot type at build time, for custom types and for extending built-in types such as AMAZON.Movie with library titles. For a dynamic type they replace the language's example values.
 	SlotValues map[string][]SlotValue

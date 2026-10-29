@@ -20,7 +20,11 @@ func Build(src *Sources, locale string, opts BuildOptions) (*InteractionModel, e
 	}
 
 	invocation := loc.Invocation
-	if opts.Invocation != "" {
+
+	switch {
+	case opts.Invocation == InvocationKodi && loc.KodiInvocation != "":
+		invocation = loc.KodiInvocation
+	case opts.Invocation != "":
 		invocation = opts.Invocation
 	}
 

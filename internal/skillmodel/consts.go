@@ -15,5 +15,8 @@ const (
 	recommendedSamples = 5
 )
 
+// InvocationKodi is the invocation choice that names the skill after Kodi rather than Encore; each locale may spell it in its own script (Locale.KodiInvocation).
+const InvocationKodi = "kodi"
+
 // ReferenceLanguage is the language every other language's responses are compared against.
 const ReferenceLanguage = "en"
