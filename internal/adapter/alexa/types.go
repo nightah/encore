@@ -85,6 +85,8 @@ type Speech struct {
 	slotIDs map[string]map[string]map[string]string
 	// roomPhrases holds, per locale, the words its utterances put between another slot and {Room} ("in the", "im"), lowercased and split into words.
 	roomPhrases map[string][][]string
+	// roomAfter holds, per locale, the postpositions its utterances put after {Room} ("में"), lowercased and split into words.
+	roomAfter map[string][][]string
 	// queryForms holds, per locale, the TV intents' samples as they'd reach PlayMedia's search query, most specific first.
 	queryForms map[string][]queryForm
 	log        *slog.Logger
