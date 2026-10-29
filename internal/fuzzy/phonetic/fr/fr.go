@@ -45,6 +45,11 @@ func sounded(w string) (singular, silent int) {
 		strip("gc")
 	}
 
+	if n > 1 && n < len(w) && w[n] == 't' && w[n-2] == 'i' {
+		// The g of "doigt" is silent with its t.
+		strip("g")
+	}
+
 	if n > 1 && w[n-2] == 'e' {
 		strip("r")
 	}
@@ -112,6 +117,8 @@ func encode(k *skeleton.Key, w string) {
 		case c == 's' && at(i) == 'h':
 			k.Emit('X')
 			i++
+		case c == 'w' && i > 1 && strings.IndexByte("cgkq", at(i-2)) >= 0:
+			// After a velar, w is the glide of "oi" or "oua" spelt as heard ("kwè" for "quoi").
 		case c == 't' && at(i) == 'i' && isVowel(at(i+1)) && i > 1 && at(i-2) != 's':
 			// -tion, -tiel: the t says s, except after s ("question").
 			k.Emit('S')
