@@ -180,7 +180,7 @@ func TestMACAddressReplies(t *testing.T) {
 		reply func(json.RawMessage) (any, *fakekodi.Error)
 		err   string
 	}{
-		{"too long", labels("00:00:00:00:fe:80:00:00"), "instead of a MAC address"},
+		{"too long", macReply("00:00:00:00:fe:80:00:00"), "instead of a MAC address"},
 		{"failing", func(json.RawMessage) (any, *fakekodi.Error) {
 			return nil, &fakekodi.Error{Code: CodeInternalError, Message: "x"}
 		}, "XBMC.GetInfoLabels"},
@@ -201,7 +201,7 @@ func TestMACAddressReplies(t *testing.T) {
 	}
 }
 
-func labels(mac string) func(json.RawMessage) (any, *fakekodi.Error) {
+func macReply(mac string) func(json.RawMessage) (any, *fakekodi.Error) {
 	return func(json.RawMessage) (any, *fakekodi.Error) { return map[string]string{"Network.MacAddress": mac}, nil }
 }
 
