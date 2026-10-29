@@ -1,0 +1,72 @@
+# Example values for the dynamic slot types in model.yaml (ja): deploys replace them with what is set up in Encore. Chosen for this language rather than translated, so not on Crowdin.
+
+KODI_MUSIC_VIDEO:
+  - {value: 夜に駆ける}
+  - {value: レモン, synonyms: [lemon]}
+  - {value: マリーゴールド}
+  - {value: 紅蓮華}
+  - {value: パプリカ}
+
+# Examples only, extended from the library when available.
+KODI_PLAYLIST:
+  - {value: ドライブ, synonyms: [ドライブ用]}
+  - {value: パーティー}
+  - {value: ワークアウト, synonyms: [トレーニング]}
+  - {value: リラックス, synonyms: [癒し]}
+  - {value: 子ども向け, synonyms: [キッズ]}
+  - {value: ディナー, synonyms: [夕食]}
+  - {value: 高評価, synonyms: [お気に入り曲]}
+
+# Examples only: deploys replace them with the rooms set up in Encore. Bare nouns, so "{Room}で" reads naturally.
+KODI_ROOM:
+  - {value: リビング, synonyms: [リビングルーム, 居間]}
+  - {value: 寝室, synonyms: [ベッドルーム]}
+  - {value: 子ども部屋, synonyms: [子供部屋]}
+  - {value: 和室}
+  - {value: キッチン, synonyms: [台所]}
+  - {value: ダイニング}
+  - {value: 書斎}
+  - {value: 仕事部屋}
+  - {value: シアタールーム, synonyms: [ホームシアター]}
+  - {value: 客間}
+  - {value: 二階}
+  - {value: ガレージ}
+
+# Examples only, extended from the library when available.
+MEDIA_GENRE:
+  - {value: アクション}
+  - {value: アドベンチャー, synonyms: [冒険]}
+  - {value: アニメ, synonyms: [アニメーション]}
+  - {value: コメディー, synonyms: [コメディ, お笑い]}
+  - {value: 犯罪, synonyms: [クライム]}
+  - {value: ドキュメンタリー}
+  - {value: ドラマ}
+  - {value: ファミリー, synonyms: [家族向け]}
+  - {value: ファンタジー}
+  - {value: ホラー}
+  - {value: キッズ, synonyms: [子ども向け]}
+  - {value: ミステリー}
+  - {value: ロマンス, synonyms: [恋愛]}
+  - {value: エスエフ, synonyms: [サイエンスフィクション]}
+  - {value: スリラー, synonyms: [サスペンス]}
+  - {value: 戦争}
+  - {value: 西部劇}
+  - {value: 時代劇}
+  - {value: ロック}
+  - {value: ポップス, synonyms: [ポップ]}
+  - {value: ジェイポップ}
+  - {value: ジャズ}
+  - {value: クラシック}
+  - {value: ヒップホップ, synonyms: [ラップ]}
+  - {value: カントリー}
+  - {value: エレクトロ, synonyms: [エレクトロニック, ダンス]}
+  - {value: ブルース}
+  - {value: メタル, synonyms: [ヘヴィメタル]}
+  - {value: フォーク}
+  - {value: レゲエ}
+  - {value: ソウル}
+  - {value: アールアンドビー}
+  - {value: インディーズ}
+  - {value: サウンドトラック, synonyms: [サントラ]}
+  - {value: 演歌}
+  - {value: アニソン}
