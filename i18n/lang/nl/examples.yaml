@@ -34,7 +34,7 @@ KODI_PLAYLIST:
   - {value: avondeten, synonyms: [diner]}
   - {value: best beoordeeld, synonyms: [favorieten, top]}
 
-# Examples only: deploys replace them with the rooms set up in Encore. Utterances say "in de {Room}", "in het {Room}" or "op de {Room}", so values carry no article.
+# Examples only: deploys replace them with the rooms set up in Encore. Utterances say "in de {Room}", "in het {Room}", "op de {Room}" or a bare "op {Room}" (as in "op zolder" or "op kantoor"), so values carry no article.
 KODI_ROOM:
   - {value: woonkamer, synonyms: [huiskamer]}
   - {value: slaapkamer}
@@ -95,7 +95,7 @@ MEDIA_GENRE:
   - {value: levenslied, synonyms: [nederlandstalig, smartlap]}
   - {value: reggae}
   - {value: soul}
-  - {value: r. and b., synonyms: [r. n. b.]}
+  - {value: r. en b., synonyms: [r. and b., r. n. b.]}
   - {value: indie}
   - {value: soundtrack, synonyms: [soundtracks, filmmuziek]}
 
