@@ -22,6 +22,9 @@ func TestNormalizePortuguese(t *testing.T) {
 		{"Sessão de Terapia", "sessao de terapia"},
 		{"O Palhaço", "palhasso"},
 		{"Ç", "ss"},
+		// A decomposed ç (c and a combining cedilla), as NFD filenames store it.
+		{"O Palhac\u0327o", "palhasso"},
+		{"C\u0327", "ss"},
 		{"Minha Mãe É uma Peça", "minha mae e uma pessa"},
 		{"Copo d'Água", "copo dagua"},
 		{"Chitãozinho & Xororó", "chitaozinho e xororo"},

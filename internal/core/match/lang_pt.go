@@ -19,8 +19,8 @@ func portuguese() *language {
 		articles:    set("o", "a", "os", "as", "um", "uma", "uns", "umas"),
 		stop:        set("o", "a", "os", "as", "um", "uma", "uns", "umas", "de", "do", "da", "dos", "das", "e", "em", "no", "na", "nos", "nas"),
 		ordSuffixes: []string{"o", "a", "os", "as"},
-		// "ç" always sounds as "ss" ("palhaço", "Iguaçu"), which speech recognition also writes ("palhasso"), and "3%" is said "três por cento".
-		respell: strings.NewReplacer("ç", "ss", "Ç", "ss", "%", " por cento "),
+		// "ç" always sounds as "ss" ("palhaço", "Iguaçu"), which speech recognition also writes ("palhasso"), whether it is stored precomposed or as "c" and a combining cedilla, and "3%" is said "três por cento".
+		respell: strings.NewReplacer("ç", "ss", "Ç", "ss", "c\u0327", "ss", "C\u0327", "ss", "%", " por cento "),
 		nums: numTable{
 			units: []string{
 				"zero", "", "dois", "tres", "quatro", "cinco", "seis", "sete", "oito", "nove", "dez",
