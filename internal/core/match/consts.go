@@ -76,6 +76,9 @@ const (
 // tatweel is the Arabic kashida (U+0640), which stretches a word for justification and is dropped.
 const tatweel = 'ـ'
 
+// arabicSun are the sun letters, which the definite article assimilates to: "الناظر" is said "an-nāẓir".
+const arabicSun = "تثدذرزسشصضطظلن"
+
 const (
 	numUnit     numKind = iota // 0-19
 	numTens                    // 20, 30, ... (and French "dix")
