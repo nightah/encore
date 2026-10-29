@@ -1,0 +1,331 @@
+# Utterance patterns, translated on Crowdin from the English file. Each key is one way of asking, and may hold several patterns, one per line. (a|b) picks one, [a|b] is optional, {Slot} is a slot. Built-in intents already understand the common phrasings; samples here only add Kodi-specific ones. An optional room at the end, such as "[(in|on) the {Room}]", lets a request name the room whose Kodi should play it; notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
+AMAZON.LoopOffIntent:
+  loop_off: "herhalen uit"
+  turn_off_repeat: "(zet|schakel) [het] herhalen uit"
+AMAZON.LoopOnIntent:
+  loop: "herhalen aan"
+  turn_repeat: "(zet|schakel) [het] herhalen aan"
+AMAZON.PauseIntent:
+  pause_tv: "pauzeer (de tv|de televisie|kodi|de video|de film|de serie)\nzet (de tv|kodi|de video|de film|de serie) op pauze"
+AMAZON.ResumeIntent:
+  resume_tv: "hervat (de tv|kodi|de video|de film|de serie)\nspeel (de video|de film|de serie) verder"
+AMAZON.ShuffleOffIntent:
+  shuffle_off: "shuffle uit\nwillekeurige volgorde uit"
+  turn_off_shuffle: "(zet|schakel) (shuffle|willekeurig afspelen) uit"
+AMAZON.ShuffleOnIntent:
+  shuffle: "shuffle aan\nwillekeurige volgorde aan"
+  turn_shuffle: "(zet|schakel) (shuffle|willekeurig afspelen) aan"
+AudioPassthrough:
+  toggle_digital_audio: "(digitale audio|digitaal geluid|audio passthrough) (aan|uit)"
+  toggle_passthrough: "(wissel|schakel) [de] passthrough om"
+  turn_passthrough: "(zet|schakel) [de] [audio] passthrough (aan|uit)"
+AudioStream:
+  audio: "{Step} (audiospoor|geluidsspoor|audiotrack|taal)\n(audiospoor|geluidsspoor|taal) {Step}"
+  audio_2: "(audio|audiospoor|geluidsspoor) {Language}"
+  audio_3: "audio in [het] {Language}"
+  language: "(kies|neem) de {Step} taal"
+  play: "(speel|luister) in [het] {Language}"
+  switch_audio: "(zet|wissel|verander) (de audio|het audiospoor|de taal|het geluid) naar [het] {Language}"
+BingeShow:
+  binge: "bingewatch {Show} [(in de|in het|op de) {Room}]\nik wil {Show} bingewatchen"
+  binge_rest: "speel de rest van {Show} [(in de|in het|op de) {Room}]\nzet de rest van {Show} op"
+  play_all: "speel alle afleveringen van {Show} achter elkaar"
+  play_all_unwatched: "speel alle (ongeziene|resterende|overige) afleveringen van {Show} [(in de|in het|op de) {Room}]\nzet alle (ongeziene|resterende) afleveringen van {Show} op"
+  start_binge_mode: "start [de] bingemodus (voor|met) {Show} [(in de|in het|op de) {Room}]\nzet [de] bingemodus voor {Show} aan"
+CleanLibrary:
+  clean_library: "(ruim|schoon) [de|mijn] bibliotheek op"
+  clean_library_2: "(ruim|schoon) [de|mijn] {Library} bibliotheek op"
+  tidy_library: "maak [de|mijn] {Library} bibliotheek schoon\n[de|mijn] {Library} bibliotheek opschonen"
+ContinueWatching:
+  continue_last_show: "(ga verder met|hervat) de laatste serie [(in de|in het|op de) {Room}]"
+  continue_watching: "kijk verder [(in de|in het|op de) {Room}]\nga verder met kijken [(in de|in het|op de) {Room}]"
+  continue_where_i: "ga verder waar ik gebleven was [(in de|in het|op de) {Room}]"
+  pick_up_where: "speel verder waar ik (was gebleven|gestopt was|ben gestopt) [(in de|in het|op de) {Room}]"
+  play_what_i: "speel (wat ik aan het kijken was|waar ik naar keek|wat ik laatst keek) [(in de|in het|op de) {Room}]"
+  where_did_i: "waar was ik gebleven"
+CurrentPlayItemEnquiry:
+  what_am_i: "(waar kijk ik naar|waar luister ik naar|wat kijk ik|wat luister ik)"
+  what_is_playing: "wat (speelt er|wordt er afgespeeld|staat er op) [nu]"
+  what_show_is: "(welke film|welke serie|welk liedje|welk nummer) is dit"
+  whats_playing: "wat is er (nu|op dit moment) aan het spelen"
+  who_is_this: "(wie|wat) is dit"
+CurrentPlayItemTimeRemaining:
+  how_long_is: "hoe lang (duurt het nog|duurt dit nog|is het nog)"
+  how_much_is: "hoeveel tijd is er nog over\nhoeveel minuten zijn er nog over"
+  how_much_longer: "hoe lang nog"
+  how_much_time: "hoeveel tijd (rest er nog|blijft er nog over)"
+  when_is_this: "wanneer is (het|dit) (afgelopen|voorbij|klaar)"
+  when_will_movie: "wanneer is (de film|de serie|de aflevering) (afgelopen|voorbij|klaar)"
+  when_will_this: "hoe laat is (het|dit|de film|de aflevering) (afgelopen|voorbij|klaar)"
+EjectMedia:
+  eject: "uitwerpen"
+  eject_disc: "werp (de disc|de schijf|de c. d.|de d. v. d.|de blu ray) uit\n(de disc|de schijf|de c. d.|de d. v. d.) uitwerpen"
+  open_disc_tray: "open (de lade|het station|de c. d. lade|de d. v. d. lade)"
+Fullscreen:
+  exit_fullscreen: "(sluit|verlaat) het volledige scherm\nvolledig scherm (sluiten|verlaten)"
+  fullscreen: "volledig scherm [aan|uit]"
+  go_fullscreen: "(ga naar|schakel naar) (volledig scherm|het volledige scherm)\nzet (het beeld|de video) op volledig scherm"
+  show_visualizer: "laat de visualisatie zien\ntoon de visualisatie"
+  visualizer: "visualisatie (aan|uit)"
+GlobalSearch:
+  do_global_search: "(doe|start) een globale zoekopdracht naar {Query}"
+  global_search: "globaal zoeken naar {Query}\nzoek overal naar {Query}"
+  search_kodi_for: "(doorzoek|zoek in) (kodi|alle add ons|alle addons|alles) naar {Query}"
+IdentifyEcho:
+  identify_this_echo: "identificeer (deze echo|dit apparaat|deze speaker)"
+  what_echo_is: "welk apparaat is dit\nwelke (echo|speaker) is dit"
+  what_is_this: "hoe heet (deze echo|dit apparaat|deze speaker)"
+  whats_name_this: "wat is de naam van (deze echo|dit apparaat|deze speaker)"
+  which_echo_am: "tegen (welke echo|welk apparaat|welke speaker) praat ik"
+  which_echo_is: "welke echo (ben je|is het)"
+LaunchAddon:
+  launch: "voer {Addon} uit"
+  launch_addon: "(start|open) [de|het] (addon|add on|plugin|plug in|script|app) {Addon}"
+  launch_addon_2: "(start|open) {Addon} (addon|add on|plugin|app)"
+ListenToAlbum:
+  play_album: "(speel|draai) het album {Album} [(in de|in het|op de) {Room}]\nik wil het album {Album} horen\nhet album {Album} af te spelen"
+  play_album_2: "(speel|draai) de (plaat|c. d.) {Album} [van {Artist}]"
+  play_album_by: "(speel|draai) het album {Album} van {Artist} [(in de|in het|op de) {Room}]\nik wil het album {Album} van {Artist} horen"
+ListenToArtist:
+  play_artist: "(speel|draai) (de artiest|de band|de zanger|de zangeres) {Artist} [(in de|in het|op de) {Room}]"
+  play_music_by: "(speel|draai) [wat] (muziek|nummers|liedjes) van {Artist} [(in de|in het|op de) {Room}]\nik wil [wat] muziek van {Artist} horen\nmuziek van {Artist} af te spelen"
+  play_music_by_2: "(speel|draai) [wat] {Genre} (muziek|nummers) van {Artist} [(in de|in het|op de) {Room}]"
+ListenToGenre:
+  play_genre: "(speel|draai) muziek uit het genre {Genre} [(in de|in het|op de) {Room}]"
+  play_music: "(speel|draai) [wat] {Genre} (muziek|nummers|liedjes) [(in de|in het|op de) {Room}]\nzet [wat] {Genre} (muziek|nummers) op [(in de|in het|op de) {Room}]\nik wil [wat] {Genre} horen"
+  shuffle_music: "shuffle [wat] {Genre} (muziek|nummers) [(in de|in het|op de) {Room}]"
+ListenToLatestAlbum:
+  play_latest_album: "(speel|draai) het (nieuwste|laatste|nieuwe) album van {Artist} [(in de|in het|op de) {Room}]\nik wil het nieuwe album van {Artist} horen"
+ListenToRecentSongs:
+  listen_recently_added: "ik wil [mijn] nieuwe (nummers|liedjes|muziek) horen"
+  play_recent_songs: "(speel|draai) [mijn] (nieuwe|recente) (nummers|liedjes|muziek)"
+  play_recently_added: "(speel|draai|shuffle) [mijn] (onlangs toegevoegde|recent toegevoegde|nieuwste) (nummers|liedjes|muziek) [(in de|in het|op de) {Room}]"
+ListenToSong:
+  play_song: "(speel|draai) (het nummer|het liedje|de track) {Song} [(in de|in het|op de) {Room}]\nik wil (het nummer|het liedje) {Song} horen\nhet nummer {Song} af te spelen"
+  play_song_by: "(speel|draai) (het nummer|het liedje) {Song} van {Artist} [(in de|in het|op de) {Room}]"
+  play_song_from: "(speel|draai) (het nummer|het liedje) {Song} van het album {Album}"
+  play_track_by: "(speel|draai) de track {Song} van {Artist}"
+ListenToSongOrAlbum:
+  play_by: "(speel|draai) {Title} van {Artist} [(in de|in het|op de) {Room}]\nik wil {Title} van {Artist} horen\n{Title} van {Artist} af te spelen"
+Mute:
+  mute: "dempen"
+  mute_tv: "demp (de tv|kodi|het geluid)\nzet het geluid (uit|aan|weer aan)"
+  silence_tv: "zet de tv op stil"
+  toggle_mute: "geluid (aan|uit)"
+  unmute: "dempen opheffen"
+Navigate:
+  go: "(ga|druk|navigeer) {NavAction}"
+  go_times: "(ga|druk|navigeer) {Count} keer {NavAction}"
+  open_screen: "(open|toon) [het|de] {NavAction} (scherm|venster)"
+  sample: "{NavAction}"
+  times: "{NavAction} {Count} keer"
+OpenFavourite:
+  open_favourite: "(open|start|toon) [mijn] favoriet {Favourite}"
+  play_from_favourites: "(speel|open) {Favourite} uit [mijn] favorieten"
+PartyMode:
+  lets_party: "(laten we|tijd om te) feesten\ntijd voor een feestje"
+  play_all_music: "(speel|draai|shuffle) (alle|willekeurige) muziek [(in de|in het|op de) {Room}]"
+  start_party_mode: "start [de] (feestmodus|partymodus) [(in de|in het|op de) {Room}]\nzet [de] (feestmodus|partymodus) aan"
+PlayMedia:
+  find: "(zoek|vind) {Query}"
+  play: "speel {Query}\n{Query} af te spelen"
+  put: "zet {Query} op"
+  queue_up: "zet {Query} in de wachtrij"
+  search_for: "zoek naar {Query}"
+PlayPlaylist:
+  play_music_playlist: "(speel|start) de (muziekafspeellijst|videoafspeellijst|slimme afspeellijst) {Playlist}"
+  play_playlist: "(speel|start|draai) [mijn] (afspeellijst|playlist) {Playlist} [(in de|in het|op de) {Room}]\nik wil de afspeellijst {Playlist} horen"
+  play_playlist_2: "(speel|start|draai) [de|mijn] {Playlist} (afspeellijst|playlist) [(in de|in het|op de) {Room}]"
+PlayerMove:
+  move_picture: "(verschuif|beweeg) (het beeld|het plaatje|de video) {Direction}"
+  pan: "(pan|schuif) {Direction}"
+PlayerRewind:
+  go_back: "ga {Duration} terug"
+  rewind: "(spoel|spring) [met] {Duration} terug"
+  rewind_2: "(spoel|spring|ga) {Size} terug"
+  rewind_3: "terugspoelen"
+  rewind_it: "spoel (terug|het terug|de video terug)"
+PlayerRotate:
+  rotate: "draai {Rotation}"
+  rotate_2: "draai [negentig graden] {Rotation}"
+  rotate_picture: "draai (het beeld|het plaatje|het scherm|de video) [{Rotation}]"
+  turn_picture: "roteer (het beeld|het plaatje|het scherm|de video) [{Rotation}]"
+PlayerSeek:
+  sample: "{Duration} {SeekDirection}"
+  skip: "(spoel|spring|ga) {Duration} {SeekDirection}\n(spoel|spring) {SeekDirection} met {Duration}"
+  skip_2: "(spoel|spring) {Size} {SeekDirection}"
+  skip_3: "ga {Size} {SeekDirection}"
+  skip_4: "(spoel|spring) {SeekDirection}"
+  skip_5: "sla {Duration} over"
+  step: "{Size} {SeekDirection}"
+  take_step: "(maak|neem) {Size} {SeekDirection}"
+PlayerSeekTo:
+  go_mark: "(ga|spring|spoel) naar het tijdstip {Position}"
+  go_minute: "(ga|spring|spoel) naar minuut {Minute}"
+  jump: "(spring|spoel) naar {Position}"
+  play_from_minute: "(speel|start) vanaf minuut {Minute}"
+  start_from: "(speel|start) vanaf {Position}"
+PlayerZoom:
+  enhance: "(vergroot|verscherp) het beeld"
+  enhance_and_move: "vergroot en (beweeg|schuif) {Direction}"
+  zoom: "zoom {Zoom}"
+  zoom_2: "{Zoom} zoomen"
+  zoom_and_move: "zoom {Zoom} en (beweeg|schuif|ga) {Direction}"
+Power:
+  kodi: "{PowerAction} (kodi|het systeem|de computer|het mediacenter|de box)\n(kodi|het systeem|de computer|het mediacenter) {PowerAction}"
+  put_kodi: "zet (kodi|het systeem|de computer) in de {PowerAction}\nzet (kodi|het systeem|de computer) {PowerAction}"
+  sample: "{PowerAction}"
+Recommend:
+  give_me_recommendation: "(ik wil|geef me) een tip voor (een|wat) {MediaType}"
+  recommend: "(raad|beveel) me (een|wat) {MediaType} aan"
+  recommend_2: "(raad|beveel) me (een|wat) {Genre} {MediaType} aan"
+  recommend_3: "(raad|beveel) me {MediaType} aan"
+  recommend_something: "raad me iets aan\nheb je een tip"
+  what_movie_should: "(welke film|welke serie) (zal|moet) ik kijken"
+  what_should_i: "wat (zal|moet) ik kijken"
+  what_should_we: "wat zullen we [vanavond] kijken"
+Repeat:
+  loop_mode: "herhaalmodus [op] {RepeatMode}"
+  repeat: "herhaal {RepeatMode}"
+  set_loop: "(zet|schakel) herhalen (op|naar) {RepeatMode}"
+  turn_repeat: "zet de herhaalmodus op {RepeatMode}"
+RoomControl:
+  in_the: "{Command} (in de|in het|op de) {Room}"
+  playback: "{Command} het afspelen (in de|in het|op de) {Room}"
+  tv: "{Command} (de tv|kodi|de muziek|de film|de serie|de video) (in de|in het|op de) {Room}"
+ShuffleAlbum:
+  shuffle_album: "shuffle het album {Album} [(in de|in het|op de) {Room}]\n(speel|draai) het album {Album} in willekeurige volgorde [(in de|in het|op de) {Room}]"
+  shuffle_album_2: "shuffle de (plaat|c. d.) {Album} [van {Artist}]"
+  shuffle_album_by: "shuffle het album {Album} van {Artist} [(in de|in het|op de) {Room}]\n(speel|draai) het album {Album} van {Artist} in willekeurige volgorde"
+ShuffleArtist:
+  shuffle_artist: "shuffle (de artiest|de band|de zanger|de zangeres) {Artist} [(in de|in het|op de) {Room}]"
+  shuffle_music_by: "shuffle [wat] (muziek|nummers|liedjes) van {Artist} [(in de|in het|op de) {Room}]\n(speel|draai) (muziek|nummers|liedjes) van {Artist} in willekeurige volgorde"
+  shuffle_music_by_2: "shuffle [wat] {Genre} (muziek|nummers) van {Artist} [(in de|in het|op de) {Room}]"
+ShuffleLatestAlbum:
+  shuffle_latest_album: "shuffle het (nieuwste|laatste|nieuwe) album van {Artist} [(in de|in het|op de) {Room}]\n(speel|draai) het nieuwste album van {Artist} in willekeurige volgorde"
+ShuffleMusicVideos:
+  play_music_videos: "(speel|toon|shuffle) [alle|al mijn] [{Genre}] (muziekvideo's|videoclips) [(in de|in het|op de) {Room}]"
+  play_music_videos_2: "(speel|toon|shuffle) [alle] [{Genre}] (muziekvideo's|videoclips) van {Artist}"
+ShufflePlaylist:
+  play_playlist_shuffled: "(speel|start|draai) [de|mijn] {Playlist} (afspeellijst|playlist) in willekeurige volgorde\n(speel|start|draai) [mijn] afspeellijst {Playlist} in willekeurige volgorde"
+  shuffle_music_playlist: "shuffle de (muziekafspeellijst|videoafspeellijst|slimme afspeellijst) {Playlist}"
+  shuffle_playlist: "shuffle [mijn] (afspeellijst|playlist) {Playlist} [(in de|in het|op de) {Room}]"
+  shuffle_playlist_2: "shuffle [de|mijn] {Playlist} (afspeellijst|playlist) [(in de|in het|op de) {Room}]"
+ShuffleShow:
+  play_shuffled: "(speel|start) {Show} in willekeurige volgorde"
+  shuffle_episodes: "shuffle [alle] afleveringen van {Show} [(in de|in het|op de) {Room}]\nspeel [alle] afleveringen van {Show} in willekeurige volgorde [(in de|in het|op de) {Room}]"
+  shuffle_show: "shuffle de serie {Show} [(in de|in het|op de) {Room}]"
+StereoscopicMode:
+  stereoscopic_mode: "(stereoscopische|drie d.) modus"
+  toggle_stereoscopic_mode: "(wissel|schakel) [de] (stereoscopische|drie d.) modus om"
+  turn_stereoscopic_mode: "(zet|schakel) [de] (stereoscopische|drie d.) modus (aan|uit)"
+Subtitles:
+  subtitle_language: "{SubtitleAction} de ondertitelingstaal"
+  subtitles: "{SubtitleAction} [de] (ondertiteling|ondertitels)"
+  subtitles_2: "(ondertiteling|ondertitels) {SubtitleAction}"
+  subtitles_3: "(ondertiteling|ondertitels) in [het] {Language}"
+  switch_subtitles: "(zet|wissel|verander) de (ondertiteling|ondertitels) naar [het] {Language}"
+  turn_subtitles: "(zet|schakel) de (ondertiteling|ondertitels) {SubtitleAction}"
+  turn_subtitles_2: "(toon|gebruik|kies) [de] (ondertiteling|ondertitels) in [het] {Language}"
+TypeText:
+  enter_text: "voer de tekst {Text} in"
+  insert: "vul {Text} in"
+  spell: "spel het woord {Text}"
+  type: "typ {Text}"
+  write: "schrijf {Text}"
+UpdateLibrary:
+  look_for_new: "zoek naar nieuwe (films|series|afleveringen|muziek|nummers|albums|media)"
+  update_library: "werk [de|mijn] bibliotheek bij\nscan [de|mijn] bibliotheek [opnieuw]\n(ververs|vernieuw|update) [de|mijn] bibliotheek"
+  update_library_2: "werk [de|mijn] {Library} bibliotheek bij\nscan [de|mijn] {Library} bibliotheek [opnieuw]\n(ververs|vernieuw|update) [de|mijn] {Library} bibliotheek"
+ViewLibrary:
+  show: "(toon|open) [de|mijn] {Section}\nga naar [de|mijn] {Section}"
+  show_2: "(toon|open) [de|mijn] {Genre} {Section}\nga naar [de|mijn] {Genre} {Section}"
+  show_me: "laat [me] [de|mijn] {Section} zien"
+  show_me_2: "laat [me] [de|mijn] {Genre} {Section} zien"
+ViewPlaylist:
+  show_music_playlist: "(toon|open) de (muziek|audio|video|film|serie) afspeellijst {Playlist}"
+  show_playlist: "(toon|open) [de|mijn] afspeellijst {Playlist}\nga naar de afspeellijst {Playlist}"
+  show_playlist_2: "(toon|open) [de|mijn] {Playlist} afspeellijst\nlaat [me] de afspeellijst {Playlist} zien"
+VolumeDown:
+  lower_volume: "(verlaag|verminder) het volume"
+  make_it_quieter: "zet (het|hem) zachter"
+  quieter: "zachter [graag]"
+  turn_down: "zet het volume (lager|zachter)"
+  volume_down: "volume (omlaag|lager)"
+VolumeSet:
+  set_volume: "zet het volume op {Level}"
+  set_volume_percent: "zet het volume op {Level} procent\nvolume {Level} procent"
+  volume: "volume [op] {Level}"
+VolumeUp:
+  louder: "harder [graag]"
+  make_it_louder: "zet (het|hem) harder"
+  raise_volume: "(verhoog|vergroot) het volume"
+  turn_up: "zet het volume (hoger|harder)"
+  volume_up: "volume (omhoog|hoger)"
+WatchEpisode:
+  play_episode_season: "(speel|start) {Show} aflevering {Episode} van seizoen {Season}\nzet {Show} aflevering {Episode} van seizoen {Season} op"
+  play_episode_season_2: "(speel|start) aflevering {Episode} van seizoen {Season} van {Show}\nzet aflevering {Episode} van seizoen {Season} van {Show} op"
+  play_season_episode: "(speel|start) {Show} seizoen {Season} aflevering {Episode} [(in de|in het|op de) {Room}]\nzet {Show} seizoen {Season} aflevering {Episode} op [(in de|in het|op de) {Room}]"
+  play_season_episode_2: "(speel|start) seizoen {Season} aflevering {Episode} van {Show} [(in de|in het|op de) {Room}]\nseizoen {Season} aflevering {Episode} van {Show} af te spelen"
+WatchFirstEpisode:
+  play_first: "(speel|start) {Show} vanaf het begin [(in de|in het|op de) {Room}]\nik wil {Show} vanaf het begin (kijken|zien)"
+  play_first_episode: "(speel|start) de (eerste|allereerste) aflevering van {Show} [(in de|in het|op de) {Room}]\nzet de (eerste|allereerste) aflevering van {Show} op [(in de|in het|op de) {Room}]"
+  play_first_episode_2: "(speel|start) {Show} vanaf de eerste aflevering [(in de|in het|op de) {Room}]\nde eerste aflevering van {Show} af te spelen"
+WatchLatestEpisode:
+  play_latest: "(speel|start) de (nieuwste|laatste) {Show} aflevering"
+  play_latest_episode: "(speel|start) de (nieuwste|laatste|meest recente) aflevering van {Show} [(in de|in het|op de) {Room}]\nzet de (nieuwste|laatste) aflevering van {Show} op [(in de|in het|op de) {Room}]"
+  play_latest_episode_2: "ik wil de (nieuwste|laatste) aflevering van {Show} (kijken|zien)"
+WatchMovie:
+  i_want_watch: "ik wil [de film] {Movie} (kijken|zien)"
+  lets_watch: "laten we [de film] {Movie} kijken"
+  play_film: "zet de film {Movie} op [(in de|in het|op de) {Room}]\nlaat [me] de film {Movie} zien"
+  play_movie: "(speel|start) de film {Movie} [(in de|in het|op de) {Room}]\nde film {Movie} af te spelen [(in de|in het|op de) {Room}]"
+WatchMovieTrailer:
+  play_trailer: "(speel|toon) de (trailer|preview)\nlaat [me] de trailer zien"
+  play_trailer_2: "(speel|toon) de {Movie} trailer"
+  play_trailer_for: "(speel|toon) de (trailer|preview) (van|voor) [de film] {Movie}\nlaat [me] de trailer van [de film] {Movie} zien"
+WatchMusicVideo:
+  play_music_video: "(speel|toon) de (muziekvideo|videoclip) [van] {MusicVideo} [(in de|in het|op de) {Room}]"
+  play_music_video_2: "(speel|toon) de (muziekvideo|videoclip) [van] {MusicVideo} van {Artist} [(in de|in het|op de) {Room}]"
+  play_music_video_3: "(speel|toon) de {MusicVideo} (muziekvideo|videoclip)\nlaat [me] de videoclip van {MusicVideo} zien"
+WatchNextEpisode:
+  continue: "(ga|kijk) verder met {Show} [(in de|in het|op de) {Room}]"
+  play_from_where: "speel {Show} verder waar ik gebleven was"
+  play_next_episode: "(speel|start) de volgende aflevering van {Show} [(in de|in het|op de) {Room}]\nzet de volgende aflevering van {Show} op [(in de|in het|op de) {Room}]\nde volgende aflevering van {Show} af te spelen"
+  whats_next: "wat is de volgende aflevering van {Show}"
+WatchNextInCollection:
+  continue_collection: "ga verder met de {Movie} (reeks|filmreeks|collectie|films)"
+  play_next_movie: "(speel|start) de volgende film (uit|van) de {Movie} (reeks|filmreeks|collectie) [(in de|in het|op de) {Room}]\nzet de volgende film uit de {Movie} reeks op"
+  whats_next_collection: "wat is de volgende film (uit|van) de {Movie} (reeks|filmreeks|collectie)"
+WatchRandomEpisode:
+  play_episode: "(speel|start) (een|zomaar een) aflevering van {Show} [(in de|in het|op de) {Room}]\nzet (een|zomaar een) aflevering van {Show} op"
+  play_episode_2: "(speel|start) een willekeurige {Show} aflevering"
+  play_random_episode: "(speel|start) een (willekeurige|random) aflevering van {Show} [(in de|in het|op de) {Room}]\nzet een willekeurige aflevering van {Show} op"
+WatchRandomMovie:
+  pick_movie_for: "kies een [{Genre}] film voor me"
+  play_any_movie: "(speel|start) zomaar een [{Genre}] film\nzet zomaar een [{Genre}] film op"
+  play_random_movie: "(speel|start) een (willekeurige|random) [{Genre}] film [(in de|in het|op de) {Room}]\nzet een willekeurige [{Genre}] film op [(in de|in het|op de) {Room}]"
+  surprise_me_with: "verras me met een [{Genre}] film"
+WatchRandomMusicVideo:
+  play_music_video: "(speel|toon) een (willekeurige|random) [{Genre}] (muziekvideo|videoclip) [(in de|in het|op de) {Room}]"
+  play_music_video_2: "(speel|toon) een [willekeurige] [{Genre}] (muziekvideo|videoclip) van {Artist}"
+WatchRandomShow:
+  play_any_show: "(speel|start) zomaar een [{Genre}] serie\nzet zomaar een [{Genre}] serie op"
+  play_random_show: "(speel|start) een (willekeurige|random) [{Genre}] serie [(in de|in het|op de) {Room}]\nzet een willekeurige [{Genre}] serie op [(in de|in het|op de) {Room}]"
+  surprise_me_with: "verras me met een [{Genre}] serie"
+WhatAlbums:
+  list_albums_by: "(noem|geef) [me] de albums van {Artist}"
+  what_albums_by: "welke albums van {Artist} (heb ik|hebben we|heb je)"
+  what_albums_do: "welke albums (heb ik|hebben we|heb je) van {Artist}"
+  what_albums_has: "welke albums heeft {Artist} (gemaakt|uitgebracht)"
+  which_albums_by: "wat voor albums van {Artist} (heb ik|hebben we)"
+WhatsNew:
+  are_there_new: "(zijn er|heb ik|hebben we) [nog] (nieuwe|ongeziene) {MediaType}"
+  are_there_new_2: "(zijn er|heb ik|hebben we) [nog] (nieuwe|ongeziene) {Genre} {MediaType}"
+  are_there_new_3: "(zijn er|heb ik|hebben we) [nog] (nieuwe|ongeziene) afleveringen van {Show}"
+  how_many_new: "hoeveel (nieuwe|ongeziene) afleveringen van {Show} (zijn er|heb ik|hebben we)"
+  what_new_do: "welke nieuwe {MediaType} (heb ik|hebben we|zijn er)"
+  what_new_do_2: "welke nieuwe {Genre} {MediaType} (heb ik|hebben we|zijn er)"
+  whats_new: "wat is er nieuw"
+  whats_new_2: "wat is er nieuw (bij|van) {Show}"
+  whats_new_watch: "wat is er nieuw om te (kijken|luisteren)"

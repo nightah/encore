@@ -1,0 +1,110 @@
+# Example values for the dynamic slot types in model.yaml (nl): deploys replace them with what is set up in Encore. Chosen for this language rather than translated, so not on Crowdin.
+
+# Stand-in for AMAZON.SearchQuery in nl-NL: add-ons are read from Kodi when asked for, so these only bias what Alexa hears.
+KODI_ADDON:
+  - {value: youtube}
+  - {value: netflix}
+  - {value: npo}
+  - {value: ondertitels}
+  - {value: weer}
+  - {value: spotify}
+
+# Stand-in for AMAZON.SearchQuery in nl-NL: favourites are read from Kodi when asked for, so these only bias what Alexa hears.
+KODI_FAVOURITE:
+  - {value: npo start}
+  - {value: radio veronica}
+  - {value: het journaal}
+  - {value: weerbericht}
+  - {value: kinderliedjes}
+
+KODI_MUSIC_VIDEO:
+  - {value: bohemian rhapsody}
+  - {value: dromen zijn bedrog}
+  - {value: take on me}
+  - {value: zoutelande}
+  - {value: radar love}
+
+# Examples only, extended from the library when available.
+KODI_PLAYLIST:
+  - {value: roadtrip, synonyms: [road trip, op reis]}
+  - {value: feest, synonyms: [party, feestje]}
+  - {value: sporten, synonyms: [workout, training]}
+  - {value: chill, synonyms: [chill out, ontspannen]}
+  - {value: kinderen, synonyms: [kids]}
+  - {value: avondeten, synonyms: [diner]}
+  - {value: best beoordeeld, synonyms: [favorieten, top]}
+
+# Examples only: deploys replace them with the rooms set up in Encore. Utterances say "in de {Room}", "in het {Room}" or "op de {Room}", so values carry no article.
+KODI_ROOM:
+  - {value: woonkamer, synonyms: [huiskamer]}
+  - {value: slaapkamer}
+  - {value: kinderkamer}
+  - {value: keuken}
+  - {value: werkkamer, synonyms: [studeerkamer]}
+  - {value: kantoor}
+  - {value: eetkamer}
+  - {value: logeerkamer}
+  - {value: thuisbioscoop, synonyms: [bioscoop]}
+  - {value: zolder}
+  - {value: kelder}
+  - {value: speelkamer}
+  - {value: garage}
+
+# Stand-in for AMAZON.SearchQuery in nl-NL, which lacks it: "speel …" and global search take library titles. Examples only, replaced with an even spread of the library's titles at deploy.
+KODI_TITLE:
+  - {value: soldaat van oranje}
+  - {value: flodder}
+  - {value: de luizenmoeder}
+  - {value: wie is de mol}
+  - {value: zwartboek}
+  - {value: penoza}
+  - {value: goede tijden slechte tijden}
+  - {value: marco borsato}
+  - {value: dune}
+  - {value: breaking bad}
+
+# Examples only, extended from the library when available.
+MEDIA_GENRE:
+  - {value: actie}
+  - {value: avontuur}
+  - {value: animatie, synonyms: [tekenfilm, tekenfilms, animatiefilm]}
+  - {value: komedie, synonyms: [komedies, grappig]}
+  - {value: misdaad, synonyms: [detective, detectives]}
+  - {value: documentaire, synonyms: [documentaires, docu]}
+  - {value: drama}
+  - {value: familie, synonyms: [familiefilm]}
+  - {value: fantasy}
+  - {value: horror, synonyms: [eng, griezel]}
+  - {value: kinderen, synonyms: [kinderfilm, jeugd]}
+  - {value: mysterie}
+  - {value: romantiek, synonyms: [romantisch, liefde]}
+  - {value: sciencefiction, synonyms: [science fiction, sci fi]}
+  - {value: thriller, synonyms: [thrillers, spanning]}
+  - {value: oorlog, synonyms: [oorlogsfilm]}
+  - {value: western, synonyms: [westerns]}
+  - {value: rock}
+  - {value: pop}
+  - {value: jazz}
+  - {value: klassiek, synonyms: [klassieke muziek]}
+  - {value: hiphop, synonyms: [hip hop, rap, nederhop]}
+  - {value: country}
+  - {value: elektronisch, synonyms: [dance, house, techno]}
+  - {value: blues}
+  - {value: metal, synonyms: [heavy metal]}
+  - {value: folk}
+  - {value: levenslied, synonyms: [nederlandstalig, smartlap]}
+  - {value: reggae}
+  - {value: soul}
+  - {value: r. and b., synonyms: [r. n. b.]}
+  - {value: indie}
+  - {value: soundtrack, synonyms: [soundtracks, filmmuziek]}
+
+# Stand-in for AMAZON.SearchQuery in nl-NL for typed text: common search words, so free text is heard as Dutch.
+SPOKEN_TEXT:
+  - {value: film}
+  - {value: serie}
+  - {value: muziek}
+  - {value: nieuws}
+  - {value: hallo}
+  - {value: zoeken}
+  - {value: wachtwoord}
