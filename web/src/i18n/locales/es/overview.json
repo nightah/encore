@@ -41,6 +41,7 @@
       "time": "Hora"
     },
     "empty": "Aún no hay peticiones. Di «Alexa, pregunta a {{invocation}} qué está sonando».",
+    "emptyNoInvocation": "",
     "open": "Abrir la petición de las {{time}} en el registro",
     "title": "Peticiones recientes",
     "viewAll": "Ver todas"
