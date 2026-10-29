@@ -21,8 +21,10 @@ type fakeBackend struct {
 	calls   map[string]int
 	sinces  []time.Time
 	fn      func(media.Event)
-	subbed  chan struct{}
-	subOnce sync.Once
+	// duringEpisodes, when set, runs inside Episodes after the call is recorded, as if it happened while Kodi was answering.
+	duringEpisodes func()
+	subbed         chan struct{}
+	subOnce        sync.Once
 }
 
 func newFakeBackend(items ...media.Item) *fakeBackend {
@@ -130,6 +132,10 @@ func (f *fakeBackend) Library(_ context.Context, kind media.Kind) ([]media.Item,
 
 func (f *fakeBackend) Episodes(_ context.Context, showID int) ([]media.Item, error) {
 	f.record("Episodes")
+
+	if f.duringEpisodes != nil {
+		f.duringEpisodes()
+	}
 
 	if err := f.err("Episodes"); err != nil {
 		return nil, err

@@ -311,6 +311,14 @@ func TestOverviewFailsWhenLibrariesDo(t *testing.T) {
 	assert.Contains(t, h.logs.String(), "catalog unavailable", "but are logged")
 }
 
+func TestAttentionFailsOnUnreadableSkillSettings(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	require.NoError(t, h.app.DB().Settings().Set(t.Context(), lwaSettingsKey, "not settings"))
+
+	_, err := h.api.attention(t.Context())
+	require.Error(t, err, "settings that can't be read aren't taken as none")
+}
+
 // A database that stops answering must surface as errors, never as empty results that look valid.
 func TestDatabaseErrorsArePassedOn(t *testing.T) {
 	h := newHarness(t, harnessOpts{noKodi: true})

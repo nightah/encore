@@ -15,6 +15,7 @@ import (
 
 	"github.com/nightah/encore/internal/core/actions"
 	"github.com/nightah/encore/internal/core/match"
+	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/skillmodel"
 )
 
@@ -27,6 +28,7 @@ func NewSpeech(src *skillmodel.Sources, log *slog.Logger) (*Speech, error) {
 		languages:   map[string]string{},
 		slotIDs:     map[string]map[string]map[string]string{},
 		roomPhrases: map[string][][]string{},
+		queryForms:  map[string][]queryForm{},
 		log:         log,
 	}
 
@@ -52,6 +54,10 @@ func NewSpeech(src *skillmodel.Sources, log *slog.Logger) (*Speech, error) {
 		}
 
 		if s.roomPhrases[locale], err = roomPhrases(utterances); err != nil {
+			return nil, fmt.Errorf("locale %s: %w", locale, err)
+		}
+
+		if s.queryForms[locale], err = queryForms(src.Model, utterances); err != nil {
 			return nil, fmt.Errorf("locale %s: %w", locale, err)
 		}
 	}
@@ -144,6 +150,177 @@ func (s *Speech) RoomSplits(locale, query string) []RoomSplit {
 	}
 
 	return out
+}
+
+// Reinterpret reads a PlayMedia search query as the TV intent whose sample it is. Alexa can hear "play the next episode of bluey" as PlayMedia with the query "the next episode of bluey", since an AMAZON.SearchQuery slot takes any words; searched as a title, it matches nothing. It returns the intent to dispatch and the slot holding the spoken title, which may still end with a room: the query itself, or the intent's {Show}.
+func (s *Speech) Reinterpret(locale string, intent Intent) (Intent, string) {
+	forms, ok := s.queryForms[locale]
+	if !ok {
+		locale, forms = fallbackLocale, s.queryForms[fallbackLocale]
+	}
+
+	words := strings.Fields(intent.Slots["Query"].Value)
+	for i, w := range words {
+		if o, ok := ordinals[s.languages[locale]][strings.ToLower(w)]; ok {
+			words[i] = o
+		}
+	}
+
+	for _, form := range forms {
+		values, ok := form.match(words)
+		if !ok {
+			continue
+		}
+
+		out := Intent{Name: form.intent, Slots: map[string]Slot{}}
+		title := ""
+
+		for name, value := range values {
+			out.Slots[name] = Slot{Name: name, Value: value}
+
+			if !form.numbers[name] {
+				title = name
+			}
+		}
+
+		return out, title
+	}
+
+	return intent, "Query"
+}
+
+// ordinals maps the ordinals Alexa writes as digits in a search query to the words the samples spell out.
+var ordinals = map[string]map[string]string{
+	"en": {"1st": "first"},
+}
+
+// queryForms collects the samples of each TV intent that start with one of PlayMedia's carrier phrases, without it and without a room, most specific first. Samples that are only a slot after the carrier, such as "play {Show}", are left out: any query would match them.
+func queryForms(model skillmodel.Model, utterances map[string][]string) ([]queryForm, error) {
+	var carriers [][]string
+
+	for _, pattern := range utterances["PlayMedia"] {
+		samples, err := skillmodel.Expand(pattern)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, sample := range samples {
+			if words := strings.Fields(strings.ToLower(sample)); len(words) > 1 && words[len(words)-1] == "{query}" {
+				carriers = append(carriers, words[:len(words)-1])
+			}
+		}
+	}
+
+	content := model.IntentContent()
+
+	var out []queryForm
+
+	for _, in := range model.Intents {
+		if content[in.Name] != media.ContentTV {
+			continue
+		}
+
+		numbers := map[string]bool{}
+
+		for _, slot := range in.Slots {
+			if slot.Type == "AMAZON.NUMBER" {
+				numbers[slot.Name] = true
+			}
+		}
+
+		for _, pattern := range utterances[in.Name] {
+			samples, err := skillmodel.Expand(pattern)
+			if err != nil {
+				return nil, err
+			}
+
+			for _, sample := range samples {
+				if form, ok := newQueryForm(in.Name, sample, carriers, numbers); ok {
+					out = append(out, form)
+				}
+			}
+		}
+	}
+
+	slices.SortStableFunc(out, func(a, b queryForm) int { return b.literals - a.literals })
+
+	return out, nil
+}
+
+func newQueryForm(intent, sample string, carriers [][]string, numbers map[string]bool) (queryForm, bool) {
+	if strings.Contains(sample, "{Room}") {
+		return queryForm{}, false
+	}
+
+	words := strings.Fields(sample)
+
+	for _, carrier := range carriers {
+		if len(words) <= len(carrier) || !wordsEqual(words, carrier) {
+			continue
+		}
+
+		form := queryForm{intent: intent, words: words[len(carrier):], numbers: numbers}
+
+		for i, w := range form.words {
+			if !isSlotRef(w) {
+				form.words[i] = strings.ToLower(w)
+				form.literals++
+			}
+		}
+
+		return form, form.literals > 0
+	}
+
+	return queryForm{}, false
+}
+
+// match reads words as the form, returning each slot's words; a number slot takes one word that is a number.
+func (f queryForm) match(words []string) (map[string]string, bool) {
+	values := map[string]string{}
+
+	var at func(i, j int) bool
+
+	at = func(i, j int) bool {
+		if i == len(f.words) {
+			return j == len(words)
+		}
+
+		if j == len(words) {
+			return false
+		}
+
+		w := f.words[i]
+		if !isSlotRef(w) {
+			return strings.EqualFold(words[j], w) && at(i+1, j+1)
+		}
+
+		name := w[1 : len(w)-1]
+		if f.numbers[name] {
+			if _, err := strconv.Atoi(words[j]); err != nil {
+				return false
+			}
+
+			values[name] = words[j]
+
+			return at(i+1, j+1)
+		}
+
+		for end := j + 1; end <= len(words); end++ {
+			values[name] = strings.Join(words[j:end], " ")
+
+			if at(i+1, end) {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	return values, at(0, 0)
+}
+
+func isSlotRef(word string) bool {
+	return len(word) > 2 && word[0] == '{' && word[len(word)-1] == '}'
 }
 
 // roomPhrases collects the words that introduce an optional trailing room in utterances, such as "in the" and "on the" from "[(in|on) the {Room}]".

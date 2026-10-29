@@ -250,6 +250,10 @@ WatchEpisode:
   play_episode_season_2: "(spiele|spiel|zeige|zeig) [mir] (folge|episode) {Episode} (der|von|aus) staffel {Season} von {Show}"
   play_season_episode: "(spiele|spiel|zeige|zeig|starte|start) [mir] {Show} staffel {Season} (folge|episode) {Episode} [(im|in der) {Room}]"
   play_season_episode_2: "(spiele|spiel|zeige|zeig|starte|start) [mir] staffel {Season} (folge|episode) {Episode} von {Show} [(im|in der) {Room}]\nstaffel {Season} (folge|episode) {Episode} von {Show} (zu spielen|abzuspielen|zu zeigen)"
+WatchFirstEpisode:
+  play_first: "(spiele|spiel|zeige|zeig) [mir] {Show} von (anfang an|vorne)"
+  play_first_episode: "(spiele|spiel|zeige|zeig|starte|start) [mir] die (erste|allererste) (folge|episode) von {Show} [(im|in der) {Room}]"
+  play_first_episode_2: "(spiele|spiel|zeige|zeig) [mir] erste (folge|episode) von {Show} [(im|in der) {Room}]"
 WatchLatestEpisode:
   play_latest: "(spiele|spiel|zeige|zeig) [mir] die (neueste|aktuellste) {Show} (folge|episode)"
   play_latest_episode: "(spiele|spiel|zeige|zeig|starte|start) [mir] die (neueste|aktuellste|letzte) (folge|episode) von {Show} [(im|in der) {Room}]"

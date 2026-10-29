@@ -61,6 +61,11 @@ intents:
       - {name: Season, type: AMAZON.NUMBER}
       - {name: Episode, type: AMAZON.NUMBER}
       - {name: Room, type: KODI_ROOM}
+  - name: WatchFirstEpisode
+    content: tv
+    slots:
+      - {name: Show, type: AMAZON.TVSeries}
+      - {name: Room, type: KODI_ROOM}
   - name: WatchLatestEpisode
     content: tv
     slots:

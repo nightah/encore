@@ -659,6 +659,9 @@ func TestBackendFailuresAreReported(t *testing.T) {
 		{"episode", []string{"Episodes"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.Episode(ctx, t, "severance", 2, 3, nil)
 		}},
+		{"first episode", []string{"Episodes"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+			return s.FirstEpisode(ctx, t, "severance", nil)
+		}},
 		{"latest episode", []string{"Episodes"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.LatestEpisode(ctx, t, "severance", nil)
 		}},

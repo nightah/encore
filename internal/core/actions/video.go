@@ -196,6 +196,30 @@ func (s *Service) Episode(ctx context.Context, t Target, show string, season, ep
 	return s.playItem(ctx, t, eps[i], progress)
 }
 
+// FirstEpisode plays a show's first episode, ignoring specials.
+func (s *Service) FirstEpisode(ctx context.Context, t Target, show string, progress Progress) Outcome {
+	doc, o := s.show(ctx, t, show)
+	if o != nil {
+		return *o
+	}
+
+	eps, err := s.episodes(ctx, t, doc.Ref.ID, progress)
+	if err != nil {
+		return failure(t, err)
+	}
+
+	regular := filter(eps, func(e media.Item) bool { return e.Season > 0 })
+	if len(regular) == 0 {
+		regular = eps
+	}
+
+	if len(regular) == 0 {
+		return done(say("tv.no_episodes", map[string]string{"show": doc.Title}))
+	}
+
+	return s.playItem(ctx, t, regular[0], progress)
+}
+
 // LatestEpisode plays a show's most recent episode, ignoring specials.
 func (s *Service) LatestEpisode(ctx context.Context, t Target, show string, progress Progress) Outcome {
 	doc, o := s.show(ctx, t, show)
