@@ -142,40 +142,42 @@ func dial(t *testing.T, s *Server) *websocket.Conn {
 }
 
 func TestWebSocketCallsAndNotifications(t *testing.T) {
-	s := New(t, Options{})
-	ctx := t.Context()
-	conn := dial(t, s)
+	synctest.Test(t, func(t *testing.T) {
+		s := NewNetwork().New(t, Options{})
+		ctx := t.Context()
+		conn := dial(t, s)
 
-	require.NoError(t, conn.Write(ctx, websocket.MessageText,
-		[]byte(`{"jsonrpc":"2.0","id":7,"method":"Player.Open","params":{"item":{"movieid":3}}}`)))
+		require.NoError(t, conn.Write(ctx, websocket.MessageText,
+			[]byte(`{"jsonrpc":"2.0","id":7,"method":"Player.Open","params":{"item":{"movieid":3}}}`)))
 
-	// Kodi sends the notification and the response on the same socket, in either order; collect both.
-	var gotResponse, gotNotification bool
+		// Kodi sends the notification and the response on the same socket, in either order; collect both.
+		var gotResponse, gotNotification bool
 
-	readCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
-	defer cancel()
+		readCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+		defer cancel()
 
-	for !gotResponse || !gotNotification {
-		_, data, err := conn.Read(readCtx)
-		require.NoError(t, err)
+		for !gotResponse || !gotNotification {
+			_, data, err := conn.Read(readCtx)
+			require.NoError(t, err)
 
-		var msg map[string]json.RawMessage
-		require.NoError(t, json.Unmarshal(data, &msg))
+			var msg map[string]json.RawMessage
+			require.NoError(t, json.Unmarshal(data, &msg))
 
-		switch {
-		case msg["id"] != nil:
-			assert.JSONEq(t, `"OK"`, string(msg["result"]))
+			switch {
+			case msg["id"] != nil:
+				assert.JSONEq(t, `"OK"`, string(msg["result"]))
 
-			gotResponse = true
-		case string(msg["method"]) == `"Player.OnPlay"`:
-			assert.Contains(t, string(msg["params"]), `"id":3`)
+				gotResponse = true
+			case string(msg["method"]) == `"Player.OnPlay"`:
+				assert.Contains(t, string(msg["params"]), `"id":3`)
 
-			gotNotification = true
+				gotNotification = true
+			}
 		}
-	}
 
-	_, resp := post(t, s, "", "", "Player.GetItem", nil)
-	assert.Contains(t, string(resp.Result), "Dune: Part Two")
+		_, resp := post(t, s, "", "", "Player.GetItem", nil)
+		assert.Contains(t, string(resp.Result), "Dune: Part Two")
+	})
 }
 
 // A client counts itself connected once it has the handshake response, which can be before the server has registered it; a notification sent straight away must still reach it.

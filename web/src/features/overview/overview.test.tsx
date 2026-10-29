@@ -80,7 +80,9 @@ describe("overview", () => {
       simulated: true,
       time: new Date().toISOString(),
     });
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    // Events are handled in order, so once a later live request shows, the simulated one has been handled and left out.
+    FakeEventSource.emit("request", { ...base, id: 9103, intent: "AMAZON.StopIntent", time: new Date().toISOString() });
+    expect(await within(recent).findByText("AMAZON.StopIntent")).toBeInTheDocument();
     expect(within(recent).queryByText("LaunchRequest")).not.toBeInTheDocument();
   });
 
