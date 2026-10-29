@@ -18,6 +18,12 @@ func dutch() *language {
 		"eerste": 1, "tweede": 2, "derde": 3, "vierde": 4, "vijfde": 5, "zesde": 6, "zevende": 7, "achtste": 8,
 		"negende": 9, "tiende": 10, "elfde": 11, "twaalfde": 12, "dertiende": 13, "veertiende": 14, "vijftiende": 15,
 		"zestiende": 16, "zeventiende": 17, "achttiende": 18, "negentiende": 19, "honderdste": 100, "duizendste": 1000,
+		// English ordinals too, for the English titles Dutch libraries keep ("The 6th Day" meets "the sixth day").
+		"first": 1, "second": 2, "third": 3, "fourth": 4, "fifth": 5, "sixth": 6, "seventh": 7, "eighth": 8,
+		"ninth": 9, "tenth": 10, "eleventh": 11, "twelfth": 12, "thirteenth": 13, "fourteenth": 14,
+		"fifteenth": 15, "sixteenth": 16, "seventeenth": 17, "eighteenth": 18, "nineteenth": 19,
+		"twentieth": 20, "thirtieth": 30, "fortieth": 40, "fiftieth": 50, "sixtieth": 60, "seventieth": 70,
+		"eightieth": 80, "ninetieth": 90, "hundredth": 100,
 	}
 
 	for ti, t := range tens {
@@ -35,7 +41,7 @@ func dutch() *language {
 		// "'t" and "'s" are the elided "het" and "des"; a possessive or plural apostrophe joins the word ("Ocean's", "opa's"). Dutch recognisers write the English "the" as heard, so both count.
 		articles:    set("de", "het", "een", "t", "s", "the"),
 		stop:        set("de", "het", "een", "t", "s", "the", "en", "van", "in", "op", "met", "voor", "te", "der", "den", "aan"),
-		ordSuffixes: []string{"e", "de", "ste"},
+		ordSuffixes: []string{"e", "de", "ste", "st", "nd", "rd", "th"},
 		nums: numTable{
 			units: []string{
 				"nul", "", "twee", "drie", "vier", "vijf", "zes", "zeven", "acht", "negen", "tien",
