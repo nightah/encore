@@ -247,7 +247,7 @@ func french() *language {
 			},
 		}.build(),
 		conj:           set("et"),
-		parts:          set("partie", "chapitre", "volume", "vol"),
+		parts:          set("partie", "chapitre", "volume"),
 		phonetic:       phoneticKeysOf(fr.Encoder{}),
 		soundAlikeLead: true,
 	}
