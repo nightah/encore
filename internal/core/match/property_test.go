@@ -13,7 +13,7 @@ import (
 	"github.com/nightah/encore/internal/core/media"
 )
 
-var langs = []string{"en", "de", "fr", "es", "it"}
+var langs = Languages()
 
 // titleWords mixes plain words with the things normalisation rewrites: articles, number words, ordinals, roman numerals, part words, single letters and conjunctions.
 var titleWords = []string{

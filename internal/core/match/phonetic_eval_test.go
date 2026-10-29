@@ -390,7 +390,7 @@ func evalLanguage(t *testing.T, table *strings.Builder, set, retr, code string, 
 func BenchmarkPhoneticUpsert(b *testing.B) {
 	docs := syntheticDocs(2000, 3)
 
-	for _, code := range []string{"en", "de", "fr", "es", "it"} {
+	for _, code := range Languages() {
 		for _, enc := range evalEncoders {
 			if enc.name == "none" {
 				continue
