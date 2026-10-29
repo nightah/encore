@@ -1,0 +1,6 @@
+# pt-BR inherits lang/pt.
+# Brazilian Portuguese uses "kodi" even when encore is chosen. Alexa reads an invocation name with the locale's pronunciation rules, which make "encore" "en-có-ri", while Brazilians who know the word say it the French way, "an-cór", which the recogniser hears as Portuguese words ("âncora", "em cor") rather than the name; "bis", the Portuguese word for an encore, is a common word and a chocolate brand, so it can't stand alone as an invocation. "kodi" read by Portuguese rules is "kó-di", which is how Brazilians already say the name of the software, and no Portuguese word sounds like it. pt-BR can't be tested in Amazon's simulator, so this rests on that reasoning rather than a trial.
+
+invocation: kodi
+language: pt
+skill_name: Encore

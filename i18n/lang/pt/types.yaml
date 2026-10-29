@@ -1,0 +1,330 @@
+# Values for the static custom slot types in model.yaml, translated on Crowdin from the English file. Each key is the value's ID, which is what the handler acts on; the first line is the value and any further lines its synonyms, which are what people say. The dynamic types' examples are in examples.yaml, and notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
+LIBRARY_SECTION:
+  albums: |-
+    álbuns
+    discos
+    álbuns de música
+  artists: |-
+    artistas
+    músicos
+    bandas
+    cantores
+  favourites: |-
+    favoritos
+    meus favoritos
+  movies: |-
+    filmes
+    biblioteca de filmes
+    meus filmes
+  music: |-
+    música
+    músicas
+    biblioteca de música
+    minhas músicas
+  musicvideos: |-
+    clipes
+    videoclipes
+    meus clipes
+  recentepisodes: |-
+    episódios adicionados recentemente
+    episódios novos
+    últimos episódios
+    episódios recentes
+    séries novas
+    séries adicionadas recentemente
+  recentmovies: |-
+    filmes adicionados recentemente
+    filmes novos
+    últimos filmes
+    filmes recentes
+    lançamentos
+  recentmusic: |-
+    músicas adicionadas recentemente
+    músicas novas
+    últimas músicas
+    álbuns novos
+    últimos álbuns
+    álbuns recentes
+  recentmusicvideos: |-
+    clipes adicionados recentemente
+    clipes novos
+    últimos clipes
+  tvshows: |-
+    séries
+    seriados
+    programas de tv
+    programas
+    minhas séries
+LIBRARY_TYPE:
+  music: |-
+    música
+    músicas
+    áudio
+  video: |-
+    vídeo
+    vídeos
+    filmes
+    séries
+    tv
+MEDIA_TYPE:
+  album: |-
+    álbum
+    álbuns
+    disco
+    discos
+  artist: |-
+    artista
+    artistas
+    banda
+    bandas
+    cantor
+    cantora
+    cantores
+    músico
+    músicos
+  audio: |-
+    algo para ouvir
+    alguma coisa para ouvir
+    algo para escutar
+  episode: |-
+    episódio
+    episódios
+  movie: |-
+    filme
+    filmes
+  musicvideo: |-
+    clipe
+    clipes
+    videoclipe
+    videoclipes
+  song: |-
+    música
+    músicas
+    canção
+    canções
+    faixa
+    faixas
+  tvshow: |-
+    série
+    séries
+    seriado
+    seriados
+    programa
+    programas
+  video: |-
+    algo para assistir
+    alguma coisa para assistir
+    algo para ver
+    vídeo
+    vídeos
+NAV_ACTION:
+  back: |-
+    voltar
+    volta
+    para trás
+  down: |-
+    para baixo
+    pra baixo
+    baixo
+  home: |-
+    início
+    tela inicial
+    menu principal
+  info: |-
+    informações
+    info
+    detalhes
+    mais informações
+  left: |-
+    esquerda
+    para a esquerda
+    pra esquerda
+  menu: |-
+    menu
+    menu de contexto
+    opções
+  osd: |-
+    controles
+    controles do player
+    controles de reprodução
+    o. s. d.
+  pagedown: |-
+    próxima página
+    página para baixo
+    mostrar mais
+  pageup: |-
+    página anterior
+    página para cima
+  right: |-
+    direita
+    para a direita
+    pra direita
+  select: |-
+    seleciona
+    selecionar
+    ok
+    confirma
+    escolhe esse
+    entra
+  up: |-
+    para cima
+    pra cima
+    cima
+NAV_DIRECTION:
+  down: "para baixo\npra baixo"
+  left: "para a esquerda\npra esquerda"
+  right: "para a direita\npra direita"
+  up: "para cima\npra cima"
+POWER_ACTION:
+  hibernate: |-
+    hiberna
+    hibernar
+    hibernação
+  quit: |-
+    fecha
+    fechar
+    encerra
+    fecha o kodi
+    sai do kodi
+  reboot: |-
+    reinicia
+    reiniciar
+    reinicialização
+  shutdown: |-
+    desliga
+    desligar
+  suspend: |-
+    suspende
+    suspender
+    suspensão
+    dormir
+REPEAT_MODE:
+  all: |-
+    tudo
+    todas
+    todos
+    a playlist
+    a fila
+  "off": |-
+    desligado
+    desligada
+    nada
+    nenhum
+  one: |-
+    esta
+    essa
+    este
+    esse
+    essa música
+    esta música
+    essa faixa
+    este episódio
+    esse episódio
+    só uma
+ROTATE_DIRECTION:
+  clockwise: |-
+    no sentido horário
+    sentido horário
+    para a direita
+    pra direita
+  counterclockwise: |-
+    no sentido anti-horário
+    sentido anti-horário
+    para a esquerda
+    pra esquerda
+SEEK_DIRECTION:
+  back: |-
+    para trás
+    pra trás
+    volta
+    retrocede
+  forward: |-
+    para frente
+    pra frente
+    adiante
+    avança
+    adianta
+SEEK_SIZE:
+  big: |-
+    bastante
+    muito
+    grande
+    um bom pedaço
+  small: |-
+    um pouco
+    um pouquinho
+    pouco
+    pequeno
+STREAM_STEP:
+  next: |-
+    próximo
+    próxima
+    troca
+    muda
+    outro
+    outra
+  previous: |-
+    anterior
+SUBTITLE_ACTION:
+  download: |-
+    baixa
+    baixar
+    procura
+    busca
+    procurar
+  next: |-
+    próxima
+    próximas
+    troca
+    muda
+    outra
+  "off": |-
+    desativa
+    desliga
+    tira
+    esconde
+    desativada
+    desligada
+    desligadas
+  "on": |-
+    ativa
+    liga
+    mostra
+    coloca
+    ativada
+    ligada
+    ligadas
+  previous: |-
+    anterior
+    anteriores
+TRANSPORT_COMMAND:
+  next: |-
+    próxima
+    próximo
+    pula
+    passa
+  pause: "pausa"
+  previous: |-
+    anterior
+    volta
+  resume: |-
+    continua
+    retoma
+    despausa
+    toca
+  stop: "para\nparar"
+ZOOM_ACTION:
+  in: |-
+    aumenta
+    aproxima
+    mais
+    dá
+  out: |-
+    diminui
+    afasta
+    menos
+  reset: |-
+    normal
+    tira
+    reseta
+    zera
