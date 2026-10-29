@@ -32,7 +32,10 @@ var update = flag.Bool("update", false, "rewrite golden response files")
 // linkedDevice is the Echo the fake target directory knows; any other device is unlinked.
 const linkedDevice = "amzn1.ask.device.LOUNGE"
 
-// fakeTargets knows one linked Echo and two rooms: the bedroom has its own Kodi instance, the kitchen has none.
+// errRoomLookup is the fake target directory failing to look up the cellar.
+var errRoomLookup = errors.New("database is locked")
+
+// fakeTargets knows one linked Echo and two rooms: the bedroom has its own Kodi instance, the kitchen has none. Looking up the cellar fails.
 type fakeTargets struct {
 	target  actions.Target
 	bedroom actions.Target
@@ -52,6 +55,8 @@ func (f fakeTargets) TargetForRoom(ctx context.Context, deviceID, room string) (
 		return f.bedroom, nil
 	case "kitchen":
 		return f.Target(ctx, deviceID)
+	case "cellar":
+		return actions.Target{}, errRoomLookup
 	}
 
 	return actions.Target{}, ErrUnknownRoom

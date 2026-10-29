@@ -1,7 +1,9 @@
 package alexa
 
 import (
+	"bytes"
 	"encoding/json"
+	"log/slog"
 	"strings"
 	"testing"
 	"time"
@@ -9,7 +11,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/nightah/encore/i18n"
 	"github.com/nightah/encore/internal/core/actions"
+	"github.com/nightah/encore/internal/skillmodel"
 )
 
 func TestParseDuration(t *testing.T) {
@@ -110,6 +114,97 @@ func TestRoomTargeting(t *testing.T) {
 	require.Len(t, rec.entries, 1)
 	assert.Equal(t, "Bedroom", rec.entries[0].Target)
 	assert.Equal(t, "bedroom", rec.entries[0].Slots["Room"])
+}
+
+func TestRoomInSearchQuery(t *testing.T) {
+	h, lounge, bedroom, rec := newRoomHandler(t)
+
+	serveBody(t, h, mustRead(t, "testdata/golden/play-media-in-bedroom/request.json"))
+	assert.Empty(t, lounge.Calls())
+	assert.Equal(t, []string{"Play movie/4 resume"}, bedroom.Calls())
+
+	require.Len(t, rec.entries, 1)
+	assert.Equal(t, "Bedroom", rec.entries[0].Target)
+	assert.Equal(t, "hot fuzz in the bedroom", rec.entries[0].Slots["Query"], "the log keeps what was heard")
+}
+
+func TestRoomInSearchQueryUnknownRoom(t *testing.T) {
+	h, _, bedroom, rec := newRoomHandler(t)
+
+	req := mustRead(t, "testdata/golden/play-media-in-bedroom/request.json")
+	req = bytes.Replace(req, []byte(`"value": "hot fuzz in the bedroom"`), []byte(`"value": "hot fuzz in the attic"`), 1)
+
+	serveBody(t, h, req)
+	assert.Empty(t, bedroom.Calls())
+
+	require.Len(t, rec.entries, 1)
+	assert.Equal(t, "Lounge", rec.entries[0].Target, "a phrase naming no room stays part of the title")
+	assert.Contains(t, rec.entries[0].Speech, "hot fuzz in the attic")
+}
+
+func TestRoomInSearchQueryLookupFails(t *testing.T) {
+	h, lounge, bedroom, rec := newRoomHandler(t)
+
+	req := mustRead(t, "testdata/golden/play-media-in-bedroom/request.json")
+	req = bytes.Replace(req, []byte(`"value": "hot fuzz in the bedroom"`), []byte(`"value": "hot fuzz in the cellar"`), 1)
+
+	serveBody(t, h, req)
+	assert.Empty(t, lounge.Calls(), "a room that can't be looked up isn't guessed at")
+	assert.Empty(t, bedroom.Calls())
+
+	require.Len(t, rec.entries, 1)
+	require.ErrorIs(t, rec.entries[0].Err, errRoomLookup)
+	assert.Empty(t, rec.entries[0].Target)
+}
+
+func TestRoomGroup(t *testing.T) {
+	for _, tc := range []struct {
+		pattern, want string
+		ok            bool
+	}{
+		{"play {Movie} [(in|on) the {Room}]", "(in|on) the", true},
+		{"play {Movie} [(in|on) [the] {Room}]", "(in|on) [the]", true},
+		{"play [the] {Movie} [(im|in der) {Room}]", "(im|in der)", true},
+		{"play {Movie} [{Room}]", "", false},
+		{"{Command} (in|on) the {Room}", "", false},
+		{"play {Movie} [in the {Room}] please", "", false},
+		{"play {Movie} in the {Room}]", "", false},
+	} {
+		got, ok := roomGroup(tc.pattern)
+		assert.Equal(t, tc.ok, ok, tc.pattern)
+		assert.Equal(t, tc.want, got, tc.pattern)
+	}
+}
+
+func TestRoomSplits(t *testing.T) {
+	src, err := skillmodel.Load(i18n.FS)
+	require.NoError(t, err)
+
+	speech, err := NewSpeech(src, slog.New(slog.DiscardHandler))
+	require.NoError(t, err)
+
+	for _, tc := range []struct {
+		locale, query string
+		want          []RoomSplit
+	}{
+		{"en-AU", "frozen in the lounge room", []RoomSplit{{"frozen", "lounge room"}}},
+		{"en-AU", "frozen on the TV", []RoomSplit{{"frozen", "TV"}}},
+		{"en-AU", "the man in the iron mask in the lounge", []RoomSplit{
+			{"the man", "iron mask in the lounge"},
+			{"the man in the iron mask", "lounge"},
+		}},
+		{"en-AU", "frozen", nil},
+		{"en-AU", "in the lounge", nil},
+		{"en-AU", "frozen in the", nil},
+		{"de-DE", "die eiskönigin im wohnzimmer", []RoomSplit{{"die eiskönigin", "wohnzimmer"}}},
+		{"de-DE", "die eiskönigin in der küche", []RoomSplit{{"die eiskönigin", "küche"}}},
+		{"fr-FR", "la reine des neiges au salon", []RoomSplit{{"la reine des neiges", "salon"}}},
+		{"es-ES", "frozen en el salón", []RoomSplit{{"frozen", "salón"}}},
+		{"it-IT", "frozen nel salotto", []RoomSplit{{"frozen", "salotto"}}},
+		{"xx-XX", "frozen in the lounge", []RoomSplit{{"frozen", "lounge"}}},
+	} {
+		assert.Equal(t, tc.want, speech.RoomSplits(tc.locale, tc.query), "%s %q", tc.locale, tc.query)
+	}
 }
 
 func TestFollowupRoundTrip(t *testing.T) {

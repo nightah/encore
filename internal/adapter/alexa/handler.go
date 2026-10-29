@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"maps"
 	"net/http"
 	"slices"
 	"strings"
@@ -137,9 +138,12 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, entry *LogEn
 		err    error
 	)
 
-	if room := strings.TrimSpace(intent.Slots["Room"].Value); room != "" {
+	switch room := strings.TrimSpace(intent.Slots["Room"].Value); {
+	case room != "":
 		target, err = h.Targets.TargetForRoom(ctx, entry.DeviceID, room)
-	} else {
+	case intent.Name == "PlayMedia":
+		target, intent, err = h.targetInQuery(ctx, entry.DeviceID, locale, intent)
+	default:
 		target, err = h.Targets.Target(ctx, entry.DeviceID)
 	}
 
@@ -172,6 +176,29 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, entry *LogEn
 	}
 
 	return h.respond(locale, o, target.ConfirmSound), &o
+}
+
+// targetInQuery finds a room named at the end of a search query. An AMAZON.SearchQuery slot can't share an utterance with another slot, so "play frozen in the lounge" arrives as the query "frozen in the lounge"; when its ending names a known room, the room is taken off the query and its Kodi instance is the target.
+func (h *Handler) targetInQuery(ctx context.Context, deviceID, locale string, intent Intent) (actions.Target, Intent, error) {
+	for _, split := range h.Speech.RoomSplits(locale, intent.Slots["Query"].Value) {
+		target, err := h.Targets.TargetForRoom(ctx, deviceID, split.Room)
+
+		switch {
+		case errors.Is(err, ErrUnknownRoom):
+			continue
+		case err != nil:
+			return actions.Target{}, intent, err
+		}
+
+		slots := maps.Clone(intent.Slots)
+		slots["Query"] = Slot{Name: "Query", Value: split.Title}
+
+		return target, Intent{Name: intent.Name, Slots: slots}, nil
+	}
+
+	target, err := h.Targets.Target(ctx, deviceID)
+
+	return target, intent, err
 }
 
 // respond renders an outcome as an Alexa response. With confirm, a success that has nothing to say plays ConfirmSoundURL instead of answering with silence.
