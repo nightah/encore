@@ -293,13 +293,13 @@ func spanish() *language {
 				map[string]int{"primer": 1, "tercer": 3},
 			),
 		}.build(),
-		// The letters' names as the Ortografía de la lengua española (2010) gives them, with "ere" and "i griega"'s "ye"; "eñe" folds to "ene" and is left out.
+		// The letters' names as the Ortografía de la lengua española (2010) gives them, with "ere" and "i griega"'s "ye", and the Latin American "ve" for v ("de ve de"); "eñe" folds to "ene" and is left out.
 		letterNames: map[string]string{
 			"be": "b", "ce": "c", "de": "d", "efe": "f", "ge": "g", "hache": "h", "jota": "j", "ka": "k", "ele": "l", "eme": "m",
-			"ene": "n", "pe": "p", "cu": "q", "erre": "r", "ere": "r", "ese": "s", "te": "t", "uve": "v", "equis": "x", "ye": "y",
+			"ene": "n", "pe": "p", "cu": "q", "erre": "r", "ere": "r", "ese": "s", "te": "t", "uve": "v", "ve": "v", "equis": "x", "ye": "y",
 			"zeta": "z",
 		},
-		letterWords: set("de", "te", "ese"),
+		letterWords: set("de", "te", "ese", "ve"),
 		conj:        set("y"),
 		parts:       set("parte", "capitulo", "volumen", "vol"), //nolint:misspell // Spanish for "chapter".
 		phonetic:    phoneticKeysOf(es.Encoder{}),
