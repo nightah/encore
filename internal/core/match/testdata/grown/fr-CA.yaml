@@ -1,0 +1,623 @@
+# Grown set: testdata/grown is a held-out set of corpora, kept apart from the original set (asr_corpus.yaml and phonetic/). TestASRCorpus and TestPhoneticEval score both sets and report them separately.
+#
+# Québec French (fr-CA) evaluation corpus for TestPhoneticEval. This locale is matched with the French (fr) rules, so every suite has lang: fr. Same schema as asr_corpus.yaml; cases are scored, not asserted, so there is no xfail. There is no development set for this locale: every case here is held out.
+#
+# Libraries: two suites of real, well-known Québec titles with their original release years. Suite one is film and television, suite two is music (artists, albums and songs). Each library carries near neighbours that share words, names or numbers so a wrong play is possible: numbered sequels (Les Boys to Les Boys IV and Il était une fois les Boys, Bon Cop, Bad Cop and its sequel, De père en flic 1 and 2, Cruising Bar 1 and 2, three Elvis Gratton, La Guerre des tuques and La Guerre des tuques 3D, the series and two films called Dans une galaxie près de chez vous), Ricardo Trogi's year-titled films 1981, 1987 and 1991, the two empire américain films, the French and English series both called 19-2, Omertà as series and film, Éric and Pierre Lapointe, Isabelle Boulay and Les Sœurs Boulay, Harmonium the band and the album, Les Cowboys Fringants and Bye Bye Mon Cowboy.
+#
+# Cases: what a speech recogniser plausibly writes when a Québec speaker asks for the title. Mishearings are grouped under a comment naming the confusion class they model. The classes are the documented features of Québec French pronunciation (Ostiguy and Tousignant, Les prononciations du français québécois, 2008; Dumas, Les prononciations en français québécois, 1987) and the French spelling-to-sound ambiguities they compound:
+# - affrication: t and d before i, u and their glides are affricated to [ts] and [dz] (tu heard tsu, dire heard dzire, petite heard petsite, District heard dzistrict).
+# - diphthong: long vowels diphthongised in stressed syllables, mostly before r (père/paère, mère/maère, encore/encaore, cœur/caeur, jaune/jaoune).
+# - oi: oi pronounced [we] or [wɛ] in popular speech and written oé or ouè (moi/moé, fois/foé, trois/troé, quoi/kwè), and oin heard ouin (Lapointe/Lapouinte).
+# - nasal: nasal vowel shifts and the spellings they blur: in/un merged, an/en fronted towards in, on/an confused, ien heard in (un/in, menteur/manteur, oncle/ancle).
+# - elision: elided pronouns, articles and ne, and the Québec contractions (je suis > chu, je sais > chais, il > y, de la > d'la, mon oncle > mononcle, à la > à).
+# - english: English titles and the anglicisms of Québec speech respelled by a Québec recogniser (Bon Cop, Bad Cop > bonne cope bad cope, Gaz Bar Blues > gaz bar blouse, break > brèque, toune and tune), and English names said the French way.
+# - silent: silent final consonants and plural marks added or dropped (Les Boys/les boy, Les Parent/les parents), including the silent h.
+# - number: digits against number words, the Québec year reading dix-neuf cent quatre-vingt-sept beside mille neuf cent, sequel numbers in roman numerals read as words, letters and abbreviations (Québec, like France, says soixante-dix and quatre-vingt-dix, never septante or nonante).
+# - real-word: substitution by a more frequent homophone or near-homophone word (mère/mer/maire, Fugueuse/fougueuse, Mes Aïeux/mes yeux, Karkwa/carquois, Bélanger/boulanger).
+# - split: word splits and merges, dropped hyphens and apostrophes, and letters run together or spelt out (C.R.A.Z.Y.).
+# - diacritic: accents dropped by the recogniser or text normalisation.
+#
+# Controls (the title as written, distinctive opening words, plus genuine ambiguity that must ask) and absent titles (not_found for titles not in the library, including near misses that share words or first names with library titles; ask for missing numbered sequels, as in the French corpora) keep the decision thresholds honest.
+#
+# Cases describe what a listener hears; don't change a case to suit an encoder's results, or the comparison stops meaning anything (see docs/src/content/docs/contributing/dependencies.md).
+suites:
+  - name: quebec films and series
+    lang: fr
+    library:
+      # Films.
+      - {id: crazy, kind: movie, title: "C.R.A.Z.Y.", year: 2005}
+      - {id: incendies, kind: movie, title: "Incendies", year: 2010}
+      - {id: mommy, kind: movie, title: "Mommy", year: 2014}
+      - {id: jaitue, kind: movie, title: "J'ai tué ma mère", year: 2009}
+      - {id: amoursimag, kind: movie, title: "Les Amours imaginaires", year: 2010}
+      - {id: laurence, kind: movie, title: "Laurence Anyways", year: 2012}
+      - {id: tomferme, kind: movie, title: "Tom à la ferme", year: 2013}
+      - {id: justefin, kind: movie, title: "Juste la fin du monde", year: 2016}
+      - {id: matthias, kind: movie, title: "Matthias et Maxime", year: 2019}
+      - {id: boncop, kind: movie, title: "Bon Cop, Bad Cop", year: 2006}
+      - {id: boncop2, kind: movie, title: "Bon Cop, Bad Cop 2", year: 2017}
+      - {id: seduction, kind: movie, title: "La Grande Séduction", year: 2003}
+      - {id: boys1, kind: movie, title: "Les Boys", year: 1997}
+      - {id: boys2, kind: movie, title: "Les Boys II", year: 1998}
+      - {id: boys3, kind: movie, title: "Les Boys III", year: 2001}
+      - {id: boys4, kind: movie, title: "Les Boys IV", year: 2005}
+      - {id: boysfois, kind: movie, title: "Il était une fois les Boys", year: 2013}
+      - {id: galaxiefilm, kind: movie, title: "Dans une galaxie près de chez vous", year: 2004}
+      - {id: galaxie2, kind: movie, title: "Dans une galaxie près de chez vous 2", year: 2008}
+      - {id: declin, kind: movie, title: "Le Déclin de l'empire américain", year: 1986}
+      - {id: invasions, kind: movie, title: "Les Invasions barbares", year: 2003}
+      - {id: chute, kind: movie, title: "La Chute de l'empire américain", year: 2018}
+      - {id: jesus, kind: movie, title: "Jésus de Montréal", year: 1989}
+      - {id: poly, kind: movie, title: "Polytechnique", year: 2009}
+      - {id: lazhar, kind: movie, title: "Monsieur Lazhar", year: 2011}
+      - {id: flore, kind: movie, title: "Café de Flore", year: 2011}
+      - {id: maurice, kind: movie, title: "Maurice Richard", year: 2005}
+      - {id: aurore, kind: movie, title: "Aurore", year: 2005}
+      - {id: seraphin, kind: movie, title: "Séraphin : Un homme et son péché", year: 2002}
+      - {id: gratton1, kind: movie, title: "Elvis Gratton : Le King des kings", year: 1985}
+      - {id: gratton2, kind: movie, title: "Elvis Gratton II : Miracle à Memphis", year: 1999}
+      - {id: gratton3, kind: movie, title: "Elvis Gratton XXX : La Vengeance d'Elvis Wong", year: 2004}
+      - {id: tuques, kind: movie, title: "La Guerre des tuques", year: 1984}
+      - {id: tuques3d, kind: movie, title: "La Guerre des tuques 3D", year: 2015}
+      - {id: starbuck, kind: movie, title: "Starbuck", year: 2011}
+      - {id: perefl1, kind: movie, title: "De père en flic", year: 2009}
+      - {id: perefl2, kind: movie, title: "De père en flic 2", year: 2017}
+      - {id: menteur, kind: movie, title: "Menteur", year: 2019}
+      - {id: cyr, kind: movie, title: "Louis Cyr : L'homme le plus fort du monde", year: 2013}
+      - {id: t1981, kind: movie, title: "1981", year: 2009}
+      - {id: t1987, kind: movie, title: "1987", year: 2014}
+      - {id: t1991, kind: movie, title: "1991", year: 2018}
+      - {id: oncle, kind: movie, title: "Mon oncle Antoine", year: 1971}
+      - {id: aout, kind: movie, title: "Un 32 août sur terre", year: 1998}
+      - {id: gazbar, kind: movie, title: "Gaz Bar Blues", year: 2003}
+      - {id: mambo, kind: movie, title: "Mambo Italiano", year: 2003}
+      - {id: dede, kind: movie, title: "Dédé, à travers les brumes", year: 2009}
+      - {id: deesse, kind: movie, title: "La Déesse des mouches à feu", year: 2020}
+      - {id: cruising, kind: movie, title: "Cruising Bar", year: 1989}
+      - {id: cruising2, kind: movie, title: "Cruising Bar 2", year: 2008}
+      - {id: camping, kind: movie, title: "Camping sauvage", year: 2004}
+      - {id: antigone, kind: movie, title: "Antigone", year: 2019}
+      - {id: omertafilm, kind: movie, title: "Omertà", year: 2012}
+      - {id: chiengarde, kind: movie, title: "Chien de garde", year: 2018}
+      - {id: doigts, kind: movie, title: "Les Doigts croches", year: 2009}
+      # Series.
+      - {id: galaxieserie, kind: tvshow, title: "Dans une galaxie près de chez vous", year: 1998}
+      - {id: caleb, kind: tvshow, title: "Les Filles de Caleb", year: 1990}
+      - {id: district, kind: tvshow, title: "District 31", year: 2016}
+      - {id: omertaserie, kind: tvshow, title: "Omertà, la loi du silence", year: 1996}
+      - {id: petitevie, kind: tvshow, title: "La Petite Vie", year: 1993}
+      - {id: bougon, kind: tvshow, title: "Les Bougon", year: 2004}
+      - {id: invincibles, kind: tvshow, title: "Les Invincibles", year: 2005}
+      - {id: unite9, kind: tvshow, title: "Unité 9", year: 2012}
+      - {id: paysdenhaut, kind: tvshow, title: "Les Pays d'en haut", year: 2016}
+      - {id: fugueuse, kind: tvshow, title: "Fugueuse", year: 2018}
+      - {id: beauxmalaises, kind: tvshow, title: "Les Beaux Malaises", year: 2014}
+      - {id: tempspaix, kind: tvshow, title: "Le Temps d'une paix", year: 1980}
+      - {id: lance, kind: tvshow, title: "Lance et compte", year: 1986}
+      - {id: watatatow, kind: tvshow, title: "Watatatow", year: 1991}
+      - {id: passepartout, kind: tvshow, title: "Passe-Partout", year: 1977}
+      - {id: parent, kind: tvshow, title: "Les Parent", year: 2008}
+      - {id: simone, kind: tvshow, title: "Les Simone", year: 2016}
+      - {id: pecheurs, kind: tvshow, title: "Les Pêcheurs", year: 2013}
+      - {id: likemoi, kind: tvshow, title: "Like-moi!", year: 2016}
+      - {id: commeca, kind: tvshow, title: "C'est comme ça que je t'aime", year: 2020}
+      - {id: dixneuf, kind: tvshow, title: "19-2", year: 2011}
+      - {id: dixneufen, kind: tvshow, title: "19-2", year: 2014}
+      - {id: tlmep, kind: tvshow, title: "Tout le monde en parle", year: 2004}
+      - {id: fortier, kind: tvshow, title: "Fortier", year: 2000}
+      - {id: minuit, kind: tvshow, title: "Minuit, le soir", year: 2005}
+    cases:
+      # Controls: the title as written.
+      - {heard: "crazy", want: play, id: crazy}
+      - {heard: "incendies", want: play, id: incendies}
+      - {heard: "mommy", want: play, id: mommy}
+      - {heard: "j'ai tué ma mère", want: play, id: jaitue}
+      - {heard: "les amours imaginaires", want: play, id: amoursimag}
+      - {heard: "tom à la ferme", want: play, id: tomferme}
+      - {heard: "juste la fin du monde", want: play, id: justefin}
+      - {heard: "bon cop bad cop", want: play, id: boncop}
+      - {heard: "la grande séduction", want: play, id: seduction}
+      - {heard: "les boys", want: play, id: boys1}
+      - {heard: "les filles de caleb", want: play, id: caleb}
+      - {heard: "district 31", want: play, id: district}
+      - {heard: "les invasions barbares", want: play, id: invasions}
+      - {heard: "jésus de montréal", want: play, id: jesus}
+      - {heard: "polytechnique", want: play, id: poly}
+      - {heard: "monsieur lazhar", want: play, id: lazhar}
+      - {heard: "café de flore", want: play, id: flore}
+      - {heard: "starbuck", want: play, id: starbuck}
+      - {heard: "la petite vie", want: play, id: petitevie}
+      - {heard: "unité 9", want: play, id: unite9}
+      - {heard: "fugueuse", want: play, id: fugueuse}
+      - {heard: "lance et compte", want: play, id: lance}
+      - {heard: "mon oncle antoine", want: play, id: oncle}
+      - {heard: "de père en flic", want: play, id: perefl1}
+      - {heard: "1987", want: play, id: t1987}
+      - {heard: "omertà", want: play, id: omertafilm}
+      - {heard: "omertà la loi du silence", want: play, id: omertaserie}
+      - {heard: "dans une galaxie près de chez vous", want: play, id: galaxieserie, kinds: [tvshow]}
+      - {heard: "dans une galaxie près de chez vous", want: play, id: galaxiefilm, kinds: [movie]}
+      # Controls: distinctive opening words and subtitles.
+      - {heard: "séraphin", want: play, id: seraphin}
+      - {heard: "un homme et son péché", want: play, id: seraphin}
+      - {heard: "louis cyr", want: play, id: cyr}
+      - {heard: "l'homme le plus fort du monde", want: play, id: cyr}
+      - {heard: "elvis gratton miracle à memphis", want: play, id: gratton2}
+      - {heard: "la vengeance d'elvis wong", want: play, id: gratton3}
+      - {heard: "elvis gratton le king des kings", want: play, id: gratton1}
+      - {heard: "dédé", want: play, id: dede}
+      # Controls: genuinely ambiguous, must ask.
+      - {heard: "dans une galaxie près de chez vous", want: ask, among: [galaxieserie, galaxiefilm]}
+      - {heard: "19-2", want: ask, among: [dixneuf, dixneufen]}
+      - {heard: "elvis gratton", want: ask, among: [gratton1, gratton2, gratton3]}
+      - {heard: "l'empire américain", want: ask, among: [declin, chute]}
+      # affrication: t and d before i and u heard ts and dz.
+      - {heard: "j'ai tsué ma mère", want: play, id: jaitue}
+      - {heard: "dzistrict 31", want: play, id: district}
+      - {heard: "incendzies", want: play, id: incendies}
+      - {heard: "la petsite vie", want: play, id: petitevie}
+      - {heard: "antsigone", want: play, id: antigone}
+      - {heard: "matsias et maxime", want: play, id: matthias}
+      - {heard: "la grande sédzuction", want: play, id: seduction}
+      - {heard: "juste la fin dzu monde", want: play, id: justefin}
+      - {heard: "la guerre des tsuques", want: play, id: tuques}
+      - {heard: "fortsier", want: play, id: fortier}
+      # diphthong: long vowels diphthongised.
+      - {heard: "j'ai tué ma maère", want: play, id: jaitue}
+      - {heard: "de paère en flic", want: play, id: perefl1}
+      - {heard: "les paêcheurs", want: play, id: pecheurs}
+      - {heard: "mentaeur", want: play, id: menteur}
+      - {heard: "auraore", want: play, id: aurore}
+      - {heard: "chien de gaorde", want: play, id: chiengarde}
+      - {heard: "les invasions barbaores", want: play, id: invasions}
+      - {heard: "maourice richard", want: play, id: maurice}
+      # oi: oi said oé or ouè.
+      - {heard: "il était une foé les boys", want: play, id: boysfois}
+      - {heard: "il était une fouè les boys", want: play, id: boysfois}
+      - {heard: "like-moé", want: play, id: likemoi}
+      - {heard: "like moé", want: play, id: likemoi}
+      - {heard: "les boys troé", want: play, id: boys3}
+      - {heard: "les doés croches", want: play, id: doigts}
+      # nasal: nasal vowel shifts.
+      - {heard: "les envincibles", want: play, id: invincibles}
+      - {heard: "in trente-deux août sur terre", want: play, id: aout}
+      - {heard: "manteur", want: play, id: menteur}
+      - {heard: "le déclain de l'empire américain", want: play, id: declin}
+      - {heard: "ancendies", want: play, id: incendies}
+      - {heard: "mon ancle antoine", want: play, id: oncle}
+      - {heard: "chin de garde", want: play, id: chiengarde}
+      # elision: elided pronouns and articles, Québec contractions.
+      - {heard: "mononcle antoine", want: play, id: oncle}
+      - {heard: "d'père en flic", want: play, id: perefl1}
+      - {heard: "y était une fois les boys", want: play, id: boysfois}
+      - {heard: "c'est comme ça que j't'aime", want: play, id: commeca}
+      - {heard: "les filles d'caleb", want: play, id: caleb}
+      - {heard: "jésus d'montréal", want: play, id: jesus}
+      - {heard: "l'temps d'une paix", want: play, id: tempspaix}
+      - {heard: "la p'tite vie", want: play, id: petitevie}
+      - {heard: "minuit l'soir", want: play, id: minuit}
+      - {heard: "tom à ferme", want: play, id: tomferme}
+      - {heard: "dans une galaxie près d'chez vous", want: ask, among: [galaxieserie, galaxiefilm]}
+      # english: English titles and anglicisms as a Québec recogniser spells them.
+      - {heard: "bonne cope bad cope", want: play, id: boncop}
+      - {heard: "bon cop bad cope", want: play, id: boncop}
+      - {heard: "mami", want: play, id: mommy}
+      - {heard: "laurence ènniwèze", want: play, id: laurence}
+      - {heard: "laurence anyway", want: play, id: laurence}
+      - {heard: "starbock", want: play, id: starbuck}
+      - {heard: "gaz bar blouse", want: play, id: gazbar}
+      - {heard: "crouzing bar", want: play, id: cruising}
+      - {heard: "crouzine bar deux", want: play, id: cruising2}
+      - {heard: "laïke moi", want: play, id: likemoi}
+      - {heard: "elvis gratton le kingue des kingues", want: play, id: gratton1}
+      - {heard: "la vengeance d'elvis ouong", want: play, id: gratton3}
+      - {heard: "ouatatatou", want: play, id: watatatow}
+      - {heard: "campigne sauvage", want: play, id: camping}
+      - {heard: "crézé", want: play, id: crazy}
+      # silent: final consonants, plural marks and h added or dropped.
+      - {heard: "les boy", want: play, id: boys1}
+      - {heard: "les fille de caleb", want: play, id: caleb}
+      - {heard: "incendie", want: play, id: incendies}
+      - {heard: "les amour imaginaire", want: play, id: amoursimag}
+      - {heard: "les invasion barbare", want: play, id: invasions}
+      - {heard: "les bougons", want: play, id: bougon}
+      - {heard: "les invincible", want: play, id: invincibles}
+      - {heard: "le pays d'en haut", want: play, id: paysdenhaut}
+      - {heard: "les pêcheur", want: play, id: pecheurs}
+      - {heard: "les beau malaise", want: play, id: beauxmalaises}
+      - {heard: "les simones", want: play, id: simone}
+      - {heard: "les doigt croche", want: play, id: doigts}
+      - {heard: "monsieur lazar", want: play, id: lazhar}
+      # number: digits and words, Québec year readings, roman numerals.
+      - {heard: "district trente et un", want: play, id: district}
+      - {heard: "district trente-et-un", want: play, id: district}
+      - {heard: "unité neuf", want: play, id: unite9}
+      - {heard: "dix-neuf deux", want: ask, among: [dixneuf, dixneufen]}
+      - {heard: "19 2", want: ask, among: [dixneuf, dixneufen]}
+      - {heard: "dix-neuf cent quatre-vingt-un", want: play, id: t1981}
+      - {heard: "mille neuf cent quatre-vingt-un", want: play, id: t1981}
+      - {heard: "dix-neuf cent quatre-vingt-sept", want: play, id: t1987}
+      - {heard: "mille neuf cent quatre-vingt-onze", want: play, id: t1991}
+      - {heard: "dix-neuf quatre-vingt-onze", want: play, id: t1991}
+      - {heard: "un trente-deux août sur terre", want: play, id: aout}
+      - {heard: "un 32 août sur terre", want: play, id: aout}
+      - {heard: "les boys 2", want: play, id: boys2}
+      - {heard: "les boys deux", want: play, id: boys2}
+      - {heard: "les boys trois", want: play, id: boys3}
+      - {heard: "les boys 4", want: play, id: boys4}
+      - {heard: "les boys quatre", want: play, id: boys4}
+      - {heard: "bon cop bad cop 2", want: play, id: boncop2}
+      - {heard: "bon cop bad cop deux", want: play, id: boncop2}
+      - {heard: "de père en flic deux", want: play, id: perefl2}
+      - {heard: "dans une galaxie près de chez vous 2", want: play, id: galaxie2}
+      - {heard: "dans une galaxie près de chez vous deux", want: play, id: galaxie2}
+      - {heard: "elvis gratton 2", want: play, id: gratton2}
+      - {heard: "elvis gratton deux", want: play, id: gratton2}
+      - {heard: "la guerre des tuques trois d", want: play, id: tuques3d}
+      - {heard: "la guerre des tuques 3d", want: play, id: tuques3d}
+      - {heard: "cruising bar deux", want: play, id: cruising2}
+      # real-word: more frequent homophones and near-homophones.
+      - {heard: "mamie", want: play, id: mommy}
+      - {heard: "les pécheurs", want: play, id: pecheurs}
+      - {heard: "lance et conte", want: play, id: lance}
+      - {heard: "fougueuse", want: play, id: fugueuse}
+      - {heard: "la grande réduction", want: play, id: seduction}
+      - {heard: "j'ai tué ma mer", want: play, id: jaitue}
+      - {heard: "j'ai tué ma maire", want: play, id: jaitue}
+      - {heard: "de pair en flic", want: play, id: perefl1}
+      - {heard: "la petite ville", want: play, id: petitevie}
+      - {heard: "unité neuve", want: play, id: unite9}
+      - {heard: "les parents", want: play, id: parent}
+      - {heard: "louis sire", want: play, id: cyr}
+      # split: splits, merges, dropped hyphens and apostrophes, letters spelt out.
+      - {heard: "passe partout", want: play, id: passepartout}
+      - {heard: "passepartout", want: play, id: passepartout}
+      - {heard: "jai tué ma mère", want: play, id: jaitue}
+      - {heard: "c r a z y", want: play, id: crazy}
+      - {heard: "star buck", want: play, id: starbuck}
+      - {heard: "poly technique", want: play, id: poly}
+      - {heard: "watata tow", want: play, id: watatatow}
+      # diacritic: accents dropped.
+      - {heard: "jesus de montreal", want: play, id: jesus}
+      - {heard: "la grande seduction", want: play, id: seduction}
+      - {heard: "j'ai tue ma mere", want: play, id: jaitue}
+      - {heard: "unite 9", want: play, id: unite9}
+      - {heard: "dede a travers les brumes", want: play, id: dede}
+      - {heard: "la deesse des mouches a feu", want: play, id: deesse}
+      # Missing numbered sequels: ask.
+      - {heard: "les boys cinq", want: ask}
+      - {heard: "les boys 5", want: ask}
+      - {heard: "bon cop bad cop trois", want: ask}
+      - {heard: "de père en flic trois", want: ask}
+      - {heard: "cruising bar trois", want: ask}
+      - {heard: "dans une galaxie près de chez vous trois", want: ask}
+      - {heard: "elvis gratton quatre", want: ask}
+      - {heard: "la guerre des tuques deux", want: ask}
+      # Absent titles, including near misses sharing words with library titles.
+      - {heard: "jésus de nazareth", want: not_found}
+      - {heard: "la grande illusion", want: not_found}
+      - {heard: "café society", want: not_found}
+      - {heard: "la petite aurore l'enfant martyre", want: not_found}
+      - {heard: "les vacances de monsieur hulot", want: not_found}
+      - {heard: "l'âge des ténèbres", want: not_found}
+      - {heard: "le règne de la beauté", want: not_found}
+      - {heard: "un gars une fille", want: not_found}
+      - {heard: "la vie la vie", want: not_found}
+      - {heard: "les beaux dimanches", want: not_found}
+      - {heard: "blanche", want: not_found}
+      - {heard: "les belles-sœurs", want: not_found}
+      - {heard: "le survenant", want: not_found}
+      - {heard: "la famille plouffe", want: not_found}
+      - {heard: "les têtes à claques", want: not_found}
+      - {heard: "taxi 0 22", want: not_found}
+      - {heard: "les lavigueur la vraie histoire", want: not_found}
+      - {heard: "le confessionnal", want: not_found}
+      - {heard: "kamouraska", want: not_found}
+      - {heard: "les ordres", want: not_found}
+      - {heard: "maelström", want: not_found}
+      - {heard: "les feluettes", want: not_found}
+      - {heard: "la bolduc", want: not_found}
+      - {heard: "il fait beau demain", want: not_found}
+
+  - name: quebec music
+    lang: fr
+    library:
+      # Artists.
+      - {id: celine, kind: artist, title: "Céline Dion"}
+      - {id: cowboys, kind: artist, title: "Les Cowboys Fringants"}
+      - {id: charlebois, kind: artist, title: "Robert Charlebois"}
+      - {id: aieux, kind: artist, title: "Mes Aïeux"}
+      - {id: reno, kind: artist, title: "Ginette Reno"}
+      - {id: vigneault, kind: artist, title: "Gilles Vigneault"}
+      - {id: leclerc, kind: artist, title: "Félix Leclerc"}
+      - {id: harmoniumart, kind: artist, title: "Harmonium"}
+      - {id: beaudommage, kind: artist, title: "Beau Dommage"}
+      - {id: dufresne, kind: artist, title: "Diane Dufresne"}
+      - {id: leloup, kind: artist, title: "Jean Leloup"}
+      - {id: belanger, kind: artist, title: "Daniel Bélanger"}
+      - {id: ericlapointe, kind: artist, title: "Éric Lapointe"}
+      - {id: pierrelapointe, kind: artist, title: "Pierre Lapointe"}
+      - {id: colocs, kind: artist, title: "Les Colocs"}
+      - {id: kain, kind: artist, title: "Kaïn"}
+      - {id: mariemai, kind: artist, title: "Marie-Mai"}
+      - {id: isaboulay, kind: artist, title: "Isabelle Boulay"}
+      - {id: soeursboulay, kind: artist, title: "Les Sœurs Boulay"}
+      - {id: garou, kind: artist, title: "Garou"}
+      - {id: voisine, kind: artist, title: "Roch Voisine"}
+      - {id: lemay, kind: artist, title: "Lynda Lemay"}
+      - {id: piche, kind: artist, title: "Paul Piché"}
+      - {id: plume, kind: artist, title: "Plume Latraverse"}
+      - {id: troisaccords, kind: artist, title: "Les Trois Accords"}
+      - {id: karkwa, kind: artist, title: "Karkwa"}
+      - {id: coeurpirate, kind: artist, title: "Cœur de pirate"}
+      - {id: cardin, kind: artist, title: "Charlotte Cardin"}
+      - {id: lenoir, kind: artist, title: "Hubert Lenoir"}
+      - {id: ferland, kind: artist, title: "Jean-Pierre Ferland"}
+      - {id: rivard, kind: artist, title: "Michel Rivard"}
+      - {id: desjardins, kind: artist, title: "Richard Desjardins"}
+      - {id: dubois, kind: artist, title: "Claude Dubois"}
+      - {id: boulet, kind: artist, title: "Gerry Boulet"}
+      - {id: offenbach, kind: artist, title: "Offenbach"}
+      - {id: bvan, kind: artist, title: "Bran Van 3000"}
+      - {id: arcade, kind: artist, title: "Arcade Fire"}
+      - {id: simpleplan, kind: artist, title: "Simple Plan"}
+      - {id: loud, kind: artist, title: "Loud"}
+      - {id: bottine, kind: artist, title: "La Bottine Souriante"}
+      - {id: deuxfreres, kind: artist, title: "2Frères"}
+      - {id: louanges, kind: artist, title: "Les Louanges"}
+      - {id: klo, kind: artist, title: "Klô Pelgag"}
+      - {id: pellerin, kind: artist, title: "Fred Pellerin"}
+      - {id: moffatt, kind: artist, title: "Ariane Moffatt"}
+      - {id: mitsou, kind: artist, title: "Mitsou"}
+      - {id: bruneau, kind: artist, title: "Roxane Bruneau"}
+      - {id: vallieres, kind: artist, title: "Vincent Vallières"}
+      - {id: mononc, kind: artist, title: "Mononc' Serge"}
+      - {id: coreyhart, kind: artist, title: "Corey Hart"}
+      # Albums.
+      - {id: deux, kind: album, title: "D'eux", year: 1995}
+      - {id: falling, kind: album, title: "Falling into You", year: 1996}
+      - {id: letstalk, kind: album, title: "Let's Talk About Love", year: 1997}
+      - {id: incognito, kind: album, title: "Incognito", year: 1987}
+      - {id: heptade, kind: album, title: "L'Heptade", year: 1976}
+      - {id: harmoniumalb, kind: album, title: "Harmonium", year: 1974}
+      - {id: cinquieme, kind: album, title: "Si on avait besoin d'une cinquième saison", year: 1975}
+      - {id: dome, kind: album, title: "Le Dôme", year: 1996}
+      - {id: menteuralb, kind: album, title: "Menteur", year: 1990}
+      - {id: insomniaques, kind: album, title: "Les Insomniaques s'amusent", year: 1992}
+      - {id: break, kind: album, title: "Break syndical", year: 2002}
+      - {id: grandmesse, kind: album, title: "La Grand-Messe", year: 2004}
+      - {id: motel, kind: album, title: "Motel Capri", year: 2000}
+      - {id: enfamille, kind: album, title: "En famille", year: 2004}
+      - {id: jaune, kind: album, title: "Jaune", year: 1970}
+      - {id: funeral, kind: album, title: "Funeral", year: 2004}
+      - {id: suburbs, kind: album, title: "The Suburbs", year: 2010}
+      - {id: darlene, kind: album, title: "Darlène", year: 2018}
+      - {id: poids, kind: album, title: "Le Poids des confettis", year: 2013}
+      # Songs.
+      - {id: pourque, kind: song, title: "Pour que tu m'aimes encore", year: 1995}
+      - {id: myheart, kind: song, title: "My Heart Will Go On", year: 1997}
+      - {id: suffisait, kind: song, title: "S'il suffisait d'aimer", year: 1998}
+      - {id: existe, kind: song, title: "L'amour existe encore", year: 1991}
+      - {id: reve, kind: song, title: "Ce n'était qu'un rêve", year: 1981}
+      - {id: amitie, kind: song, title: "D'amour ou d'amitié", year: 1982}
+      - {id: jesaispas, kind: song, title: "Je sais pas", year: 1995}
+      - {id: etoiles, kind: song, title: "Les Étoiles filantes", year: 2004}
+      - {id: toune, kind: song, title: "Toune d'automne", year: 2002}
+      - {id: berne, kind: song, title: "En berne", year: 2008}
+      - {id: amerique, kind: song, title: "L'Amérique pleure", year: 2019}
+      - {id: degenerations, kind: song, title: "Dégénérations", year: 2004}
+      - {id: chanson, kind: song, title: "Je ne suis qu'une chanson", year: 1979}
+      - {id: genspays, kind: song, title: "Gens du pays", year: 1975}
+      - {id: monpays, kind: song, title: "Mon pays", year: 1965}
+      - {id: bonheur, kind: song, title: "Le Petit Bonheur", year: 1950}
+      - {id: souliers, kind: song, title: "Moi, mes souliers", year: 1951}
+      - {id: instant, kind: song, title: "Pour un instant", year: 1974}
+      - {id: phoque, kind: song, title: "La Complainte du phoque en Alaska", year: 1974}
+      - {id: bluesmetro, kind: song, title: "Le Blues d'la métropole", year: 1974}
+      - {id: isabelle, kind: song, title: "Isabelle", year: 1990}
+      - {id: s1990, kind: song, title: "1990", year: 1990}
+      - {id: cookie, kind: song, title: "Cookie", year: 1996}
+      - {id: opium, kind: song, title: "Opium", year: 1992}
+      - {id: seche, kind: song, title: "Sèche tes pleurs", year: 1992}
+      - {id: julie, kind: song, title: "Julie", year: 1993}
+      - {id: tassez, kind: song, title: "Tassez-vous de d'là", year: 1993}
+      - {id: nimporte, kind: song, title: "N'importe quoi", year: 1994}
+      - {id: deuxpar, kind: song, title: "Deux par deux rassemblés", year: 2004}
+      - {id: lindberg, kind: song, title: "Lindberg", year: 1968}
+      - {id: ordinaire, kind: song, title: "Ordinaire", year: 1970}
+      - {id: montreal, kind: song, title: "Je reviendrai à Montréal", year: 1976}
+      - {id: rencontre, kind: song, title: "J'ai rencontré l'homme de ma vie", year: 1973}
+      - {id: hawaienne, kind: song, title: "Hawaïenne", year: 2003}
+      - {id: saskatchewan, kind: song, title: "Saskatchewan", year: 2003}
+      - {id: enfants, kind: song, title: "Comme des enfants", year: 2008}
+      - {id: fillepersonne, kind: song, title: "Fille de personne II", year: 2018}
+      - {id: parlemoi, kind: song, title: "Parle-moi", year: 2000}
+      - {id: helene, kind: song, title: "Hélène", year: 1989}
+      - {id: seul, kind: song, title: "Seul", year: 2000}
+      - {id: byebye, kind: song, title: "Bye Bye Mon Cowboy", year: 1988}
+      - {id: drinking, kind: song, title: "Drinking in L.A.", year: 1997}
+      - {id: sunglasses, kind: song, title: "Sunglasses at Night", year: 1984}
+      - {id: welcome, kind: song, title: "Welcome to My Life", year: 2004}
+      - {id: maudits, kind: song, title: "Les Maudits Français", year: 2000}
+    cases:
+      # Controls: the title as written.
+      - {heard: "céline dion", want: play, id: celine}
+      - {heard: "les cowboys fringants", want: play, id: cowboys}
+      - {heard: "robert charlebois", want: play, id: charlebois}
+      - {heard: "mes aïeux", want: play, id: aieux}
+      - {heard: "ginette reno", want: play, id: reno}
+      - {heard: "gilles vigneault", want: play, id: vigneault}
+      - {heard: "félix leclerc", want: play, id: leclerc}
+      - {heard: "jean leloup", want: play, id: leloup}
+      - {heard: "les colocs", want: play, id: colocs}
+      - {heard: "pour que tu m'aimes encore", want: play, id: pourque}
+      - {heard: "my heart will go on", want: play, id: myheart}
+      - {heard: "d'eux", want: play, id: deux}
+      - {heard: "gens du pays", want: play, id: genspays}
+      - {heard: "mon pays", want: play, id: monpays}
+      - {heard: "le petit bonheur", want: play, id: bonheur}
+      - {heard: "les étoiles filantes", want: play, id: etoiles}
+      - {heard: "toune d'automne", want: play, id: toune}
+      - {heard: "dégénérations", want: play, id: degenerations}
+      - {heard: "lindberg", want: play, id: lindberg}
+      - {heard: "hélène", want: play, id: helene}
+      - {heard: "1990", want: play, id: s1990}
+      - {heard: "menteur", want: play, id: menteuralb}
+      - {heard: "isabelle", want: play, id: isabelle}
+      - {heard: "la complainte du phoque en alaska", want: play, id: phoque}
+      - {heard: "si on avait besoin d'une cinquième saison", want: play, id: cinquieme}
+      - {heard: "en famille", want: play, id: enfamille}
+      - {heard: "harmonium", want: play, id: harmoniumart, kinds: [artist]}
+      - {heard: "harmonium", want: play, id: harmoniumalb, kinds: [album]}
+      # Controls: distinctive opening words.
+      - {heard: "la complainte du phoque", want: play, id: phoque}
+      - {heard: "tassez-vous", want: play, id: tassez}
+      # Controls: genuinely ambiguous, must ask.
+      - {heard: "harmonium", want: ask, among: [harmoniumart, harmoniumalb]}
+      - {heard: "lapointe", want: ask, among: [ericlapointe, pierrelapointe]}
+      - {heard: "boulay", want: ask, among: [isaboulay, soeursboulay]}
+      # affrication: t and d before i and u heard ts and dz.
+      - {heard: "céline dzion", want: play, id: celine}
+      - {heard: "dziane dzufresne", want: play, id: dufresne}
+      - {heard: "pour que tsu m'aimes encore", want: play, id: pourque}
+      - {heard: "le petsit bonheur", want: play, id: bonheur}
+      - {heard: "ordzinaire", want: play, id: ordinaire}
+      - {heard: "dzaniel bélanger", want: play, id: belanger}
+      - {heard: "d'amour ou d'amitsié", want: play, id: amitie}
+      # diphthong: long vowels diphthongised.
+      - {heard: "pour que tu m'aimes encaore", want: play, id: pourque}
+      - {heard: "sèche tes plaeurs", want: play, id: seche}
+      - {heard: "caeur de pirate", want: play, id: coeurpirate}
+      - {heard: "jaoune", want: play, id: jaune}
+      - {heard: "le daoume", want: play, id: dome}
+      - {heard: "ordinaère", want: play, id: ordinaire}
+      - {heard: "l'amérique plaeure", want: play, id: amerique}
+      # oi: oi said oé or ouè, oin said ouin.
+      - {heard: "n'importe quoé", want: play, id: nimporte}
+      - {heard: "n'importe kwè", want: play, id: nimporte}
+      - {heard: "moé mes souliers", want: play, id: souliers}
+      - {heard: "parle-moé", want: play, id: parlemoi}
+      - {heard: "les troé accords", want: play, id: troisaccords}
+      - {heard: "les trouè accords", want: play, id: troisaccords}
+      - {heard: "roch voésine", want: play, id: voisine}
+      - {heard: "les étouèles filantes", want: play, id: etoiles}
+      - {heard: "éric lapouinte", want: play, id: ericlapointe}
+      - {heard: "pierre lapouinte", want: play, id: pierrelapointe}
+      # nasal: nasal vowel shifts.
+      - {heard: "landberg", want: play, id: lindberg}
+      - {heard: "pour in instant", want: play, id: instant}
+      - {heard: "comme des infants", want: play, id: enfants}
+      - {heard: "an berne", want: play, id: berne}
+      # elision: elided pronouns, articles and ne, Québec contractions.
+      - {heard: "j'sais pas", want: play, id: jesaispas}
+      - {heard: "chais pas", want: play, id: jesaispas}
+      - {heard: "je ne sais pas", want: play, id: jesaispas}
+      - {heard: "le blues de la métropole", want: play, id: bluesmetro}
+      - {heard: "tassez-vous de là", want: play, id: tassez}
+      - {heard: "chu qu'une chanson", want: play, id: chanson}
+      - {heard: "j'suis qu'une chanson", want: play, id: chanson}
+      - {heard: "c'tait qu'un rêve", want: play, id: reve}
+      - {heard: "si y suffisait d'aimer", want: play, id: suffisait}
+      - {heard: "j'ai rencontré l'homme d'ma vie", want: play, id: rencontre}
+      - {heard: "j'reviendrai à montréal", want: play, id: montreal}
+      - {heard: "mon oncle serge", want: play, id: mononc}
+      - {heard: "pour que t'm'aimes encore", want: play, id: pourque}
+      # english: English titles and anglicisms as a Québec recogniser spells them.
+      - {heard: "maï harte ouil go onne", want: play, id: myheart}
+      - {heard: "fôline intou you", want: play, id: falling}
+      - {heard: "let's tok abaoute love", want: play, id: letstalk}
+      - {heard: "sonne glasses at naïte", want: play, id: sunglasses}
+      - {heard: "ouèlcome tou maï laïfe", want: play, id: welcome}
+      - {heard: "drinkine in el é", want: play, id: drinking}
+      - {heard: "brane vane trois mille", want: play, id: bvan}
+      - {heard: "arcade faïeur", want: play, id: arcade}
+      - {heard: "simpeule plane", want: play, id: simpleplan}
+      - {heard: "baille baille mon cowboy", want: play, id: byebye}
+      - {heard: "bye bye mon cowboye", want: play, id: byebye}
+      - {heard: "tune d'automne", want: play, id: toune}
+      - {heard: "brèque syndical", want: play, id: break}
+      - {heard: "coukie", want: play, id: cookie}
+      - {heard: "de seuborbes", want: play, id: suburbs}
+      - {heard: "fiounéral", want: play, id: funeral}
+      - {heard: "corey harte", want: play, id: coreyhart}
+      # silent: final consonants, plural marks and h added or dropped.
+      - {heard: "les cowboy fringant", want: play, id: cowboys}
+      - {heard: "les coloc", want: play, id: colocs}
+      - {heard: "les étoile filante", want: play, id: etoiles}
+      - {heard: "les trois accord", want: play, id: troisaccords}
+      - {heard: "les insomniaque s'amuse", want: play, id: insomniaques}
+      - {heard: "les sœur boulay", want: play, id: soeursboulay}
+      - {heard: "mes aïeu", want: play, id: aieux}
+      - {heard: "les maudit français", want: play, id: maudits}
+      - {heard: "les louange", want: play, id: louanges}
+      - {heard: "comme des enfant", want: play, id: enfants}
+      - {heard: "sèche tes pleur", want: play, id: seche}
+      - {heard: "le poids des confetti", want: play, id: poids}
+      - {heard: "vincent vallière", want: play, id: vallieres}
+      - {heard: "l'eptade", want: play, id: heptade}
+      # number: digits and words, years, roman numerals, letters.
+      - {heard: "bran van 3000", want: play, id: bvan}
+      - {heard: "deux frères", want: play, id: deuxfreres}
+      - {heard: "2 frères", want: play, id: deuxfreres}
+      - {heard: "mille neuf cent quatre-vingt-dix", want: play, id: s1990}
+      - {heard: "dix-neuf cent quatre-vingt-dix", want: play, id: s1990}
+      - {heard: "dix-neuf quatre-vingt-dix", want: play, id: s1990}
+      - {heard: "si on avait besoin d'une 5e saison", want: play, id: cinquieme}
+      - {heard: "2 par 2 rassemblés", want: play, id: deuxpar}
+      - {heard: "fille de personne deux", want: play, id: fillepersonne}
+      - {heard: "fille de personne 2", want: play, id: fillepersonne}
+      - {heard: "drinking in l a", want: play, id: drinking}
+      # real-word: more frequent homophones and near-homophones.
+      - {heard: "mes yeux", want: play, id: aieux}
+      - {heard: "carquois", want: play, id: karkwa}
+      - {heard: "caïn", want: play, id: kain}
+      - {heard: "daniel boulanger", want: play, id: belanger}
+      - {heard: "roche voisine", want: play, id: voisine}
+      - {heard: "fred pèlerin", want: play, id: pellerin}
+      - {heard: "deux", want: play, id: deux}
+      - {heard: "jeune", want: play, id: jaune}
+      - {heard: "seule", want: play, id: seul}
+      - {heard: "motel caprice", want: play, id: motel}
+      # split: splits, merges, dropped hyphens and apostrophes.
+      - {heard: "plume la traverse", want: play, id: plume}
+      - {heard: "hubert le noir", want: play, id: lenoir}
+      - {heard: "marie mai", want: play, id: mariemai}
+      - {heard: "mononc serge", want: play, id: mononc}
+      - {heard: "tassez vous de dla", want: play, id: tassez}
+      - {heard: "jean pierre ferland", want: play, id: ferland}
+      - {heard: "la grande messe", want: play, id: grandmesse}
+      # diacritic: accents dropped.
+      - {heard: "celine dion", want: play, id: celine}
+      - {heard: "mes aieux", want: play, id: aieux}
+      - {heard: "les soeurs boulay", want: play, id: soeursboulay}
+      - {heard: "eric lapointe", want: play, id: ericlapointe}
+      - {heard: "klo pelgag", want: play, id: klo}
+      - {heard: "hawaienne", want: play, id: hawaienne}
+      - {heard: "darlene", want: play, id: darlene}
+      - {heard: "degenerations", want: play, id: degenerations}
+      # Missing numbered sequels: ask.
+      - {heard: "fille de personne trois", want: ask}
+      # Absent titles, including near misses sharing first names or words with library titles.
+      - {heard: "lara fabian", want: not_found}
+      - {heard: "mario pelchat", want: not_found}
+      - {heard: "jean ferrat", want: not_found}
+      - {heard: "éric clapton", want: not_found}
+      - {heard: "julien clerc", want: not_found}
+      - {heard: "isabelle pierre", want: not_found}
+      - {heard: "gilles valiquette", want: not_found}
+      - {heard: "kevin parent", want: not_found}
+      - {heard: "les denis drolet", want: not_found}
+      - {heard: "bleu jeans bleu", want: not_found}
+      - {heard: "daniel lavoie", want: not_found}
+      - {heard: "vilain pingouin", want: not_found}
+      - {heard: "la chicane", want: not_found}
+      - {heard: "le temps des cathédrales", want: not_found}
+      - {heard: "ce n'est qu'un au revoir", want: not_found}
+      - {heard: "l'hymne à l'amour", want: not_found}
+      - {heard: "les vieux amants", want: not_found}
+      - {heard: "la manic", want: not_found}
+      - {heard: "le plus beau voyage", want: not_found}
+      - {heard: "quand les hommes vivront d'amour", want: not_found}
+      - {heard: "frédéric", want: not_found}
+      - {heard: "michel sardou", want: not_found}
+      - {heard: "les b b", want: not_found}

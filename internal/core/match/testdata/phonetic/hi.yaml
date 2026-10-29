@@ -1,0 +1,233 @@
+# Hindi (hi-IN) phonetic evaluation corpus for TestPhoneticEval. Same schema as asr_corpus.yaml; cases are scored, not asserted, so there is no xfail.
+#
+# Library: real, well-known Hindi films, series and artists and Hollywood films as an Indian Kodi library holds them (titles as published by English-language scrapers, so Hindi titles are romanised, with their original release years), plus two series titled in Devanagari. It carries near neighbours (Don 1978 and 2006 and Don 2, Dhoom 1 to 3, Baahubali 1 and 2, Stree and Stree 2, the two Munna Bhai films, Hera Pheri and Phir Hera Pheri, Kabhi Kabhie and Kabhi Khushi Kabhie Gham, Avengers: Endgame and Infinity War, Arijit, Jagjit and Honey Singh, Kishore Kumar and Kumar Sanu) so a wrong play is possible.
+#
+# Cases: what Alexa's hi-IN recogniser plausibly writes when a Hindi speaker asks for the title. It writes Hindi in Devanagari and often writes English words in Latin script, so the central case is a Devanagari request against a romanised title. Each mishearing sits under a "class" comment naming the confusion it models. The classes are documented Hindi spelling-to-sound and romanisation ambiguities: inconsistent romanisation of one Hindi word (Kabhi/Kabhie, Jayenge/Jaayenge, Kuch/Kuchh, oo/u, ee/i), schwa deletion (धड़कन is dhadkan, not dhadakan; Ramayan/Ramayana), aspirated and unaspirated stops (ख/क, घ/ग, थ/त, भ/ब, फ/प, छ/च), retroflex and dental (ट/त, ड/द, ण/न), nukta and its absence (ज़/ज, फ़/फ, ग़/ग, ड़/ड), anusvara, chandrabindu and a written nasal consonant (जाएंगे/जाएँगे, दंगल/दन्गल), the sibilants श/ष/स, short and long vowels (ि/ी, ु/ू), v and w, English words written in Devanagari in several spellings (अवेंजर्स/एवेंजर्स, नाइट/नाईट), code-mixed requests that switch script mid-title, initialisms said as letter names (पीके, एम बी बी एस), numbers as digits, Devanagari digits and Hindi or English number words (2, २, दो, टू), word splits and merges (अंधा धुन), and real-word substitutions (स्वदेश for Swades, दिल्ली for Delhi, अर्जित for Arijit). Controls (exact titles), ambiguous requests (ask), missing sequels (ask) and absent titles (not_found) keep the decision thresholds honest.
+#
+# Cases describe what a listener hears; don't change a case to suit an encoder's results, or the comparison stops meaning anything (see docs/src/content/docs/contributing/dependencies.md).
+suites:
+  - name: hindi library
+    lang: hi
+    library:
+      - {id: ddlj, kind: movie, title: "Dilwale Dulhania Le Jayenge", year: 1995}
+      - {id: k3g, kind: movie, title: "Kabhi Khushi Kabhie Gham", year: 2001}
+      - {id: kabhikabhie, kind: movie, title: "Kabhi Kabhie", year: 1976}
+      - {id: kkhh, kind: movie, title: "Kuch Kuch Hota Hai", year: 1998}
+      - {id: kalhonaho, kind: movie, title: "Kal Ho Naa Ho", year: 2003}
+      - {id: dilchahta, kind: movie, title: "Dil Chahta Hai", year: 2001}
+      - {id: sholay, kind: movie, title: "Sholay", year: 1975}
+      - {id: mughal, kind: movie, title: "Mughal-e-Azam", year: 1960}
+      - {id: don1978, kind: movie, title: "Don", year: 1978}
+      - {id: don2006, kind: movie, title: "Don", year: 2006}
+      - {id: don2, kind: movie, title: "Don 2", year: 2011}
+      - {id: dhoom, kind: movie, title: "Dhoom", year: 2004}
+      - {id: dhoom2, kind: movie, title: "Dhoom 2", year: 2006}
+      - {id: dhoom3, kind: movie, title: "Dhoom 3", year: 2013}
+      - {id: threeidiots, kind: movie, title: "3 Idiots", year: 2009}
+      - {id: pk, kind: movie, title: "PK", year: 2014}
+      - {id: dangal, kind: movie, title: "Dangal", year: 2016}
+      - {id: lagaan, kind: movie, title: "Lagaan", year: 2001}
+      - {id: taare, kind: movie, title: "Taare Zameen Par", year: 2007}
+      - {id: rdb, kind: movie, title: "Rang De Basanti", year: 2006}
+      - {id: znmd, kind: movie, title: "Zindagi Na Milegi Dobara", year: 2011}
+      - {id: gow1, kind: movie, title: "Gangs of Wasseypur", year: 2012}
+      - {id: gow2, kind: movie, title: "Gangs of Wasseypur – Part 2", year: 2012}
+      - {id: munnabhai, kind: movie, title: "Munna Bhai M.B.B.S.", year: 2003}
+      - {id: lagerahomunna, kind: movie, title: "Lage Raho Munna Bhai", year: 2006}
+      - {id: herapheri, kind: movie, title: "Hera Pheri", year: 2000}
+      - {id: phirherapheri, kind: movie, title: "Phir Hera Pheri", year: 2006}
+      - {id: golmaal, kind: movie, title: "Golmaal", year: 1979}
+      - {id: bahubali, kind: movie, title: "Baahubali: The Beginning", year: 2015}
+      - {id: bahubali2, kind: movie, title: "Baahubali 2: The Conclusion", year: 2017}
+      - {id: stree, kind: movie, title: "Stree", year: 2018}
+      - {id: stree2, kind: movie, title: "Stree 2", year: 2024}
+      - {id: swades, kind: movie, title: "Swades", year: 2004}
+      - {id: jabwemet, kind: movie, title: "Jab We Met", year: 2007}
+      - {id: devdas, kind: movie, title: "Devdas", year: 2002}
+      - {id: haider, kind: movie, title: "Haider", year: 2014}
+      - {id: gullyboy, kind: movie, title: "Gully Boy", year: 2019}
+      - {id: kahaani, kind: movie, title: "Kahaani", year: 2012}
+      - {id: andhadhun, kind: movie, title: "Andhadhun", year: 2018}
+      - {id: queen, kind: movie, title: "Queen", year: 2014}
+      - {id: barfi, kind: movie, title: "Barfi!", year: 2012}
+      - {id: chakde, kind: movie, title: "Chak De! India", year: 2007}
+      - {id: chhichhore, kind: movie, title: "Chhichhore", year: 2019}
+      - {id: bhaag, kind: movie, title: "Bhaag Milkha Bhaag", year: 2013}
+      - {id: ghajini, kind: movie, title: "Ghajini", year: 2008}
+      - {id: thappad, kind: movie, title: "Thappad", year: 2020}
+      - {id: udta, kind: movie, title: "Udta Punjab", year: 2016}
+      - {id: dhadkan, kind: movie, title: "Dhadkan", year: 2000}
+      - {id: bajrangi, kind: movie, title: "Bajrangi Bhaijaan", year: 2015}
+      - {id: endgame, kind: movie, title: "Avengers: Endgame", year: 2019}
+      - {id: infinitywar, kind: movie, title: "Avengers: Infinity War", year: 2018}
+      - {id: darkknight, kind: movie, title: "The Dark Knight", year: 2008}
+      - {id: inception, kind: movie, title: "Inception", year: 2010}
+      - {id: titanic, kind: movie, title: "Titanic", year: 1997}
+      - {id: sacredgames, kind: tvshow, title: "Sacred Games", year: 2018}
+      - {id: mirzapur, kind: tvshow, title: "Mirzapur", year: 2018}
+      - {id: panchayat, kind: tvshow, title: "Panchayat", year: 2020}
+      - {id: familyman, kind: tvshow, title: "The Family Man", year: 2019}
+      - {id: scam1992, kind: tvshow, title: "Scam 1992: The Harshad Mehta Story", year: 2020}
+      - {id: kotafactory, kind: tvshow, title: "Kota Factory", year: 2019}
+      - {id: delhicrime, kind: tvshow, title: "Delhi Crime", year: 2019}
+      - {id: tmkoc, kind: tvshow, title: "Taarak Mehta Ka Ooltah Chashmah", year: 2008}
+      - {id: ramayan, kind: tvshow, title: "रामायण", year: 1987}
+      - {id: mahabharat, kind: tvshow, title: "महाभारत", year: 1988}
+      - {id: arijit, kind: artist, title: "Arijit Singh"}
+      - {id: jagjit, kind: artist, title: "Jagjit Singh"}
+      - {id: honeysingh, kind: artist, title: "Yo Yo Honey Singh"}
+      - {id: diljit, kind: artist, title: "Diljit Dosanjh"}
+      - {id: lata, kind: artist, title: "Lata Mangeshkar"}
+      - {id: asha, kind: artist, title: "Asha Bhosle"}
+      - {id: kishore, kind: artist, title: "Kishore Kumar"}
+      - {id: kumarsanu, kind: artist, title: "Kumar Sanu"}
+      - {id: rafi, kind: artist, title: "Mohammed Rafi"}
+      - {id: shreya, kind: artist, title: "Shreya Ghoshal"}
+      - {id: sonu, kind: artist, title: "Sonu Nigam"}
+      - {id: udit, kind: artist, title: "Udit Narayan"}
+      - {id: neha, kind: artist, title: "Neha Kakkar"}
+      - {id: badshah, kind: artist, title: "Badshah"}
+      - {id: rahman, kind: artist, title: "A. R. Rahman"}
+      - {id: nusrat, kind: artist, title: "Nusrat Fateh Ali Khan"}
+    cases:
+      # Controls: the title as written, in Latin script where the recogniser takes it for English, and the Devanagari titles in Devanagari.
+      - {heard: "inception", want: play, id: inception}
+      - {heard: "titanic", want: play, id: titanic}
+      - {heard: "the dark knight", want: play, id: darkknight}
+      - {heard: "sacred games", want: play, id: sacredgames}
+      - {heard: "kota factory", want: play, id: kotafactory}
+      - {heard: "don 2", want: play, id: don2}
+      - {heard: "रामायण", want: play, id: ramayan}
+      - {heard: "महाभारत", want: play, id: mahabharat}
+      # Class script: a romanised Hindi title said exactly and written in Devanagari.
+      - {heard: "दिलवाले दुल्हनिया ले जाएंगे", want: play, id: ddlj}
+      - {heard: "कभी खुशी कभी ग़म", want: play, id: k3g}
+      - {heard: "कभी कभी", want: play, id: kabhikabhie}
+      - {heard: "शोले", want: play, id: sholay}
+      - {heard: "दंगल", want: play, id: dangal}
+      - {heard: "तारे ज़मीन पर", want: play, id: taare}
+      - {heard: "गैंग्स ऑफ़ वासेपुर", want: play, id: gow1}
+      - {heard: "फिर हेरा फेरी", want: play, id: phirherapheri}
+      - {heard: "स्त्री", want: play, id: stree}
+      - {heard: "स्वदेस", want: play, id: swades}
+      - {heard: "छिछोरे", want: play, id: chhichhore}
+      - {heard: "मिर्ज़ापुर", want: play, id: mirzapur}
+      - {heard: "तारक मेहता का उल्टा चश्मा", want: play, id: tmkoc}
+      - {heard: "अरिजीत सिंह", want: play, id: arijit}
+      - {heard: "लता मंगेशकर", want: play, id: lata}
+      - {heard: "नेहा कक्कड़", want: play, id: neha}
+      # Class romanisation: Latin script with another romanisation of the Hindi words.
+      - {heard: "kabhie khushie kabhi gham", want: play, id: k3g}
+      - {heard: "dilwale dulhaniya le jaayenge", want: play, id: ddlj}
+      - {heard: "kuchh kuchh hota hai", want: play, id: kkhh}
+      - {heard: "kal ho na ho", want: play, id: kalhonaho}
+      - {heard: "taare zamin par", want: play, id: taare}
+      - {heard: "taarak mehta ka ulta chashma", want: play, id: tmkoc}
+      # Class schwa: the inherent vowel dropped in speech, kept in a Sanskritised or halant spelling.
+      - {heard: "ramayana", want: play, id: ramayan}
+      - {heard: "mahabharata", want: play, id: mahabharat}
+      - {heard: "धड़कन", want: play, id: dhadkan}
+      - {heard: "dhadakan", want: play, id: dhadkan}
+      - {heard: "अंधाधुन", want: play, id: andhadhun}
+      - {heard: "devadas", want: play, id: devdas}
+      # Class aspiration: aspirated and unaspirated stops swapped.
+      - {heard: "कभी कुशी कभी गम", want: play, id: k3g}
+      - {heard: "गजनी", want: play, id: ghajini}
+      - {heard: "बाग मिल्खा बाग", want: play, id: bhaag}
+      - {heard: "चिचोरे", want: play, id: chhichhore}
+      - {heard: "तप्पड़", want: play, id: thappad}
+      - {heard: "पिर हेरा पेरी", want: play, id: phirherapheri}
+      - {heard: "आशा बोसले", want: play, id: asha}
+      # Class retroflex: retroflex and dental stops and nasals swapped.
+      - {heard: "डंगल", want: play, id: dangal}
+      - {heard: "रामायन", want: play, id: ramayan}
+      - {heard: "द दार्क नाइट", want: play, id: darkknight}
+      - {heard: "कोटा फैक्त्री", want: play, id: kotafactory}
+      - {heard: "उदित नारायन", want: play, id: udit}
+      # Class nukta: the nukta dropped, and ड़ written as ड.
+      - {heard: "जिंदगी ना मिलेगी दोबारा", want: play, id: znmd}
+      - {heard: "मिर्जापुर", want: play, id: mirzapur}
+      - {heard: "मुगल ए आजम", want: play, id: mughal}
+      - {heard: "उडता पंजाब", want: play, id: udta}
+      - {heard: "मोहम्मद रफी", want: play, id: rafi}
+      - {heard: "नुसरत फतेह अली खान", want: play, id: nusrat}
+      # Class nasal: anusvara, chandrabindu and a written nasal consonant.
+      - {heard: "दिलवाले दुल्हनिया ले जाएँगे", want: play, id: ddlj}
+      - {heard: "दिलवाले दुल्हनिया ले जायेंगे", want: play, id: ddlj}
+      - {heard: "रन्ग दे बसन्ती", want: play, id: rdb}
+      - {heard: "आशा भोंसले", want: play, id: asha}
+      - {heard: "दिलजीत दोसाँझ", want: play, id: diljit}
+      # Class sibilant: श, ष and स swapped.
+      - {heard: "सोले", want: play, id: sholay}
+      - {heard: "श्रेया घोसाल", want: play, id: shreya}
+      - {heard: "लता मंगेसकर", want: play, id: lata}
+      - {heard: "बादसाह", want: play, id: badshah}
+      # Class vowel-length: short and long vowels swapped.
+      - {heard: "कभि खुशि कभि ग़म", want: play, id: k3g}
+      - {heard: "धुम 2", want: play, id: dhoom2}
+      - {heard: "स्त्रि", want: play, id: stree}
+      - {heard: "अरिजित सिंह", want: play, id: arijit}
+      # Class v-w: v and w in romanised titles.
+      - {heard: "dilvale dulhania le jayenge", want: play, id: ddlj}
+      - {heard: "svades", want: play, id: swades}
+      - {heard: "gangs of vasseypur", want: play, id: gow1}
+      # Class english: English titles written in Devanagari, in several spellings.
+      - {heard: "अवेंजर्स एंडगेम", want: play, id: endgame}
+      - {heard: "एवेंजर्स एंड गेम", want: play, id: endgame}
+      - {heard: "अवेंजर्स इन्फिनिटी वॉर", want: play, id: infinitywar}
+      - {heard: "दी डार्क नाईट", want: play, id: darkknight}
+      - {heard: "इंसेप्शन", want: play, id: inception}
+      - {heard: "टाइटैनिक", want: play, id: titanic}
+      - {heard: "द फ़ैमिली मैन", want: play, id: familyman}
+      - {heard: "फैमिली मेन", want: play, id: familyman}
+      # Class code-mix: one title in two scripts.
+      - {heard: "avengers एंडगेम", want: play, id: endgame}
+      - {heard: "sacred गेम्स", want: play, id: sacredgames}
+      - {heard: "yo yo हनी सिंह", want: play, id: honeysingh}
+      # Class letters: initialisms said as letter names.
+      - {heard: "पीके", want: play, id: pk}
+      - {heard: "ए आर रहमान", want: play, id: rahman}
+      - {heard: "ar rahman", want: play, id: rahman}
+      - {heard: "मुन्ना भाई एम बी बी एस", want: play, id: munnabhai}
+      # Class number: digits, Devanagari digits and Hindi or English number words.
+      - {heard: "3 इडियट्स", want: play, id: threeidiots}
+      - {heard: "३ इडियट्स", want: play, id: threeidiots}
+      - {heard: "थ्री इडियट्स", want: play, id: threeidiots}
+      - {heard: "डॉन २", want: play, id: don2}
+      - {heard: "डॉन टू", want: play, id: don2}
+      - {heard: "धूम तीन", want: play, id: dhoom3}
+      - {heard: "स्त्री दो", want: play, id: stree2}
+      - {heard: "बाहुबली 2", want: play, id: bahubali2}
+      - {heard: "स्कैम 1992", want: play, id: scam1992}
+      - {heard: "स्कैम उन्नीस सौ बानवे", want: play, id: scam1992}
+      # Class split-merge: one word split into several or several merged.
+      - {heard: "अंधा धुन", want: play, id: andhadhun}
+      - {heard: "बाहु बली द बिगिनिंग", want: play, id: bahubali}
+      # Class real-word: a frequent Hindi word replaces the title word.
+      - {heard: "स्वदेश", want: play, id: swades}
+      - {heard: "दिल्ली क्राइम", want: play, id: delhicrime}
+      - {heard: "अर्जित सिंह", want: play, id: arijit}
+      - {heard: "लगन", want: play, id: lagaan}
+      # Ambiguous: ask among the near neighbours.
+      - {heard: "डॉन", want: ask, among: [don1978, don2006]}
+      - {heard: "बाहुबली", want: ask, among: [bahubali, bahubali2]}
+      - {heard: "अवेंजर्स", want: ask, among: [endgame, infinitywar]}
+      - {heard: "सिंह", want: ask, among: [arijit, jagjit, honeysingh]}
+      - {heard: "मुन्ना भाई", want: ask, among: [munnabhai, lagerahomunna]}
+      # Missing sequels: ask.
+      - {heard: "डॉन 3", want: ask}
+      - {heard: "धूम 4", want: ask}
+      - {heard: "हेरा फेरी 3", want: ask}
+      - {heard: "स्त्री 3", want: ask}
+      # Absent titles, including near misses that share words with the library.
+      - {heard: "दबंग", want: not_found}
+      - {heard: "पठान", want: not_found}
+      - {heard: "बाज़ीगर", want: not_found}
+      - {heard: "अंदाज़ अपना अपना", want: not_found}
+      - {heard: "कभी अलविदा ना कहना", want: not_found}
+      - {heard: "जब हैरी मेट सेजल", want: not_found}
+      - {heard: "मुन्ना माइकल", want: not_found}
+      - {heard: "गोलमाल रिटर्न्स", want: not_found}
+      - {heard: "द डार्क नाइट राइज़ेस", want: not_found}
+      - {heard: "पाताल लोक", want: not_found}
+      - {heard: "सुनिधि चौहान", want: not_found}
