@@ -22,7 +22,10 @@ func TestNormalizeHindi(t *testing.T) {
 		{"तारक मेहता का उल्टा चश्मा", "tarak mehta ka ulta chashma"},
 		// Schwa deletion: final, and medial between a vowel and a voiced consonant.
 		{"धड़कन", "dhadkan"},
-		{"दिलवाले", "dilvale"},
+		{"दिलवाले", "dilwale"},
+		{"घरवाली", "gharwali"},
+		{"कलवा", "kalwa"},
+		{"दिवाली", "divali"},
 		{"अदरक", "adrak"},
 		{"महाभारत", "mahabharat"},
 		{"दुल्हनिया", "dulhaniya"},
