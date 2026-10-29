@@ -267,7 +267,7 @@ func discordant(out, ref []evalOutcome) (gains, losses int) {
 	return gains, losses
 }
 
-// fuzzyGate is how many more correct decisions than English Double Metaphone internal/fuzzy must make per language on the original corpora, and production on both sets where it has its own encoder (ownEncoder): the French and Spanish encoders earn their place only with a measurable gain.
+// fuzzyGate is how many more correct decisions than English Double Metaphone internal/fuzzy must make per language on the original corpora, and production on both sets where it has its own encoder (ownEncoder): each language's own encoder earns its place only with a measurable gain.
 var fuzzyGate = map[string]int{"fr": 3, "es": 3, "ar": 3, "pt": 3}
 
 // evalFull adds what TestPhoneticEval reports without gating: the trigram retriever, the "none" encoder and internal/fuzzy on the grown corpora. The phoneticeval build tag sets it, so the race-detector run of the package keeps only what the gates need.

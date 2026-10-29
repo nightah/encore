@@ -212,7 +212,7 @@ These counts include three fixes made after the grown set was first scored, none
 | French | French rules | 61 of 63 | 0 | 55 | 48 | +6 / −0 | +9.5 (+2.3 to +16.8) | 0.031 |
 | Italian | English Double Metaphone | 56 of 57 | 0 | same | 49 | none | none | none |
 | Dutch | English Double Metaphone | 109 of 120 | 0 | same | 84 | none | none | none |
-| Brazilian Portuguese | Brazilian Portuguese rules | 107 of 118 | 0 | 93 | 77 | +14 / −0 | +11.9 (+5.9 to +17.8) | 0.0001 |
+| Brazilian Portuguese | Brazilian Portuguese rules | 107 of 118 | 0 | 93 | 77 | +14 / −0 | +11.9 (+6.0 to +17.7) | 0.0001 |
 | Arabic | Arabic rules, over Latin letters | 114 of 121 | 0 | 109 | 86 | +5 / −0 | +4.1 (+0.6 to +7.7) | 0.063 |
 | Hindi | English Double Metaphone, over Latin letters | 109 of 121 | 1 | same | 73 | none | none | none |
 | Japanese | English Double Metaphone, over Latin letters | 80 of 120 | 0 | same | 71 | none | none | none |
@@ -242,7 +242,7 @@ None of the changes since the first results moved these counts.
 
 **English** keeps Double Metaphone.
 
-**Spanish and French** keep their own rules. On the grown set they get 31 and 18 more cases right than Double Metaphone, with no more wrong plays. Spanish plays 6 more titles per 2,000 that aren't in the library, a fair trade for 37 more correct answers; French plays 2 fewer.
+**Spanish and French** keep their own rules. On the grown set, counting the regional suites, they get 55 and 26 more cases right than Double Metaphone (32 and 18 on Spain's and France's files alone), with no more wrong plays. Spanish plays 6 more titles per 2,000 that aren't in the library, a fair trade for 66 more correct answers; French plays 2 fewer.
 
 ##### Italian
 
@@ -284,7 +284,7 @@ Japanese is matched in Latin letters with English Double Metaphone. Titles and r
 
 ##### Latin American Spanish and Québec French
 
-The regional held-out sets are scored with the Spanish and French rules, which beat Double Metaphone on them as well: +28 / −5 in Latin America (+6.0 points, +3.1 to +8.9) and +14 / −6 in Québec (+2.2 points, −0.2 to +4.6, an interval that touches zero, so French's regional lead is only suggestive). Their misses led to five small additions: Spanish acronyms read by letter name ("erre be de" is *RBD*, "de ve de" *DVD*, with the Latin American "ve"), "veintiún" and Québec "troé" read as numbers, "volume" dropped before a number as "part" is, a Spanish key for an h or w that stands for the jota or gu ("hosé" finds *José*, "weros" *Güeros*), and a French key for a w after a velar, the Québec "quoi" ("kwè"). Because they were drawn from the held-out misses themselves, their gains there (+16 / −0 in Spanish, +4 / −0 in French) are in-sample and not confirmatory; they were kept because they lose no case in any corpus and add no wrong play and no play of an absent title. Québec's affrication of t and d before i and u was tried and dropped: it gained one case and lost another.
+The regional held-out sets are scored with the Spanish and French rules, which beat Double Metaphone on them as well: +28 / −5 in Latin America (+6.0 points, +3.1 to +8.9) and +14 / −6 in Québec (+2.2 points, −0.2 to +4.6, an interval that touches zero, so French's regional lead is only suggestive). Their misses led to five small additions: Spanish acronyms read by letter name ("erre be de" is *RBD*, "de ve de" *DVD*, with the Latin American "ve"), "veintiún" and Québec "troé" read as numbers, "volume" dropped before a number as "part" is, a Spanish key for an h or w that stands for the jota or gu ("hosé" finds *José*, "weros" *Güeros*), and a French key for a w after a velar, the Québec "quoi" ("kwè"). Because they were drawn from the held-out misses themselves, their gains there (+16 / −0 in Spanish, +4 / −0 in French) are in-sample and not confirmatory, and they also took Spain's own file from 418 to 420 right; they were kept because they lose no case in any corpus and add no wrong play and no play of an absent title. Québec's affrication of t and d before i and u was tried and dropped: it gained one case and lost another.
 
 French keys merge spellings that are different titles as well as mishearings (*mot* and *mots*, *son* and *sont*), so in French a top candidate that only sounds like the request must lead the runner-up clearly before Encore plays it; otherwise Alexa asks.
 
