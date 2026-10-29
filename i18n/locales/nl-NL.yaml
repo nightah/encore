@@ -1,0 +1,5 @@
+# nl-NL inherits lang/nl. "encore" is a known loanword in Dutch (said for a concert's toegift), contains none of the launch words Amazon lists for Dutch ("start", "speel", "open", "vraag") and clashes with no Dutch Alexa command, so the invocation stays "encore".
+
+invocation: encore
+language: nl
+skill_name: Encore
