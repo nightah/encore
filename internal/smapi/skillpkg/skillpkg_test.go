@@ -136,6 +136,29 @@ func TestBuildOverrides(t *testing.T) {
 	assert.Contains(t, pub.Locales["en-US"].ExamplePhrases, "Alexa, open my kodi")
 }
 
+func TestBuildRegionalLocales(t *testing.T) {
+	opts := options()
+	opts.Locales = []string{"fr-CA", "es-US", "es-MX"}
+
+	pkg, err := skillpkg.Build(sources(t), opts)
+	require.NoError(t, err)
+
+	assert.Equal(t, []string{"es-MX", "es-US", "fr-CA"}, pkg.Locales())
+	assert.Equal(t, "encore", pkg.Invocation("es-MX"))
+	assert.Equal(t, "encore", pkg.Invocation("es-US"))
+	assert.Equal(t, "kodi", pkg.Invocation("fr-CA"), "encore means again in Canadian French too")
+	assert.Equal(t, []string{"CA", "MX", "US"}, pkg.Manifest.Manifest.PublishingInformation.DistributionCountries)
+
+	opts.Invocation = skillmodel.InvocationKodi
+
+	pkg, err = skillpkg.Build(sources(t), opts)
+	require.NoError(t, err)
+
+	for _, locale := range pkg.Locales() {
+		assert.Equal(t, "kodi", pkg.Invocation(locale), locale)
+	}
+}
+
 func TestDeterministic(t *testing.T) {
 	src := sources(t)
 
