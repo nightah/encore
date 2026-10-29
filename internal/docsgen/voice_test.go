@@ -96,6 +96,35 @@ func TestVoiceDataGroupsIntentsUnderTheirSections(t *testing.T) {
 	assert.Equal(t, []skillmodel.SlotValue{{Value: "Dune"}}, src.Model.Types[0].Values, "the model's values aren't changed")
 }
 
+func TestVoiceDataShowsLocaleSynonyms(t *testing.T) {
+	src := &skillmodel.Sources{
+		Model: skillmodel.Model{
+			Intents: []skillmodel.Intent{{Name: "ViewRoom", Slots: []skillmodel.Slot{{Name: "Room", Type: "ROOM"}}}},
+			Types:   []skillmodel.SlotType{{Name: "ROOM", Values: []skillmodel.SlotValue{{Value: "lounge"}}}},
+		},
+		Languages: map[string]skillmodel.Language{"en": {
+			Utterances: map[string][]string{"ViewRoom": {"show the {Room}"}},
+			Types:      map[string][]skillmodel.SlotValue{"ROOM": {{ID: "bed", Value: "bedroom"}, {ID: "den", Value: "den"}}},
+		}},
+		Locales: map[string]skillmodel.Locale{
+			"en-AU": {Language: "en", Types: map[string]map[string][]string{"ROOM": {"den": {"rumpus room"}, "lounge": {"lounge room"}}}},
+			"en-US": {Language: "en"},
+		},
+	}
+
+	types, ok := voiceData(src, "en", nil)["Types"].([]VoiceType)
+	require.True(t, ok)
+	require.Len(t, types, 1)
+	assert.Equal(t, []LocaleValues{{Locale: "en-AU", Values: []skillmodel.SlotValue{
+		{Value: "lounge", Synonyms: []string{"lounge room"}},
+		{ID: "den", Value: "den", Synonyms: []string{"rumpus room"}},
+	}}}, types[0].Extra, "each value the locale adds to, in the type's order, with only its synonyms")
+
+	pages, err := VoiceCommands(loadSources(t), i18n.FS)
+	require.NoError(t, err)
+	assert.Contains(t, string(pages["fr"]), "Also in `fr-CA`:\n\n- clip (vidéoclips)\n- chanson (toune, tounes)\n")
+}
+
 func TestVoiceDataShowsFallbacksWhereEveryLocaleLacksTheBuiltin(t *testing.T) {
 	src := &skillmodel.Sources{
 		Model: skillmodel.Model{
