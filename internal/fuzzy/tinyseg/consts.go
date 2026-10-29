@@ -1,5 +1,8 @@
 package tinyseg
 
+// bias is the original's BIAS, the score of a boundary before any weight is added.
+const bias = -332
+
 // pad is how many tags stand before and after the text.
 const pad = 3
 
