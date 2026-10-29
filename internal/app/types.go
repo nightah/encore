@@ -279,11 +279,18 @@ type loggedTiming struct {
 
 type loggedMatch struct {
 	Target     string            `json:"target,omitempty"`
+	Via        *loggedVia        `json:"via,omitempty"`
 	Normalized string            `json:"normalized,omitempty"`
 	Decision   string            `json:"decision,omitempty"`
 	Margin     float64           `json:"margin,omitempty"`
 	Candidates []loggedCandidate `json:"candidates,omitempty"`
 	Error      string            `json:"error,omitempty"`
+}
+
+type loggedVia struct {
+	Spoken string `json:"spoken"`
+	Kind   string `json:"kind"`
+	Room   string `json:"room"`
 }
 
 type loggedCandidate struct {

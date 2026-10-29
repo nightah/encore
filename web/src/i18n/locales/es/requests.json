@@ -24,7 +24,7 @@
       "wouldSay": "Alexa diría: «{{speech}}»"
     },
     "silent": "Nada (en silencio).",
-    "slotRaw": "Slot (sin procesar)",
+    "slots": "Slots",
     "target": {
       "label": "Kodi de destino",
       "none": "Ninguno",
@@ -34,6 +34,10 @@
       "fallback": "Encore {{encore}} · Kodi {{kodi}} · total {{total}}",
       "label": "Tiempos",
       "split": "verificación {{verify}} · búsqueda {{match}} · Kodi {{kodi}} · total {{total}}"
+    },
+    "via": {
+      "alias": "<spoken>{{spoken}}</spoken> otro nombre de <room>{{room}}</room>",
+      "device": "<spoken>{{spoken}}</spoken> dispositivo en <room>{{room}}</room>"
     }
   },
   "empty": {

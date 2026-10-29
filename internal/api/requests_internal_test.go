@@ -155,6 +155,11 @@ func TestToDetail(t *testing.T) {
 	onlyTarget := toDetail(store.RequestLogEntry{Match: json.RawMessage(`{"target":"Lounge"}`)}, nil)
 	require.NotNil(t, onlyTarget.Match.V, "a target alone says where the request went")
 	assert.Equal(t, "Lounge", onlyTarget.Match.V.Target)
+	assert.Nil(t, onlyTarget.Via.V, "a target the Echo chose itself names no room")
+
+	device := toDetail(store.RequestLogEntry{Match: json.RawMessage(`{"target":"Lounge","via":{"spoken":"TV","kind":"device","room":"Lounge"}}`)}, nil)
+	require.NotNil(t, device.Via.V)
+	assert.Equal(t, Via{Spoken: "TV", Kind: "device", Room: "Lounge"}, *device.Via.V)
 }
 
 func TestMatchResult(t *testing.T) {

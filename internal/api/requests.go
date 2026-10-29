@@ -210,8 +210,13 @@ func toDetail(e store.RequestLogEntry, devs map[string]store.EchoDevice) Request
 		_ = json.Unmarshal(e.Slots, &d.Slots)
 	}
 
-	if m, ok := decodeMatch(e.Match); ok && (m.Decision != "" || m.Error != "" || m.Target != "") {
+	m, ok := decodeMatch(e.Match)
+	if ok && (m.Decision != "" || m.Error != "" || m.Target != "") {
 		d.Match = Some(toMatch(m))
+	}
+
+	if m.Via != nil {
+		d.Via = Some(*m.Via)
 	}
 
 	if len(e.KodiCalls) > 0 {

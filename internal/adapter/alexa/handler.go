@@ -167,7 +167,7 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, entry *LogEn
 		return h.respond(locale, o, false), &o
 	}
 
-	entry.Target = target.Name
+	entry.Target, entry.Via = target.Name, target.Via
 
 	var timed *timedMatcher
 

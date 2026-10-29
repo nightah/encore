@@ -40,6 +40,13 @@ type scanner interface {
 	Scan(dest ...any) error
 }
 
+// trailing scans one column after those its caller asks for.
+type trailing struct {
+	scanner
+
+	last any
+}
+
 type querier interface {
 	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
 }

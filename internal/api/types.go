@@ -536,10 +536,18 @@ type RequestDetail struct {
 	RequestSummary
 
 	Slots     map[string]string `json:"slots"`
+	Via       Nullable[Via]     `json:"via" doc:"The room or device the request named; null when it named none, or for requests logged before Encore recorded it. A room without its own Kodi instance plays on the Echo's, so the target can differ from this room"`
 	Match     Nullable[Match]   `json:"match"`
 	KodiCalls []KodiCall        `json:"kodi_calls"`
 	Timing    Nullable[Timing]  `json:"timing" doc:"How long each phase took; null for requests logged before Encore recorded it"`
 	Speech    string            `json:"speech"`
+}
+
+// Via is a room name said in a request ("on the TV"): the name that matched, whether it names the room or a device in it, and the room. Spoken equals Room when the room's own name was said.
+type Via struct {
+	Spoken string `json:"spoken"`
+	Kind   string `json:"kind" enum:"room,device"`
+	Room   string `json:"room"`
 }
 
 // Timing splits a request's handling time: the signature check, title matching and calls to Kodi.
@@ -608,6 +616,7 @@ type WouldCall struct {
 // loggedMatch is the request log's match column; the breakdown keeps match.Breakdown's Go field names.
 type loggedMatch struct {
 	Target     string  `json:"target"`
+	Via        *Via    `json:"via"`
 	Normalized string  `json:"normalized"`
 	Decision   string  `json:"decision"`
 	Margin     float64 `json:"margin"`

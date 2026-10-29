@@ -195,23 +195,26 @@ func TestRoomsAndAliases(t *testing.T) {
 	bed.Name = "the lounge"
 	require.ErrorIs(t, repo.Update(ctx, bed), ErrConflict, "a name cannot shadow another room's alias")
 
-	got, err := repo.Resolve(ctx, "the lounge")
+	got, kind, err := repo.Resolve(ctx, "the lounge")
 	require.NoError(t, err)
 	assert.Equal(t, lounge.ID, got.ID)
+	assert.Equal(t, SpokenRoom, kind)
 
-	got, err = repo.Resolve(ctx, "kids room")
+	got, kind, err = repo.Resolve(ctx, "kids room")
 	require.NoError(t, err)
 	assert.Equal(t, "Kid's Room", got.Name)
+	assert.Equal(t, SpokenRoom, kind, "a room's own name is a room name")
 
-	_, err = repo.Resolve(ctx, "garage")
+	_, _, err = repo.Resolve(ctx, "garage")
 	require.ErrorIs(t, err, ErrNotFound)
 
 	tv, err := repo.AddAlias(ctx, lounge.ID, "TV", SpokenDevice)
 	require.NoError(t, err)
 
-	got, err = repo.Resolve(ctx, "tv")
+	got, kind, err = repo.Resolve(ctx, "tv")
 	require.NoError(t, err)
 	assert.Equal(t, lounge.ID, got.ID, "a device resolves to its room")
+	assert.Equal(t, SpokenDevice, kind)
 
 	_, err = repo.AddAlias(ctx, lounge.ID, "hall", "speaker")
 	require.ErrorIs(t, err, ErrInvalid)
@@ -231,7 +234,7 @@ func TestRoomsAndAliases(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, repo.Delete(ctx, lounge.ID))
 
-	_, err = repo.Resolve(ctx, "front room")
+	_, _, err = repo.Resolve(ctx, "front room")
 	require.ErrorIs(t, err, ErrNotFound, "aliases are deleted with their room")
 
 	rooms, err := repo.List(ctx)
@@ -710,11 +713,11 @@ func TestRoomsGetAndUpdate(t *testing.T) {
 	require.NoError(t, repo.Update(ctx, room))
 	assert.Equal(t, clk.Now(), room.UpdatedAt)
 
-	got, err = repo.Resolve(ctx, "family room")
+	got, _, err = repo.Resolve(ctx, "family room")
 	require.NoError(t, err)
 	assert.Equal(t, room.ID, got.ID)
 
-	_, err = repo.Resolve(ctx, "lounge")
+	_, _, err = repo.Resolve(ctx, "lounge")
 	require.ErrorIs(t, err, ErrNotFound, "the old name is released")
 
 	room.Name = "?!"

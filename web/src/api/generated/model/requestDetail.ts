@@ -10,6 +10,7 @@ import type { Match } from "./match.ts";
 import type { RequestDetailOutcome } from "./requestDetailOutcome.ts";
 import type { RequestDetailSlots } from "./requestDetailSlots.ts";
 import type { Timing } from "./timing.ts";
+import type { Via } from "./via.ts";
 
 export interface RequestDetail {
   /**
@@ -36,4 +37,6 @@ export interface RequestDetail {
   time: string;
   /** How long each phase took; null for requests logged before Encore recorded it */
   timing: Timing | null;
+  /** The room or device the request named; null when it named none, or for requests logged before Encore recorded it. A room without its own Kodi instance plays on the Echo's, so the target can differ from this room */
+  via: Via | null;
 }

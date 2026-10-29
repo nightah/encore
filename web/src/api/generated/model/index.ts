@@ -164,6 +164,8 @@ export * from "./updateRoomRequest.ts";
 export * from "./updateSkillContentRequest.ts";
 export * from "./updateSkillContentRequestContentItem.ts";
 export * from "./user.ts";
+export * from "./via.ts";
+export * from "./viaKind.ts";
 export * from "./webDAVPatch.ts";
 export * from "./webDAVSettings.ts";
 export * from "./wouldCall.ts";

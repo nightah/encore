@@ -368,6 +368,7 @@ function scheduleHello() {
       target: db.instances[0]?.name ?? "",
       time: new Date().toISOString(),
       timing: { kodi_ms: 14, match_ms: 1, verify_ms: 3 },
+      via: null,
     };
     db.requests.unshift(request);
     emit("device", device);

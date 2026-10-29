@@ -59,11 +59,12 @@ export function sampleRequests(now: number): RequestDetail[] {
         target: "Lounge",
       },
       outcome: "played",
-      slots: { Show: "severance" },
+      slots: { Room: "big tv", Show: "severance" },
       speech: "Playing Severance, season 2, episode 4, Woe's Hollow, in the lounge.",
       target: "Lounge",
       time: ago(5 * MIN, now),
       timing: { kodi_ms: 122, match_ms: 2, verify_ms: 3 },
+      via: { kind: "device", room: "Lounge", spoken: "big tv" },
     },
     {
       device_id: 1,
@@ -98,6 +99,7 @@ export function sampleRequests(now: number): RequestDetail[] {
       target: "Lounge",
       time: ago(34 * MIN, now),
       timing: { kodi_ms: 0, match_ms: 4, verify_ms: 3 },
+      via: null,
     },
     {
       device_id: 3,
@@ -128,6 +130,7 @@ export function sampleRequests(now: number): RequestDetail[] {
       target: "Kids' room",
       time: ago(48 * MIN, now),
       timing: { kodi_ms: 126, match_ms: 3, verify_ms: 3 },
+      via: null,
     },
     {
       device_id: 5,
@@ -145,6 +148,7 @@ export function sampleRequests(now: number): RequestDetail[] {
       target: "",
       time: ago(76 * MIN, now),
       timing: { kodi_ms: 0, match_ms: 1, verify_ms: 3 },
+      via: null,
     },
     {
       device_id: 2,
@@ -169,6 +173,7 @@ export function sampleRequests(now: number): RequestDetail[] {
       target: "Bedroom",
       time: ago(2 * HOUR + 41 * MIN, now),
       timing: { kodi_ms: 6396, match_ms: 1, verify_ms: 3 },
+      via: null,
     },
     {
       device_id: 1,
@@ -196,6 +201,7 @@ export function sampleRequests(now: number): RequestDetail[] {
       target: "Lounge",
       time: ago(3 * HOUR + 24 * MIN, now),
       timing: { kodi_ms: 151, match_ms: 6, verify_ms: 3 },
+      via: null,
     },
   ];
   return list.map((r) => ({ ...r, simulated: false }));
@@ -251,6 +257,7 @@ export function olderRequests(now: number, count = 70): RequestDetail[] {
       target,
       time: ago(4 * HOUR + index * 47 * MIN, now),
       timing: { kodi_ms: 12, match_ms: 1, verify_ms: 3 },
+      via: null,
     };
   });
 }

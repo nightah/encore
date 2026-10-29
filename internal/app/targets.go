@@ -45,20 +45,22 @@ func (a *App) Target(ctx context.Context, deviceID string) (actions.Target, erro
 
 // TargetForRoom returns the Kodi instance of a room named in a request ("play Dune in the bedroom"), matching room names and aliases. A room without a Kodi instance falls back to the device's own target; a name that matches no room is alexa.ErrUnknownRoom.
 func (a *App) TargetForRoom(ctx context.Context, deviceID, spoken string) (actions.Target, error) {
-	room, err := a.db.Rooms().Resolve(ctx, spoken)
-
-	// Alexa sometimes keeps the article: "the bedroom".
-	if rest, ok := cutArticle(spoken); ok && errors.Is(err, store.ErrNotFound) {
-		room, err = a.db.Rooms().Resolve(ctx, rest)
-	}
-
-	switch {
-	case errors.Is(err, store.ErrNotFound):
-		return actions.Target{}, fmt.Errorf("%w: “%s”", alexa.ErrUnknownRoom, spoken)
-	case err != nil:
+	room, via, err := a.resolveRoom(ctx, spoken)
+	if err != nil {
 		return actions.Target{}, err
 	}
 
+	t, err := a.roomTarget(ctx, deviceID, room)
+	if err != nil {
+		return actions.Target{}, err
+	}
+
+	t.Via = via
+
+	return t, nil
+}
+
+func (a *App) roomTarget(ctx context.Context, deviceID string, room store.Room) (actions.Target, error) {
 	if room.KodiInstanceID != 0 {
 		// The device is still recorded as seen, as Target does.
 		if _, err := a.db.EchoDevices().Seen(ctx, deviceID); err != nil {
@@ -71,6 +73,32 @@ func (a *App) TargetForRoom(ctx context.Context, deviceID, spoken string) (actio
 	}
 
 	return a.Target(ctx, deviceID)
+}
+
+// resolveRoom returns the room spoken names and how it was named, or alexa.ErrUnknownRoom.
+func (a *App) resolveRoom(ctx context.Context, spoken string) (store.Room, actions.Via, error) {
+	name := spoken
+	room, kind, err := a.db.Rooms().Resolve(ctx, name)
+
+	// Alexa sometimes keeps the article: "the bedroom".
+	if rest, ok := cutArticle(spoken); ok && errors.Is(err, store.ErrNotFound) {
+		name = rest
+		room, kind, err = a.db.Rooms().Resolve(ctx, name)
+	}
+
+	switch {
+	case errors.Is(err, store.ErrNotFound):
+		return store.Room{}, actions.Via{}, fmt.Errorf("%w: “%s”", alexa.ErrUnknownRoom, spoken)
+	case err != nil:
+		return store.Room{}, actions.Via{}, err
+	}
+
+	// The room's own name is reported as the room names itself, so it can be told apart from its other names.
+	if store.Normalise(name) == store.Normalise(room.Name) {
+		name = room.Name
+	}
+
+	return room, actions.Via{Spoken: name, Kind: string(kind), Room: room.Name}, nil
 }
 
 // DeviceName returns the Echo's name in Encore, "" if it has none yet, and records it as seen so a new Echo shows up in the web interface.

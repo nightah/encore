@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nightah/encore/internal/adapter/alexa"
+	"github.com/nightah/encore/internal/core/actions"
 	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/store"
 	"github.com/nightah/encore/internal/testkit"
@@ -201,6 +202,41 @@ func TestDryRunTargetsFollowLinksAndRooms(t *testing.T) {
 
 	_, err = db.EchoDevices().GetByAlexaID(ctx, testDevice)
 	require.ErrorIs(t, err, store.ErrNotFound, "a replay doesn't record the device as seen")
+}
+
+func TestTargetForRoomSaysHowTheRoomWasNamed(t *testing.T) {
+	h := newHarness(t, true)
+	ctx := t.Context()
+	db := h.app.DB()
+	inst := h.instance(t)
+
+	lounge := store.Room{Name: "Lounge", KodiInstanceID: inst.id}
+	require.NoError(t, db.Rooms().Create(ctx, &lounge))
+
+	_, err := db.Rooms().AddAlias(ctx, lounge.ID, "TV", store.SpokenDevice)
+	require.NoError(t, err)
+
+	_, err = db.Rooms().AddAlias(ctx, lounge.ID, "lounge room", store.SpokenRoom)
+	require.NoError(t, err)
+
+	cases := map[string]actions.Via{
+		"TV":          {Spoken: "TV", Kind: "device", Room: "Lounge"},
+		"the tv":      {Spoken: "tv", Kind: "device", Room: "Lounge"},
+		"lounge room": {Spoken: "lounge room", Kind: "room", Room: "Lounge"},
+		"the lounge":  {Spoken: "Lounge", Kind: "room", Room: "Lounge"},
+	}
+
+	for _, targets := range []alexa.Targets{h.app, DryRunTargets{App: h.app, Run: &DryRun{}}} {
+		for spoken, want := range cases {
+			target, err := targets.TargetForRoom(ctx, testDevice, spoken)
+			require.NoError(t, err, spoken)
+			assert.Equal(t, want, target.Via, "%T %s", targets, spoken)
+		}
+	}
+
+	target, err := h.app.Target(ctx, testDevice)
+	require.NoError(t, err)
+	assert.Zero(t, target.Via, "an Echo's own target names no room")
 }
 
 func TestDryRunTargetsSkipAMissingRuntime(t *testing.T) {
