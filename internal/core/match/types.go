@@ -380,6 +380,8 @@ type numTable struct {
 	units, tens         []string
 	hundreds, thousands []string
 	millions            []string
+	// scales are words for other multipliers above a thousand that, like a million, start a group the thousands follow ("lakh" 100,000, "crore" 10,000,000).
+	scales map[string]int
 	// hundredsOf are words for a whole number of hundreds ("duecento" 200).
 	hundredsOf           map[string]int
 	cont                 map[string]int
@@ -395,3 +397,19 @@ type asciiMasks [utf8.RuneSelf]uint64
 
 // phoneticFunc returns the phonetic keys of one normalised token. Digit tokens are their own key.
 type phoneticFunc func(tok string) []string
+
+// hindiRomanizer writes Devanagari in Latin letters the way Hindi film and music titles are commonly romanised: the inherent vowel deleted where Hindi speech drops it, nukta letters as their Perso-Arabic sounds (ज़ z, फ़ f, क़ q), a nasal sign as n, or m before a labial, and ड़ as d. long also doubles आ and ई (aa, ee) and writes ऊ oo at the end of a word, the other common spelling.
+type hindiRomanizer struct {
+	long bool
+}
+
+// hindiUnit is one written syllable: a consonant (cons, empty for a vowel letter) and the vowel it carries. A consonant with the inherent vowel has inherent set and vowel "a"; one with a virama has vowel "".
+type hindiUnit struct {
+	cons, vowel string
+	inherent    bool
+	// nasal is the anusvara or chandrabindu after the vowel, if any.
+	nasal rune
+	// visarga is set when the syllable ends in ः.
+	visarga bool
+	deleted bool
+}

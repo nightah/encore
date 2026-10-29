@@ -98,3 +98,12 @@ const (
 	stThousand
 	stMillion
 )
+
+// Devanagari signs.
+const (
+	chandrabindu = 'ँ'
+	anusvara     = 'ं'
+	visarga      = 'ः'
+	nukta        = '़'
+	virama       = '्'
+)

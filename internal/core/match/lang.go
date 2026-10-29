@@ -87,6 +87,10 @@ func (t numTable) build() map[string]numWord {
 		m[w] = numWord{val: 1_000_000, kind: numMillion}
 	}
 
+	for w, v := range t.scales {
+		m[w] = numWord{val: v, kind: numMillion}
+	}
+
 	for w, v := range t.compounds {
 		m[w] = numWord{val: v, kind: numCompound}
 	}
