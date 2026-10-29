@@ -45,6 +45,9 @@ func (l *language) normalizeSpelled(s string, aggressive bool) (toks []string, s
 func (l *language) tokenize(s string) []string {
 	// NFKD would make "8½" "81⁄2", so ½ is read as words first.
 	s = strings.ReplaceAll(s, "½", " "+l.half+" ")
+	if l.respell != nil {
+		s = l.respell.Replace(s)
+	}
 
 	b := make([]byte, 0, len(s))
 
