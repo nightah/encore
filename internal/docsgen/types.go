@@ -188,6 +188,12 @@ type openAPISchema struct {
 	Maximum              *float64                  `json:"maximum"`
 }
 
+type apiRenderer struct {
+	doc openAPIDoc
+	// shown names the schemas that have a resource block of their own, so shapes refer to them by name.
+	shown map[string]bool
+}
+
 type apiOp struct {
 	Method string
 	Path   string

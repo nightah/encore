@@ -82,12 +82,6 @@ func APIEndpoints(document []byte) ([]byte, error) {
 	}{apiPrefix, sections})
 }
 
-type apiRenderer struct {
-	doc openAPIDoc
-	// shown names the schemas that have a resource block of their own, so shapes refer to them by name.
-	shown map[string]bool
-}
-
 func (r apiRenderer) operation(o apiOp) APIOperation {
 	out := APIOperation{
 		Method: o.Method,
