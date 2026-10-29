@@ -85,7 +85,7 @@ func voiceData(src *skillmodel.Sources, lang string, titles map[string]string) m
 			sections = append(sections, VoiceSection{Title: t})
 		}
 
-		vi := VoiceIntent{Name: in.Name, Slots: in.Slots, Patterns: l.Utterances[in.Name]}
+		vi := VoiceIntent{Name: in.Name, Slots: slotsIn(in.Slots, locales), Patterns: l.Utterances[in.Name]}
 
 		for _, loc := range locales {
 			if p := src.Locales[loc.Locale].Utterances[in.Name]; len(p) > 0 {
@@ -101,7 +101,7 @@ func voiceData(src *skillmodel.Sources, lang string, titles map[string]string) m
 			continue
 		}
 
-		for _, s := range in.Slots {
+		for _, s := range vi.Slots {
 			used[s.Type] = true
 		}
 
@@ -124,6 +124,19 @@ func voiceData(src *skillmodel.Sources, lang string, titles map[string]string) m
 	return map[string]any{
 		"Lang": lang, "Name": name, "Locales": locales, "Sections": sections, "Builtins": builtins, "Types": types,
 	}
+}
+
+// slotsIn gives each slot the type the language's locales use: its fallback when every one of them lacks its built-in type (Dutch has no AMAZON.SearchQuery), its type otherwise.
+func slotsIn(slots []skillmodel.Slot, locales []VoiceLocale) []skillmodel.Slot {
+	out := slices.Clone(slots)
+
+	for i, s := range out {
+		if len(locales) > 0 && !slices.ContainsFunc(locales, func(l VoiceLocale) bool { return s.TypeIn(l.Locale) == s.Type }) {
+			out[i].Type = s.Fallback
+		}
+	}
+
+	return out
 }
 
 // sectionTitles reads the comments that head groups of intents in model.yaml, keyed by the first intent of each group.

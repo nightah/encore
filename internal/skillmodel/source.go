@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/fs"
 	"path"
+	"slices"
 	"sort"
 	"strings"
 
@@ -41,6 +42,46 @@ func (m Model) Type(name string) (SlotType, bool) {
 // IsBuiltin reports whether name is an Amazon built-in intent or slot type.
 func IsBuiltin(name string) bool {
 	return strings.HasPrefix(name, "AMAZON.")
+}
+
+// missingBuiltins lists, per locale, the built-in slot types Amazon doesn't offer there. Every other built-in type the model uses exists in every Alexa locale.
+var missingBuiltins = map[string][]string{
+	"nl-NL": {"AMAZON.SearchQuery"},
+}
+
+// LacksBuiltin reports whether locale is one where Amazon doesn't offer the built-in slot type typ.
+func LacksBuiltin(locale, typ string) bool {
+	return slices.Contains(missingBuiltins[locale], typ)
+}
+
+// TypeIn returns the slot's type in locale: its Fallback where the locale lacks its built-in type, otherwise its Type.
+func (s Slot) TypeIn(locale string) string {
+	if s.Fallback != "" && LacksBuiltin(locale, s.Type) {
+		return s.Fallback
+	}
+
+	return s.Type
+}
+
+// fallbackOnly returns the custom types that slots take only as their Fallback, which a locale needs only when one of its slots falls back to them.
+func (m Model) fallbackOnly() map[string]bool {
+	out := map[string]bool{}
+
+	for _, in := range m.Intents {
+		for _, s := range in.Slots {
+			if s.Fallback != "" {
+				out[s.Fallback] = true
+			}
+		}
+	}
+
+	for _, in := range m.Intents {
+		for _, s := range in.Slots {
+			delete(out, s.Type)
+		}
+	}
+
+	return out
 }
 
 // Intent returns the named intent.

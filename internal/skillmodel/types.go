@@ -27,6 +27,8 @@ type Intent struct {
 type Slot struct {
 	Name string `yaml:"name"`
 	Type string `yaml:"type"`
+	// Fallback is the custom type the slot takes in a locale that lacks Type, a built-in type (see LacksBuiltin). The slot keeps its name, so its handler reads it the same way.
+	Fallback string `yaml:"fallback"`
 }
 
 // SlotType is a custom slot type. Values may be static here, per language in types.yaml, or supplied at build time, e.g. room names.
@@ -35,6 +37,9 @@ type SlotType struct {
 	Values []SlotValue `yaml:"values"`
 	// Dynamic types get their values at build time, e.g. the rooms set up in Encore. A language's values for them are examples, used only when the build supplies none, so the model still builds before anything is configured.
 	Dynamic bool `yaml:"dynamic"`
+	// From names slot types whose build-time values a dynamic type takes when none are supplied for it: merged, one per value whatever its case, and sorted. Limit caps how many, picked evenly across the sorted values so no stretch of the alphabet is left out; zero means all.
+	From  []string `yaml:"from"`
+	Limit int      `yaml:"limit"`
 }
 
 // SlotValue is one value of a slot type, with an optional stable ID that entity resolution hands back to the skill.

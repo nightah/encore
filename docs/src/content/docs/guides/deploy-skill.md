@@ -103,6 +103,10 @@ alexa:
 
 `ENCORE_ALEXA_LOCALES=en-AU,en-GB` does the same. When set in config, the locale choice is read-only in the web interface. Empty means every locale Encore ships. The [voice commands](/encore/voice-commands/) pages list the phrases for each language.
 
+:::note[Dutch has no free-text slot]
+Amazon offers its free-text slot type, `AMAZON.SearchQuery`, in every locale but `nl-NL`. There Encore gives the commands that take any words a custom slot type of its own with the same slot name, so they're handled exactly as elsewhere: "play …" and global search use your library titles (an even spread across the alphabet, at most 3,000), and typing text, favourites and add-ons use example words. Alexa still passes on words outside a custom type's values; the values only steer what it hears towards them, so titles in your library are recognised best.
+:::
+
 ## Redeploying
 
 - **Deploy again after changing locales, the invocation or skill name, or the endpoint.** The overview shows "Skill update pending" when what Encore would deploy differs from what was last deployed.
