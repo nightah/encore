@@ -13,9 +13,6 @@ var arabicFolds = map[rune]string{
 	'پ': "ب", 'ڤ': "ف", 'ڥ': "ف", 'گ': "ق", 'ڨ': "ق",
 }
 
-// arabicSun are the sun letters, which the definite article assimilates to: "الناظر" is said "an-nāẓir".
-const arabicSun = "تثدذرزسشصضطظلن"
-
 // arabicTeenStems are the units that "عشر" follows in 11 to 19 ("ثلاثة عشر"), folded.
 var arabicTeenStems = map[string]int{
 	"احد": 1, "احدي": 1, "اثنا": 2, "اثني": 2, "اثنتا": 2, "اثنتي": 2, "اتنين": 2,
