@@ -43,14 +43,14 @@ func TestVoiceCommandsOnePagePerLanguage(t *testing.T) {
 
 func TestVoiceCommandsShowAnUnnamedLanguageByItsCode(t *testing.T) {
 	src := loadSources(t)
-	src.Languages["nl"] = src.Languages["en"]
+	src.Languages["sv"] = src.Languages["en"]
 
 	pages, err := VoiceCommands(src, i18n.FS)
 	require.NoError(t, err)
 
-	page := string(pages["nl"])
-	assert.Contains(t, page, "title: nl\n")
-	assert.Contains(t, page, "editUrl: "+CrowdinProject+"/nl\n")
+	page := string(pages["sv"])
+	assert.Contains(t, page, "title: sv\n")
+	assert.Contains(t, page, "editUrl: "+CrowdinProject+"/sv\n")
 }
 
 func TestVoiceDataGroupsIntentsUnderTheirSections(t *testing.T) {
