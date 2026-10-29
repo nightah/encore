@@ -196,7 +196,7 @@ NAV_DIRECTION:
   up: "naar boven\nomhoog"
 POWER_ACTION:
   hibernate: |-
-    slaapstand
+    sluimerstand
     diepe slaap
     winterslaap
   quit: |-
@@ -212,7 +212,7 @@ POWER_ACTION:
     uitschakelen
     uit
   suspend: |-
-    sluimerstand
+    slaapstand
     stand by
     standby
     pauzestand
