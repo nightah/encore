@@ -353,7 +353,9 @@ type language struct {
 	folds map[rune]string
 	// split breaks tokenize's tokens into words for a script written without spaces (Japanese), and runs before fused articles, letter runs and whole-word articles are handled. Nil leaves the tokens as they are.
 	split func(toks []string) []string
-	stop  map[string]bool
+	// romanize writes a token in Latin letters, so a title and a request in different scripts meet in one form (Devanagari "दंगल" and Latin "Dangal" both "dangal"). It runs after split and articlePrefixes, so articles, stop words, number words and parts are listed as romanize writes them. A token it can't write (kanji) is returned unchanged; one it returns empty is dropped and one with spaces becomes several tokens. Nil leaves tokens in their script.
+	romanize func(tok string) string
+	stop     map[string]bool
 	// elide splits on apostrophes ("l'amour" -> "l amour") instead of joining ("ocean's" -> "oceans").
 	elide bool
 	// vigesimal counts on in twenties past sixty, as French does ("soixante-dix" 70, "quatre-vingts" 80, "quatre-vingt-onze" 91).

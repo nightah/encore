@@ -28,7 +28,7 @@ func (l *language) normalizeSpelled(s string, aggressive bool) (toks []string, s
 		toks = l.split(toks)
 	}
 
-	toks = joinLetters(l.stripPrefixes(toks))
+	toks = joinLetters(l.romanizeAll(l.stripPrefixes(toks)))
 
 	// Articles go first so a numeral straight after one ("The II") isn't taken as following a word.
 	for len(toks) > 1 && l.articles[toks[0]] {
@@ -126,6 +126,20 @@ func asciiDigit(r rune) rune {
 	}
 
 	return '0' + (r-lo)%10
+}
+
+// romanizeAll writes each token in the language's romanize form, dropping a token that romanizes to nothing and splitting one that romanizes to several words.
+func (l *language) romanizeAll(toks []string) []string {
+	if l.romanize == nil {
+		return toks
+	}
+
+	out := make([]string, 0, len(toks))
+	for _, tok := range toks {
+		out = append(out, strings.Fields(l.romanize(tok))...)
+	}
+
+	return out
 }
 
 // stripPrefixes removes the longest of the language's articlePrefixes from each token that keeps at least articlePrefixMin runes, and always at least one, without it.
