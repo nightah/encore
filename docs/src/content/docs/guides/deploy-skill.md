@@ -60,7 +60,7 @@ On the **Deploy skill** step or the Alexa skill page:
 
 - **Locales.** Pick the locales to build. See [locales](#locales) below.
 - **What it can play.** Movies, TV shows and music, all on by default. Turning one off leaves its voice commands out of the skill (so Alexa won't route "play the album …" to Encore without music), and "play X" stops searching those titles. Music includes music videos. Keep at least one; set it as code with [`alexa.content`](/encore/reference/configuration/#alexacontent), e.g. `content: [movies, tv]`.
-- **Invocation name.** Choose **encore** or **kodi**. encore is "encore" in every locale except French, where it's "kodi" because "encore" means "again"; kodi is "kodi" everywhere ("Alexa, ask kodi to…").
+- **Invocation name.** Choose **encore** or **kodi** ("Alexa, ask kodi to…"). French and Brazilian Portuguese say "kodi" for both, and Arabic and Japanese spell each in their own script; see [locales](#locales) for every locale's name.
 - **Skill name.** Empty uses each locale's default.
 - **Endpoint.** The public `https://` URL of `/api/v1/alexa`, served with a certificate from a public authority (see [what Alexa requires](/encore/guides/reverse-proxy/#what-alexa-requires)).
 - **Privacy and compliance.** Amazon asks every skill whether it collects personal information, is directed at children under 13, is export compliant, contains advertising and allows purchases. These are your own declarations to Amazon, so read and answer each question yourself. Encore refuses to deploy until all of them are answered.
@@ -86,13 +86,20 @@ When it finishes, say "Alexa, open encore" to an Echo. The skill also appears in
 
 An Echo can use the skill only when **its language matches a deployed locale**. An Echo set to English (United Kingdom) needs `en-GB`; one set to German needs `de-DE`. Check each device's language in the Alexa app (**Devices** → the Echo → **Language**). Encore ships these locales:
 
-| Language | Locales | Invocation name with encore chosen |
-| --- | --- | --- |
-| English | `en-AU`, `en-CA`, `en-GB`, `en-IN`, `en-US` | encore |
-| German | `de-DE` | encore |
-| French | `fr-FR` | kodi |
-| Spanish | `es-ES` | encore |
-| Italian | `it-IT` | encore |
+| Language | Locales | Invocation name with encore chosen | With kodi chosen |
+| --- | --- | --- | --- |
+| English | `en-AU`, `en-CA`, `en-GB`, `en-IN`, `en-US` | encore | kodi |
+| German | `de-DE` | encore | kodi |
+| French | `fr-CA`, `fr-FR` | kodi | kodi |
+| Spanish | `es-ES`, `es-MX`, `es-US` | encore | kodi |
+| Italian | `it-IT` | encore | kodi |
+| Dutch | `nl-NL` | encore | kodi |
+| Portuguese | `pt-BR` | kodi | kodi |
+| Arabic | `ar-SA` | انكور | كودي |
+| Hindi | `hi-IN` | encore | kodi |
+| Japanese | `ja-JP` | アンコール | コディ |
+
+French and Brazilian Portuguese say kodi whichever you choose: "encore" means "again" in French, and Portuguese reads it as "en-có-ri", which the recogniser hears as "âncora". Arabic and Japanese invocation names must be written in their own script, so each choice is spelt the way people there say it; the deploy step shows what each enabled locale will say.
 
 Deploy only what you need: every locale is a separate interaction model for Amazon to build, so fewer locales deploy faster. Set them on the Alexa skill page or as code with [`alexa.locales`](/encore/reference/configuration/#alexalocales):
 

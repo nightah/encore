@@ -207,7 +207,7 @@ type KodiInstance struct {
 	Broadcast string `koanf:"broadcast"`
 	// Default makes this instance answer Echo devices that aren't linked to one.
 	Default bool `koanf:"default"`
-	// Language selects title-matching rules for this library: en, de, es, fr or it. Defaults to en.
+	// Language selects title-matching rules for this library: ar, de, en, es, fr, hi, it, ja, nl or pt. Defaults to en.
 	Language string `koanf:"language"`
 	// LibraryGroup names the shared library database this instance reads (MySQL/MariaDB). Instances with the same name share one library catalog and title index. "none" (LibraryGroupNone) forces the instance to keep its own; empty lets Encore detect sharing.
 	LibraryGroup string `koanf:"library_group"`

@@ -979,7 +979,7 @@ type SkillInfo struct {
 	Amazon           AmazonConnection `json:"amazon"`
 	SkillID          string           `json:"skill_id"`
 	State            string           `json:"state" enum:"live,not_deployed,deploying,failed"`
-	Invocation       string           `json:"invocation" enum:"encore,kodi" doc:"encore uses each locale's own name for it (\"kodi\" in French); kodi is each locale's spelling of \"kodi\" (see locale_invocations)"`
+	Invocation       string           `json:"invocation" enum:"encore,kodi" doc:"encore uses each locale's own name for it (\"kodi\" in French and Brazilian Portuguese, \"انكور\" in Arabic, \"アンコール\" in Japanese); kodi is \"kodi\", or \"كودي\" and \"コディ\" where the name must be in the language's script. locale_invocations lists both choices for every locale"`
 	InvocationName   string           `json:"invocation_name" doc:"What people say, \"Alexa, ask <invocation_name> to…\", in the first enabled locale"`
 	SkillName        string           `json:"skill_name" doc:"Empty uses each locale's default"`
 	LocalesAvailable []string         `json:"locales_available"`
