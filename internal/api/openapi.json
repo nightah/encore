@@ -2247,10 +2247,22 @@
                 "type": "null"
               }
             ]
+          },
+          "via": {
+            "description": "The room name in the request that picked its Kodi instance; null when none did, or for requests logged before Encore recorded it",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Via"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
           "slots",
+          "via",
           "match",
           "kodi_calls",
           "timing",
@@ -3183,6 +3195,30 @@
         },
         "required": [
           "name"
+        ],
+        "type": "object"
+      },
+      "Via": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "room",
+              "device"
+            ],
+            "type": "string"
+          },
+          "room": {
+            "type": "string"
+          },
+          "spoken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "spoken",
+          "kind",
+          "room"
         ],
         "type": "object"
       },

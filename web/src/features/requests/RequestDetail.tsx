@@ -1,11 +1,18 @@
 import { useState } from "react";
 
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 
 import { errorMessage } from "@api/client";
-import type { RequestDetail as Detail, Match as MatchDetail, Replay } from "@api/generated/model";
+import {
+  type RequestDetail as Detail,
+  type Match as MatchDetail,
+  type Replay,
+  RoomAliasKind,
+  type Via,
+} from "@api/generated/model";
 import { useReplayRequest, useRequest } from "@api/requests";
 import { Heard, requestSource } from "@components/Heard";
+import { KindPill } from "@components/KindPill";
 import { Button } from "@components/ui/Button";
 import { Label } from "@components/ui/Card";
 import { Meter, SegmentBar } from "@components/ui/Meter";
@@ -14,10 +21,35 @@ import { explain, titleWithYear } from "@features/library/labels";
 import i18n from "@i18n/index";
 import { formatClock, formatDuration, formatScore } from "@lib/format";
 
-/** `Title = "the new dune"` for each slot that has a value: what Alexa heard, as the log keeps it. */
-function describeSlots(slots: Detail["slots"]): string {
+/** `Title = "the new dune"` for each slot that has a value: what Alexa heard. The Room slot also holds devices ("on the TV"), so it reads Device when it named one. */
+function describeSlots(slots: Detail["slots"], via: Via | null): string {
   const entries = Object.entries(slots).filter(([, value]) => value);
-  return entries.length ? entries.map(([name, value]) => `${name} = "${value}"`).join(", ") : "-";
+  const device = via?.kind === RoomAliasKind.device;
+  return entries.length
+    ? entries.map(([name, value]) => `${device && name === "Room" ? "Device" : name} = "${value}"`).join(", ")
+    : "-";
+}
+
+/** The room name that picked the target: a device in a room, another name for a room, or the room itself. */
+function ViaLine({ via }: { via: Via }) {
+  const room = <KindPill kind={RoomAliasKind.room} className="pr-2.5" />;
+  if (via.kind === RoomAliasKind.room && via.spoken === via.room) {
+    return (
+      <KindPill kind={RoomAliasKind.room} className="pr-2.5">
+        {via.room}
+      </KindPill>
+    );
+  }
+  return (
+    <span className="flex flex-wrap items-center gap-1.5 text-[13px] text-muted">
+      <Trans
+        ns="requests"
+        i18nKey={via.kind === RoomAliasKind.device ? "detail.via.device" : "detail.via.alias"}
+        values={{ room: via.room, spoken: via.spoken }}
+        components={{ room, spoken: <KindPill kind={via.kind} className="pr-2.5" /> }}
+      />
+    </span>
+  );
 }
 
 /** verify / match / Kodi split; falls back to Kodi call time vs the rest for requests logged without timing. */
@@ -144,7 +176,7 @@ export function RequestDetailPane({ id }: { id: number }) {
   }
   if (error) return <ErrorState error={error} onRetry={() => refetch()} />;
 
-  const slots = describeSlots(detail.slots);
+  const slots = describeSlots(detail.slots, detail.via);
   const timing = timingParts(detail);
 
   async function copy() {
@@ -189,14 +221,15 @@ export function RequestDetailPane({ id }: { id: number }) {
           <span className="wrap-anywhere font-mono text-[13px]">{detail.intent}</span>
         </div>
         <div className="flex flex-col">
-          <Label>{t("detail.slotRaw")}</Label>
+          <Label>{t("detail.slots")}</Label>
           <span className="wrap-anywhere font-mono text-[13px]">{slots}</span>
         </div>
-        <div className="flex flex-col">
+        <div className="flex flex-col items-start gap-1">
           <Label>{t("detail.target.label")}</Label>
           <span>
             {detail.target || (detail.outcome === "unlinked" ? t("detail.target.unlinked") : t("detail.target.none"))}
           </span>
+          {detail.via ? <ViaLine via={detail.via} /> : null}
         </div>
       </div>
 

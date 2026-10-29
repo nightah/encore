@@ -42,6 +42,8 @@ func scanRoomAlias(s scanner) (RoomAlias, error) {
 	return a, nil
 }
 
+func (t trailing) Scan(dest ...any) error { return t.scanner.Scan(append(dest, t.last)...) }
+
 // Create inserts room and sets its ID and timestamps.
 func (r Rooms) Create(ctx context.Context, room *Room) error {
 	now := r.db.stamp()
@@ -132,16 +134,18 @@ func (r Rooms) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-// Resolve returns the room whose name or alias matches spoken under Normalise.
-func (r Rooms) Resolve(ctx context.Context, spoken string) (Room, error) {
-	room, err := scanRoom(r.db.read.QueryRowContext(ctx, `SELECT `+roomColumns+` FROM rooms WHERE normalised = ?1
-		UNION ALL SELECT r.id, r.name, r.kodi_instance_id, r.created_at, r.updated_at
-		FROM room_aliases a JOIN rooms r ON r.id = a.room_id WHERE a.normalised = ?1 LIMIT 1`, Normalise(spoken)))
+// Resolve returns the room whose name or alias matches spoken under Normalise, and the kind of name it matched; a room's own name is SpokenRoom.
+func (r Rooms) Resolve(ctx context.Context, spoken string) (Room, SpokenKind, error) {
+	var kind SpokenKind
+
+	room, err := scanRoom(trailing{r.db.read.QueryRowContext(ctx, `SELECT `+roomColumns+`, ?2 FROM rooms WHERE normalised = ?1
+		UNION ALL SELECT r.id, r.name, r.kodi_instance_id, r.created_at, r.updated_at, a.kind
+		FROM room_aliases a JOIN rooms r ON r.id = a.room_id WHERE a.normalised = ?1 LIMIT 1`, Normalise(spoken), SpokenRoom), &kind})
 	if err != nil {
-		return Room{}, fmt.Errorf("resolving room “%s”: %w", spoken, err)
+		return Room{}, "", fmt.Errorf("resolving room “%s”: %w", spoken, err)
 	}
 
-	return room, nil
+	return room, kind, nil
 }
 
 // AddAlias adds a spoken alias of the given kind to a room. It returns ErrConflict if the alias already names any room.

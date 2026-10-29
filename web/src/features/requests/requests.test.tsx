@@ -460,6 +460,47 @@ describe("Request log", () => {
     expect(screen.queryByText(/Room =/)).not.toBeInTheDocument();
   });
 
+  it("names a device said in the Room slot, and the room it picked", async () => {
+    const request = getDb().requests.find((r) => r.id === 1001);
+    if (!request) throw new Error("no sample request");
+    request.slots = { Command: "stop", Room: "TV" };
+    request.via = { kind: "device", room: "Lounge", spoken: "TV" };
+    renderApp("/request-log?id=1001");
+    await screen.findByRole("heading", { level: 2, name: "“play hot fuzzy”" });
+
+    expect(screen.getByText("Slots")).toBeInTheDocument();
+    expect(screen.getByText('Command = "stop", Device = "TV"')).toBeInTheDocument();
+    const via = screen.getByText("device in", { exact: false });
+    expect(via).toHaveTextContent("TV device in Lounge");
+  });
+
+  it("says which room another name for it picked, keeping the Room slot", async () => {
+    const request = getDb().requests.find((r) => r.id === 1001);
+    if (!request) throw new Error("no sample request");
+    request.slots = { Command: "stop", Room: "lounge room" };
+    request.via = { kind: "room", room: "Lounge", spoken: "lounge room" };
+    renderApp("/request-log?id=1001");
+    await screen.findByRole("heading", { level: 2, name: "“play hot fuzzy”" });
+
+    expect(screen.getByText('Command = "stop", Room = "lounge room"')).toBeInTheDocument();
+    expect(screen.getByText("another name for", { exact: false })).toHaveTextContent(
+      "lounge room another name for Lounge",
+    );
+  });
+
+  it("shows just the room when its own name picked it", async () => {
+    const request = getDb().requests.find((r) => r.id === 1001);
+    if (!request) throw new Error("no sample request");
+    request.slots = { Command: "stop", Room: "lounge" };
+    request.via = { kind: "room", room: "Lounge", spoken: "Lounge" };
+    renderApp("/request-log?id=1001");
+    await screen.findByRole("heading", { level: 2, name: "“play hot fuzzy”" });
+
+    expect(screen.getByText('Command = "stop", Room = "lounge"')).toBeInTheDocument();
+    expect(screen.getAllByText("Lounge"), "the target and the room").toHaveLength(2);
+    expect(screen.queryByText("another name for", { exact: false })).not.toBeInTheDocument();
+  });
+
   it("says when a match had no candidates", async () => {
     const request = getDb().requests.find((r) => r.id === 1001);
     if (!request?.match) throw new Error("no sample request");

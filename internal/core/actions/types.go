@@ -46,6 +46,14 @@ type Target struct {
 	ConfirmSound bool
 	// Disabled lists the content groups the skill was set up without; the zero value allows everything.
 	Disabled []media.Content
+	// Via is set when a room named in the request picked the target.
+	Via Via
+}
+
+// Via is the room name a request said that picked its target, e.g. "TV", a device in the lounge.
+type Via struct {
+	// Spoken is the name that matched, Kind "room" or "device", and Room the name of the room it belongs to.
+	Spoken, Kind, Room string
 }
 
 // Message is a localisable message: an ID from the response catalogue and its placeholder values. An empty ID means say nothing.

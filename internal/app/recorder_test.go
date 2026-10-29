@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nightah/encore/internal/adapter/alexa"
+	"github.com/nightah/encore/internal/core/actions"
 	"github.com/nightah/encore/internal/core/match"
 	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/store"
@@ -111,6 +112,11 @@ func TestRecorderRow(t *testing.T) {
 	t.Run("an error without a match is still logged", func(t *testing.T) {
 		row := toRow(alexa.LogEntry{Intent: "Pause", Target: "Lounge", Err: failed})
 		assert.JSONEq(t, `{"target":"Lounge","error":"kodi went away"}`, string(row.Match))
+	})
+
+	t.Run("the room name that picked the target is logged with it", func(t *testing.T) {
+		row := toRow(alexa.LogEntry{Intent: "RoomControl", Target: "Lounge", Via: actions.Via{Spoken: "TV", Kind: "device", Room: "Lounge"}})
+		assert.JSONEq(t, `{"target":"Lounge","via":{"spoken":"TV","kind":"device","room":"Lounge"}}`, string(row.Match))
 	})
 
 	t.Run("matching that took longer than the request leaves Kodi nothing", func(t *testing.T) {

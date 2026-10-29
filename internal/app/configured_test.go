@@ -34,11 +34,11 @@ func TestApplyConfiguredRoomsAndDevicesWithUnknownNames(t *testing.T) {
 
 	require.NoError(t, a.ApplyConfiguredRoomsAndDevices(ctx))
 
-	room, err := a.DB().Rooms().Resolve(ctx, "attic")
+	room, _, err := a.DB().Rooms().Resolve(ctx, "attic")
 	require.NoError(t, err)
 	assert.Zero(t, room.KodiInstanceID, "a room naming no known Kodi instance plays nowhere of its own")
 
-	_, err = a.DB().Rooms().Resolve(ctx, "kitchen")
+	_, _, err = a.DB().Rooms().Resolve(ctx, "kitchen")
 	require.NoError(t, err, "rooms that aren't declared are left alone")
 
 	dev, err := a.DB().EchoDevices().GetByAlexaID(ctx, "amzn1.ask.device.C")
@@ -64,7 +64,7 @@ func TestApplyConfiguredRoomsAndDevices(t *testing.T) {
 
 	dev, err := a.DB().EchoDevices().GetByAlexaID(t.Context(), "amzn1.ask.device.A")
 	require.NoError(t, err)
-	room, err := a.DB().Rooms().Resolve(t.Context(), "living room")
+	room, _, err := a.DB().Rooms().Resolve(t.Context(), "living room")
 	require.NoError(t, err)
 	assert.Equal(t, "Lounge", room.Name)
 
@@ -93,7 +93,7 @@ func TestApplyConfiguredRoomsAndDevices(t *testing.T) {
 	a.cfg.Rooms[0].Aliases = nil
 	require.NoError(t, a.ApplyConfiguredRoomsAndDevices(t.Context()))
 
-	_, err = a.DB().Rooms().Resolve(t.Context(), "living room")
+	_, _, err = a.DB().Rooms().Resolve(t.Context(), "living room")
 	require.Error(t, err)
 
 	aliases, err = a.DB().Rooms().Aliases(t.Context(), room.ID)
@@ -177,7 +177,7 @@ func TestApplyConfiguredRoomsAndDevicesReportsDatabaseFailures(t *testing.T) {
 			fault: testkit.Fault{Op: testkit.Insert, Table: "room_aliases", Nth: 2},
 			want:  `room "Lounge": alias "big tv": adding alias`,
 			after: func(t *testing.T, db *store.DB) {
-				room, err := db.Rooms().Resolve(t.Context(), "living room")
+				room, _, err := db.Rooms().Resolve(t.Context(), "living room")
 				require.NoError(t, err, "the room and the aliases before the failure are kept")
 				assert.Equal(t, "Lounge", room.Name)
 
@@ -237,7 +237,7 @@ func TestApplyConfiguredRoomsAndDevicesReportsDatabaseFailures(t *testing.T) {
 			// Applying again once the database works finishes the job.
 			require.NoError(t, a.ApplyConfiguredRoomsAndDevices(t.Context()))
 
-			room, err := a.DB().Rooms().Resolve(t.Context(), "lounge")
+			room, _, err := a.DB().Rooms().Resolve(t.Context(), "lounge")
 			require.NoError(t, err)
 			assert.NotZero(t, room.KodiInstanceID)
 

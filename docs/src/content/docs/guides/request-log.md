@@ -22,7 +22,8 @@ Filter by Echo, by outcome or by text.
 
 Opening an entry shows:
 
-- the **slots** Alexa filled (title, room, numbers, …),
+- the **slots** Alexa filled (title, room, numbers, …). Alexa fills one Room slot for both rooms and devices, so it reads **Device** when it named one, as in `Command = "stop", Device = "TV"`. The log keeps it as Room, and Replay sends it that way,
+- the **room name** that picked the Kodi instance, under it: a device and its room ("TV device in Lounge"), another name for a room, or the room itself. A room named at the end of a search ("play Bluey in the lounge") shows here too, though it never fills the Room slot. See [rooms](/encore/guides/echo-devices/#rooms),
 - the **match**: the normalised query, the decision and its margin, and the candidates with their score breakdown (see [matching](/encore/guides/matching/)),
 - the **Kodi calls** Encore made, in order, with each one's duration and result,
 - the **timing**: how long verifying Alexa's signature, matching and talking to Kodi took,

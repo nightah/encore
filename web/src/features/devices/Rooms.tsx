@@ -1,11 +1,12 @@
-import { type ReactNode, useState } from "react";
+import { useState } from "react";
 
-import { House, Pencil, Tv, X } from "lucide-react";
+import { Pencil, X } from "lucide-react";
 import { Trans, useTranslation } from "react-i18next";
 
 import { errorMessage } from "@api/client";
 import { useAddRoomAlias, useCreateRoom, useDeleteRoom, useDeleteRoomAlias, useUpdateRoom } from "@api/devices";
 import { type Instance, type Room, RoomAliasKind } from "@api/generated/model";
+import { KindPill } from "@components/KindPill";
 import { Button, IconButton } from "@components/ui/Button";
 import { cn, focusRing } from "@components/ui/cn";
 import { Dialog } from "@components/ui/Dialog";
@@ -50,28 +51,6 @@ export function RoomsSection({ rooms, instances }: { rooms: Room[]; instances: I
       </div>
       <RoomDialog open={dialog !== null} room={dialog?.room} instances={instances} onClose={() => setDialog(null)} />
     </section>
-  );
-}
-
-const kindStyle: Record<RoomAliasKind, string> = {
-  [RoomAliasKind.device]: "bg-ask-bg text-ask",
-  [RoomAliasKind.room]: "bg-info-bg text-info",
-};
-
-/** A spoken name's pill, coloured and marked with an icon by kind so rooms and devices tell apart at a glance. */
-function KindPill({ kind, children, className }: { kind: RoomAliasKind; children?: ReactNode; className?: string }) {
-  const Icon = kind === RoomAliasKind.device ? Tv : House;
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 rounded-full py-0.5 pl-2 font-medium text-[12.5px]",
-        kindStyle[kind],
-        className,
-      )}
-    >
-      <Icon aria-hidden="true" className="size-3.5" />
-      {children}
-    </span>
   );
 }
 

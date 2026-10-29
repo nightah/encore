@@ -381,7 +381,7 @@ func TestClosedDatabaseErrors(t *testing.T) {
 		"Rooms.Update":              func() error { return db.Rooms().Update(ctx, &Room{ID: 1, Name: "Lounge"}) },
 		"Rooms.Get":                 func() error { return ignore(db.Rooms().Get(ctx, 1)) },
 		"Rooms.List":                func() error { return ignore(db.Rooms().List(ctx)) },
-		"Rooms.Resolve":             func() error { return ignore(db.Rooms().Resolve(ctx, "lounge")) },
+		"Rooms.Resolve":             func() error { _, _, err := db.Rooms().Resolve(ctx, "lounge"); return err },
 		"Rooms.Delete":              func() error { return db.Rooms().Delete(ctx, 1) },
 		"Rooms.AddAlias":            func() error { return ignore(db.Rooms().AddAlias(ctx, 1, "front room", SpokenRoom)) },
 		"Rooms.RemoveAlias":         func() error { return db.Rooms().RemoveAlias(ctx, 1) },

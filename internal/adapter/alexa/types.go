@@ -48,11 +48,13 @@ type LogEntry struct {
 	Intent    string
 	Slots     map[string]string
 	Target    string
-	Match     *match.Result
-	Speech    string
-	Outcome   string
-	Err       error
-	Duration  time.Duration
+	// Via is the room name in the request that picked Target, if one did.
+	Via      actions.Via
+	Match    *match.Result
+	Speech   string
+	Outcome  string
+	Err      error
+	Duration time.Duration
 	// Verify is the signature check, MatchTime the title matching, and KodiCalls the calls made to Kodi with their durations.
 	Verify    time.Duration
 	MatchTime time.Duration

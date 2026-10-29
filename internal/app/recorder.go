@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/nightah/encore/internal/adapter/alexa"
+	"github.com/nightah/encore/internal/core/actions"
 	"github.com/nightah/encore/internal/core/match"
 	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/store"
@@ -79,9 +80,9 @@ func toRow(e alexa.LogEntry) store.RequestLogEntry {
 	row.Timing, _ = json.Marshal(loggedTiming{VerifyMS: e.Verify.Milliseconds(), MatchMS: e.MatchTime.Milliseconds(), KodiMS: kodi.Milliseconds()})
 
 	if e.Match != nil {
-		row.Match, _ = json.Marshal(summariseMatch(e.Match, e.Target, e.Err))
+		row.Match, _ = json.Marshal(summariseMatch(e.Match, e.Target, e.Via, e.Err))
 	} else if e.Target != "" || e.Err != nil {
-		row.Match, _ = json.Marshal(summariseMatch(nil, e.Target, e.Err))
+		row.Match, _ = json.Marshal(summariseMatch(nil, e.Target, e.Via, e.Err))
 	}
 
 	return row
@@ -96,8 +97,12 @@ func kodiTime(calls []media.Call) time.Duration {
 	return total
 }
 
-func summariseMatch(res *match.Result, target string, err error) loggedMatch {
+func summariseMatch(res *match.Result, target string, via actions.Via, err error) loggedMatch {
 	m := loggedMatch{Target: target}
+
+	if via.Spoken != "" {
+		m.Via = &loggedVia{Spoken: via.Spoken, Kind: via.Kind, Room: via.Room}
+	}
 
 	if err != nil {
 		m.Error = err.Error()

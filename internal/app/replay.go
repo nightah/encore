@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/nightah/encore/internal/adapter/alexa"
 	"github.com/nightah/encore/internal/core/actions"
@@ -58,26 +57,21 @@ func (t DryRunTargets) Target(ctx context.Context, deviceID string) (actions.Tar
 
 // TargetForRoom implements alexa.Targets.
 func (t DryRunTargets) TargetForRoom(ctx context.Context, deviceID, spoken string) (actions.Target, error) {
-	a := t.App
-
-	room, err := a.db.Rooms().Resolve(ctx, spoken)
-
-	if rest, ok := cutArticle(spoken); ok && errors.Is(err, store.ErrNotFound) {
-		room, err = a.db.Rooms().Resolve(ctx, rest)
-	}
-
-	switch {
-	case errors.Is(err, store.ErrNotFound):
-		return actions.Target{}, fmt.Errorf("%w: “%s”", alexa.ErrUnknownRoom, spoken)
-	case err != nil:
+	room, via, err := t.App.resolveRoom(ctx, spoken)
+	if err != nil {
 		return actions.Target{}, err
 	}
 
-	if target, ok := a.instanceTarget(ctx, room.KodiInstanceID); ok && room.KodiInstanceID != 0 {
-		return t.dry(target), nil
+	target, ok := t.App.instanceTarget(ctx, room.KodiInstanceID)
+	if ok && room.KodiInstanceID != 0 {
+		target = t.dry(target)
+	} else if target, err = t.Target(ctx, deviceID); err != nil {
+		return actions.Target{}, err
 	}
 
-	return t.Target(ctx, deviceID)
+	target.Via = via
+
+	return target, nil
 }
 
 // DeviceName implements alexa.Targets without recording the device as seen.

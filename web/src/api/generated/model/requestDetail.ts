@@ -10,6 +10,7 @@ import type { Match } from "./match.ts";
 import type { RequestDetailOutcome } from "./requestDetailOutcome.ts";
 import type { RequestDetailSlots } from "./requestDetailSlots.ts";
 import type { Timing } from "./timing.ts";
+import type { Via } from "./via.ts";
 
 export interface RequestDetail {
   /**
@@ -36,4 +37,6 @@ export interface RequestDetail {
   time: string;
   /** How long each phase took; null for requests logged before Encore recorded it */
   timing: Timing | null;
+  /** The room name in the request that picked its Kodi instance; null when none did, or for requests logged before Encore recorded it */
+  via: Via | null;
 }
