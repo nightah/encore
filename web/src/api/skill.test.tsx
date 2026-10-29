@@ -147,10 +147,10 @@ describe("Amazon authorisation", () => {
 });
 
 describe("skill hooks", () => {
-  it("names the invocation, defaulting to encore until the skill loads", async () => {
+  it("names the invocation, without guessing one until the skill loads", async () => {
     getDb().skill.invocation_name = "kodi";
     const { result } = renderHook(() => useInvocationName(), { wrapper });
-    expect(result.current).toBe("encore");
+    expect(result.current).toBeUndefined();
     await waitFor(() => expect(result.current).toBe("kodi"));
   });
 

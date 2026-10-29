@@ -392,7 +392,8 @@ describe("overview page", () => {
     expect(status).toHaveTextContent("0 libraries · none shared");
     expect(screen.getByText("No Kodi instances yet")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Add one on the Kodi page" })).toHaveAttribute("href", "/kodi");
-    expect(screen.getByText(/No requests yet. Say “Alexa, ask encore what's playing.”/)).toBeInTheDocument();
+    // The line names the invocation only once the skill settings load.
+    expect(await screen.findByText(/No requests yet. Say “Alexa, ask encore what's playing.”/)).toBeInTheDocument();
     expect(screen.getByText("Nothing needs your attention.")).toBeInTheDocument();
   });
 

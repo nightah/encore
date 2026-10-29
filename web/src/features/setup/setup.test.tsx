@@ -390,10 +390,11 @@ describe("setup wizard", () => {
     expect(requests.some((r) => r.path.startsWith("/skill/amazon/authorize"))).toBe(false);
   });
 
-  it("says the skill settings didn't load instead of asking to connect Amazon", async () => {
+  it("says the skill settings didn't load instead of asking to connect Amazon, and tries again", async () => {
     resetDb("configured");
     window.localStorage.setItem(SETUP_STORAGE_KEY, JSON.stringify({ done: [1, 2, 3], skipped: [], step: 4 }));
     failWith("get", "/skill", 500, "boom");
+    const user = userEvent.setup();
     const { queryClient } = renderApp("/setup");
 
     await heading("Connect your Amazon developer account");
@@ -401,6 +402,11 @@ describe("setup wizard", () => {
     expect(screen.queryByLabelText("Client ID")).not.toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent("boom");
     expect(screen.getByRole("button", { name: "Skip for now" })).toBeEnabled();
+
+    server.resetHandlers();
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByText(/Connected to Amazon \(vendor M2X8K4P1QF\)/)).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("shows the deploy step loading, and why it didn't load, with a way to move on", async () => {
@@ -431,6 +437,10 @@ describe("setup wizard", () => {
     await heading("Deploy the skill");
     expect(await screen.findByRole("alert")).toHaveTextContent("boom");
     expect(screen.getByRole("button", { name: "Skip for now" })).toBeEnabled();
+
+    server.resetHandlers();
+    await userEvent.setup().click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByRole("button", { name: "Deploy skill" })).toBeInTheDocument();
   });
 
   it("resumes where you left off and offers it from the shell", async () => {
@@ -805,7 +815,7 @@ describe("setup address step", () => {
     startAt(2);
     const user = userEvent.setup();
     renderApp("/setup");
-    await heading("Tell us your public address");
+    await addressStep();
 
     const field = screen.getByLabelText("Public base URL");
     await user.clear(field);
@@ -889,22 +899,6 @@ describe("setup address step", () => {
     expect(dots[1]).toHaveClass("bg-dot-warn");
     await user.click(screen.getByRole("button", { name: "Continue" }));
     await heading("Add your first Kodi");
-  });
-
-  it("checks an address typed before the skill has loaded, saving no endpoint", async () => {
-    startAt(2);
-    server.use(http.get("*/api/v1/skill", () => delay("infinite")));
-    const user = userEvent.setup();
-    const log = recordRequests();
-    renderApp("/setup");
-    await heading("Tell us your public address");
-
-    await user.type(screen.getByLabelText("Public base URL"), "https://kodi.example.org");
-    await user.click(screen.getByRole("button", { name: "Check address" }));
-
-    expect(await screen.findByRole("list", { name: "Reachability check results" })).toBeInTheDocument();
-    expect(log.some((r) => r.path === "/setup/reachability")).toBe(true);
-    expect(log.some((r) => r.path === "/skill/settings")).toBe(false);
   });
 
   it.each([404, 405, 501])("lets you continue when this server can't check addresses (%i)", async (status) => {
@@ -1479,7 +1473,7 @@ describe("setup hello step", () => {
     const log = recordRequests();
     const { router } = renderApp("/setup");
     await heading("Say hello");
-    expect(screen.getByText("“Alexa, ask encore what's playing.”")).toBeInTheDocument();
+    expect(await screen.findByText("“Alexa, ask encore what's playing.”")).toBeInTheDocument();
     await waitFor(() => expect(FakeEventSource.open).toBeGreaterThan(0));
 
     FakeEventSource.emit("request", {
