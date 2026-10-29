@@ -52,6 +52,9 @@ locale = "en-au"
 [type.md.extend-words]
 # typos reads licence (the Australian noun) as a misspelling.
 licence = "licence"
+licences = "licences"
+# TinySegmenter's licence, quoted verbatim on the credits page.
+ORGANIZATION = "ORGANIZATION"
 # Examples in the contributing guide's notes for each language: French and Québécois ("avance", "pèse sur"), Dutch ("ik wil").
 avance = "avance"
 sur = "sur"
