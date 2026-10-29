@@ -1012,6 +1012,7 @@ export const handlers = [
         { location: "body.locales_enabled", message: "Enable at least one locale." },
       ]);
     }
+    const first = [...input.locales_enabled].sort()[0];
     db.skill = {
       ...db.skill,
       content: input.content ?? db.skill.content,
@@ -1021,9 +1022,8 @@ export const handlers = [
           }
         : db.skill.endpoint,
       invocation,
-      // The server reports the first enabled locale's name; French always uses "kodi".
-      invocation_name:
-        invocation === "kodi" ? "kodi" : [...input.locales_enabled].sort()[0] === "fr-FR" ? "kodi" : "encore",
+      // The server reports what people say in the first enabled locale.
+      invocation_name: db.skill.locale_invocations.find((l) => l.locale === first)?.[invocation] ?? invocation,
       locales_enabled: input.locales_enabled,
       needs_deploy: true,
       privacy: input.privacy ?? db.skill.privacy,

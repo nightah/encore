@@ -78,6 +78,7 @@ export * from "./localAuth.ts";
 export * from "./localAuthPatch.ts";
 export * from "./localeDeploy.ts";
 export * from "./localeDeployStatus.ts";
+export * from "./localeInvocation.ts";
 export * from "./localePatch.ts";
 export * from "./localeSettings.ts";
 export * from "./localeStatus.ts";

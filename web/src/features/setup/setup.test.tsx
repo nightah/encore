@@ -1329,7 +1329,7 @@ describe("setup deploy step", () => {
     await user.click(screen.getByRole("button", { name: "Deploy skill" }));
     await waitFor(() =>
       expect(log.find((r) => r.method === "PUT" && r.path === "/skill/settings")?.body).toMatchObject({
-        locales_enabled: ["en-AU", "en-GB", "de-DE"],
+        locales_enabled: ["de-DE", "en-AU", "en-GB"],
       }),
     );
   });
@@ -1344,17 +1344,22 @@ describe("setup deploy step", () => {
     expect(screen.getByRole("button", { name: "Deploy skill" })).toBeDisabled();
   });
 
-  it("explains that French uses “kodi” while encore is chosen", async () => {
+  it("says what each enabled locale says when it differs from the choice", async () => {
     startAt(5);
     const user = userEvent.setup();
     renderApp("/setup");
     await heading("Deploy the skill");
 
     await user.click(await screen.findByRole("checkbox", { name: "fr-FR" }));
-    expect(screen.getByText(/French uses “kodi”/)).toBeInTheDocument();
+    await user.click(screen.getByRole("checkbox", { name: "fr-CA" }));
+    expect(screen.getByText("In fr-CA and fr-FR, people say “kodi”.")).toBeInTheDocument();
+    await user.click(screen.getByRole("checkbox", { name: "ja-JP" }));
+    expect(screen.getByText("In ja-JP, people say “アンコール”.")).toBeInTheDocument();
+
     await user.click(screen.getByRole("radio", { name: "kodi" }));
     expect(screen.getByText("“Alexa, ask kodi to…”")).toBeInTheDocument();
-    expect(screen.queryByText(/French uses “kodi”/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/people say “kodi”/)).not.toBeInTheDocument();
+    expect(screen.getByText("In ja-JP, people say “コディ”.")).toBeInTheDocument();
   });
 
   it.each([

@@ -5,6 +5,7 @@ import type {
   DiscoveredInstance,
   Instance,
   Library,
+  LocaleInvocation,
   RecentTitle,
   RequestDetail,
   Room,
@@ -51,7 +52,33 @@ export function ago(ms: number, now = Date.now()): string {
   return new Date(now - ms).toISOString();
 }
 
-export const LOCALES = ["en-AU", "en-GB", "en-US", "en-CA", "en-IN", "de-DE", "fr-FR", "es-ES", "it-IT"];
+export const LOCALES = [
+  "ar-SA",
+  "de-DE",
+  "en-AU",
+  "en-CA",
+  "en-GB",
+  "en-IN",
+  "en-US",
+  "es-ES",
+  "es-MX",
+  "es-US",
+  "fr-CA",
+  "fr-FR",
+  "hi-IN",
+  "it-IT",
+  "ja-JP",
+  "nl-NL",
+  "pt-BR",
+];
+
+/** What people say per locale for each invocation choice: French says kodi for both, and Arabic and Japanese write the names in their own script. */
+export const LOCALE_INVOCATIONS: LocaleInvocation[] = LOCALES.map((locale) => {
+  if (locale.startsWith("fr-")) return { encore: "kodi", kodi: "kodi", locale };
+  if (locale === "ar-SA") return { encore: "انكور", kodi: "كودي", locale };
+  if (locale === "ja-JP") return { encore: "アンコール", kodi: "コディ", locale };
+  return { encore: "encore", kodi: "kodi", locale };
+});
 
 export function instances(now: number): Instance[] {
   return [

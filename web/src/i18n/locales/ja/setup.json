@@ -99,8 +99,8 @@
     "goToAmazon": "Amazon アカウントへ",
     "heading": "スキルをデプロイ",
     "invocation": {
+      "elsewhere": "{{locales}}では「{{name}}」と言います。",
       "example": "「アレクサ、{{name}}で…」",
-      "french": "「encore」はフランス語で「もう一度」を意味するため、フランス語では「kodi」を使います。",
       "label": "呼び出し名"
     },
     "locales": {

@@ -7,6 +7,7 @@
  */
 import type { AmazonConnection } from "./amazonConnection.ts";
 import type { LastDeploy } from "./lastDeploy.ts";
+import type { LocaleInvocation } from "./localeInvocation.ts";
 import type { ModelSize } from "./modelSize.ts";
 import type { Privacy } from "./privacy.ts";
 import type { SkillEndpointInfo } from "./skillEndpointInfo.ts";
@@ -29,6 +30,8 @@ export interface SkillInfo {
   /** What people say, "Alexa, ask <invocation_name> to…", in the first enabled locale */
   invocation_name: string;
   last_deploy: LastDeploy | null;
+  /** What people say in each available locale for each invocation choice */
+  locale_invocations: LocaleInvocation[];
   locales_available: string[];
   locales_enabled: string[];
   model_size: ModelSize | null;
