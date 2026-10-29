@@ -15,8 +15,6 @@ import (
 	"github.com/nightah/encore/internal/core/media"
 )
 
-// The libraries and queries below are copies of the generators in internal/core/match's bench_test.go (syntheticDocs) and scale_test.go (scaleDocs, scaleQueries), which are test code of that package and can't be imported. They are deterministic for a seed, so the numbers here and there are measured over the same titles.
-
 // corpusPath is the ASR corpus the matcher's own tests use: libraries of real titles and what speech recognition heard for them.
 const corpusPath = "../../internal/core/match/testdata/asr_corpus.yaml"
 
@@ -93,7 +91,7 @@ var benchSyllables = []string{
 	"gel", "dark", "ness", "lord", "ring", "sil", "ence", "lamb", "god", "fa", "thur", "mo", "nster", "in", "ter", "stel", "lar",
 }
 
-// syntheticDocs is BenchmarkSearch100k's library: titles of one to five words from an 8000-word vocabulary of made-up words.
+// syntheticDocs is BenchmarkSearch100k's library: titles of one to five words from an 8000-word vocabulary of made-up words. It copies syntheticDocs in internal/core/match's bench_test.go, which is test code and can't be imported, and gives the same titles for a seed.
 func syntheticDocs(n int, seed uint64) []match.Doc {
 	r := rand.New(rand.NewPCG(seed, seed))
 
@@ -175,7 +173,7 @@ var scaleKinds = []struct {
 	{media.KindSong, 50}, {media.KindAlbum, 14}, {media.KindArtist, 8}, {media.KindEpisode, 12}, {media.KindMovie, 10}, {media.KindTVShow, 4}, {media.KindMusicVideo, 2},
 }
 
-// scaleDocs returns n Docs: the English ASR corpus library plus synthetic titles, deterministic for a seed.
+// scaleDocs returns n Docs: the English ASR corpus library plus synthetic titles, deterministic for a seed. It copies scaleDocs in internal/core/match's scale_test.go, which can't be imported, so both measure the same titles.
 func scaleDocs(n int, lib []match.Doc, seed uint64) []match.Doc {
 	r := rand.New(rand.NewPCG(seed, seed^0x5ca1e))
 
@@ -243,7 +241,7 @@ var scaleMishearings = [][2]string{
 	{"ph", "f"}, {"ck", "k"}, {"c", "k"}, {"ee", "ea"}, {"s", "z"}, {"ou", "ow"}, {"y", "ie"}, {"er", "a"}, {"th", "f"}, {"ll", "l"}, {"x", "ks"}, {"qu", "kw"}, {"i", "ee"},
 }
 
-// scaleQueries derives n queries from known Docs, each by one kind of mishearing.
+// scaleQueries derives n queries from known Docs, each by one kind of mishearing. It copies scaleQueries in internal/core/match's scale_test.go.
 func scaleQueries(docs []match.Doc, n int, seed uint64) []match.Query {
 	r := rand.New(rand.NewPCG(seed, seed^0xa5))
 	kinds := []string{"exact", "typo", "first-letter", "sound-alike", "merged", "dropped-word", "first-word"}

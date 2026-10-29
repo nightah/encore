@@ -22,8 +22,7 @@ import (
 	"github.com/nightah/encore/internal/core/media"
 )
 
-// The bleve retriever below has the mapping, analyzers, batching and query Encore used with bleve, behind match.Retriever. bleveDoc indexes each match.RetrievalDoc, and wordClauses works out the query's terms, fuzziness and phonetic keys.
-
+// filters records the phonetic token filters registered in bleve's global registry, one per language, so each is registered once.
 var (
 	filtersMu sync.Mutex
 	filters   = map[string]bool{}

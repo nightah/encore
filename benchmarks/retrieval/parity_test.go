@@ -10,8 +10,6 @@ import (
 	"github.com/nightah/encore/internal/core/match"
 )
 
-// The parity tests check that the in-tree inverted index and bleve hand the scorer the same candidates, so the two differ in speed and memory but not in what Encore plays. They hold for Search with no kind filter or one kind, as the corpus cases have: with a filter of several kinds, bleve adds the filter's IDF to each candidate's score and the inverted index doesn't. Retrieval only needs recall: the order of candidates with equal retrieval scores, which bleve breaks by its internal document order, never reaches the user, because every candidate is re-scored and sorted by its own score.
-
 // newIndexes builds the same library with the inverted index (the default) and with bleve.
 func newIndexes(tb testing.TB, lang string, cfg match.Config, docs []match.Doc) (inverted, blv *match.Index) {
 	tb.Helper()

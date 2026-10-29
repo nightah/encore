@@ -23,12 +23,6 @@ import (
 	"github.com/nightah/encore/internal/core/media"
 )
 
-// The scale harness compares candidate retrievers on large synthetic libraries that embed the English ASR corpus. It is opt-in because a full run takes minutes:
-//
-//	ENCORE_MATCH_SCALE=10000,100000,500000 go test ./internal/core/match -run TestRetrieverScale -v -timeout 1h
-//
-// ENCORE_MATCH_RETRIEVERS limits which retrievers run (comma-separated names from scaleRetrievers), ENCORE_MATCH_POOLS lists candidate pool sizes to compare (default Config.CandidatePool), and ENCORE_MATCH_KINDS filters the queries by kind: "playmedia" filters the synthetic queries to films and shows, as a PlayMedia request does, and "all" filters every query without a filter of its own to all six kinds, as PlayMedia does when a content group is switched off.
-
 // scaleRetrievers builds each retriever the harness compares against exhaustive scoring.
 var scaleRetrievers = map[string]func(*language) (retriever, error){
 	RetrieverInverted: func(l *language) (retriever, error) { return newInvertedRetriever(l), nil },
@@ -477,6 +471,12 @@ func englishSuite(tb testing.TB) corpusSuite {
 }
 
 // TestRetrieverScale reports, per retriever, library size and candidate pool size, build time and memory, candidate and Search latency, and how often Search agrees with exhaustive scoring. Agreement is the share of queries with the same decision and top Doc; recall@10 is the share of exhaustive scoring's top ten that the retriever's Search also returns.
+//
+// It compares candidate retrievers on large synthetic libraries that embed the English ASR corpus, and is opt-in because a full run takes minutes:
+//
+//	ENCORE_MATCH_SCALE=10000,100000,500000 go test ./internal/core/match -run TestRetrieverScale -v -timeout 1h
+//
+// ENCORE_MATCH_RETRIEVERS limits which retrievers run (comma-separated names from scaleRetrievers), ENCORE_MATCH_POOLS lists candidate pool sizes to compare (default Config.CandidatePool), and ENCORE_MATCH_KINDS filters the queries by kind: "playmedia" filters the synthetic queries to films and shows, as a PlayMedia request does, and "all" filters every query without a filter of its own to all six kinds, as PlayMedia does when a content group is switched off.
 func TestRetrieverScale(t *testing.T) {
 	if os.Getenv("ENCORE_MATCH_SCALE") == "" {
 		t.Skip("set ENCORE_MATCH_SCALE (e.g. 10000,100000) to run the retriever scale harness")

@@ -2,9 +2,7 @@ package match
 
 import "slices"
 
-// Jaro-Winkler and optimal string alignment distance work on runes, so an accented or non-Latin letter counts as one character. Strings up to stackRunes runes are decoded into stack buffers, which keeps scoring free of allocations.
-
-// jaroWinkler is the Jaro similarity of a and b, in [0, 1], raised by a tenth of the remaining gap per shared leading rune (at most 4). Two empty strings score 0. It computes in float32 so scores, and the thresholds tuned on them, match the values in similarity_test.go.
+// jaroWinkler is the Jaro similarity of a and b, in [0, 1], raised by a tenth of the remaining gap per shared leading rune (at most 4). It counts runes, so an accented or non-Latin letter is one character. Two empty strings score 0. It computes in float32 so scores, and the thresholds tuned on them, match the values in similarity_test.go.
 func jaroWinkler(a, b string) float64 {
 	var ab, bb [stackRunes]rune
 
@@ -140,6 +138,7 @@ func osaDistance(a, b string) int {
 	return prev[n]
 }
 
+// appendRunes appends the runes of s to dst. Callers pass a stack buffer of stackRunes runes, so scoring a string that fits doesn't allocate.
 func appendRunes(dst []rune, s string) []rune {
 	for _, r := range s {
 		dst = append(dst, r)

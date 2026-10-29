@@ -17,7 +17,6 @@ import (
 )
 
 // The benchmarks run each retriever as a sub-benchmark named impl=bleve or impl=intree (the inverted index), bleve first so that benchstat with -col /impl reports the in-tree retriever against it. Libraries are built once per process and shared across -count runs; ENCORE_BENCH_SCALE lists the library sizes for BenchmarkSearchScale and BenchmarkCandidates (default 100000).
-
 var retrievers = []string{"bleve", "intree"}
 
 // newIndex returns an empty English Index retrieving with the named retriever.

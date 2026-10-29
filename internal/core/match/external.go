@@ -7,9 +7,7 @@ import (
 	"github.com/nightah/encore/internal/core/media"
 )
 
-// This file is a seam for the benchmarks module (benchmarks/ at the repository root), which compares the in-tree code with external libraries. Encore itself never calls anything here. It adds no behaviour: each function wraps what the package already does, so code outside the package can measure and check it.
-
-// NewWithRetriever is New with candidate retrieval supplied by newRetriever, which is given the language's phonetic encoder. Everything else, from normalising to scoring and deciding, is the Index's own, so two retrievers can be compared through the same Search.
+// NewWithRetriever is New with candidate retrieval supplied by newRetriever, which is given the language's phonetic encoder. Everything else, from normalising to scoring and deciding, is the Index's own, so two retrievers can be compared through the same Search. Encore never calls it; the benchmarks module uses it to compare retrievers.
 func NewWithRetriever(lang string, cfg Config, newRetriever func(phonetic func(word string) []string) (Retriever, error)) (*Index, error) {
 	ix, err := New(lang, cfg)
 	if err != nil {
@@ -26,7 +24,7 @@ func NewWithRetriever(lang string, cfg Config, newRetriever func(phonetic func(w
 	return ix, nil
 }
 
-// Candidates returns the Doc IDs retrieval hands the scorer for q, best first, without scoring them. Exact matches that Search adds itself are not included.
+// Candidates returns the Doc IDs retrieval hands the scorer for q, best first, without scoring them. Exact matches that Search adds itself are not included. Encore never calls it; the benchmarks module uses it to check retrieval parity.
 func (ix *Index) Candidates(ctx context.Context, q Query) ([]string, error) {
 	qf := ix.lang.newForm(ix.lang.normalizeSpelled(q.Text, false))
 	if len(qf.toks) == 0 {
@@ -40,10 +38,10 @@ func (ix *Index) Candidates(ctx context.Context, q Query) ([]string, error) {
 	return ix.ret.candidates(ctx, &qf, q.Kinds, ix.cfg.CandidatePool)
 }
 
-// JaroWinkler is the Jaro-Winkler similarity the scorer uses, in [0, 1].
+// JaroWinkler is the Jaro-Winkler similarity the scorer uses, in [0, 1]. It wraps jaroWinkler for the benchmarks module, which checks it against go-edlib.
 func JaroWinkler(a, b string) float64 { return jaroWinkler(a, b) }
 
-// OSADistance is the optimal string alignment distance the scorer uses.
+// OSADistance is the optimal string alignment distance the scorer uses. It wraps osaDistance for the benchmarks module, which checks it against go-edlib.
 func OSADistance(a, b string) int { return osaDistance(a, b) }
 
 func (r *externalRetriever) upsert(entries []*entry) error {
