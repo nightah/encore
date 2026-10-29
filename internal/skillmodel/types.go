@@ -168,6 +168,9 @@ type scriptRules struct {
 	// invocation reports whether a name uses only what Amazon allows in the script, and message says what that is.
 	invocation func(name string) bool
 	message    string
+	// sampleWord reports whether one word of a sample, slots left out, is written in the script, and sampleMessage says what that is.
+	sampleWord    func(word string) bool
+	sampleMessage string
 	// unspaced scripts write words without spaces (Japanese): particles attach straight to a slot, a reserved word counts anywhere in a name, and a name has no words to count.
 	unspaced bool
 }

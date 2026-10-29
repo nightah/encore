@@ -54,6 +54,12 @@ var (
 	japaneseInvocation = regexp.MustCompile(`^(?:[a-z] |[\p{Hiragana}\p{Katakana}\p{Han}ー])*[\p{Hiragana}\p{Katakana}\p{Han}ー]$`)
 	digit              = regexp.MustCompile(`\p{N}`)
 
+	// Sample words of each script, with the apostrophes, periods and hyphens samples may hold; Latin words must also be lowercase (lowercaseLatin).
+	latinSample      = regexp.MustCompile(`^[\p{Latin}\p{M}'.\-]+$`)
+	devanagariSample = regexp.MustCompile(`^[\p{Devanagari}\p{M}'.\-]+$`)
+	arabicSample     = regexp.MustCompile(`^[\p{Arabic}\p{M}'.\-]+$`)
+	japaneseLetter   = regexp.MustCompile(`^[\p{Hiragana}\p{Katakana}\p{Han}ー]$`)
+
 	// reservedWords are banned from invocation names in every language: Amazon's own names and English launch words.
 	reservedWords = []string{"alexa", "amazon", "echo", "skill", "app", "launch", "ask", "tell", "open"}
 
@@ -70,23 +76,31 @@ var (
 	// scripts are the rules of the languages not written in Latin script, by language; every other language follows latinScript.
 	scripts = map[string]scriptRules{
 		"ar": {
-			invocation: wordsOf(arabicWord),
-			message:    "must be Arabic words, or lowercase Latin for loanwords Arabic can't spell, separated by single spaces",
+			invocation:    wordsOf(arabicWord),
+			message:       "must be Arabic words, or lowercase Latin for loanwords Arabic can't spell, separated by single spaces",
+			sampleWord:    nativeOrLatin(arabicSample),
+			sampleMessage: "Arabic or lowercase Latin",
 		},
 		"hi": {
-			invocation: wordsOf(devanagariWord),
-			message:    "must be Devanagari words, or lowercase Latin for English words, separated by single spaces",
+			invocation:    wordsOf(devanagariWord),
+			message:       "must be Devanagari words, or lowercase Latin for English words, separated by single spaces",
+			sampleWord:    nativeOrLatin(devanagariSample),
+			sampleMessage: "Devanagari or lowercase Latin",
 		},
 		"ja": {
-			invocation: japaneseInvocation.MatchString,
-			message:    "must be Hiragana, Katakana or Kanji, with Latin letters only for acronyms, each lowercase and followed by a space",
-			unspaced:   true,
+			invocation:    japaneseInvocation.MatchString,
+			message:       "must be Hiragana, Katakana or Kanji, with Latin letters only for acronyms, each lowercase and followed by a space",
+			sampleWord:    japaneseSampleWord,
+			sampleMessage: "Hiragana, Katakana, Kanji or lowercase Latin",
+			unspaced:      true,
 		},
 	}
 
 	latinScript = scriptRules{
-		invocation: func(name string) bool { return latinInvocation.MatchString(name) && latinOnly.MatchString(name) },
-		message:    "must be lowercase letters, spaces, apostrophes or periods",
+		invocation:    func(name string) bool { return latinInvocation.MatchString(name) && latinOnly.MatchString(name) },
+		message:       "must be lowercase letters, spaces, apostrophes or periods",
+		sampleWord:    lowercaseLatin,
+		sampleMessage: "lowercase Latin",
 	}
 )
 
@@ -97,6 +111,27 @@ func scriptOf(language string) scriptRules {
 	}
 
 	return latinScript
+}
+
+// lowercaseLatin reports whether a sample word is lowercase Latin.
+func lowercaseLatin(word string) bool {
+	return latinSample.MatchString(word) && word == strings.ToLower(word)
+}
+
+// japaneseSampleWord accepts a run of Japanese text, which has no spaces, when every character is kana, kanji or ー, or belongs to a lowercase Latin word written straight against them ("{Movie}をplayして").
+func japaneseSampleWord(word string) bool {
+	for _, r := range word {
+		if c := string(r); !japaneseLetter.MatchString(c) && !lowercaseLatin(c) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// nativeOrLatin accepts a sample word in the native script or, as Amazon allows for English words and loanwords, in lowercase Latin.
+func nativeOrLatin(native *regexp.Regexp) func(string) bool {
+	return func(word string) bool { return native.MatchString(word) || lowercaseLatin(word) }
 }
 
 // wordsOf accepts names of single-space-separated words, each either a native word or a lowercase Latin one, and no digits.
@@ -438,6 +473,14 @@ func (l *linter) sample(locale string, in Intent, pattern, sample string, exact,
 
 	if text := slotRef.ReplaceAllString(sample, ""); !sampleChars.MatchString(text) {
 		l.add(Error, locale, in.Name, "sample %q may only contain letters, spaces, apostrophes, periods and hyphens (spell out numbers)", sample)
+	} else {
+		for w := range strings.FieldsSeq(text) {
+			if !l.script.sampleWord(w) {
+				l.add(Error, locale, in.Name, "sample %q has the word %q, which isn't %s", sample, w, l.script.sampleMessage)
+
+				break
+			}
+		}
 	}
 
 	key := strings.ToLower(sample)
