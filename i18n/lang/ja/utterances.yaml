@@ -155,7 +155,7 @@ PlayerSeek:
   skip: "{Duration}だけ{SeekDirection}[ください]"
   skip_2: "{Size}{SeekDirection}[ください]"
   skip_5: "{Duration}(スキップして|飛ばして)[ください]"
-  step: "{Size}だけ{SeekDirection}[ください]"
+  step: "(少し|ちょっと)だけ{SeekDirection}[ください]"
 PlayerSeekTo:
   go_mark: "{Position}のところ(に|へ|まで)(移動して|飛んで|ジャンプして)[ください]"
   go_minute: "{Minute}分(に|へ|まで)(移動して|飛んで|ジャンプして)[ください]"
@@ -187,7 +187,7 @@ Repeat:
   turn_repeat: "リピート{RepeatMode}"
 RoomControl:
   in_the: "{Room}で{Command}[ください]"
-  playback: "{Room}の再生を{Command}[ください]"
+  playback: "{Room}の方で{Command}[ください]"
   tv: "{Room}の(テレビ|コディ|音楽|映画|番組|ビデオ)を{Command}[ください]"
 ShuffleAlbum:
   shuffle_album: "[{Room}で]アルバム[の]{Album}をシャッフル(して|再生して)[ください]"
