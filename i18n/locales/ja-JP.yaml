@@ -1,0 +1,6 @@
+# ja-JP inherits lang/ja. Japanese invocation names are written in kana or kanji, so the Latin names can't be used: "encore" is the loanword アンコール, an ordinary noun that names no Alexa command or built-in feature, and kodi is spelt コディ, as Japanese writes the name. Amazon asks for invocation names of two or more words, but Japanese writes no spaces and the linter checks only for reserved words in it; アンコール is fine for a private skill, and a certified one would need brand proof or a longer name such as アンコールプレーヤー. The skill opens with "アンコールを開いて" and takes one-shot requests as "アンコールで映画デューンを再生して", which reach the samples unchanged.
+
+invocation: アンコール
+kodi_invocation: コディ
+language: ja
+skill_name: Encore
