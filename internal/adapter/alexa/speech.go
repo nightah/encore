@@ -103,7 +103,7 @@ func (s *Speech) Render(locale string, msg actions.Message) string {
 		}
 
 		if t, ok := msg.Times[name]; ok {
-			return spokenTime(lang, t)
+			return spokenTime(locale, lang, t)
 		}
 
 		if code, ok := msg.Languages[name]; ok {
@@ -555,11 +555,9 @@ func slotIDs(lang string, types map[string][]skillmodel.SlotValue) map[string]ma
 	return out
 }
 
-// spokenTime words a clock time as people say it: twelve-hour with am or pm in English, twelve-hour after the part of the day and before "बजे" in Hindi ("रात 9:30 बजे"), hours and minutes in Japanese ("15時4分", "15時"), and 24-hour elsewhere.
-func spokenTime(lang string, t time.Time) string {
+// spokenTime words a clock time as the locale says it: twelve-hour after the part of the day and before "बजे" in Hindi ("रात 9:30 बजे"), hours and minutes in Japanese ("15時4分", "15時"), twelve-hour where twelveHour lists the locale or its language, and 24-hour elsewhere.
+func spokenTime(locale, lang string, t time.Time) string {
 	switch {
-	case lang == "en":
-		return t.Format("3:04 pm")
 	case lang == "hi":
 		return hindiDayPart(t.Hour()) + " " + t.Format("3:04") + " बजे"
 	case lang == "ja" && t.Minute() == 0:
@@ -568,7 +566,20 @@ func spokenTime(lang string, t time.Time) string {
 		return strconv.Itoa(t.Hour()) + "時" + strconv.Itoa(t.Minute()) + "分"
 	}
 
-	return t.Format("15:04")
+	meridiem, ok := twelveHour[locale]
+	if !ok {
+		meridiem, ok = twelveHour[lang]
+	}
+
+	if !ok {
+		return t.Format("15:04")
+	}
+
+	if t.Hour() < 12 {
+		return t.Format("3:04 ") + meridiem[0]
+	}
+
+	return t.Format("3:04 ") + meridiem[1]
 }
 
 // hindiDayPart is the part of the day Hindi names before a twelve-hour time: सुबह (morning) from 4, दोपहर (afternoon) from noon, शाम (evening) from 4 pm and रात (night) from 8 pm.
@@ -608,6 +619,9 @@ func languageName(locale, code string) string {
 
 	return code
 }
+
+// twelveHour holds the words for before and after noon of the locales and languages that read the clock in twelve hours: English, as people say it, and Mexican and US Spanish, as Alexa says it there.
+var twelveHour = map[string][2]string{"en": {"am", "pm"}, "es-MX": {"a. m.", "p. m."}, "es-US": {"a. m.", "p. m."}}
 
 var listAnd = map[string]string{"en": "and", "de": "und", "fr": "et", "es": "y", "it": "e", "ar": "و", "hi": "और", "ja": "と", "nl": "en", "pt": "e"}
 

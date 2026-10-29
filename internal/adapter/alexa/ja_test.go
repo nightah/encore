@@ -96,8 +96,8 @@ func TestJapaneseSpeech(t *testing.T) {
 	}
 
 	assert.Equal(t, "AとB", spokenList("ja", []string{"A", "B"}))
-	assert.Equal(t, "15時", spokenTime("ja", time.Date(1, 1, 1, 15, 0, 0, 0, time.UTC)))
-	assert.Equal(t, "9時30分", spokenTime("ja", time.Date(1, 1, 1, 9, 30, 0, 0, time.UTC)))
+	assert.Equal(t, "15時", spokenTime("ja-JP", "ja", time.Date(1, 1, 1, 15, 0, 0, 0, time.UTC)))
+	assert.Equal(t, "9時30分", spokenTime("ja-JP", "ja", time.Date(1, 1, 1, 9, 30, 0, 0, time.UTC)))
 }
 
 func TestUnits(t *testing.T) {

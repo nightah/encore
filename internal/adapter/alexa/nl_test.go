@@ -39,7 +39,7 @@ func TestDutchSpokenDurationsListsAndTimes(t *testing.T) {
 
 	assert.Equal(t, "Dune, Alien en Heat", spokenList("nl", []string{"Dune", "Alien", "Heat"}))
 	assert.Equal(t, "Dune en Alien", spokenList("nl", []string{"Dune", "Alien"}))
-	assert.Equal(t, "21:59", spokenTime("nl", time.Date(1, 1, 1, 21, 59, 0, 0, time.UTC)))
+	assert.Equal(t, "21:59", spokenTime("nl-NL", "nl", time.Date(1, 1, 1, 21, 59, 0, 0, time.UTC)))
 	assert.Equal(t, "Frans", languageName("nl-NL", "fre"))
 }
 

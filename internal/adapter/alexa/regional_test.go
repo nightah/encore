@@ -25,6 +25,14 @@ func regionalSpeech(t *testing.T) *Speech {
 	return speech
 }
 
+func ends(hour, minute int) actions.Message {
+	return actions.Message{
+		ID:        "player.remaining_until",
+		Durations: map[string]time.Duration{"remaining": 5 * time.Minute},
+		Times:     map[string]time.Time{"end": time.Date(1, 1, 1, hour, minute, 0, 0, time.UTC)},
+	}
+}
+
 func TestRegionalRoomSplits(t *testing.T) {
 	speech := regionalSpeech(t)
 
@@ -109,7 +117,28 @@ func TestRegionalResponses(t *testing.T) {
 		{"fr-CA", actions.Message{ID: "playlist.playing", Params: map[string]string{"playlist": "Party"}}, "Je lance la liste de lecture Party."},
 		{"fr-CA", actions.Message{ID: "music.playing_video", Params: map[string]string{"title": "Dégénérations", "artist": "Mes Aïeux"}}, "Je lance le vidéoclip Dégénérations de Mes Aïeux."},
 		{"fr-CA", actions.Message{ID: "streams.audio_language", Languages: map[string]string{"language": "fre"}}, "Audio : français."},
+		{"es-MX", ends(15, 4), "Hora de término: 3:04 p. m.; termina en 5 minutos."},
+		{"es-US", ends(9, 30), "Hora de término: 9:30 a. m.; termina en 5 minutos."},
+		{"es-MX", ends(0, 5), "Hora de término: 12:05 a. m.; termina en 5 minutos."},
+		{"es-ES", ends(15, 4), "Termina en 5 minutos, a las 15:04."},
 	} {
 		assert.Equal(t, tc.want, speech.Render(tc.locale, tc.msg), "%s %s", tc.locale, tc.msg.ID)
+	}
+}
+
+func TestRegionalSpokenTime(t *testing.T) {
+	afternoon := time.Date(1, 1, 1, 15, 4, 0, 0, time.UTC)
+
+	for _, tc := range []struct {
+		locale, lang, want string
+	}{
+		{"es-MX", "es", "3:04 p. m."},
+		{"es-US", "es", "3:04 p. m."},
+		{"es-ES", "es", "15:04"},
+		{"fr-CA", "fr", "15:04"},
+		{"fr-FR", "fr", "15:04"},
+		{"en-AU", "en", "3:04 pm"},
+	} {
+		assert.Equal(t, tc.want, spokenTime(tc.locale, tc.lang, afternoon), tc.locale)
 	}
 }

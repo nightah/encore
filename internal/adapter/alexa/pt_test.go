@@ -32,7 +32,7 @@ func TestPortugueseSpeech(t *testing.T) {
 	assert.Equal(t, "2 horas 1 minuto", spokenDuration("pt", 121*time.Minute))
 	assert.Equal(t, "menos de um minuto", spokenDuration("pt", 20*time.Second))
 	assert.Equal(t, "Duna, Alien e Fogo contra Fogo", spokenList("pt", []string{"Duna", "Alien", "Fogo contra Fogo"}))
-	assert.Equal(t, "21:59", spokenTime("pt", time.Date(1, 1, 1, 21, 59, 0, 0, time.UTC)))
+	assert.Equal(t, "21:59", spokenTime("pt-BR", "pt", time.Date(1, 1, 1, 21, 59, 0, 0, time.UTC)))
 	assert.Equal(t, "francês", languageName("pt-BR", "fre"))
 
 	msg := actions.Message{
