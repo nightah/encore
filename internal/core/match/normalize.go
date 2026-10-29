@@ -28,7 +28,7 @@ func (l *language) normalizeSpelled(s string, aggressive bool) (toks []string, s
 		toks = l.split(toks)
 	}
 
-	toks = joinLetters(l.romanizeAll(l.stripPrefixes(toks)))
+	toks = joinLetters(l.spellLetters(l.romanizeAll(l.stripPrefixes(toks))))
 
 	// Articles go first so a numeral straight after one ("The II") isn't taken as following a word.
 	for len(toks) > 1 && l.articles[toks[0]] {
@@ -188,6 +188,47 @@ func umlautVariant(s string) string {
 }
 
 var umlautReplacer = strings.NewReplacer("ä", "ae", "ö", "oe", "ü", "ue", "Ä", "Ae", "Ö", "Oe", "Ü", "Ue")
+
+// spellLetters writes each run of letter names that reads as a spelled acronym as its letters (see language.letterNames), for joinLetters to merge.
+func (l *language) spellLetters(toks []string) []string {
+	if l.letterNames == nil {
+		return toks
+	}
+
+	isName := func(tok string) bool { _, ok := l.letterNames[tok]; return ok || isSingleLetter(tok) }
+
+	for i := 0; i < len(toks); {
+		j := i
+		for j < len(toks) && isName(toks[j]) {
+			j++
+		}
+
+		start := i
+		if start > 0 && j-start > 2 && l.letterWords[toks[start]] {
+			start++
+		}
+
+		names := 0
+
+		for _, tok := range toks[start:j] {
+			if len(tok) > 1 && !l.letterWords[tok] {
+				names++
+			}
+		}
+
+		if j-start >= 2 && names >= 2 {
+			for k := start; k < j; k++ {
+				if letter, ok := l.letterNames[toks[k]]; ok {
+					toks[k] = letter
+				}
+			}
+		}
+
+		i = max(j, i+1)
+	}
+
+	return toks
+}
 
 // joinLetters merges runs of two or more single-letter tokens, so "E.T." and "M*A*S*H" become "et" and "mash".
 func joinLetters(toks []string) []string {

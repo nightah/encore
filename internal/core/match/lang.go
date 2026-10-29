@@ -233,11 +233,13 @@ func french() *language {
 				"zero", "", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "",
 				"onze", "douze", "treize", "quatorze", "quinze", "seize",
 			},
-			tens:      []string{"vingt", "trente", "quarante", "cinquante", "soixante"}, //nolint:misspell // French number words.
-			extraTen:  map[string]int{"dix": 10, "vingts": 20},
-			hundreds:  []string{"cent", "cents"},
-			thousands: []string{"mille"},
-			cont:      map[string]int{"un": 1, "une": 1},
+			tens: []string{"vingt", "trente", "quarante", "cinquante", "soixante"}, //nolint:misspell // French number words.
+			// "troé" is "trois" as Québec French says it, [tʁwe].
+			extraUnits: map[string]int{"troe": 3},
+			extraTen:   map[string]int{"dix": 10, "vingts": 20},
+			hundreds:   []string{"cent", "cents"},
+			thousands:  []string{"mille"},
+			cont:       map[string]int{"un": 1, "une": 1},
 			ordinals: map[string]int{
 				"premier": 1, "premiere": 1, "second": 2, "seconde": 2, "deuxieme": 2, "troisieme": 3, "quatrieme": 4,
 				"cinquieme": 5, "sixieme": 6, "septieme": 7, "huitieme": 8, "neuvieme": 9, "dixieme": 10,
@@ -245,7 +247,7 @@ func french() *language {
 			},
 		}.build(),
 		conj:           set("et"),
-		parts:          set("partie", "chapitre"),
+		parts:          set("partie", "chapitre", "volume", "vol"),
 		phonetic:       phoneticKeysOf(fr.Encoder{}),
 		soundAlikeLead: true,
 	}
@@ -256,6 +258,9 @@ func spanish() *language {
 	for i, u := range []string{"uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve"} {
 		compounds["veinti"+u] = 21 + i
 	}
+
+	// "veintiún" and "veintiuna" are 21 before a noun ("veintiún gramos").
+	compounds["veintiun"], compounds["veintiuna"] = 21, 21
 
 	hundredsOf := suffixed(map[string]int{
 		"doscient": 200, "trescient": 300, "cuatrocient": 400, "quinient": 500, "seiscient": 600, "setecient": 700,
@@ -288,9 +293,16 @@ func spanish() *language {
 				map[string]int{"primer": 1, "tercer": 3},
 			),
 		}.build(),
-		conj:     set("y"),
-		parts:    set("parte", "capitulo"), //nolint:misspell // Spanish for "chapter".
-		phonetic: phoneticKeysOf(es.Encoder{}),
+		// The letters' names as the Ortografía de la lengua española (2010) gives them, with "ere" and "i griega"'s "ye"; "eñe" folds to "ene" and is left out.
+		letterNames: map[string]string{
+			"be": "b", "ce": "c", "de": "d", "efe": "f", "ge": "g", "hache": "h", "jota": "j", "ka": "k", "ele": "l", "eme": "m",
+			"ene": "n", "pe": "p", "cu": "q", "erre": "r", "ere": "r", "ese": "s", "te": "t", "uve": "v", "equis": "x", "ye": "y",
+			"zeta": "z",
+		},
+		letterWords: set("de", "te", "ese"),
+		conj:        set("y"),
+		parts:       set("parte", "capitulo", "volumen", "vol"), //nolint:misspell // Spanish for "chapter".
+		phonetic:    phoneticKeysOf(es.Encoder{}),
 	}
 }
 
