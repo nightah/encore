@@ -20,6 +20,22 @@ var arabicTeenStems = map[string]int{
 	"ست": 6, "سته": 6, "سبع": 7, "سبعه": 7, "ثمان": 8, "ثماني": 8, "ثمانيه": 8, "تسع": 9, "تسعه": 9,
 }
 
+// arabicOrdinalStems are the ordinals that "عشر" follows in 11th to 19th ("الثالث عشر"), folded and without the article.
+var arabicOrdinalStems = map[string]int{
+	"حادي": 1, "حاديه": 1, "ثاني": 2, "ثانيه": 2, "تاني": 2, "تانيه": 2, "ثالث": 3, "ثالثه": 3, "تالت": 3, "تالته": 3,
+	"رابع": 4, "رابعه": 4, "خامس": 5, "خامسه": 5, "سادس": 6, "سادسه": 6, "سابع": 7, "سابعه": 7,
+	"ثامن": 8, "ثامنه": 8, "تامن": 8, "تاسع": 9, "تاسعه": 9,
+}
+
+// arabicCounted are number words that carry their count, rewritten as the count and the word: the dual ("الفين", two thousand) and the plural after three to ten ("آلاف" in "ثلاثة آلاف"), folded. "الفين" and "الاف" start like the article, so they are rewritten before the article is stripped.
+var arabicCounted = map[string][]string{
+	"الفين": {"اثنين", "الف"}, "الفان": {"اثنين", "الف"}, "الاف": {"الف"},
+	"مليونين": {"اثنين", "مليون"}, "مليونان": {"اثنين", "مليون"}, "ملايين": {"مليون"},
+}
+
+// arabicArticles are the article and its clitic forms ("وال" and, "بال" with, "فال" so, "كال" like, "لل" for the).
+var arabicArticles = []string{"ال", "وال", "بال", "فال", "كال", "لل", "ولل"}
+
 // arabicLatin writes each Arabic consonant in Latin letters as English spellings of Arabic names do: the emphatic consonants as their plain pairs (ص s, ض d, ط t), ذ and ظ as th ("Theeb" for ذيب, "Kathem" for كاظم), ح as h like ه, and ع as the vowel it colours.
 var arabicLatin = map[rune]string{
 	'ب': "b", 'ت': "t", 'ث': "th", 'ج': "j", 'ح': "h", 'خ': "kh", 'د': "d", 'ذ': "th", 'ر': "r", 'ز': "z",
@@ -36,7 +52,7 @@ func arabic() *language {
 		and:  "و",
 		// "ذا" and "زا" are English "the" as Arabic speakers say it ("ذا قودفاذر").
 		articles:         romanizeSet("ذا", "زا", "the", "a", "an"),
-		articlePrefixes:  []string{"ال", "وال", "بال", "فال", "كال", "لل", "ولل"},
+		articlePrefixes:  arabicArticles,
 		articlePrefixMin: 2,
 		folds:            arabicFolds,
 		split:            arabicSplit(nums),
@@ -66,6 +82,18 @@ func arabicNumbers() map[string]numWord {
 		}
 	}
 
+	ordinals := map[string]int{
+		"اول": 1, "اولي": 1, "ثاني": 2, "تاني": 2, "ثانيه": 2, "تانيه": 2, "ثالث": 3, "تالت": 3, "ثالثه": 3, "تالته": 3,
+		"رابع": 4, "رابعه": 4, "خامس": 5, "خامسه": 5, "سادس": 6, "سادسه": 6, "سابع": 7, "سابعه": 7,
+		"ثامن": 8, "ثامنه": 8, "تامن": 8, "تاسع": 9, "تاسعه": 9, "عاشر": 10, "عاشره": 10,
+	}
+
+	for stem, v := range arabicOrdinalStems {
+		for _, ten := range []string{"عشر", "عشره"} {
+			ordinals[stem+ten] = 10 + v
+		}
+	}
+
 	extraUnits := map[string]int{
 		"واحده": 1, "اثنان": 2, "اتنين": 2, "ثنين": 2, "اثنتين": 2, "اثنتان": 2, "ثلاث": 3, "تلاته": 3, "تلات": 3,
 		"اربع": 4, "خمس": 5, "ست": 6, "سبع": 7, "ثمان": 8, "ثماني": 8, "تمانيه": 8, "تمنيه": 8, "تسع": 9, "عشر": 10,
@@ -90,12 +118,6 @@ func arabicNumbers() map[string]numWord {
 		}
 	}
 
-	ordinals := map[string]int{
-		"اول": 1, "اولي": 1, "ثاني": 2, "تاني": 2, "ثانيه": 2, "تانيه": 2, "ثالث": 3, "تالت": 3, "ثالثه": 3, "تالته": 3,
-		"رابع": 4, "رابعه": 4, "خامس": 5, "خامسه": 5, "سادس": 6, "سادسه": 6, "سابع": 7, "سابعه": 7,
-		"ثامن": 8, "ثامنه": 8, "تامن": 8, "تاسع": 9, "تاسعه": 9, "عاشر": 10, "عاشره": 10,
-	}
-
 	// Libraries in Arabic hold English titles too, so English number words, articles and parts are read as well.
 	for w, n := range eng.nums {
 		switch {
@@ -116,6 +138,7 @@ func arabicNumbers() map[string]numWord {
 		hundreds:   []string{"ميه", "مايه", "hundred"},
 		hundredsOf: hundredsOf,
 		thousands:  []string{"الف", "thousand"},
+		millions:   []string{"مليون", "million"},
 		compounds:  compounds,
 		ordinals:   ordinals,
 	}.build()
@@ -139,7 +162,7 @@ func romanizeNums(nums map[string]numWord) map[string]numWord {
 	return out
 }
 
-// arabicSplit returns the split hook for Arabic. It writes the definite article as it is spelt where a request spells it as it is said ("انناظر", "ار رسالة" and "اتتغريبة" for "الناظر", "الرسالة" and "التغريبة"; Arabic never writes a doubled letter, so an alef and a doubled sun letter are the article), parts a name built on "عبد" from the word after it ("عبدالله" -> "عبد الله"), separates the "و" ("and") fused to a number word after another ("واحد وعشرين"), and joins a unit to the "عشر" after it ("ثلاثة عشر"), so the numbers read. nums is the number vocabulary in Arabic script, since split runs before romanize.
+// arabicSplit returns the split hook for Arabic. It writes the definite article as it is spelt where a request spells it as it is said ("انناظر", "ار رسالة" and "اتتغريبة" for "الناظر", "الرسالة" and "التغريبة"): an alef and a doubled sun letter starting a word of five letters or more are taken as the article said aloud, though a few words spelt with a doubled letter after an alef ("اسس") are taken too, and a separate "ان" stays the word "أن" or "إن". It parts a name built on "عبد" from the word after it ("عبدالله" -> "عبد الله"), separates the "و" ("and") fused to a number word after another ("واحد وعشرين"), joins a unit or an ordinal to the "عشر" after it ("ثلاثة عشر", "الحادي عشر") and writes a number word that carries its count as the count and the word (arabicCounted), so the numbers read. nums is the number vocabulary in Arabic script, since split runs before romanize.
 func arabicSplit(nums map[string]numWord) func([]string) []string {
 	isNum := func(tok string) bool {
 		w, ok := nums[tok]
@@ -154,12 +177,21 @@ func arabicSplit(nums map[string]numWord) func([]string) []string {
 			tok := toks[i]
 			r := []rune(tok)
 
+			next := ""
+			if i+1 < len(toks) {
+				next = toks[i+1]
+			}
+
 			switch {
-			case len(r) >= 3 && r[0] == 'ا' && r[1] == r[2] && strings.ContainsRune(arabicSun, r[1]):
+			case arabicCounted[tok] != nil:
+				out = append(out, arabicCounted[tok]...)
+
+				continue
+			case len(r) >= 5 && r[0] == 'ا' && r[1] == r[2] && strings.ContainsRune(arabicSun, r[1]):
 				tok = "ال" + string(r[2:])
-			case len(r) == 2 && r[0] == 'ا' && strings.ContainsRune(arabicSun, r[1]) && i+1 < len(toks) &&
-				(r[1] == 'ل' || strings.HasPrefix(toks[i+1], string(r[1]))):
-				tok = "ال" + toks[i+1]
+			case len(r) == 2 && r[0] == 'ا' && strings.ContainsRune(arabicSun, r[1]) && tok != "ان" && next != "" &&
+				(r[1] == 'ل' || strings.HasPrefix(next, string(r[1]))):
+				tok = "ال" + next
 				i++
 			case strings.HasPrefix(tok, "عبدال") && utf8.RuneCountInString(tok) >= 7:
 				out = append(out, "عبد")
@@ -167,8 +199,8 @@ func arabicSplit(nums map[string]numWord) func([]string) []string {
 			case strings.HasPrefix(tok, "و") && len(out) > 0 && isNum(out[len(out)-1]) && isNum(tok[len("و"):]):
 				out = append(out, "و")
 				tok = tok[len("و"):]
-			case arabicTeenStems[tok] > 0 && i+1 < len(toks) && (toks[i+1] == "عشر" || toks[i+1] == "عشره"):
-				tok += toks[i+1]
+			case (next == "عشر" || next == "عشره") && (arabicTeenStems[tok] > 0 || arabicOrdinalStems[withoutArticle(tok)] > 0):
+				tok += next
 				i++
 			}
 
@@ -177,6 +209,19 @@ func arabicSplit(nums map[string]numWord) func([]string) []string {
 
 		return out
 	}
+}
+
+// withoutArticle returns tok without the longest of arabicArticles it starts with.
+func withoutArticle(tok string) string {
+	cut := 0
+
+	for _, p := range arabicArticles {
+		if len(p) > cut && strings.HasPrefix(tok, p) {
+			cut = len(p)
+		}
+	}
+
+	return tok[cut:]
 }
 
 // romanizeArabic writes an Arabic token as a Latin consonant skeleton (arabicLatin), so an Arabic request and an English title asked for in Arabic letters meet ("تايتانك", "titanic"). Short vowels are not written in Arabic and stay out; the long vowels are their letters: ا as a, و and ي as u and i after a consonant and as w and y at the start of a word or after a vowel. A final ه is a ta marbuta, folded to ه, and is written a, as it is said. A token without Arabic letters is returned as it is.
