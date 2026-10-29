@@ -69,6 +69,8 @@ const (
 	digitWeight = 4
 	// stackRunes is the longest string, in runes, that the edit distances handle without allocating.
 	stackRunes = 64
+	// minUnspacedCover is the fewest runes a query word needs to be covered by appearing inside the title in a language written without spaces.
+	minUnspacedCover = 3
 	// maxFused is the longest token, in bytes, that is tried as a number written as one word.
 	maxFused = 64
 )

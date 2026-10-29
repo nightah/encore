@@ -284,7 +284,7 @@ var grownFloor = map[string]evalScore{
 	"it": {correct: 343, wrong: 1},
 	"ar": {correct: 347, wrong: 5},
 	"hi": {correct: 331, wrong: 5},
-	"ja": {correct: 0, wrong: 1000},
+	"ja": {correct: 262, wrong: 4},
 	"nl": {correct: 0, wrong: 1000},
 	"pt": {correct: 0, wrong: 1000},
 }

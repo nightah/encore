@@ -80,7 +80,7 @@ func (l *language) tokenize(s string) []string {
 			}
 		case unicode.IsDigit(r):
 			b = utf8.AppendRune(b, asciiDigit(r))
-		case unicode.IsLetter(r):
+		case unicode.IsLetter(r), unicode.Is(unicode.Nl, r):
 			if keepsMarks(r) {
 				cluster = len(b)
 			}

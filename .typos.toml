@@ -75,6 +75,8 @@ capitulo = "capitulo"
 feld = "feld"
 ue = "ue"
 alikes = "alikes"
+# Romaji the Japanese matcher writes katakana in (トイ, toi).
+toi = "toi"
 # Short names in the fuzzy matcher (ba: the matched part of b) and deliberate misspellings in tests.
 ba = "ba"
 # in-toto, the attestation format of SLSA provenance (encore.intoto.jsonl).
