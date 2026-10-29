@@ -34,11 +34,15 @@
       "add": "Hinzufügen",
       "addAliasButton": "Sprechnamen zu {{name}} hinzufügen",
       "addAliasLabel": "Sprechnamen für {{name}} hinzufügen",
-      "addAliasPlaceholder": "Sprechnamen hinzufügen",
       "aliases": "Sprechnamen für {{name}}",
       "edit": "Raum {{name}} bearbeiten",
+      "kindLabel": "",
       "kodi": "→ Kodi „{{name}}“",
       "noKodi": "→ keine Kodi-Instanz",
+      "placeholder": {
+        "device": "",
+        "room": ""
+      },
       "removeAlias": "Sprechnamen „{{alias}}“ entfernen"
     },
     "dialog": {
@@ -63,7 +67,11 @@
       "save": "Speichern"
     },
     "empty": "Noch keine Räume.",
-    "intro": "Diese Namen werden ins Interaktionsmodell des Skills aufgenommen, damit Alexa sie in „spiel Bluey <b>im Kinderzimmer</b>“ erkennt.",
+    "intro": "",
+    "kind": {
+      "device": "",
+      "room": ""
+    },
     "title": "Räume und Sprechnamen"
   },
   "table": {
