@@ -1326,6 +1326,7 @@ muthuqa
 mysql
 mzamna
 naftha
+nallgha
 nam
 name
 named
@@ -1357,6 +1358,7 @@ nia
 njah
 njh
 nlfuq
+nlgha
 nllaali
 nllasfl
 nllimin
@@ -1543,6 +1545,7 @@ queue
 quieter
 quit
 quits
+qul
 quoted
 rab
 raise
@@ -2025,7 +2028,6 @@ totp
 tqdm
 tqiyma
 tqtrhin
-tqul
 track
 trailer
 trak
