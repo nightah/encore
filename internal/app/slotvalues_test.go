@@ -45,7 +45,7 @@ func TestSlotValuesCoverTitlesPlaylistsAndRooms(t *testing.T) {
 
 		lounge := store.Room{Name: "Lounge", KodiInstanceID: id}
 		require.NoError(t, db.Rooms().Create(ctx, &lounge))
-		_, err := db.Rooms().AddAlias(ctx, lounge.ID, "living room")
+		_, err := db.Rooms().AddAlias(ctx, lounge.ID, "living room", store.SpokenRoom)
 		require.NoError(t, err)
 
 		out, err := h.app.SlotValues(ctx)

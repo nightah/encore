@@ -72,6 +72,14 @@ func TestRooms(t *testing.T) {
 
 	c.json(http.MethodPost, fmt.Sprintf("/api/v1/rooms/%d/aliases", lounge.ID), map[string]string{"alias": "living room"}, http.StatusCreated, &alias)
 	assert.Equal(t, "living room", alias.Alias)
+	assert.Equal(t, "room", alias.Kind, "a spoken name is another name for the room unless it says otherwise")
+
+	var tv RoomAlias
+
+	c.json(http.MethodPost, fmt.Sprintf("/api/v1/rooms/%d/aliases", lounge.ID), map[string]string{"alias": "TV", "kind": "device"}, http.StatusCreated, &tv)
+	assert.Equal(t, "device", tv.Kind)
+
+	assert.Equal(t, http.StatusUnprocessableEntity, c.do(http.MethodPost, fmt.Sprintf("/api/v1/rooms/%d/aliases", lounge.ID), map[string]string{"alias": "hall", "kind": "speaker"}).status)
 
 	p := c.do(http.MethodPost, fmt.Sprintf("/api/v1/rooms/%d/aliases", den.ID), map[string]string{"alias": "Living-Room"}).problem(t)
 	assert.Equal(t, http.StatusConflict, p.Status, "a spoken name belongs to one room")
@@ -83,7 +91,7 @@ func TestRooms(t *testing.T) {
 
 	c.json(http.MethodGet, "/api/v1/rooms", nil, http.StatusOK, &rooms)
 	require.Len(t, rooms, 2)
-	assert.Equal(t, []RoomAlias{alias}, rooms[1].Aliases)
+	assert.Equal(t, []RoomAlias{alias, tv}, rooms[1].Aliases)
 
 	assert.Equal(t, http.StatusNotFound, c.do(http.MethodDelete, fmt.Sprintf("/api/v1/rooms/%d/aliases/%d", den.ID, alias.ID), nil).status, "the alias belongs to another room")
 	c.json(http.MethodDelete, fmt.Sprintf("/api/v1/rooms/%d/aliases/%d", lounge.ID, alias.ID), nil, http.StatusNoContent, nil)

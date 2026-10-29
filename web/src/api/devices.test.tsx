@@ -141,10 +141,14 @@ describe("rooms", () => {
     const otherAliases = other.aliases.length;
     const requests = recordRequests();
 
-    await act(() => result.current.addAlias.mutateAsync({ alias: "Front Room", roomId: room.id }));
+    await act(() => result.current.addAlias.mutateAsync({ alias: "Front Room", kind: "device", roomId: room.id }));
 
     const cached = queryClient.getQueryData<Room[]>(keys.rooms);
-    expect(cached?.find((r) => r.id === room.id)?.aliases.at(-1)?.alias).toBe("front room");
+    expect(cached?.find((r) => r.id === room.id)?.aliases.at(-1)).toMatchObject({
+      alias: "front room",
+      kind: "device",
+    });
+    expect(requests[0]?.body).toMatchObject({ alias: "Front Room", kind: "device" });
     expect(cached?.find((r) => r.id === other.id)?.aliases).toHaveLength(otherAliases);
     expect(requests.map((r) => r.method)).toEqual(["POST"]);
   });
@@ -155,7 +159,9 @@ describe("rooms", () => {
     const taken = other.aliases[0]?.alias ?? "";
     const before = queryClient.getQueryData<Room[]>(keys.rooms);
 
-    const error = await failure(() => result.current.addAlias.mutateAsync({ alias: taken, roomId: room.id }));
+    const error = await failure(() =>
+      result.current.addAlias.mutateAsync({ alias: taken, kind: "room", roomId: room.id }),
+    );
 
     expect(error).toMatchObject({ status: 409 });
     expect(queryClient.getQueryData<Room[]>(keys.rooms)).toBe(before);

@@ -635,10 +635,11 @@ type Room struct {
 	Aliases        []RoomAlias `json:"aliases"`
 }
 
-// RoomAlias is another spoken name for a room.
+// RoomAlias is another spoken name for a room: another name for the room itself ("lounge room") or a device in it ("TV").
 type RoomAlias struct {
 	ID    int64  `json:"id"`
 	Alias string `json:"alias"`
+	Kind  string `json:"kind" enum:"room,device"`
 }
 
 type roomAliasPath struct {

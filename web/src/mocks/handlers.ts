@@ -3,6 +3,7 @@ import { HttpResponse, delay, http, sse } from "msw";
 import { RECENT_REQUESTS } from "@api/events";
 import type {
   Accepted,
+  AddRoomAliasRequest,
   AuthState,
   AuthorizeInfo,
   Candidate,
@@ -967,11 +968,12 @@ export const handlers = [
     if (denied) return denied;
     const room = db.rooms.find((r) => r.id === Number(params.id));
     if (!room) return problem(404, "Not Found");
-    const alias = (await body<{ alias?: string }>(request)).alias?.trim().toLowerCase() ?? "";
+    const input = await body<Partial<AddRoomAliasRequest>>(request);
+    const alias = input.alias?.trim().toLowerCase() ?? "";
     if (!alias) return problem(422, "Unprocessable Entity", "Type the spoken name.");
     const owner = db.rooms.find((r) => r.aliases.some((a) => a.alias === alias));
     if (owner) return problem(409, "Conflict", `“${alias}” is already used by ${owner.name}.`);
-    const created: RoomAlias = { alias, id: nextId() };
+    const created: RoomAlias = { alias, id: nextId(), kind: input.kind ?? "room" };
     room.aliases.push(created);
     save();
     return json<RoomAlias>(created, 201);

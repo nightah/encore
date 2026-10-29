@@ -9,7 +9,14 @@ import {
   listRooms,
   updateRoom,
 } from "@api/generated/endpoints/rooms/rooms";
-import type { CreateRoomRequest, Device, Room, UpdateDeviceRequest, UpdateRoomRequest } from "@api/generated/model";
+import type {
+  CreateRoomRequest,
+  Device,
+  Room,
+  RoomAliasKind,
+  UpdateDeviceRequest,
+  UpdateRoomRequest,
+} from "@api/generated/model";
 import { keys } from "@api/keys";
 import i18n from "@i18n/index";
 
@@ -97,7 +104,8 @@ export function useAddRoomAlias() {
   const queryClient = useQueryClient();
   return useMutation({
     meta: { inline: true },
-    mutationFn: ({ roomId, alias }: { roomId: number; alias: string }) => addRoomAlias(roomId, { alias }),
+    mutationFn: ({ roomId, alias, kind }: { roomId: number; alias: string; kind: RoomAliasKind }) =>
+      addRoomAlias(roomId, { alias, kind }),
     onSuccess: (alias, { roomId }) => {
       queryClient.setQueryData<Room[]>(keys.rooms, (list) =>
         list?.map((room) => (room.id === roomId ? { ...room, aliases: [...room.aliases, alias] } : room)),

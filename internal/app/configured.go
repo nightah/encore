@@ -74,7 +74,16 @@ func (a *App) applyConfiguredRooms(ctx context.Context, instanceID map[string]in
 
 		ids[c.Name] = room.ID
 
-		if err := a.syncRoomAliases(ctx, room.ID, c.Aliases); err != nil {
+		want := make([]store.RoomAlias, 0, len(c.Aliases)+len(c.Devices))
+		for _, alias := range c.Aliases {
+			want = append(want, store.RoomAlias{Alias: alias, Kind: store.SpokenRoom})
+		}
+
+		for _, device := range c.Devices {
+			want = append(want, store.RoomAlias{Alias: device, Kind: store.SpokenDevice})
+		}
+
+		if err := a.syncRoomAliases(ctx, room.ID, want); err != nil {
 			return nil, fmt.Errorf("room %q: %w", c.Name, err)
 		}
 	}
@@ -82,7 +91,7 @@ func (a *App) applyConfiguredRooms(ctx context.Context, instanceID map[string]in
 	return ids, nil
 }
 
-func (a *App) syncRoomAliases(ctx context.Context, roomID int64, want []string) error {
+func (a *App) syncRoomAliases(ctx context.Context, roomID int64, want []store.RoomAlias) error {
 	have, err := a.db.Rooms().Aliases(ctx, roomID)
 	if err != nil {
 		return err
@@ -91,7 +100,7 @@ func (a *App) syncRoomAliases(ctx context.Context, roomID int64, want []string) 
 	present := map[string]bool{}
 
 	for _, alias := range have {
-		if slices.Contains(want, alias.Alias) {
+		if slices.ContainsFunc(want, func(w store.RoomAlias) bool { return w.Alias == alias.Alias && w.Kind == alias.Kind }) {
 			present[alias.Alias] = true
 
 			continue
@@ -102,13 +111,13 @@ func (a *App) syncRoomAliases(ctx context.Context, roomID int64, want []string) 
 		}
 	}
 
-	for _, alias := range want {
-		if present[alias] {
+	for _, w := range want {
+		if present[w.Alias] {
 			continue
 		}
 
-		if _, err := a.db.Rooms().AddAlias(ctx, roomID, alias); err != nil {
-			return fmt.Errorf("alias %q: %w", alias, err)
+		if _, err := a.db.Rooms().AddAlias(ctx, roomID, w.Alias, w.Kind); err != nil {
+			return fmt.Errorf("alias %q: %w", w.Alias, err)
 		}
 	}
 

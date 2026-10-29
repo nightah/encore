@@ -17,9 +17,9 @@ function rooms(): Room[] {
   return [
     {
       aliases: [
-        { alias: "lounge", id: 1 },
-        { alias: "living room", id: 2 },
-        { alias: "big tv", id: 3 },
+        { alias: "big tv", id: 3, kind: "device" },
+        { alias: "living room", id: 2, kind: "room" },
+        { alias: "lounge", id: 1, kind: "room" },
       ],
       id: 1,
       kodi_instance_id: 1,
@@ -27,8 +27,8 @@ function rooms(): Room[] {
     },
     {
       aliases: [
-        { alias: "bedroom", id: 4 },
-        { alias: "bedroom tv", id: 5 },
+        { alias: "bedroom", id: 4, kind: "room" },
+        { alias: "bedroom tv", id: 5, kind: "device" },
       ],
       id: 2,
       kodi_instance_id: 2,
@@ -36,14 +36,22 @@ function rooms(): Room[] {
     },
     {
       aliases: [
-        { alias: "kids room", id: 6 },
-        { alias: "playroom", id: 7 },
+        { alias: "kids room", id: 6, kind: "room" },
+        { alias: "playroom", id: 7, kind: "room" },
       ],
       id: 3,
       kodi_instance_id: 3,
       name: "Kids' room",
     },
-    { aliases: [{ alias: "study", id: 8 }], id: 4, kodi_instance_id: 1, name: "Study" },
+    {
+      aliases: [
+        { alias: "study", id: 8, kind: "room" },
+        { alias: "study tv", id: 9, kind: "device" },
+      ],
+      id: 4,
+      kodi_instance_id: 1,
+      name: "Study",
+    },
   ];
 }
 

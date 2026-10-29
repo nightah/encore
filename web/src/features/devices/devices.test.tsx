@@ -100,6 +100,30 @@ describe("Echo devices page", () => {
     expect(await screen.findByText("“bedroom” is already used by Bedroom.")).toBeInTheDocument();
   });
 
+  it("adds a device's spoken name and marks each name's kind", async () => {
+    const user = userEvent.setup();
+    renderApp("/echo-devices");
+    const input = await screen.findByRole("textbox", { name: "Add a spoken name for Lounge" });
+    const kind = screen.getByRole("combobox", { name: "Kind of spoken name for Lounge" });
+
+    await user.selectOptions(kind, "device");
+    expect(input).toHaveAttribute("placeholder", "Device name, e.g. TV");
+    await user.type(input, "projector");
+    await user.click(screen.getByRole("button", { name: "Add spoken name to Lounge" }));
+
+    const names = screen.getByRole("list", { name: "Spoken names for Lounge" });
+    expect(await within(names).findByText("projector")).toBeInTheDocument();
+    expect(
+      getDb()
+        .rooms.find((r) => r.id === 1)
+        ?.aliases.find((a) => a.alias === "projector")?.kind,
+    ).toBe("device");
+
+    const items = within(names).getAllByRole("listitem");
+    expect(items.find((li) => li.textContent?.includes("projector"))).toHaveTextContent("Device: projector");
+    expect(items.find((li) => li.textContent?.includes("living room"))).toHaveTextContent("Room: living room");
+  });
+
   it("edits an Echo's room and Kodi instance", async () => {
     const user = userEvent.setup();
     renderApp("/echo-devices");
@@ -384,7 +408,7 @@ describe("Rooms", () => {
 
     await waitFor(() => expect(list).not.toHaveTextContent("big tv"));
     expect(log.find((r) => r.method === "DELETE")?.path).toBe("/rooms/1/aliases/3");
-    expect(getDb().rooms[0]?.aliases.map((a) => a.alias)).toEqual(["lounge", "living room"]);
+    expect(getDb().rooms[0]?.aliases.map((a) => a.alias)).toEqual(["living room", "lounge"]);
   });
 
   it("ignores a blank spoken name and trims the one it sends", async () => {
@@ -402,7 +426,7 @@ describe("Rooms", () => {
     await user.type(input, "  office  ");
     await user.click(add);
     await waitFor(() => expect(input).toHaveValue(""));
-    expect(log.find((r) => r.method === "POST")?.body).toEqual({ alias: "office" });
+    expect(log.find((r) => r.method === "POST")?.body).toEqual({ alias: "office", kind: "room" });
   });
 
   it("clears a duplicate spoken name's error as soon as you edit it", async () => {

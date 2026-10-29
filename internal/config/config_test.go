@@ -168,15 +168,17 @@ func TestStatelessValidation(t *testing.T) {
 func TestRoomsAndDevicesValidation(t *testing.T) {
 	cfg := Defaults()
 	cfg.Kodi = []KodiInstance{{Name: "Lounge", URL: "http://kodi/jsonrpc"}}
-	cfg.Rooms = []Room{{Name: "Lounge", Kodi: "Lounge", Aliases: []string{"living room"}}, {Name: "Lounge", Kodi: "Attic"}}
+	cfg.Rooms = []Room{{Name: "Lounge", Kodi: "Lounge", Aliases: []string{"living room", "TV"}, Devices: []string{"projector", "tv"}}, {Name: "Lounge", Kodi: "Attic"}}
 	cfg.Devices = []Device{{ID: "amzn1.ask.device.A", Kodi: "Lounge", Room: "Lounge"}, {ID: "amzn1.ask.device.A", Room: "Garage"}, {Kodi: "Lounge"}}
 
 	err := cfg.Validate()
 	require.Error(t, err)
 
-	for _, want := range []string{"rooms[1].name", "rooms[1].kodi", "devices[1].id is used twice", "devices[1].room", "devices[2].id"} {
+	for _, want := range []string{"rooms[1].name", "rooms[1].kodi", `rooms[0].devices "tv" is also in its aliases`, "devices[1].id is used twice", "devices[1].room", "devices[2].id"} {
 		require.ErrorContains(t, err, want)
 	}
+
+	assert.NotContains(t, err.Error(), "projector", "a device that isn't also a room name is fine")
 }
 
 func TestAlexaContent(t *testing.T) {

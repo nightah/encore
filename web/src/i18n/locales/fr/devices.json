@@ -34,11 +34,15 @@
       "add": "Ajouter",
       "addAliasButton": "Ajouter un nom prononcé à {{name}}",
       "addAliasLabel": "Ajouter un nom prononcé pour {{name}}",
-      "addAliasPlaceholder": "Ajouter un nom prononcé",
       "aliases": "Noms prononcés pour {{name}}",
       "edit": "Modifier la pièce {{name}}",
+      "kindLabel": "Type de nom prononcé pour {{name}}",
       "kodi": "→ Kodi « {{name}} »",
       "noKodi": "→ aucune instance Kodi",
+      "placeholder": {
+        "device": "Nom de l'appareil, p. ex. télé",
+        "room": "Nom de la pièce, p. ex. salon"
+      },
       "removeAlias": "Supprimer le nom prononcé « {{alias}} »"
     },
     "dialog": {
@@ -63,7 +67,11 @@
       "save": "Enregistrer"
     },
     "empty": "Aucune pièce pour l'instant.",
-    "intro": "Ces noms sont ajoutés au modèle d'interaction de la skill, pour qu'Alexa les reconnaisse dans « mets Bluey <b>dans la chambre des enfants</b> ».",
+    "intro": "Ces noms sont ajoutés au modèle d'interaction de la skill, pour qu'Alexa reconnaisse une <room>pièce</room> dans « mets Bluey <b>dans la chambre des enfants</b> » et un <device>appareil</device> dans « mets Bluey <b>à la télé</b> ».",
+    "kind": {
+      "device": "Appareil",
+      "room": "Pièce"
+    },
     "title": "Pièces et noms prononcés"
   },
   "table": {

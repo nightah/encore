@@ -34,11 +34,15 @@
       "add": "Aggiungi",
       "addAliasButton": "Aggiungi nome vocale a {{name}}",
       "addAliasLabel": "Aggiungi un nome vocale per {{name}}",
-      "addAliasPlaceholder": "Aggiungi nome vocale",
       "aliases": "Nomi vocali per {{name}}",
       "edit": "Modifica stanza {{name}}",
+      "kindLabel": "Tipo di nome vocale per {{name}}",
       "kodi": "→ Kodi “{{name}}”",
       "noKodi": "→ nessuna istanza di Kodi",
+      "placeholder": {
+        "device": "Nome del dispositivo, ad es. TV",
+        "room": "Nome della stanza, ad es. soggiorno"
+      },
       "removeAlias": "Rimuovi il nome vocale “{{alias}}”"
     },
     "dialog": {
@@ -63,7 +67,11 @@
       "save": "Salva"
     },
     "empty": "Ancora nessuna stanza.",
-    "intro": "Questi nomi vengono aggiunti al modello di interazione della skill, così Alexa li riconosce in “metti Bluey <b>nella cameretta</b>”.",
+    "intro": "Questi nomi vengono aggiunti al modello di interazione della skill, così Alexa riconosce una <room>stanza</room> in “metti Bluey <b>nella cameretta</b>” e un <device>dispositivo</device> in “metti Bluey <b>in TV</b>”.",
+    "kind": {
+      "device": "Dispositivo",
+      "room": "Stanza"
+    },
     "title": "Stanze e nomi vocali"
   },
   "table": {

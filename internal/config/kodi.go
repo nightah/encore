@@ -124,6 +124,12 @@ func (c *Config) validateRoomsAndDevices() []error {
 		if r.Kodi != "" && !instances[r.Kodi] {
 			errs = append(errs, fmt.Errorf("rooms[%d].kodi %q is not a Kodi instance in the kodi list", i, r.Kodi))
 		}
+
+		for _, d := range r.Devices {
+			if slices.ContainsFunc(r.Aliases, func(a string) bool { return strings.EqualFold(a, d) }) {
+				errs = append(errs, fmt.Errorf("rooms[%d].devices %q is also in its aliases; a spoken name is either a room name or a device", i, d))
+			}
+		}
 	}
 
 	devices := map[string]bool{}

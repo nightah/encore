@@ -52,7 +52,7 @@ func TestApplyConfiguredRoomsAndDevices(t *testing.T) {
 	cfg := config.Defaults()
 	cfg.DataDir = t.TempDir()
 	cfg.Kodi = []config.KodiInstance{{Name: "Lounge", URL: "http://127.0.0.1:1/jsonrpc"}, {Name: "Bedroom", URL: "http://127.0.0.1:2/jsonrpc"}}
-	cfg.Rooms = []config.Room{{Name: "Lounge", Kodi: "Lounge", Aliases: []string{"living room", "big tv"}}}
+	cfg.Rooms = []config.Room{{Name: "Lounge", Kodi: "Lounge", Aliases: []string{"living room"}, Devices: []string{"big tv"}}}
 	cfg.Devices = []config.Device{{ID: "amzn1.ask.device.A", Name: "Lounge Echo Show", Kodi: "Lounge", Room: "Lounge"}, {ID: "amzn1.ask.device.B", Kodi: "Bedroom"}}
 
 	a, err := New(t.Context(), &cfg, slog.New(slog.DiscardHandler))
@@ -85,10 +85,12 @@ func TestApplyConfiguredRoomsAndDevices(t *testing.T) {
 
 	aliases, err := a.DB().Rooms().Aliases(t.Context(), room.ID)
 	require.NoError(t, err)
-	assert.Len(t, aliases, 2)
+	require.Len(t, aliases, 2)
+	assert.Equal(t, store.SpokenDevice, aliases[0].Kind, "big tv")
+	assert.Equal(t, store.SpokenRoom, aliases[1].Kind, "living room")
 
 	// Applying again with fewer aliases removes the dropped one, and stays idempotent.
-	a.cfg.Rooms[0].Aliases = []string{"big tv"}
+	a.cfg.Rooms[0].Aliases = nil
 	require.NoError(t, a.ApplyConfiguredRoomsAndDevices(t.Context()))
 
 	_, err = a.DB().Rooms().Resolve(t.Context(), "living room")
@@ -98,6 +100,15 @@ func TestApplyConfiguredRoomsAndDevices(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, aliases, 1)
 	assert.Equal(t, "big tv", aliases[0].Alias, "an alias still wanted is kept, not added twice")
+
+	// Moving a name between the lists changes its kind.
+	a.cfg.Rooms[0].Aliases, a.cfg.Rooms[0].Devices = []string{"big tv"}, nil
+	require.NoError(t, a.ApplyConfiguredRoomsAndDevices(t.Context()))
+
+	aliases, err = a.DB().Rooms().Aliases(t.Context(), room.ID)
+	require.NoError(t, err)
+	require.Len(t, aliases, 1)
+	assert.Equal(t, store.SpokenRoom, aliases[0].Kind)
 
 	target, err := a.Target(t.Context(), "amzn1.ask.device.B")
 	require.NoError(t, err)
@@ -155,7 +166,7 @@ func TestApplyConfiguredRoomsAndDevicesReportsDatabaseFailures(t *testing.T) {
 				room := store.Room{Name: "Lounge"}
 				require.NoError(t, db.Rooms().Create(t.Context(), &room))
 
-				_, err := db.Rooms().AddAlias(t.Context(), room.ID, "front room")
+				_, err := db.Rooms().AddAlias(t.Context(), room.ID, "front room", store.SpokenRoom)
 				require.NoError(t, err)
 			},
 			fault: testkit.Fault{Op: testkit.Delete, Table: "room_aliases"},

@@ -27,15 +27,22 @@ The page also shows when each Echo was first and last seen and how many requests
 
 ## Rooms
 
-A room has a name, an optional Kodi instance that plays there, and spoken **aliases**: other names people use for it ("living room" and "family room" for the lounge). Names and aliases must be unique across rooms.
+A room has a name, an optional Kodi instance that plays there, and spoken names of two kinds:
 
-Requests that start playback accept a room at the end: "Alexa, ask encore to play the next episode of Severance in the bedroom", "... put on some jazz in the kitchen". Encore ignores a leading "the", matches the name against rooms and their aliases, and plays on that room's Kodi. A room without a Kodi instance falls back to the Echo's own instance; a name that matches no room gets "I don't know a room called …". The [voice commands](/encore/voice-commands/) pages show which commands take a `{Room}`.
+- **Room names** are other names people use for the room ("living room" and "family room" for the lounge), said as "…in the living room".
+- **Devices** are things in the room ("TV", "projector"), said as "…on the TV".
+
+Pick the kind next to the name when you add it; the page colours room names and devices differently. Both kinds pick the room's Kodi instance, and names must be unique across rooms.
+
+Requests that start playback accept a room or device at the end: "Alexa, ask encore to play the next episode of Severance in the bedroom", "... put on some jazz in the kitchen", "... play Bluey on the TV". Encore ignores a leading "the", matches the name against rooms and their spoken names, and plays on that room's Kodi.
+
+This also works for a plain "play …" request, which Alexa hears as one search phrase: "play Frozen in the lounge" arrives as "Frozen in the lounge". When the end of that phrase names a known room or device after the language's room wording ("in the", "on the"; "im", "in der"; "dans le", "au"; …), Encore takes it off the title and plays on that room's Kodi. If it names no room, the whole phrase is searched as a title. A room without a Kodi instance falls back to the Echo's own instance; a name that matches no room gets "I don't know a room called …". The [voice commands](/encore/voice-commands/) pages show which commands take a `{Room}`.
 
 Rooms work as soon as you add them. They also become slot values the next time you [deploy the skill](/encore/guides/deploy-skill/#redeploying), which helps Alexa hear unusual room names.
 
 ## Declare rooms and devices in config
 
-For [stateless deployments](/encore/guides/stateless/) or if you prefer code, declare rooms and Echo links in config. Rooms are matched by name (their aliases are made to match exactly) and devices by their Alexa device ID; rooms and devices not in config are left alone.
+For [stateless deployments](/encore/guides/stateless/) or if you prefer code, declare rooms and Echo links in config. Rooms are matched by name (their room names and devices are made to match exactly) and devices by their Alexa device ID; rooms and devices not in config are left alone.
 
 ```yaml title="encore.yml"
 kodi:
@@ -47,6 +54,7 @@ rooms:
   - name: Lounge
     kodi: Lounge
     aliases: [living room, family room]
+    devices: [TV]
   - name: Bedroom
     kodi: Bedroom
 devices:

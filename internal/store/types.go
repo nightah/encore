@@ -195,7 +195,11 @@ type RoomAlias struct {
 	Alias      string
 	Normalised string
 	CreatedAt  time.Time
+	Kind       SpokenKind
 }
+
+// SpokenKind says whether a spoken name is another name for a room ("lounge room") or a device in it ("TV").
+type SpokenKind string
 
 // Rooms is the rooms and room_aliases repository. Room names and aliases share one namespace under Normalise, so a spoken name resolves to at most one room.
 type Rooms struct{ db *DB }

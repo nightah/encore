@@ -8,6 +8,7 @@
 
 export * from "./accepted.ts";
 export * from "./addRoomAliasRequest.ts";
+export * from "./addRoomAliasRequestKind.ts";
 export * from "./amazonConnection.ts";
 export * from "./attention.ts";
 export * from "./authorizeAmazonParams.ts";
@@ -121,6 +122,7 @@ export * from "./requestSummaryOutcome.ts";
 export * from "./requestsToday.ts";
 export * from "./room.ts";
 export * from "./roomAlias.ts";
+export * from "./roomAliasKind.ts";
 export * from "./s3Patch.ts";
 export * from "./s3PatchAddressing.ts";
 export * from "./s3PatchSse.ts";

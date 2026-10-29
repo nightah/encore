@@ -37,6 +37,7 @@ rooms:
   - name: Lounge
     kodi: Lounge
     aliases: [living room]
+    devices: [TV]
 devices:
   - id: amzn1.ask.device.EXAMPLE-DEVICE-ID
     name: Lounge Echo Show
