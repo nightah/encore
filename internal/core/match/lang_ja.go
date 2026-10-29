@@ -1,6 +1,7 @@
 package match
 
 import (
+	"math"
 	"strconv"
 	"strings"
 	"unicode"
@@ -139,13 +140,14 @@ func kanjiNumbers(words []string) []string {
 			runes++
 		}
 
-		if n == 0 || runes > maxKanjiNumeral {
+		v, ok := kanjiValue(w[:n])
+		if n == 0 || runes > maxKanjiNumeral || !ok {
 			out = append(out, w)
 
 			continue
 		}
 
-		out = append(out, strconv.Itoa(kanjiValue(w[:n])))
+		out = append(out, strconv.Itoa(v))
 		if n < len(w) {
 			out = append(out, w[n:])
 		}
@@ -154,33 +156,48 @@ func kanjiNumbers(words []string) []string {
 	return out
 }
 
-// kanjiValue reads a kanji numeral of at most maxKanjiNumeral characters, digit by digit ("二〇二三" 2023) or with multipliers ("千九百八十四" 1984, "一億二千万" 120000000).
-func kanjiValue(s string) int {
+// kanjiValue reads a kanji numeral of at most maxKanjiNumeral characters, digit by digit ("二〇二三" 2023) or with multipliers ("千九百八十四" 1984, "一億二千万" 120000000). It reports false for a numeral whose value does not fit an int ("九九九九九九九九九九九億").
+func kanjiValue(s string) (int, bool) {
 	total, section, cur := 0, 0, 0
+	ok := true
 
 	for _, r := range s {
 		switch r {
 		case '十':
-			section += max(cur, 1) * 10
+			section, ok = addMul(section, max(cur, 1), 10, ok)
 			cur = 0
 		case '百':
-			section += max(cur, 1) * 100
+			section, ok = addMul(section, max(cur, 1), 100, ok)
 			cur = 0
 		case '千':
-			section += max(cur, 1) * 1000
+			section, ok = addMul(section, max(cur, 1), 1000, ok)
 			cur = 0
 		case '万':
-			total += max(section+cur, 1) * 10_000
+			section, ok = addMul(section, cur, 1, ok)
+			total, ok = addMul(total, max(section, 1), 10_000, ok)
 			section, cur = 0, 0
 		case '億':
-			total += max(section+cur, 1) * 100_000_000
+			section, ok = addMul(section, cur, 1, ok)
+			total, ok = addMul(total, max(section, 1), 100_000_000, ok)
 			section, cur = 0, 0
 		default:
-			cur = cur*10 + jaDigits[r]
+			cur, ok = addMul(jaDigits[r], cur, 10, ok)
 		}
 	}
 
-	return total + section + cur
+	section, ok = addMul(section, cur, 1, ok)
+	total, ok = addMul(total, section, 1, ok)
+
+	return total, ok
+}
+
+// addMul returns acc + x*m for non-negative operands, and false once the result would pass math.MaxInt or ok is already false.
+func addMul(acc, x, m int, ok bool) (int, bool) {
+	if !ok || x > (math.MaxInt-acc)/m {
+		return 0, false
+	}
+
+	return acc + x*m, true
 }
 
 // ordinals drops the counter after "第" and a number ("第2部", "第3章"), leaving "第" for dropParts.

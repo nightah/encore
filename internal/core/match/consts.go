@@ -116,7 +116,7 @@ const (
 	jaSmallKana = "ぁぃぅぇぉゃゅょゎっァィゥェォャュョヮッー"
 	// jaNumerals are the kanji numerals kanjiNumbers reads.
 	jaNumerals = "〇零一二三四五六七八九十百千万億"
-	// maxKanjiNumeral is the longest kanji numeral, in characters, read as a number; a longer run of numerals is not one a title spells, and its value could overflow.
+	// maxKanjiNumeral is the longest kanji numeral, in characters, read as a number; a longer run of numerals is not one a title spells.
 	maxKanjiNumeral = 12
 	// jaCounters are the counters that follow "第" and a number in a title: part, chapter, episode, volume, season, instalment, act.
 	jaCounters = "部章話巻期弾作幕"

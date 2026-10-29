@@ -81,8 +81,17 @@ func TestKanjiValue(t *testing.T) {
 		"一": 1, "十": 10, "十一": 11, "二十": 20, "百二十": 120, "三千": 3000, "千九百八十四": 1984, "二〇二三": 2023,
 		"零": 0, "万": 10_000, "二万五千": 25_000, "一億": 100_000_000, "一億二千万": 120_000_000,
 	} {
-		assert.Equal(t, want, kanjiValue(in), in)
+		got, ok := kanjiValue(in)
+		assert.True(t, ok, in)
+		assert.Equal(t, want, got, in)
 	}
+
+	for _, in := range []string{"九九九九九九九九九九九億", "一〇〇〇〇〇〇〇〇〇〇〇億", "九九九九九九九九九九九九九九九九九九九九"} {
+		_, ok := kanjiValue(in)
+		assert.False(t, ok, "%s does not fit an int", in)
+	}
+
+	assert.Equal(t, []string{"九九九九九九九九九九九億"}, kanjiNumbers([]string{"九九九九九九九九九九九億"}), "a numeral too large to read stays a word")
 }
 
 func TestRomanizeKana(t *testing.T) {
