@@ -11,32 +11,11 @@ import { type Plugin, defineConfig } from "vite";
 
 // Relative, unlike the rest of the code: Vite loads this file before its aliases exist. The extension is for Vite's native config loader.
 import { baseUIEntries } from "./src/dev/baseUI.ts";
+import { testDeps } from "./src/dev/testDeps.ts";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
 const outDir = resolve(root, "../internal/server/dist");
 const apiTarget = process.env.ENCORE_API_URL ?? "http://127.0.0.1:8080";
-
-/** What the browser tests load besides the app's own code, pre-bundled with it: Vite's scan of the test files misses some (react-dom/client, which Testing Library loads), and finding one mid-run makes Vite re-bundle and reload a test page, leaving it with two copies of React. */
-const TEST_DEPS = [
-  "@mswjs/interceptors/fetch",
-  "@tanstack/react-query",
-  "@tanstack/react-router",
-  "@testing-library/jest-dom/vitest",
-  "@testing-library/react",
-  "@testing-library/user-event",
-  "i18next",
-  "lucide-react",
-  "msw",
-  "msw/experimental",
-  "react",
-  "react-dom",
-  "react-dom/client",
-  "react-hook-form",
-  "react-i18next",
-  "react/jsx-dev-runtime",
-  "react/jsx-runtime",
-  "zod",
-];
 
 /** `emptyOutDir` wipes internal/server/dist on every build, including the committed `.gitkeep` that keeps `//go:embed all:dist` compiling on a clean checkout. Put it back. */
 function keepGitkeep(): Plugin {
@@ -67,7 +46,7 @@ export default defineConfig(({ mode }) => ({
   },
   // One dependency cache per mode: the dev server and a mock-mode server (pnpm dev:mock, the mock e2e run) pre-bundle differently, and a shared cache would make each rebuild it under the other, breaking open pages ("error loading dynamically imported module").
   cacheDir: resolve(root, "node_modules/.vite", mode),
-  optimizeDeps: { include: [...baseUIEntries(root), ...(mode === "test" ? TEST_DEPS : [])] },
+  optimizeDeps: { include: [...new Set([...baseUIEntries(root), ...(mode === "test" ? testDeps(root) : [])])] },
   plugins: [
     // Must run before the React plugin. No route HMR glue under Vitest: it never runs there (no import.meta.hot), and its source map points back into each route file, so coverage counted it as untested route code.
     tanstackRouter({ autoCodeSplitting: true, codeSplittingOptions: { addHmr: mode !== "test" }, target: "react" }),
