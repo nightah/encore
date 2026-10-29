@@ -1,0 +1,89 @@
+{
+  "attention": {
+    "empty": "対応が必要な項目はありません。",
+    "links": {
+      "needsDeploy": "今すぐ更新",
+      "open": "開く",
+      "unlinkedDevice": "デバイスをリンク"
+    },
+    "title": "要対応"
+  },
+  "description": "Alexa が Kodi インスタンスに届くために必要なすべてを一目で確認できます。読み取り専用です。変更は各セクションのページで行います。",
+  "instances": {
+    "asleep": {
+      "addMac": "音声リクエストで起動できるよう、MAC アドレスを追加してください。",
+      "manage": "Kodi ページで管理",
+      "plain": "スリープ中です。",
+      "since": "{{time}} からスリープ中です。",
+      "willWake": "音声リクエストで自動的に起動します。"
+    },
+    "empty": {
+      "action": "Kodi ページで追加",
+      "body": "Alexa が操作できるよう、Kodi インスタンスを追加してください。",
+      "title": "まだ Kodi インスタンスがありません"
+    },
+    "episode": "S{{season}} · E{{episode}}「{{title}}」",
+    "idle": "何も再生していません。",
+    "offline": {
+      "test": "Kodi ページでテスト",
+      "text": "応答がありません。Kodi が起動していて、接続できるか確認してください。"
+    },
+    "progress": "進捗 {{percent}} パーセント",
+    "title": "Kodi インスタンス"
+  },
+  "ms": "{{ms}} ミリ秒",
+  "openRequestLog": "リクエストログを開く",
+  "recent": {
+    "columns": {
+      "echo": "Echo",
+      "heard": "聞き取った内容",
+      "result": "結果",
+      "time": "時刻"
+    },
+    "empty": "まだリクエストがありません。「アレクサ、{{invocation}}で再生中のものを教えて」と話しかけてください。",
+    "emptyNoInvocation": "まだリクエストがありません。",
+    "open": "{{time}} のリクエストをログで開く",
+    "title": "最近のリクエスト",
+    "viewAll": "すべて表示"
+  },
+  "status": {
+    "endpoint": {
+      "label": "公開エンドポイント",
+      "notReachable": "{{host}} に外部から接続できません",
+      "reachable": "{{host}} に接続可能",
+      "unreachable": "接続不可"
+    },
+    "label": "ステータス",
+    "libraries": {
+      "and": "、",
+      "count_other": "{{count, number}} 件のライブラリ",
+      "label": "ライブラリ",
+      "noneShared": "共有なし",
+      "notSynced": "未同期",
+      "shared_other": "{{count}} 件共有",
+      "shareOne": "{{names}}がひとつを共有",
+      "synced": "{{when}}に同期"
+    },
+    "requests": {
+      "detail": "{{failed}} 件失敗 · 中央値 {{ms}} ミリ秒",
+      "label": "今日のリクエスト"
+    },
+    "skill": {
+      "label": "Alexa スキル",
+      "locales_other": "{{count, number}} 件のロケール",
+      "stage": {
+        "development": "開発ステージ",
+        "live": "ライブステージ",
+        "other": "{{stage}} ステージ"
+      },
+      "state": {
+        "deploying": "デプロイ中…",
+        "failed": "デプロイ失敗",
+        "live": "公開中",
+        "not_deployed": "未デプロイ"
+      },
+      "updatePending": "更新待ち"
+    }
+  },
+  "title": "概要"
+}

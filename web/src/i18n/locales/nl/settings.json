@@ -1,0 +1,371 @@
+{
+  "access": {
+    "breakGlass": {
+      "hint": "De gebruikersnaam en het wachtwoord blijven werken als je provider of proxy niet werkt. Als je buitengesloten bent terwijl dit uit staat, stel dan ENCORE_BREAK_GLASS=true in.",
+      "label": "Lokaal wachtwoord behouden als noodlogin",
+      "managed": "Ingesteld door ENCORE_BREAK_GLASS of encore.yml, dus het kan hier niet worden gewijzigd."
+    },
+    "cancel": "Annuleren",
+    "header": {
+      "adminGroup": {
+        "label": "Beheerdersgroep"
+      },
+      "groupsHeader": {
+        "label": "Groepenheader"
+      },
+      "strip": "Je proxy moet deze headers uit binnenkomende verzoeken verwijderen.",
+      "trustedProxies": {
+        "hint": "Headers van elk ander adres worden genegeerd. Scheid met komma's.",
+        "label": "Vertrouwde proxyadressen"
+      },
+      "userHeader": {
+        "label": "Gebruikersheader",
+        "required": "Voer de header in die de gebruikersnaam bevat."
+      }
+    },
+    "local": {
+      "lockout": {
+        "5/15": "5 mislukte pogingen voor 15 minuten",
+        "10/60": "10 mislukte pogingen voor 1 uur",
+        "custom": "{{attempts}} mislukte pogingen voor {{minutes}} minuten",
+        "label": "Blokkeren na"
+      },
+      "password": {
+        "change": "Wachtwoord wijzigen…",
+        "hint": "Opgeslagen als argon2id-hash.",
+        "label": "Wachtwoord"
+      },
+      "session": {
+        "days_one": "{{count}} dag",
+        "days_other": "{{count}} dagen",
+        "hours_one": "{{count}} uur",
+        "hours_other": "{{count}} uur",
+        "label": "Sessieduur"
+      },
+      "totp": {
+        "hint": "Gebruik een authenticator-app als tweede stap.",
+        "label": "Eenmalige code vereisen (TOTP)"
+      },
+      "username": {
+        "hint": "Ingesteld toen het beheerdersaccount werd aangemaakt.",
+        "label": "Gebruikersnaam"
+      }
+    },
+    "mode": {
+      "header": {
+        "hint": "Remote-User van je forward-auth-proxy",
+        "label": "Vertrouwde proxyheaders"
+      },
+      "legend": "Inlogmethode",
+      "local": {
+        "hint": "argon2id, met snelheidslimiet",
+        "label": "Lokaal wachtwoord"
+      },
+      "oidc": {
+        "hint": "bijv. Authelia, Authentik, Keycloak",
+        "label": "OpenID Connect"
+      }
+    },
+    "oidc": {
+      "adminGroup": {
+        "hint": "Gebruikers zonder deze waarde in de groups-claim worden geweigerd.",
+        "label": "Beheerdersgroep"
+      },
+      "clientId": {
+        "label": "Client-ID",
+        "required": "Voer de client-ID in."
+      },
+      "clientSecret": {
+        "empty": "Laat leeg voor een openbare client met alleen PKCE.",
+        "label": "Clientgeheim",
+        "stored": "Er is een geheim opgeslagen. Typ een nieuw geheim om het te vervangen."
+      },
+      "groupsClaim": {
+        "label": "Groups-claim"
+      },
+      "issuer": {
+        "hint": "Encore leest hier het discovery-document van de provider.",
+        "hintPreset": "{{shape}}. Encore leest hier het discovery-document.",
+        "invalid": "Voer de issuer-URL in, bijv. https://auth.example.net.",
+        "label": "Issuer-URL"
+      },
+      "provider": {
+        "hint": "Vult de gebruikelijke scopes en groups-claim in en toont hieronder de kant van de provider.",
+        "label": "Provider",
+        "other": "Overig"
+      },
+      "providers": {
+        "authelia": {
+          "digest": "De digest komt hier; het willekeurige wachtwoord komt in het Clientgeheim van Encore.",
+          "generate": "Genereer beide helften met:",
+          "issuerHint": "Het adres van Authelia, bijv. https://auth.example.com",
+          "snippetTitle": "Voeg deze client toe onder identity_providers.oidc in de configuratie van Authelia"
+        },
+        "authentik": {
+          "copySecret": "Kopieer het Client Secret van de provider naar Encore. De issuer is\n{{issuer}} voor de slug hierboven.",
+          "issuerHint": "De OpenID-issuer van de applicatie, bijv. https://authentik.example.com/application/o/encore/",
+          "scopesNote": "(de standaardwaarden; profile bevat de groepen)",
+          "snippetTitle": "Ga in Authentik naar Applications > Applications > Create with provider"
+        },
+        "keycloak": {
+          "issuerHint": "Het adres van de realm, bijv. https://keycloak.example.com/realms/home",
+          "snippetTitle": "Plak dit in Keycloak onder Clients > Import client en kopieer daarna het geheim van het tabblad Credentials naar encore"
+        }
+      },
+      "redirectUri": {
+        "copy": "Redirect-URI kopiëren",
+        "label": "Redirect-URI om bij je provider te registreren"
+      },
+      "saveToTest": "Sla op met OpenID Connect geselecteerd om het te testen.",
+      "scopes": {
+        "hint": "Gescheiden door spaties.",
+        "label": "Scopes"
+      },
+      "snippetLabel": "Configuratie van {{provider}}",
+      "testSignIn": "Inloggen testen"
+    },
+    "password": {
+      "changed": "Wachtwoord gewijzigd.",
+      "confirm": {
+        "label": "Nieuw wachtwoord bevestigen",
+        "mismatch": "De wachtwoorden komen niet overeen."
+      },
+      "current": {
+        "label": "Huidig wachtwoord",
+        "required": "Voer je huidige wachtwoord in."
+      },
+      "description": "Je blijft ingelogd in deze browser. Andere sessies worden uitgelogd.",
+      "new": {
+        "hint": "Minstens 12 tekens.",
+        "label": "Nieuw wachtwoord",
+        "tooShort": "Gebruik minstens 12 tekens."
+      },
+      "submit": "Wachtwoord wijzigen",
+      "title": "Wachtwoord wijzigen"
+    },
+    "title": "Beheerderstoegang",
+    "totp": {
+      "code": "Code",
+      "copySecret": "Geheim kopiëren",
+      "off": "Uitschakelen",
+      "offDescription": "Voer een code uit je authenticator-app in om te bevestigen.",
+      "offTitle": "Eenmalige codes uitschakelen",
+      "on": "Inschakelen",
+      "onDescription": "Voeg Encore toe aan je authenticator-app en voer daarna de code in die de app toont.",
+      "onTitle": "Eenmalige codes inschakelen",
+      "openApp": "Openen in een authenticator-app",
+      "secret": "Geheim",
+      "turnedOff": "Eenmalige codes uitgeschakeld.",
+      "turnedOn": "Eenmalige codes ingeschakeld."
+    }
+  },
+  "backup": {
+    "export": "Configuratie exporteren",
+    "import": "Configuratie importeren…",
+    "imported": "{{items}} geïmporteerd.",
+    "importedNothing": "Niets geïmporteerd.",
+    "importing": "Importeren…",
+    "includeSecrets": {
+      "hint": "Alleen een andere Encore met dezelfde versleutelingssleutel kan ze lezen.",
+      "label": "Geheimen meenemen (versleuteld)"
+    },
+    "intro": "YAML met Kodi-instanties, apparaatkoppelingen, kamers, aliassen en instellingen. Geheimen worden weggelaten, tenzij je ze versleuteld meeneemt.",
+    "skillPackage": "Skillpakket downloaden",
+    "skipped": "Overgeslagen: {{items}}.",
+    "title": "Importeren en exporteren"
+  },
+  "features": {
+    "auto_deploy": {
+      "hint": "Rolt de skill opnieuw uit als nieuwe bibliotheektitels, instellingen of een Encore-upgrade hem wijzigen. Een mislukte uitrol pauzeert dit tot je zelf uitrolt.",
+      "title": "Skillwijzigingen automatisch uitrollen"
+    },
+    "auto_deploy_minutes": {
+      "hint_hours_one": "Een wijziging is binnen twee controles live (ongeveer {{count, number}} uur).",
+      "hint_hours_other": "Een wijziging is binnen twee controles live (ongeveer {{count, number}} uur).",
+      "hint_minutes_one": "Een wijziging is binnen twee controles live (ongeveer {{count, number}} minuut).",
+      "hint_minutes_other": "Een wijziging is binnen twee controles live (ongeveer {{count, number}} minuten).",
+      "hintInvalid": "Van 1 tot {{max}} minuten.",
+      "title": "Controleren op wijzigingen elke",
+      "unit": "min"
+    },
+    "confirm_sound": {
+      "hint": "Alexa speelt een kort geluid na opdrachten zoals pauzeren of volume omhoog, in plaats van stil te blijven",
+      "title": "Opdrachten bevestigen met een geluid"
+    },
+    "deep_search": {
+      "hint": "In elk mediatype zoeken als het type niet wordt genoemd",
+      "title": "Diep zoeken voor “speel X”"
+    },
+    "queue_limit": {
+      "hint": "Het maximale aantal items dat een shuffle of wachtrij in één keer afspeelt, zodat grote bibliotheken snel blijven reageren",
+      "title": "Wachtrijlimiet"
+    },
+    "shutdown_quits": {
+      "hint": "In plaats van het apparaat uit te schakelen",
+      "title": "“Afsluiten” sluit Kodi af"
+    },
+    "title": "Optionele functies"
+  },
+  "general": {
+    "basePath": {
+      "hint": "Voor een proxy die Encore onder een subpad aanbiedt, bijv. /encore. Encore blijft ook op / antwoorden. Rol de skill opnieuw uit nadat je dit hebt gewijzigd.",
+      "label": "Basispad"
+    },
+    "defaultLocale": {
+      "label": "Standaardtaalregio"
+    },
+    "language": {
+      "auto": "Zelfde als browser ({{language}})",
+      "hint": "Alleen in deze browser opgeslagen.",
+      "label": "Taal"
+    },
+    "logLevel": {
+      "debug": "Debug: alles, inclusief elke Kodi-aanroep",
+      "error": "Fout: alleen storingen",
+      "hint": "Wordt meteen toegepast, zonder herstart.",
+      "info": "Info: wat Encore doet (standaard)",
+      "label": "Logniveau",
+      "warn": "Waarschuwing: alleen problemen"
+    },
+    "sections": {
+      "appearance": "Weergave",
+      "locale": "Taalregio",
+      "logging": "Logboekregistratie",
+      "server": "Server"
+    },
+    "theme": {
+      "dark": {
+        "hint": "Marineblauw, prettiger voor de ogen 's avonds",
+        "label": "Donker"
+      },
+      "legend": "Thema",
+      "light": {
+        "hint": "Koel grijs werkvlak",
+        "label": "Licht"
+      },
+      "note": "Alleen in deze browser opgeslagen. De zon/maan-knop in de kop van elke pagina wisselt en slaat meteen op.",
+      "system": {
+        "hint": "Volgt de lichte of donkere instelling van je apparaat",
+        "label": "Zelfde als systeem"
+      }
+    },
+    "timezone": {
+      "hint": "Gebruikt voor “hij is om 21:47 klaar”.",
+      "label": "Tijdzone"
+    },
+    "title": "Algemeen"
+  },
+  "page": {
+    "description": "Velden gemarkeerd met <badge/> komen uit <code>encore.yml</code> of <code>ENCORE_*</code>-variabelen en kunnen hier niet worden gewijzigd.",
+    "save": "Wijzigingen opslaan",
+    "sections": "Onderdelen van instellingen",
+    "title": "Instellingen"
+  },
+  "secrets": {
+    "encrypted": "Versleuteld: refresh token en clientgeheim van Login with Amazon, Kodi-wachtwoorden, opslaggegevens.",
+    "keyId": {
+      "label": "Actieve sleutel-ID",
+      "rotated": "{{keyId}} (vernieuwd {{date}})"
+    },
+    "rotate": {
+      "button": "Versleutelingssleutel vernieuwen…",
+      "cancel": "Annuleren",
+      "confirm": "Sleutel vernieuwen",
+      "description": "Encore maakt een nieuwe sleutel en versleutelt elk opgeslagen geheim daar opnieuw mee. Back-ups van vóór nu hebben nog steeds de oude sleutel nodig, die Encore bewaart.",
+      "title": "De versleutelingssleutel vernieuwen?"
+    },
+    "source": {
+      "config": "Ingesteld in encore.yml",
+      "file": "Gelezen uit een sleutelbestand (ENCORE_ENCRYPTION_KEY_FILE)",
+      "generated": "Gegenereerd door Encore en bewaard in de datamap",
+      "label": "Bron van de versleutelingssleutel"
+    },
+    "title": "Geheimen"
+  },
+  "storage": {
+    "backend": {
+      "legend": "Backend",
+      "local": "Lokale schijf",
+      "localHint": "Het /data-volume (standaard)",
+      "s3": "S3-compatibel",
+      "webdavHint": "Nextcloud, ownCloud en andere"
+    },
+    "backups": {
+      "folder": {
+        "hint": "Binnen de opslaglocatie hierboven; laat leeg voor het hoogste niveau. Als je wijzigt waar back-ups naartoe gaan, wordt er meteen een gemaakt.",
+        "label": "Back-upmap"
+      },
+      "hint": "Database plus configuratie-export. Geheimen worden uitgesloten.",
+      "keep": {
+        "count_one": "{{count}} back-up",
+        "count_other": "{{count}} back-ups",
+        "label": "Bewaren"
+      },
+      "label": "Back-ups",
+      "last": {
+        "label": "Laatste back-up",
+        "never": "Nooit",
+        "run": "Nu back-up maken"
+      },
+      "schedules": {
+        "daily": "Dagelijks om 03:00",
+        "off": "Uit",
+        "weekly": "Wekelijks, zondag om 03:00"
+      },
+      "snapshot": {
+        "label": "Bibliotheeksnapshot",
+        "value": "Elke 15 min en na elke synchronisatie opgeslagen, voor een snelle warme start"
+      }
+    },
+    "intro": "Waar Encore bibliotheeksnapshots, back-ups en geëxporteerde skillpakketten bewaart. Spraakverzoeken wachten nooit op deze opslag: de live index blijft in het geheugen.",
+    "local": {
+      "hint": "Koppel hier een volume zodat snapshots het herstarten van de container overleven.",
+      "label": "Datamap"
+    },
+    "s3": {
+      "accessKey": "Toegangssleutel",
+      "bucket": "Bucket",
+      "caBundle": "CA-certificaat (PEM)",
+      "customCa": "Aangepast CA-certificaat",
+      "endpoint": {
+        "hint": "Laat leeg voor AWS S3. Werkt met MinIO, Silo, Garage, Ceph RGW, SeaweedFS, R2, B2.",
+        "label": "Endpoint-URL"
+      },
+      "pathStyle": "Adressering in padstijl",
+      "prefix": "Voorvoegsel",
+      "region": "Regio",
+      "secretKey": {
+        "hint": "Versleuteld opgeslagen.",
+        "label": "Geheime sleutel",
+        "stored": "Opgeslagen, versleuteld met sleutel {{keyId}}. Typ een nieuwe om hem te vervangen."
+      },
+      "sse": "Versleuteling aan serverzijde"
+    },
+    "test": {
+      "button": "Verbinding testen",
+      "failed": "Het testobject kon niet worden geschreven.",
+      "ok": "Testobject geschreven, gelezen en verwijderd in {{ms}} ms",
+      "saveFirst": "Sla de wijzigingen op om ze te testen."
+    },
+    "title": "Opslag",
+    "webdav": {
+      "password": {
+        "hint": "Maak er een aan onder Beveiliging in Nextcloud. Versleuteld opgeslagen.",
+        "label": "App-wachtwoord"
+      },
+      "url": {
+        "hint": "Nextcloud, ownCloud of een andere WebDAV-server.",
+        "label": "WebDAV-URL"
+      },
+      "username": "Gebruikersnaam"
+    }
+  },
+  "tabs": {
+    "access": "Toegang",
+    "backup": "Importeren en exporteren",
+    "features": "Functies",
+    "general": "Algemeen",
+    "secrets": "Geheimen",
+    "storage": "Opslag"
+  }
+}

@@ -1,0 +1,189 @@
+{
+  "card": {
+    "address": "アドレス",
+    "and": "、",
+    "defaultForUnlinked": "リンクされていない Echo の既定",
+    "edit": "編集",
+    "editNamed": "{{name}}を編集",
+    "failed": "失敗：",
+    "hideTest": "テスト結果を隠す",
+    "httpOnly": {
+      "scheduled": "WebSocket がオフです。Encore はライブではなくスケジュールでライブラリを同期します。また、<b>設定 › サービス › コントロール › 他のシステムのアプリケーションからのリモートコントロールを許可</b>を有効にするまで、{{name}}で再生中の内容を確認できません。",
+      "theSource": "ライブラリソース",
+      "viaSource": "WebSocket がオフです。ライブラリの更新は引き続き{{source}}（ライブラリソース）から届きますが、<b>設定 › サービス › コントロール › 他のシステムのアプリケーションからのリモートコントロールを許可</b>を有効にするまで、Encore は{{name}}で再生中の内容を確認できません。"
+    },
+    "library": {
+      "label": "ライブラリ",
+      "own": "独自のライブラリ",
+      "sharedWith": "{{names}}と共有"
+    },
+    "mac": "MAC（Wake-on-LAN）",
+    "ms": "{{ms}} ミリ秒",
+    "notSet": "未設定",
+    "offline": "Encore は{{name}}に接続できません。Kodi が起動していて、下のアドレスが正しいか確認してください。",
+    "passed": "成功：",
+    "shared": "共有ライブラリ",
+    "sharedSource": "共有ライブラリ · ソース",
+    "stats": {
+      "findable": "検索可能",
+      "lastEvent": "最後の Kodi イベント",
+      "movies_other": "映画 {{count, number}} 本",
+      "newest": "最新のタイトル",
+      "noneYet": "まだありません",
+      "notFindable": "まだ検索できません",
+      "resync": "安全のための再同期",
+      "resyncEvery": "15 分ごと",
+      "resyncNext": "15 分ごと · 次回 {{time}}",
+      "sharedWith": "{{names}}と共有",
+      "shows_other": "テレビ番組 {{count, number}} 本"
+    },
+    "sync": "ライブラリを同期",
+    "test": "接続をテスト",
+    "testing": "{{name}}をテスト中…",
+    "testResults": "接続テストの結果",
+    "useForUnlinked": "リンクされていない Echo に使用",
+    "version": "バージョン",
+    "wake": "今すぐ起動",
+    "wakeTimeout": {
+      "label": "起動タイムアウト",
+      "value": "60 秒後に「まだ起動中です」と応答"
+    },
+    "waking": "起動中…（Kodi を待っています）"
+  },
+  "dialog": {
+    "add": "Kodi インスタンスを追加",
+    "addTitle": "Kodi インスタンスを追加",
+    "cancel": "キャンセル",
+    "close": "閉じる",
+    "confirmRemove": "{{name}}を削除しますか？リンクされている Echo は、再度リンクするまで動作しなくなります。",
+    "description": "Kodi で「HTTP 経由のリモートコントロールを許可」と「他のシステムのアプリケーションから」をオンにする必要があります。",
+    "editTitle": "{{name}}を編集",
+    "errors": {
+      "mac": "DC:A6:32:4B:19:0E のような MAC アドレスを入力するか、空欄のままにしてください。",
+      "name": "設置している部屋の名前など、名前を付けてください。",
+      "url": "http:// または https:// のアドレスを入力してください（例：http://192.168.1.20:8080/jsonrpc）。",
+      "websocketUrl": "ws:// または wss:// のアドレスを入力するか、空欄のままにしてください。"
+    },
+    "fields": {
+      "broadcast": {
+        "hint": "Wake-on-LAN を特定のサブネットに送る必要がある場合のみ。",
+        "label": "ブロードキャストアドレス"
+      },
+      "language": {
+        "hint": "話されたタイトルをこのライブラリと照合するときのルールです。",
+        "label": "タイトルの言語"
+      },
+      "mac": {
+        "hint": "スリープ中のこの Kodi インスタンスを音声リクエストで起動できるようにします。",
+        "label": "MAC アドレス（Wake-on-LAN）"
+      },
+      "name": {
+        "hint": "Echo とリクエストログに表示されます。",
+        "label": "名前"
+      },
+      "password": {
+        "hint": "保存時に暗号化されます。",
+        "label": "Kodi のパスワード",
+        "saved": "パスワードは保存済みです。そのままにする場合は空欄のままにしてください。"
+      },
+      "shutdown": {
+        "hint": "「アレクサ、encore でシャットダウンして」と言ったときに、この Kodi インスタンスで行う動作です。",
+        "inherit": "設定 › 機能 に従う",
+        "label": "「シャットダウン」",
+        "power_off": "デバイスの電源を切る",
+        "quit": "Kodi を終了"
+      },
+      "timezone": {
+        "hint": "この Kodi インスタンスの所在地です。空欄にすると Kodi の時計から取得します。",
+        "label": "タイムゾーン"
+      },
+      "url": {
+        "label": "JSON-RPC URL"
+      },
+      "username": {
+        "label": "Kodi のユーザー名"
+      },
+      "websocketUrl": {
+        "hint": "ライブラリのライブ更新と再生中の情報に使います。通常はポート 9090 です。",
+        "label": "WebSocket URL"
+      }
+    },
+    "keep": "残す",
+    "managed": "このインスタンスは encore.yml または ENCORE_* 変数で定義されています。そちらで変更してください。",
+    "remove": "削除",
+    "removeEllipsis": "削除…",
+    "save": "保存"
+  },
+  "discovered": {
+    "add": "追加",
+    "addNamed": "{{name}}を追加",
+    "intro": "mDNS（<mono>{{service}}</mono>）で検出しました。別の VLAN にある Kodi はここに表示されないため、手動で追加してください。",
+    "lastScan": "最終スキャン {{when}} · 継続的にスキャン中",
+    "none": "新しいものは見つかりませんでした。",
+    "scanning": "スキャン中…",
+    "searching": "mDNS で Kodi を検索しています。数秒かかります。",
+    "title": "ネットワーク上で検出",
+    "unavailable": "現在、検出は利用できません。",
+    "version": "Kodi {{version}}"
+  },
+  "library": {
+    "explanation": {
+      "common": {
+        "many": "Encore はこれらのインスタンスに対してひとつのライブラリとタイトルインデックスを保持し、ライブラリソースから同期して、すべてのインスタンスからの変更を受け取ります。",
+        "two": "Encore はこれらのインスタンスに対してひとつのライブラリとタイトルインデックスを保持し、ライブラリソースから同期して、両方のインスタンスからの変更を受け取ります。"
+      },
+      "confirmed": {
+        "many": "これらのインスタンスは同じ Kodi データベースを使用しています。1 台での再生により、すべてのインスタンスの視聴状態と再開位置が同時に変わりました。",
+        "two": "これらのインスタンスは同じ Kodi データベースを使用しています。1 台での再生により、両方のインスタンスの視聴状態と再開位置が同時に変わりました。"
+      },
+      "likely": {
+        "check": {
+          "many": "次に何かが再生されたとき、Encore はすべてのインスタンスで視聴状態と再開位置が同時に変わるか確認します。変わった場合は「共有を確認済み」になります。",
+          "two": "次に何かが再生されたとき、Encore は両方のインスタンスで視聴状態と再開位置が同時に変わるか確認します。変わった場合は「共有を確認済み」になります。"
+        },
+        "evidence": "これらのインスタンスは同じ Kodi データベースを使用しているようです：{{evidence}}。",
+        "plain": "これらのインスタンスは同じ Kodi データベースを使用しているようです。"
+      },
+      "manual": "これらのインスタンスは手動でグループ化されています。"
+    },
+    "fallback": "ソースに接続できないため、Encore は{{name}}から同期しています。",
+    "share": {
+      "add": "インスタンスを追加",
+      "alreadyShared": "{{names}}とライブラリを共有しています。チェックするとこのライブラリに移動します。",
+      "cancel": "キャンセル",
+      "confirm_other": "{{count}} 台でライブラリを共有",
+      "description": "MySQL など、同じ Kodi データベースを使用している Kodi インスタンスにチェックを入れてください。Encore はそれらに対してひとつのライブラリとタイトルインデックスを保持します。",
+      "legend": "Kodi インスタンス",
+      "open": "ライブラリを共有",
+      "sourceHint": "最初にチェックしたインスタンスがライブラリソースになります。後から変更できます。",
+      "title": "ライブラリを共有"
+    },
+    "source": "ライブラリソース",
+    "sourceHint": "ソースがスリープ中の場合、Encore はグループ内の起動している別のインスタンスから同期します。再生は引き続き Echo が操作するインスタンスで行われます。",
+    "split": {
+      "cancel": "キャンセル",
+      "confirm": "分割",
+      "currentSource": "現在のライブラリソース",
+      "description": "独自の Kodi データベースを持つインスタンスを選んでください。Encore はそのインスタンスを個別に同期してインデックスします。",
+      "legend": "独自のライブラリを持つインスタンス",
+      "open": "共有していない場合は分割",
+      "title": "共有ライブラリを分割"
+    },
+    "state": {
+      "confirmed_shared": "共有を確認済み",
+      "likely_shared": "共有の可能性あり",
+      "manual": "手動でグループ化",
+      "solo": "独自のライブラリ"
+    },
+    "title": "共有ライブラリ：{{name}}"
+  },
+  "page": {
+    "addManually": "Kodi を手動で追加",
+    "description": "Encore が操作できる各 Kodi です。ライブラリのインデックスは Kodi の WebSocket イベントによって常に最新に保たれます。",
+    "empty": {
+      "body": "ネットワーク上で検出されたものを追加するか、アドレスを入力してください。Kodi で「HTTP 経由のリモートコントロールを許可」をオンにする必要があります。",
+      "title": "まだ Kodi インスタンスがありません"
+    },
+    "title": "Kodi インスタンス"
+  }
+}

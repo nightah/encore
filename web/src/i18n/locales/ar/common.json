@@ -1,0 +1,122 @@
+{
+  "actions": {
+    "close": "إغلاق",
+    "copied": "تم النسخ",
+    "copy": "نسخ",
+    "copyNamed": "نسخ {{label}}",
+    "copyWithText": "{{label}}: {{text}}",
+    "dismiss": "تجاهل",
+    "tryAgain": "حاول مرة أخرى"
+  },
+  "check": {
+    "auth": "بيانات الاعتماد",
+    "library": "المكتبة",
+    "ping": "JSON-RPC عبر HTTP"
+  },
+  "error": {
+    "generic": "حدث خطأ ما.",
+    "http": "فشل الطلب برمز HTTP {{status}}.",
+    "lwaCredentials": "احفظ معرّف العميل وسر العميل الخاصين بـ Login with Amazon أولًا.",
+    "noConnection": "تعذّر الوصول إلى خادم Encore.",
+    "pageFailed": "حدث خطأ ما في هذه الصفحة",
+    "unreachable": "Encore لا يستجيب"
+  },
+  "field": {
+    "managed": "مُدار من ملف الإعداد",
+    "managedSuffix": "، مُدار من ملف الإعداد"
+  },
+  "heard": {
+    "quoted": "«{{text}}»",
+    "suffix": ": «{{text}}»"
+  },
+  "infoTip": {
+    "label": "حول: {{label}}"
+  },
+  "instance": {
+    "asleep": "في وضع السكون",
+    "connectedHttp": "متصل · HTTP فقط",
+    "connectedWebSocket": "متصل · WebSocket",
+    "httpOnly": "HTTP فقط",
+    "idle": "خامل",
+    "macSaved": "عنوان MAC محفوظ",
+    "noMac": "لا يوجد عنوان MAC",
+    "offline": "غير متصل",
+    "paused": "متوقف مؤقتًا",
+    "playing": "قيد التشغيل",
+    "versionUnknown": "غير معروف حتى يصل Encore إلى Kodi"
+  },
+  "loading": "جارٍ التحميل…",
+  "nav": {
+    "alexaSkill": "مهارة Alexa",
+    "echoDevices": "أجهزة Echo",
+    "kodi": "Kodi",
+    "label": "التنقل الرئيسي",
+    "library": "المكتبة",
+    "overview": "نظرة عامة",
+    "requestLog": "سجل الطلبات",
+    "settings": "الإعدادات"
+  },
+  "notFound": {
+    "back": "العودة إلى النظرة العامة",
+    "title": "الصفحة غير موجودة"
+  },
+  "outcome": {
+    "asked": "سأل عن المقصود",
+    "error": "خطأ",
+    "not_found": "غير موجود",
+    "ok": "تم",
+    "played": "تم التشغيل",
+    "unlinked": "الجهاز غير مرتبط"
+  },
+  "request": {
+    "simulator": "محاكي Amazon",
+    "unnamedEcho": "جهاز Echo بلا اسم"
+  },
+  "setupBanner": {
+    "continue": "متابعة الإعداد",
+    "message": "لم يكتمل الإعداد بعد. أنت في الخطوة {{step}} من 6."
+  },
+  "shell": {
+    "signedInAs": "مسجّل الدخول باسم <name>{{name}}</name>",
+    "signOut": "تسجيل الخروج",
+    "skipToContent": "تخطَّ إلى المحتوى"
+  },
+  "theme": {
+    "toDark": "التبديل إلى الوضع الداكن",
+    "toLight": "التبديل إلى الوضع الفاتح"
+  },
+  "time": {
+    "hoursAgo": "قبل {{value}} س",
+    "inHours": "بعد {{value}} س",
+    "inMinutes": "بعد {{value}} د",
+    "justNow": "الآن",
+    "minutesAgo": "قبل {{value}} د",
+    "never": "أبدًا",
+    "seconds": "{{value}} ث",
+    "soon": "بعد لحظات"
+  },
+  "toast": {
+    "aliasSaved": "تم حفظ الاسم البديل. ستتم إضافته إلى نموذج المهارة في التحديث التالي.",
+    "amazonConnected": "تم الاتصال بـ Amazon.",
+    "amazonDisconnected": "تم حذف رموز Amazon.",
+    "backupStarted": "بدأ النسخ الاحتياطي.",
+    "defaultInstance": "أصبحت أجهزة Echo غير المرتبطة تتحكم في مثيل Kodi هذا.",
+    "echoForgotten": "تم نسيان جهاز Echo. سيظهر مجددًا إذا أرسل طلبًا آخر.",
+    "echoSaved": "تم حفظ جهاز Echo.",
+    "failed": "لم ينجح ذلك",
+    "instanceAdded": "تمت إضافة مثيل Kodi.",
+    "instanceRemoved": "تمت إزالة مثيل Kodi.",
+    "instanceSaved": "تم حفظ مثيل Kodi.",
+    "libraryGrouped": "تمت مشاركة المكتبة. أصبح Encore يفهرس هذه المثيلات كمثيل واحد.",
+    "librarySource": "تم تغيير مصدر المكتبة.",
+    "librarySplit": "تم فصل المكتبة. أصبح Encore يفهرس كل مثيل على حدة.",
+    "roomAdded": "تمت إضافة الغرفة.",
+    "roomRemoved": "تمت إزالة الغرفة.",
+    "roomSaved": "تم حفظ الغرفة.",
+    "secretsRotated": "تم تدوير مفتاح التشفير. أُعيد تشفير الأسرار المخزّنة.",
+    "settingsSaved": "تم حفظ الإعدادات.",
+    "skillSaved": "تم حفظ إعدادات المهارة.",
+    "syncStarted": "بدأت مزامنة المكتبة. تتحدّث الأعداد عند انتهائها.",
+    "wakeSent": "تم إرسال حزمة Wake-on-LAN. في انتظار استجابة Kodi."
+  }
+}

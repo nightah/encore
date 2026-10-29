@@ -1,0 +1,108 @@
+{
+  "controlsKodi": "يتحكم في Kodi",
+  "dialog": {
+    "cancel": "إلغاء",
+    "confirmForget": "هل تريد نسيان جهاز Echo هذا؟ سيعود غير مرتبط في المرة التالية التي يرسل فيها طلبًا.",
+    "editEcho": "تعديل جهاز Echo",
+    "editTitle": "تعديل {{name}}",
+    "fields": {
+      "kodi": {
+        "hint": "قل «…على تلفاز غرفة النوم» لتجاوزه في طلب واحد."
+      },
+      "name": {
+        "hint": "لا تشارك Alexa أسماء الأجهزة، لذا سمِّه هنا.",
+        "label": "الاسم"
+      },
+      "room": {
+        "label": "الغرفة",
+        "none": "بلا غرفة"
+      }
+    },
+    "forget": "نسيان الجهاز",
+    "forgetEllipsis": "نسيان الجهاز…",
+    "keep": "الإبقاء عليه",
+    "save": "حفظ"
+  },
+  "notLinked": "غير مرتبط",
+  "page": {
+    "description": "يتحكم كل جهاز Echo في مثيل Kodi واحد افتراضيًا. قل «…على تلفاز غرفة النوم» لتجاوزه في طلب واحد.",
+    "title": "أجهزة Echo والغرف"
+  },
+  "rooms": {
+    "add": "إضافة غرفة",
+    "card": {
+      "add": "إضافة",
+      "addAliasButton": "إضافة اسم منطوق إلى {{name}}",
+      "addAliasLabel": "إضافة اسم منطوق لـ {{name}}",
+      "aliases": "الأسماء المنطوقة لـ {{name}}",
+      "edit": "تعديل الغرفة {{name}}",
+      "kindLabel": "نوع الاسم المنطوق لـ {{name}}",
+      "kodi": "← Kodi «{{name}}»",
+      "noKodi": "← بلا مثيل Kodi",
+      "placeholder": {
+        "device": "اسم الجهاز، مثل التلفاز",
+        "room": "اسم الغرفة، مثل غرفة المعيشة"
+      },
+      "removeAlias": "إزالة الاسم المنطوق «{{alias}}»"
+    },
+    "dialog": {
+      "addTitle": "إضافة غرفة",
+      "cancel": "إلغاء",
+      "confirmRemove": "هل تريد إزالة {{name}} وأسماءها المنطوقة؟ تحتفظ أجهزة Echo الموجودة فيها بارتباطها بـ Kodi.",
+      "editTitle": "تعديل {{name}}",
+      "fields": {
+        "kodi": {
+          "hint": "المكان الذي يُشغَّل فيه «…في المطبخ».",
+          "label": "مثيل Kodi",
+          "none": "لا شيء"
+        },
+        "name": {
+          "label": "الاسم",
+          "placeholder": "المطبخ"
+        }
+      },
+      "keep": "الإبقاء عليها",
+      "remove": "إزالة الغرفة",
+      "removeEllipsis": "إزالة…",
+      "save": "حفظ"
+    },
+    "empty": "لا توجد غرف بعد.",
+    "intro": "تُضاف هذه الأسماء إلى نموذج التفاعل الخاص بالمهارة، فتتعرّف Alexa على <room>الغرفة</room> في «شغّل Bluey <b>في غرفة الأطفال</b>» وعلى <device>الجهاز</device> في «شغّل Bluey <b>على التلفاز</b>».",
+    "kind": {
+      "device": "جهاز",
+      "room": "غرفة"
+    },
+    "title": "الغرف والأسماء المنطوقة"
+  },
+  "table": {
+    "anUnnamedEcho": "جهاز Echo بلا اسم",
+    "columns": {
+      "actions": "الإجراءات",
+      "controls": "يتحكم في",
+      "lastRequest": "آخر طلب",
+      "name": "الاسم",
+      "room": "الغرفة",
+      "today": "اليوم"
+    },
+    "edit": "تعديل",
+    "editNamed": "تعديل {{name}}",
+    "empty": "لا توجد أجهزة Echo بعد. تظهر هنا بعد أول طلب منها إلى المهارة.",
+    "identified": "هذا هو جهاز Echo الذي تحدّثت إليه للتو",
+    "identifyHint": "لست متأكدًا أي جهاز Echo هو أيّها؟ قل «Alexa، اسأل {{invocation}} ما هذا الجهاز» وسيُبرَز هنا.",
+    "spokeTo": "تحدّثت للتو إلى {{name}}.",
+    "title": "الأجهزة"
+  },
+  "unlinked": {
+    "deviceName": "اسم الجهاز",
+    "firstRequest": {
+      "other": "أول طلب {{when}}{{heard}}. الجهاز <mono>{{id}}</mono>",
+      "today": "أول طلب {{when}} اليوم{{heard}}. الجهاز <mono>{{id}}</mono>"
+    },
+    "link": "ربط الجهاز",
+    "linked": "تم ربط جهاز Echo.",
+    "placeholder": "Dot المطبخ",
+    "title": "تم رصد جهاز Echo جديد: غير مرتبط بمثيل Kodi بعد",
+    "titleIdentified": "هذا هو جهاز Echo الذي تحدّثت إليه للتو: غير مرتبط بمثيل Kodi بعد"
+  },
+  "unnamed": "جهاز Echo بلا اسم"
+}

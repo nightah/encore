@@ -1,0 +1,232 @@
+{
+  "address": {
+    "check": "アドレスを確認",
+    "checkAgain": "再確認",
+    "checking": "ネットワークの外部から確認しています…",
+    "heading": "公開アドレスを入力してください",
+    "intro": "Alexa はリバースプロキシまたはトンネルを通じて、ポート 443 の HTTPS で Encore を呼び出します。",
+    "results": {
+      "label": "到達性チェックの結果",
+      "title": "到達性チェック（ネットワークの外部から）"
+    },
+    "unsupported": "このサーバーはまだ外部からアドレスを確認できません。続行し、概要ページで公開エンドポイントに接続できることを確認してください。",
+    "url": {
+      "hint": "例：{{url}}",
+      "label": "公開ベース URL"
+    }
+  },
+  "admin": {
+    "errors": {
+      "password": "12 文字以上にしてください。",
+      "token": "Encore のログに出力されたセットアップトークンを貼り付けてください。",
+      "username": "ユーザー名を決めてください。"
+    },
+    "exists": "管理者アカウントは作成済みです。",
+    "existsSignedIn": "管理者アカウントは作成済みで、{{name}}としてサインインしています。",
+    "heading": "管理者アカウントを作成",
+    "intro": "このインスタンスの所有者であることを証明するため、Encore の起動時にログに出力されたワンタイムのセットアップトークンを貼り付けてください。管理者アカウントが作成されると無効になります。",
+    "logs": {
+      "docker": "Docker で実行している場合",
+      "systemd": "systemd サービスとして実行している場合"
+    },
+    "password": {
+      "hint": "12 文字以上。argon2id ハッシュとして保存されます。",
+      "label": "パスワード"
+    },
+    "sso": "シングルサインオンを使いたい場合は、セットアップ後に設定で OIDC または信頼済みプロキシヘッダーに切り替えられます。",
+    "token": "セットアップトークン",
+    "username": "ユーザー名"
+  },
+  "amazon": {
+    "authorize": "Amazon で認可",
+    "clientId": "クライアント ID",
+    "clientSecret": {
+      "hint": "保存時に暗号化されます。アクセストークンの更新にのみ使用されます。",
+      "label": "クライアントシークレット"
+    },
+    "connected": "Amazon に接続しました。Encore はスキルをデプロイできます。",
+    "connectedVendor": "Amazon に接続しました（ベンダー {{vendor}}）。Encore はスキルをデプロイできます。",
+    "copyReturnUrl": "返信 URL をコピー",
+    "fallback": {
+      "connect": "接続",
+      "label": "代替手段",
+      "redirectUrl": {
+        "hint": "サインイン後、Amazon は読み込めないアドレスに移動します。ブラウザーのアドレスバーからアドレス全体をコピーしてください。",
+        "label": "リダイレクト URL",
+        "option": "リダイレクト URL を貼り付ける"
+      },
+      "refreshToken": {
+        "hint": "{{prefix}} で始まります。",
+        "label": "リフレッシュトークン",
+        "option": "リフレッシュトークンを貼り付ける"
+      },
+      "summaryHttp": "HTTPS のコールバックがない場合は、代わりに「リダイレクト URL を貼り付ける」を使うか、<code>{{command}}</code> で取得したリフレッシュトークンを貼り付けてください。",
+      "summaryHttps": "コールバック経由でサインインできない場合は、代わりに <code>{{command}}</code> で取得したリフレッシュトークンを貼り付けてください。"
+    },
+    "heading": "Amazon 開発者アカウントを接続",
+    "instructions": {
+      "credentials": "プロファイルのクライアント ID とクライアントシークレットを下に貼り付けてください。",
+      "open": "<link>Login with Amazon コンソール</link>を開き、「encore」という名前のセキュリティプロファイルを作成します。",
+      "returnUrls_other": "「Web Settings」で、次の「Allowed Return URLs」を追加します："
+    },
+    "intro": "Encore は、あなた自身の Login with Amazon セキュリティプロファイルを使ってスキルをデプロイします。作成は一度だけで、2 分ほどで終わります。",
+    "newTab": "（新しいタブで開きます）",
+    "reauthorise": "Amazon から再サインインを求められました。デプロイを続けるには、もう一度認可してください。",
+    "redirectError": "Amazon に接続できませんでした：{{error}}"
+  },
+  "check": {
+    "fail": "失敗：",
+    "ok": "成功：",
+    "pending": "確認中：",
+    "warn": "警告："
+  },
+  "content": {
+    "legend": "再生できるもの"
+  },
+  "deploy": {
+    "answer": {
+      "no": "いいえ",
+      "noLabel": "{{question}}：いいえ",
+      "yes": "はい",
+      "yesLabel": "{{question}}：はい"
+    },
+    "connectFirst": "先に Amazon 開発者アカウントを接続してください。Encore はそのアカウントでスキルをデプロイします。",
+    "contentNote": "外したものの音声コマンドはスキルから削除されます。",
+    "deploy": "スキルをデプロイ",
+    "deploying": "デプロイ中…",
+    "duration_other": "{{count}} 件のロケールで通常 2～5 分",
+    "failed": "「{{step}}」でデプロイに失敗しました：{{message}}。",
+    "goToAmazon": "Amazon アカウントへ",
+    "heading": "スキルをデプロイ",
+    "invocation": {
+      "example": "「アレクサ、{{name}}で…」",
+      "french": "「encore」はフランス語で「もう一度」を意味するため、フランス語では「kodi」を使います。",
+      "label": "呼び出し名"
+    },
+    "locales": {
+      "faster": "ロケールが少ないほどデプロイは速くなります。",
+      "legend": "デプロイするロケール",
+      "match": "各 Echo の言語が、このいずれかと一致している必要があります。"
+    },
+    "noDetails": "詳細なし",
+    "privacy": {
+      "allows_purchases": {
+        "about": "スキル内課金、サブスクリプション、現実の商品など、スキルを通じて何かを購入できるかどうかです。Encore は何も販売しません。",
+        "label": "スキルで購入が可能"
+      },
+      "contains_ads": {
+        "about": "他の製品の宣伝を含め、スキルが広告を再生、読み上げ、表示するかどうかです。Encore には広告がありません。",
+        "label": "スキルに広告が含まれる"
+      },
+      "is_child_directed": {
+        "about": "米国の児童オンラインプライバシー保護法（COPPA）の定義に基づき、スキルが 13 歳未満の子ども向けに設計されているかどうかです。子どもが使う可能性ではなく、スキルの対象者が誰かを問うものです。",
+        "label": "スキルは 13 歳未満の子ども向け"
+      },
+      "is_export_compliant": {
+        "about": "スキルが、ライセンスなしで米国およびスキルを提供するその他すべての国との間で輸出入でき、暗号化を使用するソフトウェアに関するものを含め、輸出入に関する法律に準拠していることを確認します。Encore はメディアの再生を操作し、標準の HTTPS 暗号化のみを使用します。",
+        "label": "スキルは輸出規制に準拠"
+      },
+      "legend": "Amazon のプライバシーに関する質問（ご自身で回答してください）",
+      "unanswered_other": "デプロイ前に回答が必要な質問が残り {{count}} 件あります。",
+      "uses_personal_info": {
+        "about": "名前、メールアドレス、電話番号、位置情報など、スキルの利用者から個人情報を収集するかどうかです。Encore はこれらを一切求めません。Encore が把握するのは各 Echo のデバイス ID と依頼内容だけで、それはあなた自身のサーバーに保存されます。",
+        "label": "スキルは個人情報を収集する"
+      }
+    },
+    "progress": "デプロイ中、{{percent}} パーセント完了",
+    "starting": "開始中",
+    "succeeded": "デプロイしました。スキルはあなたの Amazon アカウントでテスト用に有効になっています。",
+    "tryAgain": "再試行"
+  },
+  "hello": {
+    "alexaPlus": "Alexa+ デバイスで「{{invocation}}で」が認識されない場合は、Alexa アプリの Alexa+ ストアからスキルを一度有効にしてください。",
+    "echoName": {
+      "hint": "例：リビングの Echo Show",
+      "label": "Echo の名前"
+    },
+    "finish": "完了",
+    "heading": "話しかけてみる",
+    "intro": "あなたの Amazon アカウントでサインインしている Echo に、次のように話しかけてください：",
+    "named": "Echo に名前を付けました。",
+    "phrase": "「アレクサ、{{invocation}}で再生中のものを教えて」",
+    "received": "{{time}} に{{device}}からリクエストを受信しました。",
+    "receivedNew": "{{time}} に新しい Echo からリクエストを受信しました。Kodi にリンクできるよう、名前を付けてください：",
+    "waiting": "最初のリクエストを待っています…"
+  },
+  "kodi": {
+    "addAnother": "さらに追加",
+    "added": "{{name}}を追加しました。Encore はライブラリを同期しています。",
+    "adding": "{{name}}を追加中…",
+    "alreadyAdded": "追加済み：{{names}}。さらに追加するか、続行してください。",
+    "contentNote": "Encore は Kodi からこれらだけを同期し、それ以外の音声コマンドはスキルから除外します。",
+    "fixLater": "これは後から Kodi ページで修正できます。音声操作には、少なくとも HTTP のチェックに成功する必要があります。",
+    "found": "ネットワーク上で次のものが見つかりました。",
+    "heading": "最初の Kodi を追加",
+    "instance": "Kodi インスタンス",
+    "manual": {
+      "hint": "別の VLAN にある Kodi や、検出がブロックされている場合",
+      "label": "アドレスを手動で入力"
+    },
+    "name": {
+      "hint": "呼び方です（例：リビング）",
+      "label": "名前"
+    },
+    "notFound": "ネットワーク上で応答した Kodi がないため、下にアドレスを入力してください。",
+    "password": {
+      "hint": "保存時に暗号化されます。",
+      "label": "Kodi のパスワード"
+    },
+    "remoteControl": "Kodi で「HTTP 経由のリモートコントロールを許可」と「他のシステムのアプリケーションから」を有効にする必要があります。",
+    "results": "接続テストの結果",
+    "rpc": "JSON-RPC アドレス",
+    "searchAgain": "再検索",
+    "searchFailed": "Encore はネットワーク上で Kodi を検索できなかったため、下にアドレスを入力してください。",
+    "searching": "ネットワーク上で Kodi を探しています。",
+    "submit": "追加してテスト",
+    "testFailed": "接続テストを実行できませんでした：{{error}}",
+    "username": "Kodi のユーザー名"
+  },
+  "nav": {
+    "back": "戻る",
+    "continue": "続行",
+    "skip": "今はスキップ"
+  },
+  "steps": {
+    "address": {
+      "sub": "プロキシと証明書の確認",
+      "title": "公開アドレス"
+    },
+    "admin": {
+      "sub": "セットアップトークンとパスワード",
+      "title": "管理者アカウント"
+    },
+    "amazon": {
+      "sub": "Login with Amazon プロファイル",
+      "title": "Amazon アカウント"
+    },
+    "deploy": {
+      "sub": "ロケールごとにビルド",
+      "title": "スキルをデプロイ"
+    },
+    "hello": {
+      "sub": "最初のリクエストを確認",
+      "title": "話しかけてみる"
+    },
+    "kodi": {
+      "sub": "検出して接続",
+      "title": "Kodi"
+    }
+  },
+  "wizard": {
+    "label": "ステップ {{step}}：{{title}}",
+    "progress": "ステップ {{step}}/{{total}}<sr>：{{title}}</sr>",
+    "skipped": "スキップ済み",
+    "state": {
+      "current": "（現在のステップ）",
+      "done": "（完了）",
+      "skipped": "（スキップ済み）"
+    },
+    "steps": "セットアップの手順",
+    "subtitle": "初回セットアップ"
+  }
+}
