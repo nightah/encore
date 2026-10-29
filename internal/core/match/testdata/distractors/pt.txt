@@ -1,5 +1,6 @@
 aba
 abaixa
+abaixar
 abaixo
 about
 abra
@@ -41,6 +42,7 @@ addon
 address
 addtitle
 adianta
+adiantar
 adiante
 adiciona
 adicionada
@@ -65,6 +67,7 @@ aguardando
 aguarde
 ainda
 ajusta
+ajustar
 album
 albums
 albuns
@@ -100,6 +103,7 @@ alterar
 alterassoes
 altere
 alterna
+alternar
 alternativa
 alterou
 alto
@@ -129,6 +133,7 @@ apelido
 apelidos
 apenas
 aperta
+apertar
 aplica
 aplicativo
 aplicativos
@@ -148,7 +153,9 @@ armazenados
 armazenamento
 arquivo
 arrasta
+arrastar
 arruma
+arrumar
 article
 artist
 artista
@@ -206,6 +213,7 @@ autorizar
 autorize
 available
 avanssa
+avanssar
 aventura
 aviso
 avisos
@@ -249,6 +257,7 @@ bossa
 bota
 botao
 botar
+bote
 both
 branco
 brasileira
@@ -312,6 +321,7 @@ change
 changed
 chave
 checa
+checar
 check
 checkagain
 checking
@@ -355,12 +365,14 @@ coleta
 collection
 coloca
 colocar
+coloque
 columns
 com
 comandos
 comedia
 comessa
 comessando
+comessar
 comesso
 comessou
 command
@@ -470,6 +482,7 @@ correto
 corrigir
 corrija
 corta
+cortar
 count
 counterclockwise
 cozinha
@@ -519,6 +532,7 @@ defina
 define
 definida
 definido
+definir
 deixa
 deixar
 deixe
@@ -557,8 +571,11 @@ desligado
 desligando
 desligar
 desloca
+deslocar
 desmuta
+desmutar
 despausa
+despausar
 desperta
 despertando
 despertar
@@ -590,6 +607,7 @@ digitar
 digite
 digitos
 diminui
+diminuir
 dinamicas
 direcionada
 directed
@@ -659,6 +677,7 @@ ele
 eles
 eletronica
 embaralha
+embaralhar
 emergencia
 emissor
 empty
@@ -707,6 +726,7 @@ erro
 error
 errors
 erudita
+escanear
 escaneia
 escolha
 escolhe
@@ -714,6 +734,7 @@ escolher
 esconde
 escopos
 escreve
+escrever
 escreveu
 escritorio
 escura
@@ -889,6 +910,7 @@ gere
 gerenciado
 gerenciar
 gira
+girar
 give
 glass
 global
@@ -949,6 +971,7 @@ https
 humor
 identidade
 identifica
+identificar
 identified
 identify
 identifyecho
@@ -986,6 +1009,7 @@ incluir
 index
 indexa
 indica
+indicar
 indice
 indo
 infantil
@@ -1007,6 +1031,7 @@ inicio
 inminutes
 inmodel
 insere
+inserir
 insert
 instale
 instance
@@ -1080,6 +1105,7 @@ leitor
 leitura
 lets
 leva
+levar
 level
 libraries
 library
@@ -1094,6 +1120,7 @@ ligada
 ligadas
 ligado
 ligando
+ligar
 light
 likely
 limit
@@ -1111,6 +1138,7 @@ links
 linter
 list
 lista
+listar
 listen
 listentoalbum
 listentoartist
@@ -1187,6 +1215,7 @@ mediatype
 meio
 melhor
 melhora
+melhorar
 memoria
 menores
 menos
@@ -1212,6 +1241,7 @@ minutos
 mismatch
 misterio
 mistura
+misturar
 mode
 model
 modelo
@@ -1225,8 +1255,10 @@ monte
 more
 mostra
 mostrar
+mostre
 mova
 move
+mover
 movie
 movies
 mpb
@@ -1248,6 +1280,7 @@ musicos
 musicvideo
 musicvideos
 muta
+mutar
 mute
 mysql
 nada
@@ -1260,9 +1293,8 @@ nav
 navaction
 navega
 navegador
+navegar
 navigate
-ncoloca
-ncomessa
 nearly
 necessarios
 needsdeploy
@@ -1281,6 +1313,7 @@ newtab
 next
 nextcloud
 nhora
+nidioma
 nivel
 noalias
 nobackup
@@ -1358,6 +1391,7 @@ option
 optional
 ordem
 organiza
+organizar
 origem
 osd
 other
@@ -1401,6 +1435,8 @@ party
 partymode
 passa
 passando
+passar
+passe
 passed
 passem
 passou
@@ -1440,6 +1476,7 @@ personal
 personalizado
 perto
 pesquisa
+pesquisar
 pessa
 pessoais
 pessoas
@@ -1477,6 +1514,7 @@ poder
 podera
 poe
 policial
+ponha
 ponto
 pontuassao
 pontuassoes
@@ -1502,6 +1540,7 @@ prefere
 prefix
 prefixo
 pressiona
+pressionar
 previous
 previsao
 principal
@@ -1575,10 +1614,12 @@ reachable
 realm
 realms
 realssa
+realssar
 reaparece
 reason
 reauthorise
 rebobina
+rebobinar
 reboot
 recebida
 recebidas
@@ -1597,6 +1638,7 @@ recomenda
 recomendar
 recomendassao
 recomessa
+recomessar
 recommend
 recommendation
 reconectando
@@ -1611,6 +1653,7 @@ redirecterror
 redirecturi
 redirecturl
 reduz
+reduzir
 referir
 refreshtoken
 reggae
@@ -1651,6 +1694,7 @@ replayresult
 repouso
 reprodussao
 reproduz
+reproduza
 reproduzido
 reproduzindo
 reproduzir
@@ -1709,6 +1753,7 @@ roomremoved
 rooms
 roomsaved
 rotaciona
+rotacionar
 rotate
 rotated
 rotation
@@ -1835,6 +1880,7 @@ significa
 signout
 silence
 silencia
+silenciar
 silencio
 silent
 silo
@@ -1872,6 +1918,7 @@ sobrevivam
 software
 sol
 soletra
+soletrar
 solicitassao
 solicitassoes
 solo
@@ -1927,6 +1974,7 @@ sucesso
 such
 suffix
 sugere
+sugerir
 sugestao
 suite
 summary
@@ -1934,6 +1982,7 @@ summaryhttp
 summaryhttps
 supply
 surpreende
+surpreender
 surprise
 suspend
 suspende
@@ -2004,6 +2053,7 @@ timing
 tipo
 tipos
 tira
+tirar
 title
 titleidentified
 titles
@@ -2124,6 +2174,7 @@ variaveis
 varre
 varredura
 varrendo
+varrer
 veja
 vem
 vende
