@@ -7,15 +7,31 @@ files:
   - source: /i18n/lang/en/responses.yaml
     translation: /i18n/lang/%two_letters_code%/%original_file_name%
     skip_untranslated_strings: true
+    # Crowdin names some languages by a regional variant (pt-BR, es-ES); each maps to the directory Encore keeps the language in, so a second variant can never write over it.
+    languages_mapping: &languages
+      two_letters_code:
+        ar: ar
+        de: de
+        es-ES: es
+        fr: fr
+        hi: hi
+        it: it
+        ja: ja
+        nl: nl
+        pt-BR: pt
   # How people ask: each entry is one way of asking, and its translation may hold as many patterns, one per line, as the language needs. Left out until translated, so a language never gets English samples.
   - source: /i18n/lang/en/utterances.yaml
     translation: /i18n/lang/%two_letters_code%/%original_file_name%
     skip_untranslated_strings: true
+    languages_mapping: *languages
   # Static slot values by ID: the value on the first line, its synonyms below. (examples.yaml isn't here: each language picks its own example rooms and genres.)
   - source: /i18n/lang/en/types.yaml
     translation: /i18n/lang/%two_letters_code%/%original_file_name%
     skip_untranslated_strings: true
-  # The web interface, one file per area. A string not translated yet falls back to English.
+    languages_mapping: *languages
+  # The web interface, one file per area. A string not translated yet falls back to English. As i18next JSON, Crowdin offers a plural's _one and _other keys in each language's own plural categories (Arabic's six, Japanese's one).
   - source: /web/src/i18n/locales/en/*.json
     translation: /web/src/i18n/locales/%two_letters_code%/%original_file_name%
+    type: i18next_json
     skip_untranslated_strings: true
+    languages_mapping: *languages

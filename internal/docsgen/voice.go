@@ -204,11 +204,14 @@ func editURL(lang string) string {
 	return CrowdinProject + "/" + crowdinLanguage(lang)
 }
 
-// crowdinLanguage maps a language directory under i18n/lang to the language's code on Crowdin, which differs where Crowdin names a regional variant.
+// crowdinLanguage maps a language directory under i18n/lang to the language's code on Crowdin, which differs where Crowdin names a regional variant. It is the reverse of the languages_mapping in .crowdin.yml.
 func crowdinLanguage(lang string) string {
-	if lang == "es" {
-		return "es-ES"
+	if code, ok := crowdinRegional[lang]; ok {
+		return code
 	}
 
 	return lang
 }
+
+// crowdinRegional are the languages Crowdin knows by a regional variant: Spanish as spoken in Spain, Portuguese as spoken in Brazil.
+var crowdinRegional = map[string]string{"es": "es-ES", "pt": "pt-BR"}

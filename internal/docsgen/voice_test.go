@@ -1,11 +1,13 @@
 package docsgen
 
 import (
+	"os"
 	"testing"
 	"testing/fstest"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.yaml.in/yaml/v3"
 
 	"github.com/nightah/encore/i18n"
 	"github.com/nightah/encore/internal/skillmodel"
@@ -187,4 +189,36 @@ func TestEditURL(t *testing.T) {
 	assert.Equal(t, CrowdinProject+"/de", editURL("de"))
 	assert.Equal(t, CrowdinProject+"/es-ES", editURL("es"), "Crowdin names Spanish by its regional variant")
 	assert.Equal(t, CrowdinProject+"/fr", editURL("fr"))
+	assert.Equal(t, CrowdinProject+"/pt-BR", editURL("pt"), "Crowdin names Portuguese by its regional variant")
+}
+
+// TestCrowdinLanguageMatchesCrowdinConfig keeps crowdinLanguage the reverse of every file's languages_mapping in .crowdin.yml.
+func TestCrowdinLanguageMatchesCrowdinConfig(t *testing.T) {
+	t.Parallel()
+
+	b, err := os.ReadFile("../../.crowdin.yml")
+	require.NoError(t, err)
+
+	var cfg struct {
+		Files []struct {
+			Source  string `yaml:"source"`
+			Mapping struct {
+				TwoLetters map[string]string `yaml:"two_letters_code"`
+			} `yaml:"languages_mapping"`
+		} `yaml:"files"`
+	}
+	require.NoError(t, yaml.Unmarshal(b, &cfg))
+	require.NotEmpty(t, cfg.Files)
+
+	for _, f := range cfg.Files {
+		require.NotEmpty(t, f.Mapping.TwoLetters, "%s maps its languages", f.Source)
+
+		for crowdin, dir := range f.Mapping.TwoLetters {
+			assert.Equal(t, crowdin, crowdinLanguage(dir), "%s: %s", f.Source, dir)
+		}
+
+		for dir, crowdin := range crowdinRegional {
+			assert.Equal(t, dir, f.Mapping.TwoLetters[crowdin], "%s maps %s", f.Source, crowdin)
+		}
+	}
 }
