@@ -2,8 +2,6 @@ package tinyseg
 
 // The weights are TinySegmenter 0.2's (tiny_segmenter-0.2.js), table by table under the original's names, and Taku Kudo's work under the BSD licence in doc.go.
 
-const bias = -332
-
 // upTable holds UP1, UP2, UP3.
 var upTable = [...]map[string]int32{
 	{"O": -214},
