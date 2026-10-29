@@ -111,11 +111,11 @@ A `Device`: `{"id", "alexa_device_id", "name", "room_id", "kodi_instance_id", "f
 | GET | `/devices` | `[Device]` |
 | PATCH | `/devices/{id}` | `{"name"?, "room_id"?, "kodi_instance_id"?}` |
 | DELETE | `/devices/{id}` | 204 |
-| GET | `/rooms` | `[{"id", "name", "kodi_instance_id", "aliases": [{"id", "alias"}]}]` |
+| GET | `/rooms` | `[{"id", "name", "kodi_instance_id", "aliases": [{"id", "alias", "kind"}]}]`. `kind` is `room` for another name for the room or `device` for a device in it. |
 | POST | `/rooms` | `{"name", "kodi_instance_id"?}` → 201 |
 | PATCH | `/rooms/{id}` | `{"name"?, "kodi_instance_id"?}` |
 | DELETE | `/rooms/{id}` | 204 |
-| POST | `/rooms/{id}/aliases` | `{"alias"}` → 201 `{"id", "alias"}`; 409 if the spoken name is already used. |
+| POST | `/rooms/{id}/aliases` | `{"alias", "kind"?}` → 201 `{"id", "alias", "kind"}`; `kind` defaults to `room`. 409 if the spoken name is already used. |
 | DELETE | `/rooms/{id}/aliases/{alias_id}` | 204 |
 
 ## Alexa skill
