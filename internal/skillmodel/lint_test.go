@@ -412,6 +412,21 @@ func TestLintSamplesPerScript(t *testing.T) {
 		{"pt", "assistir {Movie}", ""},
 		{"ar", "شغل {Movie}", ""},
 		{"ar", "شغل{Movie}", "joins slot {Movie} to other text"},
+		// Each word is in the language's script, or lowercase Latin where Amazon allows English words.
+		{"hi", "{Movie} F चलाओ", `has the word "F", which isn't Devanagari or lowercase Latin`},
+		{"hi", "{Movie} شغل", "which isn't Devanagari or lowercase Latin"},
+		{"ar", "play {Movie}", ""},
+		{"ar", "शुरू {Movie}", "which isn't Arabic or lowercase Latin"},
+		{"ja", "{Movie}をplayして", ""},
+		{"ja", "{Movie}をPlayして", "which isn't Hiragana, Katakana, Kanji or lowercase Latin"},
+		{"ja", "{Movie}를재생", "which isn't Hiragana, Katakana, Kanji or lowercase Latin"},
+		{"de", "spiele den film {Movie} ab", ""},
+		{"de", "spiele den Film {Movie} ab", `has the word "Film", which isn't lowercase Latin`},
+		{"pt", "toca o filme {Movie} já", ""},
+		{"pt", "смотреть {Movie}", "which isn't lowercase Latin"},
+		{"nl", "zet 't journal op", ""},
+		{"nl", "speel r. en b.", ""},
+		{"fr", "mets l'émission {Movie}", ""},
 	}
 
 	for _, tt := range tests {
