@@ -41,6 +41,7 @@
       "time": "Zeit"
     },
     "empty": "Noch keine Anfragen. Sag „Alexa, frag {{invocation}}, was gerade läuft.“",
+    "emptyNoInvocation": "",
     "open": "Anfrage von {{time}} im Protokoll öffnen",
     "title": "Letzte Anfragen",
     "viewAll": "Alle anzeigen"
