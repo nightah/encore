@@ -1,0 +1,774 @@
+# Grown set: testdata/grown is a held-out set of corpora, kept apart from the original set (asr_corpus.yaml and phonetic/). TestASRCorpus and TestPhoneticEval score both sets and report them separately.
+#
+# Brazilian Portuguese (pt-BR) phonetic evaluation corpus, second set, for TestPhoneticEval. Same schema as asr_corpus.yaml; cases are scored, not asserted, so there is no xfail. It adds three suites with their own libraries to the first Brazilian Portuguese set; no play case repeats a heard string from it, and some absent cases deliberately name titles from its library, which are not in these libraries.
+#
+# Libraries: suite one is Brazilian films, series and telenovelas, suite two is Brazilian music (artists, albums and songs), suite three is English-language films, series and music as Brazilians ask for them (English titles as published, with the Brazilian release title as an alias where Brazilians use it, such as Esqueceram de Mim, De Volta para o Futuro and Homem-Aranha). Every entry is real, with its original release year. Each library carries near neighbours that share words, names or numbers (De Pernas pro Ar 1 and 2, Terra em Transe and Terra Nostra, Chico Xavier and Xica da Silva, Bye Bye Brasil and Carlota Joaquina, Princesa do Brazil, Duas Caras, Os Dez Mandamentos and Dona Flor e Seus Dois Maridos, João and Bebel Gilberto, Paulinho da Viola and Martinho da Vila, País Tropical, Pais e Filhos and Que País É Este, Construção as album and song, Mamonas Assassinas, Tribalistas and Secos & Molhados as artist and album, Harry Potter 1 and 2, Home Alone 1 and 2, Back to the Future 1 and 2, Rocky 1 and 2, Top Gun and Top Gun: Maverick, Homem-Aranha and Homem de Ferro, House and House of Cards) so a wrong play is possible.
+#
+# Cases: what a speech recogniser plausibly writes when a Brazilian Portuguese speaker asks for the title. Each mishearing sits under a "class" comment naming the confusion it models. The classes follow the spelling-to-sound ambiguities of Brazilian Portuguese described in Cristófaro Silva, Fonética e fonologia do português (1999) and Mattoso Câmara, Estrutura da língua portuguesa (1970), and the errors ASR language models make when a name is out of vocabulary or a more frequent word sounds alike:
+#   sibilant: /s/ written ç, ss, s, sc or c before e/i, and intervocalic s as /z/ (Sucesso/suceso, Marisa/Mariza, Nascimento/nacimento, Isaura/Izaura).
+#   x-ch: x has four values, /ʃ/ (Xingu), /ks/ (táxi), /s/ (próximo) and /z/ (exagerado), and /ʃ/ is also spelled ch (Xica/Chica, Chico Xavier/Xico Chavier, Exu/Echu, Show/Xou).
+#   lh-nh: the palatal lateral and nasal written as li and ni or lost (filhos/filios, Ilha/Ilia, Thiaguinho/Thiaguinio).
+#   final-l: syllable-final l vocalised to /w/, so l and u are written either way (Brasil/Brasiu, Abril/abriu, Sol/sou, saudade/saldade, Picapau/Picapal).
+#   nasal: nasal endings -m, -n, -ão, -am and -ã written for one another (Luan/Luã, usam/usão, não/num, saíram/sairão, homem/homi).
+#   palatal: t and d before i palatalised to /tʃ/ and /dʒ/, and Di read as de (Tieta/Chieta, Thiaguinho/Chiaguinho, Zezé Di Camargo/de Camargo, Pitty/Pitchi).
+#   r: rr and r, the final r dropped in speech (Lar/lá, Xavier/xaviê, envolver/envolvê), English h heard as the Brazilian r (Harry/Rarry, Hey/rei) and the popular rhotacism of l in clusters (flores/frores, clube/crube).
+#   vowel: unstressed e and o raised to i and u (leite/leiti, perdido/perdidu, e/i), pretonic raising (destino/distino, estômago/istômago) and ei/ou reduced to e/o (companheiro/companhero).
+#   accent: accents and tildes dropped (Malhação/malhacao, País/pais, Cálice/calice).
+#   g-j: g before e and i against j (Getúlio/Jetúlio, Gilberto/Jilberto, exagerado/exajerado).
+#   qu-gu: qu and gu with and without a sounded u, written k or cu (que/ke, Joaquina/Joakina, Aquarius/Acuarius).
+#   h: silent h dropped or added (Hilda/Ilda, homem/omem, Emicida/homicida, Havaí/Avaí).
+#   epenthesis: the i that breaks a consonant cluster or follows a final consonant (signo/siguino, disritmia/disritimia, black/bléqui, Alok/Alóqui, Psicose/Pissicose).
+#   doubled: the doubled letters of artistic names that no one hears (Gusttavo/Gustavo, Pabllo Vittar/Pablo Vitar, Ludmilla/Ludmila, Claudia Leitte/Leite).
+#   foreign: English names and titles respelled in Brazilian Portuguese phonology (Bye Bye/bai bai, Johnny/Djôni, Breaking Bad/breiquin bédi, Michael Jackson/Maicou Djéquisson) and letter names (MC's/emecês, U2/iú tú).
+#   number: digits against number words, the feminine duas, ordinals and part numbers (Duas Caras/2 caras, Os Dez Mandamentos/os 10 mandamentos, Segunda Chamada/2a chamada, Trem das Onze/trem das 11, Rocky II/rocky dois).
+#   real-word: a more frequent real word replaces the title word (Tieta/dieta, Xingu/xingou, Cangaço/cansaço, Cálice/cale-se, Asa Branca/casa branca, Metallica/metálica).
+# Controls (exact titles as an ASR writes them, lower case, punctuation dropped, and the distinctive opening words of a title), ambiguous requests (ask among the near neighbours), missing sequels (ask) and absent titles (not_found, including near misses that share words with library titles) keep the decision thresholds honest.
+#
+# Cases describe what a listener hears; don't change a case to suit an encoder's results, or the comparison stops meaning anything (see docs/src/content/docs/contributing/dependencies.md).
+suites:
+  - name: brazilian films and series
+    lang: pt
+    library:
+      # Films.
+      - {id: pixote, kind: movie, title: "Pixote: A Lei do Mais Fraco", year: 1980}
+      - {id: blacktie, kind: movie, title: "Eles Não Usam Black-Tie", year: 1981}
+      - {id: byebye, kind: movie, title: "Bye Bye Brasil", year: 1980}
+      - {id: donaflor, kind: movie, title: "Dona Flor e Seus Dois Maridos", year: 1976}
+      - {id: pagador, kind: movie, title: "O Pagador de Promessas", year: 1962}
+      - {id: deusdiabo, kind: movie, title: "Deus e o Diabo na Terra do Sol", year: 1964}
+      - {id: terratranse, kind: movie, title: "Terra em Transe", year: 1967}
+      - {id: vidassecas, kind: movie, title: "Vidas Secas", year: 1963}
+      - {id: macunaima, kind: movie, title: "Macunaíma", year: 1969}
+      - {id: bandido, kind: movie, title: "O Bandido da Luz Vermelha", year: 1968}
+      - {id: lavoura, kind: movie, title: "Lavoura Arcaica", year: 2001}
+      - {id: abril, kind: movie, title: "Abril Despedaçado", year: 2001}
+      - {id: madamesata, kind: movie, title: "Madame Satã", year: 2002}
+      - {id: estomago, kind: movie, title: "Estômago", year: 2007}
+      - {id: linhapasse, kind: movie, title: "Linha de Passe", year: 2008}
+      - {id: somredor, kind: movie, title: "O Som ao Redor", year: 2012}
+      - {id: aquarius, kind: movie, title: "Aquarius", year: 2016}
+      - {id: depernas, kind: movie, title: "De Pernas pro Ar", year: 2010}
+      - {id: depernas2, kind: movie, title: "De Pernas pro Ar 2", year: 2012}
+      - {id: menino, kind: movie, title: "O Menino e o Mundo", year: 2013}
+      - {id: cidadebaixa, kind: movie, title: "Cidade Baixa", year: 2005}
+      - {id: cazuzafilme, kind: movie, title: "Cazuza: O Tempo Não Pára", year: 2004}
+      - {id: olga, kind: movie, title: "Olga", year: 2004}
+      - {id: companheiro, kind: movie, title: "O Que É Isso, Companheiro?", year: 1997}
+      - {id: johnny, kind: movie, title: "Meu Nome Não É Johnny", year: 2008}
+      - {id: anoemque, kind: movie, title: "O Ano em Que Meus Pais Saíram de Férias", year: 2006}
+      - {id: xingu, kind: movie, title: "Xingu", year: 2012}
+      - {id: nossolar, kind: movie, title: "Nosso Lar", year: 2010}
+      - {id: chicoxavier, kind: movie, title: "Chico Xavier", year: 2010}
+      - {id: bingo, kind: movie, title: "Bingo: O Rei das Manhãs", year: 2017}
+      - {id: tieta, kind: movie, title: "Tieta do Agreste", year: 1996}
+      - {id: carlota, kind: movie, title: "Carlota Joaquina, Princesa do Brazil", year: 1995}
+      - {id: saneamento, kind: movie, title: "Saneamento Básico, o Filme", year: 2007}
+      - {id: ohomem, kind: movie, title: "O Homem que Copiava", year: 2003}
+      - {id: signo, kind: movie, title: "O Signo da Cidade", year: 2007}
+      - {id: getulio, kind: movie, title: "Getúlio", year: 2014}
+      # Series and telenovelas.
+      - {id: roque, kind: tvshow, title: "Roque Santeiro", year: 1985}
+      - {id: valetudo, kind: tvshow, title: "Vale Tudo", year: 1988}
+      - {id: clone, kind: tvshow, title: "O Clone", year: 2001}
+      - {id: senhora, kind: tvshow, title: "Senhora do Destino", year: 2004}
+      - {id: malhacao, kind: tvshow, title: "Malhação", year: 1995}
+      - {id: sitio, kind: tvshow, title: "Sítio do Picapau Amarelo", year: 1977}
+      - {id: castelo, kind: tvshow, title: "Castelo Rá-Tim-Bum", year: 1994}
+      - {id: coisamaislinda, kind: tvshow, title: "Coisa Mais Linda", year: 2019}
+      - {id: mecanismo, kind: tvshow, title: "O Mecanismo", year: 2018}
+      - {id: veronica, kind: tvshow, title: "Bom Dia, Verônica", year: 2020}
+      - {id: dezmandamentos, kind: tvshow, title: "Os Dez Mandamentos", year: 2015}
+      - {id: duascaras, kind: tvshow, title: "Duas Caras", year: 2007}
+      - {id: detetives, kind: tvshow, title: "Detetives do Prédio Azul", year: 2012}
+      - {id: sobpressao, kind: tvshow, title: "Sob Pressão", year: 2017}
+      - {id: ilhadeferro, kind: tvshow, title: "Ilha de Ferro", year: 2018}
+      - {id: segundachamada, kind: tvshow, title: "Segunda Chamada", year: 2019}
+      - {id: amordemae, kind: tvshow, title: "Amor de Mãe", year: 2019}
+      - {id: cangaco, kind: tvshow, title: "Cangaço Novo", year: 2023}
+      - {id: cravo, kind: tvshow, title: "O Cravo e a Rosa", year: 2000}
+      - {id: terranostra, kind: tvshow, title: "Terra Nostra", year: 1999}
+      - {id: xica, kind: tvshow, title: "Xica da Silva", year: 1996}
+      - {id: escrava, kind: tvshow, title: "Escrava Isaura", year: 1976}
+      - {id: umcontra, kind: tvshow, title: "1 Contra Todos", year: 2016}
+      - {id: mulheres, kind: tvshow, title: "Mulheres Apaixonadas", year: 2003}
+      - {id: rensga, kind: tvshow, title: "Rensga Hits!", year: 2022}
+      - {id: hilda, kind: tvshow, title: "Hilda Furacão", year: 1998}
+    cases:
+      # Controls: the title as an ASR writes it.
+      - {heard: "pixote", want: play, id: pixote}
+      - {heard: "eles não usam black tie", want: play, id: blacktie}
+      - {heard: "bye bye brasil", want: play, id: byebye}
+      - {heard: "dona flor e seus dois maridos", want: play, id: donaflor}
+      - {heard: "o pagador de promessas", want: play, id: pagador}
+      - {heard: "deus e o diabo na terra do sol", want: play, id: deusdiabo}
+      - {heard: "terra em transe", want: play, id: terratranse}
+      - {heard: "vidas secas", want: play, id: vidassecas}
+      - {heard: "macunaíma", want: play, id: macunaima}
+      - {heard: "o bandido da luz vermelha", want: play, id: bandido}
+      - {heard: "de pernas pro ar", want: play, id: depernas}
+      - {heard: "meu nome não é johnny", want: play, id: johnny}
+      - {heard: "chico xavier", want: play, id: chicoxavier}
+      - {heard: "cazuza o tempo não pára", want: play, id: cazuzafilme}
+      - {heard: "carlota joaquina", want: play, id: carlota}
+      - {heard: "saneamento básico", want: play, id: saneamento}
+      - {heard: "o ano em que meus pais saíram de férias", want: play, id: anoemque}
+      - {heard: "roque santeiro", want: play, id: roque}
+      - {heard: "malhação", want: play, id: malhacao}
+      - {heard: "castelo rá tim bum", want: play, id: castelo}
+      - {heard: "bom dia verônica", want: play, id: veronica}
+      - {heard: "os dez mandamentos", want: play, id: dezmandamentos}
+      - {heard: "duas caras", want: play, id: duascaras}
+      - {heard: "hilda furacão", want: play, id: hilda}
+      - {heard: "1 contra todos", want: play, id: umcontra}
+      # Class sibilant: ç, ss, s, sc and c before e/i, and intervocalic s as z.
+      - {heard: "abril despedassado", want: play, id: abril}
+      - {heard: "o pagador de promeças", want: play, id: pagador}
+      - {heard: "sidade baixa", want: play, id: cidadebaixa}
+      - {heard: "carlota joaquina princesa do brasil", want: play, id: carlota}
+      - {heard: "o que é iço companheiro", want: play, id: companheiro}
+      - {heard: "saneamento bázico", want: play, id: saneamento}
+      - {heard: "escrava izaura", want: play, id: escrava}
+      - {heard: "malhassão", want: play, id: malhacao}
+      # Class x-ch: x as sh, and sh spelled ch or x.
+      - {heard: "chica da silva", want: play, id: xica}
+      - {heard: "xico chavier", want: play, id: chicoxavier}
+      - {heard: "chingu", want: play, id: xingu}
+      - {heard: "cidade baicha", want: play, id: cidadebaixa}
+      - {heard: "pichote", want: play, id: pixote}
+      # Class lh-nh: palatal lateral and nasal written as li and ni.
+      - {heard: "linia de passe", want: play, id: linhapasse}
+      - {heard: "ilia de ferro", want: play, id: ilhadeferro}
+      - {heard: "seniora do destino", want: play, id: senhora}
+      - {heard: "maliação", want: play, id: malhacao}
+      - {heard: "o bandido da luz vermeia", want: play, id: bandido}
+      # Class final-l: l and u written for one another.
+      - {heard: "bye bye brasiu", want: play, id: byebye}
+      - {heard: "abriu despedaçado", want: play, id: abril}
+      - {heard: "sítio do picapal amarelo", want: play, id: sitio}
+      - {heard: "deus e o diabo na terra do sou", want: play, id: deusdiabo}
+      - {heard: "detetives do prédio azu", want: play, id: detetives}
+      # Class nasal: -m, -n, -ão, -am and -ã.
+      - {heard: "eles não usão black tie", want: play, id: blacktie}
+      - {heard: "madame satan", want: play, id: madamesata}
+      - {heard: "meu nome num é johnny", want: play, id: johnny}
+      - {heard: "o homi que copiava", want: play, id: ohomem}
+      - {heard: "o ano em que meus pais sairão de férias", want: play, id: anoemque}
+      # Class palatal: t and d before i.
+      - {heard: "chieta do agreste", want: play, id: tieta}
+      - {heard: "castelo rá chim bum", want: play, id: castelo}
+      - {heard: "o pagador di promessas", want: play, id: pagador}
+      - {heard: "linha di passe", want: play, id: linhapasse}
+      - {heard: "amor di mãe", want: play, id: amordemae}
+      # Class r: r and rr, dropped final r, rhotacism.
+      - {heard: "nosso lá", want: play, id: nossolar}
+      - {heard: "chico xaviê", want: play, id: chicoxavier}
+      - {heard: "tera nostra", want: play, id: terranostra}
+      - {heard: "amô de mãe", want: play, id: amordemae}
+      - {heard: "dona frô e seus dois maridos", want: play, id: donaflor}
+      # Class vowel: unstressed e and o raised, pretonic raising, ei reduced.
+      - {heard: "o que é isso companhero", want: play, id: companheiro}
+      - {heard: "istômago", want: play, id: estomago}
+      - {heard: "abril dispedaçado", want: play, id: abril}
+      - {heard: "vale tudu", want: play, id: valetudo}
+      - {heard: "de pernas pru ar", want: play, id: depernas}
+      - {heard: "senhora do distino", want: play, id: senhora}
+      - {heard: "o cravo i a rosa", want: play, id: cravo}
+      # Class accent: accents and tildes dropped.
+      - {heard: "estomago", want: play, id: estomago}
+      - {heard: "malhacao", want: play, id: malhacao}
+      - {heard: "bom dia veronica", want: play, id: veronica}
+      - {heard: "sob pressao", want: play, id: sobpressao}
+      - {heard: "amor de mae", want: play, id: amordemae}
+      - {heard: "cangaco novo", want: play, id: cangaco}
+      - {heard: "getulio", want: play, id: getulio}
+      - {heard: "cazuza o tempo não para", want: play, id: cazuzafilme}
+      # Class g-j: g before e and i against j.
+      - {heard: "jetúlio", want: play, id: getulio}
+      - {heard: "jetulio", want: play, id: getulio}
+      # Class qu-gu: qu and gu, k and cu.
+      - {heard: "carlota joakina", want: play, id: carlota}
+      - {heard: "o homem ke copiava", want: play, id: ohomem}
+      - {heard: "o ke é isso companheiro", want: play, id: companheiro}
+      - {heard: "acuarius", want: play, id: aquarius}
+      - {heard: "o ano em ke meus pais saíram de férias", want: play, id: anoemque}
+      # Class h: silent h dropped or added.
+      - {heard: "ilda furacão", want: play, id: hilda}
+      - {heard: "o omem que copiava", want: play, id: ohomem}
+      - {heard: "hescrava isaura", want: play, id: escrava}
+      # Class epenthesis: i breaking a consonant cluster.
+      - {heard: "o siguino da cidade", want: play, id: signo}
+      - {heard: "eles não usam bléqui tai", want: play, id: blacktie}
+      - {heard: "rensga ritis", want: play, id: rensga}
+      # Class foreign: English words respelled.
+      - {heard: "bai bai brasil", want: play, id: byebye}
+      - {heard: "meu nome não é djôni", want: play, id: johnny}
+      - {heard: "eles não usam blequetai", want: play, id: blacktie}
+      - {heard: "rock santeiro", want: play, id: roque}
+      # Class number: digits, words, the feminine duas and ordinals.
+      - {heard: "dona flor e seus 2 maridos", want: play, id: donaflor}
+      - {heard: "os 10 mandamentos", want: play, id: dezmandamentos}
+      - {heard: "2 caras", want: play, id: duascaras}
+      - {heard: "dois caras", want: play, id: duascaras}
+      - {heard: "um contra todos", want: play, id: umcontra}
+      - {heard: "de pernas pro ar 2", want: play, id: depernas2}
+      - {heard: "2a chamada", want: play, id: segundachamada}
+      - {heard: "segunda chamada", want: play, id: segundachamada}
+      # Class real-word: a frequent word replaces a title word.
+      - {heard: "dieta do agreste", want: play, id: tieta}
+      - {heard: "xingou", want: play, id: xingu}
+      - {heard: "cansaço novo", want: play, id: cangaco}
+      - {heard: "terra em trânsito", want: play, id: terratranse}
+      - {heard: "coisa mas linda", want: play, id: coisamaislinda}
+      - {heard: "aquário", want: play, id: aquarius}
+      - {heard: "picote", want: play, id: pixote}
+      # Ambiguous: ask among the near neighbours.
+      - {heard: "terra", want: ask, among: [terratranse, terranostra]}
+      - {heard: "de pernas", want: ask, among: [depernas, depernas2]}
+      # Missing sequels: ask.
+      - {heard: "de pernas pro ar 3", want: ask}
+      - {heard: "de pernas pro ar três", want: ask}
+      - {heard: "nosso lar 2", want: ask}
+      # Absent titles, including near misses that share words with the library.
+      - {heard: "cidade de deus", want: not_found}
+      - {heard: "central do brasil", want: not_found}
+      - {heard: "tropa de elite", want: not_found}
+      - {heard: "bacurau", want: not_found}
+      - {heard: "ainda estou aqui", want: not_found}
+      - {heard: "o auto da compadecida", want: not_found}
+      - {heard: "três por cento", want: not_found}
+      - {heard: "sintonia", want: not_found}
+      - {heard: "avenida brasil", want: not_found}
+      - {heard: "sessão de terapia", want: not_found}
+      - {heard: "deus é brasileiro", want: not_found}
+      - {heard: "terra estrangeira", want: not_found}
+      - {heard: "o menino maluquinho", want: not_found}
+      - {heard: "dona beija", want: not_found}
+      - {heard: "o rei do gado", want: not_found}
+      - {heard: "o bem amado", want: not_found}
+      - {heard: "mulheres de areia", want: not_found}
+      - {heard: "amor à vida", want: not_found}
+      - {heard: "bom dia brasil", want: not_found}
+      - {heard: "chico bento", want: not_found}
+      - {heard: "pantanal", want: not_found}
+      - {heard: "o primo basílio", want: not_found}
+      - {heard: "linha direta", want: not_found}
+      - {heard: "a lei do mais forte", want: not_found}
+      - {heard: "o cravo e a canela", want: not_found}
+  - name: brazilian music
+    lang: pt
+    library:
+      # Artists.
+      - {id: erasmo, kind: artist, title: "Erasmo Carlos"}
+      - {id: zeca, kind: artist, title: "Zeca Pagodinho"}
+      - {id: paulinho, kind: artist, title: "Paulinho da Viola"}
+      - {id: martinho, kind: artist, title: "Martinho da Vila"}
+      - {id: paralamas, kind: artist, title: "Os Paralamas do Sucesso"}
+      - {id: racionais, kind: artist, title: "Racionais MC's"}
+      - {id: luan, kind: artist, title: "Luan Santana"}
+      - {id: safadao, kind: artist, title: "Wesley Safadão"}
+      - {id: gusttavo, kind: artist, title: "Gusttavo Lima"}
+      - {id: zeze, kind: artist, title: "Zezé Di Camargo & Luciano"}
+      - {id: marisa, kind: artist, title: "Marisa Monte"}
+      - {id: thiaguinho, kind: artist, title: "Thiaguinho"}
+      - {id: exalta, kind: artist, title: "Exaltasamba"}
+      - {id: alcione, kind: artist, title: "Alcione"}
+      - {id: bethcarvalho, kind: artist, title: "Beth Carvalho"}
+      - {id: xande, kind: artist, title: "Xande de Pilares"}
+      - {id: vinicius, kind: artist, title: "Vinicius de Moraes"}
+      - {id: joaogilberto, kind: artist, title: "João Gilberto"}
+      - {id: bebel, kind: artist, title: "Bebel Gilberto"}
+      - {id: calcanhotto, kind: artist, title: "Adriana Calcanhotto"}
+      - {id: lulu, kind: artist, title: "Lulu Santos"}
+      - {id: ney, kind: artist, title: "Ney Matogrosso"}
+      - {id: secos, kind: artist, title: "Secos & Molhados"}
+      - {id: sandyjunior, kind: artist, title: "Sandy & Junior"}
+      - {id: maiara, kind: artist, title: "Maiara & Maraisa"}
+      - {id: pitty, kind: artist, title: "Pitty"}
+      - {id: emicida, kind: artist, title: "Emicida"}
+      - {id: criolo, kind: artist, title: "Criolo"}
+      - {id: iza, kind: artist, title: "Iza"}
+      - {id: gloriagroove, kind: artist, title: "Gloria Groove"}
+      - {id: baco, kind: artist, title: "Baco Exu do Blues"}
+      - {id: matue, kind: artist, title: "Matuê"}
+      - {id: alok, kind: artist, title: "Alok"}
+      - {id: telo, kind: artist, title: "Michel Teló"}
+      - {id: daniela, kind: artist, title: "Daniela Mercury"}
+      - {id: claudia, kind: artist, title: "Claudia Leitte"}
+      - {id: elza, kind: artist, title: "Elza Soares"}
+      - {id: claranunes, kind: artist, title: "Clara Nunes"}
+      - {id: cartola, kind: artist, title: "Cartola"}
+      - {id: adoniran, kind: artist, title: "Adoniran Barbosa"}
+      - {id: cazuza, kind: artist, title: "Cazuza"}
+      - {id: barao, kind: artist, title: "Barão Vermelho"}
+      - {id: engenheiros, kind: artist, title: "Engenheiros do Hawaii"}
+      - {id: mamonas, kind: artist, title: "Mamonas Assassinas"}
+      - {id: tribalistas, kind: artist, title: "Tribalistas"}
+      - {id: ritalee, kind: artist, title: "Rita Lee"}
+      - {id: milton, kind: artist, title: "Milton Nascimento"}
+      - {id: nando, kind: artist, title: "Nando Reis"}
+      - {id: ludmilla, kind: artist, title: "Ludmilla"}
+      - {id: pabllo, kind: artist, title: "Pabllo Vittar"}
+      # Albums.
+      - {id: tropicalia, kind: album, title: "Tropicália ou Panis et Circencis", year: 1968}
+      - {id: clube, kind: album, title: "Clube da Esquina", year: 1972}
+      - {id: acabou, kind: album, title: "Acabou Chorare", year: 1972}
+      - {id: construcaoalb, kind: album, title: "Construção", year: 1971}
+      - {id: elistom, kind: album, title: "Elis & Tom", year: 1974}
+      - {id: sobrevivendo, kind: album, title: "Sobrevivendo no Inferno", year: 1997}
+      - {id: cabeca, kind: album, title: "Cabeça Dinossauro", year: 1986}
+      - {id: dois, kind: album, title: "Dois", year: 1986}
+      - {id: quatro, kind: album, title: "As Quatro Estações", year: 1989}
+      - {id: mamonasalb, kind: album, title: "Mamonas Assassinas", year: 1995}
+      - {id: tribalistasalb, kind: album, title: "Tribalistas", year: 2002}
+      - {id: secosalb, kind: album, title: "Secos & Molhados", year: 1973}
+      # Songs.
+      - {id: garota, kind: song, title: "Garota de Ipanema", year: 1962}
+      - {id: aguas, kind: song, title: "Águas de Março", year: 1972}
+      - {id: aquarela, kind: song, title: "Aquarela do Brasil", year: 1939}
+      - {id: paistropical, kind: song, title: "País Tropical", year: 1969}
+      - {id: masquenada, kind: song, title: "Mas Que Nada", year: 1963}
+      - {id: tajmahal, kind: song, title: "Taj Mahal", year: 1972}
+      - {id: evidencias, kind: song, title: "Evidências", year: 1990}
+      - {id: aiseeu, kind: song, title: "Ai Se Eu Te Pego", year: 2011}
+      - {id: asabranca, kind: song, title: "Asa Branca", year: 1947}
+      - {id: trem, kind: song, title: "Trem das Onze", year: 1964}
+      - {id: faroeste, kind: song, title: "Faroeste Caboclo", year: 1987}
+      - {id: tempoperdido, kind: song, title: "Tempo Perdido", year: 1986}
+      - {id: eduardo, kind: song, title: "Eduardo e Mônica", year: 1986}
+      - {id: paisefilhos, kind: song, title: "Pais e Filhos", year: 1989}
+      - {id: chega, kind: song, title: "Chega de Saudade", year: 1958}
+      - {id: exagerado, kind: song, title: "Exagerado", year: 1985}
+      - {id: brasil, kind: song, title: "Brasil", year: 1988}
+      - {id: envolver, kind: song, title: "Envolver", year: 2021}
+      - {id: poderosas, kind: song, title: "Show das Poderosas", year: 2013}
+      - {id: malandra, kind: song, title: "Vai Malandra", year: 2017}
+      - {id: sinal, kind: song, title: "Sinal Fechado", year: 1969}
+      - {id: osol, kind: song, title: "O Sol", year: 2017}
+      - {id: velha, kind: song, title: "Velha Infância", year: 2002}
+      - {id: construcao, kind: song, title: "Construção", year: 1971}
+      - {id: disritmia, kind: song, title: "Disritmia", year: 1974}
+      - {id: quepais, kind: song, title: "Que País É Este", year: 1987}
+      - {id: flores, kind: song, title: "Pra Não Dizer Que Não Falei das Flores", year: 1968}
+      - {id: calice, kind: song, title: "Cálice", year: 1978}
+      - {id: detalhes, kind: song, title: "Detalhes", year: 1971}
+      - {id: sampa, kind: song, title: "Sampa", year: 1978}
+      - {id: ovelha, kind: song, title: "Ovelha Negra", year: 1975}
+      - {id: comonossos, kind: song, title: "Como Nossos Pais", year: 1976}
+    cases:
+      # Controls: the title as an ASR writes it.
+      - {heard: "zeca pagodinho", want: play, id: zeca}
+      - {heard: "paulinho da viola", want: play, id: paulinho}
+      - {heard: "martinho da vila", want: play, id: martinho}
+      - {heard: "os paralamas do sucesso", want: play, id: paralamas}
+      - {heard: "marisa monte", want: play, id: marisa}
+      - {heard: "vinicius de moraes", want: play, id: vinicius}
+      - {heard: "joão gilberto", want: play, id: joaogilberto}
+      - {heard: "ney matogrosso", want: play, id: ney}
+      - {heard: "matuê", want: play, id: matue}
+      - {heard: "michel teló", want: play, id: telo}
+      - {heard: "elza soares", want: play, id: elza}
+      - {heard: "cazuza", want: play, id: cazuza}
+      - {heard: "rita lee", want: play, id: ritalee}
+      - {heard: "milton nascimento", want: play, id: milton}
+      - {heard: "garota de ipanema", want: play, id: garota}
+      - {heard: "águas de março", want: play, id: aguas}
+      - {heard: "evidências", want: play, id: evidencias}
+      - {heard: "asa branca", want: play, id: asabranca}
+      - {heard: "sobrevivendo no inferno", want: play, id: sobrevivendo}
+      - {heard: "brasil", want: play, id: brasil}
+      - {heard: "elis e tom", want: play, id: elistom}
+      - {heard: "sinal fechado", want: play, id: sinal}
+      - {heard: "tropicália", want: play, id: tropicalia}
+      - {heard: "pra não dizer que não falei das flores", want: play, id: flores}
+      - {heard: "construção", want: play, id: construcao, kinds: [song]}
+      - {heard: "construção", want: play, id: construcaoalb, kinds: [album]}
+      - {heard: "mamonas assassinas", want: play, id: mamonasalb, kinds: [album]}
+      - {heard: "tribalistas", want: play, id: tribalistas, kinds: [artist]}
+      # Class sibilant: ç, ss, s, sc and c before e/i, and intervocalic s as z.
+      - {heard: "os paralamas do suceso", want: play, id: paralamas}
+      - {heard: "isa", want: play, id: iza}
+      - {heard: "mariza monte", want: play, id: marisa}
+      - {heard: "nei matogroço", want: play, id: ney}
+      - {heard: "elsa soares", want: play, id: elza}
+      - {heard: "cabessa dinossauro", want: play, id: cabeca}
+      - {heard: "evidênsias", want: play, id: evidencias}
+      - {heard: "milton nacimento", want: play, id: milton}
+      - {heard: "mamonas asassinas", want: play, id: mamonas, kinds: [artist]}
+      - {heard: "construsão", want: play, id: construcao, kinds: [song]}
+      # Class x-ch: x as sh, ks and z, and sh spelled ch or x.
+      - {heard: "chande de pilares", want: play, id: xande}
+      - {heard: "baco echu do blues", want: play, id: baco}
+      - {heard: "ezagerado", want: play, id: exagerado}
+      - {heard: "ezaltasamba", want: play, id: exalta}
+      - {heard: "acabou xorare", want: play, id: acabou}
+      - {heard: "xou das poderosas", want: play, id: poderosas}
+      # Class lh-nh: palatal lateral and nasal written as li and ni.
+      - {heard: "paulinio da viola", want: play, id: paulinho}
+      - {heard: "martinio da vila", want: play, id: martinho}
+      - {heard: "thiaguinio", want: play, id: thiaguinho}
+      - {heard: "ovelia negra", want: play, id: ovelha}
+      - {heard: "velia infância", want: play, id: velha}
+      - {heard: "pais e filios", want: play, id: paisefilhos}
+      - {heard: "secos e moliados", want: play, id: secos, kinds: [artist]}
+      # Class final-l: l and u written for one another.
+      - {heard: "brasiu", want: play, id: brasil}
+      - {heard: "aquarela do brasiu", want: play, id: aquarela}
+      - {heard: "sinau fechado", want: play, id: sinal}
+      - {heard: "o sou", want: play, id: osol}
+      - {heard: "chega de saldade", want: play, id: chega}
+      - {heard: "país tropicau", want: play, id: paistropical}
+      - {heard: "bebéu gilberto", want: play, id: bebel}
+      # Class nasal: -m, -n, -ão and -ã.
+      - {heard: "luã santana", want: play, id: luan}
+      - {heard: "tren das onze", want: play, id: trem}
+      - {heard: "barãu vermelho", want: play, id: barao}
+      - {heard: "wesley safadã", want: play, id: safadao}
+      # Class palatal: t and d before i, Di read as de.
+      - {heard: "chiaguinho", want: play, id: thiaguinho}
+      - {heard: "zezé de camargo e luciano", want: play, id: zeze}
+      - {heard: "pitchi", want: play, id: pitty}
+      - {heard: "chega di saudade", want: play, id: chega}
+      - {heard: "djetalhes", want: play, id: detalhes}
+      # Class r: dropped final r, rhotacism, r and rr.
+      - {heard: "envolvê", want: play, id: envolver}
+      - {heard: "pra não dizer que não falei das frores", want: play, id: flores}
+      - {heard: "crube da esquina", want: play, id: clube}
+      - {heard: "craudia leitte", want: play, id: claudia}
+      - {heard: "crara nunes", want: play, id: claranunes}
+      # Class vowel: unstressed e and o raised, ou and ei reduced.
+      - {heard: "claudia leiti", want: play, id: claudia}
+      - {heard: "daniela mercuri", want: play, id: daniela}
+      - {heard: "tempo perdidu", want: play, id: tempoperdido}
+      - {heard: "sobrevivendu no infernu", want: play, id: sobrevivendo}
+      - {heard: "ditalhes", want: play, id: detalhes}
+      - {heard: "uvelha negra", want: play, id: ovelha}
+      - {heard: "cálici", want: play, id: calice}
+      - {heard: "pais i filhos", want: play, id: paisefilhos}
+      - {heard: "eduardo i mônica", want: play, id: eduardo}
+      - {heard: "faroesti caboclu", want: play, id: faroeste}
+      # Class accent: accents and tildes dropped.
+      - {heard: "aguas de marco", want: play, id: aguas}
+      - {heard: "evidencias", want: play, id: evidencias}
+      - {heard: "michel telo", want: play, id: telo}
+      - {heard: "eduardo e monica", want: play, id: eduardo}
+      - {heard: "pais tropical", want: play, id: paistropical}
+      - {heard: "que pais e este", want: play, id: quepais}
+      - {heard: "joao gilberto", want: play, id: joaogilberto}
+      - {heard: "calice", want: play, id: calice}
+      # Class g-j: g before e and i against j.
+      - {heard: "joão jilberto", want: play, id: joaogilberto}
+      - {heard: "bebel jilberto", want: play, id: bebel}
+      - {heard: "exajerado", want: play, id: exagerado}
+      - {heard: "enjenheiros do hawaii", want: play, id: engenheiros}
+      # Class qu-gu: qu and gu, k and cu.
+      - {heard: "mas ke nada", want: play, id: masquenada}
+      - {heard: "ke país é este", want: play, id: quepais}
+      - {heard: "acuarela do brasil", want: play, id: aquarela}
+      - {heard: "gloria grúvi", want: play, id: gloriagroove}
+      # Class h: silent h dropped or added.
+      - {heard: "tiaguinho", want: play, id: thiaguinho}
+      - {heard: "engenheiros do havaí", want: play, id: engenheiros}
+      - {heard: "bete carvalho", want: play, id: bethcarvalho}
+      - {heard: "homicida", want: play, id: emicida}
+      - {heard: "taj maal", want: play, id: tajmahal}
+      # Class epenthesis: i breaking a cluster or after a final consonant.
+      - {heard: "disritimia", want: play, id: disritmia}
+      - {heard: "alóqui", want: play, id: alok}
+      - {heard: "baco exu do blúis", want: play, id: baco}
+      - {heard: "michéu teló", want: play, id: telo}
+      # Class doubled: doubled letters of artistic names.
+      - {heard: "gustavo lima", want: play, id: gusttavo}
+      - {heard: "pablo vitar", want: play, id: pabllo}
+      - {heard: "ludmila", want: play, id: ludmilla}
+      - {heard: "pity", want: play, id: pitty}
+      - {heard: "nando reiz", want: play, id: nando}
+      # Class foreign: English names respelled, and letter names.
+      - {heard: "uesley safadão", want: play, id: safadao}
+      - {heard: "rita li", want: play, id: ritalee}
+      - {heard: "sândi e júnior", want: play, id: sandyjunior}
+      - {heard: "nei matogrosso", want: play, id: ney}
+      - {heard: "racionais emecês", want: play, id: racionais}
+      - {heard: "taj marrau", want: play, id: tajmahal}
+      - {heard: "chou das poderosas", want: play, id: poderosas}
+      - {heard: "maiara e maraíza", want: play, id: maiara}
+      # Class number: digits and words.
+      - {heard: "trem das 11", want: play, id: trem}
+      - {heard: "as 4 estações", want: play, id: quatro}
+      - {heard: "as quatro estações", want: play, id: quatro}
+      - {heard: "2", want: play, id: dois, kinds: [album]}
+      - {heard: "dois", want: play, id: dois, kinds: [album]}
+      # Class real-word: a frequent word replaces a title word.
+      - {heard: "claudia leite", want: play, id: claudia}
+      - {heard: "cale se", want: play, id: calice}
+      - {heard: "que país é esse", want: play, id: quepais}
+      - {heard: "vai malandro", want: play, id: malandra}
+      - {heard: "casa branca", want: play, id: asabranca}
+      - {heard: "crioulo", want: play, id: criolo}
+      - {heard: "mais que nada", want: play, id: masquenada}
+      - {heard: "engenheiros do avaí", want: play, id: engenheiros}
+      # Ambiguous: ask among the near neighbours.
+      - {heard: "gilberto", want: ask, among: [joaogilberto, bebel]}
+      - {heard: "mamonas assassinas", want: ask, among: [mamonas, mamonasalb]}
+      - {heard: "tribalistas", want: ask, among: [tribalistas, tribalistasalb]}
+      - {heard: "secos e molhados", want: ask, among: [secos, secosalb]}
+      - {heard: "paulinho da vila", want: ask, among: [paulinho, martinho]}
+      # Absent titles, including near misses that share words or names with the library.
+      - {heard: "caetano veloso", want: not_found}
+      - {heard: "gilberto gil", want: not_found}
+      - {heard: "elis regina", want: not_found}
+      - {heard: "anitta", want: not_found}
+      - {heard: "marília mendonça", want: not_found}
+      - {heard: "legião urbana", want: not_found}
+      - {heard: "os mutantes", want: not_found}
+      - {heard: "tom jobim", want: not_found}
+      - {heard: "chico buarque", want: not_found}
+      - {heard: "jorge ben jor", want: not_found}
+      - {heard: "tim maia", want: not_found}
+      - {heard: "ivete sangalo", want: not_found}
+      - {heard: "roberto carlos", want: not_found}
+      - {heard: "djavan", want: not_found}
+      - {heard: "elba ramalho", want: not_found}
+      - {heard: "zé ramalho", want: not_found}
+      - {heard: "alceu valença", want: not_found}
+      - {heard: "vanessa da mata", want: not_found}
+      - {heard: "jota quest", want: not_found}
+      - {heard: "kid abelha", want: not_found}
+      - {heard: "cpm 22", want: not_found}
+      - {heard: "sorriso maroto", want: not_found}
+      - {heard: "garota nacional", want: not_found}
+      - {heard: "brasileirinho", want: not_found}
+      - {heard: "país do futebol", want: not_found}
+      - {heard: "trem bala", want: not_found}
+      - {heard: "sandy", want: not_found}
+  - name: english titles in brazil
+    lang: pt
+    library:
+      # Films.
+      - {id: harrypotter1, kind: movie, title: "Harry Potter and the Philosopher's Stone", aliases: ["Harry Potter e a Pedra Filosofal"], year: 2001}
+      - {id: harrypotter2, kind: movie, title: "Harry Potter and the Chamber of Secrets", aliases: ["Harry Potter e a Câmara Secreta"], year: 2002}
+      - {id: homealone, kind: movie, title: "Home Alone", aliases: ["Esqueceram de Mim"], year: 1990}
+      - {id: homealone2, kind: movie, title: "Home Alone 2: Lost in New York", aliases: ["Esqueceram de Mim 2: Perdido em Nova York"], year: 1992}
+      - {id: halloween, kind: movie, title: "Halloween", year: 1978}
+      - {id: starwars, kind: movie, title: "Star Wars", year: 1977}
+      - {id: jurassic, kind: movie, title: "Jurassic Park", year: 1993}
+      - {id: backtofuture, kind: movie, title: "Back to the Future", aliases: ["De Volta para o Futuro"], year: 1985}
+      - {id: backtofuture2, kind: movie, title: "Back to the Future Part II", aliases: ["De Volta para o Futuro Parte II"], year: 1989}
+      - {id: lionking, kind: movie, title: "The Lion King", aliases: ["O Rei Leão"], year: 1994}
+      - {id: forrest, kind: movie, title: "Forrest Gump", year: 1994}
+      - {id: fightclub, kind: movie, title: "Fight Club", aliases: ["Clube da Luta"], year: 1999}
+      - {id: gladiator, kind: movie, title: "Gladiator", aliases: ["Gladiador"], year: 2000}
+      - {id: spiderman, kind: movie, title: "Spider-Man", aliases: ["Homem-Aranha"], year: 2002}
+      - {id: ironman, kind: movie, title: "Iron Man", aliases: ["Homem de Ferro"], year: 2008}
+      - {id: avatar, kind: movie, title: "Avatar", year: 2009}
+      - {id: blackpanther, kind: movie, title: "Black Panther", aliases: ["Pantera Negra"], year: 2018}
+      - {id: topgun, kind: movie, title: "Top Gun", year: 1986}
+      - {id: topgunmaverick, kind: movie, title: "Top Gun: Maverick", year: 2022}
+      - {id: rocky, kind: movie, title: "Rocky", year: 1976}
+      - {id: rocky2, kind: movie, title: "Rocky II", year: 1979}
+      - {id: ghost, kind: movie, title: "Ghost", year: 1990}
+      - {id: dirtydancing, kind: movie, title: "Dirty Dancing", year: 1987}
+      - {id: grease, kind: movie, title: "Grease", year: 1978}
+      - {id: taxidriver, kind: movie, title: "Taxi Driver", year: 1976}
+      - {id: psycho, kind: movie, title: "Psycho", aliases: ["Psicose"], year: 1960}
+      # Series.
+      - {id: walkingdead, kind: tvshow, title: "The Walking Dead", year: 2010}
+      - {id: strangerthings, kind: tvshow, title: "Stranger Things", year: 2016}
+      - {id: breakingbad, kind: tvshow, title: "Breaking Bad", year: 2008}
+      - {id: bettercallsaul, kind: tvshow, title: "Better Call Saul", year: 2015}
+      - {id: houseofcards, kind: tvshow, title: "House of Cards", year: 2013}
+      - {id: house, kind: tvshow, title: "House", year: 2004}
+      - {id: hannah, kind: tvshow, title: "Hannah Montana", year: 2006}
+      - {id: bigbang, kind: tvshow, title: "The Big Bang Theory", year: 2007}
+      - {id: greys, kind: tvshow, title: "Grey's Anatomy", year: 2005}
+      - {id: himym, kind: tvshow, title: "How I Met Your Mother", year: 2005}
+      - {id: twoandahalf, kind: tvshow, title: "Two and a Half Men", aliases: ["Dois Homens e Meio"], year: 2003}
+      - {id: prisonbreak, kind: tvshow, title: "Prison Break", year: 2005}
+      - {id: supernatural, kind: tvshow, title: "Supernatural", year: 2005}
+      - {id: smallville, kind: tvshow, title: "Smallville", year: 2001}
+      - {id: simpsons, kind: tvshow, title: "The Simpsons", aliases: ["Os Simpsons"], year: 1989}
+      - {id: spongebob, kind: tvshow, title: "SpongeBob SquarePants", aliases: ["Bob Esponja Calça Quadrada"], year: 1999}
+      # Music.
+      - {id: michaeljackson, kind: artist, title: "Michael Jackson"}
+      - {id: madonna, kind: artist, title: "Madonna"}
+      - {id: britney, kind: artist, title: "Britney Spears"}
+      - {id: whitney, kind: artist, title: "Whitney Houston"}
+      - {id: brunomars, kind: artist, title: "Bruno Mars"}
+      - {id: taylorswift, kind: artist, title: "Taylor Swift"}
+      - {id: rihanna, kind: artist, title: "Rihanna"}
+      - {id: rhcp, kind: artist, title: "Red Hot Chili Peppers"}
+      - {id: gnr, kind: artist, title: "Guns N' Roses"}
+      - {id: bonjovi, kind: artist, title: "Bon Jovi"}
+      - {id: queen, kind: artist, title: "Queen"}
+      - {id: stones, kind: artist, title: "The Rolling Stones"}
+      - {id: u2, kind: artist, title: "U2"}
+      - {id: nirvana, kind: artist, title: "Nirvana"}
+      - {id: metallica, kind: artist, title: "Metallica"}
+      - {id: ladygaga, kind: artist, title: "Lady Gaga"}
+      - {id: edsheeran, kind: artist, title: "Ed Sheeran"}
+      - {id: bieber, kind: artist, title: "Justin Bieber"}
+      - {id: thriller, kind: album, title: "Thriller", year: 1982}
+      - {id: bad, kind: album, title: "Bad", year: 1987}
+      - {id: beatit, kind: song, title: "Beat It", year: 1983}
+      - {id: billiejean, kind: song, title: "Billie Jean", year: 1983}
+      - {id: hotelcalifornia, kind: song, title: "Hotel California", year: 1977}
+      - {id: teenspirit, kind: song, title: "Smells Like Teen Spirit", year: 1991}
+      - {id: sweetchild, kind: song, title: "Sweet Child o' Mine", year: 1988}
+      - {id: bohemian, kind: song, title: "Bohemian Rhapsody", year: 1975}
+      - {id: wonderwall, kind: song, title: "Wonderwall", year: 1995}
+      - {id: shapeofyou, kind: song, title: "Shape of You", year: 2017}
+      - {id: heyjude, kind: song, title: "Hey Jude", year: 1968}
+      - {id: yesterday, kind: song, title: "Yesterday", year: 1965}
+    cases:
+      # Controls: the title or its Brazilian release title as an ASR writes it.
+      - {heard: "harry potter e a pedra filosofal", want: play, id: harrypotter1}
+      - {heard: "esqueceram de mim", want: play, id: homealone}
+      - {heard: "halloween", want: play, id: halloween}
+      - {heard: "star wars", want: play, id: starwars}
+      - {heard: "jurassic", want: play, id: jurassic}
+      - {heard: "de volta para o futuro", want: play, id: backtofuture}
+      - {heard: "o rei leão", want: play, id: lionking}
+      - {heard: "forrest gump", want: play, id: forrest}
+      - {heard: "clube da luta", want: play, id: fightclub}
+      - {heard: "homem aranha", want: play, id: spiderman}
+      - {heard: "homem de ferro", want: play, id: ironman}
+      - {heard: "pantera negra", want: play, id: blackpanther}
+      - {heard: "top gun", want: play, id: topgun}
+      - {heard: "top gun maverick", want: play, id: topgunmaverick}
+      - {heard: "rocky", want: play, id: rocky}
+      - {heard: "the walking dead", want: play, id: walkingdead}
+      - {heard: "breaking bad", want: play, id: breakingbad}
+      - {heard: "os simpsons", want: play, id: simpsons}
+      - {heard: "bob esponja", want: play, id: spongebob}
+      - {heard: "michael jackson", want: play, id: michaeljackson}
+      - {heard: "thriller", want: play, id: thriller}
+      - {heard: "bad", want: play, id: bad, kinds: [album]}
+      - {heard: "bohemian rhapsody", want: play, id: bohemian}
+      # Class r: English h heard as the Brazilian r.
+      - {heard: "rarry potter e a pedra filosofal", want: play, id: harrypotter1}
+      - {heard: "rári póter e a câmara secreta", want: play, id: harrypotter2}
+      - {heard: "rôum alôun", want: play, id: homealone}
+      - {heard: "raloween", want: play, id: halloween}
+      - {heard: "rause of cards", want: play, id: houseofcards}
+      - {heard: "rana montana", want: play, id: hannah}
+      - {heard: "rotel califórnia", want: play, id: hotelcalifornia}
+      - {heard: "rau ai met iór móder", want: play, id: himym}
+      - {heard: "uitni riuston", want: play, id: whitney}
+      # Class h: silent h in the Portuguese reading.
+      - {heard: "omem aranha", want: play, id: spiderman}
+      - {heard: "omem de ferro", want: play, id: ironman}
+      - {heard: "ana montana", want: play, id: hannah}
+      - {heard: "otel califórnia", want: play, id: hotelcalifornia}
+      - {heard: "boemian rapsodi", want: play, id: bohemian}
+      # Class final-l: l and u written for one another.
+      - {heard: "hotéu califórnia", want: play, id: hotelcalifornia}
+      - {heard: "better call sau", want: play, id: bettercallsaul}
+      - {heard: "supernaturau", want: play, id: supernatural}
+      - {heard: "smóuvil", want: play, id: smallville}
+      # Class nasal: -m, -n and -ão.
+      - {heard: "omi aranha", want: play, id: spiderman}
+      - {heard: "o rei leon", want: play, id: lionking}
+      - {heard: "top gãn", want: play, id: topgun}
+      - {heard: "jâstin bíber", want: play, id: bieber}
+      # Class epenthesis: i breaking a cluster or after a final consonant.
+      - {heard: "istrêinjer tíngs", want: play, id: strangerthings}
+      - {heard: "istar uórs", want: play, id: starwars}
+      - {heard: "prison breiqui", want: play, id: prisonbreak}
+      - {heard: "faiti clâbi", want: play, id: fightclub}
+      - {heard: "róqui", want: play, id: rocky}
+      - {heard: "pissicose", want: play, id: psycho}
+      - {heard: "bigui bangue tiori", want: play, id: bigbang}
+      - {heard: "britini ispírs", want: play, id: britney}
+      - {heard: "ismels laique tin ispirit", want: play, id: teenspirit}
+      # Class x-ch: x as ks, sh spelled ch or x.
+      - {heard: "táksi draiver", want: play, id: taxidriver}
+      - {heard: "ed xiran", want: play, id: edsheeran}
+      - {heard: "xêipe of iú", want: play, id: shapeofyou}
+      - {heard: "red hot xili peppers", want: play, id: rhcp}
+      # Class palatal: t and d before i.
+      - {heard: "dârti dancin", want: play, id: dirtydancing}
+      - {heard: "the uóquin déd", want: play, id: walkingdead}
+      - {heard: "suiti tchaild o maine", want: play, id: sweetchild}
+      - {heard: "esqueceram dji mim", want: play, id: homealone}
+      # Class vowel: unstressed e and o raised to i and u.
+      - {heard: "brunu mars", want: play, id: brunomars}
+      - {heard: "esqueceram di mim", want: play, id: homealone}
+      - {heard: "gladiadô", want: play, id: gladiator}
+      # Class accent: accents and tildes dropped.
+      - {heard: "o rei leao", want: play, id: lionking}
+      - {heard: "bob esponja calca quadrada", want: play, id: spongebob}
+      - {heard: "harry potter e a camara secreta", want: play, id: harrypotter2}
+      # Class g-j: g before e and i against j.
+      - {heard: "lêidi gaga", want: play, id: ladygaga}
+      - {heard: "djurássic park", want: play, id: jurassic}
+      - {heard: "bili djin", want: play, id: billiejean}
+      - {heard: "rei djude", want: play, id: heyjude}
+      # Class qu-gu: qu and gu, k and cu.
+      - {heard: "cuin", want: play, id: queen}
+      - {heard: "quin", want: play, id: queen}
+      # Class foreign: English titles and names respelled.
+      - {heard: "maicou djéquisson", want: play, id: michaeljackson}
+      - {heard: "madona", want: play, id: madonna}
+      - {heard: "guns en rouses", want: play, id: gnr}
+      - {heard: "bon jóvi", want: play, id: bonjovi}
+      - {heard: "rólin istôuns", want: play, id: stones}
+      - {heard: "iú tú", want: play, id: u2}
+      - {heard: "breiquin bédi", want: play, id: breakingbad}
+      - {heard: "forest gamp", want: play, id: forrest}
+      - {heard: "goust", want: play, id: ghost}
+      - {heard: "gris", want: play, id: grease}
+      - {heard: "greis anatomi", want: play, id: greys}
+      - {heard: "trilher", want: play, id: thriller}
+      - {heard: "bit it", want: play, id: beatit}
+      - {heard: "uonderuol", want: play, id: wonderwall}
+      - {heard: "iésterdei", want: play, id: yesterday}
+      - {heard: "walking dead", want: play, id: walkingdead}
+      - {heard: "de volta pro futuro", want: play, id: backtofuture}
+      # Class number: digits, words and part numbers.
+      - {heard: "rocky 2", want: play, id: rocky2}
+      - {heard: "rocky dois", want: play, id: rocky2}
+      - {heard: "esqueceram de mim 2", want: play, id: homealone2}
+      - {heard: "home alone 2", want: play, id: homealone2}
+      - {heard: "de volta para o futuro 2", want: play, id: backtofuture2}
+      - {heard: "de volta para o futuro parte dois", want: play, id: backtofuture2}
+      - {heard: "dois homens e meio", want: play, id: twoandahalf}
+      - {heard: "2 homens e meio", want: play, id: twoandahalf}
+      - {heard: "u 2", want: play, id: u2}
+      # Class real-word: a frequent word replaces a title word.
+      - {heard: "metálica", want: play, id: metallica}
+      - {heard: "maicon jackson", want: play, id: michaeljackson}
+      - {heard: "rei jude", want: play, id: heyjude}
+      - {heard: "jurássico parque", want: play, id: jurassic}
+      # Ambiguous: ask among the near neighbours.
+      - {heard: "harry potter", want: ask, among: [harrypotter1, harrypotter2]}
+      - {heard: "homem", want: ask, among: [spiderman, ironman]}
+      # Missing sequels: ask.
+      - {heard: "rocky 3", want: ask}
+      - {heard: "rocky três", want: ask}
+      - {heard: "esqueceram de mim 3", want: ask}
+      - {heard: "de volta para o futuro 3", want: ask}
+      - {heard: "harry potter e o prisioneiro de azkaban", want: ask}
+      - {heard: "homem aranha 2", want: ask}
+      - {heard: "avatar 2", want: ask}
+      # Absent titles, including near misses that share words or names with the library.
+      - {heard: "toy story", want: not_found}
+      - {heard: "pulp fiction", want: not_found}
+      - {heard: "friends", want: not_found}
+      - {heard: "the office", want: not_found}
+      - {heard: "game of thrones", want: not_found}
+      - {heard: "coldplay", want: not_found}
+      - {heard: "beyoncé", want: not_found}
+      - {heard: "titanic", want: not_found}
+      - {heard: "o poderoso chefão", want: not_found}
+      - {heard: "house of the dragon", want: not_found}
+      - {heard: "star trek", want: not_found}
+      - {heard: "jurassic world", want: not_found}
+      - {heard: "ghostbusters", want: not_found}
+      - {heard: "black mirror", want: not_found}
+      - {heard: "iron maiden", want: not_found}
+      - {heard: "michael bublé", want: not_found}
+      - {heard: "bruno e marrone", want: not_found}
+      - {heard: "ed motta", want: not_found}
+      - {heard: "billie eilish", want: not_found}
+      - {heard: "hotel transilvânia", want: not_found}
+      - {heard: "mariah carey", want: not_found}
+      - {heard: "wonder woman", want: not_found}
