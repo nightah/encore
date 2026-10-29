@@ -31,6 +31,13 @@ func TestExpand(t *testing.T) {
 		}},
 		{"what's   playing", []string{"what's playing"}},
 		{"(a|a) b", []string{"a b"}},
+		// Japanese is written without spaces, around groups too.
+		{"[{Room}で]{Movie}を(再生|上映)して[ください]", []string{
+			"{Room}で{Movie}を再生してください", "{Room}で{Movie}を再生して", "{Room}で{Movie}を上映してください", "{Room}で{Movie}を上映して",
+			"{Movie}を再生してください", "{Movie}を再生して", "{Movie}を上映してください", "{Movie}を上映して",
+		}},
+		{"{Movie}[ください]", []string{"{Movie}ください", "{Movie}"}},
+		{"アルバム[の]{Album} (by|from) x", []string{"アルバムの{Album} by x", "アルバムの{Album} from x", "アルバム{Album} by x", "アルバム{Album} from x"}},
 	}
 
 	for _, tt := range tests {
