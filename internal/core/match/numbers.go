@@ -130,7 +130,7 @@ loop:
 				break loop
 			}
 
-			mill = max(cur, 1) * 1_000_000
+			mill = max(cur, 1) * w.val
 			cur = 0
 			st = stMillion
 		}
