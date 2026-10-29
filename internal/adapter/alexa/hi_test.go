@@ -87,8 +87,9 @@ func TestRoomPostposition(t *testing.T) {
 		{"{Room} में {Command}", "", false},
 		{"play {Movie} [(in|on) the {Room}]", "", false},
 	} {
-		got, ok := roomPostposition(tc.pattern)
-		assert.Equal(t, tc.ok, ok, tc.pattern)
+		_, after, place := roomAround(tc.pattern)
+		got := strings.TrimSpace(after)
+		assert.Equal(t, tc.ok, place != roomNone && got != "", tc.pattern)
 		assert.Equal(t, tc.want, got, tc.pattern)
 	}
 }

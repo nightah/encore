@@ -83,10 +83,8 @@ type Speech struct {
 	languages map[string]string
 	// slotIDs maps locale, slot type and normalised value or synonym to the value's ID.
 	slotIDs map[string]map[string]map[string]string
-	// roomPhrases holds, per locale, the words its utterances put between another slot and {Room} ("in the", "im"), lowercased and split into words.
-	roomPhrases map[string][][]string
-	// roomAfter holds, per locale, the postpositions its utterances put after {Room} ("में"), lowercased and split into words.
-	roomAfter map[string][][]string
+	// roomPhrases holds, per locale, the words its utterances put around {Room} ("in the", "im", "で"), lowercased and split into words (units).
+	roomPhrases map[string][]roomPhrase
 	// queryForms holds, per locale, the TV intents' samples as they'd reach PlayMedia's search query, most specific first.
 	queryForms map[string][]queryForm
 	log        *slog.Logger
@@ -101,6 +99,17 @@ type queryForm struct {
 	numbers map[string]bool
 	// literals counts the words that aren't slots, so the most specific form is tried first.
 	literals int
+	// unspaced joins a slot's words without spaces, for a language written without them (units).
+	unspaced bool
+}
+
+// roomPlace is where a pattern's optional room group is (roomAround).
+type roomPlace uint8
+
+// roomPhrase is one way an utterance names the room: the words before and after {Room} in its optional group, and whether the room comes before the title ("[{Room}で]{Movie}を再生して") rather than after it ("{Movie} [in the {Room}]").
+type roomPhrase struct {
+	before, after []string
+	first         bool
 }
 
 // RoomSplit is one way of reading a search query as a title followed by a room.

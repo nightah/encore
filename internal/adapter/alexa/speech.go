@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"golang.org/x/text/language"
 	"golang.org/x/text/language/display"
@@ -27,8 +28,7 @@ func NewSpeech(src *skillmodel.Sources, log *slog.Logger) (*Speech, error) {
 		responses:   map[string]map[string]string{},
 		languages:   map[string]string{},
 		slotIDs:     map[string]map[string]map[string]string{},
-		roomPhrases: map[string][][]string{},
-		roomAfter:   map[string][][]string{},
+		roomPhrases: map[string][]roomPhrase{},
 		queryForms:  map[string][]queryForm{},
 		log:         log,
 	}
@@ -54,15 +54,11 @@ func NewSpeech(src *skillmodel.Sources, log *slog.Logger) (*Speech, error) {
 			return nil, err
 		}
 
-		if s.roomPhrases[locale], err = roomPhrases(utterances); err != nil {
+		if s.roomPhrases[locale], err = roomPhrases(s.languages[locale], utterances); err != nil {
 			return nil, fmt.Errorf("locale %s: %w", locale, err)
 		}
 
-		if s.roomAfter[locale], err = roomPostpositions(utterances); err != nil {
-			return nil, fmt.Errorf("locale %s: %w", locale, err)
-		}
-
-		if s.queryForms[locale], err = queryForms(src.Model, utterances); err != nil {
+		if s.queryForms[locale], err = languageQueryForms(s.languages[locale], src.Model, utterances); err != nil {
 			return nil, fmt.Errorf("locale %s: %w", locale, err)
 		}
 	}
@@ -132,42 +128,41 @@ func (s *Speech) SlotID(locale, typ, heard string) string {
 	return ids[typ][match.Normalize(s.languages[locale], heard)]
 }
 
-// RoomSplits returns the ways query can be read as "<title> <room phrase> <room>", using the phrases locale's utterances put before {Room}, longest room first. Where its utterances put a postposition after {Room} instead ("[{Room} में]"), it also reads query as "<room> <postposition> <title>" and "<title> <room> <postposition>", longest room first. The caller decides which room, if any, is real.
+// RoomSplits returns the ways query can be read as "<title> <room phrase> <room>", or as the room first ("リビングで千と千尋の神隠し", "बेडरूम में शोले"), using the words locale's utterances put around {Room}, longest room first and rooms after the title before rooms before it. The caller decides which room, if any, is real.
 func (s *Speech) RoomSplits(locale, query string) []RoomSplit {
 	phrases, ok := s.roomPhrases[locale]
 	if !ok {
 		locale, phrases = fallbackLocale, s.roomPhrases[fallbackLocale]
 	}
 
-	words := strings.Fields(query)
+	lang := s.languages[locale]
+	words := units(lang, query)
 
 	var out []RoomSplit
 
 	for i := 1; i < len(words); i++ {
-		for _, phrase := range phrases {
-			end := i + len(phrase)
-			if end >= len(words) || !wordsEqual(words[i:end], phrase) {
+		for _, p := range phrases {
+			// A postposition that follows a leading room may also follow one said after the title ("दंगल बेडरूम में" for "[{Room} में] ..."), in a spaced language where the words show where the room starts.
+			trailing := !p.first || len(p.before) == 0 && len(p.after) > 0 && !unspaced[lang]
+
+			end, last := i+len(p.before), len(words)-len(p.after)
+			if !trailing || end >= last || !wordsEqual(words[i:end], p.before) || !wordsEqual(words[last:], p.after) {
 				continue
 			}
 
-			out = append(out, RoomSplit{Title: strings.Join(words[:i], " "), Room: strings.Join(words[end:], " ")})
+			out = append(out, RoomSplit{Title: joinUnits(lang, words[:i]), Room: joinUnits(lang, words[end:last])})
 		}
 	}
 
-	for _, post := range s.roomAfter[locale] {
-		for k := len(words) - len(post) - 1; k >= 1; k-- {
-			if wordsEqual(words[k:k+len(post)], post) {
-				out = append(out, RoomSplit{Title: strings.Join(words[k+len(post):], " "), Room: strings.Join(words[:k], " ")})
-			}
-		}
-
-		end := len(words) - len(post)
-		if end < 2 || !wordsEqual(words[end:], post) {
+	for _, p := range phrases {
+		if !p.first || len(words) < len(p.before) || !wordsEqual(words, p.before) {
 			continue
 		}
 
-		for i := 1; i < end; i++ {
-			out = append(out, RoomSplit{Title: strings.Join(words[:i], " "), Room: strings.Join(words[i:end], " ")})
+		for j := len(words) - len(p.after) - 1; j > len(p.before); j-- {
+			if wordsEqual(words[j:], p.after) {
+				out = append(out, RoomSplit{Title: joinUnits(lang, words[j+len(p.after):]), Room: joinUnits(lang, words[len(p.before):j])})
+			}
 		}
 	}
 
@@ -181,7 +176,7 @@ func (s *Speech) Reinterpret(locale string, intent Intent) (Intent, string) {
 		locale, forms = fallbackLocale, s.queryForms[fallbackLocale]
 	}
 
-	words := strings.Fields(intent.Slots["Query"].Value)
+	words := units(s.languages[locale], intent.Slots["Query"].Value)
 	for i, w := range words {
 		if o, ok := ordinals[s.languages[locale]][strings.ToLower(w)]; ok {
 			words[i] = o
@@ -216,9 +211,14 @@ var ordinals = map[string]map[string]string{
 	"en": {"1st": "first"},
 }
 
-// queryForms collects the samples of each TV intent that start with one of PlayMedia's carrier phrases, or end with one where the language puts the verb last ("{Query} चलाओ"), without it and without a room, most specific first. Samples that are only a slot beside the carrier, such as "play {Show}", are left out: any query would match them.
+// queryForms collects the samples of each TV intent that start with one of PlayMedia's carrier phrases, without it and without a room, most specific first. Samples that are only a slot after the carrier, such as "play {Show}", are left out: any query would match them.
 func queryForms(model skillmodel.Model, utterances map[string][]string) ([]queryForm, error) {
-	var carriers, trailing [][]string
+	return languageQueryForms("", model, utterances)
+}
+
+// languageQueryForms is queryForms in a language, whose words may be written without spaces (units) and whose carrier phrases may follow the query (verbFinal): "{Show}の次のエピソード" from "{Show}の次のエピソードを再生して" and PlayMedia's "{Query}を再生して".
+func languageQueryForms(lang string, model skillmodel.Model, utterances map[string][]string) ([]queryForm, error) {
+	var carriers, trailers [][]string
 
 	for _, pattern := range utterances["PlayMedia"] {
 		samples, err := skillmodel.Expand(pattern)
@@ -227,13 +227,13 @@ func queryForms(model skillmodel.Model, utterances map[string][]string) ([]query
 		}
 
 		for _, sample := range samples {
-			words := strings.Fields(strings.ToLower(sample))
+			words := units(lang, strings.ToLower(sample))
 
 			switch {
 			case len(words) > 1 && words[len(words)-1] == "{query}":
 				carriers = append(carriers, words[:len(words)-1])
-			case len(words) > 1 && words[0] == "{query}":
-				trailing = append(trailing, words[1:])
+			case len(words) > 1 && words[0] == "{query}" && verbFinal[lang]:
+				trailers = append(trailers, words[1:])
 			}
 		}
 	}
@@ -262,7 +262,8 @@ func queryForms(model skillmodel.Model, utterances map[string][]string) ([]query
 			}
 
 			for _, sample := range samples {
-				if form, ok := newQueryForm(in.Name, sample, carriers, trailing, numbers); ok {
+				if form, ok := newQueryForm(in.Name, units(lang, sample), carriers, trailers, numbers); ok {
+					form.unspaced = unspaced[lang]
 					out = append(out, form)
 				}
 			}
@@ -274,31 +275,33 @@ func queryForms(model skillmodel.Model, utterances map[string][]string) ([]query
 	return out, nil
 }
 
-func newQueryForm(intent, sample string, carriers, trailing [][]string, numbers map[string]bool) (queryForm, bool) {
-	if strings.Contains(sample, "{Room}") {
+// newQueryForm reads a sample's words as a query form: without the carrier it starts with, or the trailer (a carrier after the query) it ends with.
+func newQueryForm(intent string, words []string, carriers, trailers [][]string, numbers map[string]bool) (queryForm, bool) {
+	if slices.Contains(words, "{Room}") {
 		return queryForm{}, false
 	}
 
-	words := strings.Fields(sample)
+	var rest []string
 
 	for _, carrier := range carriers {
 		if len(words) > len(carrier) && wordsEqual(words, carrier) {
-			return newForm(intent, words[len(carrier):], numbers)
+			rest = words[len(carrier):]
+
+			break
 		}
 	}
 
-	for _, carrier := range trailing {
-		if start := len(words) - len(carrier); start > 0 && wordsEqual(words[start:], carrier) {
-			return newForm(intent, words[:start], numbers)
+	for _, trailer := range trailers {
+		if rest == nil && len(words) > len(trailer) && wordsEqual(words[len(words)-len(trailer):], trailer) {
+			rest = words[:len(words)-len(trailer)]
 		}
 	}
 
-	return queryForm{}, false
-}
+	if rest == nil {
+		return queryForm{}, false
+	}
 
-// newForm is the query form of a sample's words without its carrier phrase, which must keep at least one word that isn't a slot.
-func newForm(intent string, words []string, numbers map[string]bool) (queryForm, bool) {
-	form := queryForm{intent: intent, words: words, numbers: numbers}
+	form := queryForm{intent: intent, words: rest, numbers: numbers}
 
 	for i, w := range form.words {
 		if !isSlotRef(w) {
@@ -343,6 +346,9 @@ func (f queryForm) match(words []string) (map[string]string, bool) {
 
 		for end := j + 1; end <= len(words); end++ {
 			values[name] = strings.Join(words[j:end], " ")
+			if f.unspaced {
+				values[name] = strings.TrimSpace(strings.Join(words[j:end], ""))
+			}
 
 			if at(i+1, end) {
 				return true
@@ -359,28 +365,36 @@ func isSlotRef(word string) bool {
 	return len(word) > 2 && word[0] == '{' && word[len(word)-1] == '}'
 }
 
-// roomPhrases collects the words that introduce an optional trailing room in utterances, such as "in the" and "on the" from "[(in|on) the {Room}]".
-func roomPhrases(utterances map[string][]string) ([][]string, error) {
+// roomPhrases collects the words around {Room} in the optional groups of utterances, such as "in the" and "on the" before a trailing room from "[(in|on) the {Room}]", and "で" after a leading one from "[{Room}で]{Movie}を再生して".
+func roomPhrases(lang string, utterances map[string][]string) ([]roomPhrase, error) {
 	seen := map[string]bool{}
 
-	var out [][]string
+	var out []roomPhrase
 
 	for _, intent := range slices.Sorted(maps.Keys(utterances)) {
 		for _, pattern := range utterances[intent] {
-			group, ok := roomGroup(pattern)
-			if !ok {
+			before, after, place := roomAround(pattern)
+			if place == roomNone {
 				continue
 			}
 
-			phrases, err := skillmodel.Expand(group)
+			leads, err := expandOrEmpty(before)
 			if err != nil {
 				return nil, err
 			}
 
-			for _, phrase := range phrases {
-				if phrase = strings.ToLower(phrase); !seen[phrase] {
-					seen[phrase] = true
-					out = append(out, strings.Fields(phrase))
+			trails, err := expandOrEmpty(after)
+			if err != nil {
+				return nil, err
+			}
+
+			for _, b := range leads {
+				for _, a := range trails {
+					p := roomPhrase{before: units(lang, strings.ToLower(b)), after: units(lang, strings.ToLower(a)), first: place == roomFirst}
+					if key := fmt.Sprint(p); !seen[key] && len(p.before)+len(p.after) > 0 {
+						seen[key] = true
+						out = append(out, p)
+					}
 				}
 			}
 		}
@@ -389,88 +403,117 @@ func roomPhrases(utterances map[string][]string) ([][]string, error) {
 	return out, nil
 }
 
-// roomPostpositions collects the words that follow {Room} inside an optional group that starts with it, such as "में" from "[{Room} में]", where a language puts the room's postposition after it.
-func roomPostpositions(utterances map[string][]string) ([][]string, error) {
-	seen := map[string]bool{}
-
-	var out [][]string
-
-	for _, intent := range slices.Sorted(maps.Keys(utterances)) {
-		for _, pattern := range utterances[intent] {
-			group, ok := roomPostposition(pattern)
-			if !ok {
-				continue
-			}
-
-			phrases, err := skillmodel.Expand(group)
-			if err != nil {
-				return nil, err
-			}
-
-			for _, phrase := range phrases {
-				if phrase = strings.ToLower(phrase); !seen[phrase] {
-					seen[phrase] = true
-					out = append(out, strings.Fields(phrase))
-				}
-			}
-		}
+// expandOrEmpty is Expand, with nothing at all expanding to the empty phrase.
+func expandOrEmpty(pattern string) ([]string, error) {
+	if strings.TrimSpace(pattern) == "" {
+		return []string{""}, nil
 	}
 
-	return out, nil
+	return skillmodel.Expand(pattern)
 }
 
-// roomPostposition returns what follows {Room} inside the optional group that starts with it, "में" for "[{Room} में] ...".
-func roomPostposition(pattern string) (string, bool) {
-	start := strings.Index(pattern, "[{Room} ")
-	if start < 0 {
-		return "", false
+// roomAround returns the pattern text around {Room} in the optional group holding it, and where the group is: before and after {Room} inside a group that ends the pattern ("(in|on) the" for "... [(in|on) the {Room}]"), inside one that starts it ("で" for "[{Room}で]{Movie}を再生して"), or, for a group in the middle, from the slot before the group to the end of the group ("を" and "で" for "{Movie}を[{Room}で]再生して"), where a search query ends as the carrier phrase begins.
+func roomAround(pattern string) (before, after string, place roomPlace) {
+	at := strings.LastIndex(pattern, "{Room}")
+	if at < 0 {
+		return "", "", roomNone
 	}
 
-	depth := 0
+	open, closing := -1, -1
 
-	for i := start + 1; i < len(pattern); i++ {
+	for i, depth := at-1, 0; i >= 0 && open < 0; i-- {
 		switch pattern[i] {
-		case '[':
-			depth++
 		case ']':
+			depth++
+		case '[':
 			if depth == 0 {
-				group := strings.TrimSpace(pattern[start+len("[{Room}") : i])
-
-				return group, group != ""
+				open = i
 			}
 
 			depth--
 		}
 	}
 
-	return "", false
+	for i, depth := at+len("{Room}"), 0; i < len(pattern) && closing < 0; i++ {
+		switch pattern[i] {
+		case '[':
+			depth++
+		case ']':
+			if depth == 0 {
+				closing = i
+			}
+
+			depth--
+		}
+	}
+
+	if open < 0 || closing < 0 {
+		return "", "", roomNone
+	}
+
+	before, after = pattern[open+1:at], pattern[at+len("{Room}"):closing]
+	head, tail := pattern[:open], pattern[closing+1:]
+
+	switch {
+	case strings.TrimSpace(tail) == "":
+		return before, after, roomLast
+	case strings.TrimSpace(head) == "":
+		return before, after, roomFirst
+	}
+
+	slot := strings.LastIndex(head, "}")
+	if slot < 0 {
+		return "", "", roomNone
+	}
+
+	return head[slot+1:] + before, after, roomMiddle
 }
 
 // roomGroup returns what comes before {Room} inside the optional group that ends a pattern with it, "(in|on) the" for "... [(in|on) the {Room}]".
 func roomGroup(pattern string) (string, bool) {
-	end := strings.LastIndex(pattern, "{Room}]")
-	if end < 0 || strings.TrimSpace(pattern[end+len("{Room}]"):]) != "" {
+	before, after, place := roomAround(pattern)
+	if before = strings.TrimSpace(before); place != roomLast || after != "" || before == "" {
 		return "", false
 	}
 
-	depth := 0
+	return before, true
+}
 
-	for i := end - 1; i >= 0; i-- {
-		switch pattern[i] {
-		case ']':
-			depth++
-		case '[':
-			if depth == 0 {
-				group := strings.TrimSpace(pattern[i+1 : end])
-
-				return group, group != ""
-			}
-
-			depth--
-		}
+// units splits text into the units the adapter compares utterances and queries in: its words, or in a language written without spaces (unspaced) its characters, with a run of digits and a slot reference each one unit.
+func units(lang, text string) []string {
+	if !unspaced[lang] {
+		return strings.Fields(text)
 	}
 
-	return "", false
+	var out []string
+
+	for i := 0; i < len(text); {
+		r, size := utf8.DecodeRuneInString(text[i:])
+		n := size
+
+		switch {
+		case r >= '0' && r <= '9':
+			n = len(text[i:]) - len(strings.TrimLeft(text[i:], "0123456789"))
+		case r == '{':
+			if end := strings.IndexByte(text[i:], '}'); end > 0 {
+				n = end + 1
+			}
+		}
+
+		out = append(out, text[i:i+n])
+		i += n
+	}
+
+	return out
+}
+
+// joinUnits joins units back into text.
+func joinUnits(lang string, words []string) string {
+	if unspaced[lang] {
+		return strings.TrimSpace(strings.Join(words, ""))
+	}
+
+	return strings.Join(words, " ")
 }
 
 func wordsEqual(words, phrase []string) bool {
@@ -510,13 +553,17 @@ func slotIDs(lang string, types map[string][]skillmodel.SlotValue) map[string]ma
 	return out
 }
 
-// spokenTime words a clock time as people say it: twelve-hour with am or pm in English, twelve-hour after the part of the day and before "बजे" in Hindi ("रात 9:30 बजे"), and 24-hour elsewhere.
+// spokenTime words a clock time as people say it: twelve-hour with am or pm in English, twelve-hour after the part of the day and before "बजे" in Hindi ("रात 9:30 बजे"), hours and minutes in Japanese ("15時4分", "15時"), and 24-hour elsewhere.
 func spokenTime(lang string, t time.Time) string {
-	switch lang {
-	case "en":
+	switch {
+	case lang == "en":
 		return t.Format("3:04 pm")
-	case "hi":
+	case lang == "hi":
 		return hindiDayPart(t.Hour()) + " " + t.Format("3:04") + " बजे"
+	case lang == "ja" && t.Minute() == 0:
+		return strconv.Itoa(t.Hour()) + "時"
+	case lang == "ja":
+		return strconv.Itoa(t.Hour()) + "時" + strconv.Itoa(t.Minute()) + "分"
 	}
 
 	return t.Format("15:04")
@@ -560,13 +607,19 @@ func languageName(locale, code string) string {
 	return code
 }
 
-var listAnd = map[string]string{"en": "and", "de": "und", "fr": "et", "es": "y", "it": "e", "ar": "و", "hi": "और"}
+var listAnd = map[string]string{"en": "and", "de": "und", "fr": "et", "es": "y", "it": "e", "ar": "و", "hi": "और", "ja": "と"}
 
 // listCommas are the list separators of languages that don't write ", ".
-var listCommas = map[string]string{"ar": "، "}
+var listCommas = map[string]string{"ar": "، ", "ja": "、"}
 
 // listAndJoins report, for the languages that write "and" joined to the word after it, whether it joins the last item of a list.
 var listAndJoins = map[string]func(item string) bool{"ar": startsArabic}
+
+// unspaced lists the languages written without spaces: their lists are joined with "、" and their "and" with no spaces around ("A、BとC"), their durations have no spaces ("1時間12分"), and the adapter compares their utterances character by character (units).
+var unspaced = map[string]bool{"ja": true}
+
+// verbFinal lists the languages that put the verb last, so PlayMedia's carrier phrase follows the search query ("{Query}を再生して", "{Query} चलाओ").
+var verbFinal = map[string]bool{"hi": true, "ja": true}
 
 func spokenList(lang string, items []string) string {
 	and, ok := listAnd[lang]
@@ -587,7 +640,11 @@ func spokenList(lang string, items []string) string {
 	}
 
 	last := items[len(items)-1]
-	if join := listAndJoins[lang]; join == nil || !join(last) {
+
+	switch join := listAndJoins[lang]; {
+	case unspaced[lang]:
+		return strings.Join(items[:len(items)-1], comma) + and + last
+	case join == nil || !join(last):
 		and += " "
 	}
 
@@ -603,13 +660,14 @@ var durationWords = map[string][5]string{
 	"it": {"ora", "ore", "minuto", "minuti", "meno di un minuto"},
 	"ar": {"ساعة", "ساعات", "دقيقة", "دقائق", "أقل من دقيقة"},
 	"hi": {"घंटा", "घंटे", "मिनट", "मिनट", "एक मिनट से कम"},
+	"ja": {"時間", "時間", "分", "分", "1分未満"},
 }
 
-// durationCounts word a count of a duration unit in languages whose nouns take more forms after a number than one and many, given the unit's singular and plural.
-var durationCounts = map[string]func(n int, one, many string) string{"ar": arabicCount}
+// durationCounts word a count of a duration unit in languages that don't say the number, a space and the singular for one or the plural otherwise, given the unit's singular and plural.
+var durationCounts = map[string]func(n int, one, many string) string{"ar": arabicCount, "ja": unspacedCount}
 
-// durationJoins are what joins the hours to the minutes in languages that say more than a space between them, such as Arabic's "and".
-var durationJoins = map[string]string{"ar": " و"}
+// durationJoins are what joins the hours to the minutes in languages that don't put a space between them, such as Arabic's "and" and Japanese's nothing.
+var durationJoins = map[string]string{"ar": " و", "ja": ""}
 
 func spokenDuration(lang string, d time.Duration) string {
 	w, ok := durationWords[lang]
@@ -652,4 +710,9 @@ func countUnit(n int, one, many string) string {
 	}
 
 	return strconv.Itoa(n) + " " + many
+}
+
+// unspacedCount writes the number straight before the unit, as Japanese does ("1時間"); its units don't change with the count.
+func unspacedCount(n int, one, _ string) string {
+	return strconv.Itoa(n) + one
 }
