@@ -51,8 +51,8 @@ func (a *App) restoreSnapshot(ctx context.Context, g *group) {
 	g.log.Info("restored the library snapshot", "items", len(snap.Items), "synced", snap.LastSync)
 }
 
-// keepSnapshots saves the group's catalog after syncs and events, at most once per snapshotEvery, and once more when ctx ends if anything changed since.
-func (a *App) keepSnapshots(ctx context.Context, g *group) {
+// keepSnapshots saves the group's catalog after syncs and events, at most once per snapshotEvery, and once more when ctx ends if anything changed since saved, the catalog's stats when it was last saved or restored.
+func (a *App) keepSnapshots(ctx context.Context, g *group, saved library.Stats) {
 	if a.blobs == nil {
 		<-ctx.Done()
 
@@ -61,9 +61,6 @@ func (a *App) keepSnapshots(ctx context.Context, g *group) {
 
 	ticker := time.NewTicker(a.tune.snapshotCheck)
 	defer ticker.Stop()
-
-	// The catalog as restored or carried over needs no saving.
-	saved := g.catalog.Stats()
 
 	var lastSave time.Time
 
