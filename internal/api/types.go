@@ -976,23 +976,32 @@ type skillService struct {
 
 // SkillInfo is the Alexa skill page.
 type SkillInfo struct {
-	Amazon           AmazonConnection     `json:"amazon"`
-	SkillID          string               `json:"skill_id"`
-	State            string               `json:"state" enum:"live,not_deployed,deploying,failed"`
-	Invocation       string               `json:"invocation" enum:"encore,kodi" doc:"encore uses each locale's own name for it (\"kodi\" in French); kodi is \"kodi\" in every locale"`
-	InvocationName   string               `json:"invocation_name" doc:"What people say, \"Alexa, ask <invocation_name> to…\", in the first enabled locale"`
-	SkillName        string               `json:"skill_name" doc:"Empty uses each locale's default"`
-	LocalesAvailable []string             `json:"locales_available"`
-	LocalesEnabled   []string             `json:"locales_enabled"`
-	Content          []string             `json:"content" enum:"movies,tv,music" doc:"What the skill can play; music includes music videos"`
-	Endpoint         SkillEndpointInfo    `json:"endpoint"`
-	Privacy          Privacy              `json:"privacy" doc:"Each answer is null until it's given; deploys are refused until all are answered"`
-	LastDeploy       Nullable[LastDeploy] `json:"last_deploy"`
-	NeedsDeploy      bool                 `json:"needs_deploy"`
-	UpdateReason     string               `json:"update_reason" enum:"none,settings,library" doc:"Why needs_deploy is set: the skill's settings changed, or only the library titles in the model"`
-	ModelSize        Nullable[ModelSize]  `json:"model_size"`
-	AutoDeploy       bool                 `json:"auto_deploy" doc:"Whether alexa.auto_deploy redeploys the skill on its own when needs_deploy is set"`
-	AutoDeployPaused string               `json:"auto_deploy_paused" doc:"Why automatic deploys are paused until a deploy started by hand succeeds; empty when they aren't paused or alexa.auto_deploy is off"`
+	Amazon           AmazonConnection `json:"amazon"`
+	SkillID          string           `json:"skill_id"`
+	State            string           `json:"state" enum:"live,not_deployed,deploying,failed"`
+	Invocation       string           `json:"invocation" enum:"encore,kodi" doc:"encore uses each locale's own name for it (\"kodi\" in French); kodi is each locale's spelling of \"kodi\" (see locale_invocations)"`
+	InvocationName   string           `json:"invocation_name" doc:"What people say, \"Alexa, ask <invocation_name> to…\", in the first enabled locale"`
+	SkillName        string           `json:"skill_name" doc:"Empty uses each locale's default"`
+	LocalesAvailable []string         `json:"locales_available"`
+	LocalesEnabled   []string         `json:"locales_enabled"`
+	// LocaleInvocations spell each choice per locale: some languages write the names in their own script, and French says kodi for both.
+	LocaleInvocations []LocaleInvocation   `json:"locale_invocations" doc:"What people say in each available locale for each invocation choice"`
+	Content           []string             `json:"content" enum:"movies,tv,music" doc:"What the skill can play; music includes music videos"`
+	Endpoint          SkillEndpointInfo    `json:"endpoint"`
+	Privacy           Privacy              `json:"privacy" doc:"Each answer is null until it's given; deploys are refused until all are answered"`
+	LastDeploy        Nullable[LastDeploy] `json:"last_deploy"`
+	NeedsDeploy       bool                 `json:"needs_deploy"`
+	UpdateReason      string               `json:"update_reason" enum:"none,settings,library" doc:"Why needs_deploy is set: the skill's settings changed, or only the library titles in the model"`
+	ModelSize         Nullable[ModelSize]  `json:"model_size"`
+	AutoDeploy        bool                 `json:"auto_deploy" doc:"Whether alexa.auto_deploy redeploys the skill on its own when needs_deploy is set"`
+	AutoDeployPaused  string               `json:"auto_deploy_paused" doc:"Why automatic deploys are paused until a deploy started by hand succeeds; empty when they aren't paused or alexa.auto_deploy is off"`
+}
+
+// LocaleInvocation is what people say in one locale for each invocation choice.
+type LocaleInvocation struct {
+	Locale string `json:"locale"`
+	Encore string `json:"encore"`
+	Kodi   string `json:"kodi"`
 }
 
 // AmazonConnection is the state of the Login with Amazon connection.

@@ -34,6 +34,37 @@ func invocationChoice(stored string) string {
 	return invocationEncore
 }
 
+// localeInvocations lists every locale's spelling of both invocation choices, in locale order.
+func localeInvocations(src *skillmodel.Sources) []LocaleInvocation {
+	out := make([]LocaleInvocation, 0, len(src.Locales))
+
+	for _, name := range src.LocaleNames() {
+		loc := src.Locales[name]
+
+		kodi := loc.KodiInvocation
+		if kodi == "" {
+			kodi = skillmodel.InvocationKodi
+		}
+
+		out = append(out, LocaleInvocation{Locale: name, Encore: loc.Invocation, Kodi: kodi})
+	}
+
+	return out
+}
+
+// spokenInvocation is what people say in locale for the stored choice: the locale's spelling of kodi when that is chosen, and "" for Encore's own name, which the package build fills in.
+func spokenInvocation(src *skillmodel.Sources, locale, stored string) string {
+	if stored != invocationKodi {
+		return ""
+	}
+
+	if loc, ok := src.Locales[locale]; ok && loc.KodiInvocation != "" {
+		return loc.KodiInvocation
+	}
+
+	return invocationKodi
+}
+
 func loadSources() (*skillmodel.Sources, error) {
 	return skillmodel.Load(i18n.FS)
 }
@@ -337,15 +368,16 @@ func (s *skillService) info(ctx context.Context) (SkillInfo, error) {
 			Connected: tok != nil && tok.RefreshToken != "" && !reauth, VendorID: state.VendorID, ProfileClientID: ls.ClientID,
 			HasClientSecret: secretErr == nil, NeedsReauthorise: reauth,
 		},
-		SkillID:          s.storedSkillID(),
-		Invocation:       invocationChoice(ss.Invocation),
-		InvocationName:   ss.Invocation,
-		SkillName:        ss.SkillName,
-		LocalesAvailable: s.a.opts.Sources.LocaleNames(),
-		LocalesEnabled:   locales,
-		Content:          content,
-		Endpoint:         SkillEndpointInfo{URL: s.endpointURL(ctx, ss)},
-		Privacy:          ss.Privacy,
+		SkillID:           s.storedSkillID(),
+		Invocation:        invocationChoice(ss.Invocation),
+		InvocationName:    spokenInvocation(s.a.opts.Sources, firstOr(locales, ""), ss.Invocation),
+		SkillName:         ss.SkillName,
+		LocalesAvailable:  s.a.opts.Sources.LocaleNames(),
+		LocalesEnabled:    locales,
+		LocaleInvocations: localeInvocations(s.a.opts.Sources),
+		Content:           content,
+		Endpoint:          SkillEndpointInfo{URL: s.endpointURL(ctx, ss)},
+		Privacy:           ss.Privacy,
 	}
 
 	if out.InvocationName == "" || out.SkillName == "" {
