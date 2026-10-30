@@ -150,6 +150,11 @@ type contextTokenSource interface {
 	TokenContext(ctx context.Context) (*oauth2.Token, error)
 }
 
+// rejectingTokenSource is a token source that can be told an access token was rejected, as *lwa.TokenSource can.
+type rejectingTokenSource interface {
+	Rejected(accessToken string)
+}
+
 // doer adds authorisation and retries to an *http.Client.
 type doer struct {
 	http   *http.Client

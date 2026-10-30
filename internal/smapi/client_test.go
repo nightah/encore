@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -225,4 +226,128 @@ func TestTruncatedResponse(t *testing.T) {
 	_, err = c.Vendors(t.Context())
 	require.ErrorIs(t, err, io.ErrUnexpectedEOF)
 	assert.ErrorContains(t, err, "reading response")
+}
+
+func TestUnauthorisedRefreshesOnceAndRepeats(t *testing.T) {
+	fake := smapitest.New(t, smapitest.Options{})
+	c := newClient(t, fake)
+
+	_, err := c.Vendors(t.Context())
+	require.NoError(t, err)
+	require.Equal(t, 1, fake.Refreshes())
+
+	// Amazon stops accepting the access token before the expiry it was issued with.
+	fake.ExpireAccessTokens()
+
+	vendors, err := c.Vendors(t.Context())
+	require.NoError(t, err)
+	assert.Len(t, vendors, 1)
+	assert.Equal(t, 2, fake.Refreshes(), "a 401 refreshes the access token once")
+	assert.Equal(t, 2, fake.Calls("GET /v1/vendors"))
+}
+
+func TestUnauthorisedRepeatsARequestBody(t *testing.T) {
+	fake := smapitest.New(t, smapitest.Options{})
+	c := newClient(t, fake)
+
+	location := upload(t, c, packageZip(t, "encore", "en-US"))
+	fake.ExpireAccessTokens()
+
+	id, err := c.ImportNew(t.Context(), smapitest.DefaultVendorID, location)
+	require.NoError(t, err, "the import's body is sent again with the new token")
+	assert.NotEmpty(t, id)
+	assert.Equal(t, 1, fake.Calls("POST /v1/skills/imports"))
+}
+
+func TestUnauthorisedTwiceIsReturned(t *testing.T) {
+	fake := smapitest.New(t, smapitest.Options{})
+	c := newClient(t, fake)
+
+	fake.Inject(http.StatusUnauthorized, 3)
+
+	_, err := c.Vendors(t.Context())
+	require.Error(t, err)
+	assert.Equal(t, http.StatusUnauthorized, smapi.StatusCode(err))
+	assert.Equal(t, 2, fake.Injected(), "the request is repeated once, not until it works")
+	assert.Equal(t, 2, fake.Refreshes(), "one refresh for the request, one after the 401")
+}
+
+func TestUnauthorisedWithAStaticTokenIsReturned(t *testing.T) {
+	calls := 0
+
+	c := stubClient(t, func(w http.ResponseWriter, _ *http.Request) {
+		calls++
+
+		w.WriteHeader(http.StatusUnauthorized)
+	})
+
+	_, err := c.Vendors(t.Context())
+	assert.Equal(t, http.StatusUnauthorized, smapi.StatusCode(err))
+	assert.Equal(t, 1, calls, "a token source that can't be reset has no other token to try")
+}
+
+// Requests that were sent with the same access token and all got a 401 refresh it once between them, not once each.
+func TestUnauthorisedConcurrentRequestsRefreshOnce(t *testing.T) {
+	fake := smapitest.New(t, smapitest.Options{})
+	opts := fake.Options()
+
+	const parallel = 3
+
+	var (
+		mu       sync.Mutex
+		rejected = map[string]bool{}
+		arrived  = make(chan struct{}, parallel)
+		release  = make(chan struct{})
+	)
+
+	// The first token is refused, but only once every request has been sent with it, so all of them see the 401.
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		tok := r.Header.Get("Authorization")
+
+		mu.Lock()
+		first := len(rejected) == 0 || rejected[tok]
+		rejected[tok] = rejected[tok] || first
+		mu.Unlock()
+
+		if first {
+			arrived <- struct{}{}
+			<-release
+			w.WriteHeader(http.StatusUnauthorized)
+
+			return
+		}
+
+		_, _ = w.Write([]byte(`{"vendors":[{"id":"V1","name":"Vendor","roles":["ROLE_ADMINISTRATOR"]}]}`))
+	}))
+	t.Cleanup(srv.Close)
+
+	lc, err := lwa.New(lwa.Config{Credentials: lwa.Credentials{ClientID: opts.ClientID, ClientSecret: opts.ClientSecret}, Endpoint: fake.Endpoint()})
+	require.NoError(t, err)
+
+	store := &lwa.MemoryStore{}
+	require.NoError(t, store.Save(t.Context(), &oauth2.Token{RefreshToken: opts.RefreshToken}))
+
+	c, err := smapi.New(lc.TokenSource(store), smapi.Options{BaseURL: srv.URL, Retry: fastRetry, Poll: fastPoll})
+	require.NoError(t, err)
+
+	errs := make(chan error, parallel)
+
+	for range parallel {
+		go func() {
+			_, err := c.Vendors(t.Context())
+			errs <- err
+		}()
+	}
+
+	for range parallel {
+		<-arrived
+	}
+
+	close(release)
+
+	for range parallel {
+		require.NoError(t, <-errs)
+	}
+
+	assert.Equal(t, 2, fake.Refreshes(), "one refresh for the first token, one for the token they all had refused")
 }

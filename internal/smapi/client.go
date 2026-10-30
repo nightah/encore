@@ -47,6 +47,8 @@ func (c *Client) API() *smapiclient.Client {
 
 func (d *doer) Do(req *http.Request) (*http.Response, error) {
 	ctx := req.Context()
+	refreshed := false
+	sent := ""
 
 	for attempt := 1; ; attempt++ {
 		if attempt > 1 && hasBody(req) {
@@ -64,7 +66,8 @@ func (d *doer) Do(req *http.Request) (*http.Response, error) {
 				return nil, err
 			}
 
-			req.Header.Set("Authorization", "Bearer "+tok.AccessToken)
+			sent = tok.AccessToken
+			req.Header.Set("Authorization", "Bearer "+sent)
 		}
 
 		resp, err := d.http.Do(req)
@@ -81,6 +84,16 @@ func (d *doer) Do(req *http.Request) (*http.Response, error) {
 			continue
 		}
 
+		// Amazon can stop accepting an access token before its expiry; a fresh one is worth one more try.
+		if resp.StatusCode == http.StatusUnauthorized && !refreshed && rewindable(req) && d.rejectToken(sent) {
+			refreshed = true
+
+			_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, maxBody))
+			_ = resp.Body.Close()
+
+			continue
+		}
+
 		wait, retry := d.retry.decide(req, resp.StatusCode, resp.Header, nil, attempt)
 		if !retry {
 			return resp, nil
@@ -93,6 +106,16 @@ func (d *doer) Do(req *http.Request) (*http.Response, error) {
 			return nil, err
 		}
 	}
+}
+
+// rejectToken makes the next token a new one, unless another request already replaced the rejected one, when the token source can.
+func (d *doer) rejectToken(accessToken string) bool {
+	r, ok := d.tokens.(rejectingTokenSource)
+	if ok {
+		r.Rejected(accessToken)
+	}
+
+	return ok
 }
 
 func (d *doer) token(ctx context.Context) (*oauth2.Token, error) {
