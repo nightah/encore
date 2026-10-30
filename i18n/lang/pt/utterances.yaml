@@ -336,6 +336,13 @@ WatchRandomShow:
   play_any_show: "(quero|vamos) (assistir|ver) (uma|alguma) série [de {Genre}]"
   play_random_show: "(coloca|colocar|coloque|bota|botar|bote|põe|pôr|ponha|passa|passar|passe|reproduz|reproduzir|reproduza|toca|tocar|toque) uma série (aleatória|qualquer) [(na|no) {Room}]\n(coloca|colocar|coloque|bota|botar|bote|põe|pôr|ponha|passa|passar|passe|reproduz|reproduzir|reproduza|toca|tocar|toque) uma série de {Genre} [aleatória|qualquer] [(na|no) {Room}]"
   surprise_me_with: "(me surpreende|me surpreender) com uma série [de {Genre}]"
+WatchSeason:
+  play_ordinal_only: "(coloca|colocar|coloque|bota|botar|bote|põe|pôr|ponha|passa|passar|passe|reproduz|reproduzir|reproduza|toca|tocar|toque) a {Ordinal} temporada [(na|no) {Room}]"
+  play_ordinal_season: "(coloca|colocar|coloque|bota|botar|bote|põe|pôr|ponha|passa|passar|passe|reproduz|reproduzir|reproduza|toca|tocar|toque) a {Ordinal} temporada de {Show} [(na|no) {Room}]\n(coloca|colocar|coloque|bota|botar|bote|põe|pôr|ponha|passa|passar|passe|reproduz|reproduzir|reproduza|toca|tocar|toque) a {Ordinal} temporada inteira de {Show} [(na|no) {Room}]"
+  play_season: "(coloca|colocar|coloque|bota|botar|bote|põe|pôr|ponha|passa|passar|passe|reproduz|reproduzir|reproduza|toca|tocar|toque) a temporada {Season} de {Show} [(na|no) {Room}]"
+  play_season_only: "(coloca|colocar|coloque|bota|botar|bote|põe|pôr|ponha|passa|passar|passe|reproduz|reproduzir|reproduza|toca|tocar|toque) a temporada {Season} [(na|no) {Room}]"
+  play_show_season: "(coloca|colocar|coloque|bota|botar|bote|põe|pôr|ponha|passa|passar|passe|reproduz|reproduzir|reproduza|toca|tocar|toque) {Show} temporada {Season} [(na|no) {Room}]"
+  play_whole_season: "(coloca|colocar|coloque|bota|botar|bote|põe|pôr|ponha|passa|passar|passe|reproduz|reproduzir|reproduza|toca|tocar|toque) a temporada {Season} inteira de {Show} [(na|no) {Room}]\n(coloca|colocar|coloque|bota|botar|bote|põe|pôr|ponha|passa|passar|passe|reproduz|reproduzir|reproduza|toca|tocar|toque) toda a temporada {Season} de {Show} [(na|no) {Room}]"
 WhatAlbums:
   list_albums_by: "(lista|listar|fala|falar|diz|dizer) os (álbuns|discos) (de|do|da) {Artist}"
   what_albums_by: "que (álbuns|discos) (de|do|da) {Artist} (eu tenho|a gente tem|você tem)"

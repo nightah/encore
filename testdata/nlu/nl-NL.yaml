@@ -26,6 +26,7 @@ cases:
   - {utterance: "speel de trailer", intent: WatchMovieTrailer}
   - {utterance: "ga verder met de zwartboek reeks", intent: WatchNextInCollection, slots: {Movie: "zwartboek"}}
   - {utterance: "speel de luizenmoeder aflevering 3 van seizoen 2", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "de luizenmoeder"}}
+  - {utterance: "speel seizoen 2 van de luizenmoeder", intent: WatchSeason, slots: {Season: "2", Show: "de luizenmoeder"}, pending: "WatchSeason is in the model from the next deploy"}
   - {utterance: "speel de luizenmoeder vanaf het begin", intent: WatchFirstEpisode, slots: {Show: "de luizenmoeder"}}
   - {utterance: "speel de nieuwste de luizenmoeder aflevering", intent: WatchLatestEpisode, slots: {Show: "de luizenmoeder"}}
   - {utterance: "ga verder met de laatste serie", intent: ContinueWatching}
@@ -115,6 +116,11 @@ cases:
   - {utterance: "zet de eerste aflevering van de luizenmoeder op", intent: WatchFirstEpisode, slots: {Show: "de luizenmoeder"}}
   - {utterance: "speel de luizenmoeder vanaf de eerste aflevering", intent: WatchFirstEpisode, slots: {Show: "de luizenmoeder"}}
   - {utterance: "de eerste aflevering van de luizenmoeder af te spelen", intent: WatchFirstEpisode, slots: {Show: "de luizenmoeder"}}
+  - {utterance: "speel het tweede seizoen van de luizenmoeder", intent: WatchSeason, slots: {Ordinal: "02", Show: "de luizenmoeder"}, pending: "WatchSeason is in the model from the next deploy"}
+  - {utterance: "zet seizoen 2 van de luizenmoeder op", intent: WatchSeason, slots: {Season: "2", Show: "de luizenmoeder"}, pending: "WatchSeason is in the model from the next deploy"}
+  - {utterance: "speel seizoen 2 van de luizenmoeder in de slaapkamer", intent: WatchSeason, slots: {Room: "", Season: "2", Show: "de luizenmoeder"}, pending: "WatchSeason is in the model from the next deploy"}
+  - {utterance: "seizoen 2 van de luizenmoeder af te spelen", intent: WatchSeason, slots: {Season: "2", Show: "de luizenmoeder"}, pending: "WatchSeason is in the model from the next deploy"}
+  - {utterance: "speel seizoen 3", intent: WatchSeason, slots: {Season: "3"}, pending: "WatchSeason is in the model from the next deploy"}
   # Music by an artist, including the one-shot forms.
   - {utterance: "speel wat muziek van marco borsato", intent: ListenToArtist, slots: {Artist: "marco borsato"}, pending: "Amazon writes wat muziek as whatmuziek"}
   - {utterance: "ik wil wat muziek van marco borsato horen", intent: ListenToArtist, slots: {Artist: "marco borsato"}}

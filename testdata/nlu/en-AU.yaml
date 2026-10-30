@@ -26,6 +26,7 @@ cases:
   - {utterance: "play the trailer", intent: WatchMovieTrailer}
   - {utterance: "continue the dune collection", intent: WatchNextInCollection, slots: {Movie: "dune"}}
   - {utterance: "play breaking bad episode 3 of season 2", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "breaking bad"}}
+  - {utterance: "chuck on season 2 of breaking bad", intent: WatchSeason, slots: {Season: "2", Show: "breaking bad"}, pending: "WatchSeason is in the model from the next deploy"}
   - {utterance: "play breaking bad from the start", intent: WatchFirstEpisode, slots: {Show: "breaking bad"}}
   - {utterance: "play the latest breaking bad episode", intent: WatchLatestEpisode, slots: {Show: "breaking bad"}}
   - {utterance: "continue watching the last show", intent: ContinueWatching}
@@ -103,6 +104,11 @@ cases:
   - {utterance: "play the latest episode of breaking bad", intent: WatchLatestEpisode, slots: {Show: "breaking bad"}}
   - {utterance: "play the very first episode of breaking bad", intent: WatchFirstEpisode, slots: {Show: "breaking bad"}}
   - {utterance: "play first episode of breaking bad", intent: WatchFirstEpisode, slots: {Show: "breaking bad"}}
+  - {utterance: "play the second season of breaking bad", intent: WatchSeason, slots: {Ordinal: "02", Show: "breaking bad"}, pending: "WatchSeason is in the model from the next deploy"}
+  - {utterance: "play breaking bad season 2", intent: WatchSeason, slots: {Season: "2", Show: "breaking bad"}, pending: "WatchSeason is in the model from the next deploy"}
+  - {utterance: "play season 2 of breaking bad in the living room", intent: WatchSeason, slots: {Room: "", Season: "2", Show: "breaking bad"}, pending: "WatchSeason is in the model from the next deploy"}
+  - {utterance: "play all of season 2 of breaking bad", intent: WatchSeason, slots: {Season: "2", Show: "breaking bad"}, pending: "WatchSeason is in the model from the next deploy"}
+  - {utterance: "play season 3", intent: WatchSeason, slots: {Season: "3"}, pending: "WatchSeason is in the model from the next deploy"}
   # Music by an artist, including the one-shot forms.
   - {utterance: "play some music by queen", intent: ListenToArtist, slots: {Artist: "queen"}}
   - {utterance: "play the song bohemian rhapsody by queen", intent: ListenToSong, slots: {Artist: "queen", Song: "bohemian rhapsody"}}

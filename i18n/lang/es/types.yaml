@@ -207,6 +207,40 @@ NAV_DIRECTION:
   left: "izquierda\na la izquierda\nhacia la izquierda"
   right: "derecha\na la derecha\nhacia la derecha"
   up: "arriba\nhacia arriba"
+ORDINAL:
+  "01": |-
+    primera
+    primer
+    primero
+  "02": |-
+    segunda
+    segundo
+  "03": |-
+    tercera
+    tercer
+    tercero
+  "04": |-
+    cuarta
+    cuarto
+  "05": |-
+    quinta
+    quinto
+  "06": |-
+    sexta
+    sexto
+  "07": |-
+    séptima
+    séptimo
+    setima
+  "08": |-
+    octava
+    octavo
+  "09": |-
+    novena
+    noveno
+  "10": |-
+    décima
+    décimo
 POWER_ACTION:
   hibernate: |-
     hiberna

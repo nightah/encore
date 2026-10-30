@@ -225,6 +225,27 @@ NAV_DIRECTION:
   left: "left"
   right: "right"
   up: "up"
+ORDINAL:
+  "01": |-
+    first
+  "02": |-
+    second
+  "03": |-
+    third
+  "04": |-
+    fourth
+  "05": |-
+    fifth
+  "06": |-
+    sixth
+  "07": |-
+    seventh
+  "08": |-
+    eighth
+  "09": |-
+    ninth
+  "10": |-
+    tenth
 POWER_ACTION:
   hibernate: |-
     hibernate

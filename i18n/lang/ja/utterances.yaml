@@ -330,6 +330,13 @@ WatchRandomShow:
   play_any_show: "(何か|なにか)[{Genre}の](番組|テレビ番組|ドラマ)を(再生して|見せて|かけて)[ください]"
   play_random_show: "[{Room}で](ランダムに|適当に)[{Genre}の](番組|テレビ番組|ドラマ)を(再生して|見せて)[ください]"
   surprise_me_with: "おまかせで[{Genre}の](番組|ドラマ)を(再生して|見せて)[ください]"
+WatchSeason:
+  play_ordinal_only: "[{Room}で]{Ordinal}シーズンを(再生して|見せて)[ください]"
+  play_ordinal_season: "[{Room}で]{Show}の{Ordinal}シーズンを(再生して|見せて|かけて)[ください]"
+  play_season: "[{Room}で]{Show}のシーズン{Season}を(再生して|見せて|かけて)[ください]\n[{Room}で]{Show}の(第{Season}期|{Season}期|{Season}期目|第{Season}シーズン)を(再生して|見せて)[ください]"
+  play_season_only: "[{Room}で]シーズン{Season}を(再生して|見せて)[ください]"
+  play_show_season: "[{Room}で]{Show}シーズン{Season}を(再生して|見せて|かけて)[ください]"
+  play_whole_season: "[{Room}で]{Show}のシーズン{Season}を(全部|全話|通しで)(再生して|見せて)[ください]"
 WhatAlbums:
   list_albums_by: "{Artist}のアルバムを(一覧にして|教えて|挙げて)[ください]"
   what_albums_by: "{Artist}の(どんな|何の)アルバムがある[の]"

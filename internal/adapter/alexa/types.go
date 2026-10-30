@@ -129,8 +129,8 @@ type queryForm struct {
 	words []string
 	// numbers names the slots that take a number.
 	numbers map[string]bool
-	// literals counts the words that aren't slots, so the most specific form is tried first.
-	literals int
+	// literals counts the words that aren't slots, so the most specific form is tried first, and free the slots that take any words, so of forms as specific the one with fewer is.
+	literals, free int
 	// unspaced joins a slot's words without spaces, for a language written without them (units).
 	unspaced bool
 	// lang is the language, whose number words a query may hold as digits (sameWord).

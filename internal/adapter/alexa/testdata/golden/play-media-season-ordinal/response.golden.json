@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "response": {
+    "outputSpeech": {
+      "type": "PlainText",
+      "text": "Playing season 2 of Severance, from episode 4, Woe's Hollow."
+    },
+    "card": {
+      "type": "Simple",
+      "title": "Encore",
+      "content": "Playing season 2 of Severance, from episode 4, Woe's Hollow."
+    },
+    "shouldEndSession": true
+  }
+}
+

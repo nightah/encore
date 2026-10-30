@@ -69,6 +69,15 @@ intents:
       - {name: Season, type: AMAZON.NUMBER}
       - {name: Episode, type: AMAZON.NUMBER}
       - {name: Room, type: KODI_ROOM}
+  - name: WatchSeason
+    content: tv
+    slots:
+      # A whole season, from its first unwatched episode: "play season 2 of bluey". Without a show, the season is of the show playing now.
+      - {name: Show, type: AMAZON.TVSeries}
+      - {name: Season, type: AMAZON.NUMBER}
+      # "The second season": an ordinal word, which AMAZON.NUMBER doesn't read.
+      - {name: Ordinal, type: ORDINAL}
+      - {name: Room, type: KODI_ROOM}
   - name: WatchFirstEpisode
     content: tv
     slots:
@@ -314,6 +323,7 @@ types:
   - {name: KODI_MUSIC_VIDEO, dynamic: true}
   - name: MEDIA_TYPE
   - name: MATCH_CHOICE
+  - name: ORDINAL
   - name: LIBRARY_SECTION
   - name: LIBRARY_TYPE
   - name: NAV_ACTION

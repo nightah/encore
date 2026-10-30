@@ -169,6 +169,8 @@ func TestDispatchUnrecognisedSlotsAskAgain(t *testing.T) {
 		"power without an action":         {intent: "Power", slots: map[string]slotSpec{"PowerAction": {value: "explode"}}},
 		"episode without a season":        {intent: "WatchEpisode", slots: map[string]slotSpec{"Show": {value: "bluey"}, "Episode": {value: "3"}}},
 		"episode with a non-number":       {intent: "WatchEpisode", slots: map[string]slotSpec{"Show": {value: "bluey"}, "Season": {value: "one"}, "Episode": {value: "3"}}},
+		"season without a number":         {intent: "WatchSeason", slots: map[string]slotSpec{"Show": {value: "bluey"}}},
+		"season with an unknown ordinal":  {intent: "WatchSeason", slots: map[string]slotSpec{"Show": {value: "bluey"}, "Ordinal": {value: "endless"}}},
 		"an intent Encore does not know":  {intent: "OrderPizza"},
 		"fallback intent":                 {intent: "AMAZON.FallbackIntent"},
 		"seek to a negative zero minutes": {intent: "PlayerSeekTo", slots: map[string]slotSpec{"Position": {value: "PT0S"}}},

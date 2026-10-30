@@ -1,6 +1,7 @@
 package alexa
 
 import (
+	"cmp"
 	"fmt"
 	"log/slog"
 	"maps"
@@ -339,6 +340,13 @@ func (s *Speech) Reinterpret(locale string, intent Intent) []Intent {
 				continue
 			}
 
+			// A form's ordinal slot takes any words, so a reading whose ordinal isn't one ("the man who season of") is no reading at all.
+			if ordinal, has := values["Ordinal"]; has {
+				if _, ok := s.Ordinal(locale, ordinal); !ok {
+					continue
+				}
+			}
+
 			reading := Intent{Name: form.intent, Slots: map[string]Slot{}}
 			for name, value := range values {
 				reading.Slots[name] = Slot{Name: name, Value: value}
@@ -496,7 +504,8 @@ func languageQueryForms(lang string, model skillmodel.Model, utterances map[stri
 		}
 	}
 
-	slices.SortStableFunc(out, func(a, b queryForm) int { return b.literals - a.literals })
+	// Of forms as specific, the one with fewer slots that take any words reads first: "الموسم 2 من بلوي" is season {Season}, which its ordinal form would read too.
+	slices.SortStableFunc(out, func(a, b queryForm) int { return cmp.Or(b.literals-a.literals, a.free-b.free) })
 
 	return out, nil
 }
@@ -536,16 +545,14 @@ func newQueryForm(intent string, words []string, carriers, trailers [][]string, 
 		}
 	}
 
-	free := 0
-
 	for _, w := range form.words {
 		if isSlotRef(w) && !numbers[w[1:len(w)-1]] {
-			free++
+			form.free++
 		}
 	}
 
 	edged := !isSlotRef(form.words[0]) || !isSlotRef(form.words[len(form.words)-1])
-	form.loose = free >= 2 && !edged
+	form.loose = form.free >= 2 && !edged
 
 	return form, form.literals > 0
 }

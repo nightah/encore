@@ -333,6 +333,13 @@ WatchRandomShow:
   play_any_show: "(شغلي|شغل|حطي) (أي مسلسل|اي مسلسل) [{Genre}]"
   play_random_show: "(شغلي|شغل|حطي) مسلسل [{Genre}] عشوائي [في {Room}]"
   surprise_me_with: "(فاجئيني|فاجئني) بمسلسل [{Genre}]"
+WatchSeason:
+  play_ordinal_only: "(شغلي|شغل|حطي|تشغيل) الموسم {Ordinal} [في {Room}]"
+  play_ordinal_season: "(شغلي|شغل|حطي|تشغيل) الموسم {Ordinal} من [مسلسل] {Show} [في {Room}]\n(شغلي|شغل|حطي) كل حلقات الموسم {Ordinal} من [مسلسل] {Show} [في {Room}]"
+  play_season: "(شغلي|شغل|حطي|تشغيل) الموسم {Season} من [مسلسل] {Show} [في {Room}]"
+  play_season_only: "(شغلي|شغل|حطي|تشغيل) الموسم {Season} [في {Room}]"
+  play_show_season: "(شغلي|شغل|حطي) [مسلسل] {Show} الموسم {Season} [في {Room}]"
+  play_whole_season: "(شغلي|شغل|حطي) كل حلقات الموسم {Season} من [مسلسل] {Show} [في {Room}]"
 WhatAlbums:
   list_albums_by: "(عددي|اذكري|سمي) (ألبومات|البومات) {Artist}"
   what_albums_by: "(وش|ايش|إيش|ما هي) (ألبومات|البومات) {Artist} اللي (عندي|عندنا)"

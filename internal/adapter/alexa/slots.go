@@ -31,6 +31,21 @@ func (s slots) number(name string) (int, bool) {
 	return n, err == nil
 }
 
+// season reads WatchSeason's season: its number, or its ordinal ("the second season").
+func (s slots) season() (int, bool) {
+	if n, ok := s.number("Season"); ok && n >= 0 {
+		return n, true
+	}
+
+	if id := s.id("Ordinal", "ORDINAL"); id != "" {
+		n, err := strconv.Atoi(id)
+
+		return n, err == nil
+	}
+
+	return s.speech.Ordinal(s.locale, s.value("Ordinal"))
+}
+
 func (s slots) duration(name string) (time.Duration, bool) {
 	return parseDuration(s.value(name))
 }

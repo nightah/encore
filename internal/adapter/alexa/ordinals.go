@@ -1,11 +1,13 @@
 package alexa
 
 import (
+	"regexp"
 	"slices"
+	"strconv"
 	"strings"
 )
 
-// firstOrdinals maps the ways Alexa writes "first" with a digit in a search query, per language, to the word the samples spell out ("the 1st episode of" for "the first episode of").
+// firstOrdinals maps the ways Alexa writes "first" with a digit in a search query, per language, to the word the samples spell out ("the 1st episode of" for "the first episode of"). Only "first" is a literal word in samples; other ordinals reach the Ordinal slot, which writtenOrdinals reads.
 var firstOrdinals = map[string]map[string]string{
 	"de": {"1.": "erste"},
 	"en": {"1st": "first"},
@@ -20,6 +22,58 @@ var firstOrdinals = map[string]map[string]string{
 // unspacedOnes holds, per language written without spaces, how its samples spell the digit 1 beside a counter that makes it an ordinal: Japanese writes "第一話" and "一話目", which Alexa writes "第1話" and "1話目".
 var unspacedOnes = map[string]unspacedOne{
 	"ja": {numeral: "一", before: []string{"第"}, after: []string{"話"}},
+}
+
+// writtenOrdinals matches an ordinal written with digits the way Alexa writes it in each language ("2nd", "2e", "2ª", "2.", "第2"), capturing the number.
+var writtenOrdinals = map[string]*regexp.Regexp{
+	"de": regexp.MustCompile(`^(\d+)\.$`),
+	"en": regexp.MustCompile(`^(\d+)(?:st|nd|rd|th)$`),
+	"es": regexp.MustCompile(`^(\d+)\.?(?:º|°|ª|o|a|er|ro|ra|do|da|to|ta|vo|va|no|na|mo|ma)$`),
+	"fr": regexp.MustCompile(`^(\d+)(?:er|re|ère|e|ème|eme|nd|nde)$`),
+	"hi": regexp.MustCompile(`^(\d+)(?:ला|रा|था|ठा|वाँ|वां|वा)$`),
+	"it": regexp.MustCompile(`^(\d+)[º°ªoa]$`),
+	"ja": regexp.MustCompile(`^第(\d+)$`),
+	"nl": regexp.MustCompile(`^(\d+)(?:e|ste|de)$`),
+	"pt": regexp.MustCompile(`^(\d+)\.?[º°ªoa]$`),
+}
+
+// Ordinal reads an ordinal said in locale as its number: a value or synonym of the ORDINAL slot type ("second", "deuxième", "दूसरा"), the digits Alexa writes for one ("2nd", "2e", "2ª") or a plain number.
+func (s *Speech) Ordinal(locale, heard string) (int, bool) {
+	heard = strings.TrimSpace(heard)
+
+	if id := s.SlotID(locale, "ORDINAL", heard); id != "" {
+		n, err := strconv.Atoi(id)
+
+		return n, err == nil
+	}
+
+	lang, ok := s.languages[locale]
+	if !ok {
+		lang = s.languages[fallbackLocale]
+	}
+
+	return writtenOrdinal(lang, heard)
+}
+
+// writtenOrdinal reads an ordinal written with digits in lang, or a plain number.
+func writtenOrdinal(lang, heard string) (int, bool) {
+	if n, err := strconv.Atoi(heard); err == nil {
+		return n, n >= 0
+	}
+
+	re, ok := writtenOrdinals[lang]
+	if !ok {
+		return 0, false
+	}
+
+	m := re.FindStringSubmatch(strings.ToLower(heard))
+	if m == nil {
+		return 0, false
+	}
+
+	n, err := strconv.Atoi(m[1])
+
+	return n, err == nil
 }
 
 // spellOrdinals returns words with "first" written as the samples spell it (firstOrdinals, unspacedOnes), for matching against literal sample words; number slots still read the digits in words as they are.

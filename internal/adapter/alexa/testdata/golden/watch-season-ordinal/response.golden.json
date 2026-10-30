@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "response": {
+    "outputSpeech": {
+      "type": "PlainText",
+      "text": "Reproduciendo la temporada 2 de Severance, desde el episodio 4, Woe's Hollow."
+    },
+    "card": {
+      "type": "Simple",
+      "title": "Encore",
+      "content": "Reproduciendo la temporada 2 de Severance, desde el episodio 4, Woe's Hollow."
+    },
+    "shouldEndSession": true
+  }
+}
+
