@@ -175,6 +175,19 @@
     "title": "Import und Export"
   },
   "features": {
+    "auto_deploy": {
+      "hint": "",
+      "title": ""
+    },
+    "auto_deploy_minutes": {
+      "hint_hours_one": "",
+      "hint_hours_other": "",
+      "hint_minutes_one": "",
+      "hint_minutes_other": "",
+      "hintInvalid": "",
+      "title": "",
+      "unit": ""
+    },
     "confirm_sound": {
       "hint": "Alexa spielt nach Befehlen wie Pause oder Lauter einen kurzen Ton ab, statt still zu bleiben",
       "title": "Befehle mit einem Ton bestätigen"
