@@ -415,3 +415,46 @@ func TestChooseWithoutStoredQuestion(t *testing.T) {
 	assert.Equal(t, "There's more than one. Sorry, I didn't catch that. Try: play the movie Dune.", speechOf(resp))
 	assert.Equal(t, []string{"movie/4"}, pendingOf(t, resp))
 }
+
+// TestHelpExplainsTheQuestion checks help during a question says how to answer it and asks it again, keeping its choices, in every language.
+func TestHelpExplainsTheQuestion(t *testing.T) {
+	tests := map[string][2]string{
+		"en-AU": {"You can say the first one, the second one, the newer one or the title, or no for other matches. ", "Please answer yes or no. "},
+		"de-DE": {"Du kannst sagen: den ersten, den zweiten, den neueren oder den Titel, oder nein für andere Treffer. ", "Bitte antworte mit ja oder nein. "},
+		"es-ES": {"Puedes decir el primero, el segundo, el más reciente o el título, o no para ver otras coincidencias. ", "Responde sí o no, por favor. "},
+		"fr-FR": {"Vous pouvez dire le premier, le deuxième, le plus récent ou le titre, ou non pour d'autres résultats. ", "Répondez par oui ou par non. "},
+		"it-IT": {"Puoi dire il primo, il secondo, il più recente o il titolo, oppure no per altri risultati. ", "Rispondi sì o no, per favore. "},
+		"nl-NL": {"Je kunt zeggen: de eerste, de tweede, de nieuwere of de titel, of nee voor andere resultaten. ", "Antwoord alsjeblieft met ja of nee. "},
+		"pt-BR": {"Você pode dizer o primeiro, o segundo, o mais recente ou o título, ou não para outros resultados. ", "Responda sim ou não, por favor. "},
+		"ar-SA": {"يمكن قول: الأول، أو الثاني، أو الأحدث، أو العنوان، أو لا لنتائج أخرى. ", "الرجاء الإجابة بنعم أو لا. "},
+		"hi-IN": {"आप कह सकते हैं: पहला वाला, दूसरा वाला, नया वाला या टाइटल का नाम, या दूसरे नतीजों के लिए नहीं। ", "कृपया हाँ या नहीं में जवाब दीजिए। "},
+		"ja-JP": {"「一つ目」「二つ目」「新しい方」やタイトルで答えてください。ほかの候補は「いいえ」と言ってください。", "「はい」か「いいえ」で答えてください。"},
+	}
+
+	for locale, want := range tests {
+		t.Run(locale, func(t *testing.T) {
+			c := newConversation(t, locale)
+			question := c.say("WatchMovie", map[string]slotSpec{"Movie": {value: "dune"}})
+
+			resp := c.say("AMAZON.HelpIntent", nil)
+			assert.Equal(t, want[0]+speechOf(question), speechOf(resp))
+			assert.Equal(t, speechOf(question), repromptOf(resp))
+			assert.Equal(t, []string{"movie/1", "movie/2"}, pendingOf(t, resp))
+
+			c = newConversation(t, locale)
+			question = c.say("WatchMovie", map[string]slotSpec{"Movie": {value: "fuzz"}})
+
+			resp = c.say("AMAZON.HelpIntent", nil)
+			assert.Equal(t, want[1]+speechOf(question), speechOf(resp))
+			assert.Equal(t, []string{"movie/4"}, pendingOf(t, resp))
+		})
+	}
+}
+
+// TestHelpWithoutQuestion checks help outside a question is the general help.
+func TestHelpWithoutQuestion(t *testing.T) {
+	resp := newConversation(t, "en-AU").say("AMAZON.HelpIntent", nil)
+
+	assert.Equal(t, "You can say things like: play the movie Dune, play the next episode of a show, or what's playing.", speechOf(resp))
+	assert.Nil(t, resp.SessionAttributes)
+}

@@ -100,8 +100,10 @@ alikes = "alikes"
 # German speech the handler tests expect ("Dune von 1984 oder Dune von 2021", "das habe ich nicht verstanden").
 oder = "oder"
 habe = "habe"
-# Spanish speech the handler tests expect ("Hay varios").
+# Spanish and Portuguese speech the handler tests expect ("Hay varios", "Responde sí o no").
 varios = "varios"
+responde = "responde"
+responda = "responda"
 # Dutch speech the handler tests expect ("geen andere titels").
 titels = "titels"
 # Romaji the Japanese matcher writes katakana in (トイ, toi).
