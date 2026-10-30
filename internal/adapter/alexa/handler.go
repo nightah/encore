@@ -172,7 +172,19 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, tr *requestT
 			return h.respond(locale, askAgain(env, "match.which_one", *question), false), nil
 		}
 	case "AMAZON.NoIntent":
-		if followup == nil || followup.Recommend == nil {
+		switch {
+		case followup != nil && followup.Recommend != nil:
+			// Dispatched: another recommendation needs Kodi.
+		case (followup == nil || followup.Confirm == "") && len(pendingChoices(env.Session.Attributes)) > 0:
+			var more []actions.Choice
+			if followup != nil {
+				more = followup.More
+			}
+
+			o := h.Service.OtherChoices(more)
+
+			return h.respond(locale, o, false), &o
+		default:
 			return h.respond(locale, actions.Outcome{Say: actions.Message{ID: "match.cancelled"}, EndSession: true}, false), nil
 		}
 	case "AMAZON.FallbackIntent", "AMAZON.NavigateHomeIntent":

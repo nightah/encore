@@ -86,29 +86,55 @@ func (s *Service) lookup(ctx context.Context, t Target, req TitleRequest) bool {
 }
 
 func ask(res match.Result) Outcome {
+	// Past the titles asked about, only those the matcher would have asked about on their own are worth offering after a "no".
+	floor := match.DefaultConfig().AskScore
+
 	var choices []Choice
 
 	for _, c := range res.Candidates {
-		if len(choices) == maxChoices {
+		if len(choices) == maxCandidates || len(choices) >= maxChoices && c.Score < floor {
 			break
 		}
 
 		choices = append(choices, Choice{DocID: c.Doc.ID, Ref: c.Doc.Ref, Title: c.Doc.Title, Year: c.Doc.Year})
 	}
 
-	var msg Message
-
-	switch len(choices) {
-	case 0:
+	if len(choices) == 0 {
 		return done(say("match.not_found", map[string]string{"query": res.Normalized}))
-	case 1:
-		// A single uncertain candidate becomes a yes/no question.
-		msg = describe(Message{ID: "match.confirm"}, "title", choices[0])
-	default:
-		msg = describe(describe(Message{ID: "match.did_you_mean"}, "first", choices[0]), "second", choices[1])
 	}
 
-	return Outcome{Say: msg, Reprompt: &msg, Pending: choices}
+	return offer(choices)
+}
+
+// OtherChoices answers "no" to a "did you mean" question: it offers the titles the question kept back, or says there are no more.
+func (s *Service) OtherChoices(more []Choice) Outcome {
+	if len(more) == 0 {
+		return done(say("match.no_more", nil))
+	}
+
+	return offer(more)
+}
+
+// offer asks about the first choices, keeping the rest for "no".
+func offer(choices []Choice) Outcome {
+	offered := choices[:min(maxChoices, len(choices))]
+
+	var msg Message
+
+	if len(offered) == 1 {
+		// A single uncertain candidate becomes a yes/no question.
+		msg = describe(Message{ID: "match.confirm"}, "title", offered[0])
+	} else {
+		msg = describe(describe(Message{ID: "match.did_you_mean"}, "first", offered[0]), "second", offered[1])
+	}
+
+	o := Outcome{Say: msg, Reprompt: &msg, Pending: offered}
+
+	if rest := choices[len(offered):]; len(rest) > 0 {
+		o.Followup = &Followup{More: rest}
+	}
+
+	return o
 }
 
 // describe fills msg's placeholder key with a choice named unambiguously enough to choose between remakes: its title, with its year worded in the listener's language when it has one.

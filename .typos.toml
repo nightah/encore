@@ -102,6 +102,8 @@ oder = "oder"
 habe = "habe"
 # Spanish speech the handler tests expect ("Hay varios").
 varios = "varios"
+# Dutch speech the handler tests expect ("geen andere titels").
+titels = "titels"
 # Romaji the Japanese matcher writes katakana in (トイ, toi).
 toi = "toi"
 # Short names in the fuzzy matcher (ba: the matched part of b) and deliberate misspellings in tests.

@@ -218,3 +218,61 @@ func TestYesToOneChoicePlays(t *testing.T) {
 	assert.Equal(t, "Playing Hot Fuzz.", speechOf(resp))
 	assert.Equal(t, []string{"Play movie/4 resume"}, c.backend.Calls())
 }
+
+// TestNoOffersOtherMatches checks "no" to a "did you mean" question offers the next matches, then says there are no more, in every language.
+func TestNoOffersOtherMatches(t *testing.T) {
+	tests := map[string][2]string{
+		"en-AU": {"Did you mean Dune: Part Two from 2024?", "I couldn't find any other matches."},
+		"de-DE": {"Meintest du Dune: Part Two von 2024?", "Ich habe keine weiteren Treffer gefunden."},
+		"es-ES": {"¿Te refieres a Dune: Part Two de 2024?", "No he encontrado más coincidencias."},
+		"fr-FR": {"Vouliez-vous dire Dune: Part Two de 2024 ?", "Je n'ai pas trouvé d'autres résultats."},
+		"it-IT": {"Intendevi Dune: Part Two del 2024?", "Non ho trovato altri risultati."},
+		"nl-NL": {"Bedoel je Dune: Part Two uit 2024?", "Ik kan geen andere titels vinden."},
+		"pt-BR": {"Você quis dizer Dune: Part Two de 2024?", "Não encontrei outros resultados."},
+		"ar-SA": {"هل المقصود Dune: Part Two لعام 2024؟", "لم أجد نتائج أخرى."},
+		"hi-IN": {"क्या आपका मतलब 2024 वाली Dune: Part Two था?", "मुझे और कोई टाइटल नहीं मिला।"},
+		"ja-JP": {"2024年のDune: Part Twoのことですか？", "ほかに候補は見つかりませんでした。"},
+	}
+
+	for locale, want := range tests {
+		t.Run(locale, func(t *testing.T) {
+			c := newConversation(t, locale)
+			c.say("WatchMovie", map[string]slotSpec{"Movie": {value: "dun"}})
+
+			next := c.say("AMAZON.NoIntent", nil)
+			assert.Equal(t, want[0], speechOf(next))
+			assert.Equal(t, []string{"movie/3"}, pendingOf(t, next), "the next match is offered")
+			require.NotNil(t, next.Response.ShouldEndSession)
+			assert.False(t, *next.Response.ShouldEndSession)
+
+			last := c.say("AMAZON.NoIntent", nil)
+			assert.Equal(t, want[1], speechOf(last))
+			require.NotNil(t, last.Response.ShouldEndSession)
+			assert.True(t, *last.Response.ShouldEndSession)
+			assert.Empty(t, c.backend.Calls())
+		})
+	}
+}
+
+// TestYesAfterNoPlaysTheNextMatch checks the match "no" moved on to can be chosen.
+func TestYesAfterNoPlaysTheNextMatch(t *testing.T) {
+	c := newConversation(t, "en-AU")
+	c.say("WatchMovie", map[string]slotSpec{"Movie": {value: "dun"}})
+	c.say("AMAZON.NoIntent", nil)
+
+	resp := c.say("AMAZON.YesIntent", nil)
+
+	assert.Equal(t, "Playing Dune: Part Two.", speechOf(resp))
+	assert.Equal(t, []string{"Play movie/3 resume"}, c.backend.Calls())
+}
+
+// TestNoWithoutOtherMatches checks "no" to a question with nothing else to offer says so and ends.
+func TestNoWithoutOtherMatches(t *testing.T) {
+	c := newConversation(t, "en-AU")
+	c.say("WatchMovie", map[string]slotSpec{"Movie": {value: "dune"}})
+
+	resp := c.say("AMAZON.NoIntent", nil)
+
+	assert.Equal(t, "I couldn't find any other matches.", speechOf(resp))
+	assert.Nil(t, resp.SessionAttributes)
+}
