@@ -23,12 +23,7 @@ func (l *language) normalize(s string, aggressive bool) []string {
 
 // normalizeSpelled also returns the tokens before numbers were rewritten, joined without spaces, so compounds such as "Zweiohrküken" still meet "zwei ohr küken".
 func (l *language) normalizeSpelled(s string, aggressive bool) (toks []string, spelled string) {
-	toks = l.tokenize(s)
-	if l.split != nil {
-		toks = l.split(toks)
-	}
-
-	toks = joinLetters(l.spellLetters(l.romanizeAll(l.stripPrefixes(toks))))
+	toks = joinLetters(l.spellLetters(l.scriptWords(l.tokenize(s))))
 
 	// Articles go first so a numeral straight after one ("The II") isn't taken as following a word.
 	for len(toks) > 1 && l.articles[toks[0]] {
@@ -93,6 +88,9 @@ func (l *language) tokenize(s string) []string {
 				b = append(b, f...)
 			} else if f, ok := letterFolds[r]; ok {
 				b = append(b, f...)
+			} else if f, ok := arabicFolds[r]; ok {
+				// Arabic is folded in every language's library, so Arabic text meets itself and the Arabic rules scriptWords applies.
+				b = append(b, f...)
 			} else {
 				b = utf8.AppendRune(b, r)
 			}
@@ -129,6 +127,117 @@ func asciiDigit(r rune) rune {
 	}
 
 	return '0' + (r-lo)%10
+}
+
+// scriptWords breaks tokens into words and writes them in Latin letters. Runs of tokens in a script another language reads (Japanese, Devanagari, Arabic) go through that language's rules, whatever the library's language, so a Japanese request meets a Latin or Japanese title in an English library; a run of tokens of digits alone stays with the run before it. Everything else goes through this language's own rules, so a library in Japanese, Hindi or Arabic reads its own script as before.
+func (l *language) scriptWords(toks []string) []string {
+	toks = l.scriptPieces(toks)
+	out := make([]string, 0, len(toks))
+
+	var owner *language
+
+	from := 0
+
+	for i, tok := range toks {
+		o := l.foreignOwner(tok)
+
+		if o == nil && i > 0 && isDigits(tok) {
+			o = owner
+		}
+
+		if i > 0 && o != owner {
+			out = append(out, l.words(owner, toks[from:i], from == 0)...)
+			from = i
+		}
+
+		owner = o
+	}
+
+	return append(out, l.words(owner, toks[from:], from == 0)...)
+}
+
+// words is a run of tokens through the rules of the language whose script they are in (o), or through this language's own when o is nil. A foreign run also has its own articles (when it starts the text), number words and parts handled, which this language does not know, and then this language's hooks.
+func (l *language) words(o *language, toks []string, first bool) []string {
+	if o == nil {
+		return l.ownWords(toks)
+	}
+
+	toks = o.ownWords(toks)
+	for first && len(toks) > 1 && o.articles[toks[0]] {
+		toks = toks[1:]
+	}
+
+	// This language's own hooks then see the Latin words as they would on a second pass, which keeps normalising idempotent.
+	return l.ownWords(o.dropParts(o.numbers(toks)))
+}
+
+// ownWords splits, strips fused articles from and romanizes tokens with this language's hooks.
+func (l *language) ownWords(toks []string) []string {
+	if l.split != nil {
+		toks = l.split(toks)
+	}
+
+	return l.romanizeAll(l.stripPrefixes(toks))
+}
+
+// scriptPieces splits a token where a script another language reads starts or ends ("abcदंगल" -> "abc" "दंगल"), so each piece goes through one language's rules. Digits, marks and anything else no language reads its own way stay with the piece before them; a token in no other language's script is left whole.
+func (l *language) scriptPieces(toks []string) []string {
+	out := make([]string, 0, len(toks))
+
+	for _, tok := range toks {
+		var owner *language
+
+		from, started := 0, false
+
+		for j, r := range tok {
+			o := l.foreignRune(r)
+			if o == nil && !unicode.IsLetter(r) {
+				continue
+			}
+
+			if started && o != owner {
+				out = append(out, tok[from:j])
+				from = j
+			}
+
+			owner, started = o, true
+		}
+
+		out = append(out, tok[from:])
+	}
+
+	return out
+}
+
+// foreignOwner is the language whose rules read the script tok is in, when that is not this language, or nil.
+func (l *language) foreignOwner(tok string) *language {
+	for _, r := range tok {
+		if o := l.foreignRune(r); o != nil {
+			return o
+		}
+	}
+
+	return nil
+}
+
+// foreignRune is the language whose rules read r's script, when that is not this language, or nil.
+func (l *language) foreignRune(r rune) *language {
+	var o *language
+
+	switch {
+	case isJapanese(r):
+		o = languages["ja"]
+	case isDevanagari(r):
+		o = languages["hi"]
+	case isArabicLetter(r):
+		o = languages["ar"]
+	}
+
+	if o == l {
+		return nil
+	}
+
+	return o
 }
 
 // romanizeAll writes each token in the language's romanize form, dropping a token that romanizes to nothing and splitting one that romanizes to several words.

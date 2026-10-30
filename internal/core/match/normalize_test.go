@@ -186,26 +186,7 @@ func TestNormalize(t *testing.T) {
 		{"fr", "8½", "8 et demi"},
 		{"es", "8½", "8 y medio"},
 		{"es", "ocho y medio", "8 y medio"},
-		// Devanagari keeps its vowel signs, nasalisation, virama and nukta, which are combining marks, and splits nothing at the spacing ones.
-		{"en", "दिल चाहता है", "दिल चाहता है"},
-		{"en", "हँसी तो फँसी", "हँसी तो फँसी"},
-		{"en", "क्या कहना", "क्या कहना"},
-		{"en", "ज़िंदगी", "ज़िंदगी"},
-		{"en", "ज़िंदगी", "ज़िंदगी"},
-		// Kana keep their voicing: が stays が (U+304C) rather than か, and halfwidth katakana compose to the fullwidth letters.
-		{"en", "が か ぱ ば は", "が か ぱ ば は"},
-		{"en", "ガンダム", "ガンダム"},
-		{"en", "ｶﾞﾝﾀﾞﾑ", "ガンダム"},
-		{"en", "千と千尋の神隠し", "千と千尋の神隠し"},
-		{"en", "ドラゴンボールZ", "ドラゴンボールz"},
-		// Arabic harakat, hamza and tatweel and Hebrew points are dropped.
-		{"en", "مُحَمَّد", "محمد"},
-		{"en", "أحمد إسلام آمن", "احمد اسلام امن"},
-		{"en", "محـــمد", "محمد"},
-		{"en", "שָׁלוֹם", "שלום"},
 		// Every script's decimal digits are ASCII digits, and read as numbers.
-		{"en", "दंगल २०१६", "दंगल 2016"},
-		{"en", "فيلم ٢٠٢١", "فيلم 2021"},
 		{"en", "۱۹۸۴", "1984"},
 		{"en", "１９８４", "1984"},
 		{"en", "rocky ٢", "rocky 2"},
@@ -278,7 +259,13 @@ func TestLanguageHooks(t *testing.T) {
 			l := english()
 			tt.edit(l)
 
-			assert.Equal(t, tt.want, strings.Join(l.normalize(tt.in, false), " "))
+			got := l.normalize(tt.in, false)
+			if l.foreignOwner(tt.in) != nil {
+				// Another language reads this script in a normalised string, so the language's own hooks are checked alone.
+				got = l.ownWords(l.tokenize(tt.in))
+			}
+
+			assert.Equal(t, tt.want, strings.Join(got, " "))
 		})
 	}
 }
@@ -413,4 +400,78 @@ func TestArticle(t *testing.T) {
 	assert.False(t, Article("en", "of"), "a stop word that is no article")
 	assert.False(t, Article("ja", "の"))
 	assert.False(t, Article("en", "the end"))
+}
+
+// TestNormalizeOtherScripts checks that text in a script another language reads goes through that language's rules whatever the library's language, and that the library's own script keeps its own.
+func TestNormalizeOtherScripts(t *testing.T) {
+	tests := []struct {
+		lang, in, want string
+	}{
+		// Kana, Devanagari and Arabic in an English or German library.
+		{"en", "クイーン", "kuin"},
+		{"en", "タイタニック", "taitanikku"},
+		{"de", "दंगल", "dangal"},
+		{"en", "تايتانك", "taytank"},
+		// Each script's own segmentation, fused articles and folds.
+		{"en", "トイストーリー3", "toisutori 3"},
+		{"fr", "الملك", "mlk"},
+		{"en", "وجدة", Normalize("ar", "وجدة")},
+		// Number words and parts of the script's language, and a run of digits staying with the run before it.
+		{"en", "धूम दो", "dhoom 2"},
+		{"en", "भाग 2", "2"},
+		{"en", "توي ستوري ٣", "tuy sturi 3"},
+		// A leading article of the script's language.
+		{"en", "ذا ماتريكس", "matriks"},
+		// Latin text next to it keeps the library's rules.
+		{"en", "The Matrix クイーン", "matrix kuin"},
+		{"de", "Der Pate दंगल", "pate dangal"},
+		{"en", "abcदंगल", "abc dangal"},
+		{"en", "ｶﾞﾝﾀﾞﾑ", "gandamu"},
+		{"en", "दंगल २०१६", "dangal 2016"},
+		{"en", "فيلم ٢٠٢١", "film 2021"},
+		// A library in Japanese, Hindi or Arabic reads its own script as it always has.
+		{"ja", "トイストーリー3", "toisutori 3"},
+		{"hi", "धूम दो", "dhoom 2"},
+		{"ar", "ذا ماتريكس", "matriks"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.lang+"/"+tt.in, func(t *testing.T) {
+			assert.Equal(t, tt.want, Normalize(tt.lang, tt.in))
+		})
+	}
+}
+
+// TestTokenizeScripts checks what tokenize keeps of each script's letters and marks, ahead of the rules scriptWords applies to them.
+func TestTokenizeScripts(t *testing.T) {
+	tests := []struct {
+		in, want string
+	}{
+		// Devanagari keeps its vowel signs, nasalisation, virama and nukta, which are combining marks, and splits nothing at the spacing ones.
+		{"दिल चाहता है", "दिल चाहता है"},
+		{"हँसी तो फँसी", "हँसी तो फँसी"},
+		{"क्या कहना", "क्या कहना"},
+		{"ज़िंदगी", "ज़िंदगी"},
+		{"ज़िंदगी", "ज़िंदगी"},
+		// Kana keep their voicing: が stays が (U+304C) rather than か, and halfwidth katakana compose to the fullwidth letters.
+		{"が か ぱ ば は", "が か ぱ ば は"},
+		{"ガンダム", "ガンダム"},
+		{"ｶﾞﾝﾀﾞﾑ", "ガンダム"},
+		{"千と千尋の神隠し", "千と千尋の神隠し"},
+		{"ドラゴンボールZ", "ドラゴンボールz"},
+		// Arabic harakat, hamza and tatweel and Hebrew points are dropped.
+		{"مُحَمَّد", "محمد"},
+		{"أحمد إسلام آمن", "احمد اسلام امن"},
+		{"محـــمد", "محمد"},
+		{"שָׁלוֹם", "שלום"},
+		// Every script's decimal digits are ASCII digits.
+		{"दंगल २०१६", "दंगल 2016"},
+		{"فيلم ٢٠٢١", "فيلم 2021"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.in, func(t *testing.T) {
+			assert.Equal(t, tt.want, strings.Join(english().tokenize(tt.in), " "))
+		})
+	}
 }

@@ -168,6 +168,35 @@ func TestDefaultRetrieverFindsUnsegmentedScripts(t *testing.T) {
 	}
 }
 
+// TestSearchOtherScriptInEnglishLibrary checks that a request in Japanese, Hindi or Arabic meets a Latin title in an English library, the way a ja-JP, hi-IN or ar-SA recogniser writes it.
+func TestSearchOtherScriptInEnglishLibrary(t *testing.T) {
+	retrievers(t, func(t *testing.T, retr string) {
+		ix := newIndex(t, retr,
+			movie("titanic", "Titanic", 1997),
+			movie("dangal", "Dangal", 2016),
+			movie("dhoom2", "Dhoom 2", 2006),
+			movie("matrix", "The Matrix", 1999),
+			movie("spirited", "千と千尋の神隠し", 2001),
+			movie("filler", "Inception", 2010),
+		)
+
+		for _, c := range [][2]string{
+			{"タイタニック", "titanic"},
+			{"दंगल", "dangal"},
+			{"धूम दो", "dhoom2"},
+			{"ذا ماتريكس", "matrix"},
+			{"千と千尋の神隠し", "spirited"},
+		} {
+			res, err := ix.Search(t.Context(), Query{Text: c[0]})
+			require.NoError(t, err)
+
+			best, _ := res.Best()
+			assert.Equal(t, DecisionPlay, res.Decision, "%q", c[0])
+			assert.Equal(t, c[1], best.Doc.ID, "%q", c[0])
+		}
+	})
+}
+
 func TestBoostsReorderOnlyNearTies(t *testing.T) {
 	ix := newIndex(t, RetrieverInverted,
 		movie("old", "The Thing", 1982),
