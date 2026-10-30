@@ -177,8 +177,8 @@ func (s *Service) lookup(ctx context.Context, t Target, req TitleRequest) bool {
 }
 
 func ask(res match.Result) Outcome {
-	// Past the titles asked about, only those the matcher would have asked about on their own are worth offering after a "no".
-	floor := match.DefaultConfig().AskScore
+	// Past the titles asked about, only those the search would have asked about on their own are worth offering after a "no".
+	floor := res.AskScore
 
 	var choices []Choice
 

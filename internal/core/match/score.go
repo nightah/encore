@@ -8,7 +8,7 @@ import (
 // scoreAlias rates how well alias a matches query q, in [0, 1]. It gives up early, returning a negative score, once the alias provably can't beat floor.
 func (ix *Index) scoreAlias(q *form, a *alias, floor float64) scored {
 	if !a.derived && q.norm == a.norm {
-		return scored{score: 1, exact: true, bd: Breakdown{Alias: a.text, TokenSet: 1, JaroWinkler: 1, OSA: 1, Phonetic: 1}}
+		return scored{score: 1, exact: true, native: a.native, bd: Breakdown{Alias: a.text, TokenSet: 1, JaroWinkler: 1, OSA: 1, Phonetic: 1}}
 	}
 
 	compact := ratio(q.compact, a.compact)
@@ -84,6 +84,7 @@ func (ix *Index) scoreAlias(q *form, a *alias, floor float64) scored {
 		score:         min(f, nonExactCap),
 		soundAlike:    soundAlike,
 		numbersDiffer: numbersDiffer,
+		native:        a.native,
 		bd:            Breakdown{Alias: a.text, TokenSet: s, JaroWinkler: jw, OSA: osa, Phonetic: ph},
 	}
 }

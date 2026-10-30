@@ -5,6 +5,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/nightah/encore/internal/fuzzy/loanword"
 	"github.com/nightah/encore/internal/fuzzy/phonetic/de"
 	"github.com/nightah/encore/internal/fuzzy/phonetic/en"
 	"github.com/nightah/encore/internal/fuzzy/phonetic/es"
@@ -48,6 +49,11 @@ func languageFor(code string) *language {
 	}
 
 	return languages["en"]
+}
+
+// nativeOf returns the native hook for a language loanword writes.
+func nativeOf(code string) func(string) []string {
+	return func(name string) []string { return loanword.Native(code, name) }
 }
 
 func set(words ...string) map[string]bool {

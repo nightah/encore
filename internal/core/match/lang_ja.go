@@ -26,6 +26,7 @@ func japanese() *language {
 		romanize: romanizeKana,
 		// Another library's titles spell a loanword written with ヴ with the v it stands for.
 		romanizeForeign: romanizeKanaV,
+		native:          nativeOf("ja"),
 		phonetic:        phoneticKeysOf(en.Encoder{}),
 	}
 }

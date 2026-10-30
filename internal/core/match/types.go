@@ -74,6 +74,8 @@ type Result struct {
 	Decision   Decision
 	// Margin is the top score minus the runner-up's.
 	Margin float64
+	// AskScore is the least top score this search counted as worth asking about: the configured Config.AskScore, or the higher bar a title that wins on a native alias needs. A caller offering more candidates than the top ones offers only those that reach it.
+	AskScore float64
 }
 
 // Config tunes an Index. Zero fields take the DefaultConfig value.
@@ -308,7 +310,9 @@ type scored struct {
 	soundAlike bool
 	// numbersDiffer is set when the query carries a number and the alias does not carry the same ones ("crocodile dundee 2" against "Crocodile Dundee"): a missing sequel, which may be asked about but never played. A title's own number the query leaves out ("star wars a new hope") does not count.
 	numbersDiffer bool
-	bd            Breakdown
+	// native is set when the score is a native alias's (alias.native).
+	native bool
+	bd     Breakdown
 }
 
 // form is a normalised string with everything the scorer needs precomputed.
@@ -333,6 +337,8 @@ type alias struct {
 	text string
 	// derived aliases (subtitle or qualifier dropped) are shortened titles: they score with a penalty and never count as exact.
 	derived bool
+	// native aliases are a name's Latin words as a recogniser writes them in the language's script (language.native): a guess at the spelling, so a top candidate that wins on one must lead clearly to play.
+	native bool
 }
 
 type entry struct {
@@ -372,7 +378,9 @@ type language struct {
 	romanize func(tok string) string
 	// romanizeForeign stands in for romanize where the language's script is read in another language's library (scriptWords), whose titles are in Latin letters. Nil uses romanize.
 	romanizeForeign func(tok string) string
-	stop            map[string]bool
+	// native returns the forms a recogniser for the language writes a name's Latin-script words in, in its own script (loanword.Native), which newEntry indexes as more of a title's aliases so a request written that way meets them ("スーパーフライ" for "Superfly"). Nil adds none.
+	native func(name string) []string
+	stop   map[string]bool
 	// letterNames maps the names of letters to the letters ("erre" -> "r"), so an acronym spelled out by name ("erre be de") reads as its letters ("rbd"). Only a run with at least two names that are no other word of the language (not letterWords), or a run of three or more names none of which is a single letter ("de ve de"), is read this way, so "de" or "te" alone in a title stays a word, and a run that follows another word leaves out a leading letterWord, the preposition before the acronym ("concierto de erre be de").
 	letterNames map[string]string
 	letterWords map[string]bool

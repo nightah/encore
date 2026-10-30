@@ -123,3 +123,6 @@ const (
 	// jaCounters are the counters that follow "第" and a number in a title: part, chapter, episode, volume, season, instalment, act.
 	jaCounters = "部章話巻期弾作幕"
 )
+
+// nativeAskScore is the least score a top candidate that wins on a native alias (alias.native) needs to be asked about, rather than AskScore: a near miss written in the language's script ("द डार्क नाइट राइज़ेस" for an absent sequel) should still be not found.
+const nativeAskScore = 0.75

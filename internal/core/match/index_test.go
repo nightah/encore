@@ -487,3 +487,15 @@ func TestIndexLanguage(t *testing.T) {
 		require.NoError(t, ix.Close())
 	}
 }
+
+// A search reports the score it counts as worth asking about, as configured, so callers that offer more than the top titles use the same bar.
+func TestSearchReportsItsAskScore(t *testing.T) {
+	ix, err := New("en", Config{AskScore: 0.8})
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = ix.Close() })
+	require.NoError(t, ix.Upsert(movie("a", "Inception", 2010), movie("b", "Interstellar", 2014)))
+
+	res, err := ix.Search(t.Context(), Query{Text: "inception"})
+	require.NoError(t, err)
+	assert.InDelta(t, 0.8, res.AskScore, 1e-9)
+}
