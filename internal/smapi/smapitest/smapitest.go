@@ -101,7 +101,7 @@ func (s *Server) LimitSlotValues(locale, slotType string, n int) {
 	s.valueLimits[locale+"/"+slotType] = n
 }
 
-// RejectSlotValue makes the build of every locale whose model has value fail with an error naming it.
+// RejectSlotValue makes the build of every locale whose model has value, as a slot value or a synonym, fail with an error naming it.
 func (s *Server) RejectSlotValue(value string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

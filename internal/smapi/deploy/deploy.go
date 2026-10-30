@@ -190,7 +190,7 @@ func (r *run) degrade(de *Error) bool {
 			continue
 		}
 
-		own, dropped := withoutNamed(values, problems)
+		own, dropped := withoutNamed(values, r.pkg.Models[loc], problems)
 		if len(dropped) == 0 {
 			if !partial {
 				continue
@@ -247,8 +247,8 @@ func countValues(values map[string][]skillmodel.SlotValue) int {
 	return n
 }
 
-// withoutNamed leaves out the values that problems quote, by value or synonym, ignoring case, and returns them.
-func withoutNamed(values map[string][]skillmodel.SlotValue, problems []smapi.Problem) (map[string][]skillmodel.SlotValue, []string) {
+// withoutNamed leaves out the values that problems quote, by value or synonym, ignoring case, and returns them. Amazon quotes built, the model it was given, whose values are cleaned for it (skillpkg.CleanSlotText) and may carry synonyms the build added, such as native-script forms, so a value is also left out when its cleaned text is that of a value built quotes.
+func withoutNamed(values map[string][]skillmodel.SlotValue, built *skillmodel.InteractionModel, problems []smapi.Problem) (map[string][]skillmodel.SlotValue, []string) {
 	var text strings.Builder
 
 	for _, p := range problems {
@@ -268,6 +268,22 @@ func withoutNamed(values map[string][]skillmodel.SlotValue, problems []smapi.Pro
 		return false
 	}
 
+	named := map[string]map[string]bool{}
+
+	if built != nil {
+		for _, typ := range built.InteractionModel.LanguageModel.Types {
+			for _, v := range typ.Values {
+				if quoted(v.Name.Value) || slices.ContainsFunc(v.Name.Synonyms, quoted) {
+					if named[typ.Name] == nil {
+						named[typ.Name] = map[string]bool{}
+					}
+
+					named[typ.Name][strings.ToLower(v.Name.Value)] = true
+				}
+			}
+		}
+	}
+
 	out := make(map[string][]skillmodel.SlotValue, len(values))
 
 	var dropped []string
@@ -276,7 +292,7 @@ func withoutNamed(values map[string][]skillmodel.SlotValue, problems []smapi.Pro
 		kept := make([]skillmodel.SlotValue, 0, len(values[typ]))
 
 		for _, v := range values[typ] {
-			if v.Value != "" && (quoted(v.Value) || slices.ContainsFunc(v.Synonyms, quoted)) {
+			if v.Value != "" && (quoted(v.Value) || slices.ContainsFunc(v.Synonyms, quoted) || named[typ][strings.ToLower(skillpkg.CleanSlotText(v.Value))]) {
 				dropped = append(dropped, v.Value)
 
 				continue

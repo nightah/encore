@@ -27,7 +27,7 @@ type Server struct {
 	unreported map[string]bool
 	// valueLimits, keyed by "<locale>/<slot type>", fail a locale's build when its model holds more values of the slot type than the limit.
 	valueLimits map[string]int
-	// rejected fail the build of any locale whose model has one of these slot values.
+	// rejected fail the build of any locale whose model has one of these slot values or synonyms.
 	rejected map[string]bool
 	// unimported are locales left out of an import's resources, so their builds are known only from the skill status.
 	unimported  map[string]bool

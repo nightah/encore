@@ -230,7 +230,7 @@ func TestCleanSlotText(t *testing.T) {
 		"[Rec]":               "[Rec]",
 		"Amélie":              "Amélie",
 	} {
-		assert.Equal(t, want, cleanSlotText(in), "%q", in)
+		assert.Equal(t, want, CleanSlotText(in), "%q", in)
 	}
 }
 

@@ -32,7 +32,7 @@ func TestWithoutNamed(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			out, dropped := withoutNamed(values, []smapi.Problem{{Code: "INVALID", Message: tc.message}})
+			out, dropped := withoutNamed(values, nil, []smapi.Problem{{Code: "INVALID", Message: tc.message}})
 			assert.Equal(t, tc.dropped, dropped)
 			assert.Equal(t, countValues(values)-len(tc.dropped), countValues(out))
 		})

@@ -176,6 +176,69 @@ func TestDeployDoesNotThinAnUnexplainedFailure(t *testing.T) {
 	assert.Equal(t, 1, sk.Imports)
 }
 
+// Amazon quotes the model it was given, whose values are cleaned for it, so a value it names is found by its cleaned text.
+func TestDeployLeavesOutANamedValueAsCleaned(t *testing.T) {
+	for name, tc := range map[string]struct{ stored, quoted string }{
+		"kodi tags": {stored: "[B]Frozen[/B]", quoted: "Frozen"},
+		"asterisks": {stored: "M*A*S*H", quoted: "MASH"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			h := newHarness(t, smapitest.Options{})
+			h.fake.RejectSlotValue(tc.quoted)
+
+			req := degradeRequest(h)
+			req.Package.Locales = []string{"en-AU"}
+			req.Package.SlotValues["AMAZON.Movie"] = append(titles(40), skillmodel.SlotValue{ID: "movie/bad", Value: tc.stored})
+
+			res, err := h.deployer.Deploy(t.Context(), req)
+			require.NoError(t, err)
+
+			require.Contains(t, res.Degraded, "en-AU")
+			assert.Equal(t, []string{tc.stored}, res.Degraded["en-AU"].Dropped)
+
+			values := h.deployedValues(t, res.State.SkillID, "en-AU", "AMAZON.Movie")
+			assert.Len(t, values, 40, "only the value Amazon named is left out")
+			assert.NotContains(t, values, tc.quoted)
+		})
+	}
+}
+
+// A native-script synonym Encore adds is in the model Amazon quotes but not in the values asked for: the value it was made from is left out.
+func TestDeployLeavesOutAValueWhoseNativeSynonymIsNamed(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+
+	req := degradeRequest(h)
+	req.Package.Locales = []string{"ja-JP"}
+	req.Package.SlotValues["AMAZON.Movie"] = append(titles(40), skillmodel.SlotValue{ID: "movie/superfly", Value: "Superfly"})
+
+	pkg, err := h.deployer.Build(req.Package)
+	require.NoError(t, err)
+
+	var native string
+
+	for _, typ := range pkg.Models["ja-JP"].InteractionModel.LanguageModel.Types {
+		for _, v := range typ.Values {
+			if v.ID == "movie/superfly" {
+				require.NotEmpty(t, v.Name.Synonyms, "Superfly gets a katakana synonym")
+				native = v.Name.Synonyms[0]
+			}
+		}
+	}
+
+	require.NotEmpty(t, native)
+	h.fake.RejectSlotValue(native)
+
+	res, err := h.deployer.Deploy(t.Context(), req)
+	require.NoError(t, err, "a synonym Amazon names is left out even when every locale failed")
+
+	require.Contains(t, res.Degraded, "ja-JP")
+	assert.Equal(t, []string{"Superfly"}, res.Degraded["ja-JP"].Dropped)
+
+	values := h.deployedValues(t, res.State.SkillID, "ja-JP", "AMAZON.Movie")
+	assert.Len(t, values, 40, "only the value whose synonym Amazon named is left out, not every other title")
+	assert.NotContains(t, values, "Superfly")
+}
+
 // A deploy skipped because the package is unchanged reports the locales the deploy it stands for built with fewer titles, and one that changed the package forgets them.
 func TestDeploySkippedKeepsTheDegradation(t *testing.T) {
 	h := newHarness(t, smapitest.Options{})
