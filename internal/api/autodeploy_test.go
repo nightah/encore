@@ -129,6 +129,40 @@ func TestAutoDeployRedeploysSettledChanges(t *testing.T) {
 	assert.Equal(t, 1, ah.smapi.SkillCount(), "the deployed skill is updated, not a new one created")
 }
 
+func TestAutoDeployRedeploysEveryLocale(t *testing.T) {
+	ah := newAutoDeployHarness(t)
+
+	available := ah.skill(t).LocalesAvailable
+	require.Len(t, available, 17, "every Alexa locale Encore ships")
+
+	settings := deployableSettings()
+	settings["locales_enabled"] = available
+	ah.c.json(http.MethodPut, "/api/v1/skill/settings", settings, http.StatusOK, nil)
+
+	first := ah.deployByHand(t)
+	require.Equal(t, "succeeded", first.State, first.Error)
+
+	ah.setAutoDeploy(t, true)
+	ah.addTitle("movie/2", "Arrival")
+	ah.check(t)
+	ah.check(t)
+
+	info := ah.skill(t)
+	require.NotNil(t, info.LastDeploy.V)
+	assert.NotEqual(t, first.ID, info.LastDeploy.V.ID)
+	assert.True(t, info.LastDeploy.V.Automatic)
+	assert.Equal(t, "succeeded", info.LastDeploy.V.State, info.LastDeploy.V.Error)
+	assert.False(t, info.NeedsDeploy)
+
+	deployed := make([]string, 0, len(info.LastDeploy.V.Locales))
+	for _, l := range info.LastDeploy.V.Locales {
+		assert.Equal(t, "succeeded", l.Status, l.Locale)
+		deployed = append(deployed, l.Locale)
+	}
+
+	assert.ElementsMatch(t, available, deployed, "the automatic deploy builds every enabled locale")
+}
+
 func TestAutoDeployOffOrNeverDeployed(t *testing.T) {
 	ah := newAutoDeployHarness(t)
 
