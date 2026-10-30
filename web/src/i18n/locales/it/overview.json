@@ -1,7 +1,12 @@
 {
   "attention": {
     "empty": "Niente richiede la tua attenzione.",
+    "libraryLanguage": {
+      "detail": "La sua lingua dei titoli è {{current}}. Impostala su {{language}} perché i titoli vengano riconosciuti con le regole per il {{language}}.",
+      "title": "La maggior parte dei titoli di {{instance}} è in {{language}}"
+    },
     "links": {
+      "libraryLanguage": "Cambia la lingua dei titoli",
       "needsDeploy": "Aggiorna ora",
       "open": "Apri",
       "unlinkedDevice": "Collega dispositivo"

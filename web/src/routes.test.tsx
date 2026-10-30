@@ -440,6 +440,50 @@ describe("overview page", () => {
     expect(within(attention).getAllByRole("link")).toHaveLength(3);
   });
 
+  it("translates a library whose titles are in another language, and keeps the server's text without its params", async () => {
+    server.use(
+      http.get("*/api/v1/overview", () =>
+        HttpResponse.json({
+          attention: [
+            {
+              detail: "Its title language is English.",
+              kind: "library_language",
+              link: "/kodi",
+              params: { current: "en", instance: "Lounge", language: "ja" },
+              title: "Most of Lounge's titles are in Japanese",
+            },
+            {
+              detail: "Without params.",
+              kind: "library_language",
+              link: "/kodi",
+              title: "Check Study's title language",
+            },
+          ],
+          endpoint: { checked_at: null, latency_ms: 95, reachable: true, url: "https://encore.example.net/alexa" },
+          instances: [],
+          libraries: { count: 2, shared_groups: 0, synced_at: null },
+          recent_requests: [],
+          requests_today: { failed: 0, median_ms: 0, total: 0 },
+          skill: { locales: ["ja-JP"], needs_deploy: false, stage: "development", state: "live", update_reason: "" },
+        }),
+      ),
+    );
+    renderApp("/");
+
+    const attention = await screen.findByRole("region", { name: "Needs attention" });
+    expect(await within(attention).findByText("Most of Lounge's titles are in Japanese")).toBeInTheDocument();
+    expect(
+      within(attention).getByText(
+        "Its title language is English. Set it to Japanese so its titles are matched with the rules for Japanese.",
+      ),
+    ).toBeInTheDocument();
+    expect(within(attention).getByText("Check Study's title language")).toBeInTheDocument();
+    expect(within(attention).getByText("Without params.")).toBeInTheDocument();
+    const links = within(attention).getAllByRole("link", { name: "Change the title language" });
+    expect(links).toHaveLength(2);
+    expect(links[0]).toHaveAttribute("href", "/kodi");
+  });
+
   it("opens a recent request from its time link", async () => {
     const user = userEvent.setup();
     const { router } = renderApp("/");

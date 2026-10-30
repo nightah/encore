@@ -258,7 +258,11 @@ type Library struct {
 	Name    string
 	// Members are the instances' names, ordered by ID.
 	Members []string
-	Catalog *library.Catalog
+	// Source is the name of the member the library is read from, whose title language it is matched in.
+	Source string
+	// Language is the code of the title-matching rules the library's index uses ("en" when unset).
+	Language string
+	Catalog  *library.Catalog
 }
 
 type recorder struct {

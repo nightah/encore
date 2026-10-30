@@ -1,7 +1,12 @@
 {
   "attention": {
     "empty": "Rien ne requiert votre attention.",
+    "libraryLanguage": {
+      "detail": "Sa langue des titres est {{current}}. Choisissez {{language}} pour que ses titres soient reconnus avec les règles du {{language}}.",
+      "title": "La plupart des titres de {{instance}} sont en {{language}}"
+    },
     "links": {
+      "libraryLanguage": "Changer la langue des titres",
       "needsDeploy": "Mettre à jour",
       "open": "Ouvrir",
       "unlinkedDevice": "Associer l'appareil"

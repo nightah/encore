@@ -15,6 +15,7 @@ import (
 
 	"github.com/nightah/encore/internal/adapter/alexa"
 	"github.com/nightah/encore/internal/backend/kodi/fakekodi"
+	"github.com/nightah/encore/internal/core/match"
 	"github.com/nightah/encore/internal/smapi/deploy"
 	"github.com/nightah/encore/internal/store"
 )
@@ -425,4 +426,36 @@ func TestOverviewWithoutRejections(t *testing.T) {
 
 	h.admin().json(http.MethodGet, "/api/v1/overview", nil, http.StatusOK, &raw)
 	assert.Equal(t, []any{}, raw["rejected_requests"], "no rejections is an empty list, not null")
+}
+
+func TestLibraryLanguages(t *testing.T) {
+	libs := []libraryScripts{
+		{source: "Lounge", language: "en", titles: 10, scripts: map[string]int{"ja": 6, "ar": 1}},
+		{source: "Study", language: "en", titles: 10, scripts: map[string]int{"ja": 5}},
+		{source: "Den", language: "ja", titles: 4, scripts: map[string]int{"ja": 4}},
+		{source: "Garage", language: "de", titles: 3, scripts: map[string]int{"hi": 2}},
+		{source: "Attic", language: "en", titles: 0, scripts: map[string]int{}},
+	}
+
+	att := libraryLanguages(libs, []string{"en-AU", "ja-JP", "hi-IN"})
+	assert.Equal(t, []Attention{
+		{
+			Kind: "library_language", Title: "Most of Lounge's titles are in Japanese", Link: "/kodi",
+			Detail: "Its title language is English. Set it to Japanese so its titles are matched with the rules for Japanese.",
+			Params: map[string]string{"instance": "Lounge", "language": "ja", "current": "en"},
+		},
+		{
+			Kind: "library_language", Title: "Most of Garage's titles are in Hindi", Link: "/kodi",
+			Detail: "Its title language is German. Set it to Hindi so its titles are matched with the rules for Hindi.",
+			Params: map[string]string{"instance": "Garage", "language": "hi", "current": "de"},
+		},
+	}, att, "half the titles is not most, and a library already in the language needs nothing")
+
+	assert.Empty(t, libraryLanguages(libs, []string{"en-AU", "de-DE"}), "only an enabled locale's language counts")
+}
+
+func TestLanguageNamesCoverEveryTitleLanguage(t *testing.T) {
+	for _, code := range match.Languages() {
+		assert.NotEmpty(t, languageNames[code], code)
+	}
 }

@@ -1,7 +1,12 @@
 {
   "attention": {
     "empty": "لا شيء يحتاج إلى انتباهك.",
+    "libraryLanguage": {
+      "detail": "لغة العناوين فيها هي {{current}}. اضبطها على {{language}} لتُطابَق عناوينها بقواعد {{language}}.",
+      "title": "معظم عناوين {{instance}} باللغة {{language}}"
+    },
     "links": {
+      "libraryLanguage": "تغيير لغة العناوين",
       "needsDeploy": "التحديث الآن",
       "open": "فتح",
       "unlinkedDevice": "ربط الجهاز"

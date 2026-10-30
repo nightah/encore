@@ -1,7 +1,12 @@
 {
   "attention": {
     "empty": "対応が必要な項目はありません。",
+    "libraryLanguage": {
+      "detail": "タイトルの言語が{{current}}になっています。{{language}}に設定すると、タイトルが{{language}}のルールで照合されます。",
+      "title": "{{instance}} のタイトルの大半が{{language}}です"
+    },
     "links": {
+      "libraryLanguage": "タイトルの言語を変更",
       "needsDeploy": "今すぐ更新",
       "open": "開く",
       "unlinkedDevice": "デバイスをリンク"

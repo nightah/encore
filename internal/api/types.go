@@ -482,12 +482,21 @@ type RequestsToday struct {
 
 // Attention is something the user should look at.
 type Attention struct {
-	Kind   string `json:"kind" doc:"unlinked_device, amazon_not_connected, amazon_reauthorise, privacy_unanswered, skill_not_deployed, needs_deploy, deploy_failed, auto_deploy_paused, instance_offline, kodi_unauthorized, no_instances, requests_rejected"`
+	Kind   string `json:"kind" doc:"unlinked_device, amazon_not_connected, amazon_reauthorise, privacy_unanswered, skill_not_deployed, needs_deploy, deploy_failed, auto_deploy_paused, instance_offline, kodi_unauthorized, no_instances, requests_rejected, library_language"`
 	Title  string `json:"title"`
 	Detail string `json:"detail"`
 	Link   string `json:"link" doc:"A web interface route: /echo-devices, /kodi, /alexa-skill, /request-log, /library or /settings; empty when the fix is outside Encore"`
 	Stage  string `json:"stage,omitempty" enum:"timestamp,signature,skill_id" doc:"For requests_rejected, the check that refused them"`
 	Count  int    `json:"count,omitempty" doc:"For requests_rejected, how many requests the check refused in the last day"`
+	// Params carries what a translated title and detail need.
+	Params map[string]string `json:"params,omitempty" doc:"What a translation of title and detail is filled with, by name. library_language: instance (the library's source instance), language (the language most of its titles are written in) and current (its title language), as language codes such as ja or en"`
+}
+
+// libraryScripts is how many of a library's titles are written in each script another language reads, by that language.
+type libraryScripts struct {
+	source, language string
+	titles           int
+	scripts          map[string]int
 }
 
 type endpointCache struct {

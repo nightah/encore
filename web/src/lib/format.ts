@@ -7,7 +7,7 @@ function locale(): string {
   return !i18n.language || i18n.language === "en" ? "en-GB" : i18n.language;
 }
 
-type Format = Intl.NumberFormat | Intl.RelativeTimeFormat | Intl.ListFormat;
+type Format = Intl.NumberFormat | Intl.RelativeTimeFormat | Intl.ListFormat | Intl.DisplayNames;
 
 const formats = new Map<string, Format>();
 
@@ -21,6 +21,16 @@ function cached<F extends Format>(kind: string, make: (locale: string) => F): F 
     formats.set(key, format);
   }
   return format;
+}
+
+/** A language's name in the interface language ("ja" is "Japanese" in English), or the code when there is none. */
+export function formatLanguage(code: string | undefined): string {
+  if (!code) return "";
+  try {
+    return cached("language", (l) => new Intl.DisplayNames(l, { fallback: "none", type: "language" })).of(code) ?? code;
+  } catch {
+    return code;
+  }
 }
 
 export function formatNumber(value: number): string {

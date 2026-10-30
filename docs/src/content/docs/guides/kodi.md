@@ -25,7 +25,7 @@ On the **Kodi** page, Encore lists Kodi instances it finds on your network with 
 - **WebSocket URL**: e.g. `ws://192.168.1.20:9090/jsonrpc`. Leave it empty to use HTTP only.
 - **Username** and **password** of Kodi's web server. The password is encrypted at rest.
 - **MAC address** and **broadcast address** for Wake-on-LAN (optional, see below).
-- **Title language**: the rules for matching spoken titles against this library (articles, number words and so on). Instances sharing a library use their library source's. Set it to the language the library's titles are in, not the language you speak to Alexa: a Japanese, Hindi or Arabic request still finds Latin titles in an English library.
+- **Title language**: the rules for matching spoken titles against this library (articles, number words and so on). Instances sharing a library use their library source's. Set it to the language the library's titles are in, not the language you speak to Alexa: a Japanese, Hindi or Arabic request still finds Latin titles in an English library. The overview flags a library whose films, shows, artists and albums are mostly written in Japanese, Devanagari or Arabic script while the skill has a ja-JP, hi-IN or ar-SA locale enabled and the library's title language is another one.
 - **Time zone** of the Kodi host, e.g. `Australia/Melbourne`, which Kodi writes library dates in. Leave it empty and Encore learns the offset from Kodi's clock.
 - **"Shut down"**: follow the setting under **Settings** → **Features**, or always quit Kodi or always power off for this instance (see below).
 
