@@ -186,9 +186,9 @@ How each language's encoder does on the grown set:
 | Italian | English Double Metaphone | 343 of 364 (94.2%) | 1 | 25 |
 | Dutch | English Double Metaphone | 401 of 435 (92.2%) | 4 | 28 |
 | Brazilian Portuguese | Brazilian Portuguese rules | 402 of 440 (91.4%) | 3 | 39 |
-| Arabic | Arabic rules, over Latin letters | 347 of 421 (82.4%) | 5 | 40 |
-| Hindi | English Double Metaphone, over Latin letters | 331 of 418 (79.2%) | 5 | 61 |
-| Japanese | English Double Metaphone, over Latin letters | 262 of 440 (59.5%) | 4 | 72 |
+| Arabic | Arabic rules, over Latin letters | 381 of 421 (90.5%) | 5 | 35 |
+| Hindi | English Double Metaphone, over Latin letters | 364 of 418 (87.1%) | 5 | 56 |
+| Japanese | English Double Metaphone, over Latin letters | 288 of 440 (65.5%) | 4 | 64 |
 
 The same cases with English Double Metaphone instead, which is what French and Spanish had before they had encoders of their own, and what Italian, Dutch, Hindi and Japanese still use, and with no sound-alike keys at all, which shows how much they contribute. *Gains / losses* count the cases the language's encoder gets right and Double Metaphone doesn't, and the reverse. An encoder is kept only when its gain holds up and costs nothing: the 95% interval of the difference must not include zero, and it must add no wrong plays, which the tests enforce for every language with an encoder of its own.
 
@@ -198,9 +198,9 @@ The same cases with English Double Metaphone instead, which is what French and S
 | Spanish | 697 (83.1%), 3 wrong | 627 | +66 / −11 | +6.6 points (+4.6 to +8.6) | 1.0 × 10⁻¹⁰ |
 | French | 711 (88.8%), 3 wrong | 640 | +35 / −9 | +3.2 points (+1.6 to +4.9) | 1.1 × 10⁻⁴ |
 | Brazilian Portuguese | 367 (83.4%), 3 wrong | 318 | +37 / −2 | +8.0 points (+5.3 to +10.6) | 2.8 × 10⁻⁹ |
-| Arabic | 329 (78.1%), 5 wrong | 258 | +18 / −0 | +4.3 points (+2.3 to +6.2) | 7.6 × 10⁻⁶ |
+| Arabic | 362 (86.0%), 5 wrong | 307 | +19 / −0 | +4.5 points (+2.5 to +6.5) | 3.8 × 10⁻⁶ |
 
-English, Italian, Dutch, Hindi and Japanese use Double Metaphone already; without sound-alike keys they get 404, 297, 332, 206 and 247 right. Spanish and French count their regional suites; on Spain's and France's files alone they are +38 / −6 and +21 / −3 against Double Metaphone, and on the Latin American and Québec files +28 / −5 (+6.0 points, +3.1 to +8.9) and +14 / −6 (+2.2 points, −0.2 to +4.6). Arabic, Hindi and Japanese are scored after the matcher writes them in Latin letters; in their own scripts Double Metaphone keys nothing, and Arabic, for one, gets 234 right either way.
+English, Italian, Dutch, Hindi and Japanese use Double Metaphone already; without sound-alike keys they get 404, 297, 332, 277 and 269 right. Spanish and French count their regional suites; on Spain's and France's files alone they are +38 / −6 and +21 / −3 against Double Metaphone, and on the Latin American and Québec files +28 / −5 (+6.0 points, +3.1 to +8.9) and +14 / −6 (+2.2 points, −0.2 to +4.6). Arabic, Hindi and Japanese are scored after the matcher writes them in Latin letters; in their own scripts Double Metaphone keys nothing, and Arabic, for one, gets 234 right either way.
 
 These counts include three fixes made after the grown set was first scored, none of them to an encoder: one corrected label, numbers the normaliser now reads in every language, and the German *-er* rule. Together they added 1 case in English, 14 in German, 2 in Spanish, 2 in French and 11 in Italian, and removed two wrong plays.
 
@@ -215,9 +215,9 @@ These counts include three fixes made after the grown set was first scored, none
 | Italian | English Double Metaphone | 56 of 57 | 0 | same | 49 | none | none | none |
 | Dutch | English Double Metaphone | 109 of 120 | 0 | same | 84 | none | none | none |
 | Brazilian Portuguese | Brazilian Portuguese rules | 107 of 118 | 0 | 93 | 77 | +14 / −0 | +11.9 (+6.0 to +17.7) | 0.0001 |
-| Arabic | Arabic rules, over Latin letters | 114 of 121 | 0 | 109 | 86 | +5 / −0 | +4.1 (+0.6 to +7.7) | 0.063 |
-| Hindi | English Double Metaphone, over Latin letters | 109 of 121 | 1 | same | 73 | none | none | none |
-| Japanese | English Double Metaphone, over Latin letters | 80 of 120 | 0 | same | 71 | none | none | none |
+| Arabic | Arabic rules, over Latin letters | 117 of 121 | 0 | 113 | 101 | +4 / −0 | +3.3 (+0.1 to +6.5) | 0.13 |
+| Hindi | English Double Metaphone, over Latin letters | 110 of 121 | 1 | same | 88 | none | none | none |
+| Japanese | English Double Metaphone, over Latin letters | 85 of 120 | 0 | same | 75 | none | none | none |
 
 None of the changes above moved a case in the first five languages' original set.
 
@@ -246,11 +246,11 @@ A request for a title your library doesn't have should never play something else
 | Italian | 94 | 94 | 0 |
 | Dutch | 115 | 115 | 0 |
 | Brazilian Portuguese | 95 | 95 | 0 |
-| Arabic | 86 | 84 | −2 |
-| Hindi | 92 | 92 | 0 |
-| Japanese | 80 | 80 | 0 |
+| Arabic | 87 | 85 | −2 |
+| Hindi | 95 | 95 | 0 |
+| Japanese | 82 | 82 | 0 |
 
-None of the changes since the first results moved these counts.
+Only the native-script forms of Latin titles (below) moved these counts, in Arabic, Hindi and Japanese.
 
 #### What was decided
 
@@ -286,7 +286,7 @@ Brazilian Portuguese has an encoder of its own (`internal/fuzzy/phonetic/pt`), w
 
 ##### Arabic
 
-Arabic is matched in Latin letters, with an encoder of its own on top (`internal/fuzzy/phonetic/ar`). Alexa's ar-SA recogniser writes Arabic script, while Saudi libraries mix Arabic titles with English ones asked for in Arabic letters ("تايتانك" for *Titanic*). In Arabic script Double Metaphone keys nothing: it decides 88 development and 234 held-out cases, exactly as many as no sound-alike keys. The matcher therefore folds the letters written several ways for one sound (hamza seats, ة and ه, ى and ي), strips the article ال and its fused forms, and writes each word as a Latin consonant skeleton, the short vowels Arabic doesn't write left out. That alone takes Double Metaphone to 109 and 329. The encoder keeps Double Metaphone's key and adds one that merges the consonants Gulf, Najdi, Cairene and Levantine speech interchange (ق, ج and g; the interdentals and sibilants; خ and ح) and one that says ق as the glottal stop of Cairo, which gains 18 held-out cases and loses none.
+Arabic is matched in Latin letters, with an encoder of its own on top (`internal/fuzzy/phonetic/ar`). Alexa's ar-SA recogniser writes Arabic script, while Saudi libraries mix Arabic titles with English ones asked for in Arabic letters ("تايتانك" for *Titanic*). In Arabic script Double Metaphone keys nothing: it decides 88 development and 234 held-out cases, exactly as many as no sound-alike keys. The matcher therefore folds the letters written several ways for one sound (hamza seats, ة and ه, ى and ي), strips the article ال and its fused forms, and writes each word as a Latin consonant skeleton, the short vowels Arabic doesn't write left out. That alone takes Double Metaphone to 109 and 329. The encoder keeps Double Metaphone's key and adds one that merges the consonants Gulf, Najdi, Cairene and Levantine speech interchange (ق, ج and g; the interdentals and sibilants; خ and ح) and one that says ق as the glottal stop of Cairo, which gains 19 held-out cases and loses none.
 
 ##### Hindi
 
@@ -296,6 +296,24 @@ Hindi is matched in Latin letters with English Double Metaphone. Alexa's hi-IN r
 
 Japanese is matched in Latin letters with English Double Metaphone. Titles and requests are split into words with a port of TinySegmenter (BSD licence, chosen over splitting at script changes and a particle-aware splitter on the development set), and kana is written in Hepburn romaji without long vowels, so a word spelt in hiragana, katakana or Latin letters meets itself; kanji stay as written, since reading them takes a dictionary. Without romaji Double Metaphone has nothing to key, and held-out accuracy falls from 262 to 207 of 440. Japanese rules for the way Japanese writes English loanwords and the recogniser's confusions (l and r, v and b, th and s, si and shi, tu and tsu, long vowels) gained 20 held-out cases and lost 3 (p = 0.0005), but added a wrong play, so they weren't shipped. Most Japanese misses are kanji homophones and kanji spellings of katakana titles, which only a reading dictionary would reach.
 
+##### Latin titles asked for in Arabic, Hindi and Japanese script
+
+The largest class of held-out misses in all three languages was a title kept in Latin letters and asked for in the language's own script: 38 in Japanese (スーパーフライ for *Superfly*, グレー for *GLAY*, ゴーストインザシェル for *GHOST IN THE SHELL*), 64 in Hindi (फ्रोजन for *Frozen*, मिस्टर इंडिया for *Mr. India*, दीवार for *Deewaar*) and 49 in Arabic (هوم الون for *Home Alone*, بريف هارت for *Braveheart*). Romanising the request can't reach these: スーパーフライ is "supafurai" and *Superfly* "superfly", and the long vowel, the epenthetic u, the r for l and the dropped r of "super" all differ.
+
+Encore now writes each Latin title the way the language's recogniser would (`internal/fuzzy/loanword`, rules of Encore's own) and indexes that as another alias, which goes through the same romaniser and keys as a request does. A word is read as English into sounds (spelling rules for silent e, digraphs, the endings of "nation" and "picture", r after a vowel, plural and past endings, and a short list of irregular words), then written by each language's loanword conventions: katakana with epenthetic vowels, ー for long vowels and a dropped r, ッ before a doubled stop, l as the r line and a form without a leading "The" (ビートルズ); Devanagari with z as ज, the anusvara before a consonant and a long final a, plus a second reading of the word as romanised Hindi ("Deewaar" दीवार, "Zanjeer" जंजीर); Arabic letters as a consonant skeleton with the long vowels written, p as ب, v as ف and g as ق. Initialisms are spelt by letter name (エーケービー48, केजीएफ, بي تي اس). A Japanese library also keys ヴ as the b line now, so ドライヴマイカー meets *ドライブ・マイ・カー*, while another library keeps the v that ヴ stands for, so トップガンマーヴェリック still meets the Latin *Top Gun: Maverick* of an English library; that alone gained 6 held-out Japanese cases and 1 development case, and lost one held-out case (ヴァラエティ for *VARIETY*, which Double Metaphone had matched on its v), which the native forms then left asked about rather than played.
+
+A native alias is a guess at a spelling, so it can only add to what a title's own names decide. A top candidate that wins on one plays only with a score of at least 0.90 and a lead of 0.10, and is asked about only from 0.75; whatever the title's own names would play or ask still stands. Without these rules the aliases played three titles the corpora expect Encore to ask about (*افنجرز* between *The Avengers* and *Avengers: Endgame*, as English already does for "avengers") and asked about seven absent near misses (*The Dark Knight Rises* beside *The Dark Knight*).
+
+| Language | Held-out cases right | Gains / losses | Difference (95% interval) | p | Development set |
+| --- | --- | --- | --- | --- | --- |
+| Arabic | 347 to 381 of 421 | +34 / −0 | +8.1 points (+5.5 to +10.7) | 1.2 × 10⁻¹⁰ | 114 to 117, +3 / −0 |
+| Hindi | 331 to 364 of 418 | +33 / −0 | +7.9 points (+5.3 to +10.5) | 2.3 × 10⁻¹⁰ | 109 to 110, +1 / −0 |
+| Japanese, with the ヴ fold | 262 to 288 of 440 | +27 / −1 | +5.9 points (+3.6 to +8.2) | 2.2 × 10⁻⁷ | 80 to 85, +5 / −0 |
+
+No wrong play was added on either set, under either retriever, and no case was lost but that one Japanese case. These gains are not confirmatory: the rules were written after reading the held-out misses, and the ask threshold of 0.75 was set where the held-out near misses stopped being asked about (0.70 was enough on the development set). Titles that aren't in the library were played a little more often (Arabic 84 to 85, Hindi 92 to 95, Japanese 80 to 82 of 2,000). Most of the added plays are a request in the language's script for the very English word the synthetic library holds in Latin letters, which is a right answer the test can't tell apart: シャットダウン and スロット for *shutdown* and *slot*, वेब, सिंक and स्टोरेज for *web*, *sync* and *storage*, تايتل for *title*. The rest are as many as the plays the aliases removed: Arabic adds three (فين plays *fine*, عندي *end*) and removes three, Hindi and Japanese add one each (साइंस plays *since*, ステップ *stop*) and remove one, so the ceilings were raised to the measured counts.
+
+The skill model carries the same forms: on deploy, the ja-JP, hi-IN and ar-SA models get each title's, playlist's and room's native-script forms as synonyms, so Alexa can resolve a title it writes in its own script. They only use the room left under 1.2 MB, the size at which Encore warns about the model, so no title loses its place to them; when not all fit, each value's likeliest form goes in first, cheapest first, and the deploy says how many were left out. With 11,000 titles at the slot caps, a ja-JP model grew from 0.81 MB to 1.40 MB with every form, and a hi-IN one from 0.94 MB to 2.16 MB, over Amazon's limit, which is why they are budgeted rather than added outright.
+
 ##### Latin American Spanish and Québec French
 
 The regional held-out sets are scored with the Spanish and French rules, which beat Double Metaphone on them as well: +28 / −5 in Latin America (+6.0 points, +3.1 to +8.9) and +14 / −6 in Québec (+2.2 points, −0.2 to +4.6, an interval that touches zero, so French's regional lead is only suggestive). Their misses led to five small additions: Spanish acronyms read by letter name ("erre be de" is *RBD*, "de ve de" *DVD*, with the Latin American "ve"), "veintiún" and Québec "troé" read as numbers, "volume" dropped before a number as "part" is, a Spanish key for an h or w that stands for the jota or gu ("hosé" finds *José*, "weros" *Güeros*), and a French key for a w after a velar, the Québec "quoi" ("kwè"). Because they were drawn from the held-out misses themselves, their gains there (+16 / −0 in Spanish, +4 / −0 in French) are in-sample and not confirmatory, and they also took Spain's own file from 418 to 420 right; they were kept because they lose no case in any corpus and add no wrong play and no play of an absent title. Québec's affrication of t and d before i and u was tried and dropped: it gained one case and lost another.
@@ -304,7 +322,7 @@ French keys merge spellings that are different titles as well as mishearings (*m
 
 The grown set also exposed a matcher bug that no encoder could fix: asking for a sequel the library doesn't have ("crocodile dundee two", "die vorstadtkrokodile 2") played the original. Encore now asks instead, which removed 6 wrong plays from the grown set and decided 4 more cases right; the numbers above include it.
 
-Measured on 29 October 2026, and for the new languages and regional suites on 30 October 2026; the inverted index and the simpler trigram retriever give the same counts everywhere, and the trigram retriever's wrong plays for titles that aren't in the library differ by at most one.
+Measured on 29 October 2026, and for the new languages, the regional suites and the native-script forms of Latin titles on 30 October 2026; the inverted index and the simpler trigram retriever give the same counts everywhere, and the trigram retriever's wrong plays for titles that aren't in the library differ by at most one.
 
 #### Rerunning the evaluation
 
