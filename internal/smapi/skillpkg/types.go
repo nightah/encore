@@ -15,6 +15,8 @@ type Options struct {
 	SkillName string
 	// SlotValues are supplied at build time, e.g. library titles for AMAZON.Movie. Values too long for Amazon are dropped with a warning.
 	SlotValues map[string][]skillmodel.SlotValue
+	// LocaleSlotValues replaces SlotValues for the locales it names, e.g. to build one locale with fewer titles than the others. Values too long for Amazon are dropped from them too; the warning comes from SlotValues.
+	LocaleSlotValues map[string]map[string][]skillmodel.SlotValue
 	// Content lists the content groups whose intents the model includes; nil includes every group.
 	Content  []media.Content
 	Endpoint Endpoint
