@@ -97,6 +97,7 @@ ListenToArtist:
   play_artist: "(toca|tocar|toque|coloca|colocar|coloque|bota|botar|bote|põe|pôr|ponha|reproduz|reproduzir|reproduza) (o artista|a artista|a banda|o grupo|o cantor|a cantora) {Artist} [(na|no) {Room}]"
   play_music_by: "(toca|tocar|toque|coloca|colocar|coloque|bota|botar|bote|põe|pôr|ponha|reproduz|reproduzir|reproduza) [umas] músicas (de|do|da) {Artist} [(na|no) {Room}]\n(quero ouvir|ouvir) [umas] músicas (de|do|da) {Artist}"
   play_music_by_2: "(toca|tocar|toque|coloca|colocar|coloque|bota|botar|bote|põe|pôr|ponha|reproduz|reproduzir|reproduza) (um pouco de|músicas do estilo) {Genre} (de|do|da) {Artist} [(na|no) {Room}]"
+  play_something_by: "(toca|tocar|toque|coloca|colocar|coloque|bota|botar|bote|põe|pôr|ponha) (alguma coisa|algo) (de|do|da) {Artist} [(na|no) {Room}]"
 ListenToGenre:
   play_genre: "(toca|tocar|toque|coloca|colocar|coloque|reproduz|reproduzir|reproduza) o gênero {Genre}"
   play_music: "(toca|tocar|toque|coloca|colocar|coloque|bota|botar|bote|põe|pôr|ponha|reproduz|reproduzir|reproduza) (um pouco de|músicas do estilo|música do gênero) {Genre} [(na|no) {Room}]\n(quero ouvir|ouvir) (um pouco de|músicas do estilo) {Genre}"

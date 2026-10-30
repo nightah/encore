@@ -95,8 +95,9 @@ ListenToAlbum:
   play_album_by: "(speel|draai) het album {Album} van {Artist} [(in de|in het|op de|op) {Room}]\nik wil het album {Album} van {Artist} horen"
 ListenToArtist:
   play_artist: "(speel|draai) (de artiest|de band|de zanger|de zangeres) {Artist} [(in de|in het|op de|op) {Room}]"
-  play_music_by: "(speel|draai) [wat] (muziek|nummers|liedjes) van {Artist} [(in de|in het|op de|op) {Room}]\nik wil [wat] muziek van {Artist} horen\nmuziek van {Artist} af te spelen"
+  play_music_by: "(speel|draai) [wat] (muziek|nummers|liedjes) van {Artist} [(in de|in het|op de|op) {Room}]\nik wil [wat] muziek van {Artist} horen\nmuziek van {Artist} af te spelen\nzet [wat] (muziek|nummers|liedjes) van {Artist} op"
   play_music_by_2: "(speel|draai) [wat] {Genre} (muziek|nummers) van {Artist} [(in de|in het|op de|op) {Room}]"
+  play_something_by: "(speel|draai) iets van {Artist} [(in de|in het|op de|op) {Room}]\nzet iets van {Artist} op"
 ListenToGenre:
   play_genre: "(speel|draai) muziek uit het genre {Genre} [(in de|in het|op de|op) {Room}]"
   play_music: "(speel|draai) [wat] {Genre} (muziek|nummers|liedjes) [(in de|in het|op de|op) {Room}]\nzet [wat] {Genre} (muziek|nummers) op [(in de|in het|op de) {Room}]\nik wil [wat] {Genre} horen"

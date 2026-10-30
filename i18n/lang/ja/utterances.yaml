@@ -95,8 +95,9 @@ ListenToAlbum:
   play_album_by: "[{Room}で]{Artist}のアルバム[の]{Album}を(再生して|かけて|流して|聴かせて)[ください]"
 ListenToArtist:
   play_artist: "[{Room}で]アーティストの{Artist}を(再生して|かけて|流して)[ください]"
-  play_music_by: "[{Room}で]{Artist}の(曲|音楽|歌)を(再生して|かけて|流して|聴かせて)[ください]"
+  play_music_by: "[{Room}で]{Artist}の(曲|音楽|歌)を(再生して|かけて|流して|聴かせて)[ください]\n[{Room}で]{Artist}が歌う(曲|歌)を(再生して|かけて|流して|聴かせて)[ください]"
   play_music_by_2: "[{Room}で]{Artist}の{Genre}の(曲|音楽)を(再生して|かけて|流して)[ください]"
+  play_something_by: "[{Room}で]{Artist}の(何か|なにか)を(再生して|かけて|流して)[ください]"
 ListenToGenre:
   play_genre: "ジャンルの{Genre}を(再生して|かけて|流して)[ください]"
   play_music: "[{Room}で]{Genre}(系の曲|系の音楽|ミュージック)を(かけて|流して|再生して|聴かせて)[ください]"
