@@ -69,6 +69,20 @@ type Locale struct {
 	Responses      map[string]string   `yaml:"responses"`
 	// Types adds synonyms to static slot type values, by type name and value ID, for the words the locale's speakers use where its language's types.yaml has others ("computadora" beside "ordenador").
 	Types map[string]map[string][]string `yaml:"types"`
+	// Launch is how the locale's speakers open the skill.
+	Launch Launch `yaml:"launch"`
+}
+
+// Launch is a locale's phrases for opening the skill without a request, each with {invocation} where the invocation name goes. They come from the launch phrases Amazon lists for the language.
+type Launch struct {
+	// Open is the phrase the voice command pages lead with and the deploy's smoke test says.
+	Open string `yaml:"open"`
+	// Also are other launch phrases Amazon lists for the language.
+	Also []string `yaml:"also"`
+	// Skill names the invocation as a skill ("open the encore skill"), for when Alexa doesn't take the name alone for one.
+	Skill string `yaml:"skill"`
+	// PlainOpenFails marks a locale where a plain open phrase hasn't been seen to reach the skill in Amazon's simulator, so the pages lead with Skill.
+	PlainOpenFails bool `yaml:"plain_open_fails"`
 }
 
 // keyedSection is one intent or slot type of a keyed file, its entries in file order.

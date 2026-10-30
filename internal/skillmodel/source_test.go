@@ -165,7 +165,7 @@ func TestTypesLocaleSynonymsErrors(t *testing.T) {
 }
 
 func TestUtterancesDoNotAliasLanguage(t *testing.T) {
-	src := load(t, map[string]string{"locales/en-GB.yaml": "language: en\nskill_name: Encore\ninvocation: encore test\nutterances:\n  WatchMovie:\n    - \"stick on {Movie}\"\n"})
+	src := load(t, map[string]string{"locales/en-GB.yaml": "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: encore test\nutterances:\n  WatchMovie:\n    - \"stick on {Movie}\"\n"})
 
 	au, err := src.Utterances("en-AU")
 	require.NoError(t, err)

@@ -4,6 +4,11 @@
 
 invocation: encore
 language: es
+launch:
+  also:
+    - "inicia {invocation}"
+  open: "abre {invocation}"
+  skill: "abre la skill {invocation}"
 
 responses:
   addon.not_found: "No encontré ningún complemento llamado {addon}."

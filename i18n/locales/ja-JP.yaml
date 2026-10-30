@@ -3,4 +3,10 @@
 invocation: アンコール
 kodi_invocation: コディ
 language: ja
+launch:
+  also:
+    - "{invocation}を起動して"
+    - "{invocation}をスタートして"
+  open: "{invocation}を開いて"
+  skill: "{invocation}スキルを開いて"
 skill_name: Encore

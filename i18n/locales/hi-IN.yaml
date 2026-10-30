@@ -2,4 +2,11 @@
 
 invocation: encore
 language: hi
+launch:
+  also:
+    - "{invocation} खोलो"
+    - "{invocation} चालू करो"
+  open: "{invocation} शुरू करो"
+  plain_open_fails: true
+  skill: "{invocation} स्किल शुरू करो"
 skill_name: Encore

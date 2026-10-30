@@ -3,4 +3,11 @@
 invocation: انكور
 kodi_invocation: كودي
 language: ar
+launch:
+  also:
+    - "ابدأ {invocation}"
+    - "شغلي {invocation}"
+  open: "افتحي {invocation}"
+  plain_open_fails: true
+  skill: "افتحي مهارة {invocation}"
 skill_name: Encore

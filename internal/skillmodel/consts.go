@@ -20,3 +20,6 @@ const InvocationKodi = "kodi"
 
 // ReferenceLanguage is the language every other language's responses are compared against.
 const ReferenceLanguage = "en"
+
+// InvocationPlaceholder stands for the invocation name in a locale's launch phrases.
+const InvocationPlaceholder = "{invocation}"

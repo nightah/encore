@@ -331,6 +331,8 @@ func (l *linter) locale(locale string) {
 		l.add(Error, locale, "", "skill_name is required")
 	}
 
+	l.launch(locale, loc.Launch)
+
 	if _, err := l.src.Types(locale); err != nil {
 		l.add(Error, locale, "", "%v", strings.TrimPrefix(err.Error(), "locale "+locale+": "))
 	}
@@ -551,4 +553,21 @@ func placeholders(s string) string {
 	sort.Strings(names)
 
 	return "[" + strings.Join(names, ", ") + "]"
+}
+
+// launch checks a locale's launch phrases: an open phrase and a skill phrase are required, and each phrase names the invocation once.
+func (l *linter) launch(locale string, launch Launch) {
+	if launch.Open == "" {
+		l.add(Error, locale, "", "launch.open is required: the phrase that opens the skill, with %s where its name goes", InvocationPlaceholder)
+	}
+
+	if launch.Skill == "" {
+		l.add(Error, locale, "", "launch.skill is required: the phrase that opens the skill by calling it a skill, with %s where its name goes", InvocationPlaceholder)
+	}
+
+	for _, p := range append([]string{launch.Open, launch.Skill}, launch.Also...) {
+		if p != "" && strings.Count(p, InvocationPlaceholder) != 1 {
+			l.add(Error, locale, "", "launch phrase %q must name %s once", p, InvocationPlaceholder)
+		}
+	}
 }
