@@ -55,14 +55,18 @@ func TestLintLocaleRules(t *testing.T) {
 		want   string
 	}{
 		"unknown language":         {locale: "language: xx\nskill_name: Encore\ninvocation: encore test\n", want: `error: en-US: unknown language "xx"`},
-		"missing skill name":       {locale: "language: en\ninvocation: encore test\n", want: "error: en-US: skill_name is required"},
-		"uppercase invocation":     {locale: "language: en\nskill_name: Encore\ninvocation: Encore Test\n", want: "must be lowercase letters"},
-		"digits in invocation":     {locale: "language: en\nskill_name: Encore\ninvocation: encore 2\n", want: "must be lowercase letters"},
-		"empty invocation":         {locale: "language: en\nskill_name: Encore\n", want: `invocation name "" must be lowercase letters`},
-		"trailing period":          {locale: "language: en\nskill_name: Encore\ninvocation: encore.\n", want: "must be lowercase letters"},
-		"reserved word, any place": {locale: "language: en\nskill_name: Encore\ninvocation: my echo remote\n", want: `contains the reserved word "echo"`},
+		"missing skill name":       {locale: "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\ninvocation: encore test\n", want: "error: en-US: skill_name is required"},
+		"uppercase invocation":     {locale: "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: Encore Test\n", want: "must be lowercase letters"},
+		"digits in invocation":     {locale: "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: encore 2\n", want: "must be lowercase letters"},
+		"empty invocation":         {locale: "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\n", want: `invocation name "" must be lowercase letters`},
+		"trailing period":          {locale: "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: encore.\n", want: "must be lowercase letters"},
+		"reserved word, any place": {locale: "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: my echo remote\n", want: `contains the reserved word "echo"`},
+		"no launch phrases":        {locale: "language: en\nskill_name: Encore\ninvocation: encore test\n", want: "error: en-US: launch.open is required"},
+		"no skill launch phrase":   {locale: "language: en\nlaunch:\n  open: open {invocation}\nskill_name: Encore\ninvocation: encore test\n", want: "error: en-US: launch.skill is required"},
+		"launch without the name":  {locale: "language: en\nlaunch:\n  open: open {invocation}\n  also: [open it]\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: encore test\n", want: `error: en-US: launch phrase "open it" must name {invocation} once`},
+		"launch naming it twice":   {locale: "language: en\nlaunch:\n  open: open {invocation} {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: encore test\n", want: `launch phrase "open {invocation} {invocation}" must name {invocation} once`},
 		"synonyms for an unknown value": {
-			locale: "language: en\nskill_name: Encore\ninvocation: encore test\ntypes:\n  KODI_ROOM:\n    attic: [loft]\n",
+			locale: "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: encore test\ntypes:\n  KODI_ROOM:\n    attic: [loft]\n",
 			want:   "error: en-US: synonyms given for value attic of slot type KODI_ROOM, which has no value with that ID",
 		},
 	}
@@ -76,13 +80,13 @@ func TestLintLocaleRules(t *testing.T) {
 }
 
 func TestLintChecksTheKodiInvocation(t *testing.T) {
-	got := messages(Lint(load(t, map[string]string{"locales/en-US.yaml": "language: en\nskill_name: Encore\ninvocation: encore test\nkodi_invocation: kodi 2\n"})), Error)
+	got := messages(Lint(load(t, map[string]string{"locales/en-US.yaml": "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: encore test\nkodi_invocation: kodi 2\n"})), Error)
 	assert.True(t, containsSubstring(got, `invocation name "kodi 2" must be lowercase letters`), "got %q", got)
 }
 
 func TestLintAcceptsValidInvocations(t *testing.T) {
 	for _, inv := range []string{"encore test", "kodi's remote", "t.v. remote", "my reopen box"} {
-		findings := Lint(load(t, map[string]string{"locales/en-US.yaml": "language: en\nskill_name: Encore\ninvocation: " + inv + "\n"}))
+		findings := Lint(load(t, map[string]string{"locales/en-US.yaml": "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: " + inv + "\n"}))
 		assert.Empty(t, messages(findings, Error), inv)
 		assert.False(t, containsSubstring(messages(findings, Warning), "one-word"), "%s has more than one word", inv)
 	}
@@ -90,7 +94,7 @@ func TestLintAcceptsValidInvocations(t *testing.T) {
 
 func TestLintOrdersErrorsBeforeWarningsInOnePlace(t *testing.T) {
 	// The one-word warning is found before the missing skill name, so only sorting puts the error first.
-	src := load(t, map[string]string{"locales/en-US.yaml": "language: en\ninvocation: encore\n"})
+	src := load(t, map[string]string{"locales/en-US.yaml": "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\ninvocation: encore\n"})
 
 	var got []string
 
@@ -107,7 +111,7 @@ func TestLintOrdersErrorsBeforeWarningsInOnePlace(t *testing.T) {
 }
 
 func TestLintSharedWordingNamesTheFirstIntent(t *testing.T) {
-	src := load(t, map[string]string{"locales/en-US.yaml": "language: en\nskill_name: Encore\ninvocation: encore test\nutterances:\n  ViewRoom:\n    - \"put on {Room}\"\n"})
+	src := load(t, map[string]string{"locales/en-US.yaml": "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: encore test\nutterances:\n  ViewRoom:\n    - \"put on {Room}\"\n"})
 	src.Model.Intents = append(src.Model.Intents, Intent{Name: "ViewGenre", Slots: []Slot{{Name: "Genre", Type: "KODI_ROOM"}}})
 
 	lang := src.Languages["en"]
@@ -210,7 +214,7 @@ func TestLintBuiltinIntentsNeedNoSamples(t *testing.T) {
 }
 
 func TestLintFindingsAreOrdered(t *testing.T) {
-	src := load(t, map[string]string{"locales/en-US.yaml": "language: en\nskill_name: Encore\ninvocation: encore\nutterances:\n  Rewind:\n    - \"rewind\"\n"})
+	src := load(t, map[string]string{"locales/en-US.yaml": "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: encore\nutterances:\n  Rewind:\n    - \"rewind\"\n"})
 
 	findings := Lint(src)
 	require.NotEmpty(t, findings)

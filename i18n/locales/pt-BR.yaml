@@ -3,4 +3,11 @@
 
 invocation: kodi
 language: pt
+launch:
+  also:
+    - "abre o {invocation}"
+    - "inicie {invocation}"
+  open: "abrir {invocation}"
+  plain_open_fails: true
+  skill: "abre a skill {invocation}"
 skill_name: Encore

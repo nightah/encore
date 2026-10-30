@@ -54,6 +54,9 @@ playback.playing: "Playing {title}."
 `,
 	"locales/en-AU.yaml": `
 language: en
+launch:
+  open: open {invocation}
+  skill: open the {invocation} skill
 skill_name: Encore
 invocation: encore test
 utterances:
@@ -62,6 +65,9 @@ utterances:
 `,
 	"locales/en-US.yaml": `
 language: en
+launch:
+  open: open {invocation}
+  skill: open the {invocation} skill
 skill_name: Encore
 invocation: encore test
 `,
@@ -208,11 +214,11 @@ func TestLintRules(t *testing.T) {
 			want:      "missing", sev: Error,
 		},
 		"reserved invocation word": {
-			overrides: map[string]string{"locales/en-US.yaml": "language: en\nskill_name: Encore\ninvocation: alexa remote\n"},
+			overrides: map[string]string{"locales/en-US.yaml": "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: alexa remote\n"},
 			want:      "reserved word", sev: Error,
 		},
 		"one word invocation": {
-			overrides: map[string]string{"locales/en-US.yaml": "language: en\nskill_name: Encore\ninvocation: encore\n"},
+			overrides: map[string]string{"locales/en-US.yaml": "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: encore\n"},
 			want:      "one-word invocation", sev: Warning,
 		},
 		"response placeholder mismatch": {
@@ -367,7 +373,7 @@ func TestBuildWithoutContentGroups(t *testing.T) {
 
 func TestBuildKodiInvocationUsesTheLocaleSpelling(t *testing.T) {
 	src := load(t, map[string]string{
-		"locales/en-GB.yaml": "language: en\nskill_name: Encore\ninvocation: encore test\nkodi_invocation: kodi player\n",
+		"locales/en-GB.yaml": "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: encore test\nkodi_invocation: kodi player\n",
 	})
 
 	for _, tt := range []struct {

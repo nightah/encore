@@ -5,6 +5,12 @@
 
 invocation: kodi
 language: fr
+launch:
+  also:
+    - "lance {invocation}"
+    - "démarre {invocation}"
+  open: "ouvre {invocation}"
+  skill: "ouvre la compétence {invocation}"
 
 responses:
   content.disabled: "Cette compétence est configurée sans ce type de contenu. Vous pouvez l'activer dans les réglages de la compétence Alexa d'Encore."
