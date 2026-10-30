@@ -10,6 +10,7 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 
+	"github.com/nightah/encore/internal/adapter/alexa"
 	"github.com/nightah/encore/internal/store"
 )
 
@@ -80,6 +81,12 @@ func (a *API) overview(ctx context.Context, ec *endpointCache) (Overview, error)
 		return o, err
 	}
 
+	o.RejectedRequests = []RejectedRequests{}
+
+	for _, r := range a.app.Rejections().Counts(a.now()) {
+		o.RejectedRequests = append(o.RejectedRequests, RejectedRequests{Stage: string(r.Stage), Count: r.Count, LastAt: r.Last})
+	}
+
 	return o, nil
 }
 
@@ -144,6 +151,47 @@ func (a *API) checkEndpoint(ctx context.Context, ec *endpointCache, url string) 
 	ec.mu.Unlock()
 
 	return check
+}
+
+// rejectedAttention asks about voice requests refused in the last day (alexa.RecentRejections) at a check a real Alexa request can fail: the host clock, the signature, the skill ID. Requests with no signature, with a certificate URL that isn't Amazon's or with an unreadable body are left out, since any scanner on the internet sends those; a stale timestamp only counts when Alexa signed the request. An item stops showing a day after the last rejection it counts.
+func (a *API) rejectedAttention() []Attention {
+	var out []Attention
+
+	for _, r := range a.app.Rejections().Counts(a.now()) {
+		if r.Recent == 0 {
+			continue
+		}
+
+		att := Attention{Kind: "requests_rejected", Stage: string(r.Stage), Count: r.Recent}
+		n := plural(r.Recent, "1 request", "%d requests")
+
+		switch r.Stage {
+		case alexa.RejectTimestamp:
+			att.Title = n + " rejected for a stale timestamp"
+			att.Detail = "Alexa stamps each request with the time it was sent, and Encore refuses one more than 150 seconds from its own clock. Check that this host's clock is synchronised."
+		case alexa.RejectSignature:
+			att.Title = n + " rejected for a bad signature"
+			att.Detail = "Encore couldn't confirm that Alexa sent them. If they came from your Echo, check that Encore can reach s3.amazonaws.com for Amazon's certificate and that your proxy passes requests on unchanged."
+		case alexa.RejectSkillID:
+			att.Title = n + " for another skill rejected"
+			att.Detail = "Alexa signed them for a skill ID other than the one Encore expects. Check alexa.skill_id, or deploy the skill again."
+			att.Link = "/alexa-skill"
+		default:
+			continue
+		}
+
+		out = append(out, att)
+	}
+
+	return out
+}
+
+func plural(n int, one, many string) string {
+	if n == 1 {
+		return one
+	}
+
+	return fmt.Sprintf(many, n)
 }
 
 // attention is ordered most important first.
@@ -211,6 +259,8 @@ func (a *API) attention(ctx context.Context) ([]Attention, error) {
 			out = append(out, Attention{Kind: "instance_offline", Title: r.Name + " is offline", Detail: "Encore cannot reach this Kodi instance.", Link: "/kodi"})
 		}
 	}
+
+	out = append(out, a.rejectedAttention()...)
 
 	devs, err := a.app.DB().EchoDevices().List(ctx)
 	if err != nil {

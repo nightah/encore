@@ -350,6 +350,7 @@ export function createDb(scenario: Scenario = "configured", now = Date.now()): M
     nextId: 5000,
     publicUrl: fresh ? "" : "https://encore.example.net",
     recent: fresh ? {} : recent(now),
+    rejectedRequests: [],
     requests: fresh ? [] : [...sampleRequests(now), ...olderRequests(now)],
     rooms: fresh ? [] : rooms(),
     scenario,

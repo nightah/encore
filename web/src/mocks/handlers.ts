@@ -237,6 +237,7 @@ function overview(): Overview {
       .filter((r) => !r.simulated)
       .slice(0, RECENT_REQUESTS)
       .map(summary),
+    rejected_requests: db.rejectedRequests,
     requests_today: {
       failed: today.filter((r) => r.outcome === "error" || r.outcome === "not_found").length + (today.length ? 1 : 0),
       median_ms: durations.length ? (durations[Math.floor(durations.length / 2)] ?? 0) : 0,

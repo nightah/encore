@@ -438,6 +438,15 @@ type Overview struct {
 	Instances      []Instance       `json:"instances"`
 	RecentRequests []RequestSummary `json:"recent_requests"`
 	Attention      []Attention      `json:"attention"`
+	// RejectedRequests counts every stage, including the ones anything on the internet can trip and so raise no attention item.
+	RejectedRequests []RejectedRequests `json:"rejected_requests" doc:"Requests the Alexa endpoint refused since Encore started, by the check that refused them, in the order the checks run. Only stages that refused at least one request are listed."`
+}
+
+// RejectedRequests is how many requests one check of the Alexa endpoint refused.
+type RejectedRequests struct {
+	Stage  string    `json:"stage" enum:"body,unsigned,timestamp,signature,skill_id" doc:"body: unreadable, too large, undecodable or with no timestamp; unsigned: no signature headers, or a certificate URL that isn't Amazon's, so not from Alexa; timestamp: signed by Alexa but more than 150 seconds from Encore's clock; signature: a bad signature or certificate chain, or the chain couldn't be fetched; skill_id: signed by Alexa for another skill"`
+	Count  int       `json:"count" minimum:"1"`
+	LastAt time.Time `json:"last_at" doc:"When this check last refused a request"`
 }
 
 // OverviewSkill summarises the skill's deploy state.
@@ -473,10 +482,12 @@ type RequestsToday struct {
 
 // Attention is something the user should look at.
 type Attention struct {
-	Kind   string `json:"kind" doc:"unlinked_device, amazon_not_connected, amazon_reauthorise, privacy_unanswered, skill_not_deployed, needs_deploy, deploy_failed, auto_deploy_paused, instance_offline, kodi_unauthorized, no_instances"`
+	Kind   string `json:"kind" doc:"unlinked_device, amazon_not_connected, amazon_reauthorise, privacy_unanswered, skill_not_deployed, needs_deploy, deploy_failed, auto_deploy_paused, instance_offline, kodi_unauthorized, no_instances, requests_rejected"`
 	Title  string `json:"title"`
 	Detail string `json:"detail"`
-	Link   string `json:"link" doc:"A web interface route: /echo-devices, /kodi, /alexa-skill, /request-log, /library or /settings"`
+	Link   string `json:"link" doc:"A web interface route: /echo-devices, /kodi, /alexa-skill, /request-log, /library or /settings; empty when the fix is outside Encore"`
+	Stage  string `json:"stage,omitempty" enum:"timestamp,signature,skill_id" doc:"For requests_rejected, the check that refused them"`
+	Count  int    `json:"count,omitempty" doc:"For requests_rejected, how many requests the check refused in the last day"`
 }
 
 type endpointCache struct {
