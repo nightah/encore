@@ -37,6 +37,9 @@ var writtenOrdinals = map[string]*regexp.Regexp{
 	"pt": regexp.MustCompile(`^(\d+)\.?[º°ªoa]$`),
 }
 
+// episodeCode matches a show followed by the shorthand for a season and episode, or a season alone, as Alexa writes it when asked for "bluey s two e three": "bluey s2e3", "bluey s02e03", "bluey s. 2 e. 3", "bluey s2 ep3", "bluey s2".
+var episodeCode = regexp.MustCompile(`(?i)^(.+?)\s+s\.?\s?(\d{1,3})(?:\s?(?:e|ep)\.?\s?(\d{1,4}))?$`)
+
 // Ordinal reads an ordinal said in locale as its number: a value or synonym of the ORDINAL slot type ("second", "deuxième", "दूसरा"), the digits Alexa writes for one ("2nd", "2e", "2ª") or a plain number.
 func (s *Speech) Ordinal(locale, heard string) (int, bool) {
 	heard = strings.TrimSpace(heard)
@@ -94,4 +97,32 @@ func spellOrdinals(lang string, words []string) []string {
 	}
 
 	return out
+}
+
+// codedEpisode reads a search query ending in an episode code (episodeCode) as WatchEpisode, or WatchSeason for a season alone.
+func codedEpisode(query string) (Intent, bool) {
+	m := episodeCode.FindStringSubmatch(strings.TrimSpace(query))
+	if m == nil {
+		return Intent{}, false
+	}
+
+	slots := map[string]Slot{
+		"Show":   {Name: "Show", Value: m[1]},
+		"Season": {Name: "Season", Value: strconv.Itoa(atoi(m[2]))},
+	}
+
+	if m[3] == "" {
+		return Intent{Name: "WatchSeason", Slots: slots}, true
+	}
+
+	slots["Episode"] = Slot{Name: "Episode", Value: strconv.Itoa(atoi(m[3]))}
+
+	return Intent{Name: "WatchEpisode", Slots: slots}, true
+}
+
+// atoi reads digits episodeCode matched, which always parse.
+func atoi(digits string) int {
+	n, _ := strconv.Atoi(digits)
+
+	return n
 }

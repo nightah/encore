@@ -111,6 +111,28 @@ func TestReinterpretSeasonNeedsAnOrdinal(t *testing.T) {
 	assert.Equal(t, map[string]string{"Query": "the endless season of bluey"}, slots)
 }
 
+func TestReinterpretEpisodeCode(t *testing.T) {
+	speech := shippedSpeech(t)
+
+	for _, tc := range []struct {
+		locale, query, intent string
+		slots                 map[string]string
+	}{
+		{"en-AU", "bluey s2e3", "WatchEpisode", map[string]string{"Show": "bluey", "Season": "2", "Episode": "3"}},
+		{"en-AU", "Bluey S02E03", "WatchEpisode", map[string]string{"Show": "Bluey", "Season": "2", "Episode": "3"}},
+		{"en-US", "bluey s. 2 e. 3", "WatchEpisode", map[string]string{"Show": "bluey", "Season": "2", "Episode": "3"}},
+		{"en-GB", "bluey s2 ep3", "WatchEpisode", map[string]string{"Show": "bluey", "Season": "2", "Episode": "3"}},
+		{"de-DE", "dark s1e4", "WatchEpisode", map[string]string{"Show": "dark", "Season": "1", "Episode": "4"}},
+		{"en-AU", "bluey s2", "WatchSeason", map[string]string{"Show": "bluey", "Season": "2"}},
+		{"en-AU", "ocean's 12", "PlayMedia", map[string]string{"Query": "ocean's 12"}},
+		{"en-AU", "s2e3", "PlayMedia", map[string]string{"Query": "s2e3"}},
+	} {
+		intent, slots := reading(speech, tc.locale, tc.query)
+		assert.Equal(t, tc.intent, intent, "%s %q", tc.locale, tc.query)
+		assert.Equal(t, tc.slots, slots, "%s %q", tc.locale, tc.query)
+	}
+}
+
 // TestSpeechOrdinal reads ordinals as words of the ORDINAL type and as Alexa writes them with digits in each language.
 func TestSpeechOrdinal(t *testing.T) {
 	speech := shippedSpeech(t)
