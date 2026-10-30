@@ -98,7 +98,14 @@ type Speech struct {
 	roomPhrases map[string][]roomPhrase
 	// queryForms holds, per locale, the TV intents' samples as they'd reach PlayMedia's search query, most specific first.
 	queryForms map[string][]queryForm
-	log        *slog.Logger
+	// bareSlots holds, per locale, the slots of custom types that a sample of their intent is alone ("{NavAction}"), in model order.
+	bareSlots map[string][]bareSlot
+	log       *slog.Logger
+}
+
+// bareSlot is a slot an intent's sample is alone: Navigate's {NavAction} of type NAV_ACTION.
+type bareSlot struct {
+	intent, slot, typ string
 }
 
 // queryForm is one TV intent sample with PlayMedia's carrier phrase ("play", "put on") taken off the front: "the next episode of {Show}" for WatchNextEpisode.

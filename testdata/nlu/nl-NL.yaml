@@ -21,6 +21,7 @@ cases:
   - {utterance: "ik wil de film zwartboek kijken", intent: WatchMovie, slots: {Movie: "zwartboek"}}
   - {utterance: "ga verder met de luizenmoeder", intent: WatchNextEpisode, slots: {Show: "de luizenmoeder"}}
   - {utterance: "zoek zwartboek", intent: PlayMedia, slots: {Query: "zwartboek"}, pending: "nl-NL takes AMAZON.SearchQuery from the next deploy"}
+  - {utterance: "de tweede graag", intent: ChooseMatch, slots: {Which: "second"}, pending: "ChooseMatch is in the model from the next deploy"}
   - {utterance: "kies een komedie film voor me", intent: WatchRandomMovie, slots: {Genre: ""}}
   - {utterance: "speel de trailer", intent: WatchMovieTrailer}
   - {utterance: "ga verder met de zwartboek reeks", intent: WatchNextInCollection, slots: {Movie: "zwartboek"}}
@@ -84,6 +85,7 @@ cases:
   # Answers to "did you mean …?".
   - {utterance: "ja graag", intent: AMAZON.YesIntent}
   - {utterance: "nee dank je", intent: AMAZON.NoIntent}
+  - {utterance: "ik bedoel de oudere", intent: ChooseMatch, slots: {Which: "older"}, pending: "ChooseMatch is in the model from the next deploy"}
   # Bare titles, which free-text and title slots compete for.
   - {utterance: "speel zwartboek", intent: PlayMedia, slots: {Query: "zwartboek"}, pending: "nl-NL takes AMAZON.SearchQuery from the next deploy"}
   - {utterance: "zwartboek af te spelen", intent: PlayMedia, slots: {Query: "zwartboek"}, pending: "nl-NL takes AMAZON.SearchQuery from the next deploy"}

@@ -135,3 +135,18 @@ func FuzzParseDuration(f *testing.F) {
 		}
 	})
 }
+
+// A locale Encore has no model for reads a lone command the fallback locale's way.
+func TestBareCommandInAnUnknownLocale(t *testing.T) {
+	h, _, _ := newHandler(t)
+
+	want, ok := h.Speech.BareCommand(fallbackLocale, "select")
+	require.True(t, ok, "select is a remote command in English")
+
+	got, ok := h.Speech.BareCommand("xx-XX", "select")
+	require.True(t, ok)
+	assert.Equal(t, want, got)
+
+	_, ok = h.Speech.BareCommand("xx-XX", "Dune")
+	assert.False(t, ok, "a title is no command")
+}

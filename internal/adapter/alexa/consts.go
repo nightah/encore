@@ -14,6 +14,9 @@ const (
 
 const exampleTitle = "Dune"
 
+// chooseIntent answers a "did you mean" question: by position ({Which}) or with a title said on its own ({Answer}).
+const chooseIntent = "ChooseMatch"
+
 // Session attributes: the choices a question offered ("did you mean", a recommendation), what its answer should do, and the question itself, to ask again when the answer isn't one.
 const (
 	sessionPending  = "pending"

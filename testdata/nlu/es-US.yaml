@@ -21,6 +21,7 @@ cases:
   - {utterance: "quiero ver la película el laberinto del fauno", intent: WatchMovie, slots: {Movie: "el laberinto del fauno"}}
   - {utterance: "sigue viendo la casa de papel", intent: WatchNextEpisode, slots: {Show: "la casa de papel"}}
   - {utterance: "encuentra la casa de papel", intent: PlayMedia, slots: {Query: "la casa de papel"}}
+  - {utterance: "la segunda por favor", intent: ChooseMatch, slots: {Which: "second"}, pending: "ChooseMatch is in the model from the next deploy"}
   - {utterance: "elige una película de comedia por mí", intent: WatchRandomMovie, slots: {Genre: ""}}
   - {utterance: "pon el tráiler", intent: WatchMovieTrailer}
   - {utterance: "sigue con la saga el laberinto del fauno", intent: WatchNextInCollection, slots: {Movie: "el laberinto del fauno"}}
@@ -84,6 +85,7 @@ cases:
   # Answers to "did you mean …?".
   - {utterance: "sí por favor", intent: AMAZON.YesIntent}
   - {utterance: "no gracias", intent: AMAZON.NoIntent}
+  - {utterance: "me refiero a la más antigua", intent: ChooseMatch, slots: {Which: "older"}, pending: "ChooseMatch is in the model from the next deploy"}
   # Bare titles, which free-text and title slots compete for.
   - {utterance: "reproduce la casa de papel", intent: PlayMedia, slots: {Query: "la casa de papel"}}
   - {utterance: "pon la casa de papel", intent: PlayMedia, slots: {Query: "la casa de papel"}}

@@ -92,6 +92,8 @@ type Outcome struct {
 	Followup *Followup
 	// Confirm marks a success with nothing to say, which the adapter may acknowledge with a sound.
 	Confirm bool
+	// AskAgain means an answer chose none of a question's titles: the adapter asks the question again after Say, whose {question} placeholder it fills, keeping the question's choices.
+	AskAgain bool
 	// Played is the item that started playing, if any.
 	Played *media.Item
 	// Match is the search result behind the outcome, for the request log.
@@ -158,6 +160,14 @@ type TitleRequest struct {
 	Hints map[string]float64
 	// Pending are the choices from a question this request answers.
 	Pending []Choice
+}
+
+// Answer chooses one of the titles a "did you mean" question offered.
+type Answer struct {
+	// Which is a position among the titles offered (AnswerFirst, AnswerSecond...); it wins over Title.
+	Which string
+	// Title is a title said on its own: one the question found, or another to search for.
+	Title string
 }
 
 // SeekRequest moves the playhead. By wins over Step; To is an absolute position.

@@ -66,6 +66,35 @@ LIBRARY_TYPE:
     filmes
     séries
     tv
+MATCH_CHOICE:
+  first: |-
+    primeiro
+    primeira
+  last: |-
+    último
+    última
+  newer: |-
+    mais novo
+    mais nova
+    mais recente
+    novo
+    nova
+    recente
+  older: |-
+    mais antigo
+    mais antiga
+    mais velho
+    mais velha
+    antigo
+    antiga
+    velho
+    velha
+    original
+  second: |-
+    segundo
+    segunda
+    outro
+    outra
 MEDIA_TYPE:
   album: |-
     álbum

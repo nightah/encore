@@ -837,3 +837,66 @@ func TestAskKeepsMoreMatchesForNo(t *testing.T) {
 	assert.Equal(t, "match.no_more", o.Say.ID)
 	assert.True(t, o.EndSession)
 }
+
+func TestChoose(t *testing.T) {
+	old := Choice{DocID: "movie/1", Ref: media.Ref{Kind: media.KindMovie, ID: 1}, Title: "Dune", Year: 1984}
+	remake := Choice{DocID: "movie/2", Ref: media.Ref{Kind: media.KindMovie, ID: 2}, Title: "Dune", Year: 2021}
+	sequel := Choice{DocID: "movie/3", Ref: media.Ref{Kind: media.KindMovie, ID: 3}, Title: "Dune: Part Two", Year: 2024}
+	undated := Choice{DocID: "playlist/70", Ref: media.Ref{Kind: media.KindPlaylist, ID: 70}, Title: "Road Trip"}
+	sameYear := Choice{DocID: "movie/4", Ref: media.Ref{Kind: media.KindMovie, ID: 4}, Title: "Hot Fuzz", Year: 2021}
+
+	tests := map[string]struct {
+		answer  Answer
+		pending []Choice
+		more    []Choice
+		play    string
+		again   bool
+	}{
+		"first":                {answer: Answer{Which: AnswerFirst}, pending: []Choice{old, remake}, play: "movie/1"},
+		"second":               {answer: Answer{Which: AnswerSecond}, pending: []Choice{old, remake}, play: "movie/2"},
+		"second of one":        {answer: Answer{Which: AnswerSecond}, pending: []Choice{old}, again: true},
+		"last":                 {answer: Answer{Which: AnswerLast}, pending: []Choice{old, remake}, play: "movie/2"},
+		"newer":                {answer: Answer{Which: AnswerNewer}, pending: []Choice{remake, old}, play: "movie/2"},
+		"older":                {answer: Answer{Which: AnswerOlder}, pending: []Choice{remake, old}, play: "movie/1"},
+		"newer of one":         {answer: Answer{Which: AnswerNewer}, pending: []Choice{old}, again: true},
+		"newer of the same":    {answer: Answer{Which: AnswerNewer}, pending: []Choice{remake, sameYear}, again: true},
+		"older without a year": {answer: Answer{Which: AnswerOlder}, pending: []Choice{old, undated}, again: true},
+		"unknown position":     {answer: Answer{Which: "third"}, pending: []Choice{old, remake}, again: true},
+		"position wins":        {answer: Answer{Which: AnswerFirst, Title: "hot fuzz"}, pending: []Choice{old, remake}, play: "movie/1"},
+		"nothing":              {pending: []Choice{old, remake}, again: true},
+		"no choices":           {answer: Answer{Which: AnswerFirst}, again: true},
+		"title with year":      {answer: Answer{Title: "Dune 1984"}, pending: []Choice{old, remake}, play: "movie/1"},
+		"title kept back":      {answer: Answer{Title: "dune part two"}, pending: []Choice{old, remake}, more: []Choice{sequel}, play: "movie/3"},
+		"title shared":         {answer: Answer{Title: "dune"}, pending: []Choice{old, remake}, again: true},
+		"another title":        {answer: Answer{Title: "hot fuzz"}, pending: []Choice{old, remake}, play: "movie/4"},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			target, backend, _ := newTarget()
+
+			o := newService().Choose(t.Context(), target, tc.answer, tc.pending, tc.more, nil)
+
+			assert.Equal(t, tc.again, o.AskAgain)
+
+			if tc.again {
+				assert.Equal(t, "match.which_one", o.Say.ID)
+				assert.Empty(t, backend.Calls())
+
+				return
+			}
+
+			assert.Equal(t, []string{"Play " + tc.play + " resume"}, backend.Calls())
+		})
+	}
+}
+
+func TestChooseSearchesTheKindsOffered(t *testing.T) {
+	target, backend, _ := newTarget()
+	show := Choice{DocID: "tvshow/20", Ref: media.Ref{Kind: media.KindTVShow, ID: 20}, Title: "Bluey", Year: 2018}
+
+	o := newService().Choose(t.Context(), target, Answer{Title: "hot fuzz"}, []Choice{show, show}, nil, nil)
+
+	assert.Equal(t, "match.not_found", o.Say.ID, "a film isn't found among shows")
+	assert.Empty(t, backend.Calls())
+}

@@ -32,6 +32,13 @@ BingeShow:
   play_all: "(ابغى|ابي|ودي) اشوف [مسلسل] {Show} كامل"
   play_all_unwatched: "(شغلي|شغل) (الحلقات اللي ما شفتها|الحلقات المتبقية|الحلقات الباقية) من [مسلسل] {Show} [في {Room}]"
   start_binge_mode: "(فعلي|شغلي) (وضع المشاهدة المتواصلة|المشاهدة المتواصلة) (لمسلسل|على مسلسل) {Show} [في {Room}]"
+ChooseMatch:
+  answer: "{Answer}\n{Answer} لو سمحت"
+  meant_answer: "(قصدي|كان قصدي|أقصد|ابغى|ابي|أريد) {Answer}"
+  meant_which: "(قصدي|كان قصدي|أقصد|ابغى|ابي|أريد) {Which}"
+  the_which: "(الفيلم|المسلسل|اللي) {Which}"
+  which: "{Which}"
+  which_please: "{Which} لو سمحت\n(الفيلم|المسلسل) {Which} لو سمحت"
 CleanLibrary:
   clean_library: "(نظفي|نظف) (المكتبة|مكتبتي)"
   clean_library_2: "(نظفي|نظف) مكتبة {Library}"

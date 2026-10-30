@@ -21,6 +21,7 @@ cases:
   - {utterance: "映画の千と千尋の神隠しが見たいです", intent: WatchMovie, slots: {Movie: "千と千尋の神隠し"}}
   - {utterance: "鬼滅の刃の続きを見せてください", intent: WatchNextEpisode, slots: {Show: "鬼滅の刃"}}
   - {utterance: "鬼滅の刃を探してください", intent: PlayMedia, slots: {Query: "鬼滅の刃"}}
+  - {utterance: "二つ目でお願いします", intent: ChooseMatch, slots: {Which: "second"}, pending: "ChooseMatch is in the model from the next deploy"}
   - {utterance: "アクションの映画を選んでください", intent: WatchRandomMovie, slots: {Genre: ""}}
   - {utterance: "予告編を再生してください", intent: WatchMovieTrailer}
   - {utterance: "千と千尋の神隠しシリーズの続きを見せてください", intent: WatchNextInCollection, slots: {Movie: "千と千尋の神隠し"}}
@@ -84,6 +85,8 @@ cases:
   # Answers to "did you mean …?".
   - {utterance: "はいお願いします", intent: AMAZON.YesIntent}
   - {utterance: "いいえ結構です", intent: AMAZON.NoIntent}
+  - {utterance: "古い方です", intent: ChooseMatch, slots: {Which: "older"}, pending: "ChooseMatch is in the model from the next deploy"}
+  - {utterance: "一番古い方", intent: ChooseMatch, slots: {Which: "older"}, pending: "ChooseMatch is in the model from the next deploy"}
   # Bare titles, which free-text and title slots compete for.
   - {utterance: "鬼滅の刃を再生して", intent: PlayMedia, slots: {Query: "鬼滅の刃"}}
   - {utterance: "鬼滅の刃をかけてください", intent: PlayMedia, slots: {Query: "鬼滅の刃"}}

@@ -21,6 +21,7 @@ cases:
   - {utterance: "i want to watch the movie dune", intent: WatchMovie, slots: {Movie: "dune"}}
   - {utterance: "continue watching breaking bad", intent: WatchNextEpisode, slots: {Show: "breaking bad"}}
   - {utterance: "find dune", intent: PlayMedia, slots: {Query: "dune"}}
+  - {utterance: "the second one please", intent: ChooseMatch, slots: {Which: "second"}, pending: "ChooseMatch is in the model from the next deploy"}
   - {utterance: "pick a comedy movie for me", intent: WatchRandomMovie, slots: {Genre: ""}}
   - {utterance: "play the trailer", intent: WatchMovieTrailer}
   - {utterance: "continue the dune collection", intent: WatchNextInCollection, slots: {Movie: "dune"}}
@@ -84,6 +85,7 @@ cases:
   # Answers to "did you mean …?".
   - {utterance: "yes please", intent: AMAZON.YesIntent}
   - {utterance: "no thanks", intent: AMAZON.NoIntent}
+  - {utterance: "i meant the older one", intent: ChooseMatch, slots: {Which: "older"}, pending: "ChooseMatch is in the model from the next deploy"}
   # Bare titles, which free-text and title slots compete for.
   - {utterance: "play dune", intent: PlayMedia, slots: {Query: "dune"}}
   - {utterance: "put on dune", intent: PlayMedia, slots: {Query: "dune"}}

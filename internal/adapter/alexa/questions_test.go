@@ -276,3 +276,142 @@ func TestNoWithoutOtherMatches(t *testing.T) {
 	assert.Equal(t, "I couldn't find any other matches.", speechOf(resp))
 	assert.Nil(t, resp.SessionAttributes)
 }
+
+// TestChooseByPosition checks "the second one" and "the older one" choose between the titles offered, as each language says them.
+func TestChooseByPosition(t *testing.T) {
+	tests := map[string][2]string{
+		"en-AU": {"second", "older"},
+		"de-DE": {"zweite", "ältere"},
+		"es-ES": {"segundo", "más antiguo"},
+		"fr-FR": {"deuxième", "plus ancien"},
+		"it-IT": {"secondo", "più vecchio"},
+		"nl-NL": {"tweede", "oudere"},
+		"pt-BR": {"segunda", "mais antigo"},
+		"ar-SA": {"الثاني", "الأقدم"},
+		"hi-IN": {"दूसरा", "पुराना"},
+		"ja-JP": {"二つ目の方", "古い方"},
+	}
+
+	for locale, heard := range tests {
+		t.Run(locale, func(t *testing.T) {
+			c := newConversation(t, locale)
+			c.say("WatchMovie", map[string]slotSpec{"Movie": {value: "dune"}})
+			c.say("ChooseMatch", map[string]slotSpec{"Which": {value: heard[0]}})
+			assert.Equal(t, []string{"Play movie/2 resume"}, c.backend.Calls(), "the second title offered")
+
+			c = newConversation(t, locale)
+			c.say("WatchMovie", map[string]slotSpec{"Movie": {value: "dune"}})
+			c.say("ChooseMatch", map[string]slotSpec{"Which": {value: heard[1]}})
+			assert.Equal(t, []string{"Play movie/1 resume"}, c.backend.Calls(), "the older title offered")
+		})
+	}
+}
+
+func TestChooseByEveryPosition(t *testing.T) {
+	tests := map[string]string{"first": "movie/1", "second": "movie/2", "last": "movie/2", "newer": "movie/2", "older": "movie/1"}
+
+	for id, want := range tests {
+		t.Run(id, func(t *testing.T) {
+			c := newConversation(t, "en-AU")
+			c.say("WatchMovie", map[string]slotSpec{"Movie": {value: "dune"}})
+
+			resp := c.say("ChooseMatch", map[string]slotSpec{"Which": {value: id, id: id}})
+
+			assert.Equal(t, "Playing Dune.", speechOf(resp))
+			assert.Equal(t, []string{"Play " + want + " resume"}, c.backend.Calls())
+		})
+	}
+}
+
+// TestChoosePositionNotOffered checks an answer that names no title offered asks again.
+func TestChoosePositionNotOffered(t *testing.T) {
+	c := newConversation(t, "en-AU")
+	c.say("WatchMovie", map[string]slotSpec{"Movie": {value: "fuzz"}})
+
+	for _, which := range []string{"second", "newer", "older", ""} {
+		resp := c.say("ChooseMatch", map[string]slotSpec{"Which": {value: which, id: which}})
+
+		assert.Equal(t, "There's more than one. Did you mean Hot Fuzz from 2007?", speechOf(resp), which)
+		assert.Equal(t, []string{"movie/4"}, pendingOf(t, resp))
+	}
+
+	assert.Empty(t, c.backend.Calls())
+
+	c.say("ChooseMatch", map[string]slotSpec{"Which": {value: "first", id: "first"}})
+	assert.Equal(t, []string{"Play movie/4 resume"}, c.backend.Calls())
+}
+
+// TestChooseByTitle checks a bare title answers the question: one of the titles found, a title the question found but hadn't offered yet, or a new search.
+func TestChooseByTitle(t *testing.T) {
+	tests := map[string]struct {
+		answer string
+		calls  []string
+		speech string
+	}{
+		"offered":     {answer: "dune 2021", calls: []string{"Play movie/2 resume"}, speech: "Playing Dune."},
+		"not offered": {answer: "dune part two", calls: []string{"Play movie/3 resume"}, speech: "Playing Dune: Part Two."},
+		"another":     {answer: "hot fuzz", calls: []string{"Play movie/4 resume"}, speech: "Playing Hot Fuzz."},
+		"several":     {answer: "dune", speech: "There's more than one. Did you mean Dune from 1984 or Dune from 2021?"},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			c := newConversation(t, "en-AU")
+			c.say("WatchMovie", map[string]slotSpec{"Movie": {value: "dun"}})
+
+			resp := c.say("ChooseMatch", map[string]slotSpec{"Answer": {value: tc.answer}})
+
+			assert.Equal(t, tc.speech, speechOf(resp))
+			assert.Equal(t, tc.calls, c.backend.Calls())
+		})
+	}
+}
+
+// TestChooseOutsideQuestion checks an answer with no question waiting is not acted on, and that a one-word command Alexa heard as an answer still runs.
+func TestChooseOutsideQuestion(t *testing.T) {
+	c := newConversation(t, "en-AU")
+
+	resp := c.say("ChooseMatch", map[string]slotSpec{"Which": {value: "first", id: "first"}})
+	assert.Equal(t, "Sorry, I didn't catch that. Try: play the movie Dune.", speechOf(resp))
+
+	resp = c.say("ChooseMatch", map[string]slotSpec{"Answer": {value: "dune"}})
+	assert.Equal(t, "Sorry, I didn't catch that. Try: play the movie Dune.", speechOf(resp))
+	assert.Empty(t, c.backend.Calls(), "a bare title outside a question plays nothing")
+
+	c.say("ChooseMatch", map[string]slotSpec{"Answer": {value: "select"}})
+	assert.Equal(t, []string{"Input select"}, c.backend.Calls(), "\"select\" is Navigate's")
+
+	c = newConversation(t, "de-DE")
+	c.say("ChooseMatch", map[string]slotSpec{"Answer": {value: "runter"}})
+	assert.Equal(t, []string{"Input down"}, c.backend.Calls(), "in the listener's language")
+
+	c = newConversation(t, "en-AU")
+	c.say("Power", map[string]slotSpec{"PowerAction": {value: "shut down", id: "shutdown"}})
+
+	resp = c.say("ChooseMatch", map[string]slotSpec{"Which": {value: "first", id: "first"}})
+	assert.Equal(t, "Sorry, I didn't catch that. Are you sure you want to shut down Lounge?", speechOf(resp), "a question without choices is asked again")
+	assert.Empty(t, c.backend.Calls())
+}
+
+// TestChooseAfterNo checks the titles "no" moved on to can be chosen by position.
+func TestChooseAfterNo(t *testing.T) {
+	c := newConversation(t, "en-AU")
+	c.say("WatchMovie", map[string]slotSpec{"Movie": {value: "dun"}})
+	c.say("AMAZON.NoIntent", nil)
+
+	c.say("ChooseMatch", map[string]slotSpec{"Which": {value: "first", id: "first"}})
+
+	assert.Equal(t, []string{"Play movie/3 resume"}, c.backend.Calls())
+}
+
+// TestChooseWithoutStoredQuestion checks choices kept without their question are asked about with the usual fallback.
+func TestChooseWithoutStoredQuestion(t *testing.T) {
+	c := newConversation(t, "en-AU")
+	c.say("WatchMovie", map[string]slotSpec{"Movie": {value: "fuzz"}})
+	delete(c.attrs, sessionQuestion)
+
+	resp := c.say("ChooseMatch", map[string]slotSpec{"Which": {value: "second", id: "second"}})
+
+	assert.Equal(t, "There's more than one. Sorry, I didn't catch that. Try: play the movie Dune.", speechOf(resp))
+	assert.Equal(t, []string{"movie/4"}, pendingOf(t, resp))
+}

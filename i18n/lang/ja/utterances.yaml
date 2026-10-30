@@ -32,6 +32,13 @@ BingeShow:
   play_all: "{Show}を(全話|全部)(再生して|見せて)[ください]"
   play_all_unwatched: "[{Room}で]{Show}の(未視聴の|まだ見ていない|残りの)エピソードを(全部|すべて)(再生して|流して)[ください]"
   start_binge_mode: "[{Room}で]{Show}の一気見モードを(開始して|オンにして|始めて)[ください]"
+ChooseMatch:
+  answer: "{Answer}\n{Answer}の方\n{Answer}のほう"
+  meant_answer: "{Answer}(です|のことです|でお願い|でお願いします)"
+  meant_which: "{Which}(です|のことです)"
+  the_which: "{Which}で"
+  which: "{Which}"
+  which_please: "{Which}で(お願い|お願いします)\n{Which}にして[ください]"
 CleanLibrary:
   clean_library: "ライブラリを(クリーンアップして|整理して|掃除して)[ください]"
   clean_library_2: "{Library}ライブラリを(クリーンアップして|整理して|掃除して)[ください]"

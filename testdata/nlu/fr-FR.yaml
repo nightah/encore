@@ -21,6 +21,7 @@ cases:
   - {utterance: "je veux regarder le film intouchables", intent: WatchMovie, slots: {Movie: "intouchables"}}
   - {utterance: "continue à regarder lupin", intent: WatchNextEpisode, slots: {Show: "lupin"}}
   - {utterance: "trouve intouchables", intent: PlayMedia, slots: {Query: "intouchables"}}
+  - {utterance: "la deuxième s'il te plaît", intent: ChooseMatch, slots: {Which: "second"}, pending: "ChooseMatch is in the model from the next deploy"}
   - {utterance: "choisis moi un film de comédie", intent: WatchRandomMovie, slots: {Genre: ""}}
   - {utterance: "mets la bande-annonce", intent: WatchMovieTrailer}
   - {utterance: "continue la saga intouchables", intent: WatchNextInCollection, slots: {Movie: "intouchables"}}
@@ -84,6 +85,9 @@ cases:
   # Answers to "did you mean …?".
   - {utterance: "oui s'il te plaît", intent: AMAZON.YesIntent}
   - {utterance: "non merci", intent: AMAZON.NoIntent}
+  - {utterance: "je veux dire le plus ancien", intent: ChooseMatch, slots: {Which: "older"}, pending: "ChooseMatch is in the model from the next deploy"}
+  - {utterance: "je veux dire l'autre", intent: ChooseMatch, slots: {Which: "second"}, pending: "ChooseMatch is in the model from the next deploy"}
+  - {utterance: "l'ancien", intent: ChooseMatch, slots: {Which: "older"}, pending: "ChooseMatch is in the model from the next deploy"}
   # Bare titles, which free-text and title slots compete for.
   - {utterance: "joue intouchables", intent: PlayMedia, slots: {Query: "intouchables"}}
   # Rooms.

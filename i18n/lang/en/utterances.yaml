@@ -32,6 +32,13 @@ BingeShow:
   play_all: "(play|watch) all of {Show}"
   play_all_unwatched: "(play|queue up) (all|the rest of) the (unwatched|remaining) episodes of {Show} [(in|on) the {Room}]"
   start_binge_mode: "(start|turn on) binge mode (for|on) {Show} [(in|on) the {Room}]"
+ChooseMatch:
+  answer: "{Answer}\n{Answer} please"
+  meant_answer: "i (meant|mean|want|said) {Answer}"
+  meant_which: "i (meant|mean|want) the {Which} [one]"
+  the_which: "the {Which} [one|film|movie|show|series]"
+  which: "{Which} [one]"
+  which_please: "the {Which} one please"
 CleanLibrary:
   clean_library: "clean [up] [the|my] library"
   clean_library_2: "clean [up] [the|my] {Library} library"
