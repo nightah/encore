@@ -15,6 +15,10 @@
     "title": "Compte développeur Amazon",
     "vendor": "ID fournisseur"
   },
+  "autoDeployPaused": {
+    "resume": "",
+    "title": ""
+  },
   "content": {
     "movies": "Films",
     "music": "Musique",
@@ -46,6 +50,7 @@
       "legend": "Langues"
     },
     "needsDeploy": {
+      "automatic": "",
       "library": "De nouveaux titres sont arrivés dans la médiathèque depuis le dernier déploiement. Encore les trouve déjà ; redéployez pour les ajouter au modèle de la skill.",
       "settings": "Les paramètres ont changé depuis le dernier déploiement. Redéployez pour les appliquer."
     },
