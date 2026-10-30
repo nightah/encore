@@ -32,6 +32,13 @@ BingeShow:
   play_all: "speel alle afleveringen van {Show} achter elkaar"
   play_all_unwatched: "speel alle (ongeziene|resterende|overige) afleveringen van {Show} [(in de|in het|op de|op) {Room}]\nzet alle (ongeziene|resterende) afleveringen van {Show} op"
   start_binge_mode: "start [de] bingemodus (voor|met) {Show} [(in de|in het|op de|op) {Room}]\nzet [de] bingemodus voor {Show} aan"
+ChooseMatch:
+  answer: "{Answer}\n{Answer} graag\n{Answer} alsjeblieft"
+  meant_answer: "ik (bedoel|bedoelde|wil) {Answer}"
+  meant_which: "ik (bedoel|bedoelde|wil) (de|het) {Which}"
+  the_which: "(de|het) {Which}\nde {Which} (film|serie)"
+  which: "{Which}"
+  which_please: "(de|het) {Which} (graag|alsjeblieft)"
 CleanLibrary:
   clean_library: "(ruim|schoon) [de|mijn] bibliotheek op"
   clean_library_2: "(ruim|schoon) [de|mijn] {Library} bibliotheek op"

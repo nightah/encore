@@ -21,6 +21,7 @@ cases:
   - {utterance: "voglio vedere il film la vita è bella", intent: WatchMovie, slots: {Movie: "la vita è bella"}}
   - {utterance: "continua a guardare gomorra", intent: WatchNextEpisode, slots: {Show: "gomorra"}}
   - {utterance: "trova gomorra", intent: PlayMedia, slots: {Query: "gomorra"}}
+  - {utterance: "la seconda per favore", intent: ChooseMatch, slots: {Which: "second"}, pending: "ChooseMatch is in the model from the next deploy"}
   - {utterance: "scegli tu un film di commedia per me", intent: WatchRandomMovie, slots: {Genre: ""}}
   - {utterance: "metti il trailer", intent: WatchMovieTrailer}
   - {utterance: "continua la saga di la vita è bella", intent: WatchNextInCollection, slots: {Movie: "la vita è bella"}}
@@ -84,6 +85,9 @@ cases:
   # Answers to "did you mean …?".
   - {utterance: "sì grazie", intent: AMAZON.YesIntent}
   - {utterance: "no grazie", intent: AMAZON.NoIntent}
+  - {utterance: "intendevo il più vecchio", intent: ChooseMatch, slots: {Which: "older"}, pending: "ChooseMatch is in the model from the next deploy"}
+  - {utterance: "intendevo l'altro", intent: ChooseMatch, slots: {Which: "second"}, pending: "ChooseMatch is in the model from the next deploy"}
+  - {utterance: "l'ultimo", intent: ChooseMatch, slots: {Which: "last"}, pending: "ChooseMatch is in the model from the next deploy"}
   # Bare titles, which free-text and title slots compete for.
   - {utterance: "riproduci gomorra", intent: PlayMedia, slots: {Query: "gomorra"}}
   - {utterance: "metti gomorra", intent: PlayMedia, slots: {Query: "gomorra"}}

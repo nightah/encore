@@ -32,6 +32,13 @@ BingeShow:
   play_all: "{Show} के सारे एपिसोड (चलाओ|दिखाओ|लगाओ)"
   play_all_unwatched: "[{Room} में] {Show} के (अनदेखे|बचे हुए|बाकी अनदेखे) एपिसोड (चलाओ|लगाओ|दिखाओ)"
   start_binge_mode: "[{Room} में] {Show} के लिए बिंज मोड (चालू करो|शुरू करो|ऑन करो|लगाओ)"
+ChooseMatch:
+  answer: "{Answer}\n{Answer} वाला\n{Answer} वाली"
+  meant_answer: "मेरा मतलब {Answer} (था|से था|से है)"
+  meant_which: "मेरा मतलब {Which} (वाला|वाली|वाले) (था|से था|से है)"
+  the_which: "{Which} (वाला|वाली|वाले)\n{Which} (फ़िल्म|फिल्म|शो)"
+  which: "{Which}"
+  which_please: "{Which} (वाला|वाली|वाले) (चलाओ|चलाइए|लगाओ|लगा दो)"
 CleanLibrary:
   clean_library: "[मेरी] लाइब्रेरी (साफ़ करो|साफ करो|क्लीन करो|clean करो)"
   clean_library_2: "[मेरी] {Library} लाइब्रेरी (साफ़ करो|साफ करो|क्लीन करो|clean करो)"

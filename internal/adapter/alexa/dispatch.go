@@ -50,6 +50,13 @@ func (h *Handler) dispatch(ctx context.Context, env *RequestEnvelope, t actions.
 	case "AMAZON.NoIntent":
 		// Only reached when a recommendation is waiting for an answer: suggest another.
 		return svc.Recommend(ctx, t, *followup.Recommend, pending)
+	case chooseIntent:
+		var more []actions.Choice
+		if followup != nil {
+			more = followup.More
+		}
+
+		return svc.Choose(ctx, t, actions.Answer{Which: sl.id("Which", "MATCH_CHOICE"), Title: sl.value("Answer")}, pending, more, progress)
 
 	// Playing by name.
 	case "WatchMovie":

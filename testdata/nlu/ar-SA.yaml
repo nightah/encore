@@ -21,6 +21,7 @@ cases:
   - {utterance: "ابغى اشوف فيلم الرسالة", intent: WatchMovie, slots: {Movie: "الرسالة"}}
   - {utterance: "كملي مشاهدة مسلسل باب الحارة", intent: WatchNextEpisode, slots: {Show: "باب الحارة"}}
   - {utterance: "لاقي لي باب الحارة", intent: PlayMedia, slots: {Query: "باب الحارة"}}
+  - {utterance: "الثاني لو سمحت", intent: ChooseMatch, slots: {Which: "second"}, pending: "ChooseMatch is in the model from the next deploy"}
   - {utterance: "اختاري لي فيلم أكشن", intent: WatchRandomMovie, slots: {Genre: ""}}
   - {utterance: "شغلي الإعلان", intent: WatchMovieTrailer}
   - {utterance: "كملي سلسلة الرسالة", intent: WatchNextInCollection, slots: {Movie: "الرسالة"}}
@@ -84,6 +85,7 @@ cases:
   # Answers to "did you mean …?".
   - {utterance: "ايوه", intent: AMAZON.YesIntent}
   - {utterance: "لا شكرا", intent: AMAZON.NoIntent}
+  - {utterance: "قصدي الأقدم", intent: ChooseMatch, slots: {Which: "older"}, pending: "ChooseMatch is in the model from the next deploy"}
   # Bare titles, which free-text and title slots compete for.
   - {utterance: "شغلي باب الحارة", intent: PlayMedia, slots: {Query: "باب الحارة"}}
   - {utterance: "حطي باب الحارة", intent: PlayMedia, slots: {Query: "باب الحارة"}}

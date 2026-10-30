@@ -21,6 +21,7 @@ cases:
   - {utterance: "मुझे फ़िल्म शोले देखनी है", intent: WatchMovie, slots: {Movie: "शोले"}}
   - {utterance: "पंचायत देखना जारी रखो", intent: WatchNextEpisode, slots: {Show: "पंचायत"}}
   - {utterance: "शोले ढूँढो", intent: PlayMedia, slots: {Query: "शोले"}}
+  - {utterance: "दूसरा वाला चलाओ", intent: ChooseMatch, slots: {Which: "second"}, pending: "ChooseMatch is in the model from the next deploy"}
   - {utterance: "मेरे लिए कोई एक्शन फ़िल्म चुनो", intent: WatchRandomMovie, slots: {Genre: ""}}
   - {utterance: "ट्रेलर दिखाओ", intent: WatchMovieTrailer}
   - {utterance: "शोले सीरीज़ जारी रखो", intent: WatchNextInCollection, slots: {Movie: "शोले"}}
@@ -84,6 +85,8 @@ cases:
   # Answers to "did you mean …?".
   - {utterance: "हाँ जी", intent: AMAZON.YesIntent}
   - {utterance: "नहीं धन्यवाद", intent: AMAZON.NoIntent}
+  - {utterance: "मेरा मतलब पुराना वाला था", intent: ChooseMatch, slots: {Which: "older"}, pending: "ChooseMatch is in the model from the next deploy"}
+  - {utterance: "सबसे नया वाला", intent: ChooseMatch, slots: {Which: "newer"}, pending: "ChooseMatch is in the model from the next deploy"}
   # Bare titles, which free-text and title slots compete for.
   - {utterance: "शोले चलाओ", intent: PlayMedia, slots: {Query: "शोले"}}
   - {utterance: "शोले लगाओ", intent: PlayMedia, slots: {Query: "शोले"}}

@@ -30,6 +30,7 @@ func NewSpeech(src *skillmodel.Sources, log *slog.Logger) (*Speech, error) {
 		slotIDs:     map[string]map[string]map[string]string{},
 		roomPhrases: map[string][]roomPhrase{},
 		queryForms:  map[string][]queryForm{},
+		bareSlots:   map[string][]bareSlot{},
 		log:         log,
 	}
 
@@ -61,6 +62,8 @@ func NewSpeech(src *skillmodel.Sources, log *slog.Logger) (*Speech, error) {
 		if s.queryForms[locale], err = languageQueryForms(s.languages[locale], src.Model, utterances); err != nil {
 			return nil, fmt.Errorf("locale %s: %w", locale, err)
 		}
+
+		s.bareSlots[locale] = bareSlots(src.Model, utterances)
 	}
 
 	if _, ok := s.responses[fallbackLocale]; !ok {
@@ -215,6 +218,56 @@ var ordinals = map[string]map[string]string{
 	"en": {"1st": "first"},
 	"nl": {"1e": "eerste", "1ste": "eerste"},
 	"pt": {"1º": "primeiro", "1°": "primeiro"},
+}
+
+// BareCommand reads a title said on its own as the one-word command it may be. Alexa can hear "select", said after a remote-style command, as an answer to a question (ChooseMatch's lone {Answer}) rather than Navigate's lone {NavAction}, since both samples are a slot alone; heard is the intent with that slot when it is one of the slot's values in locale.
+func (s *Speech) BareCommand(locale, heard string) (Intent, bool) {
+	slots, ok := s.bareSlots[locale]
+	if !ok {
+		locale, slots = fallbackLocale, s.bareSlots[fallbackLocale]
+	}
+
+	for _, b := range slots {
+		if s.SlotID(locale, b.typ, heard) != "" {
+			return Intent{Name: b.intent, Slots: map[string]Slot{b.slot: {Name: b.slot, Value: heard}}}, true
+		}
+	}
+
+	return Intent{}, false
+}
+
+// bareSlots finds the slots of custom types that one of their intent's samples is alone, other than ChooseMatch's.
+func bareSlots(model skillmodel.Model, utterances map[string][]string) []bareSlot {
+	var out []bareSlot
+
+	for _, in := range model.Intents {
+		if in.Name == chooseIntent {
+			continue
+		}
+
+		for _, slot := range in.Slots {
+			if skillmodel.IsBuiltin(slot.Type) {
+				continue
+			}
+
+			if sampleIsAlone(utterances[in.Name], "{"+slot.Name+"}") {
+				out = append(out, bareSlot{intent: in.Name, slot: slot.Name, typ: slot.Type})
+			}
+		}
+	}
+
+	return out
+}
+
+// sampleIsAlone reports whether one of the patterns' samples is ref alone. A pattern that doesn't expand has failed roomPhrases already.
+func sampleIsAlone(patterns []string, ref string) bool {
+	for _, pattern := range patterns {
+		if samples, err := skillmodel.Expand(pattern); err == nil && slices.Contains(samples, ref) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // queryForms collects the samples of each TV intent that start with one of PlayMedia's carrier phrases, without it and without a room, most specific first. Samples that are only a slot after the carrier, such as "play {Show}", are left out: any query would match them.

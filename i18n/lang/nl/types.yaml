@@ -77,6 +77,25 @@ LIBRARY_TYPE:
     films
     series
     videobibliotheek
+MATCH_CHOICE:
+  first: |-
+    eerste
+  last: |-
+    laatste
+  newer: |-
+    nieuwere
+    nieuwste
+    nieuwe
+    recentere
+    recentste
+  older: |-
+    oudere
+    oudste
+    oude
+    originele
+  second: |-
+    tweede
+    andere
 MEDIA_TYPE:
   album: |-
     album

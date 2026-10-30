@@ -72,6 +72,36 @@ LIBRARY_TYPE:
     t. v.
     dei video
     dei film
+MATCH_CHOICE:
+  first: |-
+    primo
+    prima
+  last: |-
+    ultimo
+    ultima
+    l'ultimo
+    l'ultima
+  newer: |-
+    più nuovo
+    più nuova
+    più recente
+    nuovo
+    nuova
+    recente
+  older: |-
+    più vecchio
+    più vecchia
+    vecchio
+    vecchia
+    originale
+    l'originale
+  second: |-
+    secondo
+    seconda
+    altro
+    altra
+    l'altro
+    l'altra
 MEDIA_TYPE:
   album: |-
     album

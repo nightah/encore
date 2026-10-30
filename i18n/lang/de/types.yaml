@@ -73,6 +73,45 @@ LIBRARY_TYPE:
     filme
     serien
     videobibliothek
+MATCH_CHOICE:
+  first: |-
+    erste
+    ersten
+    erster
+    erstes
+  last: |-
+    letzte
+    letzten
+    letzter
+    letztes
+  newer: |-
+    neuere
+    neueren
+    neuerer
+    neueres
+    neueste
+    neuesten
+    neue
+    neuen
+    aktuellere
+  older: |-
+    ältere
+    älteren
+    älterer
+    älteres
+    älteste
+    ältesten
+    alte
+    alten
+    originale
+    original
+  second: |-
+    zweite
+    zweiten
+    zweiter
+    zweites
+    andere
+    anderen
 MEDIA_TYPE:
   album: |-
     album

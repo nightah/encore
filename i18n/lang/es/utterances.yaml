@@ -29,6 +29,13 @@ BingeShow:
   play_all: "(pon|reproduce) toda la serie {Show}"
   play_all_unwatched: "(pon|reproduce) [todos] los (capítulos|episodios) (pendientes|sin ver|que me quedan) de {Show} [en (el|la) {Room}]\n(pon|reproduce) el resto de {Show} [en (el|la) {Room}]"
   start_binge_mode: "(activa|pon) el modo maratón (con|de|para) {Show} [en (el|la) {Room}]"
+ChooseMatch:
+  answer: "{Answer}\n{Answer} por favor"
+  meant_answer: "(me refiero a|quiero|quería) {Answer}"
+  meant_which: "me refiero (al|a la) {Which}\n(quiero|quería) (el|la) {Which}"
+  the_which: "(el|la) {Which}\n(la película|la serie) {Which}"
+  which: "{Which}"
+  which_please: "(el|la) {Which} por favor"
 CleanLibrary:
   clean_library: "limpia [la|mi] biblioteca"
   clean_library_2: "limpia [la|mi] biblioteca de {Library}"

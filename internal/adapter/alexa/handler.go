@@ -195,6 +195,25 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, tr *requestT
 		msg := fallbackMessage()
 
 		return h.respond(locale, actions.Outcome{Say: msg, Reprompt: &msg}, false), nil
+	case chooseIntent:
+		// An answer is acted on only while a question's titles wait for one.
+		if len(pendingChoices(env.Session.Attributes)) > 0 {
+			break
+		}
+
+		if bare, ok := h.Speech.BareCommand(locale, intent.Slots["Answer"].Value); ok {
+			intent = bare
+
+			break
+		}
+
+		if question != nil {
+			return h.respond(locale, askAgain(env, "question.again", *question), false), nil
+		}
+
+		msg := fallbackMessage()
+
+		return h.respond(locale, actions.Outcome{Say: msg, Reprompt: &msg}, false), nil
 	case "IdentifyEcho":
 		o := h.identify(ctx, deviceID)
 
@@ -245,6 +264,15 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, tr *requestT
 	tr.setTarget(target, timed)
 
 	o := h.dispatch(ctx, env, target, intent)
+
+	if o.AskAgain {
+		if question == nil {
+			msg := fallbackMessage()
+			question = &msg
+		}
+
+		o = askAgain(env, o.Say.ID, *question)
+	}
 
 	return h.respond(locale, o, target.ConfirmSound), &o
 }

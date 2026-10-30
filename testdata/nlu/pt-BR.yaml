@@ -21,6 +21,7 @@ cases:
   - {utterance: "quero assistir o filme cidade de deus", intent: WatchMovie, slots: {Movie: "cidade de deus"}}
   - {utterance: "continua assistindo sintonia", intent: WatchNextEpisode, slots: {Show: "sintonia"}}
   - {utterance: "encontra cidade de deus", intent: PlayMedia, slots: {Query: "cidade de deus"}}
+  - {utterance: "a segunda por favor", intent: ChooseMatch, slots: {Which: "second"}, pending: "ChooseMatch is in the model from the next deploy"}
   - {utterance: "escolhe um filme de comédia para mim", intent: WatchRandomMovie, slots: {Genre: ""}}
   - {utterance: "coloca o trailer", intent: WatchMovieTrailer}
   - {utterance: "continua a coleção cidade de deus", intent: WatchNextInCollection, slots: {Movie: "cidade de deus"}}
@@ -84,6 +85,7 @@ cases:
   # Answers to "did you mean …?".
   - {utterance: "sim por favor", intent: AMAZON.YesIntent}
   - {utterance: "não obrigado", intent: AMAZON.NoIntent}
+  - {utterance: "eu quis dizer o mais antigo", intent: ChooseMatch, slots: {Which: "older"}, pending: "ChooseMatch is in the model from the next deploy"}
   # Bare titles, which free-text and title slots compete for.
   - {utterance: "toca cidade de deus", intent: PlayMedia, slots: {Query: "cidade de deus"}}
   - {utterance: "coloca cidade de deus", intent: PlayMedia, slots: {Query: "cidade de deus"}}
