@@ -15,6 +15,10 @@
     "title": "Cuenta de desarrollador de Amazon",
     "vendor": "ID de proveedor"
   },
+  "autoDeployPaused": {
+    "resume": "",
+    "title": ""
+  },
   "content": {
     "movies": "Películas",
     "music": "Música",
@@ -46,6 +50,7 @@
       "legend": "Configuraciones regionales"
     },
     "needsDeploy": {
+      "automatic": "",
       "library": "Hay títulos nuevos en la biblioteca desde el último despliegue. Encore ya los encuentra; vuelve a desplegar para añadirlos al modelo de la skill.",
       "settings": "La configuración ha cambiado desde el último despliegue. Vuelve a desplegar para aplicarla."
     },
