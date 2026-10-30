@@ -193,14 +193,15 @@ func TestSplitAloneKeepsWordCoverage(t *testing.T) {
 	assert.Greater(t, ix.scoreAlias(&q, &a, -1).score, want.score, "an unspaced language covers a word inside the title")
 }
 
-// TestNormalizeJapaneseIdempotent checks that only the Japanese scripts are segmented, a run in another script staying one word and a combining mark on the letter before it, and that normalising the result again changes nothing.
+// TestNormalizeJapaneseIdempotent checks that only the Japanese scripts are segmented, a run in another script staying one word (or going through the rules of the language that reads it) and a combining mark on the letter before it, and that normalising the result again changes nothing.
 func TestNormalizeJapaneseIdempotent(t *testing.T) {
 	for _, tc := range []struct {
 		in, want string
 	}{
 		{"Москва", "москва"},
 		{"Ελλάδα", "ελλαδα"},
-		{"दिल चाहता है", "दिल चाहता है"},
+		{"दिल चाहता है", "dil chahta hai"},
+		{"々अ", "々 a"},
 		{"ᛮ̀", "ᛮ̀"},
 		{"モスクワМосква", "mosukuwa москва"},
 		{"ア́", "a"},

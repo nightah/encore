@@ -226,7 +226,7 @@ func withoutArticle(tok string) string {
 
 // romanizeArabic writes an Arabic token as a Latin consonant skeleton (arabicLatin), so an Arabic request and an English title asked for in Arabic letters meet ("تايتانك", "titanic"). Short vowels are not written in Arabic and stay out; the long vowels are their letters: ا as a, و and ي as u and i after a consonant and as w and y at the start of a word or after a vowel. A final ه is a ta marbuta, folded to ه, and is written a, as it is said. A token without Arabic letters is returned as it is.
 func romanizeArabic(tok string) string {
-	if !strings.ContainsFunc(tok, func(r rune) bool { return r >= 0x0600 && r <= 0x06FF }) {
+	if !strings.ContainsFunc(tok, isArabicLetter) {
 		return tok
 	}
 
@@ -271,3 +271,6 @@ func romanizeArabic(tok string) string {
 
 	return b.String()
 }
+
+// isArabicLetter reports whether r is in the Arabic block, where the letters romanizeArabic writes are.
+func isArabicLetter(r rune) bool { return r >= 0x0600 && r <= 0x06FF }
