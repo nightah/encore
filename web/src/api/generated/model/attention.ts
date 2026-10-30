@@ -5,12 +5,17 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
+import type { AttentionStage } from "./attentionStage.ts";
 
 export interface Attention {
+  /** For requests_rejected, how many requests the check refused in the last day */
+  count?: number;
   detail: string;
-  /** unlinked_device, amazon_not_connected, amazon_reauthorise, privacy_unanswered, skill_not_deployed, needs_deploy, deploy_failed, auto_deploy_paused, instance_offline, kodi_unauthorized, no_instances */
+  /** unlinked_device, amazon_not_connected, amazon_reauthorise, privacy_unanswered, skill_not_deployed, needs_deploy, deploy_failed, auto_deploy_paused, instance_offline, kodi_unauthorized, no_instances, requests_rejected */
   kind: string;
-  /** A web interface route: /echo-devices, /kodi, /alexa-skill, /request-log, /library or /settings */
+  /** A web interface route: /echo-devices, /kodi, /alexa-skill, /request-log, /library or /settings; empty when the fix is outside Encore */
   link: string;
+  /** For requests_rejected, the check that refused them */
+  stage?: AttentionStage;
   title: string;
 }

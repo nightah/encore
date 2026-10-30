@@ -7,6 +7,7 @@ import type {
   Library,
   LocaleInvocation,
   RecentTitle,
+  RejectedRequests,
   RequestDetail,
   Room,
   Settings,
@@ -41,6 +42,7 @@ export interface MockDb {
   recent: Record<number, RecentTitle[]>;
   settings: Settings;
   attention: Attention[];
+  rejectedRequests: RejectedRequests[];
   nextId: number;
   helloSent: boolean;
 }

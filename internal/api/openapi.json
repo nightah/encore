@@ -66,15 +66,29 @@
       "Attention": {
         "additionalProperties": false,
         "properties": {
+          "count": {
+            "description": "For requests_rejected, how many requests the check refused in the last day",
+            "format": "int64",
+            "type": "integer"
+          },
           "detail": {
             "type": "string"
           },
           "kind": {
-            "description": "unlinked_device, amazon_not_connected, amazon_reauthorise, privacy_unanswered, skill_not_deployed, needs_deploy, deploy_failed, auto_deploy_paused, instance_offline, kodi_unauthorized, no_instances",
+            "description": "unlinked_device, amazon_not_connected, amazon_reauthorise, privacy_unanswered, skill_not_deployed, needs_deploy, deploy_failed, auto_deploy_paused, instance_offline, kodi_unauthorized, no_instances, requests_rejected",
             "type": "string"
           },
           "link": {
-            "description": "A web interface route: /echo-devices, /kodi, /alexa-skill, /request-log, /library or /settings",
+            "description": "A web interface route: /echo-devices, /kodi, /alexa-skill, /request-log, /library or /settings; empty when the fix is outside Encore",
+            "type": "string"
+          },
+          "stage": {
+            "description": "For requests_rejected, the check that refused them",
+            "enum": [
+              "timestamp",
+              "signature",
+              "skill_id"
+            ],
             "type": "string"
           },
           "title": {
@@ -2009,6 +2023,13 @@
             },
             "type": "array"
           },
+          "rejected_requests": {
+            "description": "Requests the Alexa endpoint refused since Encore started, by the check that refused them, in the order the checks run. Only stages that refused at least one request are listed.",
+            "items": {
+              "$ref": "#/components/schemas/RejectedRequests"
+            },
+            "type": "array"
+          },
           "requests_today": {
             "$ref": "#/components/schemas/RequestsToday"
           },
@@ -2023,7 +2044,8 @@
           "requests_today",
           "instances",
           "recent_requests",
-          "attention"
+          "attention",
+          "rejected_requests"
         ],
         "type": "object"
       },
@@ -2242,6 +2264,38 @@
           "added_at",
           "findable",
           "in_skill_model"
+        ],
+        "type": "object"
+      },
+      "RejectedRequests": {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "format": "int64",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "last_at": {
+            "description": "When this check last refused a request",
+            "format": "date-time",
+            "type": "string"
+          },
+          "stage": {
+            "description": "body: unreadable, too large, undecodable or with no timestamp; unsigned: no signature headers, or a certificate URL that isn't Amazon's, so not from Alexa; timestamp: signed by Alexa but more than 150 seconds from Encore's clock; signature: a bad signature or certificate chain, or the chain couldn't be fetched; skill_id: signed by Alexa for another skill",
+            "enum": [
+              "body",
+              "unsigned",
+              "timestamp",
+              "signature",
+              "skill_id"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "stage",
+          "count",
+          "last_at"
         ],
         "type": "object"
       },

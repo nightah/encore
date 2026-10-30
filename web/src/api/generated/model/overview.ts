@@ -10,6 +10,7 @@ import type { EndpointCheck } from "./endpointCheck.ts";
 import type { Instance } from "./instance.ts";
 import type { OverviewLibs } from "./overviewLibs.ts";
 import type { OverviewSkill } from "./overviewSkill.ts";
+import type { RejectedRequests } from "./rejectedRequests.ts";
 import type { RequestSummary } from "./requestSummary.ts";
 import type { RequestsToday } from "./requestsToday.ts";
 
@@ -19,6 +20,8 @@ export interface Overview {
   instances: Instance[];
   libraries: OverviewLibs;
   recent_requests: RequestSummary[];
+  /** Requests the Alexa endpoint refused since Encore started, by the check that refused them, in the order the checks run. Only stages that refused at least one request are listed. */
+  rejected_requests: RejectedRequests[];
   requests_today: RequestsToday;
   skill: OverviewSkill;
 }
