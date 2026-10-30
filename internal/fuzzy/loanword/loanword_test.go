@@ -55,16 +55,16 @@ func TestNativeHindi(t *testing.T) {
 	for in, want := range map[string][]string{
 		"Frozen":                  {"फ्रोजन", "फ्रोजेन"},
 		"Mr. India":               {"मिस्टर. इंडिया", "म्र. इंदिआ"},
-		"Deewaar":                 {"डीवैआर", "दीवार"},
+		"Deewaar":                 {"दीवार", "डीवैआर"},
 		"Zanjeer":                 {"जैंजियर", "जंजीर"},
-		"Yeh Jawaani Hai Deewani": {"ये जॉऐऐनी हे डीवॉनी", "ये जवानी है दीवनी"},
+		"Yeh Jawaani Hai Deewani": {"ये जवानी है दीवनी", "ये जॉऐऐनी हे डीवॉनी"},
 		"The Beatles":             {"द बीटल्स", "थे बेअत्लेस"},
 		"K.G.F: Chapter 1":        {"केजीएफ: चैप्टर 1", "केजीएफ: चप्तेर 1"},
 		"RRR":                     {"आरआरआर"},
 		"R. D. Burman":            {"आरडी बरमैन", "आरडी बुर्मन"},
 		"Mission: Impossible":     {"मिशन: इंपॉसिबल", "मिस्सिओन: इम्पोस्सिब्ले"},
 		"Stranger Things":         {"स्ट्रेंजर थिंग्स", "स्त्रंगेर थिंग्स"},
-		"Chhota Bheem":            {"च्होटा ब्हीम", "छोता भीम"},
+		"Chhota Bheem":            {"छोता भीम", "च्होटा ब्हीम"},
 		"Krrish":                  {"क्रिश", "क्र्रिश"},
 		"Pushpa":                  {"पुश्पा", "पुश्पा"[:0] + "पुश्पा"},
 	} {
@@ -290,6 +290,14 @@ func TestEnglish(t *testing.T) {
 		"ah":         "ae",
 	} {
 		assert.Equal(t, want, strings.Join(english(in), " "), in)
+	}
+}
+
+func TestRomanisedScore(t *testing.T) {
+	for in, want := range map[string]int{
+		"deewaar": 1, "khabar": 1, "jawani": 1, "chhota": 1, "kaun": 0, "dune": -1, "picture": -2, "night": -1, "rock": -2, "the": -2,
+	} {
+		assert.Equal(t, want, romanisedScore(in), in)
 	}
 }
 
