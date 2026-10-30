@@ -6,6 +6,23 @@
       "open": "Openen",
       "unlinkedDevice": "Apparaat koppelen"
     },
+    "rejected": {
+      "signature": {
+        "detail": "Encore kon niet bevestigen dat Alexa ze stuurde. Kwamen ze van je Echo, controleer dan of Encore s3.amazonaws.com kan bereiken voor het certificaat van Amazon en of je proxy verzoeken ongewijzigd doorgeeft.",
+        "title_one": "{{count, number}} verzoek geweigerd om een ongeldige handtekening",
+        "title_other": "{{count, number}} verzoeken geweigerd om een ongeldige handtekening"
+      },
+      "skillId": {
+        "detail": "Alexa ondertekende ze voor een andere skill-ID dan Encore verwacht. Controleer alexa.skill_id of implementeer de skill opnieuw.",
+        "title_one": "{{count, number}} verzoek voor een andere skill geweigerd",
+        "title_other": "{{count, number}} verzoeken voor een andere skill geweigerd"
+      },
+      "timestamp": {
+        "detail": "Alexa zet op elk verzoek de tijd waarop het verstuurd is, en Encore weigert verzoeken die meer dan 150 seconden van de eigen klok afwijken. Controleer of de klok van deze host gesynchroniseerd is.",
+        "title_one": "{{count, number}} verzoek geweigerd om een verouderde tijdstempel",
+        "title_other": "{{count, number}} verzoeken geweigerd om een verouderde tijdstempel"
+      }
+    },
     "title": "Vraagt aandacht"
   },
   "description": "Alles wat Alexa nodig heeft om je Kodi-instanties te bereiken, in één oogopslag. Alleen lezen: wijzigingen doe je op de pagina van elk onderdeel.",

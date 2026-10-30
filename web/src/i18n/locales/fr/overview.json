@@ -6,6 +6,23 @@
       "open": "Ouvrir",
       "unlinkedDevice": "Associer l'appareil"
     },
+    "rejected": {
+      "signature": {
+        "detail": "Encore n'a pas pu confirmer qu'elles venaient d'Alexa. Si elles venaient de votre Echo, vérifiez qu'Encore peut joindre s3.amazonaws.com pour le certificat d'Amazon et que votre proxy transmet les requêtes sans les modifier.",
+        "title_one": "{{count, number}} requête refusée pour une signature invalide",
+        "title_other": "{{count, number}} requêtes refusées pour une signature invalide"
+      },
+      "skillId": {
+        "detail": "Alexa les a signées pour un autre ID de skill que celui attendu par Encore. Vérifiez alexa.skill_id, ou déployez de nouveau la skill.",
+        "title_one": "{{count, number}} requête pour une autre skill refusée",
+        "title_other": "{{count, number}} requêtes pour une autre skill refusées"
+      },
+      "timestamp": {
+        "detail": "Alexa horodate chaque requête à son envoi, et Encore refuse celles qui s'écartent de plus de 150 secondes de sa propre horloge. Vérifiez que l'horloge de cet hôte est synchronisée.",
+        "title_one": "{{count, number}} requête refusée pour un horodatage périmé",
+        "title_other": "{{count, number}} requêtes refusées pour un horodatage périmé"
+      }
+    },
     "title": "À traiter"
   },
   "description": "Tout ce dont Alexa a besoin pour joindre vos instances Kodi, en un coup d'œil. Lecture seule : les modifications se font sur la page de chaque section.",

@@ -276,6 +276,30 @@ function RecentRequests({ overview }: { overview: Overview }) {
 
 function AttentionList({ items }: { items: Attention[] }) {
   const { t } = useTranslation("overview");
+  // Rejected requests carry their check and count, so they read in the viewer's language; other items use the server's English.
+  const text = (item: Attention): { title: string; detail: string } => {
+    const count = item.count ?? 0;
+    if (item.kind !== "requests_rejected") return item;
+    switch (item.stage) {
+      case "timestamp":
+        return {
+          detail: t("attention.rejected.timestamp.detail"),
+          title: t("attention.rejected.timestamp.title", { count }),
+        };
+      case "signature":
+        return {
+          detail: t("attention.rejected.signature.detail"),
+          title: t("attention.rejected.signature.title", { count }),
+        };
+      case "skill_id":
+        return {
+          detail: t("attention.rejected.skillId.detail"),
+          title: t("attention.rejected.skillId.title", { count }),
+        };
+      default:
+        return item;
+    }
+  };
   const linkLabel = (kind: string) =>
     kind === "needs_deploy"
       ? t("attention.links.needsDeploy")
@@ -294,6 +318,7 @@ function AttentionList({ items }: { items: Attention[] }) {
       <ul aria-live="polite" className="flex flex-col gap-3">
         {items.map((item, index) => {
           const urgent = index === 0 && item.kind === "unlinked_device";
+          const { title, detail } = text(item);
           return (
             <li
               key={`${item.kind}-${item.title}`}
@@ -301,8 +326,8 @@ function AttentionList({ items }: { items: Attention[] }) {
             >
               <Dot tone={urgent ? "accent" : "muted"} className="mt-1.75 size-2" />
               <div className="flex flex-col gap-1">
-                <span className="font-semibold">{item.title}</span>
-                <span className="text-[13px] text-muted">{item.detail}</span>
+                <span className="font-semibold">{title}</span>
+                <span className="text-[13px] text-muted">{detail}</span>
                 {item.link ? (
                   <Link to={item.link} className="w-fit text-[13.5px] text-link hover:text-ink">
                     {linkLabel(item.kind)}

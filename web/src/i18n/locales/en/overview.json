@@ -6,6 +6,23 @@
       "open": "Open",
       "unlinkedDevice": "Link device"
     },
+    "rejected": {
+      "signature": {
+        "detail": "Encore couldn't confirm that Alexa sent them. If they came from your Echo, check that Encore can reach s3.amazonaws.com for Amazon's certificate and that your proxy passes requests on unchanged.",
+        "title_one": "{{count, number}} request rejected for a bad signature",
+        "title_other": "{{count, number}} requests rejected for a bad signature"
+      },
+      "skillId": {
+        "detail": "Alexa signed them for a skill ID other than the one Encore expects. Check alexa.skill_id, or deploy the skill again.",
+        "title_one": "{{count, number}} request for another skill rejected",
+        "title_other": "{{count, number}} requests for another skill rejected"
+      },
+      "timestamp": {
+        "detail": "Alexa stamps each request with the time it was sent, and Encore refuses one more than 150 seconds from its own clock. Check that this host's clock is synchronised.",
+        "title_one": "{{count, number}} request rejected for a stale timestamp",
+        "title_other": "{{count, number}} requests rejected for a stale timestamp"
+      }
+    },
     "title": "Needs attention"
   },
   "description": "Everything Alexa needs to reach your Kodi instances, at a glance. Read-only: changes happen on each section's page.",
