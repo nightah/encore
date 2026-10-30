@@ -153,7 +153,11 @@ The Alexa skill page can download the skill package as a zip (`skill-package/` p
 
 **"Deploy" is refused.** Encore answers why: privacy questions unanswered, the endpoint isn't `https://`, Amazon isn't connected, or another deploy is running.
 
-**Alexa says the skill didn't respond.** Alexa can't reach Encore or doesn't accept the certificate. Run the public address check on the Alexa skill page, and look at the [request log](/encore/guides/request-log/): if nothing arrives, the problem is between Alexa and your proxy.
+**Alexa says the skill didn't respond.** Alexa can't reach Encore, doesn't accept the certificate, or Encore refused the request. Run the public address check on the Alexa skill page, and look at the [request log](/encore/guides/request-log/). If nothing arrives, look at the overview's **Needs attention** first: requests refused for a stale timestamp (the host's clock is off by more than 150 seconds), a bad signature or another skill's ID are counted there, since they never reach the request log. If the overview counts nothing either, the problem is between Alexa and your proxy.
+
+**Every voice request fails at once, but the web interface works.** Something in front of Encore is refusing Amazon's servers, usually with a `403`: Cloudflare's Bot Fight Mode, a WAF rule or a country block. Your browser gets through, Amazon's servers don't. See [bot protection, WAF and country blocks](/encore/guides/reverse-proxy/#bot-protection-waf-and-country-blocks) for how to let Alexa through.
+
+**Alexa says a Kodi instance isn't answering.** Encore gives each voice request seven seconds, which leaves time for the answer before Alexa gives up at about eight, and says this when Kodi hasn't answered by then. Check that the Kodi instance is running and responsive; the request log shows the request as an error after seven seconds, with the Kodi calls that had finished by then.
 
 **The Echo answers with something unrelated or "I don't know that".** The Echo's language may not match a deployed locale, or it heard a different invocation name. Check the device language and the locales you deployed.
 
