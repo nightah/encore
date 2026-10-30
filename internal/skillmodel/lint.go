@@ -208,20 +208,8 @@ func (l *linter) model() {
 		types[t.Name] = true
 	}
 
-	for _, t := range l.src.Model.Types {
-		for _, from := range t.From {
-			if !IsBuiltin(from) && !types[from] {
-				l.add(Error, "", "", "slot type %s takes values from undeclared type %s", t.Name, from)
-			}
-		}
-
-		if len(t.From) > 0 && !t.Dynamic {
-			l.add(Error, "", "", "slot type %s takes values from other types, so it must be dynamic", t.Name)
-		}
-	}
-
-	// Amazon requires a slot name to have one type across the model: "Slot X in intent Y cannot reference more than one slot type". A fallback takes the type's place in some locales, so it must agree too.
-	slotTypes := map[string]Slot{}
+	// Amazon requires a slot name to have one type across the model: "Slot X in intent Y cannot reference more than one slot type".
+	slotTypes := map[string]string{}
 	slotFirst := map[string]string{}
 
 	for _, in := range l.src.Model.Intents {
@@ -248,46 +236,17 @@ func (l *linter) model() {
 				l.add(Error, "", in.Name, "slot %s uses undeclared type %s", s.Name, s.Type)
 			}
 
-			switch {
-			case s.Fallback != "" && !IsBuiltin(s.Type):
-				l.add(Error, "", in.Name, "slot %s has a fallback, but its type %s is not built in", s.Name, s.Type)
-			case s.Fallback != "" && (IsBuiltin(s.Fallback) || !types[s.Fallback]):
-				l.add(Error, "", in.Name, "slot %s falls back to %s, which model.yaml doesn't declare as a custom type", s.Name, s.Fallback)
-			}
-
-			prev, ok := slotTypes[s.Name]
-
-			switch {
-			case !ok:
-				slotTypes[s.Name], slotFirst[s.Name] = s, in.Name
-			case prev.Type != s.Type:
-				l.add(Error, "", in.Name, "slot %s has type %s here but %s in %s; Amazon requires one type per slot name, so rename one", s.Name, s.Type, prev.Type, slotFirst[s.Name])
-			case prev.Fallback != s.Fallback:
-				l.add(Error, "", in.Name, "slot %s falls back to %q here but %q in %s; Amazon requires one type per slot name, so use one fallback", s.Name, s.Fallback, prev.Fallback, slotFirst[s.Name])
+			if prev, ok := slotTypes[s.Name]; ok && prev != s.Type {
+				l.add(Error, "", in.Name, "slot %s has type %s here but %s in %s; Amazon requires one type per slot name, so rename one", s.Name, s.Type, prev, slotFirst[s.Name])
+			} else if !ok {
+				slotTypes[s.Name], slotFirst[s.Name] = s.Type, in.Name
 			}
 		}
 	}
 }
 
-// types checks every language gives each custom slot type values (examples, for a dynamic type) and gives none for undeclared types, with static values in types.yaml and dynamic examples in examples.yaml. A type slots take only as a fallback needs values only in the languages of locales that fall back to it.
+// types checks every language gives each custom slot type values (examples, for a dynamic type) and gives none for undeclared types, with static values in types.yaml and dynamic examples in examples.yaml.
 func (l *linter) types() {
-	fallbackOnly := l.src.Model.fallbackOnly()
-	needed := map[string]map[string]bool{}
-
-	for locale, loc := range l.src.Locales {
-		for _, in := range l.src.Model.Intents {
-			for _, s := range in.Slots {
-				if typ := s.TypeIn(locale); fallbackOnly[typ] {
-					if needed[loc.Language] == nil {
-						needed[loc.Language] = map[string]bool{}
-					}
-
-					needed[loc.Language][typ] = true
-				}
-			}
-		}
-	}
-
 	for name, lang := range l.src.Languages {
 		where := "lang/" + name
 
@@ -310,7 +269,7 @@ func (l *linter) types() {
 		}
 
 		for _, t := range l.src.Model.Types {
-			if len(t.Values)+len(lang.Types[t.Name]) > 0 || fallbackOnly[t.Name] && !needed[name][t.Name] {
+			if len(t.Values)+len(lang.Types[t.Name]) > 0 {
 				continue
 			}
 
@@ -388,12 +347,6 @@ func (l *linter) locale(locale string) {
 	carriers := map[string]sampleOwner{}
 
 	for _, in := range l.src.Model.Intents {
-		for _, s := range in.Slots {
-			if LacksBuiltin(locale, s.TypeIn(locale)) {
-				l.add(Error, locale, in.Name, "slot %s uses %s, which Amazon doesn't offer in %s; give the slot a fallback custom type in model.yaml", s.Name, s.Type, locale)
-			}
-		}
-
 		var samples []string
 
 		for _, pattern := range utterances[in.Name] {
@@ -462,11 +415,11 @@ func (l *linter) sample(locale string, in Intent, pattern, sample string, exact,
 			continue
 		}
 
-		if slot.TypeIn(locale) == "AMAZON.SearchQuery" && strings.TrimSpace(slotRef.ReplaceAllString(sample, "")) == "" {
+		if slot.Type == "AMAZON.SearchQuery" && strings.TrimSpace(slotRef.ReplaceAllString(sample, "")) == "" {
 			l.add(Error, locale, in.Name, "sample %q needs a carrier phrase around the AMAZON.SearchQuery slot", sample)
 		}
 
-		if slot.TypeIn(locale) == "AMAZON.SearchQuery" && len(refs) > 1 {
+		if slot.Type == "AMAZON.SearchQuery" && len(refs) > 1 {
 			l.add(Error, locale, in.Name, "sample %q combines an AMAZON.SearchQuery slot with other slots, which Amazon rejects", sample)
 		}
 	}
