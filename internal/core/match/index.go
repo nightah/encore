@@ -41,6 +41,9 @@ func New(lang string, cfg Config) (*Index, error) {
 	}, nil
 }
 
+// Language returns the code of the language whose rules the index matches with ("en" for an unknown language).
+func (ix *Index) Language() string { return ix.lang.code }
+
 // Normalize returns the query form of s for this index's language.
 func (ix *Index) Normalize(s string) string {
 	return Normalize(ix.lang.code, s)

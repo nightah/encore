@@ -1,7 +1,12 @@
 {
   "attention": {
     "empty": "Niets vraagt om je aandacht.",
+    "libraryLanguage": {
+      "detail": "De taal van titels is {{current}}. Zet die op {{language}}, zodat de titels met de regels voor het {{language}} worden vergeleken.",
+      "title": "De meeste titels van {{instance}} zijn in het {{language}}"
+    },
     "links": {
+      "libraryLanguage": "Taal van titels wijzigen",
       "needsDeploy": "Nu bijwerken",
       "open": "Openen",
       "unlinkedDevice": "Apparaat koppelen"

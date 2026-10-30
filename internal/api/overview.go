@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"maps"
 	"net/http"
 	"slices"
 	"strings"
@@ -11,8 +12,20 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 
 	"github.com/nightah/encore/internal/adapter/alexa"
+	"github.com/nightah/encore/internal/app"
+	"github.com/nightah/encore/internal/core/match"
+	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/store"
 )
+
+// scriptKinds are the kinds libraryLanguages reads a library's script from: the titles people ask for by name, without the episodes and songs that outnumber them.
+var scriptKinds = []media.Kind{media.KindMovie, media.KindTVShow, media.KindArtist, media.KindAlbum}
+
+// languageNames are the title languages' English names, by code.
+var languageNames = map[string]string{
+	"ar": "Arabic", "de": "German", "en": "English", "es": "Spanish", "fr": "French",
+	"hi": "Hindi", "it": "Italian", "ja": "Japanese", "nl": "Dutch", "pt": "Portuguese",
+}
 
 func (a *API) registerOverview(api huma.API) {
 	ec := &endpointCache{}
@@ -262,6 +275,8 @@ func (a *API) attention(ctx context.Context) ([]Attention, error) {
 
 	out = append(out, a.rejectedAttention()...)
 
+	out = append(out, libraryLanguages(scriptsOf(a.app.Libraries()), info.LocalesEnabled)...)
+
 	devs, err := a.app.DB().EchoDevices().List(ctx)
 	if err != nil {
 		return nil, err
@@ -285,4 +300,59 @@ func (a *API) attention(ctx context.Context) ([]Attention, error) {
 	}
 
 	return out, nil
+}
+
+// scriptsOf counts each library's films, shows, artists and albums (scriptKinds) and how many of them are written in the script of each language match.ScriptLanguage names.
+func scriptsOf(libs []app.Library) []libraryScripts {
+	out := make([]libraryScripts, 0, len(libs))
+
+	for _, lib := range libs {
+		ls := libraryScripts{source: lib.Source, language: lib.Language, scripts: map[string]int{}}
+
+		if lib.Catalog != nil {
+			for _, kind := range scriptKinds {
+				for _, it := range lib.Catalog.Items(kind) {
+					ls.titles++
+
+					if l := match.ScriptLanguage(it.Title); l != "" {
+						ls.scripts[l]++
+					}
+				}
+			}
+		}
+
+		out = append(out, ls)
+	}
+
+	return out
+}
+
+// libraryLanguages asks to change a library's title language when most of its titles are written in the script of a language the skill has a locale enabled in (Japanese, Hindi or Arabic) and the library is matched with another language's rules. Requests in that script are read with its rules in any library, but the library's titles are then matched with the other language's stop words, numbers and sound-alike keys.
+func libraryLanguages(libs []libraryScripts, locales []string) []Attention {
+	enabled := map[string]bool{}
+
+	for _, l := range locales {
+		lang, _, _ := strings.Cut(l, "-")
+		enabled[lang] = true
+	}
+
+	var out []Attention
+
+	for _, lib := range libs {
+		for _, lang := range slices.Sorted(maps.Keys(lib.scripts)) {
+			if lang == lib.language || !enabled[lang] || 2*lib.scripts[lang] <= lib.titles {
+				continue
+			}
+
+			out = append(out, Attention{
+				Kind:   "library_language",
+				Title:  fmt.Sprintf("Most of %s's titles are in %s", lib.source, languageNames[lang]),
+				Detail: fmt.Sprintf("Its title language is %s. Set it to %s so its titles are matched with the rules for %s.", languageNames[lib.language], languageNames[lang], languageNames[lang]),
+				Link:   "/kodi",
+				Params: map[string]string{"instance": lib.source, "language": lang, "current": lib.language},
+			})
+		}
+	}
+
+	return out
 }

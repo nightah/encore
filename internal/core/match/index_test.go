@@ -466,3 +466,20 @@ func TestDefaultPoolFindsSplitTitlesAtScale(t *testing.T) {
 	assert.Equal(t, DecisionPlay, res.Decision, describe(res))
 	assert.Equal(t, "moana", best.Doc.ID)
 }
+
+func TestScriptLanguage(t *testing.T) {
+	for in, want := range map[string]string{
+		"千と千尋の神隠し": "ja", "クイーン": "ja", "दंगल": "hi", "تملي معاك": "ar", "Titanic": "", "2001": "", "": "", "Live 東京": "ja", "Москва": "",
+	} {
+		assert.Equal(t, want, ScriptLanguage(in), in)
+	}
+}
+
+func TestIndexLanguage(t *testing.T) {
+	for code, want := range map[string]string{"ja-JP": "ja", "de": "de", "xx": "en", "": "en"} {
+		ix, err := New(code, Config{})
+		require.NoError(t, err)
+		assert.Equal(t, want, ix.Language(), code)
+		require.NoError(t, ix.Close())
+	}
+}

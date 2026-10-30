@@ -27,6 +27,15 @@ var languages = map[string]*language{
 // Languages lists the language codes with their own title-matching rules, sorted.
 func Languages() []string { return slices.Sorted(maps.Keys(languages)) }
 
+// ScriptLanguage returns the language whose rules read the script s is written in, whatever a library's language: "ja" for kana or kanji, "hi" for Devanagari and "ar" for Arabic letters, from the first such letter. It returns "" for text every language reads alike, such as Latin letters and digits.
+func ScriptLanguage(s string) string {
+	if o := languages["en"].foreignOwner(s); o != nil {
+		return o.code
+	}
+
+	return ""
+}
+
 // languageFor resolves a language or locale code ("de", "de-DE", "en_GB"), falling back to English.
 func languageFor(code string) *language {
 	code = strings.ToLower(code)

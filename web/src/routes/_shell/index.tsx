@@ -16,7 +16,7 @@ import { cn } from "@components/ui/cn";
 import { Meter } from "@components/ui/Meter";
 import { EmptyState, ErrorState, LoadingBlock } from "@components/ui/States";
 import { Table, Td, Th } from "@components/ui/Table";
-import { formatClock, formatPosition, formatRelative, hostPort } from "@lib/format";
+import { formatClock, formatLanguage, formatPosition, formatRelative, hostPort } from "@lib/format";
 
 export const Route = createFileRoute("/_shell/")({
   component: OverviewPage,
@@ -276,8 +276,19 @@ function RecentRequests({ overview }: { overview: Overview }) {
 
 function AttentionList({ items }: { items: Attention[] }) {
   const { t } = useTranslation("overview");
-  // Rejected requests carry their check and count, so they read in the viewer's language; other items use the server's English.
+  // Rejected requests and a library's title language carry what their text needs, so they read in the viewer's language; other items use the server's English.
   const text = (item: Attention): { title: string; detail: string } => {
+    if (item.kind === "library_language" && item.params) {
+      const params = {
+        current: formatLanguage(item.params.current),
+        instance: item.params.instance,
+        language: formatLanguage(item.params.language),
+      };
+      return {
+        detail: t("attention.libraryLanguage.detail", params),
+        title: t("attention.libraryLanguage.title", params),
+      };
+    }
     const count = item.count ?? 0;
     if (item.kind !== "requests_rejected") return item;
     switch (item.stage) {
@@ -305,7 +316,9 @@ function AttentionList({ items }: { items: Attention[] }) {
       ? t("attention.links.needsDeploy")
       : kind === "unlinked_device"
         ? t("attention.links.unlinkedDevice")
-        : t("attention.links.open");
+        : kind === "library_language"
+          ? t("attention.links.libraryLanguage")
+          : t("attention.links.open");
   return (
     <section
       aria-labelledby="attn-h"

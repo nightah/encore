@@ -77,7 +77,7 @@ func (a *App) Libraries() []Library {
 	out := make([]Library, 0, len(a.groups))
 
 	for _, g := range a.groups {
-		lib := Library{GroupID: g.id, Name: g.rec.Name, Catalog: g.catalog}
+		lib := Library{GroupID: g.id, Name: g.rec.Name, Source: g.source.name, Language: g.index.Language(), Catalog: g.catalog}
 		for _, m := range g.members {
 			lib.Members = append(lib.Members, m.name)
 		}

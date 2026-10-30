@@ -1,7 +1,12 @@
 {
   "attention": {
     "empty": "किसी चीज़ पर आपका ध्यान ज़रूरी नहीं है।",
+    "libraryLanguage": {
+      "detail": "इसकी टाइटल की भाषा {{current}} है। इसे {{language}} पर सेट करें, ताकि इसके टाइटल {{language}} के नियमों से मिलाए जाएँ।",
+      "title": "{{instance}} के ज़्यादातर टाइटल {{language}} में हैं"
+    },
     "links": {
+      "libraryLanguage": "टाइटल की भाषा बदलें",
       "needsDeploy": "अभी अपडेट करें",
       "open": "खोलें",
       "unlinkedDevice": "डिवाइस लिंक करें"

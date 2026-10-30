@@ -6,6 +6,7 @@ import {
   formatDate,
   formatDayOrClock,
   formatDuration,
+  formatLanguage,
   formatList,
   formatMegabytes,
   formatNumber,
@@ -19,6 +20,22 @@ import {
 /** An ISO timestamp for a local wall-clock time, so the tests don't depend on the machine's time zone. */
 const local = (...parts: [number, number, number, number?, number?, number?]) =>
   new Date(parts[0], parts[1], parts[2], parts[3] ?? 0, parts[4] ?? 0, parts[5] ?? 0).toISOString();
+
+describe("formatLanguage", () => {
+  it("names a language in the interface language", async () => {
+    expect(formatLanguage("ja")).toBe("Japanese");
+    expect(formatLanguage("en")).toBe("English");
+    await i18n.changeLanguage("de");
+    expect(formatLanguage("ja")).toBe("Japanisch");
+    await i18n.changeLanguage("en");
+  });
+
+  it("keeps a code it can't name", () => {
+    expect(formatLanguage(undefined)).toBe("");
+    expect(formatLanguage("xx")).toBe("xx");
+    expect(formatLanguage("not a language")).toBe("not a language");
+  });
+});
 
 describe("formatNumber", () => {
   it("groups digits the British way in English and follows the interface language", async () => {

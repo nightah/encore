@@ -1,7 +1,12 @@
 {
   "attention": {
     "empty": "Nichts braucht deine Aufmerksamkeit.",
+    "libraryLanguage": {
+      "detail": "Die Titelsprache ist {{current}}. Stelle sie auf {{language}}, damit die Titel nach den Regeln für {{language}} abgeglichen werden.",
+      "title": "Die meisten Titel von {{instance}} sind auf {{language}}"
+    },
     "links": {
+      "libraryLanguage": "Titelsprache ändern",
       "needsDeploy": "Jetzt aktualisieren",
       "open": "Öffnen",
       "unlinkedDevice": "Gerät verknüpfen"

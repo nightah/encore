@@ -11,6 +11,7 @@ export * from "./addRoomAliasRequest.ts";
 export * from "./addRoomAliasRequestKind.ts";
 export * from "./amazonConnection.ts";
 export * from "./attention.ts";
+export * from "./attentionParams.ts";
 export * from "./attentionStage.ts";
 export * from "./authorizeAmazonParams.ts";
 export * from "./authorizeAmazonThen.ts";
