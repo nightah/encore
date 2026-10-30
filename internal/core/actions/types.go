@@ -109,6 +109,8 @@ type Followup struct {
 	Recommend *RecommendRequest `json:"recommend,omitempty"`
 	// Confirm is a system command waiting for "yes".
 	Confirm media.SystemCommand `json:"confirm,omitempty"`
+	// More are the titles a "did you mean" question found but hasn't offered yet; "no" offers them next.
+	More []Choice `json:"more,omitempty"`
 }
 
 // Service runs actions.

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"strconv"
 	"testing"
 	"time"
 
@@ -792,4 +793,47 @@ func TestMatcherFailuresAreReported(t *testing.T) {
 			assert.Equal(t, 2, m.searches, "the index is searched again after the lookup found something")
 		})
 	}
+}
+
+func TestAskKeepsMoreMatchesForNo(t *testing.T) {
+	cands := func(scores ...float64) match.Result {
+		var res match.Result
+
+		for i, s := range scores {
+			id := strconv.Itoa(i + 1)
+			res.Candidates = append(res.Candidates, match.Candidate{Doc: match.Doc{ID: "movie/" + id, Ref: media.Ref{Kind: media.KindMovie, ID: i + 1}, Title: "Title " + id}, Score: s})
+		}
+
+		return res
+	}
+
+	ids := func(choices []Choice) []string {
+		var out []string
+		for _, c := range choices {
+			out = append(out, c.DocID)
+		}
+
+		return out
+	}
+
+	o := ask(cands(0.8, 0.8, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7))
+	assert.Equal(t, []string{"movie/1", "movie/2"}, ids(o.Pending))
+	require.NotNil(t, o.Followup)
+	assert.Equal(t, []string{"movie/3", "movie/4", "movie/5", "movie/6"}, ids(o.Followup.More), "a question keeps at most maxCandidates titles")
+
+	o = ask(cands(0.65, 0.5, 0.7, 0.3))
+	assert.Equal(t, []string{"movie/1", "movie/2"}, ids(o.Pending), "the titles asked about are offered whatever their score")
+	require.NotNil(t, o.Followup)
+	assert.Equal(t, []string{"movie/3"}, ids(o.Followup.More), "later titles stop at the first one too weak to ask about")
+
+	o = ask(cands(0.7, 0.7, 0.3))
+	assert.Nil(t, o.Followup, "nothing is kept back when the rest are too weak")
+
+	o = newService().OtherChoices(o.Pending)
+	assert.Equal(t, "match.did_you_mean", o.Say.ID, "no offers the titles kept back")
+	assert.False(t, o.EndSession)
+
+	o = newService().OtherChoices(nil)
+	assert.Equal(t, "match.no_more", o.Say.ID)
+	assert.True(t, o.EndSession)
 }

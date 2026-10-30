@@ -18,7 +18,11 @@ const candidateLimit = 20
 // pendingBoost is added to titles offered in the previous question, so an answer like "the newer one" or a repeated title resolves to one of them.
 const pendingBoost = 0.08
 
+// maxChoices is how many titles one "did you mean" question offers.
 const maxChoices = 2
+
+// maxCandidates is how many of a search's titles a "did you mean" question keeps, counting those it offers; "no" offers the rest, maxChoices at a time.
+const maxCandidates = 6
 
 // nearlyOver is when "how long is left" just says it's nearly finished.
 const nearlyOver = time.Minute
