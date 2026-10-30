@@ -29,6 +29,6 @@ func TestOpenPhraseJapaneseSkill(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		assert.Equal(t, want, deploy.OpenPhrase("ja-JP", pkg.Invocation("ja-JP")), invocation)
+		assert.Equal(t, want, deploy.OpenPhrase(src, "ja-JP", pkg.Invocation("ja-JP")), invocation)
 	}
 }

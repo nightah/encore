@@ -39,6 +39,7 @@ type Server struct {
 	statusPolls map[string]int
 	sims        map[string]*simJob
 	unresolved  int
+	reaches     map[string]bool
 	profiles    map[string][]NLUAnswer
 	profiled    map[string]int
 }

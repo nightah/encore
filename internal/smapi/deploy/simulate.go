@@ -6,27 +6,18 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/nightah/encore/internal/skillmodel"
 	"github.com/nightah/encore/internal/smapi"
 )
 
-// openPhrases are per language; %s is the invocation name.
-var openPhrases = map[string]string{
-	"de": "öffne %s",
-	"en": "open %s",
-	"fr": "ouvre %s",
-	"ja": "%sを開いて",
-}
-
-// OpenPhrase is the utterance that opens the skill in locale, or "" if Encore does not know one.
-func OpenPhrase(locale, invocation string) string {
-	lang, _, _ := strings.Cut(locale, "-")
-
-	p, ok := openPhrases[lang]
-	if !ok {
+// OpenPhrase is the locale's open phrase from src with invocation in place, or "" when src has none for locale.
+func OpenPhrase(src *skillmodel.Sources, locale, invocation string) string {
+	open := src.Locales[locale].Launch.Open
+	if open == "" {
 		return ""
 	}
 
-	return fmt.Sprintf(p, invocation)
+	return skillmodel.Say(open, invocation)
 }
 
 // simulate opens the skill in one locale (see smokeLocale): that proves Alexa reaches the endpoint, while simulating every locale in turn took minutes. A failed smoke test is a warning, not a failed deploy: the skill is already live for testing.
@@ -44,11 +35,11 @@ func (r *run) simulate(ctx context.Context) error {
 		return nil
 	}
 
-	phrase := OpenPhrase(loc, r.pkg.Invocation(loc))
+	phrase := OpenPhrase(r.d.src, loc, r.pkg.Invocation(loc))
 	r.start(StepSimulate, fmt.Sprintf("Saying “%s” to the simulator in %s", phrase, loc))
 
 	sctx, cancel := context.WithTimeout(ctx, simulateTimeout)
-	sim, err := r.simulateUntilResolved(sctx, loc, phrase)
+	sim, err := r.simulator().untilResolved(sctx, loc, phrase)
 	cancel()
 
 	if ctx.Err() != nil {
@@ -80,7 +71,7 @@ func (r *run) simulate(ctx context.Context) error {
 // smokeLocale is the locale to simulate: the primary locale when the package has it and the simulation API supports it, else the first package locale it supports, or "" when none.
 func (r *run) smokeLocale() string {
 	can := func(loc string) bool {
-		return slices.Contains(r.pkg.Locales(), loc) && smapi.CanSimulate(loc) && OpenPhrase(loc, r.pkg.Invocation(loc)) != ""
+		return slices.Contains(r.pkg.Locales(), loc) && smapi.CanSimulate(loc) && OpenPhrase(r.d.src, loc, r.pkg.Invocation(loc)) != ""
 	}
 
 	if can(r.req.PrimaryLocale) {
@@ -96,24 +87,28 @@ func (r *run) smokeLocale() string {
 	return ""
 }
 
-// simulateUntilResolved asks again, at the poll interval and up to simulateAttempts times, while the simulator says phrase resolves to no intent.
-func (r *run) simulateUntilResolved(ctx context.Context, locale, phrase string) (*smapi.Simulation, error) {
+func (r *run) simulator() simulator {
+	return simulator{client: r.d.client, skillID: r.res.State.SkillID, debug: r.debug}
+}
+
+// untilResolved asks again, at the poll interval and up to simulateAttempts times, while the simulator says phrase resolves to no intent.
+func (s simulator) untilResolved(ctx context.Context, locale, phrase string) (*smapi.Simulation, error) {
 	var (
 		sim      *smapi.Simulation
 		attempts int
 	)
 
-	err := r.d.client.Poll(ctx, func(ctx context.Context) (bool, error) {
+	err := s.client.Poll(ctx, func(ctx context.Context) (bool, error) {
 		attempts++
 
 		var err error
-		if sim, err = r.simulateLocale(ctx, locale, phrase); err != nil {
+		if sim, err = s.once(ctx, locale, phrase); err != nil {
 			return false, err
 		}
 
 		unresolved := sim.Status == smapi.SimulationFailed && strings.Contains(sim.Error, "did not resolve to any intent")
 		if unresolved && attempts < simulateAttempts {
-			r.debug("skill simulation not resolved yet; asking again", "locale", locale, "attempt", attempts)
+			s.debug("skill simulation not resolved yet; asking again", "locale", locale, "attempt", attempts)
 
 			return false, nil
 		}
@@ -124,16 +119,17 @@ func (r *run) simulateUntilResolved(ctx context.Context, locale, phrase string) 
 	return sim, err
 }
 
-func (r *run) simulateLocale(ctx context.Context, locale, phrase string) (*smapi.Simulation, error) {
-	id, err := r.d.client.Simulate(ctx, r.res.State.SkillID, locale, phrase)
+// once says phrase and waits for the simulator's answer.
+func (s simulator) once(ctx context.Context, locale, phrase string) (*smapi.Simulation, error) {
+	id, err := s.client.Simulate(ctx, s.skillID, locale, phrase)
 	if err != nil {
 		return nil, err
 	}
 
 	var sim *smapi.Simulation
 
-	err = r.d.client.Poll(ctx, func(ctx context.Context) (bool, error) {
-		sim, err = r.d.client.Simulation(ctx, r.res.State.SkillID, id)
+	err = s.client.Poll(ctx, func(ctx context.Context) (bool, error) {
+		sim, err = s.client.Simulation(ctx, s.skillID, id)
 		if err != nil {
 			return false, err
 		}
