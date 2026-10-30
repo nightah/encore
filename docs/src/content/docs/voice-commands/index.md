@@ -40,6 +40,18 @@ The first and latest episodes skip specials (season 0) unless a show has nothing
 
 Encore matches what Alexa heard against your own library, so it copes with numbering ("rocky two"), subtitles ("endgame") and titles Alexa doesn't know. When two titles are close, it asks which one you meant. See [matching and aliases](/encore/guides/matching/).
 
+## Answering a question
+
+When two titles are close, Alexa asks which one you meant, naming each with its year ("Did you mean Dune from 1984 or Dune from 2021?"), and waits for the answer:
+
+- "the first one", "the second one" or "the last one" picks by position
+- "the newer one" or "the older one" picks by release year
+- the title on its own, such as "Dune Part Two", picks it; a title that isn't one of the choices is searched for instead
+- "no" offers the next closest matches, two at a time, until there are none left
+- "yes" plays the title when Alexa offered only one, and asks again when it offered two
+
+If Alexa doesn't understand the answer, it asks the same question again instead of giving up, and "help" says how to answer. Each language's page lists its ways of answering under "Answering a question".
+
 ## Every phrase, by language
 
 The pages below are generated from the interaction model Encore deploys, so they always match what your skill understands. Each lists the locales and invocation names, every command with its sample patterns, and the words custom slots accept.
