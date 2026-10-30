@@ -121,6 +121,8 @@ Amazon offers its free-text slot type, `AMAZON.SearchQuery`, in every locale but
 - **New library titles don't need a redeploy.** Encore finds them as soon as Kodi reports them; a redeploy adds them to the skill model too, which helps with unusual names.
 - **Unchanged packages are skipped.** Packages are built deterministically; if nothing changed since the last successful deploy, Encore stops after the package step. Use **Force** to redeploy anyway.
 - **The same skill is updated.** Encore remembers the skill ID. If it's lost, for example after reinstalling, it finds the skill by name instead of creating a duplicate. If you deleted the skill in the developer console, the next deploy creates a new one.
+- **Some locales failing doesn't hold the others back.** When Amazon won't build some locales' models for a reason it names, Encore deploys once more straight away. A locale whose build errors quote some of its titles or aliases is built without those titles; otherwise, if other locales did build, it keeps every other library title, and all its rooms. The deploy then succeeds with those locales marked **Fewer titles** on the Alexa skill page, which lists the titles left out or how many were kept, with Amazon's message. Titles left out are still found by Encore's matcher. The package still counts as deployed, so Encore doesn't keep redeploying it; the next change, or **Redeploy**, tries every title again. If the second attempt fails too, the deploy fails as before.
+- **Expired access tokens are renewed.** If Amazon rejects Encore's access token before it expires, Encore gets a new one from Login with Amazon and repeats the request once.
 - **Model size.** Amazon limits each interaction model to 1.5 MB. Encore includes the most recently added or played titles up to a per-kind limit that keeps the largest locale well under it; titles left out are still found by Encore's matcher. The Alexa skill page shows each locale's size against the limit.
 
 ### Automatic redeploys
@@ -129,7 +131,8 @@ With **Deploy skill changes automatically** on under **Settings › Features**, 
 
 - **Encore checks every 5 minutes** and deploys a change once it has stayed the same for a whole check, so a library sync or a run of settings changes is deployed once, after it settles. A change goes live within two checks, about 10 minutes. Change how often it checks with **Check for changes every** beneath the switch, from 1 minute to 1440 (a day) and fractions such as 2.5 allowed, or with [`alexa.auto_deploy_minutes`](/encore/reference/configuration/#alexaauto_deploy_minutes) (`ENCORE_ALEXA_AUTO_DEPLOY_MINUTES`).
 - **Only a skill you've already deployed is redeployed.** The first deploy is always yours, as is reconnecting to Amazon when it asks.
-- **A failure pauses automatic deploys.** The overview shows "Automatic deploys are paused" with Amazon's reason, and the Alexa skill page shows it too. Fix the cause, then deploy by hand: once a deploy succeeds, automatic deploys resume.
+- **A failure that may pass is tried again.** When an automatic deploy fails because Amazon is unavailable or throttling (even after Encore's own retries of each request), another build of the skill is still running, the network failed, an import or build took too long, or a locale failed to build without Amazon saying why, Encore tries again at the first check 5 minutes later, then after 10 and 20 more. The Alexa skill page shows the failed attempt, how many have failed and when the next one runs. A retry doesn't wait for the package to settle again.
+- **Any other failure pauses automatic deploys**, as does a fourth failure in a row: Amazon no longer accepting Encore's authorisation, or a package or model Amazon rejected for a reason it named. The overview shows "Automatic deploys are paused" with Amazon's reason, and the Alexa skill page shows it too. Fix the cause, then deploy by hand: once a deploy succeeds, automatic deploys resume.
 - **Without a configured endpoint**, an automatic deploy reuses the one the skill was last deployed with, since there's no browser request to work it out from. If Encore has no record of it, for example for a skill deployed by an older version, it reads it from the skill at Amazon.
 
 ## Without SMAPI: export the package
@@ -144,7 +147,9 @@ The Alexa skill page can download the skill package as a zip (`skill-package/` p
 
 **"authorise Encore with Amazon again".** Amazon rejected the stored refresh token: the profile was deleted or its secret changed, or you revoked access. Authorise again. Saving a different client ID also forgets the stored authorisation.
 
-**A locale fails to build.** Open the deploy's **build** step for Amazon's message per locale. Problems with a title or alias usually name the slot value; fix or remove the alias and redeploy.
+**A locale fails to build.** Open the deploy's **build** step for Amazon's message per locale. Problems with a title or alias usually name the slot value, and Encore leaves a named title out by itself; fix or remove an alias Amazon names and redeploy to bring the title back.
+
+**A locale shows "Fewer titles".** Amazon wouldn't build that locale's model with every title, so Encore deployed it with fewer; the warnings on the Alexa skill page say which titles were left out or how many were kept, with Amazon's message. Voice commands still work, and Encore's matcher still finds every title. Choose **Redeploy** to try every title again, for example after removing an alias Amazon named.
 
 **"Deploy" is refused.** Encore answers why: privacy questions unanswered, the endpoint isn't `https://`, Amazon isn't connected, or another deploy is running.
 
