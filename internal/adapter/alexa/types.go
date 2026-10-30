@@ -49,11 +49,12 @@ type LogEntry struct {
 	Slots     map[string]string
 	Target    string
 	// Via is the room or device the request named, if it named one.
-	Via      actions.Via
-	Match    *match.Result
-	Speech   string
-	Outcome  string
-	Err      error
+	Via     actions.Via
+	Match   *match.Result
+	Speech  string
+	Outcome string
+	Err     error
+	// Duration is how long Alexa waited for the answer, signature check included.
 	Duration time.Duration
 	// Verify is the signature check, MatchTime the title matching, and KodiCalls the calls made to Kodi with their durations.
 	Verify    time.Duration

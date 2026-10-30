@@ -394,6 +394,26 @@ func TestRecorderCapturesCallsAndTiming(t *testing.T) {
 	assert.Zero(t, e.Verify, "the request didn't go through VerifiedFunc")
 }
 
+// The logged duration is how long Alexa waited, so it counts the signature check that ran before the handler.
+func TestRecorderDurationIncludesVerify(t *testing.T) {
+	h, _, rec := newHandler(t)
+	now := fixedNow
+	h.Now = func() time.Time {
+		now = now.Add(100 * time.Millisecond)
+
+		return now
+	}
+
+	body := mustRead(t, "testdata/golden/watch-movie-unique/request.json")
+	ctx := context.WithValue(t.Context(), verifyTimeKey{}, 650*time.Millisecond)
+	h.ServeBody(httptest.NewRecorder(), httptest.NewRequestWithContext(ctx, http.MethodPost, "/api/v1/alexa", bytes.NewReader(body)), body)
+
+	require.Len(t, rec.entries, 1)
+	e := rec.entries[0]
+	assert.Equal(t, 650*time.Millisecond, e.Verify)
+	assert.Equal(t, 750*time.Millisecond, e.Duration, "650 ms verifying plus the 100 ms the handler's clock saw")
+}
+
 // A session end has no action outcome; it is logged as ok rather than with an empty outcome the UI can't show.
 func TestRecorderLogsSessionEndAsOK(t *testing.T) {
 	h, _, rec := newHandler(t)

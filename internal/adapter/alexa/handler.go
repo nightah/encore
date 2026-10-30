@@ -70,7 +70,8 @@ func (h *Handler) ServeBody(w http.ResponseWriter, r *http.Request, body []byte)
 		entry.Speech = resp.Response.OutputSpeech.Text
 	}
 
-	entry.Duration = h.now().Sub(start)
+	// Verification ran before this handler, but Alexa waited for it too.
+	entry.Duration = h.now().Sub(start) + entry.Verify
 
 	if h.Recorder != nil {
 		h.Recorder.Record(r.Context(), entry)

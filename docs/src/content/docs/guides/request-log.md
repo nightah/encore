@@ -26,7 +26,7 @@ Opening an entry shows:
 - under **Target Kodi**, the room or device the request named: a device and its room ("TV device in Lounge"), another name for a room, or the room itself. A room named at the end of a search ("play Bluey in the lounge") shows here too, though it never fills the Room slot. A room without its own Kodi instance plays on the Echo's, so the target can differ from the room shown. See [rooms](/encore/guides/echo-devices/#rooms).
 - the **match**: the normalised query, the decision and its margin, and the candidates with their score breakdown (see [matching](/encore/guides/matching/)).
 - the **Kodi calls** Encore made, in order, with each one's duration and result.
-- the **timing**: how long verifying Alexa's signature, matching and talking to Kodi took.
+- the **timing**: how long verifying Alexa's signature, matching and talking to Kodi took, and the total Alexa waited for an answer.
 - the **speech** Alexa was given to say.
 
 **Replay** runs the request again against the current library index without touching Kodi, and shows what Encore would say and which Kodi calls it would make. Use it after adding an [alias](/encore/guides/matching/#aliases) to check the fix.
