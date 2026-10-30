@@ -15,6 +15,10 @@
     "title": "Amazon-Entwicklerkonto",
     "vendor": "Vendor-ID"
   },
+  "autoDeployPaused": {
+    "resume": "",
+    "title": ""
+  },
   "content": {
     "movies": "Filme",
     "music": "Musik",
@@ -46,6 +50,7 @@
       "legend": "Gebietsschemas"
     },
     "needsDeploy": {
+      "automatic": "",
       "library": "Seit der letzten Bereitstellung sind neue Titel in der Mediathek. Encore findet sie bereits; stelle den Skill erneut bereit, um sie ins Skill-Modell aufzunehmen.",
       "settings": "Die Einstellungen haben sich seit der letzten Bereitstellung geändert. Stelle den Skill erneut bereit, um sie zu übernehmen."
     },
