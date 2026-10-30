@@ -56,20 +56,20 @@ type Via struct {
 	Spoken, Kind, Room string
 }
 
-// Message is a localisable message: an ID from the response catalogue and its placeholder values. An empty ID means say nothing.
+// Message is a localisable message: an ID from the response catalogue and its placeholder values. An empty ID means say nothing. It round-trips through assistant session state as JSON, so a question can be asked again.
 type Message struct {
-	ID     string
-	Params map[string]string
+	ID     string            `json:"id"`
+	Params map[string]string `json:"params,omitempty"`
 	// Durations are placeholder values the renderer words for the listener's language, e.g. "1 hour 12 minutes".
-	Durations map[string]time.Duration
+	Durations map[string]time.Duration `json:"durations,omitempty"`
 	// Times are clock times the renderer words for the listener, e.g. "9:42 pm".
-	Times map[string]time.Time
+	Times map[string]time.Time `json:"times,omitempty"`
 	// Languages are language codes (BCP 47 or ISO 639-2) the renderer names in the listener's language, e.g. "fre" becomes "French".
-	Languages map[string]string
+	Languages map[string]string `json:"languages,omitempty"`
 	// Lists are joined the listener's way, e.g. "Dune, Alien and Heat".
-	Lists map[string][]string
+	Lists map[string][]string `json:"lists,omitempty"`
 	// Messages are placeholder values that are messages themselves, rendered in the listener's language, e.g. a title with its year.
-	Messages map[string]Message
+	Messages map[string]Message `json:"messages,omitempty"`
 }
 
 // Choice is one option offered in a "did you mean" question. It round-trips through assistant session state as JSON.

@@ -14,10 +14,11 @@ const (
 
 const exampleTitle = "Dune"
 
-// Session attributes: the choices a question offered ("did you mean", a recommendation) and what its answer should do.
+// Session attributes: the choices a question offered ("did you mean", a recommendation), what its answer should do, and the question itself, to ask again when the answer isn't one.
 const (
 	sessionPending  = "pending"
 	sessionFollowup = "followup"
+	sessionQuestion = "question"
 )
 
 // ConfirmSoundURL is the sound from Amazon's sound library that acknowledges a command with nothing to say.
