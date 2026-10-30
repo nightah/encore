@@ -21,7 +21,7 @@
     "@biomejs/biome": "2.6.3",
     "sort-package-json": "4.1.0"
   },
-  "packageManager": "pnpm@12.16.0",
+  "packageManager": "pnpm@12.16.1",
   "engines": {
     "node": ">=26"
   }
