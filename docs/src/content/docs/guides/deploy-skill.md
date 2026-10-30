@@ -78,9 +78,13 @@ Choose **Deploy**. Progress is shown step by step:
 | import | Amazon imports it, creating or updating the skill. |
 | build | Amazon builds each locale's interaction model. Per-locale results and errors appear here. |
 | enable | Enables the skill for testing on the devices registered to your Amazon account. |
-| simulate | A smoke test through Amazon's simulation API: Encore opens the skill in each locale the API supports. A failed smoke test is reported as a warning; the skill is already live by then. |
+| simulate | A smoke test through Amazon's simulation API: Encore opens the skill in one locale, your default locale when the API supports it, else the first deployed locale it does. A failed smoke test is reported as a warning; the skill is already live by then. |
 
 When it finishes, say "Alexa, open encore" to an Echo. The skill also appears in the Alexa app under **Skills & Games** → **Your Skills** → **Dev**.
+
+:::note[Give a new model a few minutes]
+A deploy is done when Amazon has built the models, but they take a few more minutes, usually 2 to 10, to reach your Echo devices. Until then an Echo may still use the previous model, or not find the skill at all after the first deploy, so wait that long before looking for what's wrong with a new phrase or invocation name.
+:::
 
 ## Locales
 
@@ -100,6 +104,24 @@ An Echo can use the skill only when **its language matches a deployed locale**. 
 | Japanese | `ja-JP` | アンコール | コディ |
 
 French and Brazilian Portuguese say kodi whichever you choose: "encore" means "again" in French, and Portuguese reads it as "en-có-ri", which the recogniser hears as "âncora". Arabic and Japanese invocation names must be written in their own script, so each choice is spelt the way people there say it; the deploy step shows what each enabled locale will say.
+
+Each language's [voice commands](/encore/voice-commands/) page lists the phrases that open the skill in its locales.
+
+### When Alexa doesn't hear the invocation name
+
+Alexa hears an invocation name with the locale's own speech recogniser, so a name that sounds foreign there can be heard as other words, and the skill doesn't open. French Echo owners have found exactly that with English-sounding names, which is one reason French uses kodi. Where Encore keeps "encore", it's because the word is known there or reads close to how people say it, but that hasn't been tried on an Echo in every locale. If "Alexa, open encore" opens something else or nothing at all, choose **kodi** as the invocation name and deploy again:
+
+| Locale | With encore | Risk |
+| --- | --- | --- |
+| `en-AU`, `en-CA`, `en-GB`, `en-IN`, `en-US` | encore | An English word. |
+| `de-DE`, `it-IT`, `nl-NL` | encore | A known loanword, though said the French way, which the recogniser may not expect. |
+| `es-ES` | encore | Not a Spanish word: Spanish rules read it "en-có-re", while people who know it say "an-cór". |
+| `es-MX`, `es-US` | encore | As `es-ES`; US Spanish speakers know it from English, which may help in `es-US`. |
+| `hi-IN` | encore | Written in Latin letters, as Indian speakers say brand names in English; the Hindi recogniser mostly writes Hindi words in Devanagari. |
+| `fr-CA`, `fr-FR`, `pt-BR` | kodi | Already kodi. |
+| `ar-SA`, `ja-JP` | انكور, アンコール | Written as people there say it. |
+
+Amazon's simulator and Encore's NLU checks take text, not speech, so neither can show how Alexa hears the name; only an Echo can. The simulator can show whether an open phrase reaches the skill at all in the locales it simulates, and it hasn't been seen to in `ar-SA`, `hi-IN`, `nl-NL` and `pt-BR`.
 
 Deploy only what you need: every locale is a separate interaction model for Amazon to build, so fewer locales deploy faster. Set them on the Alexa skill page or as code with [`alexa.locales`](/encore/reference/configuration/#alexalocales):
 
@@ -155,6 +177,6 @@ The Alexa skill page can download the skill package as a zip (`skill-package/` p
 
 **Alexa says a Kodi instance isn't answering.** Encore gives each voice request seven seconds, which leaves time for the answer before Alexa gives up at about eight, and says this when Kodi hasn't answered by then. Check that the Kodi instance is running and responsive; the request log shows the request as an error after seven seconds, with the Kodi calls that had finished by then.
 
-**The Echo answers with something unrelated or "I don't know that".** The Echo's language may not match a deployed locale, or it heard a different invocation name. Check the device language and the locales you deployed.
+**The Echo answers with something unrelated or "I don't know that".** If you deployed in the last few minutes, wait up to 10 minutes and try again: a new model takes that long to reach the Echo. Otherwise the Echo's language may not match a deployed locale, or it heard a different invocation name. Check the device language and the locales you deployed, try the other phrases on your language's [voice commands](/encore/voice-commands/) page, and see [when Alexa doesn't hear the invocation name](#when-alexa-doesnt-hear-the-invocation-name).
 
 **"This Echo isn't linked to a Kodi yet."** Link the device on the **Echo devices** page, or make one Kodi instance the default for unlinked Echos; see [Echo devices and rooms](/encore/guides/echo-devices/).
