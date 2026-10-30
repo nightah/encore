@@ -175,6 +175,19 @@
     "title": "Importa ed esporta"
   },
   "features": {
+    "auto_deploy": {
+      "hint": "",
+      "title": ""
+    },
+    "auto_deploy_minutes": {
+      "hint_hours_one": "",
+      "hint_hours_other": "",
+      "hint_minutes_one": "",
+      "hint_minutes_other": "",
+      "hintInvalid": "",
+      "title": "",
+      "unit": ""
+    },
     "confirm_sound": {
       "hint": "Alexa riproduce un breve suono dopo comandi come pausa o alza il volume, invece di restare in silenzio",
       "title": "Conferma i comandi con un suono"
