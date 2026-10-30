@@ -6,6 +6,23 @@
       "open": "Abrir",
       "unlinkedDevice": "Vincular dispositivo"
     },
+    "rejected": {
+      "signature": {
+        "detail": "O Encore não conseguiu confirmar que foi a Alexa que as enviou. Se vieram do seu Echo, verifique se o Encore consegue acessar s3.amazonaws.com para obter o certificado da Amazon e se o seu proxy repassa as solicitações sem alterá-las.",
+        "title_one": "{{count, number}} solicitação recusada por assinatura inválida",
+        "title_other": "{{count, number}} solicitações recusadas por assinatura inválida"
+      },
+      "skillId": {
+        "detail": "A Alexa as assinou para um ID de skill diferente do que o Encore espera. Verifique alexa.skill_id ou implante a skill de novo.",
+        "title_one": "{{count, number}} solicitação para outra skill recusada",
+        "title_other": "{{count, number}} solicitações para outra skill recusadas"
+      },
+      "timestamp": {
+        "detail": "A Alexa marca cada solicitação com a hora em que foi enviada, e o Encore recusa as que se afastam mais de 150 segundos do próprio relógio. Verifique se o relógio deste host está sincronizado.",
+        "title_one": "{{count, number}} solicitação recusada por horário desatualizado",
+        "title_other": "{{count, number}} solicitações recusadas por horário desatualizado"
+      }
+    },
     "title": "Precisa de atenção"
   },
   "description": "Tudo o que a Alexa precisa para chegar às suas instâncias do Kodi, de relance. Somente leitura: as alterações são feitas na página de cada seção.",

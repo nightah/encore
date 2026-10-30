@@ -6,6 +6,23 @@
       "open": "Apri",
       "unlinkedDevice": "Collega dispositivo"
     },
+    "rejected": {
+      "signature": {
+        "detail": "Encore non ha potuto confermare che le abbia inviate Alexa. Se venivano dal tuo Echo, controlla che Encore raggiunga s3.amazonaws.com per il certificato di Amazon e che il tuo proxy inoltri le richieste senza modificarle.",
+        "title_one": "{{count, number}} richiesta rifiutata per una firma non valida",
+        "title_other": "{{count, number}} richieste rifiutate per una firma non valida"
+      },
+      "skillId": {
+        "detail": "Alexa le ha firmate per un ID skill diverso da quello che Encore si aspetta. Controlla alexa.skill_id o distribuisci di nuovo la skill.",
+        "title_one": "{{count, number}} richiesta per un'altra skill rifiutata",
+        "title_other": "{{count, number}} richieste per un'altra skill rifiutate"
+      },
+      "timestamp": {
+        "detail": "Alexa segna su ogni richiesta l'ora di invio, ed Encore rifiuta quelle che si discostano di oltre 150 secondi dal suo orologio. Controlla che l'orologio di questo host sia sincronizzato.",
+        "title_one": "{{count, number}} richiesta rifiutata per un orario scaduto",
+        "title_other": "{{count, number}} richieste rifiutate per un orario scaduto"
+      }
+    },
     "title": "Da sistemare"
   },
   "description": "Tutto ciò che serve ad Alexa per raggiungere le tue istanze di Kodi, a colpo d'occhio. Sola lettura: le modifiche si fanno nella pagina di ciascuna sezione.",

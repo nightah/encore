@@ -6,6 +6,20 @@
       "open": "開く",
       "unlinkedDevice": "デバイスをリンク"
     },
+    "rejected": {
+      "signature": {
+        "detail": "Alexa から送られたことを Encore が確認できませんでした。Echo からのリクエストなら、Encore が Amazon の証明書を取得するために s3.amazonaws.com に接続できること、プロキシがリクエストを変更せずに転送していることを確認してください。",
+        "title_other": "署名が無効なため {{count, number}} 件のリクエストを拒否しました"
+      },
+      "skillId": {
+        "detail": "Alexa は Encore が想定しているものとは別のスキル ID でこれらに署名しました。alexa.skill_id を確認するか、スキルをもう一度デプロイしてください。",
+        "title_other": "別のスキル宛ての {{count, number}} 件のリクエストを拒否しました"
+      },
+      "timestamp": {
+        "detail": "Alexa は各リクエストに送信時刻を付けており、Encore は自分の時計と 150 秒以上ずれたリクエストを拒否します。このホストの時計が同期されているか確認してください。",
+        "title_other": "タイムスタンプが古いため {{count, number}} 件のリクエストを拒否しました"
+      }
+    },
     "title": "要対応"
   },
   "description": "Alexa が Kodi インスタンスに届くために必要なすべてを一目で確認できます。読み取り専用です。変更は各セクションのページで行います。",
