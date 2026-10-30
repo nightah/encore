@@ -167,6 +167,7 @@ describe("skill hooks", () => {
     ["encore", ["ar-SA"], "انكور"],
     ["encore", ["ja-JP", "ar-SA"], "アンコール"],
     ["encore", ["fr-FR", "ar-SA"], "kodi"],
+    ["encore", ["pt-BR", "ar-SA"], "kodi"],
   ] as const)("names %s in %j as %s, preferring the Latin name", async (invocation, locales, name) => {
     const { result } = renderHook(() => ({ save: useSaveSkillSettings(), skill: useSkill() }), { wrapper });
     await waitFor(() => expect(result.current.skill.isSuccess).toBe(true));

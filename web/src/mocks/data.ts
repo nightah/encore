@@ -72,9 +72,9 @@ export const LOCALES = [
   "pt-BR",
 ];
 
-/** What people say per locale for each invocation choice: French says kodi for both, and Arabic and Japanese write the names in their own script. */
+/** What people say per locale for each invocation choice: French and Brazilian Portuguese say kodi for both, and Arabic and Japanese write the names in their own script. */
 export const LOCALE_INVOCATIONS: LocaleInvocation[] = LOCALES.map((locale) => {
-  if (locale.startsWith("fr-")) return { encore: "kodi", kodi: "kodi", locale };
+  if (locale.startsWith("fr-") || locale === "pt-BR") return { encore: "kodi", kodi: "kodi", locale };
   if (locale === "ar-SA") return { encore: "انكور", kodi: "كودي", locale };
   if (locale === "ja-JP") return { encore: "アンコール", kodi: "コディ", locale };
   return { encore: "encore", kodi: "kodi", locale };
