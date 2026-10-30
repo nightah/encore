@@ -191,7 +191,8 @@ func (ix *Index) Search(ctx context.Context, q Query) (Result, error) {
 		return res, err
 	}
 
-	entries := ix.lookup(ids, qf.norm, yq)
+	entries := ix.lookup(ids, qf.norm, yq, q.Resolved)
+	names := ix.resolvedNames(q.Resolved)
 
 	if err := ctx.Err(); err != nil {
 		return res, err
@@ -211,6 +212,13 @@ func (ix *Index) Search(ctx context.Context, q Query) (Result, error) {
 		if yq != nil && e.doc.Year == yq.year {
 			if s := ix.scoreEntry(&yq.rest, e); s.score > best.score {
 				best = s
+			}
+		}
+
+		// The value Alexa resolved the request to names this Doc: it scores against that name, discounted, keeping what was heard's verdict on numbers.
+		for i := range names[e.doc.ID] {
+			if s := ix.scoreEntry(&names[e.doc.ID][i], e); s.score*resolvedNameFactor > best.score {
+				best = scored{score: s.score * resolvedNameFactor, numbersDiffer: best.numbersDiffer, bd: s.bd}
 			}
 		}
 
@@ -289,8 +297,32 @@ func yearQuery(l *language, q *form) *yearQ {
 	return &yearQ{year: y, rest: l.newForm(q.toks[:n-1], "")}
 }
 
-// lookup resolves candidate IDs plus every exact match of norm (or of the year-less query for Docs from that year), deduplicated. Entries are immutable, so they stay valid after the lock is released.
-func (ix *Index) lookup(ids []string, norm string, yq *yearQ) []*entry {
+// resolvedNames is the query form of each resolved value's name, by Doc ID.
+func (ix *Index) resolvedNames(res []Resolved) map[string][]form {
+	var out map[string][]form
+
+	for _, r := range res {
+		if r.Name == "" {
+			continue
+		}
+
+		f := ix.lang.newForm(ix.lang.normalizeSpelled(r.Name, false))
+		if len(f.toks) == 0 {
+			continue
+		}
+
+		if out == nil {
+			out = make(map[string][]form, len(res))
+		}
+
+		out[r.ID] = append(out[r.ID], f)
+	}
+
+	return out
+}
+
+// lookup resolves candidate IDs plus every exact match of norm (or of the year-less query for Docs from that year) and every resolved Doc, deduplicated. Entries are immutable, so they stay valid after the lock is released.
+func (ix *Index) lookup(ids []string, norm string, yq *yearQ, res []Resolved) []*entry {
 	ix.mu.RLock()
 	defer ix.mu.RUnlock()
 
@@ -316,6 +348,10 @@ func (ix *Index) lookup(ids []string, norm string, yq *yearQ) []*entry {
 		for id := range ix.exact[yq.rest.norm] {
 			add(id, yq.year)
 		}
+	}
+
+	for _, r := range res {
+		add(r.ID, 0)
 	}
 
 	for _, id := range ids {

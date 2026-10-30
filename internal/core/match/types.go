@@ -33,6 +33,16 @@ type Query struct {
 	Limit int
 	// Hints adds per-request boosts by Doc ID, e.g. Alexa resolved this title or the user mentioned "new".
 	Hints map[string]float64
+	// Resolved are the Docs Alexa's entity resolution matched the request to. Each is scored as a candidate even when retrieval misses it.
+	Resolved []Resolved
+}
+
+// Resolved is one value Alexa's entity resolution matched a request to.
+type Resolved struct {
+	// ID is the Doc's ID.
+	ID string
+	// Name is the value's name as Alexa matched it, usually the Doc's title. The Doc also scores against it, discounted, so a request in another spelling or script ("せんとちひろのかみかくし") meets the title Alexa resolved it to ("千と千尋の神隠し"). Empty scores the Doc against the request alone.
+	Name string
 }
 
 // Breakdown explains a candidate's score.

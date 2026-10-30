@@ -238,6 +238,22 @@ func TestPendingChoicesAddToTheCallersHints(t *testing.T) {
 	assert.InDeltaMapValues(t, map[string]float64{"movie/1": 0.1 + pendingBoost, "movie/2": 0.05, "movie/3": pendingBoost}, got.Hints, 1e-9)
 }
 
+func TestPlayTitlePassesResolvedValues(t *testing.T) {
+	var got match.Query
+
+	target, _, _ := newTarget()
+	target.Matcher = matcherFunc(func(q match.Query) match.Result {
+		got = q
+
+		return match.Result{Decision: match.DecisionNotFound}
+	})
+
+	resolved := []match.Resolved{{ID: "movie/7", Name: "千と千尋の神隠し"}}
+	newService().PlayTitle(t.Context(), target, TitleRequest{Query: "せんとちひろのかみかくし", Resolved: resolved}, nil)
+
+	assert.Equal(t, resolved, got.Resolved)
+}
+
 func TestNowPlaying(t *testing.T) {
 	target, backend, _ := newTarget()
 	svc := newService()

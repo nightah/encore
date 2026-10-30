@@ -65,6 +65,8 @@ const (
 	homophoneSet = 0.9
 	// nonExactCap keeps fuzzy matches strictly below an exact one.
 	nonExactCap = 0.99
+	// resolvedNameFactor discounts a Doc's score against the value name Alexa's entity resolution matched (Resolved.Name): an exact name scores 0.9, enough to play when nothing else comes close, never an exact match.
+	resolvedNameFactor = 0.9
 	// digitWeight is how many characters a number token counts for in coverage: numbers tell sequels apart.
 	digitWeight = 4
 	// stackRunes is the longest string, in runes, that the edit distances handle without allocating.
