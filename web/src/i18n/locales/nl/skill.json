@@ -19,6 +19,10 @@
     "resume": "Rol de skill zelf uit zodra het is opgelost om ze te hervatten.",
     "title": "Automatische uitrol is gepauzeerd"
   },
+  "autoDeployRetry": {
+    "next": "Poging {{attempts}} van {{max}} is mislukt. Volgende poging: {{time}}.",
+    "title": "Een automatische uitrol is mislukt en wordt opnieuw geprobeerd"
+  },
   "content": {
     "movies": "Films",
     "music": "Muziek",

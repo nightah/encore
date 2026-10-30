@@ -365,6 +365,26 @@ export function AutoDeployPausedCard({ skill }: { skill: Skill }) {
   );
 }
 
+/** Shown while a failed automatic deploy waits to be tried again, before automatic deploys would pause. */
+export function AutoDeployRetryCard({ skill }: { skill: Skill }) {
+  const { t } = useTranslation("skill");
+  const retry = skill.auto_deploy_retry;
+  if (!retry || skill.auto_deploy_paused) return null;
+  return (
+    <Callout tone="warn" role="status" className="flex-col gap-1">
+      <span className="font-semibold">{t("autoDeployRetry.title")}</span>
+      <span className="wrap-anywhere">{retry.error}</span>
+      <span>
+        {t("autoDeployRetry.next", {
+          attempts: retry.attempts,
+          max: retry.max_attempts,
+          time: formatDayOrClock(retry.next_at),
+        })}
+      </span>
+    </Callout>
+  );
+}
+
 export function WarningsCard({ warnings }: { warnings: string[] }) {
   const { t } = useTranslation("skill");
   if (!warnings.length) return null;

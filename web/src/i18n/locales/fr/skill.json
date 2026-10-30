@@ -19,6 +19,10 @@
     "resume": "Déployez la skill à la main une fois le problème réglé pour les reprendre.",
     "title": "Les déploiements automatiques sont en pause"
   },
+  "autoDeployRetry": {
+    "next": "La tentative {{attempts}} sur {{max}} a échoué. Prochain essai : {{time}}.",
+    "title": "Un déploiement automatique a échoué et sera relancé"
+  },
   "content": {
     "movies": "Films",
     "music": "Musique",

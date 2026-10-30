@@ -19,6 +19,10 @@
     "resume": "Despliega la skill a mano cuando esté arreglado para reanudarlos.",
     "title": "Los despliegues automáticos están en pausa"
   },
+  "autoDeployRetry": {
+    "next": "Falló el intento {{attempts}} de {{max}}. Próximo intento: {{time}}.",
+    "title": "Un despliegue automático falló y se volverá a intentar"
+  },
   "content": {
     "movies": "Películas",
     "music": "Música",

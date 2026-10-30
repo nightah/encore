@@ -176,7 +176,7 @@
   },
   "features": {
     "auto_deploy": {
-      "hint": "Rolt de skill opnieuw uit als nieuwe bibliotheektitels, instellingen of een Encore-upgrade hem wijzigen. Een mislukte uitrol pauzeert dit tot je zelf uitrolt.",
+      "hint": "Rolt de skill opnieuw uit als nieuwe bibliotheektitels, instellingen of een Encore-upgrade hem wijzigen. Een uitrol die mislukt omdat Amazon bezet of onbereikbaar is, wordt een paar keer opnieuw geprobeerd; elke andere fout pauzeert dit tot je zelf uitrolt.",
       "title": "Skillwijzigingen automatisch uitrollen"
     },
     "auto_deploy_minutes": {

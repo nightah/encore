@@ -19,6 +19,10 @@
     "resume": "Implante a skill manualmente depois de corrigir o problema para retomá-las.",
     "title": "As implantações automáticas estão pausadas"
   },
+  "autoDeployRetry": {
+    "next": "A tentativa {{attempts}} de {{max}} falhou. Próxima tentativa: {{time}}.",
+    "title": "Uma implantação automática falhou e será tentada de novo"
+  },
   "content": {
     "movies": "Filmes",
     "music": "Música",

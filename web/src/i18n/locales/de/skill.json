@@ -19,6 +19,10 @@
     "resume": "Stelle den Skill von Hand bereit, sobald das behoben ist, um sie fortzusetzen.",
     "title": "Automatische Bereitstellungen sind pausiert"
   },
+  "autoDeployRetry": {
+    "next": "Versuch {{attempts}} von {{max}} ist fehlgeschlagen. Nächster Versuch ab {{time}}.",
+    "title": "Eine automatische Bereitstellung ist fehlgeschlagen und wird wiederholt"
+  },
   "content": {
     "movies": "Filme",
     "music": "Musik",
