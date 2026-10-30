@@ -136,6 +136,13 @@ func FuzzParseDuration(f *testing.F) {
 	})
 }
 
+func TestNewSpeechRejectsBrokenMusicSample(t *testing.T) {
+	_, err := NewSpeech(speechSources(t, map[string]string{
+		"en-US": "language: en\nutterances:\n  ListenToArtist:\n    - \"(play|put on {Artist}\"\n",
+	}), slog.New(slog.DiscardHandler))
+	require.ErrorContains(t, err, "locale en-US")
+}
+
 // A locale Encore has no model for reads a lone command the fallback locale's way.
 func TestBareCommandInAnUnknownLocale(t *testing.T) {
 	h, _, _ := newHandler(t)

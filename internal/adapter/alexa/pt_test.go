@@ -82,33 +82,33 @@ func TestPortugueseReinterpret(t *testing.T) {
 	speech := portugueseSpeech(t)
 
 	type want struct {
-		intent, title string
-		slots         map[string]string
+		intent string
+		slots  map[string]string
 	}
 
 	for _, tc := range []struct {
 		query string
 		want  want
 	}{
-		{"o próximo episódio de sintonia", want{"WatchNextEpisode", "Show", map[string]string{"Show": "sintonia"}}},
-		{"o próximo episódio de sintonia na sala", want{"WatchNextEpisode", "Show", map[string]string{"Show": "sintonia na sala"}}},
-		{"o primeiro episódio de irmandade", want{"WatchFirstEpisode", "Show", map[string]string{"Show": "irmandade"}}},
-		{"o 1º episódio de irmandade", want{"WatchFirstEpisode", "Show", map[string]string{"Show": "irmandade"}}},
-		{"o 1° episódio de irmandade", want{"WatchFirstEpisode", "Show", map[string]string{"Show": "irmandade"}}},
-		{"o último episódio de os normais", want{"WatchLatestEpisode", "Show", map[string]string{"Show": "os normais"}}},
-		{"um episódio aleatório de chiquititas", want{"WatchRandomEpisode", "Show", map[string]string{"Show": "chiquititas"}}},
-		{"o episódio 4 da temporada 2 de sintonia", want{"WatchEpisode", "Show", map[string]string{"Show": "sintonia", "Season": "2", "Episode": "4"}}},
-		{"cidade invisível de onde parei", want{"WatchNextEpisode", "Show", map[string]string{"Show": "cidade invisível"}}},
-		{"cidade de deus", want{"PlayMedia", "Query", map[string]string{"Query": "cidade de deus"}}},
+		{"o próximo episódio de sintonia", want{"WatchNextEpisode", map[string]string{"Show": "sintonia"}}},
+		{"o próximo episódio de sintonia na sala", want{"WatchNextEpisode", map[string]string{"Show": "sintonia na sala"}}},
+		{"o primeiro episódio de irmandade", want{"WatchFirstEpisode", map[string]string{"Show": "irmandade"}}},
+		{"o 1º episódio de irmandade", want{"WatchFirstEpisode", map[string]string{"Show": "irmandade"}}},
+		{"o 1° episódio de irmandade", want{"WatchFirstEpisode", map[string]string{"Show": "irmandade"}}},
+		{"o último episódio de os normais", want{"WatchLatestEpisode", map[string]string{"Show": "os normais"}}},
+		{"um episódio aleatório de chiquititas", want{"WatchRandomEpisode", map[string]string{"Show": "chiquititas"}}},
+		{"o episódio 4 da temporada 2 de sintonia", want{"WatchEpisode", map[string]string{"Show": "sintonia", "Season": "2", "Episode": "4"}}},
+		{"cidade invisível de onde parei", want{"WatchNextEpisode", map[string]string{"Show": "cidade invisível"}}},
+		{"cidade de deus", want{"PlayMedia", map[string]string{"Query": "cidade de deus"}}},
 	} {
 		in := Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.query}}}
-		got, title := speech.Reinterpret("pt-BR", in)
+		got := speech.Reinterpret("pt-BR", in)[0]
 
 		values := map[string]string{}
 		for name, slot := range got.Slots {
 			values[name] = slot.Value
 		}
 
-		assert.Equal(t, tc.want, want{got.Name, title, values}, "%q", tc.query)
+		assert.Equal(t, tc.want, want{got.Name, values}, "%q", tc.query)
 	}
 }

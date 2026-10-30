@@ -100,31 +100,31 @@ func TestReinterpretArabic(t *testing.T) {
 	require.NoError(t, err)
 
 	type want struct {
-		intent, title string
-		slots         map[string]string
+		intent string
+		slots  map[string]string
 	}
 
 	for _, tc := range []struct {
 		query string
 		want  want
 	}{
-		{"الحلقة الجاية من طاش ما طاش", want{"WatchNextEpisode", "Show", map[string]string{"Show": "طاش ما طاش"}}},
-		{"الحلقة الجاية من مسلسل طاش ما طاش في الصالة", want{"WatchNextEpisode", "Show", map[string]string{"Show": "طاش ما طاش في الصالة"}}},
-		{"آخر حلقة من العاصوف", want{"WatchLatestEpisode", "Show", map[string]string{"Show": "العاصوف"}}},
-		{"أول حلقة من العاصوف", want{"WatchFirstEpisode", "Show", map[string]string{"Show": "العاصوف"}}},
-		{"حلقة عشوائية من مسلسل جن", want{"WatchRandomEpisode", "Show", map[string]string{"Show": "جن"}}},
-		{"الموسم 2 الحلقة 4 من باب الحارة", want{"WatchEpisode", "Show", map[string]string{"Show": "باب الحارة", "Season": "2", "Episode": "4"}}},
-		{"طاش ما طاش", want{"PlayMedia", "Query", map[string]string{"Query": "طاش ما طاش"}}},
+		{"الحلقة الجاية من طاش ما طاش", want{"WatchNextEpisode", map[string]string{"Show": "طاش ما طاش"}}},
+		{"الحلقة الجاية من مسلسل طاش ما طاش في الصالة", want{"WatchNextEpisode", map[string]string{"Show": "طاش ما طاش في الصالة"}}},
+		{"آخر حلقة من العاصوف", want{"WatchLatestEpisode", map[string]string{"Show": "العاصوف"}}},
+		{"أول حلقة من العاصوف", want{"WatchFirstEpisode", map[string]string{"Show": "العاصوف"}}},
+		{"حلقة عشوائية من مسلسل جن", want{"WatchRandomEpisode", map[string]string{"Show": "جن"}}},
+		{"الموسم 2 الحلقة 4 من باب الحارة", want{"WatchEpisode", map[string]string{"Show": "باب الحارة", "Season": "2", "Episode": "4"}}},
+		{"طاش ما طاش", want{"PlayMedia", map[string]string{"Query": "طاش ما طاش"}}},
 	} {
 		in := Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.query}}}
-		got, title := speech.Reinterpret("ar-SA", in)
+		got := speech.Reinterpret("ar-SA", in)[0]
 
 		values := map[string]string{}
 		for name, slot := range got.Slots {
 			values[name] = slot.Value
 		}
 
-		assert.Equal(t, tc.want, want{got.Name, title, values}, tc.query)
+		assert.Equal(t, tc.want, want{got.Name, values}, tc.query)
 	}
 }
 

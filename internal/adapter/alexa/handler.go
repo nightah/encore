@@ -235,18 +235,15 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, tr *requestT
 		err    error
 	)
 
-	// The slot holding a search query's title, which may end with a room.
-	var title string
-
-	if intent.Name == "PlayMedia" {
-		intent, title = h.Speech.Reinterpret(locale, intent)
-	}
+	// The ways to read the request, tried in turn until one finds something: a search query may name a film, TV or music intent's sample.
+	readings := []Intent{intent}
 
 	switch room := strings.TrimSpace(intent.Slots["Room"].Value); {
+	case intent.Name == "PlayMedia":
+		target, intent, err = h.targetInQuery(ctx, deviceID, locale, intent)
+		readings = h.Speech.Reinterpret(locale, intent)
 	case room != "":
 		target, err = h.Targets.TargetForRoom(ctx, deviceID, room)
-	case title != "":
-		target, intent, err = h.targetInQuery(ctx, deviceID, locale, intent, title)
 	default:
 		target, err = h.Targets.Target(ctx, deviceID)
 	}
@@ -273,7 +270,17 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, tr *requestT
 
 	tr.setTarget(target, timed)
 
-	o := h.dispatch(ctx, env, target, intent)
+	o := h.dispatch(ctx, env, target, readings[0])
+
+	for _, reading := range readings[1:] {
+		if !o.Missed() {
+			break
+		}
+
+		if next := h.dispatch(ctx, env, target, reading); !next.Missed() {
+			o = next
+		}
+	}
 
 	if o.AskAgain {
 		if question == nil {
@@ -287,8 +294,10 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, tr *requestT
 	return h.respond(locale, o, target.ConfirmSound), &o
 }
 
-// targetInQuery finds a room named at the end of a search query's title slot. An AMAZON.SearchQuery slot can't share an utterance with another slot, so "play frozen in the lounge" arrives as the query "frozen in the lounge"; when its ending names a known room, the room is taken off the title and its Kodi instance is the target.
-func (h *Handler) targetInQuery(ctx context.Context, deviceID, locale string, intent Intent, title string) (actions.Target, Intent, error) {
+// targetInQuery finds a room named in a search query. An AMAZON.SearchQuery slot can't share an utterance with another slot, so "play frozen in the lounge" arrives as the query "frozen in the lounge"; when its ending (or, in some languages, its start) names a known room, the room is taken off the query and its Kodi instance is the target.
+func (h *Handler) targetInQuery(ctx context.Context, deviceID, locale string, intent Intent) (actions.Target, Intent, error) {
+	const title = "Query"
+
 	for _, split := range h.Speech.RoomSplits(locale, intent.Slots[title].Value) {
 		target, err := h.Targets.TargetForRoom(ctx, deviceID, split.Room)
 

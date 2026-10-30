@@ -66,7 +66,7 @@ func TestRegionalReinterpret(t *testing.T) {
 		{"fr-CA", "le téléroman les belles histoires des pays d'en haut", "WatchNextEpisode", map[string]string{"Show": "les belles histoires des pays d'en haut"}},
 		{"fr-FR", "le téléroman district 31", "PlayMedia", map[string]string{"Query": "le téléroman district 31"}},
 	} {
-		got, _ := speech.Reinterpret(tc.locale, Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.query}}})
+		got := speech.Reinterpret(tc.locale, Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.query}}})[0]
 
 		values := map[string]string{}
 		for name, slot := range got.Slots {
