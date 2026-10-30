@@ -73,7 +73,7 @@ func TestTitleYearInEveryLanguage(t *testing.T) {
 		"nl-NL": "Bedoel je Dune uit 1984 of Dune uit 2021?",
 		"pt-BR": "Você quis dizer Dune de 1984 ou Dune de 2021?",
 		"ar-SA": "هل المقصود Dune لعام 1984 أم Dune لعام 2021؟",
-		"hi-IN": "क्या आपका मतलब 1984 वाली Dune था या 2021 वाली Dune?",
+		"hi-IN": "क्या आपका मतलब Dune (1984) था या Dune (2021)?",
 		"ja-JP": "1984年のDuneと2021年のDuneのどちらですか？",
 	}
 
@@ -127,7 +127,7 @@ func TestUnrecognisedReplyAsksAgain(t *testing.T) {
 		"nl-NL": "Sorry, dat verstond ik niet. Bedoel je Dune uit 1984 of Dune uit 2021?",
 		"pt-BR": "Desculpe, não entendi. Você quis dizer Dune de 1984 ou Dune de 2021?",
 		"ar-SA": "عذرا، لم أفهم ذلك. هل المقصود Dune لعام 1984 أم Dune لعام 2021؟",
-		"hi-IN": "माफ़ कीजिए, मैं समझ नहीं पाई। क्या आपका मतलब 1984 वाली Dune था या 2021 वाली Dune?",
+		"hi-IN": "माफ़ कीजिए, मैं समझ नहीं पाई। क्या आपका मतलब Dune (1984) था या Dune (2021)?",
 		"ja-JP": "すみません、聞き取れませんでした。1984年のDuneと2021年のDuneのどちらですか？",
 	}
 
@@ -189,7 +189,7 @@ func TestYesToEitherOrAsksAgain(t *testing.T) {
 		"nl-NL": "Er zijn er meerdere. Bedoel je Dune uit 1984 of Dune uit 2021?",
 		"pt-BR": "Tem mais de um. Você quis dizer Dune de 1984 ou Dune de 2021?",
 		"ar-SA": "فيه أكثر من واحد. هل المقصود Dune لعام 1984 أم Dune لعام 2021؟",
-		"hi-IN": "एक से ज़्यादा हैं। क्या आपका मतलब 1984 वाली Dune था या 2021 वाली Dune?",
+		"hi-IN": "एक से ज़्यादा हैं। क्या आपका मतलब Dune (1984) था या Dune (2021)?",
 		"ja-JP": "候補が複数あります。1984年のDuneと2021年のDuneのどちらですか？",
 	}
 
@@ -230,7 +230,7 @@ func TestNoOffersOtherMatches(t *testing.T) {
 		"nl-NL": {"Bedoel je Dune: Part Two uit 2024?", "Ik kan geen andere titels vinden."},
 		"pt-BR": {"Você quis dizer Dune: Part Two de 2024?", "Não encontrei outros resultados."},
 		"ar-SA": {"هل المقصود Dune: Part Two لعام 2024؟", "لم أجد نتائج أخرى."},
-		"hi-IN": {"क्या आपका मतलब 2024 वाली Dune: Part Two था?", "मुझे और कोई टाइटल नहीं मिला।"},
+		"hi-IN": {"क्या आपका मतलब Dune: Part Two (2024) था?", "मुझे और कोई टाइटल नहीं मिला।"},
 		"ja-JP": {"2024年のDune: Part Twoのことですか？", "ほかに候補は見つかりませんでした。"},
 	}
 
