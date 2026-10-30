@@ -10,6 +10,7 @@ responses:
   content.disabled: "Esta skill está configurada sin ese tipo de contenido. Puedes activarlo en la configuración de la skill de Alexa de Encore."
   error.device_unlinked: "Este Echo todavía no está vinculado a ninguna instancia de Kodi. Abre la configuración de Encore para elegir una."
   error.generic: "Lo siento, algo falló al comunicarme con Kodi."
+  error.not_answering: "Lo siento, esto tardó demasiado. Inténtalo de nuevo en un momento."
   error.unknown_room: "No conozco ningún cuarto llamado {room}."
   fallback: "Lo siento, no te entendí. Intenta decir: pon la película {example}."
   favourite.not_found: "No encontré ningún favorito llamado {favourite}."

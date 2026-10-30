@@ -26,6 +26,9 @@ const ConfirmSoundURL = "soundbank://soundlibrary/ui/gameshow/amzn_ui_sfx_gamesh
 // resolvedBoost favours titles Alexa's own entity resolution picked; small, because Alexa's guess is a prior, not the answer.
 const resolvedBoost = 0.03
 
+// RequestDeadline is how long Encore works on a voice request before answering that Kodi isn't answering. Alexa gives up after about eight seconds and says the skill didn't respond, which tells the user nothing; this leaves a second for the answer to travel back. The signature check counts against it, since Alexa waited for that too.
+const RequestDeadline = 7 * time.Second
+
 // progressiveTimeout bounds a progressive response so it never eats into Alexa's eight-second budget for the real answer.
 const progressiveTimeout = time.Second
 

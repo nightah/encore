@@ -70,6 +70,15 @@ type Recorder interface {
 	Record(ctx context.Context, e LogEntry)
 }
 
+// requestTrace collects what handling a request did, for the request log. It is shared with the goroutine handling the request, which may still be running when the deadline answers for it.
+type requestTrace struct {
+	mu     sync.Mutex
+	calls  []media.Call
+	target string
+	via    actions.Via
+	timed  *timedMatcher
+}
+
 // timedMatcher adds up the time spent matching titles during one request.
 type timedMatcher struct {
 	actions.Matcher

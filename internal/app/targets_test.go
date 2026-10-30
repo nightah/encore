@@ -298,3 +298,8 @@ func TestDeviceNameRecordsTheEcho(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "Kitchen Dot", name)
 }
+
+// A woken Kodi instance must have time left to act on the request before the voice request's deadline answers for it.
+func TestWakeBudgetFitsTheRequestDeadline(t *testing.T) {
+	assert.Less(t, wakeBudget, alexa.RequestDeadline)
+}
