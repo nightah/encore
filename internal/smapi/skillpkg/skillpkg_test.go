@@ -8,8 +8,10 @@ import (
 	"image"
 	_ "image/png"
 	"io"
+	"io/fs"
 	"strings"
 	"testing"
+	"testing/fstest"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -353,4 +355,29 @@ func TestLocaleSlotValues(t *testing.T) {
 	full, err := skillpkg.Build(sources(t), skillpkg.Options{Locales: opts.Locales, Endpoint: opts.Endpoint, Privacy: opts.Privacy, SlotValues: opts.SlotValues})
 	require.NoError(t, err)
 	assert.NotEqual(t, full.Hash(), pkg.Hash())
+}
+
+// A locale whose samples don't expand fails the package, naming the locale and intent.
+func TestBuildRefusesABrokenSample(t *testing.T) {
+	fsys := fstest.MapFS{}
+
+	require.NoError(t, fs.WalkDir(i18n.FS, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return err
+		}
+
+		data, err := fs.ReadFile(i18n.FS, path)
+		fsys[path] = &fstest.MapFile{Data: data}
+
+		return err
+	}))
+
+	en := fsys["locales/en-US.yaml"]
+	en.Data = append(en.Data, []byte("utterances:\n  WatchMovie:\n    - \"play (the {Movie}\"\n")...)
+
+	src, err := skillmodel.Load(fsys)
+	require.NoError(t, err)
+
+	_, err = skillpkg.Build(src, options())
+	require.ErrorContains(t, err, "skillpkg: locale en-US, intent WatchMovie")
 }

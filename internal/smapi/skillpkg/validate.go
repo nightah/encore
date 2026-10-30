@@ -47,7 +47,7 @@ func (p Privacy) validate() error {
 	return fmt.Errorf("privacy and compliance questions unanswered: %s", strings.Join(missing, ", "))
 }
 
-// filterSlotValues cleans build-time slot values and synonyms for Amazon (cleanSlotText), then drops those left empty or longer than MaxSlotValueLength, which would otherwise fail the whole build over one title, and merges values that clean to the same text: the first keeps its ID and gains the others' synonyms.
+// filterSlotValues cleans build-time slot values and synonyms for Amazon (CleanSlotText), then drops those left empty or longer than MaxSlotValueLength, which would otherwise fail the whole build over one title, and merges values that clean to the same text: the first keeps its ID and gains the others' synonyms.
 func filterSlotValues(in map[string][]skillmodel.SlotValue) (map[string][]skillmodel.SlotValue, []string) {
 	if in == nil {
 		return nil, nil
@@ -63,7 +63,7 @@ func filterSlotValues(in map[string][]skillmodel.SlotValue) (map[string][]skillm
 		byValue := map[string]int{}
 
 		for _, v := range in[typ] {
-			value := cleanSlotText(v.Value)
+			value := CleanSlotText(v.Value)
 
 			switch {
 			case value == "":
@@ -84,7 +84,7 @@ func filterSlotValues(in map[string][]skillmodel.SlotValue) (map[string][]skillm
 			}
 
 			for _, s := range v.Synonyms {
-				s = cleanSlotText(s)
+				s = CleanSlotText(s)
 
 				switch {
 				case s == "":
@@ -114,8 +114,8 @@ func filterSlotValues(in map[string][]skillmodel.SlotValue) (map[string][]skillm
 // kodiTags matches Kodi's label formatting tags, opening and closing, in any case.
 var kodiTags = regexp.MustCompile(`(?i)\[(?:/?(?:b|i|light|uppercase|lowercase|capitalize|tabs)|color[^\]]*|/color|cr)\]`)
 
-// cleanSlotText makes a title or name fit for a slot value: Kodi's label formatting tags are removed ([B], [I], [LIGHT], [COLOR x], [UPPERCASE], [LOWERCASE], [CAPITALIZE], [TABS] and their closing tags, with [CR] a space), as are control and format characters, symbols such as emoji and their skin tones and keycaps, which can't be said, and '*', which Amazon rejects in a slot value ("*NSYNC"). Runs of spaces collapse to one and the ends are trimmed.
-func cleanSlotText(s string) string {
+// CleanSlotText makes a title or name fit for a slot value: Kodi's label formatting tags are removed ([B], [I], [LIGHT], [COLOR x], [UPPERCASE], [LOWERCASE], [CAPITALIZE], [TABS] and their closing tags, with [CR] a space), as are control and format characters, symbols such as emoji and their skin tones and keycaps, which can't be said, and '*', which Amazon rejects in a slot value ("*NSYNC"). Runs of spaces collapse to one and the ends are trimmed.
+func CleanSlotText(s string) string {
 	s = kodiTags.ReplaceAllStringFunc(s, func(tag string) string {
 		if strings.EqualFold(tag, "[cr]") {
 			return " "

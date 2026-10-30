@@ -88,7 +88,8 @@ func (s *Server) checkValues(locale string, model json.RawMessage) string {
 					Name   string `json:"name"`
 					Values []struct {
 						Name struct {
-							Value string `json:"value"`
+							Value    string   `json:"value"`
+							Synonyms []string `json:"synonyms"`
 						} `json:"name"`
 					} `json:"values"`
 				} `json:"types"`
@@ -104,6 +105,12 @@ func (s *Server) checkValues(locale string, model json.RawMessage) string {
 		for _, v := range typ.Values {
 			if s.rejected[v.Name.Value] {
 				return fmt.Sprintf("Slot type %q has an invalid value %q.", typ.Name, v.Name.Value)
+			}
+
+			for _, syn := range v.Name.Synonyms {
+				if s.rejected[syn] {
+					return fmt.Sprintf("Slot type %q has an invalid synonym %q.", typ.Name, syn)
+				}
 			}
 		}
 
