@@ -18,7 +18,7 @@ func newGenCommand() *cobra.Command {
 		Short: "Developer tools for the interaction model",
 	}
 
-	cmd.AddCommand(newGenLintCommand(), newGenModelCommand())
+	cmd.AddCommand(newGenLintCommand(), newGenModelCommand(), newGenNLUCommand(), newGenOpenCommand())
 
 	return cmd
 }

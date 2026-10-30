@@ -48,3 +48,10 @@ type statelessRun struct {
 	blobs blobstore.Store
 	dir   string
 }
+
+// smapiFlags are how the live developer tools reach SMAPI. The endpoints are flags only so tests can point them at a fake.
+type smapiFlags struct {
+	skill    string
+	smapiURL string
+	tokenURL string
+}

@@ -7,6 +7,7 @@ GO       = go
 PNPM     = pnpm
 DOCKER   = docker
 GOLANGCI = golangci-lint
+NLU_FLAGS =
 BIN      = bin/encore
 IMAGE    = encore:dev
 
@@ -94,6 +95,12 @@ bench: ## Run the benchmarks module's comparisons once and summarise them with b
 	cd benchmarks && for p in editdistance totp phonetic; do $(GO) test -run '^$$' -bench . ./$$p > bench-$$p.txt || exit 1; done
 	cd benchmarks && for p in retrieval editdistance totp phonetic; do $(GO) tool benchstat -col /impl bench-$$p.txt || exit 1; done
 
+nlu: ## Profile testdata/nlu's utterances against the deployed skill with SMAPI's profileNlu (needs SMAPI_CLIENT_ID, SMAPI_CLIENT_SECRET, SMAPI_REFRESH_TOKEN and SMAPI_SKILL_ID; NLU_FLAGS adds flags, e.g. NLU_FLAGS='-l nl-NL -v')
+	$(GO) run ./cmd/encore gen nlu $(NLU_FLAGS)
+
+nlu-open: ## Say each locale's launch phrases to Amazon's simulator against the deployed skill and report which locales it refuses (same credentials as nlu; NLU_FLAGS adds flags, e.g. NLU_FLAGS='--invocation kodi')
+	$(GO) run ./cmd/encore gen open $(NLU_FLAGS)
+
 test-web: web-browser ## Run web unit tests (in headless Chromium)
 	$(PNPM) -C web test
 
@@ -146,6 +153,6 @@ clean: ## Remove build outputs (keeps internal/server/dist/.gitkeep)
 	rm -rf bin dist coverage.out benchmarks/bench-*.txt web/playwright-report web/test-results docs/dist docs/.astro
 	find internal/server/dist -mindepth 1 ! -name .gitkeep -exec rm -rf {} +
 
-.PHONY: help version patch minor major icons generate lint lint-go lint-repo lint-web test test-go test-tools test-benchmarks bench test-web \
+.PHONY: help version patch minor major icons generate lint lint-go lint-repo lint-web test test-go test-tools test-benchmarks bench nlu nlu-open test-web \
 	test-contract web-install web-browser web-build build build-noui run dev web-dev docs-install docs docs-dev \
 	docker clean

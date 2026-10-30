@@ -58,6 +58,7 @@ To reach it through a reverse proxy, override the host and allowed host names, a
 | `make build` | Builds the web interface, then `bin/encore` with it embedded |
 | `make docs` / `make docs-dev` | Builds this site into `docs/dist` (checking links) / serves it locally |
 | `make test-contract` | Contract tests against a real Kodi, MinIO and WebDAV server |
+| `make nlu` / `make nlu-open` | Checks how Alexa reads the fixture utterances, and which locales the simulator opens the skill in, against your deployed skill (see [NLU checks](#nlu-checks)) |
 | `make docker` | Builds a local container image, `encore:dev` |
 
 ## Generated code
@@ -105,6 +106,21 @@ ENCORE_CONTRACT_WEBDAV_URL=http://127.0.0.1:8082/remote.php/dav/files/encore/ \
 ```
 
 With `ENCORE_CONTRACT_KODI_LIBRARY` also set, the voice tests in `internal/app` ask Encore for the titles in the test library (`internal/backend/kodi/testdata/kodi-headless/library`) and check what it matched and played. Kodi has to have scanned that library first: the "Seed the library" step in `.github/workflows/nightly.yml` adds it and starts the scan.
+
+## NLU checks
+
+The interaction model lint checks the samples Encore sends; only Amazon can say which intent its NLU picks for what people say. `make nlu` profiles every row of `testdata/nlu/<locale>.yaml` with SMAPI's `profileNlu` against your deployed skill's development models and lists each row whose intent or slots differ, with the intents Alexa weighed instead. It needs a security profile's client ID and secret and a refresh token it issued, the same ones the live SMAPI tests use, and the skill's ID from the Alexa skill page:
+
+```sh
+export SMAPI_CLIENT_ID=amzn1.application-oa2-client.… SMAPI_CLIENT_SECRET=… SMAPI_REFRESH_TOKEN=Atzr|…
+export SMAPI_SKILL_ID=amzn1.ask.skill.…
+make nlu                          # every locale
+make nlu NLU_FLAGS='-l nl-NL -v'  # one locale, listing the rows that pass too
+```
+
+Profiling reads the built models, so deploy first, and expect the odd row to need a second ask: Amazon's NLU now and then answers no intent, so such a row is asked twice more before it fails, and its occasional 500s are retried. Each row names an utterance, the intent and the slots it should fill (an empty value takes any words; a custom type's value may be its ID). A row that needs a model change you haven't deployed yet takes `pending: <why>`: it's reported but doesn't fail the run, and once it passes the run says to drop the mark. Add rows for every locale when you add or change phrasings, including the risky ones: bare titles, the forms one-shot requests take, rooms, episodes and seasons, and music by an artist.
+
+`make nlu-open` says each locale's launch phrases (`launch` in `i18n/locales/<locale>.yaml`) to Amazon's simulator in turn, until one reaches the skill, and reports the locales the simulator refuses and those where none got through; pass `NLU_FLAGS='--invocation kodi'` if the skill was deployed with kodi. Neither check hears speech, so how Alexa hears the invocation name can only be tried on an Echo.
 
 ## Test images
 
