@@ -31,6 +31,7 @@
   },
   "locales": {
     "build": {
+      "degraded": "Minder titels",
       "failed": "Mislukt",
       "in_progress": "Bezig met bouwen",
       "succeeded": "Geslaagd"
@@ -47,6 +48,7 @@
       "keepOne": "Houd minstens één van films, tv-series of muziek aan.",
       "legend": "Wat hij kan afspelen"
     },
+    "degradedTitles": "{{kept}} van {{total}}",
     "empty": "Nog niets gebouwd. Rol de skill uit om voor elke ingeschakelde taalregio een model te bouwen.",
     "enabled": {
       "hint": "Alleen ingeschakelde taalregio's worden gebouwd en uitgerold. Een Echo kan de skill alleen gebruiken als zijn taal overeenkomt met een ervan. Wijzigingen gelden bij de volgende uitrol.",
@@ -125,6 +127,8 @@
     "title": "Titels in het model"
   },
   "warnings": {
+    "dropped": "{{locale}}: Amazon weigerde deze titels, dus zijn ze weggelaten: {{titles}}",
+    "thinned": "{{locale}}: Amazon bouwde het model niet met alle bibliotheektitels, dus is het gebouwd met {{kept}} van {{total}}.",
     "title": "Waarschuwingen van de laatste uitrol"
   }
 }

@@ -6,6 +6,7 @@ import {
   formatDate,
   formatDayOrClock,
   formatDuration,
+  formatList,
   formatMegabytes,
   formatNumber,
   formatPosition,
@@ -24,6 +25,14 @@ describe("formatNumber", () => {
     expect(formatNumber(1234567.5)).toBe("1,234,567.5");
     await i18n.changeLanguage("de");
     expect(formatNumber(1234567.5)).toBe("1.234.567,5");
+  });
+});
+
+describe("formatList", () => {
+  it("joins items the interface language's way", async () => {
+    expect(formatList(["Dune", "Heat", "Alien"])).toBe("Dune, Heat and Alien");
+    await i18n.changeLanguage("de");
+    expect(formatList(["Dune", "Heat"])).toBe("Dune und Heat");
   });
 });
 

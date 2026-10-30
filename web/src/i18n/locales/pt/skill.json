@@ -31,6 +31,7 @@
   },
   "locales": {
     "build": {
+      "degraded": "Menos títulos",
       "failed": "Falhou",
       "in_progress": "Compilando",
       "succeeded": "Concluído"
@@ -47,6 +48,7 @@
       "keepOne": "Mantenha pelo menos um entre filmes, séries de TV ou música.",
       "legend": "O que ela pode reproduzir"
     },
+    "degradedTitles": "{{kept}} de {{total}}",
     "empty": "Nada compilado ainda. Implante a skill para compilar um modelo para cada localidade ativada.",
     "enabled": {
       "hint": "Somente as localidades ativadas são compiladas e implantadas. Um Echo só pode usar a skill se o idioma dele corresponder a uma delas. As alterações valem na próxima implantação.",
@@ -125,6 +127,8 @@
     "title": "Títulos no modelo"
   },
   "warnings": {
+    "dropped": "{{locale}}: a Amazon rejeitou estes títulos, então eles foram deixados de fora: {{titles}}",
+    "thinned": "{{locale}}: a Amazon não compilou o modelo com todos os títulos da biblioteca, então ele foi compilado com {{kept}} de {{total}}.",
     "title": "Avisos da última implantação"
   }
 }

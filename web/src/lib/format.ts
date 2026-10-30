@@ -7,10 +7,12 @@ function locale(): string {
   return !i18n.language || i18n.language === "en" ? "en-GB" : i18n.language;
 }
 
-const formats = new Map<string, Intl.NumberFormat | Intl.RelativeTimeFormat>();
+type Format = Intl.NumberFormat | Intl.RelativeTimeFormat | Intl.ListFormat;
+
+const formats = new Map<string, Format>();
 
 /** One formatter per kind and locale, kept: building them is slow and the language rarely changes. */
-function cached<F extends Intl.NumberFormat | Intl.RelativeTimeFormat>(kind: string, make: (locale: string) => F): F {
+function cached<F extends Format>(kind: string, make: (locale: string) => F): F {
   const lang = locale();
   const key = `${kind}|${lang}`;
   let format = formats.get(key) as F | undefined;
@@ -23,6 +25,11 @@ function cached<F extends Intl.NumberFormat | Intl.RelativeTimeFormat>(kind: str
 
 export function formatNumber(value: number): string {
   return cached("number", (l) => new Intl.NumberFormat(l)).format(value);
+}
+
+/** "Dune, Heat and Alien", joined the interface language's way. */
+export function formatList(items: string[]): string {
+  return cached("list", (l) => new Intl.ListFormat(l, { type: "conjunction" })).format(items);
 }
 
 /** "20:41", always 24-hour. */

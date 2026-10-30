@@ -155,6 +155,70 @@ describe("Alexa skill page", () => {
     expect(screen.queryByText("An automatic deploy failed and will be tried again")).not.toBeInTheDocument();
   });
 
+  it("shows the locales built with fewer library titles", async () => {
+    const db = getDb();
+    const last = db.skill.last_deploy;
+    if (!last) throw new Error("the mock skill has been deployed");
+    const row = last.locales[0];
+    if (!row) throw new Error("the mock deploy built a locale");
+    db.skill = {
+      ...db.skill,
+      last_deploy: {
+        ...last,
+        locales: [
+          { ...row, locale: "en-AU" },
+          {
+            ...row,
+            degraded: { dropped: [], reasons: ["INVALID_INTERACTION_MODEL: too large"], titles_asked_for: 3480 },
+            locale: "en-GB",
+            titles: 1740,
+          },
+          {
+            ...row,
+            degraded: { dropped: ["Dune", "Heat"], reasons: ["Slot value 'Dune' is invalid"], titles_asked_for: 3480 },
+            locale: "en-US",
+            titles: 3478,
+          },
+          {
+            ...row,
+            degraded: { dropped: ["Arrival"], reasons: [], titles_asked_for: 3480 },
+            locale: "en-CA",
+            titles: 3479,
+          },
+          {
+            ...row,
+            degraded: { dropped: ["Alien"], reasons: [], titles_asked_for: 3480 },
+            errors: ["it failed anyway"],
+            locale: "en-IN",
+            status: "failed",
+          },
+        ],
+        warnings: ["slot type AMAZON.Movie: dropped 1 values or synonyms longer than 140 characters"],
+      },
+    };
+    renderApp("/alexa-skill");
+
+    const note = await screen.findByRole("note");
+    expect(
+      within(note).getByText(
+        "en-GB: Amazon would not build the model with every library title, so it was built with 1,740 of 3,480.",
+      ),
+    ).toBeInTheDocument();
+    expect(within(note).getByText("INVALID_INTERACTION_MODEL: too large")).toBeInTheDocument();
+    expect(
+      within(note).getByText("en-US: Amazon rejected these titles, so they were left out: Dune and Heat"),
+    ).toBeInTheDocument();
+    const canada = within(note).getByText("en-CA: Amazon rejected these titles, so they were left out: Arrival");
+    expect(within(canada).queryByRole("list")).not.toBeInTheDocument();
+    expect(within(note).queryByText(/Alien/)).not.toBeInTheDocument();
+    expect(within(note).getByText(/dropped 1 values/)).toBeInTheDocument();
+
+    const table = screen.getByRole("table");
+    expect(within(table).getAllByText("Fewer titles")).toHaveLength(4);
+    expect(within(table).getByText("1,740 of 3,480")).toBeInTheDocument();
+    expect(within(table).getByText("3,478 of 3,480")).toBeInTheDocument();
+  });
+
   it("refuses to disable the last enabled locale", async () => {
     const user = userEvent.setup();
     const log = recordRequests();

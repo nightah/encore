@@ -31,6 +31,7 @@
   },
   "locales": {
     "build": {
+      "degraded": "Fewer titles",
       "failed": "Failed",
       "in_progress": "Building",
       "succeeded": "Succeeded"
@@ -47,6 +48,7 @@
       "keepOne": "Keep at least one of movies, TV shows or music.",
       "legend": "What it can play"
     },
+    "degradedTitles": "{{kept}} of {{total}}",
     "empty": "Nothing built yet. Deploy the skill to build a model for each enabled locale.",
     "enabled": {
       "hint": "Only enabled locales are built and deployed. An Echo can use the skill only if its language matches one of them. Changes apply on the next deploy.",
@@ -125,6 +127,8 @@
     "title": "Titles in the model"
   },
   "warnings": {
+    "dropped": "{{locale}}: Amazon rejected these titles, so they were left out: {{titles}}",
+    "thinned": "{{locale}}: Amazon would not build the model with every library title, so it was built with {{kept}} of {{total}}.",
     "title": "Warnings from the last deploy"
   }
 }
