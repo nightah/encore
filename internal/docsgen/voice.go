@@ -72,12 +72,33 @@ func voiceData(src *skillmodel.Sources, lang string, titles map[string]string) m
 
 	l := src.Languages[lang]
 
-	var locales []VoiceLocale
+	var (
+		locales   []VoiceLocale
+		plainFail []string
+	)
 
 	for _, code := range src.LocaleNames() {
-		if loc := src.Locales[code]; loc.Language == lang {
-			locales = append(locales, VoiceLocale{Locale: code, SkillName: loc.SkillName, Invocation: loc.Invocation})
+		loc := src.Locales[code]
+		if loc.Language != lang {
+			continue
 		}
+
+		say := func(p string) string { return skillmodel.Say(p, loc.Invocation) }
+
+		vl := VoiceLocale{
+			Locale: code, SkillName: loc.SkillName, Invocation: loc.Invocation,
+			Open: say(loc.Launch.Open), Skill: say(loc.Launch.Skill), PlainOpenFails: loc.Launch.PlainOpenFails,
+		}
+
+		for _, p := range loc.Launch.Also {
+			vl.Also = append(vl.Also, say(p))
+		}
+
+		if vl.PlainOpenFails {
+			plainFail = append(plainFail, code)
+		}
+
+		locales = append(locales, vl)
 	}
 
 	var (
@@ -136,7 +157,7 @@ func voiceData(src *skillmodel.Sources, lang string, titles map[string]string) m
 	}
 
 	return map[string]any{
-		"Lang": lang, "Name": name, "Locales": locales, "Sections": sections, "Builtins": builtins, "Types": types,
+		"Lang": lang, "Name": name, "Locales": locales, "PlainOpenFails": plainFail, "Sections": sections, "Builtins": builtins, "Types": types,
 	}
 }
 

@@ -220,3 +220,20 @@ func TestCrowdinLanguageMatchesCrowdinConfig(t *testing.T) {
 		}
 	}
 }
+
+func TestVoiceCommandsShowLaunchPhrases(t *testing.T) {
+	pages, err := VoiceCommands(loadSources(t), i18n.FS)
+	require.NoError(t, err)
+
+	assert.Contains(t, string(pages["en"]), "| `en-GB` | \"Alexa, open encore\" | \"start encore\", \"launch encore\" | \"Alexa, open the encore skill\" |\n")
+	assert.Contains(t, string(pages["ja"]), "| `ja-JP` | \"Alexa, アンコールを開いて\" |")
+	assert.Contains(t, string(pages["fr"]), "| `fr-CA` | \"Alexa, ouvre kodi\" | \"lance kodi\", \"démarre kodi\" | \"Alexa, ouvre la compétence kodi\" |\n")
+
+	for lang, locale := range map[string]string{"nl": "nl-NL", "pt": "pt-BR", "hi": "hi-IN", "ar": "ar-SA"} {
+		assert.Contains(t, string(pages[lang]), ":::caution[A plain open phrase may not start the skill]\nIn `"+locale+"`, ", lang)
+	}
+
+	for _, lang := range []string{"en", "de", "es", "fr", "it", "ja"} {
+		assert.NotContains(t, string(pages[lang]), "A plain open phrase may not start the skill", lang)
+	}
+}
