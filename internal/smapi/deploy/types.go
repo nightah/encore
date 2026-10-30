@@ -42,6 +42,8 @@ type State struct {
 	Hash string `json:"hash,omitempty"`
 	// SettingsHash is the hash of that package without library titles, so the caller can tell a settings change from new titles. The deployer carries it over unchanged.
 	SettingsHash string `json:"settingsHash,omitempty"`
+	// Degraded are the locales the deploy Hash stands for built with fewer slot values, which a skipped deploy reports as its own.
+	Degraded map[string]Degradation `json:"degraded,omitempty"`
 }
 
 // NeedsDeploy reports whether a package with hash differs from what was last deployed.
@@ -103,6 +105,8 @@ type Request struct {
 	Progress func(Event)
 	// Log, if set, receives each import and build status Amazon reports, at debug level.
 	Log *slog.Logger
+	// KeepSlots are slot types a second attempt never thins out, e.g. room names, which have to be complete to be any use.
+	KeepSlots []string
 }
 
 // Result is a deploy's outcome. State is meaningful even when Deploy returns an error and should be persisted, so a retry reuses the skill.
@@ -111,6 +115,21 @@ type Result struct {
 	Skipped  bool                    `json:"skipped"`
 	Locales  map[string]LocaleStatus `json:"locales,omitempty"`
 	Warnings []string                `json:"warnings,omitempty"`
+	// Degraded are the locales a successful deploy built with fewer slot values than asked for.
+	Degraded map[string]Degradation `json:"degraded,omitempty"`
+}
+
+// Degradation is how a locale whose model Amazon would not build with every slot value was built with fewer.
+type Degradation struct {
+	// Reason is what Amazon said when it would not build the locale with every value.
+	Reason []smapi.Problem `json:"reason"`
+	// Dropped are the values Amazon's errors named, which were left out; when it named none, every other value of each slot type not in Request.KeepSlots was.
+	Dropped []string `json:"dropped,omitempty"`
+	// Kept and Total count the slot values, of every type, in the locale's model and asked for.
+	Kept  int `json:"kept"`
+	Total int `json:"total"`
+	// Bytes is the size of the locale's model as deployed.
+	Bytes int `json:"bytes"`
 }
 
 // Deployer deploys the skill built from src through client.
@@ -128,4 +147,6 @@ type run struct {
 	// missing counts consecutive build polls a locale has been absent from the skill status.
 	missing  map[string]int
 	imported map[string]bool
+	// retried is set once the package was built again with fewer slot values, which happens at most once a deploy.
+	retried bool
 }

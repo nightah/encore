@@ -35,3 +35,6 @@ const simulateTimeout = 2 * time.Minute
 
 // simulateAttempts is how often the smoke test asks before taking "did not resolve" as the answer: just after a model goes live, the simulator can take a little while to know it.
 const simulateAttempts = 4
+
+// valueQuotes are the quote pairs a build error may put around a slot value it names.
+var valueQuotes = [][2]string{{`"`, `"`}, {"'", "'"}, {"“", "”"}, {"‘", "’"}, {"«", "»"}, {"「", "」"}, {"`", "`"}}

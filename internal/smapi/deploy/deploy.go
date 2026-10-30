@@ -2,6 +2,7 @@ package deploy
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"maps"
@@ -104,6 +105,7 @@ func (r *run) deploy(ctx context.Context) error {
 
 	if !r.req.Force && !r.res.State.NeedsDeploy(pkg.Hash()) {
 		r.res.Skipped = true
+		r.res.Degraded = r.res.State.Degraded
 		r.done("Unchanged since the last deploy")
 
 		for _, s := range []Step{StepVendor, StepSkill, StepUpload, StepImport, StepBuild, StepEnable, StepSimulate} {
@@ -114,7 +116,7 @@ func (r *run) deploy(ctx context.Context) error {
 	}
 
 	// Until this deploy succeeds, what is live no longer matches any known hash.
-	r.res.State.Hash = ""
+	r.res.State.Hash, r.res.State.Degraded = "", nil
 	r.done(fmt.Sprintf("%d locales, hash %.12s", len(pkg.Locales()), pkg.Hash()))
 
 	if err := r.resolveVendor(ctx); err != nil {
@@ -125,17 +127,17 @@ func (r *run) deploy(ctx context.Context) error {
 		return err
 	}
 
-	location, err := r.upload(ctx)
-	if err != nil {
-		return err
-	}
+	if err := r.ship(ctx); err != nil {
+		de, ok := errors.AsType[*Error](err)
+		if !ok || !r.degrade(de) {
+			return err
+		}
 
-	if err := r.importPackage(ctx, location); err != nil {
-		return err
-	}
+		if err := r.ship(ctx); err != nil {
+			r.res.Degraded = nil
 
-	if err := r.waitForBuild(ctx); err != nil {
-		return err
+			return err
+		}
 	}
 
 	r.start(StepEnable, "Enabling the skill for testing")
@@ -150,9 +152,165 @@ func (r *run) deploy(ctx context.Context) error {
 		return err
 	}
 
-	r.res.State.Hash = pkg.Hash()
+	// A package deployed with fewer slot values still counts as this one, so it isn't deployed again until something changes.
+	r.res.State.Hash, r.res.State.Degraded = pkg.Hash(), r.res.Degraded
 
 	return nil
+}
+
+// ship uploads the package, imports it and waits for its models to build.
+func (r *run) ship(ctx context.Context) error {
+	location, err := r.upload(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err := r.importPackage(ctx, location); err != nil {
+		return err
+	}
+
+	return r.waitForBuild(ctx)
+}
+
+// degrade prepares a second attempt, once a deploy, after Amazon would not build some locales' models for reasons it named. A locale whose errors quote some of its slot values is built without them; otherwise, when other locales did build, it keeps every other value of each slot type but Request.KeepSlots. Locales that failed without a reason are left as they are, as their failure may pass. It reports false when nothing would change, and the failure stands.
+func (r *run) degrade(de *Error) bool {
+	if r.retried || len(de.Locales) == 0 {
+		return false
+	}
+
+	partial := len(de.Locales) < len(r.pkg.Locales())
+	values := r.req.Package.SlotValues
+	total := countValues(values)
+	overrides := map[string]map[string][]skillmodel.SlotValue{}
+	degraded := map[string]Degradation{}
+
+	for _, loc := range slices.Sorted(maps.Keys(de.Locales)) {
+		problems := de.Locales[loc]
+		if (&Error{Locales: map[string][]smapi.Problem{loc: problems}}).unexplained() {
+			continue
+		}
+
+		own, dropped := withoutNamed(values, problems)
+		if len(dropped) == 0 {
+			if !partial {
+				continue
+			}
+
+			own = thinned(values, r.req.KeepSlots)
+		}
+
+		if kept := countValues(own); kept < total {
+			overrides[loc] = own
+			degraded[loc] = Degradation{Reason: problems, Dropped: dropped, Kept: kept, Total: total}
+		}
+	}
+
+	if len(overrides) == 0 {
+		return false
+	}
+
+	opts := r.req.Package
+	opts.LocaleSlotValues = overrides
+
+	pkg, err := r.d.Build(opts)
+	if err != nil {
+		return false
+	}
+
+	for _, f := range pkg.Files {
+		loc := strings.TrimSuffix(strings.TrimPrefix(f.Name, skillpkg.ModelDir), ".json")
+		if d, ok := degraded[loc]; ok && strings.HasPrefix(f.Name, skillpkg.ModelDir) {
+			d.Bytes = len(f.Data)
+			degraded[loc] = d
+		}
+	}
+
+	locales := slices.Sorted(maps.Keys(overrides))
+	r.emit(Event{Step: StepBuild, State: StateFailed, Message: "Amazon could not build " + strings.Join(locales, ", ") + "; deploying again with fewer library titles there", Locales: r.snapshot()})
+	r.step = ""
+
+	r.retried = true
+	r.pkg = pkg
+	r.res.Degraded = degraded
+	r.res.Locales = map[string]LocaleStatus{}
+	r.imported, r.missing = nil, nil
+
+	return true
+}
+
+func countValues(values map[string][]skillmodel.SlotValue) int {
+	n := 0
+	for _, vs := range values {
+		n += len(vs)
+	}
+
+	return n
+}
+
+// withoutNamed leaves out the values that problems quote, by value or synonym, ignoring case, and returns them.
+func withoutNamed(values map[string][]skillmodel.SlotValue, problems []smapi.Problem) (map[string][]skillmodel.SlotValue, []string) {
+	var text strings.Builder
+
+	for _, p := range problems {
+		text.WriteString(strings.ToLower(p.Message))
+		text.WriteByte('\n')
+	}
+
+	msg := text.String()
+	quoted := func(s string) bool {
+		s = strings.ToLower(s)
+		for _, q := range valueQuotes {
+			if strings.Contains(msg, q[0]+s+q[1]) {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	out := make(map[string][]skillmodel.SlotValue, len(values))
+
+	var dropped []string
+
+	for _, typ := range slices.Sorted(maps.Keys(values)) {
+		kept := make([]skillmodel.SlotValue, 0, len(values[typ]))
+
+		for _, v := range values[typ] {
+			if v.Value != "" && (quoted(v.Value) || slices.ContainsFunc(v.Synonyms, quoted)) {
+				dropped = append(dropped, v.Value)
+
+				continue
+			}
+
+			kept = append(kept, v)
+		}
+
+		out[typ] = kept
+	}
+
+	return out, dropped
+}
+
+// thinned keeps every other value of each slot type but keep, starting with the second, so a type of one value loses it.
+func thinned(values map[string][]skillmodel.SlotValue, keep []string) map[string][]skillmodel.SlotValue {
+	out := make(map[string][]skillmodel.SlotValue, len(values))
+
+	for typ, vs := range values {
+		if slices.Contains(keep, typ) {
+			out[typ] = vs
+
+			continue
+		}
+
+		half := make([]skillmodel.SlotValue, 0, len(vs)/2)
+		for i := 1; i < len(vs); i += 2 {
+			half = append(half, vs[i])
+		}
+
+		out[typ] = half
+	}
+
+	return out
 }
 
 func (r *run) resolveVendor(ctx context.Context) error {
