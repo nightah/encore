@@ -1362,6 +1362,18 @@ describe("setup deploy step", () => {
     expect(screen.getByText("In ja-JP, people say “コディ”.")).toBeInTheDocument();
   });
 
+  it("lists the locales that say it differently the way the rest of the interface does", async () => {
+    startAt(5);
+    const user = userEvent.setup();
+    renderApp("/setup");
+    await heading("Deploy the skill");
+
+    await user.click(await screen.findByRole("checkbox", { name: "fr-FR" }));
+    await user.click(screen.getByRole("checkbox", { name: "fr-CA" }));
+    await user.click(screen.getByRole("checkbox", { name: "pt-BR" }));
+    expect(screen.getByText("In fr-CA, fr-FR and pt-BR, people say “kodi”.")).toBeInTheDocument();
+  });
+
   it.each([
     ["locales", "body.locales_enabled", "choose at least one locale"],
     ["content", "body.content", "choose at least one of movies, tv or music"],

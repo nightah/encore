@@ -31,6 +31,7 @@
   },
   "locales": {
     "build": {
+      "degraded": "Menos títulos",
       "failed": "Error",
       "in_progress": "Compilando",
       "succeeded": "Correcto"
@@ -47,6 +48,7 @@
       "keepOne": "Deja activado al menos uno: películas, series o música.",
       "legend": "Qué puede reproducir"
     },
+    "degradedTitles": "{{kept}} de {{total}}",
     "empty": "Aún no hay nada compilado. Despliega la skill para compilar un modelo para cada configuración regional activada.",
     "enabled": {
       "hint": "Solo se compilan y despliegan las configuraciones regionales activadas. Un Echo solo puede usar la skill si su idioma coincide con una de ellas. Los cambios se aplican en el próximo despliegue.",
@@ -125,6 +127,8 @@
     "title": "Títulos en el modelo"
   },
   "warnings": {
+    "dropped": "{{locale}}: Amazon rechazó estos títulos, así que se dejaron fuera: {{titles}}",
+    "thinned": "{{locale}}: Amazon no compiló el modelo con todos los títulos de la biblioteca, así que se compiló con {{kept}} de {{total}}.",
     "title": "Avisos del último despliegue"
   }
 }

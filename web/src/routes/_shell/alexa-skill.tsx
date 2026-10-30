@@ -84,7 +84,7 @@ function AlexaSkillPage() {
           </div>
           {running ? null : <AutoDeployPausedCard skill={skill} />}
           {running ? null : <AutoDeployRetryCard skill={skill} />}
-          <WarningsCard warnings={skill.last_deploy?.warnings ?? []} />
+          <WarningsCard deploy={skill.last_deploy} />
           <div className="flex flex-wrap items-start gap-4.5">
             <LocalesPanel skill={skill} deploying={running} />
             <div className="flex min-w-0 flex-[2_1_320px] flex-col gap-4.5">

@@ -23,6 +23,7 @@ import { Callout } from "@components/ui/States";
 import { StepFooter, StepHeading, StepPending, type StepProps } from "@features/setup/shared";
 import { CONTENT, type Content, toggleContent } from "@features/skill/content";
 import { deployFraction } from "@features/skill/timeline";
+import { formatList } from "@lib/format";
 
 /** Amazon's questions, in the order Amazon asks them. Each has a label and a plain explanation of what it asks under deploy.privacy.<key>; they describe, they don't answer for the user. */
 const PRIVACY_QUESTIONS: Array<keyof Privacy> = [
@@ -319,8 +320,7 @@ function InvocationChoice({
   error?: string;
   onChange: (value: Invocation) => void;
 }) {
-  const { t, i18n } = useTranslation("setup");
-  const list = new Intl.ListFormat(i18n.language, { type: "conjunction" });
+  const { t } = useTranslation("setup");
   const id = useId();
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
@@ -352,7 +352,7 @@ function InvocationChoice({
         {elsewhere.map(({ name, locales }) => (
           <span key={name}>
             <br />
-            {t("deploy.invocation.elsewhere", { locales: list.format(locales), name })}
+            {t("deploy.invocation.elsewhere", { locales: formatList(locales), name })}
           </span>
         ))}
       </span>
