@@ -900,3 +900,16 @@ func TestChooseSearchesTheKindsOffered(t *testing.T) {
 	assert.Equal(t, "match.not_found", o.Say.ID, "a film isn't found among shows")
 	assert.Empty(t, backend.Calls())
 }
+
+func TestOutcomeMissed(t *testing.T) {
+	svc := NewService(slog.New(slog.DiscardHandler))
+	tgt, _, _ := newTarget()
+	ctx := context.Background()
+
+	assert.True(t, svc.PlayTitle(ctx, tgt, TitleRequest{Query: "conclave"}, nil).Missed(), "no title by that name")
+	assert.True(t, svc.Song(ctx, tgt, MusicRequest{Title: "come together", Artist: "queen"}, nil).Missed(), "not by that artist")
+	assert.True(t, svc.Artist(ctx, tgt, MusicRequest{Artist: "queen", Genre: "jazz"}, nil).Missed(), "no such genre by the artist")
+	assert.True(t, ContentDisabled().Missed())
+	assert.False(t, svc.PlayTitle(ctx, tgt, TitleRequest{Query: "hot fuzz"}, nil).Missed())
+	assert.False(t, svc.PlayTitle(ctx, tgt, TitleRequest{Query: "dune"}, nil).Missed(), "a question is an answer")
+}
