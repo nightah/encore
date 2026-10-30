@@ -32,10 +32,20 @@ Ask for an episode of a show by where it falls, or by its number:
 - "play the first episode of Bluey" or "play Bluey from the start"
 - "play the latest episode of Bluey" ("newest", "most recent" and "last" work too)
 - "play a random episode of Bluey"
-- "play Bluey season 2 episode 4"
+- "play Bluey season 2 episode 4", or "play Bluey s2e4"
 - "next" or "next episode" while an episode plays with nothing queued after it plays the show's next episode, or says it was the last one; with a queue, such as a season, both move to what's queued next
 
 The first and latest episodes skip specials (season 0) unless a show has nothing else. Alexa sometimes hears these as a plain "play …" search rather than an episode command, usually when it doesn't recognise the show's name; Encore spots the episode command's wording in the search and runs it anyway, so either way the right episode plays.
+
+## Seasons
+
+Ask for a whole season by its number or as an ordinal:
+
+- "play season 2 of Bluey" or "play Bluey season 2" ("series 2" works too)
+- "play the second season of Bluey"
+- "play season 3" while an episode is playing plays season 3 of that show
+
+The season plays from its first episode you haven't watched, or one you stopped partway through, with the rest of the season queued after it; a season you've watched all of plays again from its first episode. Ordinals go up to the tenth in every language ("la deuxième saison", "die zweite Staffel", "दूसरा सीज़न", 「セカンドシーズン」); say the number for later seasons.
 
 ## Finding titles
 
