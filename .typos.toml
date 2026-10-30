@@ -55,6 +55,9 @@ extend-exclude = [
   "internal/fuzzy/phonetic/en/metaphone.go",
   # TinySegmenter's weights are keyed by character classes ("HOM", "ONN"), not words.
   "internal/fuzzy/tinyseg/weights.go",
+  # English spelling rules match letter sequences ("ture", "ure"), and their tests are English words split into sounds.
+  "internal/fuzzy/loanword/english.go",
+  "internal/fuzzy/loanword/loanword_test.go",
 ]
 
 # Prose is Australian English.
