@@ -39,6 +39,8 @@ type Server struct {
 	statusPolls map[string]int
 	sims        map[string]*simJob
 	unresolved  int
+	profiles    map[string][]NLUAnswer
+	profiled    map[string]int
 }
 
 // Options configure the fake.
@@ -100,6 +102,16 @@ type importJob struct {
 type problem struct {
 	Code    string `json:"code,omitempty"`
 	Message string `json:"message"`
+}
+
+// NLUAnswer is one profileNlu answer: the selected intent ("" for none) with its slot words and the IDs some of them resolve to, and the intents considered besides. A non-zero Status fails the call with that HTTP status instead.
+type NLUAnswer struct {
+	Intent       string
+	Slots        map[string]string
+	Resolved     map[string]string
+	Considered   []string
+	SessionEnded bool
+	Status       int
 }
 
 type simJob struct {
