@@ -24,7 +24,9 @@ func japanese() *language {
 		split:    splitJapanese,
 		unspaced: true,
 		romanize: romanizeKana,
-		phonetic: phoneticKeysOf(en.Encoder{}),
+		// Another library's titles spell a loanword written with ヴ with the v it stands for.
+		romanizeForeign: romanizeKanaV,
+		phonetic:        phoneticKeysOf(en.Encoder{}),
 	}
 }
 
@@ -294,8 +296,18 @@ func ordinals(words []string) []string {
 	return out
 }
 
-// romanizeKana writes a word in kana in modified Hepburn romaji, without marking long vowels ("ターミネーター" -> "tamineta", "とうきょう" -> "tokyo"), and a number or letter reading as what it reads ("ツー" -> "2"). The particles は and へ on their own are read "wa" and "e". Characters that are not kana stay as they are, apart from the kana around them ("駆ける" -> "駆 keru").
+// romanizeKana writes a word in kana in modified Hepburn romaji, with ヴ as the b line, without marking long vowels ("ターミネーター" -> "tamineta", "とうきょう" -> "tokyo"), and a number or letter reading as what it reads ("ツー" -> "2"). The particles は and へ on their own are read "wa" and "e". Characters that are not kana stay as they are, apart from the kana around them ("駆ける" -> "駆 keru").
 func romanizeKana(w string) string {
+	return romanizeKanaAs(w, kanaRomaji['ゔ'])
+}
+
+// romanizeKanaV is romanizeKana with ヴ as the v line ("ドライヴ" -> "doraivu"), as the Latin spelling of the loanword has it.
+func romanizeKanaV(w string) string {
+	return romanizeKanaAs(w, "vu")
+}
+
+// romanizeKanaAs is romanizeKana with ヴ written vu.
+func romanizeKanaAs(w, vu string) string {
 	for _, rd := range jaReadings {
 		if w == rd[0] {
 			return rd[1]
@@ -315,14 +327,14 @@ func romanizeKana(w string) string {
 	for i, r := range w {
 		if k := isKana(r); i == 0 || k != inKana {
 			if i > 0 {
-				runs = append(runs, kanaRun(w[from:i], inKana))
+				runs = append(runs, kanaRun(w[from:i], inKana, vu))
 			}
 
 			from, inKana = i, k
 		}
 	}
 
-	return strings.Join(append(runs, kanaRun(w[from:], inKana)), " ")
+	return strings.Join(append(runs, kanaRun(w[from:], inKana, vu)), " ")
 }
 
 func isKana(r rune) bool {
@@ -331,8 +343,8 @@ func isKana(r rune) bool {
 	return ok || r == 'ー' || r == 'っ' || r == 'ッ'
 }
 
-// kanaRun is a run of kana in romaji, or a run of other characters as it is.
-func kanaRun(run string, kana bool) string {
+// kanaRun is a run of kana in romaji, with ヴ written vu, or a run of other characters as it is.
+func kanaRun(run string, kana bool, vu string) string {
 	if !kana {
 		return run
 	}
@@ -351,6 +363,9 @@ func kanaRun(run string, kana bool) string {
 		case 'ー':
 		default:
 			syl := kanaRomaji[h]
+			if h == 'ゔ' {
+				syl = vu
+			}
 
 			if next, size := utf8.DecodeRuneInString(run[i:]); size > 0 {
 				if joined, ok := withSmall(syl, hiragana(next)); ok {
@@ -388,7 +403,7 @@ func hiragana(r rune) rune {
 
 func isVowelByte(c byte) bool { return strings.IndexByte("aiueo", c) >= 0 }
 
-// withSmall joins a syllable to a small kana after it: a small ya, yu or yo makes a palatal syllable ("き" "ゃ" -> "kya", "し" "ょ" -> "sho"), and a small vowel the vowels of loanwords ("テ" "ィ" -> "ti", "フ" "ァ" -> "fa", "ウ" "ィ" -> "wi", "ヴ" "ァ" -> "va"). After the vowel it repeats it lengthens it ("せ" "ぇ").
+// withSmall joins a syllable to a small kana after it: a small ya, yu or yo makes a palatal syllable ("き" "ゃ" -> "kya", "し" "ょ" -> "sho"), and a small vowel the vowels of loanwords ("テ" "ィ" -> "ti", "フ" "ァ" -> "fa", "ウ" "ィ" -> "wi", "ヴ" "ァ" -> "ba"). After the vowel it repeats it lengthens it ("せ" "ぇ").
 func withSmall(syl string, small rune) (string, bool) {
 	v, ok := smallKana[small]
 	if !ok || !isVowelByte(syl[len(syl)-1]) {
@@ -454,7 +469,7 @@ var smallKana = map[rune]string{
 	'ぁ': "a", 'ぃ': "i", 'ぅ': "u", 'ぇ': "e", 'ぉ': "o", 'ゃ': "ya", 'ゅ': "yu", 'ょ': "yo", 'ゎ': "wa",
 }
 
-// kanaRomaji is modified Hepburn for each hiragana; katakana is read as its hiragana. ぢ and づ are written ji and zu as じ and ず are, and small kana standing alone as their full-size forms.
+// kanaRomaji is modified Hepburn for each hiragana; katakana is read as its hiragana. ぢ and づ are written ji and zu as じ and ず are, and small kana standing alone as their full-size forms. ゔ (ヴ) is written bu, the b line Japanese says it as, so a loanword spelt with ヴ and with ブ or バ meets itself ("ドライヴ", "ドライブ").
 var kanaRomaji = map[rune]string{
 	'あ': "a", 'い': "i", 'う': "u", 'え': "e", 'お': "o",
 	'か': "ka", 'き': "ki", 'く': "ku", 'け': "ke", 'こ': "ko",
@@ -470,7 +485,7 @@ var kanaRomaji = map[rune]string{
 	'ま': "ma", 'み': "mi", 'む': "mu", 'め': "me", 'も': "mo",
 	'や': "ya", 'ゆ': "yu", 'よ': "yo",
 	'ら': "ra", 'り': "ri", 'る': "ru", 'れ': "re", 'ろ': "ro",
-	'わ': "wa", 'ゐ': "i", 'ゑ': "e", 'を': "o", 'ん': "n", 'ゔ': "vu",
+	'わ': "wa", 'ゐ': "i", 'ゑ': "e", 'を': "o", 'ん': "n", 'ゔ': "bu",
 	'ぁ': "a", 'ぃ': "i", 'ぅ': "u", 'ぇ': "e", 'ぉ': "o",
 	'ゃ': "ya", 'ゅ': "yu", 'ょ': "yo", 'ゎ': "wa", 'ゕ': "ka", 'ゖ': "ke",
 }
