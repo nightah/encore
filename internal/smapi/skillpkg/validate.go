@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"maps"
 	"net/url"
+	"regexp"
 	"slices"
 	"strings"
+	"unicode"
 	"unicode/utf8"
 
 	"github.com/nightah/encore/internal/skillmodel"
@@ -45,7 +47,7 @@ func (p Privacy) validate() error {
 	return fmt.Errorf("privacy and compliance questions unanswered: %s", strings.Join(missing, ", "))
 }
 
-// filterSlotValues drops build-time slot values and synonyms that exceed MaxSlotValueLength, which would otherwise fail the whole build over one long title.
+// filterSlotValues cleans build-time slot values and synonyms for Amazon (cleanSlotText), then drops those left empty or longer than MaxSlotValueLength, which would otherwise fail the whole build over one title, and merges values that clean to the same text: the first keeps its ID and gains the others' synonyms.
 func filterSlotValues(in map[string][]skillmodel.SlotValue) (map[string][]skillmodel.SlotValue, []string) {
 	if in == nil {
 		return nil, nil
@@ -56,40 +58,86 @@ func filterSlotValues(in map[string][]skillmodel.SlotValue) (map[string][]skillm
 	var warnings []string
 
 	for _, typ := range slices.Sorted(maps.Keys(in)) {
-		dropped := 0
+		dropped, empty := 0, 0
 		kept := make([]skillmodel.SlotValue, 0, len(in[typ]))
+		byValue := map[string]int{}
 
 		for _, v := range in[typ] {
-			if tooLong(v.Value) {
+			value := cleanSlotText(v.Value)
+
+			switch {
+			case value == "":
+				empty++
+
+				continue
+			case tooLong(value):
 				dropped++
 
 				continue
 			}
 
-			var syns []string
-
-			for _, s := range v.Synonyms {
-				if tooLong(s) {
-					dropped++
-
-					continue
-				}
-
-				syns = append(syns, s)
+			i, seen := byValue[strings.ToLower(value)]
+			if !seen {
+				i = len(kept)
+				byValue[strings.ToLower(value)] = i
+				kept = append(kept, skillmodel.SlotValue{ID: v.ID, Value: value})
 			}
 
-			v.Synonyms = syns
-			kept = append(kept, v)
+			for _, s := range v.Synonyms {
+				s = cleanSlotText(s)
+
+				switch {
+				case s == "":
+					empty++
+				case tooLong(s):
+					dropped++
+				case !strings.EqualFold(s, kept[i].Value) && !slices.ContainsFunc(kept[i].Synonyms, func(x string) bool { return strings.EqualFold(x, s) }):
+					kept[i].Synonyms = append(kept[i].Synonyms, s)
+				}
+			}
 		}
 
 		if dropped > 0 {
 			warnings = append(warnings, fmt.Sprintf("slot type %s: dropped %d values or synonyms longer than %d characters", typ, dropped, MaxSlotValueLength))
 		}
 
+		if empty > 0 {
+			warnings = append(warnings, fmt.Sprintf("slot type %s: dropped %d values or synonyms with nothing to say once cleaned", typ, empty))
+		}
+
 		out[typ] = kept
 	}
 
 	return out, warnings
+}
+
+// kodiTags matches Kodi's label formatting tags, opening and closing, in any case.
+var kodiTags = regexp.MustCompile(`(?i)\[(?:/?(?:b|i|light|uppercase|lowercase|capitalize|tabs)|color[^\]]*|/color|cr)\]`)
+
+// cleanSlotText makes a title or name fit for a slot value: Kodi's label formatting tags are removed ([B], [I], [LIGHT], [COLOR x], [UPPERCASE], [LOWERCASE], [CAPITALIZE], [TABS] and their closing tags, with [CR] a space), as are control and format characters, symbols such as emoji and their skin tones and keycaps, which can't be said, and '*', which Amazon rejects in a slot value ("*NSYNC"). Runs of spaces collapse to one and the ends are trimmed.
+func cleanSlotText(s string) string {
+	s = kodiTags.ReplaceAllStringFunc(s, func(tag string) string {
+		if strings.EqualFold(tag, "[cr]") {
+			return " "
+		}
+
+		return ""
+	})
+
+	s = strings.Map(func(r rune) rune {
+		switch {
+		case r == '*':
+			return -1
+		case unicode.IsSpace(r):
+			return ' '
+		case unicode.In(r, unicode.Cc, unicode.Cf, unicode.Co, unicode.Cs, unicode.So, unicode.Me), r >= 0x1F3FB && r <= 0x1F3FF, r == utf8.RuneError:
+			return -1
+		}
+
+		return r
+	}, s)
+
+	return strings.Join(strings.Fields(s), " ")
 }
 
 func tooLong(s string) bool {
