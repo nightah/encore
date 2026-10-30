@@ -17,6 +17,10 @@ import type { SkillInfoUpdateReason } from "./skillInfoUpdateReason.ts";
 
 export interface SkillInfo {
   amazon: AmazonConnection;
+  /** Whether alexa.auto_deploy redeploys the skill on its own when needs_deploy is set */
+  auto_deploy: boolean;
+  /** Why automatic deploys are paused until a deploy started by hand succeeds; empty when they aren't paused or alexa.auto_deploy is off */
+  auto_deploy_paused: string;
   /** What the skill can play; music includes music videos */
   content: SkillInfoContentItem[];
   endpoint: SkillEndpointInfo;

@@ -112,6 +112,2076 @@ func (e V1SkillImageSizeUnit) Valid() bool {
 	}
 }
 
+// Defines values for V1SkillManifestAlexaForBusinessInterfaceRequestName.
+const (
+	V1SkillManifestAlexaForBusinessInterfaceRequestNameCreate V1SkillManifestAlexaForBusinessInterfaceRequestName = "Create"
+	V1SkillManifestAlexaForBusinessInterfaceRequestNameSearch V1SkillManifestAlexaForBusinessInterfaceRequestName = "Search"
+	V1SkillManifestAlexaForBusinessInterfaceRequestNameUpdate V1SkillManifestAlexaForBusinessInterfaceRequestName = "Update"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillManifestAlexaForBusinessInterfaceRequestName enum.
+func (e V1SkillManifestAlexaForBusinessInterfaceRequestName) Valid() bool {
+	switch e {
+	case V1SkillManifestAlexaForBusinessInterfaceRequestNameCreate:
+		return true
+	case V1SkillManifestAlexaForBusinessInterfaceRequestNameSearch:
+		return true
+	case V1SkillManifestAlexaForBusinessInterfaceRequestNameUpdate:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillManifestAndroidCommonIntentName.
+const (
+	V1SkillManifestAndroidCommonIntentNameADDCALENDAREVENT V1SkillManifestAndroidCommonIntentName = "ADD_CALENDAR_EVENT"
+	V1SkillManifestAndroidCommonIntentNameOPENSETTINGS     V1SkillManifestAndroidCommonIntentName = "OPEN_SETTINGS"
+	V1SkillManifestAndroidCommonIntentNamePLAYMEDIA        V1SkillManifestAndroidCommonIntentName = "PLAY_MEDIA"
+	V1SkillManifestAndroidCommonIntentNameSHOWINMAP        V1SkillManifestAndroidCommonIntentName = "SHOW_IN_MAP"
+	V1SkillManifestAndroidCommonIntentNameSTARTPHONECALL   V1SkillManifestAndroidCommonIntentName = "START_PHONE_CALL"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillManifestAndroidCommonIntentName enum.
+func (e V1SkillManifestAndroidCommonIntentName) Valid() bool {
+	switch e {
+	case V1SkillManifestAndroidCommonIntentNameADDCALENDAREVENT:
+		return true
+	case V1SkillManifestAndroidCommonIntentNameOPENSETTINGS:
+		return true
+	case V1SkillManifestAndroidCommonIntentNamePLAYMEDIA:
+		return true
+	case V1SkillManifestAndroidCommonIntentNameSHOWINMAP:
+		return true
+	case V1SkillManifestAndroidCommonIntentNameSTARTPHONECALL:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillManifestCatalogName.
+const (
+	V1SkillManifestCatalogNameGOOGLEPLAYSTORE V1SkillManifestCatalogName = "GOOGLE_PLAY_STORE"
+	V1SkillManifestCatalogNameIOSAPPSTORE     V1SkillManifestCatalogName = "IOS_APP_STORE"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillManifestCatalogName enum.
+func (e V1SkillManifestCatalogName) Valid() bool {
+	switch e {
+	case V1SkillManifestCatalogNameGOOGLEPLAYSTORE:
+		return true
+	case V1SkillManifestCatalogNameIOSAPPSTORE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillManifestCatalogType.
+const (
+	V1SkillManifestCatalogTypeGOOGLEPLAYSTORE V1SkillManifestCatalogType = "GOOGLE_PLAY_STORE"
+	V1SkillManifestCatalogTypeIOSAPPSTORE     V1SkillManifestCatalogType = "IOS_APP_STORE"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillManifestCatalogType enum.
+func (e V1SkillManifestCatalogType) Valid() bool {
+	switch e {
+	case V1SkillManifestCatalogTypeGOOGLEPLAYSTORE:
+		return true
+	case V1SkillManifestCatalogTypeIOSAPPSTORE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillManifestCurrency.
+const (
+	V1SkillManifestCurrencyUSD V1SkillManifestCurrency = "USD"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillManifestCurrency enum.
+func (e V1SkillManifestCurrency) Valid() bool {
+	switch e {
+	case V1SkillManifestCurrencyUSD:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillManifestDistributionCountries.
+const (
+	V1SkillManifestDistributionCountriesAD V1SkillManifestDistributionCountries = "AD"
+	V1SkillManifestDistributionCountriesAE V1SkillManifestDistributionCountries = "AE"
+	V1SkillManifestDistributionCountriesAF V1SkillManifestDistributionCountries = "AF"
+	V1SkillManifestDistributionCountriesAG V1SkillManifestDistributionCountries = "AG"
+	V1SkillManifestDistributionCountriesAI V1SkillManifestDistributionCountries = "AI"
+	V1SkillManifestDistributionCountriesAL V1SkillManifestDistributionCountries = "AL"
+	V1SkillManifestDistributionCountriesAM V1SkillManifestDistributionCountries = "AM"
+	V1SkillManifestDistributionCountriesAN V1SkillManifestDistributionCountries = "AN"
+	V1SkillManifestDistributionCountriesAO V1SkillManifestDistributionCountries = "AO"
+	V1SkillManifestDistributionCountriesAQ V1SkillManifestDistributionCountries = "AQ"
+	V1SkillManifestDistributionCountriesAR V1SkillManifestDistributionCountries = "AR"
+	V1SkillManifestDistributionCountriesAS V1SkillManifestDistributionCountries = "AS"
+	V1SkillManifestDistributionCountriesAT V1SkillManifestDistributionCountries = "AT"
+	V1SkillManifestDistributionCountriesAU V1SkillManifestDistributionCountries = "AU"
+	V1SkillManifestDistributionCountriesAW V1SkillManifestDistributionCountries = "AW"
+	V1SkillManifestDistributionCountriesAX V1SkillManifestDistributionCountries = "AX"
+	V1SkillManifestDistributionCountriesAZ V1SkillManifestDistributionCountries = "AZ"
+	V1SkillManifestDistributionCountriesBA V1SkillManifestDistributionCountries = "BA"
+	V1SkillManifestDistributionCountriesBB V1SkillManifestDistributionCountries = "BB"
+	V1SkillManifestDistributionCountriesBD V1SkillManifestDistributionCountries = "BD"
+	V1SkillManifestDistributionCountriesBE V1SkillManifestDistributionCountries = "BE"
+	V1SkillManifestDistributionCountriesBF V1SkillManifestDistributionCountries = "BF"
+	V1SkillManifestDistributionCountriesBG V1SkillManifestDistributionCountries = "BG"
+	V1SkillManifestDistributionCountriesBH V1SkillManifestDistributionCountries = "BH"
+	V1SkillManifestDistributionCountriesBI V1SkillManifestDistributionCountries = "BI"
+	V1SkillManifestDistributionCountriesBJ V1SkillManifestDistributionCountries = "BJ"
+	V1SkillManifestDistributionCountriesBL V1SkillManifestDistributionCountries = "BL"
+	V1SkillManifestDistributionCountriesBM V1SkillManifestDistributionCountries = "BM"
+	V1SkillManifestDistributionCountriesBN V1SkillManifestDistributionCountries = "BN"
+	V1SkillManifestDistributionCountriesBO V1SkillManifestDistributionCountries = "BO"
+	V1SkillManifestDistributionCountriesBR V1SkillManifestDistributionCountries = "BR"
+	V1SkillManifestDistributionCountriesBS V1SkillManifestDistributionCountries = "BS"
+	V1SkillManifestDistributionCountriesBT V1SkillManifestDistributionCountries = "BT"
+	V1SkillManifestDistributionCountriesBV V1SkillManifestDistributionCountries = "BV"
+	V1SkillManifestDistributionCountriesBW V1SkillManifestDistributionCountries = "BW"
+	V1SkillManifestDistributionCountriesBY V1SkillManifestDistributionCountries = "BY"
+	V1SkillManifestDistributionCountriesBZ V1SkillManifestDistributionCountries = "BZ"
+	V1SkillManifestDistributionCountriesCA V1SkillManifestDistributionCountries = "CA"
+	V1SkillManifestDistributionCountriesCC V1SkillManifestDistributionCountries = "CC"
+	V1SkillManifestDistributionCountriesCD V1SkillManifestDistributionCountries = "CD"
+	V1SkillManifestDistributionCountriesCF V1SkillManifestDistributionCountries = "CF"
+	V1SkillManifestDistributionCountriesCG V1SkillManifestDistributionCountries = "CG"
+	V1SkillManifestDistributionCountriesCH V1SkillManifestDistributionCountries = "CH"
+	V1SkillManifestDistributionCountriesCI V1SkillManifestDistributionCountries = "CI"
+	V1SkillManifestDistributionCountriesCK V1SkillManifestDistributionCountries = "CK"
+	V1SkillManifestDistributionCountriesCL V1SkillManifestDistributionCountries = "CL"
+	V1SkillManifestDistributionCountriesCM V1SkillManifestDistributionCountries = "CM"
+	V1SkillManifestDistributionCountriesCN V1SkillManifestDistributionCountries = "CN"
+	V1SkillManifestDistributionCountriesCO V1SkillManifestDistributionCountries = "CO"
+	V1SkillManifestDistributionCountriesCR V1SkillManifestDistributionCountries = "CR"
+	V1SkillManifestDistributionCountriesCV V1SkillManifestDistributionCountries = "CV"
+	V1SkillManifestDistributionCountriesCX V1SkillManifestDistributionCountries = "CX"
+	V1SkillManifestDistributionCountriesCY V1SkillManifestDistributionCountries = "CY"
+	V1SkillManifestDistributionCountriesCZ V1SkillManifestDistributionCountries = "CZ"
+	V1SkillManifestDistributionCountriesDE V1SkillManifestDistributionCountries = "DE"
+	V1SkillManifestDistributionCountriesDJ V1SkillManifestDistributionCountries = "DJ"
+	V1SkillManifestDistributionCountriesDK V1SkillManifestDistributionCountries = "DK"
+	V1SkillManifestDistributionCountriesDM V1SkillManifestDistributionCountries = "DM"
+	V1SkillManifestDistributionCountriesDO V1SkillManifestDistributionCountries = "DO"
+	V1SkillManifestDistributionCountriesDZ V1SkillManifestDistributionCountries = "DZ"
+	V1SkillManifestDistributionCountriesEC V1SkillManifestDistributionCountries = "EC"
+	V1SkillManifestDistributionCountriesEE V1SkillManifestDistributionCountries = "EE"
+	V1SkillManifestDistributionCountriesEG V1SkillManifestDistributionCountries = "EG"
+	V1SkillManifestDistributionCountriesEH V1SkillManifestDistributionCountries = "EH"
+	V1SkillManifestDistributionCountriesER V1SkillManifestDistributionCountries = "ER"
+	V1SkillManifestDistributionCountriesES V1SkillManifestDistributionCountries = "ES"
+	V1SkillManifestDistributionCountriesET V1SkillManifestDistributionCountries = "ET"
+	V1SkillManifestDistributionCountriesFI V1SkillManifestDistributionCountries = "FI"
+	V1SkillManifestDistributionCountriesFJ V1SkillManifestDistributionCountries = "FJ"
+	V1SkillManifestDistributionCountriesFK V1SkillManifestDistributionCountries = "FK"
+	V1SkillManifestDistributionCountriesFM V1SkillManifestDistributionCountries = "FM"
+	V1SkillManifestDistributionCountriesFO V1SkillManifestDistributionCountries = "FO"
+	V1SkillManifestDistributionCountriesFR V1SkillManifestDistributionCountries = "FR"
+	V1SkillManifestDistributionCountriesGA V1SkillManifestDistributionCountries = "GA"
+	V1SkillManifestDistributionCountriesGB V1SkillManifestDistributionCountries = "GB"
+	V1SkillManifestDistributionCountriesGD V1SkillManifestDistributionCountries = "GD"
+	V1SkillManifestDistributionCountriesGE V1SkillManifestDistributionCountries = "GE"
+	V1SkillManifestDistributionCountriesGF V1SkillManifestDistributionCountries = "GF"
+	V1SkillManifestDistributionCountriesGG V1SkillManifestDistributionCountries = "GG"
+	V1SkillManifestDistributionCountriesGH V1SkillManifestDistributionCountries = "GH"
+	V1SkillManifestDistributionCountriesGI V1SkillManifestDistributionCountries = "GI"
+	V1SkillManifestDistributionCountriesGL V1SkillManifestDistributionCountries = "GL"
+	V1SkillManifestDistributionCountriesGM V1SkillManifestDistributionCountries = "GM"
+	V1SkillManifestDistributionCountriesGN V1SkillManifestDistributionCountries = "GN"
+	V1SkillManifestDistributionCountriesGP V1SkillManifestDistributionCountries = "GP"
+	V1SkillManifestDistributionCountriesGQ V1SkillManifestDistributionCountries = "GQ"
+	V1SkillManifestDistributionCountriesGR V1SkillManifestDistributionCountries = "GR"
+	V1SkillManifestDistributionCountriesGS V1SkillManifestDistributionCountries = "GS"
+	V1SkillManifestDistributionCountriesGT V1SkillManifestDistributionCountries = "GT"
+	V1SkillManifestDistributionCountriesGU V1SkillManifestDistributionCountries = "GU"
+	V1SkillManifestDistributionCountriesGW V1SkillManifestDistributionCountries = "GW"
+	V1SkillManifestDistributionCountriesGY V1SkillManifestDistributionCountries = "GY"
+	V1SkillManifestDistributionCountriesHK V1SkillManifestDistributionCountries = "HK"
+	V1SkillManifestDistributionCountriesHM V1SkillManifestDistributionCountries = "HM"
+	V1SkillManifestDistributionCountriesHN V1SkillManifestDistributionCountries = "HN"
+	V1SkillManifestDistributionCountriesHR V1SkillManifestDistributionCountries = "HR"
+	V1SkillManifestDistributionCountriesHT V1SkillManifestDistributionCountries = "HT"
+	V1SkillManifestDistributionCountriesHU V1SkillManifestDistributionCountries = "HU"
+	V1SkillManifestDistributionCountriesID V1SkillManifestDistributionCountries = "ID"
+	V1SkillManifestDistributionCountriesIE V1SkillManifestDistributionCountries = "IE"
+	V1SkillManifestDistributionCountriesIL V1SkillManifestDistributionCountries = "IL"
+	V1SkillManifestDistributionCountriesIM V1SkillManifestDistributionCountries = "IM"
+	V1SkillManifestDistributionCountriesIN V1SkillManifestDistributionCountries = "IN"
+	V1SkillManifestDistributionCountriesIO V1SkillManifestDistributionCountries = "IO"
+	V1SkillManifestDistributionCountriesIQ V1SkillManifestDistributionCountries = "IQ"
+	V1SkillManifestDistributionCountriesIS V1SkillManifestDistributionCountries = "IS"
+	V1SkillManifestDistributionCountriesIT V1SkillManifestDistributionCountries = "IT"
+	V1SkillManifestDistributionCountriesJE V1SkillManifestDistributionCountries = "JE"
+	V1SkillManifestDistributionCountriesJM V1SkillManifestDistributionCountries = "JM"
+	V1SkillManifestDistributionCountriesJO V1SkillManifestDistributionCountries = "JO"
+	V1SkillManifestDistributionCountriesJP V1SkillManifestDistributionCountries = "JP"
+	V1SkillManifestDistributionCountriesKE V1SkillManifestDistributionCountries = "KE"
+	V1SkillManifestDistributionCountriesKG V1SkillManifestDistributionCountries = "KG"
+	V1SkillManifestDistributionCountriesKH V1SkillManifestDistributionCountries = "KH"
+	V1SkillManifestDistributionCountriesKI V1SkillManifestDistributionCountries = "KI"
+	V1SkillManifestDistributionCountriesKM V1SkillManifestDistributionCountries = "KM"
+	V1SkillManifestDistributionCountriesKN V1SkillManifestDistributionCountries = "KN"
+	V1SkillManifestDistributionCountriesKR V1SkillManifestDistributionCountries = "KR"
+	V1SkillManifestDistributionCountriesKW V1SkillManifestDistributionCountries = "KW"
+	V1SkillManifestDistributionCountriesKY V1SkillManifestDistributionCountries = "KY"
+	V1SkillManifestDistributionCountriesKZ V1SkillManifestDistributionCountries = "KZ"
+	V1SkillManifestDistributionCountriesLA V1SkillManifestDistributionCountries = "LA"
+	V1SkillManifestDistributionCountriesLB V1SkillManifestDistributionCountries = "LB"
+	V1SkillManifestDistributionCountriesLC V1SkillManifestDistributionCountries = "LC"
+	V1SkillManifestDistributionCountriesLI V1SkillManifestDistributionCountries = "LI"
+	V1SkillManifestDistributionCountriesLK V1SkillManifestDistributionCountries = "LK"
+	V1SkillManifestDistributionCountriesLR V1SkillManifestDistributionCountries = "LR"
+	V1SkillManifestDistributionCountriesLS V1SkillManifestDistributionCountries = "LS"
+	V1SkillManifestDistributionCountriesLT V1SkillManifestDistributionCountries = "LT"
+	V1SkillManifestDistributionCountriesLU V1SkillManifestDistributionCountries = "LU"
+	V1SkillManifestDistributionCountriesLV V1SkillManifestDistributionCountries = "LV"
+	V1SkillManifestDistributionCountriesLY V1SkillManifestDistributionCountries = "LY"
+	V1SkillManifestDistributionCountriesMA V1SkillManifestDistributionCountries = "MA"
+	V1SkillManifestDistributionCountriesMC V1SkillManifestDistributionCountries = "MC"
+	V1SkillManifestDistributionCountriesMD V1SkillManifestDistributionCountries = "MD"
+	V1SkillManifestDistributionCountriesME V1SkillManifestDistributionCountries = "ME"
+	V1SkillManifestDistributionCountriesMF V1SkillManifestDistributionCountries = "MF"
+	V1SkillManifestDistributionCountriesMG V1SkillManifestDistributionCountries = "MG"
+	V1SkillManifestDistributionCountriesMH V1SkillManifestDistributionCountries = "MH"
+	V1SkillManifestDistributionCountriesMK V1SkillManifestDistributionCountries = "MK"
+	V1SkillManifestDistributionCountriesML V1SkillManifestDistributionCountries = "ML"
+	V1SkillManifestDistributionCountriesMM V1SkillManifestDistributionCountries = "MM"
+	V1SkillManifestDistributionCountriesMN V1SkillManifestDistributionCountries = "MN"
+	V1SkillManifestDistributionCountriesMO V1SkillManifestDistributionCountries = "MO"
+	V1SkillManifestDistributionCountriesMP V1SkillManifestDistributionCountries = "MP"
+	V1SkillManifestDistributionCountriesMQ V1SkillManifestDistributionCountries = "MQ"
+	V1SkillManifestDistributionCountriesMR V1SkillManifestDistributionCountries = "MR"
+	V1SkillManifestDistributionCountriesMS V1SkillManifestDistributionCountries = "MS"
+	V1SkillManifestDistributionCountriesMT V1SkillManifestDistributionCountries = "MT"
+	V1SkillManifestDistributionCountriesMU V1SkillManifestDistributionCountries = "MU"
+	V1SkillManifestDistributionCountriesMV V1SkillManifestDistributionCountries = "MV"
+	V1SkillManifestDistributionCountriesMW V1SkillManifestDistributionCountries = "MW"
+	V1SkillManifestDistributionCountriesMX V1SkillManifestDistributionCountries = "MX"
+	V1SkillManifestDistributionCountriesMY V1SkillManifestDistributionCountries = "MY"
+	V1SkillManifestDistributionCountriesMZ V1SkillManifestDistributionCountries = "MZ"
+	V1SkillManifestDistributionCountriesNA V1SkillManifestDistributionCountries = "NA"
+	V1SkillManifestDistributionCountriesNC V1SkillManifestDistributionCountries = "NC"
+	V1SkillManifestDistributionCountriesNE V1SkillManifestDistributionCountries = "NE"
+	V1SkillManifestDistributionCountriesNF V1SkillManifestDistributionCountries = "NF"
+	V1SkillManifestDistributionCountriesNG V1SkillManifestDistributionCountries = "NG"
+	V1SkillManifestDistributionCountriesNI V1SkillManifestDistributionCountries = "NI"
+	V1SkillManifestDistributionCountriesNL V1SkillManifestDistributionCountries = "NL"
+	V1SkillManifestDistributionCountriesNO V1SkillManifestDistributionCountries = "NO"
+	V1SkillManifestDistributionCountriesNP V1SkillManifestDistributionCountries = "NP"
+	V1SkillManifestDistributionCountriesNR V1SkillManifestDistributionCountries = "NR"
+	V1SkillManifestDistributionCountriesNU V1SkillManifestDistributionCountries = "NU"
+	V1SkillManifestDistributionCountriesNZ V1SkillManifestDistributionCountries = "NZ"
+	V1SkillManifestDistributionCountriesOM V1SkillManifestDistributionCountries = "OM"
+	V1SkillManifestDistributionCountriesPA V1SkillManifestDistributionCountries = "PA"
+	V1SkillManifestDistributionCountriesPE V1SkillManifestDistributionCountries = "PE"
+	V1SkillManifestDistributionCountriesPF V1SkillManifestDistributionCountries = "PF"
+	V1SkillManifestDistributionCountriesPG V1SkillManifestDistributionCountries = "PG"
+	V1SkillManifestDistributionCountriesPH V1SkillManifestDistributionCountries = "PH"
+	V1SkillManifestDistributionCountriesPK V1SkillManifestDistributionCountries = "PK"
+	V1SkillManifestDistributionCountriesPL V1SkillManifestDistributionCountries = "PL"
+	V1SkillManifestDistributionCountriesPM V1SkillManifestDistributionCountries = "PM"
+	V1SkillManifestDistributionCountriesPN V1SkillManifestDistributionCountries = "PN"
+	V1SkillManifestDistributionCountriesPR V1SkillManifestDistributionCountries = "PR"
+	V1SkillManifestDistributionCountriesPS V1SkillManifestDistributionCountries = "PS"
+	V1SkillManifestDistributionCountriesPT V1SkillManifestDistributionCountries = "PT"
+	V1SkillManifestDistributionCountriesPW V1SkillManifestDistributionCountries = "PW"
+	V1SkillManifestDistributionCountriesPY V1SkillManifestDistributionCountries = "PY"
+	V1SkillManifestDistributionCountriesQA V1SkillManifestDistributionCountries = "QA"
+	V1SkillManifestDistributionCountriesRE V1SkillManifestDistributionCountries = "RE"
+	V1SkillManifestDistributionCountriesRO V1SkillManifestDistributionCountries = "RO"
+	V1SkillManifestDistributionCountriesRS V1SkillManifestDistributionCountries = "RS"
+	V1SkillManifestDistributionCountriesRU V1SkillManifestDistributionCountries = "RU"
+	V1SkillManifestDistributionCountriesRW V1SkillManifestDistributionCountries = "RW"
+	V1SkillManifestDistributionCountriesSA V1SkillManifestDistributionCountries = "SA"
+	V1SkillManifestDistributionCountriesSB V1SkillManifestDistributionCountries = "SB"
+	V1SkillManifestDistributionCountriesSC V1SkillManifestDistributionCountries = "SC"
+	V1SkillManifestDistributionCountriesSE V1SkillManifestDistributionCountries = "SE"
+	V1SkillManifestDistributionCountriesSG V1SkillManifestDistributionCountries = "SG"
+	V1SkillManifestDistributionCountriesSH V1SkillManifestDistributionCountries = "SH"
+	V1SkillManifestDistributionCountriesSI V1SkillManifestDistributionCountries = "SI"
+	V1SkillManifestDistributionCountriesSJ V1SkillManifestDistributionCountries = "SJ"
+	V1SkillManifestDistributionCountriesSK V1SkillManifestDistributionCountries = "SK"
+	V1SkillManifestDistributionCountriesSL V1SkillManifestDistributionCountries = "SL"
+	V1SkillManifestDistributionCountriesSM V1SkillManifestDistributionCountries = "SM"
+	V1SkillManifestDistributionCountriesSN V1SkillManifestDistributionCountries = "SN"
+	V1SkillManifestDistributionCountriesSO V1SkillManifestDistributionCountries = "SO"
+	V1SkillManifestDistributionCountriesSR V1SkillManifestDistributionCountries = "SR"
+	V1SkillManifestDistributionCountriesST V1SkillManifestDistributionCountries = "ST"
+	V1SkillManifestDistributionCountriesSV V1SkillManifestDistributionCountries = "SV"
+	V1SkillManifestDistributionCountriesSZ V1SkillManifestDistributionCountries = "SZ"
+	V1SkillManifestDistributionCountriesTC V1SkillManifestDistributionCountries = "TC"
+	V1SkillManifestDistributionCountriesTD V1SkillManifestDistributionCountries = "TD"
+	V1SkillManifestDistributionCountriesTF V1SkillManifestDistributionCountries = "TF"
+	V1SkillManifestDistributionCountriesTG V1SkillManifestDistributionCountries = "TG"
+	V1SkillManifestDistributionCountriesTH V1SkillManifestDistributionCountries = "TH"
+	V1SkillManifestDistributionCountriesTJ V1SkillManifestDistributionCountries = "TJ"
+	V1SkillManifestDistributionCountriesTK V1SkillManifestDistributionCountries = "TK"
+	V1SkillManifestDistributionCountriesTL V1SkillManifestDistributionCountries = "TL"
+	V1SkillManifestDistributionCountriesTM V1SkillManifestDistributionCountries = "TM"
+	V1SkillManifestDistributionCountriesTN V1SkillManifestDistributionCountries = "TN"
+	V1SkillManifestDistributionCountriesTO V1SkillManifestDistributionCountries = "TO"
+	V1SkillManifestDistributionCountriesTR V1SkillManifestDistributionCountries = "TR"
+	V1SkillManifestDistributionCountriesTT V1SkillManifestDistributionCountries = "TT"
+	V1SkillManifestDistributionCountriesTV V1SkillManifestDistributionCountries = "TV"
+	V1SkillManifestDistributionCountriesTW V1SkillManifestDistributionCountries = "TW"
+	V1SkillManifestDistributionCountriesTZ V1SkillManifestDistributionCountries = "TZ"
+	V1SkillManifestDistributionCountriesUA V1SkillManifestDistributionCountries = "UA"
+	V1SkillManifestDistributionCountriesUG V1SkillManifestDistributionCountries = "UG"
+	V1SkillManifestDistributionCountriesUM V1SkillManifestDistributionCountries = "UM"
+	V1SkillManifestDistributionCountriesUS V1SkillManifestDistributionCountries = "US"
+	V1SkillManifestDistributionCountriesUY V1SkillManifestDistributionCountries = "UY"
+	V1SkillManifestDistributionCountriesUZ V1SkillManifestDistributionCountries = "UZ"
+	V1SkillManifestDistributionCountriesVA V1SkillManifestDistributionCountries = "VA"
+	V1SkillManifestDistributionCountriesVC V1SkillManifestDistributionCountries = "VC"
+	V1SkillManifestDistributionCountriesVE V1SkillManifestDistributionCountries = "VE"
+	V1SkillManifestDistributionCountriesVG V1SkillManifestDistributionCountries = "VG"
+	V1SkillManifestDistributionCountriesVI V1SkillManifestDistributionCountries = "VI"
+	V1SkillManifestDistributionCountriesVN V1SkillManifestDistributionCountries = "VN"
+	V1SkillManifestDistributionCountriesVU V1SkillManifestDistributionCountries = "VU"
+	V1SkillManifestDistributionCountriesWF V1SkillManifestDistributionCountries = "WF"
+	V1SkillManifestDistributionCountriesWS V1SkillManifestDistributionCountries = "WS"
+	V1SkillManifestDistributionCountriesYE V1SkillManifestDistributionCountries = "YE"
+	V1SkillManifestDistributionCountriesYT V1SkillManifestDistributionCountries = "YT"
+	V1SkillManifestDistributionCountriesZA V1SkillManifestDistributionCountries = "ZA"
+	V1SkillManifestDistributionCountriesZM V1SkillManifestDistributionCountries = "ZM"
+	V1SkillManifestDistributionCountriesZW V1SkillManifestDistributionCountries = "ZW"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillManifestDistributionCountries enum.
+func (e V1SkillManifestDistributionCountries) Valid() bool {
+	switch e {
+	case V1SkillManifestDistributionCountriesAD:
+		return true
+	case V1SkillManifestDistributionCountriesAE:
+		return true
+	case V1SkillManifestDistributionCountriesAF:
+		return true
+	case V1SkillManifestDistributionCountriesAG:
+		return true
+	case V1SkillManifestDistributionCountriesAI:
+		return true
+	case V1SkillManifestDistributionCountriesAL:
+		return true
+	case V1SkillManifestDistributionCountriesAM:
+		return true
+	case V1SkillManifestDistributionCountriesAN:
+		return true
+	case V1SkillManifestDistributionCountriesAO:
+		return true
+	case V1SkillManifestDistributionCountriesAQ:
+		return true
+	case V1SkillManifestDistributionCountriesAR:
+		return true
+	case V1SkillManifestDistributionCountriesAS:
+		return true
+	case V1SkillManifestDistributionCountriesAT:
+		return true
+	case V1SkillManifestDistributionCountriesAU:
+		return true
+	case V1SkillManifestDistributionCountriesAW:
+		return true
+	case V1SkillManifestDistributionCountriesAX:
+		return true
+	case V1SkillManifestDistributionCountriesAZ:
+		return true
+	case V1SkillManifestDistributionCountriesBA:
+		return true
+	case V1SkillManifestDistributionCountriesBB:
+		return true
+	case V1SkillManifestDistributionCountriesBD:
+		return true
+	case V1SkillManifestDistributionCountriesBE:
+		return true
+	case V1SkillManifestDistributionCountriesBF:
+		return true
+	case V1SkillManifestDistributionCountriesBG:
+		return true
+	case V1SkillManifestDistributionCountriesBH:
+		return true
+	case V1SkillManifestDistributionCountriesBI:
+		return true
+	case V1SkillManifestDistributionCountriesBJ:
+		return true
+	case V1SkillManifestDistributionCountriesBL:
+		return true
+	case V1SkillManifestDistributionCountriesBM:
+		return true
+	case V1SkillManifestDistributionCountriesBN:
+		return true
+	case V1SkillManifestDistributionCountriesBO:
+		return true
+	case V1SkillManifestDistributionCountriesBR:
+		return true
+	case V1SkillManifestDistributionCountriesBS:
+		return true
+	case V1SkillManifestDistributionCountriesBT:
+		return true
+	case V1SkillManifestDistributionCountriesBV:
+		return true
+	case V1SkillManifestDistributionCountriesBW:
+		return true
+	case V1SkillManifestDistributionCountriesBY:
+		return true
+	case V1SkillManifestDistributionCountriesBZ:
+		return true
+	case V1SkillManifestDistributionCountriesCA:
+		return true
+	case V1SkillManifestDistributionCountriesCC:
+		return true
+	case V1SkillManifestDistributionCountriesCD:
+		return true
+	case V1SkillManifestDistributionCountriesCF:
+		return true
+	case V1SkillManifestDistributionCountriesCG:
+		return true
+	case V1SkillManifestDistributionCountriesCH:
+		return true
+	case V1SkillManifestDistributionCountriesCI:
+		return true
+	case V1SkillManifestDistributionCountriesCK:
+		return true
+	case V1SkillManifestDistributionCountriesCL:
+		return true
+	case V1SkillManifestDistributionCountriesCM:
+		return true
+	case V1SkillManifestDistributionCountriesCN:
+		return true
+	case V1SkillManifestDistributionCountriesCO:
+		return true
+	case V1SkillManifestDistributionCountriesCR:
+		return true
+	case V1SkillManifestDistributionCountriesCV:
+		return true
+	case V1SkillManifestDistributionCountriesCX:
+		return true
+	case V1SkillManifestDistributionCountriesCY:
+		return true
+	case V1SkillManifestDistributionCountriesCZ:
+		return true
+	case V1SkillManifestDistributionCountriesDE:
+		return true
+	case V1SkillManifestDistributionCountriesDJ:
+		return true
+	case V1SkillManifestDistributionCountriesDK:
+		return true
+	case V1SkillManifestDistributionCountriesDM:
+		return true
+	case V1SkillManifestDistributionCountriesDO:
+		return true
+	case V1SkillManifestDistributionCountriesDZ:
+		return true
+	case V1SkillManifestDistributionCountriesEC:
+		return true
+	case V1SkillManifestDistributionCountriesEE:
+		return true
+	case V1SkillManifestDistributionCountriesEG:
+		return true
+	case V1SkillManifestDistributionCountriesEH:
+		return true
+	case V1SkillManifestDistributionCountriesER:
+		return true
+	case V1SkillManifestDistributionCountriesES:
+		return true
+	case V1SkillManifestDistributionCountriesET:
+		return true
+	case V1SkillManifestDistributionCountriesFI:
+		return true
+	case V1SkillManifestDistributionCountriesFJ:
+		return true
+	case V1SkillManifestDistributionCountriesFK:
+		return true
+	case V1SkillManifestDistributionCountriesFM:
+		return true
+	case V1SkillManifestDistributionCountriesFO:
+		return true
+	case V1SkillManifestDistributionCountriesFR:
+		return true
+	case V1SkillManifestDistributionCountriesGA:
+		return true
+	case V1SkillManifestDistributionCountriesGB:
+		return true
+	case V1SkillManifestDistributionCountriesGD:
+		return true
+	case V1SkillManifestDistributionCountriesGE:
+		return true
+	case V1SkillManifestDistributionCountriesGF:
+		return true
+	case V1SkillManifestDistributionCountriesGG:
+		return true
+	case V1SkillManifestDistributionCountriesGH:
+		return true
+	case V1SkillManifestDistributionCountriesGI:
+		return true
+	case V1SkillManifestDistributionCountriesGL:
+		return true
+	case V1SkillManifestDistributionCountriesGM:
+		return true
+	case V1SkillManifestDistributionCountriesGN:
+		return true
+	case V1SkillManifestDistributionCountriesGP:
+		return true
+	case V1SkillManifestDistributionCountriesGQ:
+		return true
+	case V1SkillManifestDistributionCountriesGR:
+		return true
+	case V1SkillManifestDistributionCountriesGS:
+		return true
+	case V1SkillManifestDistributionCountriesGT:
+		return true
+	case V1SkillManifestDistributionCountriesGU:
+		return true
+	case V1SkillManifestDistributionCountriesGW:
+		return true
+	case V1SkillManifestDistributionCountriesGY:
+		return true
+	case V1SkillManifestDistributionCountriesHK:
+		return true
+	case V1SkillManifestDistributionCountriesHM:
+		return true
+	case V1SkillManifestDistributionCountriesHN:
+		return true
+	case V1SkillManifestDistributionCountriesHR:
+		return true
+	case V1SkillManifestDistributionCountriesHT:
+		return true
+	case V1SkillManifestDistributionCountriesHU:
+		return true
+	case V1SkillManifestDistributionCountriesID:
+		return true
+	case V1SkillManifestDistributionCountriesIE:
+		return true
+	case V1SkillManifestDistributionCountriesIL:
+		return true
+	case V1SkillManifestDistributionCountriesIM:
+		return true
+	case V1SkillManifestDistributionCountriesIN:
+		return true
+	case V1SkillManifestDistributionCountriesIO:
+		return true
+	case V1SkillManifestDistributionCountriesIQ:
+		return true
+	case V1SkillManifestDistributionCountriesIS:
+		return true
+	case V1SkillManifestDistributionCountriesIT:
+		return true
+	case V1SkillManifestDistributionCountriesJE:
+		return true
+	case V1SkillManifestDistributionCountriesJM:
+		return true
+	case V1SkillManifestDistributionCountriesJO:
+		return true
+	case V1SkillManifestDistributionCountriesJP:
+		return true
+	case V1SkillManifestDistributionCountriesKE:
+		return true
+	case V1SkillManifestDistributionCountriesKG:
+		return true
+	case V1SkillManifestDistributionCountriesKH:
+		return true
+	case V1SkillManifestDistributionCountriesKI:
+		return true
+	case V1SkillManifestDistributionCountriesKM:
+		return true
+	case V1SkillManifestDistributionCountriesKN:
+		return true
+	case V1SkillManifestDistributionCountriesKR:
+		return true
+	case V1SkillManifestDistributionCountriesKW:
+		return true
+	case V1SkillManifestDistributionCountriesKY:
+		return true
+	case V1SkillManifestDistributionCountriesKZ:
+		return true
+	case V1SkillManifestDistributionCountriesLA:
+		return true
+	case V1SkillManifestDistributionCountriesLB:
+		return true
+	case V1SkillManifestDistributionCountriesLC:
+		return true
+	case V1SkillManifestDistributionCountriesLI:
+		return true
+	case V1SkillManifestDistributionCountriesLK:
+		return true
+	case V1SkillManifestDistributionCountriesLR:
+		return true
+	case V1SkillManifestDistributionCountriesLS:
+		return true
+	case V1SkillManifestDistributionCountriesLT:
+		return true
+	case V1SkillManifestDistributionCountriesLU:
+		return true
+	case V1SkillManifestDistributionCountriesLV:
+		return true
+	case V1SkillManifestDistributionCountriesLY:
+		return true
+	case V1SkillManifestDistributionCountriesMA:
+		return true
+	case V1SkillManifestDistributionCountriesMC:
+		return true
+	case V1SkillManifestDistributionCountriesMD:
+		return true
+	case V1SkillManifestDistributionCountriesME:
+		return true
+	case V1SkillManifestDistributionCountriesMF:
+		return true
+	case V1SkillManifestDistributionCountriesMG:
+		return true
+	case V1SkillManifestDistributionCountriesMH:
+		return true
+	case V1SkillManifestDistributionCountriesMK:
+		return true
+	case V1SkillManifestDistributionCountriesML:
+		return true
+	case V1SkillManifestDistributionCountriesMM:
+		return true
+	case V1SkillManifestDistributionCountriesMN:
+		return true
+	case V1SkillManifestDistributionCountriesMO:
+		return true
+	case V1SkillManifestDistributionCountriesMP:
+		return true
+	case V1SkillManifestDistributionCountriesMQ:
+		return true
+	case V1SkillManifestDistributionCountriesMR:
+		return true
+	case V1SkillManifestDistributionCountriesMS:
+		return true
+	case V1SkillManifestDistributionCountriesMT:
+		return true
+	case V1SkillManifestDistributionCountriesMU:
+		return true
+	case V1SkillManifestDistributionCountriesMV:
+		return true
+	case V1SkillManifestDistributionCountriesMW:
+		return true
+	case V1SkillManifestDistributionCountriesMX:
+		return true
+	case V1SkillManifestDistributionCountriesMY:
+		return true
+	case V1SkillManifestDistributionCountriesMZ:
+		return true
+	case V1SkillManifestDistributionCountriesNA:
+		return true
+	case V1SkillManifestDistributionCountriesNC:
+		return true
+	case V1SkillManifestDistributionCountriesNE:
+		return true
+	case V1SkillManifestDistributionCountriesNF:
+		return true
+	case V1SkillManifestDistributionCountriesNG:
+		return true
+	case V1SkillManifestDistributionCountriesNI:
+		return true
+	case V1SkillManifestDistributionCountriesNL:
+		return true
+	case V1SkillManifestDistributionCountriesNO:
+		return true
+	case V1SkillManifestDistributionCountriesNP:
+		return true
+	case V1SkillManifestDistributionCountriesNR:
+		return true
+	case V1SkillManifestDistributionCountriesNU:
+		return true
+	case V1SkillManifestDistributionCountriesNZ:
+		return true
+	case V1SkillManifestDistributionCountriesOM:
+		return true
+	case V1SkillManifestDistributionCountriesPA:
+		return true
+	case V1SkillManifestDistributionCountriesPE:
+		return true
+	case V1SkillManifestDistributionCountriesPF:
+		return true
+	case V1SkillManifestDistributionCountriesPG:
+		return true
+	case V1SkillManifestDistributionCountriesPH:
+		return true
+	case V1SkillManifestDistributionCountriesPK:
+		return true
+	case V1SkillManifestDistributionCountriesPL:
+		return true
+	case V1SkillManifestDistributionCountriesPM:
+		return true
+	case V1SkillManifestDistributionCountriesPN:
+		return true
+	case V1SkillManifestDistributionCountriesPR:
+		return true
+	case V1SkillManifestDistributionCountriesPS:
+		return true
+	case V1SkillManifestDistributionCountriesPT:
+		return true
+	case V1SkillManifestDistributionCountriesPW:
+		return true
+	case V1SkillManifestDistributionCountriesPY:
+		return true
+	case V1SkillManifestDistributionCountriesQA:
+		return true
+	case V1SkillManifestDistributionCountriesRE:
+		return true
+	case V1SkillManifestDistributionCountriesRO:
+		return true
+	case V1SkillManifestDistributionCountriesRS:
+		return true
+	case V1SkillManifestDistributionCountriesRU:
+		return true
+	case V1SkillManifestDistributionCountriesRW:
+		return true
+	case V1SkillManifestDistributionCountriesSA:
+		return true
+	case V1SkillManifestDistributionCountriesSB:
+		return true
+	case V1SkillManifestDistributionCountriesSC:
+		return true
+	case V1SkillManifestDistributionCountriesSE:
+		return true
+	case V1SkillManifestDistributionCountriesSG:
+		return true
+	case V1SkillManifestDistributionCountriesSH:
+		return true
+	case V1SkillManifestDistributionCountriesSI:
+		return true
+	case V1SkillManifestDistributionCountriesSJ:
+		return true
+	case V1SkillManifestDistributionCountriesSK:
+		return true
+	case V1SkillManifestDistributionCountriesSL:
+		return true
+	case V1SkillManifestDistributionCountriesSM:
+		return true
+	case V1SkillManifestDistributionCountriesSN:
+		return true
+	case V1SkillManifestDistributionCountriesSO:
+		return true
+	case V1SkillManifestDistributionCountriesSR:
+		return true
+	case V1SkillManifestDistributionCountriesST:
+		return true
+	case V1SkillManifestDistributionCountriesSV:
+		return true
+	case V1SkillManifestDistributionCountriesSZ:
+		return true
+	case V1SkillManifestDistributionCountriesTC:
+		return true
+	case V1SkillManifestDistributionCountriesTD:
+		return true
+	case V1SkillManifestDistributionCountriesTF:
+		return true
+	case V1SkillManifestDistributionCountriesTG:
+		return true
+	case V1SkillManifestDistributionCountriesTH:
+		return true
+	case V1SkillManifestDistributionCountriesTJ:
+		return true
+	case V1SkillManifestDistributionCountriesTK:
+		return true
+	case V1SkillManifestDistributionCountriesTL:
+		return true
+	case V1SkillManifestDistributionCountriesTM:
+		return true
+	case V1SkillManifestDistributionCountriesTN:
+		return true
+	case V1SkillManifestDistributionCountriesTO:
+		return true
+	case V1SkillManifestDistributionCountriesTR:
+		return true
+	case V1SkillManifestDistributionCountriesTT:
+		return true
+	case V1SkillManifestDistributionCountriesTV:
+		return true
+	case V1SkillManifestDistributionCountriesTW:
+		return true
+	case V1SkillManifestDistributionCountriesTZ:
+		return true
+	case V1SkillManifestDistributionCountriesUA:
+		return true
+	case V1SkillManifestDistributionCountriesUG:
+		return true
+	case V1SkillManifestDistributionCountriesUM:
+		return true
+	case V1SkillManifestDistributionCountriesUS:
+		return true
+	case V1SkillManifestDistributionCountriesUY:
+		return true
+	case V1SkillManifestDistributionCountriesUZ:
+		return true
+	case V1SkillManifestDistributionCountriesVA:
+		return true
+	case V1SkillManifestDistributionCountriesVC:
+		return true
+	case V1SkillManifestDistributionCountriesVE:
+		return true
+	case V1SkillManifestDistributionCountriesVG:
+		return true
+	case V1SkillManifestDistributionCountriesVI:
+		return true
+	case V1SkillManifestDistributionCountriesVN:
+		return true
+	case V1SkillManifestDistributionCountriesVU:
+		return true
+	case V1SkillManifestDistributionCountriesWF:
+		return true
+	case V1SkillManifestDistributionCountriesWS:
+		return true
+	case V1SkillManifestDistributionCountriesYE:
+		return true
+	case V1SkillManifestDistributionCountriesYT:
+		return true
+	case V1SkillManifestDistributionCountriesZA:
+		return true
+	case V1SkillManifestDistributionCountriesZM:
+		return true
+	case V1SkillManifestDistributionCountriesZW:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillManifestDistributionMode.
+const (
+	V1SkillManifestDistributionModePRIVATE V1SkillManifestDistributionMode = "PRIVATE"
+	V1SkillManifestDistributionModePUBLIC  V1SkillManifestDistributionMode = "PUBLIC"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillManifestDistributionMode enum.
+func (e V1SkillManifestDistributionMode) Valid() bool {
+	switch e {
+	case V1SkillManifestDistributionModePRIVATE:
+		return true
+	case V1SkillManifestDistributionModePUBLIC:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillManifestEventNameType.
+const (
+	V1SkillManifestEventNameTypeALLLISTSCHANGED                                        V1SkillManifestEventNameType = "ALL_LISTS_CHANGED"
+	V1SkillManifestEventNameTypeAUDIOITEMPLAYBACKFAILED                                V1SkillManifestEventNameType = "AUDIO_ITEM_PLAYBACK_FAILED"
+	V1SkillManifestEventNameTypeAUDIOITEMPLAYBACKFINISHED                              V1SkillManifestEventNameType = "AUDIO_ITEM_PLAYBACK_FINISHED"
+	V1SkillManifestEventNameTypeAUDIOITEMPLAYBACKSTARTED                               V1SkillManifestEventNameType = "AUDIO_ITEM_PLAYBACK_STARTED"
+	V1SkillManifestEventNameTypeAUDIOITEMPLAYBACKSTOPPED                               V1SkillManifestEventNameType = "AUDIO_ITEM_PLAYBACK_STOPPED"
+	V1SkillManifestEventNameTypeAlexaCameraPhotoCaptureControllerCancelCaptureFailed   V1SkillManifestEventNameType = "Alexa.Camera.PhotoCaptureController.CancelCaptureFailed"
+	V1SkillManifestEventNameTypeAlexaCameraPhotoCaptureControllerCancelCaptureFinished V1SkillManifestEventNameType = "Alexa.Camera.PhotoCaptureController.CancelCaptureFinished"
+	V1SkillManifestEventNameTypeAlexaCameraPhotoCaptureControllerCaptureFailed         V1SkillManifestEventNameType = "Alexa.Camera.PhotoCaptureController.CaptureFailed"
+	V1SkillManifestEventNameTypeAlexaCameraPhotoCaptureControllerCaptureFinished       V1SkillManifestEventNameType = "Alexa.Camera.PhotoCaptureController.CaptureFinished"
+	V1SkillManifestEventNameTypeAlexaCameraVideoCaptureControllerCancelCaptureFailed   V1SkillManifestEventNameType = "Alexa.Camera.VideoCaptureController.CancelCaptureFailed"
+	V1SkillManifestEventNameTypeAlexaCameraVideoCaptureControllerCancelCaptureFinished V1SkillManifestEventNameType = "Alexa.Camera.VideoCaptureController.CancelCaptureFinished"
+	V1SkillManifestEventNameTypeAlexaCameraVideoCaptureControllerCaptureFailed         V1SkillManifestEventNameType = "Alexa.Camera.VideoCaptureController.CaptureFailed"
+	V1SkillManifestEventNameTypeAlexaCameraVideoCaptureControllerCaptureFinished       V1SkillManifestEventNameType = "Alexa.Camera.VideoCaptureController.CaptureFinished"
+	V1SkillManifestEventNameTypeAlexaCameraVideoCaptureControllerCaptureStarted        V1SkillManifestEventNameType = "Alexa.Camera.VideoCaptureController.CaptureStarted"
+	V1SkillManifestEventNameTypeAlexaFileManagerUploadControllerCancelUploadFailed     V1SkillManifestEventNameType = "Alexa.FileManager.UploadController.CancelUploadFailed"
+	V1SkillManifestEventNameTypeAlexaFileManagerUploadControllerCancelUploadFinished   V1SkillManifestEventNameType = "Alexa.FileManager.UploadController.CancelUploadFinished"
+	V1SkillManifestEventNameTypeAlexaFileManagerUploadControllerUploadFailed           V1SkillManifestEventNameType = "Alexa.FileManager.UploadController.UploadFailed"
+	V1SkillManifestEventNameTypeAlexaFileManagerUploadControllerUploadFinished         V1SkillManifestEventNameType = "Alexa.FileManager.UploadController.UploadFinished"
+	V1SkillManifestEventNameTypeAlexaFileManagerUploadControllerUploadStarted          V1SkillManifestEventNameType = "Alexa.FileManager.UploadController.UploadStarted"
+	V1SkillManifestEventNameTypeAlexaPresentationAPLLoadIndexListData                  V1SkillManifestEventNameType = "Alexa.Presentation.APL.LoadIndexListData"
+	V1SkillManifestEventNameTypeAlexaPresentationAPLRuntimeError                       V1SkillManifestEventNameType = "Alexa.Presentation.APL.RuntimeError"
+	V1SkillManifestEventNameTypeAlexaPresentationAPLUserEvent                          V1SkillManifestEventNameType = "Alexa.Presentation.APL.UserEvent"
+	V1SkillManifestEventNameTypeAlexaPresentationHTMLEvent                             V1SkillManifestEventNameType = "Alexa.Presentation.HTML.Event"
+	V1SkillManifestEventNameTypeAlexaPresentationHTMLLifecycleStateChanged             V1SkillManifestEventNameType = "Alexa.Presentation.HTML.LifecycleStateChanged"
+	V1SkillManifestEventNameTypeAlexaPresentationPresentationDismissed                 V1SkillManifestEventNameType = "Alexa.Presentation.PresentationDismissed"
+	V1SkillManifestEventNameTypeAlexaVideoXrayShowDetailsFailed                        V1SkillManifestEventNameType = "Alexa.Video.Xray.ShowDetailsFailed"
+	V1SkillManifestEventNameTypeAlexaVideoXrayShowDetailsSuccessful                    V1SkillManifestEventNameType = "Alexa.Video.Xray.ShowDetailsSuccessful"
+	V1SkillManifestEventNameTypeAudioPlayerPlaybackFailed                              V1SkillManifestEventNameType = "AudioPlayer.PlaybackFailed"
+	V1SkillManifestEventNameTypeAudioPlayerPlaybackFinished                            V1SkillManifestEventNameType = "AudioPlayer.PlaybackFinished"
+	V1SkillManifestEventNameTypeAudioPlayerPlaybackNearlyFinished                      V1SkillManifestEventNameType = "AudioPlayer.PlaybackNearlyFinished"
+	V1SkillManifestEventNameTypeAudioPlayerPlaybackStarted                             V1SkillManifestEventNameType = "AudioPlayer.PlaybackStarted"
+	V1SkillManifestEventNameTypeAudioPlayerPlaybackStopped                             V1SkillManifestEventNameType = "AudioPlayer.PlaybackStopped"
+	V1SkillManifestEventNameTypeCardRendererDisplayContentFinished                     V1SkillManifestEventNameType = "CardRenderer.DisplayContentFinished"
+	V1SkillManifestEventNameTypeCardRendererDisplayContentStarted                      V1SkillManifestEventNameType = "CardRenderer.DisplayContentStarted"
+	V1SkillManifestEventNameTypeCardRendererReadContentFinished                        V1SkillManifestEventNameType = "CardRenderer.ReadContentFinished"
+	V1SkillManifestEventNameTypeCardRendererReadContentStarted                         V1SkillManifestEventNameType = "CardRenderer.ReadContentStarted"
+	V1SkillManifestEventNameTypeCustomInterfaceControllerEventsReceived                V1SkillManifestEventNameType = "CustomInterfaceController.EventsReceived"
+	V1SkillManifestEventNameTypeCustomInterfaceControllerExpired                       V1SkillManifestEventNameType = "CustomInterfaceController.Expired"
+	V1SkillManifestEventNameTypeDeviceSetupSetupCompleted                              V1SkillManifestEventNameType = "DeviceSetup.SetupCompleted"
+	V1SkillManifestEventNameTypeDisplayElementSelected                                 V1SkillManifestEventNameType = "Display.ElementSelected"
+	V1SkillManifestEventNameTypeDisplayUserEvent                                       V1SkillManifestEventNameType = "Display.UserEvent"
+	V1SkillManifestEventNameTypeEffectsControllerRequestEffectChangeRequest            V1SkillManifestEventNameType = "EffectsController.RequestEffectChangeRequest"
+	V1SkillManifestEventNameTypeEffectsControllerRequestGuiChangeRequest               V1SkillManifestEventNameType = "EffectsController.RequestGuiChangeRequest"
+	V1SkillManifestEventNameTypeEffectsControllerStateReceiptChangeRequest             V1SkillManifestEventNameType = "EffectsController.StateReceiptChangeRequest"
+	V1SkillManifestEventNameTypeFitnessSessionControllerFitnessSessionEnded            V1SkillManifestEventNameType = "FitnessSessionController.FitnessSessionEnded"
+	V1SkillManifestEventNameTypeFitnessSessionControllerFitnessSessionError            V1SkillManifestEventNameType = "FitnessSessionController.FitnessSessionError"
+	V1SkillManifestEventNameTypeFitnessSessionControllerFitnessSessionPaused           V1SkillManifestEventNameType = "FitnessSessionController.FitnessSessionPaused"
+	V1SkillManifestEventNameTypeFitnessSessionControllerFitnessSessionResumed          V1SkillManifestEventNameType = "FitnessSessionController.FitnessSessionResumed"
+	V1SkillManifestEventNameTypeFitnessSessionControllerFitnessSessionStarted          V1SkillManifestEventNameType = "FitnessSessionController.FitnessSessionStarted"
+	V1SkillManifestEventNameTypeGameEngineInputHandlerEvent                            V1SkillManifestEventNameType = "GameEngine.InputHandlerEvent"
+	V1SkillManifestEventNameTypeINSKILLPRODUCTSUBSCRIPTIONENDED                        V1SkillManifestEventNameType = "IN_SKILL_PRODUCT_SUBSCRIPTION_ENDED"
+	V1SkillManifestEventNameTypeINSKILLPRODUCTSUBSCRIPTIONRENEWED                      V1SkillManifestEventNameType = "IN_SKILL_PRODUCT_SUBSCRIPTION_RENEWED"
+	V1SkillManifestEventNameTypeINSKILLPRODUCTSUBSCRIPTIONSTARTED                      V1SkillManifestEventNameType = "IN_SKILL_PRODUCT_SUBSCRIPTION_STARTED"
+	V1SkillManifestEventNameTypeITEMSCREATED                                           V1SkillManifestEventNameType = "ITEMS_CREATED"
+	V1SkillManifestEventNameTypeITEMSDELETED                                           V1SkillManifestEventNameType = "ITEMS_DELETED"
+	V1SkillManifestEventNameTypeITEMSUPDATED                                           V1SkillManifestEventNameType = "ITEMS_UPDATED"
+	V1SkillManifestEventNameTypeLISTCREATED                                            V1SkillManifestEventNameType = "LIST_CREATED"
+	V1SkillManifestEventNameTypeLISTDELETED                                            V1SkillManifestEventNameType = "LIST_DELETED"
+	V1SkillManifestEventNameTypeLISTUPDATED                                            V1SkillManifestEventNameType = "LIST_UPDATED"
+	V1SkillManifestEventNameTypeLegacyActivityManagerActivityContextRemovedEvent       V1SkillManifestEventNameType = "Legacy.ActivityManager.ActivityContextRemovedEvent"
+	V1SkillManifestEventNameTypeLegacyActivityManagerActivityInterrupted               V1SkillManifestEventNameType = "Legacy.ActivityManager.ActivityInterrupted"
+	V1SkillManifestEventNameTypeLegacyActivityManagerFocusChanged                      V1SkillManifestEventNameType = "Legacy.ActivityManager.FocusChanged"
+	V1SkillManifestEventNameTypeLegacyAlertsControllerDismissCommand                   V1SkillManifestEventNameType = "Legacy.AlertsController.DismissCommand"
+	V1SkillManifestEventNameTypeLegacyAlertsControllerSnoozeCommand                    V1SkillManifestEventNameType = "Legacy.AlertsController.SnoozeCommand"
+	V1SkillManifestEventNameTypeLegacyAudioPlayerAudioStutter                          V1SkillManifestEventNameType = "Legacy.AudioPlayer.AudioStutter"
+	V1SkillManifestEventNameTypeLegacyAudioPlayerGuiButtonClickedEvent                 V1SkillManifestEventNameType = "Legacy.AudioPlayerGui.ButtonClickedEvent"
+	V1SkillManifestEventNameTypeLegacyAudioPlayerGuiLyricsViewedEvent                  V1SkillManifestEventNameType = "Legacy.AudioPlayerGui.LyricsViewedEvent"
+	V1SkillManifestEventNameTypeLegacyAudioPlayerInitialPlaybackProgressReport         V1SkillManifestEventNameType = "Legacy.AudioPlayer.InitialPlaybackProgressReport"
+	V1SkillManifestEventNameTypeLegacyAudioPlayerMetadata                              V1SkillManifestEventNameType = "Legacy.AudioPlayer.Metadata"
+	V1SkillManifestEventNameTypeLegacyAudioPlayerPeriodicPlaybackProgressReport        V1SkillManifestEventNameType = "Legacy.AudioPlayer.PeriodicPlaybackProgressReport"
+	V1SkillManifestEventNameTypeLegacyAudioPlayerPlaybackError                         V1SkillManifestEventNameType = "Legacy.AudioPlayer.PlaybackError"
+	V1SkillManifestEventNameTypeLegacyAudioPlayerPlaybackFinished                      V1SkillManifestEventNameType = "Legacy.AudioPlayer.PlaybackFinished"
+	V1SkillManifestEventNameTypeLegacyAudioPlayerPlaybackIdle                          V1SkillManifestEventNameType = "Legacy.AudioPlayer.PlaybackIdle"
+	V1SkillManifestEventNameTypeLegacyAudioPlayerPlaybackInterrupted                   V1SkillManifestEventNameType = "Legacy.AudioPlayer.PlaybackInterrupted"
+	V1SkillManifestEventNameTypeLegacyAudioPlayerPlaybackNearlyFinished                V1SkillManifestEventNameType = "Legacy.AudioPlayer.PlaybackNearlyFinished"
+	V1SkillManifestEventNameTypeLegacyAudioPlayerPlaybackPaused                        V1SkillManifestEventNameType = "Legacy.AudioPlayer.PlaybackPaused"
+	V1SkillManifestEventNameTypeLegacyAudioPlayerPlaybackResumed                       V1SkillManifestEventNameType = "Legacy.AudioPlayer.PlaybackResumed"
+	V1SkillManifestEventNameTypeLegacyAudioPlayerPlaybackStarted                       V1SkillManifestEventNameType = "Legacy.AudioPlayer.PlaybackStarted"
+	V1SkillManifestEventNameTypeLegacyAudioPlayerPlaybackStutterFinished               V1SkillManifestEventNameType = "Legacy.AudioPlayer.PlaybackStutterFinished"
+	V1SkillManifestEventNameTypeLegacyAudioPlayerPlaybackStutterStarted                V1SkillManifestEventNameType = "Legacy.AudioPlayer.PlaybackStutterStarted"
+	V1SkillManifestEventNameTypeLegacyAuxControllerDirectionChanged                    V1SkillManifestEventNameType = "Legacy.AuxController.DirectionChanged"
+	V1SkillManifestEventNameTypeLegacyAuxControllerEnabledStateChanged                 V1SkillManifestEventNameType = "Legacy.AuxController.EnabledStateChanged"
+	V1SkillManifestEventNameTypeLegacyAuxControllerInputActivityStateChanged           V1SkillManifestEventNameType = "Legacy.AuxController.InputActivityStateChanged"
+	V1SkillManifestEventNameTypeLegacyAuxControllerPluggedStateChanged                 V1SkillManifestEventNameType = "Legacy.AuxController.PluggedStateChanged"
+	V1SkillManifestEventNameTypeLegacyBluetoothNetworkCancelPairingMode                V1SkillManifestEventNameType = "Legacy.BluetoothNetwork.CancelPairingMode"
+	V1SkillManifestEventNameTypeLegacyBluetoothNetworkDeviceConnectedFailure           V1SkillManifestEventNameType = "Legacy.BluetoothNetwork.DeviceConnectedFailure"
+	V1SkillManifestEventNameTypeLegacyBluetoothNetworkDeviceConnectedSuccess           V1SkillManifestEventNameType = "Legacy.BluetoothNetwork.DeviceConnectedSuccess"
+	V1SkillManifestEventNameTypeLegacyBluetoothNetworkDeviceDisconnectedFailure        V1SkillManifestEventNameType = "Legacy.BluetoothNetwork.DeviceDisconnectedFailure"
+	V1SkillManifestEventNameTypeLegacyBluetoothNetworkDeviceDisconnectedSuccess        V1SkillManifestEventNameType = "Legacy.BluetoothNetwork.DeviceDisconnectedSuccess"
+	V1SkillManifestEventNameTypeLegacyBluetoothNetworkDevicePairFailure                V1SkillManifestEventNameType = "Legacy.BluetoothNetwork.DevicePairFailure"
+	V1SkillManifestEventNameTypeLegacyBluetoothNetworkDevicePairSuccess                V1SkillManifestEventNameType = "Legacy.BluetoothNetwork.DevicePairSuccess"
+	V1SkillManifestEventNameTypeLegacyBluetoothNetworkDeviceUnpairFailure              V1SkillManifestEventNameType = "Legacy.BluetoothNetwork.DeviceUnpairFailure"
+	V1SkillManifestEventNameTypeLegacyBluetoothNetworkDeviceUnpairSuccess              V1SkillManifestEventNameType = "Legacy.BluetoothNetwork.DeviceUnpairSuccess"
+	V1SkillManifestEventNameTypeLegacyBluetoothNetworkEnterPairingModeFailure          V1SkillManifestEventNameType = "Legacy.BluetoothNetwork.EnterPairingModeFailure"
+	V1SkillManifestEventNameTypeLegacyBluetoothNetworkEnterPairingModeSuccess          V1SkillManifestEventNameType = "Legacy.BluetoothNetwork.EnterPairingModeSuccess"
+	V1SkillManifestEventNameTypeLegacyBluetoothNetworkMediaControlFailure              V1SkillManifestEventNameType = "Legacy.BluetoothNetwork.MediaControlFailure"
+	V1SkillManifestEventNameTypeLegacyBluetoothNetworkMediaControlSuccess              V1SkillManifestEventNameType = "Legacy.BluetoothNetwork.MediaControlSuccess"
+	V1SkillManifestEventNameTypeLegacyBluetoothNetworkScanDevicesReport                V1SkillManifestEventNameType = "Legacy.BluetoothNetwork.ScanDevicesReport"
+	V1SkillManifestEventNameTypeLegacyBluetoothNetworkSetDeviceCategoriesFailed        V1SkillManifestEventNameType = "Legacy.BluetoothNetwork.SetDeviceCategoriesFailed"
+	V1SkillManifestEventNameTypeLegacyBluetoothNetworkSetDeviceCategoriesSucceeded     V1SkillManifestEventNameType = "Legacy.BluetoothNetwork.SetDeviceCategoriesSucceeded"
+	V1SkillManifestEventNameTypeLegacyContentManagerContentPlaybackTerminated          V1SkillManifestEventNameType = "Legacy.ContentManager.ContentPlaybackTerminated"
+	V1SkillManifestEventNameTypeLegacyDeviceNotificationDeleteNotificationFailed       V1SkillManifestEventNameType = "Legacy.DeviceNotification.DeleteNotificationFailed"
+	V1SkillManifestEventNameTypeLegacyDeviceNotificationDeleteNotificationSucceeded    V1SkillManifestEventNameType = "Legacy.DeviceNotification.DeleteNotificationSucceeded"
+	V1SkillManifestEventNameTypeLegacyDeviceNotificationNotificationEnteredBackground  V1SkillManifestEventNameType = "Legacy.DeviceNotification.NotificationEnteredBackground"
+	V1SkillManifestEventNameTypeLegacyDeviceNotificationNotificationEnteredForground   V1SkillManifestEventNameType = "Legacy.DeviceNotification.NotificationEnteredForground"
+	V1SkillManifestEventNameTypeLegacyDeviceNotificationNotificationStarted            V1SkillManifestEventNameType = "Legacy.DeviceNotification.NotificationStarted"
+	V1SkillManifestEventNameTypeLegacyDeviceNotificationNotificationStopped            V1SkillManifestEventNameType = "Legacy.DeviceNotification.NotificationStopped"
+	V1SkillManifestEventNameTypeLegacyDeviceNotificationNotificationSync               V1SkillManifestEventNameType = "Legacy.DeviceNotification.NotificationSync"
+	V1SkillManifestEventNameTypeLegacyDeviceNotificationSetNotificationFailed          V1SkillManifestEventNameType = "Legacy.DeviceNotification.SetNotificationFailed"
+	V1SkillManifestEventNameTypeLegacyDeviceNotificationSetNotificationSucceeded       V1SkillManifestEventNameType = "Legacy.DeviceNotification.SetNotificationSucceeded"
+	V1SkillManifestEventNameTypeLegacyEqualizerControllerEqualizerChanged              V1SkillManifestEventNameType = "Legacy.EqualizerController.EqualizerChanged"
+	V1SkillManifestEventNameTypeLegacyExternalMediaPlayerAuthorizationComplete         V1SkillManifestEventNameType = "Legacy.ExternalMediaPlayer.AuthorizationComplete"
+	V1SkillManifestEventNameTypeLegacyExternalMediaPlayerError                         V1SkillManifestEventNameType = "Legacy.ExternalMediaPlayer.Error"
+	V1SkillManifestEventNameTypeLegacyExternalMediaPlayerEvent                         V1SkillManifestEventNameType = "Legacy.ExternalMediaPlayer.Event"
+	V1SkillManifestEventNameTypeLegacyExternalMediaPlayerLogin                         V1SkillManifestEventNameType = "Legacy.ExternalMediaPlayer.Login"
+	V1SkillManifestEventNameTypeLegacyExternalMediaPlayerLogout                        V1SkillManifestEventNameType = "Legacy.ExternalMediaPlayer.Logout"
+	V1SkillManifestEventNameTypeLegacyExternalMediaPlayerReportDiscoveredPlayers       V1SkillManifestEventNameType = "Legacy.ExternalMediaPlayer.ReportDiscoveredPlayers"
+	V1SkillManifestEventNameTypeLegacyExternalMediaPlayerRequestToken                  V1SkillManifestEventNameType = "Legacy.ExternalMediaPlayer.RequestToken"
+	V1SkillManifestEventNameTypeLegacyFavoritesControllerError                         V1SkillManifestEventNameType = "Legacy.FavoritesController.Error"
+	V1SkillManifestEventNameTypeLegacyFavoritesControllerResponse                      V1SkillManifestEventNameType = "Legacy.FavoritesController.Response"
+	V1SkillManifestEventNameTypeLegacyGameEngineGameInputEvent                         V1SkillManifestEventNameType = "Legacy.GameEngine.GameInputEvent"
+	V1SkillManifestEventNameTypeLegacyHomeAutoWifiControllerDeviceReconnected          V1SkillManifestEventNameType = "Legacy.HomeAutoWifiController.DeviceReconnected"
+	V1SkillManifestEventNameTypeLegacyHomeAutoWifiControllerHTTPNotified               V1SkillManifestEventNameType = "Legacy.HomeAutoWifiController.HttpNotified"
+	V1SkillManifestEventNameTypeLegacyHomeAutoWifiControllerSsdpDiscoveryFinished      V1SkillManifestEventNameType = "Legacy.HomeAutoWifiController.SsdpDiscoveryFinished"
+	V1SkillManifestEventNameTypeLegacyHomeAutoWifiControllerSsdpServiceDiscovered      V1SkillManifestEventNameType = "Legacy.HomeAutoWifiController.SsdpServiceDiscovered"
+	V1SkillManifestEventNameTypeLegacyHomeAutoWifiControllerSsdpServiceTerminated      V1SkillManifestEventNameType = "Legacy.HomeAutoWifiController.SsdpServiceTerminated"
+	V1SkillManifestEventNameTypeLegacyListModelAddItemRequest                          V1SkillManifestEventNameType = "Legacy.ListModel.AddItemRequest"
+	V1SkillManifestEventNameTypeLegacyListModelDeleteItemRequest                       V1SkillManifestEventNameType = "Legacy.ListModel.DeleteItemRequest"
+	V1SkillManifestEventNameTypeLegacyListModelGetPageByOrdinalRequest                 V1SkillManifestEventNameType = "Legacy.ListModel.GetPageByOrdinalRequest"
+	V1SkillManifestEventNameTypeLegacyListModelGetPageByTokenRequest                   V1SkillManifestEventNameType = "Legacy.ListModel.GetPageByTokenRequest"
+	V1SkillManifestEventNameTypeLegacyListModelListStateUpdateRequest                  V1SkillManifestEventNameType = "Legacy.ListModel.ListStateUpdateRequest"
+	V1SkillManifestEventNameTypeLegacyListModelUpdateItemRequest                       V1SkillManifestEventNameType = "Legacy.ListModel.UpdateItemRequest"
+	V1SkillManifestEventNameTypeLegacyListRendererGetListPageByOrdinal                 V1SkillManifestEventNameType = "Legacy.ListRenderer.GetListPageByOrdinal"
+	V1SkillManifestEventNameTypeLegacyListRendererGetListPageByToken                   V1SkillManifestEventNameType = "Legacy.ListRenderer.GetListPageByToken"
+	V1SkillManifestEventNameTypeLegacyListRendererListItemEvent                        V1SkillManifestEventNameType = "Legacy.ListRenderer.ListItemEvent"
+	V1SkillManifestEventNameTypeLegacyMediaGroupingGroupChangeNotificationEvent        V1SkillManifestEventNameType = "Legacy.MediaGrouping.GroupChangeNotificationEvent"
+	V1SkillManifestEventNameTypeLegacyMediaGroupingGroupChangeResponseEvent            V1SkillManifestEventNameType = "Legacy.MediaGrouping.GroupChangeResponseEvent"
+	V1SkillManifestEventNameTypeLegacyMediaGroupingGroupSyncEvent                      V1SkillManifestEventNameType = "Legacy.MediaGrouping.GroupSyncEvent"
+	V1SkillManifestEventNameTypeLegacyMediaPlayerPlaybackError                         V1SkillManifestEventNameType = "Legacy.MediaPlayer.PlaybackError"
+	V1SkillManifestEventNameTypeLegacyMediaPlayerPlaybackFinished                      V1SkillManifestEventNameType = "Legacy.MediaPlayer.PlaybackFinished"
+	V1SkillManifestEventNameTypeLegacyMediaPlayerPlaybackIdle                          V1SkillManifestEventNameType = "Legacy.MediaPlayer.PlaybackIdle"
+	V1SkillManifestEventNameTypeLegacyMediaPlayerPlaybackNearlyFinished                V1SkillManifestEventNameType = "Legacy.MediaPlayer.PlaybackNearlyFinished"
+	V1SkillManifestEventNameTypeLegacyMediaPlayerPlaybackPaused                        V1SkillManifestEventNameType = "Legacy.MediaPlayer.PlaybackPaused"
+	V1SkillManifestEventNameTypeLegacyMediaPlayerPlaybackResumed                       V1SkillManifestEventNameType = "Legacy.MediaPlayer.PlaybackResumed"
+	V1SkillManifestEventNameTypeLegacyMediaPlayerPlaybackStarted                       V1SkillManifestEventNameType = "Legacy.MediaPlayer.PlaybackStarted"
+	V1SkillManifestEventNameTypeLegacyMediaPlayerPlaybackStopped                       V1SkillManifestEventNameType = "Legacy.MediaPlayer.PlaybackStopped"
+	V1SkillManifestEventNameTypeLegacyMediaPlayerSequenceItemsRequested                V1SkillManifestEventNameType = "Legacy.MediaPlayer.SequenceItemsRequested"
+	V1SkillManifestEventNameTypeLegacyMediaPlayerSequenceModified                      V1SkillManifestEventNameType = "Legacy.MediaPlayer.SequenceModified"
+	V1SkillManifestEventNameTypeLegacyMeetingClientControllerEvent                     V1SkillManifestEventNameType = "Legacy.MeetingClientController.Event"
+	V1SkillManifestEventNameTypeLegacyMicrophoneAudioRecording                         V1SkillManifestEventNameType = "Legacy.Microphone.AudioRecording"
+	V1SkillManifestEventNameTypeLegacyPhoneCallControllerEvent                         V1SkillManifestEventNameType = "Legacy.PhoneCallController.Event"
+	V1SkillManifestEventNameTypeLegacyPlaybackControllerButtonCommand                  V1SkillManifestEventNameType = "Legacy.PlaybackController.ButtonCommand"
+	V1SkillManifestEventNameTypeLegacyPlaybackControllerLyricsViewedEvent              V1SkillManifestEventNameType = "Legacy.PlaybackController.LyricsViewedEvent"
+	V1SkillManifestEventNameTypeLegacyPlaybackControllerNextCommand                    V1SkillManifestEventNameType = "Legacy.PlaybackController.NextCommand"
+	V1SkillManifestEventNameTypeLegacyPlaybackControllerPauseCommand                   V1SkillManifestEventNameType = "Legacy.PlaybackController.PauseCommand"
+	V1SkillManifestEventNameTypeLegacyPlaybackControllerPlayCommand                    V1SkillManifestEventNameType = "Legacy.PlaybackController.PlayCommand"
+	V1SkillManifestEventNameTypeLegacyPlaybackControllerPreviousCommand                V1SkillManifestEventNameType = "Legacy.PlaybackController.PreviousCommand"
+	V1SkillManifestEventNameTypeLegacyPlaybackControllerToggleCommand                  V1SkillManifestEventNameType = "Legacy.PlaybackController.ToggleCommand"
+	V1SkillManifestEventNameTypeLegacyPlaylistControllerErrorResponse                  V1SkillManifestEventNameType = "Legacy.PlaylistController.ErrorResponse"
+	V1SkillManifestEventNameTypeLegacyPlaylistControllerResponse                       V1SkillManifestEventNameType = "Legacy.PlaylistController.Response"
+	V1SkillManifestEventNameTypeLegacyPresentationPresentationDismissedEvent           V1SkillManifestEventNameType = "Legacy.Presentation.PresentationDismissedEvent"
+	V1SkillManifestEventNameTypeLegacyPresentationPresentationUserEvent                V1SkillManifestEventNameType = "Legacy.Presentation.PresentationUserEvent"
+	V1SkillManifestEventNameTypeLegacySIPClientEvent                                   V1SkillManifestEventNameType = "Legacy.SipClient.Event"
+	V1SkillManifestEventNameTypeLegacySconeRemoteControlNext                           V1SkillManifestEventNameType = "Legacy.SconeRemoteControl.Next"
+	V1SkillManifestEventNameTypeLegacySconeRemoteControlPlayPause                      V1SkillManifestEventNameType = "Legacy.SconeRemoteControl.PlayPause"
+	V1SkillManifestEventNameTypeLegacySconeRemoteControlPrevious                       V1SkillManifestEventNameType = "Legacy.SconeRemoteControl.Previous"
+	V1SkillManifestEventNameTypeLegacySconeRemoteControlVolumeDown                     V1SkillManifestEventNameType = "Legacy.SconeRemoteControl.VolumeDown"
+	V1SkillManifestEventNameTypeLegacySconeRemoteControlVolumeUp                       V1SkillManifestEventNameType = "Legacy.SconeRemoteControl.VolumeUp"
+	V1SkillManifestEventNameTypeLegacySoftwareUpdateCheckSoftwareUpdateReport          V1SkillManifestEventNameType = "Legacy.SoftwareUpdate.CheckSoftwareUpdateReport"
+	V1SkillManifestEventNameTypeLegacySoftwareUpdateInitiateSoftwareUpdateReport       V1SkillManifestEventNameType = "Legacy.SoftwareUpdate.InitiateSoftwareUpdateReport"
+	V1SkillManifestEventNameTypeLegacySpeakerMuteChanged                               V1SkillManifestEventNameType = "Legacy.Speaker.MuteChanged"
+	V1SkillManifestEventNameTypeLegacySpeakerVolumeChanged                             V1SkillManifestEventNameType = "Legacy.Speaker.VolumeChanged"
+	V1SkillManifestEventNameTypeLegacySpeechRecognizerWakeWordChanged                  V1SkillManifestEventNameType = "Legacy.SpeechRecognizer.WakeWordChanged"
+	V1SkillManifestEventNameTypeLegacySpeechSynthesizerSpeechFinished                  V1SkillManifestEventNameType = "Legacy.SpeechSynthesizer.SpeechFinished"
+	V1SkillManifestEventNameTypeLegacySpeechSynthesizerSpeechInterrupted               V1SkillManifestEventNameType = "Legacy.SpeechSynthesizer.SpeechInterrupted"
+	V1SkillManifestEventNameTypeLegacySpeechSynthesizerSpeechStarted                   V1SkillManifestEventNameType = "Legacy.SpeechSynthesizer.SpeechStarted"
+	V1SkillManifestEventNameTypeLegacySpeechSynthesizerSpeechSynthesizerError          V1SkillManifestEventNameType = "Legacy.SpeechSynthesizer.SpeechSynthesizerError"
+	V1SkillManifestEventNameTypeLegacySpotifyEvent                                     V1SkillManifestEventNameType = "Legacy.Spotify.Event"
+	V1SkillManifestEventNameTypeLegacySystemUserInactivity                             V1SkillManifestEventNameType = "Legacy.System.UserInactivity"
+	V1SkillManifestEventNameTypeLegacyUDPControllerBroadcastResponse                   V1SkillManifestEventNameType = "Legacy.UDPController.BroadcastResponse"
+	V1SkillManifestEventNameTypeLocalApplicationAlexaNotificationsEvent                V1SkillManifestEventNameType = "LocalApplication.AlexaNotifications.Event"
+	V1SkillManifestEventNameTypeLocalApplicationAlexaPlatformTestSpeechletEvent        V1SkillManifestEventNameType = "LocalApplication.AlexaPlatformTestSpeechlet.Event"
+	V1SkillManifestEventNameTypeLocalApplicationAlexaTranslationLiveTranslationEvent   V1SkillManifestEventNameType = "LocalApplication.Alexa.Translation.LiveTranslation.Event"
+	V1SkillManifestEventNameTypeLocalApplicationAlexaVisionEvent                       V1SkillManifestEventNameType = "LocalApplication.AlexaVision.Event"
+	V1SkillManifestEventNameTypeLocalApplicationAlexaVoiceLayerEvent                   V1SkillManifestEventNameType = "LocalApplication.AlexaVoiceLayer.Event"
+	V1SkillManifestEventNameTypeLocalApplicationAvaPhysicalShoppingEvent               V1SkillManifestEventNameType = "LocalApplication.AvaPhysicalShopping.Event"
+	V1SkillManifestEventNameTypeLocalApplicationCalendarEvent                          V1SkillManifestEventNameType = "LocalApplication.Calendar.Event"
+	V1SkillManifestEventNameTypeLocalApplicationClosetEvent                            V1SkillManifestEventNameType = "LocalApplication.Closet.Event"
+	V1SkillManifestEventNameTypeLocalApplicationCommunicationsEvent                    V1SkillManifestEventNameType = "LocalApplication.Communications.Event"
+	V1SkillManifestEventNameTypeLocalApplicationDeviceMessagingEvent                   V1SkillManifestEventNameType = "LocalApplication.DeviceMessaging.Event"
+	V1SkillManifestEventNameTypeLocalApplicationDigitalDashEvent                       V1SkillManifestEventNameType = "LocalApplication.DigitalDash.Event"
+	V1SkillManifestEventNameTypeLocalApplicationFireflyShoppingEvent                   V1SkillManifestEventNameType = "LocalApplication.FireflyShopping.Event"
+	V1SkillManifestEventNameTypeLocalApplicationGalleryEvent                           V1SkillManifestEventNameType = "LocalApplication.Gallery.Event"
+	V1SkillManifestEventNameTypeLocalApplicationHHOPhotosEvent                         V1SkillManifestEventNameType = "LocalApplication.HHOPhotos.Event"
+	V1SkillManifestEventNameTypeLocalApplicationHomeAutomationMediaEvent               V1SkillManifestEventNameType = "LocalApplication.HomeAutomationMedia.Event"
+	V1SkillManifestEventNameTypeLocalApplicationKnightContactsEvent                    V1SkillManifestEventNameType = "LocalApplication.KnightContacts.Event"
+	V1SkillManifestEventNameTypeLocalApplicationKnightHomeEvent                        V1SkillManifestEventNameType = "LocalApplication.KnightHome.Event"
+	V1SkillManifestEventNameTypeLocalApplicationKnightHomeThingsToTryEvent             V1SkillManifestEventNameType = "LocalApplication.KnightHomeThingsToTry.Event"
+	V1SkillManifestEventNameTypeLocalApplicationLocalMediaPlayerEvent                  V1SkillManifestEventNameType = "LocalApplication.LocalMediaPlayer.Event"
+	V1SkillManifestEventNameTypeLocalApplicationLocalVoiceUIEvent                      V1SkillManifestEventNameType = "LocalApplication.LocalVoiceUI.Event"
+	V1SkillManifestEventNameTypeLocalApplicationMShopEvent                             V1SkillManifestEventNameType = "LocalApplication.MShop.Event"
+	V1SkillManifestEventNameTypeLocalApplicationMShopPurchasingEvent                   V1SkillManifestEventNameType = "LocalApplication.MShopPurchasing.Event"
+	V1SkillManifestEventNameTypeLocalApplicationNotificationsAppEvent                  V1SkillManifestEventNameType = "LocalApplication.NotificationsApp.Event"
+	V1SkillManifestEventNameTypeLocalApplicationPhotosEvent                            V1SkillManifestEventNameType = "LocalApplication.Photos.Event"
+	V1SkillManifestEventNameTypeLocalApplicationSIPClientEvent                         V1SkillManifestEventNameType = "LocalApplication.SipClient.Event"
+	V1SkillManifestEventNameTypeLocalApplicationSIPUserAgentEvent                      V1SkillManifestEventNameType = "LocalApplication.SipUserAgent.Event"
+	V1SkillManifestEventNameTypeLocalApplicationSentryEvent                            V1SkillManifestEventNameType = "LocalApplication.Sentry.Event"
+	V1SkillManifestEventNameTypeLocalApplicationTodoRendererEvent                      V1SkillManifestEventNameType = "LocalApplication.todoRenderer.Event"
+	V1SkillManifestEventNameTypeLocalApplicationVideoExperienceServiceEvent            V1SkillManifestEventNameType = "LocalApplication.VideoExperienceService.Event"
+	V1SkillManifestEventNameTypeLocalApplicationWebVideoPlayerEvent                    V1SkillManifestEventNameType = "LocalApplication.WebVideoPlayer.Event"
+	V1SkillManifestEventNameTypeMessagingControllerUpdateConversationsStatus           V1SkillManifestEventNameType = "MessagingController.UpdateConversationsStatus"
+	V1SkillManifestEventNameTypeMessagingControllerUpdateMessagesStatusRequest         V1SkillManifestEventNameType = "MessagingController.UpdateMessagesStatusRequest"
+	V1SkillManifestEventNameTypeMessagingControllerUpdateSendMessageStatusRequest      V1SkillManifestEventNameType = "MessagingController.UpdateSendMessageStatusRequest"
+	V1SkillManifestEventNameTypeMessagingControllerUploadConversations                 V1SkillManifestEventNameType = "MessagingController.UploadConversations"
+	V1SkillManifestEventNameTypeMessagingMessageReceived                               V1SkillManifestEventNameType = "Messaging.MessageReceived"
+	V1SkillManifestEventNameTypePlaybackControllerNextCommandIssued                    V1SkillManifestEventNameType = "PlaybackController.NextCommandIssued"
+	V1SkillManifestEventNameTypePlaybackControllerPauseCommandIssued                   V1SkillManifestEventNameType = "PlaybackController.PauseCommandIssued"
+	V1SkillManifestEventNameTypePlaybackControllerPlayCommandIssued                    V1SkillManifestEventNameType = "PlaybackController.PlayCommandIssued"
+	V1SkillManifestEventNameTypePlaybackControllerPreviousCommandIssued                V1SkillManifestEventNameType = "PlaybackController.PreviousCommandIssued"
+	V1SkillManifestEventNameTypeREMINDERCREATED                                        V1SkillManifestEventNameType = "REMINDER_CREATED"
+	V1SkillManifestEventNameTypeREMINDERDELETED                                        V1SkillManifestEventNameType = "REMINDER_DELETED"
+	V1SkillManifestEventNameTypeREMINDERSTARTED                                        V1SkillManifestEventNameType = "REMINDER_STARTED"
+	V1SkillManifestEventNameTypeREMINDERSTATUSCHANGED                                  V1SkillManifestEventNameType = "REMINDER_STATUS_CHANGED"
+	V1SkillManifestEventNameTypeREMINDERUPDATED                                        V1SkillManifestEventNameType = "REMINDER_UPDATED"
+	V1SkillManifestEventNameTypeSKILLACCOUNTLINKED                                     V1SkillManifestEventNameType = "SKILL_ACCOUNT_LINKED"
+	V1SkillManifestEventNameTypeSKILLDISABLED                                          V1SkillManifestEventNameType = "SKILL_DISABLED"
+	V1SkillManifestEventNameTypeSKILLENABLED                                           V1SkillManifestEventNameType = "SKILL_ENABLED"
+	V1SkillManifestEventNameTypeSKILLNOTIFICATIONSUBSCRIPTIONCHANGED                   V1SkillManifestEventNameType = "SKILL_NOTIFICATION_SUBSCRIPTION_CHANGED"
+	V1SkillManifestEventNameTypeSKILLPERMISSIONACCEPTED                                V1SkillManifestEventNameType = "SKILL_PERMISSION_ACCEPTED"
+	V1SkillManifestEventNameTypeSKILLPERMISSIONCHANGED                                 V1SkillManifestEventNameType = "SKILL_PERMISSION_CHANGED"
+	V1SkillManifestEventNameTypeSKILLPROACTIVESUBSCRIPTIONCHANGED                      V1SkillManifestEventNameType = "SKILL_PROACTIVE_SUBSCRIPTION_CHANGED"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillManifestEventNameType enum.
+func (e V1SkillManifestEventNameType) Valid() bool {
+	switch e {
+	case V1SkillManifestEventNameTypeALLLISTSCHANGED:
+		return true
+	case V1SkillManifestEventNameTypeAUDIOITEMPLAYBACKFAILED:
+		return true
+	case V1SkillManifestEventNameTypeAUDIOITEMPLAYBACKFINISHED:
+		return true
+	case V1SkillManifestEventNameTypeAUDIOITEMPLAYBACKSTARTED:
+		return true
+	case V1SkillManifestEventNameTypeAUDIOITEMPLAYBACKSTOPPED:
+		return true
+	case V1SkillManifestEventNameTypeAlexaCameraPhotoCaptureControllerCancelCaptureFailed:
+		return true
+	case V1SkillManifestEventNameTypeAlexaCameraPhotoCaptureControllerCancelCaptureFinished:
+		return true
+	case V1SkillManifestEventNameTypeAlexaCameraPhotoCaptureControllerCaptureFailed:
+		return true
+	case V1SkillManifestEventNameTypeAlexaCameraPhotoCaptureControllerCaptureFinished:
+		return true
+	case V1SkillManifestEventNameTypeAlexaCameraVideoCaptureControllerCancelCaptureFailed:
+		return true
+	case V1SkillManifestEventNameTypeAlexaCameraVideoCaptureControllerCancelCaptureFinished:
+		return true
+	case V1SkillManifestEventNameTypeAlexaCameraVideoCaptureControllerCaptureFailed:
+		return true
+	case V1SkillManifestEventNameTypeAlexaCameraVideoCaptureControllerCaptureFinished:
+		return true
+	case V1SkillManifestEventNameTypeAlexaCameraVideoCaptureControllerCaptureStarted:
+		return true
+	case V1SkillManifestEventNameTypeAlexaFileManagerUploadControllerCancelUploadFailed:
+		return true
+	case V1SkillManifestEventNameTypeAlexaFileManagerUploadControllerCancelUploadFinished:
+		return true
+	case V1SkillManifestEventNameTypeAlexaFileManagerUploadControllerUploadFailed:
+		return true
+	case V1SkillManifestEventNameTypeAlexaFileManagerUploadControllerUploadFinished:
+		return true
+	case V1SkillManifestEventNameTypeAlexaFileManagerUploadControllerUploadStarted:
+		return true
+	case V1SkillManifestEventNameTypeAlexaPresentationAPLLoadIndexListData:
+		return true
+	case V1SkillManifestEventNameTypeAlexaPresentationAPLRuntimeError:
+		return true
+	case V1SkillManifestEventNameTypeAlexaPresentationAPLUserEvent:
+		return true
+	case V1SkillManifestEventNameTypeAlexaPresentationHTMLEvent:
+		return true
+	case V1SkillManifestEventNameTypeAlexaPresentationHTMLLifecycleStateChanged:
+		return true
+	case V1SkillManifestEventNameTypeAlexaPresentationPresentationDismissed:
+		return true
+	case V1SkillManifestEventNameTypeAlexaVideoXrayShowDetailsFailed:
+		return true
+	case V1SkillManifestEventNameTypeAlexaVideoXrayShowDetailsSuccessful:
+		return true
+	case V1SkillManifestEventNameTypeAudioPlayerPlaybackFailed:
+		return true
+	case V1SkillManifestEventNameTypeAudioPlayerPlaybackFinished:
+		return true
+	case V1SkillManifestEventNameTypeAudioPlayerPlaybackNearlyFinished:
+		return true
+	case V1SkillManifestEventNameTypeAudioPlayerPlaybackStarted:
+		return true
+	case V1SkillManifestEventNameTypeAudioPlayerPlaybackStopped:
+		return true
+	case V1SkillManifestEventNameTypeCardRendererDisplayContentFinished:
+		return true
+	case V1SkillManifestEventNameTypeCardRendererDisplayContentStarted:
+		return true
+	case V1SkillManifestEventNameTypeCardRendererReadContentFinished:
+		return true
+	case V1SkillManifestEventNameTypeCardRendererReadContentStarted:
+		return true
+	case V1SkillManifestEventNameTypeCustomInterfaceControllerEventsReceived:
+		return true
+	case V1SkillManifestEventNameTypeCustomInterfaceControllerExpired:
+		return true
+	case V1SkillManifestEventNameTypeDeviceSetupSetupCompleted:
+		return true
+	case V1SkillManifestEventNameTypeDisplayElementSelected:
+		return true
+	case V1SkillManifestEventNameTypeDisplayUserEvent:
+		return true
+	case V1SkillManifestEventNameTypeEffectsControllerRequestEffectChangeRequest:
+		return true
+	case V1SkillManifestEventNameTypeEffectsControllerRequestGuiChangeRequest:
+		return true
+	case V1SkillManifestEventNameTypeEffectsControllerStateReceiptChangeRequest:
+		return true
+	case V1SkillManifestEventNameTypeFitnessSessionControllerFitnessSessionEnded:
+		return true
+	case V1SkillManifestEventNameTypeFitnessSessionControllerFitnessSessionError:
+		return true
+	case V1SkillManifestEventNameTypeFitnessSessionControllerFitnessSessionPaused:
+		return true
+	case V1SkillManifestEventNameTypeFitnessSessionControllerFitnessSessionResumed:
+		return true
+	case V1SkillManifestEventNameTypeFitnessSessionControllerFitnessSessionStarted:
+		return true
+	case V1SkillManifestEventNameTypeGameEngineInputHandlerEvent:
+		return true
+	case V1SkillManifestEventNameTypeINSKILLPRODUCTSUBSCRIPTIONENDED:
+		return true
+	case V1SkillManifestEventNameTypeINSKILLPRODUCTSUBSCRIPTIONRENEWED:
+		return true
+	case V1SkillManifestEventNameTypeINSKILLPRODUCTSUBSCRIPTIONSTARTED:
+		return true
+	case V1SkillManifestEventNameTypeITEMSCREATED:
+		return true
+	case V1SkillManifestEventNameTypeITEMSDELETED:
+		return true
+	case V1SkillManifestEventNameTypeITEMSUPDATED:
+		return true
+	case V1SkillManifestEventNameTypeLISTCREATED:
+		return true
+	case V1SkillManifestEventNameTypeLISTDELETED:
+		return true
+	case V1SkillManifestEventNameTypeLISTUPDATED:
+		return true
+	case V1SkillManifestEventNameTypeLegacyActivityManagerActivityContextRemovedEvent:
+		return true
+	case V1SkillManifestEventNameTypeLegacyActivityManagerActivityInterrupted:
+		return true
+	case V1SkillManifestEventNameTypeLegacyActivityManagerFocusChanged:
+		return true
+	case V1SkillManifestEventNameTypeLegacyAlertsControllerDismissCommand:
+		return true
+	case V1SkillManifestEventNameTypeLegacyAlertsControllerSnoozeCommand:
+		return true
+	case V1SkillManifestEventNameTypeLegacyAudioPlayerAudioStutter:
+		return true
+	case V1SkillManifestEventNameTypeLegacyAudioPlayerGuiButtonClickedEvent:
+		return true
+	case V1SkillManifestEventNameTypeLegacyAudioPlayerGuiLyricsViewedEvent:
+		return true
+	case V1SkillManifestEventNameTypeLegacyAudioPlayerInitialPlaybackProgressReport:
+		return true
+	case V1SkillManifestEventNameTypeLegacyAudioPlayerMetadata:
+		return true
+	case V1SkillManifestEventNameTypeLegacyAudioPlayerPeriodicPlaybackProgressReport:
+		return true
+	case V1SkillManifestEventNameTypeLegacyAudioPlayerPlaybackError:
+		return true
+	case V1SkillManifestEventNameTypeLegacyAudioPlayerPlaybackFinished:
+		return true
+	case V1SkillManifestEventNameTypeLegacyAudioPlayerPlaybackIdle:
+		return true
+	case V1SkillManifestEventNameTypeLegacyAudioPlayerPlaybackInterrupted:
+		return true
+	case V1SkillManifestEventNameTypeLegacyAudioPlayerPlaybackNearlyFinished:
+		return true
+	case V1SkillManifestEventNameTypeLegacyAudioPlayerPlaybackPaused:
+		return true
+	case V1SkillManifestEventNameTypeLegacyAudioPlayerPlaybackResumed:
+		return true
+	case V1SkillManifestEventNameTypeLegacyAudioPlayerPlaybackStarted:
+		return true
+	case V1SkillManifestEventNameTypeLegacyAudioPlayerPlaybackStutterFinished:
+		return true
+	case V1SkillManifestEventNameTypeLegacyAudioPlayerPlaybackStutterStarted:
+		return true
+	case V1SkillManifestEventNameTypeLegacyAuxControllerDirectionChanged:
+		return true
+	case V1SkillManifestEventNameTypeLegacyAuxControllerEnabledStateChanged:
+		return true
+	case V1SkillManifestEventNameTypeLegacyAuxControllerInputActivityStateChanged:
+		return true
+	case V1SkillManifestEventNameTypeLegacyAuxControllerPluggedStateChanged:
+		return true
+	case V1SkillManifestEventNameTypeLegacyBluetoothNetworkCancelPairingMode:
+		return true
+	case V1SkillManifestEventNameTypeLegacyBluetoothNetworkDeviceConnectedFailure:
+		return true
+	case V1SkillManifestEventNameTypeLegacyBluetoothNetworkDeviceConnectedSuccess:
+		return true
+	case V1SkillManifestEventNameTypeLegacyBluetoothNetworkDeviceDisconnectedFailure:
+		return true
+	case V1SkillManifestEventNameTypeLegacyBluetoothNetworkDeviceDisconnectedSuccess:
+		return true
+	case V1SkillManifestEventNameTypeLegacyBluetoothNetworkDevicePairFailure:
+		return true
+	case V1SkillManifestEventNameTypeLegacyBluetoothNetworkDevicePairSuccess:
+		return true
+	case V1SkillManifestEventNameTypeLegacyBluetoothNetworkDeviceUnpairFailure:
+		return true
+	case V1SkillManifestEventNameTypeLegacyBluetoothNetworkDeviceUnpairSuccess:
+		return true
+	case V1SkillManifestEventNameTypeLegacyBluetoothNetworkEnterPairingModeFailure:
+		return true
+	case V1SkillManifestEventNameTypeLegacyBluetoothNetworkEnterPairingModeSuccess:
+		return true
+	case V1SkillManifestEventNameTypeLegacyBluetoothNetworkMediaControlFailure:
+		return true
+	case V1SkillManifestEventNameTypeLegacyBluetoothNetworkMediaControlSuccess:
+		return true
+	case V1SkillManifestEventNameTypeLegacyBluetoothNetworkScanDevicesReport:
+		return true
+	case V1SkillManifestEventNameTypeLegacyBluetoothNetworkSetDeviceCategoriesFailed:
+		return true
+	case V1SkillManifestEventNameTypeLegacyBluetoothNetworkSetDeviceCategoriesSucceeded:
+		return true
+	case V1SkillManifestEventNameTypeLegacyContentManagerContentPlaybackTerminated:
+		return true
+	case V1SkillManifestEventNameTypeLegacyDeviceNotificationDeleteNotificationFailed:
+		return true
+	case V1SkillManifestEventNameTypeLegacyDeviceNotificationDeleteNotificationSucceeded:
+		return true
+	case V1SkillManifestEventNameTypeLegacyDeviceNotificationNotificationEnteredBackground:
+		return true
+	case V1SkillManifestEventNameTypeLegacyDeviceNotificationNotificationEnteredForground:
+		return true
+	case V1SkillManifestEventNameTypeLegacyDeviceNotificationNotificationStarted:
+		return true
+	case V1SkillManifestEventNameTypeLegacyDeviceNotificationNotificationStopped:
+		return true
+	case V1SkillManifestEventNameTypeLegacyDeviceNotificationNotificationSync:
+		return true
+	case V1SkillManifestEventNameTypeLegacyDeviceNotificationSetNotificationFailed:
+		return true
+	case V1SkillManifestEventNameTypeLegacyDeviceNotificationSetNotificationSucceeded:
+		return true
+	case V1SkillManifestEventNameTypeLegacyEqualizerControllerEqualizerChanged:
+		return true
+	case V1SkillManifestEventNameTypeLegacyExternalMediaPlayerAuthorizationComplete:
+		return true
+	case V1SkillManifestEventNameTypeLegacyExternalMediaPlayerError:
+		return true
+	case V1SkillManifestEventNameTypeLegacyExternalMediaPlayerEvent:
+		return true
+	case V1SkillManifestEventNameTypeLegacyExternalMediaPlayerLogin:
+		return true
+	case V1SkillManifestEventNameTypeLegacyExternalMediaPlayerLogout:
+		return true
+	case V1SkillManifestEventNameTypeLegacyExternalMediaPlayerReportDiscoveredPlayers:
+		return true
+	case V1SkillManifestEventNameTypeLegacyExternalMediaPlayerRequestToken:
+		return true
+	case V1SkillManifestEventNameTypeLegacyFavoritesControllerError:
+		return true
+	case V1SkillManifestEventNameTypeLegacyFavoritesControllerResponse:
+		return true
+	case V1SkillManifestEventNameTypeLegacyGameEngineGameInputEvent:
+		return true
+	case V1SkillManifestEventNameTypeLegacyHomeAutoWifiControllerDeviceReconnected:
+		return true
+	case V1SkillManifestEventNameTypeLegacyHomeAutoWifiControllerHTTPNotified:
+		return true
+	case V1SkillManifestEventNameTypeLegacyHomeAutoWifiControllerSsdpDiscoveryFinished:
+		return true
+	case V1SkillManifestEventNameTypeLegacyHomeAutoWifiControllerSsdpServiceDiscovered:
+		return true
+	case V1SkillManifestEventNameTypeLegacyHomeAutoWifiControllerSsdpServiceTerminated:
+		return true
+	case V1SkillManifestEventNameTypeLegacyListModelAddItemRequest:
+		return true
+	case V1SkillManifestEventNameTypeLegacyListModelDeleteItemRequest:
+		return true
+	case V1SkillManifestEventNameTypeLegacyListModelGetPageByOrdinalRequest:
+		return true
+	case V1SkillManifestEventNameTypeLegacyListModelGetPageByTokenRequest:
+		return true
+	case V1SkillManifestEventNameTypeLegacyListModelListStateUpdateRequest:
+		return true
+	case V1SkillManifestEventNameTypeLegacyListModelUpdateItemRequest:
+		return true
+	case V1SkillManifestEventNameTypeLegacyListRendererGetListPageByOrdinal:
+		return true
+	case V1SkillManifestEventNameTypeLegacyListRendererGetListPageByToken:
+		return true
+	case V1SkillManifestEventNameTypeLegacyListRendererListItemEvent:
+		return true
+	case V1SkillManifestEventNameTypeLegacyMediaGroupingGroupChangeNotificationEvent:
+		return true
+	case V1SkillManifestEventNameTypeLegacyMediaGroupingGroupChangeResponseEvent:
+		return true
+	case V1SkillManifestEventNameTypeLegacyMediaGroupingGroupSyncEvent:
+		return true
+	case V1SkillManifestEventNameTypeLegacyMediaPlayerPlaybackError:
+		return true
+	case V1SkillManifestEventNameTypeLegacyMediaPlayerPlaybackFinished:
+		return true
+	case V1SkillManifestEventNameTypeLegacyMediaPlayerPlaybackIdle:
+		return true
+	case V1SkillManifestEventNameTypeLegacyMediaPlayerPlaybackNearlyFinished:
+		return true
+	case V1SkillManifestEventNameTypeLegacyMediaPlayerPlaybackPaused:
+		return true
+	case V1SkillManifestEventNameTypeLegacyMediaPlayerPlaybackResumed:
+		return true
+	case V1SkillManifestEventNameTypeLegacyMediaPlayerPlaybackStarted:
+		return true
+	case V1SkillManifestEventNameTypeLegacyMediaPlayerPlaybackStopped:
+		return true
+	case V1SkillManifestEventNameTypeLegacyMediaPlayerSequenceItemsRequested:
+		return true
+	case V1SkillManifestEventNameTypeLegacyMediaPlayerSequenceModified:
+		return true
+	case V1SkillManifestEventNameTypeLegacyMeetingClientControllerEvent:
+		return true
+	case V1SkillManifestEventNameTypeLegacyMicrophoneAudioRecording:
+		return true
+	case V1SkillManifestEventNameTypeLegacyPhoneCallControllerEvent:
+		return true
+	case V1SkillManifestEventNameTypeLegacyPlaybackControllerButtonCommand:
+		return true
+	case V1SkillManifestEventNameTypeLegacyPlaybackControllerLyricsViewedEvent:
+		return true
+	case V1SkillManifestEventNameTypeLegacyPlaybackControllerNextCommand:
+		return true
+	case V1SkillManifestEventNameTypeLegacyPlaybackControllerPauseCommand:
+		return true
+	case V1SkillManifestEventNameTypeLegacyPlaybackControllerPlayCommand:
+		return true
+	case V1SkillManifestEventNameTypeLegacyPlaybackControllerPreviousCommand:
+		return true
+	case V1SkillManifestEventNameTypeLegacyPlaybackControllerToggleCommand:
+		return true
+	case V1SkillManifestEventNameTypeLegacyPlaylistControllerErrorResponse:
+		return true
+	case V1SkillManifestEventNameTypeLegacyPlaylistControllerResponse:
+		return true
+	case V1SkillManifestEventNameTypeLegacyPresentationPresentationDismissedEvent:
+		return true
+	case V1SkillManifestEventNameTypeLegacyPresentationPresentationUserEvent:
+		return true
+	case V1SkillManifestEventNameTypeLegacySIPClientEvent:
+		return true
+	case V1SkillManifestEventNameTypeLegacySconeRemoteControlNext:
+		return true
+	case V1SkillManifestEventNameTypeLegacySconeRemoteControlPlayPause:
+		return true
+	case V1SkillManifestEventNameTypeLegacySconeRemoteControlPrevious:
+		return true
+	case V1SkillManifestEventNameTypeLegacySconeRemoteControlVolumeDown:
+		return true
+	case V1SkillManifestEventNameTypeLegacySconeRemoteControlVolumeUp:
+		return true
+	case V1SkillManifestEventNameTypeLegacySoftwareUpdateCheckSoftwareUpdateReport:
+		return true
+	case V1SkillManifestEventNameTypeLegacySoftwareUpdateInitiateSoftwareUpdateReport:
+		return true
+	case V1SkillManifestEventNameTypeLegacySpeakerMuteChanged:
+		return true
+	case V1SkillManifestEventNameTypeLegacySpeakerVolumeChanged:
+		return true
+	case V1SkillManifestEventNameTypeLegacySpeechRecognizerWakeWordChanged:
+		return true
+	case V1SkillManifestEventNameTypeLegacySpeechSynthesizerSpeechFinished:
+		return true
+	case V1SkillManifestEventNameTypeLegacySpeechSynthesizerSpeechInterrupted:
+		return true
+	case V1SkillManifestEventNameTypeLegacySpeechSynthesizerSpeechStarted:
+		return true
+	case V1SkillManifestEventNameTypeLegacySpeechSynthesizerSpeechSynthesizerError:
+		return true
+	case V1SkillManifestEventNameTypeLegacySpotifyEvent:
+		return true
+	case V1SkillManifestEventNameTypeLegacySystemUserInactivity:
+		return true
+	case V1SkillManifestEventNameTypeLegacyUDPControllerBroadcastResponse:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationAlexaNotificationsEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationAlexaPlatformTestSpeechletEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationAlexaTranslationLiveTranslationEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationAlexaVisionEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationAlexaVoiceLayerEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationAvaPhysicalShoppingEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationCalendarEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationClosetEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationCommunicationsEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationDeviceMessagingEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationDigitalDashEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationFireflyShoppingEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationGalleryEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationHHOPhotosEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationHomeAutomationMediaEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationKnightContactsEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationKnightHomeEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationKnightHomeThingsToTryEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationLocalMediaPlayerEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationLocalVoiceUIEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationMShopEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationMShopPurchasingEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationNotificationsAppEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationPhotosEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationSIPClientEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationSIPUserAgentEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationSentryEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationTodoRendererEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationVideoExperienceServiceEvent:
+		return true
+	case V1SkillManifestEventNameTypeLocalApplicationWebVideoPlayerEvent:
+		return true
+	case V1SkillManifestEventNameTypeMessagingControllerUpdateConversationsStatus:
+		return true
+	case V1SkillManifestEventNameTypeMessagingControllerUpdateMessagesStatusRequest:
+		return true
+	case V1SkillManifestEventNameTypeMessagingControllerUpdateSendMessageStatusRequest:
+		return true
+	case V1SkillManifestEventNameTypeMessagingControllerUploadConversations:
+		return true
+	case V1SkillManifestEventNameTypeMessagingMessageReceived:
+		return true
+	case V1SkillManifestEventNameTypePlaybackControllerNextCommandIssued:
+		return true
+	case V1SkillManifestEventNameTypePlaybackControllerPauseCommandIssued:
+		return true
+	case V1SkillManifestEventNameTypePlaybackControllerPlayCommandIssued:
+		return true
+	case V1SkillManifestEventNameTypePlaybackControllerPreviousCommandIssued:
+		return true
+	case V1SkillManifestEventNameTypeREMINDERCREATED:
+		return true
+	case V1SkillManifestEventNameTypeREMINDERDELETED:
+		return true
+	case V1SkillManifestEventNameTypeREMINDERSTARTED:
+		return true
+	case V1SkillManifestEventNameTypeREMINDERSTATUSCHANGED:
+		return true
+	case V1SkillManifestEventNameTypeREMINDERUPDATED:
+		return true
+	case V1SkillManifestEventNameTypeSKILLACCOUNTLINKED:
+		return true
+	case V1SkillManifestEventNameTypeSKILLDISABLED:
+		return true
+	case V1SkillManifestEventNameTypeSKILLENABLED:
+		return true
+	case V1SkillManifestEventNameTypeSKILLNOTIFICATIONSUBSCRIPTIONCHANGED:
+		return true
+	case V1SkillManifestEventNameTypeSKILLPERMISSIONACCEPTED:
+		return true
+	case V1SkillManifestEventNameTypeSKILLPERMISSIONCHANGED:
+		return true
+	case V1SkillManifestEventNameTypeSKILLPROACTIVESUBSCRIPTIONCHANGED:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillManifestFlashBriefingContentType.
+const (
+	V1SkillManifestFlashBriefingContentTypeAUDIO V1SkillManifestFlashBriefingContentType = "AUDIO"
+	V1SkillManifestFlashBriefingContentTypeTEXT  V1SkillManifestFlashBriefingContentType = "TEXT"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillManifestFlashBriefingContentType enum.
+func (e V1SkillManifestFlashBriefingContentType) Valid() bool {
+	switch e {
+	case V1SkillManifestFlashBriefingContentTypeAUDIO:
+		return true
+	case V1SkillManifestFlashBriefingContentTypeTEXT:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillManifestFlashBriefingGenre.
+const (
+	V1SkillManifestFlashBriefingGenreARTSANDCULTURE           V1SkillManifestFlashBriefingGenre = "ARTS_AND_CULTURE"
+	V1SkillManifestFlashBriefingGenreBUSINESS                 V1SkillManifestFlashBriefingGenre = "BUSINESS"
+	V1SkillManifestFlashBriefingGenreENTERTAINMENT            V1SkillManifestFlashBriefingGenre = "ENTERTAINMENT"
+	V1SkillManifestFlashBriefingGenreHEADLINENEWS             V1SkillManifestFlashBriefingGenre = "HEADLINE_NEWS"
+	V1SkillManifestFlashBriefingGenreHEALTHANDFITNESS         V1SkillManifestFlashBriefingGenre = "HEALTH_AND_FITNESS"
+	V1SkillManifestFlashBriefingGenreHUMOR                    V1SkillManifestFlashBriefingGenre = "HUMOR"
+	V1SkillManifestFlashBriefingGenreLIFESTYLE                V1SkillManifestFlashBriefingGenre = "LIFESTYLE"
+	V1SkillManifestFlashBriefingGenreOTHER                    V1SkillManifestFlashBriefingGenre = "OTHER"
+	V1SkillManifestFlashBriefingGenrePOLITICS                 V1SkillManifestFlashBriefingGenre = "POLITICS"
+	V1SkillManifestFlashBriefingGenrePRODUCTIVITYANDUTILITIES V1SkillManifestFlashBriefingGenre = "PRODUCTIVITY_AND_UTILITIES"
+	V1SkillManifestFlashBriefingGenreSCIENCE                  V1SkillManifestFlashBriefingGenre = "SCIENCE"
+	V1SkillManifestFlashBriefingGenreSPORTS                   V1SkillManifestFlashBriefingGenre = "SPORTS"
+	V1SkillManifestFlashBriefingGenreTECHNOLOGY               V1SkillManifestFlashBriefingGenre = "TECHNOLOGY"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillManifestFlashBriefingGenre enum.
+func (e V1SkillManifestFlashBriefingGenre) Valid() bool {
+	switch e {
+	case V1SkillManifestFlashBriefingGenreARTSANDCULTURE:
+		return true
+	case V1SkillManifestFlashBriefingGenreBUSINESS:
+		return true
+	case V1SkillManifestFlashBriefingGenreENTERTAINMENT:
+		return true
+	case V1SkillManifestFlashBriefingGenreHEADLINENEWS:
+		return true
+	case V1SkillManifestFlashBriefingGenreHEALTHANDFITNESS:
+		return true
+	case V1SkillManifestFlashBriefingGenreHUMOR:
+		return true
+	case V1SkillManifestFlashBriefingGenreLIFESTYLE:
+		return true
+	case V1SkillManifestFlashBriefingGenreOTHER:
+		return true
+	case V1SkillManifestFlashBriefingGenrePOLITICS:
+		return true
+	case V1SkillManifestFlashBriefingGenrePRODUCTIVITYANDUTILITIES:
+		return true
+	case V1SkillManifestFlashBriefingGenreSCIENCE:
+		return true
+	case V1SkillManifestFlashBriefingGenreSPORTS:
+		return true
+	case V1SkillManifestFlashBriefingGenreTECHNOLOGY:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillManifestFlashBriefingUpdateFrequency.
+const (
+	V1SkillManifestFlashBriefingUpdateFrequencyDAILY  V1SkillManifestFlashBriefingUpdateFrequency = "DAILY"
+	V1SkillManifestFlashBriefingUpdateFrequencyHOURLY V1SkillManifestFlashBriefingUpdateFrequency = "HOURLY"
+	V1SkillManifestFlashBriefingUpdateFrequencyWEEKLY V1SkillManifestFlashBriefingUpdateFrequency = "WEEKLY"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillManifestFlashBriefingUpdateFrequency enum.
+func (e V1SkillManifestFlashBriefingUpdateFrequency) Valid() bool {
+	switch e {
+	case V1SkillManifestFlashBriefingUpdateFrequencyDAILY:
+		return true
+	case V1SkillManifestFlashBriefingUpdateFrequencyHOURLY:
+		return true
+	case V1SkillManifestFlashBriefingUpdateFrequencyWEEKLY:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillManifestGadgetSupportRequirement.
+const (
+	V1SkillManifestGadgetSupportRequirementOPTIONAL V1SkillManifestGadgetSupportRequirement = "OPTIONAL"
+	V1SkillManifestGadgetSupportRequirementREQUIRED V1SkillManifestGadgetSupportRequirement = "REQUIRED"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillManifestGadgetSupportRequirement enum.
+func (e V1SkillManifestGadgetSupportRequirement) Valid() bool {
+	switch e {
+	case V1SkillManifestGadgetSupportRequirementOPTIONAL:
+		return true
+	case V1SkillManifestGadgetSupportRequirementREQUIRED:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillManifestIOSAppStoreCommonSchemeName.
+const (
+	V1SkillManifestIOSAppStoreCommonSchemeNameMAPS V1SkillManifestIOSAppStoreCommonSchemeName = "MAPS"
+	V1SkillManifestIOSAppStoreCommonSchemeNameTEL  V1SkillManifestIOSAppStoreCommonSchemeName = "TEL"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillManifestIOSAppStoreCommonSchemeName enum.
+func (e V1SkillManifestIOSAppStoreCommonSchemeName) Valid() bool {
+	switch e {
+	case V1SkillManifestIOSAppStoreCommonSchemeNameMAPS:
+		return true
+	case V1SkillManifestIOSAppStoreCommonSchemeNameTEL:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillManifestKnowledgeApisEnablementChannel.
+const (
+	V1SkillManifestKnowledgeApisEnablementChannelA4B    V1SkillManifestKnowledgeApisEnablementChannel = "A4B"
+	V1SkillManifestKnowledgeApisEnablementChannelASP    V1SkillManifestKnowledgeApisEnablementChannel = "ASP"
+	V1SkillManifestKnowledgeApisEnablementChannelPUBLIC V1SkillManifestKnowledgeApisEnablementChannel = "PUBLIC"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillManifestKnowledgeApisEnablementChannel enum.
+func (e V1SkillManifestKnowledgeApisEnablementChannel) Valid() bool {
+	switch e {
+	case V1SkillManifestKnowledgeApisEnablementChannelA4B:
+		return true
+	case V1SkillManifestKnowledgeApisEnablementChannelASP:
+		return true
+	case V1SkillManifestKnowledgeApisEnablementChannelPUBLIC:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillManifestLambdaSSLCertificateType.
+const (
+	V1SkillManifestLambdaSSLCertificateTypeSelfSigned V1SkillManifestLambdaSSLCertificateType = "SelfSigned"
+	V1SkillManifestLambdaSSLCertificateTypeTrusted    V1SkillManifestLambdaSSLCertificateType = "Trusted"
+	V1SkillManifestLambdaSSLCertificateTypeWildcard   V1SkillManifestLambdaSSLCertificateType = "Wildcard"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillManifestLambdaSSLCertificateType enum.
+func (e V1SkillManifestLambdaSSLCertificateType) Valid() bool {
+	switch e {
+	case V1SkillManifestLambdaSSLCertificateTypeSelfSigned:
+		return true
+	case V1SkillManifestLambdaSSLCertificateTypeTrusted:
+		return true
+	case V1SkillManifestLambdaSSLCertificateTypeWildcard:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillManifestManifestVersion.
+const (
+	V1SkillManifestManifestVersionN10 V1SkillManifestManifestVersion = "1.0"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillManifestManifestVersion enum.
+func (e V1SkillManifestManifestVersion) Valid() bool {
+	switch e {
+	case V1SkillManifestManifestVersionN10:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillManifestMusicContentName.
+const (
+	V1SkillManifestMusicContentNameONDEMAND V1SkillManifestMusicContentName = "ON_DEMAND"
+	V1SkillManifestMusicContentNamePODCAST  V1SkillManifestMusicContentName = "PODCAST"
+	V1SkillManifestMusicContentNameRADIO    V1SkillManifestMusicContentName = "RADIO"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillManifestMusicContentName enum.
+func (e V1SkillManifestMusicContentName) Valid() bool {
+	switch e {
+	case V1SkillManifestMusicContentNameONDEMAND:
+		return true
+	case V1SkillManifestMusicContentNamePODCAST:
+		return true
+	case V1SkillManifestMusicContentNameRADIO:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillManifestOfferType.
+const (
+	V1SkillManifestOfferTypeENTITLEMENT  V1SkillManifestOfferType = "ENTITLEMENT"
+	V1SkillManifestOfferTypeSUBSCRIPTION V1SkillManifestOfferType = "SUBSCRIPTION"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillManifestOfferType enum.
+func (e V1SkillManifestOfferType) Valid() bool {
+	switch e {
+	case V1SkillManifestOfferTypeENTITLEMENT:
+		return true
+	case V1SkillManifestOfferTypeSUBSCRIPTION:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillManifestPermissionName.
+const (
+	V1SkillManifestPermissionNameAlexaAlertsRemindersSkillReadwrite             V1SkillManifestPermissionName = "alexa::alerts:reminders:skill:readwrite"
+	V1SkillManifestPermissionNameAlexaAlertsTimersSkillReadwrite                V1SkillManifestPermissionName = "alexa::alerts:timers:skill:readwrite"
+	V1SkillManifestPermissionNameAlexaAsyncEventWrite                           V1SkillManifestPermissionName = "alexa::async_event:write"
+	V1SkillManifestPermissionNameAlexaAuthenticate2Mandatory                    V1SkillManifestPermissionName = "alexa::authenticate:2:mandatory"
+	V1SkillManifestPermissionNameAlexaAuthenticate2Optional                     V1SkillManifestPermissionName = "alexa::authenticate:2:optional"
+	V1SkillManifestPermissionNameAlexaCustomerIDRead                            V1SkillManifestPermissionName = "alexa::customer_id:read"
+	V1SkillManifestPermissionNameAlexaDeviceIDRead                              V1SkillManifestPermissionName = "alexa::device_id:read"
+	V1SkillManifestPermissionNameAlexaDeviceTypeRead                            V1SkillManifestPermissionName = "alexa::device_type:read"
+	V1SkillManifestPermissionNameAlexaDevicesAllAddressCountryAndPostalCodeRead V1SkillManifestPermissionName = "alexa:devices:all:address:country_and_postal_code:read"
+	V1SkillManifestPermissionNameAlexaDevicesAllAddressFullRead                 V1SkillManifestPermissionName = "alexa::devices:all:address:full:read"
+	V1SkillManifestPermissionNameAlexaDevicesAllCoarseLocationRead              V1SkillManifestPermissionName = "alexa::devices:all:coarse_location:read"
+	V1SkillManifestPermissionNameAlexaDevicesAllGeolocationRead                 V1SkillManifestPermissionName = "alexa::devices:all:geolocation:read"
+	V1SkillManifestPermissionNameAlexaDevicesAllIntentTokensRead                V1SkillManifestPermissionName = "alexa::devices:all:intent_tokens:read"
+	V1SkillManifestPermissionNameAlexaDevicesAllNotificationsUrgentWrite        V1SkillManifestPermissionName = "alexa::devices:all:notifications:urgent:write"
+	V1SkillManifestPermissionNameAlexaDevicesAllNotificationsWrite              V1SkillManifestPermissionName = "alexa::devices:all:notifications:write"
+	V1SkillManifestPermissionNameAlexaDevicesAllTokenizedGeolocationRead        V1SkillManifestPermissionName = "alexa::devices:all:tokenized_geolocation:read"
+	V1SkillManifestPermissionNameAlexaEnergyDevicesStateRead                    V1SkillManifestPermissionName = "alexa::energy:devices:state:read"
+	V1SkillManifestPermissionNameAlexaHealthProfileWrite                        V1SkillManifestPermissionName = "alexa::health:profile:write"
+	V1SkillManifestPermissionNameAlexaHouseholdListsRead                        V1SkillManifestPermissionName = "alexa::household:lists:read"
+	V1SkillManifestPermissionNameAlexaHouseholdListsWrite                       V1SkillManifestPermissionName = "alexa::household:lists:write"
+	V1SkillManifestPermissionNameAlexaMeasurementSystemReadwrite                V1SkillManifestPermissionName = "alexa::measurement_system::readwrite"
+	V1SkillManifestPermissionNameAlexaMusicCast                                 V1SkillManifestPermissionName = "alexa::music:cast"
+	V1SkillManifestPermissionNameAlexaOriginIPAddressRead                       V1SkillManifestPermissionName = "alexa::origin_ip_address:read"
+	V1SkillManifestPermissionNameAlexaPersonIDRead                              V1SkillManifestPermissionName = "alexa::person_id:read"
+	V1SkillManifestPermissionNameAlexaPersonalityExplicitRead                   V1SkillManifestPermissionName = "alexa::personality:explicit:read"
+	V1SkillManifestPermissionNameAlexaPersonalityExplicitWrite                  V1SkillManifestPermissionName = "alexa::personality:explicit:write"
+	V1SkillManifestPermissionNameAlexaProfileEmailRead                          V1SkillManifestPermissionName = "alexa::profile:email:read"
+	V1SkillManifestPermissionNameAlexaProfileGivenNameRead                      V1SkillManifestPermissionName = "alexa::profile:given_name:read"
+	V1SkillManifestPermissionNameAlexaProfileMobileNumberRead                   V1SkillManifestPermissionName = "alexa::profile:mobile_number:read"
+	V1SkillManifestPermissionNameAlexaProfileNameRead                           V1SkillManifestPermissionName = "alexa::profile:name:read"
+	V1SkillManifestPermissionNameAlexaRawPersonIDRead                           V1SkillManifestPermissionName = "alexa::raw_person_id:read"
+	V1SkillManifestPermissionNameAlexaSkillCdsMonetization                      V1SkillManifestPermissionName = "alexa::skill:cds:monetization"
+	V1SkillManifestPermissionNameAlexaSkillProactiveEnablement                  V1SkillManifestPermissionName = "alexa::skill:proactive_enablement"
+	V1SkillManifestPermissionNameAlexaSkillProductsEntitlements                 V1SkillManifestPermissionName = "alexa::skill:products:entitlements"
+	V1SkillManifestPermissionNameAlexaUserExperienceGuidanceRead                V1SkillManifestPermissionName = "alexa::user_experience_guidance:read"
+	V1SkillManifestPermissionNameAlexaUtteranceIDRead                           V1SkillManifestPermissionName = "alexa::utterance_id:read"
+	V1SkillManifestPermissionNameAvsDistributedAudio                            V1SkillManifestPermissionName = "avs::distributed_audio"
+	V1SkillManifestPermissionNameDashReadEndpointsSensors                       V1SkillManifestPermissionName = "dash::read:endpoints:sensors"
+	V1SkillManifestPermissionNameDashVendorReadEndpoints                        V1SkillManifestPermissionName = "dash::vendor:read:endpoints"
+	V1SkillManifestPermissionNamePaymentsAutopayConsent                         V1SkillManifestPermissionName = "payments:autopay_consent"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillManifestPermissionName enum.
+func (e V1SkillManifestPermissionName) Valid() bool {
+	switch e {
+	case V1SkillManifestPermissionNameAlexaAlertsRemindersSkillReadwrite:
+		return true
+	case V1SkillManifestPermissionNameAlexaAlertsTimersSkillReadwrite:
+		return true
+	case V1SkillManifestPermissionNameAlexaAsyncEventWrite:
+		return true
+	case V1SkillManifestPermissionNameAlexaAuthenticate2Mandatory:
+		return true
+	case V1SkillManifestPermissionNameAlexaAuthenticate2Optional:
+		return true
+	case V1SkillManifestPermissionNameAlexaCustomerIDRead:
+		return true
+	case V1SkillManifestPermissionNameAlexaDeviceIDRead:
+		return true
+	case V1SkillManifestPermissionNameAlexaDeviceTypeRead:
+		return true
+	case V1SkillManifestPermissionNameAlexaDevicesAllAddressCountryAndPostalCodeRead:
+		return true
+	case V1SkillManifestPermissionNameAlexaDevicesAllAddressFullRead:
+		return true
+	case V1SkillManifestPermissionNameAlexaDevicesAllCoarseLocationRead:
+		return true
+	case V1SkillManifestPermissionNameAlexaDevicesAllGeolocationRead:
+		return true
+	case V1SkillManifestPermissionNameAlexaDevicesAllIntentTokensRead:
+		return true
+	case V1SkillManifestPermissionNameAlexaDevicesAllNotificationsUrgentWrite:
+		return true
+	case V1SkillManifestPermissionNameAlexaDevicesAllNotificationsWrite:
+		return true
+	case V1SkillManifestPermissionNameAlexaDevicesAllTokenizedGeolocationRead:
+		return true
+	case V1SkillManifestPermissionNameAlexaEnergyDevicesStateRead:
+		return true
+	case V1SkillManifestPermissionNameAlexaHealthProfileWrite:
+		return true
+	case V1SkillManifestPermissionNameAlexaHouseholdListsRead:
+		return true
+	case V1SkillManifestPermissionNameAlexaHouseholdListsWrite:
+		return true
+	case V1SkillManifestPermissionNameAlexaMeasurementSystemReadwrite:
+		return true
+	case V1SkillManifestPermissionNameAlexaMusicCast:
+		return true
+	case V1SkillManifestPermissionNameAlexaOriginIPAddressRead:
+		return true
+	case V1SkillManifestPermissionNameAlexaPersonIDRead:
+		return true
+	case V1SkillManifestPermissionNameAlexaPersonalityExplicitRead:
+		return true
+	case V1SkillManifestPermissionNameAlexaPersonalityExplicitWrite:
+		return true
+	case V1SkillManifestPermissionNameAlexaProfileEmailRead:
+		return true
+	case V1SkillManifestPermissionNameAlexaProfileGivenNameRead:
+		return true
+	case V1SkillManifestPermissionNameAlexaProfileMobileNumberRead:
+		return true
+	case V1SkillManifestPermissionNameAlexaProfileNameRead:
+		return true
+	case V1SkillManifestPermissionNameAlexaRawPersonIDRead:
+		return true
+	case V1SkillManifestPermissionNameAlexaSkillCdsMonetization:
+		return true
+	case V1SkillManifestPermissionNameAlexaSkillProactiveEnablement:
+		return true
+	case V1SkillManifestPermissionNameAlexaSkillProductsEntitlements:
+		return true
+	case V1SkillManifestPermissionNameAlexaUserExperienceGuidanceRead:
+		return true
+	case V1SkillManifestPermissionNameAlexaUtteranceIDRead:
+		return true
+	case V1SkillManifestPermissionNameAvsDistributedAudio:
+		return true
+	case V1SkillManifestPermissionNameDashReadEndpointsSensors:
+		return true
+	case V1SkillManifestPermissionNameDashVendorReadEndpoints:
+		return true
+	case V1SkillManifestPermissionNamePaymentsAutopayConsent:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillManifestPlayStoreCommonSchemeName.
+const (
+	V1SkillManifestPlayStoreCommonSchemeNameMAPS V1SkillManifestPlayStoreCommonSchemeName = "MAPS"
+	V1SkillManifestPlayStoreCommonSchemeNameTEL  V1SkillManifestPlayStoreCommonSchemeName = "TEL"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillManifestPlayStoreCommonSchemeName enum.
+func (e V1SkillManifestPlayStoreCommonSchemeName) Valid() bool {
+	switch e {
+	case V1SkillManifestPlayStoreCommonSchemeNameMAPS:
+		return true
+	case V1SkillManifestPlayStoreCommonSchemeNameTEL:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillManifestSSLCertificateType.
+const (
+	V1SkillManifestSSLCertificateTypeSelfSigned V1SkillManifestSSLCertificateType = "SelfSigned"
+	V1SkillManifestSSLCertificateTypeTrusted    V1SkillManifestSSLCertificateType = "Trusted"
+	V1SkillManifestSSLCertificateTypeWildcard   V1SkillManifestSSLCertificateType = "Wildcard"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillManifestSSLCertificateType enum.
+func (e V1SkillManifestSSLCertificateType) Valid() bool {
+	switch e {
+	case V1SkillManifestSSLCertificateTypeSelfSigned:
+		return true
+	case V1SkillManifestSSLCertificateTypeTrusted:
+		return true
+	case V1SkillManifestSSLCertificateTypeWildcard:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillManifestSmartHomeProtocol.
+const (
+	V1SkillManifestSmartHomeProtocolN2  V1SkillManifestSmartHomeProtocol = "2"
+	V1SkillManifestSmartHomeProtocolN20 V1SkillManifestSmartHomeProtocol = "2.0"
+	V1SkillManifestSmartHomeProtocolN3  V1SkillManifestSmartHomeProtocol = "3"
+	V1SkillManifestSmartHomeProtocolN30 V1SkillManifestSmartHomeProtocol = "3.0"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillManifestSmartHomeProtocol enum.
+func (e V1SkillManifestSmartHomeProtocol) Valid() bool {
+	switch e {
+	case V1SkillManifestSmartHomeProtocolN2:
+		return true
+	case V1SkillManifestSmartHomeProtocolN20:
+		return true
+	case V1SkillManifestSmartHomeProtocolN3:
+		return true
+	case V1SkillManifestSmartHomeProtocolN30:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillManifestSubscriptionPaymentFrequency.
+const (
+	V1SkillManifestSubscriptionPaymentFrequencyMONTHLY V1SkillManifestSubscriptionPaymentFrequency = "MONTHLY"
+	V1SkillManifestSubscriptionPaymentFrequencyYEARLY  V1SkillManifestSubscriptionPaymentFrequency = "YEARLY"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillManifestSubscriptionPaymentFrequency enum.
+func (e V1SkillManifestSubscriptionPaymentFrequency) Valid() bool {
+	switch e {
+	case V1SkillManifestSubscriptionPaymentFrequencyMONTHLY:
+		return true
+	case V1SkillManifestSubscriptionPaymentFrequencyYEARLY:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillManifestSupportedControlsType.
+const (
+	V1SkillManifestSupportedControlsTypeREMOTEVEHICLECONTROL V1SkillManifestSupportedControlsType = "REMOTE_VEHICLE_CONTROL"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillManifestSupportedControlsType enum.
+func (e V1SkillManifestSupportedControlsType) Valid() bool {
+	switch e {
+	case V1SkillManifestSupportedControlsTypeREMOTEVEHICLECONTROL:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillManifestTaxInformationCategory.
+const (
+	V1SkillManifestTaxInformationCategoryINFORMATIONSERVICES V1SkillManifestTaxInformationCategory = "INFORMATION_SERVICES"
+	V1SkillManifestTaxInformationCategoryNEWSPAPERS          V1SkillManifestTaxInformationCategory = "NEWSPAPERS"
+	V1SkillManifestTaxInformationCategoryPERIODICALS         V1SkillManifestTaxInformationCategory = "PERIODICALS"
+	V1SkillManifestTaxInformationCategorySOFTWARE            V1SkillManifestTaxInformationCategory = "SOFTWARE"
+	V1SkillManifestTaxInformationCategorySTREAMINGAUDIO      V1SkillManifestTaxInformationCategory = "STREAMING_AUDIO"
+	V1SkillManifestTaxInformationCategorySTREAMINGRADIO      V1SkillManifestTaxInformationCategory = "STREAMING_RADIO"
+	V1SkillManifestTaxInformationCategoryVIDEO               V1SkillManifestTaxInformationCategory = "VIDEO"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillManifestTaxInformationCategory enum.
+func (e V1SkillManifestTaxInformationCategory) Valid() bool {
+	switch e {
+	case V1SkillManifestTaxInformationCategoryINFORMATIONSERVICES:
+		return true
+	case V1SkillManifestTaxInformationCategoryNEWSPAPERS:
+		return true
+	case V1SkillManifestTaxInformationCategoryPERIODICALS:
+		return true
+	case V1SkillManifestTaxInformationCategorySOFTWARE:
+		return true
+	case V1SkillManifestTaxInformationCategorySTREAMINGAUDIO:
+		return true
+	case V1SkillManifestTaxInformationCategorySTREAMINGRADIO:
+		return true
+	case V1SkillManifestTaxInformationCategoryVIDEO:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillManifestVersion.
+const (
+	V1SkillManifestVersionN10 V1SkillManifestVersion = "1.0"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillManifestVersion enum.
+func (e V1SkillManifestVersion) Valid() bool {
+	switch e {
+	case V1SkillManifestVersionN10:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillManifestVideoPromptNameType.
+const (
+	V1SkillManifestVideoPromptNameTypeDefault V1SkillManifestVideoPromptNameType = "Default"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillManifestVideoPromptNameType enum.
+func (e V1SkillManifestVideoPromptNameType) Valid() bool {
+	switch e {
+	case V1SkillManifestVideoPromptNameTypeDefault:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for V1SkillPublicationStatus.
 const (
 	V1SkillPublicationStatusCERTIFICATION V1SkillPublicationStatus = "CERTIFICATION"
@@ -598,6 +2668,915 @@ type V1SkillListSkillResponse struct {
 	// * If a skill was never published to live, this list will contain only one entry for the skill with stage as 'development'.
 	// * For any skill that has been published to 'live', this list will contain two entries `:` one with stage 'development' and another with stage 'live'. Both of these summaries will have same skillId.
 	Skills []V1SkillSkillSummary `json:"skills,omitempty"`
+}
+
+// V1SkillManifestAlexaForBusinessApis Defines the structure of alexaForBusiness api in the skill manifest.
+type V1SkillManifestAlexaForBusinessApis struct {
+	// Endpoint Defines the structure for endpoint information in the skill manifest.
+	Endpoint *V1SkillManifestSkillManifestEndpoint `json:"endpoint,omitempty"`
+
+	// Interfaces Contains the list of supported interfaces.
+	Interfaces []V1SkillManifestAlexaForBusinessInterface `json:"interfaces,omitempty"`
+
+	// Regions Contains an array of the supported <region> Objects.
+	Regions map[string]V1SkillManifestRegion `json:"regions,omitempty"`
+}
+
+// V1SkillManifestAlexaForBusinessInterface defines model for v1.skill.Manifest.AlexaForBusinessInterface.
+type V1SkillManifestAlexaForBusinessInterface struct {
+	// Namespace Name of the interface.
+	Namespace string `json:"namespace"`
+
+	// Requests Contains a list of requests/messages that skill can handle.
+	Requests []V1SkillManifestAlexaForBusinessInterfaceRequest `json:"requests"`
+
+	// Version Version of the interface.
+	Version V1SkillManifestVersion `json:"version"`
+}
+
+// V1SkillManifestAlexaForBusinessInterfaceRequest defines model for v1.skill.Manifest.AlexaForBusinessInterfaceRequest.
+type V1SkillManifestAlexaForBusinessInterfaceRequest struct {
+	// Name Name of the request.
+	Name V1SkillManifestAlexaForBusinessInterfaceRequestName `json:"name"`
+}
+
+// V1SkillManifestAlexaForBusinessInterfaceRequestName Name of the request.
+type V1SkillManifestAlexaForBusinessInterfaceRequestName string
+
+// V1SkillManifestAndroidCommonIntentName Supported android common intent. Each of the value maps to a common intent defined in https://developer.android.com/guide/components/intents-common.
+type V1SkillManifestAndroidCommonIntentName string
+
+// V1SkillManifestAndroidCustomIntent Android custom intent
+type V1SkillManifestAndroidCustomIntent struct {
+	// Action android intent action
+	Action *string `json:"action,omitempty"`
+
+	// Component android component name
+	Component *string `json:"component,omitempty"`
+}
+
+// V1SkillManifestAppLink Details required for app linking use cases.
+type V1SkillManifestAppLink struct {
+	// LinkedAndroidCommonIntents Allow developer to declare their skill to link to the speicified android common intents.
+	LinkedAndroidCommonIntents []V1SkillManifestLinkedAndroidCommonIntent `json:"linkedAndroidCommonIntents,omitempty"`
+
+	// LinkedApplications Allows developers to declare their Skill will use Alexa App Links, and list relevant apps. This field is required when using the APP_LINK interface.
+	LinkedApplications []V1SkillManifestLinkedApplication `json:"linkedApplications,omitempty"`
+
+	// LinkedCommonSchemes Allow developer to declare their skill to link to the speicified common schemes
+	LinkedCommonSchemes *V1SkillManifestLinkedCommonSchemes `json:"linkedCommonSchemes,omitempty"`
+
+	// LinkedWebDomains Allow developer to decalre their skill to link to the declared web domains.
+	LinkedWebDomains []string `json:"linkedWebDomains,omitempty"`
+}
+
+// V1SkillManifestAuthorizedClient Defines a client authorized for a skill.
+type V1SkillManifestAuthorizedClient struct {
+	AuthenticationProvider string `json:"authenticationProvider"`
+}
+
+// V1SkillManifestAutomaticClonedLocale Defines the structure for Sync Locales in the skill manifest. This is an optional property and Sync Locales will be disabled if not set.
+type V1SkillManifestAutomaticClonedLocale struct {
+	// Locales List of language specific source locale to target locales mapping.
+	Locales []V1SkillManifestLocalesByAutomaticClonedLocale `json:"locales"`
+}
+
+// V1SkillManifestAutomaticDistribution optional. Used by developer to opt in to Automatic Skill Distribution, a feature where a skill will automatically be published in new eligible locales from the same language (e.g. from "en-US" to "en-CA" and "en-GB"). Locales that the developer has already created will not be overwritten.
+type V1SkillManifestAutomaticDistribution struct {
+	// IsActive set to true to opt in to Automatic Skill Distribution. If false, then the skill will not be considered for Automatic Skill Distribution. Note that once a skill has gone through the automatic distribution process and this value is later set to false, any locales that were published through this feature will not be reverted. Any published locales will need to be suppressed manually via contacting DAG.
+	IsActive bool `json:"isActive"`
+
+	// SourceLocaleForLanguages list of items pairing a language with a source locale. Required if isActive is set to true. For each language there must be exactly one source locale.
+	SourceLocaleForLanguages []V1SkillManifestSourceLanguageForLocales `json:"sourceLocaleForLanguages,omitempty"`
+}
+
+// V1SkillManifestCatalogInfo Details about how the app is listed on app store catalogs.
+type V1SkillManifestCatalogInfo struct {
+	// Identifier Identifier when accessing app in store.
+	Identifier string `json:"identifier"`
+
+	// Type Supported catalog
+	Type V1SkillManifestCatalogType `json:"type"`
+}
+
+// V1SkillManifestCatalogName defines model for v1.skill.Manifest.CatalogName.
+type V1SkillManifestCatalogName string
+
+// V1SkillManifestCatalogType Supported catalog
+type V1SkillManifestCatalogType string
+
+// V1SkillManifestConnectionsPayload Payload of the connection.
+type V1SkillManifestConnectionsPayload struct {
+	// Type Type of the payload.
+	Type string `json:"type"`
+
+	// Version Version of the payload.
+	Version string `json:"version"`
+}
+
+// V1SkillManifestCurrency Currency to use for paid skill product.
+type V1SkillManifestCurrency string
+
+// V1SkillManifestCustomConnection Skill connection object.
+type V1SkillManifestCustomConnection struct {
+	// Name Name of the connection.
+	Name string `json:"name"`
+
+	// Payload Payload of the connection.
+	Payload V1SkillManifestConnectionsPayload `json:"payload"`
+}
+
+// V1SkillManifestCustomTargetRuntime Discriminator for target runtime objects.
+type V1SkillManifestCustomTargetRuntime struct {
+	Type string `json:"type"`
+}
+
+// V1SkillManifestCustomApis Defines the structure for custom api of the skill.
+type V1SkillManifestCustomApis struct {
+	// UnderscoreTargetRuntimes Defines the set of target runtimes for this skill.
+	UnderscoreTargetRuntimes []V1SkillManifestCustomTargetRuntime `json:"_targetRuntimes,omitempty"`
+
+	// AppLink Details required for app linking use cases.
+	AppLink *V1SkillManifestAppLink `json:"appLink,omitempty"`
+
+	// Connections Supported connections.
+	Connections *V1SkillManifestCustomConnections `json:"connections,omitempty"`
+
+	// DialogManagement Defines the dialog management configuration for the skill.
+	DialogManagement *V1SkillManifestDialogManagement `json:"dialogManagement,omitempty"`
+
+	// Endpoint Defines the structure for endpoint information in the skill manifest.
+	Endpoint *V1SkillManifestSkillManifestEndpoint `json:"endpoint,omitempty"`
+
+	// Interfaces Defines the structure for interfaces supported by the custom api of the skill.
+	Interfaces []V1SkillManifestInterface `json:"interfaces,omitempty"`
+
+	// Locales Object that contains <locale> Objects for each supported locale.
+	Locales map[string]V1SkillManifestCustomLocalizedInformation `json:"locales,omitempty"`
+
+	// Regions Contains an array of the supported <region> Objects.
+	Regions map[string]V1SkillManifestRegion `json:"regions,omitempty"`
+
+	// Tasks List of provided tasks.
+	Tasks []V1SkillManifestCustomTask `json:"tasks,omitempty"`
+}
+
+// V1SkillManifestCustomConnections Supported connections.
+type V1SkillManifestCustomConnections struct {
+	// Provides List of provided connections.
+	Provides []V1SkillManifestCustomConnection `json:"provides,omitempty"`
+
+	// Requires List of required connections.
+	Requires []V1SkillManifestCustomConnection `json:"requires,omitempty"`
+}
+
+// V1SkillManifestCustomDialogManagementSessionStartDelegationStrategy Specifies the initial dialog manager to field requests when a new skill session starts. If absent, this is assumed to be the default "skill" target
+type V1SkillManifestCustomDialogManagementSessionStartDelegationStrategy struct {
+	Target string `json:"target"`
+}
+
+// V1SkillManifestCustomLocalizedInformation Defines the localized custom api information.
+type V1SkillManifestCustomLocalizedInformation struct {
+	// DialogManagement Defines locale-specific dialog-management configuration for a skill.
+	DialogManagement *V1SkillManifestCustomLocalizedInformationDialogManagement `json:"dialogManagement,omitempty"`
+}
+
+// V1SkillManifestCustomLocalizedInformationDialogManagement Defines locale-specific dialog-management configuration for a skill.
+type V1SkillManifestCustomLocalizedInformationDialogManagement struct {
+	// SessionStartDelegationStrategy Specifies the initial dialog manager to field requests when a new skill session starts. If absent, this is assumed to be the default "skill" target
+	SessionStartDelegationStrategy *V1SkillManifestCustomDialogManagementSessionStartDelegationStrategy `json:"sessionStartDelegationStrategy,omitempty"`
+}
+
+// V1SkillManifestCustomProductPrompts Custom prompts used for paid skill product purchasing options. Supports Speech Synthesis Markup Language (SSML), which can be used to control pronunciation, intonation, timing, and emotion.
+type V1SkillManifestCustomProductPrompts struct {
+	// PurchaseConfirmationDescription Description of the paid skill product that displays when the paid skill is purchased.
+	PurchaseConfirmationDescription string `json:"purchaseConfirmationDescription"`
+
+	// PurchasePromptDescription Description of the paid skill product heard before customer is prompted for purchase.
+	PurchasePromptDescription string `json:"purchasePromptDescription"`
+}
+
+// V1SkillManifestCustomTask Defines the name and version of the task that the skill wants to handle.
+type V1SkillManifestCustomTask struct {
+	// Name Name of the task.
+	Name string `json:"name"`
+
+	// Version Version of the task.
+	Version string `json:"version"`
+}
+
+// V1SkillManifestDemandResponseApis Defines the structure for demand response api of the skill.
+type V1SkillManifestDemandResponseApis struct {
+	// Endpoint Contains the uri field. This sets the global default endpoint.
+	Endpoint *V1SkillManifestLambdaEndpoint `json:"endpoint,omitempty"`
+
+	// EnrollmentURL Defines the url for enrolling into a demand response program.
+	EnrollmentURL *string `json:"enrollmentUrl,omitempty"`
+
+	// Regions Contains an array of the supported <region> Objects.
+	Regions map[string]V1SkillManifestLambdaRegion `json:"regions,omitempty"`
+}
+
+// V1SkillManifestDialogDelegationStrategy Specifies the initial dialog manager to field requests when a new skill session starts. If absent this is assumed to be the default \"skill\" target.
+type V1SkillManifestDialogDelegationStrategy struct {
+	Target string `json:"target"`
+}
+
+// V1SkillManifestDialogManagement Defines the dialog management configuration for the skill.
+type V1SkillManifestDialogManagement struct {
+	// DialogManagers List of dialog managers configured by the skill
+	DialogManagers []V1SkillManifestDialogManager `json:"dialogManagers"`
+
+	// SessionStartDelegationStrategy Specifies the initial dialog manager to field requests when a new skill session starts. If absent this is assumed to be the default \"skill\" target.
+	SessionStartDelegationStrategy *V1SkillManifestDialogDelegationStrategy `json:"sessionStartDelegationStrategy,omitempty"`
+}
+
+// V1SkillManifestDialogManager Individual dialog manager defined for the skill.
+type V1SkillManifestDialogManager struct {
+	// Type Type of DialogManager.
+	Type string `json:"type"`
+}
+
+// V1SkillManifestDistributionCountries defines model for v1.skill.Manifest.DistributionCountries.
+type V1SkillManifestDistributionCountries string
+
+// V1SkillManifestDistributionMode What audience the skill should be distributed to. "PUBLIC" - available to all users. Has ASIN and can be enabled. "PRIVATE" - available to entitled users. Has ASIN and can be enabled. "INTERNAL" - has no ASIN and cannot be enabled by users. Internally managed skills.
+type V1SkillManifestDistributionMode string
+
+// V1SkillManifestEventName defines model for v1.skill.Manifest.EventName.
+type V1SkillManifestEventName struct {
+	// EventName Name of the event to be subscribed to.
+	EventName *V1SkillManifestEventNameType `json:"eventName,omitempty"`
+}
+
+// V1SkillManifestEventNameType Name of the event to be subscribed to.
+type V1SkillManifestEventNameType string
+
+// V1SkillManifestEventPublications defines model for v1.skill.Manifest.EventPublications.
+type V1SkillManifestEventPublications struct {
+	// EventName Name of the event to publish.
+	EventName *string `json:"eventName,omitempty"`
+}
+
+// V1SkillManifestFlashBriefingApis Defines the structure of flash briefing api in the skill manifest.
+type V1SkillManifestFlashBriefingApis struct {
+	// Locales Object that contains <locale> objects for each supported locale.
+	Locales map[string]V1SkillManifestLocalizedFlashBriefingInfo `json:"locales"`
+}
+
+// V1SkillManifestFlashBriefingContentType Format of the feed content.
+type V1SkillManifestFlashBriefingContentType string
+
+// V1SkillManifestFlashBriefingGenre Type or subject of the content in the feed.
+type V1SkillManifestFlashBriefingGenre string
+
+// V1SkillManifestFlashBriefingUpdateFrequency Tells how often the feed has new content.
+type V1SkillManifestFlashBriefingUpdateFrequency string
+
+// V1SkillManifestFreeTrialInformation Defines the structure for paid skill product free trial information.
+type V1SkillManifestFreeTrialInformation struct {
+	// FreeTrialDuration Defines the free trial period for the paid skill product, in ISO_8601#Durations format.
+	FreeTrialDuration string `json:"freeTrialDuration"`
+}
+
+// V1SkillManifestFriendlyName Localized App name
+type V1SkillManifestFriendlyName struct {
+	// Default Default app name
+	Default string `json:"default"`
+
+	// LocalizedNames Localized app names.
+	LocalizedNames []V1SkillManifestLocalizedName `json:"localizedNames,omitempty"`
+}
+
+// V1SkillManifestGadgetSupportRequirement Specifies if gadget support is required/optional for this skill to work.
+type V1SkillManifestGadgetSupportRequirement string
+
+// V1SkillManifestHouseHoldList Defines the structure of household list api in the skill manifest.
+type V1SkillManifestHouseHoldList = map[string]interface{}
+
+// V1SkillManifestIOSAppStoreCommonSchemeName supported common schemes for IOS_APP_STORE. MAPS is for "maps:" and TEL is for "tel:".
+type V1SkillManifestIOSAppStoreCommonSchemeName string
+
+// V1SkillManifestInterface defines model for v1.skill.Manifest.Interface.
+type V1SkillManifestInterface struct {
+	Type string `json:"type"`
+}
+
+// V1SkillManifestKnowledgeApis defines the structure for the knowledge api of the skill.
+type V1SkillManifestKnowledgeApis struct {
+	// EnablementChannel Defines how the skill can be enabled by developers. values can be set to 'PUBLIC' (in Alexa Skill Store), 'ASP' (A4R/A4H vendor devices), or 'A4B' Public and ASP selections must have "distributionMode" = 'PUBLIC' and will only be eligible for distribution on personal or vendor (A4H/A4R or A4B) devices.
+	EnablementChannel *V1SkillManifestKnowledgeApisEnablementChannel `json:"enablementChannel,omitempty"`
+
+	// Locales Defines the structure of locale specific knowledge information in the skill manifest.
+	Locales map[string]V1SkillManifestLocalizedKnowledgeInformation `json:"locales,omitempty"`
+}
+
+// V1SkillManifestKnowledgeApisEnablementChannel Defines how the skill can be enabled by developers. values can be set to 'PUBLIC' (in Alexa Skill Store), 'ASP' (A4R/A4H vendor devices), or 'A4B' Public and ASP selections must have "distributionMode" = 'PUBLIC' and will only be eligible for distribution on personal or vendor (A4H/A4R or A4B) devices.
+type V1SkillManifestKnowledgeApisEnablementChannel string
+
+// V1SkillManifestLambdaEndpoint Contains the uri field. This sets the global default endpoint.
+type V1SkillManifestLambdaEndpoint struct {
+	// SslCertificateType The SSL certificate type of the skill's HTTPS endpoint. Only valid for HTTPS endpoint not for AWS Lambda ARN.
+	SslCertificateType *V1SkillManifestLambdaSSLCertificateType `json:"sslCertificateType,omitempty"`
+
+	// URI Amazon Resource Name (ARN) of the Lambda function.
+	URI string `json:"uri"`
+}
+
+// V1SkillManifestLambdaRegion Defines the structure of a regional information.
+type V1SkillManifestLambdaRegion struct {
+	// Endpoint Contains the uri field. This sets the global default endpoint.
+	Endpoint V1SkillManifestLambdaEndpoint `json:"endpoint"`
+}
+
+// V1SkillManifestLambdaSSLCertificateType The SSL certificate type of the skill's HTTPS endpoint. Only valid for HTTPS endpoint not for AWS Lambda ARN.
+type V1SkillManifestLambdaSSLCertificateType string
+
+// V1SkillManifestLinkedAndroidCommonIntent Android common intents associated with the skill
+type V1SkillManifestLinkedAndroidCommonIntent struct {
+	CatalogType V1SkillManifestCatalogName `json:"catalogType"`
+
+	// IntentName Supported android common intent. Each of the value maps to a common intent defined in https://developer.android.com/guide/components/intents-common.
+	IntentName V1SkillManifestAndroidCommonIntentName `json:"intentName"`
+}
+
+// V1SkillManifestLinkedApplication Applications associated with the skill.
+type V1SkillManifestLinkedApplication struct {
+	// AndroidCustomIntents Supported android custom intent
+	AndroidCustomIntents []V1SkillManifestAndroidCustomIntent `json:"androidCustomIntents,omitempty"`
+
+	// CatalogInfo Details about how the app is listed on app store catalogs.
+	CatalogInfo V1SkillManifestCatalogInfo `json:"catalogInfo"`
+
+	// CustomSchemes Supported schemes
+	CustomSchemes []string `json:"customSchemes,omitempty"`
+
+	// Domains Supported domains
+	Domains []string `json:"domains,omitempty"`
+
+	// FriendlyName Localized App name
+	FriendlyName V1SkillManifestFriendlyName `json:"friendlyName"`
+}
+
+// V1SkillManifestLinkedCommonSchemes Allow developer to declare their skill to link to the speicified common schemes
+type V1SkillManifestLinkedCommonSchemes struct {
+	GOOGLEPLAYSTORE []V1SkillManifestPlayStoreCommonSchemeName   `json:"GOOGLE_PLAY_STORE,omitempty"`
+	IOSAPPSTORE     []V1SkillManifestIOSAppStoreCommonSchemeName `json:"IOS_APP_STORE,omitempty"`
+}
+
+// V1SkillManifestLocalesByAutomaticClonedLocale maps source locale to list of target locales. Source and target locales should be with the same language.
+type V1SkillManifestLocalesByAutomaticClonedLocale struct {
+	// Source Locale where the metadata and model will be copied from. For example: en-US. This locale must already exist in the skill.
+	Source string `json:"source"`
+
+	// Targets Optional. List of locales where the metadata and model will be copied to. All configuration of source locale will be copied, so target locales do not have to exist before. Defaults to all locales with the same language as the sourceLocale.
+	Targets []string `json:"targets,omitempty"`
+}
+
+// V1SkillManifestLocalizedFlashBriefingInfo Defines the structure of a localized flash briefing information.
+type V1SkillManifestLocalizedFlashBriefingInfo struct {
+	// CustomErrorMessage Alexa says this to the customer if the skill fails to render the content.
+	CustomErrorMessage *string `json:"customErrorMessage,omitempty"`
+
+	// Feeds Defines the structure for a feed information in the skill manifest.
+	Feeds []V1SkillManifestLocalizedFlashBriefingInfoItems `json:"feeds,omitempty"`
+}
+
+// V1SkillManifestLocalizedFlashBriefingInfoItems defines model for v1.skill.Manifest.LocalizedFlashBriefingInfoItems.
+type V1SkillManifestLocalizedFlashBriefingInfoItems struct {
+	// ContentType Format of the feed content.
+	ContentType V1SkillManifestFlashBriefingContentType `json:"contentType"`
+
+	// Genre Type or subject of the content in the feed.
+	Genre V1SkillManifestFlashBriefingGenre `json:"genre"`
+
+	// ImageURI Uri for the feed image
+	ImageURI *string `json:"imageUri,omitempty"`
+
+	// IsDefault True if this should be the default feed to be enabled when customer enables the skill false otherwise.
+	IsDefault bool `json:"isDefault"`
+
+	// LogicalName Logical name of the feed. This is used to signify relation among feeds across different locales. Example If you have "weather" feed in multiple locale then consider naming it "weather_update" and we will make sure to play the right feed if customer changes the language on device.
+	LogicalName *string `json:"logicalName,omitempty"`
+
+	// Name Name that identifies this feed.
+	Name *string `json:"name,omitempty"`
+
+	// UpdateFrequency Tells how often the feed has new content.
+	UpdateFrequency V1SkillManifestFlashBriefingUpdateFrequency `json:"updateFrequency"`
+
+	// URL Url for the feed
+	URL string `json:"url"`
+
+	// VuiPreamble A short introduction for the feed that Alexa reads to the customer before the feed contents. Should start with "In" or "From".
+	VuiPreamble *string `json:"vuiPreamble,omitempty"`
+}
+
+// V1SkillManifestLocalizedKnowledgeInformation Defines the structure of localized knowledge information in the skill manifest.
+type V1SkillManifestLocalizedKnowledgeInformation struct {
+	// AnswerAttribution enables skill developers to prepend a custom message to all of their knowledge skill's answers, which can help inform end-users of the skill and data source answering their question.
+	AnswerAttribution *string `json:"answerAttribution,omitempty"`
+}
+
+// V1SkillManifestLocalizedMusicInfo Defines the structure of localized music information in the skill manifest.
+type V1SkillManifestLocalizedMusicInfo struct {
+	// Aliases Defines the structure of the music prompt name information in the skill manifest.
+	Aliases  []V1SkillManifestMusicAlias   `json:"aliases,omitempty"`
+	Features []V1SkillManifestMusicFeature `json:"features,omitempty"`
+
+	// PromptName Name to be used when Alexa renders the music skill name.
+	PromptName    *string                        `json:"promptName,omitempty"`
+	WordmarkLogos []V1SkillManifestMusicWordmark `json:"wordmarkLogos,omitempty"`
+}
+
+// V1SkillManifestLocalizedName Localized app name
+type V1SkillManifestLocalizedName struct {
+	// Locale locale
+	Locale string `json:"locale"`
+
+	// Name app name
+	Name string `json:"name"`
+}
+
+// V1SkillManifestManifestGadgetSupport Defines the structure for gadget buttons support in the skill manifest.
+type V1SkillManifestManifestGadgetSupport struct {
+	// MaxGadgetButtons Maximum number of gadget buttons required.
+	MaxGadgetButtons *int `json:"maxGadgetButtons,omitempty"`
+
+	// MinGadgetButtons Minimum number of gadget buttons required.
+	MinGadgetButtons *int `json:"minGadgetButtons,omitempty"`
+
+	// NumPlayersMax Maximum number of players in the game.
+	NumPlayersMax *int `json:"numPlayersMax,omitempty"`
+
+	// NumPlayersMin Minimum number of players in the game.
+	NumPlayersMin *int `json:"numPlayersMin,omitempty"`
+
+	// Requirement Specifies if gadget support is required/optional for this skill to work.
+	Requirement V1SkillManifestGadgetSupportRequirement `json:"requirement"`
+}
+
+// V1SkillManifestManifestVersion Version of the skill manifest.
+type V1SkillManifestManifestVersion string
+
+// V1SkillManifestMarketplacePricing Paid skill product pricing information.
+type V1SkillManifestMarketplacePricing struct {
+	// Currency Currency to use for paid skill product.
+	Currency V1SkillManifestCurrency `json:"currency"`
+
+	// FreeTrialInformation Defines the structure for paid skill product free trial information.
+	FreeTrialInformation *V1SkillManifestFreeTrialInformation `json:"freeTrialInformation,omitempty"`
+
+	// OfferType The type of the offer.
+	OfferType V1SkillManifestOfferType `json:"offerType"`
+
+	// Price Defines the price of a paid skill product. The price should be your suggested price, not including any VAT or similar taxes. Taxes are included in the final price to end users.
+	Price float32 `json:"price"`
+
+	// SubscriptionInformation Defines the structure for paid skill product subscription information.
+	SubscriptionInformation *V1SkillManifestSubscriptionInformation `json:"subscriptionInformation,omitempty"`
+}
+
+// V1SkillManifestMusicAlias defines model for v1.skill.Manifest.MusicAlias.
+type V1SkillManifestMusicAlias struct {
+	// Name Alias name to be associated with the music skill.
+	Name *string `json:"name,omitempty"`
+}
+
+// V1SkillManifestMusicApis Defines the structure of music api in the skill manifest.
+type V1SkillManifestMusicApis struct {
+	// Capabilities Defines the structure of music capabilities information in the skill manifest.
+	Capabilities []V1SkillManifestMusicCapability `json:"capabilities,omitempty"`
+
+	// ContentTypes List of the type of content to be provided by the music skill.
+	ContentTypes []V1SkillManifestMusicContentType `json:"contentTypes,omitempty"`
+
+	// Endpoint Contains the uri field. This sets the global default endpoint.
+	Endpoint *V1SkillManifestLambdaEndpoint `json:"endpoint,omitempty"`
+
+	// Interfaces A list of music skill interfaces that your skill supports.
+	Interfaces []V1SkillManifestMusicInterfaces `json:"interfaces,omitempty"`
+
+	// Locales Defines the structure of locale specific music information in the skill manifest.
+	Locales map[string]V1SkillManifestLocalizedMusicInfo `json:"locales,omitempty"`
+
+	// Regions Contains an array of the supported <region> Objects.
+	Regions map[string]V1SkillManifestLambdaRegion `json:"regions,omitempty"`
+}
+
+// V1SkillManifestMusicCapability defines model for v1.skill.Manifest.MusicCapability.
+type V1SkillManifestMusicCapability struct {
+	// Name Name of music skill api.
+	Name *string `json:"name,omitempty"`
+
+	// Namespace Namespace of music skill api.
+	Namespace *string `json:"namespace,omitempty"`
+
+	// Version Version of music skill api.
+	Version *string `json:"version,omitempty"`
+}
+
+// V1SkillManifestMusicContentName Name of the content type that's supported for the music skill.
+type V1SkillManifestMusicContentName string
+
+// V1SkillManifestMusicContentType Defines the structure for content that can be provided by a music skill.
+type V1SkillManifestMusicContentType struct {
+	// Name Name of the content type that's supported for the music skill.
+	Name *V1SkillManifestMusicContentName `json:"name,omitempty"`
+}
+
+// V1SkillManifestMusicFeature defines model for v1.skill.Manifest.MusicFeature.
+type V1SkillManifestMusicFeature struct {
+	// Name Feature name to be associated with the music skill.
+	Name *string `json:"name,omitempty"`
+}
+
+// V1SkillManifestMusicInterfaces defines model for v1.skill.Manifest.MusicInterfaces.
+type V1SkillManifestMusicInterfaces struct {
+	// Namespace Name of the interface.
+	Namespace string `json:"namespace"`
+
+	// Requests Contains a list of requests/messages that skill can handle.
+	Requests []V1SkillManifestMusicRequest `json:"requests,omitempty"`
+
+	// Version Version of the interface.
+	Version *string `json:"version,omitempty"`
+}
+
+// V1SkillManifestMusicRequest defines model for v1.skill.Manifest.MusicRequest.
+type V1SkillManifestMusicRequest struct {
+	// Name Name of the request.
+	Name *string `json:"name,omitempty"`
+}
+
+// V1SkillManifestMusicWordmark defines model for v1.skill.Manifest.MusicWordmark.
+type V1SkillManifestMusicWordmark struct {
+	// URI Wordmark logo to be used by devices with displays.
+	URI *string `json:"uri,omitempty"`
+}
+
+// V1SkillManifestOfferType The type of the offer.
+type V1SkillManifestOfferType string
+
+// V1SkillManifestPaidSkillInformation Defines the structure of the paid skill information of the skill.
+type V1SkillManifestPaidSkillInformation struct {
+	// Pricing Defines the structure for marketplace specific pricing information in the skill manifest
+	Pricing map[string][]V1SkillManifestMarketplacePricing `json:"pricing"`
+
+	// TaxInformation Defines the structure for paid skill product tax information.
+	TaxInformation V1SkillManifestTaxInformation `json:"taxInformation"`
+}
+
+// V1SkillManifestPermissionItems defines model for v1.skill.Manifest.PermissionItems.
+type V1SkillManifestPermissionItems struct {
+	// Name Name of the required permission.
+	Name V1SkillManifestPermissionName `json:"name"`
+}
+
+// V1SkillManifestPermissionName Name of the required permission.
+type V1SkillManifestPermissionName string
+
+// V1SkillManifestPlayStoreCommonSchemeName supported common schemes for GOOGLE_PLAY_STORE. MAPS is for "maps:" and TEL is for "tel:".
+type V1SkillManifestPlayStoreCommonSchemeName string
+
+// V1SkillManifestRegion Defines the structure for regional information.
+type V1SkillManifestRegion struct {
+	// Endpoint Defines the structure for endpoint information in the skill manifest.
+	Endpoint V1SkillManifestSkillManifestEndpoint `json:"endpoint"`
+}
+
+// V1SkillManifestSSLCertificateType The SSL certificate type of the skill's HTTPS endpoint. Only valid for HTTPS endpoint not for AWS Lambda ARN.
+type V1SkillManifestSSLCertificateType string
+
+// V1SkillManifestShoppingKit Defines the structure for Shopping Kit related information in the skill manifest.
+type V1SkillManifestShoppingKit struct {
+	// IsAmazonAssociatesOnAlexaEnabled True if the skill uses Shopping Actions with Amazon Associates, false otherwise.
+	IsAmazonAssociatesOnAlexaEnabled *bool `json:"isAmazonAssociatesOnAlexaEnabled,omitempty"`
+
+	// IsShoppingActionsEnabled True if the skill uses Alexa Shopping Actions, false otherwise.
+	IsShoppingActionsEnabled *bool `json:"isShoppingActionsEnabled,omitempty"`
+}
+
+// V1SkillManifestSkillManifest Defines the structure for a skill's metadata.
+type V1SkillManifestSkillManifest struct {
+	// Apis Defines the structure for implemented apis information in the skill manifest.
+	Apis *V1SkillManifestSkillManifestApis `json:"apis,omitempty"`
+
+	// AuthorizedClients Defines a list of clients authorized for a skill.
+	AuthorizedClients []V1SkillManifestAuthorizedClient `json:"authorizedClients,omitempty"`
+
+	// Events Defines the structure for subscribed events information in the skill manifest.
+	Events *V1SkillManifestSkillManifestEvents `json:"events,omitempty"`
+
+	// ManifestVersion Version of the skill manifest.
+	ManifestVersion *V1SkillManifestManifestVersion `json:"manifestVersion,omitempty"`
+
+	// Permissions Defines the structure for required permissions information in the skill manifest.
+	Permissions []V1SkillManifestPermissionItems `json:"permissions,omitempty"`
+
+	// PrivacyAndCompliance Defines the structure for privacy & compliance information in the skill manifest.
+	PrivacyAndCompliance *V1SkillManifestSkillManifestPrivacyAndCompliance `json:"privacyAndCompliance,omitempty"`
+
+	// PublishingInformation Defines the structure for publishing information in the skill manifest.
+	PublishingInformation *V1SkillManifestSkillManifestPublishingInformation `json:"publishingInformation,omitempty"`
+}
+
+// V1SkillManifestSkillManifestApis Defines the structure for implemented apis information in the skill manifest.
+type V1SkillManifestSkillManifestApis struct {
+	// AlexaForBusiness Defines the structure of alexaForBusiness api in the skill manifest.
+	AlexaForBusiness *V1SkillManifestAlexaForBusinessApis `json:"alexaForBusiness,omitempty"`
+
+	// Custom Defines the structure for custom api of the skill.
+	Custom *V1SkillManifestCustomApis `json:"custom,omitempty"`
+
+	// DemandResponse Defines the structure for demand response api of the skill.
+	DemandResponse *V1SkillManifestDemandResponseApis `json:"demandResponse,omitempty"`
+
+	// FlashBriefing Defines the structure of flash briefing api in the skill manifest.
+	FlashBriefing *V1SkillManifestFlashBriefingApis `json:"flashBriefing,omitempty"`
+
+	// HouseholdList Defines the structure of household list api in the skill manifest.
+	HouseholdList *V1SkillManifestHouseHoldList `json:"householdList,omitempty"`
+
+	// Knowledge defines the structure for the knowledge api of the skill.
+	Knowledge *V1SkillManifestKnowledgeApis `json:"knowledge,omitempty"`
+
+	// Music Defines the structure of music api in the skill manifest.
+	Music *V1SkillManifestMusicApis `json:"music,omitempty"`
+
+	// SmartHome Defines the structure of smart home api of the skill.
+	SmartHome *V1SkillManifestSmartHomeApis `json:"smartHome,omitempty"`
+
+	// Video Defines the structure for video api of the skill.
+	Video *V1SkillManifestVideoApis `json:"video,omitempty"`
+}
+
+// V1SkillManifestSkillManifestEndpoint Defines the structure for endpoint information in the skill manifest.
+type V1SkillManifestSkillManifestEndpoint struct {
+	// SslCertificateType The SSL certificate type of the skill's HTTPS endpoint. Only valid for HTTPS endpoint not for AWS Lambda ARN.
+	SslCertificateType *V1SkillManifestSSLCertificateType `json:"sslCertificateType,omitempty"`
+
+	// URI Amazon Resource Name (ARN) of the skill's Lambda function or HTTPS URL.
+	URI string `json:"uri"`
+}
+
+// V1SkillManifestSkillManifestEnvelope defines model for v1.skill.Manifest.SkillManifestEnvelope.
+type V1SkillManifestSkillManifestEnvelope struct {
+	// Manifest Defines the structure for a skill's metadata.
+	Manifest *V1SkillManifestSkillManifest `json:"manifest,omitempty"`
+}
+
+// V1SkillManifestSkillManifestEvents Defines the structure for subscribed events information in the skill manifest.
+type V1SkillManifestSkillManifestEvents struct {
+	// Endpoint Defines the structure for endpoint information in the skill manifest.
+	Endpoint     V1SkillManifestSkillManifestEndpoint `json:"endpoint"`
+	Publications []V1SkillManifestEventPublications   `json:"publications,omitempty"`
+
+	// Regions Contains an array of the supported <region> Objects.
+	Regions map[string]V1SkillManifestRegion `json:"regions,omitempty"`
+
+	// Subscriptions Contains an array of eventName object each of which contains the name of a skill event.
+	Subscriptions []V1SkillManifestEventName `json:"subscriptions,omitempty"`
+}
+
+// V1SkillManifestSkillManifestLocalizedPrivacyAndCompliance Defines the structure for locale specific privacy & compliance information in the skill manifest.
+type V1SkillManifestSkillManifestLocalizedPrivacyAndCompliance struct {
+	// PrivacyPolicyURL Link to the privacy policy that applies to this skill.
+	PrivacyPolicyURL *string `json:"privacyPolicyUrl,omitempty"`
+
+	// TermsOfUseURL link to the terms of use document for this skill
+	TermsOfUseURL *string `json:"termsOfUseUrl,omitempty"`
+}
+
+// V1SkillManifestSkillManifestLocalizedPublishingInformation Defines the structure for locale specific publishing information in the skill manifest.
+type V1SkillManifestSkillManifestLocalizedPublishingInformation struct {
+	// CustomProductPrompts Custom prompts used for paid skill product purchasing options. Supports Speech Synthesis Markup Language (SSML), which can be used to control pronunciation, intonation, timing, and emotion.
+	CustomProductPrompts *V1SkillManifestCustomProductPrompts `json:"customProductPrompts,omitempty"`
+
+	// Description A full description explaining the skill’s core functionality and any prerequisites to using it (such as additional hardware, software, or accounts). For a Flash Briefing skill, you must list the feeds for the skill.
+	Description *string `json:"description,omitempty"`
+
+	// ExamplePhrases Three example phrases that illustrate how users can invoke your skill. For accuracy, these phrases must come directly from your sample utterances.
+	ExamplePhrases []string `json:"examplePhrases,omitempty"`
+
+	// Keywords Sample keyword phrases that describe the skill.
+	Keywords []string `json:"keywords,omitempty"`
+
+	// LargeIconURI URL to a large icon that represents this skill (512x512px).
+	LargeIconURI *string `json:"largeIconUri,omitempty"`
+
+	// Name Name of the skill that is displayed to customers in the Alexa app.
+	Name string `json:"name"`
+
+	// SmallIconURI URL to a small icon for the skill, which is shown in the list of skills (108x108px).
+	SmallIconURI *string `json:"smallIconUri,omitempty"`
+
+	// Summary Summary description of the skill, which is shown when viewing the list of skills.
+	Summary *string `json:"summary,omitempty"`
+
+	// UpdatesDescription Updates description of the skill's new features and fixes in the version. Should describe changes in the revisions of the skill.
+	UpdatesDescription *string `json:"updatesDescription,omitempty"`
+}
+
+// V1SkillManifestSkillManifestPrivacyAndCompliance Defines the structure for privacy & compliance information in the skill manifest.
+type V1SkillManifestSkillManifestPrivacyAndCompliance struct {
+	// AllowsPurchases True if the skill allows users to make purchases or spend real money false otherwise.
+	AllowsPurchases *bool `json:"allowsPurchases,omitempty"`
+
+	// ContainsAds True if the skill contains advertising false otherwise.
+	ContainsAds *bool `json:"containsAds,omitempty"`
+
+	// IsChildDirected True if the skill is directed to or targets children under the age of 13/16 false otherwise.
+	IsChildDirected *bool `json:"isChildDirected,omitempty"`
+
+	// IsExportCompliant True if it is certified that the skill may be imported to and exported from the United States and all other countries and regions in which Amazon operate its program or in which skill owner have authorized sales to end users (without the need for Amazon to obtain any license or clearance or take any other action) and is in full compliance with all applicable laws and regulations governing imports and export including those applicable to software that makes use of encryption technology.
+	IsExportCompliant *bool `json:"isExportCompliant,omitempty"`
+
+	// Locales Object that contains <locale> objects for each supported locale.
+	Locales map[string]V1SkillManifestSkillManifestLocalizedPrivacyAndCompliance `json:"locales,omitempty"`
+
+	// ShoppingKit Defines the structure for Shopping Kit related information in the skill manifest.
+	ShoppingKit *V1SkillManifestShoppingKit `json:"shoppingKit,omitempty"`
+
+	// UsesHealthInfo True if the skill developer is a Covered Entity (CE) or Business Associate (BA) as defined by the Health Insurance Portability And Accountability Act (HIPAA) and the skill requires Amazon to process PHI on their behalf, false otherwise. This is an optional property and treated as false if not set.
+	UsesHealthInfo *bool `json:"usesHealthInfo,omitempty"`
+
+	// UsesPersonalInfo True if the skill collects users' personal information false otherwise.
+	UsesPersonalInfo *bool `json:"usesPersonalInfo,omitempty"`
+}
+
+// V1SkillManifestSkillManifestPublishingInformation Defines the structure for publishing information in the skill manifest.
+type V1SkillManifestSkillManifestPublishingInformation struct {
+	// AutomaticClonedLocale Defines the structure for Sync Locales in the skill manifest. This is an optional property and Sync Locales will be disabled if not set.
+	AutomaticClonedLocale *V1SkillManifestAutomaticClonedLocale `json:"automaticClonedLocale,omitempty"`
+
+	// AutomaticDistribution optional. Used by developer to opt in to Automatic Skill Distribution, a feature where a skill will automatically be published in new eligible locales from the same language (e.g. from "en-US" to "en-CA" and "en-GB"). Locales that the developer has already created will not be overwritten.
+	AutomaticDistribution *V1SkillManifestAutomaticDistribution `json:"automaticDistribution,omitempty"`
+
+	// Category Category that best describes a skill. Indicates the filter category for the skill in the Alexa App.
+	Category *string `json:"category,omitempty"`
+
+	// Description Description of the skill's purpose and feature and how it works. Should describe any prerequisites like hardware or account requirements and detailed steps for the customer to get started. For Flash Briefing skill list the feeds offered within the skill. Use a conversational tone and correct grammar and punctuation. This description displays to customers on the skill detail card in the Alexa app.
+	Description *string `json:"description,omitempty"`
+
+	// DistributionCountries Selected list of countries provided by the skill owner where Amazon can distribute the skill.
+	DistributionCountries []V1SkillManifestDistributionCountries `json:"distributionCountries,omitempty"`
+
+	// DistributionMode What audience the skill should be distributed to. "PUBLIC" - available to all users. Has ASIN and can be enabled. "PRIVATE" - available to entitled users. Has ASIN and can be enabled. "INTERNAL" - has no ASIN and cannot be enabled by users. Internally managed skills.
+	DistributionMode *V1SkillManifestDistributionMode `json:"distributionMode,omitempty"`
+
+	// GadgetSupport Defines the structure for gadget buttons support in the skill manifest.
+	GadgetSupport *V1SkillManifestManifestGadgetSupport `json:"gadgetSupport,omitempty"`
+
+	// IsAvailableWorldwide True if the skill should be distributed in all countries where Amazon distributes skill false otherwise.
+	IsAvailableWorldwide *bool `json:"isAvailableWorldwide,omitempty"`
+
+	// Locales Defines the structure for locale specific publishing information in the skill manifest.
+	Locales map[string]V1SkillManifestSkillManifestLocalizedPublishingInformation `json:"locales,omitempty"`
+
+	// Name Name of the skill that is displayed to customers in the Alexa app.
+	Name *string `json:"name,omitempty"`
+
+	// PaidSkillInformation Defines the structure of the paid skill information of the skill.
+	PaidSkillInformation *V1SkillManifestPaidSkillInformation `json:"paidSkillInformation,omitempty"`
+
+	// TestingInstructions Special instructions provided by the developer to test the skill.
+	TestingInstructions *string `json:"testingInstructions,omitempty"`
+}
+
+// V1SkillManifestSmartHomeApis Defines the structure of smart home api of the skill.
+type V1SkillManifestSmartHomeApis struct {
+	// Endpoint Contains the uri field. This sets the global default endpoint.
+	Endpoint *V1SkillManifestLambdaEndpoint `json:"endpoint,omitempty"`
+
+	// ProtocolVersion Version of the Smart Home API. Default and recommended value is '3'. You may create a skill with version '2' for testing migration to version '3', but a skill submission using version '2' will not be certified.
+	ProtocolVersion V1SkillManifestSmartHomeProtocol `json:"protocolVersion"`
+
+	// Regions Contains an array of the supported <region> Objects.
+	Regions map[string]V1SkillManifestLambdaRegion `json:"regions,omitempty"`
+
+	// SupportedControls (Optional) Contains the attributes specifying additional functionalities supported by the skill.
+	SupportedControls *V1SkillManifestSupportedControls `json:"supportedControls,omitempty"`
+}
+
+// V1SkillManifestSmartHomeProtocol Version of the Smart Home API. Default and recommended value is '3'. You may create a skill with version '2' for testing migration to version '3', but a skill submission using version '2' will not be certified.
+type V1SkillManifestSmartHomeProtocol string
+
+// V1SkillManifestSourceLanguageForLocales maps a language to a locale. During Automatic Skill Distribution, skill metadata and model of the source locale will be copied to other eligible locales of the same language. Eligible destination locales will be determined by the system.
+type V1SkillManifestSourceLanguageForLocales struct {
+	// Language two-letter string representing the language to distribute to. There must be at least one locale in publishingInformation.locales which has this language as the prefix.
+	Language string `json:"language"`
+
+	// SourceLocale locale where the metadata and model will be copied from. This locale must already exist in the skill.
+	SourceLocale string `json:"sourceLocale"`
+}
+
+// V1SkillManifestSubscriptionInformation Defines the structure for paid skill product subscription information.
+type V1SkillManifestSubscriptionInformation struct {
+	// SubscriptionPaymentFrequency The frequency in which payments are collected for the subscription.
+	SubscriptionPaymentFrequency V1SkillManifestSubscriptionPaymentFrequency `json:"subscriptionPaymentFrequency"`
+}
+
+// V1SkillManifestSubscriptionPaymentFrequency The frequency in which payments are collected for the subscription.
+type V1SkillManifestSubscriptionPaymentFrequency string
+
+// V1SkillManifestSupportedControls (Optional) Contains the attributes specifying additional functionalities supported by the skill.
+type V1SkillManifestSupportedControls struct {
+	// Type Type of the supported functionality.
+	Type *V1SkillManifestSupportedControlsType `json:"type,omitempty"`
+}
+
+// V1SkillManifestSupportedControlsType Type of the supported functionality.
+type V1SkillManifestSupportedControlsType string
+
+// V1SkillManifestTaxInformation Defines the structure for paid skill product tax information.
+type V1SkillManifestTaxInformation struct {
+	// Category The tax category that best describes the paid skill product.
+	Category V1SkillManifestTaxInformationCategory `json:"category"`
+}
+
+// V1SkillManifestTaxInformationCategory The tax category that best describes the paid skill product.
+type V1SkillManifestTaxInformationCategory string
+
+// V1SkillManifestUpChannelItems defines model for v1.skill.Manifest.UpChannelItems.
+type V1SkillManifestUpChannelItems struct {
+	// Type Use \"SNS\" for this field.
+	Type *string `json:"type,omitempty"`
+
+	// URI SNS Amazon Resource Name (ARN) for video skill through which video partner can send events to Alexa.
+	URI *string `json:"uri,omitempty"`
+}
+
+// V1SkillManifestVersion Version of the interface.
+type V1SkillManifestVersion string
+
+// V1SkillManifestVideoApis Defines the structure for video api of the skill.
+type V1SkillManifestVideoApis struct {
+	// Countries Object that contains <country> Objects for each supported country.
+	Countries map[string]V1SkillManifestVideoCountryInfo `json:"countries,omitempty"`
+
+	// Endpoint Contains the uri field. This sets the global default endpoint.
+	Endpoint *V1SkillManifestLambdaEndpoint `json:"endpoint,omitempty"`
+
+	// Locales Defines the structure for the locale specific video api information.
+	Locales map[string]V1SkillManifestVideoApisLocale `json:"locales,omitempty"`
+
+	// Regions Defines the structure for region information.
+	Regions map[string]V1SkillManifestVideoRegion `json:"regions,omitempty"`
+}
+
+// V1SkillManifestVideoApisLocale Defines the structure for localized video api information.
+type V1SkillManifestVideoApisLocale struct {
+	// Features Defines the array of video features for this skill.
+	Features               []V1SkillManifestVideoFeature               `json:"features,omitempty"`
+	FireTvCatalogIngestion *V1SkillManifestVideoFireTvCatalogIngestion `json:"fireTvCatalogIngestion,omitempty"`
+
+	// PromptNames Name to use when Alexa renders the video skill name in a prompt to the user
+	PromptNames          []V1SkillManifestVideoPromptName `json:"promptNames,omitempty"`
+	VideoProviderLogoURI *string                          `json:"videoProviderLogoUri,omitempty"`
+
+	// VideoProviderTargetingNames Defines the video provider's targeting name.
+	VideoProviderTargetingNames []string `json:"videoProviderTargetingNames"`
+}
+
+// V1SkillManifestVideoCatalogInfo defines model for v1.skill.Manifest.VideoCatalogInfo.
+type V1SkillManifestVideoCatalogInfo struct {
+	SourceID string `json:"sourceId"`
+}
+
+// V1SkillManifestVideoCountryInfo Defines the structure of per-country video info in the skill manifest.
+type V1SkillManifestVideoCountryInfo struct {
+	CatalogInformation []V1SkillManifestVideoCatalogInfo `json:"catalogInformation,omitempty"`
+}
+
+// V1SkillManifestVideoFeature A feature of an Alexa skill.
+type V1SkillManifestVideoFeature struct {
+	Name    string `json:"name"`
+	Version string `json:"version"`
+}
+
+// V1SkillManifestVideoFireTvCatalogIngestion defines model for v1.skill.Manifest.VideoFireTvCatalogIngestion.
+type V1SkillManifestVideoFireTvCatalogIngestion struct {
+	FireTvCatalogIngestionSourceID  *string `json:"fireTvCatalogIngestionSourceId,omitempty"`
+	IsFireTvCatalogIngestionEnabled *bool   `json:"isFireTvCatalogIngestionEnabled,omitempty"`
+}
+
+// V1SkillManifestVideoPromptName defines model for v1.skill.Manifest.VideoPromptName.
+type V1SkillManifestVideoPromptName struct {
+	Name string                             `json:"name"`
+	Type V1SkillManifestVideoPromptNameType `json:"type"`
+}
+
+// V1SkillManifestVideoPromptNameType defines model for v1.skill.Manifest.VideoPromptNameType.
+type V1SkillManifestVideoPromptNameType string
+
+// V1SkillManifestVideoRegion Defines the structure for endpoint information.
+type V1SkillManifestVideoRegion struct {
+	// Endpoint Defines the structure for endpoint information in the skill manifest.
+	Endpoint V1SkillManifestSkillManifestEndpoint `json:"endpoint"`
+
+	// Upchannel The channel through which the partner skill can communicate to Alexa.
+	Upchannel []V1SkillManifestUpChannelItems `json:"upchannel,omitempty"`
 }
 
 // V1SkillManifestLastUpdateRequest Contains attributes related to last modification (create/update) request of a resource.
@@ -1225,6 +4204,11 @@ type ClientInterface interface {
 	// Creates a new import for a skill with given skillId.
 	ImportSkillPackageV1(ctx context.Context, skillID string, params *ImportSkillPackageV1Params, body ImportSkillPackageV1JSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetSkillManifestV1 performs a GET /v1/skills/{skillId}/stages/{stageV2}/manifest (the `GetSkillManifestV1` operationId) request.
+	//
+	// Returns the skill manifest for given skillId and stage.
+	GetSkillManifestV1(ctx context.Context, skillID string, stageV2 string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// SetSkillEnablementV1 performs a PUT /v1/skills/{skillId}/stages/{stage}/enablement (the `SetSkillEnablementV1` operationId) request.
 	//
 	// Creates/Updates the enablement for given skillId/stage and customerId (retrieved from Auth token).
@@ -1365,6 +4349,21 @@ func (c *Client) ImportSkillPackageV1WithBody(ctx context.Context, skillID strin
 // Creates a new import for a skill with given skillId.
 func (c *Client) ImportSkillPackageV1(ctx context.Context, skillID string, params *ImportSkillPackageV1Params, body ImportSkillPackageV1JSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewImportSkillPackageV1Request(c.Server, skillID, params, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetSkillManifestV1 performs a GET /v1/skills/{skillId}/stages/{stageV2}/manifest (the `GetSkillManifestV1` operationId) request.
+//
+// Returns the skill manifest for given skillId and stage.
+func (c *Client) GetSkillManifestV1(ctx context.Context, skillID string, stageV2 string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSkillManifestV1Request(c.Server, skillID, stageV2)
 	if err != nil {
 		return nil, err
 	}
@@ -1724,6 +4723,47 @@ func NewImportSkillPackageV1RequestWithBody(server string, skillID string, param
 	return req, nil
 }
 
+// NewGetSkillManifestV1Request constructs an http.Request for the GetSkillManifestV1 method
+func NewGetSkillManifestV1Request(server string, skillID string, stageV2 string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "skillId", skillID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "stageV2", stageV2, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/skills/%s/stages/%s/manifest", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewSetSkillEnablementV1Request constructs an http.Request for the SetSkillEnablementV1 method
 func NewSetSkillEnablementV1Request(server string, skillID string, stage string) (*http.Request, error) {
 	var err error
@@ -2047,6 +5087,13 @@ type ClientWithResponsesInterface interface {
 	//
 	// Creates a new import for a skill with given skillId.
 	ImportSkillPackageV1WithResponse(ctx context.Context, skillID string, params *ImportSkillPackageV1Params, body ImportSkillPackageV1JSONRequestBody, reqEditors ...RequestEditorFn) (*ImportSkillPackageV1Response, error)
+
+	// GetSkillManifestV1WithResponse performs a GET /v1/skills/{skillId}/stages/{stageV2}/manifest (the `GetSkillManifestV1` operationId) request.
+	//
+	// Returns the skill manifest for given skillId and stage.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	GetSkillManifestV1WithResponse(ctx context.Context, skillID string, stageV2 string, reqEditors ...RequestEditorFn) (*GetSkillManifestV1Response, error)
 
 	// SetSkillEnablementV1WithResponse performs a PUT /v1/skills/{skillId}/stages/{stage}/enablement (the `SetSkillEnablementV1` operationId) request.
 	//
@@ -2562,6 +5609,118 @@ func (r ImportSkillPackageV1Response) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r ImportSkillPackageV1Response) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// GetSkillManifestV1Response200Headers the declared response headers of an HTTP 200 response for GetSkillManifestV1
+type GetSkillManifestV1Response200Headers struct {
+	ContentType *string
+	ETag        *string
+}
+
+// GetSkillManifestV1Response303Headers the declared response headers of an HTTP 303 response for GetSkillManifestV1
+type GetSkillManifestV1Response303Headers struct {
+	Location *string
+}
+
+// GetSkillManifestV1Response401Headers the declared response headers of an HTTP 401 response for GetSkillManifestV1
+type GetSkillManifestV1Response401Headers struct {
+	WWWAuthenticate *string
+}
+
+type GetSkillManifestV1Response struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *V1SkillManifestSkillManifestEnvelope
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *V1BadRequestError
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *V1SkillStandardizedError
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *V1BadRequestError
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *V1SkillStandardizedError
+	// JSON429 the response for an HTTP 429 `application/json` response
+	JSON429 *V1SkillStandardizedError
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *V1SkillStandardizedError
+	// JSON503 the response for an HTTP 503 `application/json` response
+	JSON503 *V1SkillStandardizedError
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *GetSkillManifestV1Response200Headers
+	// Headers303 the parsed response headers for an HTTP 303 response
+	Headers303 *GetSkillManifestV1Response303Headers
+	// Headers401 the parsed response headers for an HTTP 401 response
+	Headers401 *GetSkillManifestV1Response401Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetSkillManifestV1Response) GetJSON200() *V1SkillManifestSkillManifestEnvelope {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetSkillManifestV1Response) GetJSON400() *V1BadRequestError {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetSkillManifestV1Response) GetJSON401() *V1SkillStandardizedError {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r GetSkillManifestV1Response) GetJSON403() *V1BadRequestError {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GetSkillManifestV1Response) GetJSON404() *V1SkillStandardizedError {
+	return r.JSON404
+}
+
+// GetJSON429 returns the response for an HTTP 429 `application/json` response
+func (r GetSkillManifestV1Response) GetJSON429() *V1SkillStandardizedError {
+	return r.JSON429
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetSkillManifestV1Response) GetJSON500() *V1SkillStandardizedError {
+	return r.JSON500
+}
+
+// GetJSON503 returns the response for an HTTP 503 `application/json` response
+func (r GetSkillManifestV1Response) GetJSON503() *V1SkillStandardizedError {
+	return r.JSON503
+}
+
+// GetBody returns the raw response body bytes
+func (r GetSkillManifestV1Response) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetSkillManifestV1Response) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetSkillManifestV1Response) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetSkillManifestV1Response) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -3222,6 +6381,19 @@ func (c *ClientWithResponses) ImportSkillPackageV1WithResponse(ctx context.Conte
 	return ParseImportSkillPackageV1Response(rsp)
 }
 
+// GetSkillManifestV1WithResponse performs a GET /v1/skills/{skillId}/stages/{stageV2}/manifest (the `GetSkillManifestV1` operationId) request.
+//
+// Returns the skill manifest for given skillId and stage.
+//
+// Returns a wrapper object for the known response body format(s).
+func (c *ClientWithResponses) GetSkillManifestV1WithResponse(ctx context.Context, skillID string, stageV2 string, reqEditors ...RequestEditorFn) (*GetSkillManifestV1Response, error) {
+	rsp, err := c.GetSkillManifestV1(ctx, skillID, stageV2, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetSkillManifestV1Response(rsp)
+}
+
 // SetSkillEnablementV1WithResponse performs a PUT /v1/skills/{skillId}/stages/{stage}/enablement (the `SetSkillEnablementV1` operationId) request.
 //
 // Creates/Updates the enablement for given skillId/stage and customerId (retrieved from Auth token).
@@ -3740,6 +6912,124 @@ func ParseImportSkillPackageV1Response(rsp *http.Response) (*ImportSkillPackageV
 		response.Headers202 = &headers
 	case rsp.StatusCode == 401:
 		var headers ImportSkillPackageV1Response401Headers
+		if values := rsp.Header.Values("WWW-Authenticate"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "WWW-Authenticate", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.WWWAuthenticate = &value
+		}
+		response.Headers401 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseGetSkillManifestV1Response parses an HTTP response from a GetSkillManifestV1WithResponse call
+func ParseGetSkillManifestV1Response(rsp *http.Response) (*GetSkillManifestV1Response, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetSkillManifestV1Response{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest V1SkillManifestSkillManifestEnvelope
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case rsp.StatusCode == 303:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest V1BadRequestError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest V1BadRequestError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers GetSkillManifestV1Response200Headers
+		if values := rsp.Header.Values("Content-Type"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Content-Type", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ContentType = &value
+		}
+		if values := rsp.Header.Values("ETag"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "ETag", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ETag = &value
+		}
+		response.Headers200 = &headers
+	case rsp.StatusCode == 303:
+		var headers GetSkillManifestV1Response303Headers
+		if values := rsp.Header.Values("Location"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Location", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.Location = &value
+		}
+		response.Headers303 = &headers
+	case rsp.StatusCode == 401:
+		var headers GetSkillManifestV1Response401Headers
 		if values := rsp.Header.Values("WWW-Authenticate"); len(values) > 0 {
 			var value string
 			if err := runtime.BindStyledParameterWithOptions("simple", "WWW-Authenticate", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {

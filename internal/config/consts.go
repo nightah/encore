@@ -26,6 +26,12 @@ const (
 // DefaultQueueLimit is alexa.queue_limit's default, as in Kanzi.
 const DefaultQueueLimit = 100
 
+// alexa.auto_deploy_minutes' default and largest value.
+const (
+	DefaultAutoDeployMinutes = 5
+	MaxAutoDeployMinutes     = 24 * 60
+)
+
 // Admin authentication modes.
 const (
 	AuthModeLocal  = "local"

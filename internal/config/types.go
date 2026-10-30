@@ -63,6 +63,10 @@ type Alexa struct {
 	DeepSearch bool `koanf:"deep_search"`
 	// QueueLimit caps how many items a shuffle or queue plays at once (Kanzi's playlist_max_items), which keeps large libraries responsive. It can also be changed under Settings › Features.
 	QueueLimit int `koanf:"queue_limit"`
+	// AutoDeploy redeploys the skill on its own when what would be deployed changes, such as new library titles or an Encore upgrade that changes the interaction model. Only a skill that has already been deployed is redeployed. A failed automatic deploy pauses automatic deploys until a deploy started by hand succeeds. It can also be changed under Settings › Features.
+	AutoDeploy bool `koanf:"auto_deploy"`
+	// AutoDeployMinutes is how often AutoDeploy looks for changes, from 1 to 1440 and fractions such as 2.5 allowed. A change is deployed once it has stayed the same for a whole check, so it goes live within two checks. It can also be changed under Settings › Features.
+	AutoDeployMinutes float64 `koanf:"auto_deploy_minutes"`
 }
 
 // Auth configures how admins sign in to the web interface. Anything left unset here can be changed in the web interface instead; values set here are shown there as managed by config.

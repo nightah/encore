@@ -342,7 +342,7 @@ func TestDatabaseErrorsArePassedOn(t *testing.T) {
 		"update":       func() error { _, err := h.api.updateInstance(ctx, 1, InstanceInput{}); return err },
 		"delete":       func() error { return h.api.deleteInstance(ctx, 1) },
 		"test":         func() error { _, err := h.api.testInstance(ctx, 1); return err },
-		"start deploy": func() error { _, err := s.startDeploy(ctx, false); return err },
+		"start deploy": func() error { _, err := s.startDeploy(ctx, false, false); return err },
 		"export":       func() error { _, err := s.exportPackage(ctx); return err },
 		"credentials":  func() error { return s.saveCredentials(ctx, "client", "secret") },
 		"settings":     func() error { return s.saveSettings(ctx, SkillSettingsInput{LocalesEnabled: []string{"en-AU"}}) },

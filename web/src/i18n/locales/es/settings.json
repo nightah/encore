@@ -175,6 +175,19 @@
     "title": "Importar y exportar"
   },
   "features": {
+    "auto_deploy": {
+      "hint": "Vuelve a desplegar la skill cuando la cambian títulos nuevos de la biblioteca, la configuración o una actualización de Encore. Un despliegue fallido lo pausa hasta que despliegues a mano.",
+      "title": "Desplegar los cambios de la skill automáticamente"
+    },
+    "auto_deploy_minutes": {
+      "hint_hours_one": "Un cambio se publica en dos comprobaciones como mucho (aprox. {{count, number}} hora).",
+      "hint_hours_other": "Un cambio se publica en dos comprobaciones como mucho (aprox. {{count, number}} horas).",
+      "hint_minutes_one": "Un cambio se publica en dos comprobaciones como mucho (aprox. {{count, number}} minuto).",
+      "hint_minutes_other": "Un cambio se publica en dos comprobaciones como mucho (aprox. {{count, number}} minutos).",
+      "hintInvalid": "De 1 a {{max}} minutos.",
+      "title": "Buscar cambios cada",
+      "unit": "min"
+    },
     "confirm_sound": {
       "hint": "Alexa reproduce un sonido corto tras órdenes como pausa o subir volumen, en vez de quedarse en silencio",
       "title": "Confirmar órdenes con un sonido"

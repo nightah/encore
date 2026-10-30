@@ -34,7 +34,7 @@ func Defaults() Config {
 		Server:  Server{Address: ":8080", BasePath: "/", TrustedProxies: []string{"127.0.0.1/32", "::1/128"}},
 		Log:     Log{Level: "info", Format: "auto"},
 		DataDir: DefaultDataDir(),
-		Alexa:   Alexa{QueueLimit: DefaultQueueLimit, DeepSearch: true, ConfirmSound: true, Content: []string{ContentMovies, ContentTV, ContentMusic}},
+		Alexa:   Alexa{QueueLimit: DefaultQueueLimit, DeepSearch: true, ConfirmSound: true, AutoDeploy: true, AutoDeployMinutes: DefaultAutoDeployMinutes, Content: []string{ContentMovies, ContentTV, ContentMusic}},
 		Storage: Storage{
 			Backend: BackendLocal,
 			S3:      StorageS3{Addressing: AddressingAuto},
@@ -165,6 +165,10 @@ func (c *Config) Validate() error {
 		errs = append(errs, fmt.Errorf("alexa.queue_limit %d must be at least 1", c.Alexa.QueueLimit))
 	}
 
+	if c.Alexa.AutoDeployMinutes < 1 || c.Alexa.AutoDeployMinutes > MaxAutoDeployMinutes {
+		errs = append(errs, fmt.Errorf("alexa.auto_deploy_minutes %g must be from 1 to %d", c.Alexa.AutoDeployMinutes, MaxAutoDeployMinutes))
+	}
+
 	errs = append(errs, c.Auth.validate(c.Server.TrustedProxies)...)
 
 	for _, l := range c.Alexa.Locales {
@@ -273,20 +277,22 @@ func defaultsMap() map[string]any {
 	d := Defaults()
 
 	return map[string]any{
-		"server.address":         d.Server.Address,
-		"server.base_path":       d.Server.BasePath,
-		"server.trusted_proxies": d.Server.TrustedProxies,
-		"alexa.locales":          []string{},
-		"alexa.content":          d.Alexa.Content,
-		"log.level":              d.Log.Level,
-		"log.format":             d.Log.Format,
-		"stateless":              d.Stateless,
-		"data_dir":               d.DataDir,
-		"alexa.skill_id":         d.Alexa.SkillID,
-		"alexa.shutdown_quits":   d.Alexa.ShutdownQuits,
-		"alexa.confirm_sound":    d.Alexa.ConfirmSound,
-		"alexa.deep_search":      d.Alexa.DeepSearch,
-		"alexa.queue_limit":      d.Alexa.QueueLimit,
+		"server.address":            d.Server.Address,
+		"server.base_path":          d.Server.BasePath,
+		"server.trusted_proxies":    d.Server.TrustedProxies,
+		"alexa.locales":             []string{},
+		"alexa.content":             d.Alexa.Content,
+		"log.level":                 d.Log.Level,
+		"log.format":                d.Log.Format,
+		"stateless":                 d.Stateless,
+		"data_dir":                  d.DataDir,
+		"alexa.skill_id":            d.Alexa.SkillID,
+		"alexa.shutdown_quits":      d.Alexa.ShutdownQuits,
+		"alexa.confirm_sound":       d.Alexa.ConfirmSound,
+		"alexa.deep_search":         d.Alexa.DeepSearch,
+		"alexa.queue_limit":         d.Alexa.QueueLimit,
+		"alexa.auto_deploy":         d.Alexa.AutoDeploy,
+		"alexa.auto_deploy_minutes": d.Alexa.AutoDeployMinutes,
 
 		"storage.backend":                     d.Storage.Backend,
 		"storage.local.path":                  d.Storage.Local.Path,

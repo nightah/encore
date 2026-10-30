@@ -25,6 +25,12 @@ func (c *changes) num(key string, v *int) {
 	}
 }
 
+func (c *changes) decimal(key string, v *float64) {
+	if v != nil {
+		*c = append(*c, Change{Key: key, Value: *v})
+	}
+}
+
 func (c *changes) flag(key string, v *bool) {
 	if v != nil {
 		*c = append(*c, Change{Key: key, Value: *v})
@@ -92,6 +98,8 @@ func (p SettingsPatch) changes() []Change {
 		c.flag("alexa.shutdown_quits", f.ShutdownQuits)
 		c.flag("alexa.confirm_sound", f.ConfirmSound)
 		c.num("alexa.queue_limit", f.QueueLimit)
+		c.flag("alexa.auto_deploy", f.AutoDeploy)
+		c.decimal("alexa.auto_deploy_minutes", f.AutoDeployMinutes)
 	}
 
 	if l := p.Logging; l != nil {

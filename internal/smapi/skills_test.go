@@ -279,6 +279,36 @@ func TestEnableDevelopment(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, smapi.StatusCode(err))
 }
 
+func TestSkillEndpoint(t *testing.T) {
+	c := stubClient(t, func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "/v1/skills/amzn1.ask.skill.1/stages/development/manifest", r.URL.Path)
+		_, _ = w.Write([]byte(`{"manifest":{"apis":{"custom":{"endpoint":{"uri":"https://encore.example.net/api/v1/alexa","sslCertificateType":"Wildcard"}}}}}`))
+	})
+
+	uri, err := c.SkillEndpoint(t.Context(), "amzn1.ask.skill.1")
+	require.NoError(t, err)
+	assert.Equal(t, "https://encore.example.net/api/v1/alexa", uri)
+
+	fake := smapitest.New(t, smapitest.Options{})
+	fc := newClient(t, fake)
+
+	id, err := fc.ImportNew(t.Context(), smapitest.DefaultVendorID, upload(t, fc, packageZip(t, "encore", "en-AU")))
+	require.NoError(t, err)
+
+	imp, err := fc.ImportStatus(t.Context(), id)
+	require.NoError(t, err)
+
+	uri, err = fc.SkillEndpoint(t.Context(), imp.Skill.ID)
+	require.NoError(t, err)
+	assert.Empty(t, uri, "a manifest without an endpoint")
+
+	_, err = fc.SkillEndpoint(t.Context(), "amzn1.ask.skill.missing")
+	assert.Equal(t, http.StatusNotFound, smapi.StatusCode(err))
+
+	_, err = stubClient(t, func(w http.ResponseWriter, _ *http.Request) { _, _ = w.Write([]byte(`[]`)) }).SkillEndpoint(t.Context(), "skill")
+	require.ErrorContains(t, err, "get skill manifest: decoding response")
+}
+
 func TestCreateUploadRequiresURL(t *testing.T) {
 	c := stubClient(t, func(w http.ResponseWriter, _ *http.Request) { _, _ = w.Write([]byte(`{"expiresAt":"1793002725519"}`)) })
 

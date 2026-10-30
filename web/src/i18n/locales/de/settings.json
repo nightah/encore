@@ -175,6 +175,19 @@
     "title": "Import und Export"
   },
   "features": {
+    "auto_deploy": {
+      "hint": "Stellt den Skill erneut bereit, wenn neue Titel in der Mediathek, Einstellungen oder ein Encore-Update ihn ändern. Eine fehlgeschlagene Bereitstellung pausiert das, bis du von Hand bereitstellst.",
+      "title": "Skill-Änderungen automatisch bereitstellen"
+    },
+    "auto_deploy_minutes": {
+      "hint_hours_one": "Eine Änderung ist nach höchstens zwei Prüfungen live (etwa {{count, number}} Stunde).",
+      "hint_hours_other": "Eine Änderung ist nach höchstens zwei Prüfungen live (etwa {{count, number}} Stunden).",
+      "hint_minutes_one": "Eine Änderung ist nach höchstens zwei Prüfungen live (etwa {{count, number}} Minute).",
+      "hint_minutes_other": "Eine Änderung ist nach höchstens zwei Prüfungen live (etwa {{count, number}} Minuten).",
+      "hintInvalid": "Von 1 bis {{max}} Minuten.",
+      "title": "Nach Änderungen suchen alle",
+      "unit": "Min."
+    },
     "confirm_sound": {
       "hint": "Alexa spielt nach Befehlen wie Pause oder Lauter einen kurzen Ton ab, statt still zu bleiben",
       "title": "Befehle mit einem Ton bestätigen"

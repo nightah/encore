@@ -182,6 +182,8 @@ type deployRecord struct {
 	Locales  []LocaleDeploy `json:"locales"`
 	Warnings []string       `json:"warnings"`
 	Error    string         `json:"error"`
+	// Automatic is set when alexa.auto_deploy started the deploy.
+	Automatic bool `json:"automatic"`
 }
 
 // Device is an Echo device that has talked to the skill.
@@ -463,7 +465,7 @@ type RequestsToday struct {
 
 // Attention is something the user should look at.
 type Attention struct {
-	Kind   string `json:"kind" doc:"unlinked_device, amazon_not_connected, amazon_reauthorise, privacy_unanswered, skill_not_deployed, needs_deploy, deploy_failed, instance_offline, kodi_unauthorized, no_instances"`
+	Kind   string `json:"kind" doc:"unlinked_device, amazon_not_connected, amazon_reauthorise, privacy_unanswered, skill_not_deployed, needs_deploy, deploy_failed, auto_deploy_paused, instance_offline, kodi_unauthorized, no_instances"`
 	Title  string `json:"title"`
 	Detail string `json:"detail"`
 	Link   string `json:"link" doc:"A web interface route: /echo-devices, /kodi, /alexa-skill, /request-log, /library or /settings"`
@@ -662,7 +664,7 @@ type Settings struct {
 	Auth     AuthSettings    `json:"auth"`
 	Storage  StorageSettings `json:"storage"`
 	Secrets  SecretsInfo     `json:"secrets"`
-	Features Features        `json:"features" doc:"The alexa.deep_search, alexa.shutdown_quits, alexa.confirm_sound and alexa.queue_limit config keys"`
+	Features Features        `json:"features" doc:"The alexa.deep_search, alexa.shutdown_quits, alexa.confirm_sound, alexa.queue_limit, alexa.auto_deploy and alexa.auto_deploy_minutes config keys"`
 	Logging  LoggingSettings `json:"logging"`
 	Locale   LocaleSettings  `json:"locale"`
 	Managed  []string        `json:"managed" doc:"Dotted keys set by encore.yml or ENCORE_* variables; shown read-only"`
@@ -761,12 +763,14 @@ type SecretsInfo struct {
 	RotatedAt *time.Time `json:"rotated_at"`
 }
 
-// Features are optional behaviours. They are the config keys alexa.deep_search, alexa.shutdown_quits, alexa.confirm_sound and alexa.queue_limit.
+// Features are optional behaviours. They are the config keys alexa.deep_search, alexa.shutdown_quits, alexa.confirm_sound, alexa.queue_limit, alexa.auto_deploy and alexa.auto_deploy_minutes.
 type Features struct {
-	DeepSearch    bool `json:"deep_search" doc:"\"Play X\" also searches music when the request doesn't say what kind of title X is"`
-	ShutdownQuits bool `json:"shutdown_quits" doc:"\"Shut down\" quits Kodi instead of powering off the device; a Kodi instance's own kodi[].shutdown_quits wins"`
-	ConfirmSound  bool `json:"confirm_sound" doc:"A short sound answers commands that have nothing to say, such as pause or volume up"`
-	QueueLimit    int  `json:"queue_limit" doc:"The most items a shuffle or queue plays at once"`
+	DeepSearch        bool    `json:"deep_search" doc:"\"Play X\" also searches music when the request doesn't say what kind of title X is"`
+	ShutdownQuits     bool    `json:"shutdown_quits" doc:"\"Shut down\" quits Kodi instead of powering off the device; a Kodi instance's own kodi[].shutdown_quits wins"`
+	ConfirmSound      bool    `json:"confirm_sound" doc:"A short sound answers commands that have nothing to say, such as pause or volume up"`
+	QueueLimit        int     `json:"queue_limit" doc:"The most items a shuffle or queue plays at once"`
+	AutoDeploy        bool    `json:"auto_deploy" doc:"Redeploy the skill on its own when what would be deployed changes; a failed automatic deploy pauses this until a deploy started by hand succeeds"`
+	AutoDeployMinutes float64 `json:"auto_deploy_minutes" doc:"How often auto_deploy looks for changes, in minutes that can be fractional; a change goes live within two checks"`
 }
 
 // LoggingSettings are the config key log.level.
@@ -893,11 +897,13 @@ type BackupSettingsPatch struct {
 
 // FeaturesPatch toggles optional behaviours.
 type FeaturesPatch struct {
-	_             struct{} `additionalProperties:"true"`
-	DeepSearch    *bool    `json:"deep_search,omitempty"`
-	ShutdownQuits *bool    `json:"shutdown_quits,omitempty"`
-	ConfirmSound  *bool    `json:"confirm_sound,omitempty"`
-	QueueLimit    *int     `json:"queue_limit,omitempty" minimum:"1" maximum:"1000"`
+	_                 struct{} `additionalProperties:"true"`
+	DeepSearch        *bool    `json:"deep_search,omitempty"`
+	ShutdownQuits     *bool    `json:"shutdown_quits,omitempty"`
+	ConfirmSound      *bool    `json:"confirm_sound,omitempty"`
+	QueueLimit        *int     `json:"queue_limit,omitempty" minimum:"1" maximum:"1000"`
+	AutoDeploy        *bool    `json:"auto_deploy,omitempty"`
+	AutoDeployMinutes *float64 `json:"auto_deploy_minutes,omitempty" minimum:"1" maximum:"1440"`
 }
 
 // LoggingPatch changes the log level.
@@ -962,6 +968,8 @@ type skillService struct {
 	running string
 
 	skillID atomic.Pointer[string]
+	// autoSeen is the package hash the previous automatic deploy check found waiting to be deployed. Only the auto deploy loop uses it.
+	autoSeen string
 	// simulatingUntil is when the deploy smoke test's window closes, as Unix nanoseconds; requests arriving before then came from Amazon's simulator.
 	simulatingUntil atomic.Int64
 }
@@ -983,6 +991,8 @@ type SkillInfo struct {
 	NeedsDeploy      bool                 `json:"needs_deploy"`
 	UpdateReason     string               `json:"update_reason" enum:"none,settings,library" doc:"Why needs_deploy is set: the skill's settings changed, or only the library titles in the model"`
 	ModelSize        Nullable[ModelSize]  `json:"model_size"`
+	AutoDeploy       bool                 `json:"auto_deploy" doc:"Whether alexa.auto_deploy redeploys the skill on its own when needs_deploy is set"`
+	AutoDeployPaused string               `json:"auto_deploy_paused" doc:"Why automatic deploys are paused until a deploy started by hand succeeds; empty when they aren't paused or alexa.auto_deploy is off"`
 }
 
 // AmazonConnection is the state of the Login with Amazon connection.
@@ -1001,13 +1011,14 @@ type SkillEndpointInfo struct {
 
 // LastDeploy summarises the most recent deploy.
 type LastDeploy struct {
-	ID       string         `json:"id"`
-	At       time.Time      `json:"at"`
-	State    string         `json:"state" enum:"succeeded,failed,in_progress"`
-	Hash     string         `json:"hash"`
-	Locales  []LocaleDeploy `json:"locales"`
-	Warnings []string       `json:"warnings"`
-	Error    string         `json:"error"`
+	ID        string         `json:"id"`
+	At        time.Time      `json:"at"`
+	State     string         `json:"state" enum:"succeeded,failed,in_progress"`
+	Hash      string         `json:"hash"`
+	Locales   []LocaleDeploy `json:"locales"`
+	Warnings  []string       `json:"warnings"`
+	Error     string         `json:"error"`
+	Automatic bool           `json:"automatic" doc:"Started by alexa.auto_deploy rather than by hand"`
 }
 
 // LocaleDeploy is one locale's deploy result.

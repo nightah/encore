@@ -15,6 +15,10 @@
     "title": "Amazon developer account",
     "vendor": "Vendor"
   },
+  "autoDeployPaused": {
+    "resume": "Deploy the skill by hand once it's fixed to resume them.",
+    "title": "Automatic deploys are paused"
+  },
   "content": {
     "movies": "Movies",
     "music": "Music",
@@ -46,6 +50,7 @@
       "legend": "Locales"
     },
     "needsDeploy": {
+      "automatic": "Changes since the last deploy. Encore deploys them automatically once they settle.",
       "library": "New library titles since the last deploy. Encore already finds them; redeploy to add them to the skill model.",
       "settings": "Settings changed since the last deploy. Redeploy to apply them."
     },

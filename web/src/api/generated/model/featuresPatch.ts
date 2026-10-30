@@ -7,6 +7,12 @@
  */
 
 export interface FeaturesPatch {
+  auto_deploy?: boolean;
+  /**
+   * @minimum 1
+   * @maximum 1440
+   */
+  auto_deploy_minutes?: number;
   confirm_sound?: boolean;
   deep_search?: boolean;
   /**

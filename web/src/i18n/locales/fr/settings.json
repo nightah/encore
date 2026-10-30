@@ -175,6 +175,19 @@
     "title": "Import et export"
   },
   "features": {
+    "auto_deploy": {
+      "hint": "Redéploie la skill quand de nouveaux titres de la médiathèque, les paramètres ou une mise à jour d’Encore la modifient. Un déploiement en échec met cela en pause jusqu’à ce que vous déployiez à la main.",
+      "title": "Déployer automatiquement les modifications de la skill"
+    },
+    "auto_deploy_minutes": {
+      "hint_hours_one": "Un changement est en ligne en deux vérifications au plus (environ {{count, number}} heure).",
+      "hint_hours_other": "Un changement est en ligne en deux vérifications au plus (environ {{count, number}} heures).",
+      "hint_minutes_one": "Un changement est en ligne en deux vérifications au plus (environ {{count, number}} minute).",
+      "hint_minutes_other": "Un changement est en ligne en deux vérifications au plus (environ {{count, number}} minutes).",
+      "hintInvalid": "De 1 à {{max}} minutes.",
+      "title": "Rechercher des changements toutes les",
+      "unit": "min"
+    },
     "confirm_sound": {
       "hint": "Alexa émet un son bref après des commandes comme pause ou monter le volume, au lieu de rester silencieuse",
       "title": "Confirmer les commandes par un son"

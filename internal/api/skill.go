@@ -177,7 +177,7 @@ func (s *skillService) locales(ctx context.Context) ([]string, error) {
 	return s.a.opts.Sources.LocaleNames(), nil
 }
 
-// endpointURL is the configured endpoint, or one derived from how the browser reached Encore.
+// endpointURL is the configured endpoint, or one derived from how the browser reached Encore. Without a browser request, as in an automatic deploy, it is the endpoint the skill was last deployed with.
 func (s *skillService) endpointURL(ctx context.Context, ss skillSettings) string {
 	if ss.Endpoint.URL != "" {
 		return ss.Endpoint.URL
@@ -187,7 +187,16 @@ func (s *skillService) endpointURL(ctx context.Context, ss skillSettings) string
 		return s.a.auth.ExternalBase(r) + alexaPath
 	}
 
-	return ""
+	ep, _ := store.Setting(ctx, s.a.app.DB().Settings(), deployEndpointKey, "")
+
+	return ep
+}
+
+// rememberEndpoint records the endpoint the skill is deployed with.
+func (s *skillService) rememberEndpoint(ctx context.Context, uri string) {
+	if err := s.a.app.DB().Settings().Set(ctx, deployEndpointKey, uri); err != nil {
+		s.a.log.Error("saving the skill endpoint", "error", err)
+	}
 }
 
 // packageOptions builds the package options from the saved settings. With placeholderPrivacy, unanswered privacy questions are filled in so the model can be sized before the user has answered them; such a package is never deployed.
@@ -365,6 +374,11 @@ func (s *skillService) info(ctx context.Context) (SkillInfo, error) {
 	}
 
 	out.NeedsDeploy, out.UpdateReason = s.updatePending(ctx, state)
+
+	if eff, err := s.a.prefs.Effective(ctx); err == nil && eff.Alexa.AutoDeploy {
+		out.AutoDeploy = true
+		out.AutoDeployPaused = s.autoDeployPaused(ctx)
+	}
 
 	return out, nil
 }

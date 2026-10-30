@@ -368,3 +368,19 @@ func (s *Server) handleGetEnablement(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+// handleGetManifest returns the skill.json of the skill's last import, as the live API returns the stage's manifest.
+func (s *Server) handleGetManifest(w http.ResponseWriter, r *http.Request) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	sk, ok := s.skills[r.PathValue("skillId")]
+	if !ok || sk.Manifest == nil {
+		writeError(w, http.StatusNotFound, "skill not found")
+
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_, _ = w.Write(sk.Manifest)
+}

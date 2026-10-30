@@ -70,7 +70,7 @@
             "type": "string"
           },
           "kind": {
-            "description": "unlinked_device, amazon_not_connected, amazon_reauthorise, privacy_unanswered, skill_not_deployed, needs_deploy, deploy_failed, instance_offline, kodi_unauthorized, no_instances",
+            "description": "unlinked_device, amazon_not_connected, amazon_reauthorise, privacy_unanswered, skill_not_deployed, needs_deploy, deploy_failed, auto_deploy_paused, instance_offline, kodi_unauthorized, no_instances",
             "type": "string"
           },
           "link": {
@@ -830,6 +830,15 @@
       "Features": {
         "additionalProperties": false,
         "properties": {
+          "auto_deploy": {
+            "description": "Redeploy the skill on its own when what would be deployed changes; a failed automatic deploy pauses this until a deploy started by hand succeeds",
+            "type": "boolean"
+          },
+          "auto_deploy_minutes": {
+            "description": "How often auto_deploy looks for changes, in minutes that can be fractional; a change goes live within two checks",
+            "format": "double",
+            "type": "number"
+          },
           "confirm_sound": {
             "description": "A short sound answers commands that have nothing to say, such as pause or volume up",
             "type": "boolean"
@@ -852,13 +861,24 @@
           "deep_search",
           "shutdown_quits",
           "confirm_sound",
-          "queue_limit"
+          "queue_limit",
+          "auto_deploy",
+          "auto_deploy_minutes"
         ],
         "type": "object"
       },
       "FeaturesPatch": {
         "additionalProperties": true,
         "properties": {
+          "auto_deploy": {
+            "type": "boolean"
+          },
+          "auto_deploy_minutes": {
+            "format": "double",
+            "maximum": 1440,
+            "minimum": 1,
+            "type": "number"
+          },
           "confirm_sound": {
             "type": "boolean"
           },
@@ -1233,6 +1253,10 @@
             "format": "date-time",
             "type": "string"
           },
+          "automatic": {
+            "description": "Started by alexa.auto_deploy rather than by hand",
+            "type": "boolean"
+          },
           "error": {
             "type": "string"
           },
@@ -1270,7 +1294,8 @@
           "hash",
           "locales",
           "warnings",
-          "error"
+          "error",
+          "automatic"
         ],
         "type": "object"
       },
@@ -2645,7 +2670,7 @@
           },
           "features": {
             "$ref": "#/components/schemas/Features",
-            "description": "The alexa.deep_search, alexa.shutdown_quits, alexa.confirm_sound and alexa.queue_limit config keys"
+            "description": "The alexa.deep_search, alexa.shutdown_quits, alexa.confirm_sound, alexa.queue_limit, alexa.auto_deploy and alexa.auto_deploy_minutes config keys"
           },
           "locale": {
             "$ref": "#/components/schemas/LocaleSettings"
@@ -2736,6 +2761,14 @@
         "properties": {
           "amazon": {
             "$ref": "#/components/schemas/AmazonConnection"
+          },
+          "auto_deploy": {
+            "description": "Whether alexa.auto_deploy redeploys the skill on its own when needs_deploy is set",
+            "type": "boolean"
+          },
+          "auto_deploy_paused": {
+            "description": "Why automatic deploys are paused until a deploy started by hand succeeds; empty when they aren't paused or alexa.auto_deploy is off",
+            "type": "string"
           },
           "content": {
             "description": "What the skill can play; music includes music videos",
@@ -2844,7 +2877,9 @@
           "last_deploy",
           "needs_deploy",
           "update_reason",
-          "model_size"
+          "model_size",
+          "auto_deploy",
+          "auto_deploy_paused"
         ],
         "type": "object"
       },

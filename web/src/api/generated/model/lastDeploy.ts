@@ -10,6 +10,8 @@ import type { LocaleDeploy } from "./localeDeploy.ts";
 
 export interface LastDeploy {
   at: string;
+  /** Started by alexa.auto_deploy rather than by hand */
+  automatic: boolean;
   error: string;
   hash: string;
   id: string;

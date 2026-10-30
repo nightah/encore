@@ -175,17 +175,20 @@ func (a *API) attention(ctx context.Context) ([]Attention, error) {
 		out = append(out, Attention{Kind: "privacy_unanswered", Title: "Answer the privacy questions", Detail: "Amazon requires your own answers before the skill can be deployed.", Link: "/alexa-skill"})
 	}
 
-	switch info.State {
-	case "failed":
+	switch {
+	case info.AutoDeployPaused != "":
+		// The pause names the failure, so it stands in for deploy_failed when an automatic deploy failed.
+		out = append(out, Attention{Kind: "auto_deploy_paused", Title: "Automatic deploys are paused", Detail: strings.TrimSuffix(info.AutoDeployPaused, ".") + ". Deploy the skill by hand once it's fixed to resume them.", Link: "/alexa-skill"})
+	case info.State == "failed":
 		detail := ""
 		if l := info.LastDeploy.V; l != nil {
 			detail = l.Error
 		}
 
 		out = append(out, Attention{Kind: "deploy_failed", Title: "The last deploy failed", Detail: detail, Link: "/alexa-skill"})
-	case "not_deployed":
+	case info.State == "not_deployed":
 		out = append(out, Attention{Kind: "skill_not_deployed", Title: "Deploy the skill", Detail: "The Alexa skill has not been deployed yet.", Link: "/alexa-skill"})
-	case "live":
+	case info.State == "live":
 		if info.NeedsDeploy && info.UpdateReason == "library" {
 			out = append(out, Attention{Kind: "needs_deploy", Title: "New library titles for the skill", Detail: "Encore already finds them. Redeploy to add them to the skill model, which helps Alexa recognise unusual names.", Link: "/alexa-skill"})
 		} else if info.NeedsDeploy {

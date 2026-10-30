@@ -15,6 +15,10 @@
     "title": "Compte développeur Amazon",
     "vendor": "ID fournisseur"
   },
+  "autoDeployPaused": {
+    "resume": "Déployez la skill à la main une fois le problème réglé pour les reprendre.",
+    "title": "Les déploiements automatiques sont en pause"
+  },
   "content": {
     "movies": "Films",
     "music": "Musique",
@@ -46,6 +50,7 @@
       "legend": "Langues"
     },
     "needsDeploy": {
+      "automatic": "Des modifications ont eu lieu depuis le dernier déploiement. Encore les déploie automatiquement une fois stabilisées.",
       "library": "De nouveaux titres sont arrivés dans la médiathèque depuis le dernier déploiement. Encore les trouve déjà ; redéployez pour les ajouter au modèle de la skill.",
       "settings": "Les paramètres ont changé depuis le dernier déploiement. Redéployez pour les appliquer."
     },

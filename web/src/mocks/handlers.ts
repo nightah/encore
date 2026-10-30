@@ -300,6 +300,7 @@ function runDeploy(id: string, stepMs: number) {
           ...db.skill,
           last_deploy: {
             at: now,
+            automatic: false,
             error: "",
             hash: Math.random().toString(16).slice(2, 10),
             id,

@@ -208,7 +208,11 @@ export function LocalesPanel({ skill, deploying }: { skill: Skill; deploying: bo
           {save.error ? <span className="text-bad">{errorMessage(save.error)}</span> : null}
           {!note && !save.error && skill.needs_deploy ? (
             <span className="text-warn">
-              {skill.update_reason === "library" ? t("locales.needsDeploy.library") : t("locales.needsDeploy.settings")}
+              {skill.auto_deploy && !skill.auto_deploy_paused
+                ? t("locales.needsDeploy.automatic")
+                : skill.update_reason === "library"
+                  ? t("locales.needsDeploy.library")
+                  : t("locales.needsDeploy.settings")}
             </span>
           ) : null}
         </div>
@@ -338,6 +342,19 @@ export function AmazonCard({ skill }: { skill: Skill }) {
         }
       />
     </Section>
+  );
+}
+
+/** Shown while alexa.auto_deploy is on but paused by a failure, until a deploy started by hand succeeds. */
+export function AutoDeployPausedCard({ skill }: { skill: Skill }) {
+  const { t } = useTranslation("skill");
+  if (!skill.auto_deploy_paused) return null;
+  return (
+    <Callout tone="bad" role="alert" className="flex-col gap-1">
+      <span className="font-semibold">{t("autoDeployPaused.title")}</span>
+      <span>{skill.auto_deploy_paused}</span>
+      <span>{t("autoDeployPaused.resume")}</span>
+    </Callout>
   );
 }
 
