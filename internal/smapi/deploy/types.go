@@ -150,3 +150,24 @@ type run struct {
 	// retried is set once the package was built again with fewer slot values, which happens at most once a deploy.
 	retried bool
 }
+
+// simulator says phrases to one skill's simulator.
+type simulator struct {
+	client  *smapi.Client
+	skillID string
+	debug   func(msg string, args ...any)
+}
+
+// OpenCheck is how the simulator answered one locale's launch phrases.
+type OpenCheck struct {
+	Locale string `json:"locale"`
+	// Tries are the phrases said, in the order the locale lists them, up to the first that reached the skill.
+	Tries []OpenTry `json:"tries"`
+}
+
+// OpenTry is one launch phrase and the simulator's answer. Simulation is set even when the request failed, with the failure as its Error; Refused is set when the simulator turned the request down (HTTP 400), as it does for a locale it doesn't simulate.
+type OpenTry struct {
+	Phrase     string            `json:"phrase"`
+	Simulation *smapi.Simulation `json:"simulation"`
+	Refused    bool              `json:"refused,omitempty"`
+}

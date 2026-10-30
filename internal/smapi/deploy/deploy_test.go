@@ -536,12 +536,6 @@ func TestExportPackage(t *testing.T) {
 	assert.Contains(t, names, "skill-package/skill.json")
 }
 
-func TestOpenPhrase(t *testing.T) {
-	assert.Equal(t, "open encore", deploy.OpenPhrase("en-AU", "encore"))
-	assert.Equal(t, "öffne encore", deploy.OpenPhrase("de-DE", "encore"))
-	assert.Empty(t, deploy.OpenPhrase("pt-BR", "encore"))
-}
-
 func TestStateNeedsDeploy(t *testing.T) {
 	assert.True(t, deploy.State{}.NeedsDeploy("h"))
 	assert.True(t, deploy.State{SkillID: "s", Hash: "a"}.NeedsDeploy("b"))
