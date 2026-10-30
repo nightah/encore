@@ -261,6 +261,10 @@ func TestSearchResolvedCandidates(t *testing.T) {
 
 		res, _ = search(t, Query{Text: heard, Resolved: []Resolved{{ID: "missing", Name: "千と千尋の神隠し"}}})
 		assert.Equal(t, DecisionNotFound, res.Decision)
+
+		// A name with nothing to match is no name.
+		res, _ = search(t, Query{Text: heard, Resolved: []Resolved{{ID: "spirited", Name: "!!!"}}})
+		assert.Equal(t, DecisionNotFound, res.Decision)
 	})
 }
 
