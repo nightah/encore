@@ -166,6 +166,11 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, tr *requestT
 		return h.respond(locale, actions.Outcome{Say: msg, Reprompt: &msg}, false), nil
 	case "AMAZON.CancelIntent":
 		return h.respond(locale, actions.Outcome{Say: actions.Message{ID: "match.cancelled"}, EndSession: true}, false), nil
+	case "AMAZON.YesIntent":
+		// "Yes" to "A or B?" chooses neither.
+		if pending := pendingChoices(env.Session.Attributes); len(pending) > 1 && question != nil {
+			return h.respond(locale, askAgain(env, "match.which_one", *question), false), nil
+		}
 	case "AMAZON.NoIntent":
 		if followup == nil || followup.Recommend == nil {
 			return h.respond(locale, actions.Outcome{Say: actions.Message{ID: "match.cancelled"}, EndSession: true}, false), nil

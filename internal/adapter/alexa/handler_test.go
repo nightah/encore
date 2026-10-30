@@ -235,7 +235,7 @@ func compareGolden(t *testing.T, path string, got []byte) {
 func TestQuestionAndAnswerRoundTrip(t *testing.T) {
 	h, backend, rec := newHandler(t)
 
-	ask := serveBody(t, h, mustRead(t, "testdata/golden/watch-movie-ambiguous/request.json"))
+	ask := serveBody(t, h, intentRequest(t, "WatchMovie", map[string]slotSpec{"Movie": {value: "fuzz"}}))
 
 	var resp ResponseEnvelope
 	require.NoError(t, json.Unmarshal(ask, &resp))
@@ -251,7 +251,7 @@ func TestQuestionAndAnswerRoundTrip(t *testing.T) {
 	require.NoError(t, err)
 
 	serveBody(t, h, body)
-	assert.Equal(t, []string{"Play movie/1 resume"}, backend.Calls(), "yes picks the first title offered")
+	assert.Equal(t, []string{"Play movie/4 resume"}, backend.Calls(), "yes plays the title offered")
 
 	require.Len(t, rec.entries, 2)
 	assert.Equal(t, "asked", rec.entries[0].Outcome)

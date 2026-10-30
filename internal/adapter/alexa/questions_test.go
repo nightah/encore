@@ -177,3 +177,44 @@ func TestUnrecognisedReplyWithoutQuestion(t *testing.T) {
 	assert.Equal(t, "Sorry, I didn't catch that. Try: play the movie Dune.", speechOf(resp))
 	assert.Nil(t, resp.SessionAttributes)
 }
+
+// TestYesToEitherOrAsksAgain checks "yes" to "A or B?" asks which rather than playing A, in every language.
+func TestYesToEitherOrAsksAgain(t *testing.T) {
+	tests := map[string]string{
+		"en-AU": "There's more than one. Did you mean Dune from 1984 or Dune from 2021?",
+		"de-DE": "Es gibt mehrere. Meintest du Dune von 1984 oder Dune von 2021?",
+		"es-ES": "Hay varios. ¿Te refieres a Dune de 1984 o a Dune de 2021?",
+		"fr-FR": "Il y en a plusieurs. Vouliez-vous dire Dune de 1984 ou Dune de 2021 ?",
+		"it-IT": "Ce n'è più di uno. Intendevi Dune del 1984 o Dune del 2021?",
+		"nl-NL": "Er zijn er meerdere. Bedoel je Dune uit 1984 of Dune uit 2021?",
+		"pt-BR": "Tem mais de um. Você quis dizer Dune de 1984 ou Dune de 2021?",
+		"ar-SA": "فيه أكثر من واحد. هل المقصود Dune لعام 1984 أم Dune لعام 2021؟",
+		"hi-IN": "एक से ज़्यादा हैं। क्या आपका मतलब 1984 वाली Dune था या 2021 वाली Dune?",
+		"ja-JP": "候補が複数あります。1984年のDuneと2021年のDuneのどちらですか？",
+	}
+
+	for locale, want := range tests {
+		t.Run(locale, func(t *testing.T) {
+			c := newConversation(t, locale)
+			question := c.say("WatchMovie", map[string]slotSpec{"Movie": {value: "dune"}})
+
+			resp := c.say("AMAZON.YesIntent", nil)
+
+			assert.Equal(t, want, speechOf(resp))
+			assert.Equal(t, speechOf(question), repromptOf(resp))
+			assert.Equal(t, []string{"movie/1", "movie/2"}, pendingOf(t, resp))
+			assert.Empty(t, c.backend.Calls(), "nothing plays")
+		})
+	}
+}
+
+// TestYesToOneChoicePlays checks "yes" still plays the title a yes/no question offered.
+func TestYesToOneChoicePlays(t *testing.T) {
+	c := newConversation(t, "en-AU")
+	c.say("WatchMovie", map[string]slotSpec{"Movie": {value: "fuzz"}})
+
+	resp := c.say("AMAZON.YesIntent", nil)
+
+	assert.Equal(t, "Playing Hot Fuzz.", speechOf(resp))
+	assert.Equal(t, []string{"Play movie/4 resume"}, c.backend.Calls())
+}
