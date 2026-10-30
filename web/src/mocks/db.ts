@@ -75,6 +75,7 @@ function skill(now: number, fresh: boolean): SkillInfo {
         },
     auto_deploy: !fresh,
     auto_deploy_paused: "",
+    auto_deploy_retry: null,
     content: ["movies", "tv", "music"],
     endpoint: {
       url: "https://encore.example.net/api/v1/alexa",

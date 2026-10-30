@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1
  */
 import type { AmazonConnection } from "./amazonConnection.ts";
+import type { AutoDeployRetry } from "./autoDeployRetry.ts";
 import type { LastDeploy } from "./lastDeploy.ts";
 import type { LocaleInvocation } from "./localeInvocation.ts";
 import type { ModelSize } from "./modelSize.ts";
@@ -22,6 +23,8 @@ export interface SkillInfo {
   auto_deploy: boolean;
   /** Why automatic deploys are paused until a deploy started by hand succeeds; empty when they aren't paused or alexa.auto_deploy is off */
   auto_deploy_paused: string;
+  /** An automatic deploy that failed for a reason that may pass, such as Amazon being unavailable or still building, which is tried again before automatic deploys pause; null when there is none or alexa.auto_deploy is off */
+  auto_deploy_retry: AutoDeployRetry | null;
   /** What the skill can play; music includes music videos */
   content: SkillInfoContentItem[];
   endpoint: SkillEndpointInfo;

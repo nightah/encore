@@ -510,3 +510,196 @@ func TestEvery(t *testing.T) {
 		<-done
 	})
 }
+
+// failNextDeploy makes the next deploy's first SMAPI call fail with status, after the client's own retries for a status it retries.
+func (ah *autoDeployHarness) failNextDeploy(status int) {
+	n := 6
+	if status == http.StatusConflict {
+		n = 1
+	}
+
+	ah.smapi.Inject(status, n)
+}
+
+func (ah *autoDeployHarness) advance(d time.Duration) {
+	ah.skew.Add(int64(d))
+}
+
+func TestAutoDeployRetriesTransientFailures(t *testing.T) {
+	ah := newAutoDeployHarness(t)
+
+	first := ah.deployByHand(t)
+	require.Equal(t, "succeeded", first.State, first.Error)
+
+	ah.setAutoDeploy(t, true)
+	ah.addTitle("movie/2", "Arrival")
+	ah.failNextDeploy(http.StatusServiceUnavailable)
+	ah.check(t)
+	ah.check(t)
+
+	info := ah.skill(t)
+	require.NotNil(t, info.LastDeploy.V)
+	failed := info.LastDeploy.V
+	assert.NotEqual(t, first.ID, failed.ID)
+	assert.Equal(t, "failed", failed.State)
+	assert.Empty(t, info.AutoDeployPaused, "Amazon being unavailable may pass")
+	require.NotNil(t, info.AutoDeployRetry.V)
+	assert.Equal(t, 1, info.AutoDeployRetry.V.Attempts)
+	assert.Equal(t, 4, info.AutoDeployRetry.V.MaxAttempts)
+	assert.Contains(t, info.AutoDeployRetry.V.Error, "503")
+	assert.WithinDuration(t, time.Now().Add(5*time.Minute), info.AutoDeployRetry.V.NextAt, time.Minute)
+
+	att, err := ah.api.attention(t.Context())
+	require.NoError(t, err)
+	assert.NotContains(t, kinds(att), "deploy_failed", "Encore is handling it")
+	assert.NotContains(t, kinds(att), "auto_deploy_paused")
+
+	ah.check(t)
+	assert.Equal(t, failed.ID, ah.skill(t).LastDeploy.V.ID, "the retry waits")
+
+	// Each retry waits twice as long as the one before, and runs at the first check after its wait without waiting for the package to settle again.
+	for attempt, wait := range []time.Duration{5 * time.Minute, 10 * time.Minute, 20 * time.Minute} {
+		ah.advance(wait - time.Minute)
+		ah.check(t)
+		require.Equal(t, failed.ID, ah.skill(t).LastDeploy.V.ID, "attempt %d is not due yet", attempt+2)
+
+		ah.advance(2 * time.Minute)
+		ah.failNextDeploy(http.StatusServiceUnavailable)
+		ah.check(t)
+
+		info = ah.skill(t)
+		require.NotEqual(t, failed.ID, info.LastDeploy.V.ID, "attempt %d runs", attempt+2)
+		failed = info.LastDeploy.V
+		assert.Equal(t, "failed", failed.State)
+		assert.True(t, failed.Automatic)
+
+		if attempt < 2 {
+			require.NotNil(t, info.AutoDeployRetry.V)
+			assert.Equal(t, attempt+2, info.AutoDeployRetry.V.Attempts)
+			assert.Empty(t, info.AutoDeployPaused)
+		}
+	}
+
+	info = ah.skill(t)
+	assert.Nil(t, info.AutoDeployRetry.V, "the fourth failure in a row gives up")
+	assert.Contains(t, info.AutoDeployPaused, "503")
+
+	att, err = ah.api.attention(t.Context())
+	require.NoError(t, err)
+	assert.Contains(t, kinds(att), "auto_deploy_paused")
+
+	// A deploy by hand that succeeds resumes them.
+	fixed := ah.deployByHand(t)
+	require.Equal(t, "succeeded", fixed.State, fixed.Error)
+
+	info = ah.skill(t)
+	assert.Empty(t, info.AutoDeployPaused)
+	assert.Nil(t, info.AutoDeployRetry.V)
+}
+
+func TestAutoDeployRetrySucceeds(t *testing.T) {
+	ah := newAutoDeployHarness(t)
+
+	first := ah.deployByHand(t)
+	require.Equal(t, "succeeded", first.State, first.Error)
+
+	ah.setAutoDeploy(t, true)
+	ah.addTitle("movie/2", "Arrival")
+	ah.failNextDeploy(http.StatusConflict)
+	ah.check(t)
+	ah.check(t)
+
+	info := ah.skill(t)
+	require.NotNil(t, info.AutoDeployRetry.V, "a build still running is worth waiting for")
+	assert.Equal(t, "failed", info.LastDeploy.V.State)
+
+	ah.advance(6 * time.Minute)
+	ah.check(t)
+
+	info = ah.skill(t)
+	assert.Equal(t, "succeeded", info.LastDeploy.V.State, info.LastDeploy.V.Error)
+	assert.True(t, info.LastDeploy.V.Automatic)
+	assert.Nil(t, info.AutoDeployRetry.V)
+	assert.Empty(t, info.AutoDeployPaused)
+	assert.False(t, info.NeedsDeploy)
+
+	// The next failure starts counting afresh.
+	ah.addTitle("movie/3", "Contact")
+	ah.failNextDeploy(http.StatusBadGateway)
+	ah.check(t)
+	ah.check(t)
+
+	info = ah.skill(t)
+	require.NotNil(t, info.AutoDeployRetry.V)
+	assert.Equal(t, 1, info.AutoDeployRetry.V.Attempts)
+}
+
+func TestAutoDeployRetryOnlyWhileAutoDeployIsOn(t *testing.T) {
+	ah := newAutoDeployHarness(t)
+
+	first := ah.deployByHand(t)
+	require.Equal(t, "succeeded", first.State, first.Error)
+
+	ah.setAutoDeploy(t, true)
+	ah.addTitle("movie/2", "Arrival")
+	ah.failNextDeploy(http.StatusServiceUnavailable)
+	ah.check(t)
+	ah.check(t)
+	require.NotNil(t, ah.skill(t).AutoDeployRetry.V)
+
+	ah.setAutoDeploy(t, false)
+	assert.Nil(t, ah.skill(t).AutoDeployRetry.V, "nothing is retried while alexa.auto_deploy is off")
+
+	ah.advance(6 * time.Minute)
+	ah.check(t)
+	failed := ah.skill(t).LastDeploy.V
+	assert.Equal(t, "failed", failed.State)
+	assert.Nil(t, ah.api.skill.autoDeployRetry(t.Context()), "turning automatic deploys off forgets the failure")
+
+	// Turned on again, a later change waits to settle like any other, and a failure starts counting afresh.
+	ah.setAutoDeploy(t, true)
+	ah.addTitle("movie/3", "Contact")
+	ah.check(t)
+	assert.Equal(t, failed.ID, ah.skill(t).LastDeploy.V.ID, "the change waits a check to settle")
+
+	ah.failNextDeploy(http.StatusServiceUnavailable)
+	ah.check(t)
+
+	info := ah.skill(t)
+	require.NotEqual(t, failed.ID, info.LastDeploy.V.ID)
+	require.NotNil(t, info.AutoDeployRetry.V)
+	assert.Equal(t, 1, info.AutoDeployRetry.V.Attempts)
+}
+
+func TestAutoDeployPausesAtOnceWhenAmazonRevokedAccess(t *testing.T) {
+	ah := newAutoDeployHarness(t)
+
+	first := ah.deployByHand(t)
+	require.Equal(t, "succeeded", first.State, first.Error)
+
+	ah.setAutoDeploy(t, true)
+	ah.addTitle("movie/2", "Arrival")
+	ah.smapi.RevokeRefreshToken()
+	ah.smapi.ExpireAccessTokens()
+	ah.check(t)
+	ah.check(t)
+
+	info := ah.skill(t)
+	assert.Equal(t, "failed", info.LastDeploy.V.State)
+	assert.Nil(t, info.AutoDeployRetry.V, "authorising again needs a person")
+	assert.Contains(t, info.AutoDeployPaused, "authorise Encore with Amazon again")
+	assert.True(t, info.Amazon.NeedsReauthorise)
+}
+
+func TestAutoDeployRetryDatabaseErrors(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	ctx := t.Context()
+	s := h.api.skill
+
+	require.NoError(t, h.app.DB().Close())
+
+	assert.Nil(t, s.autoDeployRetry(ctx))
+
+	s.setAutoDeployRetry(ctx, &autoDeployRetry{Failures: 1})
+	assert.Contains(t, h.logs.String(), "saving automatic deploy retry")
+}

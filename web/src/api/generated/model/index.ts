@@ -20,6 +20,7 @@ export * from "./authSettings.ts";
 export * from "./authSettingsMode.ts";
 export * from "./authState.ts";
 export * from "./authStateMode.ts";
+export * from "./autoDeployRetry.ts";
 export * from "./backupSettings.ts";
 export * from "./backupSettingsPatch.ts";
 export * from "./breakdown.ts";

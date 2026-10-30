@@ -179,6 +179,8 @@ func (a *API) attention(ctx context.Context) ([]Attention, error) {
 	case info.AutoDeployPaused != "":
 		// The pause names the failure, so it stands in for deploy_failed when an automatic deploy failed.
 		out = append(out, Attention{Kind: "auto_deploy_paused", Title: "Automatic deploys are paused", Detail: strings.TrimSuffix(info.AutoDeployPaused, ".") + ". Deploy the skill by hand once it's fixed to resume them.", Link: "/alexa-skill"})
+	case info.AutoDeployRetry.V != nil:
+		// Encore is trying the automatic deploy again; the pause asks for attention if it gives up.
 	case info.State == "failed":
 		detail := ""
 		if l := info.LastDeploy.V; l != nil {

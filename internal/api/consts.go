@@ -78,6 +78,12 @@ const (
 // autoDeployTick is the longest the auto-deploy loop waits before reading alexa.auto_deploy_minutes again, so a changed interval applies within a tick.
 const autoDeployTick = time.Minute
 
+// autoDeployRetries is how many times an automatic deploy that failed for a reason that may pass (deploy.Transient) is tried again before automatic deploys pause.
+const autoDeployRetries = 3
+
+// autoDeployRetryDelay is how long the first retry of a failed automatic deploy waits; each further retry waits twice as long as the one before. A retry runs at the first automatic check after its wait.
+const autoDeployRetryDelay = 5 * time.Minute
+
 // simulateGrace keeps the window open briefly after the smoke test, for the session-ended request that follows its launch.
 const simulateGrace = 15 * time.Second
 
@@ -91,6 +97,8 @@ const (
 	reauthKey        = "skill.lwa.needs_reauthorise"
 	// autoDeployPausedKey holds why automatic deploys are paused, or nothing when they aren't.
 	autoDeployPausedKey = "skill.auto_deploy_paused"
+	// autoDeployRetryKey holds the automatic deploy failure waiting to be tried again, or nothing when there is none.
+	autoDeployRetryKey = "skill.auto_deploy_retry"
 	// deployEndpointKey holds the endpoint the skill was last deployed with, for deploys that start without a browser request to derive it from.
 	deployEndpointKey = "skill.deploy_endpoint"
 

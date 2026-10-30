@@ -424,6 +424,10 @@ func (s *skillService) info(ctx context.Context) (SkillInfo, error) {
 	if eff, err := s.a.prefs.Effective(ctx); err == nil && eff.Alexa.AutoDeploy {
 		out.AutoDeploy = true
 		out.AutoDeployPaused = s.autoDeployPaused(ctx)
+
+		if r := s.autoDeployRetry(ctx); r != nil {
+			out.AutoDeployRetry = Some(AutoDeployRetry{Attempts: r.Failures, MaxAttempts: autoDeployRetries + 1, NextAt: r.NextAt, Error: r.Error})
+		}
 	}
 
 	return out, nil
