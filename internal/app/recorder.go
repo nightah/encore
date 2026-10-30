@@ -22,6 +22,9 @@ func newRecorder(repo store.RequestLog, log *slog.Logger) *recorder {
 // Recorder returns the request log recorder for the Alexa adapter.
 func (a *App) Recorder() alexa.Recorder { return a.recorder }
 
+// Rejections returns the counts of voice requests the Alexa endpoint refused, for VerifiedFunc to add to and the overview to show.
+func (a *App) Rejections() *alexa.Rejections { return a.rejections }
+
 // Record queues e for the request log, dropping it if the queue is full.
 func (r *recorder) Record(_ context.Context, e alexa.LogEntry) {
 	select {

@@ -9,6 +9,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/jamestelfer/billy/pkg/alexaverify"
+
 	"github.com/nightah/encore/internal/core/actions"
 	"github.com/nightah/encore/internal/core/match"
 	"github.com/nightah/encore/internal/core/media"
@@ -147,6 +149,50 @@ type RequestVerifier interface {
 type BodyHandler func(w http.ResponseWriter, r *http.Request, body []byte)
 
 type verifyTimeKey struct{}
+
+// RejectStage is the check that refused a request.
+type RejectStage string
+
+// Verifier is the RequestVerifier NewVerifier returns: an alexaverify.Verifier that can also check a request refused for its timestamp as of the time it carries, so a request Alexa signed is told from one anybody could send.
+type Verifier struct {
+	*alexaverify.Verifier
+
+	// sent reads its clock from at, so a request's timestamp is the time it checks the signature and chain at.
+	sent *alexaverify.Verifier
+
+	mu sync.Mutex
+	at time.Time
+}
+
+// sentVerifier is a RequestVerifier that can check a request as of the time it was sent, as *Verifier can.
+type sentVerifier interface {
+	VerifyAsSent(ctx context.Context, body []byte, hdr http.Header) error
+}
+
+// Rejections counts the requests VerifiedFunc refused since Encore started, by stage. It lives in memory: a restart starts again from zero.
+type Rejections struct {
+	now func() time.Time
+
+	mu     sync.Mutex
+	counts map[RejectStage]*Rejection
+	// hours counts each stage's rejections by the hour they were in, for the last RecentRejections.
+	hours map[RejectStage][]rejectedHour
+}
+
+// Rejection is how many requests one stage refused, and when it last did.
+type Rejection struct {
+	Stage RejectStage
+	Count int
+	// Recent is how many of them were in the RecentRejections before Counts was asked, to within an hour.
+	Recent int
+	Last   time.Time
+}
+
+// rejectedHour is how many requests one stage refused in the hour from start.
+type rejectedHour struct {
+	start time.Time
+	n     int
+}
 
 // certURLVerifier is the RequestVerifier RememberCertURL returns.
 type certURLVerifier struct {
