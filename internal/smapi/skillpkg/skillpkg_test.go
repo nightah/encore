@@ -323,3 +323,34 @@ func TestIcons(t *testing.T) {
 
 	assert.Empty(t, sizes, "both icons are in the package")
 }
+
+func modelValues(pkg *skillpkg.Package, locale, slotType string) []string {
+	var out []string
+
+	for _, typ := range pkg.Models[locale].InteractionModel.LanguageModel.Types {
+		if typ.Name == slotType {
+			for _, v := range typ.Values {
+				out = append(out, v.Name.Value)
+			}
+		}
+	}
+
+	return out
+}
+
+func TestLocaleSlotValues(t *testing.T) {
+	opts := options()
+	opts.SlotValues = map[string][]skillmodel.SlotValue{"AMAZON.Movie": {{Value: "Heat"}, {Value: "Dune"}}}
+	opts.LocaleSlotValues = map[string]map[string][]skillmodel.SlotValue{
+		"en-GB": {"AMAZON.Movie": {{Value: "Dune"}, {Value: strings.Repeat("x", skillpkg.MaxSlotValueLength+1)}}},
+	}
+
+	pkg, err := skillpkg.Build(sources(t), opts)
+	require.NoError(t, err)
+	assert.Equal(t, []string{"Heat", "Dune"}, modelValues(pkg, "en-US", "AMAZON.Movie"))
+	assert.Equal(t, []string{"Dune"}, modelValues(pkg, "en-GB", "AMAZON.Movie"), "a locale's own values replace the others, too long ones dropped")
+
+	full, err := skillpkg.Build(sources(t), skillpkg.Options{Locales: opts.Locales, Endpoint: opts.Endpoint, Privacy: opts.Privacy, SlotValues: opts.SlotValues})
+	require.NoError(t, err)
+	assert.NotEqual(t, full.Hash(), pkg.Hash())
+}

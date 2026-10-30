@@ -58,7 +58,12 @@ func Build(src *skillmodel.Sources, opts Options) (*Package, error) {
 			return nil, fmt.Errorf("skillpkg: unknown locale %q", locale)
 		}
 
-		model, err := skillmodel.Build(src, locale, skillmodel.BuildOptions{Invocation: opts.Invocation, SlotValues: slotValues, Content: opts.Content})
+		values := slotValues
+		if own, ok := opts.LocaleSlotValues[locale]; ok {
+			values, _ = filterSlotValues(own)
+		}
+
+		model, err := skillmodel.Build(src, locale, skillmodel.BuildOptions{Invocation: opts.Invocation, SlotValues: values, Content: opts.Content})
 		if err != nil {
 			return nil, fmt.Errorf("skillpkg: %w", err)
 		}
