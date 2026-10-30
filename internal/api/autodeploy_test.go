@@ -703,3 +703,62 @@ func TestAutoDeployRetryDatabaseErrors(t *testing.T) {
 	s.setAutoDeployRetry(ctx, &autoDeployRetry{Failures: 1})
 	assert.Contains(t, h.logs.String(), "saving automatic deploy retry")
 }
+
+func TestDeployShipsTheLocalesAmazonBuilds(t *testing.T) {
+	ah := newAutoDeployHarness(t)
+
+	settings := deployableSettings()
+	settings["locales_enabled"] = []string{"en-AU", "en-GB"}
+	ah.c.json(http.MethodPut, "/api/v1/skill/settings", settings, http.StatusOK, nil)
+	ah.addTitle("movie/2", "Arrival")
+	ah.smapi.LimitSlotValues("en-GB", "AMAZON.Movie", 1)
+
+	d := ah.deployByHand(t)
+	require.Equal(t, "succeeded", d.State, d.Error)
+
+	info := ah.skill(t)
+	require.NotNil(t, info.LastDeploy.V)
+	assert.False(t, info.NeedsDeploy, "the package asked for counts as deployed")
+
+	byLocale := map[string]LocaleDeploy{}
+	for _, l := range info.LastDeploy.V.Locales {
+		byLocale[l.Locale] = l
+	}
+
+	assert.Nil(t, byLocale["en-AU"].Degraded.V)
+	assert.Equal(t, 2, byLocale["en-AU"].Titles)
+
+	gb := byLocale["en-GB"]
+	assert.Equal(t, "succeeded", gb.Status)
+	require.NotNil(t, gb.Degraded.V)
+	assert.Equal(t, 1, gb.Titles)
+	assert.Equal(t, 2, gb.Degraded.V.TitlesAskedFor)
+	assert.Empty(t, gb.Degraded.V.Dropped)
+	require.Len(t, gb.Degraded.V.Reasons, 1)
+	assert.Contains(t, gb.Degraded.V.Reasons[0], "too large")
+	assert.Positive(t, gb.SizeBytes)
+	assert.Less(t, gb.SizeBytes, byLocale["en-AU"].SizeBytes)
+
+	// Nothing changed since, so automatic deploys leave it be.
+	ah.setAutoDeploy(t, true)
+	ah.check(t)
+	ah.check(t)
+	assert.Equal(t, d.ID, ah.skill(t).LastDeploy.V.ID)
+
+	// A deploy by hand of the same package is skipped, and still says what Amazon's model left out.
+	again := ah.deployByHand(t)
+	require.Equal(t, "succeeded", again.State, again.Error)
+	require.NotEqual(t, d.ID, again.ID)
+
+	last := ah.skill(t).LastDeploy.V
+	require.NotNil(t, last)
+	require.Equal(t, again.ID, last.ID)
+
+	for _, l := range last.Locales {
+		if l.Locale == "en-GB" {
+			require.NotNil(t, l.Degraded.V, "the skipped deploy keeps the degradation")
+			assert.Equal(t, 1, l.Titles)
+			assert.Equal(t, gb.SizeBytes, l.SizeBytes)
+		}
+	}
+}

@@ -81,7 +81,7 @@ func (a *App) SlotValues(ctx context.Context) (map[string][]skillmodel.SlotValue
 	}
 
 	if len(rooms) > 0 {
-		out[roomSlot] = rooms
+		out[RoomSlot] = rooms
 	}
 
 	return out, nil

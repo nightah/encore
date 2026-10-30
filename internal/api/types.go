@@ -1049,12 +1049,20 @@ type LastDeploy struct {
 
 // LocaleDeploy is one locale's deploy result.
 type LocaleDeploy struct {
-	Locale    string     `json:"locale"`
-	Status    string     `json:"status" enum:"succeeded,failed,in_progress"`
-	Errors    []string   `json:"errors"`
-	Titles    int        `json:"titles"`
-	SizeBytes int        `json:"size_bytes"`
-	BuiltAt   *time.Time `json:"built_at"`
+	Locale    string                   `json:"locale"`
+	Status    string                   `json:"status" enum:"succeeded,failed,in_progress"`
+	Errors    []string                 `json:"errors"`
+	Titles    int                      `json:"titles"`
+	SizeBytes int                      `json:"size_bytes"`
+	BuiltAt   *time.Time               `json:"built_at"`
+	Degraded  Nullable[LocaleDegraded] `json:"degraded" doc:"Set when Amazon would not build this locale's model with every library title, so it was built with fewer and the other locales still shipped; titles and size_bytes are then what was deployed. Null otherwise"`
+}
+
+// LocaleDegraded is how a locale was built with fewer library titles than asked for.
+type LocaleDegraded struct {
+	TitlesAskedFor int      `json:"titles_asked_for" doc:"How many titles the locale's model was to have"`
+	Dropped        []string `json:"dropped" doc:"The titles Amazon's build errors named, which were left out; empty when it named none and every other title was left out instead"`
+	Reasons        []string `json:"reasons" doc:"What Amazon said when it would not build the locale with every title"`
 }
 
 // ModelSize is the largest locale's interaction model against Amazon's limit.

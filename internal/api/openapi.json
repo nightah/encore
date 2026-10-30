@@ -1507,6 +1507,36 @@
         },
         "type": "object"
       },
+      "LocaleDegraded": {
+        "additionalProperties": false,
+        "properties": {
+          "dropped": {
+            "description": "The titles Amazon's build errors named, which were left out; empty when it named none and every other title was left out instead",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "reasons": {
+            "description": "What Amazon said when it would not build the locale with every title",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "titles_asked_for": {
+            "description": "How many titles the locale's model was to have",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "titles_asked_for",
+          "dropped",
+          "reasons"
+        ],
+        "type": "object"
+      },
       "LocaleDeploy": {
         "additionalProperties": false,
         "properties": {
@@ -1515,6 +1545,17 @@
             "type": [
               "string",
               "null"
+            ]
+          },
+          "degraded": {
+            "description": "Set when Amazon would not build this locale's model with every library title, so it was built with fewer and the other locales still shipped; titles and size_bytes are then what was deployed. Null otherwise",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/LocaleDegraded"
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "errors": {
@@ -1549,7 +1590,8 @@
           "errors",
           "titles",
           "size_bytes",
-          "built_at"
+          "built_at",
+          "degraded"
         ],
         "type": "object"
       },
