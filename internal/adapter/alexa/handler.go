@@ -161,6 +161,16 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, tr *requestT
 	// Intents that don't need Kodi.
 	switch intent.Name {
 	case "AMAZON.HelpIntent":
+		if question != nil {
+			// A question offering several titles is answered by naming one; any other by yes or no.
+			id := "question.help"
+			if len(pendingChoices(env.Session.Attributes)) > 1 {
+				id = "match.help"
+			}
+
+			return h.respond(locale, askAgain(env, id, *question), false), nil
+		}
+
 		msg := helpMessage()
 
 		return h.respond(locale, actions.Outcome{Say: msg, Reprompt: &msg}, false), nil
