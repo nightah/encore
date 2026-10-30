@@ -175,6 +175,19 @@
     "title": "Import et export"
   },
   "features": {
+    "auto_deploy": {
+      "hint": "",
+      "title": ""
+    },
+    "auto_deploy_minutes": {
+      "hint_hours_one": "",
+      "hint_hours_other": "",
+      "hint_minutes_one": "",
+      "hint_minutes_other": "",
+      "hintInvalid": "",
+      "title": "",
+      "unit": ""
+    },
     "confirm_sound": {
       "hint": "Alexa émet un son bref après des commandes comme pause ou monter le volume, au lieu de rester silencieuse",
       "title": "Confirmer les commandes par un son"
