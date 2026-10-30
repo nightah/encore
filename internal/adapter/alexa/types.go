@@ -294,11 +294,26 @@ type Resolutions struct {
 
 // ResolvedIDs returns the IDs Alexa matched the slot to, across static and dynamic authorities.
 func (s Slot) ResolvedIDs() []string {
+	res := s.Resolved()
+	if res == nil {
+		return nil
+	}
+
+	ids := make([]string, len(res))
+	for i, r := range res {
+		ids[i] = r.ID
+	}
+
+	return ids
+}
+
+// Resolved returns the values Alexa matched the slot to, with their IDs and names, across static and dynamic authorities.
+func (s Slot) Resolved() []match.Resolved {
 	if s.Resolutions == nil {
 		return nil
 	}
 
-	var ids []string
+	var out []match.Resolved
 
 	for _, a := range s.Resolutions.PerAuthority {
 		if a.Status.Code != "ER_SUCCESS_MATCH" {
@@ -307,12 +322,12 @@ func (s Slot) ResolvedIDs() []string {
 
 		for _, v := range a.Values {
 			if v.Value.ID != "" {
-				ids = append(ids, v.Value.ID)
+				out = append(out, match.Resolved{ID: v.Value.ID, Name: v.Value.Name})
 			}
 		}
 	}
 
-	return ids
+	return out
 }
 
 // ResponseEnvelope is Encore's reply.

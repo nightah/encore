@@ -158,6 +158,8 @@ type TitleRequest struct {
 	Kinds []media.Kind
 	// Hints boosts specific documents, e.g. Alexa's own entity resolution.
 	Hints map[string]float64
+	// Resolved are the values Alexa's entity resolution matched the request to, scored as candidates (match.Query.Resolved).
+	Resolved []match.Resolved
 	// Pending are the choices from a question this request answers.
 	Pending []Choice
 }

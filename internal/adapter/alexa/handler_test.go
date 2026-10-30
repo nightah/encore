@@ -22,6 +22,7 @@ import (
 
 	"github.com/nightah/encore/i18n"
 	"github.com/nightah/encore/internal/core/actions"
+	"github.com/nightah/encore/internal/core/match"
 	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/skillmodel"
 	"github.com/nightah/encore/internal/testkit"
@@ -341,6 +342,7 @@ func TestSlotResolvedIDs(t *testing.T) {
 
 	req := titleRequest(s, []media.Kind{media.KindMovie}, nil)
 	assert.InDelta(t, resolvedBoost, req.Hints["movie/3"], 1e-9)
+	assert.Equal(t, []match.Resolved{{ID: "movie/3", Name: "Dune: Part Two"}}, req.Resolved, "a resolved value is a candidate with the name Alexa matched")
 }
 
 func mustRead(t *testing.T, path string) []byte {

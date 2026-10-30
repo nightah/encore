@@ -456,10 +456,12 @@ func askAgain(env *RequestEnvelope, id string, question actions.Message) actions
 func titleRequest(slot Slot, kinds []media.Kind, pending []actions.Choice) actions.TitleRequest {
 	req := actions.TitleRequest{Query: slot.Value, Kinds: kinds, Pending: pending}
 
-	if ids := slot.ResolvedIDs(); len(ids) > 0 {
+	if res := slot.Resolved(); len(res) > 0 {
+		req.Resolved = res
 		req.Hints = map[string]float64{}
-		for _, id := range ids {
-			req.Hints[id] = resolvedBoost
+
+		for _, r := range res {
+			req.Hints[r.ID] = resolvedBoost
 		}
 	}
 

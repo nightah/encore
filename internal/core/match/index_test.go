@@ -197,6 +197,73 @@ func TestSearchOtherScriptInEnglishLibrary(t *testing.T) {
 	})
 }
 
+// TestSearchResolvedCandidates checks that a Doc Alexa's entity resolution matched is scored even when retrieval misses it, against what was heard and against the value name Alexa matched, and that Encore's scorer still decides.
+func TestSearchResolvedCandidates(t *testing.T) {
+	retrievers(t, func(t *testing.T, retr string) {
+		ix := newIndex(t, retr,
+			movie("spirited", "千と千尋の神隠し", 2001),
+			movie("totoro", "となりのトトロ", 1988),
+			movie("titanic", "Titanic", 1997),
+			movie("toystory", "Toy Story", 1995),
+			Doc{ID: "pinkfloyd", Kind: media.KindArtist, Title: "Pink Floyd"},
+			Doc{ID: "pink", Kind: media.KindArtist, Title: "P!nk"},
+		)
+
+		search := func(t *testing.T, q Query) (Result, Candidate) {
+			t.Helper()
+
+			res, err := ix.Search(t.Context(), q)
+			require.NoError(t, err)
+
+			best, _ := res.Best()
+
+			return res, best
+		}
+
+		// Hiragana for a kanji title: retrieval finds nothing, and the value Alexa matched names the title.
+		heard := "せんとちひろのかみかくし"
+		res, _ := search(t, Query{Text: heard})
+		require.Equal(t, DecisionNotFound, res.Decision, "without resolution")
+
+		res, best := search(t, Query{Text: heard, Resolved: []Resolved{{ID: "spirited", Name: "千と千尋の神隠し"}}})
+		assert.Equal(t, DecisionPlay, res.Decision)
+		assert.Equal(t, "spirited", best.Doc.ID)
+		assert.Less(t, best.Score, 1.0, "a resolved name is never an exact match")
+
+		// An ID whose value names another title (a stale model) does not play it.
+		res, _ = search(t, Query{Text: heard, Resolved: []Resolved{{ID: "totoro", Name: "千と千尋の神隠し"}}})
+		assert.NotEqual(t, DecisionPlay, res.Decision)
+
+		// Without a name, the resolved Doc is scored against what was heard alone.
+		res, best = search(t, Query{Text: "titanik", Resolved: []Resolved{{ID: "titanic"}}})
+		assert.Equal(t, "titanic", best.Doc.ID)
+		assert.Equal(t, DecisionPlay, res.Decision)
+
+		res, _ = search(t, Query{Text: heard, Resolved: []Resolved{{ID: "spirited"}}})
+		assert.Equal(t, DecisionNotFound, res.Decision)
+
+		// Two values for one request ask which was meant.
+		res, _ = search(t, Query{Text: "pink", Kinds: []media.Kind{media.KindArtist}, Resolved: []Resolved{{ID: "pinkfloyd", Name: "Pink Floyd"}, {ID: "pink", Name: "P!nk"}}})
+		assert.Equal(t, DecisionAsk, res.Decision)
+
+		// What was heard still wins when it names another title exactly.
+		res, best = search(t, Query{Text: "titanic", Resolved: []Resolved{{ID: "toystory", Name: "Toy Story"}}})
+		assert.Equal(t, DecisionPlay, res.Decision)
+		assert.Equal(t, "titanic", best.Doc.ID)
+
+		// A number the title lacks is still a missing sequel.
+		res, _ = search(t, Query{Text: "toy story 4", Resolved: []Resolved{{ID: "toystory", Name: "Toy Story"}}})
+		assert.Equal(t, DecisionAsk, res.Decision)
+
+		// Kinds still restrict, and unknown IDs are ignored.
+		res, _ = search(t, Query{Text: heard, Kinds: []media.Kind{media.KindArtist}, Resolved: []Resolved{{ID: "spirited", Name: "千と千尋の神隠し"}}})
+		assert.Equal(t, DecisionNotFound, res.Decision)
+
+		res, _ = search(t, Query{Text: heard, Resolved: []Resolved{{ID: "missing", Name: "千と千尋の神隠し"}}})
+		assert.Equal(t, DecisionNotFound, res.Decision)
+	})
+}
+
 func TestBoostsReorderOnlyNearTies(t *testing.T) {
 	ix := newIndex(t, RetrieverInverted,
 		movie("old", "The Thing", 1982),
