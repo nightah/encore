@@ -32,6 +32,8 @@ type harness struct {
 	fake     *smapitest.Server
 	proxy    *httptest.Server
 	deployer *deploy.Deployer
+	// src is what deployer builds packages from.
+	src *skillmodel.Sources
 
 	mu        sync.Mutex
 	events    []deploy.Event
@@ -104,6 +106,7 @@ func newHarness(t *testing.T, opts smapitest.Options) *harness {
 	src, err := skillmodel.Load(i18n.FS)
 	require.NoError(t, err)
 
+	h.src = src
 	h.deployer = deploy.New(client, src)
 
 	return h

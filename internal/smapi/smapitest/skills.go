@@ -175,6 +175,8 @@ func (s *Server) startImport(w http.ResponseWriter, skillID, vendorID, location 
 		for _, loc := range job.locales {
 			if msg, bad := s.failLocales[loc]; bad {
 				job.failed[loc] = msg
+			} else if msg := s.checkValues(loc, pkg.models[loc]); msg != "" {
+				job.failed[loc] = msg
 			}
 		}
 	}
