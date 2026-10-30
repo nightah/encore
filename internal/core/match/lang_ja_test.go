@@ -34,7 +34,7 @@ func TestNormalizeJapanese(t *testing.T) {
 		{"がっこう", "gakko"},
 		{"マッチ", "matchi"},
 		{"ティファニーで朝食を", "tifani de 朝食 o"},
-		{"ヴァイオレット", "vaioretto"},
+		{"ヴァイオレット", "baioretto"},
 		{"ウィキ", "wiki"},
 		{"シェフ", "shefu"},
 		{"デュエット", "dyuetto"},
@@ -98,7 +98,7 @@ func TestRomanizeKana(t *testing.T) {
 	for in, want := range map[string]string{
 		"は": "wa", "へ": "e", "を": "o", "ツー": "2", "ゼット": "z",
 		"きゃ": "kya", "しょ": "sho", "ちゅ": "chu", "じゃ": "ja", "にょ": "nyo", "ゐゑ": "ie",
-		"ファ": "fa", "ティ": "ti", "トゥ": "tu", "ウォ": "wo", "イェ": "ye", "クァ": "ka", "ヴァ": "va", "グヮ": "gwa",
+		"ファ": "fa", "ティ": "ti", "トゥ": "tu", "ウォ": "wo", "イェ": "ye", "クァ": "ka", "ヴァ": "ba", "ヴ": "bu", "ヴィ": "bi", "ヴェ": "be", "ヴォ": "bo", "ゔ": "bu", "グヮ": "gwa",
 		"せぇ": "se", "あぁ": "a", "おぉ": "o",
 		"んゃ": "nya", "ぁ": "a", "ゃ": "ya", "ヵ": "ka", "ヶ": "ke",
 		"っか": "kka", "っち": "tchi", "っあ": "a", "っん": "n", "っ": "", "ー": "",
@@ -131,6 +131,34 @@ func TestSplitJapanese(t *testing.T) {
 	assert.Equal(t, []string{"2", "部"}, ordinals([]string{"2", "部"}), "a counter without 第 stays")
 	assert.Equal(t, []string{"第", "x", "部"}, ordinals([]string{"第", "x", "部"}), "only after a number")
 	assert.Equal(t, []string{"第", "2", "部品"}, ordinals([]string{"第", "2", "部品"}), "only a counter of its own")
+}
+
+// TestJapaneseVFoldsToB checks that ヴ is keyed as the b line, as Japanese says it, so a title spelt with ブ or バ and a request spelt with ヴ meet, and the other way round.
+func TestJapaneseVFoldsToB(t *testing.T) {
+	ix, err := New("ja", Config{})
+	require.NoError(t, err)
+	require.NoError(t, ix.Upsert(
+		Doc{ID: "lotr", Kind: "movie", Title: "ロード・オブ・ザ・リング"},
+		Doc{ID: "drive", Kind: "movie", Title: "ドライブ・マイ・カー"},
+		Doc{ID: "longvacation", Kind: "tvshow", Title: "ロングバケーション"},
+		Doc{ID: "plastic", Kind: "song", Title: "プラスティック・ラブ"},
+		Doc{ID: "violet", Kind: "tvshow", Title: "ヴァイオレット・エヴァーガーデン"},
+	))
+
+	for heard, want := range map[string]string{
+		"ロードオヴザリング":     "lotr",
+		"ドライヴマイカー":      "drive",
+		"ロングヴァケーション":    "longvacation",
+		"プラスティックラヴ":     "plastic",
+		"バイオレットエバーガーデン": "violet",
+	} {
+		res, err := ix.Search(t.Context(), Query{Text: heard})
+		require.NoError(t, err)
+
+		best, _ := res.Best()
+		assert.Equal(t, DecisionPlay, res.Decision, heard)
+		assert.Equal(t, want, best.Doc.ID, heard)
+	}
 }
 
 // TestJapaneseUnspacedCoverage checks that a word a title spells across a segmenter's word boundary still counts towards coverage, so a missing sequel is asked about and a short form is found.

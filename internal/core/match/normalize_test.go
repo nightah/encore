@@ -429,6 +429,11 @@ func TestNormalizeOtherScripts(t *testing.T) {
 		{"en", "ｶﾞﾝﾀﾞﾑ", "gandamu"},
 		{"en", "दंगल २०१६", "dangal 2016"},
 		{"en", "فيلم ٢٠٢١", "film 2021"},
+		// ヴ is the v of the Latin title another library holds, and the b line Japanese says it as in a Japanese library.
+		{"en", "マーヴェリック", "maverikku"},
+		{"en", "ドライヴ", "doraivu"},
+		{"ja", "マーヴェリック", "maberikku"},
+		{"ja", "ドライヴ", "doraibu"},
 		// A library in Japanese, Hindi or Arabic reads its own script as it always has.
 		{"ja", "トイストーリー3", "toisutori 3"},
 		{"hi", "धूम दो", "dhoom 2"},

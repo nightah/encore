@@ -162,7 +162,7 @@ func (l *language) words(o *language, toks []string, first bool) []string {
 		return l.ownWords(toks)
 	}
 
-	toks = o.ownWords(toks)
+	toks = o.foreignWords(toks)
 	for first && len(toks) > 1 && o.articles[toks[0]] {
 		toks = toks[1:]
 	}
@@ -173,11 +173,24 @@ func (l *language) words(o *language, toks []string, first bool) []string {
 
 // ownWords splits, strips fused articles from and romanizes tokens with this language's hooks.
 func (l *language) ownWords(toks []string) []string {
+	return l.splitWords(toks, l.romanize)
+}
+
+// foreignWords is ownWords for tokens in this language's script read in another language's library, romanized with romanizeForeign when the language has one.
+func (l *language) foreignWords(toks []string) []string {
+	if l.romanizeForeign != nil {
+		return l.splitWords(toks, l.romanizeForeign)
+	}
+
+	return l.ownWords(toks)
+}
+
+func (l *language) splitWords(toks []string, romanize func(string) string) []string {
 	if l.split != nil {
 		toks = l.split(toks)
 	}
 
-	return l.romanizeAll(l.stripPrefixes(toks))
+	return romanizeAll(l.stripPrefixes(toks), romanize)
 }
 
 // scriptPieces splits a token where a script another language reads starts or ends ("abcदंगल" -> "abc" "दंगल"), so each piece goes through one language's rules. Digits, marks and anything else no language reads its own way stay with the piece before them; a token in no other language's script is left whole.
@@ -240,15 +253,15 @@ func (l *language) foreignRune(r rune) *language {
 	return o
 }
 
-// romanizeAll writes each token in the language's romanize form, dropping a token that romanizes to nothing and splitting one that romanizes to several words.
-func (l *language) romanizeAll(toks []string) []string {
-	if l.romanize == nil {
+// romanizeAll writes each token as romanize writes it, dropping a token that romanizes to nothing and splitting one that romanizes to several words. A nil romanize leaves the tokens as they are.
+func romanizeAll(toks []string, romanize func(string) string) []string {
+	if romanize == nil {
 		return toks
 	}
 
 	out := make([]string, 0, len(toks))
 	for _, tok := range toks {
-		out = append(out, strings.Fields(l.romanize(tok))...)
+		out = append(out, strings.Fields(romanize(tok))...)
 	}
 
 	return out
