@@ -44,3 +44,23 @@ const (
 	roomFirst
 	roomMiddle
 )
+
+// Stages at which VerifiedFunc rejects a request.
+const (
+	// RejectBody means the body couldn't be read (too large, or the connection broke), carried no timestamp that parses, or, once verified, couldn't be decoded.
+	RejectBody RejectStage = "body"
+	// RejectUnsigned means a signature header was missing, or the certificate chain URL wasn't one of Amazon's: the request didn't come from Alexa.
+	RejectUnsigned RejectStage = "unsigned"
+	// RejectTimestamp means Alexa signed the request, but its timestamp was too far from Encore's clock.
+	RejectTimestamp RejectStage = "timestamp"
+	// RejectSignature means the signature or its certificate chain didn't check out, or the chain couldn't be fetched.
+	RejectSignature RejectStage = "signature"
+	// RejectSkillID means a verified request was for another skill.
+	RejectSkillID RejectStage = "skill_id"
+)
+
+// rejectStages lists every RejectStage in the order the checks run.
+var rejectStages = []RejectStage{RejectBody, RejectUnsigned, RejectTimestamp, RejectSignature, RejectSkillID}
+
+// RecentRejections is how far back Rejection.Recent counts.
+const RecentRejections = 24 * time.Hour

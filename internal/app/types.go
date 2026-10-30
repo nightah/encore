@@ -41,6 +41,8 @@ type App struct {
 	runCtx context.Context
 
 	recorder *recorder
+	// rejections counts the voice requests the Alexa endpoint refused since start.
+	rejections *alexa.Rejections
 
 	onPlayer func(instanceID int64)
 
