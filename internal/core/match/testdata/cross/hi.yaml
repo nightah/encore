@@ -1,0 +1,96 @@
+# Cross-language set: see ja.yaml.
+#
+# Hindi (hi-IN) requests against an English library. Same schema as asr_corpus.yaml; cases are scored, not asserted.
+#
+# Library: an English Kodi library as a TMDB and MusicBrainz scrape leaves it: Hollywood films under their English titles, Hindi films under the Latin titles their international releases use (Dangal, 3 Idiots, Sholay) and music under the names the tags carry, Hindi film songs in Latin letters. It carries near neighbours (Baahubali and 2, Toy Story and 3, Jurassic Park and World) so a wrong play is possible.
+#
+# Cases: what Alexa's hi-IN recogniser plausibly writes when a Hindi speaker asks for the title: Hindi and English titles alike in Devanagari, with the spellings Hindi uses for English sounds (ऑ for the open o, ज़ and फ़ with or without the nukta, ट and ड for t and d), numbers as ASCII digits or Hindi number words, and "द" for "the". Absent titles (not_found) are well-known films and artists the library lacks.
+#
+# Cases describe what a listener hears; don't change a case to suit the matcher's results (see docs/src/content/docs/contributing/dependencies.md).
+suites:
+  - name: english library, hindi requests
+    lang: en
+    library:
+      - {id: titanic, kind: movie, title: "Titanic", year: 1997}
+      - {id: avatar, kind: movie, title: "Avatar", year: 2009}
+      - {id: frozen, kind: movie, title: "Frozen", year: 2013}
+      - {id: toystory, kind: movie, title: "Toy Story", year: 1995}
+      - {id: toystory3, kind: movie, title: "Toy Story 3", year: 2010}
+      - {id: inception, kind: movie, title: "Inception", year: 2010}
+      - {id: joker, kind: movie, title: "Joker", year: 2019}
+      - {id: matrix, kind: movie, title: "The Matrix", year: 1999}
+      - {id: jurassicpark, kind: movie, title: "Jurassic Park", year: 1993}
+      - {id: jurassicworld, kind: movie, title: "Jurassic World", year: 2015}
+      - {id: lionking, kind: movie, title: "The Lion King", year: 1994}
+      - {id: spiderman, kind: movie, title: "Spider-Man", year: 2002}
+      - {id: dangal, kind: movie, title: "Dangal", year: 2016}
+      - {id: idiots, kind: movie, title: "3 Idiots", year: 2009}
+      - {id: sholay, kind: movie, title: "Sholay", year: 1975}
+      - {id: ddlj, kind: movie, title: "Dilwale Dulhania Le Jayenge", year: 1995}
+      - {id: lagaan, kind: movie, title: "Lagaan", year: 2001}
+      - {id: pk, kind: movie, title: "PK", year: 2014}
+      - {id: rrr, kind: movie, title: "RRR", year: 2022}
+      - {id: bahubali, kind: movie, title: "Baahubali: The Beginning", year: 2015}
+      - {id: bahubali2, kind: movie, title: "Baahubali 2: The Conclusion", year: 2017}
+      - {id: dhoom2, kind: movie, title: "Dhoom 2", year: 2006}
+      - {id: kgf, kind: movie, title: "K.G.F: Chapter 1", year: 2018}
+      - {id: sacredgames, kind: tvshow, title: "Sacred Games", year: 2018}
+      - {id: mirzapur, kind: tvshow, title: "Mirzapur", year: 2018}
+      - {id: taylor, kind: artist, title: "Taylor Swift"}
+      - {id: coldplay, kind: artist, title: "Coldplay"}
+      - {id: arijit, kind: artist, title: "Arijit Singh"}
+      - {id: shreya, kind: artist, title: "Shreya Ghoshal"}
+      - {id: tumhiho, kind: song, title: "Tum Hi Ho"}
+      - {id: kesariya, kind: song, title: "Kesariya"}
+      - {id: shapeofyou, kind: song, title: "Shape of You"}
+      - {id: thriller, kind: album, title: "Thriller"}
+    cases:
+      # devanagari: English titles written in Devanagari.
+      - {heard: "टाइटैनिक", want: play, id: titanic}
+      - {heard: "अवतार", want: play, id: avatar}
+      - {heard: "फ्रोज़न", want: play, id: frozen}
+      - {heard: "फ्रोजन", want: play, id: frozen}
+      - {heard: "इंसेप्शन", want: play, id: inception}
+      - {heard: "जोकर", want: play, id: joker}
+      - {heard: "द मैट्रिक्स", want: play, id: matrix}
+      - {heard: "मैट्रिक्स", want: play, id: matrix}
+      - {heard: "जुरासिक पार्क", want: play, id: jurassicpark}
+      - {heard: "जुरासिक वर्ल्ड", want: play, id: jurassicworld}
+      - {heard: "द लायन किंग", want: play, id: lionking}
+      - {heard: "स्पाइडर मैन", want: play, id: spiderman}
+      - {heard: "टॉय स्टोरी", want: play, id: toystory}
+      - {heard: "सेक्रेड गेम्स", want: play, id: sacredgames}
+      - {heard: "टेलर स्विफ्ट", want: play, id: taylor}
+      - {heard: "कोल्डप्ले", want: play, id: coldplay}
+      - {heard: "शेप ऑफ यू", want: play, id: shapeofyou}
+      - {heard: "थ्रिलर", want: play, id: thriller}
+      # hindi: Hindi titles the library holds in Latin letters, heard in Devanagari.
+      - {heard: "दंगल", want: play, id: dangal}
+      - {heard: "शोले", want: play, id: sholay}
+      - {heard: "लगान", want: play, id: lagaan}
+      - {heard: "दिलवाले दुल्हनिया ले जाएंगे", want: play, id: ddlj}
+      - {heard: "मिर्ज़ापुर", want: play, id: mirzapur}
+      - {heard: "मिर्जापुर", want: play, id: mirzapur}
+      - {heard: "अरिजीत सिंह", want: play, id: arijit}
+      - {heard: "श्रेया घोषाल", want: play, id: shreya}
+      - {heard: "तुम ही हो", want: play, id: tumhiho}
+      - {heard: "केसरिया", want: play, id: kesariya}
+      # letters: titles that are letters, heard as the letters' names.
+      - {heard: "पीके", want: play, id: pk}
+      # number: digits and Hindi number words.
+      - {heard: "3 इडियट्स", want: play, id: idiots}
+      - {heard: "थ्री इडियट्स", want: play, id: idiots}
+      - {heard: "टॉय स्टोरी 3", want: play, id: toystory3}
+      - {heard: "बाहुबली 2", want: play, id: bahubali2}
+      - {heard: "धूम 2", want: play, id: dhoom2}
+      - {heard: "धूम दो", want: play, id: dhoom2}
+      # ambiguous: a shared opening word.
+      - {heard: "बाहुबली", want: ask, among: [bahubali, bahubali2]}
+      - {heard: "जुरासिक", want: ask, among: [jurassicpark, jurassicworld]}
+      # absent.
+      - {heard: "टर्मिनेटर", want: not_found}
+      - {heard: "बैटमैन", want: not_found}
+      - {heard: "पठान", want: not_found}
+      - {heard: "शाहरुख़ ख़ान", want: not_found}
+      - {heard: "गदर", want: not_found}
+      - {heard: "लता मंगेशकर", want: not_found}

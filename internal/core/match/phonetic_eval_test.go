@@ -162,7 +162,61 @@ const (
 	corpusOriginal = "original"
 	// corpusGrown is testdata/grown: held-out suites in every language. Cases describe what a listener hears; don't change one to suit an encoder (see docs/src/content/docs/contributing/dependencies.md).
 	corpusGrown = "grown"
+	// corpusCross is testdata/cross: held-out suites of libraries asked for in another language's script, one file per language of the requests. Its libraries share no encoder with the requests, so it is scored with production only and gated with crossFloor.
+	corpusCross = "cross"
 )
+
+// crossCorpusGlob matches the cross-language corpora.
+const crossCorpusGlob = "testdata/cross/*.yaml"
+
+// crossFloor is what production must still do on each cross-language corpus, keyed by the language of its requests (the file's name), under either retriever: decide at least correct cases right and make at most wrong wrong plays. They are the counts measured when they were set; the same rule as grownFloor moves them.
+var crossFloor = map[string]evalScore{
+	"ar": {correct: 36, wrong: 0},
+	"hi": {correct: 40, wrong: 0},
+	"ja": {correct: 23, wrong: 0},
+}
+
+// crossSuites gathers the cross-language suites, grouped by the language of their requests.
+func crossSuites(t *testing.T) map[string][]corpusSuite {
+	t.Helper()
+
+	paths, err := filepath.Glob(crossCorpusGlob)
+	require.NoError(t, err)
+	require.NotEmpty(t, paths, "no cross-language corpora")
+
+	out := map[string][]corpusSuite{}
+
+	for _, p := range paths {
+		out[strings.TrimSuffix(filepath.Base(p), ".yaml")] = loadCorpusFiles(t, p).Suites
+	}
+
+	return out
+}
+
+// evalCross scores production on one cross-language corpus, logs its misses, writes its row to table and holds it to crossFloor.
+func evalCross(t *testing.T, table *strings.Builder, retr, heard string, suites []corpusSuite) {
+	t.Helper()
+
+	var out []evalOutcome
+
+	t.Run(corpusCross+"/"+retr+"/"+heard, func(t *testing.T) {
+		out = runEval(t, suites, retr)
+	})
+
+	for _, o := range out {
+		if !o.ok {
+			t.Logf("%s %s %s current misses [%s] %q: %s", corpusCross, retr, heard, o.suite, o.heard, o.why)
+		}
+	}
+
+	got := tally(out)
+	fmt.Fprintf(table, "%-8s %-8s %-3s %-8s %s\n", corpusCross, retr, heard, "current", got)
+
+	floor, ok := crossFloor[heard]
+	require.True(t, ok, "no cross floor for %s", heard)
+	assert.GreaterOrEqual(t, got.correct, floor.correct, "%s %s %s: production must decide at least %d cases right", corpusCross, retr, heard, floor.correct)
+	assert.LessOrEqual(t, got.wrong, floor.wrong, "%s %s %s: production must make at most %d wrong plays", corpusCross, retr, heard, floor.wrong)
+}
 
 // evalSuites gathers one corpus set's suites, grouped by language.
 func evalSuites(t *testing.T, set string) map[string][]corpusSuite {
@@ -306,6 +360,14 @@ func TestPhoneticEval(t *testing.T) {
 			for _, code := range slices.Sorted(maps.Keys(suites)) {
 				evalLanguage(t, &table, set, retr, code, suites[code])
 			}
+		}
+	}
+
+	cross := crossSuites(t)
+
+	for _, retr := range []string{RetrieverInverted, RetrieverTrigram} {
+		for _, heard := range slices.Sorted(maps.Keys(cross)) {
+			evalCross(t, &table, retr, heard, cross[heard])
 		}
 	}
 
