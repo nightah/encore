@@ -123,7 +123,7 @@ tv.nothing_to_continue: "आपने अभी तक कोई शो दे�
 tv.one_new_episode: "{show} का एक नया एपिसोड है।"
 tv.one_unwatched: "{show} का एक अनदेखा एपिसोड है।"
 tv.playing_season: "{show} का सीज़न {season} चला रही हूँ, एपिसोड {episode} से, {title}।"
-tv.season_needs_show: "अभी कुछ नहीं चल रहा है। बताइए, आपको किस शो का सीज़न {season} देखना है।"
+tv.season_needs_show: "अभी कोई शो नहीं चल रहा है। बताइए, आपको किस शो का सीज़न {season} देखना है।"
 tv.unwatched: "{show} के {count} अनदेखे एपिसोड हैं।"
 volume.set: "वॉल्यूम {level} पर सेट कर दिया।"
 whatsnew.albums: "आपके सबसे नए एल्बम हैं: {titles}।"

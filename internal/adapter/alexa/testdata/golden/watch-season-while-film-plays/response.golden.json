@@ -1,0 +1,10 @@
+{
+  "version": "1.0",
+  "response": {
+    "outputSpeech": {
+      "type": "PlainText",
+      "text": "No show is playing, so tell me which show you'd like season 2 of."
+    },
+    "shouldEndSession": true
+  }
+}
