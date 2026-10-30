@@ -51,7 +51,7 @@ func (s *Service) PlayTitle(ctx context.Context, t Target, req TitleRequest, pro
 	return o
 }
 
-// ChooseFirst plays the first pending choice, answering "yes" to a question.
+// ChooseFirst plays the first pending choice, answering "yes" to a question that offered one. "Yes" to a question offering several chooses none of them, and the adapter asks again.
 func (s *Service) ChooseFirst(ctx context.Context, t Target, pending []Choice, progress Progress) Outcome {
 	if len(pending) == 0 {
 		return done(say("match.cancelled", nil))
