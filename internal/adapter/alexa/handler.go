@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"maps"
 	"net/http"
+	"runtime/debug"
 	"slices"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/nightah/encore/internal/core/actions"
@@ -40,23 +41,14 @@ func (h *Handler) ServeBody(w http.ResponseWriter, r *http.Request, body []byte)
 		Simulated: h.Simulating != nil && h.Simulating(),
 	}
 
-	var (
-		callsMu sync.Mutex
-		calls   []media.Call
-	)
+	tr := &requestTrace{}
 
-	ctx := media.ObserveCalls(r.Context(), func(c media.Call) {
-		callsMu.Lock()
-		calls = append(calls, c)
-		callsMu.Unlock()
-	})
+	ctx := media.ObserveCalls(r.Context(), tr.addCall)
 
-	resp, outcome := h.handle(ctx, &env, &entry)
+	resp, outcome := h.handleInTime(ctx, &env, entry.Verify, tr)
 
-	// Work the action left running (a progressive response, a slow wake) may still report calls; the log keeps those made so far.
-	callsMu.Lock()
-	entry.KodiCalls = slices.Clone(calls)
-	callsMu.Unlock()
+	// Work the action left running (a progressive response, a slow wake, a stalled Kodi instance) may still report calls; the log keeps those made so far.
+	entry.KodiCalls, entry.Target, entry.Via, entry.MatchTime = tr.snapshot()
 
 	if outcome != nil {
 		entry.Match, entry.Err = outcome.Match, outcome.Err
@@ -93,8 +85,57 @@ func (h *Handler) now() time.Time {
 	return time.Now()
 }
 
-func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, entry *LogEntry) (ResponseEnvelope, *actions.Outcome) {
+// handleInTime runs handle under RequestDeadline, less the verify time already spent. When the deadline passes first, or the action failed after it passed, it answers that Kodi isn't answering, so the user hears why rather than Alexa saying the skill didn't respond. Work still running carries on with a cancelled context and its answer is dropped.
+func (h *Handler) handleInTime(ctx context.Context, env *RequestEnvelope, verify time.Duration, tr *requestTrace) (ResponseEnvelope, *actions.Outcome) {
+	ctx, cancel := context.WithTimeout(ctx, RequestDeadline-verify)
+	defer cancel()
+
+	type handled struct {
+		resp    ResponseEnvelope
+		outcome *actions.Outcome
+	}
+
+	done := make(chan handled, 1)
+
+	go func() {
+		// net/http only recovers a panic in its own goroutine; one here would take Encore down.
+		defer func() {
+			if p := recover(); p != nil {
+				h.Log.ErrorContext(ctx, "panicked handling an Alexa request", "panic", p, "stack", string(debug.Stack()))
+
+				o := actions.Outcome{Say: actions.Message{ID: "error.generic"}, EndSession: true, Err: fmt.Errorf("%w: %v", ErrPanicked, p)}
+				done <- handled{h.respond(env.Request.Locale, o, false), &o}
+			}
+		}()
+
+		resp, o := h.handle(ctx, env, tr)
+		done <- handled{resp, o}
+	}()
+
+	var err error
+
+	select {
+	case r := <-done:
+		if ctx.Err() == nil || r.outcome == nil || r.outcome.Err == nil {
+			return r.resp, r.outcome
+		}
+
+		err = r.outcome.Err
+	case <-ctx.Done():
+	}
+
+	o := actions.Outcome{Say: actions.Message{ID: "error.not_answering"}, EndSession: true, Err: errors.Join(ErrTooSlow, err)}
+
+	if name := tr.targetName(); name != "" {
+		o.Say = actions.Message{ID: "error.kodi_not_answering", Params: map[string]string{"kodi": name}}
+	}
+
+	return h.respond(env.Request.Locale, o, false), &o
+}
+
+func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, tr *requestTrace) (ResponseEnvelope, *actions.Outcome) {
 	locale := env.Request.Locale
+	deviceID := env.Context.System.Device.DeviceID
 
 	switch env.Request.Type {
 	case TypeSessionEnded:
@@ -129,7 +170,7 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, entry *LogEn
 
 		return h.respond(locale, actions.Outcome{Say: msg, Reprompt: &msg}, false), nil
 	case "IdentifyEcho":
-		o := h.identify(ctx, entry.DeviceID)
+		o := h.identify(ctx, deviceID)
 
 		return h.respond(locale, o, false), &o
 	}
@@ -148,11 +189,11 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, entry *LogEn
 
 	switch room := strings.TrimSpace(intent.Slots["Room"].Value); {
 	case room != "":
-		target, err = h.Targets.TargetForRoom(ctx, entry.DeviceID, room)
+		target, err = h.Targets.TargetForRoom(ctx, deviceID, room)
 	case title != "":
-		target, intent, err = h.targetInQuery(ctx, entry.DeviceID, locale, intent, title)
+		target, intent, err = h.targetInQuery(ctx, deviceID, locale, intent, title)
 	default:
-		target, err = h.Targets.Target(ctx, entry.DeviceID)
+		target, err = h.Targets.Target(ctx, deviceID)
 	}
 
 	if err != nil {
@@ -168,8 +209,6 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, entry *LogEn
 		return h.respond(locale, o, false), &o
 	}
 
-	entry.Target, entry.Via = target.Name, target.Via
-
 	var timed *timedMatcher
 
 	if target.Matcher != nil {
@@ -177,11 +216,9 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, entry *LogEn
 		target.Matcher = timed
 	}
 
-	o := h.dispatch(ctx, env, target, intent)
+	tr.setTarget(target, timed)
 
-	if timed != nil {
-		entry.MatchTime = time.Duration(timed.total.Load())
-	}
+	o := h.dispatch(ctx, env, target, intent)
 
 	return h.respond(locale, o, target.ConfirmSound), &o
 }
@@ -247,6 +284,40 @@ func (h *Handler) respond(locale string, o actions.Outcome, confirm bool) Respon
 	}
 
 	return env
+}
+
+func (tr *requestTrace) addCall(c media.Call) {
+	tr.mu.Lock()
+	defer tr.mu.Unlock()
+
+	tr.calls = append(tr.calls, c)
+}
+
+func (tr *requestTrace) setTarget(t actions.Target, timed *timedMatcher) {
+	tr.mu.Lock()
+	defer tr.mu.Unlock()
+
+	tr.target, tr.via, tr.timed = t.Name, t.Via, timed
+}
+
+func (tr *requestTrace) targetName() string {
+	tr.mu.Lock()
+	defer tr.mu.Unlock()
+
+	return tr.target
+}
+
+// snapshot returns what the request did so far: its Kodi calls, its target and the time spent matching titles.
+func (tr *requestTrace) snapshot() ([]media.Call, string, actions.Via, time.Duration) {
+	tr.mu.Lock()
+	defer tr.mu.Unlock()
+
+	var matching time.Duration
+	if tr.timed != nil {
+		matching = time.Duration(tr.timed.total.Load())
+	}
+
+	return slices.Clone(tr.calls), tr.target, tr.via, matching
 }
 
 func (m *timedMatcher) Search(ctx context.Context, q match.Query) (match.Result, error) {

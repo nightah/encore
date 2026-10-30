@@ -37,7 +37,7 @@ const (
 	recentlyAddedFor   = 14 * 24 * time.Hour
 )
 
-// wakeBudget is how long a voice request waits for a woken Kodi. Alexa allows about eight seconds per response, so this leaves room for the action itself.
+// wakeBudget is how long a voice request waits for a woken Kodi. It must stay under alexa.RequestDeadline, which answers for a request that runs longer, so this leaves room for the action itself.
 const wakeBudget = 5 * time.Second
 
 // recorderBuffer is how many entries may wait for the database before new ones are dropped. Recording must never slow down a voice response.
