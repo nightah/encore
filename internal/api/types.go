@@ -186,6 +186,14 @@ type deployRecord struct {
 	Automatic bool `json:"automatic"`
 }
 
+// autoDeployRetry is an automatic deploy that failed for a reason that may pass, waiting to be tried again.
+type autoDeployRetry struct {
+	// Failures counts the automatic deploys in a row that failed this way.
+	Failures int       `json:"failures"`
+	NextAt   time.Time `json:"next_at"`
+	Error    string    `json:"error"`
+}
+
 // Device is an Echo device that has talked to the skill.
 type Device struct {
 	ID                int64     `json:"id"`
@@ -769,7 +777,7 @@ type Features struct {
 	ShutdownQuits     bool    `json:"shutdown_quits" doc:"\"Shut down\" quits Kodi instead of powering off the device; a Kodi instance's own kodi[].shutdown_quits wins"`
 	ConfirmSound      bool    `json:"confirm_sound" doc:"A short sound answers commands that have nothing to say, such as pause or volume up"`
 	QueueLimit        int     `json:"queue_limit" doc:"The most items a shuffle or queue plays at once"`
-	AutoDeploy        bool    `json:"auto_deploy" doc:"Redeploy the skill on its own when what would be deployed changes; a failed automatic deploy pauses this until a deploy started by hand succeeds"`
+	AutoDeploy        bool    `json:"auto_deploy" doc:"Redeploy the skill on its own when what would be deployed changes. An automatic deploy that fails for a reason that may pass, such as Amazon being unavailable, is tried again up to three times with a growing wait; any other failure, or a fourth in a row, pauses this until a deploy started by hand succeeds"`
 	AutoDeployMinutes float64 `json:"auto_deploy_minutes" doc:"How often auto_deploy looks for changes, in minutes that can be fractional; a change goes live within two checks"`
 }
 
@@ -985,16 +993,25 @@ type SkillInfo struct {
 	LocalesAvailable []string         `json:"locales_available"`
 	LocalesEnabled   []string         `json:"locales_enabled"`
 	// LocaleInvocations spell each choice per locale: some languages write the names in their own script, and French says kodi for both.
-	LocaleInvocations []LocaleInvocation   `json:"locale_invocations" doc:"What people say in each available locale for each invocation choice"`
-	Content           []string             `json:"content" enum:"movies,tv,music" doc:"What the skill can play; music includes music videos"`
-	Endpoint          SkillEndpointInfo    `json:"endpoint"`
-	Privacy           Privacy              `json:"privacy" doc:"Each answer is null until it's given; deploys are refused until all are answered"`
-	LastDeploy        Nullable[LastDeploy] `json:"last_deploy"`
-	NeedsDeploy       bool                 `json:"needs_deploy"`
-	UpdateReason      string               `json:"update_reason" enum:"none,settings,library" doc:"Why needs_deploy is set: the skill's settings changed, or only the library titles in the model"`
-	ModelSize         Nullable[ModelSize]  `json:"model_size"`
-	AutoDeploy        bool                 `json:"auto_deploy" doc:"Whether alexa.auto_deploy redeploys the skill on its own when needs_deploy is set"`
-	AutoDeployPaused  string               `json:"auto_deploy_paused" doc:"Why automatic deploys are paused until a deploy started by hand succeeds; empty when they aren't paused or alexa.auto_deploy is off"`
+	LocaleInvocations []LocaleInvocation        `json:"locale_invocations" doc:"What people say in each available locale for each invocation choice"`
+	Content           []string                  `json:"content" enum:"movies,tv,music" doc:"What the skill can play; music includes music videos"`
+	Endpoint          SkillEndpointInfo         `json:"endpoint"`
+	Privacy           Privacy                   `json:"privacy" doc:"Each answer is null until it's given; deploys are refused until all are answered"`
+	LastDeploy        Nullable[LastDeploy]      `json:"last_deploy"`
+	NeedsDeploy       bool                      `json:"needs_deploy"`
+	UpdateReason      string                    `json:"update_reason" enum:"none,settings,library" doc:"Why needs_deploy is set: the skill's settings changed, or only the library titles in the model"`
+	ModelSize         Nullable[ModelSize]       `json:"model_size"`
+	AutoDeploy        bool                      `json:"auto_deploy" doc:"Whether alexa.auto_deploy redeploys the skill on its own when needs_deploy is set"`
+	AutoDeployPaused  string                    `json:"auto_deploy_paused" doc:"Why automatic deploys are paused until a deploy started by hand succeeds; empty when they aren't paused or alexa.auto_deploy is off"`
+	AutoDeployRetry   Nullable[AutoDeployRetry] `json:"auto_deploy_retry" doc:"An automatic deploy that failed for a reason that may pass, such as Amazon being unavailable or still building, which is tried again before automatic deploys pause; null when there is none or alexa.auto_deploy is off"`
+}
+
+// AutoDeployRetry is an automatic deploy that failed for a reason that may pass, waiting to be tried again.
+type AutoDeployRetry struct {
+	Attempts    int       `json:"attempts" doc:"How many automatic deploys in a row have failed this way"`
+	MaxAttempts int       `json:"max_attempts" doc:"How many may fail in a row before automatic deploys pause"`
+	NextAt      time.Time `json:"next_at" doc:"The earliest the next attempt runs, at the first automatic check from then on"`
+	Error       string    `json:"error" doc:"Why the last attempt failed"`
 }
 
 // LocaleInvocation is what people say in one locale for each invocation choice.

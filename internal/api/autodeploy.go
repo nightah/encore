@@ -11,6 +11,7 @@ import (
 
 	"github.com/nightah/encore/internal/config"
 	"github.com/nightah/encore/internal/smapi"
+	"github.com/nightah/encore/internal/smapi/deploy"
 	"github.com/nightah/encore/internal/smapi/skillpkg"
 	"github.com/nightah/encore/internal/store"
 )
@@ -56,11 +57,13 @@ func every(ctx context.Context, interval func(context.Context) time.Duration, ch
 	}
 }
 
-// autoDeploy starts a deploy when alexa.auto_deploy is on, automatic deploys aren't paused, the skill has been deployed before and Amazon is connected, and what would be deployed differs from the last deploy and hasn't changed since the previous check. A deploy that can't start pauses automatic deploys, as a failed one does.
+// autoDeploy starts a deploy when alexa.auto_deploy is on, automatic deploys aren't paused, the skill has been deployed before and Amazon is connected, and what would be deployed differs from the last deploy and hasn't changed since the previous check. A failed automatic deploy waiting to be tried again is retried once its wait is over, without waiting for the package to settle, since it had before the first attempt. A deploy that can't start pauses automatic deploys, as a failed one does. While automatic deploys are off or paused, a failure waiting to be tried again is forgotten.
 func (s *skillService) autoDeploy(ctx context.Context) {
 	eff, err := s.a.prefs.Effective(ctx)
 	if err != nil || !eff.Alexa.AutoDeploy || s.autoDeployPaused(ctx) != "" {
+		// A failure waiting to be tried again is forgotten too, so automatic deploys turned back on wait for a change to settle and count its failures afresh.
 		s.autoSeen = ""
+		s.setAutoDeployRetry(ctx, nil)
 
 		return
 	}
@@ -85,6 +88,11 @@ func (s *skillService) autoDeploy(ctx context.Context) {
 		return
 	}
 
+	retry := s.autoDeployRetry(ctx)
+	if retry != nil && s.a.now().Before(retry.NextAt) {
+		return
+	}
+
 	opts, _, err := s.packageOptions(ctx, false)
 	if err != nil {
 		return
@@ -106,7 +114,7 @@ func (s *skillService) autoDeploy(ctx context.Context) {
 		hash = "unbuildable"
 	}
 
-	if hash != s.autoSeen {
+	if hash != s.autoSeen && retry == nil {
 		s.autoSeen = hash
 
 		return
@@ -125,6 +133,7 @@ func (s *skillService) autoDeploy(ctx context.Context) {
 		// A deploy started by hand is already running.
 	default:
 		s.a.log.Warn("automatic skill deploy could not start", "error", err)
+		s.setAutoDeployRetry(ctx, nil)
 		s.setAutoDeployPaused(ctx, err.Error())
 
 		if att, aerr := s.a.attention(ctx); aerr == nil {
@@ -180,5 +189,50 @@ func (s *skillService) setAutoDeployPaused(ctx context.Context, reason string) {
 
 	if err := s.a.app.DB().Settings().Set(ctx, autoDeployPausedKey, strings.TrimSpace(reason)); err != nil {
 		s.a.log.Error("saving automatic deploy pause", "error", err)
+	}
+}
+
+// autoDeployFailed handles an automatic deploy that failed with err: one that may pass is tried again after a growing wait, up to autoDeployRetries times; anything else, or one failure too many, pauses automatic deploys.
+func (s *skillService) autoDeployFailed(ctx context.Context, err error) {
+	failures := 1
+	if prev := s.autoDeployRetry(ctx); prev != nil {
+		failures = prev.Failures + 1
+	}
+
+	if deploy.Transient(err) && failures <= autoDeployRetries {
+		next := s.a.now().UTC().Add(autoDeployRetryDelay << (failures - 1))
+		s.a.log.Info("automatic skill deploy will be tried again", "attempt", failures, "next_at", next, "error", err)
+		s.setAutoDeployRetry(ctx, &autoDeployRetry{Failures: failures, NextAt: next, Error: err.Error()})
+
+		return
+	}
+
+	s.setAutoDeployRetry(ctx, nil)
+	s.setAutoDeployPaused(ctx, err.Error())
+}
+
+// autoDeployRetry is the failed automatic deploy waiting to be tried again, or nil.
+func (s *skillService) autoDeployRetry(ctx context.Context) *autoDeployRetry {
+	var r autoDeployRetry
+	if err := s.a.app.DB().Settings().Get(ctx, autoDeployRetryKey, &r); err != nil {
+		return nil
+	}
+
+	return &r
+}
+
+// setAutoDeployRetry records the failed automatic deploy to try again, or forgets it when r is nil.
+func (s *skillService) setAutoDeployRetry(ctx context.Context, r *autoDeployRetry) {
+	var err error
+
+	switch {
+	case r != nil:
+		err = s.a.app.DB().Settings().Set(ctx, autoDeployRetryKey, r)
+	case s.autoDeployRetry(ctx) != nil:
+		err = s.a.app.DB().Settings().Delete(ctx, autoDeployRetryKey)
+	}
+
+	if err != nil {
+		s.a.log.Error("saving automatic deploy retry", "error", err)
 	}
 }

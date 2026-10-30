@@ -276,12 +276,13 @@ func (s *skillService) runDeploy(ctx context.Context, d *deploy.Deployer, rec *d
 		_ = s.a.app.DB().Settings().Set(context.WithoutCancel(ctx), reauthKey, true)
 	}
 
-	// A failed automatic deploy pauses the rest until someone looks; any deploy that succeeds resumes them.
+	// A failed automatic deploy is tried again a few times if the failure may pass, and otherwise pauses the rest until someone looks; any deploy that succeeds resumes them.
 	switch {
 	case err == nil:
+		s.setAutoDeployRetry(context.WithoutCancel(ctx), nil)
 		s.setAutoDeployPaused(context.WithoutCancel(ctx), "")
 	case rec.Automatic:
-		s.setAutoDeployPaused(context.WithoutCancel(ctx), err.Error())
+		s.autoDeployFailed(context.WithoutCancel(ctx), err)
 	}
 
 	s.mu.Lock()

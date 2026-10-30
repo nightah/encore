@@ -216,6 +216,37 @@
         ],
         "type": "object"
       },
+      "AutoDeployRetry": {
+        "additionalProperties": false,
+        "properties": {
+          "attempts": {
+            "description": "How many automatic deploys in a row have failed this way",
+            "format": "int64",
+            "type": "integer"
+          },
+          "error": {
+            "description": "Why the last attempt failed",
+            "type": "string"
+          },
+          "max_attempts": {
+            "description": "How many may fail in a row before automatic deploys pause",
+            "format": "int64",
+            "type": "integer"
+          },
+          "next_at": {
+            "description": "The earliest the next attempt runs, at the first automatic check from then on",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "attempts",
+          "max_attempts",
+          "next_at",
+          "error"
+        ],
+        "type": "object"
+      },
       "BackupSettings": {
         "additionalProperties": false,
         "properties": {
@@ -831,7 +862,7 @@
         "additionalProperties": false,
         "properties": {
           "auto_deploy": {
-            "description": "Redeploy the skill on its own when what would be deployed changes; a failed automatic deploy pauses this until a deploy started by hand succeeds",
+            "description": "Redeploy the skill on its own when what would be deployed changes. An automatic deploy that fails for a reason that may pass, such as Amazon being unavailable, is tried again up to three times with a growing wait; any other failure, or a fourth in a row, pauses this until a deploy started by hand succeeds",
             "type": "boolean"
           },
           "auto_deploy_minutes": {
@@ -2790,6 +2821,17 @@
             "description": "Why automatic deploys are paused until a deploy started by hand succeeds; empty when they aren't paused or alexa.auto_deploy is off",
             "type": "string"
           },
+          "auto_deploy_retry": {
+            "description": "An automatic deploy that failed for a reason that may pass, such as Amazon being unavailable or still building, which is tried again before automatic deploys pause; null when there is none or alexa.auto_deploy is off",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AutoDeployRetry"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "content": {
             "description": "What the skill can play; music includes music videos",
             "items": {
@@ -2907,7 +2949,8 @@
           "update_reason",
           "model_size",
           "auto_deploy",
-          "auto_deploy_paused"
+          "auto_deploy_paused",
+          "auto_deploy_retry"
         ],
         "type": "object"
       },
