@@ -103,21 +103,33 @@ func ask(res match.Result) Outcome {
 		return done(say("match.not_found", map[string]string{"query": res.Normalized}))
 	case 1:
 		// A single uncertain candidate becomes a yes/no question.
-		msg = say("match.confirm", map[string]string{"title": describe(choices[0])})
+		msg = describe(Message{ID: "match.confirm"}, "title", choices[0])
 	default:
-		msg = say("match.did_you_mean", map[string]string{"first": describe(choices[0]), "second": describe(choices[1])})
+		msg = describe(describe(Message{ID: "match.did_you_mean"}, "first", choices[0]), "second", choices[1])
 	}
 
 	return Outcome{Say: msg, Reprompt: &msg, Pending: choices}
 }
 
-// describe names a choice unambiguously enough to choose between remakes.
-func describe(c Choice) string {
-	if c.Year > 0 {
-		return c.Title + " from " + strconv.Itoa(c.Year)
+// describe fills msg's placeholder key with a choice named unambiguously enough to choose between remakes: its title, with its year worded in the listener's language when it has one.
+func describe(msg Message, key string, c Choice) Message {
+	if c.Year == 0 {
+		if msg.Params == nil {
+			msg.Params = map[string]string{}
+		}
+
+		msg.Params[key] = c.Title
+
+		return msg
 	}
 
-	return c.Title
+	if msg.Messages == nil {
+		msg.Messages = map[string]Message{}
+	}
+
+	msg.Messages[key] = say("match.title_year", map[string]string{"title": c.Title, "year": strconv.Itoa(c.Year)})
+
+	return msg
 }
 
 func (s *Service) playDoc(ctx context.Context, t Target, doc match.Doc, progress Progress) Outcome {
