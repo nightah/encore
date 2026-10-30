@@ -1,0 +1,122 @@
+# NLU checks for de-DE: run them with make nlu (see internal/smapi/nlu). Each row is an utterance, the intent Alexa should pick and the slots it should fill; an empty slot value takes any words, and a value of a custom type may be its ID. Mark a row pending, with why, while the model that makes it pass isn't deployed yet.
+locale: de-DE
+cases:
+  # Every intent, in model order, in the language's own words.
+  - {utterance: "abbrechen", intent: AMAZON.CancelIntent}
+  - {utterance: "hilfe", intent: AMAZON.HelpIntent}
+  - {utterance: "stopp", intent: AMAZON.StopIntent}
+  - {utterance: "geh zur startseite", intent: AMAZON.NavigateHomeIntent}
+  - {utterance: "lila elefanten tanzen auf dem mond", intent: AMAZON.FallbackIntent}
+  - {utterance: "pausiere den fernseher", intent: AMAZON.PauseIntent}
+  - {utterance: "setze den fernseher fort", intent: AMAZON.ResumeIntent}
+  - {utterance: "weiter", intent: AMAZON.NextIntent}
+  - {utterance: "zurück", intent: AMAZON.PreviousIntent}
+  - {utterance: "von vorne", intent: AMAZON.StartOverIntent}
+  - {utterance: "ja", intent: AMAZON.YesIntent}
+  - {utterance: "nein", intent: AMAZON.NoIntent}
+  - {utterance: "zufallswiedergabe an", intent: AMAZON.ShuffleOnIntent}
+  - {utterance: "zufallswiedergabe aus", intent: AMAZON.ShuffleOffIntent}
+  - {utterance: "wiederholung an", intent: AMAZON.LoopOnIntent}
+  - {utterance: "wiederholung aus", intent: AMAZON.LoopOffIntent}
+  - {utterance: "ich möchte den film das boot sehen", intent: WatchMovie, slots: {Movie: "das boot"}}
+  - {utterance: "schau dark weiter", intent: WatchNextEpisode, slots: {Show: "dark"}}
+  - {utterance: "finde das boot", intent: PlayMedia, slots: {Query: "das boot"}}
+  - {utterance: "such mir einen komödie film aus", intent: WatchRandomMovie, slots: {Genre: ""}}
+  - {utterance: "spiele mir den trailer", intent: WatchMovieTrailer}
+  - {utterance: "setze die das boot reihe fort", intent: WatchNextInCollection, slots: {Movie: "das boot"}}
+  - {utterance: "spiele mir dark folge 3 von staffel 2", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "dark"}}
+  - {utterance: "spiele mir dark von anfang an", intent: WatchFirstEpisode, slots: {Show: "dark"}}
+  - {utterance: "spiele mir die neueste dark folge", intent: WatchLatestEpisode, slots: {Show: "dark"}}
+  - {utterance: "setze die letzte serie fort", intent: ContinueWatching}
+  - {utterance: "spiele mir irgendeine folge von dark", intent: WatchRandomEpisode, slots: {Show: "dark"}}
+  - {utterance: "spiele mir irgendeine komödie serie", intent: WatchRandomShow, slots: {Genre: ""}}
+  - {utterance: "spiele dark zufällig", intent: ShuffleShow, slots: {Show: "dark"}}
+  - {utterance: "ich möchte dark am stück schauen", intent: BingeShow, slots: {Show: "dark"}}
+  - {utterance: "spiele mir den künstler rammstein", intent: ListenToArtist, slots: {Artist: "rammstein"}}
+  - {utterance: "zufallswiedergabe des künstlers rammstein", intent: ShuffleArtist, slots: {Artist: "rammstein"}}
+  - {utterance: "spiele mir das album mutter", intent: ListenToAlbum, slots: {Album: "mutter"}}
+  - {utterance: "spiele das album mutter zufällig", intent: ShuffleAlbum, slots: {Album: "mutter"}}
+  - {utterance: "spiele mir das neueste album von rammstein", intent: ListenToLatestAlbum, slots: {Artist: "rammstein"}}
+  - {utterance: "spiele das neueste album von rammstein zufällig", intent: ShuffleLatestAlbum, slots: {Artist: "rammstein"}}
+  - {utterance: "spiele mir das lied sonne", intent: ListenToSong, slots: {Song: "sonne"}}
+  - {utterance: "spiele mir sonne von rammstein", intent: ListenToSongOrAlbum, slots: {Artist: "rammstein", Title: "sonne"}}
+  - {utterance: "spiele mir musik aus dem genre komödie", intent: ListenToGenre, slots: {Genre: ""}}
+  - {utterance: "ich möchte meine neuen lieder hören", intent: ListenToRecentSongs}
+  - {utterance: "lass uns feiern", intent: PartyMode}
+  - {utterance: "spiele mir das musikvideo zu bohemian rhapsody", intent: WatchMusicVideo, slots: {MusicVideo: ""}}
+  - {utterance: "spiele mir ein zufälliges komödie musikvideo", intent: WatchRandomMusicVideo, slots: {Genre: ""}}
+  - {utterance: "spiele mir alle meine komödie musikvideos", intent: ShuffleMusicVideos, slots: {Genre: ""}}
+  - {utterance: "spiele die wiedergabeliste roadtrip", intent: PlayPlaylist, slots: {Playlist: ""}}
+  - {utterance: "spiele meine playlist roadtrip zufällig", intent: ShufflePlaylist, slots: {Playlist: ""}}
+  - {utterance: "ich möchte eine film empfehlung", intent: Recommend, slots: {MediaType: "movie"}}
+  - {utterance: "gibt es irgendwelche neue film", intent: WhatsNew, slots: {MediaType: "movie"}}
+  - {utterance: "liste mir die alben von rammstein auf", intent: WhatAlbums, slots: {Artist: "rammstein"}}
+  - {utterance: "fünf minuten zurück", intent: PlayerSeek, slots: {Duration: "", SeekDirection: "back"}}
+  - {utterance: "spul um fünf minuten zurück", intent: PlayerRewind, slots: {Duration: ""}}
+  - {utterance: "geh zur stelle fünf minuten", intent: PlayerSeekTo, slots: {Position: ""}}
+  - {utterance: "wiederholung alles", intent: Repeat, slots: {RepeatMode: "all"}}
+  - {utterance: "vergrößere das bild", intent: PlayerZoom}
+  - {utterance: "drehe im uhrzeigersinn", intent: PlayerRotate, slots: {Rotation: "clockwise"}}
+  - {utterance: "verschiebe das bild nach unten", intent: PlayerMove, slots: {Direction: "down"}}
+  - {utterance: "verlasse den vollbildmodus", intent: Fullscreen}
+  - {utterance: "stereoskopischer modus", intent: StereoscopicMode}
+  - {utterance: "audio passthrough umschalten", intent: AudioPassthrough}
+  - {utterance: "stelle die lautstärke auf 30", intent: VolumeSet, slots: {Level: "30"}}
+  - {utterance: "lauter bitte", intent: VolumeUp}
+  - {utterance: "verringere die lautstärke", intent: VolumeDown}
+  - {utterance: "stummschalten", intent: Mute}
+  - {utterance: "was schaue ich gerade", intent: CurrentPlayItemEnquiry}
+  - {utterance: "wie lange läuft das noch", intent: CurrentPlayItemTimeRemaining}
+  - {utterance: "wie heißt dieses echo", intent: IdentifyEcho}
+  - {utterance: "nächste untertitel", intent: Subtitles, slots: {SubtitleAction: "next"}}
+  - {utterance: "nächste tonspur", intent: AudioStream, slots: {Step: "next"}}
+  - {utterance: "geh zurück", intent: Navigate, slots: {NavAction: "back"}}
+  - {utterance: "gib den text hallo ein", intent: TypeText, slots: {Text: ""}}
+  - {utterance: "zeige mir die filme", intent: ViewLibrary, slots: {Section: "movies"}}
+  - {utterance: "zeige mir die musik playlist roadtrip", intent: ViewPlaylist, slots: {Playlist: ""}}
+  - {utterance: "öffne den favoriten tagesschau", intent: OpenFavourite, slots: {Favourite: ""}}
+  - {utterance: "führe youtube aus", intent: LaunchAddon, slots: {Addon: ""}}
+  - {utterance: "starte eine globale suche nach das boot", intent: GlobalSearch, slots: {Query: "das boot"}}
+  - {utterance: "kodi ruhezustand", intent: Power, slots: {PowerAction: "hibernate"}}
+  - {utterance: "auswerfen", intent: EjectMedia}
+  - {utterance: "suche nach neuen filmen", intent: UpdateLibrary}
+  - {utterance: "bereinige die bibliothek auf", intent: CleanLibrary}
+  # Answers to "did you mean …?".
+  - {utterance: "ja bitte", intent: AMAZON.YesIntent}
+  - {utterance: "nein danke", intent: AMAZON.NoIntent}
+  # Bare titles, which free-text and title slots compete for.
+  - {utterance: "spiele das boot", intent: PlayMedia, slots: {Query: "das boot"}}
+  - {utterance: "das boot abspielen", intent: PlayMedia, slots: {Query: "das boot"}}
+  - {utterance: "mach das boot an", intent: PlayMedia, slots: {Query: "das boot"}}
+  # Rooms.
+  - {utterance: "spiele mir den film das boot im schlafzimmer", intent: WatchMovie, slots: {Movie: "das boot", Room: ""}}
+  - {utterance: "den film das boot zu spielen im schlafzimmer", intent: WatchMovie, slots: {Movie: "das boot", Room: ""}}
+  - {utterance: "schau dark weiter im schlafzimmer", intent: WatchNextEpisode, slots: {Room: "", Show: "dark"}}
+  - {utterance: "setze dark fort im schlafzimmer", intent: WatchNextEpisode, slots: {Room: "", Show: "dark"}}
+  - {utterance: "spiele mir etwas musik von rammstein im schlafzimmer", intent: ListenToArtist, slots: {Artist: "rammstein", Room: ""}}
+  - {utterance: "spiele mir ein paar lieder von rammstein im schlafzimmer", intent: ListenToArtist, slots: {Artist: "rammstein", Room: ""}}
+  - {utterance: "pause im schlafzimmer", intent: RoomControl, slots: {Command: "pause", Room: ""}}
+  - {utterance: "pause den fernseher im schlafzimmer", intent: RoomControl, slots: {Command: "pause", Room: ""}}
+  # Episodes and seasons, including the one-shot forms.
+  - {utterance: "spiele mir dark staffel 2 folge 3", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "dark"}}
+  - {utterance: "spiele mir staffel 2 folge 3 von dark", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "dark"}}
+  - {utterance: "staffel 2 folge 3 von dark zu spielen", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "dark"}}
+  - {utterance: "spiele mir dark staffel 2 folge 3 im schlafzimmer", intent: WatchEpisode, slots: {Episode: "3", Room: "", Season: "2", Show: "dark"}}
+  - {utterance: "spiele mir die nächste folge von dark", intent: WatchNextEpisode, slots: {Show: "dark"}}
+  - {utterance: "die nächste folge von dark zu spielen", intent: WatchNextEpisode, slots: {Show: "dark"}}
+  - {utterance: "spiele mir die neueste folge von dark", intent: WatchLatestEpisode, slots: {Show: "dark"}}
+  - {utterance: "spiele mir die erste folge von dark", intent: WatchFirstEpisode, slots: {Show: "dark"}}
+  - {utterance: "spiele mir erste folge von dark", intent: WatchFirstEpisode, slots: {Show: "dark"}}
+  # Music by an artist, including the one-shot forms.
+  - {utterance: "spiele mir etwas musik von rammstein", intent: ListenToArtist, slots: {Artist: "rammstein"}}
+  - {utterance: "spiele mir ein paar lieder von rammstein", intent: ListenToArtist, slots: {Artist: "rammstein"}}
+  - {utterance: "ich möchte etwas musik von rammstein hören", intent: ListenToArtist, slots: {Artist: "rammstein"}}
+  - {utterance: "musik von rammstein zu spielen", intent: ListenToArtist, slots: {Artist: "rammstein"}}
+  - {utterance: "spiele mir das lied sonne von rammstein", intent: ListenToSong, slots: {Artist: "rammstein", Song: "sonne"}}
+  - {utterance: "spiele mir das album mutter von rammstein", intent: ListenToAlbum, slots: {Album: "mutter", Artist: "rammstein"}}
+  - {utterance: "ich möchte sonne von rammstein hören", intent: ListenToSongOrAlbum, slots: {Artist: "rammstein", Title: "sonne"}}
+  - {utterance: "sonne von rammstein zu spielen", intent: ListenToSongOrAlbum, slots: {Artist: "rammstein", Title: "sonne"}}
+  - {utterance: "spiele musik von rammstein zufällig", intent: ShuffleArtist, slots: {Artist: "rammstein"}}
+  - {utterance: "zufallswiedergabe mit musik von rammstein", intent: ShuffleArtist, slots: {Artist: "rammstein"}}
+  - {utterance: "spiele mir neuestes album von rammstein", intent: ListenToLatestAlbum, slots: {Artist: "rammstein"}}
+  - {utterance: "ich möchte das neue album von rammstein hören", intent: ListenToLatestAlbum, slots: {Artist: "rammstein"}}

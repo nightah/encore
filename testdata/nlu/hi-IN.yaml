@@ -1,0 +1,112 @@
+# NLU checks for hi-IN: run them with make nlu (see internal/smapi/nlu). Each row is an utterance, the intent Alexa should pick and the slots it should fill; an empty slot value takes any words, and a value of a custom type may be its ID. Mark a row pending, with why, while the model that makes it pass isn't deployed yet.
+locale: hi-IN
+cases:
+  # Every intent, in model order, in the language's own words.
+  - {utterance: "रद्द करो", intent: AMAZON.CancelIntent}
+  - {utterance: "मदद", intent: AMAZON.HelpIntent}
+  - {utterance: "रुको", intent: AMAZON.StopIntent}
+  - {utterance: "होम पर जाओ", intent: AMAZON.NavigateHomeIntent}
+  - {utterance: "बैंगनी हाथी चाँद पर नाच रहे हैं", intent: AMAZON.FallbackIntent}
+  - {utterance: "टीवी पॉज़ करो", intent: AMAZON.PauseIntent}
+  - {utterance: "टीवी फिर से चलाओ", intent: AMAZON.ResumeIntent}
+  - {utterance: "अगला", intent: AMAZON.NextIntent}
+  - {utterance: "पिछला", intent: AMAZON.PreviousIntent}
+  - {utterance: "फिर से शुरू करो", intent: AMAZON.StartOverIntent}
+  - {utterance: "हाँ", intent: AMAZON.YesIntent}
+  - {utterance: "नहीं", intent: AMAZON.NoIntent}
+  - {utterance: "शफ़ल चालू", intent: AMAZON.ShuffleOnIntent}
+  - {utterance: "शफ़ल बंद", intent: AMAZON.ShuffleOffIntent}
+  - {utterance: "रिपीट चालू", intent: AMAZON.LoopOnIntent}
+  - {utterance: "रिपीट बंद", intent: AMAZON.LoopOffIntent}
+  - {utterance: "मुझे फ़िल्म शोले देखनी है", intent: WatchMovie, slots: {Movie: "शोले"}}
+  - {utterance: "पंचायत देखना जारी रखो", intent: WatchNextEpisode, slots: {Show: "पंचायत"}}
+  - {utterance: "शोले ढूँढो", intent: PlayMedia, slots: {Query: "शोले"}}
+  - {utterance: "मेरे लिए कोई एक्शन फ़िल्म चुनो", intent: WatchRandomMovie, slots: {Genre: ""}}
+  - {utterance: "ट्रेलर दिखाओ", intent: WatchMovieTrailer}
+  - {utterance: "शोले सीरीज़ जारी रखो", intent: WatchNextInCollection, slots: {Movie: "शोले"}}
+  - {utterance: "पंचायत के सीज़न 2 का एपिसोड 3 चलाओ", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "पंचायत"}}
+  - {utterance: "पंचायत शुरू से चलाओ", intent: WatchFirstEpisode, slots: {Show: "पंचायत"}}
+  - {utterance: "पंचायत का नया एपिसोड चलाओ", intent: WatchLatestEpisode, slots: {Show: "पंचायत"}}
+  - {utterance: "पिछला शो जारी रखो", intent: ContinueWatching}
+  - {utterance: "पंचायत का कोई भी एपिसोड चलाओ", intent: WatchRandomEpisode, slots: {Show: "पंचायत"}}
+  - {utterance: "कोई भी एक्शन शो चलाओ", intent: WatchRandomShow, slots: {Genre: ""}}
+  - {utterance: "पंचायत शफ़ल में चलाओ", intent: ShuffleShow, slots: {Show: "पंचायत"}}
+  - {utterance: "पंचायत बिंज करो", intent: BingeShow, slots: {Show: "पंचायत"}}
+  - {utterance: "आर्टिस्ट अरिजीत सिंह बजाओ", intent: ListenToArtist, slots: {Artist: "अरिजीत सिंह"}}
+  - {utterance: "आर्टिस्ट अरिजीत सिंह शफ़ल करो", intent: ShuffleArtist, slots: {Artist: "अरिजीत सिंह"}}
+  - {utterance: "एल्बम आशिकी बजाओ", intent: ListenToAlbum, slots: {Album: "आशिकी"}}
+  - {utterance: "एल्बम आशिकी शफ़ल करो", intent: ShuffleAlbum, slots: {Album: "आशिकी"}}
+  - {utterance: "अरिजीत सिंह का नया एल्बम बजाओ", intent: ListenToLatestAlbum, slots: {Artist: "अरिजीत सिंह"}}
+  - {utterance: "अरिजीत सिंह का नया एल्बम शफ़ल करो", intent: ShuffleLatestAlbum, slots: {Artist: "अरिजीत सिंह"}}
+  - {utterance: "गाना तुम ही हो बजाओ", intent: ListenToSong, slots: {Song: "तुम ही हो"}}
+  - {utterance: "अरिजीत सिंह का तुम ही हो बजाओ", intent: ListenToSongOrAlbum, slots: {Artist: "अरिजीत सिंह", Title: "तुम ही हो"}}
+  - {utterance: "एक्शन जॉनर बजाओ", intent: ListenToGenre, slots: {Genre: ""}}
+  - {utterance: "मेरे हाल ही में जोड़े गए गाने सुनाओ", intent: ListenToRecentSongs}
+  - {utterance: "चलो पार्टी करें", intent: PartyMode}
+  - {utterance: "म्यूज़िक वीडियो तुम ही हो चलाओ", intent: WatchMusicVideo, slots: {MusicVideo: ""}}
+  - {utterance: "कोई रैंडम एक्शन म्यूज़िक वीडियो चलाओ", intent: WatchRandomMusicVideo, slots: {Genre: ""}}
+  - {utterance: "सारे मेरे एक्शन म्यूज़िक वीडियो शफ़ल करो", intent: ShuffleMusicVideos, slots: {Genre: ""}}
+  - {utterance: "म्यूज़िक प्लेलिस्ट सफ़र चलाओ", intent: PlayPlaylist, slots: {Playlist: ""}}
+  - {utterance: "मेरी सफ़र प्लेलिस्ट शफ़ल में चलाओ", intent: ShufflePlaylist, slots: {Playlist: ""}}
+  - {utterance: "मुझे कोई फ़िल्म सुझाओ", intent: Recommend, slots: {MediaType: "movie"}}
+  - {utterance: "क्या कोई नया फ़िल्म आया है", intent: WhatsNew, slots: {MediaType: "movie"}}
+  - {utterance: "अरिजीत सिंह के एल्बम बताओ", intent: WhatAlbums, slots: {Artist: "अरिजीत सिंह"}}
+  - {utterance: "पांच मिनट पीछे", intent: PlayerSeek, slots: {Duration: "", SeekDirection: "back"}}
+  - {utterance: "पांच मिनट पीछे करो", intent: PlayerRewind, slots: {Duration: ""}}
+  - {utterance: "पांच मिनट के निशान पर जाओ", intent: PlayerSeekTo, slots: {Position: ""}}
+  - {utterance: "रिपीट मोड सब", intent: Repeat, slots: {RepeatMode: "all"}}
+  - {utterance: "एनहांस करो", intent: PlayerZoom}
+  - {utterance: "घड़ी की दिशा में घुमाओ", intent: PlayerRotate, slots: {Rotation: "clockwise"}}
+  - {utterance: "तस्वीर नीचे खिसकाओ", intent: PlayerMove, slots: {Direction: "down"}}
+  - {utterance: "फ़ुल स्क्रीन से बाहर निकलो", intent: Fullscreen}
+  - {utterance: "स्टीरियोस्कोपिक मोड", intent: StereoscopicMode}
+  - {utterance: "डिजिटल ऑडियो चालू करो", intent: AudioPassthrough}
+  - {utterance: "आवाज़ 30 पर सेट करो", intent: VolumeSet, slots: {Level: "30"}}
+  - {utterance: "और तेज़", intent: VolumeUp}
+  - {utterance: "आवाज़ कम करो", intent: VolumeDown}
+  - {utterance: "म्यूट", intent: Mute}
+  - {utterance: "मैं क्या देख रहा हूँ", intent: CurrentPlayItemEnquiry}
+  - {utterance: "कितना बाकी है", intent: CurrentPlayItemTimeRemaining}
+  - {utterance: "इस इको की पहचान बताओ", intent: IdentifyEcho}
+  - {utterance: "सबटाइटल बदलो", intent: Subtitles, slots: {SubtitleAction: "next"}}
+  - {utterance: "अगला ऑडियो लगाओ", intent: AudioStream, slots: {Step: "next"}}
+  - {utterance: "पीछे जाओ", intent: Navigate, slots: {NavAction: "back"}}
+  - {utterance: "टेक्स्ट नमस्ते डालो", intent: TypeText, slots: {Text: ""}}
+  - {utterance: "मेरी फ़िल्में दिखाओ", intent: ViewLibrary, slots: {Section: "movies"}}
+  - {utterance: "म्यूज़िक प्लेलिस्ट सफ़र दिखाओ", intent: ViewPlaylist, slots: {Playlist: ""}}
+  - {utterance: "फ़ेवरेट आज तक खोलो", intent: OpenFavourite, slots: {Favourite: ""}}
+  - {utterance: "यूट्यूब चालू करो", intent: LaunchAddon, slots: {Addon: ""}}
+  - {utterance: "शोले की ग्लोबल सर्च करो", intent: GlobalSearch, slots: {Query: "शोले"}}
+  - {utterance: "कोडी हाइबरनेट करो", intent: Power, slots: {PowerAction: "hibernate"}}
+  - {utterance: "इजेक्ट करो", intent: EjectMedia}
+  - {utterance: "नई फ़िल्में ढूँढो", intent: UpdateLibrary}
+  - {utterance: "मेरी लाइब्रेरी साफ़ करो", intent: CleanLibrary}
+  # Answers to "did you mean …?".
+  - {utterance: "हाँ जी", intent: AMAZON.YesIntent}
+  - {utterance: "नहीं धन्यवाद", intent: AMAZON.NoIntent}
+  # Bare titles, which free-text and title slots compete for.
+  - {utterance: "शोले चलाओ", intent: PlayMedia, slots: {Query: "शोले"}}
+  - {utterance: "शोले लगाओ", intent: PlayMedia, slots: {Query: "शोले"}}
+  - {utterance: "मैं फ़िल्म शोले देखना चाहता हूँ", intent: WatchMovie, slots: {Movie: "शोले"}}
+  # Rooms.
+  - {utterance: "हॉल में फ़िल्म शोले चलाओ", intent: WatchMovie, slots: {Movie: "शोले", Room: ""}}
+  - {utterance: "हॉल में पंचायत देखना जारी रखो", intent: WatchNextEpisode, slots: {Room: "", Show: "पंचायत"}}
+  - {utterance: "हॉल में अरिजीत सिंह के गाने बजाओ", intent: ListenToArtist, slots: {Artist: "अरिजीत सिंह", Room: ""}}
+  - {utterance: "हॉल में अरिजीत सिंह का म्यूज़िक बजाओ", intent: ListenToArtist, slots: {Artist: "अरिजीत सिंह", Room: ""}}
+  - {utterance: "हॉल में पॉज़ करो", intent: RoomControl, slots: {Command: "pause", Room: ""}}
+  - {utterance: "हॉल का टीवी पॉज़ करो", intent: RoomControl, slots: {Command: "pause", Room: ""}}
+  # Episodes and seasons, including the one-shot forms.
+  - {utterance: "पंचायत सीज़न 2 एपिसोड 3 चलाओ", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "पंचायत"}}
+  - {utterance: "पंचायत का सीज़न 2 एपिसोड 3 चलाओ", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "पंचायत"}}
+  - {utterance: "हॉल में पंचायत सीज़न 2 एपिसोड 3 चलाओ", intent: WatchEpisode, slots: {Episode: "3", Room: "", Season: "2", Show: "पंचायत"}}
+  - {utterance: "पंचायत का अगला एपिसोड चलाओ", intent: WatchNextEpisode, slots: {Show: "पंचायत"}}
+  - {utterance: "पंचायत का लेटेस्ट एपिसोड चलाओ", intent: WatchLatestEpisode, slots: {Show: "पंचायत"}}
+  - {utterance: "पंचायत का पहला एपिसोड चलाओ", intent: WatchFirstEpisode, slots: {Show: "पंचायत"}}
+  - {utterance: "पंचायत का बिलकुल पहला एपिसोड चलाओ", intent: WatchFirstEpisode, slots: {Show: "पंचायत"}}
+  # Music by an artist, including the one-shot forms.
+  - {utterance: "अरिजीत सिंह के गाने बजाओ", intent: ListenToArtist, slots: {Artist: "अरिजीत सिंह"}}
+  - {utterance: "अरिजीत सिंह का म्यूज़िक बजाओ", intent: ListenToArtist, slots: {Artist: "अरिजीत सिंह"}}
+  - {utterance: "अरिजीत सिंह का गाना तुम ही हो बजाओ", intent: ListenToSong, slots: {Artist: "अरिजीत सिंह", Song: "तुम ही हो"}}
+  - {utterance: "अरिजीत सिंह का एल्बम आशिकी बजाओ", intent: ListenToAlbum, slots: {Album: "आशिकी", Artist: "अरिजीत सिंह"}}
+  - {utterance: "अरिजीत सिंह के गाने शफ़ल करो", intent: ShuffleArtist, slots: {Artist: "अरिजीत सिंह"}}
+  - {utterance: "अरिजीत सिंह के गाने रैंडम बजाओ", intent: ShuffleArtist, slots: {Artist: "अरिजीत सिंह"}}

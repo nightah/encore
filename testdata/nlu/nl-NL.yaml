@@ -1,0 +1,127 @@
+# NLU checks for nl-NL: run them with make nlu (see internal/smapi/nlu). Each row is an utterance, the intent Alexa should pick and the slots it should fill; an empty slot value takes any words, and a value of a custom type may be its ID. Mark a row pending, with why, while the model that makes it pass isn't deployed yet.
+locale: nl-NL
+cases:
+  # Every intent, in model order, in the language's own words.
+  - {utterance: "annuleer", intent: AMAZON.CancelIntent}
+  - {utterance: "help", intent: AMAZON.HelpIntent}
+  - {utterance: "stop", intent: AMAZON.StopIntent}
+  - {utterance: "ga naar het startscherm", intent: AMAZON.NavigateHomeIntent}
+  - {utterance: "paarse olifanten dansen op de maan", intent: AMAZON.FallbackIntent}
+  - {utterance: "pauzeer de tv", intent: AMAZON.PauseIntent}
+  - {utterance: "hervat de tv", intent: AMAZON.ResumeIntent}
+  - {utterance: "volgende", intent: AMAZON.NextIntent}
+  - {utterance: "vorige", intent: AMAZON.PreviousIntent}
+  - {utterance: "begin opnieuw", intent: AMAZON.StartOverIntent}
+  - {utterance: "ja", intent: AMAZON.YesIntent}
+  - {utterance: "nee", intent: AMAZON.NoIntent}
+  - {utterance: "shuffle aan", intent: AMAZON.ShuffleOnIntent}
+  - {utterance: "shuffle uit", intent: AMAZON.ShuffleOffIntent}
+  - {utterance: "herhalen aan", intent: AMAZON.LoopOnIntent}
+  - {utterance: "herhalen uit", intent: AMAZON.LoopOffIntent}
+  - {utterance: "ik wil de film zwartboek kijken", intent: WatchMovie, slots: {Movie: "zwartboek"}}
+  - {utterance: "ga verder met de luizenmoeder", intent: WatchNextEpisode, slots: {Show: "de luizenmoeder"}}
+  - {utterance: "zoek zwartboek", intent: PlayMedia, slots: {Query: "zwartboek"}, pending: "nl-NL takes AMAZON.SearchQuery from the next deploy"}
+  - {utterance: "kies een komedie film voor me", intent: WatchRandomMovie, slots: {Genre: ""}}
+  - {utterance: "speel de trailer", intent: WatchMovieTrailer}
+  - {utterance: "ga verder met de zwartboek reeks", intent: WatchNextInCollection, slots: {Movie: "zwartboek"}}
+  - {utterance: "speel de luizenmoeder aflevering 3 van seizoen 2", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "de luizenmoeder"}}
+  - {utterance: "speel de luizenmoeder vanaf het begin", intent: WatchFirstEpisode, slots: {Show: "de luizenmoeder"}}
+  - {utterance: "speel de nieuwste de luizenmoeder aflevering", intent: WatchLatestEpisode, slots: {Show: "de luizenmoeder"}}
+  - {utterance: "ga verder met de laatste serie", intent: ContinueWatching}
+  - {utterance: "speel een aflevering van de luizenmoeder", intent: WatchRandomEpisode, slots: {Show: "de luizenmoeder"}}
+  - {utterance: "speel zomaar een komedie serie", intent: WatchRandomShow, slots: {Genre: ""}}
+  - {utterance: "speel de luizenmoeder in willekeurige volgorde", intent: ShuffleShow, slots: {Show: "de luizenmoeder"}}
+  - {utterance: "bingewatch de luizenmoeder", intent: BingeShow, slots: {Show: "de luizenmoeder"}}
+  - {utterance: "speel de artiest marco borsato", intent: ListenToArtist, slots: {Artist: "marco borsato"}}
+  - {utterance: "shuffle de artiest marco borsato", intent: ShuffleArtist, slots: {Artist: "marco borsato"}}
+  - {utterance: "speel het album de bestemming", intent: ListenToAlbum, slots: {Album: "de bestemming"}}
+  - {utterance: "shuffle het album de bestemming", intent: ShuffleAlbum, slots: {Album: "de bestemming"}}
+  - {utterance: "speel het nieuwste album van marco borsato", intent: ListenToLatestAlbum, slots: {Artist: "marco borsato"}}
+  - {utterance: "shuffle het nieuwste album van marco borsato", intent: ShuffleLatestAlbum, slots: {Artist: "marco borsato"}}
+  - {utterance: "speel het nummer dromen zijn bedrog", intent: ListenToSong, slots: {Song: "dromen zijn bedrog"}}
+  - {utterance: "speel dromen zijn bedrog van marco borsato", intent: ListenToSongOrAlbum, slots: {Artist: "marco borsato", Title: "dromen zijn bedrog"}}
+  - {utterance: "speel muziek uit het genre komedie", intent: ListenToGenre, slots: {Genre: ""}}
+  - {utterance: "ik wil mijn nieuwe nummers horen", intent: ListenToRecentSongs}
+  - {utterance: "laten we feesten", intent: PartyMode}
+  - {utterance: "speel de muziekvideo van bohemian rhapsody", intent: WatchMusicVideo, slots: {MusicVideo: ""}}
+  - {utterance: "speel een willekeurige komedie muziekvideo", intent: WatchRandomMusicVideo, slots: {Genre: ""}}
+  - {utterance: "speel alle komedie muziekvideo's", intent: ShuffleMusicVideos, slots: {Genre: ""}}
+  - {utterance: "speel de muziekafspeellijst roadtrip", intent: PlayPlaylist, slots: {Playlist: ""}}
+  - {utterance: "speel de roadtrip afspeellijst in willekeurige volgorde", intent: ShufflePlaylist, slots: {Playlist: ""}}
+  - {utterance: "ik wil een tip voor een film", intent: Recommend, slots: {MediaType: "movie"}}
+  - {utterance: "zijn er nog nieuwe film", intent: WhatsNew, slots: {MediaType: "movie"}}
+  - {utterance: "noem me de albums van marco borsato", intent: WhatAlbums, slots: {Artist: "marco borsato"}}
+  - {utterance: "vijf minuten terug", intent: PlayerSeek, slots: {Duration: "", SeekDirection: "back"}}
+  - {utterance: "spoel met vijf minuten terug", intent: PlayerRewind, slots: {Duration: ""}}
+  - {utterance: "ga naar het tijdstip vijf minuten", intent: PlayerSeekTo, slots: {Position: ""}}
+  - {utterance: "herhaalmodus op alles", intent: Repeat, slots: {RepeatMode: "all"}}
+  - {utterance: "vergroot het beeld", intent: PlayerZoom}
+  - {utterance: "draai met de klok mee", intent: PlayerRotate, slots: {Rotation: "clockwise"}}
+  - {utterance: "verschuif het beeld naar beneden", intent: PlayerMove, slots: {Direction: "down"}}
+  - {utterance: "sluit het volledige scherm", intent: Fullscreen}
+  - {utterance: "stereoscopische modus", intent: StereoscopicMode}
+  - {utterance: "digitale audio aan", intent: AudioPassthrough}
+  - {utterance: "zet het volume op 30", intent: VolumeSet, slots: {Level: "30"}}
+  - {utterance: "harder graag", intent: VolumeUp}
+  - {utterance: "verlaag het volume", intent: VolumeDown}
+  - {utterance: "dempen", intent: Mute}
+  - {utterance: "waar kijk ik naar", intent: CurrentPlayItemEnquiry}
+  - {utterance: "hoe lang duurt het nog", intent: CurrentPlayItemTimeRemaining}
+  - {utterance: "identificeer deze echo", intent: IdentifyEcho}
+  - {utterance: "volgende de ondertiteling", intent: Subtitles, slots: {SubtitleAction: "next"}}
+  - {utterance: "volgende audiospoor", intent: AudioStream, slots: {Step: "next"}}
+  - {utterance: "ga terug", intent: Navigate, slots: {NavAction: "back"}}
+  - {utterance: "voer de tekst hallo in", intent: TypeText, slots: {Text: ""}, pending: "nl-NL takes AMAZON.SearchQuery from the next deploy"}
+  - {utterance: "toon de films", intent: ViewLibrary, slots: {Section: "movies"}}
+  - {utterance: "toon de muziek afspeellijst roadtrip", intent: ViewPlaylist, slots: {Playlist: ""}}
+  - {utterance: "open mijn favoriet npo start", intent: OpenFavourite, slots: {Favourite: ""}, pending: "nl-NL takes AMAZON.SearchQuery from the next deploy"}
+  - {utterance: "voer youtube uit", intent: LaunchAddon, slots: {Addon: ""}, pending: "nl-NL takes AMAZON.SearchQuery from the next deploy"}
+  - {utterance: "doe een globale zoekopdracht naar zwartboek", intent: GlobalSearch, slots: {Query: "zwartboek"}, pending: "nl-NL takes AMAZON.SearchQuery from the next deploy"}
+  - {utterance: "sluimerstand kodi", intent: Power, slots: {PowerAction: "hibernate"}}
+  - {utterance: "uitwerpen", intent: EjectMedia}
+  - {utterance: "zoek naar nieuwe films", intent: UpdateLibrary}
+  - {utterance: "ruim de bibliotheek op", intent: CleanLibrary}
+  # Answers to "did you mean …?".
+  - {utterance: "ja graag", intent: AMAZON.YesIntent}
+  - {utterance: "nee dank je", intent: AMAZON.NoIntent}
+  # Bare titles, which free-text and title slots compete for.
+  - {utterance: "speel zwartboek", intent: PlayMedia, slots: {Query: "zwartboek"}, pending: "nl-NL takes AMAZON.SearchQuery from the next deploy"}
+  - {utterance: "zwartboek af te spelen", intent: PlayMedia, slots: {Query: "zwartboek"}, pending: "nl-NL takes AMAZON.SearchQuery from the next deploy"}
+  - {utterance: "zet zwartboek op", intent: PlayMedia, slots: {Query: "zwartboek"}, pending: "nl-NL takes AMAZON.SearchQuery from the next deploy"}
+  # Rooms.
+  - {utterance: "speel de film zwartboek in de slaapkamer", intent: WatchMovie, slots: {Movie: "zwartboek", Room: ""}}
+  - {utterance: "de film zwartboek af te spelen in de slaapkamer", intent: WatchMovie, slots: {Movie: "zwartboek", Room: ""}}
+  - {utterance: "ga verder met de luizenmoeder in de slaapkamer", intent: WatchNextEpisode, slots: {Room: "", Show: "de luizenmoeder"}}
+  - {utterance: "speel wat muziek van marco borsato in de slaapkamer", intent: ListenToArtist, slots: {Artist: "marco borsato", Room: ""}}
+  - {utterance: "pauzeer in de slaapkamer", intent: RoomControl, slots: {Command: "pause", Room: ""}}
+  - {utterance: "pauzeer de tv in de slaapkamer", intent: RoomControl, slots: {Command: "pause", Room: ""}}
+  # Episodes and seasons, including the one-shot forms.
+  - {utterance: "speel de luizenmoeder seizoen 2 aflevering 3", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "de luizenmoeder"}}
+  - {utterance: "zet de luizenmoeder seizoen 2 aflevering 3 op", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "de luizenmoeder"}}
+  - {utterance: "speel seizoen 2 aflevering 3 van de luizenmoeder", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "de luizenmoeder"}}
+  - {utterance: "seizoen 2 aflevering 3 van de luizenmoeder af te spelen", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "de luizenmoeder"}}
+  - {utterance: "zet de luizenmoeder aflevering 3 van seizoen 2 op", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "de luizenmoeder"}}
+  - {utterance: "speel de luizenmoeder seizoen 2 aflevering 3 in de slaapkamer", intent: WatchEpisode, slots: {Episode: "3", Room: "", Season: "2", Show: "de luizenmoeder"}}
+  - {utterance: "zet de luizenmoeder seizoen 2 aflevering 3 op in de slaapkamer", intent: WatchEpisode, slots: {Episode: "3", Room: "", Season: "2", Show: "de luizenmoeder"}}
+  - {utterance: "speel de volgende aflevering van de luizenmoeder", intent: WatchNextEpisode, slots: {Show: "de luizenmoeder"}}
+  - {utterance: "zet de volgende aflevering van de luizenmoeder op", intent: WatchNextEpisode, slots: {Show: "de luizenmoeder"}}
+  - {utterance: "de volgende aflevering van de luizenmoeder af te spelen", intent: WatchNextEpisode, slots: {Show: "de luizenmoeder"}}
+  - {utterance: "speel de nieuwste aflevering van de luizenmoeder", intent: WatchLatestEpisode, slots: {Show: "de luizenmoeder"}}
+  - {utterance: "zet de nieuwste aflevering van de luizenmoeder op", intent: WatchLatestEpisode, slots: {Show: "de luizenmoeder"}}
+  - {utterance: "ik wil de luizenmoeder vanaf het begin kijken", intent: WatchFirstEpisode, slots: {Show: "de luizenmoeder"}}
+  - {utterance: "speel de eerste aflevering van de luizenmoeder", intent: WatchFirstEpisode, slots: {Show: "de luizenmoeder"}}
+  - {utterance: "zet de eerste aflevering van de luizenmoeder op", intent: WatchFirstEpisode, slots: {Show: "de luizenmoeder"}}
+  - {utterance: "speel de luizenmoeder vanaf de eerste aflevering", intent: WatchFirstEpisode, slots: {Show: "de luizenmoeder"}}
+  - {utterance: "de eerste aflevering van de luizenmoeder af te spelen", intent: WatchFirstEpisode, slots: {Show: "de luizenmoeder"}}
+  # Music by an artist, including the one-shot forms.
+  - {utterance: "speel wat muziek van marco borsato", intent: ListenToArtist, slots: {Artist: "marco borsato"}}
+  - {utterance: "ik wil wat muziek van marco borsato horen", intent: ListenToArtist, slots: {Artist: "marco borsato"}}
+  - {utterance: "muziek van marco borsato af te spelen", intent: ListenToArtist, slots: {Artist: "marco borsato"}}
+  - {utterance: "speel het nummer dromen zijn bedrog van marco borsato", intent: ListenToSong, slots: {Artist: "marco borsato", Song: "dromen zijn bedrog"}}
+  - {utterance: "speel het album de bestemming van marco borsato", intent: ListenToAlbum, slots: {Album: "de bestemming", Artist: "marco borsato"}}
+  - {utterance: "ik wil het album de bestemming van marco borsato horen", intent: ListenToAlbum, slots: {Album: "de bestemming", Artist: "marco borsato"}}
+  - {utterance: "ik wil dromen zijn bedrog van marco borsato horen", intent: ListenToSongOrAlbum, slots: {Artist: "marco borsato", Title: "dromen zijn bedrog"}}
+  - {utterance: "dromen zijn bedrog van marco borsato af te spelen", intent: ListenToSongOrAlbum, slots: {Artist: "marco borsato", Title: "dromen zijn bedrog"}}
+  - {utterance: "shuffle wat muziek van marco borsato", intent: ShuffleArtist, slots: {Artist: "marco borsato"}}
+  - {utterance: "speel muziek van marco borsato in willekeurige volgorde", intent: ShuffleArtist, slots: {Artist: "marco borsato"}}
+  - {utterance: "ik wil het nieuwe album van marco borsato horen", intent: ListenToLatestAlbum, slots: {Artist: "marco borsato"}}
