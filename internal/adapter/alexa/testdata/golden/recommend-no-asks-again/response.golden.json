@@ -18,7 +18,13 @@
         "title": "Dune: Part Two",
         "year": 2024
       }
-    ]
+    ],
+    "question": {
+      "id": "recommend.movie",
+      "params": {
+        "title": "Dune: Part Two"
+      }
+    }
   },
   "response": {
     "outputSpeech": {

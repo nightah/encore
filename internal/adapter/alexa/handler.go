@@ -156,6 +156,7 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, tr *requestT
 
 	intent := env.Request.Intent
 	followup := sessionFollowupOf(env.Session.Attributes)
+	question := sessionQuestionOf(env.Session.Attributes)
 
 	// Intents that don't need Kodi.
 	switch intent.Name {
@@ -170,6 +171,10 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, tr *requestT
 			return h.respond(locale, actions.Outcome{Say: actions.Message{ID: "match.cancelled"}, EndSession: true}, false), nil
 		}
 	case "AMAZON.FallbackIntent", "AMAZON.NavigateHomeIntent":
+		if question != nil {
+			return h.respond(locale, askAgain(env, "question.again", *question), false), nil
+		}
+
 		msg := fallbackMessage()
 
 		return h.respond(locale, actions.Outcome{Say: msg, Reprompt: &msg}, false), nil
@@ -285,6 +290,11 @@ func (h *Handler) respond(locale string, o actions.Outcome, confirm bool) Respon
 		if o.Followup != nil {
 			env.SessionAttributes[sessionFollowup] = o.Followup
 		}
+
+		// A question's reprompt is the question.
+		if o.Reprompt != nil {
+			env.SessionAttributes[sessionQuestion] = *o.Reprompt
+		}
 	}
 
 	return env
@@ -369,6 +379,16 @@ func fallbackMessage() actions.Message {
 	return actions.Message{ID: "fallback", Params: map[string]string{"example": exampleTitle}}
 }
 
+// askAgain repeats the question a session is waiting on, after the message id, which says why and ends with the {question}. The question's choices and what its answer does are kept.
+func askAgain(env *RequestEnvelope, id string, question actions.Message) actions.Outcome {
+	return actions.Outcome{
+		Say:      actions.Message{ID: id, Messages: map[string]actions.Message{"question": question}},
+		Reprompt: &question,
+		Pending:  pendingChoices(env.Session.Attributes),
+		Followup: sessionFollowupOf(env.Session.Attributes),
+	}
+}
+
 func titleRequest(slot Slot, kinds []media.Kind, pending []actions.Choice) actions.TitleRequest {
 	req := actions.TitleRequest{Query: slot.Value, Kinds: kinds, Pending: pending}
 
@@ -390,6 +410,16 @@ func pendingChoices(attrs map[string]any) []actions.Choice {
 	}
 
 	return choices
+}
+
+func sessionQuestionOf(attrs map[string]any) *actions.Message {
+	var q actions.Message
+
+	if !sessionValue(attrs, sessionQuestion, &q) || q.ID == "" {
+		return nil
+	}
+
+	return &q
 }
 
 func sessionFollowupOf(attrs map[string]any) *actions.Followup {

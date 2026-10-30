@@ -20,7 +20,26 @@
         "title": "Dune",
         "year": 2021
       }
-    ]
+    ],
+    "question": {
+      "id": "match.did_you_mean",
+      "messages": {
+        "first": {
+          "id": "match.title_year",
+          "params": {
+            "title": "Dune",
+            "year": "1984"
+          }
+        },
+        "second": {
+          "id": "match.title_year",
+          "params": {
+            "title": "Dune",
+            "year": "2021"
+          }
+        }
+      }
+    }
   },
   "response": {
     "outputSpeech": {
