@@ -15,6 +15,10 @@
     "title": "Account sviluppatore Amazon",
     "vendor": "ID fornitore"
   },
+  "autoDeployPaused": {
+    "resume": "",
+    "title": ""
+  },
   "content": {
     "movies": "Film",
     "music": "Musica",
@@ -46,6 +50,7 @@
       "legend": "Lingue"
     },
     "needsDeploy": {
+      "automatic": "",
       "library": "Ci sono nuovi titoli nella libreria dall'ultima distribuzione. Encore li trova già; distribuisci di nuovo la skill per aggiungerli al suo modello.",
       "settings": "Le impostazioni sono cambiate dall'ultima distribuzione. Distribuisci di nuovo la skill per applicarle."
     },
