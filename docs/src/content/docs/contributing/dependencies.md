@@ -156,6 +156,8 @@ There are two sets of corpora, scored separately:
 - **The grown set** (`testdata/grown/`): 2,352 cases over 1,345 library entries in 9 suites, added in October 2026 because the original set was too small to decide some languages. Italian, for one, had only 57 cases, so English Double Metaphone making 56 of them said little about whether Italian needed rules of its own. Each file was written blind, without running any encoder or reading its source, and committed before any evaluation ran; nothing in it was changed to suit an encoder. One label was corrected since: "der hauptmann" expected nothing to be found, but *Der Hauptmann von Köpenick* is in that library, and the corpora treat a title's distinctive opening words as a request for it ("pulp" plays *Pulp Fiction*), so it now expects that title. The grown set gates CI too: production must decide at least as many cases right in each language, and make no more wrong plays, than in the table below.
 - **The new languages and regional locales**, added in October 2026: each new language has a development set in `testdata/phonetic/` and a held-out set in `testdata/grown/`, written together from the language's documented spelling-to-sound confusions and the way its recogniser writes titles, by writers who never saw an encoder, before any encoder was chosen for it. Latin American Spanish (`es-419.yaml`, for `es-MX` and `es-US`) and Québec French (`fr-CA.yaml`) have held-out sets only, scored with the Spanish and French rules. Encoders were developed on the development sets, and each held-out set was scored once the candidate was final. The grown set now holds 5,247 cases over 2,833 library entries in 27 suites; no case in the earlier files changed.
 
+- **The cross-language set** (`testdata/cross/`): 130 held-out cases of Japanese, Hindi and Arabic requests, as the ja-JP, hi-IN and ar-SA recognisers write them, against English libraries of 30 to 35 titles each, written without running the matcher on them. It gates CI with its own counts (`crossFloor`, below).
+
 | Language | Original set | Grown set | Grown library entries |
 | --- | --- | --- | --- |
 | English | 174 | 509 | 389 |
@@ -218,6 +220,18 @@ These counts include three fixes made after the grown set was first scored, none
 | Japanese | English Double Metaphone, over Latin letters | 80 of 120 | 0 | same | 71 | none | none | none |
 
 None of the changes above moved a case in the first five languages' original set.
+
+#### Requests in another script
+
+Kana and kanji, Devanagari and Arabic letters are read with the Japanese, Hindi and Arabic rules in every library, not only in a library set to that language, so a request in one of those scripts meets the Latin titles of an English library. On the cross-language set, under either retriever:
+
+| Requests | English library, before | Now | Wrong plays |
+| --- | --- | --- | --- |
+| Japanese | 10 of 45 | 23 of 45 (51.1%) | 0 |
+| Hindi | 6 of 43 | 40 of 43 (93.0%) | 0 |
+| Arabic | 7 of 42 | 36 of 42 (85.7%) | 0 |
+
+Before, only the absent titles and the titles the library held in the request's own script were decided right. Japanese gains least: Hepburn romaji of a katakana loanword is often far from the English spelling (r for l, long vowels for *-er*, words run together), so "ライオンキング" still misses *The Lion King*. None of the other sets moved, and a library set to Japanese, Hindi or Arabic reads its own script exactly as before. The grown set's Japanese, Hindi and Arabic suites scored with English rules (the default library language) now get 259, 325 and 329 cases right, against 262, 331 and 347 with their own rules.
 
 #### Titles that aren't in the library
 
