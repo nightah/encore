@@ -32,6 +32,10 @@ func Native(lang, s string) []string {
 	variants := []func(string) string{func(w string) string { return wr.english(english(w)) }}
 	if wr.romanised != nil {
 		variants = append(variants, wr.romanised)
+
+		if romanisedTitle(pieces) {
+			variants[0], variants[1] = variants[1], variants[0]
+		}
 	}
 
 	for _, v := range variants {
@@ -46,6 +50,50 @@ func Native(lang, s string) []string {
 	}
 
 	return out
+}
+
+// romanisedTitle reports whether a title's words look more like a romanisation of Hindi than like English ("Yeh Jawaani Hai Deewani", not "Stranger Things"), so the romanised reading is the likelier.
+func romanisedTitle(pieces []piece) bool {
+	score := 0
+
+	for _, p := range pieces {
+		if p.w != nil && !p.w.letters && !p.w.keep {
+			score += romanisedScore(fold(p.w.text))
+		}
+	}
+
+	return score > 0
+}
+
+// romanisedScore counts the spellings in w that romanised Hindi uses and English doesn't (aa, kh, bh, a final i), less those English uses and romanised Hindi doesn't (tion, igh, ck, a c not before h, a silent final e).
+func romanisedScore(w string) int {
+	score := 0
+
+	for _, s := range []string{"aa", "kh", "bh", "dh", "jh", "chh", "ii", "uu"} {
+		if strings.Contains(w, s) {
+			score++
+		}
+	}
+
+	if strings.HasSuffix(w, "i") && len(w) > 2 {
+		score++
+	}
+
+	for _, s := range []string{"tion", "igh", "ck", "qu", "x", "wh", "ea", "ou", "ow", "th"} {
+		if strings.Contains(w, s) {
+			score--
+		}
+	}
+
+	if i := strings.IndexByte(w, 'c'); i >= 0 && !strings.HasPrefix(w[i:], "ch") {
+		score--
+	}
+
+	if n := len(w); n > 2 && w[n-1] == 'e' && !isVowelY(w[n-2]) {
+		score--
+	}
+
+	return score
 }
 
 // Supports reports whether Native writes lang.
