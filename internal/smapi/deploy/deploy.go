@@ -432,7 +432,7 @@ func (r *run) failedLocales() map[string][]smapi.Problem {
 		if ls.Status == smapi.StatusFailed {
 			errs := ls.Errors
 			if len(errs) == 0 {
-				errs = []smapi.Problem{{Message: "build failed without details"}}
+				errs = []smapi.Problem{{Message: unexplainedBuild}}
 			}
 
 			out[loc] = errs

@@ -24,6 +24,9 @@ const (
 
 const unreportedBuild = "Amazon reported no build for this locale"
 
+// unexplainedBuild stands in for the errors of a locale whose build Amazon reported failed without saying why.
+const unexplainedBuild = "build failed without details"
+
 // missingLocalePolls is how many build polls a package locale may be absent from the skill status after the manifest has finished, before the build counts as failed (about two minutes at the default poll interval).
 const missingLocalePolls = 10
 
