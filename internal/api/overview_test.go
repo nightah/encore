@@ -14,10 +14,14 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nightah/encore/internal/adapter/alexa"
+	"github.com/nightah/encore/internal/app"
 	"github.com/nightah/encore/internal/backend/kodi/fakekodi"
+	"github.com/nightah/encore/internal/core/library"
 	"github.com/nightah/encore/internal/core/match"
+	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/smapi/deploy"
 	"github.com/nightah/encore/internal/store"
+	"github.com/nightah/encore/internal/testkit"
 )
 
 func TestSummariseToday(t *testing.T) {
@@ -452,6 +456,22 @@ func TestLibraryLanguages(t *testing.T) {
 	}, att, "half the titles is not most, and a library already in the language needs nothing")
 
 	assert.Empty(t, libraryLanguages(libs, []string{"en-AU", "de-DE"}), "only an enabled locale's language counts")
+}
+
+func TestScriptsOfCountsTitlesByScript(t *testing.T) {
+	cat := library.New("Lounge", testkit.NewBackend(
+		media.Item{Kind: media.KindMovie, ID: 1, Title: "千と千尋の神隠し"},
+		media.Item{Kind: media.KindMovie, ID: 2, Title: "Titanic"},
+		media.Item{Kind: media.KindArtist, ID: 3, Title: "米津玄師"},
+		media.Item{Kind: media.KindSong, ID: 4, Title: "夜に駆ける"},
+	), library.Options{RefreshInterval: -1})
+	require.NoError(t, cat.Sync(t.Context()))
+
+	got := scriptsOf([]app.Library{{Source: "Lounge", Language: "en", Catalog: cat}, {Source: "Study", Language: "de"}})
+	assert.Equal(t, []libraryScripts{
+		{source: "Lounge", language: "en", titles: 3, scripts: map[string]int{"ja": 2}},
+		{source: "Study", language: "de", scripts: map[string]int{}},
+	}, got, "songs are left out, and a library without a catalog has no titles")
 }
 
 func TestLanguageNamesCoverEveryTitleLanguage(t *testing.T) {
