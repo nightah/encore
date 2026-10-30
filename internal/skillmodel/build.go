@@ -5,7 +5,6 @@ import (
 	"maps"
 	"slices"
 	"sort"
-	"strings"
 )
 
 // Build produces the interaction model for one locale.
@@ -36,7 +35,7 @@ func Build(src *Sources, locale string, opts BuildOptions) (*InteractionModel, e
 	for _, in := range src.Model.Intents {
 		if in.Content != "" && opts.Content != nil && !slices.Contains(opts.Content, in.Content) {
 			for _, s := range in.Slots {
-				excluded[s.TypeIn(locale)] = true
+				excluded[s.Type] = true
 			}
 
 			continue
@@ -45,9 +44,8 @@ func Build(src *Sources, locale string, opts BuildOptions) (*InteractionModel, e
 		mi := ModelIntent{Name: in.Name, Samples: []string{}}
 
 		for _, s := range in.Slots {
-			typ := s.TypeIn(locale)
-			mi.Slots = append(mi.Slots, ModelSlot{Name: s.Name, Type: typ})
-			used[typ] = true
+			mi.Slots = append(mi.Slots, ModelSlot(s))
+			used[s.Type] = true
 		}
 
 		for _, pattern := range utterances[in.Name] {
@@ -77,13 +75,6 @@ func Build(src *Sources, locale string, opts BuildOptions) (*InteractionModel, e
 		}
 	}
 
-	// So are the stand-ins for built-in types where the locale has the built-in.
-	for name := range src.Model.fallbackOnly() {
-		if !used[name] {
-			dropped[name] = true
-		}
-	}
-
 	types, err := buildTypes(src.Model.Types, static, used, dropped, opts.SlotValues)
 	if err != nil {
 		return nil, fmt.Errorf("locale %s: %w", locale, err)
@@ -104,12 +95,6 @@ func buildTypes(custom []SlotType, static map[string][]SlotValue, used, dropped 
 	for _, t := range custom {
 		if t.Dynamic && len(extra[t.Name]) > 0 {
 			values[t.Name] = nil
-
-			continue
-		}
-
-		if vs := t.merged(extra); t.Dynamic && len(vs) > 0 {
-			values[t.Name] = vs
 
 			continue
 		}
@@ -156,35 +141,6 @@ func buildTypes(custom []SlotType, static map[string][]SlotValue, used, dropped 
 	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 
 	return out, nil
-}
-
-// merged returns the build-time values of the types t takes its values From, one per value whatever its case (the first type's wins), sorted, and at most t.Limit of them, picked at even steps through the sorted values.
-func (t SlotType) merged(extra map[string][]SlotValue) []SlotValue {
-	seen := map[string]bool{}
-
-	var out []SlotValue
-
-	for _, from := range t.From {
-		for _, v := range extra[from] {
-			if key := strings.ToLower(v.Value); !seen[key] {
-				seen[key] = true
-				out = append(out, v)
-			}
-		}
-	}
-
-	slices.SortStableFunc(out, func(a, b SlotValue) int { return strings.Compare(strings.ToLower(a.Value), strings.ToLower(b.Value)) })
-
-	if t.Limit <= 0 || len(out) <= t.Limit {
-		return out
-	}
-
-	picked := make([]SlotValue, t.Limit)
-	for i := range picked {
-		picked[i] = out[i*len(out)/t.Limit]
-	}
-
-	return picked
 }
 
 func dedupe(in []string) []string {

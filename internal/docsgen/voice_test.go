@@ -125,37 +125,6 @@ func TestVoiceDataShowsLocaleSynonyms(t *testing.T) {
 	assert.Contains(t, string(pages["fr"]), "Also in `fr-CA`:\n\n- clip (vidéoclips)\n- chanson (toune, tounes)\n")
 }
 
-func TestVoiceDataShowsFallbacksWhereEveryLocaleLacksTheBuiltin(t *testing.T) {
-	src := &skillmodel.Sources{
-		Model: skillmodel.Model{
-			Intents: []skillmodel.Intent{{Name: "PlayMedia", Slots: []skillmodel.Slot{{Name: "Query", Type: "AMAZON.SearchQuery", Fallback: "KODI_TITLE"}}}},
-			Types:   []skillmodel.SlotType{{Name: "KODI_TITLE", Dynamic: true}},
-		},
-		Languages: map[string]skillmodel.Language{
-			"en": {Utterances: map[string][]string{"PlayMedia": {"play {Query}"}}},
-			"nl": {Utterances: map[string][]string{"PlayMedia": {"speel {Query}"}}, Types: map[string][]skillmodel.SlotValue{"KODI_TITLE": {{Value: "bluey"}}}},
-		},
-		Locales: map[string]skillmodel.Locale{
-			"en-AU": {Language: "en"},
-			"nl-NL": {Language: "nl"},
-		},
-	}
-
-	for lang, want := range map[string]string{"en": "AMAZON.SearchQuery", "nl": "KODI_TITLE"} {
-		data := voiceData(src, lang, nil)
-
-		sections, ok := data["Sections"].([]VoiceSection)
-		require.True(t, ok)
-		assert.Equal(t, []skillmodel.Slot{{Name: "Query", Type: want, Fallback: "KODI_TITLE"}}, sections[0].Intents[0].Slots, lang)
-
-		types, ok := data["Types"].([]VoiceType)
-		require.True(t, ok)
-		assert.Equal(t, want == "KODI_TITLE", len(types) == 1, "%s lists the fallback's values only where it is used", lang)
-	}
-
-	assert.Equal(t, "AMAZON.SearchQuery", src.Model.Intents[0].Slots[0].Type, "the model isn't changed")
-}
-
 func TestSectionTitles(t *testing.T) {
 	fsys := fstest.MapFS{"model.yaml": {Data: []byte(`# File header.
 

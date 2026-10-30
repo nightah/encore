@@ -1,22 +1,5 @@
 # Example values for the dynamic slot types in model.yaml (nl): deploys replace them with what is set up in Encore. Chosen for this language rather than translated, so not on Crowdin.
 
-# Stand-in for AMAZON.SearchQuery in nl-NL: add-ons are read from Kodi when asked for, so these only bias what Alexa hears.
-KODI_ADDON:
-  - {value: youtube}
-  - {value: netflix}
-  - {value: npo}
-  - {value: ondertitels}
-  - {value: weer}
-  - {value: spotify}
-
-# Stand-in for AMAZON.SearchQuery in nl-NL: favourites are read from Kodi when asked for, so these only bias what Alexa hears.
-KODI_FAVOURITE:
-  - {value: npo start}
-  - {value: radio veronica}
-  - {value: het journaal}
-  - {value: weerbericht}
-  - {value: kinderliedjes}
-
 KODI_MUSIC_VIDEO:
   - {value: bohemian rhapsody}
   - {value: dromen zijn bedrog}
@@ -49,19 +32,6 @@ KODI_ROOM:
   - {value: kelder}
   - {value: speelkamer}
   - {value: garage}
-
-# Stand-in for AMAZON.SearchQuery in nl-NL, which lacks it: "speel …" and global search take library titles. Examples only, replaced with an even spread of the library's titles at deploy.
-KODI_TITLE:
-  - {value: soldaat van oranje}
-  - {value: flodder}
-  - {value: de luizenmoeder}
-  - {value: wie is de mol}
-  - {value: zwartboek}
-  - {value: penoza}
-  - {value: goede tijden slechte tijden}
-  - {value: marco borsato}
-  - {value: dune}
-  - {value: breaking bad}
 
 # Examples only, extended from the library when available.
 MEDIA_GENRE:
@@ -98,13 +68,3 @@ MEDIA_GENRE:
   - {value: r. en b., synonyms: [r. and b., r. n. b.]}
   - {value: indie}
   - {value: soundtrack, synonyms: [soundtracks, filmmuziek]}
-
-# Stand-in for AMAZON.SearchQuery in nl-NL for typed text: common search words, so free text is heard as Dutch.
-SPOKEN_TEXT:
-  - {value: film}
-  - {value: serie}
-  - {value: muziek}
-  - {value: nieuws}
-  - {value: hallo}
-  - {value: zoeken}
-  - {value: wachtwoord}

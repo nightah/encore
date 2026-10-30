@@ -35,7 +35,7 @@ intents:
       - {name: Room, type: KODI_ROOM}
   - name: PlayMedia
     slots:
-      - {name: Query, type: AMAZON.SearchQuery, fallback: KODI_TITLE}
+      - {name: Query, type: AMAZON.SearchQuery}
 
   # Movies.
   - name: WatchRandomMovie
@@ -264,7 +264,7 @@ intents:
       - {name: Count, type: AMAZON.NUMBER}
   - name: TypeText
     slots:
-      - {name: Text, type: AMAZON.SearchQuery, fallback: SPOKEN_TEXT}
+      - {name: Text, type: AMAZON.SearchQuery}
   - name: ViewLibrary
     slots:
       - {name: Section, type: LIBRARY_SECTION}
@@ -274,16 +274,15 @@ intents:
       - {name: Playlist, type: KODI_PLAYLIST}
   - name: OpenFavourite
     slots:
-      - {name: Favourite, type: AMAZON.SearchQuery, fallback: KODI_FAVOURITE}
+      - {name: Favourite, type: AMAZON.SearchQuery}
 
   # Add-ons.
   - name: LaunchAddon
     slots:
-      - {name: Addon, type: AMAZON.SearchQuery, fallback: KODI_ADDON}
+      - {name: Addon, type: AMAZON.SearchQuery}
   - name: GlobalSearch
     slots:
-      # One fallback per slot name, as with types: a search mostly names what is in the library.
-      - {name: Query, type: AMAZON.SearchQuery, fallback: KODI_TITLE}
+      - {name: Query, type: AMAZON.SearchQuery}
 
   # The machine and the library.
   - name: Power
@@ -305,11 +304,6 @@ types:
   - {name: MEDIA_GENRE, dynamic: true}
   # Music video titles come from the library at deploy time; Amazon has no built-in music video type outside a few English locales.
   - {name: KODI_MUSIC_VIDEO, dynamic: true}
-  # Stand-ins for AMAZON.SearchQuery in the locales that lack it (nl-NL), taken by the slots whose fallback names them. A custom type still passes on words outside its values, but its values bias what Alexa hears. KODI_TITLE takes an even spread of the library titles deployed for the title types; favourites and add-ons are read from Kodi when asked for, so their types carry each language's examples, as does SPOKEN_TEXT for free text.
-  - {name: KODI_TITLE, dynamic: true, from: [AMAZON.Movie, AMAZON.TVSeries, AMAZON.Musician, AMAZON.MusicAlbum, KODI_MUSIC_VIDEO], limit: 3000}
-  - {name: KODI_FAVOURITE, dynamic: true}
-  - {name: KODI_ADDON, dynamic: true}
-  - {name: SPOKEN_TEXT, dynamic: true}
   - name: MEDIA_TYPE
   - name: LIBRARY_SECTION
   - name: LIBRARY_TYPE
