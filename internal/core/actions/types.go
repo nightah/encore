@@ -68,6 +68,8 @@ type Message struct {
 	Languages map[string]string
 	// Lists are joined the listener's way, e.g. "Dune, Alien and Heat".
 	Lists map[string][]string
+	// Messages are placeholder values that are messages themselves, rendered in the listener's language, e.g. a title with its year.
+	Messages map[string]Message
 }
 
 // Choice is one option offered in a "did you mean" question. It round-trips through assistant session state as JSON.

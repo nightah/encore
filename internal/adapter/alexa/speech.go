@@ -114,6 +114,10 @@ func (s *Speech) Render(locale string, msg actions.Message) string {
 			return spokenList(lang, list)
 		}
 
+		if sub, ok := msg.Messages[name]; ok {
+			return s.Render(locale, sub)
+		}
+
 		return msg.Params[name]
 	})
 }

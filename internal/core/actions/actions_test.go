@@ -49,8 +49,8 @@ func TestPlayTitleAmbiguousAsks(t *testing.T) {
 	o := newService().PlayTitle(t.Context(), target, TitleRequest{Query: "dune", Kinds: []media.Kind{media.KindMovie}}, nil)
 
 	assert.Equal(t, "match.did_you_mean", o.Say.ID)
-	assert.Equal(t, "Dune from 1984", o.Say.Params["first"])
-	assert.Equal(t, "Dune from 2021", o.Say.Params["second"])
+	assert.Equal(t, say("match.title_year", map[string]string{"title": "Dune", "year": "1984"}), o.Say.Messages["first"], "the year is worded in the listener's language")
+	assert.Equal(t, say("match.title_year", map[string]string{"title": "Dune", "year": "2021"}), o.Say.Messages["second"])
 	assert.False(t, o.EndSession, "the question keeps the session open")
 	require.NotNil(t, o.Reprompt)
 	assert.Len(t, o.Pending, 2)
@@ -286,7 +286,7 @@ func TestPlayTitleAsks(t *testing.T) {
 
 	o := svc.PlayTitle(t.Context(), target, TitleRequest{Query: "fuzz"}, nil)
 	assert.Equal(t, "match.confirm", o.Say.ID, "one uncertain match is a yes/no question")
-	assert.Equal(t, "Hot Fuzz from 2007", o.Say.Params["title"])
+	assert.Equal(t, say("match.title_year", map[string]string{"title": "Hot Fuzz", "year": "2007"}), o.Say.Messages["title"])
 	assert.False(t, o.EndSession)
 	require.Len(t, o.Pending, 1)
 	assert.Equal(t, Choice{DocID: "movie/4", Ref: media.Ref{Kind: media.KindMovie, ID: 4}, Title: "Hot Fuzz", Year: 2007}, o.Pending[0])
