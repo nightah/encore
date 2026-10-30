@@ -1056,6 +1056,21 @@ func TestDeployRefusesStoredSettingsThatNoLongerBuild(t *testing.T) {
 	assert.Zero(t, h.smapi.Exchanges(), "nothing reaches Amazon")
 }
 
+// Saved settings that no longer apply fail the skill's details rather than show the defaults as if they were chosen.
+func TestSkillInfoWithUnreadableSettings(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	ctx := t.Context()
+
+	require.NoError(t, h.app.DB().Settings().Set(ctx, overridesSetting, map[string]any{"alexa.locales": map[string]any{"en": map[string]any{}}}))
+
+	h.api.prefs.mu.Lock()
+	h.api.prefs.effective = nil
+	h.api.prefs.mu.Unlock()
+
+	_, err := h.api.skill.info(ctx)
+	require.ErrorContains(t, err, "applying saved settings")
+}
+
 func TestInvocationNameSkipsUnknownLocales(t *testing.T) {
 	spellings := []LocaleInvocation{{Locale: "ja-JP", Encore: "アンコール", Kodi: "コディ"}}
 
