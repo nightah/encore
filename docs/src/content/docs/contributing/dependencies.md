@@ -231,7 +231,7 @@ Kana and kanji, Devanagari and Arabic letters are read with the Japanese, Hindi 
 | Hindi | 6 of 43 | 40 of 43 (93.0%) | 0 |
 | Arabic | 7 of 42 | 36 of 42 (85.7%) | 0 |
 
-Before, only the absent titles and the titles the library held in the request's own script were decided right. Japanese gains least: Hepburn romaji of a katakana loanword is often far from the English spelling (r for l, long vowels for *-er*, words run together), so "ライオンキング" still misses *The Lion King*. None of the other sets moved, and a library set to Japanese, Hindi or Arabic reads its own script exactly as before. The grown set's Japanese, Hindi and Arabic suites scored with English rules (the default library language) now get 259, 325 and 329 cases right, against 262, 331 and 347 with their own rules.
+Before, only the absent titles and the titles the library held in the request's own script were decided right. Japanese gains least: Hepburn romaji of a katakana loanword is often far from the English spelling (r for l, long vowels for *-er*, words run together), so "ライオンキング" still misses *The Lion King*. None of the other sets moved, and a library set to Japanese, Hindi or Arabic reads its own script exactly as before. The grown set's Japanese, Hindi and Arabic suites scored with English rules (the default library language) now get 259, 325 and 329 cases right, against 288, 364 and 381 with their own rules, which also index the native-script forms of Latin titles ([below](#latin-titles-asked-for-in-arabic-hindi-and-japanese-script)). Those forms are indexed only in a library set to Japanese, Hindi or Arabic, so they leave the cross-language set where it is.
 
 #### Titles that aren't in the library
 
