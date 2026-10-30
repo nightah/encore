@@ -93,6 +93,7 @@ function skill(now: number, fresh: boolean): SkillInfo {
           locales: [
             {
               built_at: ago(40 * MIN, now),
+              degraded: null,
               errors: [],
               locale: "en-AU",
               size_bytes: 1_120_000,

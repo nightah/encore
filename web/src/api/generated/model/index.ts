@@ -77,6 +77,7 @@ export * from "./listRequestsOutcome.ts";
 export * from "./listRequestsParams.ts";
 export * from "./localAuth.ts";
 export * from "./localAuthPatch.ts";
+export * from "./localeDegraded.ts";
 export * from "./localeDeploy.ts";
 export * from "./localeDeployStatus.ts";
 export * from "./localeInvocation.ts";

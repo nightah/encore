@@ -5,11 +5,14 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
+import type { LocaleDegraded } from "./localeDegraded.ts";
 import type { LocaleDeployStatus } from "./localeDeployStatus.ts";
 
 export interface LocaleDeploy {
   /** @nullable */
   built_at: string | null;
+  /** Set when Amazon would not build this locale's model with every library title, so it was built with fewer and the other locales still shipped; titles and size_bytes are then what was deployed. Null otherwise */
+  degraded: LocaleDegraded | null;
   errors: string[];
   locale: string;
   size_bytes: number;

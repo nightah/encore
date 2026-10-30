@@ -45,11 +45,11 @@ const recorderBuffer = 64
 
 const maxLoggedCandidates = 5
 
-// Custom slot types filled from Encore's own data.
-const (
-	roomSlot     = "KODI_ROOM"
-	playlistSlot = "KODI_PLAYLIST"
-)
+// RoomSlot is the custom slot type of room names. A deploy never thins it out, as a room left out can't be asked for.
+const RoomSlot = "KODI_ROOM"
+
+// playlistSlot is the custom slot type of playlist names.
+const playlistSlot = "KODI_PLAYLIST"
 
 // snapshotTimeout bounds one snapshot read or write, so a slow blob store can't hold up start-up or shutdown for long.
 const snapshotTimeout = 30 * time.Second

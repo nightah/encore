@@ -306,6 +306,7 @@ function runDeploy(id: string, stepMs: number) {
             id,
             locales: db.skill.locales_enabled.map((locale) => ({
               built_at: now,
+              degraded: null,
               errors: [],
               locale,
               size_bytes: 1_120_000,
