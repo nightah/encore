@@ -383,3 +383,34 @@ func TestNormalizeFrenchVigesimal(t *testing.T) {
 		assert.Equal(t, tt.want, Normalize("fr", tt.in), tt.in)
 	}
 }
+
+func TestStopWord(t *testing.T) {
+	for _, tc := range []struct {
+		lang, word string
+		want       bool
+	}{
+		{"en", "the", true},
+		{"en", "The", true},
+		{"en", "of", true},
+		{"en", "frozen", false},
+		{"en", "the movie", false},
+		{"fr", "le", true},
+		{"de", "den", true},
+		{"ja", "の", true},
+		{"ja", "映", false},
+		{"pt-BR", "o", true},
+		{"en", "", false},
+	} {
+		if got := StopWord(tc.lang, tc.word); got != tc.want {
+			t.Errorf("StopWord(%q, %q) = %v, want %v", tc.lang, tc.word, got, tc.want)
+		}
+	}
+}
+
+func TestArticle(t *testing.T) {
+	assert.True(t, Article("en", "The"))
+	assert.True(t, Article("fr-FR", "la"))
+	assert.False(t, Article("en", "of"), "a stop word that is no article")
+	assert.False(t, Article("ja", "の"))
+	assert.False(t, Article("en", "the end"))
+}

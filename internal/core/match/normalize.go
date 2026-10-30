@@ -321,3 +321,19 @@ func (l *language) dropParts(toks []string) []string {
 
 	return out
 }
+
+// StopWord reports whether word is one of the language's articles or stop words, such as "the", "of" or Japanese "の", which a title search treats as filler.
+func StopWord(lang, word string) bool {
+	l := languageFor(lang)
+	toks := l.normalize(word, false)
+
+	return len(toks) == 1 && (l.stop[toks[0]] || l.articles[toks[0]])
+}
+
+// Article reports whether word is one of the language's articles, such as "the" or "la", which may start a title.
+func Article(lang, word string) bool {
+	l := languageFor(lang)
+	toks := l.normalize(word, false)
+
+	return len(toks) == 1 && l.articles[toks[0]]
+}
