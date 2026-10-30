@@ -18,7 +18,9 @@ The rules for a library follow its Kodi instance's `language` (English by defaul
 
 [`alexa.deep_search`](/encore/reference/configuration/#alexadeep_search) (on by default) makes "play X" search music as well as films and TV when the request doesn't say what kind of title it is.
 
-A "play X" request whose words are one of the skill's episode commands, such as "play the next episode of Bluey" or "play season 2 episode 4 of Bluey", isn't searched as a title: Encore runs that command and matches only the show's name ("Bluey"). Alexa sends a request this way when it doesn't recognise the show, so without it the whole phrase would be searched and found nothing. Numbers only count as numbers here when Alexa writes them as digits.
+A "play X" request whose words are one of the skill's film, TV or music commands, such as "play the next episode of Bluey", "play season 2 episode 4 of Bluey", "play the movie Frozen" or "put on music by Pink Floyd", isn't searched as a title first: Encore runs that command and matches only the name in it ("Bluey", "Frozen", "Pink Floyd"). Alexa sends a request this way when it doesn't recognise the name, so without it the whole phrase would be searched and found nothing. When the command finds nothing, the whole phrase is searched after all, so a film called *The Sound of Music* still plays rather than a genre called "the sound of". Numbers only count as numbers here when Alexa writes them as digits.
+
+Alexa can also leave a word for a kind of title in the name: "play Frozen movie", "play Innuendo album", "千と千尋の神隠しの映画を再生して". When the name as heard finds nothing, Encore takes the word off and searches only that kind ("Frozen" among films), using the words for films, shows, albums, songs, artists and music videos each language lists for recommendations. Words that name no title at all play what they mean: "play music by Queen" or "play something by Queen" heard as a song request plays Queen, and "play some songs" on its own shuffles all your music.
 
 ## The match tester
 
