@@ -84,32 +84,32 @@ func TestDutchReinterpret(t *testing.T) {
 	speech := dutchSpeech(t)
 
 	type want struct {
-		intent, title string
-		slots         map[string]string
+		intent string
+		slots  map[string]string
 	}
 
 	for _, tc := range []struct {
 		query string
 		want  want
 	}{
-		{"de volgende aflevering van flikken", want{"WatchNextEpisode", "Show", map[string]string{"Show": "flikken"}}},
-		{"de nieuwste aflevering van flikken in de woonkamer", want{"WatchLatestEpisode", "Show", map[string]string{"Show": "flikken in de woonkamer"}}},
-		{"de 1e aflevering van baantjer", want{"WatchFirstEpisode", "Show", map[string]string{"Show": "baantjer"}}},
-		{"de 1ste aflevering van baantjer", want{"WatchFirstEpisode", "Show", map[string]string{"Show": "baantjer"}}},
-		{"de eerste aflevering van baantjer", want{"WatchFirstEpisode", "Show", map[string]string{"Show": "baantjer"}}},
-		{"een willekeurige aflevering van penoza", want{"WatchRandomEpisode", "Show", map[string]string{"Show": "penoza"}}},
-		{"seizoen 2 aflevering 4 van penoza", want{"WatchEpisode", "Show", map[string]string{"Show": "penoza", "Season": "2", "Episode": "4"}}},
-		{"flikken vanaf het begin", want{"WatchFirstEpisode", "Show", map[string]string{"Show": "flikken"}}},
-		{"flodder", want{"PlayMedia", "Query", map[string]string{"Query": "flodder"}}},
+		{"de volgende aflevering van flikken", want{"WatchNextEpisode", map[string]string{"Show": "flikken"}}},
+		{"de nieuwste aflevering van flikken in de woonkamer", want{"WatchLatestEpisode", map[string]string{"Show": "flikken in de woonkamer"}}},
+		{"de 1e aflevering van baantjer", want{"WatchFirstEpisode", map[string]string{"Show": "baantjer"}}},
+		{"de 1ste aflevering van baantjer", want{"WatchFirstEpisode", map[string]string{"Show": "baantjer"}}},
+		{"de eerste aflevering van baantjer", want{"WatchFirstEpisode", map[string]string{"Show": "baantjer"}}},
+		{"een willekeurige aflevering van penoza", want{"WatchRandomEpisode", map[string]string{"Show": "penoza"}}},
+		{"seizoen 2 aflevering 4 van penoza", want{"WatchEpisode", map[string]string{"Show": "penoza", "Season": "2", "Episode": "4"}}},
+		{"flikken vanaf het begin", want{"WatchFirstEpisode", map[string]string{"Show": "flikken"}}},
+		{"flodder", want{"PlayMedia", map[string]string{"Query": "flodder"}}},
 	} {
 		in := Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.query}}}
-		got, title := speech.Reinterpret("nl-NL", in)
+		got := speech.Reinterpret("nl-NL", in)[0]
 
 		values := map[string]string{}
 		for name, slot := range got.Slots {
 			values[name] = slot.Value
 		}
 
-		assert.Equal(t, tc.want, want{got.Name, title, values}, "%q", tc.query)
+		assert.Equal(t, tc.want, want{got.Name, values}, "%q", tc.query)
 	}
 }

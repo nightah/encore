@@ -129,17 +129,17 @@ func TestHindiReinterpret(t *testing.T) {
 	speech := hindiSpeech(t)
 
 	for _, tc := range []struct {
-		query, intent, title string
-		slots                map[string]string
+		query, intent string
+		slots         map[string]string
 	}{
-		{"पंचायत का अगला एपिसोड", "WatchNextEpisode", "Show", map[string]string{"Show": "पंचायत"}},
-		{"बेडरूम में पंचायत का अगला एपिसोड", "WatchNextEpisode", "Show", map[string]string{"Show": "बेडरूम में पंचायत"}},
-		{"पंचायत का पहला एपिसोड", "WatchFirstEpisode", "Show", map[string]string{"Show": "पंचायत"}},
-		{"पंचायत का कोई रैंडम एपिसोड", "WatchRandomEpisode", "Show", map[string]string{"Show": "पंचायत"}},
-		{"पंचायत सीज़न 2 एपिसोड 4", "WatchEpisode", "Show", map[string]string{"Show": "पंचायत", "Season": "2", "Episode": "4"}},
-		{"पंचायत", "PlayMedia", "Query", map[string]string{"Query": "पंचायत"}},
+		{"पंचायत का अगला एपिसोड", "WatchNextEpisode", map[string]string{"Show": "पंचायत"}},
+		{"बेडरूम में पंचायत का अगला एपिसोड", "WatchNextEpisode", map[string]string{"Show": "बेडरूम में पंचायत"}},
+		{"पंचायत का पहला एपिसोड", "WatchFirstEpisode", map[string]string{"Show": "पंचायत"}},
+		{"पंचायत का कोई रैंडम एपिसोड", "WatchRandomEpisode", map[string]string{"Show": "पंचायत"}},
+		{"पंचायत सीज़न 2 एपिसोड 4", "WatchEpisode", map[string]string{"Show": "पंचायत", "Season": "2", "Episode": "4"}},
+		{"पंचायत", "PlayMedia", map[string]string{"Query": "पंचायत"}},
 	} {
-		got, title := speech.Reinterpret("hi-IN", Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.query}}})
+		got := speech.Reinterpret("hi-IN", Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.query}}})[0]
 
 		values := map[string]string{}
 		for name, slot := range got.Slots {
@@ -147,7 +147,6 @@ func TestHindiReinterpret(t *testing.T) {
 		}
 
 		assert.Equal(t, tc.intent, got.Name, tc.query)
-		assert.Equal(t, tc.title, title, tc.query)
 		assert.Equal(t, tc.slots, values, tc.query)
 	}
 }
@@ -175,7 +174,7 @@ func TestTrailingCarrierLeavesGermanFormsAlone(t *testing.T) {
 	speech := hindiSpeech(t)
 
 	for query, intent := range map[string]string{"die nächste folge von dark": "WatchNextEpisode", "dark": "PlayMedia", "dark abspielen": "PlayMedia"} {
-		got, _ := speech.Reinterpret("de-DE", Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: query}}})
+		got := speech.Reinterpret("de-DE", Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: query}}})[0]
 		assert.Equal(t, intent, got.Name, query)
 	}
 }

@@ -96,10 +96,14 @@ type Speech struct {
 	slotIDs map[string]map[string]map[string]string
 	// roomPhrases holds, per locale, the words its utterances put around {Room} ("in the", "im", "で"), lowercased and split into words (units).
 	roomPhrases map[string][]roomPhrase
-	// queryForms holds, per locale, the TV intents' samples as they'd reach PlayMedia's search query, most specific first.
+	// queryForms holds, per locale, the film, TV and music intents' samples as they'd reach PlayMedia's search query, most specific first.
 	queryForms map[string][]queryForm
 	// bareSlots holds, per locale, the slots of custom types that a sample of their intent is alone ("{NavAction}"), in model order.
 	bareSlots map[string][]bareSlot
+	// generic holds, per locale, the normalised words that stand in a title slot for no title at all ("music" in "play music by queen"), each reporting whether it means music on its own ("some songs", not "something").
+	generic map[string]map[string]bool
+	// kindNouns holds, per locale, the words that name a kind of title ("movie", "映画", "فيلم"), longest first.
+	kindNouns map[string][]kindNoun
 	log       *slog.Logger
 }
 
@@ -108,7 +112,13 @@ type bareSlot struct {
 	intent, slot, typ string
 }
 
-// queryForm is one TV intent sample with PlayMedia's carrier phrase ("play", "put on") taken off the front: "the next episode of {Show}" for WatchNextEpisode.
+// kindNoun is a word naming a kind of title, split into units, and the kind it names.
+type kindNoun struct {
+	units []string
+	kind  media.Kind
+}
+
+// queryForm is one film, TV or music intent sample with PlayMedia's carrier phrase ("play", "put on") taken off the front: "the next episode of {Show}" for WatchNextEpisode.
 type queryForm struct {
 	intent string
 	// words are the sample's lowercased words; a slot is its "{Name}" reference.

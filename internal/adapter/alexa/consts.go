@@ -68,3 +68,6 @@ var rejectStages = []RejectStage{RejectBody, RejectUnsigned, RejectTimestamp, Re
 
 // RecentRejections is how far back Rejection.Recent counts.
 const RecentRejections = 24 * time.Hour
+
+// maxQueryForms caps the intents a search query is read as before it is searched as a title (Speech.Reinterpret), since each reading that finds nothing costs a search.
+const maxQueryForms = 2

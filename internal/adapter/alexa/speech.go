@@ -16,7 +16,6 @@ import (
 
 	"github.com/nightah/encore/internal/core/actions"
 	"github.com/nightah/encore/internal/core/match"
-	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/skillmodel"
 )
 
@@ -31,6 +30,8 @@ func NewSpeech(src *skillmodel.Sources, log *slog.Logger) (*Speech, error) {
 		roomPhrases: map[string][]roomPhrase{},
 		queryForms:  map[string][]queryForm{},
 		bareSlots:   map[string][]bareSlot{},
+		generic:     map[string]map[string]bool{},
+		kindNouns:   map[string][]kindNoun{},
 		log:         log,
 	}
 
@@ -64,6 +65,12 @@ func NewSpeech(src *skillmodel.Sources, log *slog.Logger) (*Speech, error) {
 		}
 
 		s.bareSlots[locale] = bareSlots(src.Model, utterances)
+
+		s.kindNouns[locale] = kindNouns(s.languages[locale], types["MEDIA_TYPE"])
+
+		if s.generic[locale], err = genericWords(s.languages[locale], utterances, types["MEDIA_TYPE"]); err != nil {
+			return nil, fmt.Errorf("locale %s: %w", locale, err)
+		}
 	}
 
 	if _, ok := s.responses[fallbackLocale]; !ok {
@@ -176,8 +183,8 @@ func (s *Speech) RoomSplits(locale, query string) []RoomSplit {
 	return out
 }
 
-// Reinterpret reads a PlayMedia search query as the TV intent whose sample it is. Alexa can hear "play the next episode of bluey" as PlayMedia with the query "the next episode of bluey", since an AMAZON.SearchQuery slot takes any words; searched as a title, it matches nothing. It returns the intent to dispatch and the slot holding the spoken title, which may still end with a room: the query itself, or the intent's {Show}.
-func (s *Speech) Reinterpret(locale string, intent Intent) (Intent, string) {
+// Reinterpret reads a PlayMedia search query, with any room already taken off it, as the film, TV or music intents whose samples it is, most specific first, followed by the query itself. Alexa can hear "play the next episode of bluey" or "play the movie frozen" as PlayMedia with the query "the next episode of bluey" or "the movie frozen", since an AMAZON.SearchQuery slot takes any words; searched as a title, it matches nothing. The caller tries each reading until one finds something.
+func (s *Speech) Reinterpret(locale string, intent Intent) []Intent {
 	forms, ok := s.queryForms[locale]
 	if !ok {
 		locale, forms = fallbackLocale, s.queryForms[fallbackLocale]
@@ -190,27 +197,32 @@ func (s *Speech) Reinterpret(locale string, intent Intent) (Intent, string) {
 		}
 	}
 
+	var out []Intent
+
+	seen := map[string]bool{}
+
 	for _, form := range forms {
+		if len(out) == maxQueryForms {
+			break
+		}
+
 		values, ok := form.match(words)
 		if !ok {
 			continue
 		}
 
-		out := Intent{Name: form.intent, Slots: map[string]Slot{}}
-		title := ""
-
+		reading := Intent{Name: form.intent, Slots: map[string]Slot{}}
 		for name, value := range values {
-			out.Slots[name] = Slot{Name: name, Value: value}
-
-			if !form.numbers[name] {
-				title = name
-			}
+			reading.Slots[name] = Slot{Name: name, Value: value}
 		}
 
-		return out, title
+		if key := fmt.Sprint(reading.Name, values); !seen[key] {
+			seen[key] = true
+			out = append(out, reading)
+		}
 	}
 
-	return intent, "Query"
+	return append(out, intent)
 }
 
 // ordinals maps the ordinals Alexa writes as digits in a search query to the words the samples spell out.
@@ -270,7 +282,7 @@ func sampleIsAlone(patterns []string, ref string) bool {
 	return false
 }
 
-// queryForms collects the samples of each TV intent that start with one of PlayMedia's carrier phrases, without it and without a room, most specific first. Samples that are only a slot after the carrier, such as "play {Show}", are left out: any query would match them.
+// queryForms collects the samples of each film, TV and music intent that start with one of PlayMedia's carrier phrases, without it and without a room, most specific first. Samples that are only a slot after the carrier, such as "play {Show}", are left out: any query would match them. So are samples whose title slots meet only each other's words, such as "play {Title} by {Artist}": "stand by me" would be a song called "stand" by "me".
 func queryForms(model skillmodel.Model, utterances map[string][]string) ([]queryForm, error) {
 	return languageQueryForms("", model, utterances)
 }
@@ -302,7 +314,7 @@ func languageQueryForms(lang string, model skillmodel.Model, utterances map[stri
 	var out []queryForm
 
 	for _, in := range model.Intents {
-		if content[in.Name] != media.ContentTV {
+		if content[in.Name] == "" {
 			continue
 		}
 
@@ -369,7 +381,17 @@ func newQueryForm(intent string, words []string, carriers, trailers [][]string, 
 		}
 	}
 
-	return form, form.literals > 0
+	free := 0
+
+	for _, w := range form.words {
+		if isSlotRef(w) && !numbers[w[1:len(w)-1]] {
+			free++
+		}
+	}
+
+	edged := !isSlotRef(form.words[0]) || !isSlotRef(form.words[len(form.words)-1])
+
+	return form, form.literals > 0 && (free < 2 || edged)
 }
 
 // match reads words as the form, returning each slot's words; a number slot takes one word that is a number.

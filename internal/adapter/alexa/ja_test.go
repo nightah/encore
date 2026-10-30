@@ -59,7 +59,7 @@ func TestJapaneseReinterpret(t *testing.T) {
 		{"千と千尋の神隠し", "PlayMedia", map[string]string{"Query": "千と千尋の神隠し"}},
 	} {
 		in := Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.query}}}
-		got, _ := speech.Reinterpret("ja-JP", in)
+		got := speech.Reinterpret("ja-JP", in)[0]
 
 		values := map[string]string{}
 		for name, slot := range got.Slots {
