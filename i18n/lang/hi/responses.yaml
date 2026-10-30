@@ -34,7 +34,7 @@ match.did_you_mean: "क्या आपका मतलब {first} था य�
 match.help: "आप कह सकते हैं: पहला वाला, दूसरा वाला, नया वाला या टाइटल का नाम, या दूसरे नतीजों के लिए नहीं। {question}"
 match.no_more: "मुझे और कोई टाइटल नहीं मिला।"
 match.not_found: "मैं आपकी लाइब्रेरी में {query} ढूँढ नहीं पाई।"
-match.title_year: "{year} वाली {title}"
+match.title_year: "{title} ({year})"
 match.which_one: "एक से ज़्यादा हैं। {question}"
 movie.collection_watched: "आप {collection} की सारी फ़िल्में देख चुके हैं।"
 movie.no_collection: "{title} किसी कलेक्शन का हिस्सा नहीं है।"
