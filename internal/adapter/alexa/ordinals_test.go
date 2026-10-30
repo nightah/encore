@@ -177,6 +177,7 @@ func TestSpeechOrdinal(t *testing.T) {
 		{"ja-JP", "第三", 3},
 		{"ja-JP", "第3", 3},
 		{"xx-XX", "third", 3},
+		{"xx-XX", "21st", 21},
 	} {
 		got, ok := speech.Ordinal(tc.locale, tc.heard)
 		assert.True(t, ok, "%s %q", tc.locale, tc.heard)
@@ -191,6 +192,18 @@ func TestSpeechOrdinal(t *testing.T) {
 	} {
 		_, ok := speech.Ordinal(tc.locale, tc.heard)
 		assert.False(t, ok, "%s %q", tc.locale, tc.heard)
+	}
+}
+
+// TestWrittenOrdinalPlainNumber reads a plain number as itself in any language, and never a negative one.
+func TestWrittenOrdinalPlainNumber(t *testing.T) {
+	for _, lang := range []string{"en", "ar"} {
+		n, ok := writtenOrdinal(lang, "4")
+		assert.True(t, ok, lang)
+		assert.Equal(t, 4, n, lang)
+
+		_, ok = writtenOrdinal(lang, "-1")
+		assert.False(t, ok, lang)
 	}
 }
 
