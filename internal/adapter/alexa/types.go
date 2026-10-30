@@ -398,3 +398,9 @@ type handled struct {
 	resp    ResponseEnvelope
 	outcome *actions.Outcome
 }
+
+// unspacedOne is how a language written without spaces spells the digit 1 as an ordinal: the numeral, and the counters before or after it that make it one ("第" in "第一話", "話" in "一話目").
+type unspacedOne struct {
+	numeral       string
+	before, after []string
+}

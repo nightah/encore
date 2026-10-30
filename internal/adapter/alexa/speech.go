@@ -312,11 +312,7 @@ func (s *Speech) Reinterpret(locale string, intent Intent) []Intent {
 	}
 
 	words := units(s.languages[locale], intent.Slots["Query"].Value)
-	for i, w := range words {
-		if o, ok := ordinals[s.languages[locale]][strings.ToLower(w)]; ok {
-			words[i] = o
-		}
-	}
+	spelled := spellOrdinals(s.languages[locale], words)
 
 	var out []Intent
 
@@ -335,6 +331,10 @@ func (s *Speech) Reinterpret(locale string, intent Intent) []Intent {
 			}
 
 			values, ok := form.match(words)
+			if !ok && !slices.Equal(spelled, words) {
+				values, ok = form.match(spelled)
+			}
+
 			if !ok {
 				continue
 			}
@@ -359,7 +359,6 @@ func (s *Speech) Reinterpret(locale string, intent Intent) []Intent {
 	return out
 }
 
-// ordinals maps the ordinals Alexa writes as digits in a search query to the words the samples spell out.
 // numberWords are the words for one, as a number or the first, that Amazon writes as a digit in a query it heard them in: "un capítulo" arrives as "1 capítulo" (es-US drops the accent too), "el primer capítulo" as "el 1.ᵉʳ capítulo", "اول حلقة" as "1 حلقة". Only languages it was seen doing this in are listed.
 var numberWords = map[string]map[string]string{
 	"es": {"un": "1", "uno": "1", "una": "1", "primer": "1", "primero": "1", "primera": "1", "1.ᵉʳ": "1", "1.º": "1", "1.ª": "1", "1º": "1", "1ª": "1"},
@@ -378,12 +377,6 @@ func sameWord(lang, heard, sample string) bool {
 	}
 
 	return canon(heard) == canon(sample)
-}
-
-var ordinals = map[string]map[string]string{
-	"en": {"1st": "first"},
-	"nl": {"1e": "eerste", "1ste": "eerste"},
-	"pt": {"1º": "primeiro", "1°": "primeiro"},
 }
 
 // BareCommand reads a title said on its own as the one-word command it may be. Alexa can hear "select", said after a remote-style command, as an answer to a question (ChooseMatch's lone {Answer}) rather than Navigate's lone {NavAction}, since both samples are a slot alone; heard is the intent with that slot when it is one of the slot's values in locale.
