@@ -196,3 +196,42 @@ func TestRequestPanicIsAnswered(t *testing.T) {
 	assert.Contains(t, logs.String(), "panicked handling an Alexa request")
 	assert.Contains(t, logs.String(), "deadline_test.go", "the log carries the stack")
 }
+
+// An action that finished just as the deadline passed is answered as it went: when both are ready, the answer wins over the deadline.
+func TestInTimePrefersAFinishedAnswer(t *testing.T) {
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+
+	played := &actions.Outcome{Say: actions.Message{ID: "playing"}}
+	failed := &actions.Outcome{Err: assert.AnError}
+
+	// select picks among ready cases at random, so each case is tried often enough that a deadline chosen over a ready answer would show.
+	for range 200 {
+		done := make(chan handled, 1)
+		done <- handled{outcome: played}
+
+		r, ok := inTime(ctx, done)
+		require.True(t, ok, "a success that finished at the deadline is answered")
+		require.Same(t, played, r.outcome)
+
+		done <- handled{}
+
+		_, ok = inTime(ctx, done)
+		require.True(t, ok, "an answer without an action is given")
+
+		done <- handled{outcome: failed}
+
+		_, ok = inTime(ctx, done)
+		require.False(t, ok, "a failure after the deadline is put down to it")
+	}
+
+	_, ok := inTime(ctx, make(chan handled, 1))
+	assert.False(t, ok, "nothing answered by the deadline")
+
+	done := make(chan handled, 1)
+	done <- handled{outcome: failed}
+
+	r, ok := inTime(t.Context(), done)
+	assert.True(t, ok, "a failure in time is answered")
+	assert.Same(t, failed, r.outcome)
+}

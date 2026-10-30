@@ -331,3 +331,9 @@ type Card struct {
 	Title   string `json:"title"`
 	Content string `json:"content"`
 }
+
+// handled is what handling a request answered, as handleInTime waits for it.
+type handled struct {
+	resp    ResponseEnvelope
+	outcome *actions.Outcome
+}

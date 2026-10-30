@@ -90,11 +90,6 @@ func (h *Handler) handleInTime(ctx context.Context, env *RequestEnvelope, verify
 	ctx, cancel := context.WithTimeout(ctx, RequestDeadline-verify)
 	defer cancel()
 
-	type handled struct {
-		resp    ResponseEnvelope
-		outcome *actions.Outcome
-	}
-
 	done := make(chan handled, 1)
 
 	go func() {
@@ -112,25 +107,34 @@ func (h *Handler) handleInTime(ctx context.Context, env *RequestEnvelope, verify
 		done <- handled{resp, o}
 	}()
 
-	var err error
-
-	select {
-	case r := <-done:
-		if ctx.Err() == nil || r.outcome == nil || r.outcome.Err == nil {
-			return r.resp, r.outcome
-		}
-
-		err = r.outcome.Err
-	case <-ctx.Done():
+	if r, ok := inTime(ctx, done); ok {
+		return r.resp, r.outcome
 	}
 
-	o := actions.Outcome{Say: actions.Message{ID: "error.not_answering"}, EndSession: true, Err: errors.Join(ErrTooSlow, err)}
+	o := actions.Outcome{Say: actions.Message{ID: "error.not_answering"}, EndSession: true, Err: ErrTooSlow}
 
 	if name := tr.targetName(); name != "" {
 		o.Say = actions.Message{ID: "error.kodi_not_answering", Params: map[string]string{"kodi": name}}
 	}
 
 	return h.respond(env.Request.Locale, o, false), &o
+}
+
+// inTime waits for the handler's answer on done until ctx is done, and reports whether it is one to give. An action that failed once the deadline passed most likely failed because of it; one that succeeded is answered all the same, even when it finished just as the deadline passed.
+func inTime(ctx context.Context, done <-chan handled) (handled, bool) {
+	var r handled
+
+	select {
+	case r = <-done:
+	case <-ctx.Done():
+		select {
+		case r = <-done:
+		default:
+			return r, false
+		}
+	}
+
+	return r, ctx.Err() == nil || r.outcome == nil || r.outcome.Err == nil
 }
 
 func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, tr *requestTrace) (ResponseEnvelope, *actions.Outcome) {
