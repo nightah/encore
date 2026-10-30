@@ -38,7 +38,7 @@ The first and latest episodes skip specials (season 0) unless a show has nothing
 
 ## Finding titles
 
-Encore matches what Alexa heard against your own library, so it copes with numbering ("rocky two"), subtitles ("endgame") and titles Alexa doesn't know. When two titles are close, it asks which one you meant. See [matching and aliases](/encore/guides/matching/).
+Encore matches what Alexa heard against your own library, so it copes with numbering ("rocky two"), subtitles ("endgame") and titles Alexa doesn't know. When two titles are close, it asks which one you meant. Film and music commands heard as a plain "play …" search run as the command too ("play the movie Frozen", "put on music by Pink Floyd"), a word for a kind of title left in the name narrows the search ("play Frozen movie"), and "play something by Queen" or "play some songs" play what they say. See [matching and aliases](/encore/guides/matching/).
 
 ## Answering a question
 
