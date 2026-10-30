@@ -50,6 +50,7 @@ utterances:
     - "(fais jouer|faire jouer|fais-moi entendre) l'album {Album} (de|par) {Artist} [(dans le|dans la|au|à la) {Room}]"
   ListenToArtist:
     - "(fais jouer|faire jouer|fais-moi entendre) (de la musique|des chansons|des tounes) (de|par) {Artist} [(dans le|dans la|au|à la) {Room}]"
+    - "(fais jouer|faire jouer|fais-moi entendre) quelque chose (de|par) {Artist} [(dans le|dans la|au|à la) {Room}]"
   ListenToGenre:
     - "(fais jouer|faire jouer|fais-moi entendre) (de la musique|des chansons|des tounes) {Genre} [(dans le|dans la|au|à la) {Room}]"
   ListenToSong:

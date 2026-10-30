@@ -88,6 +88,7 @@ ListenToArtist:
   play_artist: "(mets|mettre|joue|jouer|lance|lancer) l'artiste {Artist} [(dans le|dans la|au|à la) {Room}]"
   play_music_by: "(mets|mettre|joue|jouer|lance|lancer) (de la musique|des chansons) (de|par) {Artist} [(dans le|dans la|au|à la) {Room}]\nje (veux|voudrais) écouter (de la musique|des chansons) de {Artist}"
   play_music_by_2: "(mets|mettre|joue|jouer|lance|lancer) (de la musique|des chansons) {Genre} (de|par) {Artist}"
+  play_something_by: "(mets|mettre|joue|jouer|lance|lancer) quelque chose (de|par) {Artist} [(dans le|dans la|au|à la) {Room}]"
 ListenToGenre:
   play_genre: "(mets|mettre|joue|jouer|lance|lancer) de la musique du genre {Genre} [(dans le|dans la|au|à la) {Room}]"
   play_music: "(mets|mettre|joue|jouer|lance|lancer) (de la musique|des chansons) {Genre} [(dans le|dans la|au|à la) {Room}]\n(mets|mettre|joue|jouer) (du|de la) {Genre} [(dans le|dans la|au|à la) {Room}]\nje (veux|voudrais) écouter (du|de la) {Genre}"

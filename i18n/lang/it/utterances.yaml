@@ -89,6 +89,7 @@ ListenToArtist:
   play_artist: "(metti|mettere|riproduci|riprodurre|ascolta|ascoltare|fammi sentire) l'artista {Artist} [(in|nel|nella) {Room}]"
   play_music_by: "(metti|mettere|riproduci|riprodurre|ascolta|ascoltare|fammi sentire) [un po' di] (musica|canzoni) (di|dei|degli) {Artist}\n(metti|riproduci|ascolta) [un po' di] (musica|canzoni) (di|dei|degli) {Artist} (in|nel|nella) {Room}"
   play_music_by_2: "(metti|mettere|riproduci|riprodurre|ascolta|ascoltare) [un po' di] (musica|canzoni) {Genre} di {Artist} [(in|nel|nella) {Room}]"
+  play_something_by: "(metti|mettere|riproduci|riprodurre|fammi sentire) qualcosa (di|dei|degli) {Artist} [(in|nel|nella) {Room}]"
 ListenToGenre:
   play_genre: "(metti|riproduci|ascolta) il genere {Genre}"
   play_music: "(metti|mettere|riproduci|riprodurre|ascolta|ascoltare|fammi sentire) [un po' di] musica {Genre} [(in|nel|nella) {Room}]\n(metti|riproduci|ascolta) [delle] canzoni {Genre} [(in|nel|nella) {Room}]"

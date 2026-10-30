@@ -95,8 +95,9 @@ ListenToAlbum:
   play_album_by: "(play|listen to) [the] album {Album} by {Artist} [(in|on) the {Room}]"
 ListenToArtist:
   play_artist: "(play|listen to) [the] artist {Artist} [(in|on) the {Room}]"
-  play_music_by: "(play|listen to) [some] (music|songs) by {Artist} [(in|on) the {Room}]"
-  play_music_by_2: "(play|listen to) [some] {Genre} (music|songs) by {Artist} [(in|on) the {Room}]"
+  play_music_by: "(play|listen to|put on) [some] (music|songs) by {Artist} [(in|on) the {Room}]"
+  play_music_by_2: "(play|listen to|put on) [some] {Genre} (music|songs) by {Artist} [(in|on) the {Room}]"
+  play_something_by: "(play|put on) something by {Artist} [(in|on) the {Room}]"
 ListenToGenre:
   play_genre: "(play|listen to) the {Genre} genre"
   play_music: "(play|listen to|put on) [some] {Genre} (music|songs|tunes) [(in|on) the {Room}]"
