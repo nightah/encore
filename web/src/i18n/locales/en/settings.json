@@ -176,7 +176,7 @@
   },
   "features": {
     "auto_deploy": {
-      "hint": "Redeploys the skill when new library titles, settings or an Encore upgrade change it. A failed deploy pauses this until you deploy by hand.",
+      "hint": "Redeploys the skill when new library titles, settings or an Encore upgrade change it. A deploy that fails because Amazon is busy or unavailable is tried again a few times; any other failure pauses this until you deploy by hand.",
       "title": "Deploy skill changes automatically"
     },
     "auto_deploy_minutes": {

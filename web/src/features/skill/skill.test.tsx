@@ -123,6 +123,38 @@ describe("Alexa skill page", () => {
     expect(screen.getByText(/New library titles since the last deploy/)).toBeInTheDocument();
   });
 
+  it("says a failed automatic deploy will be tried again", async () => {
+    getDb().skill = {
+      ...getDb().skill,
+      auto_deploy: true,
+      auto_deploy_retry: {
+        attempts: 1,
+        error: "smapi: create upload URL: HTTP 503: Service Unavailable",
+        max_attempts: 4,
+        next_at: new Date().toISOString(),
+      },
+      needs_deploy: true,
+    };
+    renderApp("/alexa-skill");
+    const status = await screen.findByText("An automatic deploy failed and will be tried again");
+    const card = status.closest("[role=status]") as HTMLElement;
+    expect(within(card).getByText(/HTTP 503/)).toBeInTheDocument();
+    expect(within(card).getByText(/^Attempt 1 of 4 failed\. Encore tries again after /)).toBeInTheDocument();
+    expect(screen.queryByText("Automatic deploys are paused")).not.toBeInTheDocument();
+  });
+
+  it("shows only the pause once automatic deploys gave up", async () => {
+    getDb().skill = {
+      ...getDb().skill,
+      auto_deploy: true,
+      auto_deploy_paused: "smapi: create upload URL: HTTP 503: Service Unavailable",
+      auto_deploy_retry: { attempts: 3, error: "HTTP 503", max_attempts: 4, next_at: new Date().toISOString() },
+    };
+    renderApp("/alexa-skill");
+    expect(await screen.findByText("Automatic deploys are paused")).toBeInTheDocument();
+    expect(screen.queryByText("An automatic deploy failed and will be tried again")).not.toBeInTheDocument();
+  });
+
   it("refuses to disable the last enabled locale", async () => {
     const user = userEvent.setup();
     const log = recordRequests();

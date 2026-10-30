@@ -370,7 +370,7 @@ describe("Settings page", () => {
     renderApp("/settings?tab=features");
     const toggle = await screen.findByRole("switch", { name: "Deploy skill changes automatically" });
     expect(toggle).toBeChecked();
-    expect(screen.getByText(/A failed deploy pauses this until you deploy by hand/)).toBeInTheDocument();
+    expect(screen.getByText(/any other failure pauses this until you deploy by hand/)).toBeInTheDocument();
     const switches = screen.getAllByRole("switch");
     expect(switches[switches.indexOf(toggle) - 1]).toHaveAccessibleName("Deep search for “play X”");
 

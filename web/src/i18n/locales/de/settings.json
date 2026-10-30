@@ -176,7 +176,7 @@
   },
   "features": {
     "auto_deploy": {
-      "hint": "Stellt den Skill erneut bereit, wenn neue Titel in der Mediathek, Einstellungen oder ein Encore-Update ihn ändern. Eine fehlgeschlagene Bereitstellung pausiert das, bis du von Hand bereitstellst.",
+      "hint": "Stellt den Skill erneut bereit, wenn neue Titel in der Mediathek, Einstellungen oder ein Encore-Update ihn ändern. Scheitert eine Bereitstellung, weil Amazon ausgelastet oder nicht erreichbar ist, wird sie einige Male wiederholt; jeder andere Fehler pausiert das, bis du von Hand bereitstellst.",
       "title": "Skill-Änderungen automatisch bereitstellen"
     },
     "auto_deploy_minutes": {

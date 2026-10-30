@@ -176,7 +176,7 @@
   },
   "features": {
     "auto_deploy": {
-      "hint": "Vuelve a desplegar la skill cuando la cambian títulos nuevos de la biblioteca, la configuración o una actualización de Encore. Un despliegue fallido lo pausa hasta que despliegues a mano.",
+      "hint": "Vuelve a desplegar la skill cuando la cambian títulos nuevos de la biblioteca, la configuración o una actualización de Encore. Un despliegue que falla porque Amazon está ocupado o no responde se reintenta unas cuantas veces; cualquier otro fallo lo pausa hasta que despliegues a mano.",
       "title": "Desplegar los cambios de la skill automáticamente"
     },
     "auto_deploy_minutes": {

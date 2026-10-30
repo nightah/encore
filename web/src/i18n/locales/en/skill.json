@@ -19,6 +19,10 @@
     "resume": "Deploy the skill by hand once it's fixed to resume them.",
     "title": "Automatic deploys are paused"
   },
+  "autoDeployRetry": {
+    "next": "Attempt {{attempts}} of {{max}} failed. Encore tries again after {{time}}.",
+    "title": "An automatic deploy failed and will be tried again"
+  },
   "content": {
     "movies": "Movies",
     "music": "Music",

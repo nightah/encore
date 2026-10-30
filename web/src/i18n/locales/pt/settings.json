@@ -176,7 +176,7 @@
   },
   "features": {
     "auto_deploy": {
-      "hint": "Implanta a skill novamente quando novos títulos na biblioteca, configurações ou uma atualização do Encore a alteram. Uma implantação com falha pausa isso até você implantar manualmente.",
+      "hint": "Implanta a skill novamente quando novos títulos na biblioteca, configurações ou uma atualização do Encore a alteram. Uma implantação que falha porque a Amazon está ocupada ou indisponível é tentada de novo algumas vezes; qualquer outra falha pausa isso até você implantar manualmente.",
       "title": "Implantar alterações da skill automaticamente"
     },
     "auto_deploy_minutes": {

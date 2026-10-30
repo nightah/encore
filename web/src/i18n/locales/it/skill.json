@@ -19,6 +19,10 @@
     "resume": "Distribuisci la skill a mano una volta risolto il problema per riprenderle.",
     "title": "Le distribuzioni automatiche sono sospese"
   },
+  "autoDeployRetry": {
+    "next": "Il tentativo {{attempts}} di {{max}} non è riuscito. Prossimo tentativo: {{time}}.",
+    "title": "Una distribuzione automatica non è riuscita e verrà ritentata"
+  },
   "content": {
     "movies": "Film",
     "music": "Musica",

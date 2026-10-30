@@ -176,7 +176,7 @@
   },
   "features": {
     "auto_deploy": {
-      "hint": "Redéploie la skill quand de nouveaux titres de la médiathèque, les paramètres ou une mise à jour d’Encore la modifient. Un déploiement en échec met cela en pause jusqu’à ce que vous déployiez à la main.",
+      "hint": "Redéploie la skill quand de nouveaux titres de la médiathèque, les paramètres ou une mise à jour d’Encore la modifient. Un déploiement qui échoue parce qu’Amazon est occupé ou indisponible est relancé quelques fois ; tout autre échec met cela en pause jusqu’à ce que vous déployiez à la main.",
       "title": "Déployer automatiquement les modifications de la skill"
     },
     "auto_deploy_minutes": {
