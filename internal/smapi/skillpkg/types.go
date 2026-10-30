@@ -13,7 +13,7 @@ type Options struct {
 	Invocation string
 	// SkillName overrides every locale's display name.
 	SkillName string
-	// SlotValues are supplied at build time, e.g. library titles for AMAZON.Movie. Values too long for Amazon are dropped with a warning.
+	// SlotValues are supplied at build time, e.g. library titles for AMAZON.Movie. They are cleaned of what Amazon rejects or nobody can say (Kodi formatting tags, control characters, emoji, '*'), and values left empty or too long for Amazon are dropped with a warning.
 	SlotValues map[string][]skillmodel.SlotValue
 	// LocaleSlotValues replaces SlotValues for the locales it names, e.g. to build one locale with fewer titles than the others. Values too long for Amazon are dropped from them too; the warning comes from SlotValues.
 	LocaleSlotValues map[string]map[string][]skillmodel.SlotValue
