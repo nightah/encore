@@ -5,3 +5,6 @@ const lockFileName = "encore.lock"
 
 // beforeRestoreLayout timestamps the copy of the database a restore moves aside.
 const beforeRestoreLayout = "20060102T150405Z"
+
+// certURLSetting stores the URL of the certificate chain Alexa last signed a request with, so serve can warm the verifier's cache with it on start.
+const certURLSetting = "alexa.cert_chain_url"

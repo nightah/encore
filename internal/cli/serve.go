@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"net/http"
 	"sync"
@@ -16,6 +17,7 @@ import (
 	"github.com/nightah/encore/internal/core/actions"
 	"github.com/nightah/encore/internal/server"
 	"github.com/nightah/encore/internal/skillmodel"
+	"github.com/nightah/encore/internal/store"
 )
 
 func newServeCommand() *cobra.Command {
@@ -89,7 +91,7 @@ func newServeCommand() *cobra.Command {
 				return err
 			}
 
-			skill, err := newSkillHandler(v, skillIDFunc(cfg.Alexa.SkillID, admin.SkillID), admin.Simulating, a, log)
+			skill, err := newSkillHandler(ctx, v, skillIDFunc(cfg.Alexa.SkillID, admin.SkillID), admin.Simulating, a, log)
 			if err != nil {
 				return err
 			}
@@ -157,11 +159,25 @@ func skillIDFunc(configured string, stored func() string) func() string {
 	return stored
 }
 
-func newSkillHandler(v *voice, skillID func() string, simulating func() bool, a *app.App, log *slog.Logger) (http.Handler, error) {
+func newSkillHandler(ctx context.Context, v *voice, skillID func() string, simulating func() bool, a *app.App, log *slog.Logger) (http.Handler, error) {
 	verifier, err := alexa.NewVerifier(log.With("component", "alexaverify"))
 	if err != nil {
 		return nil, err
 	}
+
+	// The certificate cache is in memory, so warm it with the chain the last run used rather than make the first request after a restart download it.
+	var certURL string
+	if err := a.DB().Settings().Get(ctx, certURLSetting, &certURL); err != nil && !errors.Is(err, store.ErrNotFound) {
+		log.Warn("couldn't read the stored Alexa certificate URL", "error", err)
+	}
+
+	go alexa.WarmVerifier(ctx, verifier, certURL, log)
+
+	remembered := alexa.RememberCertURL(verifier, certURL, func(ctx context.Context, url string) {
+		if err := a.DB().Settings().Set(context.WithoutCancel(ctx), certURLSetting, url); err != nil {
+			log.WarnContext(ctx, "couldn't store the Alexa certificate URL", "error", err)
+		}
+	})
 
 	if skillID() == "" {
 		log.Warn("alexa.skill_id is not set and no skill has been deployed; requests for any skill ID are accepted until it is")
@@ -178,5 +194,5 @@ func newSkillHandler(v *voice, skillID func() string, simulating func() bool, a 
 		Log:           log.With("component", "alexa"),
 	}
 
-	return alexa.VerifiedFunc(verifier, skillID, log, h.ServeBody), nil
+	return alexa.VerifiedFunc(remembered, skillID, log, h.ServeBody), nil
 }

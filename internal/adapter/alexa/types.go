@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -126,6 +127,16 @@ type RequestVerifier interface {
 type BodyHandler func(w http.ResponseWriter, r *http.Request, body []byte)
 
 type verifyTimeKey struct{}
+
+// certURLVerifier is the RequestVerifier RememberCertURL returns.
+type certURLVerifier struct {
+	RequestVerifier
+
+	seen func(ctx context.Context, url string)
+
+	mu   sync.Mutex
+	last string
+}
 
 // The subset of the Alexa request and response JSON Encore uses. Amazon publishes no schema for these; the field names follow the custom skill JSON interface reference.
 

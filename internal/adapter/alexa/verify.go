@@ -102,3 +102,40 @@ func applicationID(body []byte) (string, error) {
 
 	return env.Session.Application.ApplicationID, nil
 }
+
+// WarmVerifier fills v's certificate cache with the chain at url, the one a previous run verified requests with, so the first request after a start doesn't wait on the download. It is best effort: a failure is logged and the first request fetches the chain itself.
+func WarmVerifier(ctx context.Context, v *alexaverify.Verifier, url string, log *slog.Logger) {
+	if url == "" {
+		return
+	}
+
+	if err := v.Warm(ctx, url); err != nil {
+		log.WarnContext(ctx, "couldn't warm the Alexa certificate cache", "url", url, "error", err)
+	}
+}
+
+// RememberCertURL wraps v so seen learns the certificate chain URL of each request v verifies, for WarmVerifier to use after a restart. last is the URL already stored; seen is only called when a verified request brings a different one.
+func RememberCertURL(v RequestVerifier, last string, seen func(ctx context.Context, url string)) RequestVerifier {
+	return &certURLVerifier{RequestVerifier: v, seen: seen, last: last}
+}
+
+func (v *certURLVerifier) Verify(ctx context.Context, body []byte, hdr http.Header) error {
+	if err := v.RequestVerifier.Verify(ctx, body, hdr); err != nil {
+		return err
+	}
+
+	url := hdr.Get(certChainURLHeader)
+
+	v.mu.Lock()
+	changed := url != "" && url != v.last
+	if changed {
+		v.last = url
+	}
+	v.mu.Unlock()
+
+	if changed {
+		v.seen(ctx, url)
+	}
+
+	return nil
+}

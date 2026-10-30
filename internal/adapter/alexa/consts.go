@@ -30,3 +30,6 @@ const resolvedBoost = 0.03
 const progressiveTimeout = time.Second
 
 const fallbackLocale = "en-US"
+
+// certChainURLHeader carries the URL of the certificate chain Alexa signed a request with.
+const certChainURLHeader = "SignatureCertChainUrl"
