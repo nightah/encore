@@ -67,6 +67,7 @@ func hindi() *language {
 		parts:    set(append(spell("भाग", "पार्ट", "सीज़न", "सीजन", "खंड", "अध्याय", "चैप्टर", "वॉल्यूम"), "part", "chapter", "season", "volume", "vol")...),
 		split:    hindiLetters,
 		romanize: plain.romanize,
+		native:   nativeOf("hi"),
 		phonetic: phoneticKeysOf(en.Encoder{}),
 	}
 }

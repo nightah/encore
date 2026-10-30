@@ -813,7 +813,7 @@ func TestMatcherFailuresAreReported(t *testing.T) {
 
 func TestAskKeepsMoreMatchesForNo(t *testing.T) {
 	cands := func(scores ...float64) match.Result {
-		var res match.Result
+		res := match.Result{AskScore: match.DefaultConfig().AskScore}
 
 		for i, s := range scores {
 			id := strconv.Itoa(i + 1)
@@ -844,6 +844,14 @@ func TestAskKeepsMoreMatchesForNo(t *testing.T) {
 
 	o = ask(cands(0.7, 0.7, 0.3))
 	assert.Nil(t, o.Followup, "nothing is kept back when the rest are too weak")
+
+	// The bar is the one the search used: the matcher's configured AskScore, or the higher one a native alias winner needs.
+	raised := cands(0.9, 0.9, 0.7)
+	raised.AskScore = 0.75
+	assert.Nil(t, ask(raised).Followup, "a title the search wouldn't have asked about isn't offered after no")
+
+	raised.AskScore = 0.6
+	require.NotNil(t, ask(raised).Followup)
 
 	o = newService().OtherChoices(o.Pending)
 	assert.Equal(t, "match.did_you_mean", o.Say.ID, "no offers the titles kept back")

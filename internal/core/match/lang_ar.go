@@ -57,6 +57,7 @@ func arabic() *language {
 		folds:            arabicFolds,
 		split:            arabicSplit(nums),
 		romanize:         romanizeArabic,
+		native:           nativeOf("ar"),
 		stop: romanizeSet(
 			"في", "من", "عن", "مع", "و", "يا", "ف", "ب", "ل", "ذا", "زا",
 			"the", "a", "an", "of", "and", "in", "on", "to", "for", "at", "with",
