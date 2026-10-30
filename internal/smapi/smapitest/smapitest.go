@@ -56,6 +56,8 @@ func New(t testing.TB, opts Options) *Server {
 		lastImport:  map[string]*importJob{},
 		statusPolls: map[string]int{},
 		sims:        map[string]*simJob{},
+		profiles:    map[string][]NLUAnswer{},
+		profiled:    map[string]int{},
 	}
 
 	s.Server = httptest.NewServer(s.routes())

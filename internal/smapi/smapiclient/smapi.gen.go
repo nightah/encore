@@ -2380,6 +2380,72 @@ func (e V1SkillValidationFailureType) Valid() bool {
 	}
 }
 
+// Defines values for V1SkillEvaluationsConfirmationStatusType.
+const (
+	V1SkillEvaluationsConfirmationStatusTypeCONFIRMED V1SkillEvaluationsConfirmationStatusType = "CONFIRMED"
+	V1SkillEvaluationsConfirmationStatusTypeDENIED    V1SkillEvaluationsConfirmationStatusType = "DENIED"
+	V1SkillEvaluationsConfirmationStatusTypeNONE      V1SkillEvaluationsConfirmationStatusType = "NONE"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillEvaluationsConfirmationStatusType enum.
+func (e V1SkillEvaluationsConfirmationStatusType) Valid() bool {
+	switch e {
+	case V1SkillEvaluationsConfirmationStatusTypeCONFIRMED:
+		return true
+	case V1SkillEvaluationsConfirmationStatusTypeDENIED:
+		return true
+	case V1SkillEvaluationsConfirmationStatusTypeNONE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillEvaluationsDialogActType.
+const (
+	V1SkillEvaluationsDialogActTypeDialogConfirmIntent V1SkillEvaluationsDialogActType = "Dialog.ConfirmIntent"
+	V1SkillEvaluationsDialogActTypeDialogConfirmSlot   V1SkillEvaluationsDialogActType = "Dialog.ConfirmSlot"
+	V1SkillEvaluationsDialogActTypeDialogElicitSlot    V1SkillEvaluationsDialogActType = "Dialog.ElicitSlot"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillEvaluationsDialogActType enum.
+func (e V1SkillEvaluationsDialogActType) Valid() bool {
+	switch e {
+	case V1SkillEvaluationsDialogActTypeDialogConfirmIntent:
+		return true
+	case V1SkillEvaluationsDialogActTypeDialogConfirmSlot:
+		return true
+	case V1SkillEvaluationsDialogActTypeDialogElicitSlot:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillEvaluationsResolutionsPerAuthorityStatusCode.
+const (
+	V1SkillEvaluationsResolutionsPerAuthorityStatusCodeERERROREXCEPTION V1SkillEvaluationsResolutionsPerAuthorityStatusCode = "ER_ERROR_EXCEPTION"
+	V1SkillEvaluationsResolutionsPerAuthorityStatusCodeERERRORTIMEOUT   V1SkillEvaluationsResolutionsPerAuthorityStatusCode = "ER_ERROR_TIMEOUT"
+	V1SkillEvaluationsResolutionsPerAuthorityStatusCodeERSUCCESSMATCH   V1SkillEvaluationsResolutionsPerAuthorityStatusCode = "ER_SUCCESS_MATCH"
+	V1SkillEvaluationsResolutionsPerAuthorityStatusCodeERSUCCESSNOMATCH V1SkillEvaluationsResolutionsPerAuthorityStatusCode = "ER_SUCCESS_NO_MATCH"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillEvaluationsResolutionsPerAuthorityStatusCode enum.
+func (e V1SkillEvaluationsResolutionsPerAuthorityStatusCode) Valid() bool {
+	switch e {
+	case V1SkillEvaluationsResolutionsPerAuthorityStatusCodeERERROREXCEPTION:
+		return true
+	case V1SkillEvaluationsResolutionsPerAuthorityStatusCodeERERRORTIMEOUT:
+		return true
+	case V1SkillEvaluationsResolutionsPerAuthorityStatusCodeERSUCCESSMATCH:
+		return true
+	case V1SkillEvaluationsResolutionsPerAuthorityStatusCodeERSUCCESSNOMATCH:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for V2SkillSimulationsConfirmationStatusType.
 const (
 	V2SkillSimulationsConfirmationStatusTypeCONFIRMED V2SkillSimulationsConfirmationStatusType = "CONFIRMED"
@@ -3747,6 +3813,117 @@ type V1SkillCreateSkillWithPackageRequest struct {
 	VendorID *string `json:"vendorId,omitempty"`
 }
 
+// V1SkillEvaluationsConfirmationStatusType An enumeration indicating whether the user has explicitly confirmed or denied the entire intent. Possible values: "NONE", "CONFIRMED", "DENIED".
+type V1SkillEvaluationsConfirmationStatusType string
+
+// V1SkillEvaluationsDialogAct A representation of question prompts to the user for multi-turn, which requires user to fill a slot value, or confirm a slot value, or confirm an intent.
+type V1SkillEvaluationsDialogAct struct {
+	// TargetSlot The name of the target slot that needs to be filled or confirmed for a dialogAct
+	TargetSlot *string                          `json:"targetSlot,omitempty"`
+	Type       *V1SkillEvaluationsDialogActType `json:"type,omitempty"`
+}
+
+// V1SkillEvaluationsDialogActType defines model for v1.skill.evaluations.DialogActType.
+type V1SkillEvaluationsDialogActType string
+
+// V1SkillEvaluationsIntent defines model for v1.skill.evaluations.Intent.
+type V1SkillEvaluationsIntent struct {
+	// ConfirmationStatus An enumeration indicating whether the user has explicitly confirmed or denied the entire intent. Possible values: "NONE", "CONFIRMED", "DENIED".
+	ConfirmationStatus *V1SkillEvaluationsConfirmationStatusType `json:"confirmationStatus,omitempty"`
+	Name               *string                                   `json:"name,omitempty"`
+
+	// Slots A map of key-value pairs that further describes what the user meant based on a predefined intent schema. The map can be empty.
+	Slots map[string]V1SkillEvaluationsSlot `json:"slots,omitempty"`
+}
+
+// V1SkillEvaluationsMultiTurn Included when the selected intent has dialog defined and the dialog is not completed.  To continue the dialog, provide the value of the token in the multiTurnToken field in the next request.
+type V1SkillEvaluationsMultiTurn struct {
+	// DialogAct A representation of question prompts to the user for multi-turn, which requires user to fill a slot value, or confirm a slot value, or confirm an intent.
+	DialogAct *V1SkillEvaluationsDialogAct `json:"dialogAct,omitempty"`
+
+	// Prompt A sample prompt defined in the dialog model for each DialogAct.
+	Prompt *string `json:"prompt,omitempty"`
+
+	// Token Opaque string which contains multi-turn related context.
+	Token *string `json:"token,omitempty"`
+}
+
+// V1SkillEvaluationsProfileNluRequest defines model for v1.skill.evaluations.ProfileNluRequest.
+type V1SkillEvaluationsProfileNluRequest struct {
+	// MultiTurnToken Opaque string which contains multi-turn related context.
+	MultiTurnToken *string `json:"multiTurnToken,omitempty"`
+
+	// Utterance Actual representation of user input to Alexa.
+	Utterance string `json:"utterance"`
+}
+
+// V1SkillEvaluationsProfileNluResponse defines model for v1.skill.evaluations.ProfileNluResponse.
+type V1SkillEvaluationsProfileNluResponse struct {
+	// ConsideredIntents All intents that Alexa considered for the utterance in the request, but did not select.
+	ConsideredIntents []V1SkillEvaluationsIntent `json:"consideredIntents,omitempty"`
+
+	// MultiTurn Included when the selected intent has dialog defined and the dialog is not completed.  To continue the dialog, provide the value of the token in the multiTurnToken field in the next request.
+	MultiTurn *V1SkillEvaluationsMultiTurn `json:"multiTurn,omitempty"`
+
+	// SelectedIntent The intent that Alexa selected for the utterance in the request.
+	SelectedIntent *V1SkillEvaluationsProfileNluSelectedIntent `json:"selectedIntent,omitempty"`
+
+	// SessionEnded Represents when an utterance results in the skill exiting. It would be true when NLU selects 1P ExitAppIntent or GoHomeIntent, and false otherwise.
+	SessionEnded *bool `json:"sessionEnded,omitempty"`
+}
+
+// V1SkillEvaluationsProfileNluSelectedIntent The intent that Alexa selected for the utterance in the request.
+type V1SkillEvaluationsProfileNluSelectedIntent = V1SkillEvaluationsIntent
+
+// V1SkillEvaluationsResolutionsPerAuthorityItems defines model for v1.skill.evaluations.ResolutionsPerAuthorityItems.
+type V1SkillEvaluationsResolutionsPerAuthorityItems struct {
+	// Authority The name of the authority for the slot values. For custom slot types, this authority label incorporates your skill ID and the slot type name.
+	Authority *string `json:"authority,omitempty"`
+
+	// Status An object representing the status of entity resolution for the slot.
+	Status *V1SkillEvaluationsResolutionsPerAuthorityStatus `json:"status,omitempty"`
+
+	// Values An array of resolved values for the slot.
+	Values []V1SkillEvaluationsResolutionsPerAuthorityValueItems `json:"values,omitempty"`
+}
+
+// V1SkillEvaluationsResolutionsPerAuthorityStatus An object representing the status of entity resolution for the slot.
+type V1SkillEvaluationsResolutionsPerAuthorityStatus struct {
+	// Code A code indicating the results of attempting to resolve the user utterance against the defined slot types. This can be one of the following:
+	// ER_SUCCESS_MATCH: The spoken value matched a value or synonym explicitly defined in your custom slot type. ER_SUCCESS_NO_MATCH: The spoken value did not match any values or synonyms explicitly defined in your custom slot type. ER_ERROR_TIMEOUT: An error occurred due to a timeout. ER_ERROR_EXCEPTION: An error occurred due to an exception during processing.
+	Code *V1SkillEvaluationsResolutionsPerAuthorityStatusCode `json:"code,omitempty"`
+}
+
+// V1SkillEvaluationsResolutionsPerAuthorityStatusCode A code indicating the results of attempting to resolve the user utterance against the defined slot types. This can be one of the following:
+// ER_SUCCESS_MATCH: The spoken value matched a value or synonym explicitly defined in your custom slot type. ER_SUCCESS_NO_MATCH: The spoken value did not match any values or synonyms explicitly defined in your custom slot type. ER_ERROR_TIMEOUT: An error occurred due to a timeout. ER_ERROR_EXCEPTION: An error occurred due to an exception during processing.
+type V1SkillEvaluationsResolutionsPerAuthorityStatusCode string
+
+// V1SkillEvaluationsResolutionsPerAuthorityValueItems An object representing the resolved value for the slot, based on the user's utterance and the slot type definition.
+type V1SkillEvaluationsResolutionsPerAuthorityValueItems struct {
+	// ID The unique ID defined for the resolved slot value. This is based on the IDs defined in the slot type definition.
+	ID *string `json:"id,omitempty"`
+
+	// Name The string for the resolved slot value.
+	Name *string `json:"name,omitempty"`
+}
+
+// V1SkillEvaluationsSlot defines model for v1.skill.evaluations.Slot.
+type V1SkillEvaluationsSlot struct {
+	// ConfirmationStatus An enumeration indicating whether the user has explicitly confirmed or denied the entire intent. Possible values: "NONE", "CONFIRMED", "DENIED".
+	ConfirmationStatus *V1SkillEvaluationsConfirmationStatusType `json:"confirmationStatus,omitempty"`
+	Name               *string                                   `json:"name,omitempty"`
+
+	// Resolutions A resolutions object representing the results of resolving the words captured from the user's utterance.
+	Resolutions *V1SkillEvaluationsSlotResolutions `json:"resolutions,omitempty"`
+	Value       *string                            `json:"value,omitempty"`
+}
+
+// V1SkillEvaluationsSlotResolutions A resolutions object representing the results of resolving the words captured from the user's utterance.
+type V1SkillEvaluationsSlotResolutions struct {
+	// ResolutionsPerAuthority An array of objects representing each possible authority for entity resolution. An authority represents the source for the data provided for the slot. For a custom slot type, the authority is the slot type you defined.
+	ResolutionsPerAuthority []V1SkillEvaluationsResolutionsPerAuthorityItems `json:"resolutionsPerAuthority,omitempty"`
+}
+
 // V1SkillImageAttributes Set of properties of the image provided by the customer.
 type V1SkillImageAttributes struct {
 	// Dimension Dimensions of an image.
@@ -4088,6 +4265,9 @@ type CreateSkillPackageV1JSONRequestBody = V1SkillCreateSkillWithPackageRequest
 // ImportSkillPackageV1JSONRequestBody defines body for ImportSkillPackageV1 for application/json ContentType.
 type ImportSkillPackageV1JSONRequestBody = V1SkillUpdateSkillWithPackageRequest
 
+// ProfileNluV1JSONRequestBody defines body for ProfileNluV1 for application/json ContentType.
+type ProfileNluV1JSONRequestBody = V1SkillEvaluationsProfileNluRequest
+
 // SimulateSkillV2JSONRequestBody defines body for SimulateSkillV2 for application/json ContentType.
 type SimulateSkillV2JSONRequestBody = V2SkillSimulationsSimulationsAPIRequest
 
@@ -4213,6 +4393,24 @@ type ClientInterface interface {
 	//
 	// Creates/Updates the enablement for given skillId/stage and customerId (retrieved from Auth token).
 	SetSkillEnablementV1(ctx context.Context, skillID string, stage string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ProfileNluV1WithBody Profile a test utterance.
+	//
+	// This is a synchronous API that profiles an utterance against interaction model.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /v1/skills/{skillId}/stages/{stage}/interactionModel/locales/{locale}/profileNlu (the `ProfileNluV1` operationId).
+	ProfileNluV1WithBody(ctx context.Context, skillID string, stage string, locale string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ProfileNluV1 Profile a test utterance.
+	//
+	// This is a synchronous API that profiles an utterance against interaction model.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /v1/skills/{skillId}/stages/{stage}/interactionModel/locales/{locale}/profileNlu (the `ProfileNluV1` operationId).
+	ProfileNluV1(ctx context.Context, skillID string, stage string, locale string, body ProfileNluV1JSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetSkillStatusV1 performs a GET /v1/skills/{skillId}/status (the `GetSkillStatusV1` operationId) request.
 	//
@@ -4379,6 +4577,44 @@ func (c *Client) GetSkillManifestV1(ctx context.Context, skillID string, stageV2
 // Creates/Updates the enablement for given skillId/stage and customerId (retrieved from Auth token).
 func (c *Client) SetSkillEnablementV1(ctx context.Context, skillID string, stage string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewSetSkillEnablementV1Request(c.Server, skillID, stage)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ProfileNluV1WithBody Profile a test utterance.
+//
+// This is a synchronous API that profiles an utterance against interaction model.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /v1/skills/{skillId}/stages/{stage}/interactionModel/locales/{locale}/profileNlu (the `ProfileNluV1` operationId).
+func (c *Client) ProfileNluV1WithBody(ctx context.Context, skillID string, stage string, locale string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewProfileNluV1RequestWithBody(c.Server, skillID, stage, locale, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ProfileNluV1 Profile a test utterance.
+//
+// This is a synchronous API that profiles an utterance against interaction model.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /v1/skills/{skillId}/stages/{stage}/interactionModel/locales/{locale}/profileNlu (the `ProfileNluV1` operationId).
+func (c *Client) ProfileNluV1(ctx context.Context, skillID string, stage string, locale string, body ProfileNluV1JSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewProfileNluV1Request(c.Server, skillID, stage, locale, body)
 	if err != nil {
 		return nil, err
 	}
@@ -4805,6 +5041,67 @@ func NewSetSkillEnablementV1Request(server string, skillID string, stage string)
 	return req, nil
 }
 
+// NewProfileNluV1Request calls the generic ProfileNluV1 builder with application/json body
+func NewProfileNluV1Request(server string, skillID string, stage string, locale string, body ProfileNluV1JSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewProfileNluV1RequestWithBody(server, skillID, stage, locale, "application/json", bodyReader)
+}
+
+// NewProfileNluV1RequestWithBody constructs an http.Request for the ProfileNluV1 method, with any body, and a specified content type
+func NewProfileNluV1RequestWithBody(server string, skillID string, stage string, locale string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "skillId", skillID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "stage", stage, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "locale", locale, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "languager-region; same as BCP-47 language tag format"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/skills/%s/stages/%s/interactionModel/locales/%s/profileNlu", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetSkillStatusV1Request constructs an http.Request for the GetSkillStatusV1 method
 func NewGetSkillStatusV1Request(server string, skillID string, params *GetSkillStatusV1Params) (*http.Request, error) {
 	var err error
@@ -5101,6 +5398,24 @@ type ClientWithResponsesInterface interface {
 	//
 	// Returns a wrapper object for the known response body format(s).
 	SetSkillEnablementV1WithResponse(ctx context.Context, skillID string, stage string, reqEditors ...RequestEditorFn) (*SetSkillEnablementV1Response, error)
+
+	// ProfileNluV1WithBodyWithResponse Profile a test utterance.
+	//
+	// This is a synchronous API that profiles an utterance against interaction model.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /v1/skills/{skillId}/stages/{stage}/interactionModel/locales/{locale}/profileNlu (the `ProfileNluV1` operationId).
+	ProfileNluV1WithBodyWithResponse(ctx context.Context, skillID string, stage string, locale string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ProfileNluV1Response, error)
+
+	// ProfileNluV1WithResponse Profile a test utterance.
+	//
+	// This is a synchronous API that profiles an utterance against interaction model.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /v1/skills/{skillId}/stages/{stage}/interactionModel/locales/{locale}/profileNlu (the `ProfileNluV1` operationId).
+	ProfileNluV1WithResponse(ctx context.Context, skillID string, stage string, locale string, body ProfileNluV1JSONRequestBody, reqEditors ...RequestEditorFn) (*ProfileNluV1Response, error)
 
 	// GetSkillStatusV1WithResponse performs a GET /v1/skills/{skillId}/status (the `GetSkillStatusV1` operationId) request.
 	//
@@ -5831,6 +6146,131 @@ func (r SetSkillEnablementV1Response) ContentType() string {
 	return ""
 }
 
+// ProfileNluV1Response200Headers the declared response headers of an HTTP 200 response for ProfileNluV1
+type ProfileNluV1Response200Headers struct {
+	ContentType *string
+}
+
+// ProfileNluV1Response400Headers the declared response headers of an HTTP 400 response for ProfileNluV1
+type ProfileNluV1Response400Headers struct {
+	ContentType *string
+}
+
+// ProfileNluV1Response401Headers the declared response headers of an HTTP 401 response for ProfileNluV1
+type ProfileNluV1Response401Headers struct {
+	ContentType *string
+}
+
+// ProfileNluV1Response403Headers the declared response headers of an HTTP 403 response for ProfileNluV1
+type ProfileNluV1Response403Headers struct {
+	ContentType *string
+}
+
+// ProfileNluV1Response409Headers the declared response headers of an HTTP 409 response for ProfileNluV1
+type ProfileNluV1Response409Headers struct {
+	ContentType *string
+}
+
+// ProfileNluV1Response429Headers the declared response headers of an HTTP 429 response for ProfileNluV1
+type ProfileNluV1Response429Headers struct {
+	ContentType *string
+}
+
+// ProfileNluV1Response500Headers the declared response headers of an HTTP 500 response for ProfileNluV1
+type ProfileNluV1Response500Headers struct {
+	ContentType *string
+}
+
+type ProfileNluV1Response struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *V1SkillEvaluationsProfileNluResponse
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *V1BadRequestError
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *V1Error
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *V1BadRequestError
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *V1Error
+	// JSON429 the response for an HTTP 429 `application/json` response
+	JSON429 *V1Error
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *ProfileNluV1Response200Headers
+	// Headers400 the parsed response headers for an HTTP 400 response
+	Headers400 *ProfileNluV1Response400Headers
+	// Headers401 the parsed response headers for an HTTP 401 response
+	Headers401 *ProfileNluV1Response401Headers
+	// Headers403 the parsed response headers for an HTTP 403 response
+	Headers403 *ProfileNluV1Response403Headers
+	// Headers409 the parsed response headers for an HTTP 409 response
+	Headers409 *ProfileNluV1Response409Headers
+	// Headers429 the parsed response headers for an HTTP 429 response
+	Headers429 *ProfileNluV1Response429Headers
+	// Headers500 the parsed response headers for an HTTP 500 response
+	Headers500 *ProfileNluV1Response500Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ProfileNluV1Response) GetJSON200() *V1SkillEvaluationsProfileNluResponse {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r ProfileNluV1Response) GetJSON400() *V1BadRequestError {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r ProfileNluV1Response) GetJSON401() *V1Error {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r ProfileNluV1Response) GetJSON403() *V1BadRequestError {
+	return r.JSON403
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r ProfileNluV1Response) GetJSON409() *V1Error {
+	return r.JSON409
+}
+
+// GetJSON429 returns the response for an HTTP 429 `application/json` response
+func (r ProfileNluV1Response) GetJSON429() *V1Error {
+	return r.JSON429
+}
+
+// GetBody returns the raw response body bytes
+func (r ProfileNluV1Response) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ProfileNluV1Response) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ProfileNluV1Response) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ProfileNluV1Response) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 // GetSkillStatusV1Response200Headers the declared response headers of an HTTP 200 response for GetSkillStatusV1
 type GetSkillStatusV1Response200Headers struct {
 	ContentType *string
@@ -6405,6 +6845,36 @@ func (c *ClientWithResponses) SetSkillEnablementV1WithResponse(ctx context.Conte
 		return nil, err
 	}
 	return ParseSetSkillEnablementV1Response(rsp)
+}
+
+// ProfileNluV1WithBodyWithResponse Profile a test utterance.
+//
+// This is a synchronous API that profiles an utterance against interaction model.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /v1/skills/{skillId}/stages/{stage}/interactionModel/locales/{locale}/profileNlu (the `ProfileNluV1` operationId).
+func (c *ClientWithResponses) ProfileNluV1WithBodyWithResponse(ctx context.Context, skillID string, stage string, locale string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ProfileNluV1Response, error) {
+	rsp, err := c.ProfileNluV1WithBody(ctx, skillID, stage, locale, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseProfileNluV1Response(rsp)
+}
+
+// ProfileNluV1WithResponse Profile a test utterance.
+//
+// This is a synchronous API that profiles an utterance against interaction model.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /v1/skills/{skillId}/stages/{stage}/interactionModel/locales/{locale}/profileNlu (the `ProfileNluV1` operationId).
+func (c *ClientWithResponses) ProfileNluV1WithResponse(ctx context.Context, skillID string, stage string, locale string, body ProfileNluV1JSONRequestBody, reqEditors ...RequestEditorFn) (*ProfileNluV1Response, error) {
+	rsp, err := c.ProfileNluV1(ctx, skillID, stage, locale, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseProfileNluV1Response(rsp)
 }
 
 // GetSkillStatusV1WithResponse performs a GET /v1/skills/{skillId}/status (the `GetSkillStatusV1` operationId) request.
@@ -7139,6 +7609,143 @@ func ParseSetSkillEnablementV1Response(rsp *http.Response) (*SetSkillEnablementV
 			headers.WWWAuthenticate = &value
 		}
 		response.Headers401 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseProfileNluV1Response parses an HTTP response from a ProfileNluV1WithResponse call
+func ParseProfileNluV1Response(rsp *http.Response) (*ProfileNluV1Response, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ProfileNluV1Response{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest V1SkillEvaluationsProfileNluResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest V1BadRequestError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest V1Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest V1BadRequestError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest V1Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest V1Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	case rsp.StatusCode == 500:
+		break // No content-type
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers ProfileNluV1Response200Headers
+		if values := rsp.Header.Values("Content-Type"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Content-Type", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ContentType = &value
+		}
+		response.Headers200 = &headers
+	case rsp.StatusCode == 400:
+		var headers ProfileNluV1Response400Headers
+		if values := rsp.Header.Values("Content-Type"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Content-Type", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ContentType = &value
+		}
+		response.Headers400 = &headers
+	case rsp.StatusCode == 401:
+		var headers ProfileNluV1Response401Headers
+		if values := rsp.Header.Values("Content-Type"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Content-Type", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ContentType = &value
+		}
+		response.Headers401 = &headers
+	case rsp.StatusCode == 403:
+		var headers ProfileNluV1Response403Headers
+		if values := rsp.Header.Values("Content-Type"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Content-Type", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ContentType = &value
+		}
+		response.Headers403 = &headers
+	case rsp.StatusCode == 409:
+		var headers ProfileNluV1Response409Headers
+		if values := rsp.Header.Values("Content-Type"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Content-Type", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ContentType = &value
+		}
+		response.Headers409 = &headers
+	case rsp.StatusCode == 429:
+		var headers ProfileNluV1Response429Headers
+		if values := rsp.Header.Values("Content-Type"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Content-Type", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ContentType = &value
+		}
+		response.Headers429 = &headers
+	case rsp.StatusCode == 500:
+		var headers ProfileNluV1Response500Headers
+		if values := rsp.Header.Values("Content-Type"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Content-Type", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ContentType = &value
+		}
+		response.Headers500 = &headers
 	}
 
 	return response, nil
