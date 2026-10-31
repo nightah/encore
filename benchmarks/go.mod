@@ -12,7 +12,7 @@ require (
 	github.com/nightah/encore v0.0.0-00010101000000-000000000000
 	github.com/pquerna/otp v1.5.0
 	github.com/stretchr/testify v1.12.1
-	go.yaml.in/yaml/v3 v3.0.5
+	go.yaml.in/yaml/v3 v3.0.6
 	pgregory.net/rapid v1.3.0
 )
 
