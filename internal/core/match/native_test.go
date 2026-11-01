@@ -136,3 +136,25 @@ func TestNativeAliasesOnlyAdd(t *testing.T) {
 	assert.Less(t, res.Margin, hi.cfg.PlayMargin)
 	assert.Equal(t, DecisionPlay, res.Decision, "as the title's own name would play it")
 }
+
+// TestAliasAsWrittenBeatsNativeForm checks that a title's alias written in the language's script counts as a name as written, not a native alias, when one of the title's native forms comes out the same.
+func TestAliasAsWrittenBeatsNativeForm(t *testing.T) {
+	ix, err := New("hi", Config{})
+	require.NoError(t, err)
+
+	e := ix.lang.newEntry(Doc{ID: "frozen", Kind: "movie", Title: "Frozen", Aliases: []string{"फ्रोजन"}})
+
+	var found bool
+
+	for _, a := range e.aliases {
+		if a.text == "फ्रोजन" {
+			found = true
+
+			assert.False(t, a.native, "the alias as written")
+			assert.False(t, a.derived)
+		}
+	}
+
+	assert.True(t, found, "the alias is kept")
+	require.NoError(t, ix.Close())
+}
