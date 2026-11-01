@@ -7,6 +7,12 @@ Contributions are welcome: code, documentation, translations of the voice comman
 
 Everyone taking part is expected to follow the [code of conduct](https://github.com/nightah/encore/blob/main/CODE_OF_CONDUCT.md).
 
+## How Encore is built
+
+Encore is an AI-assisted project. Its maintainer designs it, sets its architecture and conventions, and understands and owns every line of it; AI coding agents (Claude Code) speed up writing the code, tests and documentation. Every change is reviewed and committed by the maintainer, who signs off and GPG-signs every commit, and is held to the same standard as a contribution: understood well enough to explain in review.
+
+Every change goes through the same checks: linting, race-enabled tests, coverage thresholds, generated code with no diff and a docs build, run in CI on every pull request. Releases are built in CI with [SLSA Build Level 3](https://slsa.dev/spec/v1.0/levels#build-l3) provenance, so a binary or image can be traced back to the commit it was built from. The maintainer is responsible for what ships, bugs included.
+
 ## Bugs and feature requests
 
 Open a [bug report](https://github.com/nightah/encore/issues/new?template=bug_report.yml) or a [feature request](https://github.com/nightah/encore/issues/new?template=feature_request.yml), after checking the [existing issues](https://github.com/nightah/encore/issues). For a bug, include the request log entry (**Copy JSON**) and the log lines around it.
@@ -45,6 +51,10 @@ Fork the repository and open a pull request. [Development setup](/encore/contrib
 - It can be merged once every check passes: `make lint`, `make test`, and generated code with no diff. The [Git hooks](/encore/contributing/development/#git-hooks) run the quick ones before each commit.
 - Pull requests are squash-merged, so commit as often as you like on your branch. Please don't force-push once a review has started, except to rebase or to fix the commit message.
 - To ask for another review, use **Re-request review** rather than mentioning the reviewer.
+
+### AI-assisted contributions
+
+Pull requests written with AI tools are welcome, on the same terms as any other. You must understand every line you submit and be able to explain it in review, and you're responsible for it as its author: that it works, that it's tested, and that you have the right to contribute it. A pull request its author can't explain will be closed.
 
 ## Commit messages
 
