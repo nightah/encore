@@ -84,6 +84,25 @@ func (m *memRecorder) Record(_ context.Context, e LogEntry) {
 	m.entries = append(m.entries, e)
 }
 
+// embeddedSpeech is the embedded sources' Speech, built once and shared by every test that doesn't need its own: NewSpeech expands every sample of every locale.
+var embeddedSpeech = sync.OnceValues(func() (*Speech, error) {
+	src, err := skillmodel.Load(i18n.FS)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewSpeech(src, slog.New(slog.DiscardHandler))
+})
+
+func sharedSpeech(t *testing.T) *Speech {
+	t.Helper()
+
+	speech, err := embeddedSpeech()
+	require.NoError(t, err)
+
+	return speech
+}
+
 func newHandler(t *testing.T) (*Handler, *testkit.Backend, *memRecorder) {
 	t.Helper()
 
@@ -96,13 +115,8 @@ func newHandler(t *testing.T) (*Handler, *testkit.Backend, *memRecorder) {
 func newRoomHandler(t *testing.T) (*Handler, *testkit.Backend, *testkit.Backend, *memRecorder) {
 	t.Helper()
 
-	src, err := skillmodel.Load(i18n.FS)
-	require.NoError(t, err)
-
 	log := slog.New(slog.DiscardHandler)
-
-	speech, err := NewSpeech(src, log)
-	require.NoError(t, err)
+	speech := sharedSpeech(t)
 
 	items := testkit.SampleLibrary()
 	backend := testkit.NewBackend(items...)
