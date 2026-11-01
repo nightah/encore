@@ -31,6 +31,8 @@ Example rooms, playlists and genres (`examples.yaml`) aren't translated: each la
 
 The translated files (`i18n/lang/<language>/` and `web/src/i18n/locales/<language>/`) are written by Crowdin, in its own layout and with the English file's comments, so change translations on Crowdin rather than in the repository: its next pull request would undo an edit made there. The English skill files are written the same way (double-quoted values, no blank lines, a one-line comment at the top), which yamllint and a test in `i18n/` check, so a sync only changes what was translated.
 
+Encore needs testers who speak a language other than English. It has had little use outside English, so it needs people to try it on an Echo in their language and report what Alexa mishears, misplays or says awkwardly, and to review the translations themselves. Reach out on Discord (`@nightah`) or Matrix (`@nightah:nerv.com.au`).
+
 ### Writing for each language
 
 Responses are filled in by the handler: every language uses the same `{placeholders}` (the linter checks), and the wording around a placeholder avoids agreeing with it, since the handler can't inflect. `{remaining}` is a spoken duration ("1 hour 12 minutes"), `{end}` a time ("15:04"), `{language}` a language name and `{titles}` a list joined with the language's "and". Where a response suggests what to say, it uses a phrasing `utterances.yaml` accepts. An optional room at the end of a request, such as `[(in|on) the {Room}]` in English, lets it name the room whose Kodi should play it.
