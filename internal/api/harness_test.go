@@ -73,6 +73,16 @@ type harnessOpts struct {
 	mutate   func(*Options)
 }
 
+// embeddedSpeech is the embedded sources' Speech, built once and shared by every harness: NewSpeech expands every sample of every locale.
+var embeddedSpeech = sync.OnceValues(func() (*alexa.Speech, error) {
+	src, err := loadSources()
+	if err != nil {
+		return nil, err
+	}
+
+	return alexa.NewSpeech(src, slog.New(slog.DiscardHandler))
+})
+
 func newHarness(t *testing.T, o harnessOpts) *harness {
 	t.Helper()
 
@@ -100,7 +110,7 @@ func newHarness(t *testing.T, o harnessOpts) *harness {
 	src, err := loadSources()
 	require.NoError(t, err)
 
-	speech, err := alexa.NewSpeech(src, log)
+	speech, err := embeddedSpeech()
 	require.NoError(t, err)
 
 	opts := Options{

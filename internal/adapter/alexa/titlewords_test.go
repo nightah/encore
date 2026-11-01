@@ -37,9 +37,7 @@ func newWorldHandler(t *testing.T, disabled ...media.Content) (*Handler, *testki
 	require.NoError(t, err)
 
 	log := slog.New(slog.DiscardHandler)
-
-	speech, err := NewSpeech(src, log)
-	require.NoError(t, err)
+	speech := sharedSpeech(t)
 
 	items := worldLibrary()
 	lounge, bedroom := testkit.NewBackend(items...), testkit.NewBackend(items...)
