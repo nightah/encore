@@ -42,4 +42,4 @@ The web interface can be added to a phone's home screen or installed on a comput
 
 Chrome and Edge install Encore as an app only over HTTPS, so reach it through your [reverse proxy](/encore/guides/reverse-proxy/) rather than `http://<host>:8080/`. Over plain HTTP they add a shortcut that opens a normal browser tab. Safari installs it either way.
 
-On a phone, the sections sit in a menu bar along the bottom of the screen. It holds four of them; the rest, the theme and **Sign out** are under **More**. To choose which four and their order, open **More**, then **Arrange menu**. The arrangement is saved on that device.
+On a phone, the sections sit in a menu bar along the bottom of the screen. It holds four of them; the rest, the theme and **Sign out** are under **More**. To choose which four and their order, open **More**, then **Arrange menu**; see [the tour](/encore/tour/#arrange-the-menu). The arrangement is saved on that device.

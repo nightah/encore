@@ -3,6 +3,7 @@ title: A tour of the web interface
 description: What each page of Encore's web interface shows, with screenshots.
 ---
 
+import PhoneScreenshots from "../../components/PhoneScreenshots.astro";
 import Screenshot from "../../components/Screenshot.astro";
 
 Encore is set up and run from its web interface. These screenshots follow your light or dark theme; addresses, Amazon IDs and similar details are blurred.
@@ -52,3 +53,22 @@ The theme, time zone, default locale and log level, how admins sign in, and wher
 <Screenshot name="settings-access" alt="Settings, Access tab, choosing how admins sign in" />
 
 <Screenshot name="settings-storage" alt="Settings, Storage tab, choosing where backups go" />
+
+## On a phone
+
+The same pages fit a phone, and Encore can be [installed as an app](/encore/getting-started/first-run/#install-as-an-app). The sections move to a menu bar along the bottom with four of them; **More** holds the rest, the theme and **Sign out**. Tables show each row as a card, and a request in the log opens under its row.
+
+<PhoneScreenshots
+  shots={[
+    { alt: "The Overview page on a phone, with the menu bar along the bottom", name: "overview" },
+    { alt: "More, open over the Overview, with the other sections, the theme and Sign out", name: "more" },
+    { alt: "The Echo devices page on a phone, each Echo shown as a card", name: "echo-devices" },
+    { alt: "The Request log on a phone, with a request opened under its row", name: "request-log" },
+  ]}
+/>
+
+### Arrange the menu
+
+Open **More**, then **Arrange menu**, to choose which four sections sit in the menu bar and in what order. Drag a section by its handle or use its arrows; the minus and plus buttons move a section between the menu bar and More. **Reset to default** puts the original four back. The arrangement is saved on that device, so a phone and a tablet can differ.
+
+<PhoneScreenshots shots={[{ alt: "Arrange menu, listing the sections in the menu bar and those in More", name: "arrange-menu" }]} />

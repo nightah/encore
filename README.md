@@ -72,6 +72,25 @@ Encore is a self-hosted Alexa skill server for Kodi, and a modern successor to t
   </tr>
 </table>
 
+On a phone, the sections move to a menu bar you can arrange:
+
+<table>
+  <tr>
+    <td><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/src/assets/screenshots/overview-phone-dark.png">
+  <img src="docs/src/assets/screenshots/overview-phone-light.png" alt="The Overview page on a phone, with the menu bar along the bottom" width="260">
+</picture></td>
+    <td><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/src/assets/screenshots/request-log-phone-dark.png">
+  <img src="docs/src/assets/screenshots/request-log-phone-light.png" alt="The Request log on a phone, with a request opened under its row" width="260">
+</picture></td>
+    <td><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/src/assets/screenshots/arrange-menu-phone-dark.png">
+  <img src="docs/src/assets/screenshots/arrange-menu-phone-light.png" alt="Arrange menu, choosing the sections in the menu bar" width="260">
+</picture></td>
+  </tr>
+</table>
+
 More in the [tour of the web interface](https://nightah.github.io/encore/tour/).
 
 ## Running
