@@ -1,6 +1,6 @@
 name: Go
 
-# The Go jobs of ci-jobs.yml, called from it as "Go", so their checks read "Pipeline / Go / …". Lint, the two race-detector test shards and the phonetic evaluation's five shards run side by side; Coverage merges the test shards' profiles, uploads them to Codecov and holds the minimum, and Phonetic evaluation requires every phonetic shard.
+# The Go jobs of ci-jobs.yml, called from it as "Go", so their checks read "Pipeline / Go / …". Lint, the three race-detector test shards and the phonetic evaluation's five shards run side by side; Coverage merges the test shards' profiles, uploads them to Codecov and holds the minimum, and Phonetic evaluation requires every phonetic shard.
 on:
   workflow_call:
 
@@ -92,8 +92,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # The matcher's tests take as long as every other package's together, so each shard gets a runner of its own.
-        shard: [matcher, others]
+        # The matcher's tests take as long as every other package's together, so each shard gets a runner of its own, and its corpus tests, which score every language's grown corpora, get another.
+        shard: [matcher, corpora, others]
     steps:
       - name: Harden the runner (audit all outbound calls)
         uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
@@ -122,16 +122,17 @@ jobs:
       - name: Test
         env:
           SHARD: ${{ matrix.shard }}
-        # -coverpkg credits code to whichever package's tests run it, so code tested through its callers counts. Each shard instruments every package, and Coverage merges the two profiles.
+        # -coverpkg credits code to whichever package's tests run it, so code tested through its callers counts. Each shard instruments every package, and Coverage merges their profiles.
         run: |
           matcher=github.com/nightah/encore/internal/core/match
-          if [ "${SHARD}" = matcher ]; then
-            packages="${matcher}"
-          else
-            packages="$(go list ./... | grep -vx "${matcher}")"
-          fi
+          corpora='^(TestASRCorpus|TestPhoneticEval)$'
+          case "${SHARD}" in
+            matcher) packages="${matcher}" tests=(-skip "${corpora}") ;;
+            corpora) packages="${matcher}" tests=(-run "${corpora}") ;;
+            *) packages="$(go list ./... | grep -vx "${matcher}")" tests=() ;;
+          esac
           # shellcheck disable=SC2086 # one argument per package
-          go test -race -coverpkg=./... -coverprofile="coverage-${SHARD}.out" -covermode=atomic ${packages}
+          go test -race -coverpkg=./... -coverprofile="coverage-${SHARD}.out" -covermode=atomic "${tests[@]}" ${packages}
 
       - name: Keep the coverage profile
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -184,7 +185,7 @@ jobs:
           key: go-test-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('go.mod', 'go.sum', 'tools/go.mod', 'tools/go.sum') }}
           restore-keys: go-test-${{ runner.os }}-${{ runner.arch }}-
 
-      - name: Require both test shards
+      - name: Require every test shard
         env:
           RESULT: ${{ needs.test.result }}
         run: |
@@ -199,7 +200,7 @@ jobs:
           pattern: go-coverage-*
           merge-multiple: true
 
-      # A profile holds one mode line, then blocks; blocks both shards report are kept twice, which go tool cover and go-coverage.sh both merge.
+      # A profile holds one mode line, then blocks; blocks several shards report are kept more than once, which go tool cover and go-coverage.sh both merge.
       - name: Merge the coverage profiles
         run: |
           {
