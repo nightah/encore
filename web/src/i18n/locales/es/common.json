@@ -46,6 +46,25 @@
     "versionUnknown": "Se sabrá cuando Encore llegue a Kodi"
   },
   "loading": "Cargando…",
+  "menu": {
+    "arrange": "Ordenar menú",
+    "done": "Listo",
+    "empty": "Aún no hay nada.",
+    "full": "La barra de menú está llena. Mueve antes una sección a Más.",
+    "inBar": "Barra de menú · hasta {{max}}",
+    "inMore": "En Más",
+    "label": "Barra de menú",
+    "more": "Más",
+    "moveDown": "Bajar {{name}}",
+    "moved": "{{name}} es ahora el {{position}} de {{count}} en la barra de menú.",
+    "movedToMore": "{{name}} se ha movido a Más.",
+    "moveUp": "Subir {{name}}",
+    "reset": "Restablecer",
+    "savedHere": "Guardado en este dispositivo.",
+    "theme": "Tema",
+    "toBar": "Añadir {{name}} a la barra de menú",
+    "toMore": "Mover {{name}} a Más"
+  },
   "nav": {
     "alexaSkill": "Skill de Alexa",
     "echoDevices": "Dispositivos Echo",
@@ -54,7 +73,16 @@
     "library": "Biblioteca",
     "overview": "Resumen",
     "requestLog": "Registro de peticiones",
-    "settings": "Ajustes"
+    "settings": "Ajustes",
+    "short": {
+      "alexaSkill": "Skill",
+      "echoDevices": "Echos",
+      "kodi": "Kodi",
+      "library": "Biblioteca",
+      "overview": "Resumen",
+      "requestLog": "Peticiones",
+      "settings": "Ajustes"
+    }
   },
   "notFound": {
     "back": "Volver al resumen",

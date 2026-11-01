@@ -46,6 +46,25 @@
     "versionUnknown": "Inconnue tant qu'Encore n'a pas joint Kodi"
   },
   "loading": "Chargement…",
+  "menu": {
+    "arrange": "Organiser le menu",
+    "done": "Terminé",
+    "empty": "Rien ici pour l’instant.",
+    "full": "La barre de menu est pleine. Déplacez d’abord une section dans Plus.",
+    "inBar": "Barre de menu · jusqu’à {{max}}",
+    "inMore": "Dans Plus",
+    "label": "Barre de menu",
+    "more": "Plus",
+    "moveDown": "Descendre {{name}}",
+    "moved": "{{name}} est maintenant {{position}} sur {{count}} dans la barre de menu.",
+    "movedToMore": "{{name}} a été déplacé dans Plus.",
+    "moveUp": "Monter {{name}}",
+    "reset": "Rétablir par défaut",
+    "savedHere": "Enregistré sur cet appareil.",
+    "theme": "Thème",
+    "toBar": "Ajouter {{name}} à la barre de menu",
+    "toMore": "Déplacer {{name}} dans Plus"
+  },
   "nav": {
     "alexaSkill": "Skill Alexa",
     "echoDevices": "Appareils Echo",
@@ -54,7 +73,16 @@
     "library": "Médiathèque",
     "overview": "Vue d'ensemble",
     "requestLog": "Journal des requêtes",
-    "settings": "Paramètres"
+    "settings": "Paramètres",
+    "short": {
+      "alexaSkill": "Skill",
+      "echoDevices": "Echo",
+      "kodi": "Kodi",
+      "library": "Médiathèque",
+      "overview": "Accueil",
+      "requestLog": "Requêtes",
+      "settings": "Réglages"
+    }
   },
   "notFound": {
     "back": "Retour à la vue d'ensemble",
