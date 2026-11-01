@@ -446,6 +446,20 @@ func TestSPAOnlyCachesTheAssetsDirectoryForever(t *testing.T) {
 	}
 }
 
+func TestSPAServesTheWebManifestAsManifestJSON(t *testing.T) {
+	spa, err := newSPAHandler(fstest.MapFS{
+		"index.html":           {Data: []byte(`<html><head></head></html>`)},
+		"manifest.webmanifest": {Data: []byte(`{"name":"Encore"}`)},
+	}, slog.New(slog.DiscardHandler))
+	require.NoError(t, err)
+
+	for _, method := range []string{http.MethodGet, http.MethodHead} {
+		rec := do(t, spa, method, "/manifest.webmanifest")
+		require.Equal(t, http.StatusOK, rec.Code, method)
+		assert.Equal(t, "application/manifest+json", rec.Header().Get("Content-Type"), "%s: the type must not depend on the host's mime.types", method)
+	}
+}
+
 func TestBasePathMatchesWholeSegmentsOnly(t *testing.T) {
 	echo := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(r.URL.Path + " " + basepath.From(r.Context())))
