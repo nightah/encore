@@ -1,6 +1,6 @@
 name: Tag release
 
-# Merging a release pull request releases it: when its squash-merged "release: vX.Y.Z (#N)" commit lands on main, this tags the commit vX.Y.Z, and that tag push starts release.yml. The tag is pushed as the encore-release-tagger GitHub App, because a tag pushed with this workflow's own GITHUB_TOKEN wouldn't start other workflows; the app is also what may create v* tags past the tag ruleset. Its client ID and private key live in the release-tag environment, which only main can use.
+# Merging a release pull request releases it: when its squash-merged "release: vX.Y.Z (#N)" commit lands on main, this tags the commit vX.Y.Z, and that tag push starts release.yml. The tag is pushed as the encore-helper GitHub App, because a tag pushed with this workflow's own GITHUB_TOKEN wouldn't start other workflows; the app is also what may create v* tags past the tag ruleset. Its client ID and private key live in the release-tag environment, which only main can use.
 on:
   push:
     branches: [main]

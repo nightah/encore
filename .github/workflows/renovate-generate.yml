@@ -1,0 +1,129 @@
+---
+# Regenerates code on Renovate's codegen branch and commits it back. The hosted Renovate app can't run go generate, so a bump that changes generated output would otherwise fail CI's stale-code checks until someone ran 'make generate' by hand. The codegen group in .renovaterc.json lists the dependencies that change it; updates to the rest never reach this workflow.
+name: Renovate Generate
+
+on:
+  push:
+    branches:
+      - renovate/codegen
+    # The commit this pushes back touches none of these, so it doesn't run the workflow again.
+    paths:
+      - go.mod
+      - go.sum
+      - tools/go.mod
+      - tools/go.sum
+
+# A newer push from Renovate supersedes the run for the older one, whose commit would be refused anyway (expectedHeadOid).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  # Runs the updated dependencies' code, so it holds no token that can write; it hands the result to the commit job as an artifact.
+  generate:
+    name: Generate
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    permissions:
+      contents: read # check out the code
+    outputs:
+      changed: ${{ steps.diff.outputs.changed }}
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: false
+
+      - name: go generate
+        run: go generate ./...
+
+      - name: Collect the changes
+        id: diff
+        run: |
+          mkdir -p "${RUNNER_TEMP}/generated"
+          git diff --name-only --diff-filter=AM -z | xargs -0 -r cp --parents -t "${RUNNER_TEMP}/generated"
+          git diff --name-only --diff-filter=D > "${RUNNER_TEMP}/generated/.deleted"
+          git ls-files --others --exclude-standard -z | xargs -0 -r cp --parents -t "${RUNNER_TEMP}/generated"
+          if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard)" ]; then
+            echo "changed=false" >> "${GITHUB_OUTPUT}"
+          else
+            git status --short
+            echo "changed=true" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Upload the changes
+        if: steps.diff.outputs.changed == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: generated
+          path: ${{ runner.temp }}/generated
+          include-hidden-files: true
+          retention-days: 1
+
+  # Commits through the GraphQL API so GitHub signs the commit, and as the encore-helper app so the push runs CI (pushes made with GITHUB_TOKEN don't). Renovate ignores the app's commits (gitIgnoredAuthors in .renovaterc.json), so it keeps rebasing the branch and this runs again.
+  commit:
+    name: Commit
+    needs: generate
+    if: needs.generate.outputs.changed == 'true'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    environment: renovate-generate
+    permissions: {}
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+        with:
+          egress-policy: audit
+
+      - name: Download the changes
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: generated
+          path: generated
+
+      - name: App token
+        id: app
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+
+      # expectedHeadOid makes the commit fail rather than land on a branch Renovate has since pushed to; that push runs this again. File contents go through files, as a generated client is larger than one command-line argument may be.
+      - name: Commit the changes
+        working-directory: generated
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+        run: |
+          find . -type f ! -name .deleted -printf '%P\n' | sort | while read -r f; do
+            base64 -w0 "$f" > "${RUNNER_TEMP}/contents"
+            jq -n --arg path "$f" --rawfile contents "${RUNNER_TEMP}/contents" '{$path, $contents}'
+          done > "${RUNNER_TEMP}/additions.json"
+          jq -R '{path: .}' .deleted > "${RUNNER_TEMP}/deletions.json"
+          jq -n \
+            --arg repo "${GITHUB_REPOSITORY}" \
+            --arg branch "${GITHUB_REF_NAME}" \
+            --arg head "${GITHUB_SHA}" \
+            --slurpfile additions "${RUNNER_TEMP}/additions.json" \
+            --slurpfile deletions "${RUNNER_TEMP}/deletions.json" \
+            '{
+              query: "mutation($input: CreateCommitOnBranchInput!) { createCommitOnBranch(input: $input) { commit { oid } } }",
+              variables: {input: {
+                branch: {repositoryNameWithOwner: $repo, branchName: $branch},
+                expectedHeadOid: $head,
+                message: {headline: "build(deps): regenerate code", body: "Output of go generate ./... for the updated dependencies."},
+                fileChanges: {additions: $additions, deletions: $deletions}
+              }}
+            }' > "${RUNNER_TEMP}/request.json"
+          gh api graphql --input "${RUNNER_TEMP}/request.json" -q '"Committed " + .data.createCommitOnBranch.commit.oid'

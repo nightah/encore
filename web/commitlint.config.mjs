@@ -6,7 +6,7 @@ export default {
   extends: ["@commitlint/config-conventional"],
   helpUrl: "https://nightah.github.io/encore/contributing/#commit-messages",
   // Renovate writes its own titles (.renovaterc.json), which can run past 72 characters with long package names.
-  ignores: [(message) => /^(build|ci|fix)\(deps\): /.test(message)],
+  ignores: [(message) => /^(build|ci)\(deps\): /.test(message)],
   plugins: [
     {
       rules: {
