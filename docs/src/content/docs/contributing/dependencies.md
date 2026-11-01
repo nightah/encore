@@ -326,14 +326,17 @@ Measured on 29 October 2026, and for the new languages, the regional suites and 
 
 #### Rerunning the evaluation
 
-Both tests are in `internal/core/match` rather than `benchmarks/`, because they swap the encoder inside the matcher, which only the package's own tests can reach, and there is no library to compare with. Both are also gates: `TestPhoneticEval` holds production to the grown-set counts above (`grownFloor`) and runs with the rest of the tests, keeping only the encoders its gates compare, and `TestPhoneticDistractors` holds it to the counts for titles that aren't in the library (`distractorCeiling`). Both run in full, without the race detector, in a CI job of their own, so a change that loses accuracy fails its own pull request. From the repository root:
+Both tests are in `internal/core/match` rather than `benchmarks/`, because they swap the encoder inside the matcher, which only the package's own tests can reach, and there is no library to compare with. Both are also gates: `TestPhoneticEval` holds production to the grown-set counts above (`grownFloor`) and runs with the rest of the tests, keeping only the encoders its gates compare, and `TestPhoneticDistractors` holds it to the counts for titles that aren't in the library (`distractorCeiling`). Both run in full, without the race detector, in CI jobs of their own, so a change that loses accuracy fails its own pull request; the distractors' languages are split across five runners with `ENCORE_MATCH_SHARD`. From the repository root:
 
 ```sh
 # Both corpus sets, every encoder and retriever: a table of cases right, wrong plays, asks and gains and losses against English, then every case each encoder wins or loses. Without the tag it runs only the inverted index and the encoders the gates compare.
 go test -tags phoneticeval -run TestPhoneticEval -v ./internal/core/match/
 
-# Wrong plays for titles that aren't in the library, per language (about two minutes, far longer under the race detector, so it is behind a build tag and CI runs it without -race).
+# Wrong plays for titles that aren't in the library, per language (about six minutes, far longer under the race detector, so it is behind a build tag and CI runs it without -race).
 go test -tags phoneticeval -run TestPhoneticDistractors -v ./internal/core/match/
+
+# One shard of its languages, as CI runs it: k/n runs those whose index in Languages() leaves k-1 over when divided by n.
+ENCORE_MATCH_SHARD=1/5 go test -tags phoneticeval -run TestPhoneticDistractors -v ./internal/core/match/
 ```
 
 The intervals and p-values come from the gains and losses: for *b* gains and *c* losses over *n* cases, the difference is (*b* − *c*) / *n* with a 95% interval for paired proportions, and *p* is the exact McNemar test, the two-sided binomial probability of a split at least as uneven as *b* to *c*. The ported encoders' parity with the libraries they replaced is checked over every word of both corpus sets by `benchmarks/phonetic`.
