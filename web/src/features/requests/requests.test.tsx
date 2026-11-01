@@ -1,7 +1,7 @@
 import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http } from "msw";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { keys } from "@api/keys";
 import { getDb } from "@mocks/handlers";
@@ -599,5 +599,91 @@ describe("Request log", () => {
     server.resetHandlers();
     await user.click(screen.getByRole("button", { name: "Try again" }));
     expect(await screen.findByRole("heading", { level: 2, name: "“shuffle radiohead”" })).toBeInTheDocument();
+  });
+});
+
+describe("Request log on a phone", () => {
+  // Too narrow for the list and the detail side by side: the layout follows the width it gets, not the window's.
+  beforeEach(() => {
+    document.body.style.width = "390px";
+  });
+  afterEach(() => {
+    document.body.style.width = "";
+  });
+
+  it("opens nothing by itself, then opens a request under its row and closes it again", async () => {
+    const user = userEvent.setup();
+    const { router } = renderApp("/request-log");
+    const list = await requestList();
+    const row = within(list).getByRole("button", { name: /play the new dune/ });
+    expect(row).toHaveAttribute("aria-expanded", "false");
+    expect(row).not.toHaveAttribute("aria-pressed");
+    expect(screen.queryByRole("button", { name: "Replay (dry run)" })).not.toBeInTheDocument();
+
+    await user.click(row);
+
+    const item = row.closest("li") as HTMLElement;
+    expect(await within(item).findByRole("heading", { level: 2, name: "“play the new dune”" })).toBeInTheDocument();
+    expect(within(item).getByText("Dune: Part Two (2024)")).toBeInTheDocument();
+    expect(row).toHaveAttribute("aria-expanded", "true");
+    expect(screen.getAllByRole("button", { name: "Replay (dry run)" })).toHaveLength(1);
+    expect(router.state.location.search.id).toBeDefined();
+
+    await user.click(row);
+
+    await waitFor(() => expect(within(item).queryByRole("heading", { level: 2 })).not.toBeInTheDocument());
+    expect(row).toHaveAttribute("aria-expanded", "false");
+    expect(router.state.location.search).toEqual({});
+  });
+
+  it("scrolls a request tapped further down to the top, so its detail shows below it", async () => {
+    const user = userEvent.setup();
+    renderApp("/request-log");
+    const list = await requestList();
+    const row = within(list).getAllByRole("button", { expanded: false })[25] as HTMLElement;
+    const item = row.closest("li") as HTMLElement;
+
+    await user.click(row);
+
+    expect(await within(item).findByRole("button", { name: "Replay (dry run)" })).toBeInTheDocument();
+    await waitFor(() => expect(Math.abs(item.getBoundingClientRect().top)).toBeLessThan(2));
+    expect(window.scrollY).toBeGreaterThan(0);
+  });
+
+  it("opens a request named in the address under its row, scrolled to the top", async () => {
+    const target = getDb()
+      .requests.slice(20, 50)
+      .find((request) => request.heard);
+    if (!target) throw new Error("the sample has no heard request in its first page");
+    renderApp(`/request-log?id=${target.id}`);
+
+    const heading = await screen.findByRole("heading", { level: 2, name: `“${target.heard}”` });
+    const item = heading.closest("li") as HTMLElement;
+    expect(within(item).getByRole("button", { expanded: true })).toBeInTheDocument();
+    await waitFor(() => expect(Math.abs(item.getBoundingClientRect().top)).toBeLessThan(2));
+    expect(window.scrollY).toBeGreaterThan(0);
+  });
+
+  it("opens a request that isn't in the loaded pages above the list", async () => {
+    const older = getDb()
+      .requests.slice(50)
+      .find((request) => request.heard);
+    if (!older) throw new Error("the sample has no heard request past its first page");
+    renderApp(`/request-log?id=${older.id}`);
+
+    const heading = await screen.findByRole("heading", { level: 2, name: `“${older.heard}”` });
+    expect(heading.closest("li")).toBeNull();
+    expect(within(await requestList()).queryByRole("button", { expanded: true })).not.toBeInTheDocument();
+  });
+
+  it("keeps each part of the timing whole when the line wraps", async () => {
+    const user = userEvent.setup();
+    renderApp("/request-log");
+    await user.click(within(await requestList()).getByRole("button", { name: /play the new dune/ }));
+
+    const timing = await screen.findByText(/verify 3 ms · match 4 ms · Kodi 0 ms · total 61 ms/);
+    expect(timing.textContent).toBe(
+      "verify\u00a03\u00a0ms · match\u00a04\u00a0ms · Kodi\u00a00\u00a0ms · total\u00a061\u00a0ms",
+    );
   });
 });

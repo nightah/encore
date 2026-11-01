@@ -5,21 +5,24 @@ import { Chip } from "@components/ui/Chip";
 import { cn } from "@components/ui/cn";
 import { formatClock, formatDuration } from "@lib/format";
 
-/** One row of the live request list: a toggle button that selects the request. */
+/** One row of the live request list: a toggle button that selects the request, or opens it under the row when `expands`. */
 export function RequestRow({
   request,
   selected,
+  expands = false,
   onSelect,
 }: {
   request: RequestSummary;
   selected: boolean;
+  expands?: boolean;
   onSelect: (id: number) => void;
 }) {
   const chip = outcomeChip(request);
   return (
     <button
       type="button"
-      aria-pressed={selected}
+      aria-pressed={expands ? undefined : selected}
+      aria-expanded={expands ? selected : undefined}
       onClick={() => onSelect(request.id)}
       className={cn(
         "grid min-h-11 w-full cursor-pointer grid-cols-[56px_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 border-line-soft border-b px-4 py-3 text-left text-sm outline-none hover:bg-soft focus-visible:outline-2 focus-visible:outline-focus focus-visible:-outline-offset-2",

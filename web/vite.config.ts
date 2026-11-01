@@ -133,6 +133,8 @@ export default defineConfig(({ mode }) => ({
               contextOptions: { colorScheme: "light", locale: "en-US", timezoneId: "Australia/Melbourne" },
             }),
             screenshotFailures: false,
+            // A laptop-sized page, with the rail and side-by-side panes; phone layouts set their own size with page.viewport.
+            viewport: { height: 900, width: 1280 },
           },
           exclude: ["src/**/*.node.test.ts"],
           include: ["src/**/*.test.{ts,tsx}"],

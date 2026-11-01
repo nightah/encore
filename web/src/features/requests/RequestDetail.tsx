@@ -15,6 +15,7 @@ import { Heard, requestSource } from "@components/Heard";
 import { KindPill } from "@components/KindPill";
 import { Button } from "@components/ui/Button";
 import { Label } from "@components/ui/Card";
+import { cn } from "@components/ui/cn";
 import { Meter, SegmentBar } from "@components/ui/Meter";
 import { ErrorState, Skeleton } from "@components/ui/States";
 import { explain, titleWithYear } from "@features/library/labels";
@@ -53,6 +54,14 @@ function ViaLine({ via }: { via: Via }) {
 }
 
 /** verify / match / Kodi split; falls back to Kodi call time vs the rest for requests logged without timing. */
+/** No-break spaces inside each "verify 0 ms" part, so a narrow screen wraps the line only between parts. */
+function keepPartsWhole(label: string): string {
+  return label
+    .split(" · ")
+    .map((part) => part.replaceAll(" ", "\u00a0"))
+    .join(" · ");
+}
+
 function timingParts(detail: Detail) {
   const t = i18n.getFixedT(null, "requests", "detail.timing");
   if (detail.timing) {
@@ -159,7 +168,8 @@ function ReplayResult({ replay }: { replay: Replay }) {
   );
 }
 
-export function RequestDetailPane({ id }: { id: number }) {
+/** A request in full. `inline` under its row in the list, whose time, Echo and words are already shown above it, so they are only read out. */
+export function RequestDetailPane({ id, inline = false }: { id: number; inline?: boolean }) {
   const { t } = useTranslation("requests");
   const { data: detail, error, refetch, isPending } = useRequest(id);
   const replay = useReplayRequest();
@@ -192,7 +202,7 @@ export function RequestDetailPane({ id }: { id: number }) {
   return (
     <div className="flex flex-col gap-4.5">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex min-w-0 flex-col gap-1">
+        <div className={cn("flex min-w-0 flex-col gap-1", inline && "sr-only")}>
           <Label>
             {formatClock(detail.time)} · {requestSource(detail)} · {detail.locale}
           </Label>
@@ -274,7 +284,7 @@ export function RequestDetailPane({ id }: { id: number }) {
       <div className="flex flex-col gap-1.5">
         <Label>{t("detail.timing.label")}</Label>
         <SegmentBar segments={timing.segments} label={timing.label} />
-        <span className="font-mono text-muted text-xs">{timing.label}</span>
+        <span className="font-mono text-muted text-xs">{keepPartsWhole(timing.label)}</span>
       </div>
     </div>
   );
