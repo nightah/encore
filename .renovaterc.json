@@ -10,7 +10,12 @@
   "labels": [
     "dependencies"
   ],
+  "automerge": true,
+  "platformAutomerge": true,
   "rebaseWhen": "conflicted",
+  "gitIgnoredAuthors": [
+    "349134151+encore-helper[bot]@users.noreply.github.com"
+  ],
   "prConcurrentLimit": 10,
   "vulnerabilityAlerts": {
     "enabled": true,
@@ -20,7 +25,7 @@
     ]
   },
   "postUpdateOptions": [
-    "gomodTidy",
+    "gomodTidyAll",
     "gomodUpdateImportPaths",
     "pnpmDedupe"
   ],
@@ -45,8 +50,7 @@
         "patch",
         "digest"
       ],
-      "groupName": "go dependencies (non-major)",
-      "semanticCommitType": "fix"
+      "groupName": "go dependencies (non-major)"
     },
     {
       "description": "Go toolchain: the go directives in every module (root, tools/, benchmarks/) and the Dockerfile's GO_VERSION bump together",
@@ -60,26 +64,24 @@
       "groupName": "go toolchain"
     },
     {
-      "description": "tools/ module (code generators): separate group; regenerated code must be committed, so never automerge",
+      "description": "tools/ module (code generators and dev tools): separate group",
       "matchManagers": [
         "gomod"
       ],
       "matchFileNames": [
         "tools/go.mod"
       ],
-      "groupName": "tools module",
-      "automerge": false
+      "groupName": "tools module"
     },
     {
-      "description": "benchmarks/ module (comparisons with external libraries, never shipped): separate group, never automerge",
+      "description": "benchmarks/ module (comparisons with external libraries, never shipped): separate group",
       "matchManagers": [
         "gomod"
       ],
       "matchFileNames": [
         "benchmarks/go.mod"
       ],
-      "groupName": "benchmarks module",
-      "automerge": false
+      "groupName": "benchmarks module"
     },
     {
       "description": "benchmarks/ module: the compared libraries stay pinned at the versions the in-tree code reproduces, so the comparisons and the published numbers stay comparable",
@@ -99,6 +101,20 @@
       "enabled": false
     },
     {
+      "description": "Code generators: the dependencies whose updates change generated output (the SMAPI client from oapi-codegen and kin-openapi, the OpenAPI document from huma, the CLI reference from cobra and pflag) share the renovate/codegen branch, where renovate-generate.yml runs go generate and commits the result",
+      "matchManagers": [
+        "gomod"
+      ],
+      "matchDepNames": [
+        "/^github\\.com/oapi-codegen/oapi-codegen(/v\\d+)?$/",
+        "/^github\\.com/getkin/kin-openapi(/v\\d+)?$/",
+        "/^github\\.com/danielgtaylor/huma(/v\\d+)?$/",
+        "/^github\\.com/spf13/cobra(/v\\d+)?$/",
+        "/^github\\.com/spf13/pflag(/v\\d+)?$/"
+      ],
+      "groupName": "codegen"
+    },
+    {
       "description": "Web: group devDependencies (non-major)",
       "matchManagers": [
         "npm"
@@ -116,24 +132,6 @@
       "groupName": "web dev dependencies"
     },
     {
-      "description": "Web: automerge patch updates of devDependencies once CI passes",
-      "matchManagers": [
-        "npm"
-      ],
-      "matchFileNames": [
-        "web/**"
-      ],
-      "matchDepTypes": [
-        "devDependencies"
-      ],
-      "matchUpdateTypes": [
-        "patch"
-      ],
-      "automerge": true,
-      "automergeType": "pr",
-      "platformAutomerge": true
-    },
-    {
       "description": "Web: group runtime dependencies (non-major)",
       "matchManagers": [
         "npm"
@@ -148,8 +146,7 @@
         "minor",
         "patch"
       ],
-      "groupName": "web dependencies (non-major)",
-      "semanticCommitType": "fix"
+      "groupName": "web dependencies (non-major)"
     },
     {
       "description": "GitHub Actions: group digest/minor/patch bumps",
@@ -170,8 +167,7 @@
       "matchManagers": [
         "dockerfile"
       ],
-      "groupName": "docker base images",
-      "semanticCommitType": "build"
+      "groupName": "docker base images"
     },
     {
       "description": "Docs site: group its dependencies (non-major)",
@@ -192,16 +188,14 @@
       "matchDepNames": [
         "pnpm"
       ],
-      "groupName": "pnpm",
-      "semanticCommitType": "build"
+      "groupName": "pnpm"
     },
     {
       "description": "Node.js: CI's node-version, the Dockerfile's NODE_VERSION and the engines fields bump together",
       "matchDepNames": [
         "node"
       ],
-      "groupName": "node",
-      "semanticCommitType": "build"
+      "groupName": "node"
     },
     {
       "description": "Node.js: the custom managers below own every Node reference, so the built-in extractions that read them with other datasources stay off (they bump to non-LTS majors, and the Dockerfile one can't rewrite FROM node:${NODE_VERSION})",
@@ -223,8 +217,7 @@
       "matchUpdateTypes": [
         "major"
       ],
-      "groupName": "node",
-      "semanticCommitType": "build"
+      "groupName": "node"
     },
     {
       "description": "Linters and scanners CI runs with pipx or docker run",

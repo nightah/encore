@@ -10,13 +10,9 @@ changelog:
     - title: Features
       labels:
         - type/feat
-    # Renovate's fix(deps), build(deps) and ci(deps) updates go under Dependencies instead.
     - title: Bug fixes
       labels:
         - type/fix
-      exclude:
-        labels:
-          - area/deps
     - title: Performance
       labels:
         - type/perf
@@ -35,6 +31,7 @@ changelog:
     - title: Tests
       labels:
         - type/test
+    # Renovate's build(deps) and ci(deps) updates go under Dependencies instead.
     - title: Build and CI
       labels:
         - type/build
