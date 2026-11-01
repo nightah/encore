@@ -1,0 +1,326 @@
+# Utterance patterns, translated on Crowdin from the English file. Each key is one way of asking, and may hold several patterns, one per line. (a|b) picks one, [a|b] is optional, {Slot} is a slot. Built-in intents already understand the common phrasings; samples here only add Kodi-specific ones. An optional room at the end, such as "[(in|on) the {Room}]", lets a request name the room whose Kodi should play it; notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
+AMAZON.LoopOffIntent:
+  loop_off: "(रिपीट|लूप) (बंद|ऑफ़)"
+  turn_off_repeat: "(रिपीट|लूप) (बंद|ऑफ़) (करो|कर दो|कीजिए)"
+AMAZON.LoopOnIntent:
+  loop: "(रिपीट|लूप) (चालू|ऑन)"
+  turn_repeat: "(रिपीट|लूप) (चालू|ऑन) (करो|कर दो|कीजिए)"
+AMAZON.PauseIntent:
+  pause_tv: "(टीवी|कोडी|kodi|वीडियो|फ़िल्म|शो) (पॉज़ करो|pause करो|रोको|रोक दो)"
+AMAZON.ResumeIntent:
+  resume_tv: "(टीवी|कोडी|kodi|वीडियो|फ़िल्म|शो) (फिर से चलाओ|दोबारा चलाओ|रिज़्यूम करो|resume करो|जारी रखो)"
+AMAZON.ShuffleOffIntent:
+  shuffle_off: "(शफ़ल|शफल) (बंद|ऑफ़)"
+  turn_off_shuffle: "(शफ़ल|शफल|shuffle) (बंद|ऑफ़) (करो|कर दो|कीजिए)"
+AMAZON.ShuffleOnIntent:
+  shuffle: "(शफ़ल|शफल) (चालू|ऑन)"
+  turn_shuffle: "(शफ़ल|शफल|shuffle) (चालू|ऑन) (करो|कर दो|कीजिए)"
+AudioPassthrough:
+  toggle_digital_audio: "डिजिटल (ऑडियो|पासथ्रू) (चालू|बंद) करो"
+  toggle_passthrough: "[ऑडियो] पासथ्रू (बदलो|टॉगल करो)"
+  turn_passthrough: "[ऑडियो] (पासथ्रू|passthrough) (चालू|बंद|ऑन|ऑफ़) करो"
+AudioStream:
+  audio: "{Step} (ऑडियो|ऑडियो ट्रैक|साउंडट्रैक) (लगाओ|चलाओ)\n(ऑडियो|ऑडियो ट्रैक) {Step}"
+  audio_2: "{Language} (ऑडियो|ऑडियो ट्रैक|साउंडट्रैक) (लगाओ|चलाओ)"
+  audio_3: "{Language} में ऑडियो\nऑडियो {Language} में (करो|कर दो)"
+  language: "{Step} भाषा (लगाओ|चलाओ)"
+  play: "{Language} में (चलाओ|सुनाओ)"
+  switch_audio: "(ऑडियो|ऑडियो ट्रैक|भाषा) {Language} में (बदलो|करो|कर दो)\n(ऑडियो|भाषा) बदलकर {Language} (करो|कर दो)"
+BingeShow:
+  binge: "[{Room} में] {Show} (बिंज करो|बिंज वॉच करो|की मैराथन करो)\n[{Room} में] {Show} के सारे एपिसोड लगातार (चलाओ|दिखाओ)"
+  binge_rest: "[{Room} में] {Show} के बाकी [सारे] एपिसोड (चलाओ|दिखाओ|लगाओ)"
+  play_all: "{Show} के सारे एपिसोड (चलाओ|दिखाओ|लगाओ)"
+  play_all_unwatched: "[{Room} में] {Show} के (अनदेखे|बचे हुए|बाकी अनदेखे) एपिसोड (चलाओ|लगाओ|दिखाओ)"
+  start_binge_mode: "[{Room} में] {Show} के लिए बिंज मोड (चालू करो|शुरू करो|ऑन करो|लगाओ)"
+ChooseMatch:
+  answer: "{Answer}\n{Answer} वाला\n{Answer} वाली"
+  meant_answer: "मेरा मतलब {Answer} (था|से था|से है)"
+  meant_which: "मेरा मतलब {Which} (वाला|वाली|वाले) (था|से था|से है)"
+  the_which: "{Which} (वाला|वाली|वाले)\n{Which} (फ़िल्म|फिल्म|शो)"
+  which: "{Which}"
+  which_please: "{Which} (वाला|वाली|वाले) (चलाओ|चलाइए|लगाओ|लगा दो)"
+CleanLibrary:
+  clean_library: "[मेरी] लाइब्रेरी (साफ़ करो|साफ करो|क्लीन करो|clean करो)"
+  clean_library_2: "[मेरी] {Library} लाइब्रेरी (साफ़ करो|साफ करो|क्लीन करो|clean करो)"
+  tidy_library: "{Library} लाइब्रेरी की (सफ़ाई|सफाई) करो"
+ContinueWatching:
+  continue_last_show: "[{Room} में] पिछला शो (जारी रखो|आगे चलाओ|फिर से चलाओ)"
+  continue_watching: "[{Room} में] देखना जारी रखो"
+  continue_where_i: "[{Room} में] जहाँ (छोड़ा|रोका) था वहीं से (चलाओ|शुरू करो)"
+  pick_up_where: "[{Room} में] वहीं से चलाओ जहाँ मैंने छोड़ा था"
+  play_what_i: "[{Room} में] जो मैं देख रहा था (वो|वह) चलाओ\n[{Room} में] जो मैं देख रही थी (वो|वह) चलाओ"
+  where_did_i: "मैंने कहाँ (छोड़ा था|तक देखा था)"
+CurrentPlayItemEnquiry:
+  what_am_i: "मैं क्या (देख|सुन) (रहा|रही) हूँ"
+  what_is_playing: "(अभी|अब) क्या चल रहा है"
+  what_show_is: "(ये|यह) कौन सा (शो|गाना|एपिसोड) है\n(ये|यह) कौन सी (फ़िल्म|मूवी) है"
+  whats_playing: "क्या (चल|बज) रहा है"
+  who_is_this: "(ये|यह) कौन गा रहा है\n(ये|यह) किसका गाना है"
+CurrentPlayItemTimeRemaining:
+  how_long_is: "कितना (बाकी|बचा) है\nकितनी देर बाकी है"
+  how_much_is: "कितना (समय|टाइम) (बाकी|बचा) है"
+  how_much_longer: "और कितनी देर (है|चलेगा)"
+  how_much_time: "(इसमें|इस में) कितना (समय|टाइम) (बाकी|बचा) है"
+  when_is_this: "(ये|यह) कितने बजे (खत्म|ख़त्म) होगा"
+  when_will_movie: "(फ़िल्म|मूवी) कब (खत्म|ख़त्म) होगी\n(शो|एपिसोड) कब (खत्म|ख़त्म) होगा"
+  when_will_this: "(ये|यह) कब (खत्म|ख़त्म) होगा"
+EjectMedia:
+  eject: "इजेक्ट (करो|कीजिए)"
+  eject_disc: "(डिस्क|सीडी|डीवीडी|ब्लू रे) (निकालो|बाहर निकालो|इजेक्ट करो)"
+  open_disc_tray: "(डिस्क|सीडी|डीवीडी) (ट्रे|ड्राइव) खोलो"
+Fullscreen:
+  exit_fullscreen: "(फ़ुल स्क्रीन|फुल स्क्रीन) से बाहर (निकलो|आओ)\n(फ़ुल स्क्रीन|फुल स्क्रीन) बंद करो"
+  fullscreen: "(फ़ुल स्क्रीन|फुल स्क्रीन) [टॉगल करो]"
+  go_fullscreen: "(फ़ुल स्क्रीन|फुल स्क्रीन) (करो|कर दो|चालू करो)"
+  show_visualizer: "(विज़ुअलाइज़र|विजुअलाइजर) दिखाओ"
+  visualizer: "(विज़ुअलाइज़र|विजुअलाइजर) (चालू करो|बंद करो|टॉगल करो)"
+GlobalSearch:
+  do_global_search: "{Query} की ग्लोबल (सर्च|खोज) करो"
+  global_search: "ग्लोबल सर्च में {Query} (ढूँढो|ढूंढो|खोजो)"
+  search_kodi_for: "(कोडी|kodi) में {Query} (ढूँढो|ढूंढो|खोजो|सर्च करो)\nसब जगह {Query} (ढूँढो|ढूंढो|खोजो)\nसारे (ऐड ऑन|ऐडऑन) में {Query} (ढूँढो|ढूंढो|खोजो)"
+IdentifyEcho:
+  identify_this_echo: "इस (इको|echo|डिवाइस|स्पीकर) की पहचान बताओ"
+  what_is_this: "इस (इको|echo|डिवाइस|स्पीकर) का नाम क्या है"
+  whats_name_this: "इस (इको|echo|डिवाइस|स्पीकर) को क्या कहते हैं"
+  which_echo_am: "मैं किस (इको|echo|डिवाइस|स्पीकर) से बात कर (रहा|रही) हूँ"
+  which_echo_is: "(ये|यह) कौन सा (इको|echo|डिवाइस|स्पीकर) है"
+LaunchAddon:
+  launch: "{Addon} (चालू करो|लॉन्च करो|launch करो|रन करो)"
+  launch_addon: "(ऐड ऑन|ऐडऑन|प्लगइन|ऐप|स्क्रिप्ट|addon) {Addon} (खोलो|चालू करो|चलाओ|लॉन्च करो)"
+  launch_addon_2: "{Addon} (ऐड ऑन|ऐडऑन|प्लगइन|ऐप|addon) (खोलो|चालू करो|चलाओ|लॉन्च करो)"
+ListenToAlbum:
+  play_album: "[{Room} में] (एल्बम|album) {Album} (बजाओ|बजाइए|बजाए|चलाओ|चलाइए|चलाए|सुनाओ|play करो|प्ले करो)"
+  play_album_2: "{Album} (एल्बम|album) (बजाओ|बजाइए|बजाए|चलाओ|चलाइए|चलाए|सुनाओ|play करो|प्ले करो)\n{Artist} का {Album} (एल्बम|album) (बजाओ|चलाओ|सुनाओ)"
+  play_album_by: "[{Room} में] {Artist} का (एल्बम|album) {Album} (बजाओ|बजाइए|बजाए|चलाओ|चलाइए|चलाए|सुनाओ|play करो|प्ले करो)"
+ListenToArtist:
+  play_artist: "[{Room} में] (आर्टिस्ट|कलाकार|सिंगर|गायक) {Artist} (बजाओ|बजाइए|बजाए|चलाओ|चलाइए|चलाए|सुनाओ|play करो|प्ले करो)"
+  play_music_by: "[{Room} में] {Artist} के (गाने|गीत|songs) (बजाओ|बजाइए|बजाए|चलाओ|चलाइए|चलाए|सुनाओ|लगाओ|लगा दो|play करो|प्ले करो)\n[{Room} में] {Artist} का (म्यूज़िक|संगीत) (बजाओ|बजाइए|बजाए|चलाओ|चलाइए|चलाए|सुनाओ|लगाओ|लगा दो|play करो|प्ले करो)"
+  play_music_by_2: "[{Room} में] {Artist} के {Genre} (गाने|गीत|songs) (बजाओ|बजाइए|बजाए|चलाओ|चलाइए|चलाए|सुनाओ|play करो|प्ले करो)"
+  play_something_by: "[{Room} में] {Artist} का कुछ (बजाओ|बजाइए|चलाओ|सुनाओ|लगाओ|play करो|प्ले करो)"
+ListenToGenre:
+  play_genre: "{Genre} (जॉनर|शैली) (बजाओ|चलाओ|सुनाओ)"
+  play_music: "[{Room} में] [कुछ] {Genre} (म्यूज़िक|संगीत|गाने|गीत|songs) (बजाओ|बजाइए|बजाए|चलाओ|चलाइए|चलाए|सुनाओ|play करो|प्ले करो)"
+  shuffle_music: "[{Room} में] [कुछ] {Genre} (म्यूज़िक|संगीत|गाने) (शफ़ल करो|शफल करो|shuffle करो)"
+ListenToLatestAlbum:
+  play_latest_album: "[{Room} में] {Artist} का (नया|लेटेस्ट|सबसे नया|नवीनतम) (एल्बम|album) (बजाओ|बजाइए|बजाए|चलाओ|चलाइए|चलाए|सुनाओ|play करो|प्ले करो)"
+ListenToRecentSongs:
+  listen_recently_added: "[मेरे] (हाल ही में जोड़े गए|हाल में जोड़े गए) (गाने|songs) सुनाओ"
+  play_recent_songs: "[मेरे] (नए|हाल के) (गाने|songs) (बजाओ|चलाओ)"
+  play_recently_added: "[{Room} में] [मेरे] (हाल ही में जोड़े गए|सबसे नए|लेटेस्ट) (गाने|songs) (बजाओ|चलाओ|play करो|शफ़ल करो)"
+ListenToSong:
+  play_song: "[{Room} में] (गाना|सॉन्ग|song|ट्रैक) {Song} (बजाओ|बजाइए|बजाए|चलाओ|चलाइए|चलाए|सुनाओ|play करो|प्ले करो)\n[{Room} में] {Song} (गाना|सॉन्ग|song) (बजाओ|बजाइए|बजाए|चलाओ|चलाइए|चलाए|सुनाओ|play करो|प्ले करो)"
+  play_song_by: "[{Room} में] {Artist} का (गाना|सॉन्ग|song) {Song} (बजाओ|बजाइए|बजाए|चलाओ|चलाइए|चलाए|सुनाओ|play करो|प्ले करो)"
+  play_song_from: "(एल्बम|album) {Album} से (गाना|सॉन्ग|song) {Song} (बजाओ|चलाओ|सुनाओ)"
+  play_track_by: "{Artist} का ट्रैक {Song} (बजाओ|चलाओ)"
+ListenToSongOrAlbum:
+  play_by: "[{Room} में] {Artist} का {Title} (बजाओ|बजाइए|बजाए|चलाओ|चलाइए|चलाए|सुनाओ|play करो|प्ले करो)"
+Mute:
+  mute: "म्यूट\nम्यूट (करो|कर दो)"
+  mute_tv: "(टीवी|कोडी|kodi|आवाज़|ऑडियो) (म्यूट|अनम्यूट) (करो|कर दो)"
+  silence_tv: "(टीवी|आवाज़) (बंद करो|चुप करो)"
+  toggle_mute: "म्यूट टॉगल करो"
+  unmute: "अनम्यूट\nअनम्यूट करो\nआवाज़ वापस (लाओ|चालू करो)"
+Navigate:
+  go: "{NavAction} (जाओ|दबाओ|करो)"
+  go_times: "{Count} बार {NavAction} (जाओ|दबाओ|करो)"
+  open_screen: "{NavAction} (स्क्रीन|विंडो|पैनल) (खोलो|दिखाओ)"
+  sample: "{NavAction}"
+  times: "{NavAction} {Count} बार"
+OpenFavourite:
+  open_favourite: "(फ़ेवरेट|फेवरेट|पसंदीदा) {Favourite} (खोलो|दिखाओ|चालू करो)"
+  play_from_favourites: "[मेरे] (फ़ेवरेट्स|फेवरेट्स|पसंदीदा) (से|में से) {Favourite} (चलाओ|खोलो)"
+PartyMode:
+  lets_party: "(चलो|आओ) पार्टी करें\nपार्टी का (समय|टाइम) है"
+  play_all_music: "[{Room} में] (सारे गाने|कोई भी गाना|कुछ भी म्यूज़िक|रैंडम गाने) (बजाओ|चलाओ|शफ़ल करो)"
+  start_party_mode: "[{Room} में] पार्टी मोड (चालू करो|शुरू करो|ऑन करो|लगाओ)"
+PlayMedia:
+  find: "{Query} (ढूँढो|ढूंढो|खोजो)"
+  play: "{Query} (चलाओ|चलाइए|चलाए|बजाओ|बजाइए|बजाए|play करो|प्ले करो|चला दो|बजा दो)"
+  put: "{Query} (लगाओ|लगाइए|लगाए|लगा दो)"
+  queue_up: "{Query} (कतार|क्यू|queue) में (लगाओ|डालो)"
+  search_for: "{Query} (सर्च करो|search करो)"
+PlayPlaylist:
+  play_music_playlist: "(म्यूज़िक|वीडियो|स्मार्ट) प्लेलिस्ट {Playlist} (चलाओ|बजाओ|शुरू करो)"
+  play_playlist: "[{Room} में] [मेरी] (प्लेलिस्ट|playlist) {Playlist} (बजाओ|बजाइए|बजाए|चलाओ|चलाइए|चलाए|सुनाओ|play करो|प्ले करो)"
+  play_playlist_2: "[{Room} में] [मेरी] {Playlist} (प्लेलिस्ट|playlist) (बजाओ|बजाइए|बजाए|चलाओ|चलाइए|चलाए|सुनाओ|play करो|प्ले करो)"
+PlayerMove:
+  move_picture: "(तस्वीर|पिक्चर|वीडियो|इमेज) {Direction} (खिसकाओ|सरकाओ|ले जाओ)"
+  pan: "{Direction} पैन करो"
+PlayerRewind:
+  go_back: "{Duration} तक पीछे जाओ"
+  rewind: "{Duration} (पीछे करो|पीछे जाओ|रिवाइंड करो|वापस जाओ)"
+  rewind_2: "{Size} (पीछे करो|रिवाइंड करो)"
+  rewind_3: "रिवाइंड\nरिवाइंड करो\nपीछे करो"
+  rewind_it: "(इसे|वीडियो|फ़िल्म) (रिवाइंड करो|पीछे करो)"
+PlayerRotate:
+  rotate: "{Rotation} घुमाओ"
+  rotate_2: "नब्बे डिग्री {Rotation} घुमाओ"
+  rotate_picture: "(तस्वीर|पिक्चर|वीडियो|स्क्रीन) [{Rotation}] घुमाओ"
+  turn_picture: "(तस्वीर|पिक्चर|वीडियो) को {Rotation} (घुमाओ|मोड़ो)"
+PlayerSeek:
+  sample: "{Duration} {SeekDirection}"
+  skip: "{Duration} {SeekDirection} (करो|जाओ|बढ़ाओ|ले जाओ)"
+  skip_2: "{Size} {SeekDirection} (करो|जाओ|ले जाओ)"
+  skip_4: "{SeekDirection} (बढ़ाओ|स्किप करो)"
+  skip_5: "{Duration} (स्किप करो|फ़ास्ट फ़ॉरवर्ड करो)"
+PlayerSeekTo:
+  go_mark: "{Position} के निशान पर (जाओ|ले चलो)"
+  go_minute: "मिनट {Minute} पर (जाओ|ले चलो)"
+  jump: "{Position} पर (जाओ|जंप करो|स्किप करो)"
+  play_from_minute: "मिनट {Minute} से (चलाओ|शुरू करो)"
+  start_from: "{Position} से (शुरू करो|चलाओ)"
+PlayerZoom:
+  enhance: "एनहांस करो\nबड़ा करके दिखाओ"
+  enhance_and_move: "एनहांस करके {Direction} (ले जाओ|खिसकाओ)"
+  zoom: "ज़ूम {Zoom}\nज़ूम {Zoom} करो"
+  zoom_and_move: "ज़ूम {Zoom} करके {Direction} (ले जाओ|खिसकाओ)"
+Power:
+  kodi: "(कोडी|kodi|सिस्टम|कंप्यूटर|मीडिया सेंटर|टीवी) {PowerAction} (करो|कर दो)"
+  put_kodi: "(कोडी|kodi|सिस्टम|कंप्यूटर) को {PowerAction} (करो|कर दो|मोड में डालो)"
+  sample: "{PowerAction}"
+Recommend:
+  give_me_recommendation: "मुझे (कोई|एक) {MediaType} (सुझाओ|सुझाइए)"
+  recommend: "(कोई|कुछ) {MediaType} (सुझाओ|सजेस्ट करो|रेकमेंड करो) [(देखने|सुनने) के लिए]"
+  recommend_2: "(कोई|कुछ) {Genre} {MediaType} (सुझाओ|सजेस्ट करो|रेकमेंड करो)"
+  recommend_3: "{MediaType} (सुझाओ|सजेस्ट करो|रेकमेंड करो)"
+  recommend_something: "कुछ (सुझाओ|सजेस्ट करो|रेकमेंड करो)"
+  what_movie_should: "मैं कौन सी (फ़िल्म|मूवी) देखूँ\nमैं कौन सा (शो|सीरियल) देखूँ"
+  what_should_i: "मैं क्या देखूँ"
+  what_should_we: "[आज रात] हम क्या देखें"
+Repeat:
+  loop_mode: "(रिपीट|लूप) मोड {RepeatMode}"
+  repeat: "{RepeatMode} (रिपीट करो|दोहराओ)"
+  set_loop: "(रिपीट|लूप) {RepeatMode} पर (सेट करो|रखो)"
+RoomControl:
+  in_the: "{Room} में {Command}"
+  playback: "{Room} में (प्लेबैक|playback) {Command}"
+  tv: "{Room} (का|वाला) (टीवी|कोडी|kodi|म्यूज़िक|वीडियो) {Command}"
+ShuffleAlbum:
+  shuffle_album: "[{Room} में] (एल्बम|album) {Album} (शफ़ल करो|शफल करो|shuffle करो)"
+  shuffle_album_2: "{Album} (एल्बम|album) (शफ़ल करो|शफल करो|shuffle करो)\n{Artist} का {Album} (एल्बम|album) (शफ़ल करो|शफल करो|shuffle करो)"
+  shuffle_album_by: "[{Room} में] {Artist} का (एल्बम|album) {Album} (शफ़ल करो|शफल करो|shuffle करो)"
+ShuffleArtist:
+  shuffle_artist: "[{Room} में] (आर्टिस्ट|कलाकार|सिंगर|गायक) {Artist} (शफ़ल करो|शफल करो|shuffle करो)"
+  shuffle_music_by: "[{Room} में] {Artist} के (गाने|songs) (शफ़ल करो|शफल करो|shuffle करो)\n[{Room} में] {Artist} के गाने (रैंडम|शफ़ल में) (बजाओ|चलाओ)"
+  shuffle_music_by_2: "[{Room} में] {Artist} के {Genre} (गाने|songs) (शफ़ल करो|शफल करो|shuffle करो)"
+ShuffleLatestAlbum:
+  shuffle_latest_album: "[{Room} में] {Artist} का (नया|लेटेस्ट|सबसे नया) (एल्बम|album) (शफ़ल करो|शफल करो|shuffle करो)"
+ShuffleMusicVideos:
+  play_music_videos: "[{Room} में] [सारे] [मेरे] [{Genre}] (म्यूज़िक वीडियो|वीडियो गाने) (शफ़ल करो|शफल करो|shuffle करो)"
+  play_music_videos_2: "{Artist} के [सारे] [{Genre}] (म्यूज़िक वीडियो|वीडियो गाने) (शफ़ल करो|शफल करो|shuffle करो)"
+ShufflePlaylist:
+  play_playlist_shuffled: "[मेरी] {Playlist} (प्लेलिस्ट|playlist) (शफ़ल में|रैंडम) (चलाओ|बजाओ)"
+  shuffle_music_playlist: "(म्यूज़िक|वीडियो|स्मार्ट) प्लेलिस्ट {Playlist} (शफ़ल करो|शफल करो|shuffle करो)"
+  shuffle_playlist: "[{Room} में] [मेरी] (प्लेलिस्ट|playlist) {Playlist} (शफ़ल करो|शफल करो|shuffle करो)"
+  shuffle_playlist_2: "[{Room} में] [मेरी] {Playlist} (प्लेलिस्ट|playlist) (शफ़ल करो|शफल करो|shuffle करो)"
+ShuffleShow:
+  play_shuffled: "{Show} (शफ़ल में|रैंडम ऑर्डर में) (चलाओ|दिखाओ)"
+  shuffle_episodes: "[{Room} में] {Show} के [सारे] एपिसोड (शफ़ल करो|शफल करो|shuffle करो)"
+  shuffle_show: "[{Room} में] (शो|सीरियल|सीरीज़|टीवी शो) {Show} (शफ़ल करो|शफल करो|shuffle करो)"
+StereoscopicMode:
+  stereoscopic_mode: "(स्टीरियोस्कोपिक|थ्री डी) मोड"
+  toggle_stereoscopic_mode: "(स्टीरियोस्कोपिक|थ्री डी) मोड टॉगल करो"
+  turn_stereoscopic_mode: "(स्टीरियोस्कोपिक|थ्री डी) मोड (चालू|बंद|ऑन|ऑफ़) करो"
+Subtitles:
+  subtitle_language: "(सबटाइटल|सबटाइटल्स) की भाषा {SubtitleAction}"
+  subtitles: "(सबटाइटल|सबटाइटल्स|उपशीर्षक|कैप्शन|subtitles) {SubtitleAction}"
+  subtitles_3: "{Language} (सबटाइटल|सबटाइटल्स)\n(सबटाइटल|सबटाइटल्स) {Language} में"
+  switch_subtitles: "(सबटाइटल|सबटाइटल्स) {Language} में (बदलो|करो|कर दो)"
+  turn_subtitles_2: "{Language} (सबटाइटल|सबटाइटल्स) (चालू करो|लगाओ|दिखाओ)"
+TypeText:
+  enter_text: "(टेक्स्ट|text) {Text} (डालो|एंटर करो)"
+  insert: "{Text} (डालो|इन्सर्ट करो)"
+  type: "{Text} टाइप करो"
+  write: "{Text} (लिखो|लिख दो)"
+UpdateLibrary:
+  look_for_new: "नई (फ़िल्में|फिल्में|मूवीज़|सीरीज़) (ढूँढो|चेक करो)\nनए (एपिसोड|गाने|एल्बम|शो) (ढूँढो|चेक करो)"
+  update_library: "[मेरी] लाइब्रेरी (अपडेट करो|स्कैन करो|रिफ़्रेश करो|update करो)"
+  update_library_2: "[मेरी] {Library} लाइब्रेरी (अपडेट करो|स्कैन करो|रिफ़्रेश करो|update करो)"
+ViewLibrary:
+  show: "[(मेरी|मेरे)] {Section} (दिखाओ|खोलो)"
+  show_2: "[(मेरी|मेरे)] {Genre} {Section} (दिखाओ|खोलो)"
+  show_me: "मुझे [(मेरी|मेरे)] {Section} दिखाओ"
+  show_me_2: "मुझे [(मेरी|मेरे)] {Genre} {Section} दिखाओ"
+ViewPlaylist:
+  show_music_playlist: "(म्यूज़िक|ऑडियो|वीडियो|फ़िल्मों की|शो की) प्लेलिस्ट {Playlist} (दिखाओ|खोलो)"
+  show_playlist: "[मेरी] (प्लेलिस्ट|playlist) {Playlist} (दिखाओ|खोलो)"
+  show_playlist_2: "[मेरी] {Playlist} (प्लेलिस्ट|playlist) (दिखाओ|खोलो)"
+VolumeDown:
+  lower_volume: "(आवाज़|आवाज|वॉल्यूम|volume) (कम करो|कम कर दो|घटाओ)"
+  make_it_quieter: "(थोड़ा|ज़रा) धीरे (करो|कर दो)"
+  quieter: "और धीरे"
+  turn_down: "(आवाज़|वॉल्यूम) नीचे करो"
+  volume_down: "(वॉल्यूम|volume) (डाउन|down)"
+VolumeSet:
+  set_volume: "(आवाज़|आवाज|वॉल्यूम|volume) {Level} पर (सेट करो|कर दो|रखो)"
+  set_volume_percent: "(आवाज़|वॉल्यूम|volume) {Level} (प्रतिशत|परसेंट) (करो|कर दो)"
+  volume: "(वॉल्यूम|volume) {Level}"
+VolumeUp:
+  louder: "और तेज़"
+  make_it_louder: "(थोड़ा|ज़रा) तेज़ (करो|कर दो)"
+  raise_volume: "(आवाज़|आवाज|वॉल्यूम|volume) (बढ़ाओ|बढ़ा दो|तेज़ करो|ज़्यादा करो)"
+  turn_up: "(आवाज़|वॉल्यूम) ऊपर करो"
+  volume_up: "(वॉल्यूम|volume) (अप|up)"
+WatchEpisode:
+  play_episode_season: "{Show} के (सीज़न|सीजन) {Season} का एपिसोड {Episode} (चलाओ|चलाइए|चलाए|लगाओ|लगाइए|लगाए|दिखाओ|दिखाइए|play करो|प्ले करो|शुरू करो)"
+  play_episode_season_2: "{Show} का एपिसोड {Episode} (सीज़न|सीजन) {Season} (चलाओ|चलाइए|चलाए|लगाओ|लगाइए|लगाए|दिखाओ|दिखाइए|play करो|प्ले करो|शुरू करो)"
+  play_season_episode: "[{Room} में] {Show} (सीज़न|सीजन) {Season} एपिसोड {Episode} (चलाओ|चलाइए|चलाए|लगाओ|लगाइए|लगाए|दिखाओ|दिखाइए|play करो|प्ले करो|शुरू करो)"
+  play_season_episode_2: "[{Room} में] {Show} का (सीज़न|सीजन) {Season} एपिसोड {Episode} (चलाओ|चलाइए|चलाए|लगाओ|लगाइए|लगाए|दिखाओ|दिखाइए|play करो|प्ले करो|शुरू करो)"
+WatchFirstEpisode:
+  play_first: "[{Room} में] {Show} (शुरू से|शुरुआत से) (चलाओ|चलाइए|चलाए|लगाओ|लगाइए|लगाए|दिखाओ|दिखाइए|play करो|प्ले करो|शुरू करो)"
+  play_first_episode: "[{Room} में] {Show} का पहला एपिसोड (चलाओ|चलाइए|चलाए|लगाओ|लगाइए|लगाए|दिखाओ|दिखाइए|play करो|प्ले करो|शुरू करो)"
+  play_first_episode_2: "[{Room} में] {Show} का (बिलकुल|सबसे) पहला एपिसोड (चलाओ|चलाइए|चलाए|लगाओ|लगाइए|लगाए|दिखाओ|दिखाइए|play करो|प्ले करो|शुरू करो)"
+WatchLatestEpisode:
+  play_latest: "{Show} का नया एपिसोड (चलाओ|चलाइए|चलाए|लगाओ|लगाइए|लगाए|दिखाओ|दिखाइए|play करो|प्ले करो|शुरू करो)"
+  play_latest_episode: "[{Room} में] {Show} का (लेटेस्ट|सबसे नया|आखिरी|आख़िरी|नवीनतम) एपिसोड (चलाओ|चलाइए|चलाए|लगाओ|लगाइए|लगाए|दिखाओ|दिखाइए|play करो|प्ले करो|शुरू करो)"
+WatchMovie:
+  i_want_watch: "मुझे [(फ़िल्म|फिल्म|मूवी)] {Movie} देखनी है\nमैं [(फ़िल्म|फिल्म|मूवी)] {Movie} देखना (चाहता|चाहती) हूँ"
+  lets_watch: "चलो [(फ़िल्म|फिल्म|मूवी)] {Movie} देखते हैं"
+  play_film: "[{Room} में] {Movie} (फ़िल्म|फिल्म|मूवी|movie) (चलाओ|चलाइए|चलाए|लगाओ|लगाइए|लगाए|दिखाओ|दिखाइए|play करो|प्ले करो|शुरू करो)"
+  play_movie: "[{Room} में] (फ़िल्म|फिल्म|मूवी|movie) {Movie} (चलाओ|चलाइए|चलाए|लगाओ|लगाइए|लगाए|दिखाओ|दिखाइए|play करो|प्ले करो|शुरू करो)"
+WatchMovieTrailer:
+  play_trailer: "(ट्रेलर|प्रीव्यू|trailer) (दिखाओ|चलाओ|play करो)"
+  play_trailer_2: "{Movie} का (ट्रेलर|trailer) (दिखाओ|चलाओ|लगाओ|play करो)"
+  play_trailer_for: "(फ़िल्म|फिल्म|मूवी) {Movie} का (ट्रेलर|trailer) (दिखाओ|चलाओ|लगाओ|play करो)"
+WatchMusicVideo:
+  play_music_video: "[{Room} में] (म्यूज़िक वीडियो|music video) {MusicVideo} (चलाओ|चलाइए|चलाए|लगाओ|लगाइए|लगाए|दिखाओ|दिखाइए|play करो|प्ले करो|शुरू करो)\n[{Room} में] {MusicVideo} का (म्यूज़िक वीडियो|वीडियो) (चलाओ|चलाइए|चलाए|लगाओ|लगाइए|लगाए|दिखाओ|दिखाइए|play करो|प्ले करो|शुरू करो)"
+  play_music_video_2: "[{Room} में] {Artist} का (म्यूज़िक वीडियो|वीडियो) {MusicVideo} (चलाओ|चलाइए|चलाए|लगाओ|लगाइए|लगाए|दिखाओ|दिखाइए|play करो|प्ले करो|शुरू करो)"
+  play_music_video_3: "{MusicVideo} (म्यूज़िक वीडियो|वीडियो गाना) (दिखाओ|चलाओ)"
+WatchNextEpisode:
+  continue: "[{Room} में] {Show} [देखना] जारी रखो"
+  play_from_where: "{Show} वहीं से (चलाओ|दिखाओ) जहाँ (छोड़ा|रोका) था"
+  play_next_episode: "[{Room} में] {Show} का अगला एपिसोड (चलाओ|चलाइए|चलाए|लगाओ|लगाइए|लगाए|दिखाओ|दिखाइए|play करो|प्ले करो|शुरू करो)"
+  whats_next: "{Show} में आगे क्या है"
+WatchNextInCollection:
+  continue_collection: "{Movie} (सीरीज़|कलेक्शन|फ़्रैंचाइज़ी) जारी रखो"
+  play_next_movie: "[{Room} में] {Movie} (सीरीज़|कलेक्शन|फ़्रैंचाइज़ी) की अगली (फ़िल्म|मूवी) (चलाओ|चलाइए|चलाए|लगाओ|लगाइए|लगाए|दिखाओ|दिखाइए|play करो|प्ले करो|शुरू करो)"
+  whats_next_collection: "{Movie} (सीरीज़|कलेक्शन) में अगली (फ़िल्म|मूवी) कौन सी है"
+WatchRandomEpisode:
+  play_episode: "[{Room} में] {Show} का कोई [भी] एपिसोड (चलाओ|चलाइए|चलाए|लगाओ|लगाइए|लगाए|दिखाओ|दिखाइए|play करो|प्ले करो|शुरू करो)"
+  play_random_episode: "[{Room} में] {Show} का कोई रैंडम एपिसोड (चलाओ|चलाइए|चलाए|लगाओ|लगाइए|लगाए|दिखाओ|दिखाइए|play करो|प्ले करो|शुरू करो)"
+WatchRandomMovie:
+  pick_movie_for: "मेरे लिए कोई [{Genre}] (फ़िल्म|मूवी) चुनो"
+  play_any_movie: "कोई भी [{Genre}] (फ़िल्म|मूवी) (चलाओ|चलाइए|चलाए|लगाओ|लगाइए|लगाए|दिखाओ|दिखाइए|play करो|प्ले करो|शुरू करो)"
+  play_random_movie: "[{Room} में] कोई [रैंडम] [{Genre}] (फ़िल्म|मूवी) (चलाओ|चलाइए|चलाए|लगाओ|लगाइए|लगाए|दिखाओ|दिखाइए|play करो|प्ले करो|शुरू करो)"
+  surprise_me_with: "किसी [{Genre}] (फ़िल्म|मूवी) से मुझे सरप्राइज़ करो"
+WatchRandomMusicVideo:
+  play_music_video: "[{Room} में] कोई [रैंडम] [{Genre}] (म्यूज़िक वीडियो|वीडियो गाना) (चलाओ|चलाइए|चलाए|लगाओ|लगाइए|लगाए|दिखाओ|दिखाइए|play करो|प्ले करो|शुरू करो)"
+  play_music_video_2: "{Artist} का कोई [रैंडम] [{Genre}] (म्यूज़िक वीडियो|वीडियो गाना) (चलाओ|चलाइए|चलाए|लगाओ|लगाइए|लगाए|दिखाओ|दिखाइए|play करो|प्ले करो|शुरू करो)"
+WatchRandomShow:
+  play_any_show: "कोई भी [{Genre}] (शो|सीरियल|टीवी शो) (चलाओ|चलाइए|चलाए|लगाओ|लगाइए|लगाए|दिखाओ|दिखाइए|play करो|प्ले करो|शुरू करो)"
+  play_random_show: "[{Room} में] कोई [रैंडम] [{Genre}] (शो|सीरियल|टीवी शो) (चलाओ|चलाइए|चलाए|लगाओ|लगाइए|लगाए|दिखाओ|दिखाइए|play करो|प्ले करो|शुरू करो)"
+  surprise_me_with: "किसी [{Genre}] (शो|सीरियल) से मुझे सरप्राइज़ करो"
+WhatAlbums:
+  list_albums_by: "{Artist} के (एल्बम|एल्बम्स) (बताओ|गिनाओ)"
+  what_albums_by: "{Artist} के कौन से (एल्बम|एल्बम्स) (हैं|मेरे पास हैं|हमारे पास हैं)"
+  what_albums_do: "(मेरे|हमारे) पास {Artist} के कौन से (एल्बम|एल्बम्स) हैं"
+  what_albums_has: "{Artist} ने कौन से (एल्बम|एल्बम्स) (बनाए|निकाले|रिलीज़ किए) हैं"
+WhatsNew:
+  are_there_new: "क्या कोई नया {MediaType} आया है\nक्या कोई नई {MediaType} आई है"
+  are_there_new_2: "क्या कोई नया {Genre} {MediaType} आया है\nक्या कोई नई {Genre} {MediaType} आई है"
+  are_there_new_3: "क्या {Show} के (नए|अनदेखे) एपिसोड (हैं|आए हैं)"
+  how_many_new: "{Show} के कितने (नए|अनदेखे) एपिसोड (हैं|बाकी हैं)"
+  what_new_do: "कौन से नए {MediaType} आए हैं\nकौन सी नई {MediaType} आई हैं"
+  whats_new: "(नया क्या है|क्या नया है)"
+  whats_new_2: "{Show} में नया क्या है"
+  whats_new_watch: "(देखने|सुनने) (को|के लिए) नया क्या है"

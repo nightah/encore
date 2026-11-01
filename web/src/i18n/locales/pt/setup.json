@@ -1,0 +1,235 @@
+{
+  "address": {
+    "check": "Verificar endereço",
+    "checkAgain": "Verificar de novo",
+    "checking": "Verificando de fora da sua rede…",
+    "heading": "Informe seu endereço público",
+    "intro": "A Alexa chama o Encore via HTTPS na porta 443 por meio do seu proxy reverso ou túnel.",
+    "results": {
+      "label": "Resultados da verificação de acessibilidade",
+      "title": "Verificação de acessibilidade (de fora da sua rede)"
+    },
+    "unsupported": "Este servidor ainda não consegue verificar o endereço de fora. Continue e depois confirme na Visão geral que o endpoint público está acessível.",
+    "url": {
+      "hint": "Por exemplo {{url}}",
+      "label": "URL base pública"
+    }
+  },
+  "admin": {
+    "errors": {
+      "password": "Use pelo menos 12 caracteres.",
+      "token": "Cole o token de configuração do log do Encore.",
+      "username": "Escolha um nome de usuário."
+    },
+    "exists": "A conta de administrador já existe.",
+    "existsSignedIn": "A conta de administrador já existe, e você está conectado como {{name}}.",
+    "heading": "Criar a conta de administrador",
+    "intro": "Para provar que esta instância é sua, cole o token de configuração de uso único que o Encore escreveu no log ao iniciar. Ele expira assim que existir uma conta de administrador.",
+    "logs": {
+      "docker": "Em execução no Docker",
+      "systemd": "Em execução como serviço do systemd"
+    },
+    "password": {
+      "hint": "Pelo menos 12 caracteres. Armazenada como hash argon2id.",
+      "label": "Senha"
+    },
+    "sso": "Prefere login único? Você pode mudar para OIDC ou cabeçalhos de proxy confiável nas Configurações depois da configuração.",
+    "token": "Token de configuração",
+    "username": "Nome de usuário"
+  },
+  "amazon": {
+    "authorize": "Autorizar com a Amazon",
+    "clientId": "ID do cliente",
+    "clientSecret": {
+      "hint": "Criptografado em repouso. Usado somente para renovar o token de acesso.",
+      "label": "Segredo do cliente"
+    },
+    "connected": "Conectado à Amazon. O Encore já pode implantar a skill.",
+    "connectedVendor": "Conectado à Amazon (fornecedor {{vendor}}). O Encore já pode implantar a skill.",
+    "copyReturnUrl": "Copiar URL de retorno",
+    "fallback": {
+      "connect": "Conectar",
+      "label": "Alternativa",
+      "redirectUrl": {
+        "hint": "Depois do login, a Amazon leva você a um endereço que não carrega. Copie o endereço inteiro da barra do navegador.",
+        "label": "URL de redirecionamento",
+        "option": "Colar a URL de redirecionamento"
+      },
+      "refreshToken": {
+        "hint": "Começa com {{prefix}}.",
+        "label": "Token de atualização",
+        "option": "Colar um token de atualização"
+      },
+      "summaryHttp": "Sem callback HTTPS? Use “colar a URL de redirecionamento”, ou cole um token de atualização de <code>{{command}}</code>.",
+      "summaryHttps": "Não consegue fazer login pelo callback? Cole um token de atualização de <code>{{command}}</code>."
+    },
+    "heading": "Conecte sua conta de desenvolvedor da Amazon",
+    "instructions": {
+      "credentials": "Cole abaixo o Client ID e o Client Secret do perfil.",
+      "open": "Abra o <link>console do Login with Amazon</link> e crie um perfil de segurança chamado “encore”.",
+      "returnUrls_one": "Em Web Settings, adicione esta Allowed Return URL:",
+      "returnUrls_other": "Em Web Settings, adicione estas Allowed Return URLs:"
+    },
+    "intro": "O Encore implanta a skill com o seu próprio perfil de segurança do Login with Amazon. Você o cria uma vez, em cerca de dois minutos.",
+    "newTab": " (abre em uma nova aba)",
+    "reauthorise": "A Amazon pediu que o Encore fizesse login de novo. Autorize mais uma vez para continuar implantando.",
+    "redirectError": "A Amazon não conectou: {{error}}"
+  },
+  "check": {
+    "fail": "Falhou: ",
+    "ok": "Passou: ",
+    "pending": "Verificando: ",
+    "warn": "Aviso: "
+  },
+  "content": {
+    "legend": "O que ela pode reproduzir"
+  },
+  "deploy": {
+    "answer": {
+      "no": "Não",
+      "noLabel": "{{question}}: não",
+      "yes": "Sim",
+      "yesLabel": "{{question}}: sim"
+    },
+    "connectFirst": "Conecte primeiro sua conta de desenvolvedor da Amazon. O Encore implanta a skill com ela.",
+    "contentNote": "Deixar um de fora remove os comandos de voz dele da skill.",
+    "deploy": "Implantar skill",
+    "deploying": "Implantando…",
+    "duration_one": "geralmente de 2 a 3 minutos para uma localidade",
+    "duration_other": "geralmente de 3 a 5 minutos para {{count}} localidades",
+    "failed": "A implantação falhou em “{{step}}”: {{message}}.",
+    "goToAmazon": "Ir para a conta da Amazon",
+    "heading": "Implantar a skill",
+    "invocation": {
+      "elsewhere": "Em {{locales}}, as pessoas dizem “{{name}}”.",
+      "example": "“Alexa, peça para {{name}}…”",
+      "label": "Nome de invocação"
+    },
+    "locales": {
+      "faster": "Menos localidades implantam mais rápido.",
+      "legend": "Localidades a implantar",
+      "match": "O idioma de cada Echo precisa corresponder a uma destas."
+    },
+    "noDetails": "sem detalhes",
+    "privacy": {
+      "allows_purchases": {
+        "about": "Se as pessoas podem comprar algo pela skill: compras dentro da skill, assinaturas ou produtos físicos. O Encore não vende nada.",
+        "label": "A skill permite compras"
+      },
+      "contains_ads": {
+        "about": "Se a skill reproduz, fala ou exibe publicidade, incluindo promoções de outros produtos. O Encore não tem publicidade.",
+        "label": "A skill contém publicidade"
+      },
+      "is_child_directed": {
+        "about": "Se a skill é feita para crianças menores de 13 anos, conforme definido pela lei de privacidade on-line infantil dos EUA (COPPA). Trata-se de para quem a skill é feita, não de se uma criança pode usá-la.",
+        "label": "A skill é direcionada a crianças menores de 13 anos"
+      },
+      "is_export_compliant": {
+        "about": "Você confirma que a skill pode ser importada para os Estados Unidos e exportada de lá, e de qualquer outro país em que esteja disponível, sem licença, e que ela cumpre as leis de importação e exportação, incluindo as de software que usa criptografia. O Encore controla a reprodução de mídia e usa apenas a criptografia HTTPS padrão.",
+        "label": "A skill está em conformidade com as regras de exportação"
+      },
+      "legend": "Perguntas de privacidade da Amazon (responda você mesmo)",
+      "unanswered_one": "Falta responder {{count}} pergunta antes de implantar.",
+      "unanswered_other": "Faltam responder {{count}} perguntas antes de implantar.",
+      "uses_personal_info": {
+        "about": "Se a skill coleta dados pessoais de quem a usa, como nomes, endereços de e-mail, números de telefone ou localização. O Encore não pede nenhum deles: ele vê o ID de dispositivo de cada Echo e o que foi pedido a ele, e guarda isso no seu próprio servidor.",
+        "label": "A skill coleta informações pessoais"
+      }
+    },
+    "progress": "Implantando, {{percent}} por cento concluído",
+    "starting": "Iniciando",
+    "succeeded": "Implantada. A skill está ativada para testes na sua conta da Amazon.",
+    "tryAgain": "Tentar de novo"
+  },
+  "hello": {
+    "alexaPlus": "Em dispositivos com Alexa+, ative a skill uma vez pela Alexa+ Store do app Alexa se “pergunte para {{invocation}}” não for reconhecido.",
+    "echoName": {
+      "hint": "Por exemplo Echo Show da sala",
+      "label": "Nome do Echo"
+    },
+    "finish": "Concluir",
+    "heading": "Diga olá",
+    "intro": "Em qualquer Echo conectado à sua conta da Amazon, diga:",
+    "named": "Echo nomeado.",
+    "phrase": "“Alexa, pergunte para {{invocation}} o que está tocando.”",
+    "received": "Solicitação recebida de {{device}} às {{time}}.",
+    "receivedNew": "Solicitação recebida de um novo Echo às {{time}}. Dê um nome a ele para poder vinculá-lo a um Kodi:",
+    "waiting": "Aguardando a primeira solicitação…"
+  },
+  "kodi": {
+    "addAnother": "Adicionar outra",
+    "added": "{{name}} foi adicionada. O Encore está sincronizando a biblioteca dela agora.",
+    "adding": "Adicionando {{name}}…",
+    "alreadyAdded": "Já adicionadas: {{names}}. Adicione outra ou continue.",
+    "contentNote": "O Encore só sincroniza estes do Kodi e deixa os comandos de voz dos outros fora da skill.",
+    "fixLater": "Você pode corrigir isso depois na página do Kodi; o controle por voz precisa que pelo menos as verificações HTTP passem.",
+    "found": "Encontramos estas na sua rede.",
+    "heading": "Adicione seu primeiro Kodi",
+    "instance": "Instância do Kodi",
+    "manual": {
+      "hint": "Para um Kodi em outra VLAN, ou quando a descoberta está bloqueada",
+      "label": "Digitar um endereço manualmente"
+    },
+    "name": {
+      "hint": "Como você vai se referir a ela, por exemplo Sala",
+      "label": "Nome"
+    },
+    "notFound": "Nenhum Kodi respondeu na sua rede, então digite o endereço dele abaixo.",
+    "password": {
+      "hint": "Criptografada em repouso.",
+      "label": "Senha do Kodi"
+    },
+    "remoteControl": "O Kodi precisa estar com “Permitir controle remoto via HTTP” e “de aplicativos em outros sistemas” ativados.",
+    "results": "Resultados do teste de conexão",
+    "rpc": "Endereço JSON-RPC",
+    "searchAgain": "Procurar de novo",
+    "searchFailed": "O Encore não conseguiu procurar o Kodi na sua rede, então digite o endereço dele abaixo.",
+    "searching": "Procurando o Kodi na sua rede.",
+    "submit": "Adicionar e testar",
+    "testFailed": "O teste de conexão não foi executado: {{error}}",
+    "username": "Nome de usuário do Kodi"
+  },
+  "nav": {
+    "back": "Voltar",
+    "continue": "Continuar",
+    "skip": "Pular por enquanto"
+  },
+  "steps": {
+    "address": {
+      "sub": "Verificação de proxy e certificado",
+      "title": "Endereço público"
+    },
+    "admin": {
+      "sub": "Token de configuração e senha",
+      "title": "Conta de administrador"
+    },
+    "amazon": {
+      "sub": "Perfil do Login with Amazon",
+      "title": "Conta da Amazon"
+    },
+    "deploy": {
+      "sub": "Compilação para cada localidade",
+      "title": "Implantar skill"
+    },
+    "hello": {
+      "sub": "Confirmar a primeira solicitação",
+      "title": "Diga olá"
+    },
+    "kodi": {
+      "sub": "Descobrir e conectar",
+      "title": "Kodi"
+    }
+  },
+  "wizard": {
+    "label": "Etapa {{step}}: {{title}}",
+    "progress": "Etapa {{step}} de {{total}}<sr>: {{title}}</sr>",
+    "skipped": "Pulada",
+    "state": {
+      "current": " (etapa atual)",
+      "done": " (concluída)",
+      "skipped": " (pulada)"
+    },
+    "steps": "Etapas da configuração",
+    "subtitle": "Configuração inicial"
+  }
+}

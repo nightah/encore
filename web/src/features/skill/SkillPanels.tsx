@@ -5,7 +5,7 @@ import { Check, LoaderCircle, X } from "lucide-react";
 import { Trans, useTranslation } from "react-i18next";
 
 import { errorMessage } from "@api/client";
-import type { Deploy, SkillInfo as Skill } from "@api/generated/model";
+import type { Deploy, LastDeploy, SkillInfo as Skill } from "@api/generated/model";
 import { getAuthorize, skillSettingsFrom, useDisconnectAmazon, useSaveSkillSettings } from "@api/skill";
 import { Button } from "@components/ui/Button";
 import { Card, KeyValues, Section } from "@components/ui/Card";
@@ -17,7 +17,7 @@ import { Callout } from "@components/ui/States";
 import { Table, Td, Th } from "@components/ui/Table";
 import { CONTENT, type Content, toggleContent } from "@features/skill/content";
 import { type MarkState, buildTimeline, shortId } from "@features/skill/timeline";
-import { formatDayOrClock, formatMegabytes, formatNumber } from "@lib/format";
+import { formatDayOrClock, formatList, formatMegabytes, formatNumber } from "@lib/format";
 import { pageLocation } from "@lib/pageLocation";
 
 const markStyles: Record<MarkState, string> = {
@@ -135,7 +135,10 @@ export function LocalesPanel({ skill, deploying }: { skill: Skill; deploying: bo
                     {row.locale}
                   </Td>
                   <Td label={t("locales.columns.build")} className="max-sm:flex-wrap">
-                    <Chip tone={chip.tone}>{chip.label}</Chip>
+                    <span className="flex flex-wrap gap-1.5">
+                      <Chip tone={chip.tone}>{chip.label}</Chip>
+                      {row.degraded && !deploying ? <Chip tone="warn">{t("locales.build.degraded")}</Chip> : null}
+                    </span>
                     {row.errors?.length ? (
                       <ul className="mt-1.5 flex flex-col gap-0.5 text-[13px] text-bad">
                         {row.errors.map((error) => (
@@ -145,7 +148,14 @@ export function LocalesPanel({ skill, deploying }: { skill: Skill; deploying: bo
                     ) : null}
                   </Td>
                   <Td label={t("locales.columns.titles")} className="font-mono text-[13px]">
-                    {row.status === "succeeded" ? formatNumber(row.titles) : "-"}
+                    {row.status !== "succeeded"
+                      ? "-"
+                      : row.degraded
+                        ? t("locales.degradedTitles", {
+                            kept: formatNumber(row.titles),
+                            total: formatNumber(row.degraded.titles_asked_for),
+                          })
+                        : formatNumber(row.titles)}
                   </Td>
                   <Td
                     label={t("locales.columns.size", { limit: formatMegabytes(limit) })}
@@ -237,7 +247,7 @@ export function ModelTitlesCard({ skill }: { skill: Skill }) {
     <Section id="size-h" title={t("titles.title")}>
       {size ? (
         <>
-          <ul className="flex list-disc flex-col gap-0.5 pl-4.5 text-[13px] text-muted">
+          <ul className="flex list-disc flex-col gap-0.5 ps-4.5 text-[13px] text-muted">
             <li>
               <Trans
                 t={t}
@@ -365,13 +375,56 @@ export function AutoDeployPausedCard({ skill }: { skill: Skill }) {
   );
 }
 
-export function WarningsCard({ warnings }: { warnings: string[] }) {
+/** Shown while a failed automatic deploy waits to be tried again, before automatic deploys would pause. */
+export function AutoDeployRetryCard({ skill }: { skill: Skill }) {
   const { t } = useTranslation("skill");
-  if (!warnings.length) return null;
+  const retry = skill.auto_deploy_retry;
+  if (!retry || skill.auto_deploy_paused) return null;
+  return (
+    <Callout tone="warn" role="status" className="flex-col gap-1">
+      <span className="font-semibold">{t("autoDeployRetry.title")}</span>
+      <span className="wrap-anywhere">{retry.error}</span>
+      <span>
+        {t("autoDeployRetry.next", {
+          attempts: retry.attempts,
+          max: retry.max_attempts,
+          time: formatDayOrClock(retry.next_at),
+        })}
+      </span>
+    </Callout>
+  );
+}
+
+/** The last deploy's warnings, the locales it built with fewer library titles than asked for first, with what Amazon said about them. */
+export function WarningsCard({ deploy }: { deploy: LastDeploy | null | undefined }) {
+  const { t } = useTranslation("skill");
+  const warnings = deploy?.warnings ?? [];
+  const degraded = (deploy?.locales ?? []).flatMap(({ locale, status, titles, degraded: d }) =>
+    status === "succeeded" && d ? [{ d, locale, titles }] : [],
+  );
+  if (!warnings.length && !degraded.length) return null;
   return (
     <Callout tone="warn" role="note" className="flex-col gap-1">
       <span className="font-semibold">{t("warnings.title")}</span>
-      <ul className="flex list-disc flex-col gap-0.5 pl-4.5">
+      <ul className="flex list-disc flex-col gap-0.5 ps-4.5">
+        {degraded.map(({ locale, titles, d }) => (
+          <li key={locale}>
+            {d.dropped.length
+              ? t("warnings.dropped", { locale, titles: formatList(d.dropped) })
+              : t("warnings.thinned", {
+                  kept: formatNumber(titles),
+                  locale,
+                  total: formatNumber(d.titles_asked_for),
+                })}
+            {d.reasons.length ? (
+              <ul className="mt-0.5 flex list-none flex-col gap-0.5 ps-0 text-[13px] wrap-anywhere">
+                {d.reasons.map((reason) => (
+                  <li key={reason}>{reason}</li>
+                ))}
+              </ul>
+            ) : null}
+          </li>
+        ))}
         {warnings.map((warning) => (
           <li key={warning}>{warning}</li>
         ))}

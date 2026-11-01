@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"cmp"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -32,6 +35,56 @@ func invocationChoice(stored string) string {
 	}
 
 	return invocationEncore
+}
+
+// localeInvocations lists every locale's spelling of both invocation choices, in locale order.
+func localeInvocations(src *skillmodel.Sources) []LocaleInvocation {
+	out := make([]LocaleInvocation, 0, len(src.Locales))
+
+	for _, name := range src.LocaleNames() {
+		loc := src.Locales[name]
+
+		kodi := loc.KodiInvocation
+		if kodi == "" {
+			kodi = skillmodel.InvocationKodi
+		}
+
+		out = append(out, LocaleInvocation{Locale: name, Encore: loc.Invocation, Kodi: kodi})
+	}
+
+	return out
+}
+
+// invocationName is the one spelling of the stored choice the interface shows: its Latin name when any enabled locale says it that way, else the first enabled locale's own spelling.
+func invocationName(spellings []LocaleInvocation, locales []string, stored string) string {
+	choice := invocationChoice(stored)
+	first := ""
+
+	for _, name := range locales {
+		i := slices.IndexFunc(spellings, func(l LocaleInvocation) bool { return l.Locale == name })
+		if i < 0 {
+			continue
+		}
+
+		spoken := spellings[i].Encore
+		if choice == invocationKodi {
+			spoken = spellings[i].Kodi
+		}
+
+		if spoken == choice {
+			return choice
+		}
+
+		if first == "" {
+			first = spoken
+		}
+	}
+
+	if first == "" {
+		return choice
+	}
+
+	return first
 }
 
 func loadSources() (*skillmodel.Sources, error) {
@@ -247,12 +300,70 @@ func (s *skillService) packageOptions(ctx context.Context, placeholderPrivacy bo
 func (s *skillService) settingsHash(opts skillpkg.Options) string {
 	opts.SlotValues = nil
 
-	pkg, err := skillpkg.Build(s.a.opts.Sources, opts)
-	if err != nil {
+	b := s.build(opts)
+	if b.err != nil {
 		return ""
 	}
 
-	return pkg.Hash()
+	return b.hash
+}
+
+// build is skillpkg.Build of the API's sources, remembering the hashes and sizes of the last keepBuilt packages: a package depends only on the sources and opts, and building one expands every sample of every enabled locale.
+func (s *skillService) build(opts skillpkg.Options) builtPackage {
+	key := optionsKey(opts)
+
+	s.builtMu.Lock()
+	b, ok := s.built[key]
+	s.builtMu.Unlock()
+
+	if ok {
+		return b
+	}
+
+	s.builds.Add(1)
+
+	b = builtOf(skillpkg.Build(s.a.opts.Sources, opts))
+
+	s.builtMu.Lock()
+	if s.built == nil || len(s.built) >= keepBuilt {
+		s.built = map[string]builtPackage{}
+	}
+
+	s.built[key] = b
+	s.builtMu.Unlock()
+
+	return b
+}
+
+// builtOf keeps what the API reads off pkg.
+func builtOf(pkg *skillpkg.Package, err error) builtPackage {
+	if err != nil {
+		return builtPackage{err: err}
+	}
+
+	b := builtPackage{hash: pkg.Hash()}
+
+	for _, f := range pkg.Files {
+		loc, ok := strings.CutPrefix(f.Name, skillpkg.ModelDir)
+		if !ok {
+			continue
+		}
+
+		if len(f.Data) > b.largestBytes {
+			b.largestLocale, b.largestBytes = strings.TrimSuffix(loc, ".json"), len(f.Data)
+		}
+	}
+
+	return b
+}
+
+// optionsKey identifies opts: equal keys build equal packages.
+func optionsKey(opts skillpkg.Options) string {
+	h := sha256.New()
+	// Options holds only strings, numbers, booleans, slices and maps, which always encode.
+	_ = json.NewEncoder(h).Encode(opts)
+
+	return hex.EncodeToString(h.Sum(nil))
 }
 
 // updatePending reports whether what would be deployed now differs from the last deploy, and why: "settings" when the skill's settings changed, "library" when only the library titles in the model did, "none" otherwise.
@@ -262,13 +373,13 @@ func (s *skillService) updatePending(ctx context.Context, state deploy.State) (b
 		return true, "settings"
 	}
 
-	pkg, err := skillpkg.Build(s.a.opts.Sources, opts)
-	if err != nil {
+	b := s.build(opts)
+	if b.err != nil {
 		return true, "settings"
 	}
 
 	switch {
-	case !state.NeedsDeploy(pkg.Hash()):
+	case !state.NeedsDeploy(b.hash):
 		return false, "none"
 	case state.SettingsHash != "" && state.SettingsHash == s.settingsHash(opts):
 		return true, "library"
@@ -337,22 +448,22 @@ func (s *skillService) info(ctx context.Context) (SkillInfo, error) {
 			Connected: tok != nil && tok.RefreshToken != "" && !reauth, VendorID: state.VendorID, ProfileClientID: ls.ClientID,
 			HasClientSecret: secretErr == nil, NeedsReauthorise: reauth,
 		},
-		SkillID:          s.storedSkillID(),
-		Invocation:       invocationChoice(ss.Invocation),
-		InvocationName:   ss.Invocation,
-		SkillName:        ss.SkillName,
-		LocalesAvailable: s.a.opts.Sources.LocaleNames(),
-		LocalesEnabled:   locales,
-		Content:          content,
-		Endpoint:         SkillEndpointInfo{URL: s.endpointURL(ctx, ss)},
-		Privacy:          ss.Privacy,
+		SkillID:           s.storedSkillID(),
+		Invocation:        invocationChoice(ss.Invocation),
+		SkillName:         ss.SkillName,
+		LocalesAvailable:  s.a.opts.Sources.LocaleNames(),
+		LocalesEnabled:    locales,
+		LocaleInvocations: localeInvocations(s.a.opts.Sources),
+		Content:           content,
+		Endpoint:          SkillEndpointInfo{URL: s.endpointURL(ctx, ss)},
+		Privacy:           ss.Privacy,
 	}
 
-	if out.InvocationName == "" || out.SkillName == "" {
+	out.InvocationName = invocationName(out.LocaleInvocations, locales, ss.Invocation)
+
+	if out.SkillName == "" {
 		if loc, ok := s.a.opts.Sources.Locales[firstOr(locales, "en-US")]; ok {
-			if out.SkillName == "" {
-				out.SkillName = loc.SkillName
-			}
+			out.SkillName = loc.SkillName
 		}
 	}
 
@@ -364,12 +475,8 @@ func (s *skillService) info(ctx context.Context) (SkillInfo, error) {
 	out.State = s.stateOf(state, last)
 
 	if opts, _, err := s.packageOptions(ctx, true); err == nil {
-		if pkg, err := skillpkg.Build(s.a.opts.Sources, opts); err == nil {
-			if out.InvocationName == "" {
-				out.InvocationName = pkg.Invocation(firstOr(pkg.Locales(), ""))
-			}
-
-			out.ModelSize = Some(s.modelSize(ctx, pkg, opts))
+		if b := s.build(opts); b.err == nil {
+			out.ModelSize = Some(s.modelSize(ctx, b, opts))
 		}
 	}
 
@@ -378,6 +485,10 @@ func (s *skillService) info(ctx context.Context) (SkillInfo, error) {
 	if eff, err := s.a.prefs.Effective(ctx); err == nil && eff.Alexa.AutoDeploy {
 		out.AutoDeploy = true
 		out.AutoDeployPaused = s.autoDeployPaused(ctx)
+
+		if r := s.autoDeployRetry(ctx); r != nil {
+			out.AutoDeployRetry = Some(AutoDeployRetry{Attempts: r.Failures, MaxAttempts: autoDeployRetries + 1, NextAt: r.NextAt, Error: r.Error})
+		}
 	}
 
 	return out, nil
@@ -408,19 +519,8 @@ func firstOr(s []string, def string) string {
 	return s[0]
 }
 
-func (s *skillService) modelSize(ctx context.Context, pkg *skillpkg.Package, opts skillpkg.Options) ModelSize {
-	ms := ModelSize{LimitBytes: skillpkg.MaxModelBytes}
-
-	for _, f := range pkg.Files {
-		loc, ok := strings.CutPrefix(f.Name, skillpkg.ModelDir)
-		if !ok {
-			continue
-		}
-
-		if len(f.Data) > ms.Bytes {
-			ms.Locale, ms.Bytes = strings.TrimSuffix(loc, ".json"), len(f.Data)
-		}
-	}
+func (s *skillService) modelSize(ctx context.Context, b builtPackage, opts skillpkg.Options) ModelSize {
+	ms := ModelSize{LimitBytes: skillpkg.MaxModelBytes, Locale: b.largestLocale, Bytes: b.largestBytes}
 
 	for _, vs := range opts.SlotValues {
 		ms.TitlesInModel += len(vs)

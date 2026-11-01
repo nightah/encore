@@ -1,0 +1,71 @@
+# Example values for the dynamic slot types in model.yaml (ar): deploys replace them with what is set up in Encore. Chosen for this language rather than translated, so not on Crowdin.
+
+KODI_MUSIC_VIDEO:
+  - {value: تملي معاك}
+  - {value: نور العين}
+  - {value: الأماكن}
+  - {value: زي الهوا}
+  - {value: قارئة الفنجان}
+
+# Examples only, extended from the library when available.
+KODI_PLAYLIST:
+  - {value: رحلة, synonyms: [السفر, الطريق]}
+  - {value: حفلة, synonyms: [الحفلة]}
+  - {value: رياضة, synonyms: [التمارين]}
+  - {value: استرخاء, synonyms: [رواق]}
+  - {value: أطفال, synonyms: [العيال]}
+  - {value: عشاء}
+  - {value: الأعلى تقييما, synonyms: [الأفضل]}
+  - {value: رمضان}
+
+# Examples only: deploys replace them with the rooms set up in Encore. Written with the article, as "في الصالة" says them.
+KODI_ROOM:
+  - {value: الصالة, synonyms: [الصالون]}
+  - {value: المجلس, synonyms: [مجلس الرجال]}
+  - {value: مجلس الحريم}
+  - {value: غرفة المعيشة}
+  - {value: غرفة النوم, synonyms: [غرفتي]}
+  - {value: غرفة الأطفال, synonyms: [غرفة العيال]}
+  - {value: غرفة الضيوف}
+  - {value: المطبخ}
+  - {value: المكتب}
+  - {value: الملحق}
+  - {value: السينما, synonyms: [غرفة السينما, المسرح المنزلي]}
+  - {value: غرفة الألعاب}
+  - {value: السطح}
+
+# Examples only, extended from the library when available.
+MEDIA_GENRE:
+  - {value: أكشن, synonyms: [حركة]}
+  - {value: مغامرة, synonyms: [مغامرات]}
+  - {value: رسوم متحركة, synonyms: [كرتون, أنمي]}
+  - {value: كوميدي, synonyms: [كوميديا, مضحك]}
+  - {value: جريمة, synonyms: [جرائم]}
+  - {value: وثائقي, synonyms: [وثائقيات]}
+  - {value: دراما, synonyms: [درامي]}
+  - {value: عائلي, synonyms: [للعائلة]}
+  - {value: فانتازيا, synonyms: [خيال]}
+  - {value: رعب, synonyms: [مرعب]}
+  - {value: أطفال, synonyms: [للأطفال]}
+  - {value: غموض}
+  - {value: رومانسي, synonyms: [رومانسية]}
+  - {value: خيال علمي}
+  - {value: إثارة, synonyms: [تشويق]}
+  - {value: حربي, synonyms: [حرب]}
+  - {value: تاريخي, synonyms: [تاريخ]}
+  - {value: ويسترن}
+  - {value: طرب, synonyms: [طرب أصيل]}
+  - {value: خليجي, synonyms: [أغاني خليجية]}
+  - {value: شيلات}
+  - {value: أناشيد}
+  - {value: روك}
+  - {value: بوب}
+  - {value: جاز}
+  - {value: كلاسيكي, synonyms: [موسيقى كلاسيكية]}
+  - {value: هيب هوب}
+  - {value: إلكترونية, synonyms: [دانس]}
+  - {value: بلوز}
+  - {value: ميتال}
+  - {value: ريغي}
+  - {value: آر أند بي}
+  - {value: موسيقى تصويرية}

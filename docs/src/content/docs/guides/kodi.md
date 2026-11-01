@@ -25,7 +25,7 @@ On the **Kodi** page, Encore lists Kodi instances it finds on your network with 
 - **WebSocket URL**: e.g. `ws://192.168.1.20:9090/jsonrpc`. Leave it empty to use HTTP only.
 - **Username** and **password** of Kodi's web server. The password is encrypted at rest.
 - **MAC address** and **broadcast address** for Wake-on-LAN (optional, see below).
-- **Title language**: the rules for matching spoken titles against this library (articles, number words and so on). Instances sharing a library use their library source's.
+- **Title language**: the rules for matching spoken titles against this library (articles, number words and so on). Instances sharing a library use their library source's. Set it to the language the library's titles are in, not the language you speak to Alexa: a Japanese, Hindi or Arabic request still finds Latin titles in an English library. The overview flags a library whose films, shows, artists and albums are mostly written in Japanese, Devanagari or Arabic script while the skill has a ja-JP, hi-IN or ar-SA locale enabled and the library's title language is another one.
 - **Time zone** of the Kodi host, e.g. `Australia/Melbourne`, which Kodi writes library dates in. Leave it empty and Encore learns the offset from Kodi's clock.
 - **"Shut down"**: follow the setting under **Settings** → **Features**, or always quit Kodi or always power off for this instance (see below).
 
@@ -55,7 +55,7 @@ kodi:
     mac: "DC:A6:32:00:00:01"
 ```
 
-In config, `language` is the title-matching rules for that library (`en` by default; `de`, `fr`, `es` and `it` have their own), `shutdown_quits` the "shut down" choice and `timezone` the time zone; `library_group` exists only in config (see [shared libraries](/encore/guides/shared-libraries/)). Kodi writes library dates (such as when a title was added) in its host's local time: set the time zone to an IANA name such as `Australia/Melbourne`, or leave it empty and Encore learns the host's UTC offset from Kodi's clock, rechecking it every six hours. See [`kodi`](/encore/reference/configuration/#kodi) in the configuration reference.
+In config, `language` is the title-matching rules for that library (`en` by default; `ar`, `de`, `es`, `fr`, `hi`, `it`, `ja`, `nl` and `pt` have their own, and a request in Japanese, Devanagari or Arabic script is read with the Japanese, Hindi or Arabic rules whatever the library's language), `shutdown_quits` the "shut down" choice and `timezone` the time zone; `library_group` exists only in config (see [shared libraries](/encore/guides/shared-libraries/)). Kodi writes library dates (such as when a title was added) in its host's local time: set the time zone to an IANA name such as `Australia/Melbourne`, or leave it empty and Encore learns the host's UTC offset from Kodi's clock, rechecking it every six hours. See [`kodi`](/encore/reference/configuration/#kodi) in the configuration reference.
 
 ## The default instance
 

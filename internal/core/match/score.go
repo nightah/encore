@@ -8,7 +8,7 @@ import (
 // scoreAlias rates how well alias a matches query q, in [0, 1]. It gives up early, returning a negative score, once the alias provably can't beat floor.
 func (ix *Index) scoreAlias(q *form, a *alias, floor float64) scored {
 	if !a.derived && q.norm == a.norm {
-		return scored{score: 1, exact: true, bd: Breakdown{Alias: a.text, TokenSet: 1, JaroWinkler: 1, OSA: 1, Phonetic: 1}}
+		return scored{score: 1, exact: true, native: a.native, bd: Breakdown{Alias: a.text, TokenSet: 1, JaroWinkler: 1, OSA: 1, Phonetic: 1}}
 	}
 
 	compact := ratio(q.compact, a.compact)
@@ -71,7 +71,7 @@ func (ix *Index) scoreAlias(q *form, a *alias, floor float64) scored {
 
 	cov := 1.0
 	if (compact < ix.cfg.CompactCoverage || !numbers) && !homophone {
-		cov = coverage(q, &a.form)
+		cov = coverage(q, &a.form, ix.lang.unspaced)
 	}
 
 	f *= 1 - ix.cfg.CoveragePenalty*(1-cov)
@@ -84,6 +84,7 @@ func (ix *Index) scoreAlias(q *form, a *alias, floor float64) scored {
 		score:         min(f, nonExactCap),
 		soundAlike:    soundAlike,
 		numbersDiffer: numbersDiffer,
+		native:        a.native,
 		bd:            Breakdown{Alias: a.text, TokenSet: s, JaroWinkler: jw, OSA: osa, Phonetic: ph},
 	}
 }
@@ -155,8 +156,8 @@ func digitsWithin(q, a *form) bool {
 	return true
 }
 
-// coverage is the weighted share of query tokens that something in the alias accounts for. Numbers must match exactly (or be a "1" against an unnumbered title); words may be a small typo or a phonetic match away.
-func coverage(q, a *form) float64 {
+// coverage is the weighted share of query tokens that something in the alias accounts for. Numbers must match exactly (or be a "1" against an unnumbered title); words may be a small typo or a phonetic match away. In a language written without spaces (unspaced), whose word boundaries are a segmenter's guess, a word the alias spells with its spaces removed counts too ("toisutori" in "toi sutori 3").
+func coverage(q, a *form, unspaced bool) float64 {
 	total, hit := 0, 0
 
 	for i, t := range q.toks {
@@ -173,6 +174,12 @@ func coverage(q, a *form) float64 {
 		}
 
 		total += w
+
+		if unspaced && !isDigits(t) && runeLen(t) >= minUnspacedCover && strings.Contains(a.compact, t) {
+			hit += w
+
+			continue
+		}
 
 		for j, u := range a.toks {
 			if tokenMatches(t, u, q.keys[i], a.keys[j]) {

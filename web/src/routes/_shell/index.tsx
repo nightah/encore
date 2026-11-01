@@ -16,7 +16,7 @@ import { cn } from "@components/ui/cn";
 import { Meter } from "@components/ui/Meter";
 import { EmptyState, ErrorState, LoadingBlock } from "@components/ui/States";
 import { Table, Td, Th } from "@components/ui/Table";
-import { formatClock, formatPosition, formatRelative, hostPort } from "@lib/format";
+import { formatClock, formatLanguage, formatPosition, formatRelative, hostPort } from "@lib/format";
 
 export const Route = createFileRoute("/_shell/")({
   component: OverviewPage,
@@ -276,12 +276,49 @@ function RecentRequests({ overview }: { overview: Overview }) {
 
 function AttentionList({ items }: { items: Attention[] }) {
   const { t } = useTranslation("overview");
+  // Rejected requests and a library's title language carry what their text needs, so they read in the viewer's language; other items use the server's English.
+  const text = (item: Attention): { title: string; detail: string } => {
+    if (item.kind === "library_language" && item.params) {
+      const params = {
+        current: formatLanguage(item.params.current),
+        instance: item.params.instance,
+        language: formatLanguage(item.params.language),
+      };
+      return {
+        detail: t("attention.libraryLanguage.detail", params),
+        title: t("attention.libraryLanguage.title", params),
+      };
+    }
+    const count = item.count ?? 0;
+    if (item.kind !== "requests_rejected") return item;
+    switch (item.stage) {
+      case "timestamp":
+        return {
+          detail: t("attention.rejected.timestamp.detail"),
+          title: t("attention.rejected.timestamp.title", { count }),
+        };
+      case "signature":
+        return {
+          detail: t("attention.rejected.signature.detail"),
+          title: t("attention.rejected.signature.title", { count }),
+        };
+      case "skill_id":
+        return {
+          detail: t("attention.rejected.skillId.detail"),
+          title: t("attention.rejected.skillId.title", { count }),
+        };
+      default:
+        return item;
+    }
+  };
   const linkLabel = (kind: string) =>
     kind === "needs_deploy"
       ? t("attention.links.needsDeploy")
       : kind === "unlinked_device"
         ? t("attention.links.unlinkedDevice")
-        : t("attention.links.open");
+        : kind === "library_language"
+          ? t("attention.links.libraryLanguage")
+          : t("attention.links.open");
   return (
     <section
       aria-labelledby="attn-h"
@@ -294,6 +331,7 @@ function AttentionList({ items }: { items: Attention[] }) {
       <ul aria-live="polite" className="flex flex-col gap-3">
         {items.map((item, index) => {
           const urgent = index === 0 && item.kind === "unlinked_device";
+          const { title, detail } = text(item);
           return (
             <li
               key={`${item.kind}-${item.title}`}
@@ -301,8 +339,8 @@ function AttentionList({ items }: { items: Attention[] }) {
             >
               <Dot tone={urgent ? "accent" : "muted"} className="mt-1.75 size-2" />
               <div className="flex flex-col gap-1">
-                <span className="font-semibold">{item.title}</span>
-                <span className="text-[13px] text-muted">{item.detail}</span>
+                <span className="font-semibold">{title}</span>
+                <span className="text-[13px] text-muted">{detail}</span>
                 {item.link ? (
                   <Link to={item.link} className="w-fit text-[13.5px] text-link hover:text-ink">
                     {linkLabel(item.kind)}

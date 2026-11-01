@@ -6,6 +6,7 @@ import (
 
 	"golang.org/x/text/language"
 	"golang.org/x/text/language/display"
+	"golang.org/x/text/unicode/norm"
 
 	"github.com/nightah/encore/internal/core/match"
 	"github.com/nightah/encore/internal/core/media"
@@ -127,7 +128,7 @@ func languageTag(code string) string {
 
 // streamIn finds the first stream whose language the listener named, comparing with the language's name in the listener's language, in English and in itself.
 func streamIn(streams []media.Stream, spoken, listener string) (int, bool) {
-	want := match.Normalize(listener, spoken)
+	want := streamKey(listener, spoken)
 	if want == "" {
 		return 0, false
 	}
@@ -151,11 +152,16 @@ func streamIn(streams []media.Stream, spoken, listener string) (int, bool) {
 		}
 
 		for _, n := range names {
-			if n != "" && match.Normalize(listener, n) == want {
+			if n != "" && streamKey(listener, n) == want {
 				return st.Index, true
 			}
 		}
 	}
 
 	return 0, false
+}
+
+// streamKey is a language name as streamIn compares it: normalised, after dropping the Devanagari nukta, which recognisers write or leave out ("फ़्रेंच", "फ्रेंच") while x/text always writes it. NFD first splits a letter with a nukta (ज़) into the letter and the nukta.
+func streamKey(listener, s string) string {
+	return match.Normalize(listener, strings.ReplaceAll(norm.NFD.String(s), nukta, ""))
 }

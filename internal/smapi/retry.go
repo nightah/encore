@@ -32,7 +32,7 @@ func (p RetryPolicy) decide(req *http.Request, status int, hdr http.Header, err 
 		return 0, false
 	}
 
-	if hasBody(req) && req.GetBody == nil {
+	if !rewindable(req) {
 		return 0, false
 	}
 
@@ -70,6 +70,11 @@ func (p RetryPolicy) backoff(attempt int) time.Duration {
 
 func hasBody(req *http.Request) bool {
 	return req.Body != nil && req.Body != http.NoBody
+}
+
+// rewindable reports whether req can be sent again.
+func rewindable(req *http.Request) bool {
+	return !hasBody(req) || req.GetBody != nil
 }
 
 func idempotent(method string) bool {

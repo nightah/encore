@@ -1,0 +1,333 @@
+# Utterance patterns, translated on Crowdin from the English file. Each key is one way of asking, and may hold several patterns, one per line. (a|b) picks one, [a|b] is optional, {Slot} is a slot. Built-in intents already understand the common phrasings; samples here only add Kodi-specific ones. An optional room at the end, such as "[(in|on) the {Room}]", lets a request name the room whose Kodi should play it; notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
+AMAZON.LoopOffIntent:
+  loop_off: "(ループ|リピート)オフ"
+  turn_off_repeat: "(リピート|ループ|繰り返し)を(オフにして|止めて|解除して)[ください]"
+AMAZON.LoopOnIntent:
+  loop: "(ループ|リピート)(オン|モード)"
+  turn_repeat: "(リピート|ループ|繰り返し)を(オンにして|有効にして)[ください]"
+AMAZON.PauseIntent:
+  pause_tv: "(テレビ|コディ|ビデオ|動画|映画|番組)を一時停止(して|してください|)"
+AMAZON.ResumeIntent:
+  resume_tv: "(テレビ|コディ|ビデオ|動画|映画|番組)を再開(して|してください|)"
+AMAZON.ShuffleOffIntent:
+  shuffle_off: "シャッフル(オフ|モードオフ)"
+  turn_off_shuffle: "シャッフルを(オフにして|止めて|解除して)[ください]"
+AMAZON.ShuffleOnIntent:
+  shuffle: "シャッフル(オン|モードオン)"
+  turn_shuffle: "シャッフルを(オンにして|有効にして)[ください]"
+AudioPassthrough:
+  toggle_digital_audio: "(デジタル音声|デジタルパススルー)を切り替えて[ください]"
+  toggle_passthrough: "[音声]パススルーを切り替えて[ください]"
+  turn_passthrough: "[音声]パススルーを(オンにして|オフにして)[ください]"
+AudioStream:
+  audio: "{Step}の(音声|音声トラック|オーディオ)(にして|に切り替えて)[ください]"
+  audio_2: "{Language}の(音声|音声トラック|オーディオ)(にして|に切り替えて)[ください]"
+  audio_3: "{Language}の音声で(再生して|流して)[ください]"
+  language: "{Step}の言語(にして|に切り替えて)[ください]"
+  play: "{Language}で(再生して|聴かせて|見せて)[ください]"
+  switch_audio: "(音声|音声トラック|言語|オーディオ)を{Language}に(切り替えて|変えて|変更して|して)[ください]"
+BingeShow:
+  binge: "[{Room}で]{Show}を(一気見して|一気見させて|一気に見せて)[ください]\n{Show}を一気見したい"
+  binge_rest: "[{Room}で]{Show}の残りを[全部](再生して|一気見して)[ください]"
+  play_all: "{Show}を(全話|全部)(再生して|見せて)[ください]"
+  play_all_unwatched: "[{Room}で]{Show}の(未視聴の|まだ見ていない|残りの)エピソードを(全部|すべて)(再生して|流して)[ください]"
+  start_binge_mode: "[{Room}で]{Show}の一気見モードを(開始して|オンにして|始めて)[ください]"
+ChooseMatch:
+  answer: "{Answer}\n{Answer}の方\n{Answer}のほう"
+  meant_answer: "{Answer}(です|のことです|でお願い|でお願いします)"
+  meant_which: "{Which}(です|のことです)"
+  the_which: "{Which}で"
+  which: "{Which}"
+  which_please: "{Which}で(お願い|お願いします)\n{Which}にして[ください]"
+CleanLibrary:
+  clean_library: "ライブラリを(クリーンアップして|整理して|掃除して)[ください]"
+  clean_library_2: "{Library}ライブラリを(クリーンアップして|整理して|掃除して)[ください]"
+  tidy_library: "{Library}のライブラリを(片付けて|クリーンアップして|整理して)[ください]"
+ContinueWatching:
+  continue_last_show: "[{Room}で]最後に見ていた番組を(再開して|続きから再生して)[ください]"
+  continue_watching: "[{Room}で]続きを(見せて|再生して)[ください]"
+  continue_where_i: "[{Room}で]前回の続きから(再生して|見せて)[ください]"
+  pick_up_where: "[{Room}で](途中|やめたところ|止めたところ)から(再生して|再開して)[ください]"
+  play_what_i: "[{Room}で](さっき|前に)見ていたものを(再生して|かけて)[ください]"
+  where_did_i: "どこまで(見たっけ|見てたっけ)"
+CurrentPlayItemEnquiry:
+  what_am_i: "[今]何を(見て|聴いて|聞いて)(いる|る)[の]"
+  what_is_playing: "[今]何が(再生されて|流れて|かかって)(いる|る)[の]"
+  what_show_is: "これは(何の|どの)(番組|映画|曲)\nこの(番組|映画|曲)は(何|なに)"
+  whats_playing: "[今]再生中の(もの|作品|曲)は(何|なに)"
+  who_is_this: "(これ|この曲)は誰の曲\n誰が歌っているの"
+CurrentPlayItemTimeRemaining:
+  how_long_is: "あと(どのくらい|どれくらい)[ある][の]"
+  how_much_is: "残り[時間]は(どのくらい|どれくらい|何分)"
+  how_much_longer: "あと何分[ある][の]"
+  how_much_time: "残り時間を教えて[ください]"
+  when_is_this: "[これは](いつ|何時に)終わる[の]"
+  when_will_movie: "(映画|番組|エピソード)は(いつ|何時に)終わる[の]"
+  when_will_this: "(これ|この番組|この映画)が終わるのは(いつ|何時)"
+EjectMedia:
+  eject: "(イジェクト|取り出し)"
+  eject_disc: "(ディスク|シーディー|ディーブイディー|ブルーレイ|メディア)を(取り出して|イジェクトして|出して)[ください]"
+  open_disc_tray: "(ディスク|シーディー|ディーブイディー)(トレイ|ドライブ)を開けて[ください]"
+Fullscreen:
+  exit_fullscreen: "(全画面|フルスクリーン)[表示]を(終了して|解除して|やめて)[ください]"
+  fullscreen: "(全画面|フルスクリーン)[表示]を切り替えて[ください]"
+  go_fullscreen: "(全画面|フルスクリーン)(にして|表示にして)[ください]"
+  show_visualizer: "ビジュアライザーを(表示して|見せて)[ください]"
+  visualizer: "ビジュアライザーを切り替えて[ください]"
+GlobalSearch:
+  do_global_search: "{Query}をグローバル検索して[ください]"
+  global_search: "グローバル検索で{Query}を(探して|検索して)[ください]"
+  search_kodi_for: "(コディ全体|すべてのアドオン|全部のアドオン)で{Query}を(検索して|探して)[ください]"
+IdentifyEcho:
+  identify_this_echo: "この(エコー|デバイス|スピーカー)を(識別して|特定して)[ください]"
+  what_echo_is: "これはどの(エコー|デバイス|スピーカー)"
+  what_is_this: "この(エコー|デバイス|スピーカー)の名前は(何|なに)"
+  whats_name_this: "この(エコー|デバイス|スピーカー)の名前を教えて[ください]"
+  which_echo_am: "どの(エコー|デバイス|スピーカー)と話している[の]"
+  which_echo_is: "この(エコー|デバイス|スピーカー)はどれ"
+LaunchAddon:
+  launch: "{Addon}を(起動して|実行して)[ください]"
+  launch_addon: "(アドオン|プラグイン|スクリプト|アプリ)の{Addon}を(起動して|開いて|実行して|開始して)[ください]"
+  launch_addon_2: "{Addon}の(アドオン|プラグイン|アプリ)を(起動して|開いて|実行して)[ください]"
+ListenToAlbum:
+  play_album: "[{Room}で]アルバム[の]{Album}を(再生して|かけて|流して|聴かせて)[ください]"
+  play_album_2: "[{Artist}の]{Album}というアルバムを(再生して|かけて|流して)[ください]"
+  play_album_by: "[{Room}で]{Artist}のアルバム[の]{Album}を(再生して|かけて|流して|聴かせて)[ください]"
+ListenToArtist:
+  play_artist: "[{Room}で]アーティストの{Artist}を(再生して|かけて|流して)[ください]"
+  play_music_by: "[{Room}で]{Artist}の(曲|音楽|歌)を(再生して|かけて|流して|聴かせて)[ください]\n[{Room}で]{Artist}が歌う(曲|歌)を(再生して|かけて|流して|聴かせて)[ください]"
+  play_music_by_2: "[{Room}で]{Artist}の{Genre}の(曲|音楽)を(再生して|かけて|流して)[ください]"
+  play_something_by: "[{Room}で]{Artist}の(何か|なにか)を(再生して|かけて|流して)[ください]"
+ListenToGenre:
+  play_genre: "ジャンルの{Genre}を(再生して|かけて|流して)[ください]"
+  play_music: "[{Room}で]{Genre}(系の曲|系の音楽|ミュージック)を(かけて|流して|再生して|聴かせて)[ください]"
+  shuffle_music: "[{Room}で]{Genre}(系の曲|系の音楽)をシャッフル(して|再生して)[ください]"
+ListenToLatestAlbum:
+  play_latest_album: "[{Room}で]{Artist}の(最新|新しい)アルバムを(再生して|かけて|流して)[ください]"
+ListenToRecentSongs:
+  listen_recently_added: "(最近追加した|新しく追加した)(曲|音楽)を(聴かせて|聞かせて)[ください]"
+  play_recent_songs: "(最近の|新しい)(曲|音楽)を(再生して|かけて)[ください]"
+  play_recently_added: "[{Room}で](最近追加した|新しく追加した|最新の)(曲|音楽)を(再生して|シャッフルして|流して)[ください]"
+ListenToSong:
+  play_song: "[{Room}で](曲|トラック)の{Song}を(再生して|かけて|流して)[ください]"
+  play_song_by: "[{Room}で]{Artist}の{Song}という曲を(再生して|かけて|流して)[ください]"
+  play_song_from: "アルバム[の]{Album}の{Song}という曲を(再生して|かけて)[ください]"
+  play_track_by: "{Artist}のトラック[の]{Song}を(再生して|かけて)[ください]"
+ListenToSongOrAlbum:
+  play_by: "[{Room}で]({Artist}の曲の|{Artist}が歌う){Title}を(再生して|かけて|流して|聴かせて)[ください]"
+Mute:
+  mute: "ミュート[して]"
+  mute_tv: "(テレビ|コディ|音|音声)を(ミュートして|消音して|ミュート解除して)[ください]"
+  silence_tv: "テレビを静かにして[ください]"
+  toggle_mute: "ミュートを切り替えて[ください]"
+  unmute: "ミュート解除[して]"
+Navigate:
+  go: "{NavAction}(に|へ)(移動して|進んで|動いて)[ください]"
+  go_times: "{NavAction}(に|へ){Count}回(移動して|進んで)[ください]"
+  open_screen: "{NavAction}(画面|ダイアログ|ウィンドウ|パネル)を(開いて|表示して)[ください]"
+  sample: "{NavAction}"
+  times: "{NavAction}を{Count}回\n{Count}回{NavAction}"
+OpenFavourite:
+  open_favourite: "お気に入りの{Favourite}を(開いて|表示して|起動して|再生して)[ください]"
+  play_from_favourites: "お気に入りから{Favourite}を(再生して|開いて)[ください]"
+PartyMode:
+  lets_party: "(パーティーしよう|パーティータイム|パーティーの時間だよ)"
+  play_all_music: "[{Room}で](全部の|すべての|ランダムな|適当な)(曲|音楽)を(かけて|再生して|流して|シャッフルして)[ください]"
+  start_party_mode: "[{Room}で]パーティーモードを(開始して|始めて|オンにして)[ください]"
+PlayMedia:
+  find: "{Query}を(探して|見つけて)[ください]"
+  play: "{Query}を(再生して|再生してください|再生する|再生)"
+  put: "{Query}を(かけて|流して|つけて|見せて)[ください]"
+  queue_up: "{Query}を(キューに追加して|キューに入れて|順番待ちに追加して)[ください]"
+  search_for: "{Query}を検索して[ください]"
+PlayPlaylist:
+  play_music_playlist: "(音楽|ビデオ|スマート)プレイリスト[の]{Playlist}を(再生して|かけて|開始して)[ください]"
+  play_playlist: "[{Room}で]プレイリスト[の]{Playlist}を(再生して|かけて|流して|聴かせて|見せて)[ください]"
+  play_playlist_2: "[{Room}で]{Playlist}のプレイリストを(再生して|かけて|流して)[ください]"
+PlayerMove:
+  move_picture: "(画面|映像|画像)を{Direction}(に|へ)(動かして|移動して|ずらして)[ください]"
+  pan: "{Direction}(に|へ)パンして[ください]"
+PlayerRewind:
+  go_back: "{Duration}(前に|前まで)戻って[ください]"
+  rewind: "{Duration}(巻き戻して|戻して)[ください]\n{Duration}巻き戻し"
+  rewind_2: "{Size}(巻き戻して|戻して)[ください]"
+  rewind_3: "(巻き戻し|巻き戻して)"
+  rewind_it: "(これ|動画|ビデオ)を巻き戻して[ください]"
+PlayerRotate:
+  rotate: "{Rotation}に回転して[ください]"
+  rotate_2: "{Rotation}に九十度回転して[ください]"
+  rotate_picture: "(画像|映像|画面|動画)を[{Rotation}に]回転して[ください]"
+  turn_picture: "(画像|映像|動画)を{Rotation}に回して[ください]"
+PlayerSeek:
+  sample: "{Duration}{SeekDirection}[ください]"
+  skip: "{Duration}だけ{SeekDirection}[ください]"
+  skip_2: "{Size}{SeekDirection}[ください]"
+  skip_5: "{Duration}(スキップして|飛ばして)[ください]"
+  step: "(少し|ちょっと)だけ{SeekDirection}[ください]"
+PlayerSeekTo:
+  go_mark: "{Position}のところ(に|へ|まで)(移動して|飛んで|ジャンプして)[ください]"
+  go_minute: "{Minute}分(に|へ|まで)(移動して|飛んで|ジャンプして)[ください]"
+  jump: "{Position}(に|へ|まで)(ジャンプして|飛んで)[ください]"
+  play_from_minute: "{Minute}分から(再生して|始めて)[ください]"
+  start_from: "{Position}から(再生して|始めて)[ください]"
+PlayerZoom:
+  enhance: "[もっと]拡大して[ください]"
+  enhance_and_move: "拡大して{Direction}に(移動して|パンして)[ください]"
+  zoom: "ズーム{Zoom}(して|してください|)"
+  zoom_2: "ズームを{Zoom}(して|してください)"
+  zoom_and_move: "ズーム{Zoom}して{Direction}に(移動して|パンして)[ください]"
+Power:
+  kodi: "(コディ|システム|コンピューター|メディアセンター|テレビ)を{PowerAction}[ください]"
+  sample: "{PowerAction}"
+Recommend:
+  give_me_recommendation: "おすすめの{MediaType}を教えて[ください]"
+  recommend: "{MediaType}を(おすすめして|推薦して)[ください]"
+  recommend_2: "おすすめの{Genre}の{MediaType}を教えて[ください]\n{Genre}の{MediaType}をおすすめして[ください]"
+  recommend_3: "おすすめの{MediaType}(はある|はありますか)"
+  recommend_something: "(何か|なにか)おすすめして[ください]\nおすすめを教えて[ください]"
+  what_movie_should: "どの(映画|番組)を見ればいい\n(どんな|何の)(映画|番組)を見ようかな"
+  what_should_i: "何を見ればいい"
+  what_should_we: "[今夜は]何を見ようか"
+Repeat:
+  loop_mode: "(ループ|リピート)モードを{RepeatMode}にして[ください]"
+  repeat: "{RepeatMode}をリピートして[ください]"
+  set_loop: "(ループ|リピート)を{RepeatMode}に(して|設定して)[ください]"
+  turn_repeat: "リピート{RepeatMode}"
+RoomControl:
+  in_the: "{Room}で{Command}[ください]"
+  playback: "{Room}の方で{Command}[ください]"
+  tv: "{Room}の(テレビ|コディ|音楽|映画|番組|ビデオ)を{Command}[ください]"
+ShuffleAlbum:
+  shuffle_album: "[{Room}で]アルバム[の]{Album}をシャッフル(して|再生して)[ください]"
+  shuffle_album_2: "[{Artist}の]{Album}というアルバムをシャッフル(して|再生して)[ください]"
+  shuffle_album_by: "[{Room}で]{Artist}のアルバム[の]{Album}をシャッフル(して|再生して)[ください]"
+ShuffleArtist:
+  shuffle_artist: "[{Room}で]アーティストの{Artist}をシャッフル(して|再生して)[ください]"
+  shuffle_music_by: "[{Room}で]{Artist}の(曲|音楽|歌)をシャッフル(して|再生して)[ください]"
+  shuffle_music_by_2: "[{Room}で]{Artist}の{Genre}の(曲|音楽)をシャッフル(して|再生して)[ください]"
+ShuffleLatestAlbum:
+  shuffle_latest_album: "[{Room}で]{Artist}の(最新|新しい)アルバムをシャッフル(して|再生して)[ください]"
+ShuffleMusicVideos:
+  play_music_videos: "[{Room}で][{Genre}の]ミュージックビデオをシャッフル(して|再生して)[ください]\n[{Room}で]すべての[{Genre}の]ミュージックビデオを(再生して|流して)[ください]"
+  play_music_videos_2: "{Artist}の[{Genre}の]ミュージックビデオをシャッフル(して|再生して)[ください]\n{Artist}のミュージックビデオを全部(再生して|流して)[ください]"
+ShufflePlaylist:
+  play_playlist_shuffled: "{Playlist}のプレイリストをシャッフルで(再生して|かけて)[ください]"
+  shuffle_music_playlist: "(音楽|ビデオ|スマート)プレイリスト[の]{Playlist}をシャッフル(して|再生して)[ください]"
+  shuffle_playlist: "[{Room}で]プレイリスト[の]{Playlist}をシャッフル(して|再生して)[ください]"
+  shuffle_playlist_2: "[{Room}で]{Playlist}のプレイリストをシャッフル(して|再生して)[ください]"
+ShuffleShow:
+  play_shuffled: "{Show}を(シャッフルで|ランダムに|ランダムな順番で)(再生して|見せて)[ください]"
+  shuffle_episodes: "[{Room}で]{Show}の[全]エピソードをシャッフル(して|再生して)[ください]"
+  shuffle_show: "[{Room}で](番組|シリーズ|ドラマ)の{Show}をシャッフル(して|再生して)[ください]"
+StereoscopicMode:
+  stereoscopic_mode: "(立体視|スリーディー)モード"
+  toggle_stereoscopic_mode: "(立体視|スリーディー)モードを切り替えて[ください]"
+  turn_stereoscopic_mode: "(立体視|スリーディー)モードを(オンにして|オフにして)[ください]"
+Subtitles:
+  subtitle_language: "字幕の言語を{SubtitleAction}[ください]"
+  subtitles: "(字幕|サブタイトル)を{SubtitleAction}[ください]"
+  subtitles_2: "字幕{SubtitleAction}"
+  subtitles_3: "{Language}の字幕(にして|を表示して|を出して)[ください]"
+  switch_subtitles: "字幕を{Language}に(切り替えて|変えて|して)[ください]"
+  turn_subtitles_2: "{Language}の字幕を(オンにして|つけて|使って)[ください]"
+TypeText:
+  enter_text: "{Text}と(入力して|打って)[ください]"
+  insert: "{Text}を(入力して|挿入して)[ください]"
+  type: "{Text}とタイプして[ください]"
+  write: "{Text}と書いて[ください]"
+UpdateLibrary:
+  look_for_new: "新しい(映画|番組|エピソード|音楽|曲|アルバム|メディア)を(確認して|チェックして)[ください]"
+  update_library: "ライブラリを(更新して|スキャンして|リフレッシュして|再スキャンして)[ください]"
+  update_library_2: "{Library}ライブラリを(更新して|スキャンして|再スキャンして)[ください]"
+ViewLibrary:
+  show: "{Section}を(表示して|開いて)[ください]"
+  show_2: "{Genre}の{Section}を(表示して|開いて)[ください]"
+  show_me: "{Section}の一覧を見せて[ください]"
+  show_me_2: "{Genre}の{Section}の一覧を見せて[ください]"
+ViewPlaylist:
+  show_music_playlist: "(音楽|オーディオ|ビデオ|映画|番組)のプレイリスト[の]{Playlist}を(表示して|開いて)[ください]"
+  show_playlist: "プレイリスト[の]{Playlist}を(表示して|開いて)[ください]"
+  show_playlist_2: "{Playlist}のプレイリストを(表示して|開いて)[ください]"
+VolumeDown:
+  lower_volume: "音量を(下げて|小さくして)[ください]"
+  make_it_quieter: "もっと静かにして[ください]"
+  quieter: "(もっと小さく|静かに)"
+  turn_down: "(音|ボリューム)を(下げて|小さくして)[ください]"
+  volume_down: "(音量|ボリューム)ダウン"
+VolumeSet:
+  set_volume: "(音量|ボリューム)を{Level}に(して|設定して|変えて)[ください]"
+  set_volume_percent: "(音量|ボリューム)を{Level}パーセントにして[ください]"
+  volume: "(音量|ボリューム){Level}"
+VolumeUp:
+  louder: "(もっと大きく|大きく)"
+  make_it_louder: "もっと大きくして[ください]"
+  raise_volume: "音量を(上げて|大きくして)[ください]"
+  turn_up: "(音|ボリューム)を(上げて|大きくして)[ください]"
+  volume_up: "(音量|ボリューム)アップ"
+WatchEpisode:
+  play_episode_season: "[{Room}で]{Show}のシーズン{Season}のエピソード{Episode}を(再生して|見せて|かけて)[ください]"
+  play_episode_season_2: "[{Room}で]{Show}のシーズン{Season}の第{Episode}話を(再生して|見せて)[ください]"
+  play_season_episode: "[{Room}で]{Show}シーズン{Season}エピソード{Episode}を(再生して|見せて|かけて)[ください]"
+  play_season_episode_2: "[{Room}で]{Show}の{Season}期の[第]{Episode}話を(再生して|見せて)[ください]"
+WatchFirstEpisode:
+  play_first: "[{Room}で]{Show}を(最初から|はじめから)(再生して|見せて)[ください]"
+  play_first_episode: "[{Room}で]{Show}の[一番]最初のエピソードを(再生して|見せて|かけて)[ください]"
+  play_first_episode_2: "[{Room}で]{Show}の(第一話|一話目)を(再生して|見せて)[ください]"
+WatchLatestEpisode:
+  play_latest: "[{Room}で]{Show}の(最新話|最新回)を(再生して|見せて)[ください]"
+  play_latest_episode: "[{Room}で]{Show}の(最新の|一番新しい|最後の)エピソードを(再生して|見せて|かけて)[ください]"
+  play_latest_episode_2: "[{Room}で]{Show}の最新エピソードを(再生して|見せて)[ください]"
+WatchMovie:
+  i_want_watch: "[映画の]{Movie}が見たい[です]"
+  lets_watch: "[映画の]{Movie}を見よう"
+  play_film: "[{Room}で]映画[の]{Movie}を(つけて|流して)[ください]"
+  play_movie: "[{Room}で]映画[の]{Movie}を(再生して|見せて|かけて)[ください]\n映画[の]{Movie}を[{Room}で](再生して|見せて)[ください]"
+WatchMovieTrailer:
+  play_trailer: "(予告編|予告|トレーラー)を(再生して|見せて)[ください]"
+  play_trailer_2: "{Movie}の(予告編|予告|トレーラー)を(再生して|見せて)[ください]"
+  play_trailer_for: "映画[の]{Movie}の(予告編|トレーラー)を(再生して|見せて)[ください]"
+WatchMusicVideo:
+  play_music_video: "[{Room}で]ミュージックビデオ[の]{MusicVideo}を(再生して|見せて|流して)[ください]"
+  play_music_video_2: "[{Room}で]{Artist}の{MusicVideo}のミュージックビデオを(再生して|見せて)[ください]"
+  play_music_video_3: "{MusicVideo}の(ミュージックビデオ|ビデオクリップ|エムブイ)を(再生して|見せて)[ください]"
+WatchNextEpisode:
+  continue: "[{Room}で]{Show}の続きを(見せて|再生して)[ください]"
+  play_from_where: "{Show}を(途中から|前回の続きから)(再生して|見せて)[ください]"
+  play_next_episode: "[{Room}で]{Show}の次の(エピソード|話|回)を(再生して|見せて|かけて)[ください]"
+  whats_next: "{Show}の次は(何|なに)"
+WatchNextInCollection:
+  continue_collection: "{Movie}(シリーズ|コレクション)の続きを(見せて|再生して)[ください]"
+  play_next_movie: "[{Room}で]{Movie}(シリーズ|コレクション)の次の(映画|作品)を(再生して|見せて)[ください]"
+  whats_next_collection: "{Movie}(シリーズ|コレクション)の次は(何|なに)"
+WatchRandomEpisode:
+  play_episode: "[{Room}で]{Show}の(どれか|適当な|ランダムな)エピソードを(再生して|見せて)[ください]"
+  play_episode_2: "{Show}を(どれか一話|適当に一話)(再生して|見せて)[ください]"
+  play_random_episode: "[{Room}で]{Show}のエピソードをランダムに(再生して|見せて)[ください]"
+WatchRandomMovie:
+  pick_movie_for: "[{Genre}の]映画を(選んで|一本選んで)[ください]"
+  play_any_movie: "(何か|なにか)[{Genre}の]映画を(再生して|見せて|かけて)[ください]"
+  play_random_movie: "[{Room}で](ランダムに|適当に)[{Genre}の]映画を(再生して|見せて|かけて)[ください]"
+  surprise_me_with: "おまかせで[{Genre}の]映画を(再生して|見せて)[ください]"
+WatchRandomMusicVideo:
+  play_music_video: "[{Room}で](何か|ランダムに|適当に)[{Genre}の]ミュージックビデオを(再生して|見せて|流して)[ください]"
+  play_music_video_2: "(何か|ランダムに){Artist}のミュージックビデオを(再生して|見せて)[ください]"
+WatchRandomShow:
+  play_any_show: "(何か|なにか)[{Genre}の](番組|テレビ番組|ドラマ)を(再生して|見せて|かけて)[ください]"
+  play_random_show: "[{Room}で](ランダムに|適当に)[{Genre}の](番組|テレビ番組|ドラマ)を(再生して|見せて)[ください]"
+  surprise_me_with: "おまかせで[{Genre}の](番組|ドラマ)を(再生して|見せて)[ください]"
+WhatAlbums:
+  list_albums_by: "{Artist}のアルバムを(一覧にして|教えて|挙げて)[ください]"
+  what_albums_by: "{Artist}の(どんな|何の)アルバムがある[の]"
+  what_albums_do: "{Artist}のアルバムは(何がある|どれがある)[の]"
+  what_albums_has: "{Artist}は(どんな|何の)アルバムを出している[の]"
+  which_albums_by: "{Artist}のどのアルバムがある[の]"
+WhatsNew:
+  are_there_new: "(新しい|未視聴の){MediaType}(はある|はありますか)"
+  are_there_new_2: "(新しい|未視聴の){Genre}の{MediaType}(はある|はありますか)"
+  are_there_new_3: "{Show}の(新しい|未視聴の)エピソード(はある|はありますか)"
+  how_many_new: "{Show}の(新しい|未視聴の)エピソードは(何話|いくつ)(ある|ありますか)"
+  what_new_do: "どんな新しい{MediaType}がある[の]"
+  what_new_do_2: "どんな新しい{Genre}の{MediaType}がある[の]"
+  whats_new: "(何か新しいものはある|新着は何|新着を教えて)"
+  whats_new_2: "{Show}の新着は(何|ある)"
+  whats_new_watch: "新しく(見られる|聴ける)ものはある"

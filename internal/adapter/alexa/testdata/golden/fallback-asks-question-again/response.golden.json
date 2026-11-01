@@ -1,0 +1,58 @@
+{
+  "version": "1.0",
+  "sessionAttributes": {
+    "pending": [
+      {
+        "doc_id": "movie/1",
+        "ref": {
+          "kind": "movie",
+          "id": 1
+        },
+        "title": "Dune",
+        "year": 1984
+      },
+      {
+        "doc_id": "movie/2",
+        "ref": {
+          "kind": "movie",
+          "id": 2
+        },
+        "title": "Dune",
+        "year": 2021
+      }
+    ],
+    "question": {
+      "id": "match.did_you_mean",
+      "messages": {
+        "first": {
+          "id": "match.title_year",
+          "params": {
+            "title": "Dune",
+            "year": "1984"
+          }
+        },
+        "second": {
+          "id": "match.title_year",
+          "params": {
+            "title": "Dune",
+            "year": "2021"
+          }
+        }
+      }
+    }
+  },
+  "response": {
+    "outputSpeech": {
+      "type": "PlainText",
+      "text": "Sorry, I didn't catch that. Did you mean Dune from 1984 or Dune from 2021?"
+    },
+    "reprompt": {
+      "outputSpeech": {
+        "type": "PlainText",
+        "text": "Did you mean Dune from 1984 or Dune from 2021?"
+      }
+    },
+    "shouldEndSession": false
+  }
+}
+

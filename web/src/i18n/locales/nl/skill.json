@@ -1,0 +1,134 @@
+{
+  "amazon": {
+    "connect": "Verbinden in de installatiewizard",
+    "disconnect": "Verbinding verbreken",
+    "disconnectDialog": {
+      "cancel": "Annuleren",
+      "confirm": "Verbinding verbreken",
+      "description": "Encore vergeet zijn Login with Amazon-tokens. De skill blijft werken op je Echo's, maar je kunt pas opnieuw uitrollen als je opnieuw autoriseert.",
+      "title": "Verbinding met Amazon verbreken?"
+    },
+    "needsReauthorise": "Amazon accepteert het token van Encore niet meer. Autoriseer opnieuw om te kunnen blijven uitrollen.",
+    "notConnected": "Encore rolt de skill uit met je eigen Login with Amazon-beveiligingsprofiel. Verbind het om uit te rollen.",
+    "profile": "Beveiligingsprofiel",
+    "reauthorise": "Opnieuw autoriseren",
+    "title": "Amazon-ontwikkelaarsaccount",
+    "vendor": "Leverancier"
+  },
+  "autoDeployPaused": {
+    "resume": "Rol de skill zelf uit zodra het is opgelost om ze te hervatten.",
+    "title": "Automatische uitrol is gepauzeerd"
+  },
+  "autoDeployRetry": {
+    "next": "Poging {{attempts}} van {{max}} is mislukt. Volgende poging: {{time}}.",
+    "title": "Een automatische uitrol is mislukt en wordt opnieuw geprobeerd"
+  },
+  "content": {
+    "movies": "Films",
+    "music": "Muziek",
+    "musicHint": "Inclusief muziekvideo's",
+    "tv": "Tv-series"
+  },
+  "locales": {
+    "build": {
+      "degraded": "Minder titels",
+      "failed": "Mislukt",
+      "in_progress": "Bezig met bouwen",
+      "succeeded": "Geslaagd"
+    },
+    "columns": {
+      "build": "Build",
+      "built": "Gebouwd",
+      "locale": "Taalregio",
+      "size": "Grootte (van {{limit}})",
+      "titles": "Bibliotheektitels"
+    },
+    "content": {
+      "hint": "Als je er een weglaat, verdwijnen de spraakopdrachten ervan uit de skill. Muziek omvat muziekvideo's.",
+      "keepOne": "Houd minstens één van films, tv-series of muziek aan.",
+      "legend": "Wat hij kan afspelen"
+    },
+    "degradedTitles": "{{kept}} van {{total}}",
+    "empty": "Nog niets gebouwd. Rol de skill uit om voor elke ingeschakelde taalregio een model te bouwen.",
+    "enabled": {
+      "hint": "Alleen ingeschakelde taalregio's worden gebouwd en uitgerold. Een Echo kan de skill alleen gebruiken als zijn taal overeenkomt met een ervan. Wijzigingen gelden bij de volgende uitrol.",
+      "keepOne": "Houd minstens één taalregio ingeschakeld.",
+      "legend": "Taalregio's"
+    },
+    "needsDeploy": {
+      "automatic": "Wijzigingen sinds de laatste uitrol. Encore rolt ze automatisch uit zodra ze stabiel zijn.",
+      "library": "Nieuwe bibliotheektitels sinds de laatste uitrol. Encore vindt ze al; rol opnieuw uit om ze aan het skillmodel toe te voegen.",
+      "settings": "Instellingen gewijzigd sinds de laatste uitrol. Rol opnieuw uit om ze toe te passen."
+    },
+    "saved": "Taalregio's opgeslagen. Ze gelden bij de volgende uitrol.",
+    "sizeUsed": "{{locale}}: {{used}} van {{limit}} gebruikt",
+    "title": "Interactiemodel per taalregio"
+  },
+  "page": {
+    "deploy": {
+      "deploying": "Uitrollen…",
+      "failed": "Uitrol mislukt: {{reason}}",
+      "failedStep": "zie de tijdlijn voor de mislukte stap",
+      "progress": "Uitrol {{percent}}% klaar",
+      "redeploy": "Opnieuw uitrollen",
+      "running": "Uitrollen: {{step}} ({{percent}}% klaar)",
+      "starting": "starten",
+      "succeeded": "Uitrol voltooid. De skill is ingeschakeld om te testen op je Echo's."
+    },
+    "description": "De privéskill “{{name}}” in je Amazon-ontwikkelaarsaccount. Ontwikkelingsfase: werkt op Echo's die met je account zijn ingelogd.",
+    "export": "Skillpakket exporteren",
+    "title": "Alexa-skill"
+  },
+  "timeline": {
+    "amazon": {
+      "connected": "Verbonden",
+      "notConnected": "Niet verbonden",
+      "reauthorise": "Autoriseer opnieuw om te kunnen blijven uitrollen",
+      "title": "Amazon-account",
+      "vendor": "Leverancier {{vendor}} · verbonden"
+    },
+    "created": {
+      "creating": "Aanmaken…",
+      "firstDeploy": "Aangemaakt bij de eerste uitrol",
+      "title": "Skill aangemaakt"
+    },
+    "endpoint": {
+      "title": "Endpoint"
+    },
+    "label": "Uitrolstatus",
+    "models": {
+      "building": "{{locales}} bouwen…",
+      "built": "{{locales}} gebouwd",
+      "failed": "De laatste build is mislukt",
+      "notBuilt": "Nog niet gebouwd",
+      "title": "Modellen"
+    },
+    "state": {
+      "busy": "bezig",
+      "fail": "vraagt aandacht",
+      "ok": "klaar",
+      "pending": "niet gestart"
+    },
+    "testing": {
+      "failed": "Niet ingeschakeld: los de mislukte stap op en rol opnieuw uit",
+      "firstDeploy": "Na de eerste uitrol",
+      "passed": "Rooktest geslaagd {{time}}",
+      "title": "Ingeschakeld om te testen",
+      "waiting": "Wachten op de rooktest"
+    }
+  },
+  "titles": {
+    "empty": "Wordt getoond na de eerste uitrol.",
+    "inModel_one": "<count>{{n}} titel</count> in het model (bezig en recent eerst)",
+    "inModel_other": "<count>{{n}} titels</count> in het model (bezig en recent eerst)",
+    "limit": "Het model van elke taalregio moet onder de limiet van {{limit}} van Amazon blijven.",
+    "serverOnly_one": "<count>{{n}} titel</count> alleen op de server gematcht",
+    "serverOnly_other": "<count>{{n}} titels</count> alleen op de server gematcht",
+    "title": "Titels in het model"
+  },
+  "warnings": {
+    "dropped": "{{locale}}: Amazon weigerde deze titels, dus zijn ze weggelaten: {{titles}}",
+    "thinned": "{{locale}}: Amazon bouwde het model niet met alle bibliotheektitels, dus is het gebouwd met {{kept}} van {{total}}.",
+    "title": "Waarschuwingen van de laatste uitrol"
+  }
+}

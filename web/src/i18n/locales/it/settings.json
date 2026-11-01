@@ -176,7 +176,7 @@
   },
   "features": {
     "auto_deploy": {
-      "hint": "Distribuisce di nuovo la skill quando nuovi titoli della libreria, le impostazioni o un aggiornamento di Encore la cambiano. Una distribuzione non riuscita sospende questa funzione finché non distribuisci a mano.",
+      "hint": "Distribuisce di nuovo la skill quando nuovi titoli della libreria, le impostazioni o un aggiornamento di Encore la cambiano. Una distribuzione che non riesce perché Amazon è occupato o non disponibile viene ritentata alcune volte; qualsiasi altro errore sospende questa funzione finché non distribuisci a mano.",
       "title": "Distribuisci automaticamente le modifiche alla skill"
     },
     "auto_deploy_minutes": {

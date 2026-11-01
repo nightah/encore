@@ -13,8 +13,10 @@ type Options struct {
 	Invocation string
 	// SkillName overrides every locale's display name.
 	SkillName string
-	// SlotValues are supplied at build time, e.g. library titles for AMAZON.Movie. Values too long for Amazon are dropped with a warning.
+	// SlotValues are supplied at build time, e.g. library titles for AMAZON.Movie. They are cleaned of what Amazon rejects or nobody can say (Kodi formatting tags, control characters, emoji, '*'), and values left empty or too long for Amazon are dropped with a warning. Locales whose recognisers write Latin titles in their own script (ja-JP, hi-IN, ar-SA) also get each value's native-script forms as synonyms, as many as fit without taking the model past WarnModelBytes.
 	SlotValues map[string][]skillmodel.SlotValue
+	// LocaleSlotValues replaces SlotValues for the locales it names, e.g. to build one locale with fewer titles than the others. Values too long for Amazon are dropped from them too; the warning comes from SlotValues.
+	LocaleSlotValues map[string]map[string][]skillmodel.SlotValue
 	// Content lists the content groups whose intents the model includes; nil includes every group.
 	Content  []media.Content
 	Endpoint Endpoint
@@ -105,4 +107,13 @@ type CustomAPI struct {
 type ManifestEndpoint struct {
 	URI                string `json:"uri"`
 	SSLCertificateType string `json:"sslCertificateType"`
+}
+
+// nativeCandidate is one native-script form of a slot value's names that nativeSynonyms may add as a synonym.
+type nativeCandidate struct {
+	typ   string
+	index int
+	form  string
+	// rank is the form's place among the value's forms, 0 for its own name's likeliest; cost is synonymCost's.
+	rank, cost int
 }

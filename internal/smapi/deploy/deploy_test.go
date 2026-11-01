@@ -32,6 +32,8 @@ type harness struct {
 	fake     *smapitest.Server
 	proxy    *httptest.Server
 	deployer *deploy.Deployer
+	// src is what deployer builds packages from.
+	src *skillmodel.Sources
 
 	mu        sync.Mutex
 	events    []deploy.Event
@@ -104,6 +106,7 @@ func newHarness(t *testing.T, opts smapitest.Options) *harness {
 	src, err := skillmodel.Load(i18n.FS)
 	require.NoError(t, err)
 
+	h.src = src
 	h.deployer = deploy.New(client, src)
 
 	return h
@@ -531,12 +534,6 @@ func TestExportPackage(t *testing.T) {
 
 	assert.Contains(t, names, "ask-resources.json")
 	assert.Contains(t, names, "skill-package/skill.json")
-}
-
-func TestOpenPhrase(t *testing.T) {
-	assert.Equal(t, "open encore", deploy.OpenPhrase("en-AU", "encore"))
-	assert.Equal(t, "öffne encore", deploy.OpenPhrase("de-DE", "encore"))
-	assert.Empty(t, deploy.OpenPhrase("pt-BR", "encore"))
 }
 
 func TestStateNeedsDeploy(t *testing.T) {

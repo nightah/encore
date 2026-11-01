@@ -54,6 +54,9 @@ playback.playing: "Playing {title}."
 `,
 	"locales/en-AU.yaml": `
 language: en
+launch:
+  open: open {invocation}
+  skill: open the {invocation} skill
 skill_name: Encore
 invocation: encore test
 utterances:
@@ -62,6 +65,9 @@ utterances:
 `,
 	"locales/en-US.yaml": `
 language: en
+launch:
+  open: open {invocation}
+  skill: open the {invocation} skill
 skill_name: Encore
 invocation: encore test
 `,
@@ -208,11 +214,11 @@ func TestLintRules(t *testing.T) {
 			want:      "missing", sev: Error,
 		},
 		"reserved invocation word": {
-			overrides: map[string]string{"locales/en-US.yaml": "language: en\nskill_name: Encore\ninvocation: alexa remote\n"},
+			overrides: map[string]string{"locales/en-US.yaml": "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: alexa remote\n"},
 			want:      "reserved word", sev: Error,
 		},
 		"one word invocation": {
-			overrides: map[string]string{"locales/en-US.yaml": "language: en\nskill_name: Encore\ninvocation: encore\n"},
+			overrides: map[string]string{"locales/en-US.yaml": "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: encore\n"},
 			want:      "one-word invocation", sev: Warning,
 		},
 		"response placeholder mismatch": {
@@ -279,6 +285,29 @@ func TestShippedSources(t *testing.T) {
 	}
 }
 
+// TestShippedFreeTextSlotsInEveryLocale keeps the free-text slots on AMAZON.SearchQuery in every locale, Dutch included: Amazon builds nl-NL models that use it and fills it, though its slot type reference leaves nl-NL off the type's list.
+func TestShippedFreeTextSlotsInEveryLocale(t *testing.T) {
+	src, err := Load(i18n.FS)
+	require.NoError(t, err)
+
+	for _, locale := range src.LocaleNames() {
+		m, err := Build(src, locale, BuildOptions{})
+		require.NoError(t, err, locale)
+
+		got := map[string]string{}
+
+		for _, in := range m.InteractionModel.LanguageModel.Intents {
+			for _, s := range in.Slots {
+				if s.Type == "AMAZON.SearchQuery" {
+					got[in.Name] = s.Name
+				}
+			}
+		}
+
+		assert.Equal(t, map[string]string{"PlayMedia": "Query", "GlobalSearch": "Query", "TypeText": "Text", "OpenFavourite": "Favourite", "LaunchAddon": "Addon"}, got, locale)
+	}
+}
+
 func TestShippedIdentifyEchoPhrasings(t *testing.T) {
 	src, err := Load(i18n.FS)
 	require.NoError(t, err)
@@ -340,4 +369,23 @@ func TestBuildWithoutContentGroups(t *testing.T) {
 	intents, _ = names(moviesOnly)
 	assert.NotContains(t, intents, "WatchEpisode")
 	assert.Contains(t, intents, "WatchRandomMovie")
+}
+
+func TestBuildKodiInvocationUsesTheLocaleSpelling(t *testing.T) {
+	src := load(t, map[string]string{
+		"locales/en-GB.yaml": "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: encore test\nkodi_invocation: kodi player\n",
+	})
+
+	for _, tt := range []struct {
+		locale, choice, want string
+	}{
+		{"en-GB", InvocationKodi, "kodi player"},
+		{"en-GB", "", "encore test"},
+		{"en-GB", "telly", "telly"},
+		{"en-US", InvocationKodi, "kodi"},
+	} {
+		m, err := Build(src, tt.locale, BuildOptions{Invocation: tt.choice})
+		require.NoError(t, err)
+		assert.Equal(t, tt.want, m.InteractionModel.LanguageModel.InvocationName, "%s with %q", tt.locale, tt.choice)
+	}
 }

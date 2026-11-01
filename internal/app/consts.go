@@ -37,7 +37,7 @@ const (
 	recentlyAddedFor   = 14 * 24 * time.Hour
 )
 
-// wakeBudget is how long a voice request waits for a woken Kodi. Alexa allows about eight seconds per response, so this leaves room for the action itself.
+// wakeBudget is how long a voice request waits for a woken Kodi. It must stay under alexa.RequestDeadline, which answers for a request that runs longer, so this leaves room for the action itself.
 const wakeBudget = 5 * time.Second
 
 // recorderBuffer is how many entries may wait for the database before new ones are dropped. Recording must never slow down a voice response.
@@ -45,11 +45,11 @@ const recorderBuffer = 64
 
 const maxLoggedCandidates = 5
 
-// Custom slot types filled from Encore's own data.
-const (
-	roomSlot     = "KODI_ROOM"
-	playlistSlot = "KODI_PLAYLIST"
-)
+// RoomSlot is the custom slot type of room names. A deploy never thins it out, as a room left out can't be asked for.
+const RoomSlot = "KODI_ROOM"
+
+// playlistSlot is the custom slot type of playlist names.
+const playlistSlot = "KODI_PLAYLIST"
 
 // snapshotTimeout bounds one snapshot read or write, so a slow blob store can't hold up start-up or shutdown for long.
 const snapshotTimeout = 30 * time.Second

@@ -6,11 +6,38 @@ extend-exclude = [
   "i18n/lang/es/",
   "i18n/lang/fr/",
   "i18n/lang/it/",
+  "i18n/lang/ar/",
+  "i18n/lang/hi/",
+  "i18n/lang/ja/",
+  "i18n/lang/nl/",
+  "i18n/lang/pt/",
+  # Regional overlays on those translations.
+  "i18n/locales/es-MX.yaml",
+  "i18n/locales/es-US.yaml",
+  "i18n/locales/fr-CA.yaml",
   "docs/src/content/docs/voice-commands/",
+  # NLU fixtures in those languages.
+  "testdata/nlu/ar-SA.yaml",
+  "testdata/nlu/de-DE.yaml",
+  "testdata/nlu/es-ES.yaml",
+  "testdata/nlu/es-MX.yaml",
+  "testdata/nlu/es-US.yaml",
+  "testdata/nlu/fr-CA.yaml",
+  "testdata/nlu/fr-FR.yaml",
+  "testdata/nlu/hi-IN.yaml",
+  "testdata/nlu/it-IT.yaml",
+  "testdata/nlu/ja-JP.yaml",
+  "testdata/nlu/nl-NL.yaml",
+  "testdata/nlu/pt-BR.yaml",
   "web/src/i18n/locales/de/",
   "web/src/i18n/locales/es/",
   "web/src/i18n/locales/fr/",
   "web/src/i18n/locales/it/",
+  "web/src/i18n/locales/ar/",
+  "web/src/i18n/locales/hi/",
+  "web/src/i18n/locales/ja/",
+  "web/src/i18n/locales/nl/",
+  "web/src/i18n/locales/pt/",
   # Vendored, pinned upstream or generated files.
   "internal/server/apidocs/",
   "tools/smapigen/spec/",
@@ -26,6 +53,11 @@ extend-exclude = [
   "internal/fuzzy/phonetic/*/testdata/",
   # Double Metaphone's rules match letter sequences ("PN", "ALLE"), not words.
   "internal/fuzzy/phonetic/en/metaphone.go",
+  # TinySegmenter's weights are keyed by character classes ("HOM", "ONN"), not words.
+  "internal/fuzzy/tinyseg/weights.go",
+  # English spelling rules match letter sequences ("ture", "ure"), and their tests are English words split into sounds.
+  "internal/fuzzy/loanword/english.go",
+  "internal/fuzzy/loanword/loanword_test.go",
 ]
 
 # Prose is Australian English.
@@ -36,8 +68,13 @@ locale = "en-au"
 [type.md.extend-words]
 # typos reads licence (the Australian noun) as a misspelling.
 licence = "licence"
-# French examples in the contributing guide's notes for each language.
+licences = "licences"
+# TinySegmenter's licence, quoted verbatim on the credits page.
+ORGANIZATION = "ORGANIZATION"
+# Examples in the contributing guide's notes for each language: French and Québécois ("avance", "pèse sur"), Dutch ("ik wil").
 avance = "avance"
+sur = "sur"
+wil = "wil"
 # HTML attributes, HTTP status names, Amazon's button labels and API field names keep their own spelling.
 center = "center"
 unauthorized = "unauthorized"
@@ -63,6 +100,17 @@ capitulo = "capitulo"
 feld = "feld"
 ue = "ue"
 alikes = "alikes"
+# German speech the handler tests expect ("Dune von 1984 oder Dune von 2021", "das habe ich nicht verstanden").
+oder = "oder"
+habe = "habe"
+# Spanish and Portuguese speech the handler tests expect ("Hay varios", "Responde sí o no").
+varios = "varios"
+responde = "responde"
+responda = "responda"
+# Dutch speech the handler tests expect ("geen andere titels").
+titels = "titels"
+# Romaji the Japanese matcher writes katakana in (トイ, toi).
+toi = "toi"
 # Short names in the fuzzy matcher (ba: the matched part of b) and deliberate misspellings in tests.
 ba = "ba"
 # in-toto, the attestation format of SLSA provenance (encore.intoto.jsonl).
@@ -70,3 +118,5 @@ intoto = "intoto"
 abd = "abd"
 titel = "titel"
 invokation = "invokation"
+carosel = "carosel"
+fassade = "fassade"

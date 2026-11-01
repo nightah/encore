@@ -31,6 +31,13 @@ BingeShow:
   play_all: "(guarda|riproduci) tutto {Show}"
   play_all_unwatched: "(metti|mettere|riproduci|riprodurre) tutti gli episodi (non visti|rimanenti) di {Show} [(in|nel|nella) {Room}]"
   start_binge_mode: "(attiva|avvia|attivare|avviare) la modalità maratona (per|di) {Show} [(in|nel|nella) {Room}]"
+ChooseMatch:
+  answer: "{Answer}\n{Answer} per favore"
+  meant_answer: "(intendevo|intendo|voglio) {Answer}"
+  meant_which: "(intendevo|intendo|voglio) (il|la|lo) {Which}\n(intendevo|intendo|voglio) {Which}"
+  the_which: "(il|la|lo) {Which}\n(il film|la serie) {Which}"
+  which: "{Which}"
+  which_please: "(il|la|lo) {Which} per favore"
 CleanLibrary:
   clean_library: "(pulisci|ripulisci|pulire) [la] libreria\n(pulisci|ripulisci) l'archivio [{Library}]"
   clean_library_2: "(pulisci|ripulisci|pulire) la libreria {Library}"
@@ -82,6 +89,7 @@ ListenToArtist:
   play_artist: "(metti|mettere|riproduci|riprodurre|ascolta|ascoltare|fammi sentire) l'artista {Artist} [(in|nel|nella) {Room}]"
   play_music_by: "(metti|mettere|riproduci|riprodurre|ascolta|ascoltare|fammi sentire) [un po' di] (musica|canzoni) (di|dei|degli) {Artist}\n(metti|riproduci|ascolta) [un po' di] (musica|canzoni) (di|dei|degli) {Artist} (in|nel|nella) {Room}"
   play_music_by_2: "(metti|mettere|riproduci|riprodurre|ascolta|ascoltare) [un po' di] (musica|canzoni) {Genre} di {Artist} [(in|nel|nella) {Room}]"
+  play_something_by: "(metti|mettere|riproduci|riprodurre|fammi sentire) qualcosa (di|dei|degli) {Artist} [(in|nel|nella) {Room}]"
 ListenToGenre:
   play_genre: "(metti|riproduci|ascolta) il genere {Genre}"
   play_music: "(metti|mettere|riproduci|riprodurre|ascolta|ascoltare|fammi sentire) [un po' di] musica {Genre} [(in|nel|nella) {Room}]\n(metti|riproduci|ascolta) [delle] canzoni {Genre} [(in|nel|nella) {Room}]"

@@ -19,12 +19,7 @@ func Build(src *Sources, locale string, opts BuildOptions) (*InteractionModel, e
 		return nil, err
 	}
 
-	invocation := loc.Invocation
-	if opts.Invocation != "" {
-		invocation = opts.Invocation
-	}
-
-	lm := LanguageModel{InvocationName: invocation}
+	lm := LanguageModel{InvocationName: loc.InvocationName(opts.Invocation)}
 	used := map[string]bool{}
 	excluded := map[string]bool{}
 

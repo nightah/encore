@@ -58,14 +58,22 @@ func Build(src *skillmodel.Sources, opts Options) (*Package, error) {
 			return nil, fmt.Errorf("skillpkg: unknown locale %q", locale)
 		}
 
-		model, err := skillmodel.Build(src, locale, skillmodel.BuildOptions{Invocation: opts.Invocation, SlotValues: slotValues, Content: opts.Content})
-		if err != nil {
-			return nil, fmt.Errorf("skillpkg: %w", err)
+		values := slotValues
+		if own, ok := opts.LocaleSlotValues[locale]; ok {
+			values, _ = filterSlotValues(own)
 		}
 
-		data, warns, err := encodeModel(locale, model)
+		model, data, warns, err := buildModel(src, locale, opts, values)
 		if err != nil {
 			return nil, err
+		}
+
+		if withNative, added, wanted := nativeSynonyms(locale, values, WarnModelBytes-len(data)); wanted > 0 {
+			if model, data, warns, err = buildModel(src, locale, opts, withNative); err != nil {
+				return nil, err
+			}
+
+			warns = append(warns, nativeWarning(locale, added, wanted)...)
 		}
 
 		pkg.Models[locale] = model
@@ -101,6 +109,21 @@ func Build(src *skillmodel.Sources, opts Options) (*Package, error) {
 	pkg.hash = hashFiles(pkg.Files)
 
 	return pkg, nil
+}
+
+// buildModel builds and encodes locale's interaction model with the given slot values.
+func buildModel(src *skillmodel.Sources, locale string, opts Options, values map[string][]skillmodel.SlotValue) (*skillmodel.InteractionModel, []byte, []string, error) {
+	model, err := skillmodel.Build(src, locale, skillmodel.BuildOptions{Invocation: opts.Invocation, SlotValues: values, Content: opts.Content})
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("skillpkg: %w", err)
+	}
+
+	data, warns, err := encodeModel(locale, model)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+
+	return model, data, warns, nil
 }
 
 // Hash identifies the package's content. It is stable across builds and Go versions, unlike the zip's bytes might be.

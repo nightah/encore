@@ -5,6 +5,7 @@ package smapi_test
 import (
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
@@ -17,6 +18,13 @@ import (
 func liveClient(t *testing.T) *smapi.Client {
 	t.Helper()
 
+	return liveClientWith(t, "")
+}
+
+// liveClientWith starts from accessToken as an access token that hasn't expired, when it isn't empty.
+func liveClientWith(t *testing.T, accessToken string) *smapi.Client {
+	t.Helper()
+
 	id, secret, refresh := os.Getenv("SMAPI_CLIENT_ID"), os.Getenv("SMAPI_CLIENT_SECRET"), os.Getenv("SMAPI_REFRESH_TOKEN")
 	if id == "" || secret == "" || refresh == "" {
 		t.Skip("SMAPI_CLIENT_ID, SMAPI_CLIENT_SECRET and SMAPI_REFRESH_TOKEN must be set")
@@ -26,7 +34,12 @@ func liveClient(t *testing.T) *smapi.Client {
 	require.NoError(t, err)
 
 	store := &lwa.MemoryStore{}
-	require.NoError(t, store.Save(t.Context(), &oauth2.Token{RefreshToken: refresh}))
+	tok := &oauth2.Token{RefreshToken: refresh}
+	if accessToken != "" {
+		tok.AccessToken, tok.Expiry = accessToken, time.Now().Add(time.Hour)
+	}
+
+	require.NoError(t, store.Save(t.Context(), tok))
 
 	c, err := smapi.New(lc.TokenSource(store), smapi.Options{})
 	require.NoError(t, err)
@@ -56,4 +69,13 @@ func TestLiveVendorsAndSkills(t *testing.T) {
 	}
 
 	t.Logf("%d skills", len(skills))
+}
+
+func TestLiveRejectedAccessTokenIsRenewed(t *testing.T) {
+	// Amazon answers 401 to an access token it doesn't accept, however long it claims to last; the client gets a new one and repeats the request.
+	c := liveClientWith(t, "Atza|not-a-token-amazon-issued")
+
+	vendors, err := c.Vendors(t.Context())
+	require.NoError(t, err)
+	require.NotEmpty(t, vendors)
 }

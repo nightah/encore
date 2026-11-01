@@ -186,6 +186,14 @@ type deployRecord struct {
 	Automatic bool `json:"automatic"`
 }
 
+// autoDeployRetry is an automatic deploy that failed for a reason that may pass, waiting to be tried again.
+type autoDeployRetry struct {
+	// Failures counts the automatic deploys in a row that failed this way.
+	Failures int       `json:"failures"`
+	NextAt   time.Time `json:"next_at"`
+	Error    string    `json:"error"`
+}
+
 // Device is an Echo device that has talked to the skill.
 type Device struct {
 	ID                int64     `json:"id"`
@@ -430,6 +438,15 @@ type Overview struct {
 	Instances      []Instance       `json:"instances"`
 	RecentRequests []RequestSummary `json:"recent_requests"`
 	Attention      []Attention      `json:"attention"`
+	// RejectedRequests counts every stage, including the ones anything on the internet can trip and so raise no attention item.
+	RejectedRequests []RejectedRequests `json:"rejected_requests" doc:"Requests the Alexa endpoint refused since Encore started, by the check that refused them, in the order the checks run. Only stages that refused at least one request are listed."`
+}
+
+// RejectedRequests is how many requests one check of the Alexa endpoint refused.
+type RejectedRequests struct {
+	Stage  string    `json:"stage" enum:"body,unsigned,timestamp,signature,skill_id" doc:"body: unreadable, too large, undecodable or with no timestamp; unsigned: no signature headers, or a certificate URL that isn't Amazon's, so not from Alexa; timestamp: signed by Alexa but more than 150 seconds from Encore's clock; signature: a bad signature or certificate chain, or the chain couldn't be fetched; skill_id: signed by Alexa for another skill"`
+	Count  int       `json:"count" minimum:"1"`
+	LastAt time.Time `json:"last_at" doc:"When this check last refused a request"`
 }
 
 // OverviewSkill summarises the skill's deploy state.
@@ -465,10 +482,21 @@ type RequestsToday struct {
 
 // Attention is something the user should look at.
 type Attention struct {
-	Kind   string `json:"kind" doc:"unlinked_device, amazon_not_connected, amazon_reauthorise, privacy_unanswered, skill_not_deployed, needs_deploy, deploy_failed, auto_deploy_paused, instance_offline, kodi_unauthorized, no_instances"`
+	Kind   string `json:"kind" doc:"unlinked_device, amazon_not_connected, amazon_reauthorise, privacy_unanswered, skill_not_deployed, needs_deploy, deploy_failed, auto_deploy_paused, instance_offline, kodi_unauthorized, no_instances, requests_rejected, library_language"`
 	Title  string `json:"title"`
 	Detail string `json:"detail"`
-	Link   string `json:"link" doc:"A web interface route: /echo-devices, /kodi, /alexa-skill, /request-log, /library or /settings"`
+	Link   string `json:"link" doc:"A web interface route: /echo-devices, /kodi, /alexa-skill, /request-log, /library or /settings; empty when the fix is outside Encore"`
+	Stage  string `json:"stage,omitempty" enum:"timestamp,signature,skill_id" doc:"For requests_rejected, the check that refused them"`
+	Count  int    `json:"count,omitempty" doc:"For requests_rejected, how many requests the check refused in the last day"`
+	// Params carries what a translated title and detail need.
+	Params map[string]string `json:"params,omitempty" doc:"What a translation of title and detail is filled with, by name. library_language: instance (the library's source instance), language (the language most of its titles are written in) and current (its title language), as language codes such as ja or en"`
+}
+
+// libraryScripts is how many of a library's titles are written in each script another language reads, by that language.
+type libraryScripts struct {
+	source, language string
+	titles           int
+	scripts          map[string]int
 }
 
 type endpointCache struct {
@@ -769,7 +797,7 @@ type Features struct {
 	ShutdownQuits     bool    `json:"shutdown_quits" doc:"\"Shut down\" quits Kodi instead of powering off the device; a Kodi instance's own kodi[].shutdown_quits wins"`
 	ConfirmSound      bool    `json:"confirm_sound" doc:"A short sound answers commands that have nothing to say, such as pause or volume up"`
 	QueueLimit        int     `json:"queue_limit" doc:"The most items a shuffle or queue plays at once"`
-	AutoDeploy        bool    `json:"auto_deploy" doc:"Redeploy the skill on its own when what would be deployed changes; a failed automatic deploy pauses this until a deploy started by hand succeeds"`
+	AutoDeploy        bool    `json:"auto_deploy" doc:"Redeploy the skill on its own when what would be deployed changes. An automatic deploy that fails for a reason that may pass, such as Amazon being unavailable, is tried again up to three times with a growing wait; any other failure, or a fourth in a row, pauses this until a deploy started by hand succeeds"`
 	AutoDeployMinutes float64 `json:"auto_deploy_minutes" doc:"How often auto_deploy looks for changes, in minutes that can be fractional; a change goes live within two checks"`
 }
 
@@ -972,27 +1000,59 @@ type skillService struct {
 	autoSeen string
 	// simulatingUntil is when the deploy smoke test's window closes, as Unix nanoseconds; requests arriving before then came from Amazon's simulator.
 	simulatingUntil atomic.Int64
+
+	builtMu sync.Mutex
+	// built holds what the packages built recently showed, by optionsKey: the skill page and the overview's status poll ask for the same few packages over and over.
+	built map[string]builtPackage
+	// builds counts the packages actually built, not found in built.
+	builds atomic.Int64
+}
+
+// builtPackage is what the API reads off a built package: its hash and its largest model, or why it didn't build. It keeps none of the package, which can run to megabytes per locale.
+type builtPackage struct {
+	hash          string
+	largestLocale string
+	largestBytes  int
+	err           error
 }
 
 // SkillInfo is the Alexa skill page.
 type SkillInfo struct {
-	Amazon           AmazonConnection     `json:"amazon"`
-	SkillID          string               `json:"skill_id"`
-	State            string               `json:"state" enum:"live,not_deployed,deploying,failed"`
-	Invocation       string               `json:"invocation" enum:"encore,kodi" doc:"encore uses each locale's own name for it (\"kodi\" in French); kodi is \"kodi\" in every locale"`
-	InvocationName   string               `json:"invocation_name" doc:"What people say, \"Alexa, ask <invocation_name> to…\", in the first enabled locale"`
-	SkillName        string               `json:"skill_name" doc:"Empty uses each locale's default"`
-	LocalesAvailable []string             `json:"locales_available"`
-	LocalesEnabled   []string             `json:"locales_enabled"`
-	Content          []string             `json:"content" enum:"movies,tv,music" doc:"What the skill can play; music includes music videos"`
-	Endpoint         SkillEndpointInfo    `json:"endpoint"`
-	Privacy          Privacy              `json:"privacy" doc:"Each answer is null until it's given; deploys are refused until all are answered"`
-	LastDeploy       Nullable[LastDeploy] `json:"last_deploy"`
-	NeedsDeploy      bool                 `json:"needs_deploy"`
-	UpdateReason     string               `json:"update_reason" enum:"none,settings,library" doc:"Why needs_deploy is set: the skill's settings changed, or only the library titles in the model"`
-	ModelSize        Nullable[ModelSize]  `json:"model_size"`
-	AutoDeploy       bool                 `json:"auto_deploy" doc:"Whether alexa.auto_deploy redeploys the skill on its own when needs_deploy is set"`
-	AutoDeployPaused string               `json:"auto_deploy_paused" doc:"Why automatic deploys are paused until a deploy started by hand succeeds; empty when they aren't paused or alexa.auto_deploy is off"`
+	Amazon           AmazonConnection `json:"amazon"`
+	SkillID          string           `json:"skill_id"`
+	State            string           `json:"state" enum:"live,not_deployed,deploying,failed"`
+	Invocation       string           `json:"invocation" enum:"encore,kodi" doc:"encore uses each locale's own name for it (\"kodi\" in French and Brazilian Portuguese, \"انكور\" in Arabic, \"アンコール\" in Japanese); kodi is \"kodi\", or \"كودي\" and \"コディ\" where the name must be in the language's script. locale_invocations lists both choices for every locale"`
+	InvocationName   string           `json:"invocation_name" doc:"What people say, \"Alexa, ask <invocation_name> to…\": the Latin name when any enabled locale says it, else the first enabled locale's spelling"`
+	SkillName        string           `json:"skill_name" doc:"Empty uses each locale's default"`
+	LocalesAvailable []string         `json:"locales_available"`
+	LocalesEnabled   []string         `json:"locales_enabled"`
+	// LocaleInvocations spell each choice per locale: some languages write the names in their own script, and French says kodi for both.
+	LocaleInvocations []LocaleInvocation        `json:"locale_invocations" doc:"What people say in each available locale for each invocation choice"`
+	Content           []string                  `json:"content" enum:"movies,tv,music" doc:"What the skill can play; music includes music videos"`
+	Endpoint          SkillEndpointInfo         `json:"endpoint"`
+	Privacy           Privacy                   `json:"privacy" doc:"Each answer is null until it's given; deploys are refused until all are answered"`
+	LastDeploy        Nullable[LastDeploy]      `json:"last_deploy"`
+	NeedsDeploy       bool                      `json:"needs_deploy"`
+	UpdateReason      string                    `json:"update_reason" enum:"none,settings,library" doc:"Why needs_deploy is set: the skill's settings changed, or only the library titles in the model"`
+	ModelSize         Nullable[ModelSize]       `json:"model_size"`
+	AutoDeploy        bool                      `json:"auto_deploy" doc:"Whether alexa.auto_deploy redeploys the skill on its own when needs_deploy is set"`
+	AutoDeployPaused  string                    `json:"auto_deploy_paused" doc:"Why automatic deploys are paused until a deploy started by hand succeeds; empty when they aren't paused or alexa.auto_deploy is off"`
+	AutoDeployRetry   Nullable[AutoDeployRetry] `json:"auto_deploy_retry" doc:"An automatic deploy that failed for a reason that may pass, such as Amazon being unavailable or still building, which is tried again before automatic deploys pause; null when there is none or alexa.auto_deploy is off"`
+}
+
+// AutoDeployRetry is an automatic deploy that failed for a reason that may pass, waiting to be tried again.
+type AutoDeployRetry struct {
+	Attempts    int       `json:"attempts" doc:"How many automatic deploys in a row have failed this way"`
+	MaxAttempts int       `json:"max_attempts" doc:"How many may fail in a row before automatic deploys pause"`
+	NextAt      time.Time `json:"next_at" doc:"The earliest the next attempt runs, at the first automatic check from then on"`
+	Error       string    `json:"error" doc:"Why the last attempt failed"`
+}
+
+// LocaleInvocation is what people say in one locale for each invocation choice.
+type LocaleInvocation struct {
+	Locale string `json:"locale"`
+	Encore string `json:"encore"`
+	Kodi   string `json:"kodi"`
 }
 
 // AmazonConnection is the state of the Login with Amazon connection.
@@ -1023,12 +1083,20 @@ type LastDeploy struct {
 
 // LocaleDeploy is one locale's deploy result.
 type LocaleDeploy struct {
-	Locale    string     `json:"locale"`
-	Status    string     `json:"status" enum:"succeeded,failed,in_progress"`
-	Errors    []string   `json:"errors"`
-	Titles    int        `json:"titles"`
-	SizeBytes int        `json:"size_bytes"`
-	BuiltAt   *time.Time `json:"built_at"`
+	Locale    string                   `json:"locale"`
+	Status    string                   `json:"status" enum:"succeeded,failed,in_progress"`
+	Errors    []string                 `json:"errors"`
+	Titles    int                      `json:"titles"`
+	SizeBytes int                      `json:"size_bytes"`
+	BuiltAt   *time.Time               `json:"built_at"`
+	Degraded  Nullable[LocaleDegraded] `json:"degraded" doc:"Set when Amazon would not build this locale's model with every library title, so it was built with fewer and the other locales still shipped; titles and size_bytes are then what was deployed. Null otherwise"`
+}
+
+// LocaleDegraded is how a locale was built with fewer library titles than asked for.
+type LocaleDegraded struct {
+	TitlesAskedFor int      `json:"titles_asked_for" doc:"How many titles the locale's model was to have"`
+	Dropped        []string `json:"dropped" doc:"The titles Amazon's build errors named, which were left out; empty when it named none and every other title was left out instead"`
+	Reasons        []string `json:"reasons" doc:"What Amazon said when it would not build the locale with every title"`
 }
 
 // ModelSize is the largest locale's interaction model against Amazon's limit.

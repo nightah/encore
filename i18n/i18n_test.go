@@ -2,6 +2,7 @@ package i18n
 
 import (
 	"io/fs"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -152,6 +153,56 @@ func TestEmbeddedLocalesAndLanguagesMatch(t *testing.T) {
 
 	for _, lang := range langs {
 		assert.True(t, used[lang.Name()], "no locale uses lang/%s", lang.Name())
+	}
+}
+
+// es-US carries es-MX's overlay (see the comment in each file), so a change to one must reach the other.
+func TestUSSpanishFollowsMexicanSpanish(t *testing.T) {
+	overlay := func(name string) map[string]any {
+		b, err := fs.ReadFile(FS, "locales/"+name+".yaml")
+		require.NoError(t, err)
+
+		var out map[string]any
+		require.NoError(t, yaml.Unmarshal(b, &out), name)
+
+		return out
+	}
+
+	assert.Equal(t, overlay("es-MX"), overlay("es-US"))
+}
+
+// es-MX and es-US replace the responses lang/es words with the Peninsular perfect ("no he encontrado") by the preterite Latin American speakers use ("no encontré"), as their headers say. With "todavía no" the perfect is usual in the Americas too.
+func TestAmericanSpanishSaysThePreterite(t *testing.T) {
+	read := func(name string, v any) {
+		b, err := fs.ReadFile(FS, name)
+		require.NoError(t, err)
+		require.NoError(t, yaml.Unmarshal(b, v), name)
+	}
+
+	var spain map[string]string
+
+	read("lang/es/responses.yaml", &spain)
+
+	perfect := regexp.MustCompile(`(?i)\b(he|has|ha|hemos|han) \p{L}+(ado|ido)\b`)
+
+	for _, locale := range []string{"es-MX", "es-US"} {
+		var overlay struct {
+			Responses map[string]string `yaml:"responses"`
+		}
+
+		read("locales/"+locale+".yaml", &overlay)
+
+		for key, text := range spain {
+			if own, ok := overlay.Responses[key]; ok {
+				text = own
+			}
+
+			if strings.HasPrefix(text, "Todavía no") {
+				continue
+			}
+
+			assert.NotRegexp(t, perfect, text, "%s %s", locale, key)
+		}
 	}
 }
 

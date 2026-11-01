@@ -15,10 +15,14 @@ const newEpisodesWindow = 30 * 24 * time.Hour
 // candidateLimit is how many matches a filtered lookup ("X by Y") considers.
 const candidateLimit = 20
 
-// pendingBoost is added to titles offered in the previous question, so an answer like "the newer one" or a repeated title resolves to one of them.
+// pendingBoost is added to titles offered in the previous question, so a request that repeats one of their names resolves to it.
 const pendingBoost = 0.08
 
+// maxChoices is how many titles one "did you mean" question offers.
 const maxChoices = 2
+
+// maxCandidates is how many of a search's titles a "did you mean" question keeps, counting those it offers; "no" offers the rest, maxChoices at a time.
+const maxCandidates = 6
 
 // nearlyOver is when "how long is left" just says it's nearly finished.
 const nearlyOver = time.Minute
@@ -31,3 +35,15 @@ const globalSearchAddon = "script.globalsearch"
 
 // lastShows is how many recently watched shows "continue watching" tries before giving up.
 const lastShows = 5
+
+// nukta is the Devanagari sign that marks a borrowed sound (फ़ f, ज़ z), which streamKey drops.
+const nukta = "\u093c"
+
+// Positions an Answer can name among the titles a question offered.
+const (
+	AnswerFirst  = "first"
+	AnswerSecond = "second"
+	AnswerLast   = "last"
+	AnswerNewer  = "newer"
+	AnswerOlder  = "older"
+)

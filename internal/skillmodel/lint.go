@@ -7,6 +7,8 @@ import (
 	"sort"
 	"strings"
 
+	"golang.org/x/text/unicode/norm"
+
 	"github.com/nightah/encore/internal/core/media"
 )
 
@@ -39,11 +41,115 @@ func (f Finding) String() string {
 var (
 	slotRef        = regexp.MustCompile(`\{([^{}]*)\}`)
 	placeholderRef = regexp.MustCompile(`\{([A-Za-z_][A-Za-z0-9_]*)\}`)
-	// Amazon accepts letters, apostrophes, periods (for "t.v."), hyphens and spaces in samples. Digits must be spelled out.
-	sampleChars    = regexp.MustCompile(`^[\p{L}' .\-]*$`)
-	invocationRule = regexp.MustCompile(`^[a-z][a-z' .]*[a-z]$`)
-	reservedWords  = []string{"alexa", "amazon", "echo", "skill", "app", "launch", "ask", "tell", "open"}
+	// Amazon accepts letters, apostrophes, periods (for "t.v."), hyphens and spaces in samples. Digits must be spelled out. Combining marks are letters' vowel signs in Devanagari.
+	sampleChars = regexp.MustCompile(`^[\p{L}\p{M}' .\-]*$`)
+
+	latinInvocation = regexp.MustCompile(`^\p{Ll}[\p{Ll}' .]*\p{Ll}$`)
+	latinOnly       = regexp.MustCompile(`^[\p{Latin}' .]*$`)
+	// latinWord is a lowercase Latin word among words of another script: an English word in Hindi, a loanword in Arabic.
+	latinWord      = regexp.MustCompile(`^\p{Latin}[\p{Latin}'.]*$`)
+	devanagariWord = regexp.MustCompile(`^[\p{Devanagari}\p{M}]+$`)
+	arabicWord     = regexp.MustCompile(`^[\p{Arabic}\p{M}]+$`)
+	// Japanese names are kana and kanji, with an acronym's Latin letters each lowercase and followed by a space.
+	japaneseInvocation = regexp.MustCompile(`^(?:[a-z] |[\p{Hiragana}\p{Katakana}\p{Han}ー])*[\p{Hiragana}\p{Katakana}\p{Han}ー]$`)
+	digit              = regexp.MustCompile(`\p{N}`)
+
+	// Sample words of each script, with the apostrophes, periods and hyphens samples may hold; Latin words must also be lowercase (lowercaseLatin).
+	latinSample      = regexp.MustCompile(`^[\p{Latin}\p{M}'.\-]+$`)
+	devanagariSample = regexp.MustCompile(`^[\p{Devanagari}\p{M}'.\-]+$`)
+	arabicSample     = regexp.MustCompile(`^[\p{Arabic}\p{M}'.\-]+$`)
+	japaneseLetter   = regexp.MustCompile(`^[\p{Hiragana}\p{Katakana}\p{Han}ー]$`)
+
+	// reservedWords are banned from invocation names in every language: Amazon's own names and English launch words.
+	reservedWords = []string{"alexa", "amazon", "echo", "skill", "app", "launch", "ask", "tell", "open"}
+
+	// languageReserved are each language's own spellings of the banned names and the launch words Amazon lists for it.
+	languageReserved = map[string][]string{
+		"ar": {"اليكسا", "امازون", "ايكو", "تطبيق", "افتحي", "شغلي"},
+		"fr": {"appli", "application"},
+		"hi": {"अलेक्सा", "एलेक्सा", "ऐलेक्सा", "ऐमेज़ोन", "ऐको", "स्किल", "ऐप"},
+		"ja": {"アレクサ", "アマゾン", "エコー", "スキル", "アプリ", "起動して", "使って", "開いて", "スタート", "開始", "実行"},
+		"nl": {"start", "speel", "open", "vraag"},
+		"pt": {"aplicativo", "começar", "iniciar", "abrir"},
+	}
+
+	// scripts are the rules of the languages not written in Latin script, by language; every other language follows latinScript.
+	scripts = map[string]scriptRules{
+		"ar": {
+			invocation:    wordsOf(arabicWord),
+			message:       "must be Arabic words, or lowercase Latin for loanwords Arabic can't spell, separated by single spaces",
+			sampleWord:    nativeOrLatin(arabicSample),
+			sampleMessage: "Arabic or lowercase Latin",
+		},
+		"hi": {
+			invocation:    wordsOf(devanagariWord),
+			message:       "must be Devanagari words, or lowercase Latin for English words, separated by single spaces",
+			sampleWord:    nativeOrLatin(devanagariSample),
+			sampleMessage: "Devanagari or lowercase Latin",
+		},
+		"ja": {
+			invocation:    japaneseInvocation.MatchString,
+			message:       "must be Hiragana, Katakana or Kanji, with Latin letters only for acronyms, each lowercase and followed by a space",
+			sampleWord:    japaneseSampleWord,
+			sampleMessage: "Hiragana, Katakana, Kanji or lowercase Latin",
+			unspaced:      true,
+		},
+	}
+
+	latinScript = scriptRules{
+		invocation:    func(name string) bool { return latinInvocation.MatchString(name) && latinOnly.MatchString(name) },
+		message:       "must be lowercase letters, spaces, apostrophes or periods",
+		sampleWord:    lowercaseLatin,
+		sampleMessage: "lowercase Latin",
+	}
 )
+
+// scriptOf returns the rules for a language's script.
+func scriptOf(language string) scriptRules {
+	if s, ok := scripts[language]; ok {
+		return s
+	}
+
+	return latinScript
+}
+
+// lowercaseLatin reports whether a sample word is lowercase Latin.
+func lowercaseLatin(word string) bool {
+	return latinSample.MatchString(word) && word == strings.ToLower(word)
+}
+
+// japaneseSampleWord accepts a run of Japanese text, which has no spaces, when every character is kana, kanji or ー, or belongs to a lowercase Latin word written straight against them ("{Movie}をplayして").
+func japaneseSampleWord(word string) bool {
+	for _, r := range word {
+		if c := string(r); !japaneseLetter.MatchString(c) && !lowercaseLatin(c) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// nativeOrLatin accepts a sample word in the native script or, as Amazon allows for English words and loanwords, in lowercase Latin.
+func nativeOrLatin(native *regexp.Regexp) func(string) bool {
+	return func(word string) bool { return native.MatchString(word) || lowercaseLatin(word) }
+}
+
+// wordsOf accepts names of single-space-separated words, each either a native word or a lowercase Latin one, and no digits.
+func wordsOf(native *regexp.Regexp) func(string) bool {
+	return func(name string) bool {
+		if name == "" || digit.MatchString(name) {
+			return false
+		}
+
+		for w := range strings.SplitSeq(name, " ") {
+			if !native.MatchString(w) && (!latinWord.MatchString(w) || w != strings.ToLower(w)) {
+				return false
+			}
+		}
+
+		return true
+	}
+}
 
 // Lint checks the sources for problems that would fail an Alexa model build, cause intents to collide, or leave responses untranslated.
 func Lint(src *Sources) []Finding {
@@ -214,10 +320,21 @@ func (l *linter) locale(locale string) {
 		return
 	}
 
-	l.invocation(locale, loc.Invocation)
+	l.script = scriptOf(loc.Language)
+	l.invocation(locale, loc.Language, loc.Invocation)
+
+	if loc.KodiInvocation != "" {
+		l.invocation(locale, loc.Language, loc.KodiInvocation)
+	}
 
 	if loc.SkillName == "" {
 		l.add(Error, locale, "", "skill_name is required")
+	}
+
+	l.launch(locale, loc.Launch)
+
+	if _, err := l.src.Types(locale); err != nil {
+		l.add(Error, locale, "", "%v", strings.TrimPrefix(err.Error(), "locale "+locale+": "))
 	}
 
 	utterances, _ := l.src.Utterances(locale)
@@ -252,22 +369,27 @@ func (l *linter) locale(locale string) {
 	}
 }
 
-func (l *linter) invocation(locale, name string) {
-	if !invocationRule.MatchString(name) {
-		l.add(Error, locale, "", "invocation name %q must be lowercase letters, spaces, apostrophes or periods", name)
+func (l *linter) invocation(locale, language, name string) {
+	script := l.script
+	name = norm.NFC.String(name)
+
+	if !script.invocation(name) {
+		l.add(Error, locale, "", "invocation name %q %s", name, script.message)
 
 		return
 	}
 
-	for _, w := range strings.Fields(name) {
-		for _, r := range reservedWords {
-			if w == r {
-				l.add(Error, locale, "", "invocation name %q contains the reserved word %q", name, r)
-			}
+	words := strings.Fields(name)
+
+	for _, r := range append(slices.Clone(reservedWords), languageReserved[language]...) {
+		r = norm.NFC.String(r)
+
+		if slices.Contains(words, r) || script.unspaced && strings.Contains(name, r) {
+			l.add(Error, locale, "", "invocation name %q contains the reserved word %q", name, r)
 		}
 	}
 
-	if len(strings.Fields(name)) == 1 {
+	if !script.unspaced && len(words) == 1 {
 		l.add(Warning, locale, "", "one-word invocation name %q is fine for a private skill but would need brand proof to certify", name)
 	}
 }
@@ -280,9 +402,9 @@ func (l *linter) sample(locale string, in Intent, pattern, sample string, exact,
 
 	refs := slotRef.FindAllStringSubmatch(sample, -1)
 
-	// Amazon fails to parse a slot joined to other text, such as the possessive "{Artist}'s".
+	// Amazon fails to parse a slot joined to other text, such as the possessive "{Artist}'s". Japanese writes no spaces, and its particles follow the slot directly ("{Movie}を再生して").
 	for _, loc := range slotRef.FindAllStringIndex(sample, -1) {
-		if (loc[0] > 0 && sample[loc[0]-1] != ' ') || (loc[1] < len(sample) && sample[loc[1]] != ' ') {
+		if !l.script.unspaced && ((loc[0] > 0 && sample[loc[0]-1] != ' ') || (loc[1] < len(sample) && sample[loc[1]] != ' ')) {
 			l.add(Error, locale, in.Name, "sample %q joins slot %s to other text; Amazon needs a space on each side (rephrase possessives such as \"{Artist}'s\")", sample, sample[loc[0]:loc[1]])
 		}
 	}
@@ -306,6 +428,14 @@ func (l *linter) sample(locale string, in Intent, pattern, sample string, exact,
 
 	if text := slotRef.ReplaceAllString(sample, ""); !sampleChars.MatchString(text) {
 		l.add(Error, locale, in.Name, "sample %q may only contain letters, spaces, apostrophes, periods and hyphens (spell out numbers)", sample)
+	} else {
+		for w := range strings.FieldsSeq(text) {
+			if !l.script.sampleWord(w) {
+				l.add(Error, locale, in.Name, "sample %q has the word %q, which isn't %s", sample, w, l.script.sampleMessage)
+
+				break
+			}
+		}
 	}
 
 	key := strings.ToLower(sample)
@@ -423,4 +553,21 @@ func placeholders(s string) string {
 	sort.Strings(names)
 
 	return "[" + strings.Join(names, ", ") + "]"
+}
+
+// launch checks a locale's launch phrases: an open phrase and a skill phrase are required, and each phrase names the invocation once.
+func (l *linter) launch(locale string, launch Launch) {
+	if launch.Open == "" {
+		l.add(Error, locale, "", "launch.open is required: the phrase that opens the skill, with %s where its name goes", InvocationPlaceholder)
+	}
+
+	if launch.Skill == "" {
+		l.add(Error, locale, "", "launch.skill is required: the phrase that opens the skill by calling it a skill, with %s where its name goes", InvocationPlaceholder)
+	}
+
+	for _, p := range append([]string{launch.Open, launch.Skill}, launch.Also...) {
+		if p != "" && strings.Count(p, InvocationPlaceholder) != 1 {
+			l.add(Error, locale, "", "launch phrase %q must name %s once", p, InvocationPlaceholder)
+		}
+	}
 }

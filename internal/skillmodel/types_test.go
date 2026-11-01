@@ -113,7 +113,7 @@ func TestLintKeysMustBeInReference(t *testing.T) {
 	src := load(t, map[string]string{
 		"lang/de/utterances.yaml": "WatchMovie:\n  play: \"spiel den film {Movie}\"\n  extra: \"zeig mir {Movie}\"\n",
 		"lang/de/responses.yaml":  "playback.playing: \"Spiele {title}.\"\n",
-		"locales/de-DE.yaml":      "language: de\nskill_name: Encore\ninvocation: encore test\n",
+		"locales/de-DE.yaml":      "language: de\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: encore test\n",
 	})
 
 	got := messages(Lint(src), Error)

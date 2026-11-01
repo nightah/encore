@@ -1,0 +1,73 @@
+{
+  "detail": {
+    "alexaSaid": "قالت Alexa",
+    "callFailed": "(فشل)",
+    "candidates": {
+      "label": "المرشحات للمطابقة",
+      "none": "لا توجد مرشحات.",
+      "score": "{{title}}: النتيجة {{score}}",
+      "unlinked": "جهاز Echo هذا غير مرتبط بمثيل Kodi، ولم يُعيَّن مثيل افتراضي لأجهزة Echo غير المرتبطة."
+    },
+    "copied": "تم النسخ",
+    "copy": "نسخ JSON",
+    "intent": "النية",
+    "kodiCalls": "استدعاءات Kodi",
+    "loading": "جارٍ تحميل الطلب…",
+    "noCalls": "لا شيء.",
+    "replay": "إعادة التنفيذ (تجريبي)",
+    "replayResult": {
+      "label": "نتيجة إعادة التنفيذ",
+      "noCalls": "لا توجد استدعاءات لـ Kodi.",
+      "title": "إعادة التنفيذ على الفهرس الحالي (دون المساس بـ Kodi)",
+      "topMatch": "أفضل تطابق: {{title}}، {{score}}.",
+      "wouldCall": "سيستدعي",
+      "wouldSay": "ستقول Alexa: «{{speech}}»"
+    },
+    "silent": "لا شيء (صامت).",
+    "slots": "الخانات",
+    "target": {
+      "label": "مثيل Kodi المستهدف",
+      "none": "لا شيء",
+      "unlinked": "لا شيء (الجهاز غير مرتبط)"
+    },
+    "timing": {
+      "fallback": "Encore {{encore}} · Kodi {{kodi}} · الإجمالي {{total}}",
+      "label": "التوقيت",
+      "split": "التحقق {{verify}} · المطابقة {{match}} · Kodi {{kodi}} · الإجمالي {{total}}"
+    },
+    "via": {
+      "alias": "<spoken>{{spoken}}</spoken> اسم آخر لـ <room>{{room}}</room>",
+      "device": "<spoken>{{spoken}}</spoken> جهاز في <room>{{room}}</room>"
+    }
+  },
+  "empty": {
+    "filtered": "جرّب بحثًا مختلفًا أو امسح عوامل التصفية.",
+    "filteredTitle": "لا توجد طلبات مطابقة",
+    "none": "تظهر الطلبات هنا بمجرد أن يتحدث جهاز Echo إلى Encore. قل «Alexa، اسأل {{invocation}} ماذا يُعرض الآن.»",
+    "noneNoInvocation": "تظهر الطلبات هنا بمجرد أن يتحدث جهاز Echo إلى Encore.",
+    "noneTitle": "لا توجد طلبات بعد"
+  },
+  "filters": {
+    "allDevices": "كل أجهزة Echo",
+    "allOutcomes": "كل النتائج",
+    "device": "جهاز Echo",
+    "deviceById": "جهاز Echo رقم {{id}}",
+    "label": "تصفية الطلبات",
+    "outcome": "النتيجة",
+    "search": "البحث فيما سُمع",
+    "unnamedDevice": "جهاز Echo بلا اسم"
+  },
+  "list": {
+    "label": "الطلبات",
+    "loading": "جارٍ تحميل الطلبات…",
+    "loadOlder": "تحميل طلبات أقدم"
+  },
+  "live": {
+    "off": "جارٍ إعادة الاتصال…",
+    "on": "مباشر",
+    "retention": "يُحتفظ بآخر 500 طلب أو 7 أيام"
+  },
+  "newRequest": "طلب جديد من {{device}}{{heard}}",
+  "title": "سجل الطلبات",
+  "unnamedDevice": "جهاز Echo بلا اسم"
+}

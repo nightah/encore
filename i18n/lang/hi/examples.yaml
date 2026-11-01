@@ -1,0 +1,66 @@
+# Example values for the dynamic slot types in model.yaml (hi): deploys replace them with what is set up in Encore. Chosen for this language rather than translated, so not on Crowdin.
+
+KODI_MUSIC_VIDEO:
+  - {value: तुम ही हो, synonyms: [tum hi ho]}
+  - {value: केसरिया, synonyms: [kesariya]}
+  - {value: छैयां छैयां, synonyms: [chaiyya chaiyya]}
+  - {value: लुंगी डांस, synonyms: [lungi dance]}
+  - {value: thriller}
+
+# Examples only, extended from the library when available.
+KODI_PLAYLIST:
+  - {value: सफ़र, synonyms: [रोड ट्रिप]}
+  - {value: पार्टी}
+  - {value: वर्कआउट, synonyms: [जिम]}
+  - {value: पुराने गाने, synonyms: [ओल्ड इज़ गोल्ड]}
+  - {value: बच्चों के लिए}
+  - {value: भजन}
+  - {value: रोमांटिक}
+
+# Examples only: deploys replace them with the rooms set up in Encore. Utterances say "{Room} में" ("बेडरूम में"), so values carry no postposition.
+KODI_ROOM:
+  - {value: लिविंग रूम, synonyms: [ड्रॉइंग रूम, बैठक]}
+  - {value: हॉल}
+  - {value: बेडरूम, synonyms: [सोने का कमरा]}
+  - {value: मास्टर बेडरूम}
+  - {value: बच्चों का कमरा, synonyms: [किड्स रूम]}
+  - {value: गेस्ट रूम, synonyms: [मेहमानों का कमरा]}
+  - {value: रसोई, synonyms: [किचन]}
+  - {value: स्टडी रूम, synonyms: [पढ़ाई का कमरा]}
+  - {value: ऑफ़िस, synonyms: [दफ़्तर]}
+  - {value: होम थिएटर, synonyms: [मीडिया रूम]}
+  - {value: छत}
+  - {value: पूजा घर}
+
+# Examples only, extended from the library when available.
+MEDIA_GENRE:
+  - {value: एक्शन}
+  - {value: एडवेंचर}
+  - {value: एनिमेशन, synonyms: [कार्टून]}
+  - {value: कॉमेडी, synonyms: [हास्य]}
+  - {value: क्राइम}
+  - {value: डॉक्यूमेंट्री}
+  - {value: ड्रामा}
+  - {value: फ़ैमिली, synonyms: [पारिवारिक]}
+  - {value: फ़ैंटेसी}
+  - {value: हॉरर, synonyms: [डरावनी]}
+  - {value: बच्चों की, synonyms: [किड्स]}
+  - {value: मिस्ट्री, synonyms: [रहस्य]}
+  - {value: रोमांस, synonyms: [रोमांटिक]}
+  - {value: साइंस फ़िक्शन, synonyms: [साइ फ़ाई]}
+  - {value: थ्रिलर}
+  - {value: बॉलीवुड}
+  - {value: फ़िल्मी, synonyms: [फ़िल्मी गाने]}
+  - {value: ग़ज़ल}
+  - {value: क़व्वाली}
+  - {value: भजन, synonyms: [भक्ति]}
+  - {value: शास्त्रीय, synonyms: [क्लासिकल]}
+  - {value: सूफ़ी}
+  - {value: पंजाबी, synonyms: [भांगड़ा]}
+  - {value: इंडी पॉप}
+  - {value: पॉप}
+  - {value: रॉक}
+  - {value: हिप हॉप, synonyms: [रैप]}
+  - {value: इलेक्ट्रॉनिक, synonyms: [डांस]}
+  - {value: लोक संगीत, synonyms: [फ़ोक]}
+  - {value: साउंडट्रैक}

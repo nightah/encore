@@ -25,6 +25,10 @@ type Server struct {
 	failLocales map[string]string
 	// unreported are locales left out of the skill status, as when a failed import is rolled back before Amazon records a build.
 	unreported map[string]bool
+	// valueLimits, keyed by "<locale>/<slot type>", fail a locale's build when its model holds more values of the slot type than the limit.
+	valueLimits map[string]int
+	// rejected fail the build of any locale whose model has one of these slot values or synonyms.
+	rejected map[string]bool
 	// unimported are locales left out of an import's resources, so their builds are known only from the skill status.
 	unimported  map[string]bool
 	uploads     map[string][]byte
@@ -35,6 +39,9 @@ type Server struct {
 	statusPolls map[string]int
 	sims        map[string]*simJob
 	unresolved  int
+	reaches     map[string]bool
+	profiles    map[string][]NLUAnswer
+	profiled    map[string]int
 }
 
 // Options configure the fake.
@@ -96,6 +103,16 @@ type importJob struct {
 type problem struct {
 	Code    string `json:"code,omitempty"`
 	Message string `json:"message"`
+}
+
+// NLUAnswer is one profileNlu answer: the selected intent ("" for none) with its slot words and the IDs some of them resolve to, and the intents considered besides. A non-zero Status fails the call with that HTTP status instead.
+type NLUAnswer struct {
+	Intent       string
+	Slots        map[string]string
+	Resolved     map[string]string
+	Considered   []string
+	SessionEnded bool
+	Status       int
 }
 
 type simJob struct {

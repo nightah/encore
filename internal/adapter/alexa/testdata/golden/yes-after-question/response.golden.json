@@ -3,12 +3,12 @@
   "response": {
     "outputSpeech": {
       "type": "PlainText",
-      "text": "Playing Dune."
+      "text": "Playing Hot Fuzz."
     },
     "card": {
       "type": "Simple",
       "title": "Encore",
-      "content": "Playing Dune."
+      "content": "Playing Hot Fuzz."
     },
     "shouldEndSession": true
   }

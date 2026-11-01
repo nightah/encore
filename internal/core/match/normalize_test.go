@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"unicode"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -137,6 +138,7 @@ func TestNormalize(t *testing.T) {
 		{"it", "ottocento ottantatré", "883"},
 		{"it", "centottanta", "180"},
 		{"it", "millenovecentottantotto", "1988"},
+		{"it", "milione milioni", "1000000 1000000"},
 		{"it", "centouno", "101"},
 		{"it", "centuno", "101"},
 		{"it", "duemila", "2000"},
@@ -184,6 +186,11 @@ func TestNormalize(t *testing.T) {
 		{"fr", "8½", "8 et demi"},
 		{"es", "8½", "8 y medio"},
 		{"es", "ocho y medio", "8 y medio"},
+		// Every script's decimal digits are ASCII digits, and read as numbers.
+		{"en", "۱۹۸۴", "1984"},
+		{"en", "１９８４", "1984"},
+		{"en", "rocky ٢", "rocky 2"},
+		{"en", "Rocky ２nd", "rocky 2"},
 		// Locale codes and unknown languages.
 		{"de-DE", "Die Ärzte", "arzte"},
 		{"en_GB", "The Crown", "crown"},
@@ -194,6 +201,90 @@ func TestNormalize(t *testing.T) {
 		t.Run(tt.lang+"/"+tt.in, func(t *testing.T) {
 			assert.Equal(t, tt.want, Normalize(tt.lang, tt.in))
 		})
+	}
+}
+
+func TestASCIIDigit(t *testing.T) {
+	// asciiDigit relies on every unbroken run of decimal digits being whole runs of ten from zero.
+	for r := rune(0); r <= unicode.MaxRune; r++ {
+		if !unicode.IsDigit(r) || unicode.IsDigit(r-1) {
+			continue
+		}
+
+		hi := r
+		for unicode.IsDigit(hi + 1) {
+			hi++
+		}
+
+		assert.Zero(t, (hi-r+1)%10, "%U-%U", r, hi)
+	}
+
+	tests := map[rune]rune{'7': '7', '०': '0', '९': '9', '٣': '3', '۷': '7', '৫': '5', '๙': '9', '𝟠': '8'}
+
+	for in, want := range tests {
+		assert.Equal(t, want, asciiDigit(in), "%U", in)
+	}
+}
+
+func TestLanguageHooks(t *testing.T) {
+	tests := []struct {
+		name string
+		edit func(l *language)
+		in   string
+		want string
+	}{
+		{"none", func(*language) {}, "Xy Zw", "xy zw"},
+		{"folds", func(l *language) { l.folds = map[rune]string{'x': "ks", 'カ': "か"} }, "Xylo", "ksylo"},
+		{"folds before letterFolds", func(l *language) { l.folds = map[rune]string{'ß': "s"} }, "Straße", "strase"},
+		{"folds keep voicing", func(l *language) { l.folds = map[rune]string{'カ': "か"} }, "ガカ", "がか"},
+		{"split", func(l *language) { l.split = splitEvery(2) }, "abcdef gh", "ab cd ef gh"},
+		{"split before letter runs", func(l *language) { l.split = splitEvery(1) }, "abc", "abc"},
+		{"prefixes", func(l *language) { l.articlePrefixes = []string{"al", "wal"} }, "alfoo walbar baz", "foo bar baz"},
+		{"longest prefix", func(l *language) { l.articlePrefixes = []string{"w", "wal"} }, "walbar", "bar"},
+		{"prefix minimum", func(l *language) { l.articlePrefixes = []string{"al"}; l.articlePrefixMin = 3 }, "alto alfoo", "alto foo"},
+		{"prefix never empties", func(l *language) { l.articlePrefixes = []string{"al"} }, "al", "al"},
+		{"prefix before articles", func(l *language) { l.articlePrefixes = []string{"x"} }, "xthe matrix", "matrix"},
+		{"romanize", func(l *language) { l.romanize = strings.ToUpper }, "abc de", "ABC DE"},
+		{"romanize drops empty", func(l *language) { l.romanize = func(t string) string { return strings.TrimPrefix(t, "x") } }, "x abc", "abc"},
+		{"romanize splits", func(l *language) { l.romanize = func(t string) string { return t + " " + t } }, "ab", "ab ab"},
+		{"romanize after prefixes", func(l *language) {
+			l.articlePrefixes = []string{"ال"}
+			l.romanize = func(t string) string { return map[string]string{"ملك": "malik", "الملك": "almalik"}[t] }
+		}, "الملك", "malik"},
+		{"prefix runes", func(l *language) { l.articlePrefixes = []string{"ال"}; l.articlePrefixMin = 2 }, "الملك الم", "ملك الم"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			l := english()
+			tt.edit(l)
+
+			got := l.normalize(tt.in, false)
+			if l.foreignOwner(tt.in) != nil {
+				// Another language reads this script in a normalised string, so the language's own hooks are checked alone.
+				got = l.ownWords(l.tokenize(tt.in))
+			}
+
+			assert.Equal(t, tt.want, strings.Join(got, " "))
+		})
+	}
+}
+
+// splitEvery splits each token into pieces of n bytes, standing in for a word segmenter.
+func splitEvery(n int) func([]string) []string {
+	return func(toks []string) []string {
+		var out []string
+
+		for _, tok := range toks {
+			for len(tok) > n {
+				out = append(out, tok[:n])
+				tok = tok[n:]
+			}
+
+			out = append(out, tok)
+		}
+
+		return out
 	}
 }
 
@@ -277,5 +368,115 @@ func TestNormalizeFrenchVigesimal(t *testing.T) {
 
 	for _, tt := range tests {
 		assert.Equal(t, tt.want, Normalize("fr", tt.in), tt.in)
+	}
+}
+
+func TestStopWord(t *testing.T) {
+	for _, tc := range []struct {
+		lang, word string
+		want       bool
+	}{
+		{"en", "the", true},
+		{"en", "The", true},
+		{"en", "of", true},
+		{"en", "frozen", false},
+		{"en", "the movie", false},
+		{"fr", "le", true},
+		{"de", "den", true},
+		{"ja", "の", true},
+		{"ja", "映", false},
+		{"pt-BR", "o", true},
+		{"en", "", false},
+	} {
+		if got := StopWord(tc.lang, tc.word); got != tc.want {
+			t.Errorf("StopWord(%q, %q) = %v, want %v", tc.lang, tc.word, got, tc.want)
+		}
+	}
+}
+
+func TestArticle(t *testing.T) {
+	assert.True(t, Article("en", "The"))
+	assert.True(t, Article("fr-FR", "la"))
+	assert.False(t, Article("en", "of"), "a stop word that is no article")
+	assert.False(t, Article("ja", "の"))
+	assert.False(t, Article("en", "the end"))
+}
+
+// TestNormalizeOtherScripts checks that text in a script another language reads goes through that language's rules whatever the library's language, and that the library's own script keeps its own.
+func TestNormalizeOtherScripts(t *testing.T) {
+	tests := []struct {
+		lang, in, want string
+	}{
+		// Kana, Devanagari and Arabic in an English or German library.
+		{"en", "クイーン", "kuin"},
+		{"en", "タイタニック", "taitanikku"},
+		{"de", "दंगल", "dangal"},
+		{"en", "تايتانك", "taytank"},
+		// Each script's own segmentation, fused articles and folds.
+		{"en", "トイストーリー3", "toisutori 3"},
+		{"fr", "الملك", "mlk"},
+		{"en", "وجدة", Normalize("ar", "وجدة")},
+		// Number words and parts of the script's language, and a run of digits staying with the run before it.
+		{"en", "धूम दो", "dhoom 2"},
+		{"en", "भाग 2", "2"},
+		{"en", "توي ستوري ٣", "tuy sturi 3"},
+		// A leading article of the script's language.
+		{"en", "ذا ماتريكس", "matriks"},
+		// Latin text next to it keeps the library's rules.
+		{"en", "The Matrix クイーン", "matrix kuin"},
+		{"de", "Der Pate दंगल", "pate dangal"},
+		{"en", "abcदंगल", "abc dangal"},
+		{"en", "ｶﾞﾝﾀﾞﾑ", "gandamu"},
+		{"en", "दंगल २०१६", "dangal 2016"},
+		{"en", "فيلم ٢٠٢١", "film 2021"},
+		// ヴ is the v of the Latin title another library holds, and the b line Japanese says it as in a Japanese library.
+		{"en", "マーヴェリック", "maverikku"},
+		{"en", "ドライヴ", "doraivu"},
+		{"ja", "マーヴェリック", "maberikku"},
+		{"ja", "ドライヴ", "doraibu"},
+		// A library in Japanese, Hindi or Arabic reads its own script as it always has.
+		{"ja", "トイストーリー3", "toisutori 3"},
+		{"hi", "धूम दो", "dhoom 2"},
+		{"ar", "ذا ماتريكس", "matriks"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.lang+"/"+tt.in, func(t *testing.T) {
+			assert.Equal(t, tt.want, Normalize(tt.lang, tt.in))
+		})
+	}
+}
+
+// TestTokenizeScripts checks what tokenize keeps of each script's letters and marks, ahead of the rules scriptWords applies to them.
+func TestTokenizeScripts(t *testing.T) {
+	tests := []struct {
+		in, want string
+	}{
+		// Devanagari keeps its vowel signs, nasalisation, virama and nukta, which are combining marks, and splits nothing at the spacing ones.
+		{"दिल चाहता है", "दिल चाहता है"},
+		{"हँसी तो फँसी", "हँसी तो फँसी"},
+		{"क्या कहना", "क्या कहना"},
+		{"ज़िंदगी", "ज़िंदगी"},
+		{"ज़िंदगी", "ज़िंदगी"},
+		// Kana keep their voicing: が stays が (U+304C) rather than か, and halfwidth katakana compose to the fullwidth letters.
+		{"が か ぱ ば は", "が か ぱ ば は"},
+		{"ガンダム", "ガンダム"},
+		{"ｶﾞﾝﾀﾞﾑ", "ガンダム"},
+		{"千と千尋の神隠し", "千と千尋の神隠し"},
+		{"ドラゴンボールZ", "ドラゴンボールz"},
+		// Arabic harakat, hamza and tatweel and Hebrew points are dropped.
+		{"مُحَمَّد", "محمد"},
+		{"أحمد إسلام آمن", "احمد اسلام امن"},
+		{"محـــمد", "محمد"},
+		{"שָׁלוֹם", "שלום"},
+		// Every script's decimal digits are ASCII digits.
+		{"दंगल २०१६", "दंगल 2016"},
+		{"فيلم ٢٠٢١", "فيلم 2021"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.in, func(t *testing.T) {
+			assert.Equal(t, tt.want, strings.Join(english().tokenize(tt.in), " "))
+		})
 	}
 }

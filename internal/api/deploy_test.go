@@ -143,6 +143,27 @@ func TestLocaleResults(t *testing.T) {
 		}, s.localeResults(res, pkg, nil, opts))
 	})
 
+	t.Run("degraded", func(t *testing.T) {
+		t.Parallel()
+
+		res := &deploy.Result{
+			Locales: map[string]deploy.LocaleStatus{"en-GB": {Status: smapi.StatusSucceeded}, "en-AU": {Status: smapi.StatusFailed}},
+			Degraded: map[string]deploy.Degradation{
+				"en-GB": {Reason: []smapi.Problem{{Code: "INVALID_INTERACTION_MODEL", Message: "too large"}}, Kept: 2, Total: 3, Bytes: 900},
+				"en-AU": {Kept: 1, Total: 3},
+			},
+		}
+
+		got := s.localeResults(res, pkg, nil, opts)
+		require.Len(t, got, 2)
+		assert.Nil(t, got[0].Degraded.V, "a locale that failed anyway isn't reported as built with fewer titles")
+		assert.Equal(t, 3, got[0].Titles)
+		assert.Equal(t, LocaleDeploy{
+			Locale: "en-GB", Status: "succeeded", Errors: []string{}, Titles: 2, SizeBytes: 900, BuiltAt: &now,
+			Degraded: Some(LocaleDegraded{TitlesAskedFor: 3, Dropped: []string{}, Reasons: []string{"INVALID_INTERACTION_MODEL: too large"}}),
+		}, got[1])
+	})
+
 	t.Run("skipped", func(t *testing.T) {
 		t.Parallel()
 
@@ -359,7 +380,7 @@ func TestSkillModelSizeUnit(t *testing.T) {
 
 			s := &skillService{a: &API{libraries: tc.libs}}
 
-			ms := s.modelSize(t.Context(), pkg, skillpkg.Options{SlotValues: values})
+			ms := s.modelSize(t.Context(), builtOf(pkg, nil), skillpkg.Options{SlotValues: values})
 			assert.Equal(t, ModelSize{LimitBytes: skillpkg.MaxModelBytes, Locale: "en-GB", Bytes: 1300, TitlesInModel: 3, TitlesServerOnly: tc.serverOnly}, ms, "the largest model counts against the limit")
 		})
 	}

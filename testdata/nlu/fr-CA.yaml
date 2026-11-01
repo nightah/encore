@@ -1,0 +1,148 @@
+# NLU checks for fr-CA: run them with make nlu (see internal/smapi/nlu). Each row is an utterance, the intent Alexa should pick and the slots it should fill; an empty slot value takes any words, and a value of a custom type may be its ID. Mark a row pending, with why, while the model that makes it pass isn't deployed yet.
+locale: fr-CA
+cases:
+  # Every intent, in model order, in the language's own words.
+  - {utterance: "annule", intent: AMAZON.CancelIntent}
+  - {utterance: "aide", intent: AMAZON.HelpIntent}
+  - {utterance: "arrête", intent: AMAZON.StopIntent}
+  - {utterance: "retour à l'accueil", intent: AMAZON.NavigateHomeIntent}
+  - {utterance: "des éléphants violets dansent sur la lune", intent: AMAZON.FallbackIntent}
+  - {utterance: "mets en pause la télé", intent: AMAZON.PauseIntent}
+  - {utterance: "reprends la télé", intent: AMAZON.ResumeIntent}
+  - {utterance: "suivant", intent: AMAZON.NextIntent}
+  - {utterance: "précédent", intent: AMAZON.PreviousIntent}
+  - {utterance: "recommence", intent: AMAZON.StartOverIntent}
+  - {utterance: "oui", intent: AMAZON.YesIntent}
+  - {utterance: "non", intent: AMAZON.NoIntent}
+  - {utterance: "lecture aléatoire activée", intent: AMAZON.ShuffleOnIntent}
+  - {utterance: "lecture aléatoire désactivée", intent: AMAZON.ShuffleOffIntent}
+  - {utterance: "mode répétition activé", intent: AMAZON.LoopOnIntent}
+  - {utterance: "mode répétition désactivé", intent: AMAZON.LoopOffIntent}
+  - {utterance: "je veux regarder le film intouchables", intent: WatchMovie, slots: {Movie: "intouchables"}}
+  - {utterance: "continue à regarder lupin", intent: WatchNextEpisode, slots: {Show: "lupin"}}
+  - {utterance: "trouve intouchables", intent: PlayMedia, slots: {Query: "intouchables"}}
+  - {utterance: "la deuxième s'il te plaît", intent: ChooseMatch, slots: {Which: "second"}, pending: "ChooseMatch is in the model from the next deploy"}
+  - {utterance: "choisis moi un film de comédie", intent: WatchRandomMovie, slots: {Genre: ""}}
+  - {utterance: "mets la bande-annonce", intent: WatchMovieTrailer}
+  - {utterance: "continue la saga intouchables", intent: WatchNextInCollection, slots: {Movie: "intouchables"}}
+  - {utterance: "mets lupin épisode 3 saison 2", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "lupin"}}
+  - {utterance: "mets lupin depuis le début", intent: WatchFirstEpisode, slots: {Show: "lupin"}}
+  - {utterance: "mets le dernier lupin", intent: WatchLatestEpisode, slots: {Show: "lupin"}}
+  - {utterance: "reprends ma dernière série", intent: ContinueWatching}
+  - {utterance: "mets un épisode de lupin au hasard", intent: WatchRandomEpisode, slots: {Show: "lupin"}}
+  - {utterance: "mets n'importe quelle série de comédie", intent: WatchRandomShow, slots: {Genre: ""}}
+  - {utterance: "mets lupin en mode aléatoire", intent: ShuffleShow, slots: {Show: "lupin"}}
+  - {utterance: "enchaîne les épisodes de lupin", intent: BingeShow, slots: {Show: "lupin"}}
+  - {utterance: "mets l'artiste stromae", intent: ListenToArtist, slots: {Artist: "stromae"}}
+  - {utterance: "mélange l'artiste stromae", intent: ShuffleArtist, slots: {Artist: "stromae"}}
+  - {utterance: "mets l'album racine carrée", intent: ListenToAlbum, slots: {Album: "racine carrée"}}
+  - {utterance: "mélange l'album racine carrée", intent: ShuffleAlbum, slots: {Album: "racine carrée"}}
+  - {utterance: "mets le dernier album de stromae", intent: ListenToLatestAlbum, slots: {Artist: "stromae"}}
+  - {utterance: "mélange le dernier album de stromae", intent: ShuffleLatestAlbum, slots: {Artist: "stromae"}}
+  - {utterance: "mets la chanson papaoutai", intent: ListenToSong, slots: {Song: "papaoutai"}}
+  - {utterance: "mets papaoutai de stromae", intent: ListenToSongOrAlbum, slots: {Artist: "stromae", Title: "papaoutai"}}
+  - {utterance: "mets de la musique du genre comédie", intent: ListenToGenre, slots: {Genre: ""}}
+  - {utterance: "je veux écouter mes nouvelles chansons", intent: ListenToRecentSongs}
+  - {utterance: "c'est l'heure de faire la fête", intent: PartyMode}
+  - {utterance: "mets le clip de bohemian rhapsody", intent: WatchMusicVideo, slots: {MusicVideo: ""}}
+  - {utterance: "mets un clip du genre comédie au hasard", intent: WatchRandomMusicVideo, slots: {Genre: ""}}
+  - {utterance: "mélange tous les clips du genre comédie", intent: ShuffleMusicVideos, slots: {Genre: ""}}
+  - {utterance: "mets la playlist musicale voyage", intent: PlayPlaylist, slots: {Playlist: ""}}
+  - {utterance: "mets la playlist voyage en aléatoire", intent: ShufflePlaylist, slots: {Playlist: ""}}
+  - {utterance: "donne-moi une recommandation de film", intent: Recommend, slots: {MediaType: "movie"}}
+  - {utterance: "y a-t-il de nouveaux film à regarder", intent: WhatsNew, slots: {MediaType: "movie"}}
+  - {utterance: "liste les albums de stromae", intent: WhatAlbums, slots: {Artist: "stromae"}}
+  - {utterance: "recule de cinq minutes", intent: PlayerSeek, slots: {Duration: "", SeekDirection: "back"}}
+  - {utterance: "rembobine de cinq minutes", intent: PlayerRewind, slots: {Duration: ""}}
+  - {utterance: "va à la minute 30", intent: PlayerSeekTo, slots: {Minute: "30"}}
+  - {utterance: "mode répétition tout", intent: Repeat, slots: {RepeatMode: "all"}}
+  - {utterance: "zoome", intent: PlayerZoom}
+  - {utterance: "tourne dans le sens des aiguilles d'une montre", intent: PlayerRotate, slots: {Rotation: "clockwise"}}
+  - {utterance: "déplace l'image vers le bas", intent: PlayerMove, slots: {Direction: "down"}}
+  - {utterance: "quitte le plein écran", intent: Fullscreen}
+  - {utterance: "mode trois d.", intent: StereoscopicMode}
+  - {utterance: "active l'audio numérique", intent: AudioPassthrough}
+  - {utterance: "mets le volume à 30", intent: VolumeSet, slots: {Level: "30"}}
+  - {utterance: "plus fort", intent: VolumeUp}
+  - {utterance: "mets moins fort", intent: VolumeDown}
+  - {utterance: "sourdine", intent: Mute}
+  - {utterance: "qu'est-ce que je regarde", intent: CurrentPlayItemEnquiry}
+  - {utterance: "combien de temps reste-t-il pour ce film", intent: CurrentPlayItemTimeRemaining}
+  - {utterance: "comment s'appelle cet echo", intent: IdentifyEcho}
+  - {utterance: "suivants les sous-titres", intent: Subtitles, slots: {SubtitleAction: "next"}}
+  - {utterance: "piste audio suivante", intent: AudioStream, slots: {Step: "next"}}
+  - {utterance: "va retour", intent: Navigate, slots: {NavAction: "back"}}
+  - {utterance: "entre le texte bonjour", intent: TypeText, slots: {Text: ""}}
+  - {utterance: "montre les films", intent: ViewLibrary, slots: {Section: "movies"}}
+  - {utterance: "montre la playlist musicale voyage", intent: ViewPlaylist, slots: {Playlist: ""}}
+  - {utterance: "ouvre mon favori france inter", intent: OpenFavourite, slots: {Favourite: ""}}
+  - {utterance: "lance youtube", intent: LaunchAddon, slots: {Addon: ""}}
+  - {utterance: "fais une recherche globale de intouchables", intent: GlobalSearch, slots: {Query: "intouchables"}}
+  - {utterance: "veille prolongée kodi", intent: Power, slots: {PowerAction: "hibernate"}}
+  - {utterance: "éjecte", intent: EjectMedia}
+  - {utterance: "regarde s'il y a de nouveaux films", intent: UpdateLibrary}
+  - {utterance: "nettoie la bibliothèque", intent: CleanLibrary}
+  # Answers to "did you mean …?".
+  - {utterance: "oui s'il te plaît", intent: AMAZON.YesIntent}
+  - {utterance: "non merci", intent: AMAZON.NoIntent}
+  - {utterance: "je veux dire le plus ancien", intent: ChooseMatch, slots: {Which: "older"}, pending: "ChooseMatch is in the model from the next deploy"}
+  - {utterance: "je voulais dire l'autre", intent: ChooseMatch, slots: {Which: "second"}, pending: "ChooseMatch is in the model from the next deploy"}
+  # Bare titles, which free-text and title slots compete for.
+  - {utterance: "joue intouchables", intent: PlayMedia, slots: {Query: "intouchables"}}
+  # Rooms.
+  - {utterance: "mets le film intouchables dans le séjour", intent: WatchMovie, slots: {Movie: "intouchables", Room: ""}}
+  - {utterance: "continue à regarder lupin dans le séjour", intent: WatchNextEpisode, slots: {Room: "", Show: "lupin"}}
+  - {utterance: "mets de la musique de stromae dans le séjour", intent: ListenToArtist, slots: {Artist: "stromae", Room: ""}}
+  - {utterance: "pause dans le séjour", intent: RoomControl, slots: {Command: "pause", Room: ""}}
+  - {utterance: "pause la lecture dans le séjour", intent: RoomControl, slots: {Command: "pause", Room: ""}}
+  # Episodes and seasons, including the one-shot forms.
+  - {utterance: "mets lupin saison 2 épisode 3", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "lupin"}}
+  - {utterance: "mets la saison 2 épisode 3 de lupin", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "lupin"}}
+  - {utterance: "mets lupin saison 2 épisode 3 dans le séjour", intent: WatchEpisode, slots: {Episode: "3", Room: "", Season: "2", Show: "lupin"}}
+  - {utterance: "mets le prochain épisode de lupin", intent: WatchNextEpisode, slots: {Show: "lupin"}}
+  - {utterance: "mets le dernier épisode de lupin", intent: WatchLatestEpisode, slots: {Show: "lupin"}}
+  - {utterance: "mets le premier épisode de lupin", intent: WatchFirstEpisode, slots: {Show: "lupin"}}
+  - {utterance: "mets le tout premier épisode de lupin", intent: WatchFirstEpisode, slots: {Show: "lupin"}}
+  - {utterance: "fais jouer le premier épisode de lupin", intent: WatchFirstEpisode, slots: {Show: "lupin"}}
+  # Music by an artist, including the one-shot forms.
+  - {utterance: "mets de la musique de stromae", intent: ListenToArtist, slots: {Artist: "stromae"}}
+  - {utterance: "je veux écouter de la musique de stromae", intent: ListenToArtist, slots: {Artist: "stromae"}}
+  - {utterance: "mets la chanson papaoutai de stromae", intent: ListenToSong, slots: {Artist: "stromae", Song: "papaoutai"}}
+  - {utterance: "mets l'album racine carrée de stromae", intent: ListenToAlbum, slots: {Album: "racine carrée", Artist: "stromae"}}
+  - {utterance: "mélange la musique de stromae", intent: ShuffleArtist, slots: {Artist: "stromae"}}
+  - {utterance: "mets de la musique de stromae en aléatoire", intent: ShuffleArtist, slots: {Artist: "stromae"}}
+  - {utterance: "je veux écouter le dernier album de stromae", intent: ListenToLatestAlbum, slots: {Artist: "stromae"}}
+  - {utterance: "mets le dernier disque de stromae", intent: ListenToLatestAlbum, slots: {Artist: "stromae"}}
+  # This locale's own phrasings.
+  - {utterance: "mets ça sur pause", intent: AMAZON.PauseIntent}
+  - {utterance: "pèse sur pause", intent: AMAZON.PauseIntent}
+  - {utterance: "fais jouer l'album racine carrée", intent: ListenToAlbum, slots: {Album: "racine carrée"}}
+  - {utterance: "fais jouer l'album racine carrée de stromae", intent: ListenToAlbum, slots: {Album: "racine carrée", Artist: "stromae"}}
+  - {utterance: "fais jouer de la musique de stromae", intent: ListenToArtist, slots: {Artist: "stromae"}}
+  - {utterance: "fais jouer de la musique comédie", intent: ListenToGenre, slots: {Genre: ""}}
+  - {utterance: "mets la toune papaoutai", intent: ListenToSong, slots: {Song: "papaoutai"}}
+  - {utterance: "mets la toune papaoutai de stromae", intent: ListenToSong, slots: {Artist: "stromae", Song: "papaoutai"}}
+  - {utterance: "fais jouer papaoutai de stromae", intent: ListenToSongOrAlbum, slots: {Artist: "stromae", Title: "papaoutai"}}
+  - {utterance: "pèse sur retour", intent: Navigate, slots: {NavAction: "back"}}
+  - {utterance: "pèse sur retour 2 fois", intent: Navigate, slots: {Count: "2", NavAction: "back"}}
+  - {utterance: "fais jouer intouchables", intent: PlayMedia, slots: {Query: "intouchables"}}
+  - {utterance: "fais jouer la playlist voyage", intent: PlayPlaylist, slots: {Playlist: ""}}
+  - {utterance: "veille prolongée l'ordi", intent: Power, slots: {PowerAction: "hibernate"}}
+  - {utterance: "qu'est-ce qu'on écoute ce soir", intent: Recommend}
+  - {utterance: "qu'est-ce que je devrais écouter comme film", intent: Recommend}
+  - {utterance: "fais jouer lupin saison 2 épisode 3", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "lupin"}}
+  - {utterance: "fais jouer l'épisode 3 de la saison 2 de lupin", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "lupin"}}
+  - {utterance: "fais jouer le dernier épisode de lupin", intent: WatchLatestEpisode, slots: {Show: "lupin"}}
+  - {utterance: "fais jouer le film intouchables", intent: WatchMovie, slots: {Movie: "intouchables"}}
+  - {utterance: "je veux écouter le film intouchables", intent: WatchMovie, slots: {Movie: "intouchables"}}
+  - {utterance: "on écoute le film intouchables", intent: WatchMovie, slots: {Movie: "intouchables"}}
+  - {utterance: "mets le vidéoclip de bohemian rhapsody", intent: WatchMusicVideo, slots: {MusicVideo: ""}}
+  - {utterance: "mets le vidéoclip de bohemian rhapsody par stromae", intent: WatchMusicVideo, slots: {Artist: "stromae", MusicVideo: ""}}
+  - {utterance: "mets l'émission lupin", intent: WatchNextEpisode, slots: {Show: "lupin"}}
+  - {utterance: "fais jouer le prochain épisode de lupin", intent: WatchNextEpisode, slots: {Show: "lupin"}}
+  - {utterance: "continue l'émission lupin", intent: WatchNextEpisode, slots: {Show: "lupin"}}
+  - {utterance: "fais jouer un épisode au hasard de lupin", intent: WatchRandomEpisode, slots: {Show: "lupin"}}
+  - {utterance: "fais jouer un film de comédie au hasard", intent: WatchRandomMovie, slots: {Genre: ""}}
+  - {utterance: "je veux écouter un film de comédie", intent: WatchRandomMovie, slots: {Genre: ""}}
+  - {utterance: "mets une émission de comédie au hasard", intent: WatchRandomShow, slots: {Genre: ""}}
+  - {utterance: "je veux écouter une émission de comédie", intent: WatchRandomShow, slots: {Genre: ""}}

@@ -1,6 +1,7 @@
 import type { RecentTitle, Room, Settings, SkillInfo } from "@api/generated/model";
 import {
   LOCALES,
+  LOCALE_INVOCATIONS,
   type MockDb,
   type Scenario,
   ago,
@@ -74,6 +75,7 @@ function skill(now: number, fresh: boolean): SkillInfo {
         },
     auto_deploy: !fresh,
     auto_deploy_paused: "",
+    auto_deploy_retry: null,
     content: ["movies", "tv", "music"],
     endpoint: {
       url: "https://encore.example.net/api/v1/alexa",
@@ -91,6 +93,7 @@ function skill(now: number, fresh: boolean): SkillInfo {
           locales: [
             {
               built_at: ago(40 * MIN, now),
+              degraded: null,
               errors: [],
               locale: "en-AU",
               size_bytes: 1_120_000,
@@ -101,6 +104,7 @@ function skill(now: number, fresh: boolean): SkillInfo {
           state: "succeeded",
           warnings: [],
         },
+    locale_invocations: LOCALE_INVOCATIONS,
     locales_available: LOCALES,
     locales_enabled: ["en-AU"],
     model_size: fresh
@@ -346,6 +350,7 @@ export function createDb(scenario: Scenario = "configured", now = Date.now()): M
     nextId: 5000,
     publicUrl: fresh ? "" : "https://encore.example.net",
     recent: fresh ? {} : recent(now),
+    rejectedRequests: [],
     requests: fresh ? [] : [...sampleRequests(now), ...olderRequests(now)],
     rooms: fresh ? [] : rooms(),
     scenario,

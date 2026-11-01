@@ -60,11 +60,29 @@ type Language struct {
 
 // Locale is a per-locale overlay on its language.
 type Locale struct {
-	Language   string              `yaml:"language"`
-	SkillName  string              `yaml:"skill_name"`
-	Invocation string              `yaml:"invocation"`
-	Utterances map[string][]string `yaml:"utterances"`
-	Responses  map[string]string   `yaml:"responses"`
+	Language   string `yaml:"language"`
+	SkillName  string `yaml:"skill_name"`
+	Invocation string `yaml:"invocation"`
+	// KodiInvocation is how the locale writes the "kodi" invocation choice (InvocationKodi), for a language whose script can't use the Latin name. Empty means "kodi".
+	KodiInvocation string              `yaml:"kodi_invocation"`
+	Utterances     map[string][]string `yaml:"utterances"`
+	Responses      map[string]string   `yaml:"responses"`
+	// Types adds synonyms to static slot type values, by type name and value ID, for the words the locale's speakers use where its language's types.yaml has others ("computadora" beside "ordenador").
+	Types map[string]map[string][]string `yaml:"types"`
+	// Launch is how the locale's speakers open the skill.
+	Launch Launch `yaml:"launch"`
+}
+
+// Launch is a locale's phrases for opening the skill without a request, each with {invocation} where the invocation name goes. They come from the launch phrases Amazon lists for the language.
+type Launch struct {
+	// Open is the phrase the voice command pages lead with and the deploy's smoke test says.
+	Open string `yaml:"open"`
+	// Also are other launch phrases Amazon lists for the language.
+	Also []string `yaml:"also"`
+	// Skill names the invocation as a skill ("open the encore skill"), for when Alexa doesn't take the name alone for one.
+	Skill string `yaml:"skill"`
+	// PlainOpenFails marks a locale where a plain open phrase hasn't been seen to reach the skill in Amazon's simulator, so the pages lead with Skill.
+	PlainOpenFails bool `yaml:"plain_open_fails"`
 }
 
 // keyedSection is one intent or slot type of a keyed file, its entries in file order.
@@ -123,7 +141,7 @@ type ModelTypeValue struct {
 
 // BuildOptions are the user-specific inputs to a build.
 type BuildOptions struct {
-	// Invocation overrides the locale's default invocation name.
+	// Invocation overrides the locale's default invocation name. InvocationKodi picks the locale's own spelling of it (Locale.KodiInvocation).
 	Invocation string
 	// SlotValues supplies values per slot type at build time, for custom types and for extending built-in types such as AMAZON.Movie with library titles. For a dynamic type they replace the language's example values.
 	SlotValues map[string][]SlotValue
@@ -150,6 +168,20 @@ type Finding struct {
 type linter struct {
 	src      *Sources
 	findings []Finding
+	// script is the rules of the language of the locale being checked.
+	script scriptRules
+}
+
+// scriptRules are the invocation name and sample rules of the languages written in one script.
+type scriptRules struct {
+	// invocation reports whether a name uses only what Amazon allows in the script, and message says what that is.
+	invocation func(name string) bool
+	message    string
+	// sampleWord reports whether one word of a sample, slots left out, is written in the script, and sampleMessage says what that is.
+	sampleWord    func(word string) bool
+	sampleMessage string
+	// unspaced scripts write words without spaces (Japanese): particles attach straight to a slot, a reserved word counts anywhere in a name, and a name has no words to count.
+	unspaced bool
 }
 
 type sampleOwner struct {

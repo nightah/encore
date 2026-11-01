@@ -42,7 +42,7 @@ export function Dialog({ open, onClose, title, description, children, footer, si
             <BaseDialog.Close
               aria-label={t("actions.close")}
               className={cn(
-                "-mt-1.5 -mr-1.5 inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-btn-hover hover:text-ink",
+                "-mt-1.5 -me-1.5 inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-btn-hover hover:text-ink",
                 focusRing,
               )}
             >

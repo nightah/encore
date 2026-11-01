@@ -31,6 +31,13 @@ BingeShow:
   play_all: "(spiele|spiel) [alle] (folgen|episoden) von {Show} am stück [(im|in der) {Room}]"
   play_all_unwatched: "(spiele|spiel) alle (ungesehenen|restlichen|übrigen) (folgen|episoden) von {Show} [(im|in der) {Room}]"
   start_binge_mode: "(starte|start) den binge modus für {Show} [(im|in der) {Room}]"
+ChooseMatch:
+  answer: "{Answer}\n{Answer} bitte"
+  meant_answer: "ich (meine|meinte|will|möchte) {Answer}"
+  meant_which: "ich (meine|meinte|will|möchte) (den|die|das) {Which}"
+  the_which: "(den|die|das) {Which} [film|serie]"
+  which: "{Which}"
+  which_please: "(den|die|das) {Which} bitte"
 CleanLibrary:
   clean_library: "(bereinige|bereinig|säubere|räum) [die|meine] bibliothek [auf]\nbibliothek (bereinigen|säubern|aufräumen)"
   clean_library_2: "(bereinige|bereinig|säubere|räum) [die|meine] {Library} bibliothek [auf]\n{Library} bibliothek (bereinigen|säubern|aufräumen)"
@@ -83,8 +90,9 @@ ListenToAlbum:
   play_album_by: "(spiele|spiel) [mir] das album {Album} von {Artist} [(im|in der) {Room}]"
 ListenToArtist:
   play_artist: "(spiele|spiel) [mir] (den künstler|die künstlerin|die band|den interpreten|die interpretin) {Artist} [(im|in der) {Room}]"
-  play_music_by: "(spiele|spiel) [mir] [etwas] musik von {Artist} [(im|in der) {Room}]\n(spiele|spiel) [mir] [ein paar] (lieder|songs) von {Artist} [(im|in der) {Room}]\nich (möchte|will) [etwas] (musik|lieder) von {Artist} hören\nmusik von {Artist} (zu spielen|abzuspielen)"
+  play_music_by: "(spiele|spiel) [mir] [etwas] musik von {Artist} [(im|in der) {Room}]\n(spiele|spiel) [mir] [ein paar] (lieder|songs) von {Artist} [(im|in der) {Room}]\nich (möchte|will) [etwas] (musik|lieder) von {Artist} hören\nmusik von {Artist} (zu spielen|abzuspielen)\n(mach|mache) [mir] [etwas] musik von {Artist} an"
   play_music_by_2: "(spiele|spiel) [mir] {Genre} (musik|lieder|songs) von {Artist} [(im|in der) {Room}]"
+  play_something_by: "(spiele|spiel) [mir] etwas von {Artist} [(im|in der) {Room}]\n(mach|mache) [mir] etwas von {Artist} an"
 ListenToGenre:
   play_genre: "(spiele|spiel) [mir] musik aus dem genre {Genre} [(im|in der) {Room}]"
   play_music: "(spiele|spiel|mach|mache) [mir] [etwas] {Genre} (musik|lieder|songs) [an] [(im|in der) {Room}]\nich (möchte|will) [etwas] {Genre} (musik|hören)"

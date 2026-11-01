@@ -92,6 +92,16 @@ func parseDuration(s string) (time.Duration, bool) {
 	return total, total > 0
 }
 
+// mediaTypeKinds maps the MEDIA_TYPE IDs that name one kind of title to it, for the kind words a title slot may hold (Speech.StripKind).
+var mediaTypeKinds = map[string]media.Kind{
+	"movie":      media.KindMovie,
+	"tvshow":     media.KindTVShow,
+	"musicvideo": media.KindMusicVideo,
+	"artist":     media.KindArtist,
+	"album":      media.KindAlbum,
+	"song":       media.KindSong,
+}
+
 // recommendKinds maps a MEDIA_TYPE ID to what to recommend; "watch" and "listen" are Kanzi's generic video and audio recommendations.
 var recommendKinds = map[string][]media.Kind{
 	"movie":      {media.KindMovie},

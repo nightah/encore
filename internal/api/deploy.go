@@ -11,6 +11,7 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 
+	"github.com/nightah/encore/internal/app"
 	"github.com/nightah/encore/internal/smapi"
 	"github.com/nightah/encore/internal/smapi/deploy"
 	"github.com/nightah/encore/internal/smapi/lwa"
@@ -208,7 +209,7 @@ func (s *skillService) startDeploy(ctx context.Context, force, automatic bool) (
 
 	s.rememberEndpoint(ctx, opts.Endpoint.URI)
 
-	req := deploy.Request{State: state, Package: opts, Force: force, Simulate: true}
+	req := deploy.Request{State: state, Package: opts, Force: force, Simulate: true, KeepSlots: []string{app.RoomSlot}}
 	if loc, err := s.a.localeSettings(ctx); err == nil {
 		req.PrimaryLocale = loc.DefaultLocale
 	}
@@ -276,12 +277,13 @@ func (s *skillService) runDeploy(ctx context.Context, d *deploy.Deployer, rec *d
 		_ = s.a.app.DB().Settings().Set(context.WithoutCancel(ctx), reauthKey, true)
 	}
 
-	// A failed automatic deploy pauses the rest until someone looks; any deploy that succeeds resumes them.
+	// A failed automatic deploy is tried again a few times if the failure may pass, and otherwise pauses the rest until someone looks; any deploy that succeeds resumes them.
 	switch {
 	case err == nil:
+		s.setAutoDeployRetry(context.WithoutCancel(ctx), nil)
 		s.setAutoDeployPaused(context.WithoutCancel(ctx), "")
 	case rec.Automatic:
-		s.setAutoDeployPaused(context.WithoutCancel(ctx), err.Error())
+		s.autoDeployFailed(context.WithoutCancel(ctx), err)
 	}
 
 	s.mu.Lock()
@@ -362,6 +364,17 @@ func (s *skillService) localeResults(res *deploy.Result, pkg *skillpkg.Package, 
 			for _, p := range ls.Errors {
 				ld.Errors = append(ld.Errors, p.String())
 			}
+		}
+
+		if d, ok := res.Degraded[loc]; ok && ld.Status == "succeeded" {
+			ld.Titles, ld.SizeBytes = d.Kept, d.Bytes
+
+			reasons := make([]string, 0, len(d.Reason))
+			for _, p := range d.Reason {
+				reasons = append(reasons, p.String())
+			}
+
+			ld.Degraded = Some(LocaleDegraded{TitlesAskedFor: d.Total, Dropped: nonNil(d.Dropped), Reasons: reasons})
 		}
 
 		out = append(out, ld)

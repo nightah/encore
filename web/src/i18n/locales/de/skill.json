@@ -19,6 +19,10 @@
     "resume": "Stelle den Skill von Hand bereit, sobald das behoben ist, um sie fortzusetzen.",
     "title": "Automatische Bereitstellungen sind pausiert"
   },
+  "autoDeployRetry": {
+    "next": "Versuch {{attempts}} von {{max}} ist fehlgeschlagen. Nächster Versuch ab {{time}}.",
+    "title": "Eine automatische Bereitstellung ist fehlgeschlagen und wird wiederholt"
+  },
   "content": {
     "movies": "Filme",
     "music": "Musik",
@@ -27,6 +31,7 @@
   },
   "locales": {
     "build": {
+      "degraded": "Weniger Titel",
       "failed": "Fehlgeschlagen",
       "in_progress": "Wird erstellt",
       "succeeded": "Erfolgreich"
@@ -43,6 +48,7 @@
       "keepOne": "Lass mindestens Filme, Serien oder Musik aktiviert.",
       "legend": "Was der Skill abspielen kann"
     },
+    "degradedTitles": "{{kept}} von {{total}}",
     "empty": "Noch nichts erstellt. Stelle den Skill bereit, um für jedes aktivierte Gebietsschema ein Modell zu erstellen.",
     "enabled": {
       "hint": "Nur aktivierte Gebietsschemas werden erstellt und bereitgestellt. Ein Echo kann den Skill nur nutzen, wenn seine Sprache zu einem davon passt. Änderungen gelten ab der nächsten Bereitstellung.",
@@ -121,6 +127,8 @@
     "title": "Titel im Modell"
   },
   "warnings": {
+    "dropped": "{{locale}}: Amazon hat diese Titel abgelehnt, daher wurden sie weggelassen: {{titles}}",
+    "thinned": "{{locale}}: Amazon hat das Modell nicht mit allen Titeln aus der Mediathek erstellt, daher wurde es mit {{kept}} von {{total}} erstellt.",
     "title": "Warnungen aus der letzten Bereitstellung"
   }
 }

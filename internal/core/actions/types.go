@@ -56,18 +56,20 @@ type Via struct {
 	Spoken, Kind, Room string
 }
 
-// Message is a localisable message: an ID from the response catalogue and its placeholder values. An empty ID means say nothing.
+// Message is a localisable message: an ID from the response catalogue and its placeholder values. An empty ID means say nothing. It round-trips through assistant session state as JSON, so a question can be asked again.
 type Message struct {
-	ID     string
-	Params map[string]string
+	ID     string            `json:"id"`
+	Params map[string]string `json:"params,omitempty"`
 	// Durations are placeholder values the renderer words for the listener's language, e.g. "1 hour 12 minutes".
-	Durations map[string]time.Duration
+	Durations map[string]time.Duration `json:"durations,omitempty"`
 	// Times are clock times the renderer words for the listener, e.g. "9:42 pm".
-	Times map[string]time.Time
+	Times map[string]time.Time `json:"times,omitempty"`
 	// Languages are language codes (BCP 47 or ISO 639-2) the renderer names in the listener's language, e.g. "fre" becomes "French".
-	Languages map[string]string
+	Languages map[string]string `json:"languages,omitempty"`
 	// Lists are joined the listener's way, e.g. "Dune, Alien and Heat".
-	Lists map[string][]string
+	Lists map[string][]string `json:"lists,omitempty"`
+	// Messages are placeholder values that are messages themselves, rendered in the listener's language, e.g. a title with its year.
+	Messages map[string]Message `json:"messages,omitempty"`
 }
 
 // Choice is one option offered in a "did you mean" question. It round-trips through assistant session state as JSON.
@@ -90,6 +92,8 @@ type Outcome struct {
 	Followup *Followup
 	// Confirm marks a success with nothing to say, which the adapter may acknowledge with a sound.
 	Confirm bool
+	// AskAgain means an answer chose none of a question's titles: the adapter asks the question again after Say, whose {question} placeholder it fills, keeping the question's choices.
+	AskAgain bool
 	// Played is the item that started playing, if any.
 	Played *media.Item
 	// Match is the search result behind the outcome, for the request log.
@@ -107,6 +111,8 @@ type Followup struct {
 	Recommend *RecommendRequest `json:"recommend,omitempty"`
 	// Confirm is a system command waiting for "yes".
 	Confirm media.SystemCommand `json:"confirm,omitempty"`
+	// More are the titles a "did you mean" question found but hasn't offered yet; "no" offers them next.
+	More []Choice `json:"more,omitempty"`
 }
 
 // Service runs actions.
@@ -152,8 +158,18 @@ type TitleRequest struct {
 	Kinds []media.Kind
 	// Hints boosts specific documents, e.g. Alexa's own entity resolution.
 	Hints map[string]float64
+	// Resolved are the values Alexa's entity resolution matched the request to, scored as candidates (match.Query.Resolved).
+	Resolved []match.Resolved
 	// Pending are the choices from a question this request answers.
 	Pending []Choice
+}
+
+// Answer chooses one of the titles a "did you mean" question offered.
+type Answer struct {
+	// Which is a position among the titles offered (AnswerFirst, AnswerSecond...); it wins over Title.
+	Which string
+	// Title is a title said on its own: one the question found, or another to search for.
+	Title string
 }
 
 // SeekRequest moves the playhead. By wins over Step; To is an absolute position.

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"strconv"
 	"testing"
 	"time"
 
@@ -49,8 +50,8 @@ func TestPlayTitleAmbiguousAsks(t *testing.T) {
 	o := newService().PlayTitle(t.Context(), target, TitleRequest{Query: "dune", Kinds: []media.Kind{media.KindMovie}}, nil)
 
 	assert.Equal(t, "match.did_you_mean", o.Say.ID)
-	assert.Equal(t, "Dune from 1984", o.Say.Params["first"])
-	assert.Equal(t, "Dune from 2021", o.Say.Params["second"])
+	assert.Equal(t, say("match.title_year", map[string]string{"title": "Dune", "year": "1984"}), o.Say.Messages["first"], "the year is worded in the listener's language")
+	assert.Equal(t, say("match.title_year", map[string]string{"title": "Dune", "year": "2021"}), o.Say.Messages["second"])
 	assert.False(t, o.EndSession, "the question keeps the session open")
 	require.NotNil(t, o.Reprompt)
 	assert.Len(t, o.Pending, 2)
@@ -237,6 +238,22 @@ func TestPendingChoicesAddToTheCallersHints(t *testing.T) {
 	assert.InDeltaMapValues(t, map[string]float64{"movie/1": 0.1 + pendingBoost, "movie/2": 0.05, "movie/3": pendingBoost}, got.Hints, 1e-9)
 }
 
+func TestPlayTitlePassesResolvedValues(t *testing.T) {
+	var got match.Query
+
+	target, _, _ := newTarget()
+	target.Matcher = matcherFunc(func(q match.Query) match.Result {
+		got = q
+
+		return match.Result{Decision: match.DecisionNotFound}
+	})
+
+	resolved := []match.Resolved{{ID: "movie/7", Name: "千と千尋の神隠し"}}
+	newService().PlayTitle(t.Context(), target, TitleRequest{Query: "せんとちひろのかみかくし", Resolved: resolved}, nil)
+
+	assert.Equal(t, resolved, got.Resolved)
+}
+
 func TestNowPlaying(t *testing.T) {
 	target, backend, _ := newTarget()
 	svc := newService()
@@ -286,7 +303,7 @@ func TestPlayTitleAsks(t *testing.T) {
 
 	o := svc.PlayTitle(t.Context(), target, TitleRequest{Query: "fuzz"}, nil)
 	assert.Equal(t, "match.confirm", o.Say.ID, "one uncertain match is a yes/no question")
-	assert.Equal(t, "Hot Fuzz from 2007", o.Say.Params["title"])
+	assert.Equal(t, say("match.title_year", map[string]string{"title": "Hot Fuzz", "year": "2007"}), o.Say.Messages["title"])
 	assert.False(t, o.EndSession)
 	require.Len(t, o.Pending, 1)
 	assert.Equal(t, Choice{DocID: "movie/4", Ref: media.Ref{Kind: media.KindMovie, ID: 4}, Title: "Hot Fuzz", Year: 2007}, o.Pending[0])
@@ -792,4 +809,131 @@ func TestMatcherFailuresAreReported(t *testing.T) {
 			assert.Equal(t, 2, m.searches, "the index is searched again after the lookup found something")
 		})
 	}
+}
+
+func TestAskKeepsMoreMatchesForNo(t *testing.T) {
+	cands := func(scores ...float64) match.Result {
+		res := match.Result{AskScore: match.DefaultConfig().AskScore}
+
+		for i, s := range scores {
+			id := strconv.Itoa(i + 1)
+			res.Candidates = append(res.Candidates, match.Candidate{Doc: match.Doc{ID: "movie/" + id, Ref: media.Ref{Kind: media.KindMovie, ID: i + 1}, Title: "Title " + id}, Score: s})
+		}
+
+		return res
+	}
+
+	ids := func(choices []Choice) []string {
+		var out []string
+		for _, c := range choices {
+			out = append(out, c.DocID)
+		}
+
+		return out
+	}
+
+	o := ask(cands(0.8, 0.8, 0.7, 0.7, 0.7, 0.7, 0.7, 0.7))
+	assert.Equal(t, []string{"movie/1", "movie/2"}, ids(o.Pending))
+	require.NotNil(t, o.Followup)
+	assert.Equal(t, []string{"movie/3", "movie/4", "movie/5", "movie/6"}, ids(o.Followup.More), "a question keeps at most maxCandidates titles")
+
+	o = ask(cands(0.65, 0.5, 0.7, 0.3))
+	assert.Equal(t, []string{"movie/1", "movie/2"}, ids(o.Pending), "the titles asked about are offered whatever their score")
+	require.NotNil(t, o.Followup)
+	assert.Equal(t, []string{"movie/3"}, ids(o.Followup.More), "later titles stop at the first one too weak to ask about")
+
+	o = ask(cands(0.7, 0.7, 0.3))
+	assert.Nil(t, o.Followup, "nothing is kept back when the rest are too weak")
+
+	// The bar is the one the search used: the matcher's configured AskScore, or the higher one a native alias winner needs.
+	raised := cands(0.9, 0.9, 0.7)
+	raised.AskScore = 0.75
+	assert.Nil(t, ask(raised).Followup, "a title the search wouldn't have asked about isn't offered after no")
+
+	raised.AskScore = 0.6
+	require.NotNil(t, ask(raised).Followup)
+
+	o = newService().OtherChoices(o.Pending)
+	assert.Equal(t, "match.did_you_mean", o.Say.ID, "no offers the titles kept back")
+	assert.False(t, o.EndSession)
+
+	o = newService().OtherChoices(nil)
+	assert.Equal(t, "match.no_more", o.Say.ID)
+	assert.True(t, o.EndSession)
+}
+
+func TestChoose(t *testing.T) {
+	old := Choice{DocID: "movie/1", Ref: media.Ref{Kind: media.KindMovie, ID: 1}, Title: "Dune", Year: 1984}
+	remake := Choice{DocID: "movie/2", Ref: media.Ref{Kind: media.KindMovie, ID: 2}, Title: "Dune", Year: 2021}
+	sequel := Choice{DocID: "movie/3", Ref: media.Ref{Kind: media.KindMovie, ID: 3}, Title: "Dune: Part Two", Year: 2024}
+	undated := Choice{DocID: "playlist/70", Ref: media.Ref{Kind: media.KindPlaylist, ID: 70}, Title: "Road Trip"}
+	sameYear := Choice{DocID: "movie/4", Ref: media.Ref{Kind: media.KindMovie, ID: 4}, Title: "Hot Fuzz", Year: 2021}
+
+	tests := map[string]struct {
+		answer  Answer
+		pending []Choice
+		more    []Choice
+		play    string
+		again   bool
+	}{
+		"first":                {answer: Answer{Which: AnswerFirst}, pending: []Choice{old, remake}, play: "movie/1"},
+		"second":               {answer: Answer{Which: AnswerSecond}, pending: []Choice{old, remake}, play: "movie/2"},
+		"second of one":        {answer: Answer{Which: AnswerSecond}, pending: []Choice{old}, again: true},
+		"last":                 {answer: Answer{Which: AnswerLast}, pending: []Choice{old, remake}, play: "movie/2"},
+		"newer":                {answer: Answer{Which: AnswerNewer}, pending: []Choice{remake, old}, play: "movie/2"},
+		"older":                {answer: Answer{Which: AnswerOlder}, pending: []Choice{remake, old}, play: "movie/1"},
+		"newer of one":         {answer: Answer{Which: AnswerNewer}, pending: []Choice{old}, again: true},
+		"newer of the same":    {answer: Answer{Which: AnswerNewer}, pending: []Choice{remake, sameYear}, again: true},
+		"older without a year": {answer: Answer{Which: AnswerOlder}, pending: []Choice{old, undated}, again: true},
+		"unknown position":     {answer: Answer{Which: "third"}, pending: []Choice{old, remake}, again: true},
+		"position wins":        {answer: Answer{Which: AnswerFirst, Title: "hot fuzz"}, pending: []Choice{old, remake}, play: "movie/1"},
+		"nothing":              {pending: []Choice{old, remake}, again: true},
+		"no choices":           {answer: Answer{Which: AnswerFirst}, again: true},
+		"title with year":      {answer: Answer{Title: "Dune 1984"}, pending: []Choice{old, remake}, play: "movie/1"},
+		"title kept back":      {answer: Answer{Title: "dune part two"}, pending: []Choice{old, remake}, more: []Choice{sequel}, play: "movie/3"},
+		"title shared":         {answer: Answer{Title: "dune"}, pending: []Choice{old, remake}, again: true},
+		"another title":        {answer: Answer{Title: "hot fuzz"}, pending: []Choice{old, remake}, play: "movie/4"},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			target, backend, _ := newTarget()
+
+			o := newService().Choose(t.Context(), target, tc.answer, tc.pending, tc.more, nil)
+
+			assert.Equal(t, tc.again, o.AskAgain)
+
+			if tc.again {
+				assert.Equal(t, "match.which_one", o.Say.ID)
+				assert.Empty(t, backend.Calls())
+
+				return
+			}
+
+			assert.Equal(t, []string{"Play " + tc.play + " resume"}, backend.Calls())
+		})
+	}
+}
+
+func TestChooseSearchesTheKindsOffered(t *testing.T) {
+	target, backend, _ := newTarget()
+	show := Choice{DocID: "tvshow/20", Ref: media.Ref{Kind: media.KindTVShow, ID: 20}, Title: "Bluey", Year: 2018}
+
+	o := newService().Choose(t.Context(), target, Answer{Title: "hot fuzz"}, []Choice{show, show}, nil, nil)
+
+	assert.Equal(t, "match.not_found", o.Say.ID, "a film isn't found among shows")
+	assert.Empty(t, backend.Calls())
+}
+
+func TestOutcomeMissed(t *testing.T) {
+	svc := NewService(slog.New(slog.DiscardHandler))
+	tgt, _, _ := newTarget()
+	ctx := context.Background()
+
+	assert.True(t, svc.PlayTitle(ctx, tgt, TitleRequest{Query: "conclave"}, nil).Missed(), "no title by that name")
+	assert.True(t, svc.Song(ctx, tgt, MusicRequest{Title: "come together", Artist: "queen"}, nil).Missed(), "not by that artist")
+	assert.True(t, svc.Artist(ctx, tgt, MusicRequest{Artist: "queen", Genre: "jazz"}, nil).Missed(), "no such genre by the artist")
+	assert.True(t, ContentDisabled().Missed())
+	assert.False(t, svc.PlayTitle(ctx, tgt, TitleRequest{Query: "hot fuzz"}, nil).Missed())
+	assert.False(t, svc.PlayTitle(ctx, tgt, TitleRequest{Query: "dune"}, nil).Missed(), "a question is an answer")
 }

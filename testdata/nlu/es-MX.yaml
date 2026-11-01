@@ -1,0 +1,138 @@
+# NLU checks for es-MX: run them with make nlu (see internal/smapi/nlu). Each row is an utterance, the intent Alexa should pick and the slots it should fill; an empty slot value takes any words, and a value of a custom type may be its ID. Mark a row pending, with why, while the model that makes it pass isn't deployed yet.
+locale: es-MX
+cases:
+  # Every intent, in model order, in the language's own words.
+  - {utterance: "cancela", intent: AMAZON.CancelIntent}
+  - {utterance: "ayuda", intent: AMAZON.HelpIntent}
+  - {utterance: "para", intent: AMAZON.StopIntent}
+  - {utterance: "ve al inicio", intent: AMAZON.NavigateHomeIntent}
+  - {utterance: "elefantes morados bailando en la luna", intent: AMAZON.FallbackIntent}
+  - {utterance: "pausa la tele", intent: AMAZON.PauseIntent}
+  - {utterance: "reanuda la tele", intent: AMAZON.ResumeIntent}
+  - {utterance: "siguiente", intent: AMAZON.NextIntent}
+  - {utterance: "anterior", intent: AMAZON.PreviousIntent}
+  - {utterance: "empieza de nuevo", intent: AMAZON.StartOverIntent}
+  - {utterance: "sí", intent: AMAZON.YesIntent}
+  - {utterance: "no", intent: AMAZON.NoIntent}
+  - {utterance: "aleatorio activado", intent: AMAZON.ShuffleOnIntent}
+  - {utterance: "aleatorio desactivado", intent: AMAZON.ShuffleOffIntent}
+  - {utterance: "repetición activado", intent: AMAZON.LoopOnIntent}
+  - {utterance: "repetición desactivado", intent: AMAZON.LoopOffIntent}
+  - {utterance: "quiero ver la película el laberinto del fauno", intent: WatchMovie, slots: {Movie: "el laberinto del fauno"}}
+  - {utterance: "sigue viendo la casa de papel", intent: WatchNextEpisode, slots: {Show: "la casa de papel"}}
+  - {utterance: "encuentra la casa de papel", intent: PlayMedia, slots: {Query: "la casa de papel"}}
+  - {utterance: "la segunda por favor", intent: ChooseMatch, slots: {Which: "second"}, pending: "ChooseMatch is in the model from the next deploy"}
+  - {utterance: "elige una película de comedia por mí", intent: WatchRandomMovie, slots: {Genre: ""}}
+  - {utterance: "pon el tráiler", intent: WatchMovieTrailer}
+  - {utterance: "sigue con la saga el laberinto del fauno", intent: WatchNextInCollection, slots: {Movie: "el laberinto del fauno"}}
+  - {utterance: "pon la casa de papel capítulo 3 de la temporada 2", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "la casa de papel"}}
+  - {utterance: "pon la casa de papel desde el principio", intent: WatchFirstEpisode, slots: {Show: "la casa de papel"}}
+  - {utterance: "pon lo último de la casa de papel", intent: WatchLatestEpisode, slots: {Show: "la casa de papel"}}
+  - {utterance: "continúa la última serie", intent: ContinueWatching}
+  - {utterance: "pon un capítulo de la casa de papel", intent: WatchRandomEpisode, slots: {Show: "la casa de papel"}}
+  - {utterance: "pon una serie aleatoria", intent: WatchRandomShow}
+  - {utterance: "pon la serie la casa de papel en aleatorio", intent: ShuffleShow, slots: {Show: "la casa de papel"}}
+  - {utterance: "pon un maratón de la casa de papel", intent: BingeShow, slots: {Show: "la casa de papel"}}
+  - {utterance: "pon al artista shakira", intent: ListenToArtist, slots: {Artist: "shakira"}}
+  - {utterance: "pon al artista shakira en aleatorio", intent: ShuffleArtist, slots: {Artist: "shakira"}}
+  - {utterance: "pon el álbum pies descalzos", intent: ListenToAlbum, slots: {Album: "pies descalzos"}}
+  - {utterance: "pon el álbum pies descalzos en aleatorio", intent: ShuffleAlbum, slots: {Album: "pies descalzos"}}
+  - {utterance: "pon el último álbum de shakira", intent: ListenToLatestAlbum, slots: {Artist: "shakira"}}
+  - {utterance: "pon el último álbum de shakira en aleatorio", intent: ShuffleLatestAlbum, slots: {Artist: "shakira"}}
+  - {utterance: "pon la canción ojos así", intent: ListenToSong, slots: {Song: "ojos así"}}
+  - {utterance: "pon ojos así de shakira", intent: ListenToSongOrAlbum, slots: {Artist: "shakira", Title: "ojos así"}}
+  - {utterance: "pon el género comedia", intent: ListenToGenre, slots: {Genre: ""}}
+  - {utterance: "quiero escuchar las últimas canciones", intent: ListenToRecentSongs}
+  - {utterance: "vamos de fiesta", intent: PartyMode}
+  - {utterance: "pon el videoclip de bohemian rhapsody", intent: WatchMusicVideo, slots: {MusicVideo: ""}}
+  - {utterance: "pon un videoclip aleatorio", intent: WatchRandomMusicVideo}
+  - {utterance: "pon todos mis videoclips en aleatorio", intent: ShuffleMusicVideos}
+  - {utterance: "pon la lista de música viaje", intent: PlayPlaylist, slots: {Playlist: ""}}
+  - {utterance: "pon mi lista de reproducción viaje en aleatorio", intent: ShufflePlaylist, slots: {Playlist: ""}}
+  - {utterance: "dame una recomendación de película", intent: Recommend, slots: {MediaType: "movie"}}
+  - {utterance: "hay algún película nuevo", intent: WhatsNew, slots: {MediaType: "movie"}}
+  - {utterance: "dime los álbumes de shakira", intent: WhatAlbums, slots: {Artist: "shakira"}}
+  - {utterance: "atrás cinco minutos", intent: PlayerSeek, slots: {Duration: "", SeekDirection: "back"}}
+  - {utterance: "retrocede cinco minutos", intent: PlayerRewind, slots: {Duration: ""}}
+  - {utterance: "salta a la posición cinco minutos", intent: PlayerSeekTo, slots: {Position: ""}}
+  - {utterance: "repetición todo", intent: Repeat, slots: {RepeatMode: "all"}}
+  - {utterance: "mejora la imagen", intent: PlayerZoom}
+  - {utterance: "gira en el sentido de las agujas del reloj", intent: PlayerRotate, slots: {Rotation: "clockwise"}}
+  - {utterance: "mueve la imagen abajo", intent: PlayerMove, slots: {Direction: "down"}}
+  - {utterance: "pantalla completa", intent: Fullscreen}
+  - {utterance: "modo estereoscópico", intent: StereoscopicMode}
+  - {utterance: "activa el passthrough", intent: AudioPassthrough}
+  - {utterance: "pon el volumen a 30", intent: VolumeSet, slots: {Level: "30"}}
+  - {utterance: "más alto", intent: VolumeUp}
+  - {utterance: "reduce el volumen", intent: VolumeDown}
+  - {utterance: "silencia", intent: Mute}
+  - {utterance: "qué estoy viendo", intent: CurrentPlayItemEnquiry}
+  - {utterance: "cuánto queda para que termine", intent: CurrentPlayItemTimeRemaining}
+  - {utterance: "cómo se llama este echo", intent: IdentifyEcho}
+  - {utterance: "siguiente los subtítulos", intent: Subtitles, slots: {SubtitleAction: "next"}}
+  - {utterance: "siguiente audio", intent: AudioStream, slots: {Step: "next"}}
+  - {utterance: "ve atrás", intent: Navigate, slots: {NavAction: "back"}}
+  - {utterance: "pon el texto hola", intent: TypeText, slots: {Text: ""}}
+  - {utterance: "muestra el películas", intent: ViewLibrary, slots: {Section: "movies"}}
+  - {utterance: "muestra la lista de música viaje", intent: ViewPlaylist, slots: {Playlist: ""}}
+  - {utterance: "abre mi favorito rtve", intent: OpenFavourite, slots: {Favourite: ""}}
+  - {utterance: "lanza youtube", intent: LaunchAddon, slots: {Addon: ""}}
+  - {utterance: "haz una búsqueda global de la casa de papel", intent: GlobalSearch, slots: {Query: "la casa de papel"}}
+  - {utterance: "hiberna kodi", intent: Power, slots: {PowerAction: "hibernate"}}
+  - {utterance: "expulsa", intent: EjectMedia}
+  - {utterance: "comprueba si hay películas nuevas", intent: UpdateLibrary}
+  - {utterance: "limpia la biblioteca", intent: CleanLibrary}
+  # Answers to "did you mean …?".
+  - {utterance: "sí por favor", intent: AMAZON.YesIntent}
+  - {utterance: "no gracias", intent: AMAZON.NoIntent}
+  - {utterance: "me refiero a la más antigua", intent: ChooseMatch, slots: {Which: "older"}, pending: "ChooseMatch is in the model from the next deploy"}
+  # Bare titles, which free-text and title slots compete for.
+  - {utterance: "reproduce la casa de papel", intent: PlayMedia, slots: {Query: "la casa de papel"}}
+  - {utterance: "pon la casa de papel", intent: PlayMedia, slots: {Query: "la casa de papel"}}
+  # Rooms.
+  - {utterance: "pon la película el laberinto del fauno en el sala de estar", intent: WatchMovie, slots: {Movie: "el laberinto del fauno", Room: ""}}
+  - {utterance: "sigue viendo la casa de papel en el sala de estar", intent: WatchNextEpisode, slots: {Room: "", Show: "la casa de papel"}}
+  - {utterance: "pon algo de música de shakira en el sala de estar", intent: ListenToArtist, slots: {Artist: "shakira", Room: ""}}
+  - {utterance: "pon canciones de shakira en el sala de estar", intent: ListenToArtist, slots: {Artist: "shakira", Room: ""}}
+  - {utterance: "pausa en el sala de estar", intent: RoomControl, slots: {Command: "pause", Room: ""}}
+  - {utterance: "pausa la tele en el sala de estar", intent: RoomControl, slots: {Command: "pause", Room: ""}}
+  # Episodes and seasons, including the one-shot forms.
+  - {utterance: "pon la casa de papel temporada 2 capítulo 3", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "la casa de papel"}}
+  - {utterance: "pon la temporada 2 capítulo 3 de la casa de papel", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "la casa de papel"}}
+  - {utterance: "pon la casa de papel temporada 2 capítulo 3 en el sala de estar", intent: WatchEpisode, slots: {Episode: "3", Room: "", Season: "2", Show: "la casa de papel"}}
+  - {utterance: "pon el siguiente capítulo de la casa de papel", intent: WatchNextEpisode, slots: {Show: "la casa de papel"}}
+  - {utterance: "pon el último capítulo de la casa de papel", intent: WatchLatestEpisode, slots: {Show: "la casa de papel"}}
+  - {utterance: "pon el primer capítulo de la casa de papel", intent: WatchFirstEpisode, slots: {Show: "la casa de papel"}}
+  - {utterance: "pon el capítulo uno de la casa de papel", intent: WatchFirstEpisode, slots: {Show: "la casa de papel"}}
+  # Music by an artist, including the one-shot forms.
+  - {utterance: "pon algo de música de shakira", intent: ListenToArtist, slots: {Artist: "shakira"}}
+  - {utterance: "pon canciones de shakira", intent: ListenToArtist, slots: {Artist: "shakira"}}
+  - {utterance: "quiero escuchar algo de música de shakira", intent: ListenToArtist, slots: {Artist: "shakira"}}
+  - {utterance: "pon la canción ojos así de shakira", intent: ListenToSong, slots: {Artist: "shakira", Song: "ojos así"}}
+  - {utterance: "quiero escuchar la canción ojos así de shakira", intent: ListenToSong, slots: {Artist: "shakira", Song: "ojos así"}}
+  - {utterance: "pon el álbum pies descalzos de shakira", intent: ListenToAlbum, slots: {Album: "pies descalzos", Artist: "shakira"}}
+  - {utterance: "pon la música de shakira en aleatorio", intent: ShuffleArtist, slots: {Artist: "shakira"}}
+  - {utterance: "mezcla la música de shakira", intent: ShuffleArtist, slots: {Artist: "shakira"}}
+  - {utterance: "mezcla las canciones de shakira", intent: ShuffleArtist, slots: {Artist: "shakira"}}
+  - {utterance: "pon el álbum más reciente de shakira", intent: ListenToLatestAlbum, slots: {Artist: "shakira"}}
+  - {utterance: "quiero escuchar el último álbum de shakira", intent: ListenToLatestAlbum, slots: {Artist: "shakira"}}
+  # This locale's own phrasings.
+  - {utterance: "quiero seguir viendo", intent: ContinueWatching}
+  - {utterance: "pon la rola ojos así", intent: ListenToSong, slots: {Song: "ojos así"}}
+  - {utterance: "pon la rola ojos así de shakira", intent: ListenToSong, slots: {Artist: "shakira", Song: "ojos así"}}
+  - {utterance: "quiero escuchar la rola ojos así de shakira", intent: ListenToSong, slots: {Artist: "shakira", Song: "ojos así"}}
+  - {utterance: "dale play a ojos así de shakira", intent: ListenToSongOrAlbum, slots: {Artist: "shakira", Title: "ojos así"}}
+  - {utterance: "dale play a la casa de papel", intent: PlayMedia, slots: {Query: "la casa de papel"}}
+  - {utterance: "hiberna la computadora", intent: Power, slots: {PowerAction: "hibernate"}}
+  - {utterance: "pon la computadora a hiberna", intent: Power, slots: {PowerAction: "hibernate"}}
+  - {utterance: "pausa en mi sala de estar", intent: RoomControl, slots: {Command: "pause", Room: ""}}
+  - {utterance: "pausa la tele en mi sala de estar", intent: RoomControl, slots: {Command: "pause", Room: ""}}
+  - {utterance: "quiero ver el capítulo 3 de la temporada 2 de la casa de papel", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "la casa de papel"}}
+  - {utterance: "pon el capítulo nuevo de la casa de papel", intent: WatchLatestEpisode, slots: {Show: "la casa de papel"}}
+  - {utterance: "pon la película el laberinto del fauno en mi sala de estar", intent: WatchMovie, slots: {Movie: "el laberinto del fauno", Room: ""}}
+  - {utterance: "quiero ver la peli el laberinto del fauno", intent: WatchMovie, slots: {Movie: "el laberinto del fauno"}}
+  - {utterance: "vamos a ver la peli el laberinto del fauno", intent: WatchMovie, slots: {Movie: "el laberinto del fauno"}}
+  - {utterance: "quiero seguir viendo la casa de papel", intent: WatchNextEpisode, slots: {Show: "la casa de papel"}}
+  - {utterance: "pon el siguiente capítulo de la serie la casa de papel", intent: WatchNextEpisode, slots: {Show: "la casa de papel"}}
+  - {utterance: "sigue con la serie la casa de papel", intent: WatchNextEpisode, slots: {Show: "la casa de papel"}}
+  - {utterance: "pon un programa al azar", intent: WatchRandomShow}

@@ -1,10 +1,32 @@
 {
   "attention": {
     "empty": "Nichts braucht deine Aufmerksamkeit.",
+    "libraryLanguage": {
+      "detail": "Die Titelsprache ist {{current}}. Stelle sie auf {{language}}, damit die Titel nach den Regeln für {{language}} abgeglichen werden.",
+      "title": "Die meisten Titel von {{instance}} sind auf {{language}}"
+    },
     "links": {
+      "libraryLanguage": "Titelsprache ändern",
       "needsDeploy": "Jetzt aktualisieren",
       "open": "Öffnen",
       "unlinkedDevice": "Gerät verknüpfen"
+    },
+    "rejected": {
+      "signature": {
+        "detail": "Encore konnte nicht bestätigen, dass sie von Alexa kamen. Falls sie von deinem Echo stammen, prüfe, ob Encore s3.amazonaws.com für Amazons Zertifikat erreicht und dein Proxy die Anfragen unverändert weitergibt.",
+        "title_one": "{{count, number}} Anfrage wegen einer ungültigen Signatur abgelehnt",
+        "title_other": "{{count, number}} Anfragen wegen einer ungültigen Signatur abgelehnt"
+      },
+      "skillId": {
+        "detail": "Alexa hat sie für eine andere Skill-ID signiert als die, die Encore erwartet. Prüfe alexa.skill_id oder stelle den Skill erneut bereit.",
+        "title_one": "{{count, number}} Anfrage für einen anderen Skill abgelehnt",
+        "title_other": "{{count, number}} Anfragen für einen anderen Skill abgelehnt"
+      },
+      "timestamp": {
+        "detail": "Alexa versieht jede Anfrage mit ihrer Sendezeit, und Encore lehnt Anfragen ab, die mehr als 150 Sekunden von seiner eigenen Uhr abweichen. Prüfe, ob die Uhr dieses Hosts synchronisiert ist.",
+        "title_one": "{{count, number}} Anfrage wegen eines veralteten Zeitstempels abgelehnt",
+        "title_other": "{{count, number}} Anfragen wegen eines veralteten Zeitstempels abgelehnt"
+      }
     },
     "title": "Braucht Aufmerksamkeit"
   },

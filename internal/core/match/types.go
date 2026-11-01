@@ -2,6 +2,7 @@ package match
 
 import (
 	"context"
+	"strings"
 	"sync"
 	"unicode/utf8"
 
@@ -32,6 +33,16 @@ type Query struct {
 	Limit int
 	// Hints adds per-request boosts by Doc ID, e.g. Alexa resolved this title or the user mentioned "new".
 	Hints map[string]float64
+	// Resolved are the Docs Alexa's entity resolution matched the request to. Each is scored as a candidate even when retrieval misses it.
+	Resolved []Resolved
+}
+
+// Resolved is one value Alexa's entity resolution matched a request to.
+type Resolved struct {
+	// ID is the Doc's ID.
+	ID string
+	// Name is the value's name as Alexa matched it, usually the Doc's title. The Doc also scores against it, discounted, so a request in another spelling or script ("せんとちひろのかみかくし") meets the title Alexa resolved it to ("千と千尋の神隠し"). Empty scores the Doc against the request alone.
+	Name string
 }
 
 // Breakdown explains a candidate's score.
@@ -63,6 +74,8 @@ type Result struct {
 	Decision   Decision
 	// Margin is the top score minus the runner-up's.
 	Margin float64
+	// AskScore is the least top score this search counted as worth asking about: the configured Config.AskScore, or the higher bar a title that wins on a native alias needs. A caller offering more candidates than the top ones offers only those that reach it.
+	AskScore float64
 }
 
 // Config tunes an Index. Zero fields take the DefaultConfig value.
@@ -297,7 +310,9 @@ type scored struct {
 	soundAlike bool
 	// numbersDiffer is set when the query carries a number and the alias does not carry the same ones ("crocodile dundee 2" against "Crocodile Dundee"): a missing sequel, which may be asked about but never played. A title's own number the query leaves out ("star wars a new hope") does not count.
 	numbersDiffer bool
-	bd            Breakdown
+	// native is set when the score is a native alias's (alias.native).
+	native bool
+	bd     Breakdown
 }
 
 // form is a normalised string with everything the scorer needs precomputed.
@@ -322,6 +337,8 @@ type alias struct {
 	text string
 	// derived aliases (subtitle or qualifier dropped) are shortened titles: they score with a penalty and never count as exact.
 	derived bool
+	// native aliases are a name's Latin words as a recogniser writes them in the language's script (language.native): a guess at the spelling, so a top candidate that wins on one must lead clearly to play.
+	native bool
 }
 
 type entry struct {
@@ -346,7 +363,27 @@ type language struct {
 	// half is how the language says "and a half", which "½" reads as ("8½" -> "8 e mezzo").
 	half     string
 	articles map[string]bool
-	stop     map[string]bool
+	// articlePrefixes are articles written fused to the word, as Arabic writes "ال" ("الملك" -> "ملك", with "وال" and "بال" for "and the" and "with the"). Each token loses the longest one it starts with, as long as at least articlePrefixMin runes (and never fewer than one) remain, so a short word that merely starts the same way survives. Whole-word articles stay in articles.
+	articlePrefixes  []string
+	articlePrefixMin int
+	// folds maps lowercase letters to what the language compares them as, applied by tokenize after NFKD and ahead of the shared letterFolds: spelling variants of one sound (Arabic "ٱ" -> "ا", "ة" -> "ه", "ى" -> "ي") or a second script for the same sounds (katakana -> hiragana). A letter whose script keeps its combining marks is recomposed after folding, so a fold of "カ" to "か" still gives "が" for "ガ".
+	folds map[rune]string
+	// respell rewrites the string before tokenize decomposes it, for spellings NFKD would lose or a sign the language reads as words: Portuguese "ç" is "ss", not the "c" NFKD leaves of it, and "%" is "por cento". Nil leaves the string as it is.
+	respell *strings.Replacer
+	// split breaks tokenize's tokens into words for a script written without spaces (Japanese), and runs before fused articles, letter runs and whole-word articles are handled. Nil leaves the tokens as they are.
+	split func(toks []string) []string
+	// unspaced marks a language written without spaces between words (Japanese), where a segmenter's word boundaries are guesses: a query word of at least minUnspacedCover runes then counts as covered when it appears anywhere inside the title. A language that splits tokens for other reasons (fused clitics, letter runs) leaves it false.
+	unspaced bool
+	// romanize writes a token in Latin letters, so a title and a request in different scripts meet in one form (Devanagari "दंगल" and Latin "Dangal" both "dangal"). It runs after split and articlePrefixes, so articles, stop words, number words and parts are listed as romanize writes them. A token it can't write (kanji) is returned unchanged; one it returns empty is dropped and one with spaces becomes several tokens. Nil leaves tokens in their script. The Japanese, Hindi and Arabic hooks (split, articlePrefixes, romanize) also read their script in every other language's library (scriptWords).
+	romanize func(tok string) string
+	// romanizeForeign stands in for romanize where the language's script is read in another language's library (scriptWords), whose titles are in Latin letters. Nil uses romanize.
+	romanizeForeign func(tok string) string
+	// native returns the forms a recogniser for the language writes a name's Latin-script words in, in its own script (loanword.Native), which newEntry indexes as more of a title's aliases so a request written that way meets them ("スーパーフライ" for "Superfly"). Nil adds none.
+	native func(name string) []string
+	stop   map[string]bool
+	// letterNames maps the names of letters to the letters ("erre" -> "r"), so an acronym spelled out by name ("erre be de") reads as its letters ("rbd"). Only a run with at least two names that are no other word of the language (not letterWords), or a run of three or more names none of which is a single letter ("de ve de"), is read this way, so "de" or "te" alone in a title stays a word, and a run that follows another word leaves out a leading letterWord, the preposition before the acronym ("concierto de erre be de").
+	letterNames map[string]string
+	letterWords map[string]bool
 	// elide splits on apostrophes ("l'amour" -> "l amour") instead of joining ("ocean's" -> "oceans").
 	elide bool
 	// vigesimal counts on in twenties past sixty, as French does ("soixante-dix" 70, "quatre-vingts" 80, "quatre-vingt-onze" 91).
@@ -371,6 +408,8 @@ type numTable struct {
 	units, tens         []string
 	hundreds, thousands []string
 	millions            []string
+	// scales are words for other multipliers above a thousand that, like a million, start a group the thousands follow ("lakh" 100,000, "crore" 10,000,000).
+	scales map[string]int
 	// hundredsOf are words for a whole number of hundreds ("duecento" 200).
 	hundredsOf           map[string]int
 	cont                 map[string]int
@@ -386,3 +425,19 @@ type asciiMasks [utf8.RuneSelf]uint64
 
 // phoneticFunc returns the phonetic keys of one normalised token. Digit tokens are their own key.
 type phoneticFunc func(tok string) []string
+
+// hindiRomanizer writes Devanagari in Latin letters the way Hindi film and music titles are commonly romanised: the inherent vowel deleted where Hindi speech drops it, nukta letters as their Perso-Arabic sounds (ज़ z, फ़ f, क़ q), a nasal sign as n, or m before a labial, and ड़ as d. long also doubles आ and ई (aa, ee) and writes ऊ oo at the end of a word, the other common spelling.
+type hindiRomanizer struct {
+	long bool
+}
+
+// hindiUnit is one written syllable: a consonant (cons, empty for a vowel letter) and the vowel it carries. A consonant with the inherent vowel has inherent set and vowel "a"; one with a virama has vowel "".
+type hindiUnit struct {
+	cons, vowel string
+	inherent    bool
+	// nasal is the anusvara or chandrabindu after the vowel, if any.
+	nasal rune
+	// visarga is set when the syllable ends in ः.
+	visarga bool
+	deleted bool
+}

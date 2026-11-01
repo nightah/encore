@@ -1,0 +1,115 @@
+# NLU checks for pt-BR: run them with make nlu (see internal/smapi/nlu). Each row is an utterance, the intent Alexa should pick and the slots it should fill; an empty slot value takes any words, and a value of a custom type may be its ID. Mark a row pending, with why, while the model that makes it pass isn't deployed yet.
+locale: pt-BR
+cases:
+  # Every intent, in model order, in the language's own words.
+  - {utterance: "cancelar", intent: AMAZON.CancelIntent}
+  - {utterance: "ajuda", intent: AMAZON.HelpIntent}
+  - {utterance: "pare", intent: AMAZON.StopIntent}
+  - {utterance: "vá para o início", intent: AMAZON.NavigateHomeIntent}
+  - {utterance: "elefantes roxos dançando na lua", intent: AMAZON.FallbackIntent}
+  - {utterance: "pausa a tv", intent: AMAZON.PauseIntent}
+  - {utterance: "continua a tv", intent: AMAZON.ResumeIntent}
+  - {utterance: "próximo", intent: AMAZON.NextIntent}
+  - {utterance: "anterior", intent: AMAZON.PreviousIntent}
+  - {utterance: "comece de novo", intent: AMAZON.StartOverIntent}
+  - {utterance: "sim", intent: AMAZON.YesIntent}
+  - {utterance: "não", intent: AMAZON.NoIntent}
+  - {utterance: "aleatório ligado", intent: AMAZON.ShuffleOnIntent}
+  - {utterance: "aleatório desligado", intent: AMAZON.ShuffleOffIntent}
+  - {utterance: "repetição ligada", intent: AMAZON.LoopOnIntent}
+  - {utterance: "repetição desligada", intent: AMAZON.LoopOffIntent}
+  - {utterance: "quero assistir o filme cidade de deus", intent: WatchMovie, slots: {Movie: "cidade de deus"}}
+  - {utterance: "continua assistindo sintonia", intent: WatchNextEpisode, slots: {Show: "sintonia"}}
+  - {utterance: "encontra cidade de deus", intent: PlayMedia, slots: {Query: "cidade de deus"}}
+  - {utterance: "a segunda por favor", intent: ChooseMatch, slots: {Which: "second"}, pending: "ChooseMatch is in the model from the next deploy"}
+  - {utterance: "escolhe um filme de comédia para mim", intent: WatchRandomMovie, slots: {Genre: ""}}
+  - {utterance: "coloca o trailer", intent: WatchMovieTrailer}
+  - {utterance: "continua a coleção cidade de deus", intent: WatchNextInCollection, slots: {Movie: "cidade de deus"}}
+  - {utterance: "coloca sintonia episódio 3 da temporada 2", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "sintonia"}}
+  - {utterance: "coloca sintonia desde o começo", intent: WatchFirstEpisode, slots: {Show: "sintonia"}}
+  - {utterance: "coloca o último de sintonia", intent: WatchLatestEpisode, slots: {Show: "sintonia"}}
+  - {utterance: "continua a última série", intent: ContinueWatching}
+  - {utterance: "coloca um episódio de sintonia", intent: WatchRandomEpisode, slots: {Show: "sintonia"}}
+  - {utterance: "quero assistir uma série de comédia", intent: WatchRandomShow, slots: {Genre: ""}}
+  - {utterance: "coloca sintonia no aleatório", intent: ShuffleShow, slots: {Show: "sintonia"}}
+  - {utterance: "maratona a série sintonia", intent: BingeShow, slots: {Show: "sintonia"}}
+  - {utterance: "toca o artista anitta", intent: ListenToArtist, slots: {Artist: "anitta"}}
+  - {utterance: "embaralha o artista anitta", intent: ShuffleArtist, slots: {Artist: "anitta"}}
+  - {utterance: "toca o álbum bang", intent: ListenToAlbum, slots: {Album: "bang"}}
+  - {utterance: "embaralha o álbum bang", intent: ShuffleAlbum, slots: {Album: "bang"}}
+  - {utterance: "toca o último álbum de anitta", intent: ListenToLatestAlbum, slots: {Artist: "anitta"}}
+  - {utterance: "embaralha o último álbum de anitta", intent: ShuffleLatestAlbum, slots: {Artist: "anitta"}}
+  - {utterance: "toca a música envolver", intent: ListenToSong, slots: {Song: "envolver"}}
+  - {utterance: "toca envolver de anitta", intent: ListenToSongOrAlbum, slots: {Artist: "anitta", Title: "envolver"}}
+  - {utterance: "toca o gênero comédia", intent: ListenToGenre, slots: {Genre: ""}}
+  - {utterance: "quero ouvir as músicas adicionadas recentemente", intent: ListenToRecentSongs}
+  - {utterance: "vamos festejar", intent: PartyMode}
+  - {utterance: "toca o clipe de evidências", intent: WatchMusicVideo, slots: {MusicVideo: ""}}
+  - {utterance: "toca um clipe aleatório", intent: WatchRandomMusicVideo}
+  - {utterance: "toca todos os meus clipes", intent: ShuffleMusicVideos}
+  - {utterance: "toca a playlist de música viagem", intent: PlayPlaylist, slots: {Playlist: ""}}
+  - {utterance: "toca a playlist viagem no aleatório", intent: ShufflePlaylist, slots: {Playlist: ""}}
+  - {utterance: "me dá uma recomendação de filme", intent: Recommend, slots: {MediaType: "movie"}}
+  - {utterance: "tem algum filme novo para assistir", intent: WhatsNew, slots: {MediaType: "movie"}}
+  - {utterance: "lista os álbuns de anitta", intent: WhatAlbums, slots: {Artist: "anitta"}}
+  - {utterance: "para trás cinco minutos", intent: PlayerSeek, slots: {Duration: "", SeekDirection: "back"}}
+  - {utterance: "retrocede cinco minutos", intent: PlayerRewind, slots: {Duration: ""}}
+  - {utterance: "vai para a posição cinco minutos", intent: PlayerSeekTo, slots: {Position: ""}}
+  - {utterance: "modo repetir tudo", intent: Repeat, slots: {RepeatMode: "all"}}
+  - {utterance: "melhora a imagem", intent: PlayerZoom}
+  - {utterance: "gira no sentido horário", intent: PlayerRotate, slots: {Rotation: "clockwise"}}
+  - {utterance: "move a imagem para baixo", intent: PlayerMove, slots: {Direction: "down"}}
+  - {utterance: "sai da tela cheia", intent: Fullscreen}
+  - {utterance: "modo estereoscópico", intent: StereoscopicMode}
+  - {utterance: "alterna o áudio digital", intent: AudioPassthrough}
+  - {utterance: "coloca o volume para 30", intent: VolumeSet, slots: {Level: "30"}}
+  - {utterance: "mais alto", intent: VolumeUp}
+  - {utterance: "diminui o volume", intent: VolumeDown}
+  - {utterance: "muta", intent: Mute}
+  - {utterance: "o que eu estou assistindo", intent: CurrentPlayItemEnquiry}
+  - {utterance: "quanto falta para acabar", intent: CurrentPlayItemTimeRemaining}
+  - {utterance: "identifica este echo", intent: IdentifyEcho}
+  - {utterance: "próxima a legenda", intent: Subtitles, slots: {SubtitleAction: "next"}}
+  - {utterance: "próximo áudio", intent: AudioStream, slots: {Step: "next"}}
+  - {utterance: "vai voltar", intent: Navigate, slots: {NavAction: "back"}}
+  - {utterance: "digita o texto olá", intent: TypeText, slots: {Text: ""}}
+  - {utterance: "mostra os filmes", intent: ViewLibrary, slots: {Section: "movies"}}
+  - {utterance: "mostra a playlist de música viagem", intent: ViewPlaylist, slots: {Playlist: ""}}
+  - {utterance: "abre o favorito globoplay", intent: OpenFavourite, slots: {Favourite: ""}}
+  - {utterance: "executa youtube", intent: LaunchAddon, slots: {Addon: ""}}
+  - {utterance: "faz uma busca global por cidade de deus", intent: GlobalSearch, slots: {Query: "cidade de deus"}}
+  - {utterance: "hiberna o kodi", intent: Power, slots: {PowerAction: "hibernate"}}
+  - {utterance: "ejeta", intent: EjectMedia}
+  - {utterance: "verifica se tem filmes novos", intent: UpdateLibrary}
+  - {utterance: "limpa a biblioteca", intent: CleanLibrary}
+  # Answers to "did you mean …?".
+  - {utterance: "sim por favor", intent: AMAZON.YesIntent}
+  - {utterance: "não obrigado", intent: AMAZON.NoIntent}
+  - {utterance: "eu quis dizer o mais antigo", intent: ChooseMatch, slots: {Which: "older"}, pending: "ChooseMatch is in the model from the next deploy"}
+  # Bare titles, which free-text and title slots compete for.
+  - {utterance: "toca cidade de deus", intent: PlayMedia, slots: {Query: "cidade de deus"}}
+  - {utterance: "coloca cidade de deus", intent: PlayMedia, slots: {Query: "cidade de deus"}}
+  # Rooms.
+  - {utterance: "coloca o filme cidade de deus na sala de estar", intent: WatchMovie, slots: {Movie: "cidade de deus", Room: ""}}
+  - {utterance: "continua assistindo sintonia na sala de estar", intent: WatchNextEpisode, slots: {Room: "", Show: "sintonia"}}
+  - {utterance: "toca umas músicas de anitta na sala de estar", intent: ListenToArtist, slots: {Artist: "anitta", Room: ""}}
+  - {utterance: "pausa na sala de estar", intent: RoomControl, slots: {Command: "pause", Room: ""}}
+  - {utterance: "pausa a tv na sala de estar", intent: RoomControl, slots: {Command: "pause", Room: ""}}
+  # Episodes and seasons, including the one-shot forms.
+  - {utterance: "coloca sintonia temporada 2 episódio 3", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "sintonia"}}
+  - {utterance: "coloca a temporada 2 episódio 3 de sintonia", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "sintonia"}}
+  - {utterance: "coloca sintonia temporada 2 episódio 3 na sala de estar", intent: WatchEpisode, slots: {Episode: "3", Room: "", Season: "2", Show: "sintonia"}}
+  - {utterance: "coloca o próximo episódio de sintonia", intent: WatchNextEpisode, slots: {Show: "sintonia"}}
+  - {utterance: "coloca o último episódio de sintonia", intent: WatchLatestEpisode, slots: {Show: "sintonia"}}
+  - {utterance: "coloca o primeiro episódio de sintonia", intent: WatchFirstEpisode, slots: {Show: "sintonia"}}
+  - {utterance: "coloca o episódio um de sintonia", intent: WatchFirstEpisode, slots: {Show: "sintonia"}}
+  # Music by an artist, including the one-shot forms.
+  - {utterance: "toca umas músicas de anitta", intent: ListenToArtist, slots: {Artist: "anitta"}}
+  - {utterance: "quero ouvir umas músicas de anitta", intent: ListenToArtist, slots: {Artist: "anitta"}}
+  - {utterance: "toca a música envolver de anitta", intent: ListenToSong, slots: {Artist: "anitta", Song: "envolver"}}
+  - {utterance: "quero ouvir a música envolver de anitta", intent: ListenToSong, slots: {Artist: "anitta", Song: "envolver"}}
+  - {utterance: "toca o álbum bang de anitta", intent: ListenToAlbum, slots: {Album: "bang", Artist: "anitta"}}
+  - {utterance: "quero ouvir o álbum bang de anitta", intent: ListenToAlbum, slots: {Album: "bang", Artist: "anitta"}}
+  - {utterance: "embaralha as músicas de anitta", intent: ShuffleArtist, slots: {Artist: "anitta"}}
+  - {utterance: "toca as músicas de anitta no aleatório", intent: ShuffleArtist, slots: {Artist: "anitta"}}
+  - {utterance: "quero ouvir o último álbum de anitta", intent: ListenToLatestAlbum, slots: {Artist: "anitta"}}

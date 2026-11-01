@@ -3,4 +3,10 @@
 
 invocation: kodi
 language: fr
+launch:
+  also:
+    - "lance {invocation}"
+    - "démarre {invocation}"
+  open: "ouvre {invocation}"
+  skill: "ouvre la skill {invocation}"
 skill_name: Encore

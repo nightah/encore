@@ -10,6 +10,7 @@ import (
 
 func (h *Handler) dispatch(ctx context.Context, env *RequestEnvelope, t actions.Target, intent Intent) actions.Outcome {
 	locale := env.Request.Locale
+	intent = h.Speech.Reroute(locale, intent)
 	pending := pendingChoices(env.Session.Attributes)
 	followup := sessionFollowupOf(env.Session.Attributes)
 	sl := slots{intent: intent, locale: locale, speech: h.Speech}
@@ -50,12 +51,19 @@ func (h *Handler) dispatch(ctx context.Context, env *RequestEnvelope, t actions.
 	case "AMAZON.NoIntent":
 		// Only reached when a recommendation is waiting for an answer: suggest another.
 		return svc.Recommend(ctx, t, *followup.Recommend, pending)
+	case chooseIntent:
+		var more []actions.Choice
+		if followup != nil {
+			more = followup.More
+		}
+
+		return svc.Choose(ctx, t, actions.Answer{Which: sl.id("Which", "MATCH_CHOICE"), Title: sl.value("Answer")}, pending, more, progress)
 
 	// Playing by name.
 	case "WatchMovie":
-		return svc.PlayTitle(ctx, t, sl.title("Movie", []media.Kind{media.KindMovie}, pending), progress)
+		return h.playTitle(ctx, locale, t, sl.title("Movie", []media.Kind{media.KindMovie}, pending), false, progress)
 	case "WatchNextEpisode":
-		return svc.PlayTitle(ctx, t, sl.title("Show", []media.Kind{media.KindTVShow}, pending), progress)
+		return h.playTitle(ctx, locale, t, sl.title("Show", []media.Kind{media.KindTVShow}, pending), false, progress)
 	case "PlayMedia":
 		// Without deep search, a title of unsaid kind is a film or a show.
 		kinds := []media.Kind{media.KindMovie, media.KindTVShow}
@@ -74,7 +82,7 @@ func (h *Handler) dispatch(ctx context.Context, env *RequestEnvelope, t actions.
 			}
 		}
 
-		return svc.PlayTitle(ctx, t, sl.title("Query", kinds, pending), progress)
+		return h.playTitle(ctx, locale, t, sl.title("Query", kinds, pending), true, progress)
 
 	// Movies.
 	case "WatchRandomMovie":
@@ -394,4 +402,27 @@ func seekRequest(rewind bool, sl slots) actions.SeekRequest {
 
 func reprompt(msg actions.Message) actions.Outcome {
 	return actions.Outcome{Say: msg, Reprompt: &msg}
+}
+
+// playTitle plays a title by name. When nothing is called that, a word naming a kind of title at either end of it, which Alexa can leave in a title slot ("frozen movie", "千と千尋の神隠しの映画"), is taken off and narrows the search to that kind: one of the request's kinds, or with widen any kind the skill was set up with.
+func (h *Handler) playTitle(ctx context.Context, locale string, t actions.Target, req actions.TitleRequest, widen bool, progress actions.Progress) actions.Outcome {
+	o := h.Service.PlayTitle(ctx, t, req, progress)
+	if !o.Missed() {
+		return o
+	}
+
+	title, kind, ok := h.Speech.StripKind(locale, req.Query)
+
+	switch {
+	case !ok:
+		return o
+	case widen && !t.Allows(kind), !widen && !slices.Contains(req.Kinds, kind):
+		return o
+	}
+
+	if next := h.Service.PlayTitle(ctx, t, actions.TitleRequest{Query: title, Kinds: []media.Kind{kind}, Pending: req.Pending}, progress); !next.Missed() {
+		return next
+	}
+
+	return o
 }

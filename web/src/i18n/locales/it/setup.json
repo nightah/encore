@@ -101,8 +101,8 @@
     "goToAmazon": "Vai all'account Amazon",
     "heading": "Distribuisci la skill",
     "invocation": {
+      "elsewhere": "In {{locales}} si dice «{{name}}».",
       "example": "«Alexa, chiedi a {{name}} di…»",
-      "french": "In francese si usa «kodi», perché «encore» in francese significa «ancora».",
       "label": "Nome di invocazione"
     },
     "locales": {

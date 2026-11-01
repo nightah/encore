@@ -8,8 +8,10 @@ import (
 	"image"
 	_ "image/png"
 	"io"
+	"io/fs"
 	"strings"
 	"testing"
+	"testing/fstest"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -134,6 +136,29 @@ func TestBuildOverrides(t *testing.T) {
 	assert.Equal(t, "My Kodi", pub.Locales["en-US"].Name)
 	assert.Equal(t, "my kodi", pkg.Invocation("en-US"))
 	assert.Contains(t, pub.Locales["en-US"].ExamplePhrases, "Alexa, open my kodi")
+}
+
+func TestBuildRegionalLocales(t *testing.T) {
+	opts := options()
+	opts.Locales = []string{"fr-CA", "es-US", "es-MX"}
+
+	pkg, err := skillpkg.Build(sources(t), opts)
+	require.NoError(t, err)
+
+	assert.Equal(t, []string{"es-MX", "es-US", "fr-CA"}, pkg.Locales())
+	assert.Equal(t, "encore", pkg.Invocation("es-MX"))
+	assert.Equal(t, "encore", pkg.Invocation("es-US"))
+	assert.Equal(t, "kodi", pkg.Invocation("fr-CA"), "encore means again in Canadian French too")
+	assert.Equal(t, []string{"CA", "MX", "US"}, pkg.Manifest.Manifest.PublishingInformation.DistributionCountries)
+
+	opts.Invocation = skillmodel.InvocationKodi
+
+	pkg, err = skillpkg.Build(sources(t), opts)
+	require.NoError(t, err)
+
+	for _, locale := range pkg.Locales() {
+		assert.Equal(t, "kodi", pkg.Invocation(locale), locale)
+	}
 }
 
 func TestDeterministic(t *testing.T) {
@@ -299,4 +324,60 @@ func TestIcons(t *testing.T) {
 	}
 
 	assert.Empty(t, sizes, "both icons are in the package")
+}
+
+func modelValues(pkg *skillpkg.Package, locale, slotType string) []string {
+	var out []string
+
+	for _, typ := range pkg.Models[locale].InteractionModel.LanguageModel.Types {
+		if typ.Name == slotType {
+			for _, v := range typ.Values {
+				out = append(out, v.Name.Value)
+			}
+		}
+	}
+
+	return out
+}
+
+func TestLocaleSlotValues(t *testing.T) {
+	opts := options()
+	opts.SlotValues = map[string][]skillmodel.SlotValue{"AMAZON.Movie": {{Value: "Heat"}, {Value: "Dune"}}}
+	opts.LocaleSlotValues = map[string]map[string][]skillmodel.SlotValue{
+		"en-GB": {"AMAZON.Movie": {{Value: "Dune"}, {Value: strings.Repeat("x", skillpkg.MaxSlotValueLength+1)}}},
+	}
+
+	pkg, err := skillpkg.Build(sources(t), opts)
+	require.NoError(t, err)
+	assert.Equal(t, []string{"Heat", "Dune"}, modelValues(pkg, "en-US", "AMAZON.Movie"))
+	assert.Equal(t, []string{"Dune"}, modelValues(pkg, "en-GB", "AMAZON.Movie"), "a locale's own values replace the others, too long ones dropped")
+
+	full, err := skillpkg.Build(sources(t), skillpkg.Options{Locales: opts.Locales, Endpoint: opts.Endpoint, Privacy: opts.Privacy, SlotValues: opts.SlotValues})
+	require.NoError(t, err)
+	assert.NotEqual(t, full.Hash(), pkg.Hash())
+}
+
+// A locale whose samples don't expand fails the package, naming the locale and intent.
+func TestBuildRefusesABrokenSample(t *testing.T) {
+	fsys := fstest.MapFS{}
+
+	require.NoError(t, fs.WalkDir(i18n.FS, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return err
+		}
+
+		data, err := fs.ReadFile(i18n.FS, path)
+		fsys[path] = &fstest.MapFile{Data: data}
+
+		return err
+	}))
+
+	en := fsys["locales/en-US.yaml"]
+	en.Data = append(en.Data, []byte("utterances:\n  WatchMovie:\n    - \"play (the {Movie}\"\n")...)
+
+	src, err := skillmodel.Load(fsys)
+	require.NoError(t, err)
+
+	_, err = skillpkg.Build(src, options())
+	require.ErrorContains(t, err, "skillpkg: locale en-US, intent WatchMovie")
 }

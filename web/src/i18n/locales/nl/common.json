@@ -1,0 +1,122 @@
+{
+  "actions": {
+    "close": "Sluiten",
+    "copied": "Gekopieerd",
+    "copy": "Kopiëren",
+    "copyNamed": "{{label}} kopiëren",
+    "copyWithText": "{{label}}: {{text}}",
+    "dismiss": "Negeren",
+    "tryAgain": "Opnieuw proberen"
+  },
+  "check": {
+    "auth": "Inloggegevens",
+    "library": "Bibliotheek",
+    "ping": "JSON-RPC via HTTP"
+  },
+  "error": {
+    "generic": "Er is iets misgegaan.",
+    "http": "Verzoek mislukt met HTTP {{status}}.",
+    "lwaCredentials": "Sla eerst de client-ID en het clientgeheim voor Login with Amazon op.",
+    "noConnection": "De Encore-server is niet bereikbaar.",
+    "pageFailed": "Er is iets misgegaan op deze pagina",
+    "unreachable": "Encore reageert niet"
+  },
+  "field": {
+    "managed": "Beheerd via configuratie",
+    "managedSuffix": ", beheerd via configuratie"
+  },
+  "heard": {
+    "quoted": "“{{text}}”",
+    "suffix": ": “{{text}}”"
+  },
+  "infoTip": {
+    "label": "Over: {{label}}"
+  },
+  "instance": {
+    "asleep": "Slaapt",
+    "connectedHttp": "Verbonden · alleen HTTP",
+    "connectedWebSocket": "Verbonden · WebSocket",
+    "httpOnly": "Alleen HTTP",
+    "idle": "Inactief",
+    "macSaved": "MAC opgeslagen",
+    "noMac": "Geen MAC-adres",
+    "offline": "Offline",
+    "paused": "Gepauzeerd",
+    "playing": "Speelt af",
+    "versionUnknown": "Onbekend totdat Encore Kodi bereikt"
+  },
+  "loading": "Laden…",
+  "nav": {
+    "alexaSkill": "Alexa-skill",
+    "echoDevices": "Echo-apparaten",
+    "kodi": "Kodi",
+    "label": "Hoofdmenu",
+    "library": "Bibliotheek",
+    "overview": "Overzicht",
+    "requestLog": "Verzoekenlogboek",
+    "settings": "Instellingen"
+  },
+  "notFound": {
+    "back": "Terug naar het overzicht",
+    "title": "Pagina niet gevonden"
+  },
+  "outcome": {
+    "asked": "Gevraagd welke",
+    "error": "Fout",
+    "not_found": "Niet gevonden",
+    "ok": "Klaar",
+    "played": "Afgespeeld",
+    "unlinked": "Apparaat niet gekoppeld"
+  },
+  "request": {
+    "simulator": "Amazon-simulator",
+    "unnamedEcho": "Naamloze Echo"
+  },
+  "setupBanner": {
+    "continue": "Installatie voortzetten",
+    "message": "De installatie is nog niet klaar. Je bent bij stap {{step}} van 6."
+  },
+  "shell": {
+    "signedInAs": "Ingelogd als <name>{{name}}</name>",
+    "signOut": "Uitloggen",
+    "skipToContent": "Naar inhoud springen"
+  },
+  "theme": {
+    "toDark": "Overschakelen naar donkere modus",
+    "toLight": "Overschakelen naar lichte modus"
+  },
+  "time": {
+    "hoursAgo": "{{value}} u geleden",
+    "inHours": "over {{value}} u",
+    "inMinutes": "over {{value}} min",
+    "justNow": "zojuist",
+    "minutesAgo": "{{value}} min geleden",
+    "never": "nooit",
+    "seconds": "{{value}} s",
+    "soon": "zo meteen"
+  },
+  "toast": {
+    "aliasSaved": "Alias opgeslagen. Hij wordt bij de volgende update aan het skillmodel toegevoegd.",
+    "amazonConnected": "Verbonden met Amazon.",
+    "amazonDisconnected": "Amazon-tokens vergeten.",
+    "backupStarted": "Back-up gestart.",
+    "defaultInstance": "Niet-gekoppelde Echo's bedienen nu deze Kodi-instantie.",
+    "echoForgotten": "Echo vergeten. Hij verschijnt weer als hij een nieuw verzoek stuurt.",
+    "echoSaved": "Echo opgeslagen.",
+    "failed": "Dat is niet gelukt",
+    "instanceAdded": "Kodi-instantie toegevoegd.",
+    "instanceRemoved": "Kodi-instantie verwijderd.",
+    "instanceSaved": "Kodi-instantie opgeslagen.",
+    "libraryGrouped": "Bibliotheek gedeeld. Encore indexeert deze instanties nu als één.",
+    "librarySource": "Bibliotheekbron gewijzigd.",
+    "librarySplit": "Bibliotheek gesplitst. Encore indexeert nu elke instantie afzonderlijk.",
+    "roomAdded": "Kamer toegevoegd.",
+    "roomRemoved": "Kamer verwijderd.",
+    "roomSaved": "Kamer opgeslagen.",
+    "secretsRotated": "Versleutelingssleutel vernieuwd. Opgeslagen geheimen zijn opnieuw versleuteld.",
+    "settingsSaved": "Instellingen opgeslagen.",
+    "skillSaved": "Skillinstellingen opgeslagen.",
+    "syncStarted": "Bibliotheeksynchronisatie gestart. De aantallen worden bijgewerkt zodra die klaar is.",
+    "wakeSent": "Wake-on-LAN-pakket verzonden. Wachten tot Kodi antwoordt."
+  }
+}

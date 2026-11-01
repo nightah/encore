@@ -48,12 +48,17 @@ func New(t testing.TB, opts Options) *Server {
 		failLocales: map[string]string{},
 		unreported:  map[string]bool{},
 		unimported:  map[string]bool{},
+		valueLimits: map[string]int{},
+		rejected:    map[string]bool{},
 		uploads:     map[string][]byte{},
 		skills:      map[string]*Skill{},
 		imports:     map[string]*importJob{},
 		lastImport:  map[string]*importJob{},
 		statusPolls: map[string]int{},
 		sims:        map[string]*simJob{},
+		reaches:     map[string]bool{},
+		profiles:    map[string][]NLUAnswer{},
+		profiled:    map[string]int{},
 	}
 
 	s.Server = httptest.NewServer(s.routes())
@@ -86,6 +91,22 @@ func (s *Server) PassLocale(locale string) {
 	defer s.mu.Unlock()
 
 	delete(s.failLocales, locale)
+}
+
+// LimitSlotValues makes locale's builds fail, without naming a value, while its model holds more than n values of slotType, as Amazon fails a model too large.
+func (s *Server) LimitSlotValues(locale, slotType string, n int) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.valueLimits[locale+"/"+slotType] = n
+}
+
+// RejectSlotValue makes the build of every locale whose model has value, as a slot value or a synonym, fail with an error naming it.
+func (s *Server) RejectSlotValue(value string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.rejected[value] = true
 }
 
 // UnreportLocale leaves locale out of the skill status entirely.

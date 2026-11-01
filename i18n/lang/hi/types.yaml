@@ -1,0 +1,329 @@
+# Values for the static custom slot types in model.yaml, translated on Crowdin from the English file. Each key is the value's ID, which is what the handler acts on; the first line is the value and any further lines its synonyms, which are what people say. The dynamic types' examples are in examples.yaml, and notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
+LIBRARY_SECTION:
+  albums: |-
+    एल्बम
+    एल्बम्स
+    म्यूज़िक एल्बम
+    albums
+  artists: |-
+    आर्टिस्ट
+    कलाकार
+    सिंगर
+    गायक
+    बैंड
+    artists
+  favourites: |-
+    फ़ेवरेट
+    फ़ेवरेट्स
+    फेवरेट
+    पसंदीदा
+    favourites
+  movies: |-
+    फ़िल्में
+    फिल्में
+    मूवीज़
+    मूवी लाइब्रेरी
+    फ़िल्म लाइब्रेरी
+    movies
+  music: |-
+    म्यूज़िक
+    म्यूजिक
+    संगीत
+    गाने
+    म्यूज़िक लाइब्रेरी
+    music
+  musicvideos: |-
+    म्यूज़िक वीडियो
+    वीडियो गाने
+    music videos
+  recentepisodes: |-
+    नए एपिसोड
+    हाल में जोड़े गए एपिसोड
+    लेटेस्ट एपिसोड
+    नए शो
+    नए सीरियल
+  recentmovies: |-
+    नई फ़िल्में
+    नई फिल्में
+    हाल में जोड़ी गई फ़िल्में
+    लेटेस्ट फ़िल्में
+    नई मूवीज़
+    लेटेस्ट मूवीज़
+  recentmusic: |-
+    नया म्यूज़िक
+    नए गाने
+    लेटेस्ट गाने
+    हाल में जोड़े गए गाने
+    नए एल्बम
+    लेटेस्ट एल्बम
+  recentmusicvideos: |-
+    नए म्यूज़िक वीडियो
+    लेटेस्ट म्यूज़िक वीडियो
+    हाल में जोड़े गए म्यूज़िक वीडियो
+  tvshows: |-
+    शो
+    टीवी शो
+    सीरियल
+    सीरीज़
+    वेब सीरीज़
+    tv shows
+LIBRARY_TYPE:
+  music: |-
+    म्यूज़िक
+    म्यूजिक
+    संगीत
+    गानों की
+    ऑडियो
+    music
+  video: |-
+    वीडियो
+    फ़िल्मों की
+    फ़िल्म
+    टीवी
+    video
+MATCH_CHOICE:
+  first: |-
+    पहला
+    पहली
+    पहले
+  last: |-
+    आख़िरी
+    आखिरी
+    आखरी
+  newer: |-
+    नया
+    नई
+    नयी
+    नए
+    नवीनतम
+    सबसे नया
+    सबसे नई
+    सबसे नयी
+    सबसे नए
+  older: |-
+    पुराना
+    पुरानी
+    पुराने
+    ओरिजिनल
+    सबसे पुराना
+    सबसे पुरानी
+    सबसे पुराने
+  second: |-
+    दूसरा
+    दूसरी
+    दूसरे
+MEDIA_TYPE:
+  album: |-
+    एल्बम
+    एल्बम्स
+  artist: |-
+    आर्टिस्ट
+    कलाकार
+    सिंगर
+    गायक
+    बैंड
+  audio: |-
+    सुनने के लिए कुछ
+    कुछ सुनने को
+    संगीत
+    म्यूज़िक
+  episode: |-
+    एपिसोड
+    एपिसोड्स
+  movie: |-
+    फ़िल्म
+    फिल्म
+    मूवी
+    पिक्चर
+    movie
+  musicvideo: |-
+    म्यूज़िक वीडियो
+    वीडियो गाना
+    वीडियो गाने
+  song: |-
+    गाना
+    गाने
+    गीत
+    सॉन्ग
+    song
+  tvshow: |-
+    शो
+    टीवी शो
+    सीरियल
+    सीरीज़
+    वेब सीरीज़
+    show
+  video: |-
+    देखने के लिए कुछ
+    कुछ देखने को
+    वीडियो
+NAV_ACTION:
+  back: |-
+    पीछे
+    वापस
+    बैक
+  down: |-
+    नीचे
+    डाउन
+  home: |-
+    होम
+    होम स्क्रीन
+    मेन मेनू
+  info: |-
+    जानकारी
+    इन्फो
+    डिटेल्स
+  left: |-
+    बाएँ
+    बाएं
+    लेफ़्ट
+  menu: |-
+    मेनू
+    ऑप्शन
+    ऑप्शंस
+  osd: |-
+    ऑन स्क्रीन डिस्प्ले
+    प्लेयर कंट्रोल
+    कंट्रोल
+  pagedown: |-
+    पेज डाउन
+    नीचे स्क्रॉल
+  pageup: |-
+    पेज अप
+    ऊपर स्क्रॉल
+  right: |-
+    दाएँ
+    दाएं
+    राइट
+  select: |-
+    सिलेक्ट
+    ओके
+    ठीक है
+    एंटर
+    चुनो
+    क्लिक
+  up: |-
+    ऊपर
+    अप
+NAV_DIRECTION:
+  down: "नीचे"
+  left: "बाएँ"
+  right: "दाएँ"
+  up: "ऊपर"
+POWER_ACTION:
+  hibernate: |-
+    हाइबरनेट
+    डीप स्लीप
+  quit: |-
+    क्विट
+    कोडी से बाहर
+  reboot: |-
+    रीस्टार्ट
+    रीबूट
+  shutdown: |-
+    शट डाउन
+    शटडाउन
+    पावर ऑफ़
+  suspend: |-
+    सस्पेंड
+    स्लीप
+REPEAT_MODE:
+  all: |-
+    सब
+    सब कुछ
+    पूरी प्लेलिस्ट
+    सारे गाने
+    पूरी लिस्ट
+  "off": |-
+    बंद
+    ऑफ़
+    कुछ नहीं
+  one: |-
+    यह
+    ये
+    यही
+    यह गाना
+    यह एपिसोड
+    एक गाना
+ROTATE_DIRECTION:
+  clockwise: |-
+    घड़ी की दिशा में
+    दाएँ
+    दाएं
+  counterclockwise: |-
+    घड़ी की उल्टी दिशा में
+    बाएँ
+    बाएं
+SEEK_DIRECTION:
+  back: |-
+    पीछे
+    बैक
+  forward: |-
+    आगे
+    फ़ॉरवर्ड
+SEEK_SIZE:
+  big: |-
+    बहुत
+    काफ़ी
+    ज़्यादा
+    बहुत ज़्यादा
+  small: |-
+    थोड़ा
+    थोड़ा सा
+    ज़रा
+    ज़रा सा
+STREAM_STEP:
+  next: |-
+    अगला
+    दूसरा
+    अगली
+    दूसरी
+  previous: |-
+    पिछला
+    पिछली
+SUBTITLE_ACTION:
+  download: |-
+    डाउनलोड करो
+    ढूँढो
+    खोजो
+  next: |-
+    बदलो
+    अगले लगाओ
+    दूसरे लगाओ
+  "off": |-
+    बंद करो
+    ऑफ़ करो
+    हटाओ
+    छुपाओ
+  "on": |-
+    चालू करो
+    ऑन करो
+    दिखाओ
+    लगाओ
+  previous: |-
+    पिछले लगाओ
+TRANSPORT_COMMAND:
+  next: |-
+    अगला चलाओ
+    आगे बढ़ो
+    स्किप करो
+  pause: "पॉज़ करो"
+  previous: |-
+    पिछला चलाओ
+    पीछे जाओ
+  resume: |-
+    फिर से चलाओ
+    रिज़्यूम करो
+    चलाओ
+  stop: "बंद करो"
+ZOOM_ACTION:
+  in: |-
+    इन
+    अंदर
+  out: |-
+    आउट
+    बाहर
+  reset: |-
+    रीसेट
+    नॉर्मल
+    सामान्य

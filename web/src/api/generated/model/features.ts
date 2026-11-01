@@ -7,7 +7,7 @@
  */
 
 export interface Features {
-  /** Redeploy the skill on its own when what would be deployed changes; a failed automatic deploy pauses this until a deploy started by hand succeeds */
+  /** Redeploy the skill on its own when what would be deployed changes. An automatic deploy that fails for a reason that may pass, such as Amazon being unavailable, is tried again up to three times with a growing wait; any other failure, or a fourth in a row, pauses this until a deploy started by hand succeeds */
   auto_deploy: boolean;
   /** How often auto_deploy looks for changes, in minutes that can be fractional; a change goes live within two checks */
   auto_deploy_minutes: number;

@@ -1,0 +1,92 @@
+# Cross-language set: see ja.yaml.
+#
+# Arabic (ar-SA) requests against an English library. Same schema as asr_corpus.yaml; cases are scored, not asserted.
+#
+# Library: an English Kodi library as a TMDB and MusicBrainz scrape leaves it: Hollywood films under their English titles, Arabic films under the Latin titles their international releases use (Theeb, Wadjda) and music under the names the tags carry, Arabic artists in Latin letters and one Arabic song tagged in Arabic. It carries near neighbours (Toy Story and 3, Frozen and II, Jurassic Park and World) so a wrong play is possible.
+#
+# Cases: what Alexa's ar-SA recogniser plausibly writes when an Arabic speaker asks for the title: English titles transliterated into Arabic letters without vowel points, with the Gulf ق or غ for g, ذ or ز for th, ب for p and ف for v, "ذا" for "the", and numbers as Arabic-Indic or ASCII digits. Arabic titles are written as Arabic spells them. Absent titles (not_found) are well-known films and artists the library lacks.
+#
+# Cases describe what a listener hears; don't change a case to suit the matcher's results (see docs/src/content/docs/contributing/dependencies.md).
+suites:
+  - name: english library, arabic requests
+    lang: en
+    library:
+      - {id: titanic, kind: movie, title: "Titanic", year: 1997}
+      - {id: avatar, kind: movie, title: "Avatar", year: 2009}
+      - {id: frozen, kind: movie, title: "Frozen", year: 2013}
+      - {id: frozen2, kind: movie, title: "Frozen II", year: 2019}
+      - {id: toystory, kind: movie, title: "Toy Story", year: 1995}
+      - {id: toystory3, kind: movie, title: "Toy Story 3", year: 2010}
+      - {id: inception, kind: movie, title: "Inception", year: 2010}
+      - {id: interstellar, kind: movie, title: "Interstellar", year: 2014}
+      - {id: joker, kind: movie, title: "Joker", year: 2019}
+      - {id: matrix, kind: movie, title: "The Matrix", year: 1999}
+      - {id: topgun, kind: movie, title: "Top Gun: Maverick", year: 2022}
+      - {id: jurassicpark, kind: movie, title: "Jurassic Park", year: 1993}
+      - {id: jurassicworld, kind: movie, title: "Jurassic World", year: 2015}
+      - {id: lionking, kind: movie, title: "The Lion King", year: 1994}
+      - {id: godfather, kind: movie, title: "The Godfather", year: 1972}
+      - {id: forrestgump, kind: movie, title: "Forrest Gump", year: 1994}
+      - {id: aladdin, kind: movie, title: "Aladdin", year: 1992}
+      - {id: theeb, kind: movie, title: "Theeb", year: 2014}
+      - {id: wadjda, kind: movie, title: "Wadjda", year: 2012}
+      - {id: friends, kind: tvshow, title: "Friends", year: 1994}
+      - {id: breakingbad, kind: tvshow, title: "Breaking Bad", year: 2008}
+      - {id: queen, kind: artist, title: "Queen"}
+      - {id: taylor, kind: artist, title: "Taylor Swift"}
+      - {id: coldplay, kind: artist, title: "Coldplay"}
+      - {id: amrdiab, kind: artist, title: "Amr Diab"}
+      - {id: fairuz, kind: artist, title: "Fairuz"}
+      - {id: nancy, kind: artist, title: "Nancy Ajram"}
+      - {id: tamally, kind: song, title: "تملي معاك"}
+      - {id: shapeofyou, kind: song, title: "Shape of You"}
+      - {id: thriller, kind: album, title: "Thriller"}
+    cases:
+      # transliteration: English titles in Arabic letters.
+      - {heard: "تايتانك", want: play, id: titanic}
+      - {heard: "تيتانيك", want: play, id: titanic}
+      - {heard: "افاتار", want: play, id: avatar}
+      - {heard: "أفاتار", want: play, id: avatar}
+      - {heard: "فروزن", want: play, id: frozen}
+      - {heard: "انسبشن", want: play, id: inception}
+      - {heard: "انترستيلر", want: play, id: interstellar}
+      - {heard: "جوكر", want: play, id: joker}
+      - {heard: "ذا ماتريكس", want: play, id: matrix}
+      - {heard: "ماتريكس", want: play, id: matrix}
+      - {heard: "جوراسيك بارك", want: play, id: jurassicpark}
+      - {heard: "جوراسيك وورلد", want: play, id: jurassicworld}
+      - {heard: "ذا لايون كينج", want: play, id: lionking}
+      - {heard: "فورست غامب", want: play, id: forrestgump}
+      - {heard: "علاء الدين", want: play, id: aladdin}
+      - {heard: "توي ستوري", want: play, id: toystory}
+      - {heard: "فريندز", want: play, id: friends}
+      - {heard: "بريكنج باد", want: play, id: breakingbad}
+      - {heard: "كوين", want: play, id: queen}
+      - {heard: "تايلور سويفت", want: play, id: taylor}
+      - {heard: "كولدبلاي", want: play, id: coldplay}
+      - {heard: "شيب اوف يو", want: play, id: shapeofyou}
+      - {heard: "ثريلر", want: play, id: thriller}
+      # g: the Gulf ق and the غ for a hard g; th as ذ or ز.
+      - {heard: "ذا قودفاذر", want: play, id: godfather}
+      - {heard: "ذا غودفاذر", want: play, id: godfather}
+      - {heard: "توب قن مافريك", want: play, id: topgun}
+      - {heard: "توب غن مافريك", want: play, id: topgun}
+      # arabic: Arabic names the library holds in Latin letters, and one in Arabic.
+      - {heard: "ذيب", want: play, id: theeb}
+      - {heard: "وجدة", want: play, id: wadjda}
+      - {heard: "عمرو دياب", want: play, id: amrdiab}
+      - {heard: "فيروز", want: play, id: fairuz}
+      - {heard: "نانسي عجرم", want: play, id: nancy}
+      - {heard: "تملي معاك", want: play, id: tamally}
+      # number: sequels with Arabic-Indic and ASCII digits.
+      - {heard: "توي ستوري ٣", want: play, id: toystory3}
+      - {heard: "فروزن 2", want: play, id: frozen2}
+      # ambiguous: a shared opening word.
+      - {heard: "جوراسيك", want: ask, among: [jurassicpark, jurassicworld]}
+      # absent.
+      - {heard: "باتمان", want: not_found}
+      - {heard: "تيرميناتور", want: not_found}
+      - {heard: "محمد عبده", want: not_found}
+      - {heard: "شيرين", want: not_found}
+      - {heard: "هاري بوتر", want: not_found}
+      - {heard: "ستار وورز", want: not_found}

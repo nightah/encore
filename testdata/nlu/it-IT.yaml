@@ -1,0 +1,114 @@
+# NLU checks for it-IT: run them with make nlu (see internal/smapi/nlu). Each row is an utterance, the intent Alexa should pick and the slots it should fill; an empty slot value takes any words, and a value of a custom type may be its ID. Mark a row pending, with why, while the model that makes it pass isn't deployed yet.
+locale: it-IT
+cases:
+  # Every intent, in model order, in the language's own words.
+  - {utterance: "annulla", intent: AMAZON.CancelIntent}
+  - {utterance: "aiuto", intent: AMAZON.HelpIntent}
+  - {utterance: "stop", intent: AMAZON.StopIntent}
+  - {utterance: "torna alla home", intent: AMAZON.NavigateHomeIntent}
+  - {utterance: "elefanti viola che ballano sulla luna", intent: AMAZON.FallbackIntent}
+  - {utterance: "metti in pausa la tv", intent: AMAZON.PauseIntent}
+  - {utterance: "riprendi la tv", intent: AMAZON.ResumeIntent}
+  - {utterance: "successivo", intent: AMAZON.NextIntent}
+  - {utterance: "precedente", intent: AMAZON.PreviousIntent}
+  - {utterance: "ricomincia", intent: AMAZON.StartOverIntent}
+  - {utterance: "sì", intent: AMAZON.YesIntent}
+  - {utterance: "no", intent: AMAZON.NoIntent}
+  - {utterance: "riproduzione casuale attiva", intent: AMAZON.ShuffleOnIntent}
+  - {utterance: "riproduzione casuale disattivata", intent: AMAZON.ShuffleOffIntent}
+  - {utterance: "ripetizione attiva", intent: AMAZON.LoopOnIntent}
+  - {utterance: "ripetizione disattivata", intent: AMAZON.LoopOffIntent}
+  - {utterance: "voglio vedere il film la vita è bella", intent: WatchMovie, slots: {Movie: "la vita è bella"}}
+  - {utterance: "continua a guardare gomorra", intent: WatchNextEpisode, slots: {Show: "gomorra"}}
+  - {utterance: "trova gomorra", intent: PlayMedia, slots: {Query: "gomorra"}}
+  - {utterance: "la seconda per favore", intent: ChooseMatch, slots: {Which: "second"}, pending: "ChooseMatch is in the model from the next deploy"}
+  - {utterance: "scegli tu un film di commedia per me", intent: WatchRandomMovie, slots: {Genre: ""}}
+  - {utterance: "metti il trailer", intent: WatchMovieTrailer}
+  - {utterance: "continua la saga di la vita è bella", intent: WatchNextInCollection, slots: {Movie: "la vita è bella"}}
+  - {utterance: "metti gomorra episodio 3 della stagione 2", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "gomorra"}}
+  - {utterance: "metti gomorra dall'inizio", intent: WatchFirstEpisode, slots: {Show: "gomorra"}}
+  - {utterance: "metti il nuovo episodio di gomorra", intent: WatchLatestEpisode, slots: {Show: "gomorra"}}
+  - {utterance: "continua l'ultima serie", intent: ContinueWatching}
+  - {utterance: "metti un episodio di gomorra", intent: WatchRandomEpisode, slots: {Show: "gomorra"}}
+  - {utterance: "metti una serie t. v. di commedia qualsiasi", intent: WatchRandomShow, slots: {Genre: ""}}
+  - {utterance: "riproduci gli episodi di gomorra in ordine casuale", intent: ShuffleShow, slots: {Show: "gomorra"}}
+  - {utterance: "maratona di gomorra", intent: BingeShow, slots: {Show: "gomorra"}}
+  - {utterance: "metti l'artista vasco rossi", intent: ListenToArtist, slots: {Artist: "vasco rossi"}}
+  - {utterance: "riproduzione casuale dell'artista vasco rossi", intent: ShuffleArtist, slots: {Artist: "vasco rossi"}}
+  - {utterance: "metti l'album vado al massimo", intent: ListenToAlbum, slots: {Album: "vado al massimo"}}
+  - {utterance: "mescola l'album vado al massimo", intent: ShuffleAlbum, slots: {Album: "vado al massimo"}}
+  - {utterance: "metti l'ultimo album di vasco rossi", intent: ListenToLatestAlbum, slots: {Artist: "vasco rossi"}}
+  - {utterance: "mescola l'ultimo album di vasco rossi", intent: ShuffleLatestAlbum, slots: {Artist: "vasco rossi"}}
+  - {utterance: "metti la canzone albachiara", intent: ListenToSong, slots: {Song: "albachiara"}}
+  - {utterance: "metti albachiara di vasco rossi", intent: ListenToSongOrAlbum, slots: {Artist: "vasco rossi", Title: "albachiara"}}
+  - {utterance: "metti il genere commedia", intent: ListenToGenre, slots: {Genre: ""}}
+  - {utterance: "metti le canzoni nuove", intent: ListenToRecentSongs}
+  - {utterance: "facciamo festa", intent: PartyMode}
+  - {utterance: "metti il video musicale di bohemian rhapsody", intent: WatchMusicVideo, slots: {MusicVideo: ""}}
+  - {utterance: "metti un video musicale commedia a caso", intent: WatchRandomMusicVideo, slots: {Genre: ""}}
+  - {utterance: "mescola tutti i video musicali commedia", intent: ShuffleMusicVideos, slots: {Genre: ""}}
+  - {utterance: "metti la playlist musicale viaggio", intent: PlayPlaylist, slots: {Playlist: ""}}
+  - {utterance: "riproduci la mia playlist viaggio in ordine casuale", intent: ShufflePlaylist, slots: {Playlist: ""}}
+  - {utterance: "dammi un consiglio su un film", intent: Recommend, slots: {MediaType: "movie"}}
+  - {utterance: "ci sono film nuovi da vedere", intent: WhatsNew, slots: {MediaType: "movie"}}
+  - {utterance: "elenca gli album di vasco rossi", intent: WhatAlbums, slots: {Artist: "vasco rossi"}}
+  - {utterance: "indietro di cinque minuti", intent: PlayerSeek, slots: {Duration: "", SeekDirection: "back"}}
+  - {utterance: "riavvolgi di cinque minuti", intent: PlayerRewind, slots: {Duration: ""}}
+  - {utterance: "vai al punto cinque minuti", intent: PlayerSeekTo, slots: {Position: ""}}
+  - {utterance: "modalità ripetizione tutto", intent: Repeat, slots: {RepeatMode: "all"}}
+  - {utterance: "ingrandisci", intent: PlayerZoom}
+  - {utterance: "ruota in senso orario", intent: PlayerRotate, slots: {Rotation: "clockwise"}}
+  - {utterance: "sposta l'immagine giù", intent: PlayerMove, slots: {Direction: "down"}}
+  - {utterance: "esci da schermo intero", intent: Fullscreen}
+  - {utterance: "modalità stereoscopica", intent: StereoscopicMode}
+  - {utterance: "attiva l'audio digitale", intent: AudioPassthrough}
+  - {utterance: "imposta il volume a 30", intent: VolumeSet, slots: {Level: "30"}}
+  - {utterance: "più forte", intent: VolumeUp}
+  - {utterance: "abbassa il volume", intent: VolumeDown}
+  - {utterance: "muto", intent: Mute}
+  - {utterance: "cosa sto guardando", intent: CurrentPlayItemEnquiry}
+  - {utterance: "quanto manca alla fine", intent: CurrentPlayItemTimeRemaining}
+  - {utterance: "come si chiama questo echo", intent: IdentifyEcho}
+  - {utterance: "cambia i sottotitoli", intent: Subtitles, slots: {SubtitleAction: "next"}}
+  - {utterance: "cambia audio", intent: AudioStream, slots: {Step: "next"}}
+  - {utterance: "vai indietro", intent: Navigate, slots: {NavAction: "back"}}
+  - {utterance: "detta ciao", intent: TypeText, slots: {Text: ""}}
+  - {utterance: "mostra i miei film", intent: ViewLibrary, slots: {Section: "movies"}}
+  - {utterance: "mostra la playlist musicale viaggio", intent: ViewPlaylist, slots: {Playlist: ""}}
+  - {utterance: "apri il preferito rai news", intent: OpenFavourite, slots: {Favourite: ""}}
+  - {utterance: "avvia youtube", intent: LaunchAddon, slots: {Addon: ""}}
+  - {utterance: "fai una ricerca globale di gomorra", intent: GlobalSearch, slots: {Query: "gomorra"}}
+  - {utterance: "iberna kodi", intent: Power, slots: {PowerAction: "hibernate"}}
+  - {utterance: "espelli il disco", intent: EjectMedia}
+  - {utterance: "cerca nuovi film", intent: UpdateLibrary}
+  - {utterance: "pulisci la libreria", intent: CleanLibrary}
+  # Answers to "did you mean …?".
+  - {utterance: "sì grazie", intent: AMAZON.YesIntent}
+  - {utterance: "no grazie", intent: AMAZON.NoIntent}
+  - {utterance: "intendevo il più vecchio", intent: ChooseMatch, slots: {Which: "older"}, pending: "ChooseMatch is in the model from the next deploy"}
+  - {utterance: "intendevo l'altro", intent: ChooseMatch, slots: {Which: "second"}, pending: "ChooseMatch is in the model from the next deploy"}
+  - {utterance: "l'ultimo", intent: ChooseMatch, slots: {Which: "last"}, pending: "ChooseMatch is in the model from the next deploy"}
+  # Bare titles, which free-text and title slots compete for.
+  - {utterance: "riproduci gomorra", intent: PlayMedia, slots: {Query: "gomorra"}}
+  - {utterance: "metti gomorra", intent: PlayMedia, slots: {Query: "gomorra"}}
+  # Rooms.
+  - {utterance: "metti il film la vita è bella in salotto", intent: WatchMovie, slots: {Movie: "la vita è bella", Room: ""}}
+  - {utterance: "continua a guardare gomorra in salotto", intent: WatchNextEpisode, slots: {Room: "", Show: "gomorra"}}
+  - {utterance: "metti un po' di musica di vasco rossi in salotto", intent: ListenToArtist, slots: {Artist: "vasco rossi", Room: ""}}
+  - {utterance: "pausa in salotto", intent: RoomControl, slots: {Command: "pause", Room: ""}}
+  - {utterance: "pausa la tv in salotto", intent: RoomControl, slots: {Command: "pause", Room: ""}}
+  # Episodes and seasons, including the one-shot forms.
+  - {utterance: "metti gomorra stagione 2 episodio 3", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "gomorra"}}
+  - {utterance: "metti la stagione 2 episodio 3 di gomorra", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "gomorra"}}
+  - {utterance: "metti gomorra stagione 2 episodio 3 in salotto", intent: WatchEpisode, slots: {Episode: "3", Room: "", Season: "2", Show: "gomorra"}}
+  - {utterance: "metti il prossimo episodio di gomorra", intent: WatchNextEpisode, slots: {Show: "gomorra"}}
+  - {utterance: "metti l'ultimo episodio di gomorra", intent: WatchLatestEpisode, slots: {Show: "gomorra"}}
+  - {utterance: "metti il primo episodio di gomorra", intent: WatchFirstEpisode, slots: {Show: "gomorra"}}
+  - {utterance: "metti il primissimo episodio di gomorra", intent: WatchFirstEpisode, slots: {Show: "gomorra"}}
+  # Music by an artist, including the one-shot forms.
+  - {utterance: "metti un po' di musica di vasco rossi", intent: ListenToArtist, slots: {Artist: "vasco rossi"}}
+  - {utterance: "metti la canzone albachiara di vasco rossi", intent: ListenToSong, slots: {Artist: "vasco rossi", Song: "albachiara"}}
+  - {utterance: "metti l'album vado al massimo di vasco rossi", intent: ListenToAlbum, slots: {Album: "vado al massimo", Artist: "vasco rossi"}}
+  - {utterance: "mescola la musica di vasco rossi", intent: ShuffleArtist, slots: {Artist: "vasco rossi"}}
+  - {utterance: "riproduci la musica di vasco rossi in ordine casuale", intent: ShuffleArtist, slots: {Artist: "vasco rossi"}}
+  - {utterance: "metti il nuovo album di vasco rossi", intent: ListenToLatestAlbum, slots: {Artist: "vasco rossi"}}

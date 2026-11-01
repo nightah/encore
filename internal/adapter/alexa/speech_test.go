@@ -93,7 +93,7 @@ func TestSpokenList(t *testing.T) {
 	assert.Equal(t, "Dune", spokenList("en", []string{"Dune"}))
 	assert.Equal(t, "Dune and Alien", spokenList("en", []string{"Dune", "Alien"}))
 	assert.Equal(t, "Dune, Alien und Heat", spokenList("de", []string{"Dune", "Alien", "Heat"}))
-	assert.Equal(t, "Dune and Alien", spokenList("ja", []string{"Dune", "Alien"}), "a language without its own word uses English")
+	assert.Equal(t, "Dune and Alien", spokenList("xx", []string{"Dune", "Alien"}), "a language without its own word uses English")
 }
 
 func TestParseDurationRejectsUnitsInTheWrongPart(t *testing.T) {
@@ -134,4 +134,26 @@ func FuzzParseDuration(f *testing.F) {
 			t.Fatalf("parseDuration(%q) rejected it but returned %s", s, d)
 		}
 	})
+}
+
+func TestNewSpeechRejectsBrokenMusicSample(t *testing.T) {
+	_, err := NewSpeech(speechSources(t, map[string]string{
+		"en-US": "language: en\nutterances:\n  ListenToArtist:\n    - \"(play|put on {Artist}\"\n",
+	}), slog.New(slog.DiscardHandler))
+	require.ErrorContains(t, err, "locale en-US")
+}
+
+// A locale Encore has no model for reads a lone command the fallback locale's way.
+func TestBareCommandInAnUnknownLocale(t *testing.T) {
+	h, _, _ := newHandler(t)
+
+	want, ok := h.Speech.BareCommand(fallbackLocale, "select")
+	require.True(t, ok, "select is a remote command in English")
+
+	got, ok := h.Speech.BareCommand("xx-XX", "select")
+	require.True(t, ok)
+	assert.Equal(t, want, got)
+
+	_, ok = h.Speech.BareCommand("xx-XX", "Dune")
+	assert.False(t, ok, "a title is no command")
 }

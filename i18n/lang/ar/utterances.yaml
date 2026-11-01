@@ -1,0 +1,336 @@
+# Utterance patterns, translated on Crowdin from the English file. Each key is one way of asking, and may hold several patterns, one per line. (a|b) picks one, [a|b] is optional, {Slot} is a slot. Built-in intents already understand the common phrasings; samples here only add Kodi-specific ones. An optional room at the end, such as "[(in|on) the {Room}]", lets a request name the room whose Kodi should play it; notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
+AMAZON.LoopOffIntent:
+  loop_off: "(وقفي|وقف|الغي|طفي) التكرار"
+  turn_off_repeat: "(وقفي|الغي|طفي) (وضع التكرار|الإعادة|التكرار التلقائي)"
+AMAZON.LoopOnIntent:
+  loop: "(شغلي|شغل|فعلي) التكرار"
+  turn_repeat: "(شغلي|فعلي|فعل) (وضع التكرار|الإعادة|التكرار التلقائي)"
+AMAZON.PauseIntent:
+  pause_tv: "(وقفي|وقف) (التلفزيون|كودي|الفيديو|الفيلم|المسلسل) (مؤقتا|شوي)\n(إيقاف مؤقت|ايقاف مؤقت) (للتلفزيون|لكودي|للفيديو|للفيلم|للمسلسل)"
+AMAZON.ResumeIntent:
+  resume_tv: "(كملي|كمل|استأنفي|استأنف) (التلفزيون|كودي|الفيديو|الفيلم|المسلسل|التشغيل)"
+AMAZON.ShuffleOffIntent:
+  shuffle_off: "(وقفي|الغي|طفي) (التشغيل العشوائي|الخلط)"
+  turn_off_shuffle: "(وقفي|الغي|طفي) (الوضع العشوائي|وضع الخلط)"
+AMAZON.ShuffleOnIntent:
+  shuffle: "(شغلي|فعلي) (التشغيل العشوائي|الخلط)"
+  turn_shuffle: "(شغلي|فعلي|فعل) (الوضع العشوائي|وضع الخلط)"
+AudioPassthrough:
+  toggle_digital_audio: "(شغلي|طفي|فعلي|الغي) (الصوت الرقمي|المخرج الصوتي الرقمي)"
+  toggle_passthrough: "(شغلي|طفي|فعلي|الغي) (تمرير الصوت|الباس ثرو)"
+  turn_passthrough: "(بدلي|غيري) (وضع تمرير الصوت|الباس ثرو)"
+AudioStream:
+  audio: "{Step} (الصوت|المسار الصوتي|لغة الصوت|الدبلجة)\n(المسار الصوتي|لغة الصوت) {Step}"
+  audio_2: "(الصوت|المسار الصوتي|الدبلجة) باللغة {Language}"
+  audio_3: "(الدبلجة|لغة الصوت) {Language}"
+  language: "{Step} اللغة\nاللغة {Step}"
+  play: "(شغلي|شغل) باللغة {Language}"
+  switch_audio: "(غيري|بدلي|حطي|خلي) (المسار الصوتي|لغة الصوت|اللغة|الدبلجة) (إلى|على) {Language}\n(غيري|بدلي) الصوت (إلى|على) {Language}"
+BingeShow:
+  binge: "(شغلي|شغل) (كل حلقات|جميع حلقات) [مسلسل] {Show} [في {Room}]"
+  binge_rest: "(شغلي|شغل) (باقي حلقات|بقية حلقات) [مسلسل] {Show} [في {Room}]"
+  play_all: "(ابغى|ابي|ودي) اشوف [مسلسل] {Show} كامل"
+  play_all_unwatched: "(شغلي|شغل) (الحلقات اللي ما شفتها|الحلقات المتبقية|الحلقات الباقية) من [مسلسل] {Show} [في {Room}]"
+  start_binge_mode: "(فعلي|شغلي) (وضع المشاهدة المتواصلة|المشاهدة المتواصلة) (لمسلسل|على مسلسل) {Show} [في {Room}]"
+ChooseMatch:
+  answer: "{Answer}\n{Answer} لو سمحت"
+  meant_answer: "(قصدي|كان قصدي|أقصد|ابغى|ابي|أريد) {Answer}"
+  meant_which: "(قصدي|كان قصدي|أقصد|ابغى|ابي|أريد) {Which}"
+  the_which: "(الفيلم|المسلسل|اللي) {Which}"
+  which: "{Which}"
+  which_please: "{Which} لو سمحت\n(الفيلم|المسلسل) {Which} لو سمحت"
+CleanLibrary:
+  clean_library: "(نظفي|نظف) (المكتبة|مكتبتي)"
+  clean_library_2: "(نظفي|نظف) مكتبة {Library}"
+  tidy_library: "(رتبي|رتب) مكتبة {Library}"
+ContinueWatching:
+  continue_last_show: "(كملي|كمل) (آخر مسلسل|المسلسل الأخير) [في {Room}]"
+  continue_watching: "(كملي|كمل) (المشاهدة|الفرجة) [في {Room}]"
+  continue_where_i: "(كملي|كمل) من (وين ما وقفت|حيث توقفت|المكان اللي وقفت فيه) [في {Room}]"
+  pick_up_where: "(ارجعي|رجعي) (للمكان اللي وقفت فيه|لآخر شي كنت اشوفه) [في {Room}]"
+  play_what_i: "(شغلي|شغل) (اللي كنت اشوفه|اللي كنت أشاهده) [في {Room}]"
+  where_did_i: "(وين|فين) وقفت"
+CurrentPlayItemEnquiry:
+  what_am_i: "(وش|ايش|إيش) (اللي اشوفه|اللي اسمعه|قاعد اشوف|قاعد اسمع)"
+  what_is_playing: "(وش|ايش|إيش|ماذا) (يشتغل|يعرض) [الحين|الآن]"
+  what_show_is: "(وش|ايش|إيش|ما) (اسم|هو) (هذا الفيلم|هذا المسلسل|هذي الأغنية|هذه الأغنية)"
+  whats_playing: "(وش|ايش|إيش) (الشغال|المعروض) [الحين|الآن]"
+  who_is_this: "(مين|من) (هذا|هذي|اللي يغني|المغني)"
+CurrentPlayItemTimeRemaining:
+  how_long_is: "كم (باقي|بقي|متبقي) [على النهاية|على الفيلم|على الحلقة]"
+  how_much_is: "كم (الوقت المتبقي|المدة المتبقية)"
+  how_much_longer: "(باقي|بقي) (كثير|وقت طويل)"
+  how_much_time: "كم (باقي من الوقت|بقي من الوقت)"
+  when_is_this: "(متى|امتى) (يخلص|ينتهي) [الفيلم|المسلسل|هذا]"
+  when_will_movie: "(متى|امتى) (تخلص|تنتهي) الحلقة"
+  when_will_this: "(الساعة كم|كم الساعة) (يخلص|ينتهي) (الفيلم|هذا)"
+EjectMedia:
+  eject: "(إخراج|اخراج) القرص"
+  eject_disc: "(طلعي|اطلعي|اخرجي) (القرص|السي دي|الدي في دي|البلو راي|الاسطوانة)"
+  open_disc_tray: "(افتحي|افتح) (درج|باب) (القرص|السي دي|الدي في دي)"
+Fullscreen:
+  exit_fullscreen: "(اطلعي|اخرجي|طلعي) من (ملء الشاشة|الشاشة الكاملة|وضع ملء الشاشة)"
+  fullscreen: "(ملء الشاشة|شاشة كاملة)"
+  go_fullscreen: "(حولي|خلي|كبري) (لملء الشاشة|للشاشة الكاملة|الشاشة كاملة)"
+  show_visualizer: "(اعرضي|شغلي|اظهري) (المؤثرات المرئية|المرئيات)"
+  visualizer: "(فعلي|الغي) (المؤثرات المرئية|المرئيات)"
+GlobalSearch:
+  do_global_search: "(سوي|اعملي) (بحث شامل|بحث عام) عن {Query}"
+  global_search: "(بحث شامل|بحث عام) عن {Query}"
+  search_kodi_for: "(دوري|ابحثي|دور|ابحث) (في كل مكان|في كودي|في كل الإضافات) عن {Query}\n(دوري على|ابحثي عن) {Query} في كل مكان"
+IdentifyEcho:
+  identify_this_echo: "(عرفيني|عرفني) (بهذا الجهاز|على هذا الجهاز)"
+  what_echo_is: "(وش|ايش|إيش) هو هذا الجهاز"
+  what_is_this: "(وش|ايش|إيش|ما) اسم (هذا الجهاز|هالجهاز|هذي السماعة)"
+  whats_name_this: "(وش|ايش|ما) اسم (هذا الإيكو|الجهاز اللي اكلمه)"
+  which_echo_am: "مع (أي|اي) جهاز (اتكلم|أتكلم|أتحدث)"
+  which_echo_is: "(أي|اي) جهاز (هذا|هذي)"
+LaunchAddon:
+  launch: "(نفذي|نفذ) {Addon}"
+  launch_addon: "(شغلي|شغل|افتحي|افتح) (الإضافة|السكربت|التطبيق|البرنامج) {Addon}"
+  launch_addon_2: "(شغلي|شغل|افتحي|افتح) (إضافة|اضافة|تطبيق|برنامج) {Addon}"
+ListenToAlbum:
+  play_album: "(شغلي|شغل|سمعيني|حطي) (ألبوم|البوم) {Album} [في {Room}]"
+  play_album_2: "(شغلي|شغل|سمعيني) (ألبوم|البوم) {Album} (حق|للفنان|للفنانة) {Artist}"
+  play_album_by: "(شغلي|شغل|سمعيني|حطي) (ألبوم|البوم) {Album} (من|غناء) {Artist} [في {Room}]"
+ListenToArtist:
+  play_artist: "(شغلي|شغل|سمعيني|حطي) (الفنان|الفنانة|المطرب|المطربة) {Artist} [في {Room}]"
+  play_music_by: "(شغلي|شغل|سمعيني|حطي|حط|تشغيل|يشغل) (أغاني|اغاني) {Artist} [في {Room}]\n(شغلي|شغل|سمعيني|حطي|حط) (أغاني|اغاني|موسيقى) حق {Artist} [في {Room}]\n(ابغى|ابي|ودي) اسمع (أغاني|اغاني) {Artist}"
+  play_music_by_2: "(شغلي|شغل|سمعيني) (أغاني|موسيقى) {Genre} (حق|من) {Artist} [في {Room}]"
+  play_something_by: "(شغلي|شغل|حطي|حط) (شي|شيء) (حق|من) {Artist} [في {Room}]"
+ListenToGenre:
+  play_genre: "(شغلي|شغل|سمعيني) (موسيقى|أغاني) من نوع {Genre}"
+  play_music: "(شغلي|شغل|سمعيني|حطي|تشغيل) موسيقى {Genre} [في {Room}]\n(ابغى|ابي|ودي) اسمع موسيقى {Genre}"
+  shuffle_music: "(اخلطي|خلطي) موسيقى {Genre} [في {Room}]"
+ListenToLatestAlbum:
+  play_latest_album: "(شغلي|شغل|سمعيني) (آخر|أحدث|احدث) (ألبوم|البوم) (حق|للفنان|للفنانة|من) {Artist} [في {Room}]\n(شغلي|شغل) (الألبوم الجديد|الالبوم الجديد) (حق|للفنان|للفنانة) {Artist} [في {Room}]"
+ListenToRecentSongs:
+  listen_recently_added: "(ابغى|ابي|ودي) اسمع (الأغاني الجديدة|آخر الأغاني|الأغاني المضافة حديثا)"
+  play_recent_songs: "(شغلي|شغل|سمعيني) (أغانيي الجديدة|الأغاني الجديدة|الموسيقى الجديدة)"
+  play_recently_added: "(شغلي|شغل|سمعيني) (الأغاني المضافة حديثا|آخر الأغاني المضافة|أحدث الأغاني) [في {Room}]\n(اخلطي|خلطي) (الأغاني الجديدة|أحدث الأغاني) [في {Room}]"
+ListenToSong:
+  play_song: "(شغلي|شغل|سمعيني|حطي|تشغيل) (أغنية|اغنية|اغنيه) {Song} [في {Room}]"
+  play_song_by: "(شغلي|شغل|سمعيني) (أغنية|اغنية) {Song} (حق|للفنان|للفنانة|غناء) {Artist} [في {Room}]"
+  play_song_from: "(شغلي|شغل|سمعيني) (أغنية|اغنية) {Song} من (ألبوم|البوم) {Album}"
+  play_track_by: "(شغلي|شغل) (المقطع|التراك) {Song} (حق|غناء) {Artist}"
+ListenToSongOrAlbum:
+  play_by: "(شغلي|شغل|سمعيني|حطي) {Title} (حق|للفنان|للفنانة|غناء) {Artist} [في {Room}]"
+Mute:
+  mute: "(كتم الصوت|اكتمي الصوت|اكتم الصوت)"
+  mute_tv: "(اكتمي|اكتم|اقطعي) صوت (التلفزيون|كودي)"
+  silence_tv: "(سكتي|اسكتي) التلفزيون"
+  toggle_mute: "(فعلي|الغي) كتم الصوت"
+  unmute: "(رجعي|ارجعي) الصوت"
+Navigate:
+  go: "(روحي|اضغطي|انتقلي) {NavAction}"
+  go_times: "(روحي|اضغطي|انتقلي) {NavAction} {Count} (مرات|مرة)"
+  open_screen: "(افتحي|اعرضي) (شاشة|نافذة) {NavAction}"
+  sample: "{NavAction}"
+  times: "{NavAction} {Count} (مرات|مرة)"
+OpenFavourite:
+  open_favourite: "(افتحي|افتح|روحي على) (المفضل|مفضلتي) {Favourite}"
+  play_from_favourites: "(شغلي|شغل|افتحي|افتح) {Favourite} من (المفضلة|مفضلتي)"
+PartyMode:
+  lets_party: "(يلا|خلينا) (نحتفل|نسوي حفلة)"
+  play_all_music: "(شغلي|شغل|سمعيني|اخلطي) (كل الأغاني|كل الموسيقى|أي موسيقى|موسيقى عشوائية) [في {Room}]"
+  start_party_mode: "(شغلي|فعلي|ابدئي) (وضع الحفلة|وضع الحفلات) [في {Room}]"
+PlayMedia:
+  find: "(لاقي لي|جيبي لي) {Query}"
+  play: "(شغلي|شغل|شغلي لي|تشغيل|يشغل|أن يشغل) {Query}"
+  put: "(حطي|حط|حطي لي) {Query}"
+  queue_up: "(ضيفي|أضيفي) {Query} (للقائمة|لقائمة الانتظار)"
+  search_for: "(دوري على|دور على|ابحثي عن|ابحث عن) {Query}"
+PlayPlaylist:
+  play_music_playlist: "(شغلي|شغل) (قائمة الأغاني|قائمة الفيديو|القائمة الذكية) {Playlist}"
+  play_playlist: "(شغلي|شغل|ابدئي) (قائمة التشغيل|قائمة|البلاي ليست) {Playlist} [في {Room}]"
+  play_playlist_2: "(شغلي|شغل) (قائمتي|قائمة تشغيلي) {Playlist} [في {Room}]"
+PlayerMove:
+  move_picture: "(حركي|حرك|زحزحي) (الصورة|الفيديو) {Direction}"
+  pan: "(حركي|حرك) {Direction}"
+PlayerRewind:
+  go_back: "(ارجعي|رجعي) {Duration} (لورا|للخلف)"
+  rewind: "(رجعي|ارجعي|رجع) (لورا|ورا|للخلف) {Duration}"
+  rewind_2: "(رجعي|ارجعي|رجع) (لورا|للخلف) {Size}"
+  rewind_3: "(ترجيع|رجعي لورا|ارجعي للخلف)"
+  rewind_it: "(رجعي|رجع) (الفيديو|الفيلم|المقطع)"
+PlayerRotate:
+  rotate: "(لفي|لف) {Rotation}"
+  rotate_2: "(لفي|لف) تسعين درجة [{Rotation}]"
+  rotate_picture: "(لفي|لف|دوري) (الصورة|الفيديو|الشاشة) [{Rotation}]"
+  turn_picture: "(اقلبي|اقلب) (الصورة|الفيديو) {Rotation}"
+PlayerSeek:
+  sample: "{SeekDirection} {Duration}"
+  skip: "(اقفزي|نطي|روحي) {SeekDirection} {Duration}"
+  skip_2: "(اقفزي|نطي) {SeekDirection} {Size}"
+  skip_3: "{SeekDirection} {Size}"
+  skip_4: "(اقفزي|نطي) {SeekDirection}"
+  skip_5: "(اقفزي|نطي|تخطي) {Duration}"
+PlayerSeekTo:
+  go_mark: "(روحي|انتقلي) (لعلامة|إلى علامة) {Position}"
+  go_minute: "(روحي|اقفزي|انتقلي) (للدقيقة|إلى الدقيقة) {Minute}"
+  jump: "(اقفزي|روحي|انتقلي) (إلى|على) {Position}"
+  play_from_minute: "(شغلي|ابدئي) من الدقيقة {Minute}"
+  start_from: "(ابدئي|شغلي|كملي) من {Position}"
+PlayerZoom:
+  enhance: "(وضحي|قربي) الصورة"
+  enhance_and_move: "(قربي|كبري) (وحركي|وروحي) {Direction}"
+  zoom: "زوم {Zoom}"
+  zoom_2: "{Zoom} الصورة"
+  zoom_and_move: "زوم {Zoom} (وحركي|وروحي) {Direction}"
+Power:
+  kodi: "{PowerAction} (كودي|النظام|الكمبيوتر|الجهاز|التلفزيون|الميديا سنتر)"
+  put_kodi: "(خلي|حطي) (كودي|الجهاز|الكمبيوتر) (في|على) {PowerAction}"
+  sample: "{PowerAction}"
+Recommend:
+  give_me_recommendation: "(ابغى|ابي|أريد) (اقتراح|ترشيح) {MediaType}"
+  recommend: "(اقترحي|اقترح|رشحي|رشح) لي {MediaType}"
+  recommend_2: "(اقترحي|اقترح|رشحي|رشح) [لي] {MediaType} {Genre}"
+  recommend_3: "(وش|ايش|إيش) {MediaType} (تقترحين|ترشحين)"
+  recommend_something: "(اقترحي|رشحي) [لي] (شي|شيء)"
+  what_movie_should: "(وش|ايش|إيش|أي|اي) (فيلم|مسلسل) (اشوف|أشاهد|اتفرج عليه)"
+  what_should_i: "(وش|ايش|إيش|ماذا) (اشوف|أشاهد)"
+  what_should_we: "(وش|ايش|إيش|ماذا) (نشوف|نشاهد) [الليلة|اليوم]"
+Repeat:
+  loop_mode: "وضع التكرار {RepeatMode}"
+  repeat: "(كرري|كرر|عيدي) {RepeatMode}"
+  set_loop: "(خلي|حطي) التكرار على {RepeatMode}"
+  turn_repeat: "(فعلي|شغلي) تكرار {RepeatMode}"
+RoomControl:
+  in_the: "{Command} في {Room}"
+  playback: "{Command} التشغيل في {Room}"
+  tv: "{Command} (التلفزيون|كودي|الموسيقى|الفيلم|المسلسل|الفيديو) في {Room}"
+ShuffleAlbum:
+  shuffle_album: "(اخلطي|خلطي) (ألبوم|البوم) {Album} [في {Room}]"
+  shuffle_album_2: "(شغلي|شغل) (ألبوم|البوم) {Album} [(حق|للفنان|للفنانة) {Artist}] (عشوائي|بشكل عشوائي)"
+  shuffle_album_by: "(اخلطي|خلطي) (ألبوم|البوم) {Album} (حق|للفنان|للفنانة|غناء) {Artist} [في {Room}]"
+ShuffleArtist:
+  shuffle_artist: "(شغلي|شغل) (الفنان|الفنانة|المطرب|المطربة) {Artist} (عشوائي|بشكل عشوائي) [في {Room}]"
+  shuffle_music_by: "(اخلطي|خلطي) (أغاني|اغاني) {Artist} [في {Room}]\n(شغلي|شغل) (أغاني|اغاني) {Artist} (عشوائي|بشكل عشوائي) [في {Room}]"
+  shuffle_music_by_2: "(اخلطي|خلطي) (أغاني|موسيقى) {Genre} (حق|من) {Artist} [في {Room}]"
+ShuffleLatestAlbum:
+  shuffle_latest_album: "(اخلطي|خلطي) (آخر|أحدث|احدث) (ألبوم|البوم) (حق|للفنان|للفنانة|من) {Artist} [في {Room}]\n(شغلي|شغل) (آخر|أحدث) (ألبوم|البوم) (حق|للفنان|للفنانة) {Artist} (عشوائي|بشكل عشوائي)"
+ShuffleMusicVideos:
+  play_music_videos: "(شغلي|شغل) (كل الكليبات|الكليبات|الفيديو كليبات) [{Genre}] (عشوائي|بشكل عشوائي) [في {Room}]\n(اخلطي|خلطي) [كل] (الكليبات|الفيديو كليبات) [{Genre}] [في {Room}]"
+  play_music_videos_2: "(اخلطي|خلطي) (كليبات|فيديو كليبات) [{Genre}] (حق|للفنان|للفنانة) {Artist}"
+ShufflePlaylist:
+  play_playlist_shuffled: "(شغلي|شغل) (قائمة التشغيل|قائمة|البلاي ليست) {Playlist} (عشوائي|بشكل عشوائي)"
+  shuffle_music_playlist: "(اخلطي|خلطي) (قائمة الأغاني|قائمة الفيديو|القائمة الذكية) {Playlist}"
+  shuffle_playlist: "(اخلطي|خلطي) (قائمة التشغيل|قائمة|البلاي ليست) {Playlist} [في {Room}]"
+  shuffle_playlist_2: "(اخلطي|خلطي) (قائمتي|قائمة تشغيلي) {Playlist} [في {Room}]"
+ShuffleShow:
+  play_shuffled: "(شغلي|شغل) [مسلسل] {Show} (بشكل عشوائي|بترتيب عشوائي)"
+  shuffle_episodes: "(شغلي|شغل) حلقات [مسلسل] {Show} (عشوائي|بشكل عشوائي) [في {Room}]"
+  shuffle_show: "(اخلطي|خلطي) حلقات [مسلسل] {Show} [في {Room}]"
+StereoscopicMode:
+  stereoscopic_mode: "(الوضع ثلاثي الأبعاد|وضع الثري دي|الوضع المجسم)"
+  toggle_stereoscopic_mode: "(فعلي|الغي|بدلي) (الوضع ثلاثي الأبعاد|وضع الثري دي|الوضع المجسم)"
+  turn_stereoscopic_mode: "(شغلي|طفي) (الثري دي|الأبعاد الثلاثية)"
+Subtitles:
+  subtitle_language: "{SubtitleAction} لغة الترجمة\nلغة الترجمة {SubtitleAction}"
+  subtitles: "{SubtitleAction} (الترجمة|الترجمه|السب تايتل)"
+  subtitles_2: "(الترجمة|الترجمه) {SubtitleAction}"
+  subtitles_3: "(الترجمة|ترجمة) {Language}"
+  switch_subtitles: "(غيري|بدلي|حطي|خلي) الترجمة (إلى|على) {Language}"
+  turn_subtitles_2: "(شغلي|حطي|اعرضي|فعلي) (الترجمة|ترجمة) (باللغة|بلغة) {Language}"
+TypeText:
+  enter_text: "(ادخلي|أدخلي|دخلي) النص {Text}"
+  insert: "(ادخلي|أدخلي) {Text}"
+  spell: "(تهجي|تهجئة) {Text}"
+  type: "(اكتبي|اكتب) {Text}"
+  write: "(اطبعي|اطبع) {Text}"
+UpdateLibrary:
+  look_for_new: "(شوفي|تحققي) (إذا فيه|هل فيه) (أفلام جديدة|مسلسلات جديدة|حلقات جديدة|أغاني جديدة|ألبومات جديدة|موسيقى جديدة)"
+  update_library: "(حدثي|حدث|افحصي|افحص) (المكتبة|مكتبتي)"
+  update_library_2: "(حدثي|حدث|افحصي|افحص) مكتبة {Library}"
+ViewLibrary:
+  show: "(اعرضي|اعرض|افتحي|افتح|وريني|وديني على|خذيني على) {Section}"
+  show_2: "(اعرضي|اعرض|افتحي|افتح|وريني) {Section} {Genre}"
+  show_me: "(ابغى|ابي|ودي) اشوف {Section}"
+  show_me_2: "(ابغى|ابي|ودي) اشوف {Section} {Genre}"
+ViewPlaylist:
+  show_music_playlist: "(اعرضي|اعرض|افتحي|افتح) (قائمة الأغاني|قائمة الفيديو|قائمة الأفلام|قائمة المسلسلات) {Playlist}"
+  show_playlist: "(اعرضي|اعرض|افتحي|افتح|وريني) (قائمة التشغيل|البلاي ليست) {Playlist}"
+  show_playlist_2: "(روحي|وديني) (لقائمة التشغيل|للبلاي ليست) {Playlist}"
+VolumeDown:
+  lower_volume: "(وطي|نزلي|اخفضي|قللي) الصوت"
+  make_it_quieter: "(خلي|خليه) الصوت (أوطى|اوطى|أقل)"
+  quieter: "(أوطى|اوطى|أهدى)"
+  turn_down: "(نزلي|نزل|وطي) الصوت شوي"
+  volume_down: "(الصوت عالي|صوت أقل)"
+VolumeSet:
+  set_volume: "(خلي|حطي|اضبطي) الصوت (على|إلى) {Level}"
+  set_volume_percent: "(خلي|حطي|اضبطي) الصوت {Level} (بالمية|بالمئة|في المية)"
+  volume: "الصوت {Level}"
+VolumeUp:
+  louder: "(أعلى|اعلى)"
+  make_it_louder: "(خلي|خليه) الصوت (أعلى|اعلى)"
+  raise_volume: "(ارفعي|علي|زيدي) الصوت"
+  turn_up: "(ارفعي|علي|زيدي) الصوت شوي"
+  volume_up: "(صوت أعلى|الصوت واطي)"
+WatchEpisode:
+  play_episode_season: "(شغلي|شغل|حطي) [مسلسل] {Show} الحلقة {Episode} من الموسم {Season}"
+  play_episode_season_2: "(شغلي|شغل|حطي|تشغيل) الحلقة {Episode} من الموسم {Season} من [مسلسل] {Show}"
+  play_season_episode: "(شغلي|شغل|حطي|تشغيل) [مسلسل] {Show} الموسم {Season} الحلقة {Episode} [في {Room}]"
+  play_season_episode_2: "(شغلي|شغل|حطي) الموسم {Season} الحلقة {Episode} من [مسلسل] {Show} [في {Room}]"
+WatchFirstEpisode:
+  play_first: "(شغلي|شغل|حطي) [مسلسل] {Show} من (البداية|الأول) [في {Room}]"
+  play_first_episode: "(شغلي|شغل|حطي|تشغيل) (أول حلقة|الحلقة الأولى) (من|في) [مسلسل] {Show} [في {Room}]"
+  play_first_episode_2: "(شغلي|شغل|حطي) (اول حلقة|الحلقة الاولى) (من|في) [مسلسل] {Show} [في {Room}]"
+WatchLatestEpisode:
+  play_latest: "(شغلي|شغل|حطي) (آخر|أحدث|احدث) {Show}"
+  play_latest_episode: "(شغلي|شغل|حطي|تشغيل) (آخر حلقة|الحلقة الأخيرة|أحدث حلقة|الحلقة الجديدة) (من|في) [مسلسل] {Show} [في {Room}]"
+  play_latest_episode_2: "(شغلي|شغل|حطي) (اخر حلقة|الحلقة الاخيرة|احدث حلقة) (من|في) [مسلسل] {Show} [في {Room}]"
+WatchMovie:
+  i_want_watch: "(ابغى|ابي|ودي|أريد) (اشوف|أشاهد|اتفرج على) فيلم {Movie}"
+  lets_watch: "(خلينا|خلنا|يلا) (نشوف|نتفرج على) [فيلم] {Movie}"
+  play_film: "(شغلي|شغل|شغلي لي|اعرضي|اعرض|حطي|حط|تشغيل) (الفيلم|فلم) {Movie} [في {Room}]"
+  play_movie: "(شغلي|شغل|شغلي لي|اعرضي|اعرض|حطي|حط|تشغيل|يشغل|أن يشغل) فيلم {Movie} [في {Room}]"
+WatchMovieTrailer:
+  play_trailer: "(شغلي|شغل|اعرضي|اعرض|وريني) (الإعلان|الاعلان|التريلر)"
+  play_trailer_2: "(ابغى|ابي|ودي|أريد) (اشوف|أشاهد) (إعلان|اعلان|تريلر) {Movie}"
+  play_trailer_for: "(شغلي|شغل|اعرضي|اعرض|وريني|تشغيل) (إعلان|اعلان|تريلر) (فيلم|الفيلم) {Movie}\n(شغلي|شغل|اعرضي|وريني) (إعلان|اعلان|تريلر) {Movie}"
+WatchMusicVideo:
+  play_music_video: "(شغلي|شغل|اعرضي|اعرض|حطي|تشغيل) (كليب|فيديو كليب|الفيديو كليب) {MusicVideo} [في {Room}]"
+  play_music_video_2: "(شغلي|شغل|اعرضي|حطي) (كليب|فيديو كليب) {MusicVideo} (حق|للفنان|للفنانة|غناء) {Artist} [في {Room}]"
+  play_music_video_3: "(ابغى|ابي|ودي) اشوف (كليب|فيديو كليب) {MusicVideo}"
+WatchNextEpisode:
+  continue: "(كملي|كمل) [مشاهدة] [مسلسل] {Show} [في {Room}]"
+  play_from_where: "(كملي|كمل|شغلي) [مسلسل] {Show} من (وين ما وقفت|حيث توقفت)"
+  play_next_episode: "(شغلي|شغل|حطي|تشغيل|يشغل) (الحلقة الجاية|الحلقة التالية|الحلقة اللي بعدها) (من|في) [مسلسل] {Show} [في {Room}]"
+  whats_next: "(وش|ايش|إيش) (الجاي|التالي) في [مسلسل] {Show}"
+WatchNextInCollection:
+  continue_collection: "(كملي|كمل) (سلسلة|سلسلة أفلام) {Movie}"
+  play_next_movie: "(شغلي|شغل|حطي) الفيلم (الجاي|التالي|اللي بعده) (من|في) سلسلة {Movie} [في {Room}]"
+  whats_next_collection: "(وش|ايش|إيش|ما هو) الفيلم (الجاي|التالي) في سلسلة {Movie}"
+WatchRandomEpisode:
+  play_episode: "(شغلي|شغل|حطي) (أي حلقة|اي حلقة|حلقة عشوائية) من [مسلسل] {Show} [في {Room}]"
+  play_episode_2: "(شغلي|شغل|حطي) حلقة من [مسلسل] {Show} (عشوائيا|على الطاير)"
+  play_random_episode: "(اختاري|اختار) لي (حلقة|أي حلقة) من [مسلسل] {Show} [في {Room}]"
+WatchRandomMovie:
+  pick_movie_for: "(اختاري|اختار) لي فيلم [{Genre}]"
+  play_any_movie: "(شغلي|شغل|حطي) (أي فيلم|اي فيلم) [{Genre}]"
+  play_random_movie: "(شغلي|شغل|حطي) فيلم [{Genre}] عشوائي [في {Room}]"
+  surprise_me_with: "(فاجئيني|فاجئني) بفيلم [{Genre}]"
+WatchRandomMusicVideo:
+  play_music_video: "(شغلي|شغل|اعرضي|حطي) (كليب|فيديو كليب) [{Genre}] عشوائي [في {Room}]\n(شغلي|شغل) (أي كليب|اي كليب) [{Genre}]"
+  play_music_video_2: "(شغلي|شغل|اعرضي) (أي كليب|كليب عشوائي) (حق|للفنان|للفنانة) {Artist}"
+WatchRandomShow:
+  play_any_show: "(شغلي|شغل|حطي) (أي مسلسل|اي مسلسل) [{Genre}]"
+  play_random_show: "(شغلي|شغل|حطي) مسلسل [{Genre}] عشوائي [في {Room}]"
+  surprise_me_with: "(فاجئيني|فاجئني) بمسلسل [{Genre}]"
+WhatAlbums:
+  list_albums_by: "(عددي|اذكري|سمي) (ألبومات|البومات) {Artist}"
+  what_albums_by: "(وش|ايش|إيش|ما هي) (ألبومات|البومات) {Artist} اللي (عندي|عندنا)"
+  what_albums_do: "(وش|ايش|إيش) (الألبومات|الالبومات) اللي (عندي|عندنا) (حق|للفنان|للفنانة) {Artist}"
+  what_albums_has: "(وش|ايش|إيش) (الألبومات|الالبومات) اللي (أصدرها|اصدرها|نزلها) {Artist}"
+  which_albums_by: "(أي|اي) (ألبومات|البومات) {Artist} (عندي|موجودة)"
+WhatsNew:
+  are_there_new: "(فيه|هل فيه|هل يوجد|عندي) {MediaType} (جديدة|جديد)"
+  are_there_new_2: "(فيه|هل فيه|عندي) {MediaType} {Genre} (جديدة|جديد)"
+  are_there_new_3: "(فيه|هل فيه|عندي) حلقات جديدة (من|في) [مسلسل] {Show}"
+  how_many_new: "كم حلقة (جديدة|ما شفتها) (من|في) [مسلسل] {Show}"
+  what_new_do: "(وش|ايش|إيش) فيه {MediaType} (جديدة|جديد)"
+  what_new_do_2: "(وش|ايش|إيش) فيه {MediaType} {Genre} (جديدة|جديد)"
+  whats_new: "(وش|ايش|إيش) (الجديد|فيه جديد)"
+  whats_new_2: "(وش|ايش|إيش) الجديد (في|من) [مسلسل] {Show}"
+  whats_new_watch: "(وش|ايش|إيش) فيه جديد (اشوفه|اسمعه|للمشاهدة)"

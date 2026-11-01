@@ -1,0 +1,73 @@
+{
+  "detail": {
+    "alexaSaid": "Alexa zei",
+    "callFailed": "(mislukt)",
+    "candidates": {
+      "label": "Matchkandidaten",
+      "none": "Geen kandidaten.",
+      "score": "{{title}}: score {{score}}",
+      "unlinked": "Deze Echo is niet aan een Kodi-instantie gekoppeld en er is geen standaard ingesteld voor niet-gekoppelde Echo's."
+    },
+    "copied": "Gekopieerd",
+    "copy": "JSON kopiëren",
+    "intent": "Intent",
+    "kodiCalls": "Kodi-aanroepen",
+    "loading": "Verzoek laden…",
+    "noCalls": "Geen.",
+    "replay": "Opnieuw afspelen (proefrun)",
+    "replayResult": {
+      "label": "Resultaat van opnieuw afspelen",
+      "noCalls": "Geen Kodi-aanroepen.",
+      "title": "Opnieuw afspelen tegen de huidige index (Kodi niet aangeraakt)",
+      "topMatch": "Beste match: {{title}}, {{score}}.",
+      "wouldCall": "Zou aanroepen",
+      "wouldSay": "Alexa zou zeggen: “{{speech}}”"
+    },
+    "silent": "Niets (stil).",
+    "slots": "Slots",
+    "target": {
+      "label": "Doel-Kodi",
+      "none": "Geen",
+      "unlinked": "Geen (apparaat niet gekoppeld)"
+    },
+    "timing": {
+      "fallback": "Encore {{encore}} · Kodi {{kodi}} · totaal {{total}}",
+      "label": "Tijdsduur",
+      "split": "verificatie {{verify}} · matchen {{match}} · Kodi {{kodi}} · totaal {{total}}"
+    },
+    "via": {
+      "alias": "<spoken>{{spoken}}</spoken> andere naam voor <room>{{room}}</room>",
+      "device": "<spoken>{{spoken}}</spoken> apparaat in <room>{{room}}</room>"
+    }
+  },
+  "empty": {
+    "filtered": "Probeer een andere zoekopdracht of wis de filters.",
+    "filteredTitle": "Geen overeenkomende verzoeken",
+    "none": "Verzoeken verschijnen hier zodra een Echo met Encore praat. Zeg “Alexa, vraag {{invocation}} wat er speelt.”",
+    "noneNoInvocation": "Verzoeken verschijnen hier zodra een Echo met Encore praat.",
+    "noneTitle": "Nog geen verzoeken"
+  },
+  "filters": {
+    "allDevices": "Alle Echo's",
+    "allOutcomes": "Alle uitkomsten",
+    "device": "Echo-apparaat",
+    "deviceById": "Echo #{{id}}",
+    "label": "Verzoeken filteren",
+    "outcome": "Uitkomst",
+    "search": "Zoeken in wat er gehoord is",
+    "unnamedDevice": "Naamloze Echo"
+  },
+  "list": {
+    "label": "Verzoeken",
+    "loading": "Verzoeken laden…",
+    "loadOlder": "Oudere verzoeken laden"
+  },
+  "live": {
+    "off": "Opnieuw verbinden…",
+    "on": "Live",
+    "retention": "laatste 500 verzoeken of 7 dagen bewaard"
+  },
+  "newRequest": "Nieuw verzoek van {{device}}{{heard}}",
+  "title": "Verzoekenlogboek",
+  "unnamedDevice": "een naamloze Echo"
+}

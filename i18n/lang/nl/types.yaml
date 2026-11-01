@@ -1,0 +1,359 @@
+# Values for the static custom slot types in model.yaml, translated on Crowdin from the English file. Each key is the value's ID, which is what the handler acts on; the first line is the value and any further lines its synonyms, which are what people say. The dynamic types' examples are in examples.yaml, and notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
+LIBRARY_SECTION:
+  albums: |-
+    albums
+    platen
+    muziekalbums
+  artists: |-
+    artiesten
+    muzikanten
+    bands
+    zangers
+  favourites: |-
+    favorieten
+    mijn favorieten
+  movies: |-
+    films
+    filmbibliotheek
+    mijn films
+    speelfilms
+  music: |-
+    muziek
+    muziekbibliotheek
+    mijn muziek
+    nummers
+    liedjes
+  musicvideos: |-
+    muziekvideo's
+    videoclips
+    clips
+  recentepisodes: |-
+    onlangs toegevoegde afleveringen
+    nieuwe afleveringen
+    nieuwste afleveringen
+    recente afleveringen
+    nieuwe series
+    onlangs toegevoegde series
+    recent toegevoegde afleveringen
+  recentmovies: |-
+    onlangs toegevoegde films
+    nieuwe films
+    nieuwste films
+    recente films
+    recent toegevoegde films
+  recentmusic: |-
+    onlangs toegevoegde muziek
+    nieuwe muziek
+    nieuwste muziek
+    recente muziek
+    nieuwe albums
+    nieuwste albums
+    onlangs toegevoegde albums
+    nieuwe nummers
+    nieuwe liedjes
+  recentmusicvideos: |-
+    onlangs toegevoegde muziekvideo's
+    nieuwe muziekvideo's
+    nieuwste muziekvideo's
+    nieuwe videoclips
+  tvshows: |-
+    series
+    tv series
+    t. v. series
+    programma's
+    tv programma's
+    mijn series
+LIBRARY_TYPE:
+  music: |-
+    muziek
+    audio
+    nummers
+    muziekbibliotheek
+    audiobibliotheek
+  video: |-
+    video
+    video's
+    film
+    films
+    series
+    videobibliotheek
+MATCH_CHOICE:
+  first: |-
+    eerste
+  last: |-
+    laatste
+  newer: |-
+    nieuwere
+    nieuwste
+    nieuwe
+    recentere
+    recentste
+  older: |-
+    oudere
+    oudste
+    oude
+    originele
+  second: |-
+    tweede
+    andere
+MEDIA_TYPE:
+  album: |-
+    album
+    albums
+    plaat
+    platen
+    c. d.
+  artist: |-
+    artiest
+    artiesten
+    band
+    bands
+    muzikant
+    muzikanten
+    zanger
+    zangeres
+  audio: |-
+    iets om naar te luisteren
+    wat om naar te luisteren
+    iets om te luisteren
+    muziek
+  episode: |-
+    aflevering
+    afleveringen
+  movie: |-
+    film
+    films
+    speelfilm
+    bioscoopfilm
+  musicvideo: |-
+    muziekvideo
+    muziekvideo's
+    videoclip
+    videoclips
+    clip
+  song: |-
+    nummer
+    nummers
+    liedje
+    liedjes
+    lied
+    track
+    tracks
+  tvshow: |-
+    serie
+    series
+    programma
+    programma's
+    tv serie
+    t. v. serie
+  video: |-
+    iets om te kijken
+    wat om te kijken
+    iets om naar te kijken
+    video
+    video's
+NAV_ACTION:
+  back: |-
+    terug
+    een terug
+    vorige
+  down: |-
+    omlaag
+    naar beneden
+  home: |-
+    startscherm
+    beginscherm
+    hoofdmenu
+    home
+  info: |-
+    info
+    informatie
+    details
+    meer info
+  left: |-
+    links
+    naar links
+  menu: |-
+    menu
+    contextmenu
+    opties
+  osd: |-
+    schermmenu
+    bediening
+    afspeelbediening
+    o. s. d.
+  pagedown: |-
+    pagina omlaag
+    pagina naar beneden
+    scroll omlaag
+    naar beneden scrollen
+    meer tonen
+  pageup: |-
+    pagina omhoog
+    pagina naar boven
+    scroll omhoog
+    naar boven scrollen
+  right: |-
+    rechts
+    naar rechts
+  select: |-
+    selecteer
+    kies
+    ok
+    oké
+    bevestig
+    enter
+    die
+    klik
+  up: |-
+    omhoog
+    naar boven
+NAV_DIRECTION:
+  down: "naar beneden\nomlaag"
+  left: "naar links\nlinks"
+  right: "naar rechts\nrechts"
+  up: "naar boven\nomhoog"
+POWER_ACTION:
+  hibernate: |-
+    sluimerstand
+    diepe slaap
+    winterslaap
+  quit: |-
+    afsluiten
+    sluiten
+    kodi afsluiten
+  reboot: |-
+    herstart
+    herstarten
+    opnieuw opstarten
+  shutdown: |-
+    uitzetten
+    uitschakelen
+    uit
+  suspend: |-
+    slaapstand
+    stand by
+    standby
+    pauzestand
+REPEAT_MODE:
+  all: |-
+    alles
+    alle
+    de afspeellijst
+    de playlist
+    de wachtrij
+  "off": |-
+    uit
+    niets
+    geen
+  one: |-
+    dit nummer
+    één
+    deze
+    dit
+    dit liedje
+    deze track
+    deze aflevering
+    het nummer
+ROTATE_DIRECTION:
+  clockwise: |-
+    met de klok mee
+    rechtsom
+    naar rechts
+  counterclockwise: |-
+    tegen de klok in
+    linksom
+    naar links
+SEEK_DIRECTION:
+  back: |-
+    terug
+    achteruit
+    naar achteren
+  forward: |-
+    vooruit
+    verder
+    naar voren
+    door
+SEEK_SIZE:
+  big: |-
+    een groot stuk
+    een flink stuk
+    veel
+    ver
+    een grote sprong
+    een grote stap
+  small: |-
+    een stukje
+    een beetje
+    een klein stuk
+    een klein beetje
+    een kleine stap
+    een kleine sprong
+    even
+STREAM_STEP:
+  next: |-
+    volgende
+    volgend
+    wissel
+    ander
+    andere
+  previous: |-
+    vorige
+    vorig
+SUBTITLE_ACTION:
+  download: |-
+    download
+    downloaden
+    zoek
+    zoeken
+    haal
+  next: |-
+    volgende
+    wissel
+    andere
+  "off": |-
+    uit
+    uitzetten
+    uitschakelen
+    verberg
+    verbergen
+    weg
+  "on": |-
+    aan
+    aanzetten
+    inschakelen
+    toon
+    tonen
+    activeer
+  previous: |-
+    vorige
+TRANSPORT_COMMAND:
+  next: |-
+    volgende
+    sla over
+    overslaan
+  pause: "pauzeer\npauze\npauzeren"
+  previous: |-
+    vorige
+    terug
+  resume: |-
+    hervat
+    ga verder
+    verder
+    speel
+    speel verder
+  stop: "stop\nstoppen"
+ZOOM_ACTION:
+  in: |-
+    in
+    dichterbij
+    vergroten
+  out: |-
+    uit
+    verder weg
+    verkleinen
+  reset: |-
+    reset
+    normaal
+    terug naar normaal
+    herstel

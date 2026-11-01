@@ -210,3 +210,41 @@ func TestHashFilesSeparatesNamesFromData(t *testing.T) {
 	assert.Equal(t, hashFiles(nil), hashFiles([]File{}))
 	assert.Len(t, hashFiles(nil), 64)
 }
+
+func TestCleanSlotText(t *testing.T) {
+	for in, want := range map[string]string{
+		"Heat":        "Heat",
+		"*NSYNC":      "NSYNC",
+		"M*A*S*H":     "MASH",
+		"[B]Dune[/B]": "Dune",
+		"[COLOR red]Alien[/COLOR] [I]Director's Cut[/i]": "Alien Director's Cut",
+		"[color=FFFF0000]Up[/color]":                     "Up",
+		"Line one[CR]Line two":                           "Line one Line two",
+		"[UPPERCASE]loud[/UPPERCASE] [LIGHT]x[/LIGHT] [TABS]y [CAPITALIZE]z[/CAPITALIZE] [LOWERCASE]w[/LOWERCASE]": "loud x y z w",
+		"Toy\tStory\n2":       "Toy Story 2",
+		"Bell\x07e\u200b":     "Belle",
+		"  Up   ":             "Up",
+		"🎄 Christmas 🎅🏽 Hits": "Christmas Hits",
+		"まどか☆マギカ":             "まどかマギカ",
+		"[B]***[/B] 🎵":        "",
+		"[Rec]":               "[Rec]",
+		"Amélie":              "Amélie",
+	} {
+		assert.Equal(t, want, CleanSlotText(in), "%q", in)
+	}
+}
+
+func TestFilterSlotValuesCleans(t *testing.T) {
+	out, warnings := filterSlotValues(map[string][]skillmodel.SlotValue{"AMAZON.Movie": {
+		{ID: "movie/1", Value: "[B]Dune[/B]", Synonyms: []string{"dune", "*", "Dune  Part   One", "dune part one"}},
+		{ID: "movie/2", Value: "DUNE", Synonyms: []string{"arrakis"}},
+		{ID: "movie/3", Value: "🎬"},
+		{ID: "movie/4", Value: "*NSYNC", Synonyms: []string{"[I]nsync[/I]", "n sync"}},
+	}})
+
+	assert.Equal(t, map[string][]skillmodel.SlotValue{"AMAZON.Movie": {
+		{ID: "movie/1", Value: "Dune", Synonyms: []string{"Dune Part One", "arrakis"}},
+		{ID: "movie/4", Value: "NSYNC", Synonyms: []string{"n sync"}},
+	}}, out, "values that clean to the same text merge into the first, and values and synonyms left empty are dropped")
+	assert.Equal(t, []string{"slot type AMAZON.Movie: dropped 2 values or synonyms with nothing to say once cleaned"}, warnings)
+}

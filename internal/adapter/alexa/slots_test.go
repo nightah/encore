@@ -63,7 +63,7 @@ func TestSlotIDsResolveLocally(t *testing.T) {
 	assert.Equal(t, "recentepisodes", h.Speech.SlotID("en-GB", "LIBRARY_SECTION", "new episodes"))
 	assert.Equal(t, "counterclockwise", h.Speech.SlotID("en-US", "ROTATE_DIRECTION", "anti clockwise"))
 	assert.Equal(t, "bedroom", h.Speech.SlotID("en-AU", "KODI_ROOM", "bedroom"), "values without an ID are their own ID")
-	assert.Equal(t, "up", h.Speech.SlotID("pt-BR", "NAV_DIRECTION", "up"), "unknown locales fall back")
+	assert.Equal(t, "up", h.Speech.SlotID("xx-XX", "NAV_DIRECTION", "up"), "unknown locales fall back")
 	assert.Empty(t, h.Speech.SlotID("en-AU", "NAV_ACTION", "sideways"))
 }
 
@@ -97,7 +97,7 @@ func TestSpeechTimesLanguagesAndLists(t *testing.T) {
 	list := actions.Message{ID: "whatsnew.movies", Lists: map[string][]string{"titles": {"Dune", "Alien", "Heat"}}}
 	assert.Equal(t, "You have Dune, Alien and Heat to watch.", h.Speech.Render("en-AU", list))
 
-	assert.Equal(t, "15:04", spokenTime("de", time.Date(1, 1, 1, 15, 4, 0, 0, time.UTC)))
+	assert.Equal(t, "15:04", spokenTime("de-DE", "de", time.Date(1, 1, 1, 15, 4, 0, 0, time.UTC)))
 	assert.Equal(t, "Französisch", languageName("de-DE", "fre"))
 	assert.Equal(t, "xx-nonsense", languageName("en-AU", "xx-nonsense"), "unknown codes are said as they are")
 	assert.Equal(t, "A und B", spokenList("de", []string{"A", "B"}))
@@ -216,38 +216,38 @@ func TestReinterpret(t *testing.T) {
 	require.NoError(t, err)
 
 	type want struct {
-		intent, title string
-		slots         map[string]string
+		intent string
+		slots  map[string]string
 	}
 
 	for _, tc := range []struct {
 		locale, query string
 		want          want
 	}{
-		{"en-AU", "the next episode of bluey", want{"WatchNextEpisode", "Show", map[string]string{"Show": "bluey"}}},
-		{"en-AU", "next episode of bluey in the lounge", want{"WatchNextEpisode", "Show", map[string]string{"Show": "bluey in the lounge"}}},
-		{"en-AU", "bluey from where I left off", want{"WatchNextEpisode", "Show", map[string]string{"Show": "bluey"}}},
-		{"en-AU", "The Latest Episode of Bluey", want{"WatchLatestEpisode", "Show", map[string]string{"Show": "Bluey"}}},
-		{"en-AU", "the 1st episode of bluey", want{"WatchFirstEpisode", "Show", map[string]string{"Show": "bluey"}}},
-		{"en-AU", "the first episode of bluey", want{"WatchFirstEpisode", "Show", map[string]string{"Show": "bluey"}}},
-		{"en-AU", "a random episode of bluey", want{"WatchRandomEpisode", "Show", map[string]string{"Show": "bluey"}}},
-		{"en-AU", "season 2 episode 4 of severance", want{"WatchEpisode", "Show", map[string]string{"Show": "severance", "Season": "2", "Episode": "4"}}},
-		{"en-AU", "season two episode four of severance", want{"PlayMedia", "Query", map[string]string{"Query": "season two episode four of severance"}}},
-		{"en-AU", "bluey", want{"PlayMedia", "Query", map[string]string{"Query": "bluey"}}},
-		{"en-AU", "the next episode of", want{"PlayMedia", "Query", map[string]string{"Query": "the next episode of"}}},
-		{"en-AU", "the man in the iron mask", want{"PlayMedia", "Query", map[string]string{"Query": "the man in the iron mask"}}},
-		{"de-DE", "die nächste folge von bluey", want{"WatchNextEpisode", "Show", map[string]string{"Show": "bluey"}}},
-		{"xx-XX", "the next episode of bluey", want{"WatchNextEpisode", "Show", map[string]string{"Show": "bluey"}}},
+		{"en-AU", "the next episode of bluey", want{"WatchNextEpisode", map[string]string{"Show": "bluey"}}},
+		{"en-AU", "next episode of bluey in the lounge", want{"WatchNextEpisode", map[string]string{"Show": "bluey in the lounge"}}},
+		{"en-AU", "bluey from where I left off", want{"WatchNextEpisode", map[string]string{"Show": "bluey"}}},
+		{"en-AU", "The Latest Episode of Bluey", want{"WatchLatestEpisode", map[string]string{"Show": "Bluey"}}},
+		{"en-AU", "the 1st episode of bluey", want{"WatchFirstEpisode", map[string]string{"Show": "bluey"}}},
+		{"en-AU", "the first episode of bluey", want{"WatchFirstEpisode", map[string]string{"Show": "bluey"}}},
+		{"en-AU", "a random episode of bluey", want{"WatchRandomEpisode", map[string]string{"Show": "bluey"}}},
+		{"en-AU", "season 2 episode 4 of severance", want{"WatchEpisode", map[string]string{"Show": "severance", "Season": "2", "Episode": "4"}}},
+		{"en-AU", "season two episode four of severance", want{"PlayMedia", map[string]string{"Query": "season two episode four of severance"}}},
+		{"en-AU", "bluey", want{"PlayMedia", map[string]string{"Query": "bluey"}}},
+		{"en-AU", "the next episode of", want{"PlayMedia", map[string]string{"Query": "the next episode of"}}},
+		{"en-AU", "the man in the iron mask", want{"PlayMedia", map[string]string{"Query": "the man in the iron mask"}}},
+		{"de-DE", "die nächste folge von bluey", want{"WatchNextEpisode", map[string]string{"Show": "bluey"}}},
+		{"xx-XX", "the next episode of bluey", want{"WatchNextEpisode", map[string]string{"Show": "bluey"}}},
 	} {
 		in := Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.query}}}
-		got, title := speech.Reinterpret(tc.locale, in)
+		got := speech.Reinterpret(tc.locale, in)[0]
 
 		values := map[string]string{}
 		for name, slot := range got.Slots {
 			values[name] = slot.Value
 		}
 
-		assert.Equal(t, tc.want, want{got.Name, title, values}, "%s %q", tc.locale, tc.query)
+		assert.Equal(t, tc.want, want{got.Name, values}, "%s %q", tc.locale, tc.query)
 	}
 }
 

@@ -1,6 +1,7 @@
 package docsgen
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -19,6 +20,11 @@ var languageNames = map[string]string{
 	"fr": "French (Français)",
 	"es": "Spanish (Español)",
 	"it": "Italian (Italiano)",
+	"ar": "Arabic (العربية)",
+	"hi": "Hindi (हिन्दी)",
+	"ja": "Japanese (日本語)",
+	"nl": "Dutch (Nederlands)",
+	"pt": "Portuguese (Português)",
 }
 
 // VoiceCommands renders one voice command page per language, keyed by language code. modelFS is the i18n directory, read again for the section comments in model.yaml.
@@ -66,12 +72,33 @@ func voiceData(src *skillmodel.Sources, lang string, titles map[string]string) m
 
 	l := src.Languages[lang]
 
-	var locales []VoiceLocale
+	var (
+		locales   []VoiceLocale
+		plainFail []string
+	)
 
 	for _, code := range src.LocaleNames() {
-		if loc := src.Locales[code]; loc.Language == lang {
-			locales = append(locales, VoiceLocale{Locale: code, SkillName: loc.SkillName, Invocation: loc.Invocation})
+		loc := src.Locales[code]
+		if loc.Language != lang {
+			continue
 		}
+
+		say := func(p string) string { return skillmodel.Say(p, loc.Invocation) }
+
+		vl := VoiceLocale{
+			Locale: code, SkillName: loc.SkillName, Invocation: loc.Invocation,
+			Open: say(loc.Launch.Open), Skill: say(loc.Launch.Skill), PlainOpenFails: loc.Launch.PlainOpenFails,
+		}
+
+		for _, p := range loc.Launch.Also {
+			vl.Also = append(vl.Also, say(p))
+		}
+
+		if vl.PlainOpenFails {
+			plainFail = append(plainFail, code)
+		}
+
+		locales = append(locales, vl)
 	}
 
 	var (
@@ -118,12 +145,33 @@ func voiceData(src *skillmodel.Sources, lang string, titles map[string]string) m
 			continue
 		}
 
-		types = append(types, VoiceType{Name: t.Name, Dynamic: t.Dynamic, Values: append(slices.Clone(t.Values), l.Types[t.Name]...)})
+		vt := VoiceType{Name: t.Name, Dynamic: t.Dynamic, Values: append(slices.Clone(t.Values), l.Types[t.Name]...)}
+
+		for _, loc := range locales {
+			if extra := localeSynonyms(vt.Values, src.Locales[loc.Locale].Types[t.Name]); len(extra) > 0 {
+				vt.Extra = append(vt.Extra, LocaleValues{Locale: loc.Locale, Values: extra})
+			}
+		}
+
+		types = append(types, vt)
 	}
 
 	return map[string]any{
-		"Lang": lang, "Name": name, "Locales": locales, "Sections": sections, "Builtins": builtins, "Types": types,
+		"Lang": lang, "Name": name, "Locales": locales, "PlainOpenFails": plainFail, "Sections": sections, "Builtins": builtins, "Types": types,
 	}
+}
+
+// localeSynonyms lists the values a locale adds synonyms to, in the type's order, each with only the synonyms the locale adds.
+func localeSynonyms(values []skillmodel.SlotValue, synonyms map[string][]string) []skillmodel.SlotValue {
+	var out []skillmodel.SlotValue
+
+	for _, v := range values {
+		if extra := synonyms[cmp.Or(v.ID, v.Value)]; len(extra) > 0 {
+			out = append(out, skillmodel.SlotValue{ID: v.ID, Value: v.Value, Synonyms: extra})
+		}
+	}
+
+	return out
 }
 
 // sectionTitles reads the comments that head groups of intents in model.yaml, keyed by the first intent of each group.
@@ -191,11 +239,14 @@ func editURL(lang string) string {
 	return CrowdinProject + "/" + crowdinLanguage(lang)
 }
 
-// crowdinLanguage maps a language directory under i18n/lang to the language's code on Crowdin, which differs where Crowdin names a regional variant.
+// crowdinLanguage maps a language directory under i18n/lang to the language's code on Crowdin, which differs where Crowdin names a regional variant. It is the reverse of the languages_mapping in .crowdin.yml.
 func crowdinLanguage(lang string) string {
-	if lang == "es" {
-		return "es-ES"
+	if code, ok := crowdinRegional[lang]; ok {
+		return code
 	}
 
 	return lang
 }
+
+// crowdinRegional are the languages Crowdin knows by a regional variant: Spanish as spoken in Spain, Portuguese as spoken in Brazil.
+var crowdinRegional = map[string]string{"es": "es-ES", "pt": "pt-BR"}

@@ -36,6 +36,22 @@ func ContentDisabled() Outcome {
 	return Outcome{Say: say("content.disabled", nil), EndSession: true}
 }
 
+// Missed reports whether the outcome found nothing to play: no title, artist, album, song, genre or playlist by the name asked for, or only a kind of title the skill was set up without. Another reading of the request may still find something.
+func (o Outcome) Missed() bool {
+	return missed[o.Say.ID]
+}
+
+// missed are the messages of the outcomes that found nothing to play (Outcome.Missed).
+var missed = map[string]bool{
+	"match.not_found":    true,
+	"music.not_found_by": true,
+	"music.not_found_on": true,
+	"music.no_genre_by":  true,
+	"library.no_genre":   true,
+	"playlist.not_found": true,
+	"content.disabled":   true,
+}
+
 func (t Target) queueLimit() int {
 	if t.QueueLimit > 0 {
 		return t.QueueLimit

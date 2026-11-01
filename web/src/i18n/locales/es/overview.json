@@ -1,10 +1,32 @@
 {
   "attention": {
     "empty": "No hay nada que requiera tu atención.",
+    "libraryLanguage": {
+      "detail": "Su idioma de los títulos es {{current}}. Cámbialo a {{language}} para que sus títulos se reconozcan con las reglas del {{language}}.",
+      "title": "La mayoría de los títulos de {{instance}} están en {{language}}"
+    },
     "links": {
+      "libraryLanguage": "Cambiar el idioma de los títulos",
       "needsDeploy": "Actualizar ahora",
       "open": "Abrir",
       "unlinkedDevice": "Vincular dispositivo"
+    },
+    "rejected": {
+      "signature": {
+        "detail": "Encore no pudo confirmar que las enviara Alexa. Si venían de tu Echo, comprueba que Encore pueda acceder a s3.amazonaws.com para obtener el certificado de Amazon y que tu proxy reenvíe las peticiones sin cambios.",
+        "title_one": "{{count, number}} petición rechazada por una firma no válida",
+        "title_other": "{{count, number}} peticiones rechazadas por una firma no válida"
+      },
+      "skillId": {
+        "detail": "Alexa las firmó para un ID de skill distinto del que espera Encore. Comprueba alexa.skill_id o vuelve a desplegar la skill.",
+        "title_one": "{{count, number}} petición para otra skill rechazada",
+        "title_other": "{{count, number}} peticiones para otra skill rechazadas"
+      },
+      "timestamp": {
+        "detail": "Alexa marca cada petición con la hora a la que se envió, y Encore rechaza las que se alejan más de 150 segundos de su propio reloj. Comprueba que el reloj de este equipo esté sincronizado.",
+        "title_one": "{{count, number}} petición rechazada por una marca de tiempo caducada",
+        "title_other": "{{count, number}} peticiones rechazadas por una marca de tiempo caducada"
+      }
     },
     "title": "Requiere atención"
   },

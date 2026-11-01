@@ -35,7 +35,7 @@ func (s *TokenSource) TokenContext(ctx context.Context) (*oauth2.Token, error) {
 		s.tok = tok
 	}
 
-	if s.tok.Valid() {
+	if s.tok.Valid() && !s.reset {
 		return s.tok, nil
 	}
 
@@ -46,6 +46,7 @@ func (s *TokenSource) TokenContext(ctx context.Context) (*oauth2.Token, error) {
 
 	rotated := tok.RefreshToken != s.tok.RefreshToken
 	s.tok = tok
+	s.reset = false
 
 	// LWA does not rotate refresh tokens, so a failed save only costs an extra refresh after a restart; it matters only if the refresh token changed.
 	if err := s.store.Save(ctx, tok); err != nil && rotated {
@@ -55,11 +56,25 @@ func (s *TokenSource) TokenContext(ctx context.Context) (*oauth2.Token, error) {
 	return tok, nil
 }
 
-// Reset drops the cached token so the next call reloads it from the store, e.g. after the user re-authorised.
+// Reset drops the cached token, so the next call reloads the refresh token from the store and redeems it for a new access token even if the old one hasn't expired yet: SMAPI rejected it, or the user re-authorised.
 func (s *TokenSource) Reset() {
 	s.mu.Lock()
 	s.tok = nil
+	s.reset = true
 	s.mu.Unlock()
+}
+
+// Rejected is Reset for an access token SMAPI refused, unless the token source has already moved on from it: requests sent together with one token all get a 401, and only the first should cost a refresh.
+func (s *TokenSource) Rejected(accessToken string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if s.tok != nil && s.tok.AccessToken != accessToken {
+		return
+	}
+
+	s.tok = nil
+	s.reset = true
 }
 
 // Load implements TokenStore.

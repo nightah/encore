@@ -1,0 +1,235 @@
+{
+  "address": {
+    "check": "Adres controleren",
+    "checkAgain": "Opnieuw controleren",
+    "checking": "Controleren van buiten je netwerk…",
+    "heading": "Geef je openbare adres op",
+    "intro": "Alexa roept Encore aan via HTTPS op poort 443, via je reverse proxy of tunnel.",
+    "results": {
+      "label": "Resultaten van de bereikbaarheidscontrole",
+      "title": "Bereikbaarheidscontrole (van buiten je netwerk)"
+    },
+    "unsupported": "Deze server kan het adres nog niet van buitenaf controleren. Ga verder en controleer daarna in het Overzicht of het openbare endpoint bereikbaar is.",
+    "url": {
+      "hint": "Bijvoorbeeld {{url}}",
+      "label": "Openbare basis-URL"
+    }
+  },
+  "admin": {
+    "errors": {
+      "password": "Gebruik minstens 12 tekens.",
+      "token": "Plak het installatietoken uit het logboek van Encore.",
+      "username": "Kies een gebruikersnaam."
+    },
+    "exists": "Het beheerdersaccount bestaat.",
+    "existsSignedIn": "Het beheerdersaccount bestaat en je bent ingelogd als {{name}}.",
+    "heading": "Het beheerdersaccount aanmaken",
+    "intro": "Plak het eenmalige installatietoken dat Encore bij het starten in zijn logboek heeft gezet, om te bewijzen dat deze instantie van jou is. Het verloopt zodra er een beheerdersaccount bestaat.",
+    "logs": {
+      "docker": "Draait in Docker",
+      "systemd": "Draait als systemd-service"
+    },
+    "password": {
+      "hint": "Minstens 12 tekens. Opgeslagen als argon2id-hash.",
+      "label": "Wachtwoord"
+    },
+    "sso": "Liever single sign-on? Na de installatie kun je in Instellingen overstappen op OIDC of vertrouwde proxyheaders.",
+    "token": "Installatietoken",
+    "username": "Gebruikersnaam"
+  },
+  "amazon": {
+    "authorize": "Autoriseren bij Amazon",
+    "clientId": "Client-ID",
+    "clientSecret": {
+      "hint": "Versleuteld opgeslagen. Alleen gebruikt om het toegangstoken te vernieuwen.",
+      "label": "Clientgeheim"
+    },
+    "connected": "Verbonden met Amazon. Encore kan de skill nu uitrollen.",
+    "connectedVendor": "Verbonden met Amazon (leverancier {{vendor}}). Encore kan de skill nu uitrollen.",
+    "copyReturnUrl": "Return-URL kopiëren",
+    "fallback": {
+      "connect": "Verbinden",
+      "label": "Alternatief",
+      "redirectUrl": {
+        "hint": "Na het inloggen stuurt Amazon je naar een adres dat niet laadt. Kopieer het volledige adres uit de adresbalk van de browser.",
+        "label": "Redirect-URL",
+        "option": "De redirect-URL plakken"
+      },
+      "refreshToken": {
+        "hint": "Begint met {{prefix}}.",
+        "label": "Refresh token",
+        "option": "Een refresh token plakken"
+      },
+      "summaryHttp": "Geen HTTPS-callback? Gebruik in plaats daarvan “de redirect-URL plakken”, of plak een refresh token van <code>{{command}}</code>.",
+      "summaryHttps": "Lukt inloggen via de callback niet? Plak dan een refresh token van <code>{{command}}</code>."
+    },
+    "heading": "Je Amazon-ontwikkelaarsaccount verbinden",
+    "instructions": {
+      "credentials": "Plak hieronder de Client ID en Client Secret van het profiel.",
+      "open": "Open de <link>Login with Amazon-console</link> en maak een beveiligingsprofiel met de naam “encore”.",
+      "returnUrls_one": "Voeg onder Web Settings deze Allowed Return URL toe:",
+      "returnUrls_other": "Voeg onder Web Settings deze Allowed Return URLs toe:"
+    },
+    "intro": "Encore rolt de skill uit met je eigen Login with Amazon-beveiligingsprofiel. Je maakt het één keer aan, in ongeveer twee minuten.",
+    "newTab": " (opent in een nieuw tabblad)",
+    "reauthorise": "Amazon vroeg Encore om opnieuw in te loggen. Autoriseer nog een keer om te kunnen blijven uitrollen.",
+    "redirectError": "Amazon heeft geen verbinding gemaakt: {{error}}"
+  },
+  "check": {
+    "fail": "Mislukt: ",
+    "ok": "Geslaagd: ",
+    "pending": "Controleren: ",
+    "warn": "Waarschuwing: "
+  },
+  "content": {
+    "legend": "Wat hij kan afspelen"
+  },
+  "deploy": {
+    "answer": {
+      "no": "Nee",
+      "noLabel": "{{question}}: nee",
+      "yes": "Ja",
+      "yesLabel": "{{question}}: ja"
+    },
+    "connectFirst": "Verbind eerst je Amazon-ontwikkelaarsaccount. Encore rolt de skill daarmee uit.",
+    "contentNote": "Als je er een weglaat, verdwijnen de spraakopdrachten ervan uit de skill.",
+    "deploy": "Skill uitrollen",
+    "deploying": "Uitrollen…",
+    "duration_one": "meestal 2 tot 3 minuten voor één taalregio",
+    "duration_other": "meestal 3 tot 5 minuten voor {{count}} taalregio's",
+    "failed": "De uitrol is mislukt bij “{{step}}”: {{message}}.",
+    "goToAmazon": "Naar Amazon-account",
+    "heading": "De skill uitrollen",
+    "invocation": {
+      "elsewhere": "In {{locales}} zeg je “{{name}}”.",
+      "example": "“Alexa, vraag {{name}} om…”",
+      "label": "Aanroepnaam"
+    },
+    "locales": {
+      "faster": "Minder taalregio's worden sneller uitgerold.",
+      "legend": "Uit te rollen taalregio's",
+      "match": "De taal van elke Echo moet overeenkomen met een van deze."
+    },
+    "noDetails": "geen details",
+    "privacy": {
+      "allows_purchases": {
+        "about": "Of mensen iets kunnen kopen via de skill: in-skill-aankopen, abonnementen of fysieke producten. Encore verkoopt niets.",
+        "label": "De skill staat aankopen toe"
+      },
+      "contains_ads": {
+        "about": "Of de skill reclame afspeelt, uitspreekt of toont, inclusief promoties voor andere producten. Encore bevat geen reclame.",
+        "label": "De skill bevat reclame"
+      },
+      "is_child_directed": {
+        "about": "Of de skill is ontworpen voor kinderen jonger dan 13, zoals gedefinieerd in de Amerikaanse Children's Online Privacy Protection Act (COPPA). Het gaat erom voor wie de skill is gemaakt, niet of een kind hem zou kunnen gebruiken.",
+        "label": "De skill is gericht op kinderen jonger dan 13"
+      },
+      "is_export_compliant": {
+        "about": "Je bevestigt dat de skill zonder vergunning kan worden geïmporteerd in en geëxporteerd uit de Verenigde Staten en elk ander land waar hij beschikbaar is, en dat hij voldoet aan de import- en exportwetgeving, ook die voor software die versleuteling gebruikt. Encore bedient mediaweergave en gebruikt alleen standaard HTTPS-versleuteling.",
+        "label": "De skill voldoet aan de exportregels"
+      },
+      "legend": "Privacyvragen van Amazon (beantwoord ze zelf)",
+      "unanswered_one": "Nog {{count}} vraag te beantwoorden voordat je uitrolt.",
+      "unanswered_other": "Nog {{count}} vragen te beantwoorden voordat je uitrolt.",
+      "uses_personal_info": {
+        "about": "Of de skill persoonlijke gegevens verzamelt van de mensen die hem gebruiken, zoals namen, e-mailadressen, telefoonnummers of locatie. Encore vraagt hier niet om: het ziet de apparaat-ID van elke Echo en wat eraan gevraagd is, en bewaart dat op je eigen server.",
+        "label": "De skill verzamelt persoonlijke gegevens"
+      }
+    },
+    "progress": "Uitrollen, {{percent}} procent klaar",
+    "starting": "Starten",
+    "succeeded": "Uitgerold. De skill is ingeschakeld om te testen op je Amazon-account.",
+    "tryAgain": "Opnieuw proberen"
+  },
+  "hello": {
+    "alexaPlus": "Schakel op Alexa+-apparaten de skill eenmalig in via de Alexa+ Store in de Alexa-app als “vraag {{invocation}}” niet wordt herkend.",
+    "echoName": {
+      "hint": "Bijvoorbeeld Echo Show woonkamer",
+      "label": "Naam van de Echo"
+    },
+    "finish": "Voltooien",
+    "heading": "Zeg hallo",
+    "intro": "Zeg op een Echo die met je Amazon-account is ingelogd:",
+    "named": "Echo heeft een naam.",
+    "phrase": "“Alexa, vraag {{invocation}} wat er speelt.”",
+    "received": "Verzoek ontvangen van {{device}} om {{time}}.",
+    "receivedNew": "Verzoek ontvangen van een nieuwe Echo om {{time}}. Geef hem een naam zodat je hem aan een Kodi kunt koppelen:",
+    "waiting": "Wachten op het eerste verzoek…"
+  },
+  "kodi": {
+    "addAnother": "Nog een toevoegen",
+    "added": "{{name}} is toegevoegd. Encore synchroniseert nu de bibliotheek ervan.",
+    "adding": "{{name}} toevoegen…",
+    "alreadyAdded": "Al toegevoegd: {{names}}. Voeg er nog een toe of ga verder.",
+    "contentNote": "Encore synchroniseert alleen deze vanuit Kodi en laat de spraakopdrachten van de andere weg uit de skill.",
+    "fixLater": "Je kunt dit later op de Kodi-pagina oplossen; voor spraakbediening moeten minstens de HTTP-controles slagen.",
+    "found": "We hebben deze op je netwerk gevonden.",
+    "heading": "Je eerste Kodi toevoegen",
+    "instance": "Kodi-instantie",
+    "manual": {
+      "hint": "Voor Kodi op een ander VLAN, of als detectie wordt geblokkeerd",
+      "label": "Handmatig een adres invoeren"
+    },
+    "name": {
+      "hint": "Hoe je ernaar verwijst, bijv. Woonkamer",
+      "label": "Naam"
+    },
+    "notFound": "Er antwoordde geen Kodi op je netwerk, dus voer hieronder het adres in.",
+    "password": {
+      "hint": "Versleuteld opgeslagen.",
+      "label": "Kodi-wachtwoord"
+    },
+    "remoteControl": "In Kodi moeten “Afstandsbediening via HTTP toestaan” en “van applicaties op andere systemen” zijn ingeschakeld.",
+    "results": "Resultaten van de verbindingstest",
+    "rpc": "JSON-RPC-adres",
+    "searchAgain": "Opnieuw zoeken",
+    "searchFailed": "Encore kon je netwerk niet doorzoeken naar Kodi, dus voer hieronder het adres in.",
+    "searching": "Zoeken naar Kodi op je netwerk.",
+    "submit": "Toevoegen en testen",
+    "testFailed": "De verbindingstest is niet uitgevoerd: {{error}}",
+    "username": "Kodi-gebruikersnaam"
+  },
+  "nav": {
+    "back": "Terug",
+    "continue": "Doorgaan",
+    "skip": "Nu overslaan"
+  },
+  "steps": {
+    "address": {
+      "sub": "Controle van proxy en certificaat",
+      "title": "Openbaar adres"
+    },
+    "admin": {
+      "sub": "Installatietoken en wachtwoord",
+      "title": "Beheerdersaccount"
+    },
+    "amazon": {
+      "sub": "Login with Amazon-profiel",
+      "title": "Amazon-account"
+    },
+    "deploy": {
+      "sub": "Bouwen voor elke taalregio",
+      "title": "Skill uitrollen"
+    },
+    "hello": {
+      "sub": "Het eerste verzoek bevestigen",
+      "title": "Zeg hallo"
+    },
+    "kodi": {
+      "sub": "Detecteren en verbinden",
+      "title": "Kodi"
+    }
+  },
+  "wizard": {
+    "label": "Stap {{step}}: {{title}}",
+    "progress": "Stap {{step}} van {{total}}<sr>: {{title}}</sr>",
+    "skipped": "Overgeslagen",
+    "state": {
+      "current": " (huidige stap)",
+      "done": " (klaar)",
+      "skipped": " (overgeslagen)"
+    },
+    "steps": "Installatiestappen",
+    "subtitle": "Eerste installatie"
+  }
+}

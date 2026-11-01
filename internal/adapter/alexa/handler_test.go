@@ -22,6 +22,7 @@ import (
 
 	"github.com/nightah/encore/i18n"
 	"github.com/nightah/encore/internal/core/actions"
+	"github.com/nightah/encore/internal/core/match"
 	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/skillmodel"
 	"github.com/nightah/encore/internal/testkit"
@@ -83,6 +84,25 @@ func (m *memRecorder) Record(_ context.Context, e LogEntry) {
 	m.entries = append(m.entries, e)
 }
 
+// embeddedSpeech is the embedded sources' Speech, built once and shared by every test that doesn't need its own: NewSpeech expands every sample of every locale.
+var embeddedSpeech = sync.OnceValues(func() (*Speech, error) {
+	src, err := skillmodel.Load(i18n.FS)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewSpeech(src, slog.New(slog.DiscardHandler))
+})
+
+func sharedSpeech(t *testing.T) *Speech {
+	t.Helper()
+
+	speech, err := embeddedSpeech()
+	require.NoError(t, err)
+
+	return speech
+}
+
 func newHandler(t *testing.T) (*Handler, *testkit.Backend, *memRecorder) {
 	t.Helper()
 
@@ -95,13 +115,8 @@ func newHandler(t *testing.T) (*Handler, *testkit.Backend, *memRecorder) {
 func newRoomHandler(t *testing.T) (*Handler, *testkit.Backend, *testkit.Backend, *memRecorder) {
 	t.Helper()
 
-	src, err := skillmodel.Load(i18n.FS)
-	require.NoError(t, err)
-
 	log := slog.New(slog.DiscardHandler)
-
-	speech, err := NewSpeech(src, log)
-	require.NoError(t, err)
+	speech := sharedSpeech(t)
 
 	items := testkit.SampleLibrary()
 	backend := testkit.NewBackend(items...)
@@ -235,7 +250,7 @@ func compareGolden(t *testing.T, path string, got []byte) {
 func TestQuestionAndAnswerRoundTrip(t *testing.T) {
 	h, backend, rec := newHandler(t)
 
-	ask := serveBody(t, h, mustRead(t, "testdata/golden/watch-movie-ambiguous/request.json"))
+	ask := serveBody(t, h, intentRequest(t, "WatchMovie", map[string]slotSpec{"Movie": {value: "fuzz"}}))
 
 	var resp ResponseEnvelope
 	require.NoError(t, json.Unmarshal(ask, &resp))
@@ -251,7 +266,7 @@ func TestQuestionAndAnswerRoundTrip(t *testing.T) {
 	require.NoError(t, err)
 
 	serveBody(t, h, body)
-	assert.Equal(t, []string{"Play movie/1 resume"}, backend.Calls(), "yes picks the first title offered")
+	assert.Equal(t, []string{"Play movie/4 resume"}, backend.Calls(), "yes plays the title offered")
 
 	require.Len(t, rec.entries, 2)
 	assert.Equal(t, "asked", rec.entries[0].Outcome)
@@ -283,7 +298,7 @@ func TestSpeechDurations(t *testing.T) {
 func TestSpeechUnknownLocaleFallsBack(t *testing.T) {
 	h, _, _ := newHandler(t)
 
-	got := h.Speech.Render("pt-BR", actions.Message{ID: "playback.playing_movie", Params: map[string]string{"title": "Dune"}})
+	got := h.Speech.Render("xx-XX", actions.Message{ID: "playback.playing_movie", Params: map[string]string{"title": "Dune"}})
 	assert.Equal(t, "Playing Dune.", got)
 }
 
@@ -341,6 +356,7 @@ func TestSlotResolvedIDs(t *testing.T) {
 
 	req := titleRequest(s, []media.Kind{media.KindMovie}, nil)
 	assert.InDelta(t, resolvedBoost, req.Hints["movie/3"], 1e-9)
+	assert.Equal(t, []match.Resolved{{ID: "movie/3", Name: "Dune: Part Two"}}, req.Resolved, "a resolved value is a candidate with the name Alexa matched")
 }
 
 func mustRead(t *testing.T, path string) []byte {
