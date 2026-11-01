@@ -1,6 +1,6 @@
 name: Go
 
-# The Go jobs of ci-jobs.yml, called from it as "Go", so their checks read "Pipeline / Go / …". Lint, the two race-detector test shards and the phonetic evaluation run side by side; Coverage merges the shards' profiles, uploads them to Codecov and holds the minimum.
+# The Go jobs of ci-jobs.yml, called from it as "Go", so their checks read "Pipeline / Go / …". Lint, the two race-detector test shards and the phonetic evaluation's five shards run side by side; Coverage merges the test shards' profiles, uploads them to Codecov and holds the minimum, and Phonetic evaluation requires every phonetic shard.
 on:
   workflow_call:
 
@@ -241,12 +241,17 @@ jobs:
         run: .github/scripts/go-coverage.sh coverage.out 97
 
   # The matcher's accuracy is gated here, on every push and pull request, so a regression fails the change that causes it rather than a later nightly. The matcher shard runs TestPhoneticEval with only what its gates need, which holds production to its floors on the grown corpora. This job runs TestPhoneticEval in full and TestPhoneticDistractors, which holds production's wrong plays for titles a library doesn't have to their ceilings. Both are too slow under the race detector, which has little to find in tests that run one search at a time, so they sit behind a build tag and run here without -race.
-  phonetic:
-    name: Phonetic evaluation
+  phonetic-shards:
+    name: Phonetic evaluation (${{ matrix.shard }}/5)
     runs-on: ubuntu-26.04
     timeout-minutes: 15
     permissions:
       contents: read # check out the code
+    strategy:
+      fail-fast: false
+      matrix:
+        # TestPhoneticDistractors searches every language's libraries one after another, so its languages are split across runners: shard k runs the languages whose index in Languages() leaves k-1 over when divided by 5 (ENCORE_MATCH_SHARD).
+        shard: [1, 2, 3, 4, 5]
     steps:
       - name: Harden the runner (audit all outbound calls)
         uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
@@ -272,5 +277,29 @@ jobs:
           key: go-test-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('go.mod', 'go.sum', 'tools/go.mod', 'tools/go.sum') }}
           restore-keys: go-test-${{ runner.os }}-${{ runner.arch }}-
 
+      - name: Phonetic distractors
+        env:
+          ENCORE_MATCH_SHARD: ${{ matrix.shard }}/5
+        run: go test -tags phoneticeval -count=1 -run 'TestPhoneticDistractors' ./internal/core/match/
+
       - name: Phonetic evaluation
-        run: go test -tags phoneticeval -count=1 -run 'TestPhonetic(Eval|Distractors)' ./internal/core/match/
+        if: matrix.shard == 1
+        run: go test -tags phoneticeval -count=1 -run 'TestPhoneticEval' ./internal/core/match/
+
+  # The required check: runs even when a shard fails, and fails then itself, since a required check that is skipped counts as passing.
+  phonetic:
+    name: Phonetic evaluation
+    needs: [phonetic-shards]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Require every phonetic shard
+        env:
+          RESULT: ${{ needs.phonetic-shards.result }}
+        run: |
+          if [ "${RESULT}" != success ]; then
+            echo "::error::A phonetic evaluation shard did not pass (${RESULT})."
+            exit 1
+          fi
