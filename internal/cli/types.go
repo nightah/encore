@@ -54,4 +54,5 @@ type smapiFlags struct {
 	skill    string
 	smapiURL string
 	tokenURL string
+	poll     time.Duration
 }

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"maps"
 	"os"
 	"slices"
 	"strings"
@@ -19,14 +20,17 @@ import (
 	"github.com/nightah/encore/internal/smapi/deploy"
 	"github.com/nightah/encore/internal/smapi/lwa"
 	"github.com/nightah/encore/internal/smapi/nlu"
+	"github.com/nightah/encore/internal/smapi/skillpkg"
 )
 
 func (f *smapiFlags) register(cmd *cobra.Command) {
 	cmd.Flags().StringVar(&f.skill, "skill", "", "the deployed skill's ID (env "+envSkillID+")")
 	cmd.Flags().StringVar(&f.smapiURL, "smapi-url", smapi.BaseURL, "SMAPI's base URL")
 	cmd.Flags().StringVar(&f.tokenURL, "token-url", "", "Login with Amazon's token URL")
+	cmd.Flags().DurationVar(&f.poll, "poll-interval", 0, "how often to ask SMAPI whether a build is done (default SMAPI's own)")
 	_ = cmd.Flags().MarkHidden("smapi-url")
 	_ = cmd.Flags().MarkHidden("token-url")
+	_ = cmd.Flags().MarkHidden("poll-interval")
 }
 
 // client authorises with a security profile and refresh token from the environment, as the live SMAPI tests do, and returns the skill to work on.
@@ -55,7 +59,7 @@ func (f *smapiFlags) client() (*smapi.Client, string, error) {
 	// MemoryStore.Save doesn't fail.
 	_ = store.Save(context.Background(), &oauth2.Token{RefreshToken: refresh})
 
-	c, err := smapi.New(lc.TokenSource(store), smapi.Options{BaseURL: f.smapiURL})
+	c, err := smapi.New(lc.TokenSource(store), smapi.Options{BaseURL: f.smapiURL, Poll: smapi.PollConfig{Interval: f.poll, MaxInterval: f.poll}})
 
 	return c, skill, err
 }
@@ -268,4 +272,176 @@ func list(locales []string) string {
 
 func quote(s string) string {
 	return "“" + s + "”"
+}
+
+func newGenDeployCommand() *cobra.Command {
+	var (
+		sf         smapiFlags
+		locales    []string
+		invocation string
+		vendor     string
+	)
+
+	cmd := &cobra.Command{
+		Use:   "deploy",
+		Short: "Deploy these sources' interaction model to a skill kept for gen nlu and gen open",
+		Long: "Builds the skill package from these sources, without library titles, deploys it to the skill --skill names, waits for every locale's model to build and enables the skill for testing, so gen nlu and gen open check this model rather than whatever was deployed last.\n" +
+			"It only deploys to a skill named " + quote(ciSkillName) + " in every locale it has a name in, so it can't replace the skill Encore deploys for you: create an empty custom skill with that name in the Alexa developer console first. Pick the invocation your own skill doesn't use, as an enabled skill answers on your Echos too. The endpoint is a placeholder that neither check reaches.\n" +
+			"Credentials come from " + envClientID + ", " + envClientSecret + " and " + envRefreshToken + "; the vendor from --vendor or " + envVendorID + ", else the account's only one.",
+		Args: cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			src, err := skillmodel.Load(i18n.FS)
+			if err != nil {
+				return err
+			}
+
+			if len(locales) == 0 {
+				locales = src.LocaleNames()
+			}
+
+			for _, loc := range locales {
+				if _, ok := src.Locales[loc]; !ok {
+					return fmt.Errorf("unknown locale %s (available: %s)", loc, strings.Join(src.LocaleNames(), ", "))
+				}
+			}
+
+			choice, err := invocationChoice(invocation)
+			if err != nil {
+				return err
+			}
+
+			c, skill, err := sf.client()
+			if err != nil {
+				return err
+			}
+
+			vendorID, err := ciVendor(cmd.Context(), c, cmp.Or(vendor, os.Getenv(envVendorID)))
+			if err != nil {
+				return err
+			}
+
+			if err := checkCISkill(cmd.Context(), c, vendorID, skill); err != nil {
+				return err
+			}
+
+			no, yes := false, true
+			stderr := cmd.ErrOrStderr()
+
+			res, err := deploy.New(c, src).Deploy(cmd.Context(), deploy.Request{
+				State: deploy.State{VendorID: vendorID, SkillID: skill},
+				Package: skillpkg.Options{
+					Locales:    locales,
+					Invocation: choice,
+					SkillName:  ciSkillName,
+					Endpoint:   skillpkg.Endpoint{URI: ciEndpoint},
+					Privacy:    skillpkg.Privacy{AllowsPurchases: &no, UsesPersonalInfo: &no, IsChildDirected: &no, IsExportCompliant: &yes, ContainsAds: &no},
+				},
+				Force: true,
+				Progress: func(ev deploy.Event) {
+					if ev.Message != "" {
+						fmt.Fprintf(stderr, "%s %s: %s\n", ev.Step, ev.State, ev.Message)
+					}
+				},
+				Log: slog.New(slog.NewTextHandler(stderr, &slog.HandlerOptions{Level: slog.LevelDebug})),
+			})
+			if res != nil {
+				if werr := writeDeploy(cmd.OutOrStdout(), res); werr != nil && err == nil {
+					err = werr
+				}
+			}
+
+			return err
+		},
+	}
+
+	sf.register(cmd)
+	cmd.Flags().StringSliceVarP(&locales, "locale", "l", nil, "locales to deploy (default all)")
+	cmd.Flags().StringVar(&invocation, "invocation", "", "the invocation to deploy with, encore or kodi: the one your own skill doesn't use")
+	cmd.Flags().StringVar(&vendor, "vendor", "", "the developer account's vendor ID (env "+envVendorID+")")
+	_ = cmd.MarkFlagRequired("invocation")
+
+	return cmd
+}
+
+// invocationChoice turns gen deploy's --invocation into a deploy's invocation choice. Only the two built-in choices are offered, as each locale spells them in a form Amazon takes, which a custom name in Latin letters isn't for ja-JP, hi-IN or ar-SA.
+func invocationChoice(name string) (string, error) {
+	switch name {
+	case "encore":
+		return "", nil
+	case skillmodel.InvocationKodi:
+		return skillmodel.InvocationKodi, nil
+	}
+
+	return "", fmt.Errorf("--invocation is encore or kodi, not %q", name)
+}
+
+// ciVendor returns vendor, or the account's only vendor when vendor is empty.
+func ciVendor(ctx context.Context, c *smapi.Client, vendor string) (string, error) {
+	if vendor != "" {
+		return vendor, nil
+	}
+
+	vendors, err := c.Vendors(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	if len(vendors) != 1 {
+		return "", fmt.Errorf("the account has %d developer accounts; name one with --vendor or %s", len(vendors), envVendorID)
+	}
+
+	return vendors[0].ID, nil
+}
+
+// checkCISkill refuses a skill that isn't the vendor's, or is named anything but ciSkillName in any locale.
+func checkCISkill(ctx context.Context, c *smapi.Client, vendorID, skillID string) error {
+	skills, err := c.ListSkills(ctx, vendorID)
+	if err != nil {
+		return err
+	}
+
+	for _, s := range skills {
+		if s.ID != skillID || s.Stage != "" && s.Stage != smapi.StageDevelopment {
+			continue
+		}
+
+		if len(s.NameByLocale) == 0 {
+			return fmt.Errorf("skill %s has no name; name it %s in the developer console", skillID, quote(ciSkillName))
+		}
+
+		for _, loc := range slices.Sorted(maps.Keys(s.NameByLocale)) {
+			if name := s.NameByLocale[loc]; name != ciSkillName {
+				return fmt.Errorf("skill %s is named %s in %s, not %s; gen deploy only replaces a skill kept for these checks", skillID, quote(name), loc, quote(ciSkillName))
+			}
+		}
+
+		return nil
+	}
+
+	return fmt.Errorf("vendor %s has no skill %s in development", vendorID, skillID)
+}
+
+// writeDeploy lists each locale's build status and its problems, and the package's warnings.
+func writeDeploy(w io.Writer, res *deploy.Result) error {
+	for _, loc := range slices.Sorted(maps.Keys(res.Locales)) {
+		st := res.Locales[loc]
+
+		if _, err := fmt.Fprintf(w, "%-11s %s\n", st.Status, loc); err != nil {
+			return err
+		}
+
+		for _, p := range append(append([]smapi.Problem(nil), st.Errors...), st.Warnings...) {
+			if _, err := fmt.Fprintf(w, "  %s\n", p.String()); err != nil {
+				return err
+			}
+		}
+	}
+
+	for _, warn := range res.Warnings {
+		if _, err := fmt.Fprintf(w, "warning: %s\n", warn); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

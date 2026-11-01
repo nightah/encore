@@ -58,7 +58,7 @@ To reach it through a reverse proxy, override the host and allowed host names, a
 | `make build` | Builds the web interface, then `bin/encore` with it embedded |
 | `make docs` / `make docs-dev` | Builds this site into `docs/dist` (checking links) / serves it locally |
 | `make test-contract` | Contract tests against a real Kodi, MinIO and WebDAV server |
-| `make nlu` / `make nlu-open` | Checks how Alexa reads the fixture utterances, and which locales the simulator opens the skill in, against your deployed skill (see [NLU checks](#nlu-checks)) |
+| `make nlu-deploy` / `make nlu` / `make nlu-open` | Deploys the working tree's model to a skill kept for the checks, then checks how Alexa reads the fixture utterances, and which locales the simulator opens the skill in (see [NLU checks](#nlu-checks)) |
 | `make docker` | Builds a local container image, `encore:dev` |
 
 ## Generated code
@@ -121,6 +121,25 @@ make nlu NLU_FLAGS='-l nl-NL -v'  # one locale, listing the rows that pass too
 Profiling reads the built models, so deploy first, and expect the odd row to need a second ask: Amazon's NLU now and then answers no intent, so such a row is asked twice more before it fails, and its occasional 500s are retried. Each row names an utterance, the intent and the slots it should fill (an empty value takes any words; a custom type's value may be its ID). A row that needs a model change you haven't deployed yet takes `pending: <why>`: it's reported but doesn't fail the run, and once it passes the run says to drop the mark. Add rows for every locale when you add or change phrasings, including the risky ones: bare titles, the forms one-shot requests take, rooms, episodes and seasons, and music by an artist.
 
 `make nlu-open` says each locale's launch phrases (`launch` in `i18n/locales/<locale>.yaml`) to Amazon's simulator in turn, until one reaches the skill, and reports the locales the simulator refuses and those where none got through; pass `NLU_FLAGS='--invocation kodi'` if the skill was deployed with kodi. Neither check hears speech, so how Alexa hears the invocation name can only be tried on an Echo.
+
+### A skill for the checks
+
+Profiling a skill Encore deploys checks whatever model it last built, with your library's titles. To check the model in your working tree instead, keep a second skill for these checks and deploy to it with `make nlu-deploy` (`encore gen deploy`). It builds the package from the sources without library titles, deploys it to the skill `SMAPI_SKILL_ID` names, waits for every locale's model to build and enables the skill for testing. It refuses any skill not named `Encore NLU CI` in every locale it has a name in, so it can't replace the skill Encore deploys for you, and Encore, which looks its own skill up by the name "Encore", never adopts this one.
+
+1. In the [Alexa developer console](https://developer.amazon.com/alexa/console/ask), create a skill named `Encore NLU CI` in any locale, with the Custom model, "Provision your own" hosting and "Start from scratch". The deploy adds the other locales.
+2. Copy its ID from the skill list. The same security profile and refresh token reach every skill in the developer account.
+3. Deploy, then check:
+
+```sh
+export SMAPI_SKILL_ID=amzn1.ask.skill.…  # the Encore NLU CI skill
+make nlu-deploy NLU_INVOCATION=encore
+make nlu
+make nlu-open NLU_INVOCATION=encore
+```
+
+An enabled skill answers on your own Echos too, so give it the invocation your everyday skill doesn't use: `NLU_INVOCATION` is `encore` or `kodi`. Its endpoint is a placeholder neither check reaches, so opening it on an Echo only gets an error. Leave it unpublished.
+
+The nightly `smapi-live` job runs the same three steps on main when the `smapi-live` environment has a `SMAPI_NLU_SKILL_ID` secret. It deploys with `encore` unless the environment's `SMAPI_NLU_INVOCATION` variable says `kodi`.
 
 ## Test images
 

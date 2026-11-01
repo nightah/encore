@@ -2,7 +2,9 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -211,4 +213,117 @@ func TestGenOpenFailsWhenStopped(t *testing.T) {
 	cancel()
 
 	require.ErrorIs(t, runCLIWith(ctx, t, io.Discard, append([]string{"gen", "open", "--skill", skill, "--locale", "en-GB"}, flags...)...), context.Canceled)
+}
+
+func TestGenDeploy(t *testing.T) {
+	fake, flags := liveFake(t)
+	skill := fake.AddSkill(smapitest.DefaultVendorID, map[string]string{"en-US": ciSkillName})
+	flags = append(flags, "--poll-interval", "1ms")
+
+	out, stderr, err := runCLI(t, append([]string{"gen", "deploy", "--skill", skill, "--invocation", "kodi", "--locale", "en-GB", "--locale", "ja-JP"}, flags...)...)
+	require.NoError(t, err)
+	assert.Contains(t, out, "SUCCEEDED   en-GB\nSUCCEEDED   ja-JP\n")
+	assert.Contains(t, stderr, "Updating skill "+skill, "the named skill is deployed to, not one looked up by name")
+
+	sk, ok := fake.Skill(skill)
+	require.True(t, ok)
+	assert.True(t, sk.Enabled)
+	assert.Equal(t, map[string]string{"en-GB": ciSkillName, "ja-JP": ciSkillName}, sk.Names)
+	assert.Contains(t, string(sk.Manifest), ciEndpoint)
+	assert.Contains(t, string(sk.Models["en-GB"]), `"invocationName":"kodi"`)
+	assert.Equal(t, 1, fake.SkillCount(), "no other skill is created")
+
+	out, _, err = runCLI(t, append([]string{"gen", "open", "--skill", skill, "--invocation", "kodi", "--locale", "en-GB"}, flags...)...)
+	require.NoError(t, err)
+	assert.Contains(t, out, "REACHED     en-GB\n  “open kodi”: reached the skill\n", "gen open checks what gen deploy deployed")
+
+	t.Setenv(envVendorID, smapitest.DefaultVendorID)
+	fake.FailLocale("en-GB", "a sample conflicts with another intent")
+
+	out, _, err = runCLI(t, append([]string{"gen", "deploy", "--skill", skill, "--invocation", "encore", "--locale", "en-GB"}, flags...)...)
+	require.ErrorIs(t, err, deploy.ErrBuildFailed)
+	assert.Contains(t, out, "FAILED      en-GB\n  INVALID_INTERACTION_MODEL: a sample conflicts with another intent\n")
+}
+
+func TestGenDeployRefuses(t *testing.T) {
+	fake, flags := liveFake(t)
+	own := fake.AddSkill(smapitest.DefaultVendorID, map[string]string{"en-US": "Encore"})
+	mixed := fake.AddSkill(smapitest.DefaultVendorID, map[string]string{"en-GB": ciSkillName, "en-US": "Encore"})
+	unnamed := fake.AddSkill(smapitest.DefaultVendorID, nil)
+
+	deployTo := func(skill string, extra ...string) error {
+		_, _, err := runCLI(t, append(append([]string{"gen", "deploy", "--skill", skill, "--invocation", "encore"}, flags...), extra...)...)
+
+		return err
+	}
+
+	require.ErrorContains(t, deployTo(own), "is named “Encore” in en-US, not “Encore NLU CI”")
+	require.ErrorContains(t, deployTo(mixed), "is named “Encore” in en-US")
+	require.ErrorContains(t, deployTo(unnamed), "has no name")
+	require.ErrorContains(t, deployTo("amzn1.ask.skill.missing"), "has no skill amzn1.ask.skill.missing")
+	require.ErrorContains(t, deployTo(own, "--vendor", "OTHER"), "vendor OTHER has no skill")
+	require.ErrorContains(t, deployTo(own, "--locale", "xx-XX"), "unknown locale xx-XX")
+	require.ErrorContains(t, deployTo(own, "--invocation", "alexa"), `--invocation is encore or kodi, not "alexa"`)
+	require.ErrorContains(t, deployTo(""), "name the skill with --skill")
+
+	_, _, err := runCLI(t, append([]string{"gen", "deploy", "--skill", own}, flags...)...)
+	require.ErrorContains(t, err, `required flag(s) "invocation" not set`)
+
+	sk, _ := fake.Skill(own)
+	assert.Zero(t, sk.Imports, "a refused skill is never touched")
+	assert.Equal(t, 3, fake.SkillCount())
+}
+
+func TestGenDeployNeedsOneVendor(t *testing.T) {
+	for _, vendors := range [][]smapitest.Vendor{{}, {{ID: "A"}, {ID: "B"}}} {
+		fake := smapitest.New(t, smapitest.Options{Vendors: vendors})
+		o := fake.Options()
+
+		t.Setenv(envClientID, o.ClientID)
+		t.Setenv(envClientSecret, o.ClientSecret)
+		t.Setenv(envRefreshToken, o.RefreshToken)
+		t.Setenv(envVendorID, "")
+
+		_, _, err := runCLI(t, "gen", "deploy", "--skill", "s", "--invocation", "encore", "--smapi-url", fake.URL, "--token-url", fake.Endpoint().TokenURL)
+		require.ErrorContains(t, err, fmt.Sprintf("the account has %d developer accounts", len(vendors)))
+	}
+
+	fake, flags := liveFake(t)
+	fake.Inject(http.StatusForbidden, 1)
+
+	_, _, err := runCLI(t, append([]string{"gen", "deploy", "--skill", "s", "--invocation", "encore"}, flags...)...)
+	require.ErrorContains(t, err, "403", "a vendor lookup that fails says why")
+}
+
+func TestWriteDeployReportsWriteErrors(t *testing.T) {
+	res := &deploy.Result{
+		Locales:  map[string]deploy.LocaleStatus{"en-GB": {Status: smapi.StatusSucceeded, Warnings: []smapi.Problem{{Message: "a sample is long"}}}},
+		Warnings: []string{"a title was dropped"},
+	}
+
+	for n := range 3 {
+		require.Error(t, writeDeploy(&failAfter{n: n}, res), n)
+	}
+
+	var out strings.Builder
+
+	require.NoError(t, writeDeploy(&out, res))
+	assert.Equal(t, "SUCCEEDED   en-GB\n  a sample is long\nwarning: a title was dropped\n", out.String())
+}
+
+// A deploy that can't list the skills, or can't write its report, says so instead of reporting a pass.
+func TestGenDeployFailsWhenUnlistedOrUnwritable(t *testing.T) {
+	fake, flags := liveFake(t)
+	skill := fake.AddSkill(smapitest.DefaultVendorID, map[string]string{"en-AU": ciSkillName})
+	args := append([]string{"gen", "deploy", "--skill", skill, "--invocation", "encore", "--locale", "en-AU", "--vendor", smapitest.DefaultVendorID, "--poll-interval", "1ms"}, flags...)
+
+	fake.Inject(http.StatusForbidden, 1)
+
+	_, _, err := runCLI(t, args...)
+	require.ErrorContains(t, err, "403")
+
+	require.ErrorIs(t, runCLIWith(t.Context(), t, &failAfter{}, args...), assert.AnError)
+
+	sk, _ := fake.Skill(skill)
+	assert.True(t, sk.Enabled, "the deploy itself went through")
 }
