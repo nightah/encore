@@ -39,9 +39,10 @@ version: ## Commit "release: vX.Y.Z" on a release branch (made from origin/main 
 patch minor major:
 	@case " $(MAKECMDGOALS) " in *" version "*) ;; *) echo "make $@: did you mean make version $@?" >&2; exit 1 ;; esac
 
-icons: ## Render the Alexa skill icons (108 and 512 px PNG) from docs/brand/logo.svg; needs rsvg-convert
+icons: ## Render the Alexa skill icons (108 and 512 px PNG) from docs/brand/logo.svg and the web app's maskable icon from docs/brand/mark-maskable.svg; needs rsvg-convert
 	rsvg-convert -w 108 -h 108 docs/brand/logo.svg -o internal/smapi/skillpkg/assets/icon-108.png
 	rsvg-convert -w 512 -h 512 docs/brand/logo.svg -o internal/smapi/skillpkg/assets/icon-512.png
+	rsvg-convert -w 512 -h 512 docs/brand/mark-maskable.svg -o web/public/icon-maskable-512.png
 
 generate: ## Regenerate Kodi JSON-RPC and SMAPI clients, the OpenAPI document and the docs reference pages (which docs builds also regenerate)
 	$(GO) generate ./...
