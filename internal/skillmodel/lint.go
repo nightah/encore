@@ -402,7 +402,7 @@ func (l *linter) sample(locale string, in Intent, pattern, sample string, exact,
 
 	refs := slotRef.FindAllStringSubmatch(sample, -1)
 
-	// Amazon fails to parse a slot joined to other text, such as the possessive "{Artist}'s". Japanese writes no spaces, and its particles follow the slot directly ("{Movie}を再生して").
+	// Amazon fails to parse a slot joined to other text, such as the possessive "{Artist}'s". Japanese writes no spaces, and its particles follow the slot directly in the sources ("{Movie}を再生して"); the build spaces them (spaceSlots).
 	for _, loc := range slotRef.FindAllStringIndex(sample, -1) {
 		if !l.script.unspaced && ((loc[0] > 0 && sample[loc[0]-1] != ' ') || (loc[1] < len(sample) && sample[loc[1]] != ' ')) {
 			l.add(Error, locale, in.Name, "sample %q joins slot %s to other text; Amazon needs a space on each side (rephrase possessives such as \"{Artist}'s\")", sample, sample[loc[0]:loc[1]])

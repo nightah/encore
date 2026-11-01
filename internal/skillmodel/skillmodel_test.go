@@ -2,6 +2,7 @@ package skillmodel
 
 import (
 	"encoding/json"
+	"regexp"
 	"slices"
 	"strings"
 	"testing"
@@ -282,6 +283,37 @@ func TestShippedSources(t *testing.T) {
 	for _, locale := range src.LocaleNames() {
 		_, err := Build(src, locale, BuildOptions{})
 		assert.NoError(t, err, locale)
+	}
+}
+
+// TestShippedSamplesSpaceTheirSlots checks that every built sample, in every locale, has a space on each side of each slot, as Amazon fails to parse "{Movie}が見たい" and the whole Japanese model with it.
+func TestShippedSamplesSpaceTheirSlots(t *testing.T) {
+	src, err := Load(i18n.FS)
+	require.NoError(t, err)
+
+	joined := regexp.MustCompile(`[^ ]\{|\}[^ ]`)
+
+	for _, locale := range src.LocaleNames() {
+		m, err := Build(src, locale, BuildOptions{})
+		require.NoError(t, err, locale)
+
+		for _, in := range m.InteractionModel.LanguageModel.Intents {
+			for _, sample := range in.Samples {
+				assert.False(t, joined.MatchString(sample), "%s %s: %q", locale, in.Name, sample)
+			}
+		}
+	}
+}
+
+func TestSpaceSlots(t *testing.T) {
+	for in, want := range map[string]string{
+		"[映画の]{Movie}が見たい":       "[映画の] {Movie} が見たい",
+		"{Room}で映画の{Movie}をつけて":  "{Room} で映画の {Movie} をつけて",
+		"{Show}{Season}":         "{Show} {Season}",
+		"play {Movie} in {Room}": "play {Movie} in {Room}",
+		"pause":                  "pause",
+	} {
+		assert.Equal(t, want, spaceSlots(in), in)
 	}
 }
 

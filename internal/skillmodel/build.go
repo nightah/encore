@@ -5,6 +5,7 @@ import (
 	"maps"
 	"slices"
 	"sort"
+	"strings"
 )
 
 // Build produces the interaction model for one locale.
@@ -45,7 +46,9 @@ func Build(src *Sources, locale string, opts BuildOptions) (*InteractionModel, e
 				return nil, fmt.Errorf("locale %s, intent %s: %w", locale, in.Name, err)
 			}
 
-			mi.Samples = append(mi.Samples, samples...)
+			for _, sample := range samples {
+				mi.Samples = append(mi.Samples, spaceSlots(sample))
+			}
 		}
 
 		mi.Samples = dedupe(mi.Samples)
@@ -132,6 +135,11 @@ func buildTypes(custom []SlotType, static map[string][]SlotValue, used, dropped 
 	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 
 	return out, nil
+}
+
+// spaceSlots puts a space on each side of every slot reference that lacks one. Amazon fails to parse a slot joined to other text, and Japanese, which writes no spaces, attaches its particles to the slot in the sources ("{Movie}を再生して"); the space there doesn't change what Alexa hears.
+func spaceSlots(sample string) string {
+	return strings.Join(strings.Fields(slotRef.ReplaceAllString(sample, " $0 ")), " ")
 }
 
 func dedupe(in []string) []string {
