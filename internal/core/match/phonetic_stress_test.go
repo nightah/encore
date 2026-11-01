@@ -1,6 +1,6 @@
 //go:build phoneticeval
 
-// TestPhoneticCollisions only logs, and TestPhoneticDistractors holds production to wrong-play ceilings. TestPhoneticDistractors takes about two minutes, and more than the ten minutes go test allows by default under the race detector, so both sit behind a build tag, which also runs TestPhoneticEval in full (evalFull): CI runs TestPhoneticDistractors and TestPhoneticEval on every push and pull request in a job of its own without -race (.github/workflows/ci-go.yml). By hand: go test -tags phoneticeval -run 'TestPhonetic(Eval|Collisions|Distractors)' -v ./internal/core/match/
+// TestPhoneticCollisions only logs, and TestPhoneticDistractors holds production to wrong-play ceilings. TestPhoneticDistractors takes about six minutes, and more than the ten minutes go test allows by default under the race detector, so both sit behind a build tag, which also runs TestPhoneticEval in full (evalFull): CI runs TestPhoneticDistractors and TestPhoneticEval on every push and pull request in jobs of their own without -race, the distractors' languages split across runners with ENCORE_MATCH_SHARD (.github/workflows/ci-go.yml). By hand: go test -tags phoneticeval -run 'TestPhonetic(Eval|Collisions|Distractors)' -v ./internal/core/match/
 
 package match
 
@@ -157,7 +157,13 @@ var distractorCeiling = map[string]int{
 func TestPhoneticDistractors(t *testing.T) {
 	var table strings.Builder
 
-	for _, code := range Languages() {
+	inShard := languageShard(t)
+
+	for i, code := range Languages() {
+		if !inShard(i) {
+			continue
+		}
+
 		words := vocabulary(t, languages[code])
 
 		sets := make([]distractorSet, len(distractorSeeds))
@@ -209,6 +215,24 @@ func TestPhoneticDistractors(t *testing.T) {
 	}
 
 	t.Logf("absent-title distractors:\n%s", table.String())
+}
+
+// languageShard reads ENCORE_MATCH_SHARD, "k/n" for the k-th of n shards, and reports whether the language at index i of Languages() is in it: those that leave k-1 over when divided by n. Unset, every language is.
+func languageShard(t *testing.T) func(i int) bool {
+	t.Helper()
+
+	v := os.Getenv("ENCORE_MATCH_SHARD")
+	if v == "" {
+		return func(int) bool { return true }
+	}
+
+	var k, n int
+
+	_, err := fmt.Sscanf(v, "%d/%d", &k, &n)
+	require.NoError(t, err, "ENCORE_MATCH_SHARD=%q is not k/n", v)
+	require.True(t, n > 0 && k >= 1 && k <= n, "ENCORE_MATCH_SHARD=%q is not k/n with 1 <= k <= n", v)
+
+	return func(i int) bool { return i%n == k-1 }
 }
 
 func evalEncoderNamed(name string) evalEncoder {
