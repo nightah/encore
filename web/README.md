@@ -86,7 +86,7 @@ pnpm test:e2e
 
 ## Screenshots
 
-`pnpm screenshots` captures every page, light and dark, into `docs/src/assets/screenshots/`, which the docs site's tour and the README use. Sensitive details are replaced with realistic examples rather than blurred:
+`pnpm screenshots` captures every page, light and dark, into `docs/src/assets/screenshots/`, which the docs site's tour and the README use. A second, phone-sized pass captures the menu bar, More, Arrange menu and the phone layouts as `<name>-phone-<theme>.png`; `pnpm screenshots --project chromium` or `--project phone` runs just one. Sensitive details are replaced with realistic examples rather than blurred:
 
 - The captured Encore's host name becomes `encore.example.net`, other host names `<first label>.example.net`; URLs keep their paths.
 - IP addresses come from `192.168.1.0/24` (IPv6 from `fd00::/64`), keeping prefix lengths and ports.
@@ -103,7 +103,7 @@ SCREENSHOT_URL=https://encore.example.net SCREENSHOT_SESSION_FILE=~/.config/enco
 
 - `SCREENSHOT_SESSION_FILE`: a file holding the value of the `encore_session` cookie from a signed-in browser (for OpenID Connect or proxy sign-in). Or `ENCORE_PASSWORD_FILE` (and `ENCORE_USERNAME`, default admin) to sign in with the password.
 - `SCREENSHOT_REPLACE`: more text to replace, as comma-separated `original=example` pairs, such as `MisatoNUC=Lounge`. Without `=example`, the text is blurred.
-- `SCREENSHOT_ONLY`: only these pages, e.g. `kodi,alexa-skill` (`login` for the sign-in page).
+- `SCREENSHOT_ONLY`: only these pages, e.g. `kodi,alexa-skill` (`login` for the sign-in page; phone pages by their name without `-phone`, such as `arrange-menu`).
 - `SCREENSHOT_DIR`: somewhere else to write them.
 
 Check every image before committing it: the patterns catch the usual details, not everything.

@@ -16,6 +16,17 @@ export default defineConfig({
       name: "chromium",
       use: { ...devices["Desktop Chrome"], deviceScaleFactor: 2, viewport: { height: 900, width: 1440 } },
     },
+    // An iPhone-sized screen in Chromium, for the menu bar and the phone layouts; images get a -phone suffix.
+    {
+      name: "phone",
+      use: {
+        ...devices["Desktop Chrome"],
+        deviceScaleFactor: 2,
+        hasTouch: true,
+        isMobile: true,
+        viewport: { height: 844, width: 390 },
+      },
+    },
   ],
   reporter: "list",
   testDir: ".",
