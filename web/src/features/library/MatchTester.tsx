@@ -127,13 +127,27 @@ export function MatchTester({ libraryId }: { libraryId: number }) {
                 <tbody>
                   {tested.result.candidates.map((candidate) => (
                     <tr key={`${candidate.title}-${candidate.year}-${candidate.media_id}`}>
-                      <Td className="font-medium">{titleWithYear(candidate)}</Td>
-                      <Td className="font-mono text-muted">{candidate.breakdown.alias || "-"}</Td>
-                      <Td className="font-mono">{formatScore(candidate.breakdown.token_set)}</Td>
-                      <Td className="font-mono">{formatScore(candidate.breakdown.jaro_winkler)}</Td>
-                      <Td className="font-mono">{formatScore(candidate.breakdown.phonetic)}</Td>
-                      <Td className="whitespace-nowrap font-mono">{boostText(candidate)}</Td>
-                      <Td className="font-mono font-semibold">{formatScore(candidate.score)}</Td>
+                      <Td lead className="font-medium">
+                        {titleWithYear(candidate)}
+                      </Td>
+                      <Td label={t("matchTester.columns.alias")} className="font-mono text-muted">
+                        {candidate.breakdown.alias || "-"}
+                      </Td>
+                      <Td label={t("matchTester.columns.tokenSet")} className="font-mono">
+                        {formatScore(candidate.breakdown.token_set)}
+                      </Td>
+                      <Td label="Jaro-W" className="font-mono">
+                        {formatScore(candidate.breakdown.jaro_winkler)}
+                      </Td>
+                      <Td label={t("matchTester.columns.phonetic")} className="font-mono">
+                        {formatScore(candidate.breakdown.phonetic)}
+                      </Td>
+                      <Td label={t("matchTester.columns.boost")} className="whitespace-nowrap font-mono">
+                        {boostText(candidate)}
+                      </Td>
+                      <Td label={t("matchTester.columns.score")} className="font-mono font-semibold">
+                        {formatScore(candidate.score)}
+                      </Td>
                     </tr>
                   ))}
                 </tbody>

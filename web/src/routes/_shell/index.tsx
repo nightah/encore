@@ -240,7 +240,7 @@ function RecentRequests({ overview }: { overview: Overview }) {
                   className="cursor-pointer hover:bg-soft"
                   onClick={() => void navigate({ search: { id: request.id }, to: "/request-log" })}
                 >
-                  <Td className="whitespace-nowrap font-mono text-muted">
+                  <Td label={t("recent.columns.time")} className="whitespace-nowrap font-mono text-muted">
                     <Link
                       to="/request-log"
                       search={{ id: request.id }}
@@ -251,11 +251,13 @@ function RecentRequests({ overview }: { overview: Overview }) {
                       {formatClock(request.time)}
                     </Link>
                   </Td>
-                  <Td className="whitespace-nowrap">{requestSource(request)}</Td>
-                  <Td>
+                  <Td label={t("recent.columns.echo")} className="whitespace-nowrap">
+                    {requestSource(request)}
+                  </Td>
+                  <Td label={t("recent.columns.heard")}>
                     <Heard request={request} />
                   </Td>
-                  <Td>
+                  <Td label={t("recent.columns.result")}>
                     <Chip tone={chip.tone}>{chip.label}</Chip>
                   </Td>
                 </tr>
