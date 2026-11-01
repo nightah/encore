@@ -14,6 +14,8 @@ Fork the repository and open a pull request. [Development setup](https://nightah
 
 For anything larger than a small fix, open an issue first so we can agree on what to change and how. Add or update tests with each change; pull requests are merged once every check passes (`make lint`, `make test` and generated code with no diff).
 
+Encore is an AI-assisted project, and AI-assisted contributions are welcome on the same terms as any other: you must understand every line you submit and be able to explain it in review, and you're responsible for it as its author. [How Encore is built](https://nightah.github.io/encore/contributing/#how-encore-is-built) describes how the project itself uses AI.
+
 Pull requests are squash-merged and the title becomes the commit message, so it follows [Conventional Commits](https://www.conventionalcommits.org/), with a header of at most 72 characters; commitlint checks it. Commit as often as you like on your branch, but please don't force-push once a review has started, except to rebase or fix the commit message. To ask for another review, use **Re-request review** rather than mentioning the reviewer.
 
 ## Licence
