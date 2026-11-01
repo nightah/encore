@@ -9,6 +9,9 @@ import (
 // ErrBuildFailed means Amazon rejected one or more locales' interaction models; *Error.Locales says why.
 var ErrBuildFailed = errors.New("deploy: interaction model build failed")
 
+// errGaveUp stops a poll that has asked as often as it may.
+var errGaveUp = errors.New("deploy: gave up waiting for the build status")
+
 // Error is a deploy that SMAPI accepted but could not complete.
 type Error struct {
 	Step     Step

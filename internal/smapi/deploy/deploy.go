@@ -478,9 +478,19 @@ func (r *run) importPackage(ctx context.Context, location string) error {
 		failure.Problems = append(failure.Problems, res.Errors...)
 	}
 
-	// A failed import is usually a failed model build; the skill status has the per-locale details. A locale whose import was rolled back may never report a build; pollBuild gives up on those, and then the import's own errors are the ones to report.
+	// A failed import is usually a failed model build. The import names the locales that failed and why, while the rest were only rolled back.
+	r.recordImported(status.Skill.Resources)
+
+	if locales := r.importFailures(status.Skill.Resources); len(locales) > 0 {
+		r.emit(Event{Step: StepImport, State: StateFailed, Message: "Amazon could not build the interaction models"})
+		r.step = StepBuild
+
+		return &Error{Step: StepBuild, Locales: locales}
+	}
+
+	// Without the import's reasons, the skill status may have them. After a rollback it can report the builds in progress for good, so it's asked only as long as a missing locale is waited for; pollBuild also gives up on a locale that never reports, and then the import's own errors are the ones to report.
 	if r.res.State.SkillID != "" {
-		if err := r.pollBuild(ctx, false); err == nil {
+		if err := r.pollBuild(ctx, false, missingLocalePolls); err == nil {
 			if locales := r.failedLocales(); len(locales) > 0 && !onlyUnreported(locales) {
 				r.emit(Event{Step: StepImport, State: StateFailed, Message: "Amazon could not build the interaction models"})
 				r.step = StepBuild
@@ -504,7 +514,7 @@ func (r *run) waitForBuild(ctx context.Context) error {
 		return nil
 	}
 
-	if err := r.pollBuild(ctx, true); err != nil {
+	if err := r.pollBuild(ctx, true, 0); err != nil {
 		return err
 	}
 
@@ -518,8 +528,16 @@ func (r *run) waitForBuild(ctx context.Context) error {
 	return nil
 }
 
-func (r *run) pollBuild(ctx context.Context, progress bool) error {
+// pollBuild waits for every package locale's build to finish, or, when limit is above zero, for at most limit polls, after which it returns errGaveUp.
+func (r *run) pollBuild(ctx context.Context, progress bool, limit int) error {
+	polls := 0
+
 	return r.d.client.Poll(ctx, func(ctx context.Context) (bool, error) {
+		polls++
+		if limit > 0 && polls > limit {
+			return false, errGaveUp
+		}
+
 		st, err := r.d.client.SkillStatus(ctx, r.res.State.SkillID)
 		if err != nil {
 			return false, err
@@ -630,17 +648,43 @@ func resourceSummary(resources []smapi.ResourceStatus) []string {
 }
 
 // Amazon names import resources "InteractionModel.en-AU" or "interactionModels.en_AU".
-func (r *run) recordImported(resources []smapi.ResourceStatus) {
+// importFailures returns the errors of each package locale whose import failed with them, and records those locales as failed.
+func (r *run) importFailures(resources []smapi.ResourceStatus) map[string][]smapi.Problem {
+	var out map[string][]smapi.Problem
+
 	for _, res := range resources {
-		kind, loc, ok := strings.Cut(res.Name, ".")
-		// SKIPPED means the model didn't change, so the one Amazon already built stands.
-		built := res.Status == smapi.StatusSucceeded || res.Status == smapi.StatusSkipped
-		if !ok || !strings.HasPrefix(strings.ToLower(kind), "interactionmodel") || !built {
+		loc, ok := resourceLocale(res.Name)
+		if !ok || res.Status != smapi.StatusFailed || len(res.Errors) == 0 || !slices.Contains(r.pkg.Locales(), loc) {
 			continue
 		}
 
-		loc = strings.ReplaceAll(loc, "_", "-")
-		if !slices.Contains(r.pkg.Locales(), loc) {
+		if out == nil {
+			out = map[string][]smapi.Problem{}
+		}
+
+		out[loc] = res.Errors
+		r.res.Locales[loc] = LocaleStatus{Status: smapi.StatusFailed, Errors: res.Errors, Warnings: res.Warnings}
+	}
+
+	return out
+}
+
+// resourceLocale returns the locale an import resource is the interaction model of.
+func resourceLocale(name string) (string, bool) {
+	kind, loc, ok := strings.Cut(name, ".")
+	if !ok || !strings.HasPrefix(strings.ToLower(kind), "interactionmodel") {
+		return "", false
+	}
+
+	return strings.ReplaceAll(loc, "_", "-"), true
+}
+
+func (r *run) recordImported(resources []smapi.ResourceStatus) {
+	for _, res := range resources {
+		loc, ok := resourceLocale(res.Name)
+		// SKIPPED means the model didn't change, so the one Amazon already built stands.
+		built := res.Status == smapi.StatusSucceeded || res.Status == smapi.StatusSkipped
+		if !ok || !built || !slices.Contains(r.pkg.Locales(), loc) {
 			continue
 		}
 

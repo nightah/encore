@@ -351,15 +351,87 @@ func TestDeployFailedImportDoesNotWait(t *testing.T) {
 	start := time.Now()
 	_, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
 
-	require.Error(t, err)
+	require.ErrorIs(t, err, deploy.ErrBuildFailed)
 	require.NotErrorIs(t, err, smapi.ErrPollTimeout)
 	assert.Less(t, time.Since(start), 5*time.Second)
 
 	var de *deploy.Error
 	require.ErrorAs(t, err, &de)
-	assert.Equal(t, deploy.StepImport, de.Step)
+	assert.Equal(t, deploy.StepBuild, de.Step)
 	assert.Contains(t, err.Error(), "Parsing error in sample", "the failed resource's errors are reported")
 	assert.Contains(t, h.timeline(), "import:failed")
+}
+
+// failedImport answers every import with body, a failed import's status, and the skill status with every locale's build still in progress, as the live API went on doing after an import whose rollback failed. It counts the skill status polls.
+func failedImport(h *harness, body string) *atomic.Int64 {
+	return failedImportWith(h, body, `{"manifest":{"lastUpdateRequest":{"status":"SUCCEEDED"}},"interactionModel":{"en-US":{"lastUpdateRequest":{"status":"IN_PROGRESS"}},"en-GB":{"lastUpdateRequest":{"status":"IN_PROGRESS"}}}}`)
+}
+
+// failedImportWith is failedImport with the skill status answering status.
+func failedImportWith(h *harness, body, status string) *atomic.Int64 {
+	var polls atomic.Int64
+
+	h.override("GET /v1/skills/{a}/{b}", func(w http.ResponseWriter, r *http.Request) {
+		if r.PathValue("a") == "imports" {
+			writeJSON(w, http.StatusOK, body)
+
+			return
+		}
+
+		polls.Add(1)
+		writeJSON(w, http.StatusOK, status)
+	})
+
+	return &polls
+}
+
+// A failed import that names a locale's errors reports them as that locale's build failure at once, without waiting on a skill status that may never finish.
+func TestDeployFailedImportReportsItsLocaleErrors(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+	polls := failedImport(h, `{"status":"FAILED","skill":{"skillId":"amzn1.ask.skill.rolledback","resources":[{"name":"Manifest","status":"ROLLBACK_FAILED"},{"name":"InteractionModel.en-US","status":"FAILED"},{"name":"InteractionModel.en-GB","status":"FAILED","errors":[{"code":"INVALID_INTERACTION_MODEL","message":"Parsing error in sample"}]}]}}`)
+
+	res, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
+	require.ErrorIs(t, err, deploy.ErrBuildFailed)
+
+	var de *deploy.Error
+	require.ErrorAs(t, err, &de)
+	assert.Equal(t, deploy.StepBuild, de.Step)
+	assert.Equal(t, map[string][]smapi.Problem{"en-GB": {{Code: "INVALID_INTERACTION_MODEL", Message: "Parsing error in sample"}}}, de.Locales)
+	assert.Equal(t, smapi.StatusFailed, res.Locales["en-GB"].Status, "the report shows the locale's errors")
+	assert.Equal(t, de.Locales["en-GB"], res.Locales["en-GB"].Errors)
+	assert.Zero(t, polls.Load(), "the import already said why")
+}
+
+// A failed import that names no locale's errors asks the skill status, but only for as long as a missing locale is waited for.
+func TestDeployFailedImportStopsAskingTheSkillStatus(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+	polls := failedImport(h, `{"status":"FAILED","skill":{"skillId":"amzn1.ask.skill.rolledback","resources":[{"name":"Manifest","status":"ROLLBACK_FAILED","errors":[{"message":"rollback failed"}]},{"name":"InteractionModel.en-GB","status":"FAILED"}]}}`)
+
+	_, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
+	require.NotErrorIs(t, err, smapi.ErrPollTimeout)
+
+	var de *deploy.Error
+	require.ErrorAs(t, err, &de)
+	assert.Equal(t, deploy.StepImport, de.Step)
+	assert.Equal(t, []smapi.Problem{{Message: "rollback failed"}}, de.Problems)
+	assert.EqualValues(t, 10, polls.Load())
+}
+
+// A failed import that names no locale's errors takes them from the skill status when it has them.
+func TestDeployFailedImportTakesTheSkillStatusErrors(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+	polls := failedImportWith(h,
+		`{"status":"FAILED","skill":{"skillId":"amzn1.ask.skill.rolledback","resources":[{"name":"InteractionModel.en-US","status":"SUCCEEDED"},{"name":"InteractionModel.en-GB","status":"FAILED"}]}}`,
+		`{"manifest":{"lastUpdateRequest":{"status":"SUCCEEDED"}},"interactionModel":{"en-GB":{"lastUpdateRequest":{"status":"FAILED","errors":[{"message":"Parsing error in sample"}]}}}}`)
+
+	_, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
+	require.ErrorIs(t, err, deploy.ErrBuildFailed)
+
+	var de *deploy.Error
+	require.ErrorAs(t, err, &de)
+	assert.Equal(t, deploy.StepBuild, de.Step)
+	assert.Equal(t, map[string][]smapi.Problem{"en-GB": {{Message: "Parsing error in sample"}}}, de.Locales)
+	assert.EqualValues(t, 1, polls.Load())
 }
 
 // The live API: the import reports each locale's model built, while the skill status doesn't list the locale. The import is authoritative.
