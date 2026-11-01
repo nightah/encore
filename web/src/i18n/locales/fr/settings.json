@@ -243,7 +243,7 @@
         "hint": "Espace de travail gris froid",
         "label": "Clair"
       },
-      "note": "Enregistré dans ce navigateur uniquement. Le bouton soleil/lune en haut de chaque page change et enregistre immédiatement.",
+      "note": "Enregistré dans ce navigateur uniquement. Le bouton soleil/lune en haut de chaque page et, sur un téléphone, Thème dans Plus changent et enregistrent immédiatement.",
       "system": {
         "hint": "Suit le réglage clair ou sombre de votre appareil",
         "label": "Comme le système"

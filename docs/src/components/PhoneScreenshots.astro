@@ -1,0 +1,50 @@
+---
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+
+// Captured by the phone pass of `pnpm screenshots` in web/ (web/e2e/screenshots), one light and one dark image per page, named <name>-phone-<theme>.png.
+const images = import.meta.glob<{ default: ImageMetadata }>("../assets/screenshots/*-phone-*.png", {
+  eager: true,
+});
+
+interface Props {
+  shots: { name: string; alt: string }[];
+}
+
+const { shots } = Astro.props;
+const find = (name: string, theme: string) => {
+  const image = images[`../assets/screenshots/${name}-phone-${theme}.png`];
+  if (!image)
+    throw new Error(`no ${theme} phone screenshot named ${name}; run pnpm screenshots in web/`);
+  return image.default;
+};
+---
+
+<div class="phones not-content">
+  {
+    shots.map(({ name, alt }) => (
+      <figure>
+        <Image src={find(name, "light")} alt={alt} class="dark:sl-hidden" widths={[390, 780]} sizes="(min-width: 50rem) 12rem, 45vw" />
+        <Image src={find(name, "dark")} alt={alt} class="light:sl-hidden" widths={[390, 780]} sizes="(min-width: 50rem) 12rem, 45vw" />
+      </figure>
+    ))
+  }
+</div>
+
+<style>
+  .phones {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 10.5rem), 1fr));
+    margin-block: 1.5rem;
+  }
+  .phones figure {
+    margin: 0;
+  }
+  .phones img {
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 1rem;
+    height: auto;
+    width: 100%;
+  }
+</style>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -18,8 +18,12 @@ import { Input, Select } from "@components/ui/Field";
 import { EmptyState, ErrorState, LoadingBlock } from "@components/ui/States";
 import { RequestDetailPane } from "@features/requests/RequestDetail";
 import { RequestRow } from "@features/requests/RequestList";
+import { useMinWidth } from "@lib/useMinWidth";
 
 const outcomeSchema = z.enum(RequestSummaryOutcome);
+
+// The room the list and the detail need side by side: their flex bases and the gap between them. Narrower, a request opens under its row.
+const SIDE_BY_SIDE = 420 + 460 + 18;
 
 const searchSchema = z.object({
   device: z.number().int().optional().catch(undefined),
@@ -79,7 +83,11 @@ function RequestLogPage() {
 
   const items = data?.pages.flatMap((page) => page.items) ?? [];
   const first = items[0];
-  const selectedId = search.id ?? first?.id;
+  const [layoutRef, sideBySide] = useMinWidth<HTMLDivElement>(SIDE_BY_SIDE);
+  // Side by side, the newest request fills the detail pane until another is picked; in the list, nothing opens by itself.
+  const selectedId = sideBySide ? (search.id ?? first?.id) : search.id;
+  // A request opened in the list scrolls to the top, so its detail shows below it.
+  const scrollToOpen = useCallback((row: HTMLLIElement | null) => row?.scrollIntoView({ block: "start" }), []);
   // A filtered Echo that isn't in the device list (still loading, failed to load, or since forgotten) still gets an option, so the filter never reads "All Echos" while the log is narrowed to one.
   const missingDevice =
     search.device !== undefined && !devices.data?.some((device) => device.id === search.device)
@@ -181,21 +189,47 @@ function RequestLogPage() {
       ) : null}
 
       {first ? (
-        <div className="flex flex-wrap items-start gap-4.5">
+        <div ref={layoutRef} className="flex flex-wrap items-start gap-4.5">
+          {/* A request named in the address that isn't in the loaded pages opens above the list. */}
+          {!sideBySide && search.id !== undefined && !items.some((request) => request.id === search.id) ? (
+            <section aria-labelledby="det-h" className="w-full rounded-xl border border-line bg-surface p-5">
+              <RequestDetailPane key={search.id} id={search.id} />
+            </section>
+          ) : null}
           <section
             aria-label={t("list.label")}
             className="min-w-0 flex-[1_1_420px] overflow-hidden rounded-xl border border-line bg-surface"
           >
             <ul>
-              {items.map((request) => (
-                <li key={request.id}>
-                  <RequestRow
-                    request={request}
-                    selected={request.id === selectedId}
-                    onSelect={(id) => navigate({ replace: true, search: (prev) => ({ ...prev, id }) })}
-                  />
-                </li>
-              ))}
+              {items.map((request) => {
+                const open = !sideBySide && request.id === selectedId;
+                return (
+                  <li key={request.id} ref={open ? scrollToOpen : undefined} className="scroll-mt-4">
+                    <RequestRow
+                      request={request}
+                      selected={request.id === selectedId}
+                      expands={!sideBySide}
+                      onSelect={(id) =>
+                        navigate({
+                          replace: true,
+                          // Picking a request keeps the page where it is; an opened row scrolls itself into view.
+                          resetScroll: false,
+                          // In the list, the open request's row closes it again.
+                          search: (prev) => ({ ...prev, id: open ? undefined : id }),
+                        })
+                      }
+                    />
+                    {open ? (
+                      <section
+                        aria-labelledby="det-h"
+                        className="border-line-soft border-b bg-soft px-4 pt-1 pb-4 shadow-[inset_3px_0_0_var(--color-accent)]"
+                      >
+                        <RequestDetailPane id={request.id} inline />
+                      </section>
+                    ) : null}
+                  </li>
+                );
+              })}
             </ul>
             {hasNextPage ? (
               <div className="flex justify-center p-3">
@@ -205,12 +239,14 @@ function RequestLogPage() {
               </div>
             ) : null}
           </section>
-          <section
-            aria-labelledby="det-h"
-            className="min-w-0 flex-[1.3_1_460px] rounded-xl border border-line bg-surface p-5 min-[1000px]:sticky min-[1000px]:top-6"
-          >
-            <RequestDetailPane key={selectedId} id={search.id ?? first.id} />
-          </section>
+          {sideBySide ? (
+            <section
+              aria-labelledby="det-h"
+              className="min-w-0 flex-[1.3_1_460px] rounded-xl border border-line bg-surface p-5 min-[1000px]:sticky min-[1000px]:top-6"
+            >
+              <RequestDetailPane key={selectedId} id={search.id ?? first.id} />
+            </section>
+          ) : null}
         </div>
       ) : null}
     </Page>

@@ -28,7 +28,8 @@ export function Page({ title, description, actions, children, width = "wide" }: 
           {description ? <p className="text-muted">{description}</p> : null}
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
-          <ThemeToggle />
+          {/* Phones switch the theme under More in the menu bar. */}
+          <ThemeToggle className="max-[800px]:hidden" />
           {actions}
         </div>
       </header>

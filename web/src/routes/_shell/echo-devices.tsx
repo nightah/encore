@@ -101,7 +101,7 @@ function EchoDevicesPage() {
                         device.id === identified && "bg-info-bg outline-2 outline-info",
                       )}
                     >
-                      <Td>
+                      <Td lead>
                         <div className="flex flex-col">
                           <span className="flex flex-wrap items-baseline gap-x-2.5">
                             <span className="font-semibold">{name}</span>
@@ -114,13 +114,17 @@ function EchoDevicesPage() {
                           ) : null}
                         </div>
                       </Td>
-                      <Td>{room?.name ?? "-"}</Td>
-                      <Td>
+                      <Td label={t("table.columns.room")}>{room?.name ?? "-"}</Td>
+                      <Td label={t("table.columns.controls")}>
                         <Chip tone={kodi ? "ok" : "warn"}>{kodi?.name ?? t("notLinked")}</Chip>
                       </Td>
-                      <Td className="whitespace-nowrap text-muted">{formatDayOrClock(device.last_seen)}</Td>
-                      <Td className="font-mono">{device.request_count_today}</Td>
-                      <Td className="text-right">
+                      <Td label={t("table.columns.lastRequest")} className="whitespace-nowrap text-muted">
+                        {formatDayOrClock(device.last_seen)}
+                      </Td>
+                      <Td label={t("table.columns.today")} className="font-mono">
+                        {device.request_count_today}
+                      </Td>
+                      <Td action className="text-right">
                         <Button aria-label={t("table.editNamed", { name })} onClick={() => setEditing(device)}>
                           {t("table.edit")}
                         </Button>

@@ -13,7 +13,9 @@ import { anonymise } from "@e2e/screenshots/anonymise";
  * - ENCORE_USERNAME (default admin) and ENCORE_PASSWORD or ENCORE_PASSWORD_FILE: otherwise, the admin to sign in as with the password. Prefer the file, so the password stays out of shell history.
  * - SCREENSHOT_REPLACE: more text to replace, comma-separated original=example pairs, such as MisatoNUC=Lounge. Without =example, the text is blurred.
  * - SCREENSHOT_DIR: where the images go; default docs/src/assets/screenshots.
- * - SCREENSHOT_ONLY: capture only these pages, comma-separated names.
+ * - SCREENSHOT_ONLY: capture only these pages, comma-separated names (a phone page by its name without -phone).
+ *
+ * The phone project captures PHONE_SHOTS at iPhone size, named with -phone before the theme.
  */
 const OUT = path.resolve(
   process.env.SCREENSHOT_DIR ?? path.join(import.meta.dirname, "../../../docs/src/assets/screenshots"),
@@ -51,6 +53,45 @@ const SHOTS: Shot[] = [
   { heading: "Settings", name: "settings", path: "/settings" },
   { heading: "Settings", name: "settings-access", path: "/settings?tab=access" },
   { heading: "Settings", name: "settings-storage", path: "/settings?tab=storage" },
+];
+
+/** The phone layouts: the menu bar and its sheets, tables as cards and a request opened in the list. */
+const PHONE_SHOTS: Shot[] = [
+  { heading: "Overview", name: "overview", path: "/" },
+  {
+    heading: "Overview",
+    name: "more",
+    path: "/",
+    prepare: async (page) => {
+      await page.getByRole("navigation", { name: "Menu bar" }).getByRole("button", { name: "More" }).click();
+      await page.getByRole("dialog", { name: "More" }).waitFor();
+      await page.waitForTimeout(500);
+    },
+  },
+  {
+    heading: "Overview",
+    name: "arrange-menu",
+    path: "/",
+    prepare: async (page) => {
+      await page.getByRole("navigation", { name: "Menu bar" }).getByRole("button", { name: "More" }).click();
+      await page.getByRole("dialog", { name: "More" }).getByRole("button", { name: "Arrange menu" }).click();
+      await page.getByRole("dialog", { name: "Arrange menu" }).waitFor();
+      await page.waitForTimeout(500);
+    },
+  },
+  { heading: "Echo devices", name: "echo-devices", path: "/echo-devices" },
+  {
+    heading: "Request log",
+    name: "request-log",
+    path: "/request-log",
+    // Open a request that matched, so its candidates and Kodi calls show under its row.
+    prepare: async (page) => {
+      const list = page.getByRole("region", { name: "Requests" });
+      await list.getByRole("button", { expanded: false }).filter({ hasText: "Played" }).nth(1).click();
+      await list.getByRole("button", { name: "Replay (dry run)" }).waitFor();
+      await page.waitForTimeout(500);
+    },
+  },
 ];
 
 function password(): string {
@@ -106,6 +147,7 @@ for (const theme of ["light", "dark"] as const) {
 
     test("sign-in page", async ({ page }) => {
       test.skip(ONLY.length > 0 && !ONLY.includes("login"));
+      test.skip(test.info().project.name === "phone", "the sign-in page looks the same on a phone");
       if (MOCK) {
         // The mock keeps its session in the browser; signing out ends only this test's.
         await signIn(page);
@@ -118,13 +160,14 @@ for (const theme of ["light", "dark"] as const) {
     });
 
     test("pages", async ({ page }) => {
+      const phone = test.info().project.name === "phone";
       await signIn(page);
-      for (const shot of SHOTS) {
+      for (const shot of phone ? PHONE_SHOTS : SHOTS) {
         if (ONLY.length && !ONLY.includes(shot.name)) continue;
         await page.goto(`.${shot.path}`);
         await settle(page, shot.heading);
         await shot.prepare?.(page);
-        await capture(page, `${shot.name}-${theme}`);
+        await capture(page, phone ? `${shot.name}-phone-${theme}` : `${shot.name}-${theme}`);
       }
     });
   });

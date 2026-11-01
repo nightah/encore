@@ -5,7 +5,7 @@ import { cn, focusRing } from "@components/ui/cn";
 import { useTheme } from "@theme/store";
 
 /** Sun/moon button in every page header: flips between light and dark. Settings › General offers "Match system" too. */
-export function ThemeToggle({ onDark = false }: { onDark?: boolean }) {
+export function ThemeToggle({ onDark = false, className }: { onDark?: boolean; className?: string }) {
   const { t } = useTranslation("common");
   const { resolved, setPreference } = useTheme();
   const dark = resolved === "dark";
@@ -23,6 +23,7 @@ export function ThemeToggle({ onDark = false }: { onDark?: boolean }) {
           ? "border-[#334050] bg-transparent text-[#c3ccd6] hover:bg-white/5 hover:text-white"
           : "border-btn-border bg-surface text-ink hover:bg-btn-hover",
         focusRing,
+        className,
       )}
     >
       {dark ? <Sun aria-hidden="true" className="size-4.5" /> : <Moon aria-hidden="true" className="size-4.5" />}

@@ -243,7 +243,7 @@
         "hint": "Área de trabajo gris frío",
         "label": "Claro"
       },
-      "note": "Se guarda solo en este navegador. El botón de sol/luna de la cabecera de cada página cambia y guarda al momento.",
+      "note": "Se guarda solo en este navegador. El botón de sol/luna de la cabecera de cada página y, en el móvil, Tema en Más cambian y guardan al momento.",
       "system": {
         "hint": "Sigue el ajuste claro u oscuro de tu dispositivo",
         "label": "Igual que el sistema"

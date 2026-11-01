@@ -131,8 +131,10 @@ export function LocalesPanel({ skill, deploying }: { skill: Skill; deploying: bo
                 : { label: status, tone: "neutral" as const };
               return (
                 <tr key={row.locale}>
-                  <Td className="font-mono text-[13px]">{row.locale}</Td>
-                  <Td>
+                  <Td label={t("locales.columns.locale")} className="font-mono text-[13px]">
+                    {row.locale}
+                  </Td>
+                  <Td label={t("locales.columns.build")} className="max-sm:flex-wrap">
                     <Chip tone={chip.tone}>{chip.label}</Chip>
                     {row.errors?.length ? (
                       <ul className="mt-1.5 flex flex-col gap-0.5 text-[13px] text-bad">
@@ -142,10 +144,13 @@ export function LocalesPanel({ skill, deploying }: { skill: Skill; deploying: bo
                       </ul>
                     ) : null}
                   </Td>
-                  <Td className="font-mono text-[13px]">
+                  <Td label={t("locales.columns.titles")} className="font-mono text-[13px]">
                     {row.status === "succeeded" ? formatNumber(row.titles) : "-"}
                   </Td>
-                  <Td className="font-mono text-[13px]">
+                  <Td
+                    label={t("locales.columns.size", { limit: formatMegabytes(limit) })}
+                    className="font-mono text-[13px]"
+                  >
                     {row.size_bytes ? (
                       <span className="flex items-center gap-2.5">
                         <Meter
@@ -165,7 +170,9 @@ export function LocalesPanel({ skill, deploying }: { skill: Skill; deploying: bo
                       "-"
                     )}
                   </Td>
-                  <Td className="text-muted">{formatDayOrClock(row.built_at)}</Td>
+                  <Td label={t("locales.columns.built")} className="text-muted">
+                    {formatDayOrClock(row.built_at)}
+                  </Td>
                 </tr>
               );
             })}

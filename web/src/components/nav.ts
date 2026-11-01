@@ -14,6 +14,8 @@ import i18n from "@i18n/index";
 export interface NavItem {
   to: "/" | "/kodi" | "/echo-devices" | "/alexa-skill" | "/request-log" | "/library" | "/settings";
   label: string;
+  /** The label in the phone menu bar, where up to four share the width. */
+  shortLabel: string;
   icon: LucideIcon;
 }
 
@@ -23,9 +25,12 @@ const item = (
   to: NavItem["to"],
 ): NavItem => ({
   icon,
-  // A getter, so the label follows the interface language.
+  // Getters, so the labels follow the interface language.
   get label() {
     return i18n.t(`nav.${key}`);
+  },
+  get shortLabel() {
+    return i18n.t(`nav.short.${key}`);
   },
   to,
 });

@@ -38,6 +38,9 @@ const tagNameEnd = ">/ \t\n\r\f"
 // hashedAssetsDir is Vite's build.assetsDir (web/vite.config.ts). Files in it carry content hashes in their names, so they can be cached forever.
 const hashedAssetsDir = "static"
 
+// webManifestType is the media type of the UI's web app manifest (web/public/manifest.webmanifest).
+const webManifestType = "application/manifest+json"
+
 // placeholderIndex is served when the binary was built without the UI, or before the frontend has been built.
 const placeholderIndex = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">

@@ -110,6 +110,11 @@ func (h *spaHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Cache-Control", "no-cache")
 		}
 
+		if path.Ext(name) == ".webmanifest" {
+			// Go's MIME table lacks this extension, so the type would otherwise come from the host's MIME database, if it has one, or fall back to text/plain.
+			w.Header().Set("Content-Type", webManifestType)
+		}
+
 		h.files.ServeHTTP(w, r)
 
 		return
