@@ -41,7 +41,7 @@ require (
 	github.com/boombuler/barcode v1.0.1-0.20190219062509-6c824513bacc // indirect
 	github.com/coreos/go-oidc/v3 v3.21.0 // indirect
 	github.com/dustin/go-humanize v1.1.0 // indirect
-	github.com/go-jose/go-jose/v4 v4.1.6 // indirect
+	github.com/go-jose/go-jose/v4 v4.1.7 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/json-iterator/go v0.0.0-20171115153421-f7279a603ede // indirect
@@ -65,7 +65,7 @@ require (
 	modernc.org/libc v1.79.0 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.12.1 // indirect
-	modernc.org/sqlite v1.61.0 // indirect
+	modernc.org/sqlite v1.61.1 // indirect
 )
 
 tool golang.org/x/perf/cmd/benchstat
