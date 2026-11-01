@@ -185,27 +185,30 @@ func TestNewKeepsInstancesAndDefaultsAcrossRestarts(t *testing.T) {
 }
 
 func TestSavingTheMACNeedsKodiAndTheRow(t *testing.T) {
-	h := newHarness(t, true)
-	ctx := t.Context()
-	inst := h.instance(t)
+	// In a bubble, so the instance's own MAC lookup (learnMACDelay after it starts) can't get in first on a slow machine.
+	inBubble(t, func(t *testing.T) {
+		h := newHarness(t, true)
+		ctx := t.Context()
+		inst := h.instance(t)
 
-	h.kodi.Close()
-	inst.saveMAC(ctx)
+		h.kodi.Close()
+		inst.saveMAC(ctx)
 
-	assert.Nil(t, inst.Waker.MAC(), "an unreachable Kodi can't tell its MAC address")
+		assert.Nil(t, inst.Waker.MAC(), "an unreachable Kodi can't tell its MAC address")
 
-	rec, err := h.app.DB().KodiInstances().Get(ctx, inst.id)
-	require.NoError(t, err)
-	assert.Empty(t, rec.MAC)
+		rec, err := h.app.DB().KodiInstances().Get(ctx, inst.id)
+		require.NoError(t, err)
+		assert.Empty(t, rec.MAC)
 
-	h.kodi.Restart(t)
-	require.NoError(t, h.app.DB().KodiInstances().Delete(ctx, inst.id))
+		h.kodi.Restart(t)
+		require.NoError(t, h.app.DB().KodiInstances().Delete(ctx, inst.id))
 
-	inst.saveMAC(ctx)
-	assert.NotNil(t, inst.Waker.MAC(), "the runtime still knows it until it stops")
+		inst.saveMAC(ctx)
+		assert.NotNil(t, inst.Waker.MAC(), "the runtime still knows it until it stops")
 
-	_, err = h.app.DB().KodiInstances().Get(ctx, inst.id)
-	require.ErrorIs(t, err, store.ErrNotFound, "an instance deleted meanwhile isn't brought back by saving its MAC")
+		_, err = h.app.DB().KodiInstances().Get(ctx, inst.id)
+		require.ErrorIs(t, err, store.ErrNotFound, "an instance deleted meanwhile isn't brought back by saving its MAC")
+	})
 }
 
 func TestTheMACIsLearnedOnceTheConnectionSettles(t *testing.T) {
