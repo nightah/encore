@@ -1000,6 +1000,20 @@ type skillService struct {
 	autoSeen string
 	// simulatingUntil is when the deploy smoke test's window closes, as Unix nanoseconds; requests arriving before then came from Amazon's simulator.
 	simulatingUntil atomic.Int64
+
+	builtMu sync.Mutex
+	// built holds what the packages built recently showed, by optionsKey: the skill page and the overview's status poll ask for the same few packages over and over.
+	built map[string]builtPackage
+	// builds counts the packages actually built, not found in built.
+	builds atomic.Int64
+}
+
+// builtPackage is what the API reads off a built package: its hash and its largest model, or why it didn't build. It keeps none of the package, which can run to megabytes per locale.
+type builtPackage struct {
+	hash          string
+	largestLocale string
+	largestBytes  int
+	err           error
 }
 
 // SkillInfo is the Alexa skill page.

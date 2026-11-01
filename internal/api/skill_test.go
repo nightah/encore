@@ -1077,3 +1077,54 @@ func TestInvocationNameSkipsUnknownLocales(t *testing.T) {
 	assert.Equal(t, "アンコール", invocationName(spellings, []string{"xx-XX", "ja-JP"}, "encore"), "a locale with no spellings is passed over")
 	assert.Equal(t, "kodi", invocationName(spellings, []string{"xx-XX"}, "kodi"), "with no spelling at all, the choice itself")
 }
+
+func TestSkillInfoBuildsEachPackageOnce(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+	ctx := t.Context()
+
+	first, err := h.api.skill.info(ctx)
+	require.NoError(t, err)
+
+	built := h.api.skill.builds.Load()
+	require.Positive(t, built)
+
+	again, err := h.api.skill.info(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, first.ModelSize, again.ModelSize)
+	assert.Equal(t, built, h.api.skill.builds.Load(), "asking again builds nothing: the packages haven't changed")
+
+	settings := map[string]any{
+		"invocation":      "encore",
+		"skill_name":      "Kodi Remote",
+		"locales_enabled": []string{"en-AU"},
+		"endpoint":        map[string]any{"url": "https://encore.example.net/api/v1/alexa"},
+		"privacy":         map[string]any{"uses_personal_info": false, "is_child_directed": false, "is_export_compliant": true, "contains_ads": false, "allows_purchases": false},
+	}
+	c.json(http.MethodPut, "/api/v1/skill/settings", settings, http.StatusOK, nil)
+
+	changed, err := h.api.skill.info(ctx)
+	require.NoError(t, err)
+	assert.Greater(t, h.api.skill.builds.Load(), built, "new settings build new packages")
+	require.NotNil(t, changed.ModelSize.V)
+	assert.Equal(t, "en-AU", changed.ModelSize.V.Locale, "and their sizes are the new packages'")
+}
+
+func TestSkillServiceKeepsFewBuiltPackages(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	s := h.api.skill
+
+	for i := range keepBuilt + 3 {
+		s.build(skillpkg.Options{Locales: []string{"en-US"}, SkillName: fmt.Sprint("Encore ", i)})
+
+		s.builtMu.Lock()
+		n := len(s.built)
+		s.builtMu.Unlock()
+
+		assert.LessOrEqual(t, n, keepBuilt)
+	}
+
+	before := s.builds.Load()
+	s.build(skillpkg.Options{Locales: []string{"en-US"}, SkillName: fmt.Sprint("Encore ", keepBuilt+2)})
+	assert.Equal(t, before, s.builds.Load(), "the latest package is still kept")
+}

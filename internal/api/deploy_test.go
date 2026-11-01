@@ -380,7 +380,7 @@ func TestSkillModelSizeUnit(t *testing.T) {
 
 			s := &skillService{a: &API{libraries: tc.libs}}
 
-			ms := s.modelSize(t.Context(), pkg, skillpkg.Options{SlotValues: values})
+			ms := s.modelSize(t.Context(), builtOf(pkg, nil), skillpkg.Options{SlotValues: values})
 			assert.Equal(t, ModelSize{LimitBytes: skillpkg.MaxModelBytes, Locale: "en-GB", Bytes: 1300, TitlesInModel: 3, TitlesServerOnly: tc.serverOnly}, ms, "the largest model counts against the limit")
 		})
 	}
