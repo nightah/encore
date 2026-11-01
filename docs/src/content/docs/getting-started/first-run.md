@@ -31,3 +31,13 @@ Browse to Encore on your network, for example `http://192.168.1.10:8080/`. This 
 - Each Echo that talks to Encore shows up under **Echo devices**. Link it to a Kodi instance and a room, or mark one Kodi instance as the default for unlinked Echos. See [Echo devices and rooms](/encore/guides/echo-devices/).
 - The **Request log** shows what Alexa heard and what Encore did; see [request log](/encore/guides/request-log/).
 - Set up [storage and backups](/encore/guides/storage/).
+
+## Install as an app
+
+The web interface can be added to a phone's home screen or installed on a computer, and then opens in its own window without the browser's address bar.
+
+- **iPhone and iPad:** open Encore in Safari, tap Share, then **Add to Home Screen**.
+- **Android:** open Encore in Chrome, open the menu, then **Add to Home screen** and **Install**.
+- **Desktop Chrome and Edge:** use the install icon at the end of the address bar.
+
+Chrome and Edge install Encore as an app only over HTTPS, so reach it through your [reverse proxy](/encore/guides/reverse-proxy/) rather than `http://<host>:8080/`. Over plain HTTP they add a shortcut that opens a normal browser tab. Safari installs it either way.
