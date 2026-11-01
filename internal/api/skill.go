@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"cmp"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -297,12 +300,70 @@ func (s *skillService) packageOptions(ctx context.Context, placeholderPrivacy bo
 func (s *skillService) settingsHash(opts skillpkg.Options) string {
 	opts.SlotValues = nil
 
-	pkg, err := skillpkg.Build(s.a.opts.Sources, opts)
-	if err != nil {
+	b := s.build(opts)
+	if b.err != nil {
 		return ""
 	}
 
-	return pkg.Hash()
+	return b.hash
+}
+
+// build is skillpkg.Build of the API's sources, remembering the hashes and sizes of the last keepBuilt packages: a package depends only on the sources and opts, and building one expands every sample of every enabled locale.
+func (s *skillService) build(opts skillpkg.Options) builtPackage {
+	key := optionsKey(opts)
+
+	s.builtMu.Lock()
+	b, ok := s.built[key]
+	s.builtMu.Unlock()
+
+	if ok {
+		return b
+	}
+
+	s.builds.Add(1)
+
+	b = builtOf(skillpkg.Build(s.a.opts.Sources, opts))
+
+	s.builtMu.Lock()
+	if s.built == nil || len(s.built) >= keepBuilt {
+		s.built = map[string]builtPackage{}
+	}
+
+	s.built[key] = b
+	s.builtMu.Unlock()
+
+	return b
+}
+
+// builtOf keeps what the API reads off pkg.
+func builtOf(pkg *skillpkg.Package, err error) builtPackage {
+	if err != nil {
+		return builtPackage{err: err}
+	}
+
+	b := builtPackage{hash: pkg.Hash()}
+
+	for _, f := range pkg.Files {
+		loc, ok := strings.CutPrefix(f.Name, skillpkg.ModelDir)
+		if !ok {
+			continue
+		}
+
+		if len(f.Data) > b.largestBytes {
+			b.largestLocale, b.largestBytes = strings.TrimSuffix(loc, ".json"), len(f.Data)
+		}
+	}
+
+	return b
+}
+
+// optionsKey identifies opts: equal keys build equal packages.
+func optionsKey(opts skillpkg.Options) string {
+	h := sha256.New()
+	// Options holds only strings, numbers, booleans, slices and maps, which always encode.
+	_ = json.NewEncoder(h).Encode(opts)
+
+	return hex.EncodeToString(h.Sum(nil))
 }
 
 // updatePending reports whether what would be deployed now differs from the last deploy, and why: "settings" when the skill's settings changed, "library" when only the library titles in the model did, "none" otherwise.
@@ -312,13 +373,13 @@ func (s *skillService) updatePending(ctx context.Context, state deploy.State) (b
 		return true, "settings"
 	}
 
-	pkg, err := skillpkg.Build(s.a.opts.Sources, opts)
-	if err != nil {
+	b := s.build(opts)
+	if b.err != nil {
 		return true, "settings"
 	}
 
 	switch {
-	case !state.NeedsDeploy(pkg.Hash()):
+	case !state.NeedsDeploy(b.hash):
 		return false, "none"
 	case state.SettingsHash != "" && state.SettingsHash == s.settingsHash(opts):
 		return true, "library"
@@ -414,8 +475,8 @@ func (s *skillService) info(ctx context.Context) (SkillInfo, error) {
 	out.State = s.stateOf(state, last)
 
 	if opts, _, err := s.packageOptions(ctx, true); err == nil {
-		if pkg, err := skillpkg.Build(s.a.opts.Sources, opts); err == nil {
-			out.ModelSize = Some(s.modelSize(ctx, pkg, opts))
+		if b := s.build(opts); b.err == nil {
+			out.ModelSize = Some(s.modelSize(ctx, b, opts))
 		}
 	}
 
@@ -458,19 +519,8 @@ func firstOr(s []string, def string) string {
 	return s[0]
 }
 
-func (s *skillService) modelSize(ctx context.Context, pkg *skillpkg.Package, opts skillpkg.Options) ModelSize {
-	ms := ModelSize{LimitBytes: skillpkg.MaxModelBytes}
-
-	for _, f := range pkg.Files {
-		loc, ok := strings.CutPrefix(f.Name, skillpkg.ModelDir)
-		if !ok {
-			continue
-		}
-
-		if len(f.Data) > ms.Bytes {
-			ms.Locale, ms.Bytes = strings.TrimSuffix(loc, ".json"), len(f.Data)
-		}
-	}
+func (s *skillService) modelSize(ctx context.Context, b builtPackage, opts skillpkg.Options) ModelSize {
+	ms := ModelSize{LimitBytes: skillpkg.MaxModelBytes, Locale: b.largestLocale, Bytes: b.largestBytes}
 
 	for _, vs := range opts.SlotValues {
 		ms.TitlesInModel += len(vs)

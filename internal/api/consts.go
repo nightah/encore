@@ -22,6 +22,9 @@ const maxImportBytes = 1 << 20
 // keepDeploys is how many deploys are kept in memory for GET /skill/deploy/{id}; the last one is also persisted.
 const keepDeploys = 10
 
+// keepBuilt is how many packages' hashes and sizes skillService keeps; the skill page asks for three (sized, as deployed, without library titles).
+const keepBuilt = 8
+
 // Event stream tuning.
 const (
 	// ringSize events are kept for clients resuming with Last-Event-ID.
