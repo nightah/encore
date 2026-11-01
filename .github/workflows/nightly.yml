@@ -237,12 +237,12 @@ jobs:
           docker logs rclone || true
           docker logs nextcloud || true
 
-  # Calls Amazon's live Skill Management API, read-only, with a maintainer-owned LWA security profile and refresh token. The secrets live in the smapi-live environment, which only main can deploy to, and the job runs only on main's schedule or a manual run. Without the secrets its steps are skipped rather than failed.
+  # Calls Amazon's live Skill Management API with a maintainer-owned LWA security profile and refresh token: the live tests read only, and the NLU checks deploy main's model to a skill kept for them, named "Encore NLU CI", which gen deploy refuses to mistake for any other. The secrets live in the smapi-live environment, which only main can deploy to, and the job runs only on main's schedule or a manual run. Without the secrets its steps are skipped rather than failed.
   smapi-live:
     name: SMAPI live
     if: github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-26.04
-    timeout-minutes: 15
+    timeout-minutes: 45
     environment: smapi-live
     env:
       SMAPI_CLIENT_ID: ${{ secrets.SMAPI_CLIENT_ID }}
@@ -250,6 +250,9 @@ jobs:
       SMAPI_REFRESH_TOKEN: ${{ secrets.SMAPI_REFRESH_TOKEN }}
       # Optional; defaults to the account's first vendor.
       SMAPI_VENDOR_ID: ${{ secrets.SMAPI_VENDOR_ID }}
+      # Optional; the NLU checks run only with it. The invocation is the one the maintainer's own skill doesn't use.
+      SMAPI_SKILL_ID: ${{ secrets.SMAPI_NLU_SKILL_ID }}
+      NLU_INVOCATION: ${{ vars.SMAPI_NLU_INVOCATION || 'encore' }}
     steps:
       - name: Harden the runner (audit all outbound calls)
         uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
@@ -291,6 +294,19 @@ jobs:
       - name: Live SMAPI tests
         if: steps.secret.outputs.present == 'true'
         run: go test -tags smapi_live -count=1 -v ./internal/smapi/...
+
+      - name: Deploy the model to the NLU skill
+        id: nlu-deploy
+        if: ${{ !cancelled() && steps.secret.outputs.present == 'true' && env.SMAPI_SKILL_ID != '' }}
+        run: make nlu-deploy
+
+      - name: NLU checks
+        if: ${{ !cancelled() && steps.nlu-deploy.outcome == 'success' }}
+        run: make nlu
+
+      - name: Launch phrase checks
+        if: ${{ !cancelled() && steps.nlu-deploy.outcome == 'success' }}
+        run: make nlu-open
 
   # CI runs the benchmarks module's parity tests in short mode; this runs them all, including the comparison with bleve over a 10,000-title library. The benchmarks themselves are only run by hand (benchmarks/README.md).
   benchmarks:
