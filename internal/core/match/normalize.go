@@ -235,6 +235,11 @@ func (l *language) foreignOwner(tok string) *language {
 
 // foreignRune is the language whose rules read r's script, when that is not this language, or nil.
 func (l *language) foreignRune(r rune) *language {
+	// Arabic, the first of these scripts, starts at U+0600, so Latin, Greek and Cyrillic text skips the lookups.
+	if r < 0x0600 {
+		return nil
+	}
+
 	var o *language
 
 	switch {
