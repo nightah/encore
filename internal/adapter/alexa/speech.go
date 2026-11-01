@@ -257,12 +257,18 @@ func bareSlots(model skillmodel.Model, utterances map[string][]string) []bareSlo
 			continue
 		}
 
+		var samples []string
+
 		for _, slot := range in.Slots {
 			if skillmodel.IsBuiltin(slot.Type) {
 				continue
 			}
 
-			if sampleIsAlone(utterances[in.Name], "{"+slot.Name+"}") {
+			if samples == nil {
+				samples = expandAll(utterances[in.Name])
+			}
+
+			if slices.Contains(samples, "{"+slot.Name+"}") {
 				out = append(out, bareSlot{intent: in.Name, slot: slot.Name, typ: slot.Type})
 			}
 		}
@@ -271,15 +277,17 @@ func bareSlots(model skillmodel.Model, utterances map[string][]string) []bareSlo
 	return out
 }
 
-// sampleIsAlone reports whether one of the patterns' samples is ref alone. A pattern that doesn't expand has failed roomPhrases already.
-func sampleIsAlone(patterns []string, ref string) bool {
+// expandAll returns the samples of every pattern that expands, and an empty, non-nil slice when none do. A pattern that doesn't expand has failed roomPhrases already.
+func expandAll(patterns []string) []string {
+	out := []string{}
+
 	for _, pattern := range patterns {
-		if samples, err := skillmodel.Expand(pattern); err == nil && slices.Contains(samples, ref) {
-			return true
+		if samples, err := skillmodel.Expand(pattern); err == nil {
+			out = append(out, samples...)
 		}
 	}
 
-	return false
+	return out
 }
 
 // queryForms collects the samples of each film, TV and music intent that start with one of PlayMedia's carrier phrases, without it and without a room, most specific first. Samples that are only a slot after the carrier, such as "play {Show}", are left out: any query would match them. So are samples whose title slots meet only each other's words, such as "play {Title} by {Artist}": "stand by me" would be a song called "stand" by "me".
