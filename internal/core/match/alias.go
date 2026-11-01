@@ -69,10 +69,10 @@ func (l *language) newEntry(d Doc) *entry {
 
 				norm := strings.Join(toks, " ")
 				if i, ok := seen[norm]; ok {
-					// A primary name beats a derived one with the same form, and a name as written one in the language's script.
+					// A name as written beats one in the language's script with the same form. Primary names are all added before derived ones, so a derived name never replaces one.
 					a := &e.aliases[i]
-					if a.derived && !derived && (!native || a.native) || a.native && !native && a.derived == derived {
-						a.derived, a.native, a.text = derived, native, text
+					if a.native && !native && a.derived == derived {
+						a.native, a.text = native, text
 					}
 
 					continue
