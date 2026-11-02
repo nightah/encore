@@ -206,6 +206,30 @@ func TestLintRules(t *testing.T) {
 			overrides: map[string]string{"model.yaml": strings.Replace(baseFiles["model.yaml"], "      - {name: Room, type: KODI_ROOM}\n", "      - {name: Room, type: KODI_ROOM}\n      - {name: Movie, type: KODI_ROOM}\n", 1)},
 			want:      "slot Movie has type KODI_ROOM here but AMAZON.Movie in WatchMovie", sev: Error,
 		},
+		"built-in slot alone": {
+			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie:\n    - \"{Movie}\"\n"},
+			want:      "is a AMAZON.Movie slot alone", sev: Error,
+		},
+		"slot samples for a slot the intent lacks": {
+			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie.Film:\n    - \"{Movie}\"\n"},
+			want:      "samples given for slot Film, which the intent doesn't have", sev: Error,
+		},
+		"slot sample naming no slot": {
+			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie.Movie:\n    - \"that one\"\n"},
+			want:      "names no slot", sev: Error,
+		},
+		"slot sample naming an undeclared slot": {
+			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie.Movie:\n    - \"{Film}\"\n"},
+			want:      "references undeclared slot {Film}", sev: Error,
+		},
+		"bad slot sample pattern": {
+			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie.Movie:\n    - \"({Movie}\"\n"},
+			want:      "slot Movie:", sev: Error,
+		},
+		"slot samples for an unknown intent": {
+			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  Rewind.Duration:\n    - \"{Duration}\"\n"},
+			want:      "not in model.yaml", sev: Error,
+		},
 		"unknown intent": {
 			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  Rewind:\n    - \"rewind\"\n"},
 			want:      "not in model.yaml", sev: Error,
@@ -420,4 +444,55 @@ func TestBuildKodiInvocationUsesTheLocaleSpelling(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, tt.want, m.InteractionModel.LanguageModel.InvocationName, "%s with %q", tt.locale, tt.choice)
 	}
+}
+
+// TestShippedChoiceAnswerIsElicited checks that a title said on its own answers a question only as the Answer slot's own sample, under a dialog model that lets the skill elicit it, and is never a ChooseMatch sample, where it would take "stop", "help" or "yes" from Amazon's intents.
+func TestShippedChoiceAnswerIsElicited(t *testing.T) {
+	src, err := Load(i18n.FS)
+	require.NoError(t, err)
+
+	for _, locale := range src.LocaleNames() {
+		m, err := Build(src, locale, BuildOptions{})
+		require.NoError(t, err, locale)
+
+		var choose ModelIntent
+
+		for _, in := range m.InteractionModel.LanguageModel.Intents {
+			if in.Name == "ChooseMatch" {
+				choose = in
+			}
+		}
+
+		assert.NotContains(t, choose.Samples, "{Answer}", locale)
+		assert.NotContains(t, choose.Samples, "{Which}", locale)
+
+		for _, slot := range choose.Slots {
+			if slot.Name == "Answer" {
+				assert.Contains(t, slot.Samples, "{Answer}", locale)
+				assert.Contains(t, slot.Samples, "{Which}", locale)
+			}
+		}
+
+		require.NotNil(t, m.InteractionModel.Dialog, locale)
+		assert.Equal(t, "SKILL_RESPONSE", m.InteractionModel.Dialog.DelegationStrategy)
+		require.Len(t, m.InteractionModel.Dialog.Intents, 1, locale)
+
+		di := m.InteractionModel.Dialog.Intents[0]
+		assert.Equal(t, "ChooseMatch", di.Name)
+		assert.Equal(t, []DialogSlot{
+			{Name: "Which", Type: "MATCH_CHOICE", Prompts: map[string]string{}},
+			{Name: "Answer", Type: "AMAZON.Movie", Prompts: map[string]string{}},
+		}, di.Slots, locale)
+	}
+}
+
+func TestBuildWithoutSlotSamplesHasNoDialog(t *testing.T) {
+	m, err := Build(load(t, nil), "en-US", BuildOptions{})
+	require.NoError(t, err)
+	assert.Nil(t, m.InteractionModel.Dialog)
+}
+
+func TestBuildRejectsBadSlotSamplePattern(t *testing.T) {
+	_, err := Build(load(t, map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie.Movie:\n    - \"({Movie}\"\n"}), "en-US", BuildOptions{})
+	require.ErrorContains(t, err, "intent WatchMovie, slot Movie")
 }

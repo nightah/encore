@@ -339,10 +339,22 @@ func (l *linter) locale(locale string) {
 
 	utterances, _ := l.src.Utterances(locale)
 
-	for intent := range utterances {
-		if _, ok := l.src.Model.Intent(intent); !ok {
-			l.add(Error, locale, intent, "utterances given for an intent not in model.yaml")
+	for key, patterns := range utterances {
+		if _, ok := l.src.Model.Intent(key); ok {
+			continue
 		}
+
+		// Built-in intents' names have a dot of their own, so a slot's samples are keyed by what follows the last one.
+		i := strings.LastIndex(key, SlotSampleSeparator)
+
+		in, ok := l.src.Model.Intent(key[:max(i, 0)])
+		if i < 0 || !ok {
+			l.add(Error, locale, key, "utterances given for an intent not in model.yaml")
+
+			continue
+		}
+
+		l.slotSamples(locale, in, key[i+len(SlotSampleSeparator):], patterns)
 	}
 
 	exact := map[string]sampleOwner{}
@@ -366,6 +378,42 @@ func (l *linter) locale(locale string) {
 		}
 
 		l.counts(locale, in, samples)
+	}
+}
+
+// slotSamples checks the samples of an intent's slot, said when the skill asks for it: the slot is the intent's, and each sample names it or another of the intent's slots, and no undeclared one.
+func (l *linter) slotSamples(locale string, in Intent, slot string, patterns []string) {
+	declared := map[string]bool{}
+	for _, s := range in.Slots {
+		declared[s.Name] = true
+	}
+
+	if !declared[slot] {
+		l.add(Error, locale, in.Name, "samples given for slot %s, which the intent doesn't have", slot)
+
+		return
+	}
+
+	for _, pattern := range patterns {
+		samples, err := Expand(pattern)
+		if err != nil {
+			l.add(Error, locale, in.Name, "slot %s: %v", slot, err)
+
+			continue
+		}
+
+		for _, sample := range samples {
+			refs := slotRef.FindAllStringSubmatch(sample, -1)
+			if len(refs) == 0 {
+				l.add(Error, locale, in.Name, "slot %s sample %q names no slot", slot, sample)
+			}
+
+			for _, ref := range refs {
+				if !declared[ref[1]] {
+					l.add(Error, locale, in.Name, "slot %s sample %q references undeclared slot {%s}", slot, sample, ref[1])
+				}
+			}
+		}
 	}
 }
 
@@ -401,6 +449,11 @@ func (l *linter) sample(locale string, in Intent, pattern, sample string, exact,
 	}
 
 	refs := slotRef.FindAllStringSubmatch(sample, -1)
+
+	// A built-in type takes almost any words, so a sample that is one of its slots alone takes requests from every other intent, Amazon's own included ("stop", "help", "yes").
+	if len(refs) == 1 && strings.TrimSpace(sample) == refs[0][0] && IsBuiltin(declared[refs[0][1]].Type) {
+		l.add(Error, locale, in.Name, "sample %q is a %s slot alone, which takes requests meant for other intents; give it a carrier word, or make it the slot's own sample (%s%s%s) for a question that elicits the slot", sample, declared[refs[0][1]].Type, in.Name, SlotSampleSeparator, refs[0][1])
+	}
 
 	// Amazon fails to parse a slot joined to other text, such as the possessive "{Artist}'s". Japanese writes no spaces, and its particles follow the slot directly in the sources ("{Movie}を再生して"); the build spaces them (spaceSlots).
 	for _, loc := range slotRef.FindAllStringIndex(sample, -1) {

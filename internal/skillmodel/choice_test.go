@@ -36,6 +36,11 @@ func TestShippedChoiceAnswers(t *testing.T) {
 		for _, in := range m.InteractionModel.LanguageModel.Intents {
 			if in.Name == "ChooseMatch" {
 				samples = in.Samples
+
+				// An answer said on its own is a sample of the slot a question elicits.
+				for _, slot := range in.Slots {
+					samples = append(samples, slot.Samples...)
+				}
 			}
 		}
 

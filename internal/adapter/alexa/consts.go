@@ -17,6 +17,18 @@ const exampleTitle = "Dune"
 // chooseIntent answers a "did you mean" question: by position ({Which}) or with a title said on its own ({Answer}).
 const chooseIntent = "ChooseMatch"
 
+// answerSlot is ChooseMatch's slot for a title said on its own. A question offering several titles elicits it, so the slot's own samples, a title alone among them, are matched only while that question waits.
+const answerSlot = "Answer"
+
+// whichSlot is ChooseMatch's slot for a position or age ("the second one", "the older one").
+const whichSlot = "Which"
+
+// confirmationNone is the confirmation status of an intent or slot nobody has confirmed.
+const confirmationNone = "NONE"
+
+// elicitSlot asks Alexa to fill one slot of an intent with the next thing said.
+const elicitSlot = "Dialog.ElicitSlot"
+
 // Session attributes: the choices a question offered ("did you mean", a recommendation), what its answer should do, and the question itself, to ask again when the answer isn't one.
 const (
 	sessionPending  = "pending"

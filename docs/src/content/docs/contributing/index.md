@@ -24,7 +24,7 @@ Open a [bug report](https://github.com/nightah/encore/issues/new?template=bug_re
 Translations are managed on [Crowdin](https://crowdin.com/project/encore), where anyone can sign in and translate; it opens a pull request with new translations (`.crowdin.yml`). For the Alexa skill, three files in `i18n/lang/en/` are translated:
 
 - `responses.yaml`: what Alexa says. A message not translated yet is spoken in English.
-- `utterances.yaml`: how people ask for each thing, one entry per way of asking (`WatchMovie.play_movie`). A translation can hold several patterns, one per line; `(a|b)` picks one, `[a]` is optional and `{Slot}` is a slot.
+- `utterances.yaml`: how people ask for each thing, one entry per way of asking (`WatchMovie.play_movie`). A translation can hold several patterns, one per line; `(a|b)` picks one, `[a]` is optional and `{Slot}` is a slot. A section named after an intent and one of its slots (`ChooseMatch.Answer`) holds what people say when Encore asks for that slot, such as a title on its own in answer to "did you mean A or B?"; Alexa matches these only while the question waits, so a sample that is nothing but a slot of a built-in type, which would take "stop" or "help" from Amazon's own intents, goes there and not in the intent (the linter checks).
 - `types.yaml`: words for the fixed slot values, such as media types and navigation actions: the value on the first line and its synonyms below it.
 
 Example rooms, playlists and genres (`examples.yaml`) aren't translated: each language picks its own, and deploys replace them with what's set up in Encore.

@@ -23,3 +23,9 @@ const ReferenceLanguage = "en"
 
 // InvocationPlaceholder stands for the invocation name in a locale's launch phrases.
 const InvocationPlaceholder = "{invocation}"
+
+// SlotSampleSeparator joins an intent and one of its slots in an utterances key that holds the slot's own samples ("ChooseMatch.Answer"): what people say when the skill asks for that slot, which Alexa matches only then.
+const SlotSampleSeparator = "."
+
+// delegationSkill leaves every dialog to the skill.
+const delegationSkill = "SKILL_RESPONSE"

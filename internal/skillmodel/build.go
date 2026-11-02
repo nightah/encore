@@ -36,7 +36,7 @@ func Build(src *Sources, locale string, opts BuildOptions) (*InteractionModel, e
 		mi := ModelIntent{Name: in.Name, Samples: []string{}}
 
 		for _, s := range in.Slots {
-			mi.Slots = append(mi.Slots, ModelSlot(s))
+			mi.Slots = append(mi.Slots, ModelSlot{Name: s.Name, Type: s.Type})
 			used[s.Type] = true
 		}
 
@@ -52,6 +52,22 @@ func Build(src *Sources, locale string, opts BuildOptions) (*InteractionModel, e
 		}
 
 		mi.Samples = dedupe(mi.Samples)
+
+		for i, slot := range mi.Slots {
+			for _, pattern := range utterances[in.Name+SlotSampleSeparator+slot.Name] {
+				samples, err := Expand(pattern)
+				if err != nil {
+					return nil, fmt.Errorf("locale %s, intent %s, slot %s: %w", locale, in.Name, slot.Name, err)
+				}
+
+				for _, sample := range samples {
+					mi.Slots[i].Samples = append(mi.Slots[i].Samples, spaceSlots(sample))
+				}
+			}
+
+			mi.Slots[i].Samples = dedupe(mi.Slots[i].Samples)
+		}
+
 		lm.Intents = append(lm.Intents, mi)
 	}
 
@@ -78,6 +94,7 @@ func Build(src *Sources, locale string, opts BuildOptions) (*InteractionModel, e
 
 	var m InteractionModel
 	m.InteractionModel.LanguageModel = lm
+	m.InteractionModel.Dialog = dialogFor(lm.Intents)
 
 	return &m, nil
 }
@@ -135,6 +152,30 @@ func buildTypes(custom []SlotType, static map[string][]SlotValue, used, dropped 
 	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 
 	return out, nil
+}
+
+// dialogFor declares the intents with a slot that has samples of its own, which Alexa matches only while the skill elicits that slot, or nil when none has.
+func dialogFor(intents []ModelIntent) *Dialog {
+	var out []DialogIntent
+
+	for _, in := range intents {
+		if !slices.ContainsFunc(in.Slots, func(s ModelSlot) bool { return len(s.Samples) > 0 }) {
+			continue
+		}
+
+		di := DialogIntent{Name: in.Name, Prompts: map[string]string{}}
+		for _, s := range in.Slots {
+			di.Slots = append(di.Slots, DialogSlot{Name: s.Name, Type: s.Type, Prompts: map[string]string{}})
+		}
+
+		out = append(out, di)
+	}
+
+	if out == nil {
+		return nil
+	}
+
+	return &Dialog{Intents: out, DelegationStrategy: delegationSkill}
 }
 
 // spaceSlots puts a space on each side of every slot reference that lacks one. Amazon fails to parse a slot joined to other text, and Japanese, which writes no spaces, attaches its particles to the slot in the sources ("{Movie}を再生して"); the space there doesn't change what Alexa hears.

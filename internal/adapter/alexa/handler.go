@@ -361,6 +361,18 @@ func (h *Handler) respond(locale string, o actions.Outcome, confirm bool) Respon
 		}
 	}
 
+	// A question offering several titles is answered by naming one, on its own if need be: eliciting the answer lets Alexa match a lone title then and only then.
+	if len(o.Pending) > 1 && !end {
+		env.Response.Directives = []Directive{{
+			Type:         elicitSlot,
+			SlotToElicit: answerSlot,
+			UpdatedIntent: &UpdatedIntent{Name: chooseIntent, ConfirmationStatus: confirmationNone, Slots: map[string]UpdatedSlot{
+				answerSlot: {Name: answerSlot, ConfirmationStatus: confirmationNone},
+				whichSlot:  {Name: whichSlot, ConfirmationStatus: confirmationNone},
+			}},
+		}}
+	}
+
 	return env
 }
 

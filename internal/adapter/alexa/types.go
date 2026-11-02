@@ -342,7 +342,28 @@ type Response struct {
 	OutputSpeech     *OutputSpeech `json:"outputSpeech,omitempty"`
 	Card             *Card         `json:"card,omitempty"`
 	Reprompt         *Reprompt     `json:"reprompt,omitempty"`
+	Directives       []Directive   `json:"directives,omitempty"`
 	ShouldEndSession *bool         `json:"shouldEndSession,omitempty"`
+}
+
+// Directive is a response directive; Encore sends only Dialog.ElicitSlot.
+type Directive struct {
+	Type          string         `json:"type"`
+	SlotToElicit  string         `json:"slotToElicit,omitempty"`
+	UpdatedIntent *UpdatedIntent `json:"updatedIntent,omitempty"`
+}
+
+// UpdatedIntent is the intent a dialog directive continues, as Amazon documents it: every slot named, none filled or confirmed yet.
+type UpdatedIntent struct {
+	Name               string                 `json:"name"`
+	ConfirmationStatus string                 `json:"confirmationStatus"`
+	Slots              map[string]UpdatedSlot `json:"slots"`
+}
+
+// UpdatedSlot is a slot of an UpdatedIntent.
+type UpdatedSlot struct {
+	Name               string `json:"name"`
+	ConfirmationStatus string `json:"confirmationStatus"`
 }
 
 // OutputSpeech is what Alexa says.

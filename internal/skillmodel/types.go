@@ -101,7 +101,32 @@ type keyedEntry struct {
 type InteractionModel struct {
 	InteractionModel struct {
 		LanguageModel LanguageModel `json:"languageModel"`
+		// Dialog declares the intents whose slots have samples of their own, so the skill can ask for those slots with Dialog.ElicitSlot.
+		Dialog *Dialog `json:"dialog,omitempty"`
 	} `json:"interactionModel"`
+}
+
+// Dialog is the interaction model's dialog section. The skill drives every dialog itself.
+type Dialog struct {
+	Intents            []DialogIntent `json:"intents"`
+	DelegationStrategy string         `json:"delegationStrategy"`
+}
+
+// DialogIntent is an intent in the dialog model. Nothing is required or confirmed: the skill elicits a slot only when it asks a question.
+type DialogIntent struct {
+	Name                 string            `json:"name"`
+	ConfirmationRequired bool              `json:"confirmationRequired"`
+	Prompts              map[string]string `json:"prompts"`
+	Slots                []DialogSlot      `json:"slots"`
+}
+
+// DialogSlot is a slot of a DialogIntent.
+type DialogSlot struct {
+	Name                 string            `json:"name"`
+	Type                 string            `json:"type"`
+	ConfirmationRequired bool              `json:"confirmationRequired"`
+	ElicitationRequired  bool              `json:"elicitationRequired"`
+	Prompts              map[string]string `json:"prompts"`
 }
 
 // LanguageModel is the interaction model's language model section.
@@ -122,6 +147,8 @@ type ModelIntent struct {
 type ModelSlot struct {
 	Name string `json:"name"`
 	Type string `json:"type"`
+	// Samples are what people say when the skill asks for this slot; Alexa matches them only then.
+	Samples []string `json:"samples,omitempty"`
 }
 
 // ModelType is a slot type as SMAPI expects it.
