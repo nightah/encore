@@ -9,7 +9,7 @@ permissions:
 
 env:
   GORELEASER_VERSION: v2.19.0
-  SYFT_VERSION: v1.55.0
+  SYFT_VERSION: v1.56.0
 
 jobs:
   web:
