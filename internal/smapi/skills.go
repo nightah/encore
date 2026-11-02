@@ -225,6 +225,25 @@ func (c *Client) SkillEndpoint(ctx context.Context, skillID string) (string, err
 	return out.Manifest.APIs.Custom.Endpoint.URI, nil
 }
 
+// SlotTypes returns the slot types in the development stage's interaction model for locale, values included. It's a 404 error (StatusCode) when the skill has no model for locale.
+func (c *Client) SlotTypes(ctx context.Context, skillID, locale string) ([]SlotType, error) {
+	var out struct {
+		InteractionModel struct {
+			LanguageModel struct {
+				Types []SlotType `json:"types"`
+			} `json:"languageModel"`
+		} `json:"interactionModel"`
+	}
+
+	if err := decode("get interaction model", func() (*http.Response, error) {
+		return c.api.GetInteractionModelV1(ctx, skillID, StageDevelopment, locale)
+	}, &out); err != nil {
+		return nil, err
+	}
+
+	return out.InteractionModel.LanguageModel.Types, nil
+}
+
 // EnableDevelopment enables the skill's development stage for testing on the user's devices.
 func (c *Client) EnableDevelopment(ctx context.Context, skillID string) error {
 	return do("enable skill", func() (*http.Response, error) {

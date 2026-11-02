@@ -53,6 +53,21 @@ type Vendor struct {
 	Roles []string `json:"roles,omitempty"`
 }
 
+// SlotType is a custom slot type, or a built-in one a model extends, with its values as a skill's interaction model holds them.
+type SlotType struct {
+	Name   string          `json:"name"`
+	Values []SlotTypeValue `json:"values"`
+}
+
+// SlotTypeValue is one value of a SlotType.
+type SlotTypeValue struct {
+	ID   string `json:"id,omitempty"`
+	Name struct {
+		Value    string   `json:"value"`
+		Synonyms []string `json:"synonyms,omitempty"`
+	} `json:"name"`
+}
+
 // SkillSummary is a skill in a vendor's skill list.
 type SkillSummary struct {
 	ID           string            `json:"skillId"`

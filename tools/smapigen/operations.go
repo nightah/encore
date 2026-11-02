@@ -19,6 +19,9 @@ var operations = []string{
 	// Enablement.
 	"setSkillEnablementV1", // PUT /v1/skills/{skillId}/stages/{stage}/enablement
 
+	// Interaction models.
+	"getInteractionModelV1", // GET /v1/skills/{skillId}/stages/{stage}/interactionModel/locales/{locale}
+
 	// Interaction model evaluation.
 	"profileNluV1", // POST /v1/skills/{skillId}/stages/{stage}/interactionModel/locales/{locale}/profileNlu
 

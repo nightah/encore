@@ -386,3 +386,25 @@ func (s *Server) handleGetManifest(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = w.Write(sk.Manifest)
 }
+
+func (s *Server) handleGetModel(w http.ResponseWriter, r *http.Request) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	sk, ok := s.skills[r.PathValue("skillId")]
+	if !ok {
+		writeError(w, http.StatusNotFound, "skill not found")
+
+		return
+	}
+
+	model, ok := sk.Models[r.PathValue("locale")]
+	if !ok {
+		writeError(w, http.StatusNotFound, "no interaction model for locale %s", r.PathValue("locale"))
+
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_, _ = w.Write(model)
+}
