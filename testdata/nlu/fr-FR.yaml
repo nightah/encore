@@ -4,20 +4,20 @@ cases:
   # Every intent, in model order, in the language's own words.
   - {utterance: "annule", intent: AMAZON.CancelIntent}
   - {utterance: "aide", intent: AMAZON.HelpIntent}
-  - {utterance: "arrête", intent: AMAZON.StopIntent}
+  - {utterance: "arrête", intent: AMAZON.StopIntent, also: [{intent: RoomControl, slots: {Command: stop}}]}
   - {utterance: "retour à l'accueil", intent: AMAZON.NavigateHomeIntent}
   - {utterance: "des éléphants violets dansent sur la lune", intent: AMAZON.FallbackIntent}
   - {utterance: "mets en pause la télé", intent: AMAZON.PauseIntent}
   - {utterance: "reprends la télé", intent: AMAZON.ResumeIntent}
-  - {utterance: "suivant", intent: AMAZON.NextIntent}
-  - {utterance: "précédent", intent: AMAZON.PreviousIntent}
+  - {utterance: "suivant", intent: AMAZON.NextIntent, also: [{intent: RoomControl, slots: {Command: next}}]}
+  - {utterance: "précédent", intent: AMAZON.PreviousIntent, also: [{intent: RoomControl, slots: {Command: previous}}]}
   - {utterance: "recommence", intent: AMAZON.StartOverIntent}
   - {utterance: "oui", intent: AMAZON.YesIntent}
   - {utterance: "non", intent: AMAZON.NoIntent}
   - {utterance: "lecture aléatoire activée", intent: AMAZON.ShuffleOnIntent}
   - {utterance: "lecture aléatoire désactivée", intent: AMAZON.ShuffleOffIntent}
   - {utterance: "mode répétition activé", intent: AMAZON.LoopOnIntent}
-  - {utterance: "mode répétition désactivé", intent: AMAZON.LoopOffIntent}
+  - {utterance: "mode répétition désactivé", intent: AMAZON.LoopOffIntent, also: [{intent: Repeat, slots: {RepeatMode: "off"}}]}
   - {utterance: "je veux regarder le film intouchables", intent: WatchMovie, slots: {Movie: "intouchables"}}
   - {utterance: "continue à regarder lupin", intent: WatchNextEpisode, slots: {Show: "lupin"}}
   - {utterance: "trouve intouchables", intent: PlayMedia, slots: {Query: "intouchables"}}

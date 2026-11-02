@@ -54,6 +54,10 @@ func Write(w io.Writer, results []Result, verbose bool) error {
 		case OutcomePass, OutcomeFail:
 		}
 
+		if r.Via != "" && len(r.Problems) == 0 {
+			line += " (via " + r.Via + ")"
+		}
+
 		if r.Probes > 1 {
 			line += fmt.Sprintf(" [asked %d times]", r.Probes)
 		}

@@ -4,20 +4,20 @@ cases:
   # Every intent, in model order, in the language's own words.
   - {utterance: "abbrechen", intent: AMAZON.CancelIntent}
   - {utterance: "hilfe", intent: AMAZON.HelpIntent}
-  - {utterance: "stopp", intent: AMAZON.StopIntent}
+  - {utterance: "stopp", intent: AMAZON.StopIntent, also: [{intent: RoomControl, slots: {Command: stop}}]}
   - {utterance: "geh zur startseite", intent: AMAZON.NavigateHomeIntent}
   - {utterance: "lila elefanten tanzen auf dem mond", intent: AMAZON.FallbackIntent}
   - {utterance: "pausiere den fernseher", intent: AMAZON.PauseIntent}
   - {utterance: "setze den fernseher fort", intent: AMAZON.ResumeIntent}
-  - {utterance: "weiter", intent: AMAZON.NextIntent}
-  - {utterance: "zurück", intent: AMAZON.PreviousIntent}
+  - {utterance: "weiter", intent: AMAZON.NextIntent, also: [{intent: RoomControl, slots: {Command: next}}]}
+  - {utterance: "zurück", intent: AMAZON.PreviousIntent, also: [{intent: RoomControl, slots: {Command: previous}}]}
   - {utterance: "von vorne", intent: AMAZON.StartOverIntent}
   - {utterance: "ja", intent: AMAZON.YesIntent}
   - {utterance: "nein", intent: AMAZON.NoIntent}
   - {utterance: "zufallswiedergabe an", intent: AMAZON.ShuffleOnIntent}
   - {utterance: "zufallswiedergabe aus", intent: AMAZON.ShuffleOffIntent}
   - {utterance: "wiederholung an", intent: AMAZON.LoopOnIntent}
-  - {utterance: "wiederholung aus", intent: AMAZON.LoopOffIntent}
+  - {utterance: "wiederholung aus", intent: AMAZON.LoopOffIntent, also: [{intent: Repeat, slots: {RepeatMode: "off"}}]}
   - {utterance: "ich möchte den film das boot sehen", intent: WatchMovie, slots: {Movie: "das boot"}}
   - {utterance: "schau dark weiter", intent: WatchNextEpisode, slots: {Show: "dark"}}
   - {utterance: "finde das boot", intent: PlayMedia, slots: {Query: "das boot"}}

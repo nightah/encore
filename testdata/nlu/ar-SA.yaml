@@ -4,20 +4,20 @@ cases:
   # Every intent, in model order, in the language's own words.
   - {utterance: "إلغاء", intent: AMAZON.CancelIntent}
   - {utterance: "مساعدة", intent: AMAZON.HelpIntent}
-  - {utterance: "توقفي", intent: AMAZON.StopIntent}
+  - {utterance: "توقفي", intent: AMAZON.StopIntent, also: [{intent: RoomControl, slots: {Command: stop}}]}
   - {utterance: "ارجعي للرئيسية", intent: AMAZON.NavigateHomeIntent}
   - {utterance: "فيلة بنفسجية ترقص على القمر", intent: AMAZON.FallbackIntent}
   - {utterance: "وقفي التلفزيون مؤقتا", intent: AMAZON.PauseIntent}
   - {utterance: "كملي التلفزيون", intent: AMAZON.ResumeIntent}
-  - {utterance: "التالي", intent: AMAZON.NextIntent}
-  - {utterance: "السابق", intent: AMAZON.PreviousIntent}
+  - {utterance: "التالي", intent: AMAZON.NextIntent, also: [{intent: RoomControl, slots: {Command: next}}]}
+  - {utterance: "السابق", intent: AMAZON.PreviousIntent, also: [{intent: RoomControl, slots: {Command: previous}}]}
   - {utterance: "ابدئي من جديد", intent: AMAZON.StartOverIntent}
   - {utterance: "نعم", intent: AMAZON.YesIntent}
   - {utterance: "لا", intent: AMAZON.NoIntent}
   - {utterance: "شغلي التشغيل العشوائي", intent: AMAZON.ShuffleOnIntent}
   - {utterance: "وقفي التشغيل العشوائي", intent: AMAZON.ShuffleOffIntent}
   - {utterance: "شغلي التكرار", intent: AMAZON.LoopOnIntent}
-  - {utterance: "وقفي التكرار", intent: AMAZON.LoopOffIntent}
+  - {utterance: "وقفي التكرار", intent: AMAZON.LoopOffIntent, also: [{intent: Repeat, slots: {RepeatMode: "off"}}]}
   - {utterance: "ابغى اشوف فيلم الرسالة", intent: WatchMovie, slots: {Movie: "الرسالة"}}
   - {utterance: "كملي مشاهدة مسلسل باب الحارة", intent: WatchNextEpisode, slots: {Show: "باب الحارة"}}
   - {utterance: "لاقي لي باب الحارة", intent: PlayMedia, slots: {Query: "باب الحارة"}}

@@ -6,8 +6,12 @@ import "time"
 const (
 	defaultReprobes = 2
 	defaultWait     = 2 * time.Second
-	defaultParallel = 4
+	// defaultRate keeps under profileNlu's limit: measured at about three requests a second for a whole developer account, shared by every skill and locale, with a short burst before it throttles.
+	defaultRate = 2.5
 )
+
+// maxInFlight caps the requests waiting on Amazon at once; at defaultRate and half a second a request, about two are.
+const maxInFlight = 8
 
 // runnersUp is how many considered intents a mismatch reports.
 const runnersUp = 3
@@ -22,4 +26,10 @@ const (
 	OutcomePending Outcome = "pending"
 	// OutcomeFixed is a pending row that now passes, so its pending mark can go.
 	OutcomeFixed Outcome = "fixed"
+)
+
+// playMedia is the catch-all search intent, and queryslot its slot, whose words Encore reads again as the film, TV and music intents it may be.
+const (
+	playMedia = "PlayMedia"
+	queryslot = "Query"
 )

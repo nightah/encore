@@ -4,20 +4,20 @@ cases:
   # Every intent, in model order, in the language's own words.
   - {utterance: "cancel", intent: AMAZON.CancelIntent}
   - {utterance: "help", intent: AMAZON.HelpIntent}
-  - {utterance: "stop", intent: AMAZON.StopIntent}
+  - {utterance: "stop", intent: AMAZON.StopIntent, also: [{intent: RoomControl, slots: {Command: stop}}]}
   - {utterance: "go home", intent: AMAZON.NavigateHomeIntent}
   - {utterance: "purple elephants dancing on the moon", intent: AMAZON.FallbackIntent}
   - {utterance: "pause the tv", intent: AMAZON.PauseIntent}
   - {utterance: "resume the tv", intent: AMAZON.ResumeIntent}
-  - {utterance: "next", intent: AMAZON.NextIntent}
-  - {utterance: "previous", intent: AMAZON.PreviousIntent}
+  - {utterance: "next", intent: AMAZON.NextIntent, also: [{intent: RoomControl, slots: {Command: next}}]}
+  - {utterance: "previous", intent: AMAZON.PreviousIntent, also: [{intent: RoomControl, slots: {Command: previous}}]}
   - {utterance: "start over", intent: AMAZON.StartOverIntent}
   - {utterance: "yes", intent: AMAZON.YesIntent}
   - {utterance: "no", intent: AMAZON.NoIntent}
   - {utterance: "shuffle on", intent: AMAZON.ShuffleOnIntent}
   - {utterance: "shuffle off", intent: AMAZON.ShuffleOffIntent}
   - {utterance: "loop on", intent: AMAZON.LoopOnIntent}
-  - {utterance: "loop off", intent: AMAZON.LoopOffIntent}
+  - {utterance: "loop off", intent: AMAZON.LoopOffIntent, also: [{intent: Repeat, slots: {RepeatMode: "off"}}]}
   - {utterance: "i want to watch the movie dune", intent: WatchMovie, slots: {Movie: "dune"}}
   - {utterance: "continue watching breaking bad", intent: WatchNextEpisode, slots: {Show: "breaking bad"}}
   - {utterance: "find dune", intent: PlayMedia, slots: {Query: "dune"}}

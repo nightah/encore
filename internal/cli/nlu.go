@@ -7,6 +7,7 @@ import (
 	"io"
 	"log/slog"
 	"maps"
+	"net/http"
 	"os"
 	"slices"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/nightah/encore/i18n"
+	"github.com/nightah/encore/internal/adapter/alexa"
 	"github.com/nightah/encore/internal/skillmodel"
 	"github.com/nightah/encore/internal/smapi"
 	"github.com/nightah/encore/internal/smapi/deploy"
@@ -66,11 +68,11 @@ func (f *smapiFlags) client() (*smapi.Client, string, error) {
 
 func newGenNLUCommand() *cobra.Command {
 	var (
-		sf       smapiFlags
-		locales  []string
-		dir      string
-		parallel int
-		verbose  bool
+		sf      smapiFlags
+		locales []string
+		dir     string
+		rate    float64
+		verbose bool
 	)
 
 	cmd := &cobra.Command{
@@ -110,17 +112,16 @@ func newGenNLUCommand() *cobra.Command {
 				return err
 			}
 
-			r := &nlu.Runner{Client: c, SkillID: skill, Parallel: parallel}
+			speech, err := alexa.NewSpeech(src, slog.New(slog.DiscardHandler))
+			if err != nil {
+				return err
+			}
 
-			var all []nlu.Result
+			r := &nlu.Runner{Client: c, SkillID: skill, Rate: rate, Reread: rereader(speech)}
 
-			for _, f := range fixtures {
-				res, err := r.Run(cmd.Context(), f)
-				if err != nil {
-					return err
-				}
-
-				all = append(all, res...)
+			all, err := r.Run(cmd.Context(), fixtures...)
+			if err != nil {
+				return err
 			}
 
 			if err := nlu.Write(cmd.OutOrStdout(), all, verbose); err != nil {
@@ -138,10 +139,42 @@ func newGenNLUCommand() *cobra.Command {
 	sf.register(cmd)
 	cmd.Flags().StringSliceVarP(&locales, "locale", "l", nil, "locales to check (default every fixture)")
 	cmd.Flags().StringVar(&dir, "fixtures", defaultNLUFixtures, "directory of <locale>.yaml fixtures")
-	cmd.Flags().IntVar(&parallel, "parallel", 4, "utterances to profile at once")
+	cmd.Flags().Float64Var(&rate, "rate", 2.5, "profileNlu requests a second; Amazon throttles a developer account at about 3, shared by every skill and locale")
 	cmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "list the rows that pass too")
 
 	return cmd
+}
+
+// rereader reads a PlayMedia query as Encore's handler does: as it stands, and with each room phrase it may end or start with taken off and kept as the room, as the film, TV and music intents it may be.
+func rereader(speech *alexa.Speech) func(locale, query string) []nlu.Reading {
+	return func(locale, query string) []nlu.Reading {
+		var out []nlu.Reading
+
+		read := func(title, room string) {
+			intent := alexa.Intent{Name: "PlayMedia", Slots: map[string]alexa.Slot{"Query": {Name: "Query", Value: title}}}
+
+			for _, in := range speech.Reinterpret(locale, intent) {
+				reading := nlu.Reading{Intent: in.Name, Slots: map[string]string{}}
+				for name, slot := range in.Slots {
+					reading.Slots[name] = slot.Value
+				}
+
+				if room != "" {
+					reading.Slots["Room"] = room
+				}
+
+				out = append(out, reading)
+			}
+		}
+
+		read(query, "")
+
+		for _, split := range speech.RoomSplits(locale, query) {
+			read(split.Title, split.Room)
+		}
+
+		return out
+	}
 }
 
 func chooseFixtures(all []nlu.Fixture, locales []string) ([]nlu.Fixture, error) {
@@ -280,12 +313,14 @@ func newGenDeployCommand() *cobra.Command {
 		locales    []string
 		invocation string
 		vendor     string
+		dir        string
+		library    string
 	)
 
 	cmd := &cobra.Command{
 		Use:   "deploy",
 		Short: "Deploy these sources' interaction model to a skill kept for gen nlu and gen open",
-		Long: "Builds the skill package from these sources, without library titles, deploys it to the skill --skill names, waits for every locale's model to build and enables the skill for testing, so gen nlu and gen open check this model rather than whatever was deployed last.\n" +
+		Long: "Builds the skill package from these sources, deploys it to the skill --skill names, waits for every locale's model to build and enables the skill for testing, so gen nlu and gen open check this model rather than whatever was deployed last. In place of a library, each locale gets the titles its NLU fixtures ask for, as Encore adds a library's titles to the built-in title types, and with --library-skill the titles a skill Encore deploys already has, such as your own, read from its model.\n" +
 			"It only deploys to a skill named " + quote(ciSkillName) + " in every locale it has a name in, so it can't replace the skill Encore deploys for you: create an empty custom skill with that name in the Alexa developer console first. Pick the invocation your own skill doesn't use, as an enabled skill answers on your Echos too. The endpoint is a placeholder that neither check reaches.\n" +
 			"Credentials come from " + envClientID + ", " + envClientSecret + " and " + envRefreshToken + "; the vendor from --vendor or " + envVendorID + ", else the account's only one.",
 		Args: cobra.NoArgs,
@@ -310,6 +345,11 @@ func newGenDeployCommand() *cobra.Command {
 				return err
 			}
 
+			fixtures, err := nlu.Load(os.DirFS(dir))
+			if err != nil {
+				return err
+			}
+
 			c, skill, err := sf.client()
 			if err != nil {
 				return err
@@ -324,17 +364,26 @@ func newGenDeployCommand() *cobra.Command {
 				return err
 			}
 
+			values := standInLibrary(src, fixtures)
+
+			if from := cmp.Or(library, os.Getenv(envLibrarySkill)); from != "" {
+				if values, err = withLibrary(cmd.Context(), c, from, locales, values, cmd.ErrOrStderr()); err != nil {
+					return err
+				}
+			}
+
 			no, yes := false, true
 			stderr := cmd.ErrOrStderr()
 
 			res, err := deploy.New(c, src).Deploy(cmd.Context(), deploy.Request{
 				State: deploy.State{VendorID: vendorID, SkillID: skill},
 				Package: skillpkg.Options{
-					Locales:    locales,
-					Invocation: choice,
-					SkillName:  ciSkillName,
-					Endpoint:   skillpkg.Endpoint{URI: ciEndpoint},
-					Privacy:    skillpkg.Privacy{AllowsPurchases: &no, UsesPersonalInfo: &no, IsChildDirected: &no, IsExportCompliant: &yes, ContainsAds: &no},
+					Locales:          locales,
+					LocaleSlotValues: values,
+					Invocation:       choice,
+					SkillName:        ciSkillName,
+					Endpoint:         skillpkg.Endpoint{URI: ciEndpoint},
+					Privacy:          skillpkg.Privacy{AllowsPurchases: &no, UsesPersonalInfo: &no, IsChildDirected: &no, IsExportCompliant: &yes, ContainsAds: &no},
 				},
 				Force: true,
 				Progress: func(ev deploy.Event) {
@@ -358,9 +407,102 @@ func newGenDeployCommand() *cobra.Command {
 	cmd.Flags().StringSliceVarP(&locales, "locale", "l", nil, "locales to deploy (default all)")
 	cmd.Flags().StringVar(&invocation, "invocation", "", "the invocation to deploy with, encore or kodi: the one your own skill doesn't use")
 	cmd.Flags().StringVar(&vendor, "vendor", "", "the developer account's vendor ID (env "+envVendorID+")")
+	cmd.Flags().StringVar(&dir, "fixtures", defaultNLUFixtures, "directory of <locale>.yaml fixtures whose titles stand in for a library")
+	cmd.Flags().StringVar(&library, "library-skill", "", "a skill Encore deploys, whose library titles to add, e.g. your own (env "+envLibrarySkill+"); it is only read")
 	_ = cmd.MarkFlagRequired("invocation")
 
 	return cmd
+}
+
+// standInLibrary returns, for each fixture's locale, the values its rows give slots of the standInTypes, as a library with those titles would supply them.
+func standInLibrary(src *skillmodel.Sources, fixtures []nlu.Fixture) map[string]map[string][]skillmodel.SlotValue {
+	types := map[string]map[string]string{}
+
+	for _, in := range src.Model.Intents {
+		types[in.Name] = map[string]string{}
+		for _, s := range in.Slots {
+			types[in.Name][s.Name] = s.Type
+		}
+	}
+
+	out := map[string]map[string][]skillmodel.SlotValue{}
+
+	for _, f := range fixtures {
+		values := map[string][]skillmodel.SlotValue{}
+
+		for _, c := range f.Cases {
+			for slot, value := range c.Slots {
+				typ := types[c.Intent][slot]
+				if value == "" || !slices.Contains(standInTypes, typ) || slices.ContainsFunc(values[typ], func(v skillmodel.SlotValue) bool { return v.Value == value }) {
+					continue
+				}
+
+				values[typ] = append(values[typ], skillmodel.SlotValue{Value: value})
+			}
+		}
+
+		if len(values) > 0 {
+			for _, vs := range values {
+				slices.SortFunc(vs, func(a, b skillmodel.SlotValue) int { return strings.Compare(a.Value, b.Value) })
+			}
+
+			out[f.Locale] = values
+		}
+	}
+
+	return out
+}
+
+// withLibrary adds to values, for each of locales, the standInTypes values in the development model of the skill from, which it only reads. A locale from has no model for keeps values' own; a title already there by value or synonym, ignoring case, isn't added twice.
+func withLibrary(ctx context.Context, c *smapi.Client, from string, locales []string, values map[string]map[string][]skillmodel.SlotValue, log io.Writer) (map[string]map[string][]skillmodel.SlotValue, error) {
+	out := make(map[string]map[string][]skillmodel.SlotValue, len(locales))
+
+	for _, loc := range locales {
+		merged := map[string][]skillmodel.SlotValue{}
+
+		types, err := c.SlotTypes(ctx, from, loc)
+
+		switch {
+		case smapi.StatusCode(err) == http.StatusNotFound:
+			fmt.Fprintf(log, "library: skill %s has no %s model; using the fixtures' titles\n", from, loc)
+		case err != nil:
+			return nil, err
+		}
+
+		n := 0
+
+		for _, typ := range types {
+			if !slices.Contains(standInTypes, typ.Name) {
+				continue
+			}
+
+			for _, v := range typ.Values {
+				merged[typ.Name] = append(merged[typ.Name], skillmodel.SlotValue{ID: v.ID, Value: v.Name.Value, Synonyms: v.Name.Synonyms})
+			}
+
+			n += len(typ.Values)
+		}
+
+		if len(types) > 0 {
+			fmt.Fprintf(log, "library: %d titles in %s from skill %s\n", n, loc, from)
+		}
+
+		for typ, vs := range values[loc] {
+			for _, v := range vs {
+				if !slices.ContainsFunc(merged[typ], func(have skillmodel.SlotValue) bool {
+					return strings.EqualFold(have.Value, v.Value) || slices.ContainsFunc(have.Synonyms, func(s string) bool { return strings.EqualFold(s, v.Value) })
+				}) {
+					merged[typ] = append(merged[typ], v)
+				}
+			}
+		}
+
+		if len(merged) > 0 {
+			out[loc] = merged
+		}
+	}
+
+	return out, nil
 }
 
 // invocationChoice turns gen deploy's --invocation into a deploy's invocation choice. Only the two built-in choices are offered, as each locale spells them in a form Amazon takes, which a custom name in Latin letters isn't for ja-JP, hi-IN or ar-SA.

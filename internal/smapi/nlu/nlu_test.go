@@ -4,8 +4,12 @@ import (
 	"bytes"
 	"context"
 	"net/http"
+	"slices"
+	"strings"
+	"sync"
 	"testing"
 	"testing/fstest"
+	"testing/synctest"
 	"time"
 
 	"github.com/stretchr/testify/assert"
@@ -39,7 +43,7 @@ func runner(t *testing.T) (*nlu.Runner, *smapitest.Server) {
 	})
 	require.NoError(t, err)
 
-	return &nlu.Runner{Client: c, SkillID: fake.AddSkill(smapitest.DefaultVendorID, nil), Wait: time.Millisecond}, fake
+	return &nlu.Runner{Client: c, SkillID: fake.AddSkill(smapitest.DefaultVendorID, nil), Wait: time.Millisecond, Rate: 1000}, fake
 }
 
 func sources(t *testing.T) *skillmodel.Sources {
@@ -230,7 +234,6 @@ func TestRunCancelled(t *testing.T) {
 func TestRunCancelledWhileWaitingToReprobe(t *testing.T) {
 	r, fake := runner(t)
 	r.Wait = time.Hour
-	r.Parallel = 1
 
 	ctx, cancel := context.WithCancel(t.Context())
 	defer cancel()
@@ -286,3 +289,136 @@ func TestWrite(t *testing.T) {
 type failWriter struct{}
 
 func (failWriter) Write([]byte) (int, error) { return 0, assert.AnError }
+
+// clockProfiler records when each request arrives and fails it, so no row is reprobed.
+type clockProfiler struct {
+	mu    sync.Mutex
+	start time.Time
+	at    []time.Duration
+}
+
+func (p *clockProfiler) ProfileNLU(context.Context, string, string, string) (*smapi.NLUProfile, error) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	p.at = append(p.at, time.Since(p.start))
+
+	return nil, assert.AnError
+}
+
+// TestRunPacesEveryFixture checks that requests from every fixture share one pace, so a run stays under Amazon's limit for the account however many locales it has.
+func TestRunPacesEveryFixture(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		p := &clockProfiler{start: time.Now()}
+		r := &nlu.Runner{Client: p, SkillID: "s", Rate: 2}
+
+		res, err := r.Run(t.Context(),
+			nlu.Fixture{Locale: "en-GB", Cases: []nlu.Case{{Utterance: "a"}, {Utterance: "b"}, {Utterance: "c"}}},
+			nlu.Fixture{Locale: "de-DE", Cases: []nlu.Case{{Utterance: "d"}, {Utterance: "e"}}},
+		)
+		require.NoError(t, err)
+		require.Len(t, res, 5)
+		assert.Equal(t, []string{"en-GB", "en-GB", "en-GB", "de-DE", "de-DE"}, []string{res[0].Locale, res[1].Locale, res[2].Locale, res[3].Locale, res[4].Locale}, "results keep fixture and row order")
+
+		slices.Sort(p.at)
+		assert.Equal(t, []time.Duration{0, 500 * time.Millisecond, time.Second, 1500 * time.Millisecond, 2 * time.Second}, p.at)
+	})
+}
+
+// A run stopped while a row waits its turn says so.
+func TestRunCancelledWhilePaced(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		p := &clockProfiler{start: time.Now()}
+		r := &nlu.Runner{Client: p, SkillID: "s", Rate: 0.001}
+
+		ctx, cancel := context.WithTimeout(t.Context(), time.Minute)
+		defer cancel()
+
+		res, err := r.Run(ctx, nlu.Fixture{Locale: "en-GB", Cases: []nlu.Case{{Utterance: "a"}, {Utterance: "b"}}})
+		require.ErrorIs(t, err, context.DeadlineExceeded)
+		assert.Nil(t, res)
+		assert.Len(t, p.at, 1, "the second row never went")
+	})
+}
+
+func TestRunPacesUnderAmazonsLimitByDefault(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		p := &clockProfiler{start: time.Now()}
+		r := &nlu.Runner{Client: p, SkillID: "s"}
+
+		_, err := r.Run(t.Context(), nlu.Fixture{Locale: "en-GB", Cases: []nlu.Case{{Utterance: "a"}, {Utterance: "b"}}})
+		require.NoError(t, err)
+
+		slices.Sort(p.at)
+		assert.Equal(t, []time.Duration{0, 400 * time.Millisecond}, p.at, "2.5 requests a second")
+	})
+}
+
+// TestRunAcceptsOtherWaysToTheSameThing checks that a row passes as one of its alternatives, or as a PlayMedia query Encore reads as the row asks, that slot values compare without accents, and that the report says how a row got there.
+func TestRunAcceptsOtherWaysToTheSameThing(t *testing.T) {
+	r, fake := runner(t)
+
+	var (
+		mu    sync.Mutex
+		asked []string
+	)
+
+	r.Reread = func(locale, query string) []nlu.Reading {
+		mu.Lock()
+		asked = append(asked, locale+": "+query)
+		mu.Unlock()
+
+		if query == "the song bohemian rhapsody" {
+			return []nlu.Reading{{Intent: "ListenToSong", Slots: map[string]string{"Song": "Bohemian Rhapsody"}}, {Intent: "PlayMedia", Slots: map[string]string{"Query": query}}}
+		}
+
+		return []nlu.Reading{{Intent: "PlayMedia", Slots: map[string]string{"Query": query}}}
+	}
+
+	fake.Profile("en-GB", "repeat off", smapitest.NLUAnswer{Intent: "Repeat", Slots: map[string]string{"RepeatMode": "off"}})
+	fake.Profile("en-GB", "play the song bohemian rhapsody", smapitest.NLUAnswer{Intent: "PlayMedia", Slots: map[string]string{"Query": "the song bohemian rhapsody"}})
+	fake.Profile("en-GB", "play the song heat", smapitest.NLUAnswer{Intent: "PlayMedia", Slots: map[string]string{"Query": "the song heat"}})
+	fake.Profile("es-US", "pon la canción ojos así", smapitest.NLUAnswer{Intent: "ListenToSong", Slots: map[string]string{"Song": "ojos asi"}})
+
+	res, err := r.Run(t.Context(),
+		nlu.Fixture{Locale: "en-GB", Cases: []nlu.Case{
+			{Utterance: "repeat off", Intent: "AMAZON.LoopOffIntent", Also: []nlu.Reading{{Intent: "Repeat", Slots: map[string]string{"RepeatMode": "on"}}, {Intent: "Repeat", Slots: map[string]string{"RepeatMode": "off"}}}},
+			{Utterance: "play the song bohemian rhapsody", Intent: "ListenToSong", Slots: map[string]string{"Song": "bohemian rhapsody"}},
+			{Utterance: "play the song heat", Intent: "ListenToSong", Slots: map[string]string{"Song": "heat"}},
+		}},
+		nlu.Fixture{Locale: "es-US", Cases: []nlu.Case{{Utterance: "pon la canción ojos así", Intent: "ListenToSong", Slots: map[string]string{"Song": "ojos así"}}}},
+	)
+	require.NoError(t, err)
+
+	assert.Equal(t, nlu.OutcomePass, res[0].Outcome(), "the second alternative")
+	assert.Equal(t, "Repeat", res[0].Via)
+	assert.Equal(t, nlu.OutcomePass, res[1].Outcome(), "a reading of the query: %v", res[1].Problems)
+	assert.Equal(t, "PlayMedia", res[1].Via)
+	assert.Equal(t, []string{"got PlayMedia, want ListenToSong"}, res[2].Problems, "no reading is the song")
+	assert.Empty(t, res[2].Via)
+	assert.Equal(t, nlu.OutcomePass, res[3].Outcome(), "accents don't count: %v", res[3].Problems)
+	assert.Empty(t, res[3].Via)
+	slices.Sort(asked)
+	assert.Equal(t, []string{"en-GB: the song bohemian rhapsody", "en-GB: the song heat"}, asked, "only PlayMedia answers are read again")
+
+	var out strings.Builder
+
+	require.NoError(t, nlu.Write(&out, res, true))
+	assert.Contains(t, out.String(), "PASS    en-GB \"repeat off\" (via Repeat)\n")
+	assert.Contains(t, out.String(), "PASS    en-GB \"play the song bohemian rhapsody\" (via PlayMedia)\n")
+}
+
+func TestCheckAlternatives(t *testing.T) {
+	src := sources(t)
+
+	f := nlu.Fixture{Locale: "en-GB", Cases: []nlu.Case{{
+		Utterance: "repeat off", Intent: "AMAZON.LoopOffIntent",
+		Also: []nlu.Reading{{Intent: "Repeat", Slots: map[string]string{"RepeatMode": "off"}}, {Intent: "Loop"}, {Intent: "Repeat", Slots: map[string]string{"Mode": "off"}}},
+	}}}
+
+	err := f.Check(src)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), `en-GB row 1 ("repeat off"): no intent "Loop" in the model for also`)
+	assert.Contains(t, err.Error(), `en-GB row 1 ("repeat off"): Repeat has no slot Mode`)
+	assert.NotContains(t, err.Error(), "no slot RepeatMode")
+}

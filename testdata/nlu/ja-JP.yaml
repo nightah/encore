@@ -4,20 +4,20 @@ cases:
   # Every intent, in model order, in the language's own words.
   - {utterance: "キャンセル", intent: AMAZON.CancelIntent}
   - {utterance: "ヘルプ", intent: AMAZON.HelpIntent}
-  - {utterance: "止めて", intent: AMAZON.StopIntent}
+  - {utterance: "止めて", intent: AMAZON.StopIntent, also: [{intent: RoomControl, slots: {Command: stop}}]}
   - {utterance: "ホームに戻って", intent: AMAZON.NavigateHomeIntent}
   - {utterance: "紫の象が月で踊っている", intent: AMAZON.FallbackIntent}
   - {utterance: "テレビを一時停止して", intent: AMAZON.PauseIntent}
   - {utterance: "テレビを再開して", intent: AMAZON.ResumeIntent}
-  - {utterance: "次", intent: AMAZON.NextIntent}
-  - {utterance: "前", intent: AMAZON.PreviousIntent}
+  - {utterance: "次", intent: AMAZON.NextIntent, also: [{intent: RoomControl, slots: {Command: next}}]}
+  - {utterance: "前", intent: AMAZON.PreviousIntent, also: [{intent: RoomControl, slots: {Command: previous}}]}
   - {utterance: "最初から", intent: AMAZON.StartOverIntent}
   - {utterance: "はい", intent: AMAZON.YesIntent}
   - {utterance: "いいえ", intent: AMAZON.NoIntent}
   - {utterance: "シャッフルオン", intent: AMAZON.ShuffleOnIntent}
   - {utterance: "シャッフルオフ", intent: AMAZON.ShuffleOffIntent}
   - {utterance: "ループオン", intent: AMAZON.LoopOnIntent}
-  - {utterance: "ループオフ", intent: AMAZON.LoopOffIntent}
+  - {utterance: "ループオフ", intent: AMAZON.LoopOffIntent, also: [{intent: Repeat, slots: {RepeatMode: "off"}}]}
   - {utterance: "映画の千と千尋の神隠しが見たいです", intent: WatchMovie, slots: {Movie: "千と千尋の神隠し"}}
   - {utterance: "鬼滅の刃の続きを見せてください", intent: WatchNextEpisode, slots: {Show: "鬼滅の刃"}}
   - {utterance: "鬼滅の刃を探してください", intent: PlayMedia, slots: {Query: "鬼滅の刃"}}

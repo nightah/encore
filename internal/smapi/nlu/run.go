@@ -6,23 +6,35 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode"
+
+	"golang.org/x/text/unicode/norm"
 
 	"github.com/nightah/encore/internal/smapi"
 )
 
-// Run profiles every row of f and returns their results in row order. It returns early only when ctx ends.
-func (r *Runner) Run(ctx context.Context, f Fixture) ([]Result, error) {
-	parallel := r.Parallel
-	if parallel <= 0 {
-		parallel = defaultParallel
+// Run profiles every row of fixtures, all at once at Rate, and returns their results in fixture and row order. It returns early only when ctx ends.
+func (r *Runner) Run(ctx context.Context, fixtures ...Fixture) ([]Result, error) {
+	rate := r.Rate
+	if rate <= 0 {
+		rate = defaultRate
 	}
 
-	out := make([]Result, len(f.Cases))
-	sem := make(chan struct{}, parallel)
+	p := &pacer{interval: time.Duration(float64(time.Second) / rate)}
+
+	var out []Result
+
+	for _, f := range fixtures {
+		for _, c := range f.Cases {
+			out = append(out, Result{Locale: f.Locale, Case: c})
+		}
+	}
+
+	sem := make(chan struct{}, maxInFlight)
 
 	var wg sync.WaitGroup
 
-	for i, c := range f.Cases {
+	for i := range out {
 		select {
 		case sem <- struct{}{}:
 		case <-ctx.Done():
@@ -34,7 +46,7 @@ func (r *Runner) Run(ctx context.Context, f Fixture) ([]Result, error) {
 		wg.Go(func() {
 			defer func() { <-sem }()
 
-			out[i] = r.one(ctx, f.Locale, c)
+			out[i] = r.one(ctx, p, out[i].Locale, out[i].Case)
 		})
 	}
 
@@ -47,7 +59,31 @@ func (r *Runner) Run(ctx context.Context, f Fixture) ([]Result, error) {
 	return out, nil
 }
 
-func (r *Runner) one(ctx context.Context, locale string, c Case) Result {
+// wait blocks until the next request may be sent, or ctx ends.
+func (p *pacer) wait(ctx context.Context) error {
+	p.mu.Lock()
+	now := time.Now()
+
+	at := p.next
+	if at.Before(now) {
+		at = now
+	}
+
+	p.next = at.Add(p.interval)
+	p.mu.Unlock()
+
+	t := time.NewTimer(at.Sub(now))
+	defer t.Stop()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-t.C:
+		return nil
+	}
+}
+
+func (r *Runner) one(ctx context.Context, p *pacer, locale string, c Case) Result {
 	reprobes := r.Reprobes
 	if reprobes <= 0 {
 		reprobes = defaultReprobes
@@ -61,6 +97,12 @@ func (r *Runner) one(ctx context.Context, locale string, c Case) Result {
 	res := Result{Locale: locale, Case: c}
 
 	for {
+		if err := p.wait(ctx); err != nil {
+			res.Err = err
+
+			return res
+		}
+
 		res.Probes++
 
 		res.Got, res.Err = r.Client.ProfileNLU(ctx, r.SkillID, locale, c.Utterance)
@@ -81,52 +123,110 @@ func (r *Runner) one(ctx context.Context, locale string, c Case) Result {
 	}
 
 	if res.Err == nil {
-		res.Problems = compare(c, res.Got)
+		res.Problems, res.Via = r.compare(locale, c, res.Got)
 	}
 
 	return res
 }
 
-// compare says how p differs from what c expects.
-func compare(c Case, p *smapi.NLUProfile) []string {
+// compare says how p differs from what c expects, or, when p is one of c's alternatives or a PlayMedia query Encore reads as c expects, nothing and how it got there.
+func (r *Runner) compare(locale string, c Case, p *smapi.NLUProfile) ([]string, string) {
+	problems := differences(Reading{Intent: c.Intent, Slots: c.Slots}, p)
+	if len(problems) == 0 {
+		return nil, ""
+	}
+
+	for _, alt := range c.Also {
+		if len(differences(alt, p)) == 0 {
+			return nil, alt.Intent
+		}
+	}
+
+	if p.Intent() == playMedia && r.Reread != nil {
+		query := p.Selected.Slots[queryslot].Value
+
+		for _, reading := range r.Reread(locale, query) {
+			for _, want := range append([]Reading{{Intent: c.Intent, Slots: c.Slots}}, c.Also...) {
+				if reads(reading, want) {
+					return nil, playMedia
+				}
+			}
+		}
+	}
+
+	return problems, ""
+}
+
+// differences says how p differs from want.
+func differences(want Reading, p *smapi.NLUProfile) []string {
 	got := p.Intent()
-	if got != c.Intent {
+	if got != want.Intent {
 		if got == "" {
 			got = "no intent"
 		}
 
-		return []string{fmt.Sprintf("got %s, want %s", got, c.Intent)}
+		return []string{fmt.Sprintf("got %s, want %s", got, want.Intent)}
 	}
 
 	var out []string
 
-	for _, name := range sortedKeys(c.Slots) {
-		want := c.Slots[name]
+	for _, name := range sortedKeys(want.Slots) {
+		value := want.Slots[name]
 		slot, ok := p.Selected.Slots[name]
 
 		switch {
 		case !ok || strings.TrimSpace(slot.Value) == "":
 			out = append(out, fmt.Sprintf("slot %s is empty", name))
-		case want != "" && !matches(slot, want):
-			out = append(out, fmt.Sprintf("slot %s is %q, want %q", name, slot.Value, want))
+		case value != "" && !matches(slot, value):
+			out = append(out, fmt.Sprintf("slot %s is %q, want %q", name, slot.Value, value))
 		}
 	}
 
 	return out
 }
 
+// reads reports whether a reading of a query is want: the same intent, and each slot want fills holding its words.
+func reads(reading, want Reading) bool {
+	if reading.Intent != want.Intent {
+		return false
+	}
+
+	for name, value := range want.Slots {
+		got := strings.TrimSpace(reading.Slots[name])
+		if got == "" || value != "" && fold(got) != fold(value) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// matches reports whether s holds want, as words or a value or ID they resolve to, ignoring case and accents: Encore's matcher ignores both, and Amazon's es-US model drops accents ("ojos asi" for "ojos así").
 func matches(s smapi.NLUSlot, want string) bool {
-	if strings.EqualFold(strings.TrimSpace(s.Value), want) {
+	if fold(s.Value) == fold(want) {
 		return true
 	}
 
 	for _, v := range s.Resolved() {
-		if strings.EqualFold(v, want) {
+		if fold(v) == fold(want) {
 			return true
 		}
 	}
 
 	return false
+}
+
+// fold lowercases s and takes its accents off.
+func fold(s string) string {
+	var b strings.Builder
+
+	for _, r := range norm.NFD.String(strings.ToLower(strings.TrimSpace(s))) {
+		if !unicode.Is(unicode.Mn, r) {
+			b.WriteRune(r)
+		}
+	}
+
+	return norm.NFC.String(b.String())
 }
 
 // Outcome is how the row did.

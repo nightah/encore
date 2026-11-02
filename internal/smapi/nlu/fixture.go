@@ -95,6 +95,21 @@ func (f Fixture) Check(src *skillmodel.Sources) error {
 				errs = append(errs, fmt.Errorf("%s: %s has no slot %s", where, c.Intent, name))
 			}
 		}
+
+		for _, alt := range c.Also {
+			in, ok := src.Model.Intent(alt.Intent)
+			if !ok {
+				errs = append(errs, fmt.Errorf("%s: no intent %q in the model for also", where, alt.Intent))
+
+				continue
+			}
+
+			for _, name := range sortedKeys(alt.Slots) {
+				if !slices.ContainsFunc(in.Slots, func(s skillmodel.Slot) bool { return s.Name == name }) {
+					errs = append(errs, fmt.Errorf("%s: %s has no slot %s", where, alt.Intent, name))
+				}
+			}
+		}
 	}
 
 	return errors.Join(errs...)

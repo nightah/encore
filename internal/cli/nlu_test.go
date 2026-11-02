@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -15,9 +16,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/oauth2"
 
+	"github.com/nightah/encore/internal/adapter/alexa"
+	"github.com/nightah/encore/internal/skillmodel"
 	"github.com/nightah/encore/internal/smapi"
 	"github.com/nightah/encore/internal/smapi/deploy"
 	"github.com/nightah/encore/internal/smapi/lwa"
+	"github.com/nightah/encore/internal/smapi/nlu"
 	"github.com/nightah/encore/internal/smapi/skillpkg"
 	"github.com/nightah/encore/internal/smapi/smapitest"
 )
@@ -151,8 +155,8 @@ func (f *failAfter) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-// deployedSkill deploys locales to the fake and enables the skill, as Encore's own deploy does.
-func deployedSkill(t *testing.T, fake *smapitest.Server, locales ...string) string {
+// fakeClient returns a SMAPI client of the fake's.
+func fakeClient(t *testing.T, fake *smapitest.Server) *smapi.Client {
 	t.Helper()
 
 	o := fake.Options()
@@ -166,12 +170,27 @@ func deployedSkill(t *testing.T, fake *smapitest.Server, locales ...string) stri
 	c, err := smapi.New(lc.TokenSource(store), smapi.Options{BaseURL: fake.URL, Poll: smapi.PollConfig{Interval: time.Millisecond, MaxInterval: time.Millisecond, Timeout: 10 * time.Second}})
 	require.NoError(t, err)
 
+	return c
+}
+
+// deployedSkill deploys locales to the fake and enables the skill, as Encore's own deploy does.
+func deployedSkill(t *testing.T, fake *smapitest.Server, locales ...string) string {
+	t.Helper()
+
+	return deployedLibrary(t, fake, nil, locales...)
+}
+
+// deployedLibrary is deployedSkill with a library's slot values.
+func deployedLibrary(t *testing.T, fake *smapitest.Server, values map[string][]skillmodel.SlotValue, locales ...string) string {
+	t.Helper()
+
 	no, yes := false, true
 
-	res, err := deploy.New(c, loadSources(t)).Deploy(t.Context(), deploy.Request{Package: skillpkg.Options{
-		Locales:  locales,
-		Endpoint: skillpkg.Endpoint{URI: "https://encore.example.com/api/v1/alexa"},
-		Privacy:  skillpkg.Privacy{AllowsPurchases: &no, UsesPersonalInfo: &no, IsChildDirected: &no, IsExportCompliant: &yes, ContainsAds: &no},
+	res, err := deploy.New(fakeClient(t, fake), loadSources(t)).Deploy(t.Context(), deploy.Request{Package: skillpkg.Options{
+		Locales:    locales,
+		SlotValues: values,
+		Endpoint:   skillpkg.Endpoint{URI: "https://encore.example.com/api/v1/alexa"},
+		Privacy:    skillpkg.Privacy{AllowsPurchases: &no, UsesPersonalInfo: &no, IsChildDirected: &no, IsExportCompliant: &yes, ContainsAds: &no},
 	}})
 	require.NoError(t, err)
 
@@ -220,7 +239,9 @@ func TestGenDeploy(t *testing.T) {
 	skill := fake.AddSkill(smapitest.DefaultVendorID, map[string]string{"en-US": ciSkillName})
 	flags = append(flags, "--poll-interval", "1ms")
 
-	out, stderr, err := runCLI(t, append([]string{"gen", "deploy", "--skill", skill, "--invocation", "kodi", "--locale", "en-GB", "--locale", "ja-JP"}, flags...)...)
+	dir := fixtureDir(t, map[string]string{"en-GB.yaml": enGBFixture})
+
+	out, stderr, err := runCLI(t, append([]string{"gen", "deploy", "--skill", skill, "--invocation", "kodi", "--locale", "en-GB", "--locale", "ja-JP", "--fixtures", dir}, flags...)...)
 	require.NoError(t, err)
 	assert.Contains(t, out, "SUCCEEDED   en-GB\nSUCCEEDED   ja-JP\n")
 	assert.Contains(t, stderr, "Updating skill "+skill, "the named skill is deployed to, not one looked up by name")
@@ -231,6 +252,7 @@ func TestGenDeploy(t *testing.T) {
 	assert.Equal(t, map[string]string{"en-GB": ciSkillName, "ja-JP": ciSkillName}, sk.Names)
 	assert.Contains(t, string(sk.Manifest), ciEndpoint)
 	assert.Contains(t, string(sk.Models["en-GB"]), `"invocationName":"kodi"`)
+	assert.Contains(t, string(sk.Models["en-GB"]), `{"name":{"value":"dune"}}`, "the fixtures' titles stand in for a library")
 	assert.Equal(t, 1, fake.SkillCount(), "no other skill is created")
 
 	out, _, err = runCLI(t, append([]string{"gen", "open", "--skill", skill, "--invocation", "kodi", "--locale", "en-GB"}, flags...)...)
@@ -265,6 +287,7 @@ func TestGenDeployRefuses(t *testing.T) {
 	require.ErrorContains(t, deployTo(own, "--locale", "xx-XX"), "unknown locale xx-XX")
 	require.ErrorContains(t, deployTo(own, "--invocation", "alexa"), `--invocation is encore or kodi, not "alexa"`)
 	require.ErrorContains(t, deployTo(""), "name the skill with --skill")
+	require.ErrorContains(t, deployTo(own, "--fixtures", fixtureDir(t, map[string]string{"en-GB.yaml": "locale: en-AU\n"})), "named for")
 
 	_, _, err := runCLI(t, append([]string{"gen", "deploy", "--skill", own}, flags...)...)
 	require.ErrorContains(t, err, `required flag(s) "invocation" not set`)
@@ -326,4 +349,74 @@ func TestGenDeployFailsWhenUnlistedOrUnwritable(t *testing.T) {
 
 	sk, _ := fake.Skill(skill)
 	assert.True(t, sk.Enabled, "the deploy itself went through")
+}
+
+func TestStandInLibrary(t *testing.T) {
+	fixtures := []nlu.Fixture{
+		{Locale: "en-GB", Cases: []nlu.Case{
+			{Utterance: "play the movie dune", Intent: "WatchMovie", Slots: map[string]string{"Movie": "dune"}},
+			{Utterance: "find dune", Intent: "WatchMovie", Slots: map[string]string{"Movie": "dune"}},
+			{Utterance: "play alien", Intent: "WatchMovie", Slots: map[string]string{"Movie": "alien", "Room": "kitchen"}},
+			{Utterance: "play the artist queen", Intent: "ListenToArtist", Slots: map[string]string{"Artist": "queen", "Genre": ""}},
+			{Utterance: "find dune", Intent: "PlayMedia", Slots: map[string]string{"Query": "dune"}},
+			{Utterance: "play my road trip playlist", Intent: "PlayPlaylist", Slots: map[string]string{"Playlist": "road trip"}},
+		}},
+		{Locale: "de-DE", Cases: []nlu.Case{{Utterance: "lauter", Intent: "VolumeUp"}}},
+	}
+
+	assert.Equal(t, map[string]map[string][]skillmodel.SlotValue{
+		"en-GB": {
+			"AMAZON.Movie":    {{Value: "alien"}, {Value: "dune"}},
+			"AMAZON.Musician": {{Value: "queen"}},
+			"KODI_PLAYLIST":   {{Value: "road trip"}},
+		},
+	}, standInLibrary(loadSources(t), fixtures), "only the title types, once each and sorted; a locale without titles keeps the model's own")
+}
+
+func TestGenDeployWithLibrary(t *testing.T) {
+	fake, flags := liveFake(t)
+	own := deployedLibrary(t, fake, map[string][]skillmodel.SlotValue{
+		"AMAZON.Movie":    {{ID: "movie/1", Value: "Alien", Synonyms: []string{"the alien"}}, {ID: "movie/2", Value: "Dune"}},
+		"AMAZON.TVSeries": {{ID: "tvshow/1", Value: "Bluey"}},
+	}, "en-GB")
+	ci := fake.AddSkill(smapitest.DefaultVendorID, map[string]string{"en-GB": ciSkillName})
+	dir := fixtureDir(t, map[string]string{"en-GB.yaml": enGBFixture + "  - {utterance: \"play the movie the alien\", intent: WatchMovie, slots: {Movie: the alien}}\n  - {utterance: \"play the movie heat\", intent: WatchMovie, slots: {Movie: heat}}\n"})
+
+	t.Setenv(envLibrarySkill, own)
+
+	_, stderr, err := runCLI(t, append([]string{"gen", "deploy", "--skill", ci, "--invocation", "encore", "--locale", "en-GB", "--locale", "de-DE", "--fixtures", dir, "--poll-interval", "1ms"}, flags...)...)
+	require.NoError(t, err)
+	assert.Contains(t, stderr, "library: 15 titles in en-GB from skill "+own, "three titles, and the example music videos and playlists a model without a library has")
+	assert.Contains(t, stderr, "library: skill "+own+" has no de-DE model; using the fixtures' titles")
+
+	sk, _ := fake.Skill(ci)
+	model := string(sk.Models["en-GB"])
+	assert.Contains(t, model, `"id":"movie/1","name":{"value":"Alien","synonyms":["the alien"]}`, "the library's own values, IDs and synonyms")
+	assert.Contains(t, model, `"value":"Bluey"`)
+	assert.Contains(t, model, `{"name":{"value":"heat"}}`, "a fixture title the library lacks is added")
+	assert.NotContains(t, model, `{"name":{"value":"dune"}}`, "one the library has, by value or synonym, isn't")
+	assert.NotContains(t, model, `{"name":{"value":"the alien"}}`)
+
+	own2, _ := fake.Skill(own)
+	assert.Equal(t, 1, own2.Imports, "the library's skill is only read")
+}
+
+func TestWithLibraryReportsSMAPIErrors(t *testing.T) {
+	fake := smapitest.New(t, smapitest.Options{})
+	c := fakeClient(t, fake)
+	fake.Inject(http.StatusForbidden, 1)
+
+	_, err := withLibrary(t.Context(), c, "amzn1.ask.skill.own", []string{"en-GB"}, nil, io.Discard)
+	require.ErrorContains(t, err, "403")
+}
+
+func TestRereaderReadsQueriesAsTheHandlerDoes(t *testing.T) {
+	speech, err := alexa.NewSpeech(loadSources(t), slog.New(slog.DiscardHandler))
+	require.NoError(t, err)
+
+	read := rereader(speech)
+
+	assert.Contains(t, read("en-GB", "the song bohemian rhapsody"), nlu.Reading{Intent: "ListenToSong", Slots: map[string]string{"Song": "bohemian rhapsody"}})
+	assert.Contains(t, read("en-GB", "the movie dune in the living room"), nlu.Reading{Intent: "WatchMovie", Slots: map[string]string{"Movie": "dune", "Room": "living room"}}, "a room phrase is taken off and kept")
+	assert.Contains(t, read("en-GB", "dune"), nlu.Reading{Intent: "PlayMedia", Slots: map[string]string{"Query": "dune"}}, "and the query as it stands")
 }

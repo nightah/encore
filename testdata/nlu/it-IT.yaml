@@ -4,20 +4,20 @@ cases:
   # Every intent, in model order, in the language's own words.
   - {utterance: "annulla", intent: AMAZON.CancelIntent}
   - {utterance: "aiuto", intent: AMAZON.HelpIntent}
-  - {utterance: "stop", intent: AMAZON.StopIntent}
+  - {utterance: "stop", intent: AMAZON.StopIntent, also: [{intent: RoomControl, slots: {Command: stop}}]}
   - {utterance: "torna alla home", intent: AMAZON.NavigateHomeIntent}
   - {utterance: "elefanti viola che ballano sulla luna", intent: AMAZON.FallbackIntent}
   - {utterance: "metti in pausa la tv", intent: AMAZON.PauseIntent}
   - {utterance: "riprendi la tv", intent: AMAZON.ResumeIntent}
-  - {utterance: "successivo", intent: AMAZON.NextIntent}
-  - {utterance: "precedente", intent: AMAZON.PreviousIntent}
+  - {utterance: "successivo", intent: AMAZON.NextIntent, also: [{intent: RoomControl, slots: {Command: next}}]}
+  - {utterance: "precedente", intent: AMAZON.PreviousIntent, also: [{intent: RoomControl, slots: {Command: previous}}]}
   - {utterance: "ricomincia", intent: AMAZON.StartOverIntent}
   - {utterance: "sì", intent: AMAZON.YesIntent}
   - {utterance: "no", intent: AMAZON.NoIntent}
   - {utterance: "riproduzione casuale attiva", intent: AMAZON.ShuffleOnIntent}
   - {utterance: "riproduzione casuale disattivata", intent: AMAZON.ShuffleOffIntent}
   - {utterance: "ripetizione attiva", intent: AMAZON.LoopOnIntent}
-  - {utterance: "ripetizione disattivata", intent: AMAZON.LoopOffIntent}
+  - {utterance: "ripetizione disattivata", intent: AMAZON.LoopOffIntent, also: [{intent: Repeat, slots: {RepeatMode: "off"}}]}
   - {utterance: "voglio vedere il film la vita è bella", intent: WatchMovie, slots: {Movie: "la vita è bella"}}
   - {utterance: "continua a guardare gomorra", intent: WatchNextEpisode, slots: {Show: "gomorra"}}
   - {utterance: "trova gomorra", intent: PlayMedia, slots: {Query: "gomorra"}}

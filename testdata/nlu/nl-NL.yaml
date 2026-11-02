@@ -4,20 +4,20 @@ cases:
   # Every intent, in model order, in the language's own words.
   - {utterance: "annuleer", intent: AMAZON.CancelIntent}
   - {utterance: "help", intent: AMAZON.HelpIntent}
-  - {utterance: "stop", intent: AMAZON.StopIntent}
+  - {utterance: "stop", intent: AMAZON.StopIntent, also: [{intent: RoomControl, slots: {Command: stop}}]}
   - {utterance: "ga naar het startscherm", intent: AMAZON.NavigateHomeIntent}
   - {utterance: "paarse olifanten dansen op de maan", intent: AMAZON.FallbackIntent}
   - {utterance: "pauzeer de tv", intent: AMAZON.PauseIntent}
   - {utterance: "hervat de tv", intent: AMAZON.ResumeIntent}
-  - {utterance: "volgende", intent: AMAZON.NextIntent}
-  - {utterance: "vorige", intent: AMAZON.PreviousIntent}
+  - {utterance: "volgende", intent: AMAZON.NextIntent, also: [{intent: RoomControl, slots: {Command: next}}]}
+  - {utterance: "vorige", intent: AMAZON.PreviousIntent, also: [{intent: RoomControl, slots: {Command: previous}}]}
   - {utterance: "begin opnieuw", intent: AMAZON.StartOverIntent}
   - {utterance: "ja", intent: AMAZON.YesIntent}
   - {utterance: "nee", intent: AMAZON.NoIntent}
   - {utterance: "shuffle aan", intent: AMAZON.ShuffleOnIntent}
   - {utterance: "shuffle uit", intent: AMAZON.ShuffleOffIntent}
   - {utterance: "herhalen aan", intent: AMAZON.LoopOnIntent}
-  - {utterance: "herhalen uit", intent: AMAZON.LoopOffIntent}
+  - {utterance: "herhalen uit", intent: AMAZON.LoopOffIntent, also: [{intent: Repeat, slots: {RepeatMode: "off"}}]}
   - {utterance: "ik wil de film zwartboek kijken", intent: WatchMovie, slots: {Movie: "zwartboek"}}
   - {utterance: "ga verder met de luizenmoeder", intent: WatchNextEpisode, slots: {Show: "de luizenmoeder"}}
   - {utterance: "zoek zwartboek", intent: PlayMedia, slots: {Query: "zwartboek"}, pending: "nl-NL takes AMAZON.SearchQuery from the next deploy"}

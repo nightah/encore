@@ -4,20 +4,20 @@ cases:
   # Every intent, in model order, in the language's own words.
   - {utterance: "cancelar", intent: AMAZON.CancelIntent}
   - {utterance: "ajuda", intent: AMAZON.HelpIntent}
-  - {utterance: "pare", intent: AMAZON.StopIntent}
+  - {utterance: "pare", intent: AMAZON.StopIntent, also: [{intent: RoomControl, slots: {Command: stop}}]}
   - {utterance: "vá para o início", intent: AMAZON.NavigateHomeIntent}
   - {utterance: "elefantes roxos dançando na lua", intent: AMAZON.FallbackIntent}
   - {utterance: "pausa a tv", intent: AMAZON.PauseIntent}
   - {utterance: "continua a tv", intent: AMAZON.ResumeIntent}
-  - {utterance: "próximo", intent: AMAZON.NextIntent}
-  - {utterance: "anterior", intent: AMAZON.PreviousIntent}
+  - {utterance: "próximo", intent: AMAZON.NextIntent, also: [{intent: RoomControl, slots: {Command: next}}]}
+  - {utterance: "anterior", intent: AMAZON.PreviousIntent, also: [{intent: RoomControl, slots: {Command: previous}}]}
   - {utterance: "comece de novo", intent: AMAZON.StartOverIntent}
   - {utterance: "sim", intent: AMAZON.YesIntent}
   - {utterance: "não", intent: AMAZON.NoIntent}
   - {utterance: "aleatório ligado", intent: AMAZON.ShuffleOnIntent}
   - {utterance: "aleatório desligado", intent: AMAZON.ShuffleOffIntent}
   - {utterance: "repetição ligada", intent: AMAZON.LoopOnIntent}
-  - {utterance: "repetição desligada", intent: AMAZON.LoopOffIntent}
+  - {utterance: "repetição desligada", intent: AMAZON.LoopOffIntent, also: [{intent: Repeat, slots: {RepeatMode: "off"}}]}
   - {utterance: "quero assistir o filme cidade de deus", intent: WatchMovie, slots: {Movie: "cidade de deus"}}
   - {utterance: "continua assistindo sintonia", intent: WatchNextEpisode, slots: {Show: "sintonia"}}
   - {utterance: "encontra cidade de deus", intent: PlayMedia, slots: {Query: "cidade de deus"}}

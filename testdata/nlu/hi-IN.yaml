@@ -4,20 +4,20 @@ cases:
   # Every intent, in model order, in the language's own words.
   - {utterance: "रद्द करो", intent: AMAZON.CancelIntent}
   - {utterance: "मदद", intent: AMAZON.HelpIntent}
-  - {utterance: "रुको", intent: AMAZON.StopIntent}
+  - {utterance: "रुको", intent: AMAZON.StopIntent, also: [{intent: RoomControl, slots: {Command: stop}}]}
   - {utterance: "होम पर जाओ", intent: AMAZON.NavigateHomeIntent}
   - {utterance: "बैंगनी हाथी चाँद पर नाच रहे हैं", intent: AMAZON.FallbackIntent}
   - {utterance: "टीवी पॉज़ करो", intent: AMAZON.PauseIntent}
   - {utterance: "टीवी फिर से चलाओ", intent: AMAZON.ResumeIntent}
-  - {utterance: "अगला", intent: AMAZON.NextIntent}
-  - {utterance: "पिछला", intent: AMAZON.PreviousIntent}
+  - {utterance: "अगला", intent: AMAZON.NextIntent, also: [{intent: RoomControl, slots: {Command: next}}]}
+  - {utterance: "पिछला", intent: AMAZON.PreviousIntent, also: [{intent: RoomControl, slots: {Command: previous}}]}
   - {utterance: "फिर से शुरू करो", intent: AMAZON.StartOverIntent}
   - {utterance: "हाँ", intent: AMAZON.YesIntent}
   - {utterance: "नहीं", intent: AMAZON.NoIntent}
   - {utterance: "शफ़ल चालू", intent: AMAZON.ShuffleOnIntent}
   - {utterance: "शफ़ल बंद", intent: AMAZON.ShuffleOffIntent}
   - {utterance: "रिपीट चालू", intent: AMAZON.LoopOnIntent}
-  - {utterance: "रिपीट बंद", intent: AMAZON.LoopOffIntent}
+  - {utterance: "रिपीट बंद", intent: AMAZON.LoopOffIntent, also: [{intent: Repeat, slots: {RepeatMode: "off"}}]}
   - {utterance: "मुझे फ़िल्म शोले देखनी है", intent: WatchMovie, slots: {Movie: "शोले"}}
   - {utterance: "पंचायत देखना जारी रखो", intent: WatchNextEpisode, slots: {Show: "पंचायत"}}
   - {utterance: "शोले ढूँढो", intent: PlayMedia, slots: {Query: "शोले"}}
