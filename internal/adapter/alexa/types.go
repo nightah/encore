@@ -129,6 +129,8 @@ type queryForm struct {
 	literals int
 	// unspaced joins a slot's words without spaces, for a language written without them (units).
 	unspaced bool
+	// lang is the language, whose number words a query may hold as digits (sameWord).
+	lang string
 }
 
 // roomPlace is where a pattern's optional room group is (roomAround).

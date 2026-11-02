@@ -241,6 +241,14 @@ func TestReinterpret(t *testing.T) {
 		{"es-US", "el album pies descalzos", want{"ListenToAlbum", map[string]string{"Album": "pies descalzos"}}},
 		{"es-US", "la casa de papel capitulo 3 de la temporada 2", want{"WatchEpisode", map[string]string{"Show": "la casa de papel", "Episode": "3", "Season": "2"}}}, //nolint:misspell // Spanish "capítulo" as es-US hears it.
 		{"de-DE", "die nachste folge von bluey", want{"WatchNextEpisode", map[string]string{"Show": "bluey"}}},
+		// As Amazon wrote them: numbers as digits, German compounds split, a word hyphenated, and playlists.
+		{"es-US", "1 capitulo de la casa de papel", want{"WatchRandomEpisode", map[string]string{"Show": "la casa de papel"}}},      //nolint:misspell // Spanish "capítulo" as es-US hears it.
+		{"es-US", "el 1.ᵉʳ capitulo de la casa de papel", want{"WatchFirstEpisode", map[string]string{"Show": "la casa de papel"}}}, //nolint:misspell // Spanish "capítulo" as es-US hears it.
+		{"ar-SA", "1 حلقة من مسلسل باب الحارة", want{"WatchFirstEpisode", map[string]string{"Show": "باب الحارة"}}},
+		{"de-DE", "mir das musik video zu bohemian rhapsody", want{"WatchMusicVideo", map[string]string{"MusicVideo": "bohemian rhapsody"}}},
+		{"es-US", "to-dos mis videoclips en aleatorio", want{"ShuffleMusicVideos", map[string]string{}}},
+		{"es-US", "la lista de musica viaje", want{"PlayPlaylist", map[string]string{"Playlist": "viaje"}}},
+		{"hi-IN", "म्यूज़िक प्लेलिस्ट सफ़र", want{"PlayPlaylist", map[string]string{"Playlist": "सफ़र"}}},
 		{"xx-XX", "the next episode of bluey", want{"WatchNextEpisode", map[string]string{"Show": "bluey"}}},
 	} {
 		in := Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.query}}}

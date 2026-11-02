@@ -228,6 +228,26 @@ func (s *Speech) Reinterpret(locale string, intent Intent) []Intent {
 }
 
 // ordinals maps the ordinals Alexa writes as digits in a search query to the words the samples spell out.
+// numberWords are the words for one, as a number or the first, that Amazon writes as a digit in a query it heard them in: "un capítulo" arrives as "1 capítulo" (es-US drops the accent too), "el primer capítulo" as "el 1.ᵉʳ capítulo", "اول حلقة" as "1 حلقة". Only languages it was seen doing this in are listed.
+var numberWords = map[string]map[string]string{
+	"es": {"un": "1", "uno": "1", "una": "1", "primer": "1", "primero": "1", "primera": "1", "1.ᵉʳ": "1", "1.º": "1", "1.ª": "1", "1º": "1", "1ª": "1"},
+	"ar": {"اول": "1", "أول": "1", "الاول": "1", "الأول": "1"},
+}
+
+// sameWord reports whether a word Alexa heard is a sample's word, however Amazon wrote it: its case, the accents on Latin letters (es-US drops them), a hyphen (es-US's "to-dos" for "todos"), and a number word as a digit (numberWords).
+func sameWord(lang, heard, sample string) bool {
+	canon := func(w string) string {
+		w = strings.ReplaceAll(foldLatin(w), "-", "")
+		if d, ok := numberWords[lang][w]; ok {
+			return d
+		}
+
+		return w
+	}
+
+	return canon(heard) == canon(sample)
+}
+
 var ordinals = map[string]map[string]string{
 	"en": {"1st": "first"},
 	"nl": {"1e": "eerste", "1ste": "eerste"},
@@ -324,7 +344,8 @@ func languageQueryForms(lang string, model skillmodel.Model, utterances map[stri
 	var out []queryForm
 
 	for _, in := range model.Intents {
-		if content[in.Name] == "" {
+		// Films, TV and music, and playlists, which a library holds too.
+		if content[in.Name] == "" && !slices.ContainsFunc(in.Slots, func(s skillmodel.Slot) bool { return s.Type == playlistType }) {
 			continue
 		}
 
@@ -345,6 +366,7 @@ func languageQueryForms(lang string, model skillmodel.Model, utterances map[stri
 			for _, sample := range samples {
 				if form, ok := newQueryForm(in.Name, units(lang, sample), carriers, trailers, numbers); ok {
 					form.unspaced = unspaced[lang]
+					form.lang = lang
 					out = append(out, form)
 				}
 			}
@@ -421,7 +443,12 @@ func (f queryForm) match(words []string) (map[string]string, bool) {
 
 		w := f.words[i]
 		if !isSlotRef(w) {
-			return foldLatin(words[j]) == foldLatin(w) && at(i+1, j+1)
+			if sameWord(f.lang, words[j], w) && at(i+1, j+1) {
+				return true
+			}
+
+			// Amazon can split a compound it heard: "musik video" for the sample's "musikvideo".
+			return j+1 < len(words) && sameWord(f.lang, words[j]+words[j+1], w) && at(i+1, j+2)
 		}
 
 		name := w[1 : len(w)-1]

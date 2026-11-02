@@ -97,6 +97,8 @@ tre = "tre"
 quarante = "quarante"
 seconde = "seconde"
 capitulo = "capitulo"
+# Spanish "my", in a search query the handler's tests read as Amazon's es-US model wrote it ("mis videoclips").
+mis = "mis"
 feld = "feld"
 ue = "ue"
 alikes = "alikes"
