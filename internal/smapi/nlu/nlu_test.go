@@ -379,6 +379,7 @@ func TestRunAcceptsOtherWaysToTheSameThing(t *testing.T) {
 	fake.Profile("en-GB", "play the song bohemian rhapsody", smapitest.NLUAnswer{Intent: "PlayMedia", Slots: map[string]string{"Query": "the song bohemian rhapsody"}})
 	fake.Profile("en-GB", "play the song heat", smapitest.NLUAnswer{Intent: "PlayMedia", Slots: map[string]string{"Query": "the song heat"}})
 	fake.Profile("es-US", "pon la canción ojos así", smapitest.NLUAnswer{Intent: "ListenToSong", Slots: map[string]string{"Song": "ojos asi"}})
+	fake.Profile("en-CA", "play the song bohemian rhapsody", smapitest.NLUAnswer{Intent: "ListenToSong", Slots: map[string]string{"Song": `"Bohemian Rhapsody"`}})
 
 	res, err := r.Run(t.Context(),
 		nlu.Fixture{Locale: "en-GB", Cases: []nlu.Case{
@@ -387,6 +388,7 @@ func TestRunAcceptsOtherWaysToTheSameThing(t *testing.T) {
 			{Utterance: "play the song heat", Intent: "ListenToSong", Slots: map[string]string{"Song": "heat"}},
 		}},
 		nlu.Fixture{Locale: "es-US", Cases: []nlu.Case{{Utterance: "pon la canción ojos así", Intent: "ListenToSong", Slots: map[string]string{"Song": "ojos así"}}}},
+		nlu.Fixture{Locale: "en-CA", Cases: []nlu.Case{{Utterance: "play the song bohemian rhapsody", Intent: "ListenToSong", Slots: map[string]string{"Song": "bohemian rhapsody"}}}},
 	)
 	require.NoError(t, err)
 
@@ -397,6 +399,7 @@ func TestRunAcceptsOtherWaysToTheSameThing(t *testing.T) {
 	assert.Equal(t, []string{"got PlayMedia, want ListenToSong"}, res[2].Problems, "no reading is the song")
 	assert.Empty(t, res[2].Via)
 	assert.Equal(t, nlu.OutcomePass, res[3].Outcome(), "accents don't count: %v", res[3].Problems)
+	assert.Equal(t, nlu.OutcomePass, res[4].Outcome(), "nor the quotes Amazon's catalogue puts around a title: %v", res[4].Problems)
 	assert.Empty(t, res[3].Via)
 	slices.Sort(asked)
 	assert.Equal(t, []string{"en-GB: the song bohemian rhapsody", "en-GB: the song heat"}, asked, "only PlayMedia answers are read again")
@@ -431,4 +434,13 @@ func TestRunKeepsMarksOutsideLatin(t *testing.T) {
 	res, err := r.Run(t.Context(), nlu.Fixture{Locale: "ja-JP", Cases: []nlu.Case{{Utterance: "かの映画", Intent: "WatchMovie", Slots: map[string]string{"Movie": "が"}}}})
 	require.NoError(t, err)
 	assert.Equal(t, []string{`slot Movie is "か", want "が"`}, res[0].Problems)
+}
+
+func TestFallbackIsLeftToTheHandlerTests(t *testing.T) {
+	src := sources(t)
+
+	f := nlu.Fixture{Locale: "en-GB", Cases: []nlu.Case{{Utterance: "purple elephants dancing on the moon", Intent: "AMAZON.FallbackIntent"}}}
+
+	require.ErrorContains(t, f.Check(src), "AMAZON.FallbackIntent can't be expected")
+	assert.NotContains(t, (nlu.Fixture{Locale: "en-GB"}).Missing(src), "AMAZON.FallbackIntent", "no row needs to expect it")
 }

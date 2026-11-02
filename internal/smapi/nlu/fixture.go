@@ -83,6 +83,12 @@ func (f Fixture) Check(src *skillmodel.Sources) error {
 
 		seen[key] = true
 
+		if c.Intent == unprofiled {
+			errs = append(errs, fmt.Errorf("%s: %s can't be expected: Amazon sends nonsense to the closest intent, so the handler's tests check that it plays nothing", where, unprofiled))
+
+			continue
+		}
+
 		in, ok := src.Model.Intent(c.Intent)
 		if !ok {
 			errs = append(errs, fmt.Errorf("%s: no intent %q in the model", where, c.Intent))
@@ -120,6 +126,10 @@ func (f Fixture) Missing(src *skillmodel.Sources) []string {
 	var out []string
 
 	for _, in := range src.Model.Intents {
+		if in.Name == unprofiled {
+			continue
+		}
+
 		if !slices.ContainsFunc(f.Cases, func(c Case) bool { return c.Intent == in.Name }) {
 			out = append(out, in.Name)
 		}

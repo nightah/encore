@@ -275,3 +275,28 @@ func TestRewindWithoutAnAmountGoesBackWhenNothingPlays(t *testing.T) {
 	serveBody(t, h, intentRequest(t, "PlayerRewind", map[string]slotSpec{"Duration": {value: "PT2M"}}))
 	assert.True(t, containsPrefix(backend.Calls(), "Seek by -2m0s"), "a rewind by an amount still seeks, which says nothing is playing: %q", backend.Calls())
 }
+
+// TestNonsenseHeardAsATitlePlaysNothing checks what the NLU checks can't: Amazon sends nonsense ("purple elephants dancing on the moon") to whichever intent is closest, a shuffle, an artist or the next episode, with the words as the title, and Encore must then play nothing and say so.
+func TestNonsenseHeardAsATitlePlaysNothing(t *testing.T) {
+	const nonsense = "purple elephants dancing on the moon"
+
+	for intent, slot := range map[string]string{
+		"ShuffleAlbum":     "Album",
+		"ShuffleShow":      "Show",
+		"ListenToAlbum":    "Album",
+		"ListenToArtist":   "Artist",
+		"WatchNextEpisode": "Show",
+		"WatchMovie":       "Movie",
+		"WhatAlbums":       "Artist",
+		"PlayMedia":        "Query",
+	} {
+		t.Run(intent, func(t *testing.T) {
+			h, backend, _ := newHandler(t)
+
+			res := string(serveBody(t, h, intentRequest(t, intent, map[string]slotSpec{slot: {value: nonsense}})))
+
+			assert.False(t, containsPrefix(backend.Calls(), "Play"), "nothing plays: %q", backend.Calls())
+			assert.Contains(t, res, `"outputSpeech"`, "and Encore says why: %s", res)
+		})
+	}
+}

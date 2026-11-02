@@ -6,7 +6,6 @@ cases:
   - {utterance: "मदद", intent: AMAZON.HelpIntent}
   - {utterance: "रुको", intent: AMAZON.StopIntent, also: [{intent: RoomControl, slots: {Command: stop}}]}
   - {utterance: "होम पर जाओ", intent: AMAZON.NavigateHomeIntent, also: [{intent: Navigate, slots: {NavAction: home}}]}
-  - {utterance: "बैंगनी हाथी चाँद पर नाच रहे हैं", intent: AMAZON.FallbackIntent}
   - {utterance: "टीवी पॉज़ करो", intent: AMAZON.PauseIntent}
   - {utterance: "टीवी फिर से चलाओ", intent: AMAZON.ResumeIntent}
   - {utterance: "अगला", intent: AMAZON.NextIntent, also: [{intent: RoomControl, slots: {Command: next}}]}

@@ -6,7 +6,6 @@ cases:
   - {utterance: "ヘルプ", intent: AMAZON.HelpIntent}
   - {utterance: "止めて", intent: AMAZON.StopIntent, also: [{intent: RoomControl, slots: {Command: stop}}]}
   - {utterance: "ホームに戻って", intent: AMAZON.NavigateHomeIntent, also: [{intent: Navigate, slots: {NavAction: home}}]}
-  - {utterance: "紫の象が月で踊っている", intent: AMAZON.FallbackIntent}
   - {utterance: "テレビを一時停止して", intent: AMAZON.PauseIntent}
   - {utterance: "テレビを再開して", intent: AMAZON.ResumeIntent}
   - {utterance: "次", intent: AMAZON.NextIntent, also: [{intent: RoomControl, slots: {Command: next}}]}

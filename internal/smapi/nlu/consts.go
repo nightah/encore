@@ -33,3 +33,9 @@ const (
 	playMedia = "PlayMedia"
 	queryslot = "Query"
 )
+
+// quotationMarks are the quotes fold drops; apostrophes stay, as they belong to words ("l'ancien").
+const quotationMarks = "\"“”„«»「」『』"
+
+// unprofiled is the intent no row may expect. Amazon sends nonsense ("purple elephants dancing on the moon") to whichever intent is closest, and its fallback sensitivity, offered only for English and German, didn't change that, so whether Encore then plays nothing is for the handler's tests.
+const unprofiled = "AMAZON.FallbackIntent"

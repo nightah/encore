@@ -216,14 +216,14 @@ func matches(s smapi.NLUSlot, want string) bool {
 	return false
 }
 
-// fold lowercases s and takes the accents off its Latin letters. Marks on other scripts stay, since there they tell words apart (が is not か).
+// fold lowercases s, takes the accents off its Latin letters and drops quotation marks, which Amazon's catalogue types put around a title they recognise ("\"Bohemian Rhapsody\""). Marks on other scripts stay, since there they tell words apart (が is not か).
 func fold(s string) string {
 	var b strings.Builder
 
 	latin := false
 
 	for _, r := range norm.NFD.String(strings.ToLower(strings.TrimSpace(s))) {
-		if unicode.Is(unicode.Mn, r) && latin {
+		if strings.ContainsRune(quotationMarks, r) || unicode.Is(unicode.Mn, r) && latin {
 			continue
 		}
 

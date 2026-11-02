@@ -6,7 +6,6 @@ cases:
   - {utterance: "ajuda", intent: AMAZON.HelpIntent}
   - {utterance: "pare", intent: AMAZON.StopIntent, also: [{intent: RoomControl, slots: {Command: stop}}]}
   - {utterance: "vá para o início", intent: AMAZON.NavigateHomeIntent, also: [{intent: Navigate, slots: {NavAction: home}}]}
-  - {utterance: "elefantes roxos dançando na lua", intent: AMAZON.FallbackIntent}
   - {utterance: "pausa a tv", intent: AMAZON.PauseIntent}
   - {utterance: "continua a tv", intent: AMAZON.ResumeIntent}
   - {utterance: "próximo", intent: AMAZON.NextIntent, also: [{intent: RoomControl, slots: {Command: next}}]}
