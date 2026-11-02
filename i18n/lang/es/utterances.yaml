@@ -9,8 +9,10 @@ AMAZON.LoopOffIntent:
 AMAZON.LoopOnIntent:
   loop: "repetición activada\nmodo repetir activado"
   turn_repeat: "(activa|pon) (la repetición|el modo repetir|el bucle)"
+AMAZON.NavigateHomeIntent:
+  go_home: "(ve|vuelve|regresa) (al inicio|a la pantalla de inicio|a la pantalla principal|al menú principal)"
 AMAZON.NoIntent:
-  say_no: "no"
+  say_no: "no\nno gracias"
 AMAZON.PauseIntent:
   pause_tv: "pausa [la] (tele|película|serie|reproducción|kodi)\npon en pausa [la] (tele|película|serie|kodi)"
 AMAZON.ResumeIntent:
@@ -24,7 +26,7 @@ AMAZON.ShuffleOnIntent:
 AMAZON.StopIntent:
   say_stop: "para\ndetente"
 AMAZON.YesIntent:
-  say_yes: "sí\nclaro"
+  say_yes: "sí\nclaro\nsí por favor"
 AudioPassthrough:
   toggle_passthrough: "(activa|desactiva|cambia) el (passthrough|paso directo de audio|audio digital)\npassthrough de audio"
   turn_passthrough: "(activa|desactiva) el audio passthrough"

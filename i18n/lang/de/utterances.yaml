@@ -9,6 +9,8 @@ AMAZON.LoopOffIntent:
 AMAZON.LoopOnIntent:
   loop: "(wiederholung|endlosschleife) (an|ein)"
   turn_repeat: "(schalte|schalt|mach) [die] (wiederholung|endlosschleife) (an|ein)"
+AMAZON.NavigateHomeIntent:
+  go_home: "(geh|gehe) (zur startseite|zum startbildschirm|zum hauptmenü)\nzurück zur startseite"
 AMAZON.NoIntent:
   say_no: "nein"
 AMAZON.PauseIntent:

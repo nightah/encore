@@ -10,7 +10,7 @@ AMAZON.LoopOnIntent:
   loop: "herhalen aan"
   turn_repeat: "(zet|schakel) [het] herhalen aan"
 AMAZON.NoIntent:
-  say_no: "nee"
+  say_no: "nee\nnee dank je\nnee bedankt"
 AMAZON.PauseIntent:
   pause_tv: "pauzeer (de tv|de televisie|kodi|de video|de film|de serie)\nzet (de tv|kodi|de video|de film|de serie) op pauze"
 AMAZON.ResumeIntent:
@@ -24,7 +24,7 @@ AMAZON.ShuffleOnIntent:
 AMAZON.StopIntent:
   say_stop: "stop"
 AMAZON.YesIntent:
-  say_yes: "ja"
+  say_yes: "ja\nja graag\nja alsjeblieft"
 AudioPassthrough:
   toggle_digital_audio: "(digitale audio|digitaal geluid|audio passthrough) (aan|uit)"
   toggle_passthrough: "(wissel|schakel) [de] passthrough om"

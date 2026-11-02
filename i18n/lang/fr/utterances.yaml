@@ -9,6 +9,8 @@ AMAZON.LoopOffIntent:
 AMAZON.LoopOnIntent:
   loop: "mode répétition activé"
   turn_repeat: "(active|activer) (la répétition|la lecture en boucle|le mode répétition)"
+AMAZON.NavigateHomeIntent:
+  go_home: "(retour|retourne|va|aller) (à l'accueil|à l'écran d'accueil|au menu principal)"
 AMAZON.NoIntent:
   say_no: "non"
 AMAZON.PauseIntent:

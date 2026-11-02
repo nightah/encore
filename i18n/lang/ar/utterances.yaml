@@ -9,6 +9,8 @@ AMAZON.LoopOffIntent:
 AMAZON.LoopOnIntent:
   loop: "(شغلي|شغل|فعلي) التكرار"
   turn_repeat: "(شغلي|فعلي|فعل) (وضع التكرار|الإعادة|التكرار التلقائي)"
+AMAZON.NavigateHomeIntent:
+  go_home: "(ارجعي|روحي) (للرئيسية|للشاشة الرئيسية|للقائمة الرئيسية)"
 AMAZON.NoIntent:
   say_no: "لا"
 AMAZON.PauseIntent:
