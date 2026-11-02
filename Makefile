@@ -17,6 +17,8 @@ DEV_HOST     = localhost
 DEV_PORT     = 3000
 DEV_HOSTS    =
 DEV_PROXIES  =
+# The skill the dev server deploys, so it doesn't adopt the skill another instance deploys as "Encore" (e.g. Encore DEV).
+DEV_SKILL_NAME =
 
 # Personal overrides of the settings above (DEV_HOST, DEV_HOSTS and so on) go in .local.mk, which git ignores; command-line values still win.
 -include .local.mk
@@ -132,7 +134,7 @@ dev: web-install ## Run the Go server (rebuilt and restarted by air on changes) 
 	@echo "encore: data in $(DEV_DATA_DIR); UI at http://$(DEV_HOST):$(DEV_PORT)"
 	@# Background jobs ignore SIGINT in a non-interactive shell, so the trap stops both explicitly. air and vite run without their go tool and pnpm wrappers so their PIDs are the ones signalled; air stops the server gracefully.
 	@air=$$($(GO) tool -modfile=tools/go.mod -n air) || exit 1; \
-	ENCORE_DATA_DIR='$(DEV_DATA_DIR)' $(if $(DEV_PROXIES),ENCORE_SERVER_TRUSTED_PROXIES='$(DEV_PROXIES)') "$$air" -c .air.toml & srv=$$!; \
+	ENCORE_DATA_DIR='$(DEV_DATA_DIR)' $(if $(DEV_PROXIES),ENCORE_SERVER_TRUSTED_PROXIES='$(DEV_PROXIES)') $(if $(DEV_SKILL_NAME),ENCORE_ALEXA_SKILL_NAME='$(DEV_SKILL_NAME)') "$$air" -c .air.toml & srv=$$!; \
 	(cd web && VITE_ALLOWED_HOSTS='$(DEV_HOSTS)' exec ./node_modules/.bin/vite --host '$(DEV_HOST)' --port '$(DEV_PORT)') & ui=$$!; \
 	trap 'kill $$srv $$ui 2>/dev/null; wait; exit 0' INT TERM; \
 	wait

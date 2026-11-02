@@ -1154,3 +1154,39 @@ func TestDeployFailureWithoutDetailsKeepsTheEvidence(t *testing.T) {
 	assert.Contains(t, h.logs.String(), `msg="skill deploy failed"`)
 	assert.Contains(t, h.logs.String(), `ROLLBACK_FAILED`, "Amazon's answer is logged")
 }
+
+// A second instance, such as a development one, names its skill with alexa.skill_name, so its first deploy creates a skill of its own rather than adopting the one named "Encore" another instance deploys.
+func TestDeployUnderTheConfiguredSkillName(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true, env: []string{"ENCORE_ALEXA_SKILL_NAME=Encore DEV"}})
+	c := h.admin()
+	connectAmazon(t, h, c)
+
+	own := h.smapi.AddSkill(smapitest.DefaultVendorID, map[string]string{"en-AU": "Encore"})
+
+	// The skill page saved the default name, as it does when its form is saved as it stands.
+	c.json(http.MethodPut, "/api/v1/skill/settings", map[string]any{
+		"invocation": "encore", "skill_name": "Encore", "locales_enabled": []string{"en-AU"},
+		"endpoint": map[string]any{"url": "https://encore.example.net/api/v1/alexa"},
+		"privacy":  map[string]any{"uses_personal_info": false, "is_child_directed": false, "is_export_compliant": true, "contains_ads": false, "allows_purchases": false},
+	}, http.StatusOK, nil)
+
+	var info SkillInfo
+
+	c.json(http.MethodGet, "/api/v1/skill", nil, http.StatusOK, &info)
+	assert.Equal(t, "Encore DEV", info.SkillName, "the instance's name wins")
+
+	var acc Accepted
+
+	c.json(http.MethodPost, "/api/v1/skill/deploy", nil, http.StatusAccepted, &acc)
+	require.Equal(t, "succeeded", waitForDeploy(t, c, acc.ID).State)
+
+	sk, _ := h.smapi.Skill(own)
+	assert.Zero(t, sk.Imports, "the other instance's skill is left alone")
+	assert.Equal(t, 2, h.smapi.SkillCount())
+
+	c.json(http.MethodGet, "/api/v1/skill", nil, http.StatusOK, &info)
+	require.NotEqual(t, own, info.SkillID)
+
+	dev, _ := h.smapi.Skill(info.SkillID)
+	assert.Equal(t, map[string]string{"en-AU": "Encore DEV"}, dev.Names)
+}

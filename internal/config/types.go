@@ -51,6 +51,8 @@ type Log struct {
 type Alexa struct {
 	// SkillID is the skill's application ID; requests for any other skill are rejected. It is normally set by the deploy flow rather than by hand.
 	SkillID string `koanf:"skill_id"`
+	// SkillName names the skill in every locale, over the Alexa skill page's "Skill name" and each locale's default ("Encore"). A deploy that has no skill ID yet adopts the skill with its name, so a second instance, such as a development one, deploys a skill of its own under another name ("Encore DEV").
+	SkillName string `koanf:"skill_name"`
 	// Locales limits which locales are built and deployed, e.g. ["en-AU"]. Empty means every locale Encore ships. An Echo can only use the skill when its language matches a deployed locale; fewer locales deploy faster.
 	Locales []string `koanf:"locales"`
 	// Content lists what the skill can play: movies, tv and music (music includes music videos). Leaving a group out leaves its intents out of the skill model and its titles out of "play X" searches, and library syncs no longer fetch it from Kodi. The setup wizard asks before the first Kodi is added.

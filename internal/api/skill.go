@@ -142,8 +142,18 @@ func (s *skillService) storedSkillID() string {
 	return ""
 }
 
+// settings returns the skill's settings, named alexa.skill_name when that is set: it names the skill for the whole instance, over what the skill page saved, so a second instance can't deploy to the first one's skill by keeping its default name.
 func (s *skillService) settings(ctx context.Context) (skillSettings, error) {
-	return store.Setting(ctx, s.a.app.DB().Settings(), skillSettingsKey, skillSettings{})
+	ss, err := store.Setting(ctx, s.a.app.DB().Settings(), skillSettingsKey, skillSettings{})
+	if err != nil {
+		return ss, err
+	}
+
+	if eff, eerr := s.a.prefs.Effective(ctx); eerr == nil && eff.Alexa.SkillName != "" {
+		ss.SkillName = eff.Alexa.SkillName
+	}
+
+	return ss, nil
 }
 
 func (s *skillService) lwaSettings(ctx context.Context) (lwaSettings, error) {

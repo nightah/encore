@@ -287,6 +287,7 @@ func defaultsMap() map[string]any {
 		"stateless":                 d.Stateless,
 		"data_dir":                  d.DataDir,
 		"alexa.skill_id":            d.Alexa.SkillID,
+		"alexa.skill_name":          d.Alexa.SkillName,
 		"alexa.shutdown_quits":      d.Alexa.ShutdownQuits,
 		"alexa.confirm_sound":       d.Alexa.ConfirmSound,
 		"alexa.deep_search":         d.Alexa.DeepSearch,
