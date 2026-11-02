@@ -38,3 +38,6 @@ const simulateAttempts = 4
 
 // valueQuotes are the quote pairs a build error may put around a slot value it names.
 var valueQuotes = [][2]string{{`"`, `"`}, {"'", "'"}, {"“", "”"}, {"‘", "’"}, {"«", "»"}, {"「", "」"}, {"`", "`"}}
+
+// silentRetryWait is how long a deploy waits before importing again after Amazon failed an import without saying why. Measured against Amazon, about one in five imports changing many locales failed that way two or three minutes in, an import started within two and a half minutes of a failure failed too, after exactly 42 seconds, and one about five minutes after the failure went through.
+const silentRetryWait = 5 * time.Minute

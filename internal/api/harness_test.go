@@ -122,10 +122,11 @@ func newHarness(t *testing.T, o harnessOpts) *harness {
 		Now:      func() time.Time { return time.Now().Add(time.Duration(h.skew.Load())) },
 		Discover: o.discover,
 		// Discovered instances report Kodi 21.3; the real probe is tested in package kodi.
-		ProbeVersion:   func(context.Context, string, int) (string, error) { return "21.3", nil },
-		Heartbeat:      100 * time.Millisecond,
-		StatusInterval: 200 * time.Millisecond,
-		LWAEndpoint:    h.smapi.Endpoint(),
+		ProbeVersion:    func(context.Context, string, int) (string, error) { return "21.3", nil },
+		Heartbeat:       100 * time.Millisecond,
+		StatusInterval:  200 * time.Millisecond,
+		LWAEndpoint:     h.smapi.Endpoint(),
+		DeployRetryWait: time.Millisecond,
 		SMAPI: smapi.Options{
 			BaseURL: h.smapi.URL,
 			Retry:   smapi.RetryPolicy{Base: time.Millisecond, Max: 2 * time.Millisecond, MaxRetryAfter: time.Millisecond},

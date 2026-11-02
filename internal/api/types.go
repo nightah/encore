@@ -52,6 +52,8 @@ type Options struct {
 	// SMAPI and LWAEndpoint point skill deploys at a fake in tests.
 	SMAPI       smapi.Options
 	LWAEndpoint *oauth2.Endpoint
+	// DeployRetryWait is how long a deploy waits to import again after Amazon fails an import without saying why; zero means five minutes (deploy.Request.SilentRetryWait).
+	DeployRetryWait time.Duration
 	// Heartbeat is the event stream's keep-alive interval; zero means 15 seconds.
 	Heartbeat time.Duration
 	// StatusInterval is how often Kodi instances are polled for the event stream; zero means 10 seconds.

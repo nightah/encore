@@ -209,7 +209,7 @@ func (s *skillService) startDeploy(ctx context.Context, force, automatic bool) (
 
 	s.rememberEndpoint(ctx, opts.Endpoint.URI)
 
-	req := deploy.Request{State: state, Package: opts, Force: force, Simulate: true, KeepSlots: []string{app.RoomSlot}}
+	req := deploy.Request{State: state, Package: opts, Force: force, Simulate: true, KeepSlots: []string{app.RoomSlot}, SilentRetryWait: s.a.opts.DeployRetryWait}
 	if loc, err := s.a.localeSettings(ctx); err == nil {
 		req.PrimaryLocale = loc.DefaultLocale
 	}

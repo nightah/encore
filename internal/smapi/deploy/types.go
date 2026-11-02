@@ -6,6 +6,7 @@ import (
 	"maps"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/nightah/encore/internal/skillmodel"
 	"github.com/nightah/encore/internal/smapi"
@@ -111,6 +112,8 @@ type Request struct {
 	Log *slog.Logger
 	// KeepSlots are slot types a second attempt never thins out, e.g. room names, which have to be complete to be any use.
 	KeepSlots []string
+	// SilentRetryWait is how long to wait before importing once more after Amazon fails an import without saying why. Zero waits silentRetryWait; a negative wait doesn't import again.
+	SilentRetryWait time.Duration
 }
 
 // Result is a deploy's outcome. State is meaningful even when Deploy returns an error and should be persisted, so a retry reuses the skill.

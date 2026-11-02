@@ -3,6 +3,7 @@ package deploy_test
 import (
 	"archive/zip"
 	"bytes"
+	"context"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"slices"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -122,7 +124,8 @@ func (h *harness) request(state deploy.State) deploy.Request {
 			Endpoint: skillpkg.Endpoint{URI: "https://encore.example.com/api/v1/alexa"},
 			Privacy:  skillpkg.Privacy{AllowsPurchases: &no, UsesPersonalInfo: &no, IsChildDirected: &no, IsExportCompliant: &yes, ContainsAds: &no},
 		},
-		Simulate: true,
+		Simulate:        true,
+		SilentRetryWait: time.Millisecond,
 		Progress: func(ev deploy.Event) {
 			h.mu.Lock()
 			h.events = append(h.events, ev)
@@ -407,7 +410,10 @@ func TestDeployFailedImportStopsAskingTheSkillStatus(t *testing.T) {
 	h := newHarness(t, smapitest.Options{})
 	polls := failedImport(h, `{"status":"FAILED","skill":{"skillId":"amzn1.ask.skill.rolledback","resources":[{"name":"Manifest","status":"ROLLBACK_FAILED","errors":[{"message":"rollback failed"}]},{"name":"InteractionModel.en-GB","status":"FAILED"}]}}`)
 
-	_, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
+	req := h.request(deploy.State{})
+	req.SilentRetryWait = -1
+
+	_, err := h.deployer.Deploy(t.Context(), req)
 	require.NotErrorIs(t, err, smapi.ErrPollTimeout)
 
 	var de *deploy.Error
@@ -945,4 +951,75 @@ func TestExportPackageInvalidOptions(t *testing.T) {
 	var buf bytes.Buffer
 	require.Error(t, h.deployer.ExportPackage(&buf, opts))
 	assert.Zero(t, buf.Len())
+}
+
+// An import Amazon fails without saying why is imported once more after a wait, and the deploy goes through; the result says so.
+func TestDeployImportsAgainAfterASilentFailure(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+	h.fake.FailImportsWithoutDetails(1)
+
+	res, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
+	require.NoError(t, err)
+
+	sk, ok := h.fake.Skill(res.State.SkillID)
+	require.True(t, ok)
+	assert.Equal(t, 2, sk.Imports)
+	assert.NotEmpty(t, res.State.Hash, "a deploy that went through on the second import counts")
+	assert.Contains(t, strings.Join(res.Warnings, "\n"), "without saying why, so the skill package was imported again")
+
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	assert.True(t, slices.ContainsFunc(h.events, func(ev deploy.Event) bool {
+		return ev.Step == deploy.StepImport && strings.Contains(ev.Message, "importing again in")
+	}), "the wait is shown")
+}
+
+// Imported again, a package Amazon fails without saying why a second time fails the deploy, which may be tried later.
+func TestDeployImportsAgainOnlyOnce(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+	h.fake.FailImportsWithoutDetails(3)
+
+	res, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
+	require.ErrorContains(t, err, "no details reported")
+	assert.True(t, deploy.Transient(err), "a later deploy may go through")
+
+	sk, _ := h.fake.Skill(res.State.SkillID)
+	assert.Equal(t, 2, sk.Imports)
+}
+
+func TestDeployDoesntImportAgainWhenTold(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+	h.fake.FailImportsWithoutDetails(1)
+
+	req := h.request(deploy.State{})
+	req.SilentRetryWait = -1
+
+	res, err := h.deployer.Deploy(t.Context(), req)
+	require.ErrorContains(t, err, "no details reported")
+
+	sk, _ := h.fake.Skill(res.State.SkillID)
+	assert.Equal(t, 1, sk.Imports)
+}
+
+// A deploy stopped while it waits to import again says so, without importing.
+func TestDeployStoppedWhileWaitingToImportAgain(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+	h.fake.FailImportsWithoutDetails(1)
+
+	req := h.request(deploy.State{})
+	req.SilentRetryWait = time.Hour
+
+	ctx, cancel := context.WithCancel(t.Context())
+	req.Progress = func(ev deploy.Event) {
+		if strings.Contains(ev.Message, "importing again in 1h0m0s") {
+			cancel()
+		}
+	}
+
+	res, err := h.deployer.Deploy(ctx, req)
+	require.ErrorIs(t, err, context.Canceled)
+
+	sk, _ := h.fake.Skill(res.State.SkillID)
+	assert.Equal(t, 1, sk.Imports)
 }

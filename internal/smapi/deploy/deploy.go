@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/nightah/encore/internal/skillmodel"
 	"github.com/nightah/encore/internal/smapi"
@@ -127,7 +128,14 @@ func (r *run) deploy(ctx context.Context) error {
 		return err
 	}
 
-	if err := r.ship(ctx); err != nil {
+	err = r.ship(ctx)
+	if de, ok := errors.AsType[*Error](err); ok && de.silent() && r.req.SilentRetryWait >= 0 {
+		if err = r.awaitRetry(ctx, de); err == nil {
+			err = r.ship(ctx)
+		}
+	}
+
+	if err != nil {
 		de, ok := errors.AsType[*Error](err)
 		if !ok || !r.degrade(de) {
 			return err
@@ -154,6 +162,31 @@ func (r *run) deploy(ctx context.Context) error {
 
 	// A package deployed with fewer slot values still counts as this one, so it isn't deployed again until something changes.
 	r.res.State.Hash, r.res.State.Degraded = pkg.Hash(), r.res.Degraded
+
+	return nil
+}
+
+// awaitRetry waits to import again after Amazon failed import de without saying why: straight away, the skill is still rolling that import back and the next one fails too.
+func (r *run) awaitRetry(ctx context.Context, de *Error) error {
+	wait := r.req.SilentRetryWait
+	if wait == 0 {
+		wait = silentRetryWait
+	}
+
+	r.res.Warnings = append(r.res.Warnings, fmt.Sprintf("Amazon rolled import %s back without saying why, so the skill package was imported again", de.ImportID))
+	r.emit(Event{Step: StepImport, State: StateRunning, Message: fmt.Sprintf("Amazon rolled the import back without saying why; importing again in %s", wait.Round(time.Second))})
+
+	t := time.NewTimer(wait)
+	defer t.Stop()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-t.C:
+	}
+
+	r.res.Locales = map[string]LocaleStatus{}
+	r.imported, r.missing = nil, nil
 
 	return nil
 }

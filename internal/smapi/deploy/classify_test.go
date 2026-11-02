@@ -46,7 +46,8 @@ func TestTransient(t *testing.T) {
 		"named build error":          {err: &deploy.Error{Step: deploy.StepBuild, Locales: map[string][]smapi.Problem{"en-US": unexplained, "en-GB": named}}, want: false},
 		"coded unexplained message":  {err: &deploy.Error{Step: deploy.StepBuild, Locales: map[string][]smapi.Problem{"en-US": {{Code: "X", Message: "build failed without details"}}}}, want: false},
 		"import errors":              {err: &deploy.Error{Step: deploy.StepImport, Problems: named}, want: false},
-		"no details at all":          {err: &deploy.Error{Step: deploy.StepImport}, want: false},
+		"import failed silently":     {err: &deploy.Error{Step: deploy.StepImport}, want: true},
+		"build failed silently":      {err: &deploy.Error{Step: deploy.StepBuild}, want: false},
 		"vendor choice":              {err: &deploy.VendorChoiceError{}, want: false},
 		"package too large":          {err: errors.New("skillpkg: locale en-US: model is 1600000 bytes, over Amazon's limit"), want: false},
 	} {

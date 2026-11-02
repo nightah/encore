@@ -282,7 +282,13 @@ func TestGenDeploy(t *testing.T) {
 
 	fake.FailImportsWithoutDetails(1)
 
-	_, stderr, err = runCLI(t, append([]string{"gen", "deploy", "--skill", skill, "--invocation", "encore", "--locale", "de-DE"}, flags...)...)
+	_, stderr, err = runCLI(t, append([]string{"gen", "deploy", "--skill", skill, "--invocation", "encore", "--locale", "de-DE", "--retry-wait", "1ms"}, flags...)...)
+	require.NoError(t, err, "imported again, the package goes through")
+	assert.Contains(t, stderr, "importing again in")
+
+	fake.FailImportsWithoutDetails(2)
+
+	_, stderr, err = runCLI(t, append([]string{"gen", "deploy", "--skill", skill, "--invocation", "kodi", "--locale", "de-DE", "--retry-wait", "1ms"}, flags...)...)
 	require.ErrorContains(t, err, "no details reported; import ")
 	assert.Regexp(t, `import \S+ status: \{.*"ROLLBACK_FAILED"`, stderr, "Amazon's answer is shown")
 }

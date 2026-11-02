@@ -10,7 +10,7 @@ import (
 	"github.com/nightah/encore/internal/smapi/lwa"
 )
 
-// Transient reports whether a deploy that failed with err may succeed when tried again later without changes: Amazon was unavailable or throttling after the client's own retries, another build was still running (409), the network failed, an import or build took too long, the deploy was interrupted, or locales failed to build without Amazon saying why. Anything else needs a change first: authorising Encore with Amazon again, or a package, model or slot value Amazon rejected for a reason it named.
+// Transient reports whether a deploy that failed with err may succeed when tried again later without changes: Amazon was unavailable or throttling after the client's own retries, another build was still running (409), the network failed, an import or build took too long, the deploy was interrupted, or locales failed to build, or the whole import failed, without Amazon saying why. Anything else needs a change first: authorising Encore with Amazon again, or a package, model or slot value Amazon rejected for a reason it named.
 func Transient(err error) bool {
 	switch {
 	case err == nil:
@@ -22,7 +22,7 @@ func Transient(err error) bool {
 	}
 
 	if de, ok := errors.AsType[*Error](err); ok {
-		return de.unexplained()
+		return de.unexplained() || de.silent()
 	}
 
 	switch status := smapi.StatusCode(err); {
@@ -52,4 +52,9 @@ func (e *Error) unexplained() bool {
 	}
 
 	return true
+}
+
+// silent reports whether e is an import Amazon failed without a reason anywhere, rolling back the locales that had built: it does that now and then to an import that changes many locales, which goes through when deployed again a few minutes later.
+func (e *Error) silent() bool {
+	return e.Step == StepImport && len(e.Problems) == 0 && len(e.Locales) == 0
 }
