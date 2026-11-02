@@ -46,6 +46,25 @@
     "versionUnknown": "Inconnue tant qu'Encore n'a pas joint Kodi"
   },
   "loading": "Chargement…",
+  "menu": {
+    "arrange": "",
+    "done": "",
+    "empty": "",
+    "full": "",
+    "inBar": "",
+    "inMore": "",
+    "label": "",
+    "more": "",
+    "moveDown": "",
+    "moved": "",
+    "movedToMore": "",
+    "moveUp": "",
+    "reset": "",
+    "savedHere": "",
+    "theme": "",
+    "toBar": "",
+    "toMore": ""
+  },
   "nav": {
     "alexaSkill": "Skill Alexa",
     "echoDevices": "Appareils Echo",
@@ -54,7 +73,16 @@
     "library": "Médiathèque",
     "overview": "Vue d'ensemble",
     "requestLog": "Journal des requêtes",
-    "settings": "Paramètres"
+    "settings": "Paramètres",
+    "short": {
+      "alexaSkill": "",
+      "echoDevices": "",
+      "kodi": "",
+      "library": "",
+      "overview": "",
+      "requestLog": "",
+      "settings": ""
+    }
   },
   "notFound": {
     "back": "Retour à la vue d'ensemble",
