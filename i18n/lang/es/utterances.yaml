@@ -1,9 +1,9 @@
 # Utterance patterns, translated on Crowdin from the English file. Each key is one way of asking, and may hold several patterns, one per line. (a|b) picks one, [a|b] is optional, {Slot} is a slot. Built-in intents already understand the common phrasings; samples here only add Kodi-specific ones. An optional room at the end, such as "[(in|on) the {Room}]", lets a request name the room whose Kodi should play it; notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
 AMAZON.LoopOffIntent:
-  loop_off: "(repetición|modo repetir) desactivado"
+  loop_off: "repetición desactivada\nmodo repetir desactivado"
   turn_off_repeat: "(desactiva|quita) (la repetición|el modo repetir|el bucle)"
 AMAZON.LoopOnIntent:
-  loop: "(repetición|modo repetir) activado"
+  loop: "repetición activada\nmodo repetir activado"
   turn_repeat: "(activa|pon) (la repetición|el modo repetir|el bucle)"
 AMAZON.PauseIntent:
   pause_tv: "pausa [la] (tele|película|serie|reproducción|kodi)\npon en pausa [la] (tele|película|serie|kodi)"
