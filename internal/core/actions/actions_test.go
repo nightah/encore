@@ -948,3 +948,13 @@ func TestRewindOrBackWhenKodiIsUnreachable(t *testing.T) {
 	require.ErrorIs(t, o.Err, media.ErrUnreachable)
 	assert.Equal(t, []string{"NowPlaying"}, backend.Calls(), "nothing is pressed or sought")
 }
+
+// A title Kodi names with its year already isn't given the year twice: "Avatar: The Last Airbender (2024)", not "… (2024) from 2024".
+func TestDescribeDoesntRepeatAYearInTheTitle(t *testing.T) {
+	m := describe(Message{}, "title", Choice{Title: "Avatar: The Last Airbender (2024)", Year: 2024})
+	assert.Equal(t, "Avatar: The Last Airbender (2024)", m.Params["title"])
+	assert.Empty(t, m.Messages)
+
+	m = describe(Message{}, "title", Choice{Title: "Avatar: The Last Airbender", Year: 2005})
+	assert.Equal(t, say("match.title_year", map[string]string{"title": "Avatar: The Last Airbender", "year": "2005"}), m.Messages["title"], "a title without one gets it")
+}

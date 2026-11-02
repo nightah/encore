@@ -6,6 +6,7 @@ import (
 	"errors"
 	"slices"
 	"strconv"
+	"strings"
 
 	"github.com/nightah/encore/internal/core/match"
 	"github.com/nightah/encore/internal/core/media"
@@ -230,7 +231,8 @@ func offer(choices []Choice) Outcome {
 
 // describe fills msg's placeholder key with a choice named unambiguously enough to choose between remakes: its title, with its year worded in the listener's language when it has one.
 func describe(msg Message, key string, c Choice) Message {
-	if c.Year == 0 {
+	// A title that ends with its year already, as Kodi names a remake ("Avatar: The Last Airbender (2024)"), isn't given it twice.
+	if c.Year == 0 || strings.HasSuffix(strings.TrimSpace(c.Title), "("+strconv.Itoa(c.Year)+")") {
 		if msg.Params == nil {
 			msg.Params = map[string]string{}
 		}
