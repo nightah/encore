@@ -28,7 +28,12 @@ export function aliasKind(kind: string): CreateAliasRequestKind | undefined {
 }
 
 export function titleWithYear(item: { title: string; year?: number | null | undefined }): string {
-  return item.year ? `${item.title} (${item.year})` : item.title;
+  // A title that ends with its year already, as Kodi names a remake ("Avatar: The Last Airbender (2024)"), isn't given it twice.
+  if (!item.year || item.title.trimEnd().endsWith(`(${item.year})`)) {
+    return item.title;
+  }
+
+  return `${item.title} (${item.year})`;
 }
 
 /** Labelled by library:matchTester.types.<value>. */

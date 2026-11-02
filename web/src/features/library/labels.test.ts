@@ -43,6 +43,12 @@ describe("titleWithYear", () => {
     expect(titleWithYear({ title: "Rocky II", year: 1979 })).toBe("Rocky II (1979)");
   });
 
+  it("doesn't repeat a year the title ends with", () => {
+    expect(titleWithYear({ title: "Avatar: The Last Airbender (2024)", year: 2024 })).toBe(
+      "Avatar: The Last Airbender (2024)",
+    );
+  });
+
   it.each([0, null, undefined])("leaves out a year of %j", (year) => {
     expect(titleWithYear({ title: "Radiohead", year })).toBe("Radiohead");
   });
