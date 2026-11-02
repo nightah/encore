@@ -1,10 +1,16 @@
-# Utterance patterns, translated on Crowdin from the English file. Each key is one way of asking, and may hold several patterns, one per line. (a|b) picks one, [a|b] is optional, {Slot} is a slot. Built-in intents already understand the common phrasings; samples here only add Kodi-specific ones. An optional room at the end, such as "[(in|on) the {Room}]", lets a request name the room whose Kodi should play it; notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
+# Utterance patterns, translated on Crowdin from the English file. Each key is one way of asking, and may hold several patterns, one per line. (a|b) picks one, [a|b] is optional, {Slot} is a slot. Built-in intents already understand the common phrasings; samples here add Kodi-specific ones, and the plain words for yes, no, help, stop and cancel, which Encore also uses to tell them from a title said in answer to a question. An optional room at the end, such as "[(in|on) the {Room}]", lets a request name the room whose Kodi should play it; notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
+AMAZON.CancelIntent:
+  say_cancel: "रद्द करो\nरहने दो"
+AMAZON.HelpIntent:
+  say_help: "मदद"
 AMAZON.LoopOffIntent:
   loop_off: "(रिपीट|लूप) (बंद|ऑफ़)"
   turn_off_repeat: "(रिपीट|लूप) (बंद|ऑफ़) (करो|कर दो|कीजिए)"
 AMAZON.LoopOnIntent:
   loop: "(रिपीट|लूप) (चालू|ऑन)"
   turn_repeat: "(रिपीट|लूप) (चालू|ऑन) (करो|कर दो|कीजिए)"
+AMAZON.NoIntent:
+  say_no: "नहीं"
 AMAZON.PauseIntent:
   pause_tv: "(टीवी|कोडी|kodi|वीडियो|फ़िल्म|शो) (पॉज़ करो|pause करो|रोको|रोक दो)"
 AMAZON.ResumeIntent:
@@ -15,6 +21,10 @@ AMAZON.ShuffleOffIntent:
 AMAZON.ShuffleOnIntent:
   shuffle: "(शफ़ल|शफल) (चालू|ऑन)"
   turn_shuffle: "(शफ़ल|शफल|shuffle) (चालू|ऑन) (करो|कर दो|कीजिए)"
+AMAZON.StopIntent:
+  say_stop: "रुको\nबंद करो"
+AMAZON.YesIntent:
+  say_yes: "हाँ\nहां"
 AudioPassthrough:
   toggle_digital_audio: "डिजिटल (ऑडियो|पासथ्रू) (चालू|बंद) करो"
   toggle_passthrough: "[ऑडियो] पासथ्रू (बदलो|टॉगल करो)"

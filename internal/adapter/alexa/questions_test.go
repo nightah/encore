@@ -458,3 +458,72 @@ func TestHelpWithoutQuestion(t *testing.T) {
 	assert.Equal(t, "You can say things like: play the movie Dune, play the next episode of a show, or what's playing.", speechOf(resp))
 	assert.Nil(t, resp.SessionAttributes)
 }
+
+// TestAnswerWordsAreNotTitles checks that while a question's titles wait, an answer Alexa fills with one of a built-in intent's words is that intent, in every language: Alexa puts whatever was said in the answer it elicits, and on an Echo "help" played The Help and "yes" asked about Yes Man.
+func TestAnswerWordsAreNotTitles(t *testing.T) {
+	tests := []struct {
+		locale, word, intent string
+	}{
+		{"en-AU", "help", "AMAZON.HelpIntent"},
+		{"en-AU", "Yes", "AMAZON.YesIntent"},
+		{"en-AU", "yeah", "AMAZON.YesIntent"},
+		{"en-AU", "no", "AMAZON.NoIntent"},
+		{"en-AU", "stop", "AMAZON.StopIntent"},
+		{"en-AU", "never mind", "AMAZON.CancelIntent"},
+		{"de-DE", "hilfe", "AMAZON.HelpIntent"},
+		{"es-US", "si", "AMAZON.YesIntent"},
+		{"fr-FR", "non", "AMAZON.NoIntent"},
+		{"ja-JP", "はい", "AMAZON.YesIntent"},
+		{"hi-IN", "मदद", "AMAZON.HelpIntent"},
+		{"ar-SA", "لا", "AMAZON.NoIntent"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.locale+" "+tc.word, func(t *testing.T) {
+			heard := newConversation(t, tc.locale)
+			heard.say("WatchMovie", map[string]slotSpec{"Movie": {value: "dune"}})
+			got := heard.say(chooseIntent, map[string]slotSpec{answerSlot: {value: tc.word}})
+
+			said := newConversation(t, tc.locale)
+			said.say("WatchMovie", map[string]slotSpec{"Movie": {value: "dune"}})
+			want := said.say(tc.intent, nil)
+
+			assert.Equal(t, speechOf(want), speechOf(got))
+			assert.Equal(t, said.backend.Calls(), heard.backend.Calls())
+			assert.False(t, containsPrefix(heard.backend.Calls(), "Play"), "nothing plays: %q", heard.backend.Calls())
+		})
+	}
+}
+
+// TestStopEndsAQuestion checks that "stop" while a question waits ends the question, as cancel does, rather than stopping playback that may not be there: on an Echo it answered "Nothing is playing".
+func TestStopEndsAQuestion(t *testing.T) {
+	c := newConversation(t, "en-AU")
+	c.say("WatchMovie", map[string]slotSpec{"Movie": {value: "dune"}})
+
+	resp := c.say("AMAZON.StopIntent", nil)
+
+	assert.Equal(t, "Okay, never mind.", speechOf(resp))
+	assert.Empty(t, c.backend.Calls())
+	require.NotNil(t, resp.Response.ShouldEndSession)
+	assert.True(t, *resp.Response.ShouldEndSession)
+}
+
+// TestContinueWatchingTheLastShow checks that a next-episode request for "the last show", as Alexa heard "continue watching the last show" on an Echo, continues the last show rather than asking about Last Light or The Last Dance.
+func TestContinueWatchingTheLastShow(t *testing.T) {
+	for _, show := range []string{"the last show", "The Last Show", "last show", "watching the last show"} {
+		t.Run(show, func(t *testing.T) {
+			heard := newConversation(t, "en-AU")
+			got := heard.say("WatchNextEpisode", map[string]slotSpec{"Show": {value: show}})
+
+			said := newConversation(t, "en-AU")
+			want := said.say("ContinueWatching", nil)
+
+			assert.Equal(t, speechOf(want), speechOf(got))
+			assert.Equal(t, said.backend.Calls(), heard.backend.Calls())
+		})
+	}
+
+	c := newConversation(t, "en-AU")
+	c.say("WatchNextEpisode", map[string]slotSpec{"Show": {value: "the last kingdom"}})
+	assert.NotContains(t, c.backend.Calls(), "NowPlaying", "a show called something else is still looked for")
+}

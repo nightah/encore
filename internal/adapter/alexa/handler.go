@@ -158,6 +158,17 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, tr *requestT
 	followup := sessionFollowupOf(env.Session.Attributes)
 	question := sessionQuestionOf(env.Session.Attributes)
 
+	switch {
+	case intent.Name == chooseIntent && len(pendingChoices(env.Session.Attributes)) > 0:
+		// Alexa fills the answer a question elicits with whatever was said: "yes", "no" or "help" mean themselves, not titles.
+		if name, ok := h.Speech.AnswerIntent(locale, intent.Slots[answerSlot].Value); ok && intent.Slots[whichSlot].Value == "" {
+			intent = Intent{Name: name}
+		}
+	case intent.Name == nextEpisodeIntent && h.Speech.MeansLastShow(locale, intent.Slots["Show"].Value):
+		// "Continue watching the last show" heard as the next episode of a show called "the last show".
+		intent = Intent{Name: continueIntent, Slots: map[string]Slot{"Room": intent.Slots["Room"]}}
+	}
+
 	// Intents that don't need Kodi.
 	switch intent.Name {
 	case "AMAZON.HelpIntent":
@@ -176,6 +187,11 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, tr *requestT
 		return h.respond(locale, actions.Outcome{Say: msg, Reprompt: &msg}, false), nil
 	case "AMAZON.CancelIntent":
 		return h.respond(locale, actions.Outcome{Say: actions.Message{ID: "match.cancelled"}, EndSession: true}, false), nil
+	case "AMAZON.StopIntent":
+		// "Stop" to a question ends it, as cancel does; otherwise it stops playback.
+		if question != nil {
+			return h.respond(locale, actions.Outcome{Say: actions.Message{ID: "match.cancelled"}, EndSession: true}, false), nil
+		}
 	case "AMAZON.YesIntent":
 		// "Yes" to "A or B?" chooses neither.
 		if pending := pendingChoices(env.Session.Attributes); len(pending) > 1 && question != nil {

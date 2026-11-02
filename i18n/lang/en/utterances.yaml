@@ -1,10 +1,16 @@
-# Utterance patterns, translated on Crowdin from the English file. Each key is one way of asking, and may hold several patterns, one per line. (a|b) picks one, [a|b] is optional, {Slot} is a slot. Built-in intents already understand the common phrasings; samples here only add Kodi-specific ones. An optional room at the end, such as "[(in|on) the {Room}]", lets a request name the room whose Kodi should play it; notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
+# Utterance patterns, translated on Crowdin from the English file. Each key is one way of asking, and may hold several patterns, one per line. (a|b) picks one, [a|b] is optional, {Slot} is a slot. Built-in intents already understand the common phrasings; samples here add Kodi-specific ones, and the plain words for yes, no, help, stop and cancel, which Encore also uses to tell them from a title said in answer to a question. An optional room at the end, such as "[(in|on) the {Room}]", lets a request name the room whose Kodi should play it; notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
+AMAZON.CancelIntent:
+  say_cancel: "cancel\nnever mind"
+AMAZON.HelpIntent:
+  say_help: "help"
 AMAZON.LoopOffIntent:
   loop_off: "(loop|repeat) off"
   turn_off_repeat: "(turn|switch) off (repeat|loop)"
 AMAZON.LoopOnIntent:
   loop: "(loop|repeat) (on|mode)"
   turn_repeat: "(turn|switch) on (repeat|loop)"
+AMAZON.NoIntent:
+  say_no: "no\nnope"
 AMAZON.PauseIntent:
   pause_tv: "pause [the] (tv|telly|kodi|video|movie|show)"
 AMAZON.ResumeIntent:
@@ -15,6 +21,10 @@ AMAZON.ShuffleOffIntent:
 AMAZON.ShuffleOnIntent:
   shuffle: "shuffle (on|mode on)"
   turn_shuffle: "(turn|switch) (on|) shuffle"
+AMAZON.StopIntent:
+  say_stop: "stop"
+AMAZON.YesIntent:
+  say_yes: "yes\nyeah\nyep\nsure"
 AudioPassthrough:
   toggle_digital_audio: "toggle (digital audio|digital passthrough|passthrough audio)"
   toggle_passthrough: "toggle [audio] passthrough"

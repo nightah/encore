@@ -1,10 +1,16 @@
-# Utterance patterns, translated on Crowdin from the English file. Each key is one way of asking, and may hold several patterns, one per line. (a|b) picks one, [a|b] is optional, {Slot} is a slot. Built-in intents already understand the common phrasings; samples here only add Kodi-specific ones. An optional room at the end, such as "[(in|on) the {Room}]", lets a request name the room whose Kodi should play it; notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
+# Utterance patterns, translated on Crowdin from the English file. Each key is one way of asking, and may hold several patterns, one per line. (a|b) picks one, [a|b] is optional, {Slot} is a slot. Built-in intents already understand the common phrasings; samples here add Kodi-specific ones, and the plain words for yes, no, help, stop and cancel, which Encore also uses to tell them from a title said in answer to a question. An optional room at the end, such as "[(in|on) the {Room}]", lets a request name the room whose Kodi should play it; notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
+AMAZON.CancelIntent:
+  say_cancel: "キャンセル\nやめて"
+AMAZON.HelpIntent:
+  say_help: "ヘルプ"
 AMAZON.LoopOffIntent:
   loop_off: "(ループ|リピート)オフ"
   turn_off_repeat: "(リピート|ループ|繰り返し)を(オフにして|止めて|解除して)[ください]"
 AMAZON.LoopOnIntent:
   loop: "(ループ|リピート)(オン|モード)"
   turn_repeat: "(リピート|ループ|繰り返し)を(オンにして|有効にして)[ください]"
+AMAZON.NoIntent:
+  say_no: "いいえ\nいや"
 AMAZON.PauseIntent:
   pause_tv: "(テレビ|コディ|ビデオ|動画|映画|番組)を一時停止(して|してください|)"
 AMAZON.ResumeIntent:
@@ -15,6 +21,10 @@ AMAZON.ShuffleOffIntent:
 AMAZON.ShuffleOnIntent:
   shuffle: "シャッフル(オン|モードオン)"
   turn_shuffle: "シャッフルを(オンにして|有効にして)[ください]"
+AMAZON.StopIntent:
+  say_stop: "ストップ\n止めて"
+AMAZON.YesIntent:
+  say_yes: "はい\nうん"
 AudioPassthrough:
   toggle_digital_audio: "(デジタル音声|デジタルパススルー)を切り替えて[ください]"
   toggle_passthrough: "[音声]パススルーを切り替えて[ください]"

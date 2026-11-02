@@ -34,6 +34,8 @@ func NewSpeech(src *skillmodel.Sources, log *slog.Logger) (*Speech, error) {
 		bareSlots:   map[string][]bareSlot{},
 		generic:     map[string]map[string]bool{},
 		kindNouns:   map[string][]kindNoun{},
+		answerWords: map[string]map[string]string{},
+		lastShow:    map[string]map[string]bool{},
 		log:         log,
 	}
 
@@ -68,6 +70,14 @@ func NewSpeech(src *skillmodel.Sources, log *slog.Logger) (*Speech, error) {
 
 		s.bareSlots[locale] = bareSlots(src.Model, utterances)
 
+		if s.answerWords[locale], err = answerWords(utterances); err != nil {
+			return nil, fmt.Errorf("locale %s: %w", locale, err)
+		}
+
+		if s.lastShow[locale], err = lastShowWords(utterances); err != nil {
+			return nil, fmt.Errorf("locale %s: %w", locale, err)
+		}
+
 		s.kindNouns[locale] = kindNouns(s.languages[locale], types["MEDIA_TYPE"])
 
 		if s.generic[locale], err = genericWords(s.languages[locale], utterances, types["MEDIA_TYPE"]); err != nil {
@@ -80,6 +90,106 @@ func NewSpeech(src *skillmodel.Sources, log *slog.Logger) (*Speech, error) {
 	}
 
 	return s, nil
+}
+
+// AnswerIntent reports the built-in intent a question's answer is when it is one of that intent's own words: while a question's titles wait, Alexa fills the answer it elicits with whatever was said, so "yes", "no" or "help" arrive as titles.
+func (s *Speech) AnswerIntent(locale, heard string) (string, bool) {
+	words, ok := s.answerWords[locale]
+	if !ok {
+		words = s.answerWords[fallbackLocale]
+	}
+
+	name, ok := words[foldWords(heard)]
+
+	return name, ok
+}
+
+// MeansLastShow reports whether a next-episode request's show is the words a "continue watching" request has in its place: Alexa can hear "continue watching the last show" as the next episode of a show called "the last show".
+func (s *Speech) MeansLastShow(locale, show string) bool {
+	words, ok := s.lastShow[locale]
+	if !ok {
+		words = s.lastShow[fallbackLocale]
+	}
+
+	return show != "" && words[foldWords(show)]
+}
+
+// foldWords folds what was heard for comparing whole phrases: accents off Latin letters, case and spacing ignored.
+func foldWords(s string) string {
+	return strings.Join(strings.Fields(foldLatin(s)), " ")
+}
+
+// answerWords maps the folded samples of the built-in intents an answer may be, each without a slot, to the intent.
+func answerWords(utterances map[string][]string) (map[string]string, error) {
+	out := map[string]string{}
+
+	for _, name := range answerIntents {
+		for _, pattern := range utterances[name] {
+			samples, err := skillmodel.Expand(pattern)
+			if err != nil {
+				return nil, err
+			}
+
+			for _, sample := range samples {
+				if !strings.Contains(sample, "{") {
+					out[foldWords(sample)] = name
+				}
+			}
+		}
+	}
+
+	return out, nil
+}
+
+// lastShowWords returns what each "continue watching" sample has after the words a next-episode sample puts before its show, when the show ends that sample: "the last show" from "continue watching the last show" and "continue watching {Show}".
+func lastShowWords(utterances map[string][]string) (map[string]bool, error) {
+	expand := func(name string) ([]string, error) {
+		var out []string
+
+		for _, pattern := range utterances[name] {
+			samples, err := skillmodel.Expand(pattern)
+			if err != nil {
+				return nil, err
+			}
+
+			out = append(out, samples...)
+		}
+
+		return out, nil
+	}
+
+	continues, err := expand(continueIntent)
+	if err != nil {
+		return nil, err
+	}
+
+	nexts, err := expand(nextEpisodeIntent)
+	if err != nil {
+		return nil, err
+	}
+
+	out := map[string]bool{}
+
+	for _, next := range nexts {
+		lead, ok := strings.CutSuffix(next, "{Show}")
+		if !ok || strings.Contains(lead, "{") {
+			continue
+		}
+
+		lead = foldWords(lead)
+
+		for _, cont := range continues {
+			if strings.Contains(cont, "{") {
+				continue
+			}
+
+			if rest, ok := strings.CutPrefix(foldWords(cont), lead+" "); ok && lead != "" {
+				out[rest] = true
+			}
+		}
+	}
+
+	return out, nil
 }
 
 // Render returns msg as plain text, or "" for a silent message.

@@ -86,3 +86,12 @@ const maxQueryForms = 2
 
 // playlistType is the slot type of a library's playlists, whose intents a search query is read as too.
 const playlistType = "KODI_PLAYLIST"
+
+// answerIntents are the built-in intents a question's answer may be instead of a title.
+var answerIntents = []string{"AMAZON.YesIntent", "AMAZON.NoIntent", "AMAZON.HelpIntent", "AMAZON.StopIntent", "AMAZON.CancelIntent"}
+
+// continueIntent and nextEpisodeIntent are the intents "continue watching the last show" and "continue watching {Show}" belong to.
+const (
+	continueIntent    = "ContinueWatching"
+	nextEpisodeIntent = "WatchNextEpisode"
+)

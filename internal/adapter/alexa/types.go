@@ -104,7 +104,11 @@ type Speech struct {
 	generic map[string]map[string]bool
 	// kindNouns holds, per locale, the words that name a kind of title ("movie", "映画", "فيلم"), longest first.
 	kindNouns map[string][]kindNoun
-	log       *slog.Logger
+	// answerWords maps, per locale, the folded words of the built-in intents' own samples ("yes", "help") to the intent, so an answer to a question that is one of them is that intent rather than a title.
+	answerWords map[string]map[string]string
+	// lastShow holds, per locale, the folded words a "continue watching" sample has where a next-episode sample has its show ("the last show"), so a next-episode request for them continues the last show.
+	lastShow map[string]map[string]bool
+	log      *slog.Logger
 }
 
 // bareSlot is a slot an intent's sample is alone: Navigate's {NavAction} of type NAV_ACTION.

@@ -1,10 +1,16 @@
-# Utterance patterns, translated on Crowdin from the English file. Each key is one way of asking, and may hold several patterns, one per line. (a|b) picks one, [a|b] is optional, {Slot} is a slot. Built-in intents already understand the common phrasings; samples here only add Kodi-specific ones. An optional room at the end, such as "[(in|on) the {Room}]", lets a request name the room whose Kodi should play it; notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
+# Utterance patterns, translated on Crowdin from the English file. Each key is one way of asking, and may hold several patterns, one per line. (a|b) picks one, [a|b] is optional, {Slot} is a slot. Built-in intents already understand the common phrasings; samples here add Kodi-specific ones, and the plain words for yes, no, help, stop and cancel, which Encore also uses to tell them from a title said in answer to a question. An optional room at the end, such as "[(in|on) the {Room}]", lets a request name the room whose Kodi should play it; notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
+AMAZON.CancelIntent:
+  say_cancel: "annulla\nlascia perdere"
+AMAZON.HelpIntent:
+  say_help: "aiuto"
 AMAZON.LoopOffIntent:
   loop_off: "ripetizione (disattivata|off)"
   turn_off_repeat: "(disattiva|spegni|togli) [la] ripetizione\n(disattiva|spegni|togli) il loop"
 AMAZON.LoopOnIntent:
   loop: "ripetizione (attiva|on)"
   turn_repeat: "(attiva|accendi) [la] ripetizione\n(attiva|accendi) il loop"
+AMAZON.NoIntent:
+  say_no: "no"
 AMAZON.PauseIntent:
   pause_tv: "(metti in pausa|pausa) (la tv|la televisione|kodi|il video|il film|la serie)"
 AMAZON.ResumeIntent:
@@ -15,6 +21,10 @@ AMAZON.ShuffleOffIntent:
 AMAZON.ShuffleOnIntent:
   shuffle: "riproduzione casuale (attiva|on)"
   turn_shuffle: "(attiva|accendi) [la] riproduzione casuale\n(attiva|accendi) (lo shuffle|la modalità casuale)"
+AMAZON.StopIntent:
+  say_stop: "stop\nfermati"
+AMAZON.YesIntent:
+  say_yes: "sì\ncerto"
 AudioPassthrough:
   toggle_digital_audio: "(attiva|disattiva) l'audio (digitale|passthrough)"
   toggle_passthrough: "(cambia|commuta) il passthrough [audio]\npassthrough audio"
