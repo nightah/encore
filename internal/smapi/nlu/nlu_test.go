@@ -422,3 +422,13 @@ func TestCheckAlternatives(t *testing.T) {
 	assert.Contains(t, err.Error(), `en-GB row 1 ("repeat off"): Repeat has no slot Mode`)
 	assert.NotContains(t, err.Error(), "no slot RepeatMode")
 }
+
+// A slot value in another script keeps its marks: が and か are different words.
+func TestRunKeepsMarksOutsideLatin(t *testing.T) {
+	r, fake := runner(t)
+	fake.Profile("ja-JP", "かの映画", smapitest.NLUAnswer{Intent: "WatchMovie", Slots: map[string]string{"Movie": "か"}})
+
+	res, err := r.Run(t.Context(), nlu.Fixture{Locale: "ja-JP", Cases: []nlu.Case{{Utterance: "かの映画", Intent: "WatchMovie", Slots: map[string]string{"Movie": "が"}}}})
+	require.NoError(t, err)
+	assert.Equal(t, []string{`slot Movie is "か", want "が"`}, res[0].Problems)
+}

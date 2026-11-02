@@ -216,14 +216,19 @@ func matches(s smapi.NLUSlot, want string) bool {
 	return false
 }
 
-// fold lowercases s and takes its accents off.
+// fold lowercases s and takes the accents off its Latin letters. Marks on other scripts stay, since there they tell words apart (が is not か).
 func fold(s string) string {
 	var b strings.Builder
 
+	latin := false
+
 	for _, r := range norm.NFD.String(strings.ToLower(strings.TrimSpace(s))) {
-		if !unicode.Is(unicode.Mn, r) {
-			b.WriteRune(r)
+		if unicode.Is(unicode.Mn, r) && latin {
+			continue
 		}
+
+		latin = unicode.Is(unicode.Latin, r)
+		b.WriteRune(r)
 	}
 
 	return norm.NFC.String(b.String())
