@@ -65,10 +65,12 @@ func TestGenNLU(t *testing.T) {
 
 	dir := fixtureDir(t, map[string]string{"en-GB.yaml": enGBFixture, "de-DE.yaml": "locale: de-DE\ncases:\n  - {utterance: lauter, intent: VolumeUp}\n"})
 
+	fake.Inject(http.StatusTooManyRequests, 1)
+
 	out, _, err := runCLI(t, append([]string{"gen", "nlu", "--fixtures", dir, "--skill", skill, "--locale", "en-GB"}, flags...)...)
 	require.NoError(t, err, "a pending row that still fails doesn't fail the run")
 	assert.Contains(t, out, `PENDING en-GB "louder"`)
-	assert.Contains(t, out, "1 passed, 0 failed, 1 pending, 0 fixed\n")
+	assert.Contains(t, out, "1 passed, 0 failed, 1 pending, 0 fixed\nsmapi retried 1 throttled and 0 failed requests, and gave up on 0\n", "throttling ridden out is reported")
 
 	t.Setenv(envSkillID, skill)
 
@@ -222,6 +224,18 @@ func TestGenNLUFailsWhenStoppedOrUnwritable(t *testing.T) {
 
 	require.ErrorIs(t, runCLIWith(ctx, t, io.Discard, args...), context.Canceled)
 	require.ErrorIs(t, runCLIWith(t.Context(), t, &failAfter{}, args...), assert.AnError)
+	require.ErrorIs(t, runCLIWith(t.Context(), t, failOn("smapi retried"), args...), assert.AnError, "nor the retries")
+}
+
+// failOn fails the write that starts with prefix.
+type failOn string
+
+func (f failOn) Write(p []byte) (int, error) {
+	if strings.HasPrefix(string(p), string(f)) {
+		return 0, assert.AnError
+	}
+
+	return len(p), nil
 }
 
 func TestGenOpenFailsWhenStopped(t *testing.T) {

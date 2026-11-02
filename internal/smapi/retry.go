@@ -41,10 +41,7 @@ func (p RetryPolicy) decide(req *http.Request, status int, hdr http.Header, err 
 		return p.backoff(attempt), idempotent(req.Method)
 	}
 
-	switch status {
-	case http.StatusTooManyRequests, http.StatusInternalServerError, http.StatusBadGateway,
-		http.StatusServiceUnavailable, http.StatusGatewayTimeout:
-	default:
+	if !retriable(status) {
 		return 0, false
 	}
 
@@ -101,4 +98,15 @@ func retryAfter(v string) (time.Duration, bool) {
 	}
 
 	return 0, false
+}
+
+// retriable reports whether a response with status is worth sending again: throttled, or failed on Amazon's side.
+func retriable(status int) bool {
+	switch status {
+	case http.StatusTooManyRequests, http.StatusInternalServerError, http.StatusBadGateway,
+		http.StatusServiceUnavailable, http.StatusGatewayTimeout:
+		return true
+	}
+
+	return false
 }

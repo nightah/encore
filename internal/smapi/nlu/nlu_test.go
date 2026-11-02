@@ -350,7 +350,7 @@ func TestRunPacesUnderAmazonsLimitByDefault(t *testing.T) {
 		require.NoError(t, err)
 
 		slices.Sort(p.at)
-		assert.Equal(t, []time.Duration{0, 400 * time.Millisecond}, p.at, "2.5 requests a second")
+		assert.Equal(t, []time.Duration{0, 500 * time.Millisecond}, p.at, "two requests a second")
 	})
 }
 

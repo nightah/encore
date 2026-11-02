@@ -47,7 +47,7 @@ type Runner struct {
 	Wait time.Duration
 	// Reread, if set, reads a PlayMedia search query as the film, TV or music intents Encore's handler would try (alexa.Speech.Reinterpret), so a row that arrives as PlayMedia passes when Encore reads it as the row expects.
 	Reread func(locale, query string) []Reading
-	// Rate is how many profileNlu requests a second are sent, reprobes included, across every fixture. Default 2.5, under Amazon's limit for a developer account.
+	// Rate is how many profileNlu requests a second are sent, reprobes included, across every fixture. Default 2, under Amazon's limit for a developer account.
 	Rate float64
 }
 

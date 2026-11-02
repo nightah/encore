@@ -6,11 +6,11 @@ import "time"
 const (
 	defaultReprobes = 2
 	defaultWait     = 2 * time.Second
-	// defaultRate keeps under profileNlu's limit: measured at about three requests a second for a whole developer account, shared by every skill and locale, with a short burst before it throttles.
-	defaultRate = 2.5
+	// defaultRate keeps under profileNlu's limit, which is for a whole developer account, shared by every skill and locale: a full run at 2.5 a second had half its attempts throttled and got through about 2.3 a second, after a short burst.
+	defaultRate = 2.0
 )
 
-// maxInFlight caps the requests waiting on Amazon at once; at defaultRate and half a second a request, about two are.
+// maxInFlight caps the requests waiting on Amazon at once; at defaultRate and half a second a request, about one is.
 const maxInFlight = 8
 
 // runnersUp is how many considered intents a mismatch reports.

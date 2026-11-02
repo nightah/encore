@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"sync/atomic"
 	"time"
 
 	"golang.org/x/oauth2"
@@ -24,6 +25,7 @@ type Client struct {
 	api    *smapiclient.Client
 	upload *doer
 	poll   PollConfig
+	counts *retryCounts
 }
 
 // RetryPolicy controls retries of throttled (429) and failed (5xx) requests. Zero fields take the defaults.
@@ -175,6 +177,21 @@ type doer struct {
 	http   *http.Client
 	tokens oauth2.TokenSource // nil for presigned S3 requests, which must not carry a bearer token
 	retry  RetryPolicy
+	counts *retryCounts
+}
+
+// RetryCounts are the requests a Client has retried, and those it gave up on after its last attempt.
+type RetryCounts struct {
+	// Throttled are the 429s retried.
+	Throttled int64
+	// Failed are the 5xx responses and network errors retried.
+	Failed int64
+	// GaveUp are the requests that still failed one of those ways on their last attempt.
+	GaveUp int64
+}
+
+type retryCounts struct {
+	throttled, failed, gaveUp atomic.Int64
 }
 
 // caller performs one generated-client request. Passing the call rather than its response keeps reading and closing the body in one place.

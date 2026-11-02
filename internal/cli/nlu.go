@@ -128,6 +128,12 @@ func newGenNLUCommand() *cobra.Command {
 				return err
 			}
 
+			// Throttling the client rode out by retrying costs time without failing a row; it shows how close the run came to Amazon's limit.
+			rc := c.Retries()
+			if _, err := fmt.Fprintf(cmd.OutOrStdout(), "smapi retried %d throttled and %d failed requests, and gave up on %d\n", rc.Throttled, rc.Failed, rc.GaveUp); err != nil {
+				return err
+			}
+
 			if nlu.Summarise(all).Failed() {
 				return errSilent
 			}
@@ -139,7 +145,7 @@ func newGenNLUCommand() *cobra.Command {
 	sf.register(cmd)
 	cmd.Flags().StringSliceVarP(&locales, "locale", "l", nil, "locales to check (default every fixture)")
 	cmd.Flags().StringVar(&dir, "fixtures", defaultNLUFixtures, "directory of <locale>.yaml fixtures")
-	cmd.Flags().Float64Var(&rate, "rate", 2.5, "profileNlu requests a second; Amazon throttles a developer account at about 3, shared by every skill and locale")
+	cmd.Flags().Float64Var(&rate, "rate", 2, "profileNlu requests a second; Amazon throttles a developer account past about 2.3, shared by every skill and locale")
 	cmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "list the rows that pass too")
 
 	return cmd

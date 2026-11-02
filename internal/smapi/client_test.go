@@ -83,6 +83,7 @@ func TestRetriesThrottledRequests(t *testing.T) {
 	_, err := c.Vendors(t.Context())
 	require.NoError(t, err)
 	assert.Equal(t, 3, fake.Injected())
+	assert.Equal(t, smapi.RetryCounts{Throttled: 2, Failed: 1}, c.Retries())
 }
 
 func TestRetriesGiveUp(t *testing.T) {
@@ -98,6 +99,7 @@ func TestRetriesGiveUp(t *testing.T) {
 	assert.Equal(t, http.StatusTooManyRequests, se.StatusCode)
 	assert.Equal(t, "injected failure", se.Message)
 	assert.Equal(t, 6, fake.Injected())
+	assert.Equal(t, smapi.RetryCounts{Throttled: 5, GaveUp: 1}, c.Retries(), "five retried, the sixth given up on")
 }
 
 func TestPOSTIsRetriedOnThrottle(t *testing.T) {
