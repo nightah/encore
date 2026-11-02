@@ -298,14 +298,51 @@ jobs:
       - name: Deploy the model to the NLU skill
         id: nlu-deploy
         if: ${{ !cancelled() && steps.secret.outputs.present == 'true' && env.SMAPI_SKILL_ID != '' }}
-        run: make nlu-deploy
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          make nlu-deploy 2>&1 | tee nlu-deploy.log
+
+      # Amazon now and then fails a whole import without saying why. Until it's known how often, and whether deploying again gets through, a deploy that failed that way is tried once more here, and the summary records both: Encore's own deploys don't retry until the numbers say they should.
+      - name: Deploy again after an unexplained failure
+        id: nlu-redeploy
+        if: ${{ !cancelled() && steps.nlu-deploy.outcome == 'failure' }}
+        run: |
+          if ! grep -q 'no details reported' nlu-deploy.log; then
+            echo "::error::The NLU skill's deploy failed for reasons Amazon gave; see the step above."
+            exit 1
+          fi
+
+          set -o pipefail
+          make nlu-deploy 2>&1 | tee nlu-redeploy.log
+
+      - name: Record the deploy
+        if: ${{ !cancelled() && steps.nlu-deploy.outcome != 'skipped' }}
+        env:
+          FIRST: ${{ steps.nlu-deploy.outcome }}
+          SECOND: ${{ steps.nlu-redeploy.outcome }}
+        run: |
+          import_of() { grep -oE 'import [^ ]+ status:' "$1" 2>/dev/null | head -n 1 | cut -d' ' -f2; }
+          kind_of() {
+            if grep -q 'no details reported' "$1" 2>/dev/null; then echo "failed without details"; elif [ "$2" = success ]; then echo "succeeded"; else echo "failed"; fi
+          }
+          {
+            echo "### NLU skill deploy"
+            echo
+            echo "| Attempt | Outcome | Import |"
+            echo "| --- | --- | --- |"
+            echo "| first | $(kind_of nlu-deploy.log "${FIRST}") | $(import_of nlu-deploy.log) |"
+            if [ -n "${SECOND}" ] && [ "${SECOND}" != skipped ]; then
+              echo "| again | $(kind_of nlu-redeploy.log "${SECOND}") | $(import_of nlu-redeploy.log) |"
+            fi
+          } >> "${GITHUB_STEP_SUMMARY}"
 
       - name: NLU checks
-        if: ${{ !cancelled() && steps.nlu-deploy.outcome == 'success' }}
+        if: ${{ !cancelled() && (steps.nlu-deploy.outcome == 'success' || steps.nlu-redeploy.outcome == 'success') }}
         run: make nlu
 
       - name: Launch phrase checks
-        if: ${{ !cancelled() && steps.nlu-deploy.outcome == 'success' }}
+        if: ${{ !cancelled() && (steps.nlu-deploy.outcome == 'success' || steps.nlu-redeploy.outcome == 'success') }}
         run: make nlu-open
 
   # CI runs the benchmarks module's parity tests in short mode; this runs them all, including the comparison with bleve over a 10,000-title library. The benchmarks themselves are only run by hand (benchmarks/README.md).
