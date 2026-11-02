@@ -257,3 +257,31 @@ func (c *Client) EnableDevelopment(ctx context.Context, skillID string) error {
 		return c.api.SetSkillEnablementV1(ctx, skillID, StageDevelopment)
 	})
 }
+
+// DevelopmentEnabled reports whether the skill's development stage is enabled for testing. Amazon answers 404 for a stage that isn't enabled.
+func (c *Client) DevelopmentEnabled(ctx context.Context, skillID string) (bool, error) {
+	err := do("get skill enablement", func() (*http.Response, error) {
+		return c.api.GetSkillEnablementStatusV1(ctx, skillID, StageDevelopment)
+	})
+
+	switch {
+	case err == nil:
+		return true, nil
+	case StatusCode(err) == http.StatusNotFound:
+		return false, nil
+	default:
+		return false, err
+	}
+}
+
+// DisableDevelopment disables the skill's development stage for testing, so the user's devices no longer reach it. A stage that isn't enabled is left as it is.
+func (c *Client) DisableDevelopment(ctx context.Context, skillID string) error {
+	err := do("disable skill", func() (*http.Response, error) {
+		return c.api.DeleteSkillEnablementV1(ctx, skillID, StageDevelopment)
+	})
+	if StatusCode(err) == http.StatusNotFound {
+		return nil
+	}
+
+	return err
+}

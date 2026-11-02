@@ -103,6 +103,8 @@ type Request struct {
 	Package skillpkg.Options
 	// Force deploys even when the package is unchanged.
 	Force bool
+	// Disabled leaves the skill disabled for testing, disabling it if it was enabled, so no device reaches it. A disabled skill can't be simulated, so Simulate is skipped.
+	Disabled bool
 	// Simulate smoke-tests the skill by opening it with the simulation API, in PrimaryLocale when that is deployed and can be simulated, else in the first locale that can.
 	Simulate      bool
 	PrimaryLocale string

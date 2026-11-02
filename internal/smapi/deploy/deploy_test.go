@@ -555,6 +555,42 @@ func TestDeployWithoutSimulation(t *testing.T) {
 	assert.Equal(t, 0, h.fake.Calls("POST /v2/skills/{skillId}/stages/{stage}/simulations"))
 }
 
+func TestDeployDisabled(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+
+	first, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
+	require.NoError(t, err)
+
+	sk, _ := h.fake.Skill(first.State.SkillID)
+	require.True(t, sk.Enabled)
+
+	req := h.request(first.State)
+	req.Force, req.Disabled = true, true
+
+	res, err := h.deployer.Deploy(t.Context(), req)
+	require.NoError(t, err)
+
+	sk, _ = h.fake.Skill(res.State.SkillID)
+	assert.False(t, sk.Enabled, "a skill a previous deploy enabled is disabled")
+	assert.Equal(t, []string{"enable:done", "simulate:skipped"}, h.timeline()[len(h.timeline())-2:])
+	assert.Nil(t, res.Locales["en-GB"].Simulation, "a disabled skill can't be simulated")
+	assert.Equal(t, 1, h.fake.Calls("POST /v2/skills/{skillId}/stages/{stage}/simulations"), "only the first deploy simulated")
+	assert.Equal(t, 1, h.fake.Calls("PUT /v1/skills/{skillId}/stages/{stage}/enablement"), "only the first deploy enabled")
+}
+
+func TestDeployDisabledFails(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+	h.override("DELETE /v1/skills/{id}/stages/{stage}/enablement", reject)
+
+	req := h.request(deploy.State{})
+	req.Disabled = true
+
+	res, err := h.deployer.Deploy(t.Context(), req)
+	assert.Equal(t, http.StatusBadRequest, smapi.StatusCode(err))
+	assert.Equal(t, "enable:failed", h.timeline()[len(h.timeline())-1])
+	assert.Empty(t, res.State.Hash, "a failed deploy never records a hash")
+}
+
 func TestDeployPrivacyUnanswered(t *testing.T) {
 	h := newHarness(t, smapitest.Options{})
 

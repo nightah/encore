@@ -374,6 +374,21 @@ func (s *Server) handleEnable(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func (s *Server) handleDisable(w http.ResponseWriter, r *http.Request) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	sk, ok := s.skills[r.PathValue("skillId")]
+	if !ok || !sk.Enabled {
+		writeError(w, http.StatusNotFound, "enablement not found")
+
+		return
+	}
+
+	sk.Enabled = false
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (s *Server) handleGetEnablement(w http.ResponseWriter, r *http.Request) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

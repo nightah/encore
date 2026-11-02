@@ -28,6 +28,12 @@ func (r *run) simulate(ctx context.Context) error {
 		return nil
 	}
 
+	if r.req.Disabled {
+		r.skip(StepSimulate, "The skill is disabled for testing")
+
+		return nil
+	}
+
 	loc := r.smokeLocale()
 	if loc == "" {
 		r.skip(StepSimulate, "None of the locales can be simulated")

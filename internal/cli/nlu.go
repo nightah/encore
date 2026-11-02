@@ -215,7 +215,7 @@ func newGenOpenCommand() *cobra.Command {
 		Use:   "open",
 		Short: "Say each locale's launch phrases to Amazon's simulator, against a deployed skill",
 		Long: "Says each locale's launch phrases to the simulation API in turn, until one reaches the skill, and reports the locales the simulator refuses and those where no phrase got through.\n" +
-			"The skill must be deployed and enabled for testing, with the same invocation choice as --invocation. The simulator takes text, so this can't show how Alexa hears the name.\n" +
+			"The skill must be deployed with the same invocation choice as --invocation. The simulator needs it enabled for testing, so a skill that isn't is enabled while it's checked and disabled again after. The simulator takes text, so this can't show how Alexa hears the name.\n" +
 			"Credentials come from " + envClientID + ", " + envClientSecret + " and " + envRefreshToken + ".",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
@@ -241,8 +241,13 @@ func newGenOpenCommand() *cobra.Command {
 
 			log := slog.New(slog.NewTextHandler(cmd.ErrOrStderr(), &slog.HandlerOptions{Level: slog.LevelDebug}))
 
-			checks, err := deploy.New(c, src).CheckOpen(cmd.Context(), skill, locales, invocation, log)
+			restore, err := enableForCheck(cmd.Context(), c, skill, log)
 			if err != nil {
+				return err
+			}
+
+			checks, err := deploy.New(c, src).CheckOpen(cmd.Context(), skill, locales, invocation, log)
+			if err := errors.Join(err, restore()); err != nil {
 				return err
 			}
 
@@ -255,6 +260,31 @@ func newGenOpenCommand() *cobra.Command {
 	cmd.Flags().StringVar(&invocation, "invocation", "", "the invocation choice the skill was deployed with: empty for encore, kodi, or a custom name")
 
 	return cmd
+}
+
+// enableForCheck enables skill for testing if it isn't already, as the simulator needs, and returns the func that disables it again, so a skill kept for the checks only answers on your Echos while it's checked. A skill that was enabled is left enabled.
+func enableForCheck(ctx context.Context, c *smapi.Client, skill string, log *slog.Logger) (func() error, error) {
+	on, err := c.DevelopmentEnabled(ctx, skill)
+	if err != nil || on {
+		return func() error { return nil }, err
+	}
+
+	if err := c.EnableDevelopment(ctx, skill); err != nil {
+		return nil, err
+	}
+
+	log.Info("enabled the skill for testing while it's checked", "skill", skill)
+
+	return func() error {
+		// Disabled even when the check was stopped, so the skill doesn't stay enabled.
+		if err := c.DisableDevelopment(context.WithoutCancel(ctx), skill); err != nil {
+			return err
+		}
+
+		log.Info("disabled the skill for testing again", "skill", skill)
+
+		return nil
+	}, nil
 }
 
 func writeOpenChecks(w io.Writer, checks []deploy.OpenCheck) error {
@@ -329,8 +359,8 @@ func newGenDeployCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "deploy",
 		Short: "Deploy these sources' interaction model to a skill kept for gen nlu and gen open",
-		Long: "Builds the skill package from these sources, deploys it to the skill --skill names, waits for every locale's model to build and enables the skill for testing, so gen nlu and gen open check this model rather than whatever was deployed last. In place of a library, each locale gets the titles its NLU fixtures ask for, as Encore adds a library's titles to the built-in title types, and with --library-skill the titles a skill Encore deploys already has, such as your own, read from its model.\n" +
-			"It only deploys to a skill named " + quote(ciSkillName) + " in every locale it has a name in, so it can't replace the skill Encore deploys for you: create an empty custom skill with that name in the Alexa developer console first. Pick the invocation your own skill doesn't use, as an enabled skill answers on your Echos too. The endpoint is a placeholder that neither check reaches.\n" +
+		Long: "Builds the skill package from these sources, deploys it to the skill --skill names, waits for every locale's model to build and leaves the skill disabled for testing, so gen nlu and gen open check this model rather than whatever was deployed last, and your Echos never reach it. gen nlu needs no enablement, and gen open enables the skill only while it checks. In place of a library, each locale gets the titles its NLU fixtures ask for, as Encore adds a library's titles to the built-in title types, and with --library-skill the titles a skill Encore deploys already has, such as your own, read from its model.\n" +
+			"It only deploys to a skill named " + quote(ciSkillName) + " in every locale it has a name in, so it can't replace the skill Encore deploys for you: create an empty custom skill with that name in the Alexa developer console first. Pick the invocation your own skill doesn't use all the same, as it answers on your Echos while gen open checks it. The endpoint is a placeholder that neither check reaches.\n" +
 			"Credentials come from " + envClientID + ", " + envClientSecret + " and " + envRefreshToken + "; the vendor from --vendor or " + envVendorID + ", else the account's only one.",
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
@@ -395,6 +425,7 @@ func newGenDeployCommand() *cobra.Command {
 					Privacy:          skillpkg.Privacy{AllowsPurchases: &no, UsesPersonalInfo: &no, IsChildDirected: &no, IsExportCompliant: &yes, ContainsAds: &no},
 				},
 				Force:           true,
+				Disabled:        true,
 				SilentRetryWait: retryWait,
 				Progress: func(ev deploy.Event) {
 					if ev.Message != "" {

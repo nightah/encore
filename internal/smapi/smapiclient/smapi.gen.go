@@ -4670,6 +4670,16 @@ type ClientInterface interface {
 	// Returns the skill manifest for given skillId and stage.
 	GetSkillManifestV1(ctx context.Context, skillID string, stageV2 string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// DeleteSkillEnablementV1 performs a DELETE /v1/skills/{skillId}/stages/{stage}/enablement (the `DeleteSkillEnablementV1` operationId) request.
+	//
+	// Deletes the enablement for given skillId/stage and customerId (retrieved from Auth token).
+	DeleteSkillEnablementV1(ctx context.Context, skillID string, stage string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetSkillEnablementStatusV1 performs a GET /v1/skills/{skillId}/stages/{stage}/enablement (the `GetSkillEnablementStatusV1` operationId) request.
+	//
+	// Checks whether an enablement exist for given skillId/stage and customerId (retrieved from Auth token).
+	GetSkillEnablementStatusV1(ctx context.Context, skillID string, stage string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// SetSkillEnablementV1 performs a PUT /v1/skills/{skillId}/stages/{stage}/enablement (the `SetSkillEnablementV1` operationId) request.
 	//
 	// Creates/Updates the enablement for given skillId/stage and customerId (retrieved from Auth token).
@@ -4859,6 +4869,36 @@ func (c *Client) GetInteractionModelV1(ctx context.Context, skillID string, stag
 // Returns the skill manifest for given skillId and stage.
 func (c *Client) GetSkillManifestV1(ctx context.Context, skillID string, stageV2 string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetSkillManifestV1Request(c.Server, skillID, stageV2)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteSkillEnablementV1 performs a DELETE /v1/skills/{skillId}/stages/{stage}/enablement (the `DeleteSkillEnablementV1` operationId) request.
+//
+// Deletes the enablement for given skillId/stage and customerId (retrieved from Auth token).
+func (c *Client) DeleteSkillEnablementV1(ctx context.Context, skillID string, stage string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteSkillEnablementV1Request(c.Server, skillID, stage)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetSkillEnablementStatusV1 performs a GET /v1/skills/{skillId}/stages/{stage}/enablement (the `GetSkillEnablementStatusV1` operationId) request.
+//
+// Checks whether an enablement exist for given skillId/stage and customerId (retrieved from Auth token).
+func (c *Client) GetSkillEnablementStatusV1(ctx context.Context, skillID string, stage string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSkillEnablementStatusV1Request(c.Server, skillID, stage)
 	if err != nil {
 		return nil, err
 	}
@@ -5345,6 +5385,88 @@ func NewGetSkillManifestV1Request(server string, skillID string, stageV2 string)
 	return req, nil
 }
 
+// NewDeleteSkillEnablementV1Request constructs an http.Request for the DeleteSkillEnablementV1 method
+func NewDeleteSkillEnablementV1Request(server string, skillID string, stage string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "skillId", skillID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "stage", stage, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/skills/%s/stages/%s/enablement", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetSkillEnablementStatusV1Request constructs an http.Request for the GetSkillEnablementStatusV1 method
+func NewGetSkillEnablementStatusV1Request(server string, skillID string, stage string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "skillId", skillID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "stage", stage, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/skills/%s/stages/%s/enablement", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewSetSkillEnablementV1Request constructs an http.Request for the SetSkillEnablementV1 method
 func NewSetSkillEnablementV1Request(server string, skillID string, stage string) (*http.Request, error) {
 	var err error
@@ -5744,6 +5866,20 @@ type ClientWithResponsesInterface interface {
 	//
 	// Returns a wrapper object for the known response body format(s).
 	GetSkillManifestV1WithResponse(ctx context.Context, skillID string, stageV2 string, reqEditors ...RequestEditorFn) (*GetSkillManifestV1Response, error)
+
+	// DeleteSkillEnablementV1WithResponse performs a DELETE /v1/skills/{skillId}/stages/{stage}/enablement (the `DeleteSkillEnablementV1` operationId) request.
+	//
+	// Deletes the enablement for given skillId/stage and customerId (retrieved from Auth token).
+	//
+	// Returns a wrapper object for the known response body format(s).
+	DeleteSkillEnablementV1WithResponse(ctx context.Context, skillID string, stage string, reqEditors ...RequestEditorFn) (*DeleteSkillEnablementV1Response, error)
+
+	// GetSkillEnablementStatusV1WithResponse performs a GET /v1/skills/{skillId}/stages/{stage}/enablement (the `GetSkillEnablementStatusV1` operationId) request.
+	//
+	// Checks whether an enablement exist for given skillId/stage and customerId (retrieved from Auth token).
+	//
+	// Returns a wrapper object for the known response body format(s).
+	GetSkillEnablementStatusV1WithResponse(ctx context.Context, skillID string, stage string, reqEditors ...RequestEditorFn) (*GetSkillEnablementStatusV1Response, error)
 
 	// SetSkillEnablementV1WithResponse performs a PUT /v1/skills/{skillId}/stages/{stage}/enablement (the `SetSkillEnablementV1` operationId) request.
 	//
@@ -6494,6 +6630,200 @@ func (r GetSkillManifestV1Response) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetSkillManifestV1Response) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// DeleteSkillEnablementV1Response204Headers the declared response headers of an HTTP 204 response for DeleteSkillEnablementV1
+type DeleteSkillEnablementV1Response204Headers struct {
+	ContentType *string
+}
+
+// DeleteSkillEnablementV1Response401Headers the declared response headers of an HTTP 401 response for DeleteSkillEnablementV1
+type DeleteSkillEnablementV1Response401Headers struct {
+	WWWAuthenticate *string
+}
+
+type DeleteSkillEnablementV1Response struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *V1BadRequestError
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *V1SkillStandardizedError
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *V1BadRequestError
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *V1SkillStandardizedError
+	// JSON429 the response for an HTTP 429 `application/json` response
+	JSON429 *V1SkillStandardizedError
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *V1SkillStandardizedError
+	// JSON503 the response for an HTTP 503 `application/json` response
+	JSON503 *V1SkillStandardizedError
+	// Headers204 the parsed response headers for an HTTP 204 response
+	Headers204 *DeleteSkillEnablementV1Response204Headers
+	// Headers401 the parsed response headers for an HTTP 401 response
+	Headers401 *DeleteSkillEnablementV1Response401Headers
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r DeleteSkillEnablementV1Response) GetJSON400() *V1BadRequestError {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r DeleteSkillEnablementV1Response) GetJSON401() *V1SkillStandardizedError {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r DeleteSkillEnablementV1Response) GetJSON403() *V1BadRequestError {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r DeleteSkillEnablementV1Response) GetJSON404() *V1SkillStandardizedError {
+	return r.JSON404
+}
+
+// GetJSON429 returns the response for an HTTP 429 `application/json` response
+func (r DeleteSkillEnablementV1Response) GetJSON429() *V1SkillStandardizedError {
+	return r.JSON429
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r DeleteSkillEnablementV1Response) GetJSON500() *V1SkillStandardizedError {
+	return r.JSON500
+}
+
+// GetJSON503 returns the response for an HTTP 503 `application/json` response
+func (r DeleteSkillEnablementV1Response) GetJSON503() *V1SkillStandardizedError {
+	return r.JSON503
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteSkillEnablementV1Response) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteSkillEnablementV1Response) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteSkillEnablementV1Response) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteSkillEnablementV1Response) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// GetSkillEnablementStatusV1Response204Headers the declared response headers of an HTTP 204 response for GetSkillEnablementStatusV1
+type GetSkillEnablementStatusV1Response204Headers struct {
+	ContentType *string
+}
+
+// GetSkillEnablementStatusV1Response401Headers the declared response headers of an HTTP 401 response for GetSkillEnablementStatusV1
+type GetSkillEnablementStatusV1Response401Headers struct {
+	WWWAuthenticate *string
+}
+
+type GetSkillEnablementStatusV1Response struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *V1BadRequestError
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *V1SkillStandardizedError
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *V1BadRequestError
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *V1SkillStandardizedError
+	// JSON429 the response for an HTTP 429 `application/json` response
+	JSON429 *V1SkillStandardizedError
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *V1SkillStandardizedError
+	// JSON503 the response for an HTTP 503 `application/json` response
+	JSON503 *V1SkillStandardizedError
+	// Headers204 the parsed response headers for an HTTP 204 response
+	Headers204 *GetSkillEnablementStatusV1Response204Headers
+	// Headers401 the parsed response headers for an HTTP 401 response
+	Headers401 *GetSkillEnablementStatusV1Response401Headers
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetSkillEnablementStatusV1Response) GetJSON400() *V1BadRequestError {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetSkillEnablementStatusV1Response) GetJSON401() *V1SkillStandardizedError {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r GetSkillEnablementStatusV1Response) GetJSON403() *V1BadRequestError {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GetSkillEnablementStatusV1Response) GetJSON404() *V1SkillStandardizedError {
+	return r.JSON404
+}
+
+// GetJSON429 returns the response for an HTTP 429 `application/json` response
+func (r GetSkillEnablementStatusV1Response) GetJSON429() *V1SkillStandardizedError {
+	return r.JSON429
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetSkillEnablementStatusV1Response) GetJSON500() *V1SkillStandardizedError {
+	return r.JSON500
+}
+
+// GetJSON503 returns the response for an HTTP 503 `application/json` response
+func (r GetSkillEnablementStatusV1Response) GetJSON503() *V1SkillStandardizedError {
+	return r.JSON503
+}
+
+// GetBody returns the raw response body bytes
+func (r GetSkillEnablementStatusV1Response) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetSkillEnablementStatusV1Response) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetSkillEnablementStatusV1Response) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetSkillEnablementStatusV1Response) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -7306,6 +7636,32 @@ func (c *ClientWithResponses) GetSkillManifestV1WithResponse(ctx context.Context
 	return ParseGetSkillManifestV1Response(rsp)
 }
 
+// DeleteSkillEnablementV1WithResponse performs a DELETE /v1/skills/{skillId}/stages/{stage}/enablement (the `DeleteSkillEnablementV1` operationId) request.
+//
+// Deletes the enablement for given skillId/stage and customerId (retrieved from Auth token).
+//
+// Returns a wrapper object for the known response body format(s).
+func (c *ClientWithResponses) DeleteSkillEnablementV1WithResponse(ctx context.Context, skillID string, stage string, reqEditors ...RequestEditorFn) (*DeleteSkillEnablementV1Response, error) {
+	rsp, err := c.DeleteSkillEnablementV1(ctx, skillID, stage, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteSkillEnablementV1Response(rsp)
+}
+
+// GetSkillEnablementStatusV1WithResponse performs a GET /v1/skills/{skillId}/stages/{stage}/enablement (the `GetSkillEnablementStatusV1` operationId) request.
+//
+// Checks whether an enablement exist for given skillId/stage and customerId (retrieved from Auth token).
+//
+// Returns a wrapper object for the known response body format(s).
+func (c *ClientWithResponses) GetSkillEnablementStatusV1WithResponse(ctx context.Context, skillID string, stage string, reqEditors ...RequestEditorFn) (*GetSkillEnablementStatusV1Response, error) {
+	rsp, err := c.GetSkillEnablementStatusV1(ctx, skillID, stage, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetSkillEnablementStatusV1Response(rsp)
+}
+
 // SetSkillEnablementV1WithResponse performs a PUT /v1/skills/{skillId}/stages/{stage}/enablement (the `SetSkillEnablementV1` operationId) request.
 //
 // Creates/Updates the enablement for given skillId/stage and customerId (retrieved from Auth token).
@@ -8077,6 +8433,194 @@ func ParseGetSkillManifestV1Response(rsp *http.Response) (*GetSkillManifestV1Res
 		response.Headers303 = &headers
 	case rsp.StatusCode == 401:
 		var headers GetSkillManifestV1Response401Headers
+		if values := rsp.Header.Values("WWW-Authenticate"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "WWW-Authenticate", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.WWWAuthenticate = &value
+		}
+		response.Headers401 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseDeleteSkillEnablementV1Response parses an HTTP response from a DeleteSkillEnablementV1WithResponse call
+func ParseDeleteSkillEnablementV1Response(rsp *http.Response) (*DeleteSkillEnablementV1Response, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteSkillEnablementV1Response{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest V1BadRequestError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest V1BadRequestError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		var headers DeleteSkillEnablementV1Response204Headers
+		if values := rsp.Header.Values("Content-Type"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Content-Type", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ContentType = &value
+		}
+		response.Headers204 = &headers
+	case rsp.StatusCode == 401:
+		var headers DeleteSkillEnablementV1Response401Headers
+		if values := rsp.Header.Values("WWW-Authenticate"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "WWW-Authenticate", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.WWWAuthenticate = &value
+		}
+		response.Headers401 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseGetSkillEnablementStatusV1Response parses an HTTP response from a GetSkillEnablementStatusV1WithResponse call
+func ParseGetSkillEnablementStatusV1Response(rsp *http.Response) (*GetSkillEnablementStatusV1Response, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetSkillEnablementStatusV1Response{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest V1BadRequestError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest V1BadRequestError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		var headers GetSkillEnablementStatusV1Response204Headers
+		if values := rsp.Header.Values("Content-Type"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Content-Type", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ContentType = &value
+		}
+		response.Headers204 = &headers
+	case rsp.StatusCode == 401:
+		var headers GetSkillEnablementStatusV1Response401Headers
 		if values := rsp.Header.Values("WWW-Authenticate"); len(values) > 0 {
 			var value string
 			if err := runtime.BindStyledParameterWithOptions("simple", "WWW-Authenticate", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {

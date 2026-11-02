@@ -45,6 +45,7 @@ func New(t testing.TB, opts Options) *Server {
 		opts:        opts,
 		tokens:      map[string]time.Time{},
 		calls:       map[string]int{},
+		injectRoute: map[string]int{},
 		failLocales: map[string]string{},
 		unreported:  map[string]bool{},
 		unimported:  map[string]bool{},
@@ -149,6 +150,14 @@ func (s *Server) Inject(status, n int) {
 	for range n {
 		s.inject = append(s.inject, status)
 	}
+}
+
+// InjectRoute makes the next call to the route pattern, e.g. "DELETE /v1/skills/{skillId}/stages/{stage}/enablement", fail with status.
+func (s *Server) InjectRoute(pattern string, status int) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.injectRoute[pattern] = status
 }
 
 // Injected reports how many injected failures have been served.

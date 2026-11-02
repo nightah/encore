@@ -132,7 +132,38 @@ func TestGenOpenEveryLocaleByDefault(t *testing.T) {
 	require.NoError(t, err)
 	assert.Contains(t, out, "reached: none\n")
 	assert.Contains(t, out, "REFUSED     pt-BR\n")
-	assert.Contains(t, out, "NOT REACHED ja-JP\n  “アンコールを開いて”: smapi: simulate: HTTP 409: skill is not enabled for testing\n")
+	assert.Contains(t, out, "NOT REACHED ja-JP\n  “アンコールを開いて”: Alexa said “Sorry, I don't know that.”\n", "a skill that isn't enabled is enabled while it's checked")
+}
+
+func TestGenOpenLeavesAnEnabledSkillEnabled(t *testing.T) {
+	fake, flags := liveFake(t)
+	skill := deployedSkill(t, fake, "en-GB")
+
+	_, stderr, err := runCLI(t, append([]string{"gen", "open", "--skill", skill, "--locale", "en-GB"}, flags...)...)
+	require.NoError(t, err)
+	assert.NotContains(t, stderr, "enabled the skill")
+
+	sk, _ := fake.Skill(skill)
+	assert.True(t, sk.Enabled, "a skill that was enabled, such as your own, stays enabled")
+	assert.Equal(t, 0, fake.Calls("DELETE /v1/skills/{skillId}/stages/{stage}/enablement"))
+}
+
+func TestGenOpenEnablementFailures(t *testing.T) {
+	for name, call := range map[string]string{
+		"status":  "GET /v1/skills/{skillId}/stages/{stage}/enablement",
+		"enable":  "PUT /v1/skills/{skillId}/stages/{stage}/enablement",
+		"disable": "DELETE /v1/skills/{skillId}/stages/{stage}/enablement",
+	} {
+		t.Run(name, func(t *testing.T) {
+			fake, flags := liveFake(t)
+			skill := fake.AddSkill(smapitest.DefaultVendorID, nil)
+			fake.InjectRoute(call, http.StatusForbidden)
+
+			out, _, err := runCLI(t, append([]string{"gen", "open", "--skill", skill, "--locale", "en-GB"}, flags...)...)
+			require.ErrorContains(t, err, "403")
+			assert.Empty(t, out, "no report from a check that couldn't set the skill up or put it back")
+		})
+	}
 }
 
 func TestWriteOpenChecksReportsWriteErrors(t *testing.T) {
@@ -262,16 +293,21 @@ func TestGenDeploy(t *testing.T) {
 
 	sk, ok := fake.Skill(skill)
 	require.True(t, ok)
-	assert.True(t, sk.Enabled)
+	assert.False(t, sk.Enabled, "left disabled, so it doesn't answer on your Echos")
 	assert.Equal(t, map[string]string{"en-GB": ciSkillName, "ja-JP": ciSkillName}, sk.Names)
 	assert.Contains(t, string(sk.Manifest), ciEndpoint)
 	assert.Contains(t, string(sk.Models["en-GB"]), `"invocationName":"kodi"`)
 	assert.Contains(t, string(sk.Models["en-GB"]), `{"name":{"value":"dune"}}`, "the fixtures' titles stand in for a library")
 	assert.Equal(t, 1, fake.SkillCount(), "no other skill is created")
 
-	out, _, err = runCLI(t, append([]string{"gen", "open", "--skill", skill, "--invocation", "kodi", "--locale", "en-GB"}, flags...)...)
+	out, stderr, err = runCLI(t, append([]string{"gen", "open", "--skill", skill, "--invocation", "kodi", "--locale", "en-GB"}, flags...)...)
 	require.NoError(t, err)
 	assert.Contains(t, out, "REACHED     en-GB\n  “open kodi”: reached the skill\n", "gen open checks what gen deploy deployed")
+	assert.Contains(t, stderr, "enabled the skill for testing while it's checked")
+	assert.Contains(t, stderr, "disabled the skill for testing again")
+
+	sk, _ = fake.Skill(skill)
+	assert.False(t, sk.Enabled, "gen open disables it again")
 
 	t.Setenv(envVendorID, smapitest.DefaultVendorID)
 	fake.FailLocale("en-GB", "a sample conflicts with another intent")
@@ -374,7 +410,7 @@ func TestGenDeployFailsWhenUnlistedOrUnwritable(t *testing.T) {
 	require.ErrorIs(t, runCLIWith(t.Context(), t, &failAfter{}, args...), assert.AnError)
 
 	sk, _ := fake.Skill(skill)
-	assert.True(t, sk.Enabled, "the deploy itself went through")
+	assert.NotEmpty(t, sk.Models["en-AU"], "the deploy itself went through")
 }
 
 func TestStandInLibrary(t *testing.T) {

@@ -124,7 +124,7 @@ Profiling reads the built models, so deploy first, and expect the odd row to nee
 
 ### A skill for the checks
 
-Profiling a skill Encore deploys checks whatever model it last built, with your library's titles. To check the model in your working tree instead, keep a second skill for these checks and deploy to it with `make nlu-deploy` (`encore gen deploy`). It builds the package from the sources, deploys it to the skill `SMAPI_SKILL_ID` names, waits for every locale's model to build and enables the skill for testing. It refuses any skill not named `Encore NLU CI` in every locale it has a name in, so it can't replace the skill Encore deploys for you, and Encore, which looks its own skill up by the name "Encore", never adopts this one.
+Profiling a skill Encore deploys checks whatever model it last built, with your library's titles. To check the model in your working tree instead, keep a second skill for these checks and deploy to it with `make nlu-deploy` (`encore gen deploy`). It builds the package from the sources, deploys it to the skill `SMAPI_SKILL_ID` names, waits for every locale's model to build and leaves the skill disabled for testing, so your Echos never reach it: `make nlu` needs no enablement, and `make nlu-open` enables the skill only while it checks, then disables it again (a skill that was already enabled, such as your own, stays enabled). It refuses any skill not named `Encore NLU CI` in every locale it has a name in, so it can't replace the skill Encore deploys for you, and Encore, which looks its own skill up by the name "Encore", never adopts this one.
 
 1. In the [Alexa developer console](https://developer.amazon.com/alexa/console/ask), create a skill named `Encore NLU CI` in any locale, with the Custom model, "Provision your own" hosting and "Start from scratch". The deploy adds the other locales.
 2. Copy its ID from the skill list. The same security profile and refresh token reach every skill in the developer account.
@@ -137,7 +137,7 @@ make nlu
 make nlu-open NLU_INVOCATION=encore
 ```
 
-An enabled skill answers on your own Echos too, so give it the invocation your everyday skill doesn't use: `NLU_INVOCATION` is `encore` or `kodi`. Its endpoint is a placeholder neither check reaches, so opening it on an Echo only gets an error. Leave it unpublished. Now and then Amazon fails a whole import of many locales without saying why (the deploy reports "import failed: no details reported"), most often just after another import failed; the same deploy run again goes through.
+While `make nlu-open` checks it, the skill answers on your own Echos too, so give it the invocation your everyday skill doesn't use: `NLU_INVOCATION` is `encore` or `kodi`. Its endpoint is a placeholder neither check reaches, so opening it on an Echo only gets an error. Leave it unpublished. Now and then Amazon fails a whole import of many locales without saying why (the deploy reports "import failed: no details reported"), most often just after another import failed; the same deploy run again goes through.
 
 In place of a library, each locale's model gets the titles its fixtures ask for (`breaking bad`, `queen` and so on) in the built-in title types, as Encore adds a library's titles. Without them Alexa reads title requests as a skill with an empty library would: most go to the catch-all search, and on the English locales `AMAZON.Musician` swaps a spoken artist for an entity of Amazon's own ("queen" comes back as "Paula Abdul").
 

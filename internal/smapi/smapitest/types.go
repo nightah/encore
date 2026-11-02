@@ -13,14 +13,16 @@ type Server struct {
 
 	opts Options
 
-	mu          sync.Mutex
-	seq         int
-	tokens      map[string]time.Time
-	revoked     bool
-	refreshes   int
-	exchanges   int
-	calls       map[string]int
-	inject      []int
+	mu        sync.Mutex
+	seq       int
+	tokens    map[string]time.Time
+	revoked   bool
+	refreshes int
+	exchanges int
+	calls     map[string]int
+	inject    []int
+	// injectRoute fail the next call to each route pattern with the status.
+	injectRoute map[string]int
 	injectN     int
 	failLocales map[string]string
 	// unreported are locales left out of the skill status, as when a failed import is rolled back before Amazon records a build.

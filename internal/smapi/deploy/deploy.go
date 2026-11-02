@@ -148,13 +148,23 @@ func (r *run) deploy(ctx context.Context) error {
 		}
 	}
 
-	r.start(StepEnable, "Enabling the skill for testing")
+	if r.req.Disabled {
+		r.start(StepEnable, "Disabling the skill for testing")
 
-	if err := r.d.client.EnableDevelopment(ctx, r.res.State.SkillID); err != nil {
-		return err
+		if err := r.d.client.DisableDevelopment(ctx, r.res.State.SkillID); err != nil {
+			return err
+		}
+
+		r.done("Not enabled on any device")
+	} else {
+		r.start(StepEnable, "Enabling the skill for testing")
+
+		if err := r.d.client.EnableDevelopment(ctx, r.res.State.SkillID); err != nil {
+			return err
+		}
+
+		r.done("Enabled on devices registered to your Amazon account")
 	}
-
-	r.done("Enabled on devices registered to your Amazon account")
 
 	if err := r.simulate(ctx); err != nil {
 		return err

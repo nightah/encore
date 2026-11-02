@@ -17,7 +17,9 @@ var operations = []string{
 	"getImportStatusV1",    // GET /v1/skills/imports/{importId}
 
 	// Enablement.
-	"setSkillEnablementV1", // PUT /v1/skills/{skillId}/stages/{stage}/enablement
+	"getSkillEnablementStatusV1", // GET /v1/skills/{skillId}/stages/{stage}/enablement
+	"setSkillEnablementV1",       // PUT /v1/skills/{skillId}/stages/{stage}/enablement
+	"deleteSkillEnablementV1",    // DELETE /v1/skills/{skillId}/stages/{stage}/enablement
 
 	// Interaction models.
 	"getInteractionModelV1", // GET /v1/skills/{skillId}/stages/{stage}/interactionModel/locales/{locale}
