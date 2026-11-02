@@ -5,7 +5,7 @@ cases:
   - {utterance: "cancelar", intent: AMAZON.CancelIntent}
   - {utterance: "ajuda", intent: AMAZON.HelpIntent}
   - {utterance: "pare", intent: AMAZON.StopIntent, also: [{intent: RoomControl, slots: {Command: stop}}]}
-  - {utterance: "vá para o início", intent: AMAZON.NavigateHomeIntent}
+  - {utterance: "vá para o início", intent: AMAZON.NavigateHomeIntent, also: [{intent: Navigate, slots: {NavAction: home}}]}
   - {utterance: "elefantes roxos dançando na lua", intent: AMAZON.FallbackIntent}
   - {utterance: "pausa a tv", intent: AMAZON.PauseIntent}
   - {utterance: "continua a tv", intent: AMAZON.ResumeIntent}
@@ -21,7 +21,7 @@ cases:
   - {utterance: "quero assistir o filme cidade de deus", intent: WatchMovie, slots: {Movie: "cidade de deus"}}
   - {utterance: "continua assistindo sintonia", intent: WatchNextEpisode, slots: {Show: "sintonia"}}
   - {utterance: "encontra cidade de deus", intent: PlayMedia, slots: {Query: "cidade de deus"}}
-  - {utterance: "a segunda por favor", intent: ChooseMatch, slots: {Which: "second"}, pending: "ChooseMatch is in the model from the next deploy"}
+  - {utterance: "a segunda por favor", intent: ChooseMatch, slots: {Which: "second"}}
   - {utterance: "escolhe um filme de comédia para mim", intent: WatchRandomMovie, slots: {Genre: ""}}
   - {utterance: "coloca o trailer", intent: WatchMovieTrailer}
   - {utterance: "continua a coleção cidade de deus", intent: WatchNextInCollection, slots: {Movie: "cidade de deus"}}
@@ -71,7 +71,7 @@ cases:
   - {utterance: "identifica este echo", intent: IdentifyEcho}
   - {utterance: "próxima a legenda", intent: Subtitles, slots: {SubtitleAction: "next"}}
   - {utterance: "próximo áudio", intent: AudioStream, slots: {Step: "next"}}
-  - {utterance: "vai voltar", intent: Navigate, slots: {NavAction: "back"}}
+  - {utterance: "vai voltar", intent: Navigate, slots: {NavAction: "back"}, also: [{intent: PlayerRewind}]}
   - {utterance: "digita o texto olá", intent: TypeText, slots: {Text: ""}}
   - {utterance: "mostra os filmes", intent: ViewLibrary, slots: {Section: "movies"}}
   - {utterance: "mostra a playlist de música viagem", intent: ViewPlaylist, slots: {Playlist: ""}}
@@ -85,7 +85,7 @@ cases:
   # Answers to "did you mean …?".
   - {utterance: "sim por favor", intent: AMAZON.YesIntent}
   - {utterance: "não obrigado", intent: AMAZON.NoIntent}
-  - {utterance: "eu quis dizer o mais antigo", intent: ChooseMatch, slots: {Which: "older"}, pending: "ChooseMatch is in the model from the next deploy"}
+  - {utterance: "eu quis dizer o mais antigo", intent: ChooseMatch, slots: {Which: "older"}}
   # Bare titles, which free-text and title slots compete for.
   - {utterance: "toca cidade de deus", intent: PlayMedia, slots: {Query: "cidade de deus"}}
   - {utterance: "coloca cidade de deus", intent: PlayMedia, slots: {Query: "cidade de deus"}}

@@ -5,7 +5,7 @@ cases:
   - {utterance: "annulla", intent: AMAZON.CancelIntent}
   - {utterance: "aiuto", intent: AMAZON.HelpIntent}
   - {utterance: "stop", intent: AMAZON.StopIntent, also: [{intent: RoomControl, slots: {Command: stop}}]}
-  - {utterance: "torna alla home", intent: AMAZON.NavigateHomeIntent}
+  - {utterance: "torna alla home", intent: AMAZON.NavigateHomeIntent, also: [{intent: Navigate, slots: {NavAction: home}}]}
   - {utterance: "elefanti viola che ballano sulla luna", intent: AMAZON.FallbackIntent}
   - {utterance: "metti in pausa la tv", intent: AMAZON.PauseIntent}
   - {utterance: "riprendi la tv", intent: AMAZON.ResumeIntent}
@@ -21,7 +21,7 @@ cases:
   - {utterance: "voglio vedere il film la vita è bella", intent: WatchMovie, slots: {Movie: "la vita è bella"}}
   - {utterance: "continua a guardare gomorra", intent: WatchNextEpisode, slots: {Show: "gomorra"}}
   - {utterance: "trova gomorra", intent: PlayMedia, slots: {Query: "gomorra"}}
-  - {utterance: "la seconda per favore", intent: ChooseMatch, slots: {Which: "second"}, pending: "ChooseMatch is in the model from the next deploy"}
+  - {utterance: "la seconda per favore", intent: ChooseMatch, slots: {Which: "second"}}
   - {utterance: "scegli tu un film di commedia per me", intent: WatchRandomMovie, slots: {Genre: ""}}
   - {utterance: "metti il trailer", intent: WatchMovieTrailer}
   - {utterance: "continua la saga di la vita è bella", intent: WatchNextInCollection, slots: {Movie: "la vita è bella"}}
@@ -71,7 +71,7 @@ cases:
   - {utterance: "come si chiama questo echo", intent: IdentifyEcho}
   - {utterance: "cambia i sottotitoli", intent: Subtitles, slots: {SubtitleAction: "next"}}
   - {utterance: "cambia audio", intent: AudioStream, slots: {Step: "next"}}
-  - {utterance: "vai indietro", intent: Navigate, slots: {NavAction: "back"}}
+  - {utterance: "vai indietro", intent: Navigate, slots: {NavAction: "back"}, also: [{intent: PlayerRewind}]}
   - {utterance: "detta ciao", intent: TypeText, slots: {Text: ""}}
   - {utterance: "mostra i miei film", intent: ViewLibrary, slots: {Section: "movies"}}
   - {utterance: "mostra la playlist musicale viaggio", intent: ViewPlaylist, slots: {Playlist: ""}}
@@ -85,9 +85,8 @@ cases:
   # Answers to "did you mean …?".
   - {utterance: "sì grazie", intent: AMAZON.YesIntent}
   - {utterance: "no grazie", intent: AMAZON.NoIntent}
-  - {utterance: "intendevo il più vecchio", intent: ChooseMatch, slots: {Which: "older"}, pending: "ChooseMatch is in the model from the next deploy"}
-  - {utterance: "intendevo l'altro", intent: ChooseMatch, slots: {Which: "second"}, pending: "ChooseMatch is in the model from the next deploy"}
-  - {utterance: "l'ultimo", intent: ChooseMatch, slots: {Which: "last"}, pending: "ChooseMatch is in the model from the next deploy"}
+  - {utterance: "intendevo il più vecchio", intent: ChooseMatch, slots: {Which: "older"}}
+  - {utterance: "intendevo l'altro", intent: ChooseMatch, slots: {Which: "second"}}
   # Bare titles, which free-text and title slots compete for.
   - {utterance: "riproduci gomorra", intent: PlayMedia, slots: {Query: "gomorra"}}
   - {utterance: "metti gomorra", intent: PlayMedia, slots: {Query: "gomorra"}}

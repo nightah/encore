@@ -5,7 +5,7 @@ cases:
   - {utterance: "annuleer", intent: AMAZON.CancelIntent}
   - {utterance: "help", intent: AMAZON.HelpIntent}
   - {utterance: "stop", intent: AMAZON.StopIntent, also: [{intent: RoomControl, slots: {Command: stop}}]}
-  - {utterance: "ga naar het startscherm", intent: AMAZON.NavigateHomeIntent}
+  - {utterance: "ga naar het startscherm", intent: AMAZON.NavigateHomeIntent, also: [{intent: Navigate, slots: {NavAction: home}}]}
   - {utterance: "paarse olifanten dansen op de maan", intent: AMAZON.FallbackIntent}
   - {utterance: "pauzeer de tv", intent: AMAZON.PauseIntent}
   - {utterance: "hervat de tv", intent: AMAZON.ResumeIntent}
@@ -20,8 +20,8 @@ cases:
   - {utterance: "herhalen uit", intent: AMAZON.LoopOffIntent, also: [{intent: Repeat, slots: {RepeatMode: "off"}}]}
   - {utterance: "ik wil de film zwartboek kijken", intent: WatchMovie, slots: {Movie: "zwartboek"}}
   - {utterance: "ga verder met de luizenmoeder", intent: WatchNextEpisode, slots: {Show: "de luizenmoeder"}}
-  - {utterance: "zoek zwartboek", intent: PlayMedia, slots: {Query: "zwartboek"}, pending: "nl-NL takes AMAZON.SearchQuery from the next deploy"}
-  - {utterance: "de tweede graag", intent: ChooseMatch, slots: {Which: "second"}, pending: "ChooseMatch is in the model from the next deploy"}
+  - {utterance: "zoek zwartboek", intent: PlayMedia, slots: {Query: "zwartboek"}}
+  - {utterance: "de tweede graag", intent: ChooseMatch, slots: {Which: "second"}}
   - {utterance: "kies een komedie film voor me", intent: WatchRandomMovie, slots: {Genre: ""}}
   - {utterance: "speel de trailer", intent: WatchMovieTrailer}
   - {utterance: "ga verder met de zwartboek reeks", intent: WatchNextInCollection, slots: {Movie: "zwartboek"}}
@@ -71,13 +71,13 @@ cases:
   - {utterance: "identificeer deze echo", intent: IdentifyEcho}
   - {utterance: "volgende de ondertiteling", intent: Subtitles, slots: {SubtitleAction: "next"}}
   - {utterance: "volgende audiospoor", intent: AudioStream, slots: {Step: "next"}}
-  - {utterance: "ga terug", intent: Navigate, slots: {NavAction: "back"}}
-  - {utterance: "voer de tekst hallo in", intent: TypeText, slots: {Text: ""}, pending: "nl-NL takes AMAZON.SearchQuery from the next deploy"}
+  - {utterance: "ga terug", intent: Navigate, slots: {NavAction: "back"}, also: [{intent: PlayerRewind}]}
+  - {utterance: "voer de tekst hallo in", intent: TypeText, slots: {Text: ""}}
   - {utterance: "toon de films", intent: ViewLibrary, slots: {Section: "movies"}}
   - {utterance: "toon de muziek afspeellijst roadtrip", intent: ViewPlaylist, slots: {Playlist: ""}}
-  - {utterance: "open mijn favoriet npo start", intent: OpenFavourite, slots: {Favourite: ""}, pending: "nl-NL takes AMAZON.SearchQuery from the next deploy"}
-  - {utterance: "voer youtube uit", intent: LaunchAddon, slots: {Addon: ""}, pending: "nl-NL takes AMAZON.SearchQuery from the next deploy"}
-  - {utterance: "doe een globale zoekopdracht naar zwartboek", intent: GlobalSearch, slots: {Query: "zwartboek"}, pending: "nl-NL takes AMAZON.SearchQuery from the next deploy"}
+  - {utterance: "open mijn favoriet npo start", intent: OpenFavourite, slots: {Favourite: ""}}
+  - {utterance: "voer youtube uit", intent: LaunchAddon, slots: {Addon: ""}}
+  - {utterance: "doe een globale zoekopdracht naar zwartboek", intent: GlobalSearch, slots: {Query: "zwartboek"}}
   - {utterance: "sluimerstand kodi", intent: Power, slots: {PowerAction: "hibernate"}}
   - {utterance: "uitwerpen", intent: EjectMedia}
   - {utterance: "zoek naar nieuwe films", intent: UpdateLibrary}
@@ -85,11 +85,11 @@ cases:
   # Answers to "did you mean …?".
   - {utterance: "ja graag", intent: AMAZON.YesIntent}
   - {utterance: "nee dank je", intent: AMAZON.NoIntent}
-  - {utterance: "ik bedoel de oudere", intent: ChooseMatch, slots: {Which: "older"}, pending: "ChooseMatch is in the model from the next deploy"}
+  - {utterance: "ik bedoel de oudere", intent: ChooseMatch, slots: {Which: "older"}}
   # Bare titles, which free-text and title slots compete for.
-  - {utterance: "speel zwartboek", intent: PlayMedia, slots: {Query: "zwartboek"}, pending: "nl-NL takes AMAZON.SearchQuery from the next deploy"}
-  - {utterance: "zwartboek af te spelen", intent: PlayMedia, slots: {Query: "zwartboek"}, pending: "nl-NL takes AMAZON.SearchQuery from the next deploy"}
-  - {utterance: "zet zwartboek op", intent: PlayMedia, slots: {Query: "zwartboek"}, pending: "nl-NL takes AMAZON.SearchQuery from the next deploy"}
+  - {utterance: "speel zwartboek", intent: PlayMedia, slots: {Query: "zwartboek"}}
+  - {utterance: "zwartboek af te spelen", intent: PlayMedia, slots: {Query: "zwartboek"}}
+  - {utterance: "zet zwartboek op", intent: PlayMedia, slots: {Query: "zwartboek"}}
   # Rooms.
   - {utterance: "speel de film zwartboek in de slaapkamer", intent: WatchMovie, slots: {Movie: "zwartboek", Room: ""}}
   - {utterance: "de film zwartboek af te spelen in de slaapkamer", intent: WatchMovie, slots: {Movie: "zwartboek", Room: ""}}

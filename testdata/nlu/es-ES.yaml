@@ -5,7 +5,7 @@ cases:
   - {utterance: "cancela", intent: AMAZON.CancelIntent}
   - {utterance: "ayuda", intent: AMAZON.HelpIntent}
   - {utterance: "para", intent: AMAZON.StopIntent, also: [{intent: RoomControl, slots: {Command: stop}}]}
-  - {utterance: "ve al inicio", intent: AMAZON.NavigateHomeIntent}
+  - {utterance: "ve al inicio", intent: AMAZON.NavigateHomeIntent, also: [{intent: Navigate, slots: {NavAction: home}}]}
   - {utterance: "elefantes morados bailando en la luna", intent: AMAZON.FallbackIntent}
   - {utterance: "pausa la tele", intent: AMAZON.PauseIntent}
   - {utterance: "reanuda la tele", intent: AMAZON.ResumeIntent}
@@ -16,12 +16,12 @@ cases:
   - {utterance: "no", intent: AMAZON.NoIntent}
   - {utterance: "aleatorio activado", intent: AMAZON.ShuffleOnIntent}
   - {utterance: "aleatorio desactivado", intent: AMAZON.ShuffleOffIntent}
-  - {utterance: "repetición activado", intent: AMAZON.LoopOnIntent}
-  - {utterance: "repetición desactivado", intent: AMAZON.LoopOffIntent, also: [{intent: Repeat, slots: {RepeatMode: "off"}}]}
+  - {utterance: "repetición activada", intent: AMAZON.LoopOnIntent}
+  - {utterance: "repetición desactivada", intent: AMAZON.LoopOffIntent, also: [{intent: Repeat, slots: {RepeatMode: "off"}}]}
   - {utterance: "quiero ver la película el laberinto del fauno", intent: WatchMovie, slots: {Movie: "el laberinto del fauno"}}
   - {utterance: "sigue viendo la casa de papel", intent: WatchNextEpisode, slots: {Show: "la casa de papel"}}
   - {utterance: "encuentra la casa de papel", intent: PlayMedia, slots: {Query: "la casa de papel"}}
-  - {utterance: "la segunda por favor", intent: ChooseMatch, slots: {Which: "second"}, pending: "ChooseMatch is in the model from the next deploy"}
+  - {utterance: "la segunda por favor", intent: ChooseMatch, slots: {Which: "second"}}
   - {utterance: "elige una película de comedia por mí", intent: WatchRandomMovie, slots: {Genre: ""}}
   - {utterance: "pon el tráiler", intent: WatchMovieTrailer}
   - {utterance: "sigue con la saga el laberinto del fauno", intent: WatchNextInCollection, slots: {Movie: "el laberinto del fauno"}}
@@ -50,12 +50,12 @@ cases:
   - {utterance: "pon la lista de música viaje", intent: PlayPlaylist, slots: {Playlist: ""}}
   - {utterance: "pon mi lista de reproducción viaje en aleatorio", intent: ShufflePlaylist, slots: {Playlist: ""}}
   - {utterance: "dame una recomendación de película", intent: Recommend, slots: {MediaType: "movie"}}
-  - {utterance: "hay algún película nuevo", intent: WhatsNew, slots: {MediaType: "movie"}}
+  - {utterance: "hay alguna película nueva", intent: WhatsNew, slots: {MediaType: "movie"}}
   - {utterance: "dime los álbumes de shakira", intent: WhatAlbums, slots: {Artist: "shakira"}}
   - {utterance: "atrás cinco minutos", intent: PlayerSeek, slots: {Duration: "", SeekDirection: "back"}}
   - {utterance: "retrocede cinco minutos", intent: PlayerRewind, slots: {Duration: ""}}
   - {utterance: "salta a la posición cinco minutos", intent: PlayerSeekTo, slots: {Position: ""}}
-  - {utterance: "repetición todo", intent: Repeat, slots: {RepeatMode: "all"}}
+  - {utterance: "repite todo", intent: Repeat, slots: {RepeatMode: "all"}}
   - {utterance: "mejora la imagen", intent: PlayerZoom}
   - {utterance: "gira en el sentido de las agujas del reloj", intent: PlayerRotate, slots: {Rotation: "clockwise"}}
   - {utterance: "mueve la imagen abajo", intent: PlayerMove, slots: {Direction: "down"}}
@@ -71,9 +71,9 @@ cases:
   - {utterance: "cómo se llama este echo", intent: IdentifyEcho}
   - {utterance: "siguiente los subtítulos", intent: Subtitles, slots: {SubtitleAction: "next"}}
   - {utterance: "siguiente audio", intent: AudioStream, slots: {Step: "next"}}
-  - {utterance: "ve atrás", intent: Navigate, slots: {NavAction: "back"}}
+  - {utterance: "ve atrás", intent: Navigate, slots: {NavAction: "back"}, also: [{intent: PlayerRewind}]}
   - {utterance: "pon el texto hola", intent: TypeText, slots: {Text: ""}}
-  - {utterance: "muestra el películas", intent: ViewLibrary, slots: {Section: "movies"}}
+  - {utterance: "muestra las películas", intent: ViewLibrary, slots: {Section: "movies"}}
   - {utterance: "muestra la lista de música viaje", intent: ViewPlaylist, slots: {Playlist: ""}}
   - {utterance: "abre mi favorito rtve", intent: OpenFavourite, slots: {Favourite: ""}}
   - {utterance: "lanza youtube", intent: LaunchAddon, slots: {Addon: ""}}
@@ -85,7 +85,7 @@ cases:
   # Answers to "did you mean …?".
   - {utterance: "sí por favor", intent: AMAZON.YesIntent}
   - {utterance: "no gracias", intent: AMAZON.NoIntent}
-  - {utterance: "me refiero a la más antigua", intent: ChooseMatch, slots: {Which: "older"}, pending: "ChooseMatch is in the model from the next deploy"}
+  - {utterance: "me refiero a la más antigua", intent: ChooseMatch, slots: {Which: "older"}}
   # Bare titles, which free-text and title slots compete for.
   - {utterance: "reproduce la casa de papel", intent: PlayMedia, slots: {Query: "la casa de papel"}}
   - {utterance: "pon la casa de papel", intent: PlayMedia, slots: {Query: "la casa de papel"}}

@@ -5,7 +5,7 @@ cases:
   - {utterance: "रद्द करो", intent: AMAZON.CancelIntent}
   - {utterance: "मदद", intent: AMAZON.HelpIntent}
   - {utterance: "रुको", intent: AMAZON.StopIntent, also: [{intent: RoomControl, slots: {Command: stop}}]}
-  - {utterance: "होम पर जाओ", intent: AMAZON.NavigateHomeIntent}
+  - {utterance: "होम पर जाओ", intent: AMAZON.NavigateHomeIntent, also: [{intent: Navigate, slots: {NavAction: home}}]}
   - {utterance: "बैंगनी हाथी चाँद पर नाच रहे हैं", intent: AMAZON.FallbackIntent}
   - {utterance: "टीवी पॉज़ करो", intent: AMAZON.PauseIntent}
   - {utterance: "टीवी फिर से चलाओ", intent: AMAZON.ResumeIntent}
@@ -21,7 +21,7 @@ cases:
   - {utterance: "मुझे फ़िल्म शोले देखनी है", intent: WatchMovie, slots: {Movie: "शोले"}}
   - {utterance: "पंचायत देखना जारी रखो", intent: WatchNextEpisode, slots: {Show: "पंचायत"}}
   - {utterance: "शोले ढूँढो", intent: PlayMedia, slots: {Query: "शोले"}}
-  - {utterance: "दूसरा वाला चलाओ", intent: ChooseMatch, slots: {Which: "second"}, pending: "ChooseMatch is in the model from the next deploy"}
+  - {utterance: "दूसरा वाला चलाओ", intent: ChooseMatch, slots: {Which: "second"}}
   - {utterance: "मेरे लिए कोई एक्शन फ़िल्म चुनो", intent: WatchRandomMovie, slots: {Genre: ""}}
   - {utterance: "ट्रेलर दिखाओ", intent: WatchMovieTrailer}
   - {utterance: "शोले सीरीज़ जारी रखो", intent: WatchNextInCollection, slots: {Movie: "शोले"}}
@@ -71,7 +71,7 @@ cases:
   - {utterance: "इस इको की पहचान बताओ", intent: IdentifyEcho}
   - {utterance: "सबटाइटल बदलो", intent: Subtitles, slots: {SubtitleAction: "next"}}
   - {utterance: "अगला ऑडियो लगाओ", intent: AudioStream, slots: {Step: "next"}}
-  - {utterance: "पीछे जाओ", intent: Navigate, slots: {NavAction: "back"}}
+  - {utterance: "पीछे जाओ", intent: Navigate, slots: {NavAction: "back"}, also: [{intent: PlayerRewind}]}
   - {utterance: "टेक्स्ट नमस्ते डालो", intent: TypeText, slots: {Text: ""}}
   - {utterance: "मेरी फ़िल्में दिखाओ", intent: ViewLibrary, slots: {Section: "movies"}}
   - {utterance: "म्यूज़िक प्लेलिस्ट सफ़र दिखाओ", intent: ViewPlaylist, slots: {Playlist: ""}}
@@ -85,8 +85,8 @@ cases:
   # Answers to "did you mean …?".
   - {utterance: "हाँ जी", intent: AMAZON.YesIntent}
   - {utterance: "नहीं धन्यवाद", intent: AMAZON.NoIntent}
-  - {utterance: "मेरा मतलब पुराना वाला था", intent: ChooseMatch, slots: {Which: "older"}, pending: "ChooseMatch is in the model from the next deploy"}
-  - {utterance: "सबसे नया वाला", intent: ChooseMatch, slots: {Which: "newer"}, pending: "ChooseMatch is in the model from the next deploy"}
+  - {utterance: "मेरा मतलब पुराना वाला था", intent: ChooseMatch, slots: {Which: "older"}}
+  - {utterance: "सबसे नया वाला", intent: ChooseMatch, slots: {Which: "newer"}}
   # Bare titles, which free-text and title slots compete for.
   - {utterance: "शोले चलाओ", intent: PlayMedia, slots: {Query: "शोले"}}
   - {utterance: "शोले लगाओ", intent: PlayMedia, slots: {Query: "शोले"}}

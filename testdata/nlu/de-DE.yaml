@@ -5,7 +5,7 @@ cases:
   - {utterance: "abbrechen", intent: AMAZON.CancelIntent}
   - {utterance: "hilfe", intent: AMAZON.HelpIntent}
   - {utterance: "stopp", intent: AMAZON.StopIntent, also: [{intent: RoomControl, slots: {Command: stop}}]}
-  - {utterance: "geh zur startseite", intent: AMAZON.NavigateHomeIntent}
+  - {utterance: "geh zur startseite", intent: AMAZON.NavigateHomeIntent, also: [{intent: Navigate, slots: {NavAction: home}}]}
   - {utterance: "lila elefanten tanzen auf dem mond", intent: AMAZON.FallbackIntent}
   - {utterance: "pausiere den fernseher", intent: AMAZON.PauseIntent}
   - {utterance: "setze den fernseher fort", intent: AMAZON.ResumeIntent}
@@ -21,7 +21,7 @@ cases:
   - {utterance: "ich möchte den film das boot sehen", intent: WatchMovie, slots: {Movie: "das boot"}}
   - {utterance: "schau dark weiter", intent: WatchNextEpisode, slots: {Show: "dark"}}
   - {utterance: "finde das boot", intent: PlayMedia, slots: {Query: "das boot"}}
-  - {utterance: "die zweite bitte", intent: ChooseMatch, slots: {Which: "second"}, pending: "ChooseMatch is in the model from the next deploy"}
+  - {utterance: "die zweite bitte", intent: ChooseMatch, slots: {Which: "second"}}
   - {utterance: "such mir einen komödie film aus", intent: WatchRandomMovie, slots: {Genre: ""}}
   - {utterance: "spiele mir den trailer", intent: WatchMovieTrailer}
   - {utterance: "setze die das boot reihe fort", intent: WatchNextInCollection, slots: {Movie: "das boot"}}
@@ -71,7 +71,7 @@ cases:
   - {utterance: "wie heißt dieses echo", intent: IdentifyEcho}
   - {utterance: "nächste untertitel", intent: Subtitles, slots: {SubtitleAction: "next"}}
   - {utterance: "nächste tonspur", intent: AudioStream, slots: {Step: "next"}}
-  - {utterance: "geh zurück", intent: Navigate, slots: {NavAction: "back"}}
+  - {utterance: "geh zurück", intent: Navigate, slots: {NavAction: "back"}, also: [{intent: PlayerRewind}]}
   - {utterance: "gib den text hallo ein", intent: TypeText, slots: {Text: ""}}
   - {utterance: "zeige mir die filme", intent: ViewLibrary, slots: {Section: "movies"}}
   - {utterance: "zeige mir die musik playlist roadtrip", intent: ViewPlaylist, slots: {Playlist: ""}}
@@ -85,7 +85,7 @@ cases:
   # Answers to "did you mean …?".
   - {utterance: "ja bitte", intent: AMAZON.YesIntent}
   - {utterance: "nein danke", intent: AMAZON.NoIntent}
-  - {utterance: "ich meine den älteren", intent: ChooseMatch, slots: {Which: "older"}, pending: "ChooseMatch is in the model from the next deploy"}
+  - {utterance: "ich meine den älteren", intent: ChooseMatch, slots: {Which: "older"}}
   # Bare titles, which free-text and title slots compete for.
   - {utterance: "spiele das boot", intent: PlayMedia, slots: {Query: "das boot"}}
   - {utterance: "das boot abspielen", intent: PlayMedia, slots: {Query: "das boot"}}

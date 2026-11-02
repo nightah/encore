@@ -5,7 +5,7 @@ cases:
   - {utterance: "إلغاء", intent: AMAZON.CancelIntent}
   - {utterance: "مساعدة", intent: AMAZON.HelpIntent}
   - {utterance: "توقفي", intent: AMAZON.StopIntent, also: [{intent: RoomControl, slots: {Command: stop}}]}
-  - {utterance: "ارجعي للرئيسية", intent: AMAZON.NavigateHomeIntent}
+  - {utterance: "ارجعي للرئيسية", intent: AMAZON.NavigateHomeIntent, also: [{intent: Navigate, slots: {NavAction: home}}]}
   - {utterance: "فيلة بنفسجية ترقص على القمر", intent: AMAZON.FallbackIntent}
   - {utterance: "وقفي التلفزيون مؤقتا", intent: AMAZON.PauseIntent}
   - {utterance: "كملي التلفزيون", intent: AMAZON.ResumeIntent}
@@ -21,7 +21,7 @@ cases:
   - {utterance: "ابغى اشوف فيلم الرسالة", intent: WatchMovie, slots: {Movie: "الرسالة"}}
   - {utterance: "كملي مشاهدة مسلسل باب الحارة", intent: WatchNextEpisode, slots: {Show: "باب الحارة"}}
   - {utterance: "لاقي لي باب الحارة", intent: PlayMedia, slots: {Query: "باب الحارة"}}
-  - {utterance: "الثاني لو سمحت", intent: ChooseMatch, slots: {Which: "second"}, pending: "ChooseMatch is in the model from the next deploy"}
+  - {utterance: "الثاني لو سمحت", intent: ChooseMatch, slots: {Which: "second"}}
   - {utterance: "اختاري لي فيلم أكشن", intent: WatchRandomMovie, slots: {Genre: ""}}
   - {utterance: "شغلي الإعلان", intent: WatchMovieTrailer}
   - {utterance: "كملي سلسلة الرسالة", intent: WatchNextInCollection, slots: {Movie: "الرسالة"}}
@@ -71,7 +71,7 @@ cases:
   - {utterance: "عرفيني بهذا الجهاز", intent: IdentifyEcho}
   - {utterance: "التالية الترجمة", intent: Subtitles, slots: {SubtitleAction: "next"}}
   - {utterance: "التالي الصوت", intent: AudioStream, slots: {Step: "next"}}
-  - {utterance: "روحي رجوع", intent: Navigate, slots: {NavAction: "back"}}
+  - {utterance: "روحي رجوع", intent: Navigate, slots: {NavAction: "back"}, also: [{intent: PlayerRewind}]}
   - {utterance: "ادخلي النص مرحبا", intent: TypeText, slots: {Text: ""}}
   - {utterance: "اعرضي الأفلام", intent: ViewLibrary, slots: {Section: "movies"}}
   - {utterance: "اعرضي قائمة الأغاني رحلة", intent: ViewPlaylist, slots: {Playlist: ""}}
@@ -85,7 +85,7 @@ cases:
   # Answers to "did you mean …?".
   - {utterance: "ايوه", intent: AMAZON.YesIntent}
   - {utterance: "لا شكرا", intent: AMAZON.NoIntent}
-  - {utterance: "قصدي الأقدم", intent: ChooseMatch, slots: {Which: "older"}, pending: "ChooseMatch is in the model from the next deploy"}
+  - {utterance: "قصدي الأقدم", intent: ChooseMatch, slots: {Which: "older"}}
   # Bare titles, which free-text and title slots compete for.
   - {utterance: "شغلي باب الحارة", intent: PlayMedia, slots: {Query: "باب الحارة"}}
   - {utterance: "حطي باب الحارة", intent: PlayMedia, slots: {Query: "باب الحارة"}}
