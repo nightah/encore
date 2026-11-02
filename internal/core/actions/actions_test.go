@@ -937,3 +937,14 @@ func TestOutcomeMissed(t *testing.T) {
 	assert.False(t, svc.PlayTitle(ctx, tgt, TitleRequest{Query: "hot fuzz"}, nil).Missed())
 	assert.False(t, svc.PlayTitle(ctx, tgt, TitleRequest{Query: "dune"}, nil).Missed(), "a question is an answer")
 }
+
+func TestRewindOrBackWhenKodiIsUnreachable(t *testing.T) {
+	target, backend, _ := newTarget()
+	backend.Err = media.ErrUnreachable
+
+	o := newService().RewindOrBack(t.Context(), target)
+
+	assert.Equal(t, "error.kodi_unreachable", o.Say.ID)
+	require.ErrorIs(t, o.Err, media.ErrUnreachable)
+	assert.Equal(t, []string{"NowPlaying"}, backend.Calls(), "nothing is pressed or sought")
+}

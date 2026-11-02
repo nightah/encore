@@ -27,6 +27,20 @@ func (s *Service) Seek(ctx context.Context, t Target, req SeekRequest) Outcome {
 	return silent()
 }
 
+// RewindOrBack is a rewind said without how far ("rewind", "go back"): a small step back while something plays, and otherwise the remote's Back, since with nothing to rewind "go back" means the previous screen.
+func (s *Service) RewindOrBack(ctx context.Context, t Target) Outcome {
+	np, err := t.Backend.NowPlaying(ctx)
+	if err != nil {
+		return failure(t, err)
+	}
+
+	if np == nil {
+		return s.Navigate(ctx, t, media.InputBack, 1)
+	}
+
+	return s.Seek(ctx, t, SeekRequest{Step: media.SeekSmallBackward})
+}
+
 // Shuffle turns shuffle on or off.
 func (s *Service) Shuffle(ctx context.Context, t Target, on bool) Outcome {
 	if err := t.Backend.SetShuffle(ctx, on); err != nil {

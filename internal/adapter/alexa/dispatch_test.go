@@ -262,3 +262,16 @@ func TestWhatsNewRespectsContentGroups(t *testing.T) {
 		})
 	}
 }
+
+// "Go back" reaches PlayerRewind with no duration or size. While something plays it rewinds a little; with nothing playing there is nothing to rewind, so it presses the remote's Back, as "go back" means on a menu.
+func TestRewindWithoutAnAmountGoesBackWhenNothingPlays(t *testing.T) {
+	h, backend, _ := newHandler(t)
+
+	serveBody(t, h, intentRequest(t, "PlayerRewind", nil))
+	assert.Contains(t, backend.Calls(), "Input back")
+	assert.False(t, containsPrefix(backend.Calls(), "Seek"), "nothing to seek in: %q", backend.Calls())
+
+	h, backend, _ = newHandler(t)
+	serveBody(t, h, intentRequest(t, "PlayerRewind", map[string]slotSpec{"Duration": {value: "PT2M"}}))
+	assert.True(t, containsPrefix(backend.Calls(), "Seek by -2m0s"), "a rewind by an amount still seeks, which says nothing is playing: %q", backend.Calls())
+}
