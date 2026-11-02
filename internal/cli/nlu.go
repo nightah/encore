@@ -3,6 +3,7 @@ package cli
 import (
 	"cmp"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -403,6 +404,11 @@ func newGenDeployCommand() *cobra.Command {
 				if werr := writeDeploy(cmd.OutOrStdout(), res); werr != nil && err == nil {
 					err = werr
 				}
+			}
+
+			// A failed import is shown as Amazon answered it, the evidence for a failure it gives no reasons for.
+			if de, ok := errors.AsType[*deploy.Error](err); ok && len(de.ImportStatus) > 0 {
+				fmt.Fprintf(stderr, "import %s status: %s\n", de.ImportID, de.ImportStatus)
 			}
 
 			return err

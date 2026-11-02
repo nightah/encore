@@ -279,6 +279,12 @@ func TestGenDeploy(t *testing.T) {
 	out, _, err = runCLI(t, append([]string{"gen", "deploy", "--skill", skill, "--invocation", "encore", "--locale", "en-GB"}, flags...)...)
 	require.ErrorIs(t, err, deploy.ErrBuildFailed)
 	assert.Contains(t, out, "FAILED      en-GB\n  INVALID_INTERACTION_MODEL: a sample conflicts with another intent\n")
+
+	fake.FailImportsWithoutDetails(1)
+
+	_, stderr, err = runCLI(t, append([]string{"gen", "deploy", "--skill", skill, "--invocation", "encore", "--locale", "de-DE"}, flags...)...)
+	require.ErrorContains(t, err, "no details reported; import ")
+	assert.Regexp(t, `import \S+ status: \{.*"ROLLBACK_FAILED"`, stderr, "Amazon's answer is shown")
 }
 
 func TestGenDeployRefuses(t *testing.T) {

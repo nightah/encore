@@ -471,7 +471,7 @@ func (r *run) importPackage(ctx context.Context, location string) error {
 		return nil
 	}
 
-	failure := &Error{Step: StepImport, Problems: status.Errors}
+	failure := &Error{Step: StepImport, Problems: status.Errors, ImportID: importID, ImportStatus: status.Raw}
 
 	// Resources report their own errors whether they failed outright or were rolled back.
 	for _, res := range status.Skill.Resources {

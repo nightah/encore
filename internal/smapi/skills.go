@@ -170,10 +170,17 @@ func (c *Client) ImportStatus(ctx context.Context, importID string) (*ImportStat
 		return c.api.GetImportStatusV1(ctx, importID)
 	}
 
-	var out ImportStatus
-	if err := decode("get import status", call, &out); err != nil {
+	var raw json.RawMessage
+	if err := decode("get import status", call, &raw); err != nil {
 		return nil, err
 	}
+
+	var out ImportStatus
+	if err := json.Unmarshal(raw, &out); err != nil {
+		return nil, fmt.Errorf("smapi: get import status: decoding response: %w", err)
+	}
+
+	out.Raw = raw
 
 	return &out, nil
 }

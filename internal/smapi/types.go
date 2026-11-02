@@ -90,9 +90,11 @@ type Status string
 
 // ImportStatus is the state of a skill package import.
 type ImportStatus struct {
-	Status   Status    `json:"status"`
-	Errors   []Problem `json:"errors,omitempty"`
-	Warnings []Problem `json:"warnings,omitempty"`
+	// Raw is the response as Amazon sent it, kept so a failure it gives no reasons for can still be looked into.
+	Raw      json.RawMessage `json:"-"`
+	Status   Status          `json:"status"`
+	Errors   []Problem       `json:"errors,omitempty"`
+	Warnings []Problem       `json:"warnings,omitempty"`
 	Skill    struct {
 		ID        string           `json:"skillId"`
 		ETag      string           `json:"eTag"`

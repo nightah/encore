@@ -157,6 +157,10 @@ func (s *Server) startImport(w http.ResponseWriter, skillID, vendorID, location 
 	}
 
 	job := &importJob{id: s.nextID("import-"), skillID: sk.ID, failed: map[string]string{}, skipped: map[string]bool{}}
+	if s.unexplained > 0 {
+		s.unexplained--
+		job.unexplained = true
+	}
 
 	pkg, err := parsePackage(data)
 	if err != nil {
@@ -229,6 +233,19 @@ func (s *Server) handleImportStatus(w http.ResponseWriter, id string) {
 	if job.polls < s.opts.Pending {
 		job.polls++
 		resp["status"] = "IN_PROGRESS"
+		writeJSON(w, http.StatusOK, resp)
+
+		return
+	}
+
+	if job.unexplained {
+		resources := []map[string]any{{"name": "Manifest", "action": "UPDATE", "status": "ROLLBACK_FAILED"}}
+		for _, loc := range job.locales {
+			resources = append(resources, map[string]any{"name": "InteractionModel." + s.localeKey(loc), "action": "UPDATE", "status": "FAILED"})
+		}
+
+		resp["status"] = "FAILED"
+		resp["skill"] = map[string]any{"skillId": job.skillID, "resources": resources}
 		writeJSON(w, http.StatusOK, resp)
 
 		return

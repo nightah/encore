@@ -308,7 +308,14 @@ func (s *skillService) runDeploy(ctx context.Context, d *deploy.Deployer, rec *d
 	}
 
 	if err != nil {
-		s.a.log.Warn("skill deploy failed", "deploy", rec.ID, "error", err)
+		attrs := []any{"deploy", rec.ID, "error", err}
+
+		// An import Amazon failed without saying why is kept as it answered, to look into later.
+		if de, ok := errors.AsType[*deploy.Error](err); ok && len(de.ImportStatus) > 0 {
+			attrs = append(attrs, "import_status", string(de.ImportStatus))
+		}
+
+		s.a.log.Warn("skill deploy failed", attrs...)
 	} else {
 		s.a.log.Info("skill deployed", "deploy", rec.ID, "skill_id", res.State.SkillID, "skipped", res.Skipped)
 	}

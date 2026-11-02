@@ -71,6 +71,10 @@ func (e *Error) Error() string {
 		parts = append(parts, "no details reported")
 	}
 
+	if e.ImportID != "" {
+		parts = append(parts, "import "+e.ImportID)
+	}
+
 	return fmt.Sprintf("deploy: %s failed: %s", e.Step, strings.Join(parts, "; "))
 }
 

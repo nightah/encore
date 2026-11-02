@@ -1,6 +1,7 @@
 package deploy
 
 import (
+	"encoding/json"
 	"errors"
 
 	"github.com/nightah/encore/internal/smapi"
@@ -18,6 +19,9 @@ type Error struct {
 	Problems []smapi.Problem
 	// Locales holds per-locale build errors.
 	Locales map[string][]smapi.Problem
+	// ImportID and ImportStatus are the failed import's ID and Amazon's last answer about it, as sent, for looking into a failure Amazon gives no reasons for.
+	ImportID     string
+	ImportStatus json.RawMessage
 }
 
 // VendorChoiceError means the user belongs to several developer accounts and must pick one.

@@ -415,6 +415,11 @@ func TestDeployFailedImportStopsAskingTheSkillStatus(t *testing.T) {
 	assert.Equal(t, deploy.StepImport, de.Step)
 	assert.Equal(t, []smapi.Problem{{Message: "rollback failed"}}, de.Problems)
 	assert.EqualValues(t, 10, polls.Load())
+
+	// The import is named, and kept as Amazon answered it, to look into later.
+	assert.NotEmpty(t, de.ImportID)
+	assert.Contains(t, err.Error(), "import "+de.ImportID)
+	assert.JSONEq(t, `{"status":"FAILED","skill":{"skillId":"amzn1.ask.skill.rolledback","resources":[{"name":"Manifest","status":"ROLLBACK_FAILED","errors":[{"message":"rollback failed"}]},{"name":"InteractionModel.en-GB","status":"FAILED"}]}}`, string(de.ImportStatus))
 }
 
 // A failed import that names no locale's errors takes them from the skill status when it has them.

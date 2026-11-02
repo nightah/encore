@@ -30,7 +30,9 @@ type Server struct {
 	// rejected fail the build of any locale whose model has one of these slot values or synonyms.
 	rejected map[string]bool
 	// unimported are locales left out of an import's resources, so their builds are known only from the skill status.
-	unimported  map[string]bool
+	unimported map[string]bool
+	// unexplained is how many of the next imports fail without saying why.
+	unexplained int
 	uploads     map[string][]byte
 	skills      map[string]*Skill
 	order       []string
@@ -98,6 +100,8 @@ type importJob struct {
 	errs    []problem
 	locales []string
 	failed  map[string]string
+	// unexplained fails the import as Amazon now and then does: every resource failed, none saying why, and the manifest's rollback failed too.
+	unexplained bool
 }
 
 type problem struct {

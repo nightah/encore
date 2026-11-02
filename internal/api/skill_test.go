@@ -1128,3 +1128,29 @@ func TestSkillServiceKeepsFewBuiltPackages(t *testing.T) {
 	s.build(skillpkg.Options{Locales: []string{"en-US"}, SkillName: fmt.Sprint("Encore ", keepBuilt+2)})
 	assert.Equal(t, before, s.builds.Load(), "the latest package is still kept")
 }
+
+// An import Amazon fails without saying why is named in the deploy's error and logged as Amazon answered it, the evidence for looking into it later.
+func TestDeployFailureWithoutDetailsKeepsTheEvidence(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+	connectAmazon(t, h, c)
+
+	h.smapi.FailImportsWithoutDetails(1)
+
+	c.json(http.MethodPut, "/api/v1/skill/settings", map[string]any{
+		"invocation": "encore", "skill_name": "", "locales_enabled": []string{"en-AU"},
+		"endpoint": map[string]any{"url": "https://encore.example.net/api/v1/alexa"},
+		"privacy":  map[string]any{"uses_personal_info": false, "is_child_directed": false, "is_export_compliant": true, "contains_ads": false, "allows_purchases": false},
+	}, http.StatusOK, nil)
+
+	var acc Accepted
+
+	c.json(http.MethodPost, "/api/v1/skill/deploy", nil, http.StatusAccepted, &acc)
+
+	d := waitForDeploy(t, c, acc.ID)
+
+	assert.Equal(t, "failed", d.State)
+	assert.Contains(t, d.Error, "deploy: import failed: no details reported; import ")
+	assert.Contains(t, h.logs.String(), `msg="skill deploy failed"`)
+	assert.Contains(t, h.logs.String(), `ROLLBACK_FAILED`, "Amazon's answer is logged")
+}

@@ -133,6 +133,14 @@ func (s *Server) localeKey(locale string) string {
 	return locale
 }
 
+// FailImportsWithoutDetails makes the next n imports fail as Amazon's now and then do: every resource FAILED with no errors and the manifest ROLLBACK_FAILED.
+func (s *Server) FailImportsWithoutDetails(n int) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.unexplained += n
+}
+
 // Inject makes the next n SMAPI calls fail with status (e.g. 429 or 503) and Retry-After: 0.
 func (s *Server) Inject(status, n int) {
 	s.mu.Lock()
