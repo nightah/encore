@@ -9,10 +9,12 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 	"unicode/utf8"
 
 	"golang.org/x/text/language"
 	"golang.org/x/text/language/display"
+	"golang.org/x/text/unicode/norm"
 
 	"github.com/nightah/encore/internal/core/actions"
 	"github.com/nightah/encore/internal/core/match"
@@ -419,7 +421,7 @@ func (f queryForm) match(words []string) (map[string]string, bool) {
 
 		w := f.words[i]
 		if !isSlotRef(w) {
-			return strings.EqualFold(words[j], w) && at(i+1, j+1)
+			return foldLatin(words[j]) == foldLatin(w) && at(i+1, j+1)
 		}
 
 		name := w[1 : len(w)-1]
@@ -820,4 +822,22 @@ func countUnit(n int, one, many string) string {
 // unspacedCount writes the number straight before the unit, as Japanese does ("1時間"); its units don't change with the count.
 func unspacedCount(n int, one, _ string) string {
 	return strconv.Itoa(n) + one
+}
+
+// foldLatin lowercases s and takes the accents off its Latin letters, so a word Alexa heard matches a sample's however it was accented: Amazon's es-US model drops them ("album" for "álbum"). Marks on other scripts stay, since there they tell words apart (が is not か).
+func foldLatin(s string) string {
+	var b strings.Builder
+
+	latin := false
+
+	for _, r := range norm.NFD.String(strings.ToLower(s)) {
+		if unicode.Is(unicode.Mn, r) && latin {
+			continue
+		}
+
+		latin = unicode.Is(unicode.Latin, r)
+		b.WriteRune(r)
+	}
+
+	return norm.NFC.String(b.String())
 }

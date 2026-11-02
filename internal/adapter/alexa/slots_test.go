@@ -237,6 +237,10 @@ func TestReinterpret(t *testing.T) {
 		{"en-AU", "the next episode of", want{"PlayMedia", map[string]string{"Query": "the next episode of"}}},
 		{"en-AU", "the man in the iron mask", want{"PlayMedia", map[string]string{"Query": "the man in the iron mask"}}},
 		{"de-DE", "die nächste folge von bluey", want{"WatchNextEpisode", map[string]string{"Show": "bluey"}}},
+		// Amazon's es-US model takes the accents off what it heard, so "álbum", "capítulo" and "tráiler" arrive bare.
+		{"es-US", "el album pies descalzos", want{"ListenToAlbum", map[string]string{"Album": "pies descalzos"}}},
+		{"es-US", "la casa de papel capitulo 3 de la temporada 2", want{"WatchEpisode", map[string]string{"Show": "la casa de papel", "Episode": "3", "Season": "2"}}}, //nolint:misspell // Spanish "capítulo" as es-US hears it.
+		{"de-DE", "die nachste folge von bluey", want{"WatchNextEpisode", map[string]string{"Show": "bluey"}}},
 		{"xx-XX", "the next episode of bluey", want{"WatchNextEpisode", map[string]string{"Show": "bluey"}}},
 	} {
 		in := Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.query}}}
@@ -297,4 +301,19 @@ func TestFollowupRoundTrip(t *testing.T) {
 
 	require.Len(t, rec.entries, 2)
 	assert.Equal(t, "asked", rec.entries[0].Outcome)
+}
+
+func TestFoldLatin(t *testing.T) {
+	for in, want := range map[string]string{
+		"Álbum":    "album",
+		"capítulo": "capitulo", //nolint:misspell // Spanish "capítulo" without its accent.
+		"nächste":  "nachste",
+		"が":        "が",
+		"ज़िंदगी":  "ज़िंदगी",
+		"Ça va":    "ca va",
+		"تريلر":    "تريلر",
+		"Ṭrailer":  "trailer",
+	} {
+		assert.Equal(t, want, foldLatin(in), in)
+	}
 }
