@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"slices"
 	"strconv"
+	"strings"
+
+	"github.com/nightah/encore/internal/core/media"
 )
 
 // New returns an empty Index for a language or locale code ("en", "de-DE"). Unknown languages use English rules.
@@ -272,6 +275,7 @@ func (ix *Index) Search(ctx context.Context, q Query) (Result, error) {
 	}
 
 	slices.SortFunc(cands, func(a, b Candidate) int { return compareCandidates(a, b, exact) })
+	cands = withoutCopies(cands, exact)
 
 	cfg := ix.cfg
 	if ix.lang.soundAlikeLead && len(cands) > 0 && soundAlike[cands[0].Doc.ID] {
@@ -291,6 +295,7 @@ func (ix *Index) Search(ctx context.Context, q Query) (Result, error) {
 	// Native aliases only add to what a title's own names find: whatever those would play, plays.
 	if res.Decision != DecisionPlay && len(plain) > 0 {
 		slices.SortFunc(plain, func(a, b Candidate) int { return compareCandidates(a, b, plainExact) })
+		plain = withoutCopies(plain, plainExact)
 
 		switch d, _ := ix.cfg.decide(plain, len(plainExact)); {
 		case d == DecisionPlay && plain[0].Doc.ID == cands[0].Doc.ID:
@@ -437,4 +442,30 @@ func compareBool(a, b bool) int {
 	default:
 		return -1
 	}
+}
+
+// withoutCopies drops each candidate that is another copy of a better one: the same kind, title and year, as when a library holds a film twice. Asking which of two identical titles was meant can't be answered, so the first copy stands for both. exact forgets the copies dropped.
+func withoutCopies(cands []Candidate, exact map[string]bool) []Candidate {
+	type key struct {
+		kind  media.Kind
+		title string
+		year  int
+	}
+
+	seen := make(map[key]bool, len(cands))
+	out := cands[:0]
+
+	for _, c := range cands {
+		k := key{c.Doc.Kind, strings.ToLower(strings.TrimSpace(c.Doc.Title)), c.Doc.Year}
+		if seen[k] {
+			delete(exact, c.Doc.ID)
+
+			continue
+		}
+
+		seen[k] = true
+		out = append(out, c)
+	}
+
+	return out
 }
