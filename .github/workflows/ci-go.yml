@@ -205,7 +205,7 @@ jobs:
         run: |
           {
             head -n 1 coverage-matcher.out
-            tail -q -n +2 coverage-matcher.out coverage-others.out
+            tail -q -n +2 coverage-*.out
           } > coverage.out
 
       - name: Coverage summary
