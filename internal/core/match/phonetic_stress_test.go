@@ -149,8 +149,8 @@ func distractorPlays(t *testing.T, code, retr string, sets []distractorSet) (pla
 
 // distractorCeiling is the most absent titles production may play per retriever and language, of the 2000 TestPhoneticDistractors asks: the counts measured when they were set. Lower one when a change plays fewer; raise one only with the evidence that the accuracy tables in docs/src/content/docs/contributing/dependencies.md are updated with.
 var distractorCeiling = map[string]int{
-	"inverted/de": 102, "inverted/en": 62, "inverted/es": 120, "inverted/fr": 73, "inverted/it": 94, "inverted/ar": 85, "inverted/hi": 95, "inverted/ja": 82, "inverted/nl": 115, "inverted/pt": 95,
-	"trigram/de": 102, "trigram/en": 62, "trigram/es": 119, "trigram/fr": 73, "trigram/it": 94, "trigram/ar": 85, "trigram/hi": 95, "trigram/ja": 82, "trigram/nl": 115, "trigram/pt": 95,
+	"inverted/de": 103, "inverted/en": 65, "inverted/es": 122, "inverted/fr": 76, "inverted/it": 98, "inverted/ar": 86, "inverted/hi": 99, "inverted/ja": 88, "inverted/nl": 116, "inverted/pt": 100,
+	"trigram/de": 103, "trigram/en": 65, "trigram/es": 121, "trigram/fr": 76, "trigram/it": 98, "trigram/ar": 86, "trigram/hi": 99, "trigram/ja": 88, "trigram/nl": 116, "trigram/pt": 100,
 }
 
 // TestPhoneticDistractors stresses precision with vocabulary nobody chose: for each of distractorSeeds, a library of 2000 synthetic titles of one to four words from the language's translations, queried with 400 other such titles that are not in it. Any play is a wrong play; asks cost a question. It logs the counts per encoder and retriever, and every play an encoder adds or removes against English Double Metaphone, and fails when production plays more than its distractorCeiling.

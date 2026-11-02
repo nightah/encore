@@ -239,24 +239,24 @@ A request for a title your library doesn't have should never play something else
 
 | Language | Wrong plays with Double Metaphone | With the language's encoder | Difference |
 | --- | --- | --- | --- |
-| English | 62 | 62 | 0 |
-| German | 115 | 102 | −13 |
-| Spanish | 114 | 120 | +6 |
-| French | 75 | 73 | −2 |
-| Italian | 94 | 94 | 0 |
-| Dutch | 115 | 115 | 0 |
-| Brazilian Portuguese | 95 | 95 | 0 |
-| Arabic | 87 | 85 | −2 |
-| Hindi | 95 | 95 | 0 |
-| Japanese | 82 | 82 | 0 |
+| English | 65 | 65 | 0 |
+| German | 116 | 103 | −13 |
+| Spanish | 117 | 122 | +5 |
+| French | 78 | 76 | −2 |
+| Italian | 98 | 98 | 0 |
+| Dutch | 116 | 116 | 0 |
+| Brazilian Portuguese | 100 | 100 | 0 |
+| Arabic | 88 | 86 | −2 |
+| Hindi | 99 | 99 | 0 |
+| Japanese | 88 | 88 | 0 |
 
-Only the native-script forms of Latin titles (below) moved these counts, in Arabic, Hindi and Japanese.
+Only the native-script forms of Latin titles (below) moved these counts, in Arabic, Hindi and Japanese. Treating copies of a title as one choice then raised every count by 1 to 6: the synthetic libraries hold some short titles twice, and a near miss on one of them used to ask which of two identical copies was meant, a question nobody can answer. It now plays, as it would with one copy.
 
 #### What was decided
 
 **English** keeps Double Metaphone.
 
-**Spanish and French** keep their own rules. On the grown set, counting the regional suites, they get 55 and 26 more cases right than Double Metaphone (32 and 18 on Spain's and France's files alone), with no more wrong plays. Spanish plays 6 more titles per 2,000 that aren't in the library, a fair trade for 66 more correct answers; French plays 2 fewer.
+**Spanish and French** keep their own rules. On the grown set, counting the regional suites, they get 55 and 26 more cases right than Double Metaphone (32 and 18 on Spain's and France's files alone), with no more wrong plays. Spanish plays 5 more titles per 2,000 that aren't in the library, a fair trade for 66 more correct answers; French plays 2 fewer.
 
 ##### Italian
 
@@ -272,7 +272,7 @@ German keeps Kölner Phonetik, and now treats a final *-er* as the *-a* it is sp
 
 On the grown set Double Metaphone first got 12 more German cases right, a gap that held up statistically. 8 of its wins were a final *-er* heard as *-a*: "lieda" for *Lieder*, "rolla" for *Roller*, "es war somma". Kölner Phonetik codes that *r*, so those words didn't match.
 
-Encore now drops the *r* of a final *-er* in German words of four letters or more before keying them. That fixes all 8 and leaves Double Metaphone 4 ahead, which is within noise. No wrong plays were added, and German still plays 102 titles per 2,000 that aren't in the library, against Double Metaphone's 115. The rule lives in the matcher, so `internal/fuzzy/phonetic/de` still gives the original library's codes.
+Encore now drops the *r* of a final *-er* in German words of four letters or more before keying them. That fixes all 8 and leaves Double Metaphone 4 ahead, which is within noise. No wrong plays were added, and German still plays 103 titles per 2,000 that aren't in the library, against Double Metaphone's 116. The rule lives in the matcher, so `internal/fuzzy/phonetic/de` still gives the original library's codes.
 
 Most of Double Metaphone's remaining German wins are English loanwords and names ("skuter" for *Scooter*, "kraftklup" for *Kraftklub*), which a German rule shouldn't chase.
 
