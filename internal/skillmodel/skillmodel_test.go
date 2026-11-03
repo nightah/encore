@@ -496,3 +496,30 @@ func TestBuildRejectsBadSlotSamplePattern(t *testing.T) {
 	_, err := Build(load(t, map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie.Movie:\n    - \"({Movie}\"\n"}), "en-US", BuildOptions{})
 	require.ErrorContains(t, err, "intent WatchMovie, slot Movie")
 }
+
+func TestBuildUnaccentedSamples(t *testing.T) {
+	const samples = `
+utterances:
+  WatchMovie:
+    - "pon la película {Movie} del año"
+    - "el pingüino {Movie}"
+  WatchMovie.Movie:
+    - "la película {Movie}"
+`
+
+	src := load(t, map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "unaccented_samples: true" + samples})
+
+	m, err := Build(src, "en-US", BuildOptions{})
+	require.NoError(t, err)
+
+	movie := m.InteractionModel.LanguageModel.Intents[1]
+	require.Equal(t, "WatchMovie", movie.Name)
+	assert.Subset(t, movie.Samples, []string{"pon la película {Movie} del año", "pon la pelicula {Movie} del año", "el pingüino {Movie}", "el pinguino {Movie}"}, "the tilde stays")
+	assert.Equal(t, 1, strings.Count(strings.Join(movie.Samples, "\n"), "put on {Movie}"), "a sample without accents isn't doubled")
+	assert.Equal(t, []string{"la película {Movie}", "la pelicula {Movie}"}, movie.Slots[0].Samples)
+
+	plain, err := Build(load(t, map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + samples}), "en-US", BuildOptions{})
+	require.NoError(t, err)
+	assert.NotContains(t, plain.InteractionModel.LanguageModel.Intents[1].Samples, "pon la pelicula {Movie} del año", "only a locale that asks")
+	assert.Contains(t, plain.InteractionModel.LanguageModel.Intents[1].Samples, "pon la película {Movie} del año")
+}

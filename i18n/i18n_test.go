@@ -168,7 +168,11 @@ func TestUSSpanishFollowsMexicanSpanish(t *testing.T) {
 		return out
 	}
 
-	assert.Equal(t, overlay("es-MX"), overlay("es-US"))
+	us := overlay("es-US")
+	assert.Equal(t, true, us["unaccented_samples"], "es-US's recognition drops accents and es-MX's keeps them")
+	delete(us, "unaccented_samples")
+
+	assert.Equal(t, overlay("es-MX"), us)
 }
 
 // es-MX and es-US replace the responses lang/es words with the Peninsular perfect ("no he encontrado") by the preterite Latin American speakers use ("no encontré"), as their headers say. With "todavía no" the perfect is usual in the Americas too.

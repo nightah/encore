@@ -71,6 +71,8 @@ type Locale struct {
 	Types map[string]map[string][]string `yaml:"types"`
 	// Launch is how the locale's speakers open the skill.
 	Launch Launch `yaml:"launch"`
+	// UnaccentedSamples adds each sample again without the acute accents and diaereses on its letters, for a locale whose speech recognition writes what it hears without them: es-US hears "la canción" as "la cancion", which its samples with the accent match less well. The tilde stays, as "año" is not "ano".
+	UnaccentedSamples bool `yaml:"unaccented_samples"`
 }
 
 // Launch is a locale's phrases for opening the skill without a request, each with {invocation} where the invocation name goes. They come from the launch phrases Amazon lists for the language.

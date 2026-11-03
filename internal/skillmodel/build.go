@@ -6,6 +6,8 @@ import (
 	"slices"
 	"sort"
 	"strings"
+
+	"golang.org/x/text/unicode/norm"
 )
 
 // Build produces the interaction model for one locale.
@@ -48,6 +50,9 @@ func Build(src *Sources, locale string, opts BuildOptions) (*InteractionModel, e
 
 			for _, sample := range samples {
 				mi.Samples = append(mi.Samples, spaceSlots(sample))
+				if loc.UnaccentedSamples {
+					mi.Samples = append(mi.Samples, spaceSlots(unaccented(sample)))
+				}
 			}
 		}
 
@@ -62,6 +67,9 @@ func Build(src *Sources, locale string, opts BuildOptions) (*InteractionModel, e
 
 				for _, sample := range samples {
 					mi.Slots[i].Samples = append(mi.Slots[i].Samples, spaceSlots(sample))
+					if loc.UnaccentedSamples {
+						mi.Slots[i].Samples = append(mi.Slots[i].Samples, spaceSlots(unaccented(sample)))
+					}
 				}
 			}
 
@@ -181,6 +189,17 @@ func dialogFor(intents []ModelIntent) *Dialog {
 // spaceSlots puts a space on each side of every slot reference that lacks one. Amazon fails to parse a slot joined to other text, and Japanese, which writes no spaces, attaches its particles to the slot in the sources ("{Movie}を再生して"); the space there doesn't change what Alexa hears.
 func spaceSlots(sample string) string {
 	return strings.Join(strings.Fields(slotRef.ReplaceAllString(sample, " $0 ")), " ")
+}
+
+// unaccented takes the acute accents and diaereses off s's letters (Locale.UnaccentedSamples).
+func unaccented(s string) string {
+	return norm.NFC.String(strings.Map(func(r rune) rune {
+		if r == acute || r == diaeresis {
+			return -1
+		}
+
+		return r
+	}, norm.NFD.String(s)))
 }
 
 func dedupe(in []string) []string {

@@ -29,3 +29,9 @@ const SlotSampleSeparator = "."
 
 // delegationSkill leaves every dialog to the skill.
 const delegationSkill = "SKILL_RESPONSE"
+
+// acute and diaeresis are the combining marks unaccented takes off.
+const (
+	acute     = '\u0301'
+	diaeresis = '\u0308'
+)
