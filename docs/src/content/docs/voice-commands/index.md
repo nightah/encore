@@ -33,6 +33,7 @@ Ask for an episode of a show by where it falls, or by its number:
 - "play the latest episode of Bluey" ("newest", "most recent" and "last" work too)
 - "play a random episode of Bluey"
 - "play Bluey season 2 episode 4"
+- "next" while an episode plays with nothing queued after it plays the show's next episode, or says it was the last one
 
 The first and latest episodes skip specials (season 0) unless a show has nothing else. Alexa sometimes hears these as a plain "play …" search rather than an episode command, usually when it doesn't recognise the show's name; Encore spots the episode command's wording in the search and runs it anyway, so either way the right episode plays.
 

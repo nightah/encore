@@ -227,10 +227,22 @@ func (b *Backend) NowPlaying(ctx context.Context) (*media.NowPlaying, error) {
 
 	props, err := b.c.PlayerGetProperties(ctx, kodirpc.PlayerGetPropertiesParams{
 		PlayerID:   player,
-		Properties: []kodirpc.PlayerPropertyName{"speed", "time", "totaltime"},
+		Properties: []kodirpc.PlayerPropertyName{"speed", "time", "totaltime", "playlistid", "position"},
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	// A position of -1 means the item isn't playing from a playlist.
+	var queued bool
+
+	if props.Position >= 0 {
+		pl, err := b.c.PlaylistGetProperties(ctx, kodirpc.PlaylistGetPropertiesParams{PlaylistID: props.PlaylistID, Properties: []kodirpc.PlaylistPropertyName{kodirpc.PlaylistPropertyNameSize}})
+		if err != nil {
+			return nil, err
+		}
+
+		queued = int(props.Position)+1 < pl.Size
 	}
 
 	np := &media.NowPlaying{
@@ -238,6 +250,7 @@ func (b *Backend) NowPlaying(ctx context.Context) (*media.NowPlaying, error) {
 		Position: globalDuration(props.Time),
 		Duration: globalDuration(props.Totaltime),
 		Paused:   props.Speed == 0,
+		Queued:   queued,
 	}
 
 	if np.Duration == 0 {

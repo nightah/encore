@@ -108,6 +108,8 @@ type NowPlaying struct {
 	Position time.Duration
 	Duration time.Duration
 	Paused   bool
+	// Queued is whether another item follows this one in the play queue.
+	Queued bool
 }
 
 // Info describes a backend instance.

@@ -181,6 +181,63 @@ func TestTransport(t *testing.T) {
 	assert.True(t, o.EndSession)
 }
 
+func TestNextPlaysTheFollowingEpisodeWhenNothingIsQueued(t *testing.T) {
+	ep := func(id, season, episode int) media.Item {
+		return media.Item{Kind: media.KindEpisode, ID: id, ShowID: 7, ShowTitle: "Severance", Season: season, Episode: episode, Title: "Episode " + strconv.Itoa(id)}
+	}
+	special, s1e1, s1e2, s2e1 := ep(70, 0, 1), ep(71, 1, 1), ep(72, 1, 2), ep(73, 2, 1)
+	movie := media.Item{Kind: media.KindMovie, ID: 4, Title: "Hot Fuzz"}
+	stranger := ep(99, 1, 3)
+
+	for _, tc := range []struct {
+		name    string
+		playing *media.NowPlaying
+		say     string
+		calls   []string
+	}{
+		{"nothing playing", nil, "playback.nothing_playing", []string{"NowPlaying", "Transport next"}},
+		{"a movie skips in the queue", &media.NowPlaying{Item: movie}, "", []string{"NowPlaying", "Transport next"}},
+		{"a queued episode skips in the queue", &media.NowPlaying{Item: s1e1, Queued: true}, "", []string{"NowPlaying", "Transport next"}},
+		{"the next episode", &media.NowPlaying{Item: s1e1}, "playback.playing_episode", []string{"NowPlaying", "Episodes 7", "Play episode/72 resume"}},
+		{"into the next season", &media.NowPlaying{Item: s1e2}, "playback.playing_episode", []string{"NowPlaying", "Episodes 7", "Play episode/73 resume"}},
+		{"from a special to the first episode", &media.NowPlaying{Item: special}, "playback.playing_episode", []string{"NowPlaying", "Episodes 7", "Play episode/71 resume"}},
+		{"the last episode says so", &media.NowPlaying{Item: s2e1}, "tv.last_episode", []string{"NowPlaying", "Episodes 7"}},
+		{"an episode outside the library skips in the queue", &media.NowPlaying{Item: stranger}, "", []string{"NowPlaying", "Episodes 7", "Transport next"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			target, backend, _ := newTarget(movie, s2e1, s1e2, special, s1e1)
+			backend.SetPlaying(tc.playing)
+
+			o := newService().Next(t.Context(), target)
+
+			require.NoError(t, o.Err)
+			assert.Equal(t, tc.say, o.Say.ID)
+			assert.Equal(t, tc.calls, backend.Calls())
+
+			if tc.say == "tv.last_episode" {
+				assert.Equal(t, "Severance", o.Say.Params["show"])
+			}
+		})
+	}
+}
+
+func TestNextFailures(t *testing.T) {
+	playing := &media.NowPlaying{Item: media.Item{Kind: media.KindEpisode, ID: 71, ShowID: 7, Season: 1, Episode: 1}}
+
+	for _, method := range []string{"NowPlaying", "Episodes"} {
+		t.Run(method, func(t *testing.T) {
+			target, backend, _ := newTarget()
+			backend.SetPlaying(playing)
+			target, _ = failing(target, backend, errBoom, method)
+
+			o := newService().Next(t.Context(), target)
+
+			assert.Equal(t, "error.generic", o.Say.ID)
+			require.ErrorIs(t, o.Err, errBoom)
+		})
+	}
+}
+
 func TestVolume(t *testing.T) {
 	target, backend, _ := newTarget()
 	svc := newService()

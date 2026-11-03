@@ -51,6 +51,7 @@ func (s *Server) registerPlayer() {
 	s.handlers["Player.GoTo"] = s.playerGoTo
 	s.handlers["Playlist.Clear"] = s.playlistClear
 	s.handlers["Playlist.Add"] = s.playlistAdd
+	s.handlers["Playlist.GetProperties"] = s.playlistGetProperties
 }
 
 func (s *Server) playerGetActivePlayers(json.RawMessage) (any, *Error) {
@@ -421,6 +422,26 @@ func (s *Server) playlistClear(params json.RawMessage) (any, *Error) {
 	s.mu.Unlock()
 
 	return "OK", nil
+}
+
+// The playing item's playlist is the play queue.
+func (s *Server) playlistGetProperties(params json.RawMessage) (any, *Error) {
+	var p struct {
+		PlaylistID int `json:"playlistid"`
+	}
+	if err := decode(params, &p); err != nil {
+		return nil, err
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	size := len(s.state.playlists[p.PlaylistID])
+	if s.state.playing != nil && s.state.playing.playerID() == p.PlaylistID {
+		size = len(s.state.queue)
+	}
+
+	return map[string]any{"size": size}, nil
 }
 
 func (s *Server) playlistAdd(params json.RawMessage) (any, *Error) {

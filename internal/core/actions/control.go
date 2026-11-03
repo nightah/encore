@@ -3,6 +3,7 @@ package actions
 import (
 	"context"
 	"errors"
+	"slices"
 	"strconv"
 	"time"
 
@@ -21,6 +22,36 @@ func (s *Service) Transport(ctx context.Context, t Target, cmd media.Transport) 
 	}
 
 	return silent()
+}
+
+// Next skips to the next item in the play queue. An episode with nothing queued after it is followed by the show's next episode, skipping specials unless a special is playing.
+func (s *Service) Next(ctx context.Context, t Target) Outcome {
+	np, err := t.Backend.NowPlaying(ctx)
+	if err != nil {
+		return failure(t, err)
+	}
+
+	if np == nil || np.Queued || np.Item.Kind != media.KindEpisode {
+		return s.Transport(ctx, t, media.TransportNext)
+	}
+
+	eps, err := t.Backend.Episodes(ctx, np.Item.ShowID)
+	if err != nil {
+		return failure(t, err)
+	}
+
+	i := slices.IndexFunc(eps, func(e media.Item) bool { return e.ID == np.Item.ID })
+	if i < 0 {
+		return s.Transport(ctx, t, media.TransportNext)
+	}
+
+	for _, e := range eps[i+1:] {
+		if e.Season > 0 || np.Item.Season == 0 {
+			return s.playItem(ctx, t, e, nil)
+		}
+	}
+
+	return done(say("tv.last_episode", map[string]string{"show": np.Item.ShowTitle}))
 }
 
 // SetVolume sets an absolute level. Levels up to 10 are read as Kanzi's 0–10 scale, larger ones as a percentage.

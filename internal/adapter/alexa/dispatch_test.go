@@ -68,6 +68,7 @@ func TestDispatchControlIntents(t *testing.T) {
 		"start over":                    {intent: "AMAZON.StartOverIntent", want: "Transport startover"},
 		"room control by resolved ID":   {intent: "RoomControl", slots: map[string]slotSpec{"Command": {"halt", "stop"}}, want: "Transport stop"},
 		"room control by synonym":       {intent: "RoomControl", slots: map[string]slotSpec{"Command": {value: "resume"}}, want: "Transport resume"},
+		"room control next":             {intent: "RoomControl", slots: map[string]slotSpec{"Command": {"next", "next"}}, want: "Transport next"},
 		"shuffle off":                   {intent: "AMAZON.ShuffleOffIntent", want: "SetShuffle false"},
 		"loop off":                      {intent: "AMAZON.LoopOffIntent", want: "SetRepeat off"},
 		"repeat one":                    {intent: "Repeat", slots: map[string]slotSpec{"RepeatMode": {"this", "one"}}, want: "SetRepeat one"},
@@ -111,6 +112,26 @@ func TestDispatchControlIntents(t *testing.T) {
 
 			calls := backend.Calls()
 			assert.True(t, containsPrefix(calls, tc.want), "want a call starting %q, got %q; response %s", tc.want, calls, res)
+		})
+	}
+}
+
+func TestDispatchNextFollowsAnEpisodeWithTheNextOne(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		intent string
+		slots  map[string]slotSpec
+	}{
+		{"next", "AMAZON.NextIntent", nil},
+		{"next on the TV", "RoomControl", map[string]slotSpec{"Command": {"next", "next"}}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h, backend, _ := newHandler(t)
+			backend.SetPlaying(&media.NowPlaying{Item: media.Item{Kind: media.KindEpisode, ID: 102, ShowID: 10, ShowTitle: "Severance", Season: 2, Episode: 4}})
+
+			res := serveBody(t, h, intentRequest(t, tc.intent, tc.slots))
+
+			assert.Contains(t, backend.Calls(), "Play episode/103 resume", "response %s", res)
 		})
 	}
 }

@@ -198,7 +198,7 @@ func (h *Handler) dispatchControl(ctx context.Context, t actions.Target, intent 
 		// Like Kanzi, "stop" stops playback as well as ending the session.
 		return svc.Transport(ctx, t, media.TransportStop)
 	case "AMAZON.NextIntent":
-		return svc.Transport(ctx, t, media.TransportNext)
+		return svc.Next(ctx, t)
 	case "AMAZON.PreviousIntent":
 		return svc.Transport(ctx, t, media.TransportPrevious)
 	case "AMAZON.StartOverIntent":
@@ -207,6 +207,10 @@ func (h *Handler) dispatchControl(ctx context.Context, t actions.Target, intent 
 		cmd, ok := transports[sl.id("Command", "TRANSPORT_COMMAND")]
 		if !ok {
 			return reprompt(fallbackMessage())
+		}
+
+		if cmd == media.TransportNext {
+			return svc.Next(ctx, t)
 		}
 
 		return svc.Transport(ctx, t, cmd)
