@@ -16,6 +16,8 @@ extend-exclude = [
   "i18n/locales/es-US.yaml",
   "i18n/locales/fr-CA.yaml",
   "docs/src/content/docs/voice-commands/",
+  # The testers' page, which quotes phrases in those languages.
+  "docs/src/content/docs/contributing/testing.md",
   # NLU fixtures in those languages.
   "testdata/nlu/ar-SA.yaml",
   "testdata/nlu/de-DE.yaml",

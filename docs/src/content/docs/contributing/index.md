@@ -31,7 +31,7 @@ Example rooms, playlists and genres (`examples.yaml`) aren't translated: each la
 
 The translated files (`i18n/lang/<language>/` and `web/src/i18n/locales/<language>/`) are written by Crowdin, in its own layout and with the English file's comments, so change translations on Crowdin rather than in the repository: its next pull request would undo an edit made there. The English skill files are written the same way (double-quoted values, no blank lines, a one-line comment at the top), which yamllint and a test in `i18n/` check, so a sync only changes what was translated.
 
-Encore needs testers who speak a language other than English. It has had little use outside English, so it needs people to try it on an Echo in their language and report what Alexa mishears, misplays or says awkwardly, and to review the translations themselves. Reach out on Discord (`@nightah`) or Matrix (`@nightah:nerv.com.au`).
+Encore needs testers who speak a language other than English. It has had little use outside English, so it needs people to try it on an Echo in their language and report what Alexa mishears, misplays or says awkwardly, and to review the translations themselves. [Testing a language](/encore/contributing/testing/) explains how, and lists the phrases Amazon still misreads in each language. Reach out on Discord (`@nightah`) or Matrix (`@nightah:nerv.com.au`).
 
 ### Writing for each language
 
