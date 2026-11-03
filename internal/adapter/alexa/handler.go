@@ -164,9 +164,9 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, tr *requestT
 		if name, ok := h.Speech.AnswerIntent(locale, intent.Slots[answerSlot].Value); ok && intent.Slots[whichSlot].Value == "" {
 			intent = Intent{Name: name}
 		}
-	case intent.Name == nextEpisodeIntent && h.Speech.MeansLastShow(locale, intent.Slots["Show"].Value):
+	default:
 		// "Continue watching the last show" heard as the next episode of a show called "the last show".
-		intent = Intent{Name: continueIntent, Slots: map[string]Slot{"Room": intent.Slots["Room"]}}
+		intent = h.Speech.LastShow(locale, intent)
 	}
 
 	// Intents that don't need Kodi.

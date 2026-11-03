@@ -114,6 +114,15 @@ func (s *Speech) MeansLastShow(locale, show string) bool {
 	return show != "" && words[foldWords(show)]
 }
 
+// LastShow reads a next-episode request whose show MeansLastShow as the continue-watching request it is, keeping its room; any other request is returned as it is.
+func (s *Speech) LastShow(locale string, intent Intent) Intent {
+	if intent.Name != nextEpisodeIntent || !s.MeansLastShow(locale, intent.Slots["Show"].Value) {
+		return intent
+	}
+
+	return Intent{Name: continueIntent, Slots: keepSlots(intent.Slots, "Room")}
+}
+
 // foldWords folds what was heard for comparing whole phrases: accents off Latin letters, case and spacing ignored.
 func foldWords(s string) string {
 	return strings.Join(strings.Fields(foldLatin(s)), " ")

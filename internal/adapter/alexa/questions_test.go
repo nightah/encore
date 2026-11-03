@@ -527,3 +527,19 @@ func TestContinueWatchingTheLastShow(t *testing.T) {
 	c.say("WatchNextEpisode", map[string]slotSpec{"Show": {value: "the last kingdom"}})
 	assert.NotContains(t, c.backend.Calls(), "NowPlaying", "a show called something else is still looked for")
 }
+
+// TestLastShow checks that only a next-episode request for "the last show" is read as continue watching, and that it keeps its room.
+func TestLastShow(t *testing.T) {
+	speech := shippedSpeech(t)
+	room := Slot{Name: "Room", Value: "bedroom"}
+
+	got := speech.LastShow("en-AU", Intent{Name: "WatchNextEpisode", Slots: map[string]Slot{"Show": {Name: "Show", Value: "the last show"}, "Room": room}})
+	assert.Equal(t, Intent{Name: "ContinueWatching", Slots: map[string]Slot{"Room": room}}, got)
+
+	for _, in := range []Intent{
+		{Name: "WatchNextEpisode", Slots: map[string]Slot{"Show": {Name: "Show", Value: "the last kingdom"}}},
+		{Name: "WatchMovie", Slots: map[string]Slot{"Movie": {Name: "Movie", Value: "the last show"}}},
+	} {
+		assert.Equal(t, in, speech.LastShow("en-AU", in))
+	}
+}
