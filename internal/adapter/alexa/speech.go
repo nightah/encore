@@ -304,7 +304,7 @@ func (s *Speech) RoomSplits(locale, query string) []RoomSplit {
 	return out
 }
 
-// Reinterpret reads a PlayMedia search query, with any room already taken off it, as the film, TV or music intents whose samples it is, most specific first, followed by the query itself. Alexa can hear "play the next episode of bluey" or "play the movie frozen" as PlayMedia with the query "the next episode of bluey" or "the movie frozen", since an AMAZON.SearchQuery slot takes any words; searched as a title, it matches nothing. The caller tries each reading until one finds something.
+// Reinterpret reads a PlayMedia search query, with any room already taken off it, as the film, TV or music intents whose samples it is, most specific first, followed by the query itself and then by a reading that only splits it between title slots ("bohemian rhapsody by queen" as a song by an artist), which "stand by me" is too, so it is tried only once the query found nothing. Alexa can hear "play the next episode of bluey" or "play the movie frozen" as PlayMedia with the query "the next episode of bluey" or "the movie frozen", since an AMAZON.SearchQuery slot takes any words; searched as a title, it matches nothing. The caller tries each reading until one finds something.
 func (s *Speech) Reinterpret(locale string, intent Intent) []Intent {
 	forms, ok := s.queryForms[locale]
 	if !ok {
@@ -322,28 +322,41 @@ func (s *Speech) Reinterpret(locale string, intent Intent) []Intent {
 
 	seen := map[string]bool{}
 
-	for _, form := range forms {
-		if len(out) == maxQueryForms {
-			break
-		}
+	read := func(loose bool, most int) {
+		n := 0
 
-		values, ok := form.match(words)
-		if !ok {
-			continue
-		}
+		for _, form := range forms {
+			if n == most {
+				return
+			}
 
-		reading := Intent{Name: form.intent, Slots: map[string]Slot{}}
-		for name, value := range values {
-			reading.Slots[name] = Slot{Name: name, Value: value}
-		}
+			if form.loose != loose {
+				continue
+			}
 
-		if key := fmt.Sprint(reading.Name, values); !seen[key] {
-			seen[key] = true
-			out = append(out, reading)
+			values, ok := form.match(words)
+			if !ok {
+				continue
+			}
+
+			reading := Intent{Name: form.intent, Slots: map[string]Slot{}}
+			for name, value := range values {
+				reading.Slots[name] = Slot{Name: name, Value: value}
+			}
+
+			if key := fmt.Sprint(reading.Name, values); !seen[key] {
+				seen[key] = true
+				out = append(out, reading)
+				n++
+			}
 		}
 	}
 
-	return append(out, intent)
+	read(false, maxQueryForms)
+	out = append(out, intent)
+	read(true, maxLooseForms)
+
+	return out
 }
 
 // ordinals maps the ordinals Alexa writes as digits in a search query to the words the samples spell out.
@@ -431,7 +444,7 @@ func expandAll(patterns []string) []string {
 	return out
 }
 
-// queryForms collects the samples of each film, TV and music intent that start with one of PlayMedia's carrier phrases, without it and without a room, most specific first. Samples that are only a slot after the carrier, such as "play {Show}", are left out: any query would match them. So are samples whose title slots meet only each other's words, such as "play {Title} by {Artist}": "stand by me" would be a song called "stand" by "me".
+// queryForms collects the samples of each film, TV and music intent that start with one of PlayMedia's carrier phrases, without it and without a room, most specific first. Samples that are only a slot after the carrier, such as "play {Show}", are left out: any query would match them. Samples whose title slots meet only each other's words, such as "play {Title} by {Artist}", are loose: "stand by me" would be a song called "stand" by "me", so they are tried last.
 func queryForms(model skillmodel.Model, utterances map[string][]string) ([]queryForm, error) {
 	return languageQueryForms("", model, utterances)
 }
@@ -541,8 +554,9 @@ func newQueryForm(intent string, words []string, carriers, trailers [][]string, 
 	}
 
 	edged := !isSlotRef(form.words[0]) || !isSlotRef(form.words[len(form.words)-1])
+	form.loose = free >= 2 && !edged
 
-	return form, form.literals > 0 && (free < 2 || edged)
+	return form, form.literals > 0
 }
 
 // match reads words as the form, returning each slot's words; a number slot takes one word that is a number.

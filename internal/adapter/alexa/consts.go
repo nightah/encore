@@ -84,6 +84,9 @@ const RecentRejections = 24 * time.Hour
 // maxQueryForms caps the intents a search query is read as before it is searched as a title (Speech.Reinterpret), since each reading that finds nothing costs a search.
 const maxQueryForms = 2
 
+// maxLooseForms caps the loose readings of a search query (queryForm.loose), tried after the query itself.
+const maxLooseForms = 1
+
 // playlistType is the slot type of a library's playlists, whose intents a search query is read as too.
 const playlistType = "KODI_PLAYLIST"
 

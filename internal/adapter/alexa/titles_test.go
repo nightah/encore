@@ -81,10 +81,11 @@ func TestReinterpretEndsWithTheQuery(t *testing.T) {
 	in := Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: "the album stand by me by ben e king"}}}
 	readings := speech.Reinterpret("en-AU", in)
 
-	require.Len(t, readings, maxQueryForms+1)
+	require.Len(t, readings, maxQueryForms+1+maxLooseForms)
 	assert.Equal(t, "ListenToAlbum", readings[0].Name)
 	assert.Equal(t, "stand", readings[0].Slots["Album"].Value, "the form with the most words comes first")
-	assert.Equal(t, in, readings[len(readings)-1])
+	assert.Equal(t, in, readings[maxQueryForms])
+	assert.Equal(t, "ListenToSongOrAlbum", readings[len(readings)-1].Name, "a loose reading comes after the query")
 
 	seen := map[string]bool{}
 	for _, r := range readings {
@@ -92,6 +93,36 @@ func TestReinterpretEndsWithTheQuery(t *testing.T) {
 		assert.False(t, seen[key], "readings are distinct: %s", key)
 		seen[key] = true
 	}
+}
+
+// TestReinterpretSplitsTitleAndArtistLast checks that a query that is only a title and an artist, as Amazon hears "play bohemian rhapsody by queen" in every locale tried, is read as that song or album once the query itself finds nothing, and that "stand by me" is still searched as it stands first.
+func TestReinterpretSplitsTitleAndArtistLast(t *testing.T) {
+	speech := shippedSpeech(t)
+
+	tests := []struct {
+		locale, query, title, artist string
+	}{
+		{"en-US", "bohemian rhapsody by queen", "bohemian rhapsody", "queen"},
+		{"en-AU", "stand by me", "stand", "me"},
+		{"es-US", "ojos asi de shakira", "ojos asi", "shakira"},
+		{"pt-BR", "envolver de anitta", "envolver", "anitta"},
+		{"nl-NL", "zij van marco borsato", "zij", "marco borsato"},
+	}
+
+	for _, tc := range tests {
+		in := Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.query}}}
+		readings := speech.Reinterpret(tc.locale, in)
+
+		require.Len(t, readings, 2, tc.query)
+		assert.Equal(t, in, readings[0], "%s: the query is searched first", tc.query)
+		assert.Equal(t, Intent{Name: "ListenToSongOrAlbum", Slots: map[string]Slot{
+			"Title":  {Name: "Title", Value: tc.title},
+			"Artist": {Name: "Artist", Value: tc.artist},
+		}}, readings[1], tc.query)
+	}
+
+	only := Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: "frozen"}}}
+	assert.Equal(t, []Intent{only}, speech.Reinterpret("en-AU", only), "a query with no artist in it is only itself")
 }
 
 func TestStripKind(t *testing.T) {

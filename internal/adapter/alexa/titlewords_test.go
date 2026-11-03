@@ -95,6 +95,7 @@ const (
 	playSpirited  = "Play movie/904 resume"
 	playUtada     = "Play artist/905 shuffle limit 100"
 	playSoundOfIt = "Play movie/906 resume"
+	playBohemian  = "Play song/50"
 )
 
 // TestWordsLeftInTitleSlots plays what was meant when Alexa leaves a kind of title ("the movie"), or words that name no title at all ("music", "something"), in a title slot, in every language the skill speaks.
@@ -128,6 +129,12 @@ func TestWordsLeftInTitleSlots(t *testing.T) {
 		{"hi music by", "hi-IN", "PlayMedia", map[string]string{"Query": "अरिजीत सिंह के गाने"}, playArijit},
 		{"ja film sample", "ja-JP", "PlayMedia", map[string]string{"Query": "映画の千と千尋の神隠し"}, playSpirited},
 		{"ja music by", "ja-JP", "PlayMedia", map[string]string{"Query": "宇多田ヒカルの曲"}, playUtada},
+
+		// A song and its artist with only the word between them: split once the whole query finds nothing.
+		{"en song by artist", "en-US", "PlayMedia", map[string]string{"Query": "bohemian rhapsody by queen"}, playBohemian},
+		{"es song by artist", "es-US", "PlayMedia", map[string]string{"Query": "bohemian rhapsody de queen"}, playBohemian},
+		{"pt song by artist", "pt-BR", "PlayMedia", map[string]string{"Query": "bohemian rhapsody do queen"}, playBohemian},
+		{"nl song by artist", "nl-NL", "PlayMedia", map[string]string{"Query": "bohemian rhapsody van queen"}, playBohemian},
 
 		// A kind of title said where no sample has it: taken off once the whole title finds nothing.
 		{"en kind after the title", "en-AU", "PlayMedia", map[string]string{"Query": "hot fuzz movie"}, playHotFuzz},

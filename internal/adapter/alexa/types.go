@@ -135,6 +135,8 @@ type queryForm struct {
 	unspaced bool
 	// lang is the language, whose number words a query may hold as digits (sameWord).
 	lang string
+	// loose is a form whose title slots meet only each other's words, such as "{Title} by {Artist}", which most queries with the word in them match.
+	loose bool
 }
 
 // roomPlace is where a pattern's optional room group is (roomAround).
