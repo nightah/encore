@@ -120,13 +120,13 @@ cases:
   - {utterance: "pon la rola ojos así", intent: ListenToSong, slots: {Song: "ojos así"}}
   - {utterance: "pon la rola ojos así de shakira", intent: ListenToSong, slots: {Artist: "shakira", Song: "ojos así"}}
   - {utterance: "quiero escuchar la rola ojos así de shakira", intent: ListenToSong, slots: {Artist: "shakira", Song: "ojos así"}}
-  - {utterance: "dale play a ojos así de shakira", intent: ListenToSongOrAlbum, slots: {Artist: "shakira", Title: "ojos así"}}
-  - {utterance: "dale play a la casa de papel", intent: PlayMedia, slots: {Query: "la casa de papel"}}
+  - {utterance: "dale play a ojos así de shakira", intent: ListenToSongOrAlbum, slots: {Artist: "shakira", Title: "ojos así"}, pending: "Amazon keeps play a from dale play a in the Title slot"}
+  - {utterance: "dale play a la casa de papel", intent: PlayMedia, slots: {Query: "la casa de papel"}, pending: "Amazon reads it as the next episode of a show called play a la casa de papel"}
   - {utterance: "hiberna la computadora", intent: Power, slots: {PowerAction: "hibernate"}}
   - {utterance: "pon la computadora a hiberna", intent: Power, slots: {PowerAction: "hibernate"}}
   - {utterance: "pausa en mi sala de estar", intent: RoomControl, slots: {Command: "pause", Room: ""}}
   - {utterance: "pausa la tele en mi sala de estar", intent: RoomControl, slots: {Command: "pause", Room: ""}}
-  - {utterance: "quiero ver el capítulo 3 de la temporada 2 de la casa de papel", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "la casa de papel"}}
+  - {utterance: "quiero ver el capítulo 3 de la temporada 2 de la casa de papel", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "la casa de papel"}, pending: "Amazon reads it as the next episode, with the episode and season in the Show slot"}
   - {utterance: "pon el capítulo nuevo de la casa de papel", intent: WatchLatestEpisode, slots: {Show: "la casa de papel"}}
   - {utterance: "pon la película el laberinto del fauno en mi sala de estar", intent: WatchMovie, slots: {Movie: "el laberinto del fauno", Room: ""}}
   - {utterance: "quiero ver la peli el laberinto del fauno", intent: WatchMovie, slots: {Movie: "el laberinto del fauno"}}

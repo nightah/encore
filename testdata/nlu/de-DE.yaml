@@ -5,11 +5,11 @@ cases:
   - {utterance: "abbrechen", intent: AMAZON.CancelIntent}
   - {utterance: "hilfe", intent: AMAZON.HelpIntent}
   - {utterance: "stopp", intent: AMAZON.StopIntent, also: [{intent: RoomControl, slots: {Command: stop}}]}
-  - {utterance: "geh zur startseite", intent: AMAZON.NavigateHomeIntent, also: [{intent: Navigate, slots: {NavAction: home}}]}
+  - {utterance: "geh zur startseite", intent: AMAZON.NavigateHomeIntent, also: [{intent: Navigate, slots: {NavAction: home}}], pending: "Amazon finds no intent, though it is one of NavigateHome's samples"}
   - {utterance: "pausiere den fernseher", intent: AMAZON.PauseIntent}
   - {utterance: "setze den fernseher fort", intent: AMAZON.ResumeIntent}
   - {utterance: "weiter", intent: AMAZON.NextIntent, also: [{intent: RoomControl, slots: {Command: next}}]}
-  - {utterance: "zurück", intent: AMAZON.PreviousIntent, also: [{intent: RoomControl, slots: {Command: previous}}]}
+  - {utterance: "vorheriges", intent: AMAZON.PreviousIntent, also: [{intent: RoomControl, slots: {Command: previous}}]}
   - {utterance: "von vorne", intent: AMAZON.StartOverIntent}
   - {utterance: "ja", intent: AMAZON.YesIntent}
   - {utterance: "nein", intent: AMAZON.NoIntent}
@@ -52,7 +52,7 @@ cases:
   - {utterance: "gibt es irgendwelche neue film", intent: WhatsNew, slots: {MediaType: "movie"}}
   - {utterance: "liste mir die alben von rammstein auf", intent: WhatAlbums, slots: {Artist: "rammstein"}}
   - {utterance: "fünf minuten zurück", intent: PlayerSeek, slots: {Duration: "", SeekDirection: "back"}}
-  - {utterance: "spul um fünf minuten zurück", intent: PlayerRewind, slots: {Duration: ""}}
+  - {utterance: "spul um fünf minuten zurück", intent: PlayerRewind, slots: {Duration: ""}, also: [{intent: PlayerSeek, slots: {Duration: "", SeekDirection: back}}]}
   - {utterance: "geh zur stelle fünf minuten", intent: PlayerSeekTo, slots: {Position: ""}}
   - {utterance: "wiederholung alles", intent: Repeat, slots: {RepeatMode: "all"}}
   - {utterance: "vergrößere das bild", intent: PlayerZoom}

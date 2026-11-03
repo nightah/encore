@@ -121,7 +121,7 @@ cases:
   - {utterance: "pon la rola ojos así de shakira", intent: ListenToSong, slots: {Artist: "shakira", Song: "ojos así"}}
   - {utterance: "quiero escuchar la rola ojos así de shakira", intent: ListenToSong, slots: {Artist: "shakira", Song: "ojos así"}}
   - {utterance: "dale play a ojos así de shakira", intent: ListenToSongOrAlbum, slots: {Artist: "shakira", Title: "ojos así"}}
-  - {utterance: "dale play a la casa de papel", intent: PlayMedia, slots: {Query: "la casa de papel"}}
+  - {utterance: "dale play a la casa de papel", intent: PlayMedia, slots: {Query: "la casa de papel"}, pending: "Amazon finds no intent, though dale play a {Query} is one of PlayMedia's samples"}
   - {utterance: "hiberna la computadora", intent: Power, slots: {PowerAction: "hibernate"}}
   - {utterance: "pon la computadora a hiberna", intent: Power, slots: {PowerAction: "hibernate"}}
   - {utterance: "pausa en mi sala de estar", intent: RoomControl, slots: {Command: "pause", Room: ""}}

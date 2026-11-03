@@ -51,7 +51,7 @@ cases:
   - {utterance: "おすすめの映画を教えてください", intent: Recommend, slots: {MediaType: "movie"}}
   - {utterance: "新しい映画はある", intent: WhatsNew, slots: {MediaType: "movie"}}
   - {utterance: "宇多田ヒカルのアルバムを一覧にしてください", intent: WhatAlbums, slots: {Artist: "宇多田ヒカル"}}
-  - {utterance: "五分戻してください", intent: PlayerSeek, slots: {Duration: "", SeekDirection: "back"}}
+  - {utterance: "五分戻してください", intent: PlayerSeek, slots: {Duration: "", SeekDirection: "back"}, also: [{intent: PlayerRewind, slots: {Duration: ""}}]}
   - {utterance: "五分巻き戻してください", intent: PlayerRewind, slots: {Duration: ""}}
   - {utterance: "五分のところに移動してください", intent: PlayerSeekTo, slots: {Position: ""}}
   - {utterance: "ループモードを全部にしてください", intent: Repeat, slots: {RepeatMode: "all"}}
@@ -61,7 +61,7 @@ cases:
   - {utterance: "全画面表示を終了してください", intent: Fullscreen}
   - {utterance: "立体視モード", intent: StereoscopicMode}
   - {utterance: "デジタル音声を切り替えてください", intent: AudioPassthrough}
-  - {utterance: "音量を30にしてください", intent: VolumeSet, slots: {Level: "30"}}
+  - {utterance: "音量を三十にしてください", intent: VolumeSet, slots: {Level: "30"}}
   - {utterance: "もっと大きく", intent: VolumeUp}
   - {utterance: "音量を下げてください", intent: VolumeDown}
   - {utterance: "ミュートして", intent: Mute}

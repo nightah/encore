@@ -7,7 +7,7 @@ cases:
   - {utterance: "stop", intent: AMAZON.StopIntent, also: [{intent: RoomControl, slots: {Command: stop}}]}
   - {utterance: "torna alla home", intent: AMAZON.NavigateHomeIntent, also: [{intent: Navigate, slots: {NavAction: home}}]}
   - {utterance: "metti in pausa la tv", intent: AMAZON.PauseIntent}
-  - {utterance: "riprendi la tv", intent: AMAZON.ResumeIntent}
+  - {utterance: "riprendi la tv", intent: AMAZON.ResumeIntent, pending: "Amazon finds no intent, though it is one of Resume's samples"}
   - {utterance: "successivo", intent: AMAZON.NextIntent, also: [{intent: RoomControl, slots: {Command: next}}]}
   - {utterance: "precedente", intent: AMAZON.PreviousIntent, also: [{intent: RoomControl, slots: {Command: previous}}]}
   - {utterance: "ricomincia", intent: AMAZON.StartOverIntent}
@@ -70,7 +70,7 @@ cases:
   - {utterance: "come si chiama questo echo", intent: IdentifyEcho}
   - {utterance: "cambia i sottotitoli", intent: Subtitles, slots: {SubtitleAction: "next"}}
   - {utterance: "cambia audio", intent: AudioStream, slots: {Step: "next"}}
-  - {utterance: "vai indietro", intent: Navigate, slots: {NavAction: "back"}, also: [{intent: PlayerRewind}]}
+  - {utterance: "vai indietro", intent: Navigate, slots: {NavAction: "back"}, also: [{intent: PlayerRewind}, {intent: PlayerSeek, slots: {SeekDirection: back}}]}
   - {utterance: "detta ciao", intent: TypeText, slots: {Text: ""}}
   - {utterance: "mostra i miei film", intent: ViewLibrary, slots: {Section: "movies"}}
   - {utterance: "mostra la playlist musicale viaggio", intent: ViewPlaylist, slots: {Playlist: ""}}

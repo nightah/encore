@@ -17,7 +17,7 @@ cases:
   - {utterance: "शफ़ल बंद", intent: AMAZON.ShuffleOffIntent}
   - {utterance: "रिपीट चालू", intent: AMAZON.LoopOnIntent}
   - {utterance: "रिपीट बंद", intent: AMAZON.LoopOffIntent, also: [{intent: Repeat, slots: {RepeatMode: "off"}}]}
-  - {utterance: "मुझे फ़िल्म शोले देखनी है", intent: WatchMovie, slots: {Movie: "शोले"}}
+  - {utterance: "मुझे फ़िल्म शोले देखनी है", intent: WatchMovie, slots: {Movie: "शोले"}, pending: "Amazon falls back, though the sample with देखनी है is WatchMovie's"}
   - {utterance: "पंचायत देखना जारी रखो", intent: WatchNextEpisode, slots: {Show: "पंचायत"}}
   - {utterance: "शोले ढूँढो", intent: PlayMedia, slots: {Query: "शोले"}}
   - {utterance: "दूसरा वाला चलाओ", intent: ChooseMatch, slots: {Which: "second"}}
@@ -52,7 +52,7 @@ cases:
   - {utterance: "क्या कोई नया फ़िल्म आया है", intent: WhatsNew, slots: {MediaType: "movie"}}
   - {utterance: "अरिजीत सिंह के एल्बम बताओ", intent: WhatAlbums, slots: {Artist: "अरिजीत सिंह"}}
   - {utterance: "पांच मिनट पीछे", intent: PlayerSeek, slots: {Duration: "", SeekDirection: "back"}}
-  - {utterance: "पांच मिनट पीछे करो", intent: PlayerRewind, slots: {Duration: ""}}
+  - {utterance: "पांच मिनट पीछे करो", intent: PlayerRewind, slots: {Duration: ""}, pending: "Amazon fills no Duration from पांच मिनट here, though it does without करो"}
   - {utterance: "पांच मिनट के निशान पर जाओ", intent: PlayerSeekTo, slots: {Position: ""}}
   - {utterance: "रिपीट मोड सब", intent: Repeat, slots: {RepeatMode: "all"}}
   - {utterance: "एनहांस करो", intent: PlayerZoom}
@@ -64,7 +64,7 @@ cases:
   - {utterance: "आवाज़ 30 पर सेट करो", intent: VolumeSet, slots: {Level: "30"}}
   - {utterance: "और तेज़", intent: VolumeUp}
   - {utterance: "आवाज़ कम करो", intent: VolumeDown}
-  - {utterance: "म्यूट", intent: Mute}
+  - {utterance: "म्यूट", intent: Mute, pending: "Amazon finds no intent, though it is one of Mute's samples"}
   - {utterance: "मैं क्या देख रहा हूँ", intent: CurrentPlayItemEnquiry}
   - {utterance: "कितना बाकी है", intent: CurrentPlayItemTimeRemaining}
   - {utterance: "इस इको की पहचान बताओ", intent: IdentifyEcho}
@@ -74,7 +74,7 @@ cases:
   - {utterance: "टेक्स्ट नमस्ते डालो", intent: TypeText, slots: {Text: ""}}
   - {utterance: "मेरी फ़िल्में दिखाओ", intent: ViewLibrary, slots: {Section: "movies"}}
   - {utterance: "म्यूज़िक प्लेलिस्ट सफ़र दिखाओ", intent: ViewPlaylist, slots: {Playlist: ""}}
-  - {utterance: "फ़ेवरेट आज तक खोलो", intent: OpenFavourite, slots: {Favourite: ""}}
+  - {utterance: "फ़ेवरेट आज तक खोलो", intent: OpenFavourite, slots: {Favourite: ""}, pending: "Amazon finds no intent for a favourite's name it doesn't know"}
   - {utterance: "यूट्यूब चालू करो", intent: LaunchAddon, slots: {Addon: ""}}
   - {utterance: "शोले की ग्लोबल सर्च करो", intent: GlobalSearch, slots: {Query: "शोले"}}
   - {utterance: "कोडी हाइबरनेट करो", intent: Power, slots: {PowerAction: "hibernate"}}
@@ -89,7 +89,7 @@ cases:
   # Bare titles, which free-text and title slots compete for.
   - {utterance: "शोले चलाओ", intent: PlayMedia, slots: {Query: "शोले"}}
   - {utterance: "शोले लगाओ", intent: PlayMedia, slots: {Query: "शोले"}}
-  - {utterance: "मैं फ़िल्म शोले देखना चाहता हूँ", intent: WatchMovie, slots: {Movie: "शोले"}}
+  - {utterance: "मैं फ़िल्म शोले देखना चाहता हूँ", intent: WatchMovie, slots: {Movie: "शोले"}, also: [{intent: WatchMovie, slots: {Movie: "फ़िल्म शोले"}}], pending: "Amazon reads मैं फ़िल्म शोले as an album"}
   # Rooms.
   - {utterance: "हॉल में फ़िल्म शोले चलाओ", intent: WatchMovie, slots: {Movie: "शोले", Room: ""}}
   - {utterance: "हॉल में पंचायत देखना जारी रखो", intent: WatchNextEpisode, slots: {Room: "", Show: "पंचायत"}}

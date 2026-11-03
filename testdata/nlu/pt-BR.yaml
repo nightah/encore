@@ -52,7 +52,7 @@ cases:
   - {utterance: "tem algum filme novo para assistir", intent: WhatsNew, slots: {MediaType: "movie"}}
   - {utterance: "lista os álbuns de anitta", intent: WhatAlbums, slots: {Artist: "anitta"}}
   - {utterance: "para trás cinco minutos", intent: PlayerSeek, slots: {Duration: "", SeekDirection: "back"}}
-  - {utterance: "retrocede cinco minutos", intent: PlayerRewind, slots: {Duration: ""}}
+  - {utterance: "retrocede cinco minutos", intent: PlayerRewind, slots: {Duration: ""}, pending: "Amazon fills no Duration from cinco minutos, which es-ES's same sample does"}
   - {utterance: "vai para a posição cinco minutos", intent: PlayerSeekTo, slots: {Position: ""}}
   - {utterance: "modo repetir tudo", intent: Repeat, slots: {RepeatMode: "all"}}
   - {utterance: "melhora a imagem", intent: PlayerZoom}
