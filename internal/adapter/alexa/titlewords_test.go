@@ -136,6 +136,9 @@ func TestWordsLeftInTitleSlots(t *testing.T) {
 		{"pt song by artist", "pt-BR", "PlayMedia", map[string]string{"Query": "bohemian rhapsody do queen"}, playBohemian},
 		{"nl song by artist", "nl-NL", "PlayMedia", map[string]string{"Query": "bohemian rhapsody van queen"}, playBohemian},
 
+		// A command heard as a search.
+		{"es volume heard as a search", "es-US", "PlayMedia", map[string]string{"Query": "el volumen a 30"}, "Volume set 30"},
+
 		// A kind of title said where no sample has it: taken off once the whole title finds nothing.
 		{"en kind after the title", "en-AU", "PlayMedia", map[string]string{"Query": "hot fuzz movie"}, playHotFuzz},
 		{"en kind in the movie slot", "en-US", "WatchMovie", map[string]string{"Movie": "hot fuzz film"}, playHotFuzz},
@@ -149,6 +152,7 @@ func TestWordsLeftInTitleSlots(t *testing.T) {
 		{"ar kind in the movie slot", "ar-SA", "WatchMovie", map[string]string{"Movie": "فيلم الرسالة"}, playRisala},
 		{"ar kind with its article", "ar-SA", "PlayMedia", map[string]string{"Query": "الرسالة الفيلم"}, playRisala},
 		{"hi kind after the title", "hi-IN", "PlayMedia", map[string]string{"Query": "शोले पिक्चर"}, playSholay},
+		{"hi kind in the movie slot", "hi-IN", "WatchMovie", map[string]string{"Movie": "फ़िल्म शोले"}, playSholay},
 		{"ja kind after the title", "ja-JP", "PlayMedia", map[string]string{"Query": "千と千尋の神隠しの映画"}, playSpirited},
 		{"ja kind in the movie slot", "ja-JP", "WatchMovie", map[string]string{"Movie": "ムービーの千と千尋の神隠し"}, playSpirited},
 

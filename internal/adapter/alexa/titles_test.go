@@ -125,6 +125,26 @@ func TestReinterpretSplitsTitleAndArtistLast(t *testing.T) {
 	assert.Equal(t, []Intent{only}, speech.Reinterpret("en-AU", only), "a query with no artist in it is only itself")
 }
 
+// TestReinterpretCommands checks that a query that is a command's sample after PlayMedia's carrier, as Amazon heard "pon el volumen a 30", "metti in pausa la tv" and "नई फ़िल्में ढूँढो", is read as that command, and that a command whose slot takes any words is left alone, as a film called In Bruges isn't AudioStream's "play in {Language}".
+func TestReinterpretCommands(t *testing.T) {
+	speech := shippedSpeech(t)
+
+	for _, tc := range []struct {
+		locale, query string
+		want          Intent
+	}{
+		{"es-US", "el volumen a 30", Intent{Name: "VolumeSet", Slots: map[string]Slot{"Level": {Name: "Level", Value: "30"}}}},
+		{"it-IT", "in pausa la tv", Intent{Name: "AMAZON.PauseIntent", Slots: map[string]Slot{}}},
+		{"hi-IN", "नई फ़िल्में", Intent{Name: "UpdateLibrary", Slots: map[string]Slot{}}},
+	} {
+		in := Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.query}}}
+		assert.Equal(t, []Intent{tc.want, in}, speech.Reinterpret(tc.locale, in), tc.query)
+	}
+
+	bruges := Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: "in bruges"}}}
+	assert.Equal(t, []Intent{bruges}, speech.Reinterpret("en-AU", bruges))
+}
+
 func TestStripKind(t *testing.T) {
 	speech := shippedSpeech(t)
 

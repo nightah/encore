@@ -304,7 +304,7 @@ func (s *Speech) RoomSplits(locale, query string) []RoomSplit {
 	return out
 }
 
-// Reinterpret reads a PlayMedia search query, with any room already taken off it, as the film, TV or music intents whose samples it is, most specific first, followed by the query itself and then by a reading that only splits it between title slots ("bohemian rhapsody by queen" as a song by an artist), which "stand by me" is too, so it is tried only once the query found nothing. Alexa can hear "play the next episode of bluey" or "play the movie frozen" as PlayMedia with the query "the next episode of bluey" or "the movie frozen", since an AMAZON.SearchQuery slot takes any words; searched as a title, it matches nothing. The caller tries each reading until one finds something.
+// Reinterpret reads a PlayMedia search query, with any room already taken off it, as the film, TV or music intents, or the commands with only numbers in them ("pon el volumen a 30", "metti in pausa la tv"), whose samples it is, most specific first, followed by the query itself and then by a reading that only splits it between title slots ("bohemian rhapsody by queen" as a song by an artist), which "stand by me" is too, so it is tried only once the query found nothing. Alexa can hear "play the next episode of bluey" or "play the movie frozen" as PlayMedia with the query "the next episode of bluey" or "the movie frozen", since an AMAZON.SearchQuery slot takes any words; searched as a title, it matches nothing. The caller tries each reading until one finds something.
 func (s *Speech) Reinterpret(locale string, intent Intent) []Intent {
 	forms, ok := s.queryForms[locale]
 	if !ok {
@@ -444,7 +444,7 @@ func expandAll(patterns []string) []string {
 	return out
 }
 
-// queryForms collects the samples of each film, TV and music intent that start with one of PlayMedia's carrier phrases, without it and without a room, most specific first. Samples that are only a slot after the carrier, such as "play {Show}", are left out: any query would match them. Samples whose title slots meet only each other's words, such as "play {Title} by {Artist}", are loose: "stand by me" would be a song called "stand" by "me", so they are tried last.
+// queryForms collects the samples of each film, TV and music intent, and of each other command whose slots all take numbers, that start with one of PlayMedia's carrier phrases, without it and without a room, most specific first. Samples that are only a slot after the carrier, such as "play {Show}", are left out: any query would match them. Samples whose title slots meet only each other's words, such as "play {Title} by {Artist}", are loose: "stand by me" would be a song called "stand" by "me", so they are tried last.
 func queryForms(model skillmodel.Model, utterances map[string][]string) ([]queryForm, error) {
 	return languageQueryForms("", model, utterances)
 }
@@ -476,10 +476,8 @@ func languageQueryForms(lang string, model skillmodel.Model, utterances map[stri
 	var out []queryForm
 
 	for _, in := range model.Intents {
-		// Films, TV and music, and playlists, which a library holds too.
-		if content[in.Name] == "" && !slices.ContainsFunc(in.Slots, func(s skillmodel.Slot) bool { return s.Type == playlistType }) {
-			continue
-		}
+		// Films, TV and music, and playlists, which a library holds too, take any form; other commands only one whose slots are numbers.
+		command := content[in.Name] == "" && !slices.ContainsFunc(in.Slots, func(s skillmodel.Slot) bool { return s.Type == playlistType })
 
 		numbers := map[string]bool{}
 
@@ -496,7 +494,7 @@ func languageQueryForms(lang string, model skillmodel.Model, utterances map[stri
 			}
 
 			for _, sample := range samples {
-				if form, ok := newQueryForm(in.Name, units(lang, sample), carriers, trailers, numbers); ok {
+				if form, ok := newQueryForm(in.Name, units(lang, sample), carriers, trailers, numbers); ok && (!command || onlyNumberSlots(form)) {
 					form.unspaced = unspaced[lang]
 					form.lang = lang
 					out = append(out, form)
@@ -557,6 +555,17 @@ func newQueryForm(intent string, words []string, carriers, trailers [][]string, 
 	form.loose = free >= 2 && !edged
 
 	return form, form.literals > 0
+}
+
+// onlyNumberSlots reports whether every slot form has takes a number, so a query it matches holds only the command's own words and a number: "el volumen a 30", not "in bruges" for AudioStream's "in {Language}".
+func onlyNumberSlots(form queryForm) bool {
+	for _, w := range form.words {
+		if isSlotRef(w) && !form.numbers[w[1:len(w)-1]] {
+			return false
+		}
+	}
+
+	return true
 }
 
 // match reads words as the form, returning each slot's words; a number slot takes one word that is a number.
