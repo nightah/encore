@@ -476,9 +476,23 @@ func TestRereaderReadsQueriesAsTheHandlerDoes(t *testing.T) {
 	speech, err := alexa.NewSpeech(loadSources(t), slog.New(slog.DiscardHandler))
 	require.NoError(t, err)
 
-	read := rereader(speech)
+	reread := rereader(speech)
+	read := func(locale, query string) []nlu.Reading {
+		return reread(locale, nlu.Reading{Intent: "PlayMedia", Slots: map[string]string{"Query": query}})
+	}
 
 	assert.Contains(t, read("en-GB", "the song bohemian rhapsody"), nlu.Reading{Intent: "ListenToSong", Slots: map[string]string{"Song": "bohemian rhapsody"}})
 	assert.Contains(t, read("en-GB", "the movie dune in the living room"), nlu.Reading{Intent: "WatchMovie", Slots: map[string]string{"Movie": "dune", "Room": "living room"}}, "a room phrase is taken off and kept")
 	assert.Contains(t, read("en-GB", "dune"), nlu.Reading{Intent: "PlayMedia", Slots: map[string]string{"Query": "dune"}}, "and the query as it stands")
+}
+
+func TestRereaderRewritesAsTheHandlerDoes(t *testing.T) {
+	speech, err := alexa.NewSpeech(loadSources(t), slog.New(slog.DiscardHandler))
+	require.NoError(t, err)
+
+	read := rereader(speech)
+
+	assert.Equal(t, []nlu.Reading{{Intent: "ContinueWatching", Slots: map[string]string{"Room": "bedroom"}}}, read("en-AU", nlu.Reading{Intent: "WatchNextEpisode", Slots: map[string]string{"Show": "the last show", "Room": "bedroom"}}), "the last show continues watching")
+	assert.Equal(t, []nlu.Reading{{Intent: "ListenToArtist", Slots: map[string]string{"Artist": "queen"}}}, read("en-AU", nlu.Reading{Intent: "ListenToSongOrAlbum", Slots: map[string]string{"Title": "music", "Artist": "queen"}}), "music by an artist is the artist's")
+	assert.Equal(t, []nlu.Reading{{Intent: "WatchMovie", Slots: map[string]string{"Movie": "dune"}}}, read("en-AU", nlu.Reading{Intent: "WatchMovie", Slots: map[string]string{"Movie": "dune"}}), "anything else stands")
 }

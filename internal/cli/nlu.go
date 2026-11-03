@@ -153,36 +153,51 @@ func newGenNLUCommand() *cobra.Command {
 	return cmd
 }
 
-// rereader reads a PlayMedia query as Encore's handler does: as it stands, and with each room phrase it may end or start with taken off and kept as the room, as the film, TV and music intents it may be.
-func rereader(speech *alexa.Speech) func(locale, query string) []nlu.Reading {
-	return func(locale, query string) []nlu.Reading {
-		var out []nlu.Reading
+// rereader reads what NLU heard as Encore's handler does before acting on it: a next-episode request for "the last show" continues watching, a music request whose title names no title is rerouted, and a PlayMedia query is read as it stands, and with each room phrase it may end or start with taken off and kept as the room, as the film, TV and music intents it may be.
+func rereader(speech *alexa.Speech) func(locale string, heard nlu.Reading) []nlu.Reading {
+	return func(locale string, heard nlu.Reading) []nlu.Reading {
+		in := alexa.Intent{Name: heard.Intent, Slots: map[string]alexa.Slot{}}
+		for name, value := range heard.Slots {
+			in.Slots[name] = alexa.Slot{Name: name, Value: value}
+		}
+
+		in = speech.Reroute(locale, speech.LastShow(locale, in))
+		out := []nlu.Reading{readingOf(in, "")}
+
+		if in.Name != "PlayMedia" {
+			return out
+		}
 
 		read := func(title, room string) {
-			intent := alexa.Intent{Name: "PlayMedia", Slots: map[string]alexa.Slot{"Query": {Name: "Query", Value: title}}}
+			query := alexa.Intent{Name: "PlayMedia", Slots: map[string]alexa.Slot{"Query": {Name: "Query", Value: title}}}
 
-			for _, in := range speech.Reinterpret(locale, intent) {
-				reading := nlu.Reading{Intent: in.Name, Slots: map[string]string{}}
-				for name, slot := range in.Slots {
-					reading.Slots[name] = slot.Value
-				}
-
-				if room != "" {
-					reading.Slots["Room"] = room
-				}
-
-				out = append(out, reading)
+			for _, in := range speech.Reinterpret(locale, query) {
+				out = append(out, readingOf(in, room))
 			}
 		}
 
-		read(query, "")
+		read(in.Slots["Query"].Value, "")
 
-		for _, split := range speech.RoomSplits(locale, query) {
+		for _, split := range speech.RoomSplits(locale, in.Slots["Query"].Value) {
 			read(split.Title, split.Room)
 		}
 
 		return out
 	}
+}
+
+// readingOf is in's intent and slot words, with room as its Room when there is one.
+func readingOf(in alexa.Intent, room string) nlu.Reading {
+	reading := nlu.Reading{Intent: in.Name, Slots: map[string]string{}}
+	for name, slot := range in.Slots {
+		reading.Slots[name] = slot.Value
+	}
+
+	if room != "" {
+		reading.Slots["Room"] = room
+	}
+
+	return reading
 }
 
 func chooseFixtures(all []nlu.Fixture, locales []string) ([]nlu.Fixture, error) {

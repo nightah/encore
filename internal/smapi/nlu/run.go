@@ -129,7 +129,7 @@ func (r *Runner) one(ctx context.Context, p *pacer, locale string, c Case) Resul
 	return res
 }
 
-// compare says how p differs from what c expects, or, when p is one of c's alternatives or a PlayMedia query Encore reads as c expects, nothing and how it got there.
+// compare says how p differs from what c expects, or, when p is one of c's alternatives or Encore reads it as c expects, nothing and how it got there.
 func (r *Runner) compare(locale string, c Case, p *smapi.NLUProfile) ([]string, string) {
 	problems := differences(Reading{Intent: c.Intent, Slots: c.Slots}, p)
 	if len(problems) == 0 {
@@ -142,19 +142,35 @@ func (r *Runner) compare(locale string, c Case, p *smapi.NLUProfile) ([]string, 
 		}
 	}
 
-	if p.Intent() == playMedia && r.Reread != nil {
-		query := p.Selected.Slots[queryslot].Value
+	if p.Selected != nil && r.Reread != nil {
+		heard := heardOf(p)
 
-		for _, reading := range r.Reread(locale, query) {
+		for _, reading := range r.Reread(locale, heard) {
 			for _, want := range append([]Reading{{Intent: c.Intent, Slots: c.Slots}}, c.Also...) {
 				if reads(reading, want) {
-					return nil, playMedia
+					return nil, heard.Intent
 				}
 			}
 		}
 	}
 
 	return problems, ""
+}
+
+// heardOf is the intent p selected and the words of each slot it filled.
+func heardOf(p *smapi.NLUProfile) Reading {
+	heard := Reading{Intent: p.Intent(), Slots: map[string]string{}}
+	if p.Selected == nil {
+		return heard
+	}
+
+	for name, slot := range p.Selected.Slots {
+		if v := strings.TrimSpace(slot.Value); v != "" {
+			heard.Slots[name] = v
+		}
+	}
+
+	return heard
 }
 
 // differences says how p differs from want.

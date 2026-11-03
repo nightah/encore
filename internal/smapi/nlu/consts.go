@@ -28,12 +28,6 @@ const (
 	OutcomeFixed Outcome = "fixed"
 )
 
-// playMedia is the catch-all search intent, and queryslot its slot, whose words Encore reads again as the film, TV and music intents it may be.
-const (
-	playMedia = "PlayMedia"
-	queryslot = "Query"
-)
-
 // quotationMarks are the quotes fold drops; apostrophes stay, as they belong to words ("l'ancien").
 const quotationMarks = "\"“”„«»「」『』"
 

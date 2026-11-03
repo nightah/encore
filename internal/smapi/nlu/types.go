@@ -26,7 +26,7 @@ type Case struct {
 	Also []Reading `yaml:"also"`
 }
 
-// Reading is an intent and the slots it fills: a fixture row's alternative, or a reading Encore takes of a PlayMedia query (Runner.Reread).
+// Reading is an intent and the slots it fills: a fixture row's alternative, or a reading Encore takes of what NLU heard (Runner.Reread).
 type Reading struct {
 	Intent string            `yaml:"intent"`
 	Slots  map[string]string `yaml:"slots"`
@@ -45,8 +45,8 @@ type Runner struct {
 	Reprobes int
 	// Wait is the pause before each reprobe. Default 2s.
 	Wait time.Duration
-	// Reread, if set, reads a PlayMedia search query as the film, TV or music intents Encore's handler would try (alexa.Speech.Reinterpret), so a row that arrives as PlayMedia passes when Encore reads it as the row expects.
-	Reread func(locale, query string) []Reading
+	// Reread, if set, reads the intent and slot words NLU heard as the requests Encore's handler would act on: "continue watching the last show" as ContinueWatching, "play music by queen" as queen's music, a PlayMedia search query as the film, TV or music intents it tries. A row passes when one of them is what it expects.
+	Reread func(locale string, heard Reading) []Reading
 	// Rate is how many profileNlu requests a second are sent, reprobes included, across every fixture. Default 2, under Amazon's limit for a developer account.
 	Rate float64
 }

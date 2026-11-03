@@ -354,7 +354,7 @@ func TestRunPacesUnderAmazonsLimitByDefault(t *testing.T) {
 	})
 }
 
-// TestRunAcceptsOtherWaysToTheSameThing checks that a row passes as one of its alternatives, or as a PlayMedia query Encore reads as the row asks, that slot values compare without accents, and that the report says how a row got there.
+// TestRunAcceptsOtherWaysToTheSameThing checks that a row passes as one of its alternatives, or as what Encore reads NLU's answer as, that slot values compare without accents, and that the report says how a row got there and what a failing one heard.
 func TestRunAcceptsOtherWaysToTheSameThing(t *testing.T) {
 	r, fake := runner(t)
 
@@ -363,16 +363,19 @@ func TestRunAcceptsOtherWaysToTheSameThing(t *testing.T) {
 		asked []string
 	)
 
-	r.Reread = func(locale, query string) []nlu.Reading {
+	r.Reread = func(locale string, heard nlu.Reading) []nlu.Reading {
 		mu.Lock()
-		asked = append(asked, locale+": "+query)
+		asked = append(asked, locale+": "+heard.Intent+" "+heard.Slots["Query"]+heard.Slots["Show"])
 		mu.Unlock()
 
-		if query == "the song bohemian rhapsody" {
-			return []nlu.Reading{{Intent: "ListenToSong", Slots: map[string]string{"Song": "Bohemian Rhapsody"}}, {Intent: "PlayMedia", Slots: map[string]string{"Query": query}}}
+		switch {
+		case heard.Slots["Query"] == "the song bohemian rhapsody":
+			return []nlu.Reading{{Intent: "ListenToSong", Slots: map[string]string{"Song": "Bohemian Rhapsody"}}, heard}
+		case heard.Slots["Show"] == "the last show":
+			return []nlu.Reading{{Intent: "ContinueWatching", Slots: map[string]string{}}}
 		}
 
-		return []nlu.Reading{{Intent: "PlayMedia", Slots: map[string]string{"Query": query}}}
+		return []nlu.Reading{heard}
 	}
 
 	fake.Profile("en-GB", "repeat off", smapitest.NLUAnswer{Intent: "Repeat", Slots: map[string]string{"RepeatMode": "off"}})
@@ -380,6 +383,7 @@ func TestRunAcceptsOtherWaysToTheSameThing(t *testing.T) {
 	fake.Profile("en-GB", "play the song heat", smapitest.NLUAnswer{Intent: "PlayMedia", Slots: map[string]string{"Query": "the song heat"}})
 	fake.Profile("es-US", "pon la canción ojos así", smapitest.NLUAnswer{Intent: "ListenToSong", Slots: map[string]string{"Song": "ojos asi"}})
 	fake.Profile("en-CA", "play the song bohemian rhapsody", smapitest.NLUAnswer{Intent: "ListenToSong", Slots: map[string]string{"Song": `"Bohemian Rhapsody"`}})
+	fake.Profile("en-AU", "continue watching the last show", smapitest.NLUAnswer{Intent: "WatchNextEpisode", Slots: map[string]string{"Show": "the last show"}})
 
 	res, err := r.Run(t.Context(),
 		nlu.Fixture{Locale: "en-GB", Cases: []nlu.Case{
@@ -389,6 +393,7 @@ func TestRunAcceptsOtherWaysToTheSameThing(t *testing.T) {
 		}},
 		nlu.Fixture{Locale: "es-US", Cases: []nlu.Case{{Utterance: "pon la canción ojos así", Intent: "ListenToSong", Slots: map[string]string{"Song": "ojos así"}}}},
 		nlu.Fixture{Locale: "en-CA", Cases: []nlu.Case{{Utterance: "play the song bohemian rhapsody", Intent: "ListenToSong", Slots: map[string]string{"Song": "bohemian rhapsody"}}}},
+		nlu.Fixture{Locale: "en-AU", Cases: []nlu.Case{{Utterance: "continue watching the last show", Intent: "ContinueWatching"}}},
 	)
 	require.NoError(t, err)
 
@@ -401,14 +406,18 @@ func TestRunAcceptsOtherWaysToTheSameThing(t *testing.T) {
 	assert.Equal(t, nlu.OutcomePass, res[3].Outcome(), "accents don't count: %v", res[3].Problems)
 	assert.Equal(t, nlu.OutcomePass, res[4].Outcome(), "nor the quotes Amazon's catalogue puts around a title: %v", res[4].Problems)
 	assert.Empty(t, res[3].Via)
+	assert.Equal(t, nlu.OutcomePass, res[5].Outcome(), "an intent Encore rewrites: %v", res[5].Problems)
+	assert.Equal(t, "WatchNextEpisode", res[5].Via)
 	slices.Sort(asked)
-	assert.Equal(t, []string{"en-GB: the song bohemian rhapsody", "en-GB: the song heat"}, asked, "only PlayMedia answers are read again")
+	assert.Equal(t, []string{"en-AU: WatchNextEpisode the last show", "en-GB: PlayMedia the song bohemian rhapsody", "en-GB: PlayMedia the song heat"}, asked, "only answers that don't pass as they stand are read again")
 
 	var out strings.Builder
 
 	require.NoError(t, nlu.Write(&out, res, true))
 	assert.Contains(t, out.String(), "PASS    en-GB \"repeat off\" (via Repeat)\n")
 	assert.Contains(t, out.String(), "PASS    en-GB \"play the song bohemian rhapsody\" (via PlayMedia)\n")
+	assert.Contains(t, out.String(), "FAIL    en-GB \"play the song heat\": got PlayMedia, want ListenToSong (heard Query=\"the song heat\")\n")
+	assert.Empty(t, nlu.Result{}.Heard(), "a row Amazon didn't answer heard nothing")
 }
 
 func TestCheckAlternatives(t *testing.T) {

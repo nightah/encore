@@ -41,6 +41,10 @@ func Write(w io.Writer, results []Result, verbose bool) error {
 			line += ": " + r.Err.Error()
 		case len(r.Problems) > 0:
 			line += ": " + strings.Join(r.Problems, "; ")
+			if heard := r.Heard(); heard != "" {
+				line += " (heard " + heard + ")"
+			}
+
 			if up := r.RunnersUp(); len(up) > 0 {
 				line += " (also considered " + strings.Join(up, ", ") + ")"
 			}
@@ -71,6 +75,22 @@ func Write(w io.Writer, results []Result, verbose bool) error {
 	_, err := fmt.Fprintf(w, "%d passed, %d failed, %d pending, %d fixed\n", s.Pass, s.Fail, s.Pending, s.Fixed)
 
 	return err
+}
+
+// Heard is the words of each slot NLU filled, as Name="words", or nothing when it filled none: what a reading that fails was given to work with.
+func (r Result) Heard() string {
+	if r.Got == nil {
+		return ""
+	}
+
+	slots := heardOf(r.Got).Slots
+
+	parts := make([]string, 0, len(slots))
+	for _, name := range sortedKeys(slots) {
+		parts = append(parts, fmt.Sprintf("%s=%q", name, slots[name]))
+	}
+
+	return strings.Join(parts, " ")
 }
 
 // Failed reports whether any row failed outright.
