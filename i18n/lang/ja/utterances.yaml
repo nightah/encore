@@ -21,6 +21,8 @@ AMAZON.ShuffleOffIntent:
 AMAZON.ShuffleOnIntent:
   shuffle: "シャッフル(オン|モードオン)"
   turn_shuffle: "シャッフルを(オンにして|有効にして)[ください]"
+AMAZON.StartOverIntent:
+  start_over: "(最初から|はじめから)[(再生して|見せて)][ください]\nもう一度最初から"
 AMAZON.StopIntent:
   say_stop: "ストップ\n止めて"
 AMAZON.YesIntent:

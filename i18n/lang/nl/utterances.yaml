@@ -21,6 +21,8 @@ AMAZON.ShuffleOffIntent:
 AMAZON.ShuffleOnIntent:
   shuffle: "shuffle aan\nwillekeurige volgorde aan"
   turn_shuffle: "(zet|schakel) (shuffle|willekeurig afspelen) aan"
+AMAZON.StartOverIntent:
+  start_over: "(begin|start) opnieuw\nopnieuw beginnen\nvan voren af aan"
 AMAZON.StopIntent:
   say_stop: "stop"
 AMAZON.YesIntent:

@@ -23,6 +23,8 @@ AMAZON.ShuffleOffIntent:
 AMAZON.ShuffleOnIntent:
   shuffle: "shuffle (on|mode on)"
   turn_shuffle: "(turn|switch) (on|) shuffle"
+AMAZON.StartOverIntent:
+  start_over: "start (over|again)\nstart from the beginning"
 AMAZON.StopIntent:
   say_stop: "stop"
 AMAZON.YesIntent:

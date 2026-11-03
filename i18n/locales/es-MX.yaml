@@ -53,6 +53,8 @@ types:
     song: [rola, rolas]
   NAV_ACTION:
     select: [okey, ok, enter]
+  REPEAT_MODE:
+    all: [to-do]
   SEEK_SIZE:
     big: [un buen rato, un montón]
     small: [tantito, un tantito]
