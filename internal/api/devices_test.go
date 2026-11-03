@@ -138,8 +138,9 @@ func TestRequestsTodayFollowTheConfiguredTimeZone(t *testing.T) {
 
 	c.json(http.MethodPatch, "/api/v1/settings", map[string]any{"locale": map[string]any{"timezone": "Australia/Melbourne"}}, http.StatusOK, nil)
 
-	// Breakfast in Melbourne is still the previous evening in UTC.
-	breakfast := time.Date(2026, 10, 28, 8, 0, 0, 0, mel)
+	// Breakfast in Melbourne is still the previous evening in UTC. It is today's, since the store prunes requests older than a week by its own clock.
+	y, m, d := time.Now().In(mel).Date()
+	breakfast := time.Date(y, m, d, 8, 0, 0, 0, mel)
 	h.skew.Store(int64(time.Until(breakfast)))
 
 	kitchen, err := h.app.DB().EchoDevices().Seen(ctx, "amzn1.ask.device.KITCHEN")
@@ -150,10 +151,10 @@ func TestRequestsTodayFollowTheConfiguredTimeZone(t *testing.T) {
 
 	log := h.app.DB().RequestLog()
 	for _, e := range []store.RequestLogEntry{
-		{DeviceID: "amzn1.ask.device.KITCHEN", Intent: "WatchMovie", Time: time.Date(2026, 10, 27, 23, 59, 0, 0, mel)},
-		{DeviceID: "amzn1.ask.device.KITCHEN", Intent: "WatchMovie", Time: time.Date(2026, 10, 28, 0, 1, 0, 0, mel)},
-		{DeviceID: "amzn1.ask.device.KITCHEN", Intent: "WatchShow", Time: time.Date(2026, 10, 28, 7, 0, 0, 0, mel)},
-		{DeviceID: "amzn1.ask.device.DEN", Intent: "WatchShow", Time: time.Date(2026, 10, 28, 7, 30, 0, 0, mel)},
+		{DeviceID: "amzn1.ask.device.KITCHEN", Intent: "WatchMovie", Time: time.Date(y, m, d-1, 23, 59, 0, 0, mel)},
+		{DeviceID: "amzn1.ask.device.KITCHEN", Intent: "WatchMovie", Time: time.Date(y, m, d, 0, 1, 0, 0, mel)},
+		{DeviceID: "amzn1.ask.device.KITCHEN", Intent: "WatchShow", Time: time.Date(y, m, d, 7, 0, 0, 0, mel)},
+		{DeviceID: "amzn1.ask.device.DEN", Intent: "WatchShow", Time: time.Date(y, m, d, 7, 30, 0, 0, mel)},
 	} {
 		require.NoError(t, log.Insert(ctx, &e))
 	}
