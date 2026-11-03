@@ -7,9 +7,9 @@ import (
 	"github.com/nightah/encore/internal/fuzzy/phonetic/ar"
 )
 
-// arabicFolds are the Arabic letters written more than one way for one sound, folded to one spelling. NFKD has already dropped the harakat and the hamza on a seat (أ إ آ ؤ ئ); a hamza on the line is dropped too, so "شيء" meets "شي" and "ذئب" meets "ذيب". Persian and Gulf letters for sounds Arabic lacks fold to the Arabic letter people also write: پ for p as ب, ڤ for v as ف, and گ for the Gulf g of ق as ق.
+// arabicFolds are the Arabic letters written more than one way for one sound, folded to one spelling. NFKD has already dropped the harakat and the hamza on a seat (أ إ آ ؤ ئ); a hamza on the line is dropped too, as is the high hamza NFKD splits from ٵ, ٶ and ٸ, so "شيء" meets "شي" and "ذئب" meets "ذيب". Persian and Gulf letters for sounds Arabic lacks fold to the Arabic letter people also write: پ for p as ب, ڤ for v as ف, and گ for the Gulf g of ق as ق.
 var arabicFolds = map[rune]string{
-	'ٱ': "ا", 'ة': "ه", 'ى': "ي", 'ء': "", 'ی': "ي", 'ک': "ك", 'ھ': "ه", 'ہ': "ه",
+	'ٱ': "ا", 'ة': "ه", 'ى': "ي", 'ء': "", 'ٴ': "", 'ی': "ي", 'ک': "ك", 'ھ': "ه", 'ہ': "ه",
 	'پ': "ب", 'ڤ': "ف", 'ڥ': "ف", 'گ': "ق", 'ڨ': "ق",
 }
 

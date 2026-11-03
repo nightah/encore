@@ -29,6 +29,8 @@ func TestNormalizeArabic(t *testing.T) {
 		{"شيء", "shi"},
 		{"ذئب", "thib"},
 		{"البريء", "bri"},
+		{"ٵ", "a"},
+		{"aٴ", "a"},
 		{"اللمبى", "lmbi"},
 		{"ٱلرسالة", "rsala"},
 		{"مُحَمَّد", "mhmd"},
