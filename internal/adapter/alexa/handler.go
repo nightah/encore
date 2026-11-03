@@ -213,7 +213,12 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, tr *requestT
 		default:
 			return h.respond(locale, actions.Outcome{Say: actions.Message{ID: "match.cancelled"}, EndSession: true}, false), nil
 		}
-	case "AMAZON.FallbackIntent", "AMAZON.NavigateHomeIntent":
+	case "AMAZON.NavigateHomeIntent":
+		// "Go home" to a question asks it again; otherwise Kodi goes to its home screen.
+		if question != nil {
+			return h.respond(locale, askAgain(env, "question.again", *question), false), nil
+		}
+	case "AMAZON.FallbackIntent":
 		if question != nil {
 			return h.respond(locale, askAgain(env, "question.again", *question), false), nil
 		}

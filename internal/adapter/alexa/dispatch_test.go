@@ -68,6 +68,7 @@ func TestDispatchControlIntents(t *testing.T) {
 		"start over":                    {intent: "AMAZON.StartOverIntent", want: "Transport startover"},
 		"room control by resolved ID":   {intent: "RoomControl", slots: map[string]slotSpec{"Command": {"halt", "stop"}}, want: "Transport stop"},
 		"room control by synonym":       {intent: "RoomControl", slots: map[string]slotSpec{"Command": {value: "resume"}}, want: "Transport resume"},
+		"go home":                       {intent: "AMAZON.NavigateHomeIntent", want: "Input home"},
 		"room control next":             {intent: "RoomControl", slots: map[string]slotSpec{"Command": {"next", "next"}}, want: "Transport next"},
 		"shuffle off":                   {intent: "AMAZON.ShuffleOffIntent", want: "SetShuffle false"},
 		"loop off":                      {intent: "AMAZON.LoopOffIntent", want: "SetRepeat off"},
@@ -170,7 +171,6 @@ func TestDispatchUnrecognisedSlotsAskAgain(t *testing.T) {
 		"episode with a non-number":       {intent: "WatchEpisode", slots: map[string]slotSpec{"Show": {value: "bluey"}, "Season": {value: "one"}, "Episode": {value: "3"}}},
 		"an intent Encore does not know":  {intent: "OrderPizza"},
 		"fallback intent":                 {intent: "AMAZON.FallbackIntent"},
-		"navigate home is not supported":  {intent: "AMAZON.NavigateHomeIntent"},
 		"seek to a negative zero minutes": {intent: "PlayerSeekTo", slots: map[string]slotSpec{"Position": {value: "PT0S"}}},
 	}
 

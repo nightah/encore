@@ -203,6 +203,8 @@ func (h *Handler) dispatchControl(ctx context.Context, t actions.Target, intent 
 		return svc.Transport(ctx, t, media.TransportPrevious)
 	case "AMAZON.StartOverIntent":
 		return svc.Transport(ctx, t, media.TransportStartOver)
+	case "AMAZON.NavigateHomeIntent":
+		return svc.Navigate(ctx, t, media.InputHome, 0)
 	case "RoomControl":
 		cmd, ok := transports[sl.id("Command", "TRANSPORT_COMMAND")]
 		if !ok {
