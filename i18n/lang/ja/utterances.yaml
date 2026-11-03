@@ -9,6 +9,8 @@ AMAZON.LoopOffIntent:
 AMAZON.LoopOnIntent:
   loop: "(ループ|リピート)(オン|モード)"
   turn_repeat: "(リピート|ループ|繰り返し)を(オンにして|有効にして)[ください]"
+AMAZON.NextIntent:
+  next_episode: "次の(エピソード|話|回)[を][(再生して|見せて|かけて)][ください]"
 AMAZON.NoIntent:
   say_no: "いいえ\nいや"
 AMAZON.PauseIntent:

@@ -9,6 +9,7 @@ cases:
   - {utterance: "टीवी पॉज़ करो", intent: AMAZON.PauseIntent}
   - {utterance: "टीवी फिर से चलाओ", intent: AMAZON.ResumeIntent}
   - {utterance: "अगला", intent: AMAZON.NextIntent, also: [{intent: RoomControl, slots: {Command: next}}]}
+  - {utterance: "अगला एपिसोड चलाओ", intent: AMAZON.NextIntent}
   - {utterance: "पिछला", intent: AMAZON.PreviousIntent, also: [{intent: RoomControl, slots: {Command: previous}}]}
   - {utterance: "फिर से शुरू करो", intent: AMAZON.StartOverIntent}
   - {utterance: "हाँ", intent: AMAZON.YesIntent}

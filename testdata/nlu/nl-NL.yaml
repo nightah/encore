@@ -9,6 +9,7 @@ cases:
   - {utterance: "pauzeer de tv", intent: AMAZON.PauseIntent}
   - {utterance: "hervat de tv", intent: AMAZON.ResumeIntent}
   - {utterance: "volgende", intent: AMAZON.NextIntent, also: [{intent: RoomControl, slots: {Command: next}}]}
+  - {utterance: "volgende aflevering", intent: AMAZON.NextIntent}
   - {utterance: "vorige", intent: AMAZON.PreviousIntent, also: [{intent: RoomControl, slots: {Command: previous}}], pending: "Amazon finds no intent for a bare vorige, which AMAZON.PreviousIntent should know"}
   - {utterance: "begin opnieuw", intent: AMAZON.StartOverIntent}
   - {utterance: "ja", intent: AMAZON.YesIntent}

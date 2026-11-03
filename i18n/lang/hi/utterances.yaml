@@ -9,6 +9,8 @@ AMAZON.LoopOffIntent:
 AMAZON.LoopOnIntent:
   loop: "(रिपीट|लूप) (चालू|ऑन)"
   turn_repeat: "(रिपीट|लूप) (चालू|ऑन) (करो|कर दो|कीजिए)"
+AMAZON.NextIntent:
+  next_episode: "अगला एपिसोड [(चलाओ|चलाइए|लगाओ|लगाइए|दिखाओ|दिखाइए|play करो|प्ले करो|शुरू करो)]"
 AMAZON.NoIntent:
   say_no: "नहीं"
 AMAZON.PauseIntent:

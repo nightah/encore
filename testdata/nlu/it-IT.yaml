@@ -9,6 +9,7 @@ cases:
   - {utterance: "metti in pausa la tv", intent: AMAZON.PauseIntent}
   - {utterance: "riprendi la tv", intent: AMAZON.ResumeIntent, pending: "Amazon finds no intent, though it is one of Resume's samples"}
   - {utterance: "successivo", intent: AMAZON.NextIntent, also: [{intent: RoomControl, slots: {Command: next}}]}
+  - {utterance: "metti il prossimo episodio", intent: AMAZON.NextIntent}
   - {utterance: "precedente", intent: AMAZON.PreviousIntent, also: [{intent: RoomControl, slots: {Command: previous}}]}
   - {utterance: "ricomincia", intent: AMAZON.StartOverIntent}
   - {utterance: "sì", intent: AMAZON.YesIntent}

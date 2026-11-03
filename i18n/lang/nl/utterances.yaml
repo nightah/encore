@@ -9,6 +9,8 @@ AMAZON.LoopOffIntent:
 AMAZON.LoopOnIntent:
   loop: "herhalen aan"
   turn_repeat: "(zet|schakel) [het] herhalen aan"
+AMAZON.NextIntent:
+  next_episode: "[(speel|start)] de volgende aflevering\nvolgende aflevering\nzet de volgende aflevering op\n(ga|spring) naar de volgende aflevering"
 AMAZON.NoIntent:
   say_no: "nee\nnee dank je\nnee bedankt"
 AMAZON.PauseIntent:

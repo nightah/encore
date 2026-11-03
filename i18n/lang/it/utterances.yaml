@@ -9,6 +9,8 @@ AMAZON.LoopOffIntent:
 AMAZON.LoopOnIntent:
   loop: "ripetizione (attiva|on)"
   turn_repeat: "(attiva|accendi) [la] ripetizione\n(attiva|accendi) il loop"
+AMAZON.NextIntent:
+  next_episode: "[(metti|guarda|riproduci)] (il prossimo episodio|l'episodio successivo)\nprossimo episodio\nepisodio successivo\npassa all'episodio successivo"
 AMAZON.NoIntent:
   say_no: "no"
 AMAZON.PauseIntent:

@@ -9,6 +9,7 @@ cases:
   - {utterance: "テレビを一時停止して", intent: AMAZON.PauseIntent}
   - {utterance: "テレビを再開して", intent: AMAZON.ResumeIntent}
   - {utterance: "次", intent: AMAZON.NextIntent, also: [{intent: RoomControl, slots: {Command: next}}]}
+  - {utterance: "次のエピソードを再生して", intent: AMAZON.NextIntent}
   - {utterance: "前", intent: AMAZON.PreviousIntent, also: [{intent: RoomControl, slots: {Command: previous}}]}
   - {utterance: "最初から", intent: AMAZON.StartOverIntent}
   - {utterance: "はい", intent: AMAZON.YesIntent}

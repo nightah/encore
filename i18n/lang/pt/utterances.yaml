@@ -11,6 +11,8 @@ AMAZON.LoopOnIntent:
   turn_repeat: "(liga|ligar|ativa|ativar) (a repetição|o modo repetir)"
 AMAZON.NavigateHomeIntent:
   go_home: "(vá|vai|volta|voltar) para (o início|a tela inicial|o menu principal)"
+AMAZON.NextIntent:
+  next_episode: "[(coloca|coloque|bota|põe|ponha|passa|reproduz|toca)] o (próximo|seguinte) episódio\npróximo episódio\n(pula|passa) para o (próximo|seguinte) episódio"
 AMAZON.NoIntent:
   say_no: "não"
 AMAZON.PauseIntent:

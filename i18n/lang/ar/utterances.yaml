@@ -11,6 +11,8 @@ AMAZON.LoopOnIntent:
   turn_repeat: "(شغلي|فعلي|فعل) (وضع التكرار|الإعادة|التكرار التلقائي)"
 AMAZON.NavigateHomeIntent:
   go_home: "(ارجعي|روحي) (للرئيسية|للشاشة الرئيسية|للقائمة الرئيسية)"
+AMAZON.NextIntent:
+  next_episode: "[(شغلي|شغل|حطي)] (الحلقة الجاية|الحلقة التالية|الحلقة اللي بعدها)"
 AMAZON.NoIntent:
   say_no: "لا"
 AMAZON.PauseIntent:
