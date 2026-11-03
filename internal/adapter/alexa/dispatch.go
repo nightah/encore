@@ -233,8 +233,9 @@ func (h *Handler) dispatchControl(ctx context.Context, t actions.Target, intent 
 
 		return svc.Repeat(ctx, t, mode)
 	case "PlayerSeek", "PlayerRewind":
-		// Alexa hears a lone "go back" as PlayerRewind, with no amount.
-		if _, ok := sl.duration("Duration"); intent.Name == "PlayerRewind" && !ok && sl.id("Size", "SEEK_SIZE") == "" {
+		// Alexa hears a lone "go back" as PlayerRewind, or as PlayerSeek back, with no amount.
+		back := intent.Name == "PlayerRewind" || sl.id("SeekDirection", "SEEK_DIRECTION") == "back"
+		if _, ok := sl.duration("Duration"); back && !ok && sl.id("Size", "SEEK_SIZE") == "" {
 			return svc.RewindOrBack(ctx, t)
 		}
 
