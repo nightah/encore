@@ -203,6 +203,11 @@ func (l *language) scriptPieces(toks []string) []string {
 		from, started := 0, false
 
 		for j, r := range tok {
+			// A mark belongs to the letter before it, whatever script it is from.
+			if isMark(r) {
+				continue
+			}
+
 			o := l.foreignRune(r)
 			if o == nil && !unicode.IsLetter(r) {
 				continue

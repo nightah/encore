@@ -222,6 +222,22 @@ func TestSplitAloneKeepsWordCoverage(t *testing.T) {
 }
 
 // TestNormalizeJapaneseIdempotent checks that only the Japanese scripts are segmented, a run in another script staying one word (or going through the rules of the language that reads it) and a combining mark on the letter before it, and that normalising the result again changes nothing.
+func TestNormalizeKanjiNumeralBeforeAMark(t *testing.T) {
+	for _, tc := range []struct {
+		lang, in, want string
+	}{
+		// A mark stays with the numeral before it, whatever its script, and a digit can't carry it.
+		{"de", "〇ؐ", "0"},
+		{"ja", "〇ؐ", "0"},
+		{"ja", "七\u0301", "7"},
+		{"hi", "二ि", "2"},
+	} {
+		got := Normalize(tc.lang, tc.in)
+		assert.Equal(t, tc.want, got, "%s %q", tc.lang, tc.in)
+		assert.Equal(t, got, Normalize(tc.lang, got), "%s: normalising %q again", tc.lang, tc.in)
+	}
+}
+
 func TestNormalizeJapaneseIdempotent(t *testing.T) {
 	for _, tc := range []struct {
 		in, want string

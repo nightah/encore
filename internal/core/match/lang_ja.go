@@ -229,8 +229,10 @@ func kanjiNumbers(words []string) []string {
 		}
 
 		out = append(out, strconv.Itoa(v))
-		if n < len(w) {
-			out = append(out, w[n:])
+
+		// Marks after the numeral can't stay on a digit, and on their own they'd be dropped when normalised again.
+		if rest := strings.TrimLeftFunc(w[n:], isMark); rest != "" {
+			out = append(out, rest)
 		}
 	}
 
