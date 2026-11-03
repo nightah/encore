@@ -71,7 +71,7 @@ type Locale struct {
 	Types map[string]map[string][]string `yaml:"types"`
 	// Launch is how the locale's speakers open the skill.
 	Launch Launch `yaml:"launch"`
-	// UnaccentedSamples adds each sample again without the acute accents and diaereses on its letters, for a locale whose speech recognition writes what it hears without them: es-US hears "la canción" as "la cancion", which its samples with the accent match less well. The tilde stays, as "año" is not "ano".
+	// UnaccentedSamples adds each sample again without the acute accents and diaereses on its letters, for a locale whose speech recognition writes what it hears without them: es-US hears "la canción" as "la cancion", which its samples with the accent match less well. Each slot value gets synonyms without them too, so "la mas antigua" still resolves. The tilde stays, as "año" is not "ano".
 	UnaccentedSamples bool `yaml:"unaccented_samples"`
 }
 

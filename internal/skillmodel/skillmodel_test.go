@@ -507,7 +507,10 @@ utterances:
     - "la película {Movie}"
 `
 
-	src := load(t, map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "unaccented_samples: true" + samples})
+	src := load(t, map[string]string{
+		"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "unaccented_samples: true" + samples,
+		"model.yaml":         strings.Replace(baseFiles["model.yaml"], "synonyms: [living room]", "synonyms: [living room, salón, sálon]", 1),
+	})
 
 	m, err := Build(src, "en-US", BuildOptions{})
 	require.NoError(t, err)
@@ -517,6 +520,10 @@ utterances:
 	assert.Subset(t, movie.Samples, []string{"pon la película {Movie} del año", "pon la pelicula {Movie} del año", "el pingüino {Movie}", "el pinguino {Movie}"}, "the tilde stays")
 	assert.Equal(t, 1, strings.Count(strings.Join(movie.Samples, "\n"), "put on {Movie}"), "a sample without accents isn't doubled")
 	assert.Equal(t, []string{"la película {Movie}", "la pelicula {Movie}"}, movie.Slots[0].Samples)
+
+	room := m.InteractionModel.LanguageModel.Types[0]
+	require.Equal(t, "KODI_ROOM", room.Name)
+	assert.Equal(t, []string{"living room", "salón", "sálon", "salon"}, room.Values[0].Name.Synonyms, "a slot value's words get synonyms without accents, once")
 
 	plain, err := Build(load(t, map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + samples}), "en-US", BuildOptions{})
 	require.NoError(t, err)

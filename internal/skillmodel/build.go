@@ -98,6 +98,14 @@ func Build(src *Sources, locale string, opts BuildOptions) (*InteractionModel, e
 		return nil, fmt.Errorf("locale %s: %w", locale, err)
 	}
 
+	if loc.UnaccentedSamples {
+		for i := range types {
+			for j := range types[i].Values {
+				types[i].Values[j].Name.Synonyms = unaccentedSynonyms(types[i].Values[j].Name.Value, types[i].Values[j].Name.Synonyms)
+			}
+		}
+	}
+
 	lm.Types = types
 
 	var m InteractionModel
@@ -200,6 +208,25 @@ func unaccented(s string) string {
 
 		return r
 	}, norm.NFD.String(s)))
+}
+
+// unaccentedSynonyms adds to synonyms each of value's and their own words without accents that isn't one of them already.
+func unaccentedSynonyms(value string, synonyms []string) []string {
+	have := map[string]bool{value: true}
+	for _, s := range synonyms {
+		have[s] = true
+	}
+
+	out := slices.Clone(synonyms)
+
+	for _, s := range append([]string{value}, synonyms...) {
+		if u := unaccented(s); !have[u] {
+			have[u] = true
+			out = append(out, u)
+		}
+	}
+
+	return out
 }
 
 func dedupe(in []string) []string {
