@@ -487,7 +487,7 @@ describe("Alexa skill page", () => {
     const user = userEvent.setup();
     failWith("get", "/skill", 500, "Encore's database is locked.");
     renderApp("/alexa-skill");
-    expect(await screen.findByRole("alert", {}, { timeout: 4000 })).toHaveTextContent("Encore's database is locked.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Encore's database is locked.");
 
     server.resetHandlers();
     await user.click(screen.getByRole("button", { name: "Try again" }));

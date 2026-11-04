@@ -594,7 +594,7 @@ describe("Request log", () => {
     const user = userEvent.setup();
     failWith("get", "/requests/1002", 500, "Database is locked.");
     renderApp("/request-log?id=1002");
-    expect(await screen.findByRole("alert", {}, { timeout: 4000 })).toHaveTextContent("Database is locked.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Database is locked.");
 
     server.resetHandlers();
     await user.click(screen.getByRole("button", { name: "Try again" }));

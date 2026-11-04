@@ -27,6 +27,19 @@ describe("Settings page", () => {
     expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled();
   });
 
+  it("shows the tabs once settings that load slowly arrive", async () => {
+    // Slower than findBy*'s one-second default, as the first page a busy CI runner renders can be.
+    server.use(
+      http.get("*/api/v1/settings", async () => {
+        await delay(1500);
+        return HttpResponse.json(getDb().settings);
+      }),
+    );
+    renderApp("/settings");
+    expect(await screen.findByRole("status")).toHaveTextContent("Loading");
+    expect(await screen.findByRole("tab", { name: "General" })).toHaveAttribute("aria-selected", "true");
+  });
+
   it("previews the theme and saves it with Save changes", async () => {
     const user = userEvent.setup();
     const log = recordRequests();

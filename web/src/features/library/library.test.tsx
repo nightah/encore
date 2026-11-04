@@ -289,14 +289,14 @@ describe("Library page", () => {
     failWith("get", "/libraries/3/recent", 503, "Kodi is asleep.");
     renderApp("/library");
     const recent = await screen.findByRole("region", { name: "Recently added" });
-    expect(await within(recent).findByRole("alert", {}, { timeout: 4000 })).toHaveTextContent("Kodi is asleep.");
+    expect(await within(recent).findByRole("alert")).toHaveTextContent("Kodi is asleep.");
   });
 
   it("offers to retry when the libraries can't be loaded", async () => {
     const user = userEvent.setup();
     failWith("get", "/libraries", 500, "Index is rebuilding.");
     renderApp("/library");
-    expect(await screen.findByRole("alert", {}, { timeout: 4000 })).toHaveTextContent("Index is rebuilding.");
+    expect(await screen.findByRole("alert")).toHaveTextContent("Index is rebuilding.");
 
     server.resetHandlers();
     await user.click(screen.getByRole("button", { name: "Try again" }));

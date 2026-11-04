@@ -101,9 +101,7 @@ describe("root route", () => {
   it("shows the error screen when the server can't tell who is signed in", async () => {
     server.use(http.get("*/api/v1/auth/state", () => new HttpResponse(null, { status: 503 })));
     renderApp("/");
-    expect(
-      await screen.findByRole("heading", { name: "Encore isn't responding" }, { timeout: 4000 }),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Encore isn't responding" })).toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent("Request failed with HTTP 503.");
   });
 
@@ -567,7 +565,7 @@ describe("page load errors", () => {
     failWith("get", endpoint, 500, "The database is locked.");
     renderApp(path);
     expect(await screen.findByRole("heading", { level: 1, name: title })).toBeInTheDocument();
-    expect(await screen.findByText("The database is locked.", {}, { timeout: 4000 })).toBeInTheDocument();
+    expect(await screen.findByText("The database is locked.")).toBeInTheDocument();
 
     server.resetHandlers();
     await user.click(screen.getByRole("button", { name: "Try again" }));

@@ -13,7 +13,7 @@ import { server } from "@test/server";
 import { failWith, recordRequests, renderApp } from "@test/utils";
 
 async function heading(name: string | RegExp) {
-  return screen.findByRole("heading", { level: 1, name }, { timeout: 4000 });
+  return screen.findByRole("heading", { level: 1, name });
 }
 
 /** Waits for the Amazon step to fill in the stored client ID: Authorise with Amazon stays disabled until it has one. */
