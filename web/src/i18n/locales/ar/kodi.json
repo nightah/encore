@@ -1,0 +1,192 @@
+{
+  "card": {
+    "address": "",
+    "and": "",
+    "defaultForUnlinked": "",
+    "edit": "",
+    "editNamed": "",
+    "failed": "",
+    "hideTest": "",
+    "httpOnly": {
+      "scheduled": "",
+      "theSource": "",
+      "viaSource": ""
+    },
+    "library": {
+      "label": "",
+      "own": "",
+      "sharedWith": ""
+    },
+    "mac": "",
+    "ms": "",
+    "notSet": "",
+    "offline": "",
+    "passed": "",
+    "shared": "",
+    "sharedSource": "",
+    "stats": {
+      "findable": "",
+      "lastEvent": "",
+      "movies_one": "",
+      "movies_other": "",
+      "newest": "",
+      "noneYet": "",
+      "notFindable": "",
+      "resync": "",
+      "resyncEvery": "",
+      "resyncNext": "",
+      "sharedWith": "",
+      "shows_one": "",
+      "shows_other": ""
+    },
+    "sync": "",
+    "test": "",
+    "testing": "",
+    "testResults": "",
+    "useForUnlinked": "",
+    "version": "",
+    "wake": "",
+    "wakeTimeout": {
+      "label": "",
+      "value": ""
+    },
+    "waking": ""
+  },
+  "dialog": {
+    "add": "",
+    "addTitle": "",
+    "cancel": "",
+    "close": "",
+    "confirmRemove": "",
+    "description": "",
+    "editTitle": "",
+    "errors": {
+      "mac": "",
+      "name": "",
+      "url": "",
+      "websocketUrl": ""
+    },
+    "fields": {
+      "broadcast": {
+        "hint": "",
+        "label": ""
+      },
+      "language": {
+        "hint": "",
+        "label": ""
+      },
+      "mac": {
+        "hint": "",
+        "label": ""
+      },
+      "name": {
+        "hint": "",
+        "label": ""
+      },
+      "password": {
+        "hint": "",
+        "label": "",
+        "saved": ""
+      },
+      "shutdown": {
+        "hint": "",
+        "inherit": "",
+        "label": "",
+        "power_off": "",
+        "quit": ""
+      },
+      "timezone": {
+        "hint": "",
+        "label": ""
+      },
+      "url": {
+        "label": ""
+      },
+      "username": {
+        "label": ""
+      },
+      "websocketUrl": {
+        "hint": "",
+        "label": ""
+      }
+    },
+    "keep": "",
+    "managed": "",
+    "remove": "",
+    "removeEllipsis": "",
+    "save": ""
+  },
+  "discovered": {
+    "add": "",
+    "addNamed": "",
+    "intro": "",
+    "lastScan": "",
+    "none": "",
+    "scanning": "",
+    "searching": "",
+    "title": "",
+    "unavailable": "",
+    "version": ""
+  },
+  "library": {
+    "explanation": {
+      "common": {
+        "many": "",
+        "two": ""
+      },
+      "confirmed": {
+        "many": "",
+        "two": ""
+      },
+      "likely": {
+        "check": {
+          "many": "",
+          "two": ""
+        },
+        "evidence": "",
+        "plain": ""
+      },
+      "manual": ""
+    },
+    "fallback": "",
+    "share": {
+      "add": "",
+      "alreadyShared": "",
+      "cancel": "",
+      "confirm_one": "",
+      "confirm_other": "",
+      "description": "",
+      "legend": "",
+      "open": "",
+      "sourceHint": "",
+      "title": ""
+    },
+    "source": "",
+    "sourceHint": "",
+    "split": {
+      "cancel": "",
+      "confirm": "",
+      "currentSource": "",
+      "description": "",
+      "legend": "",
+      "open": "",
+      "title": ""
+    },
+    "state": {
+      "confirmed_shared": "",
+      "likely_shared": "",
+      "manual": "",
+      "solo": ""
+    },
+    "title": ""
+  },
+  "page": {
+    "addManually": "",
+    "description": "",
+    "empty": {
+      "body": "",
+      "title": ""
+    },
+    "title": ""
+  }
+}
