@@ -13,7 +13,7 @@ import { server } from "@test/server";
 import { failWith, recordRequests, renderApp } from "@test/utils";
 
 async function heading(name: string | RegExp) {
-  return screen.findByRole("heading", { level: 1, name }, { timeout: 4000 });
+  return screen.findByRole("heading", { level: 1, name });
 }
 
 /** Waits for the Amazon step to fill in the stored client ID: Authorise with Amazon stays disabled until it has one. */
@@ -718,9 +718,11 @@ describe("setup admin step", () => {
   it("puts a rejected setup token under its field, without a separate alert", async () => {
     resetDb("fresh");
     server.use(
-      http.post("*/api/v1/setup/admin", () =>
-        problem422([{ location: "body.setup_token", message: "That isn't this server's setup token." }]),
-      ),
+      http.post("*/api/v1/setup/admin", async () => {
+        // Held back, so the form is still showing the field without the error when the click returns.
+        await delay(300);
+        return problem422([{ location: "body.setup_token", message: "That isn't this server's setup token." }]);
+      }),
     );
     const user = userEvent.setup();
     renderApp("/setup");
@@ -730,9 +732,8 @@ describe("setup admin step", () => {
     await user.type(screen.getByLabelText("Password"), "correct-horse-battery");
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
-    expect(await screen.findByLabelText("Setup token")).toHaveAccessibleDescription(
-      "That isn't this server's setup token.",
-    );
+    await screen.findByText("That isn't this server's setup token.");
+    expect(screen.getByLabelText("Setup token")).toHaveAccessibleDescription("That isn't this server's setup token.");
     expect(screen.getByLabelText("Setup token")).toHaveAttribute("aria-invalid", "true");
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { level: 1, name: "Create the admin account" })).toBeInTheDocument();
@@ -1551,12 +1552,22 @@ describe("setup hello step", () => {
       simulated: false,
       time: new Date().toISOString(),
     });
-    failWith("patch", "/devices/5", 500, "Database is locked.");
+    server.use(
+      http.patch("*/api/v1/devices/5", async () => {
+        // Held back, so the form is still showing the field without the error when the click returns.
+        await delay(300);
+        return HttpResponse.json(
+          { detail: "Database is locked.", status: 500, title: "Error", type: "about:blank" },
+          { headers: { "Content-Type": "application/problem+json" }, status: 500 },
+        );
+      }),
+    );
 
     await user.type(await screen.findByLabelText("Echo name"), "Lounge Echo Show");
     await user.click(screen.getByRole("button", { name: "Finish" }));
 
-    expect(await screen.findByLabelText("Echo name")).toHaveAccessibleDescription(/Database is locked\./);
+    await screen.findByText(/Database is locked\./);
+    expect(screen.getByLabelText("Echo name")).toHaveAccessibleDescription(/Database is locked\./);
     expect(router.state.location.pathname).toBe("/setup");
   });
 

@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from "vitest";
 
 import { setCsrfToken } from "@api/client";
@@ -11,6 +11,9 @@ import { onEmit, resetDb } from "@mocks/handlers";
 import { FakeEventSource } from "@test/eventSource";
 import { cancelRequests, settleRequests, trackRequests } from "@test/inflight";
 import { server } from "@test/server";
+
+// findBy* and waitFor give up after a second by default, but on a busy CI runner the first test in a file can take longer than that just to load a code-split route and render it.
+configure({ asyncUtilTimeout: 4000 });
 
 // Every test talks to the MSW implementation of the admin API (docs/src/content/docs/reference/api/); unknown requests fail loudly.
 beforeAll(() => {
