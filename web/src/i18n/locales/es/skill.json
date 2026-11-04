@@ -19,6 +19,10 @@
     "resume": "",
     "title": ""
   },
+  "autoDeployRetry": {
+    "next": "",
+    "title": ""
+  },
   "content": {
     "movies": "Películas",
     "music": "Música",
@@ -27,6 +31,7 @@
   },
   "locales": {
     "build": {
+      "degraded": "",
       "failed": "Error",
       "in_progress": "Compilando",
       "succeeded": "Correcto"
@@ -43,6 +48,7 @@
       "keepOne": "Deja activado al menos uno: películas, series o música.",
       "legend": "Qué puede reproducir"
     },
+    "degradedTitles": "",
     "empty": "Aún no hay nada compilado. Despliega la skill para compilar un modelo para cada configuración regional activada.",
     "enabled": {
       "hint": "Solo se compilan y despliegan las configuraciones regionales activadas. Un Echo solo puede usar la skill si su idioma coincide con una de ellas. Los cambios se aplican en el próximo despliegue.",
@@ -121,6 +127,8 @@
     "title": "Títulos en el modelo"
   },
   "warnings": {
+    "dropped": "",
+    "thinned": "",
     "title": "Avisos del último despliegue"
   }
 }
