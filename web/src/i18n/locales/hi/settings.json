@@ -1,0 +1,371 @@
+{
+  "access": {
+    "breakGlass": {
+      "hint": "",
+      "label": "",
+      "managed": ""
+    },
+    "cancel": "",
+    "header": {
+      "adminGroup": {
+        "label": ""
+      },
+      "groupsHeader": {
+        "label": ""
+      },
+      "strip": "",
+      "trustedProxies": {
+        "hint": "",
+        "label": ""
+      },
+      "userHeader": {
+        "label": "",
+        "required": ""
+      }
+    },
+    "local": {
+      "lockout": {
+        "5/15": "",
+        "10/60": "",
+        "custom": "",
+        "label": ""
+      },
+      "password": {
+        "change": "",
+        "hint": "",
+        "label": ""
+      },
+      "session": {
+        "days_one": "",
+        "days_other": "",
+        "hours_one": "",
+        "hours_other": "",
+        "label": ""
+      },
+      "totp": {
+        "hint": "",
+        "label": ""
+      },
+      "username": {
+        "hint": "",
+        "label": ""
+      }
+    },
+    "mode": {
+      "header": {
+        "hint": "",
+        "label": ""
+      },
+      "legend": "",
+      "local": {
+        "hint": "",
+        "label": ""
+      },
+      "oidc": {
+        "hint": "",
+        "label": ""
+      }
+    },
+    "oidc": {
+      "adminGroup": {
+        "hint": "",
+        "label": ""
+      },
+      "clientId": {
+        "label": "",
+        "required": ""
+      },
+      "clientSecret": {
+        "empty": "",
+        "label": "",
+        "stored": ""
+      },
+      "groupsClaim": {
+        "label": ""
+      },
+      "issuer": {
+        "hint": "",
+        "hintPreset": "",
+        "invalid": "",
+        "label": ""
+      },
+      "provider": {
+        "hint": "",
+        "label": "",
+        "other": ""
+      },
+      "providers": {
+        "authelia": {
+          "digest": "",
+          "generate": "",
+          "issuerHint": "",
+          "snippetTitle": ""
+        },
+        "authentik": {
+          "copySecret": "",
+          "issuerHint": "",
+          "scopesNote": "",
+          "snippetTitle": ""
+        },
+        "keycloak": {
+          "issuerHint": "",
+          "snippetTitle": ""
+        }
+      },
+      "redirectUri": {
+        "copy": "",
+        "label": ""
+      },
+      "saveToTest": "",
+      "scopes": {
+        "hint": "",
+        "label": ""
+      },
+      "snippetLabel": "",
+      "testSignIn": ""
+    },
+    "password": {
+      "changed": "",
+      "confirm": {
+        "label": "",
+        "mismatch": ""
+      },
+      "current": {
+        "label": "",
+        "required": ""
+      },
+      "description": "",
+      "new": {
+        "hint": "",
+        "label": "",
+        "tooShort": ""
+      },
+      "submit": "",
+      "title": ""
+    },
+    "title": "",
+    "totp": {
+      "code": "",
+      "copySecret": "",
+      "off": "",
+      "offDescription": "",
+      "offTitle": "",
+      "on": "",
+      "onDescription": "",
+      "onTitle": "",
+      "openApp": "",
+      "secret": "",
+      "turnedOff": "",
+      "turnedOn": ""
+    }
+  },
+  "backup": {
+    "export": "",
+    "import": "",
+    "imported": "",
+    "importedNothing": "",
+    "importing": "",
+    "includeSecrets": {
+      "hint": "",
+      "label": ""
+    },
+    "intro": "",
+    "skillPackage": "",
+    "skipped": "",
+    "title": ""
+  },
+  "features": {
+    "auto_deploy": {
+      "hint": "",
+      "title": ""
+    },
+    "auto_deploy_minutes": {
+      "hint_hours_one": "",
+      "hint_hours_other": "",
+      "hint_minutes_one": "",
+      "hint_minutes_other": "",
+      "hintInvalid": "",
+      "title": "",
+      "unit": ""
+    },
+    "confirm_sound": {
+      "hint": "",
+      "title": ""
+    },
+    "deep_search": {
+      "hint": "",
+      "title": ""
+    },
+    "queue_limit": {
+      "hint": "",
+      "title": ""
+    },
+    "shutdown_quits": {
+      "hint": "",
+      "title": ""
+    },
+    "title": ""
+  },
+  "general": {
+    "basePath": {
+      "hint": "",
+      "label": ""
+    },
+    "defaultLocale": {
+      "label": ""
+    },
+    "language": {
+      "auto": "",
+      "hint": "",
+      "label": ""
+    },
+    "logLevel": {
+      "debug": "",
+      "error": "",
+      "hint": "",
+      "info": "",
+      "label": "",
+      "warn": ""
+    },
+    "sections": {
+      "appearance": "",
+      "locale": "",
+      "logging": "",
+      "server": ""
+    },
+    "theme": {
+      "dark": {
+        "hint": "",
+        "label": ""
+      },
+      "legend": "",
+      "light": {
+        "hint": "",
+        "label": ""
+      },
+      "note": "",
+      "system": {
+        "hint": "",
+        "label": ""
+      }
+    },
+    "timezone": {
+      "hint": "",
+      "label": ""
+    },
+    "title": ""
+  },
+  "page": {
+    "description": "",
+    "save": "",
+    "sections": "",
+    "title": ""
+  },
+  "secrets": {
+    "encrypted": "",
+    "keyId": {
+      "label": "",
+      "rotated": ""
+    },
+    "rotate": {
+      "button": "",
+      "cancel": "",
+      "confirm": "",
+      "description": "",
+      "title": ""
+    },
+    "source": {
+      "config": "",
+      "file": "",
+      "generated": "",
+      "label": ""
+    },
+    "title": ""
+  },
+  "storage": {
+    "backend": {
+      "legend": "",
+      "local": "",
+      "localHint": "",
+      "s3": "",
+      "webdavHint": ""
+    },
+    "backups": {
+      "folder": {
+        "hint": "",
+        "label": ""
+      },
+      "hint": "",
+      "keep": {
+        "count_one": "",
+        "count_other": "",
+        "label": ""
+      },
+      "label": "",
+      "last": {
+        "label": "",
+        "never": "",
+        "run": ""
+      },
+      "schedules": {
+        "daily": "",
+        "off": "",
+        "weekly": ""
+      },
+      "snapshot": {
+        "label": "",
+        "value": ""
+      }
+    },
+    "intro": "",
+    "local": {
+      "hint": "",
+      "label": ""
+    },
+    "s3": {
+      "accessKey": "",
+      "bucket": "",
+      "caBundle": "",
+      "customCa": "",
+      "endpoint": {
+        "hint": "",
+        "label": ""
+      },
+      "pathStyle": "",
+      "prefix": "",
+      "region": "",
+      "secretKey": {
+        "hint": "",
+        "label": "",
+        "stored": ""
+      },
+      "sse": ""
+    },
+    "test": {
+      "button": "",
+      "failed": "",
+      "ok": "",
+      "saveFirst": ""
+    },
+    "title": "",
+    "webdav": {
+      "password": {
+        "hint": "",
+        "label": ""
+      },
+      "url": {
+        "hint": "",
+        "label": ""
+      },
+      "username": ""
+    }
+  },
+  "tabs": {
+    "access": "",
+    "backup": "",
+    "features": "",
+    "general": "",
+    "secrets": "",
+    "storage": ""
+  }
+}
