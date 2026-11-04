@@ -149,6 +149,19 @@
       "groupName": "web dependencies (non-major)"
     },
     {
+      "description": "Code generators (web): orval writes the API client in web/src/api/generated, so its updates join the codegen group, where renovate-generate.yml also runs pnpm generate:api. This comes after the web groups so it takes orval out of them",
+      "matchManagers": [
+        "npm"
+      ],
+      "matchFileNames": [
+        "web/**"
+      ],
+      "matchDepNames": [
+        "orval"
+      ],
+      "groupName": "codegen"
+    },
+    {
       "description": "GitHub Actions: group digest/minor/patch bumps",
       "matchManagers": [
         "github-actions"
