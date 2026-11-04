@@ -1,0 +1,94 @@
+{
+  "empty": {
+    "action": "",
+    "body": "",
+    "title": ""
+  },
+  "explain": {
+    "askOne": "",
+    "askTwo": "",
+    "notFound": "",
+    "nothing": "",
+    "playOne": "",
+    "playTwo": ""
+  },
+  "kinds": {
+    "album": "",
+    "artist": "",
+    "episode": "",
+    "movie": "",
+    "musicvideo": "",
+    "playlist": "",
+    "song": "",
+    "tvshow": ""
+  },
+  "matchTester": {
+    "addAlias": "",
+    "aliasEntry": "",
+    "aliases": "",
+    "aliasHint": "",
+    "candidates": "",
+    "columns": {
+      "alias": "",
+      "boost": "",
+      "candidate": "",
+      "phonetic": "",
+      "score": "",
+      "tokenSet": ""
+    },
+    "heard": "",
+    "mediaType": "",
+    "noAlias": "",
+    "normalized": "",
+    "removeAlias": "",
+    "test": "",
+    "title": "",
+    "try": "",
+    "types": {
+      "any": "",
+      "movies": "",
+      "music": "",
+      "shows": ""
+    }
+  },
+  "page": {
+    "description": "",
+    "library": "",
+    "syncAll": "",
+    "syncStarted": "",
+    "title": ""
+  },
+  "recent": {
+    "body": "",
+    "live": "",
+    "nothing": "",
+    "status": {
+      "findable": "",
+      "inModel": "",
+      "waiting": ""
+    },
+    "title": ""
+  },
+  "summary": {
+    "backups": "",
+    "episodes_one": "",
+    "episodes_other": "",
+    "label": "",
+    "lastBackup": "",
+    "libraries": "",
+    "localDisk": "",
+    "movies": "",
+    "music": "",
+    "noBackup": "",
+    "notSynced": "",
+    "s3": "",
+    "shows": "",
+    "songs": "",
+    "synced": ""
+  },
+  "verdict": {
+    "ask": "",
+    "not_found": "",
+    "play": ""
+  }
+}
