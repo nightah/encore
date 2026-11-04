@@ -1,4 +1,3 @@
-# Utterance patterns, translated on Crowdin from the English file. Each key is one way of asking, and may hold several patterns, one per line. (a|b) picks one, [a|b] is optional, {Slot} is a slot. Built-in intents already understand the common phrasings; samples here only add Kodi-specific ones. An optional room at the end, such as "[(in|on) the {Room}]", lets a request name the room whose Kodi should play it; notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
 AMAZON.LoopOffIntent:
   loop_off: "ripetizione (disattivata|off)"
   turn_off_repeat: "(disattiva|spegni|togli) [la] ripetizione\n(disattiva|spegni|togli) il loop"
@@ -80,8 +79,6 @@ ListenToAlbum:
   play_album_by: "(metti|mettere|riproduci|riprodurre|ascolta|ascoltare|fammi sentire) l'album {Album} (di|dei|degli) {Artist} [(in|nel|nella) {Room}]"
 ListenToArtist:
   play_artist: "(metti|mettere|riproduci|riprodurre|ascolta|ascoltare|fammi sentire) l'artista {Artist} [(in|nel|nella) {Room}]"
-  play_music_by: "(metti|mettere|riproduci|riprodurre|ascolta|ascoltare|fammi sentire) [un po' di] (musica|canzoni) (di|dei|degli) {Artist}\n(metti|riproduci|ascolta) [un po' di] (musica|canzoni) (di|dei|degli) {Artist} (in|nel|nella) {Room}"
-  play_music_by_2: "(metti|mettere|riproduci|riprodurre|ascolta|ascoltare) [un po' di] (musica|canzoni) {Genre} di {Artist} [(in|nel|nella) {Room}]"
 ListenToGenre:
   play_genre: "(metti|riproduci|ascolta) il genere {Genre}"
   play_music: "(metti|mettere|riproduci|riprodurre|ascolta|ascoltare|fammi sentire) [un po' di] musica {Genre} [(in|nel|nella) {Room}]\n(metti|riproduci|ascolta) [delle] canzoni {Genre} [(in|nel|nella) {Room}]"
