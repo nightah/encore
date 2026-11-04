@@ -19,6 +19,10 @@
     "resume": "",
     "title": ""
   },
+  "autoDeployRetry": {
+    "next": "",
+    "title": ""
+  },
   "content": {
     "movies": "Films",
     "music": "Musique",
@@ -27,6 +31,7 @@
   },
   "locales": {
     "build": {
+      "degraded": "",
       "failed": "Échec",
       "in_progress": "Compilation",
       "succeeded": "Réussi"
@@ -43,6 +48,7 @@
       "keepOne": "Gardez au moins les films, les séries ou la musique.",
       "legend": "Ce qu'elle peut lire"
     },
+    "degradedTitles": "",
     "empty": "Rien n'est encore compilé. Déployez la skill pour compiler un modèle pour chaque langue activée.",
     "enabled": {
       "hint": "Seules les langues activées sont compilées et déployées. Un Echo ne peut utiliser la skill que si sa langue correspond à l'une d'elles. Les modifications s'appliquent au prochain déploiement.",
@@ -121,6 +127,8 @@
     "title": "Titres dans le modèle"
   },
   "warnings": {
+    "dropped": "",
+    "thinned": "",
     "title": "Avertissements du dernier déploiement"
   }
 }
