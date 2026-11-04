@@ -1,0 +1,108 @@
+{
+  "controlsKodi": "",
+  "dialog": {
+    "cancel": "",
+    "confirmForget": "",
+    "editEcho": "",
+    "editTitle": "",
+    "fields": {
+      "kodi": {
+        "hint": ""
+      },
+      "name": {
+        "hint": "",
+        "label": ""
+      },
+      "room": {
+        "label": "",
+        "none": ""
+      }
+    },
+    "forget": "",
+    "forgetEllipsis": "",
+    "keep": "",
+    "save": ""
+  },
+  "notLinked": "",
+  "page": {
+    "description": "",
+    "title": ""
+  },
+  "rooms": {
+    "add": "",
+    "card": {
+      "add": "",
+      "addAliasButton": "",
+      "addAliasLabel": "",
+      "aliases": "",
+      "edit": "",
+      "kindLabel": "",
+      "kodi": "",
+      "noKodi": "",
+      "placeholder": {
+        "device": "",
+        "room": ""
+      },
+      "removeAlias": ""
+    },
+    "dialog": {
+      "addTitle": "",
+      "cancel": "",
+      "confirmRemove": "",
+      "editTitle": "",
+      "fields": {
+        "kodi": {
+          "hint": "",
+          "label": "",
+          "none": ""
+        },
+        "name": {
+          "label": "",
+          "placeholder": ""
+        }
+      },
+      "keep": "",
+      "remove": "",
+      "removeEllipsis": "",
+      "save": ""
+    },
+    "empty": "",
+    "intro": "",
+    "kind": {
+      "device": "",
+      "room": ""
+    },
+    "title": ""
+  },
+  "table": {
+    "anUnnamedEcho": "",
+    "columns": {
+      "actions": "",
+      "controls": "",
+      "lastRequest": "",
+      "name": "",
+      "room": "",
+      "today": ""
+    },
+    "edit": "",
+    "editNamed": "",
+    "empty": "",
+    "identified": "",
+    "identifyHint": "",
+    "spokeTo": "",
+    "title": ""
+  },
+  "unlinked": {
+    "deviceName": "",
+    "firstRequest": {
+      "other": "",
+      "today": ""
+    },
+    "link": "",
+    "linked": "",
+    "placeholder": "",
+    "title": "",
+    "titleIdentified": ""
+  },
+  "unnamed": ""
+}
