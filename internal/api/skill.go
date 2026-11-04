@@ -332,7 +332,11 @@ func (s *skillService) build(opts skillpkg.Options) builtPackage {
 
 	s.builds.Add(1)
 
-	b = builtOf(skillpkg.Build(s.a.opts.Sources, opts))
+	if s.a.opts.buildPackage != nil {
+		b = s.a.opts.buildPackage(opts)
+	} else {
+		b = builtOf(skillpkg.Build(s.a.opts.Sources, opts))
+	}
 
 	s.builtMu.Lock()
 	if s.built == nil || len(s.built) >= keepBuilt {

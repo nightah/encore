@@ -21,6 +21,7 @@ import (
 	"github.com/nightah/encore/internal/secrets"
 	"github.com/nightah/encore/internal/skillmodel"
 	"github.com/nightah/encore/internal/smapi"
+	"github.com/nightah/encore/internal/smapi/skillpkg"
 	"github.com/nightah/encore/internal/store"
 )
 
@@ -60,6 +61,8 @@ type Options struct {
 	StatusInterval time.Duration
 	// after waits between scheduled backup checks; nil means time.After. Tests replace it to step through the schedule.
 	after func(time.Duration) <-chan time.Time
+	// buildPackage builds what the API reads off a package; nil means building from Sources. Tests share builds between APIs, as each builds every locale.
+	buildPackage func(skillpkg.Options) builtPackage
 }
 
 // API is the admin API.
