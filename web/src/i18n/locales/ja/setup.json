@@ -1,0 +1,235 @@
+{
+  "address": {
+    "check": "",
+    "checkAgain": "",
+    "checking": "",
+    "heading": "",
+    "intro": "",
+    "results": {
+      "label": "",
+      "title": ""
+    },
+    "unsupported": "",
+    "url": {
+      "hint": "",
+      "label": ""
+    }
+  },
+  "admin": {
+    "errors": {
+      "password": "",
+      "token": "",
+      "username": ""
+    },
+    "exists": "",
+    "existsSignedIn": "",
+    "heading": "",
+    "intro": "",
+    "logs": {
+      "docker": "",
+      "systemd": ""
+    },
+    "password": {
+      "hint": "",
+      "label": ""
+    },
+    "sso": "",
+    "token": "",
+    "username": ""
+  },
+  "amazon": {
+    "authorize": "",
+    "clientId": "",
+    "clientSecret": {
+      "hint": "",
+      "label": ""
+    },
+    "connected": "",
+    "connectedVendor": "",
+    "copyReturnUrl": "",
+    "fallback": {
+      "connect": "",
+      "label": "",
+      "redirectUrl": {
+        "hint": "",
+        "label": "",
+        "option": ""
+      },
+      "refreshToken": {
+        "hint": "",
+        "label": "",
+        "option": ""
+      },
+      "summaryHttp": "",
+      "summaryHttps": ""
+    },
+    "heading": "",
+    "instructions": {
+      "credentials": "",
+      "open": "",
+      "returnUrls_one": "",
+      "returnUrls_other": ""
+    },
+    "intro": "",
+    "newTab": "",
+    "reauthorise": "",
+    "redirectError": ""
+  },
+  "check": {
+    "fail": "",
+    "ok": "",
+    "pending": "",
+    "warn": ""
+  },
+  "content": {
+    "legend": ""
+  },
+  "deploy": {
+    "answer": {
+      "no": "",
+      "noLabel": "",
+      "yes": "",
+      "yesLabel": ""
+    },
+    "connectFirst": "",
+    "contentNote": "",
+    "deploy": "",
+    "deploying": "",
+    "duration_one": "",
+    "duration_other": "",
+    "failed": "",
+    "goToAmazon": "",
+    "heading": "",
+    "invocation": {
+      "elsewhere": "",
+      "example": "",
+      "label": ""
+    },
+    "locales": {
+      "faster": "",
+      "legend": "",
+      "match": ""
+    },
+    "noDetails": "",
+    "privacy": {
+      "allows_purchases": {
+        "about": "",
+        "label": ""
+      },
+      "contains_ads": {
+        "about": "",
+        "label": ""
+      },
+      "is_child_directed": {
+        "about": "",
+        "label": ""
+      },
+      "is_export_compliant": {
+        "about": "",
+        "label": ""
+      },
+      "legend": "",
+      "unanswered_one": "",
+      "unanswered_other": "",
+      "uses_personal_info": {
+        "about": "",
+        "label": ""
+      }
+    },
+    "progress": "",
+    "starting": "",
+    "succeeded": "",
+    "tryAgain": ""
+  },
+  "hello": {
+    "alexaPlus": "",
+    "echoName": {
+      "hint": "",
+      "label": ""
+    },
+    "finish": "",
+    "heading": "",
+    "intro": "",
+    "named": "",
+    "phrase": "",
+    "received": "",
+    "receivedNew": "",
+    "waiting": ""
+  },
+  "kodi": {
+    "addAnother": "",
+    "added": "",
+    "adding": "",
+    "alreadyAdded": "",
+    "contentNote": "",
+    "fixLater": "",
+    "found": "",
+    "heading": "",
+    "instance": "",
+    "manual": {
+      "hint": "",
+      "label": ""
+    },
+    "name": {
+      "hint": "",
+      "label": ""
+    },
+    "notFound": "",
+    "password": {
+      "hint": "",
+      "label": ""
+    },
+    "remoteControl": "",
+    "results": "",
+    "rpc": "",
+    "searchAgain": "",
+    "searchFailed": "",
+    "searching": "",
+    "submit": "",
+    "testFailed": "",
+    "username": ""
+  },
+  "nav": {
+    "back": "",
+    "continue": "",
+    "skip": ""
+  },
+  "steps": {
+    "address": {
+      "sub": "",
+      "title": ""
+    },
+    "admin": {
+      "sub": "",
+      "title": ""
+    },
+    "amazon": {
+      "sub": "",
+      "title": ""
+    },
+    "deploy": {
+      "sub": "",
+      "title": ""
+    },
+    "hello": {
+      "sub": "",
+      "title": ""
+    },
+    "kodi": {
+      "sub": "",
+      "title": ""
+    }
+  },
+  "wizard": {
+    "label": "",
+    "progress": "",
+    "skipped": "",
+    "state": {
+      "current": "",
+      "done": "",
+      "skipped": ""
+    },
+    "steps": "",
+    "subtitle": ""
+  }
+}
