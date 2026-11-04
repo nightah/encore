@@ -196,7 +196,46 @@ func dialogFor(intents []ModelIntent) *Dialog {
 
 // spaceSlots puts a space on each side of every slot reference that lacks one. Amazon fails to parse a slot joined to other text, and Japanese, which writes no spaces, attaches its particles to the slot in the sources ("{Movie}を再生して"); the space there doesn't change what Alexa hears.
 func spaceSlots(sample string) string {
-	return strings.Join(strings.Fields(slotRef.ReplaceAllString(sample, " $0 ")), " ")
+	if !strings.Contains(sample, "{") {
+		return strings.Join(strings.Fields(sample), " ")
+	}
+
+	// A scan finds the slots as slotRef does, without a regexp's allocations for every sample of every locale.
+	var b strings.Builder
+
+	b.Grow(len(sample) + 8)
+
+	for rest := sample; rest != ""; {
+		open := strings.IndexByte(rest, '{')
+		if open < 0 {
+			b.WriteString(rest)
+
+			break
+		}
+
+		end := strings.IndexAny(rest[open+1:], "{}")
+		if end < 0 {
+			b.WriteString(rest)
+
+			break
+		}
+
+		end += open + 1
+		if rest[end] == '{' {
+			b.WriteString(rest[:end])
+			rest = rest[end:]
+
+			continue
+		}
+
+		b.WriteString(rest[:open])
+		b.WriteByte(' ')
+		b.WriteString(rest[open : end+1])
+		b.WriteByte(' ')
+		rest = rest[end+1:]
+	}
+
+	return strings.Join(strings.Fields(b.String()), " ")
 }
 
 // unaccented takes the acute accents and diaereses off s's letters (Locale.UnaccentedSamples).

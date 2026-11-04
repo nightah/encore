@@ -336,9 +336,45 @@ func TestSpaceSlots(t *testing.T) {
 		"{Show}{Season}":         "{Show} {Season}",
 		"play {Movie} in {Room}": "play {Movie} in {Room}",
 		"pause":                  "pause",
+		"{{Movie}":               "{ {Movie}",
+		"a{b":                    "a{b",
+		"}{Movie}{":              "} {Movie} {",
+		"{}x":                    "{} x",
+		"  play  {Movie} ":       "play {Movie}",
 	} {
 		assert.Equal(t, want, spaceSlots(in), in)
 	}
+}
+
+// TestSpaceSlotsAsTheRegexpDoes keeps the scan in spaceSlots spacing every shipped sample as slotRef would.
+func TestSpaceSlotsAsTheRegexpDoes(t *testing.T) {
+	src, err := Load(i18n.FS)
+	require.NoError(t, err)
+
+	byRegexp := func(s string) string {
+		return strings.Join(strings.Fields(slotRef.ReplaceAllString(s, " $0 ")), " ")
+	}
+
+	n := 0
+
+	for _, locale := range src.LocaleNames() {
+		utterances, err := src.Utterances(locale)
+		require.NoError(t, err)
+
+		for _, patterns := range utterances {
+			for _, pattern := range patterns {
+				samples, err := Expand(pattern)
+				require.NoError(t, err)
+
+				for _, s := range samples {
+					assert.Equal(t, byRegexp(s), spaceSlots(s), "%s: %q", locale, s)
+					n++
+				}
+			}
+		}
+	}
+
+	assert.Positive(t, n)
 }
 
 // TestShippedFreeTextSlotsInEveryLocale keeps the free-text slots on AMAZON.SearchQuery in every locale, Dutch included: Amazon builds nl-NL models that use it and fills it, though its slot type reference leaves nl-NL off the type's list.
@@ -529,4 +565,16 @@ utterances:
 	require.NoError(t, err)
 	assert.NotContains(t, plain.InteractionModel.LanguageModel.Intents[1].Samples, "pon la pelicula {Movie} del año", "only a locale that asks")
 	assert.Contains(t, plain.InteractionModel.LanguageModel.Intents[1].Samples, "pon la película {Movie} del año")
+}
+
+func BenchmarkBuildShippedLocales(b *testing.B) {
+	src, err := Load(i18n.FS)
+	require.NoError(b, err)
+
+	for b.Loop() {
+		for _, locale := range src.LocaleNames() {
+			_, err := Build(src, locale, BuildOptions{})
+			require.NoError(b, err)
+		}
+	}
 }
