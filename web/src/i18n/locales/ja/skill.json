@@ -1,0 +1,134 @@
+{
+  "amazon": {
+    "connect": "",
+    "disconnect": "",
+    "disconnectDialog": {
+      "cancel": "",
+      "confirm": "",
+      "description": "",
+      "title": ""
+    },
+    "needsReauthorise": "",
+    "notConnected": "",
+    "profile": "",
+    "reauthorise": "",
+    "title": "",
+    "vendor": ""
+  },
+  "autoDeployPaused": {
+    "resume": "",
+    "title": ""
+  },
+  "autoDeployRetry": {
+    "next": "",
+    "title": ""
+  },
+  "content": {
+    "movies": "",
+    "music": "",
+    "musicHint": "",
+    "tv": ""
+  },
+  "locales": {
+    "build": {
+      "degraded": "",
+      "failed": "",
+      "in_progress": "",
+      "succeeded": ""
+    },
+    "columns": {
+      "build": "",
+      "built": "",
+      "locale": "",
+      "size": "",
+      "titles": ""
+    },
+    "content": {
+      "hint": "",
+      "keepOne": "",
+      "legend": ""
+    },
+    "degradedTitles": "",
+    "empty": "",
+    "enabled": {
+      "hint": "",
+      "keepOne": "",
+      "legend": ""
+    },
+    "needsDeploy": {
+      "automatic": "",
+      "library": "",
+      "settings": ""
+    },
+    "saved": "",
+    "sizeUsed": "",
+    "title": ""
+  },
+  "page": {
+    "deploy": {
+      "deploying": "",
+      "failed": "",
+      "failedStep": "",
+      "progress": "",
+      "redeploy": "",
+      "running": "",
+      "starting": "",
+      "succeeded": ""
+    },
+    "description": "",
+    "export": "",
+    "title": ""
+  },
+  "timeline": {
+    "amazon": {
+      "connected": "",
+      "notConnected": "",
+      "reauthorise": "",
+      "title": "",
+      "vendor": ""
+    },
+    "created": {
+      "creating": "",
+      "firstDeploy": "",
+      "title": ""
+    },
+    "endpoint": {
+      "title": ""
+    },
+    "label": "",
+    "models": {
+      "building": "",
+      "built": "",
+      "failed": "",
+      "notBuilt": "",
+      "title": ""
+    },
+    "state": {
+      "busy": "",
+      "fail": "",
+      "ok": "",
+      "pending": ""
+    },
+    "testing": {
+      "failed": "",
+      "firstDeploy": "",
+      "passed": "",
+      "title": "",
+      "waiting": ""
+    }
+  },
+  "titles": {
+    "empty": "",
+    "inModel_one": "",
+    "inModel_other": "",
+    "limit": "",
+    "serverOnly_one": "",
+    "serverOnly_other": "",
+    "title": ""
+  },
+  "warnings": {
+    "dropped": "",
+    "thinned": "",
+    "title": ""
+  }
+}
