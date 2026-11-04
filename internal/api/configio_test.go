@@ -11,7 +11,7 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	goyaml "go.yaml.in/yaml/v3"
+	goyaml "go.yaml.in/yaml/v4"
 )
 
 func importYAML(t *testing.T, c *client, yml string, status int) (ImportResult, response) {

@@ -10,7 +10,7 @@ import (
 	"sort"
 	"strings"
 
-	"go.yaml.in/yaml/v3"
+	"go.yaml.in/yaml/v4"
 
 	"github.com/nightah/encore/internal/skillmodel"
 )

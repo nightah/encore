@@ -15,7 +15,7 @@ import (
 	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/confmap"
 	"github.com/knadh/koanf/v2"
-	goyaml "go.yaml.in/yaml/v3"
+	goyaml "go.yaml.in/yaml/v4"
 
 	"github.com/nightah/encore/internal/auth"
 	"github.com/nightah/encore/internal/config"
