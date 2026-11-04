@@ -1,0 +1,73 @@
+{
+  "detail": {
+    "alexaSaid": "",
+    "callFailed": "",
+    "candidates": {
+      "label": "",
+      "none": "",
+      "score": "",
+      "unlinked": ""
+    },
+    "copied": "",
+    "copy": "",
+    "intent": "",
+    "kodiCalls": "",
+    "loading": "",
+    "noCalls": "",
+    "replay": "",
+    "replayResult": {
+      "label": "",
+      "noCalls": "",
+      "title": "",
+      "topMatch": "",
+      "wouldCall": "",
+      "wouldSay": ""
+    },
+    "silent": "",
+    "slots": "",
+    "target": {
+      "label": "",
+      "none": "",
+      "unlinked": ""
+    },
+    "timing": {
+      "fallback": "",
+      "label": "",
+      "split": ""
+    },
+    "via": {
+      "alias": "",
+      "device": ""
+    }
+  },
+  "empty": {
+    "filtered": "",
+    "filteredTitle": "",
+    "none": "",
+    "noneNoInvocation": "",
+    "noneTitle": ""
+  },
+  "filters": {
+    "allDevices": "",
+    "allOutcomes": "",
+    "device": "",
+    "deviceById": "",
+    "label": "",
+    "outcome": "",
+    "search": "",
+    "unnamedDevice": ""
+  },
+  "list": {
+    "label": "",
+    "loading": "",
+    "loadOlder": ""
+  },
+  "live": {
+    "off": "",
+    "on": "",
+    "retention": ""
+  },
+  "newRequest": "",
+  "title": "",
+  "unnamedDevice": ""
+}
