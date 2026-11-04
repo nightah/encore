@@ -1,0 +1,150 @@
+{
+  "actions": {
+    "close": "",
+    "copied": "",
+    "copy": "",
+    "copyNamed": "",
+    "copyWithText": "",
+    "dismiss": "",
+    "tryAgain": ""
+  },
+  "check": {
+    "auth": "",
+    "library": "",
+    "ping": ""
+  },
+  "error": {
+    "generic": "",
+    "http": "",
+    "lwaCredentials": "",
+    "noConnection": "",
+    "pageFailed": "",
+    "unreachable": ""
+  },
+  "field": {
+    "managed": "",
+    "managedSuffix": ""
+  },
+  "heard": {
+    "quoted": "",
+    "suffix": ""
+  },
+  "infoTip": {
+    "label": ""
+  },
+  "instance": {
+    "asleep": "",
+    "connectedHttp": "",
+    "connectedWebSocket": "",
+    "httpOnly": "",
+    "idle": "",
+    "macSaved": "",
+    "noMac": "",
+    "offline": "",
+    "paused": "",
+    "playing": "",
+    "versionUnknown": ""
+  },
+  "loading": "",
+  "menu": {
+    "arrange": "",
+    "done": "",
+    "empty": "",
+    "full": "",
+    "inBar": "",
+    "inMore": "",
+    "label": "",
+    "more": "",
+    "moveDown": "",
+    "moved": "",
+    "movedToMore": "",
+    "moveUp": "",
+    "reset": "",
+    "savedHere": "",
+    "theme": "",
+    "toBar": "",
+    "toMore": ""
+  },
+  "nav": {
+    "alexaSkill": "",
+    "echoDevices": "",
+    "kodi": "",
+    "label": "",
+    "library": "",
+    "overview": "",
+    "requestLog": "",
+    "settings": "",
+    "short": {
+      "alexaSkill": "",
+      "echoDevices": "",
+      "kodi": "",
+      "library": "",
+      "overview": "",
+      "requestLog": "",
+      "settings": ""
+    }
+  },
+  "notFound": {
+    "back": "",
+    "title": ""
+  },
+  "outcome": {
+    "asked": "",
+    "error": "",
+    "not_found": "",
+    "ok": "",
+    "played": "",
+    "unlinked": ""
+  },
+  "request": {
+    "simulator": "",
+    "unnamedEcho": ""
+  },
+  "setupBanner": {
+    "continue": "",
+    "message": ""
+  },
+  "shell": {
+    "signedInAs": "",
+    "signOut": "",
+    "skipToContent": ""
+  },
+  "theme": {
+    "toDark": "",
+    "toLight": ""
+  },
+  "time": {
+    "hoursAgo": "",
+    "inHours": "",
+    "inMinutes": "",
+    "justNow": "",
+    "minutesAgo": "",
+    "never": "",
+    "seconds": "",
+    "soon": ""
+  },
+  "toast": {
+    "aliasSaved": "",
+    "amazonConnected": "",
+    "amazonDisconnected": "",
+    "backupStarted": "",
+    "defaultInstance": "",
+    "echoForgotten": "",
+    "echoSaved": "",
+    "failed": "",
+    "instanceAdded": "",
+    "instanceRemoved": "",
+    "instanceSaved": "",
+    "libraryGrouped": "",
+    "librarySource": "",
+    "librarySplit": "",
+    "roomAdded": "",
+    "roomRemoved": "",
+    "roomSaved": "",
+    "secretsRotated": "",
+    "settingsSaved": "",
+    "skillSaved": "",
+    "syncStarted": "",
+    "wakeSent": ""
+  }
+}
