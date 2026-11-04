@@ -1,4 +1,3 @@
-# Utterance patterns, translated on Crowdin from the English file. Each key is one way of asking, and may hold several patterns, one per line. (a|b) picks one, [a|b] is optional, {Slot} is a slot. Built-in intents already understand the common phrasings; samples here only add Kodi-specific ones. An optional room at the end, such as "[(in|on) the {Room}]", lets a request name the room whose Kodi should play it; notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
 AMAZON.LoopOffIntent:
   loop_off: "mode répétition désactivé"
   turn_off_repeat: "(désactive|désactiver|arrête|arrêter) (la répétition|la lecture en boucle|le mode répétition)"
@@ -79,8 +78,6 @@ ListenToAlbum:
   play_album_by: "(mets|mettre|joue|jouer|lance|lancer|écoute|écouter) l'album {Album} (de|par) {Artist} [(dans le|dans la|au|à la) {Room}]"
 ListenToArtist:
   play_artist: "(mets|mettre|joue|jouer|lance|lancer) l'artiste {Artist} [(dans le|dans la|au|à la) {Room}]"
-  play_music_by: "(mets|mettre|joue|jouer|lance|lancer) (de la musique|des chansons) (de|par) {Artist} [(dans le|dans la|au|à la) {Room}]\nje (veux|voudrais) écouter (de la musique|des chansons) de {Artist}"
-  play_music_by_2: "(mets|mettre|joue|jouer|lance|lancer) (de la musique|des chansons) {Genre} (de|par) {Artist}"
 ListenToGenre:
   play_genre: "(mets|mettre|joue|jouer|lance|lancer) de la musique du genre {Genre} [(dans le|dans la|au|à la) {Room}]"
   play_music: "(mets|mettre|joue|jouer|lance|lancer) (de la musique|des chansons) {Genre} [(dans le|dans la|au|à la) {Room}]\n(mets|mettre|joue|jouer) (du|de la) {Genre} [(dans le|dans la|au|à la) {Room}]\nje (veux|voudrais) écouter (du|de la) {Genre}"
