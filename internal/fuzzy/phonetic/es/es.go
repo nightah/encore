@@ -1,6 +1,7 @@
 package es
 
 import (
+	"slices"
 	"strings"
 	"unicode/utf8"
 
@@ -10,7 +11,7 @@ import (
 
 func init() { phonetic.Register("es", Encoder{}) }
 
-// Keys appends the key of the word as Spanish says it, with a final s or d left out (southern speakers aspirate or drop them: "iglesia(s)", "Madri(d)"), and, when different, the key with every letter sounded.
+// Keys appends the key of the word as Spanish says it, with a final s or d left out (southern speakers aspirate or drop them: "iglesia(s)", "Madri(d)"), and, when different, the key with every letter sounded. A word starting with an h or a w before a vowel also gets the key of the sound a recogniser may have written that way (see soundedOnset).
 func (Encoder) Keys(dst []string, word string) []string {
 	if phonetic.IsDigits(word) {
 		return append(dst, word)
@@ -27,7 +28,39 @@ func (Encoder) Keys(dst []string, word string) []string {
 	encode(&primary, word[:n])
 	encode(&full, word)
 
-	return skeleton.Append(dst, word, &primary, &full)
+	start := len(dst)
+	dst = skeleton.Append(dst, word, &primary, &full)
+
+	if onset := soundedOnset(word); onset != "" {
+		// The respelt word is built on the stack: only a key that is new allocates.
+		var buf [skeleton.MaxLen]byte
+
+		var alt skeleton.Key
+
+		encode(&alt, string(append(append(buf[:0], onset...), word[1:n]...)))
+
+		if k := alt.Bytes(); !slices.ContainsFunc(dst[start:], func(d string) bool { return d == string(k) }) {
+			dst = append(dst, string(k))
+		}
+	}
+
+	return dst
+}
+
+// soundedOnset returns what a word's first letter stands for when a recogniser may have written it for another sound, or "": the soft jota of Mexican, Caribbean and US speech for an h before a vowel ("hosé" for "José"), and the gu of güe and gua for a w ("weros" for "güeros").
+func soundedOnset(word string) string {
+	if len(word) < 2 || !isVowel(word[1]) {
+		return ""
+	}
+
+	switch word[0] {
+	case 'h':
+		return "j"
+	case 'w':
+		return "gu"
+	}
+
+	return ""
 }
 
 func isVowel(c byte) bool { return strings.IndexByte("aeiou", c) >= 0 }

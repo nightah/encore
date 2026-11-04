@@ -20,7 +20,26 @@
         "title": "Dune",
         "year": 2021
       }
-    ]
+    ],
+    "question": {
+      "id": "match.did_you_mean",
+      "messages": {
+        "first": {
+          "id": "match.title_year",
+          "params": {
+            "title": "Dune",
+            "year": "1984"
+          }
+        },
+        "second": {
+          "id": "match.title_year",
+          "params": {
+            "title": "Dune",
+            "year": "2021"
+          }
+        }
+      }
+    }
   },
   "response": {
     "outputSpeech": {
@@ -33,6 +52,26 @@
         "text": "Did you mean Dune from 1984 or Dune from 2021?"
       }
     },
+    "directives": [
+      {
+        "type": "Dialog.ElicitSlot",
+        "slotToElicit": "Answer",
+        "updatedIntent": {
+          "name": "ChooseMatch",
+          "confirmationStatus": "NONE",
+          "slots": {
+            "Answer": {
+              "name": "Answer",
+              "confirmationStatus": "NONE"
+            },
+            "Which": {
+              "name": "Which",
+              "confirmationStatus": "NONE"
+            }
+          }
+        }
+      }
+    ],
     "shouldEndSession": false
   }
 }

@@ -1,6 +1,8 @@
 import { CSPProvider } from "@base-ui/react/csp-provider";
+import { DirectionProvider } from "@base-ui/react/direction-provider";
 import { type QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 
 import { ToastProvider } from "@components/ui/Toast";
 import type { createAppRouter } from "@src/router";
@@ -19,13 +21,17 @@ interface AppProps {
 }
 
 export function App({ queryClient, router, nonce }: AppProps) {
+  // Base UI reads the text direction from context, not the dir attribute, to turn arrow keys the right way in tabs and radio groups.
+  const { i18n } = useTranslation();
   return (
     <CSPProvider nonce={nonce}>
-      <QueryClientProvider client={queryClient}>
-        <ToastProvider>
-          <RouterProvider router={router} />
-        </ToastProvider>
-      </QueryClientProvider>
+      <DirectionProvider direction={i18n.dir()}>
+        <QueryClientProvider client={queryClient}>
+          <ToastProvider>
+            <RouterProvider router={router} />
+          </ToastProvider>
+        </QueryClientProvider>
+      </DirectionProvider>
     </CSPProvider>
   );
 }

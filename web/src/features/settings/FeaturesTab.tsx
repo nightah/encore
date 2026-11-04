@@ -46,7 +46,7 @@ export function FeaturesTab({ settings }: { settings: Settings }) {
               />
             </div>
             {key === "auto_deploy" && settings.features.auto_deploy ? (
-              <div className="mt-3 ml-1 border-line border-l-2 pl-4">
+              <div className="mt-3 ms-1 border-line border-s-2 ps-4">
                 <NumberSetting
                   key={settings.features.auto_deploy_minutes}
                   settings={settings}
@@ -144,7 +144,7 @@ function NumberSetting({
           step={fractional ? "any" : 1}
           min={1}
           max={max}
-          className="w-24 text-right"
+          className="w-24 text-end"
           value={value}
           disabled={managed || save.isPending}
           onChange={(event) => setValue(event.target.value)}

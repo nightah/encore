@@ -26,7 +26,10 @@ func (s *Server) routes() http.Handler {
 	api("GET /v1/skills/{a}/{b}", s.handleSkillGet)
 	api("PUT /v1/skills/{skillId}/stages/{stage}/enablement", s.handleEnable)
 	api("GET /v1/skills/{skillId}/stages/{stage}/enablement", s.handleGetEnablement)
+	api("DELETE /v1/skills/{skillId}/stages/{stage}/enablement", s.handleDisable)
 	api("GET /v1/skills/{skillId}/stages/{stage}/manifest", s.handleGetManifest)
+	api("GET /v1/skills/{skillId}/stages/{stage}/interactionModel/locales/{locale}", s.handleGetModel)
+	api("POST /v1/skills/{skillId}/stages/{stage}/interactionModel/locales/{locale}/profileNlu", s.handleProfileNLU)
 	api("POST /v2/skills/{skillId}/stages/{stage}/simulations", s.handleSimulate)
 	api("GET /v2/skills/{skillId}/stages/{stage}/simulations/{simId}", s.handleGetSimulation)
 
@@ -38,9 +41,14 @@ func (s *Server) authorised(pattern string, h http.HandlerFunc) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		s.mu.Lock()
 
-		if len(s.inject) > 0 {
-			status := s.inject[0]
-			s.inject = s.inject[1:]
+		status, injected := s.injectRoute[pattern]
+		delete(s.injectRoute, pattern)
+
+		if !injected && len(s.inject) > 0 {
+			status, s.inject, injected = s.inject[0], s.inject[1:], true
+		}
+
+		if injected {
 			s.injectN++
 			s.mu.Unlock()
 

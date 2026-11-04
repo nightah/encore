@@ -170,10 +170,17 @@ func (c *Client) ImportStatus(ctx context.Context, importID string) (*ImportStat
 		return c.api.GetImportStatusV1(ctx, importID)
 	}
 
-	var out ImportStatus
-	if err := decode("get import status", call, &out); err != nil {
+	var raw json.RawMessage
+	if err := decode("get import status", call, &raw); err != nil {
 		return nil, err
 	}
+
+	var out ImportStatus
+	if err := json.Unmarshal(raw, &out); err != nil {
+		return nil, fmt.Errorf("smapi: get import status: decoding response: %w", err)
+	}
+
+	out.Raw = raw
 
 	return &out, nil
 }
@@ -225,9 +232,56 @@ func (c *Client) SkillEndpoint(ctx context.Context, skillID string) (string, err
 	return out.Manifest.APIs.Custom.Endpoint.URI, nil
 }
 
+// SlotTypes returns the slot types in the development stage's interaction model for locale, values included. It's a 404 error (StatusCode) when the skill has no model for locale.
+func (c *Client) SlotTypes(ctx context.Context, skillID, locale string) ([]SlotType, error) {
+	var out struct {
+		InteractionModel struct {
+			LanguageModel struct {
+				Types []SlotType `json:"types"`
+			} `json:"languageModel"`
+		} `json:"interactionModel"`
+	}
+
+	if err := decode("get interaction model", func() (*http.Response, error) {
+		return c.api.GetInteractionModelV1(ctx, skillID, StageDevelopment, locale)
+	}, &out); err != nil {
+		return nil, err
+	}
+
+	return out.InteractionModel.LanguageModel.Types, nil
+}
+
 // EnableDevelopment enables the skill's development stage for testing on the user's devices.
 func (c *Client) EnableDevelopment(ctx context.Context, skillID string) error {
 	return do("enable skill", func() (*http.Response, error) {
 		return c.api.SetSkillEnablementV1(ctx, skillID, StageDevelopment)
 	})
+}
+
+// DevelopmentEnabled reports whether the skill's development stage is enabled for testing. Amazon answers 404 for a stage that isn't enabled.
+func (c *Client) DevelopmentEnabled(ctx context.Context, skillID string) (bool, error) {
+	err := do("get skill enablement", func() (*http.Response, error) {
+		return c.api.GetSkillEnablementStatusV1(ctx, skillID, StageDevelopment)
+	})
+
+	switch {
+	case err == nil:
+		return true, nil
+	case StatusCode(err) == http.StatusNotFound:
+		return false, nil
+	default:
+		return false, err
+	}
+}
+
+// DisableDevelopment disables the skill's development stage for testing, so the user's devices no longer reach it. A stage that isn't enabled is left as it is.
+func (c *Client) DisableDevelopment(ctx context.Context, skillID string) error {
+	err := do("disable skill", func() (*http.Response, error) {
+		return c.api.DeleteSkillEnablementV1(ctx, skillID, StageDevelopment)
+	})
+	if StatusCode(err) == http.StatusNotFound {
+		return nil
+	}
+
+	return err
 }

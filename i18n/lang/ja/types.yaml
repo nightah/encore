@@ -1,0 +1,320 @@
+# Values for the static custom slot types in model.yaml, translated on Crowdin from the English file. Each key is the value's ID, which is what the handler acts on; the first line is the value and any further lines its synonyms, which are what people say. The dynamic types' examples are in examples.yaml, and notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
+LIBRARY_SECTION:
+  albums: |-
+    アルバム
+    アルバム一覧
+    音楽アルバム
+  artists: |-
+    アーティスト
+    ミュージシャン
+    バンド
+    アーティスト一覧
+  favourites: |-
+    お気に入り
+    お気に入り一覧
+  movies: |-
+    映画
+    映画一覧
+    映画ライブラリ
+    ムービー
+  music: |-
+    音楽
+    音楽ライブラリ
+    ミュージック
+    曲一覧
+  musicvideos: |-
+    ミュージックビデオ
+    エムブイ
+    ビデオクリップ
+  recentepisodes: |-
+    最近追加したエピソード
+    新しいエピソード
+    最新のエピソード
+    最近のエピソード
+    新しい番組
+    最近追加した番組
+  recentmovies: |-
+    最近追加した映画
+    新しい映画
+    最新の映画
+    最近の映画
+  recentmusic: |-
+    最近追加した音楽
+    新しい音楽
+    最新の音楽
+    新しいアルバム
+    最近追加したアルバム
+    新しい曲
+    最近追加した曲
+  recentmusicvideos: |-
+    最近追加したミュージックビデオ
+    新しいミュージックビデオ
+    最新のミュージックビデオ
+  tvshows: |-
+    テレビ番組
+    番組
+    番組一覧
+    ドラマ
+    シリーズ
+LIBRARY_TYPE:
+  music: |-
+    音楽
+    オーディオ
+    曲
+    音楽ライブラリ
+  video: |-
+    ビデオ
+    動画
+    映画
+    テレビ番組
+    ビデオライブラリ
+MATCH_CHOICE:
+  first: |-
+    一つ目
+    一つ目の方
+    一つ目のほう
+    最初
+    最初の方
+    最初のほう
+    一番目
+    前の方
+    前のほう
+  last: |-
+    最後
+    最後の方
+    最後のほう
+  newer: |-
+    新しい方
+    新しいほう
+    新しいの
+    新しい
+    最新
+    最新の方
+    最新のほう
+    一番新しい方
+    一番新しいほう
+    一番新しいの
+    一番新しい
+  older: |-
+    古い方
+    古いほう
+    古いの
+    古い
+    昔の方
+    昔のほう
+    元の方
+    一番古い方
+    一番古いほう
+    一番古いの
+    一番古い
+  second: |-
+    二つ目
+    二つ目の方
+    二つ目のほう
+    二番目
+    後の方
+    後のほう
+MEDIA_TYPE:
+  album: |-
+    アルバム
+  artist: |-
+    アーティスト
+    バンド
+    ミュージシャン
+    歌手
+  audio: |-
+    聴くもの
+    何か聴くもの
+    音楽
+  episode: |-
+    エピソード
+    話
+  movie: |-
+    映画
+    ムービー
+  musicvideo: |-
+    ミュージックビデオ
+    ビデオクリップ
+    エムブイ
+  song: |-
+    曲
+    歌
+    トラック
+  tvshow: |-
+    番組
+    テレビ番組
+    ドラマ
+    シリーズ
+  video: |-
+    見るもの
+    何か見るもの
+    動画
+    ビデオ
+NAV_ACTION:
+  back: |-
+    戻る
+    バック
+  down: |-
+    下
+    下方向
+  home: |-
+    ホーム
+    メインメニュー
+  info: |-
+    情報
+    詳細
+    詳しい情報
+  left: |-
+    左
+    左方向
+  menu: |-
+    メニュー
+    コンテキストメニュー
+    オプション
+  osd: |-
+    オンスクリーン表示
+    再生コントロール
+    コントロール
+  pagedown: |-
+    ページダウン
+    下にスクロール
+    次のページ
+  pageup: |-
+    ページアップ
+    上にスクロール
+    前のページ
+  right: |-
+    右
+    右方向
+  select: |-
+    決定
+    選択
+    オーケー
+    クリック
+  up: |-
+    上
+    上方向
+NAV_DIRECTION:
+  down: "下"
+  left: "左"
+  right: "右"
+  up: "上"
+POWER_ACTION:
+  hibernate: |-
+    休止状態にして
+    ハイバネートして
+  quit: |-
+    終了して
+    閉じて
+  reboot: |-
+    再起動して
+    リブートして
+  shutdown: |-
+    シャットダウンして
+    電源オフにして
+    切って
+  suspend: |-
+    スリープして
+    スリープにして
+REPEAT_MODE:
+  all: |-
+    全部
+    すべて
+    全曲
+    プレイリスト全体
+    キュー全体
+  "off": |-
+    オフ
+    なし
+    解除
+  one: |-
+    一曲
+    この曲
+    これ
+    このトラック
+    このエピソード
+ROTATE_DIRECTION:
+  clockwise: |-
+    時計回り
+    右回り
+    右
+  counterclockwise: |-
+    反時計回り
+    左回り
+    左
+SEEK_DIRECTION:
+  back: |-
+    戻して
+    巻き戻して
+    戻って
+    前に戻して
+  forward: |-
+    進めて
+    早送りして
+    先に進めて
+    進んで
+    飛ばして
+SEEK_SIZE:
+  big: |-
+    たくさん
+    大きく
+    かなり
+  small: |-
+    少し
+    ちょっと
+STREAM_STEP:
+  next: |-
+    次
+    別
+    他
+  previous: |-
+    前
+    一つ前
+SUBTITLE_ACTION:
+  download: |-
+    ダウンロードして
+    探して
+    検索して
+    取得して
+  next: |-
+    切り替えて
+    次に切り替えて
+    変えて
+  "off": |-
+    オフにして
+    消して
+    非表示にして
+    無効にして
+  "on": |-
+    オンにして
+    表示して
+    つけて
+    有効にして
+    出して
+  previous: |-
+    前に戻して
+    前のに戻して
+TRANSPORT_COMMAND:
+  next: |-
+    次にして
+    スキップして
+  pause: "一時停止して"
+  previous: |-
+    前にして
+    前に戻して
+  resume: |-
+    再開して
+    再生して
+    続けて
+  stop: "停止して"
+ZOOM_ACTION:
+  in: |-
+    イン
+    拡大
+  out: |-
+    アウト
+    縮小
+  reset: |-
+    リセット
+    解除
+    オフ

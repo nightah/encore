@@ -68,6 +68,8 @@ func TestDispatchControlIntents(t *testing.T) {
 		"start over":                    {intent: "AMAZON.StartOverIntent", want: "Transport startover"},
 		"room control by resolved ID":   {intent: "RoomControl", slots: map[string]slotSpec{"Command": {"halt", "stop"}}, want: "Transport stop"},
 		"room control by synonym":       {intent: "RoomControl", slots: map[string]slotSpec{"Command": {value: "resume"}}, want: "Transport resume"},
+		"go home":                       {intent: "AMAZON.NavigateHomeIntent", want: "Input home"},
+		"room control next":             {intent: "RoomControl", slots: map[string]slotSpec{"Command": {"next", "next"}}, want: "Transport next"},
 		"shuffle off":                   {intent: "AMAZON.ShuffleOffIntent", want: "SetShuffle false"},
 		"loop off":                      {intent: "AMAZON.LoopOffIntent", want: "SetRepeat off"},
 		"repeat one":                    {intent: "Repeat", slots: map[string]slotSpec{"RepeatMode": {"this", "one"}}, want: "SetRepeat one"},
@@ -115,6 +117,26 @@ func TestDispatchControlIntents(t *testing.T) {
 	}
 }
 
+func TestDispatchNextFollowsAnEpisodeWithTheNextOne(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		intent string
+		slots  map[string]slotSpec
+	}{
+		{"next", "AMAZON.NextIntent", nil},
+		{"next on the TV", "RoomControl", map[string]slotSpec{"Command": {"next", "next"}}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h, backend, _ := newHandler(t)
+			backend.SetPlaying(&media.NowPlaying{Item: media.Item{Kind: media.KindEpisode, ID: 102, ShowID: 10, ShowTitle: "Severance", Season: 2, Episode: 4}})
+
+			res := serveBody(t, h, intentRequest(t, tc.intent, tc.slots))
+
+			assert.Contains(t, backend.Calls(), "Play episode/103 resume", "response %s", res)
+		})
+	}
+}
+
 func containsPrefix(calls []string, prefix string) bool {
 	for _, c := range calls {
 		if len(c) >= len(prefix) && c[:len(prefix)] == prefix {
@@ -149,7 +171,6 @@ func TestDispatchUnrecognisedSlotsAskAgain(t *testing.T) {
 		"episode with a non-number":       {intent: "WatchEpisode", slots: map[string]slotSpec{"Show": {value: "bluey"}, "Season": {value: "one"}, "Episode": {value: "3"}}},
 		"an intent Encore does not know":  {intent: "OrderPizza"},
 		"fallback intent":                 {intent: "AMAZON.FallbackIntent"},
-		"navigate home is not supported":  {intent: "AMAZON.NavigateHomeIntent"},
 		"seek to a negative zero minutes": {intent: "PlayerSeekTo", slots: map[string]slotSpec{"Position": {value: "PT0S"}}},
 	}
 
@@ -259,6 +280,48 @@ func TestWhatsNewRespectsContentGroups(t *testing.T) {
 
 			assert.NotContains(t, string(res), declined)
 			assert.True(t, containsPrefix(backend.Calls(), tc.want), "want %q, got %q", tc.want, backend.Calls())
+		})
+	}
+}
+
+// "Go back" reaches PlayerRewind, or PlayerSeek back, with no duration or size. While something plays it rewinds a little; with nothing playing there is nothing to rewind, so it presses the remote's Back, as "go back" means on a menu.
+func TestRewindWithoutAnAmountGoesBackWhenNothingPlays(t *testing.T) {
+	h, backend, _ := newHandler(t)
+
+	serveBody(t, h, intentRequest(t, "PlayerRewind", nil))
+	assert.Contains(t, backend.Calls(), "Input back")
+	assert.False(t, containsPrefix(backend.Calls(), "Seek"), "nothing to seek in: %q", backend.Calls())
+
+	h, backend, _ = newHandler(t)
+	serveBody(t, h, intentRequest(t, "PlayerSeek", map[string]slotSpec{"SeekDirection": {"indietro", "back"}}))
+	assert.Contains(t, backend.Calls(), "Input back", "a seek back without an amount is a rewind without one")
+
+	h, backend, _ = newHandler(t)
+	serveBody(t, h, intentRequest(t, "PlayerRewind", map[string]slotSpec{"Duration": {value: "PT2M"}}))
+	assert.True(t, containsPrefix(backend.Calls(), "Seek by -2m0s"), "a rewind by an amount still seeks, which says nothing is playing: %q", backend.Calls())
+}
+
+// TestNonsenseHeardAsATitlePlaysNothing checks what the NLU checks can't: Amazon sends nonsense ("purple elephants dancing on the moon") to whichever intent is closest, a shuffle, an artist or the next episode, with the words as the title, and Encore must then play nothing and say so.
+func TestNonsenseHeardAsATitlePlaysNothing(t *testing.T) {
+	const nonsense = "purple elephants dancing on the moon"
+
+	for intent, slot := range map[string]string{
+		"ShuffleAlbum":     "Album",
+		"ShuffleShow":      "Show",
+		"ListenToAlbum":    "Album",
+		"ListenToArtist":   "Artist",
+		"WatchNextEpisode": "Show",
+		"WatchMovie":       "Movie",
+		"WhatAlbums":       "Artist",
+		"PlayMedia":        "Query",
+	} {
+		t.Run(intent, func(t *testing.T) {
+			h, backend, _ := newHandler(t)
+
+			res := string(serveBody(t, h, intentRequest(t, intent, map[string]slotSpec{slot: {value: nonsense}})))
+
+			assert.False(t, containsPrefix(backend.Calls(), "Play"), "nothing plays: %q", backend.Calls())
+			assert.Contains(t, res, `"outputSpeech"`, "and Encore says why: %s", res)
 		})
 	}
 }

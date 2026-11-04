@@ -1,0 +1,122 @@
+{
+  "actions": {
+    "close": "Fechar",
+    "copied": "Copiado",
+    "copy": "Copiar",
+    "copyNamed": "Copiar {{label}}",
+    "copyWithText": "{{label}}: {{text}}",
+    "dismiss": "Dispensar",
+    "tryAgain": "Tentar de novo"
+  },
+  "check": {
+    "auth": "Credenciais",
+    "library": "Biblioteca",
+    "ping": "JSON-RPC via HTTP"
+  },
+  "error": {
+    "generic": "Algo deu errado.",
+    "http": "A solicitação falhou com HTTP {{status}}.",
+    "lwaCredentials": "Salve primeiro o ID e o segredo do cliente do Login with Amazon.",
+    "noConnection": "Não foi possível acessar o servidor do Encore.",
+    "pageFailed": "Algo deu errado nesta página",
+    "unreachable": "O Encore não está respondendo"
+  },
+  "field": {
+    "managed": "Gerenciado pela configuração",
+    "managedSuffix": ", Gerenciado pela configuração"
+  },
+  "heard": {
+    "quoted": "“{{text}}”",
+    "suffix": ": “{{text}}”"
+  },
+  "infoTip": {
+    "label": "Sobre: {{label}}"
+  },
+  "instance": {
+    "asleep": "Em suspensão",
+    "connectedHttp": "Conectado · somente HTTP",
+    "connectedWebSocket": "Conectado · WebSocket",
+    "httpOnly": "Somente HTTP",
+    "idle": "Ocioso",
+    "macSaved": "MAC salvo",
+    "noMac": "Sem endereço MAC",
+    "offline": "Offline",
+    "paused": "Pausado",
+    "playing": "Reproduzindo",
+    "versionUnknown": "Desconhecida até o Encore conseguir acessar o Kodi"
+  },
+  "loading": "Carregando…",
+  "nav": {
+    "alexaSkill": "Skill da Alexa",
+    "echoDevices": "Dispositivos Echo",
+    "kodi": "Kodi",
+    "label": "Principal",
+    "library": "Biblioteca",
+    "overview": "Visão geral",
+    "requestLog": "Registro de solicitações",
+    "settings": "Configurações"
+  },
+  "notFound": {
+    "back": "Voltar para a visão geral",
+    "title": "Página não encontrada"
+  },
+  "outcome": {
+    "asked": "Perguntou qual",
+    "error": "Erro",
+    "not_found": "Não encontrado",
+    "ok": "Concluído",
+    "played": "Reproduzido",
+    "unlinked": "Dispositivo não vinculado"
+  },
+  "request": {
+    "simulator": "Simulador da Amazon",
+    "unnamedEcho": "Echo sem nome"
+  },
+  "setupBanner": {
+    "continue": "Continuar a configuração",
+    "message": "A configuração ainda não terminou. Você está na etapa {{step}} de 6."
+  },
+  "shell": {
+    "signedInAs": "Conectado como <name>{{name}}</name>",
+    "signOut": "Sair",
+    "skipToContent": "Pular para o conteúdo"
+  },
+  "theme": {
+    "toDark": "Mudar para o modo escuro",
+    "toLight": "Mudar para o modo claro"
+  },
+  "time": {
+    "hoursAgo": "há {{value}} h",
+    "inHours": "em {{value}} h",
+    "inMinutes": "em {{value}} min",
+    "justNow": "agora mesmo",
+    "minutesAgo": "há {{value}} min",
+    "never": "nunca",
+    "seconds": "{{value}} s",
+    "soon": "em instantes"
+  },
+  "toast": {
+    "aliasSaved": "Apelido salvo. Ele é adicionado ao modelo da skill na próxima atualização.",
+    "amazonConnected": "Conectado à Amazon.",
+    "amazonDisconnected": "Tokens da Amazon esquecidos.",
+    "backupStarted": "Backup iniciado.",
+    "defaultInstance": "Os Echos não vinculados agora controlam esta instância do Kodi.",
+    "echoForgotten": "Echo esquecido. Ele reaparece se enviar outra solicitação.",
+    "echoSaved": "Echo salvo.",
+    "failed": "Isso não funcionou",
+    "instanceAdded": "Instância do Kodi adicionada.",
+    "instanceRemoved": "Instância do Kodi removida.",
+    "instanceSaved": "Instância do Kodi salva.",
+    "libraryGrouped": "Biblioteca compartilhada. O Encore agora indexa estas instâncias como uma só.",
+    "librarySource": "Fonte da biblioteca alterada.",
+    "librarySplit": "Biblioteca separada. O Encore agora indexa cada instância separadamente.",
+    "roomAdded": "Cômodo adicionado.",
+    "roomRemoved": "Cômodo removido.",
+    "roomSaved": "Cômodo salvo.",
+    "secretsRotated": "Chave de criptografia trocada. Os segredos armazenados foram criptografados novamente.",
+    "settingsSaved": "Configurações salvas.",
+    "skillSaved": "Configurações da skill salvas.",
+    "syncStarted": "Sincronização da biblioteca iniciada. As contagens são atualizadas quando ela terminar.",
+    "wakeSent": "Pacote Wake-on-LAN enviado. Aguardando o Kodi responder."
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "empty": {
+    "action": "Een Kodi-instantie toevoegen",
+    "body": "Encore bouwt een bibliotheekindex op van elke Kodi-instantie die je toevoegt.",
+    "title": "Nog geen bibliotheken"
+  },
+  "explain": {
+    "askOne": "{{top}} scoort {{score}}, te krap om te kiezen, dus Alexa vraagt het.",
+    "askTwo": "{{top}} en {{second}} liggen binnen {{margin}} van elkaar, dus Alexa vraagt welke.",
+    "notFound": "De beste score, {{score}} voor {{top}}, ligt onder de 0,60 die nodig is om af te spelen.",
+    "nothing": "Niets in deze bibliotheek komt in de buurt.",
+    "playOne": "{{top}} scoort {{score}} en is de enige goede overeenkomst.",
+    "playTwo": "{{top}} scoort {{score}}, {{margin}} meer dan de volgende."
+  },
+  "kinds": {
+    "album": "Album",
+    "artist": "Artiest",
+    "episode": "Aflevering",
+    "movie": "Film",
+    "musicvideo": "Muziekvideo",
+    "playlist": "Afspeellijst",
+    "song": "Nummer",
+    "tvshow": "Tv-serie"
+  },
+  "matchTester": {
+    "addAlias": "“{{query}}” toevoegen als alias voor het beste resultaat",
+    "aliasEntry": "“{{alias}}” → {{title}}",
+    "aliases": "Je aliassen",
+    "aliasHint": "Aliassen worden in Encore opgeslagen en bij de volgende hersynchronisatie aan het skillmodel toegevoegd.",
+    "candidates": "Matchkandidaten",
+    "columns": {
+      "alias": "Overeenkomende alias",
+      "boost": "Boost",
+      "candidate": "Kandidaat",
+      "phonetic": "Fonetisch",
+      "score": "Score",
+      "tokenSet": "Tokenset"
+    },
+    "heard": "Wat Alexa hoorde",
+    "mediaType": "Mediatype",
+    "noAlias": "De server heeft niet aangegeven welke titel dit is, dus er kan hier geen alias voor worden gemaakt.",
+    "normalized": "Genormaliseerde zoekopdracht",
+    "removeAlias": "Alias {{alias}} verwijderen",
+    "test": "Testen",
+    "title": "Matchtester",
+    "try": "Probeer:",
+    "types": {
+      "any": "Alles",
+      "movies": "Films",
+      "music": "Muziek",
+      "shows": "Tv-series"
+    }
+  },
+  "page": {
+    "description": "Wat Encore weet over je Kodi-bibliotheken, en hoe het vergelijkt wat Alexa hoort.",
+    "library": "Bibliotheek",
+    "syncAll": "Alles nu synchroniseren",
+    "syncStarted": "Bibliotheeksynchronisatie gestart. De aantallen worden bijgewerkt zodra die klaar is.",
+    "title": "Bibliotheek"
+  },
+  "recent": {
+    "body": "Nieuwe titels zijn binnen enkele seconden na toevoegen in Kodi doorzoekbaar. Ze gaan meteen als dynamische entiteiten naar Alexa en worden bij de volgende hersynchronisatie aan het skillmodel toegevoegd.",
+    "live": "Live via Kodi-gebeurtenissen",
+    "nothing": "Niets recent toegevoegd.",
+    "status": {
+      "findable": "Vindbaar met spraak",
+      "inModel": "In skillmodel",
+      "waiting": "Wacht op volgende update"
+    },
+    "title": "Recent toegevoegd"
+  },
+  "summary": {
+    "backups": "Back-ups",
+    "episodes_one": "{{count, number}} aflevering",
+    "episodes_other": "{{count, number}} afleveringen",
+    "label": "Bibliotheekoverzicht",
+    "lastBackup": "laatste back-up {{when}}",
+    "libraries": "Bibliotheken",
+    "localDisk": "Lokale schijf",
+    "movies": "Films",
+    "music": "Muziek",
+    "noBackup": "nog geen back-up",
+    "notSynced": "nog niet gesynchroniseerd",
+    "s3": "S3-compatibel",
+    "shows": "Tv-series",
+    "songs": "nummers",
+    "synced": "gesynchroniseerd {{when}}"
+  },
+  "verdict": {
+    "ask": "Zou vragen",
+    "not_found": "Niet gevonden",
+    "play": "Zou afspelen"
+  }
+}

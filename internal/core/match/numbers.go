@@ -43,7 +43,7 @@ func (l *language) numbers(toks []string) []string {
 
 // parseNumber reads the longest number starting at toks[i], returning its value, the tokens consumed (0 if none) and whether it ended on an ordinal.
 func (l *language) parseNumber(toks []string, i int) (val, n int, ordinal bool) {
-	mill, total, cur := 0, 0, 0
+	mill, total, cur, scale := 0, 0, 0, 0
 	st := stStart
 	j := i
 
@@ -126,11 +126,13 @@ loop:
 			cur = 0
 			st = stThousand
 		case numMillion:
-			if mill > 0 || total > 0 {
+			// A smaller scale may follow a larger one ("ek crore bees lakh"); an equal or larger one starts a new number.
+			if total > 0 || (mill > 0 && w.val >= scale) {
 				break loop
 			}
 
-			mill = max(cur, 1) * 1_000_000
+			mill += max(cur, 1) * w.val
+			scale = w.val
 			cur = 0
 			st = stMillion
 		}
@@ -145,7 +147,7 @@ loop:
 	return mill + total + cur, j - i, false
 }
 
-// conjFollows reports whether a conjunction in state st, with cur read so far, is part of the number, given the word after it ("hundred and one", "vingt et un", "soixante et onze", "neun und neunzig").
+// conjFollows reports whether a conjunction in state st, with cur read so far, is part of the number, given the word after it ("hundred and one", "vingt et un", "soixante et onze", "neun und neunzig", "mil e quinhentos").
 func (l *language) conjFollows(st numState, cur int, next string) bool {
 	w, ok := l.nums[next]
 	if !ok {
@@ -153,8 +155,11 @@ func (l *language) conjFollows(st numState, cur int, next string) bool {
 	}
 
 	switch st {
-	case stHundred, stThousand, stMillion:
+	case stHundred:
 		return w.kind == numUnit || w.kind == numTens || w.kind == numCompound
+	case stThousand, stMillion:
+		// "mil e quinhentos": Portuguese joins hundreds to thousands with "e" too.
+		return w.kind == numUnit || w.kind == numTens || w.kind == numCompound || w.kind == numHundred
 	case stTens:
 		return w.kind == numUnit && (w.val < 10 || (l.vigesimal && cur%100 == 60 && w.val == 11))
 	case stUnit:

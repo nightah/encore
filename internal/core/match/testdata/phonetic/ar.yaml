@@ -1,0 +1,230 @@
+# Arabic (ar-SA) phonetic evaluation corpus for TestPhoneticEval. Same schema as asr_corpus.yaml; cases are scored, not asserted, so there is no xfail.
+#
+# Library: what a Kodi instance in Saudi Arabia plausibly holds, with original release years: Saudi, Egyptian, Lebanese, Syrian, Jordanian and Gulf films and series and Arabic-language artists titled in Arabic script as Kodi's Arabic scrapers give them, and international films, series and artists titled in their English (Latin) form. Near neighbours (sequels, shared words and first names: الفيل الأزرق and الفيل الأزرق 2, ولاد رزق and ولاد رزق 2, باب الحديد and باب الحارة, محمد عبده and محمد منير, راشد الماجد and ماجد المهندس, The Avengers and Avengers: Endgame, The Godfather and Part II, Frozen and Frozen II) make a wrong play possible.
+#
+# Cases: what Alexa's ar-SA recogniser plausibly writes when a Saudi speaker asks for the title: Arabic script, mostly without diacritics, ASCII or Arabic-Indic digits, Latin only rarely. Each mishearing is tagged with the confusion it models. The classes are documented Arabic spelling-to-sound ambiguities and dialect pronunciations: hamza seats and the bare alef the recogniser often writes instead (أم/ام, إسماعيلية/اسماعيلية, وائل/وايل), ta marbuta written as ha (وجدة/وجده), alif maqsura and final ya swapped (اللمبي/اللمبى), the definite article dropped, added or written as the sun-letter assimilation sounds (الناظر/ناظر/انناظر, ذيب/الذيب), emphatic and plain consonants (طاش/تاش, صعيدي/سعيدي, the Gulf merger of ض and ظ), ق said as g in Gulf speech and written ج, ك or گ (يقابل/يجابل), the interdental mergers of urban Egyptian and Levantine speech (كلثوم/كلتوم, ذيب/ديب, كاظم/كازم), the pharyngeals ع and ح heard as hamza and ه, long vowels shortened and vowel letters dropped (عمرو/عمر, شيرين/شرين), English titles transliterated into Arabic script in several ways (Titanic/تايتانك/تيتانيك), Latin script when the recogniser keeps an English word, word splits and merges with the attached prefixes و ل ف (والكباب/و الكباب, في/ف), real-word substitutions (سكر بنات/سكر نبات, همام/حمام, الهيبة/الهبة), numbers as digits, Arabic-Indic digits and words (2/٢/اتنين/الجزء الثاني), and a distinctive opening word standing for the title. Controls (exact titles) and absent titles (not_found, missing sequels) keep the decision thresholds honest.
+#
+# Cases describe what a listener hears; don't change a case to suit an encoder's results, or the comparison stops meaning anything (see docs/src/content/docs/contributing/dependencies.md).
+suites:
+  - name: arabic library
+    lang: ar
+    library:
+      - {id: wadjda, kind: movie, title: "وجدة", year: 2012}
+      - {id: theeb, kind: movie, title: "ذيب", year: 2014}
+      - {id: babelhadid, kind: movie, title: "باب الحديد", year: 1958}
+      - {id: irhab, kind: movie, title: "الإرهاب والكباب", year: 1992}
+      - {id: kitkat, kind: movie, title: "الكيت كات", year: 1991}
+      - {id: yacoubian, kind: movie, title: "عمارة يعقوبيان", year: 2006}
+      - {id: limby, kind: movie, title: "اللمبي", year: 2002}
+      - {id: nazer, kind: movie, title: "الناظر", year: 2000}
+      - {id: saidi, kind: movie, title: "صعيدي في الجامعة الأمريكية", year: 1998}
+      - {id: hammam, kind: movie, title: "همام في أمستردام", year: 1999}
+      - {id: fil1, kind: movie, title: "الفيل الأزرق", year: 2014}
+      - {id: fil2, kind: movie, title: "الفيل الأزرق 2", year: 2019}
+      - {id: capernaum, kind: movie, title: "كفرناحوم", year: 2018}
+      - {id: caramel, kind: movie, title: "سكر بنات", year: 2007}
+      - {id: halla, kind: movie, title: "وهلأ لوين؟", year: 2011}
+      - {id: masir, kind: movie, title: "المصير", year: 1997}
+      - {id: ard, kind: movie, title: "الأرض", year: 1970}
+      - {id: masameer, kind: movie, title: "مسامير", year: 2020}
+      - {id: barakah, kind: movie, title: "بركة يقابل بركة", year: 2016}
+      - {id: shams, kind: movie, title: "شمس المعارف", year: 2020}
+      - {id: risala, kind: movie, title: "الرسالة", year: 1976}
+      - {id: mukhtar, kind: movie, title: "عمر المختار", year: 1981}
+      - {id: karnak, kind: movie, title: "الكرنك", year: 1975}
+      - {id: ibnhamido, kind: movie, title: "ابن حميدو", year: 1957}
+      - {id: ismailia, kind: movie, title: "إسماعيلية رايح جاي", year: 1997}
+      - {id: rizk1, kind: movie, title: "ولاد رزق", year: 2015}
+      - {id: rizk2, kind: movie, title: "ولاد رزق 2: عودة أسود الأرض", year: 2019}
+      - {id: tash, kind: tvshow, title: "طاش ما طاش", year: 1993}
+      - {id: babelhara, kind: tvshow, title: "باب الحارة", year: 2006}
+      - {id: darb, kind: tvshow, title: "درب الزلق", year: 1977}
+      - {id: hayba, kind: tvshow, title: "الهيبة", year: 2017}
+      - {id: raafat, kind: tvshow, title: "رأفت الهجان", year: 1988}
+      - {id: helmeya, kind: tvshow, title: "ليالي الحلمية", year: 1987}
+      - {id: ikhtiyar, kind: tvshow, title: "الاختيار", year: 2020}
+      - {id: asouf, kind: tvshow, title: "العاصوف", year: 2018}
+      - {id: maazeeb, kind: tvshow, title: "خيوط المعازيب", year: 2023}
+      - {id: bomb, kind: tvshow, title: "شباب البومب", year: 2012}
+      - {id: jinn, kind: tvshow, title: "جن", year: 2019}
+      - {id: rawabi, kind: tvshow, title: "مدرسة الروابي للبنات", year: 2021}
+      - {id: tabia, kind: tvshow, title: "ما وراء الطبيعة", year: 2020}
+      - {id: taghreeba, kind: tvshow, title: "التغريبة الفلسطينية", year: 2004}
+      - {id: kulthum, kind: artist, title: "أم كلثوم"}
+      - {id: fairuz, kind: artist, title: "فيروز"}
+      - {id: abdu, kind: artist, title: "محمد عبده"}
+      - {id: amrdiab, kind: artist, title: "عمرو دياب"}
+      - {id: nancy, kind: artist, title: "نانسي عجرم"}
+      - {id: halim, kind: artist, title: "عبد الحليم حافظ"}
+      - {id: kadim, kind: artist, title: "كاظم الساهر"}
+      - {id: rashed, kind: artist, title: "راشد الماجد"}
+      - {id: majeed, kind: artist, title: "عبد المجيد عبد الله"}
+      - {id: talal, kind: artist, title: "طلال مداح"}
+      - {id: assala, kind: artist, title: "أصالة"}
+      - {id: elissa, kind: artist, title: "إليسا"}
+      - {id: mohandes, kind: artist, title: "ماجد المهندس"}
+      - {id: jassmi, kind: artist, title: "حسين الجسمي"}
+      - {id: mounir, kind: artist, title: "محمد منير"}
+      - {id: tamer, kind: artist, title: "تامر حسني"}
+      - {id: abadi, kind: artist, title: "عبادي الجوهر"}
+      - {id: wael, kind: artist, title: "وائل كفوري"}
+      - {id: sherine, kind: artist, title: "شيرين"}
+      - {id: titanic, kind: movie, title: "Titanic", year: 1997}
+      - {id: avengers, kind: movie, title: "The Avengers", year: 2012}
+      - {id: endgame, kind: movie, title: "Avengers: Endgame", year: 2019}
+      - {id: inception, kind: movie, title: "Inception", year: 2010}
+      - {id: godfather, kind: movie, title: "The Godfather", year: 1972}
+      - {id: godfather2, kind: movie, title: "The Godfather Part II", year: 1974}
+      - {id: frozen, kind: movie, title: "Frozen", year: 2013}
+      - {id: frozen2, kind: movie, title: "Frozen II", year: 2019}
+      - {id: joker, kind: movie, title: "Joker", year: 2019}
+      - {id: interstellar, kind: movie, title: "Interstellar", year: 2014}
+      - {id: breakingbad, kind: tvshow, title: "Breaking Bad", year: 2008}
+      - {id: got, kind: tvshow, title: "Game of Thrones", year: 2011}
+      - {id: friends, kind: tvshow, title: "Friends", year: 1994}
+      - {id: casapapel, kind: tvshow, title: "La casa de papel", year: 2017}
+      - {id: prisonbreak, kind: tvshow, title: "Prison Break", year: 2005}
+      - {id: mj, kind: artist, title: "Michael Jackson"}
+      - {id: adele, kind: artist, title: "Adele"}
+      - {id: coldplay, kind: artist, title: "Coldplay"}
+    cases:
+      # Controls: the title as written.
+      - {heard: "وجدة", want: play, id: wadjda}
+      - {heard: "ذيب", want: play, id: theeb}
+      - {heard: "باب الحديد", want: play, id: babelhadid}
+      - {heard: "الإرهاب والكباب", want: play, id: irhab}
+      - {heard: "طاش ما طاش", want: play, id: tash}
+      - {heard: "الهيبة", want: play, id: hayba}
+      - {heard: "باب الحارة", want: play, id: babelhara}
+      - {heard: "أم كلثوم", want: play, id: kulthum}
+      - {heard: "محمد عبده", want: play, id: abdu}
+      - {heard: "عمرو دياب", want: play, id: amrdiab}
+      - {heard: "الفيل الأزرق", want: play, id: fil1}
+      - {heard: "ولاد رزق", want: play, id: rizk1}
+      # Hamza seats dropped or added: أ إ آ ء ؤ ئ against bare alef, ya and waw.
+      - {heard: "ام كلثوم", want: play, id: kulthum}
+      - {heard: "الارهاب والكباب", want: play, id: irhab}
+      - {heard: "اسماعيلية رايح جاي", want: play, id: ismailia}
+      - {heard: "رافت الهجان", want: play, id: raafat}
+      - {heard: "وايل كفوري", want: play, id: wael}
+      - {heard: "الأختيار", want: play, id: ikhtiyar}
+      # Ta marbuta written as ha.
+      - {heard: "وجده", want: play, id: wadjda}
+      - {heard: "عماره يعقوبيان", want: play, id: yacoubian}
+      - {heard: "الهيبه", want: play, id: hayba}
+      - {heard: "الرساله", want: play, id: risala}
+      - {heard: "بركه يقابل بركه", want: play, id: barakah}
+      # Alif maqsura and final ya swapped.
+      - {heard: "اللمبى", want: play, id: limby}
+      - {heard: "ليالى الحلمية", want: play, id: helmeya}
+      - {heard: "صعيدى فى الجامعة الامريكية", want: play, id: saidi}
+      # The definite article dropped, added, or written as the assimilated sun letter sounds.
+      - {heard: "الذيب", want: play, id: theeb}
+      - {heard: "ناظر", want: play, id: nazer}
+      - {heard: "انناظر", want: play, id: nazer}
+      - {heard: "درب ازلق", want: play, id: darb}
+      - {heard: "كاظم ساهر", want: play, id: kadim}
+      - {heard: "اتتغريبة الفلسطينية", want: play, id: taghreeba}
+      - {heard: "ار رسالة", want: play, id: risala}
+      # Emphatic and plain consonants: ط/ت, ص/س, and ظ heard as ض in Gulf speech.
+      - {heard: "تاش ما تاش", want: play, id: tash}
+      - {heard: "سعيدي في الجامعة الامريكية", want: play, id: saidi}
+      - {heard: "الناضر", want: play, id: nazer}
+      - {heard: "كاضم الساهر", want: play, id: kadim}
+      - {heard: "اسالة", want: play, id: assala}
+      # ق said as g in Gulf speech and written ج, ك or گ; g in English titles written ق, ج or غ.
+      - {heard: "بركة يجابل بركة", want: play, id: barakah}
+      - {heard: "ولاد رزك", want: play, id: rizk1}
+      - {heard: "قيم اوف ثرونز", want: play, id: got}
+      - {heard: "جيم اوف ثرونز", want: play, id: got}
+      - {heard: "بريكنق باد", want: play, id: breakingbad}
+      - {heard: "ذا قودفاذر", want: play, id: godfather}
+      # Interdentals merged with stops and sibilants: ث/ت/س, ذ/د/ز, ظ/ز.
+      - {heard: "ديب", want: play, id: theeb}
+      - {heard: "ام كلتوم", want: play, id: kulthum}
+      - {heard: "ام كلسوم", want: play, id: kulthum}
+      - {heard: "كازم الساهر", want: play, id: kadim}
+      - {heard: "عبد الحليم حافز", want: play, id: halim}
+      - {heard: "زا جودفازر", want: play, id: godfather}
+      # Pharyngeals: ع heard as hamza or alef, ح as ه, خ as ح.
+      - {heard: "باب الهارة", want: play, id: babelhara}
+      - {heard: "عبد الهليم حافظ", want: play, id: halim}
+      - {heard: "نانسي اجرم", want: play, id: nancy}
+      - {heard: "الاحتيار", want: play, id: ikhtiyar}
+      # Long vowels shortened and vowel letters dropped or added.
+      - {heard: "عمر دياب", want: play, id: amrdiab}
+      - {heard: "طلال مدح", want: play, id: talal}
+      - {heard: "شرين", want: play, id: sherine}
+      - {heard: "نانسي عجروم", want: play, id: nancy}
+      # English titles transliterated into Arabic script.
+      - {heard: "تايتانك", want: play, id: titanic}
+      - {heard: "تيتانيك", want: play, id: titanic}
+      - {heard: "ذا افنجرز", want: play, id: avengers}
+      - {heard: "افنجرز اند قيم", want: play, id: endgame}
+      - {heard: "انسبشن", want: play, id: inception}
+      - {heard: "انترستيلار", want: play, id: interstellar}
+      - {heard: "جوكر", want: play, id: joker}
+      - {heard: "فروزن", want: play, id: frozen}
+      - {heard: "فريندز", want: play, id: friends}
+      - {heard: "لا كاسا دي بابيل", want: play, id: casapapel}
+      - {heard: "بريزن بريك", want: play, id: prisonbreak}
+      - {heard: "مايكل جاكسون", want: play, id: mj}
+      - {heard: "اديل", want: play, id: adele}
+      - {heard: "كولد بلاي", want: play, id: coldplay}
+      # Latin script kept for an English title.
+      - {heard: "titanic", want: play, id: titanic}
+      - {heard: "joker", want: play, id: joker}
+      - {heard: "coldplay", want: play, id: coldplay}
+      # Word splits and merges, and the prefixes و ل ف attached or detached.
+      - {heard: "عبدالمجيد عبدالله", want: play, id: majeed}
+      - {heard: "كفر ناحوم", want: play, id: capernaum}
+      - {heard: "الارهاب و الكباب", want: play, id: irhab}
+      - {heard: "و هلأ لوين", want: play, id: halla}
+      - {heard: "صعيدي فالجامعة الامريكية", want: play, id: saidi}
+      - {heard: "مدرسة الروابي ل البنات", want: play, id: rawabi}
+      - {heard: "اولاد رزق", want: play, id: rizk1}
+      # Real-word substitutions.
+      - {heard: "سكر نبات", want: play, id: caramel}
+      - {heard: "حمام في امستردام", want: play, id: hammam}
+      - {heard: "وجدت", want: play, id: wadjda}
+      - {heard: "ذئب", want: play, id: theeb}
+      - {heard: "الهبة", want: play, id: hayba}
+      - {heard: "خيوط المعازيم", want: play, id: maazeeb}
+      - {heard: "حسين الجاسمي", want: play, id: jassmi}
+      # Numbers: digits, Arabic-Indic digits and number words.
+      - {heard: "الفيل الأزرق 2", want: play, id: fil2}
+      - {heard: "الفيل الازرق ٢", want: play, id: fil2}
+      - {heard: "الفيل الازرق اتنين", want: play, id: fil2}
+      - {heard: "الفيل الازرق الجزء الثاني", want: play, id: fil2}
+      - {heard: "ولاد رزق ٢", want: play, id: rizk2}
+      - {heard: "فروزن 2", want: play, id: frozen2}
+      - {heard: "فروزن تو", want: play, id: frozen2}
+      - {heard: "ذا قودفاذر بارت تو", want: play, id: godfather2}
+      # A distinctive opening word stands for the title.
+      - {heard: "صعيدي", want: play, id: saidi}
+      - {heard: "همام", want: play, id: hammam}
+      - {heard: "خيوط", want: play, id: maazeeb}
+      - {heard: "مدرسة الروابي", want: play, id: rawabi}
+      # Ambiguous: ask among the near neighbours.
+      - {heard: "محمد", want: ask, among: [abdu, mounir]}
+      - {heard: "الفيل", want: ask, among: [fil1, fil2]}
+      - {heard: "افنجرز", want: ask, among: [avengers, endgame]}
+      - {heard: "باب", want: ask, among: [babelhadid, babelhara]}
+      - {heard: "ماجد", want: ask, among: [rashed, mohandes]}
+      # Missing sequels: ask.
+      - {heard: "الفيل الازرق 3", want: ask}
+      - {heard: "ولاد رزق ٣", want: ask}
+      - {heard: "ذا قودفاذر 3", want: ask}
+      # Absent titles, including near misses that share words or names with the library.
+      - {heard: "باب الشمس", want: not_found}
+      - {heard: "شمس الزناتي", want: not_found}
+      - {heard: "مدرسة المشاغبين", want: not_found}
+      - {heard: "الشيخ جاكسون", want: not_found}
+      - {heard: "عبدالله الرويشد", want: not_found}
+      - {heard: "ماجدة الرومي", want: not_found}
+      - {heard: "محمد رمضان", want: not_found}
+      - {heard: "سواق الأتوبيس", want: not_found}
+      - {heard: "ذا دارك نايت", want: not_found}
+      - {heard: "تايتانز", want: not_found}
+      - {heard: "باربي", want: not_found}
+      - {heard: "ذا سوبرانوز", want: not_found}

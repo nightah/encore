@@ -45,15 +45,21 @@ func New(t testing.TB, opts Options) *Server {
 		opts:        opts,
 		tokens:      map[string]time.Time{},
 		calls:       map[string]int{},
+		injectRoute: map[string]int{},
 		failLocales: map[string]string{},
 		unreported:  map[string]bool{},
 		unimported:  map[string]bool{},
+		valueLimits: map[string]int{},
+		rejected:    map[string]bool{},
 		uploads:     map[string][]byte{},
 		skills:      map[string]*Skill{},
 		imports:     map[string]*importJob{},
 		lastImport:  map[string]*importJob{},
 		statusPolls: map[string]int{},
 		sims:        map[string]*simJob{},
+		reaches:     map[string]bool{},
+		profiles:    map[string][]NLUAnswer{},
+		profiled:    map[string]int{},
 	}
 
 	s.Server = httptest.NewServer(s.routes())
@@ -88,6 +94,22 @@ func (s *Server) PassLocale(locale string) {
 	delete(s.failLocales, locale)
 }
 
+// LimitSlotValues makes locale's builds fail, without naming a value, while its model holds more than n values of slotType, as Amazon fails a model too large.
+func (s *Server) LimitSlotValues(locale, slotType string, n int) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.valueLimits[locale+"/"+slotType] = n
+}
+
+// RejectSlotValue makes the build of every locale whose model has value, as a slot value or a synonym, fail with an error naming it.
+func (s *Server) RejectSlotValue(value string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.rejected[value] = true
+}
+
 // UnreportLocale leaves locale out of the skill status entirely.
 func (s *Server) UnreportLocale(locale string) {
 	s.mu.Lock()
@@ -112,6 +134,14 @@ func (s *Server) localeKey(locale string) string {
 	return locale
 }
 
+// FailImportsWithoutDetails makes the next n imports fail as Amazon's now and then do: every resource FAILED with no errors and the manifest ROLLBACK_FAILED.
+func (s *Server) FailImportsWithoutDetails(n int) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.unexplained += n
+}
+
 // Inject makes the next n SMAPI calls fail with status (e.g. 429 or 503) and Retry-After: 0.
 func (s *Server) Inject(status, n int) {
 	s.mu.Lock()
@@ -120,6 +150,14 @@ func (s *Server) Inject(status, n int) {
 	for range n {
 		s.inject = append(s.inject, status)
 	}
+}
+
+// InjectRoute makes the next call to the route pattern, e.g. "DELETE /v1/skills/{skillId}/stages/{stage}/enablement", fail with status.
+func (s *Server) InjectRoute(pattern string, status int) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.injectRoute[pattern] = status
 }
 
 // Injected reports how many injected failures have been served.

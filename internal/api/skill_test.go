@@ -657,6 +657,44 @@ func TestSkillLocalesFollowShippedOnes(t *testing.T) {
 	assert.NotEmpty(t, info.SkillName)
 }
 
+func TestInvocationNamePrefersTheLatinName(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+
+	var info SkillInfo
+
+	c.json(http.MethodGet, "/api/v1/skill", nil, http.StatusOK, &info)
+	require.Equal(t, "ar-SA", info.LocalesEnabled[0], "every locale is enabled, and the first writes the names in its own script")
+	assert.Equal(t, "encore", info.InvocationName)
+
+	for _, tc := range []struct {
+		invocation string
+		locales    []string
+		want       string
+	}{
+		{"kodi", nil, "kodi"},
+		{"encore", []string{"ar-SA", "en-AU"}, "encore"},
+		{"kodi", []string{"ja-JP", "en-AU"}, "kodi"},
+		{"encore", []string{"ar-SA"}, "انكور"},
+		{"kodi", []string{"ar-SA"}, "كودي"},
+		{"encore", []string{"ja-JP", "ar-SA"}, "アンコール"},
+		{"encore", []string{"fr-FR", "ar-SA"}, "kodi"},
+	} {
+		settings := deployableSettings()
+		settings["invocation"] = tc.invocation
+		settings["locales_enabled"] = tc.locales
+
+		if tc.locales == nil {
+			settings["locales_enabled"] = info.LocalesAvailable
+		}
+
+		var got SkillInfo
+
+		c.json(http.MethodPut, "/api/v1/skill/settings", settings, http.StatusOK, &got)
+		assert.Equal(t, tc.want, got.InvocationName, "%s in %v", tc.invocation, tc.locales)
+	}
+}
+
 func TestAmazonCredentials(t *testing.T) {
 	h := newHarness(t, harnessOpts{noKodi: true})
 	c := h.admin()
@@ -1016,4 +1054,162 @@ func TestDeployRefusesStoredSettingsThatNoLongerBuild(t *testing.T) {
 	assert.Contains(t, p.Detail, "too short")
 	assert.NotContains(t, p.Detail, "skillpkg:")
 	assert.Zero(t, h.smapi.Exchanges(), "nothing reaches Amazon")
+}
+
+// Saved settings that no longer apply fail the skill's details rather than show the defaults as if they were chosen.
+func TestSkillInfoWithUnreadableSettings(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	ctx := t.Context()
+
+	require.NoError(t, h.app.DB().Settings().Set(ctx, overridesSetting, map[string]any{"alexa.locales": map[string]any{"en": map[string]any{}}}))
+
+	h.api.prefs.mu.Lock()
+	h.api.prefs.effective = nil
+	h.api.prefs.mu.Unlock()
+
+	_, err := h.api.skill.info(ctx)
+	require.ErrorContains(t, err, "applying saved settings")
+}
+
+func TestInvocationNameSkipsUnknownLocales(t *testing.T) {
+	spellings := []LocaleInvocation{{Locale: "ja-JP", Encore: "アンコール", Kodi: "コディ"}}
+
+	assert.Equal(t, "アンコール", invocationName(spellings, []string{"xx-XX", "ja-JP"}, "encore"), "a locale with no spellings is passed over")
+	assert.Equal(t, "kodi", invocationName(spellings, []string{"xx-XX"}, "kodi"), "with no spelling at all, the choice itself")
+}
+
+func TestSkillInfoBuildsEachPackageOnce(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+	ctx := t.Context()
+
+	first, err := h.api.skill.info(ctx)
+	require.NoError(t, err)
+
+	built := h.api.skill.builds.Load()
+	require.Positive(t, built)
+
+	again, err := h.api.skill.info(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, first.ModelSize, again.ModelSize)
+	assert.Equal(t, built, h.api.skill.builds.Load(), "asking again builds nothing: the packages haven't changed")
+
+	settings := map[string]any{
+		"invocation":      "encore",
+		"skill_name":      "Kodi Remote",
+		"locales_enabled": []string{"en-AU"},
+		"endpoint":        map[string]any{"url": "https://encore.example.net/api/v1/alexa"},
+		"privacy":         map[string]any{"uses_personal_info": false, "is_child_directed": false, "is_export_compliant": true, "contains_ads": false, "allows_purchases": false},
+	}
+	c.json(http.MethodPut, "/api/v1/skill/settings", settings, http.StatusOK, nil)
+
+	changed, err := h.api.skill.info(ctx)
+	require.NoError(t, err)
+	assert.Greater(t, h.api.skill.builds.Load(), built, "new settings build new packages")
+	require.NotNil(t, changed.ModelSize.V)
+	assert.Equal(t, "en-AU", changed.ModelSize.V.Locale, "and their sizes are the new packages'")
+}
+
+func TestSkillServiceKeepsFewBuiltPackages(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	s := h.api.skill
+
+	for i := range keepBuilt + 3 {
+		s.build(skillpkg.Options{Locales: []string{"en-US"}, SkillName: fmt.Sprint("Encore ", i)})
+
+		s.builtMu.Lock()
+		n := len(s.built)
+		s.builtMu.Unlock()
+
+		assert.LessOrEqual(t, n, keepBuilt)
+	}
+
+	before := s.builds.Load()
+	s.build(skillpkg.Options{Locales: []string{"en-US"}, SkillName: fmt.Sprint("Encore ", keepBuilt+2)})
+	assert.Equal(t, before, s.builds.Load(), "the latest package is still kept")
+}
+
+// An import Amazon fails without saying why is named in the deploy's error and logged as Amazon answered it, the evidence for looking into it later.
+func TestDeployFailureWithoutDetailsKeepsTheEvidence(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+	connectAmazon(t, h, c)
+
+	h.smapi.FailImportsWithoutDetails(2)
+
+	c.json(http.MethodPut, "/api/v1/skill/settings", map[string]any{
+		"invocation": "encore", "skill_name": "", "locales_enabled": []string{"en-AU"},
+		"endpoint": map[string]any{"url": "https://encore.example.net/api/v1/alexa"},
+		"privacy":  map[string]any{"uses_personal_info": false, "is_child_directed": false, "is_export_compliant": true, "contains_ads": false, "allows_purchases": false},
+	}, http.StatusOK, nil)
+
+	var acc Accepted
+
+	c.json(http.MethodPost, "/api/v1/skill/deploy", nil, http.StatusAccepted, &acc)
+
+	d := waitForDeploy(t, c, acc.ID)
+
+	assert.Equal(t, "failed", d.State)
+	assert.Contains(t, d.Error, "deploy: import failed: no details reported; import ")
+	assert.Contains(t, h.logs.String(), `msg="skill deploy failed"`)
+	assert.Contains(t, h.logs.String(), `ROLLBACK_FAILED`, "Amazon's answer is logged")
+}
+
+// A second instance, such as a development one, names its skill with alexa.skill_name, so its first deploy creates a skill of its own rather than adopting the one named "Encore" another instance deploys.
+func TestDeployUnderTheConfiguredSkillName(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true, env: []string{"ENCORE_ALEXA_SKILL_NAME=Encore DEV"}})
+	c := h.admin()
+	connectAmazon(t, h, c)
+
+	own := h.smapi.AddSkill(smapitest.DefaultVendorID, map[string]string{"en-AU": "Encore"})
+
+	// The skill page saved the default name, as it does when its form is saved as it stands.
+	c.json(http.MethodPut, "/api/v1/skill/settings", map[string]any{
+		"invocation": "encore", "skill_name": "Encore", "locales_enabled": []string{"en-AU"},
+		"endpoint": map[string]any{"url": "https://encore.example.net/api/v1/alexa"},
+		"privacy":  map[string]any{"uses_personal_info": false, "is_child_directed": false, "is_export_compliant": true, "contains_ads": false, "allows_purchases": false},
+	}, http.StatusOK, nil)
+
+	var info SkillInfo
+
+	c.json(http.MethodGet, "/api/v1/skill", nil, http.StatusOK, &info)
+	assert.Equal(t, "Encore DEV", info.SkillName, "the instance's name wins")
+
+	var acc Accepted
+
+	c.json(http.MethodPost, "/api/v1/skill/deploy", nil, http.StatusAccepted, &acc)
+	require.Equal(t, "succeeded", waitForDeploy(t, c, acc.ID).State)
+
+	sk, _ := h.smapi.Skill(own)
+	assert.Zero(t, sk.Imports, "the other instance's skill is left alone")
+	assert.Equal(t, 2, h.smapi.SkillCount())
+
+	c.json(http.MethodGet, "/api/v1/skill", nil, http.StatusOK, &info)
+	require.NotEqual(t, own, info.SkillID)
+
+	dev, _ := h.smapi.Skill(info.SkillID)
+	assert.Equal(t, map[string]string{"en-AU": "Encore DEV"}, dev.Names)
+}
+
+// An import Amazon fails without saying why is imported once more, and the deploy goes through.
+func TestDeployGoesThroughAfterASilentFailure(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+	connectAmazon(t, h, c)
+
+	h.smapi.FailImportsWithoutDetails(1)
+
+	c.json(http.MethodPut, "/api/v1/skill/settings", map[string]any{
+		"invocation": "encore", "skill_name": "", "locales_enabled": []string{"en-AU"},
+		"endpoint": map[string]any{"url": "https://encore.example.net/api/v1/alexa"},
+		"privacy":  map[string]any{"uses_personal_info": false, "is_child_directed": false, "is_export_compliant": true, "contains_ads": false, "allows_purchases": false},
+	}, http.StatusOK, nil)
+
+	var acc Accepted
+
+	c.json(http.MethodPost, "/api/v1/skill/deploy", nil, http.StatusAccepted, &acc)
+
+	d := waitForDeploy(t, c, acc.ID)
+	assert.Equal(t, "succeeded", d.State)
+	assert.Contains(t, h.logs.String(), "importing again in")
 }

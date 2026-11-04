@@ -8,6 +8,11 @@ export const LANGUAGES = [
   { code: "es", name: "Español" },
   { code: "fr", name: "Français" },
   { code: "it", name: "Italiano" },
+  { code: "nl", name: "Nederlands" },
+  { code: "pt", name: "Português (Brasil)" },
+  { code: "ar", name: "العربية" },
+  { code: "hi", name: "हिन्दी" },
+  { code: "ja", name: "日本語" },
 ] as const;
 
 export type Language = (typeof LANGUAGES)[number]["code"];
@@ -76,8 +81,10 @@ export async function setLanguage(code: Language | undefined): Promise<void> {
   await i18n.changeLanguage(code ?? browserLanguage());
 }
 
+// dir lays the page out right to left for Arabic; Tailwind's logical classes (ms-, pe-, text-start) and rtl: variants follow it.
 i18n.on("languageChanged", (lng) => {
   document.documentElement.lang = lng;
+  document.documentElement.dir = i18n.dir(lng);
 });
 
 void i18n.use(initReactI18next).init({

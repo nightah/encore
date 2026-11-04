@@ -52,7 +52,7 @@ func (l *language) newEntry(d Doc) *entry {
 	e := &entry{doc: d}
 	seen := make(map[string]int)
 
-	add := func(text string, derived bool) {
+	add := func(text string, derived, native bool) {
 		variants := []string{text}
 		if l.code == "de" {
 			if v := umlautVariant(text); v != text {
@@ -69,17 +69,28 @@ func (l *language) newEntry(d Doc) *entry {
 
 				norm := strings.Join(toks, " ")
 				if i, ok := seen[norm]; ok {
-					// A primary name beats a derived one with the same form.
-					if e.aliases[i].derived && !derived {
-						e.aliases[i].derived = false
-						e.aliases[i].text = text
+					// A name as written beats one in the language's script with the same form. Primary names are all added before derived ones, so a derived name never replaces one.
+					a := &e.aliases[i]
+					if a.native && !native && a.derived == derived {
+						a.native, a.text = native, text
 					}
 
 					continue
 				}
 
 				seen[norm] = len(e.aliases)
-				e.aliases = append(e.aliases, alias{form: l.newForm(toks, spelled), text: text, derived: derived})
+				e.aliases = append(e.aliases, alias{form: l.newForm(toks, spelled), text: text, derived: derived, native: native})
+			}
+		}
+	}
+
+	// addNamed adds a name and the forms a recogniser writes it in, in the language's script.
+	addNamed := func(text string, derived bool) {
+		add(text, derived, false)
+
+		if l.native != nil {
+			for _, f := range l.native(text) {
+				add(f, derived, true)
 			}
 		}
 	}
@@ -87,13 +98,13 @@ func (l *language) newEntry(d Doc) *entry {
 	names := append([]string{d.Title}, d.Aliases...)
 	for _, n := range names {
 		if strings.TrimSpace(n) != "" {
-			add(n, false)
+			addNamed(n, false)
 		}
 	}
 
 	for _, n := range names {
 		for _, s := range shortenings(n) {
-			add(s, true)
+			addNamed(s, true)
 		}
 	}
 

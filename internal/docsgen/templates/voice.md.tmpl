@@ -17,12 +17,24 @@ tableOfContents:
 {{range .Locales}}| `{{.Locale}}` | {{.SkillName}} | {{.Invocation}} |
 {{end}}
 Your Echo uses the skill only when its language is one of these locales and that locale was deployed (see [locales]({{base}}/guides/deploy-skill/#locales)). The invocation name can be changed on the Alexa skill page in the web interface.
-{{if eq .Lang "en"}}
+
+## Opening the skill
+
+| Locale | Say | Also | Naming it as a skill |
+| --- | --- | --- | --- |
+{{range .Locales}}| `{{.Locale}}` | "Alexa, {{.Open}}" | {{range $i, $p := .Also}}{{if $i}}, {{end}}"{{$p}}"{{end}} | "Alexa, {{.Skill}}" |
+{{end}}
+The first two columns are launch phrases Amazon lists for the language, shown with the default invocation name; put your own in its place if you changed it. If Alexa answers with something else, as it can when it doesn't take the invocation name alone for a skill, call it a skill, as in the last column.
+{{with .PlainOpenFails}}
+:::caution[A plain open phrase may not start the skill]
+In {{range $i, $l := .}}{{if $i}}, {{end}}`{{$l}}`{{end}}, Amazon's simulator hasn't been seen to route an open phrase to the skill, so whether "Alexa, open …" works can only be tried on an Echo. If it doesn't start the skill, try the other phrases, then the one that names it as a skill.
+:::
+{{end}}{{if eq .Lang "en"}}
 Open the skill and then speak commands ("Alexa, open encore", then "play the movie Dune"), or say it in one go: "Alexa, ask encore to play the movie Dune", "Alexa, tell encore to turn the volume up".
 {{else if eq .Lang "fr"}}
 In French the invocation name is always "kodi", because "encore" means "again" and Alexa would hear "open again" or "repeat". One-shot requests take an infinitive after "demande à kodi de …", which is why many patterns below list both forms of a verb ("mets|mettre").
 {{else}}
-Open the skill with your language's usual phrase and the invocation name, then speak a command, or say both in one request.
+Open the skill with one of the phrases above, then speak a command, or say both in one request.
 {{end}}
 ## How to read the patterns
 
@@ -63,4 +75,8 @@ Custom slot types accept these words and their synonyms. Alexa can also pass on 
 Filled at deploy time.{{if .Values}} Examples:{{end}}
 {{end}}
 {{range .Values}}- {{.Value}}{{with .Synonyms}} ({{join . ", "}}){{end}}
-{{end}}{{end}}
+{{end}}{{range .Extra}}
+Also in `{{.Locale}}`:
+
+{{range .Values}}- {{.Value}} ({{join .Synonyms ", "}})
+{{end}}{{end}}{{end}}

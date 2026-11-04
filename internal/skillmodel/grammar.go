@@ -3,6 +3,8 @@ package skillmodel
 import (
 	"fmt"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 )
 
 // Expand turns an utterance pattern into the sample utterances it describes.
@@ -11,7 +13,7 @@ import (
 //	[a|b]   optionally one of the alternatives
 //	{Slot}  a slot reference, copied through unchanged
 //
-// Groups nest. Whitespace is collapsed and the results are de-duplicated in first-seen order.
+// Groups nest. Whitespace is collapsed and the results are de-duplicated in first-seen order. A group is joined to the text around it with a space, except next to Japanese, which is written without them ("{Movie}を(再生|上映)して").
 func Expand(pattern string) ([]string, error) {
 	p := &parser{src: pattern}
 
@@ -149,11 +151,27 @@ func (p *parser) product(prefixes, suffixes []string) ([]string, error) {
 
 	for _, pre := range prefixes {
 		for _, suf := range suffixes {
-			out = append(out, pre+" "+suf)
+			if unspacedAt(pre, suf) {
+				out = append(out, pre+suf)
+			} else {
+				out = append(out, pre+" "+suf)
+			}
 		}
 	}
 
 	return out, nil
+}
+
+// unspacedAt reports whether pre and suf meet at a character of a script written without spaces.
+func unspacedAt(pre, suf string) bool {
+	last, _ := utf8.DecodeLastRuneInString(pre)
+	first, _ := utf8.DecodeRuneInString(suf)
+
+	return unspacedRune(last) || unspacedRune(first)
+}
+
+func unspacedRune(r rune) bool {
+	return r == 'ー' || unicode.In(r, unicode.Han, unicode.Hiragana, unicode.Katakana)
 }
 
 func appendAll(prefixes []string, s string) []string {

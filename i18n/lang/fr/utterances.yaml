@@ -1,10 +1,20 @@
-# Utterance patterns, translated on Crowdin from the English file. Each key is one way of asking, and may hold several patterns, one per line. (a|b) picks one, [a|b] is optional, {Slot} is a slot. Built-in intents already understand the common phrasings; samples here only add Kodi-specific ones. An optional room at the end, such as "[(in|on) the {Room}]", lets a request name the room whose Kodi should play it; notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
+# Utterance patterns, translated on Crowdin from the English file. Each key is one way of asking, and may hold several patterns, one per line. (a|b) picks one, [a|b] is optional, {Slot} is a slot. Built-in intents already understand the common phrasings; samples here add Kodi-specific ones, and the plain words for yes, no, help, stop and cancel, which Encore also uses to tell them from a title said in answer to a question. An optional room at the end, such as "[(in|on) the {Room}]", lets a request name the room whose Kodi should play it; notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
+AMAZON.CancelIntent:
+  say_cancel: "annule\nlaisse tomber"
+AMAZON.HelpIntent:
+  say_help: "aide"
 AMAZON.LoopOffIntent:
   loop_off: "mode répétition désactivé"
   turn_off_repeat: "(désactive|désactiver|arrête|arrêter) (la répétition|la lecture en boucle|le mode répétition)"
 AMAZON.LoopOnIntent:
   loop: "mode répétition activé"
   turn_repeat: "(active|activer) (la répétition|la lecture en boucle|le mode répétition)"
+AMAZON.NavigateHomeIntent:
+  go_home: "(retour|retourne|va|aller) (à l'accueil|à l'écran d'accueil|au menu principal)"
+AMAZON.NextIntent:
+  next_episode: "[(mets|lance|joue|passe)] (le prochain épisode|l'épisode suivant)\nprochain épisode\népisode suivant\n(passe|va) à l'épisode suivant"
+AMAZON.NoIntent:
+  say_no: "non"
 AMAZON.PauseIntent:
   pause_tv: "(mets|mettre) en pause (la télé|kodi|la vidéo|le film|la série)\n(mets|mettre) (la télé|kodi|la vidéo|le film|la série) en pause"
 AMAZON.ResumeIntent:
@@ -15,6 +25,10 @@ AMAZON.ShuffleOffIntent:
 AMAZON.ShuffleOnIntent:
   shuffle: "lecture aléatoire activée"
   turn_shuffle: "(active|activer) (la lecture aléatoire|le mode aléatoire)\n(mets|mettre) en (aléatoire|mode aléatoire|lecture aléatoire)"
+AMAZON.StopIntent:
+  say_stop: "stop"
+AMAZON.YesIntent:
+  say_yes: "oui\nouais"
 AudioPassthrough:
   toggle_digital_audio: "(active|activer|désactive|désactiver) (l'audio numérique|la sortie audio numérique)"
   toggle_passthrough: "(active|activer|désactive|désactiver|bascule|basculer) le passthrough [audio|numérique]\npassthrough audio"
@@ -30,6 +44,14 @@ BingeShow:
   play_all: "(mets|mettre|lance|lancer) toute la série {Show}"
   play_all_unwatched: "(mets|mettre|lance|lancer) (tous les épisodes non vus|le reste des épisodes|tous les épisodes restants) de {Show} [(dans le|dans la|au|à la) {Room}]"
   start_binge_mode: "(active|activer|lance|lancer) le mode marathon (pour|sur) {Show} [(dans le|dans la|au|à la) {Room}]"
+ChooseMatch:
+  meant_answer: "je (veux dire|voulais dire|veux) {Answer}"
+  meant_which: "je (veux dire|voulais dire|veux) (le|la) {Which}\nje (veux dire|voulais dire|veux) {Which}"
+  the_which: "(le|la) {Which}\n(le film|la série) {Which}"
+  which_please: "(le|la) {Which} (s'il te plaît|s'il vous plaît)"
+ChooseMatch.Answer:
+  answer: "{Answer}\n{Answer} s'il te plaît\n{Answer} s'il vous plaît"
+  which: "{Which}"
 CleanLibrary:
   clean_library: "(nettoie|nettoyer) (la|ma) bibliothèque"
   clean_library_2: "(nettoie|nettoyer) (la|ma) bibliothèque {Library}"
@@ -81,6 +103,7 @@ ListenToArtist:
   play_artist: "(mets|mettre|joue|jouer|lance|lancer) l'artiste {Artist} [(dans le|dans la|au|à la) {Room}]"
   play_music_by: "(mets|mettre|joue|jouer|lance|lancer) (de la musique|des chansons) (de|par) {Artist} [(dans le|dans la|au|à la) {Room}]\nje (veux|voudrais) écouter (de la musique|des chansons) de {Artist}"
   play_music_by_2: "(mets|mettre|joue|jouer|lance|lancer) (de la musique|des chansons) {Genre} (de|par) {Artist}"
+  play_something_by: "(mets|mettre|joue|jouer|lance|lancer) quelque chose (de|par) {Artist} [(dans le|dans la|au|à la) {Room}]"
 ListenToGenre:
   play_genre: "(mets|mettre|joue|jouer|lance|lancer) de la musique du genre {Genre} [(dans le|dans la|au|à la) {Room}]"
   play_music: "(mets|mettre|joue|jouer|lance|lancer) (de la musique|des chansons) {Genre} [(dans le|dans la|au|à la) {Room}]\n(mets|mettre|joue|jouer) (du|de la) {Genre} [(dans le|dans la|au|à la) {Room}]\nje (veux|voudrais) écouter (du|de la) {Genre}"

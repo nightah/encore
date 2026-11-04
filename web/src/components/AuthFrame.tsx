@@ -10,8 +10,8 @@ export function AuthFrame({ subtitle, children }: { subtitle: string; children: 
       <div className="flex flex-wrap items-center justify-center gap-2.5">
         <LogoMark size={56} className="size-14" />
         <span className="font-bold font-display text-2xl text-white">Encore</span>
-        <span className="ml-1.5 text-[#8e9aa8]">{subtitle}</span>
-        <span className="ml-3">
+        <span className="ms-1.5 text-[#8e9aa8]">{subtitle}</span>
+        <span className="ms-3">
           <ThemeToggle onDark />
         </span>
       </div>

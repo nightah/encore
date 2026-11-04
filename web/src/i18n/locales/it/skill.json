@@ -19,6 +19,10 @@
     "resume": "Distribuisci la skill a mano una volta risolto il problema per riprenderle.",
     "title": "Le distribuzioni automatiche sono sospese"
   },
+  "autoDeployRetry": {
+    "next": "Il tentativo {{attempts}} di {{max}} non è riuscito. Prossimo tentativo: {{time}}.",
+    "title": "Una distribuzione automatica non è riuscita e verrà ritentata"
+  },
   "content": {
     "movies": "Film",
     "music": "Musica",
@@ -27,6 +31,7 @@
   },
   "locales": {
     "build": {
+      "degraded": "Meno titoli",
       "failed": "Non riuscita",
       "in_progress": "In compilazione",
       "succeeded": "Riuscita"
@@ -43,6 +48,7 @@
       "keepOne": "Lascia attivo almeno uno tra film, serie TV e musica.",
       "legend": "Cosa può riprodurre"
     },
+    "degradedTitles": "{{kept}} di {{total}}",
     "empty": "Ancora niente di compilato. Distribuisci la skill per compilare un modello per ogni lingua attiva.",
     "enabled": {
       "hint": "Vengono compilate e distribuite solo le lingue attive. Un Echo può usare la skill solo se la sua lingua corrisponde a una di queste. Le modifiche si applicano alla prossima distribuzione.",
@@ -121,6 +127,8 @@
     "title": "Titoli nel modello"
   },
   "warnings": {
+    "dropped": "{{locale}}: Amazon ha rifiutato questi titoli, quindi sono stati esclusi: {{titles}}",
+    "thinned": "{{locale}}: Amazon non ha compilato il modello con tutti i titoli della libreria, quindi è stato compilato con {{kept}} di {{total}}.",
     "title": "Avvisi dell'ultima distribuzione"
   }
 }

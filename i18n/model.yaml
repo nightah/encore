@@ -37,6 +37,14 @@ intents:
     slots:
       - {name: Query, type: AMAZON.SearchQuery}
 
+  # Answering a question.
+  - name: ChooseMatch
+    slots:
+      # "The second one", "the older one": which of the titles a "did you mean" question offered.
+      - {name: Which, type: MATCH_CHOICE}
+      # A title said on its own; acted on only while a question's titles are waiting.
+      - {name: Answer, type: AMAZON.Movie}
+
   # Movies.
   - name: WatchRandomMovie
     content: movies
@@ -305,6 +313,7 @@ types:
   # Music video titles come from the library at deploy time; Amazon has no built-in music video type outside a few English locales.
   - {name: KODI_MUSIC_VIDEO, dynamic: true}
   - name: MEDIA_TYPE
+  - name: MATCH_CHOICE
   - name: LIBRARY_SECTION
   - name: LIBRARY_TYPE
   - name: NAV_ACTION

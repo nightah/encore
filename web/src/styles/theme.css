@@ -188,6 +188,7 @@
   --color-slate: var(--encore-slate);
 }
 
+/* The web fonts cover Latin, Greek and Cyrillic only. Each stack ends in the system's fonts, which supply the letters they lack, such as Arabic, Devanagari and Japanese. */
 @theme {
   --font-display: "Bricolage Grotesque Variable", "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "IBM Plex Sans Variable", "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;

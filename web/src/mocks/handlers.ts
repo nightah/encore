@@ -237,6 +237,7 @@ function overview(): Overview {
       .filter((r) => !r.simulated)
       .slice(0, RECENT_REQUESTS)
       .map(summary),
+    rejected_requests: db.rejectedRequests,
     requests_today: {
       failed: today.filter((r) => r.outcome === "error" || r.outcome === "not_found").length + (today.length ? 1 : 0),
       median_ms: durations.length ? (durations[Math.floor(durations.length / 2)] ?? 0) : 0,
@@ -306,6 +307,7 @@ function runDeploy(id: string, stepMs: number) {
             id,
             locales: db.skill.locales_enabled.map((locale) => ({
               built_at: now,
+              degraded: null,
               errors: [],
               locale,
               size_bytes: 1_120_000,
@@ -1012,6 +1014,9 @@ export const handlers = [
         { location: "body.locales_enabled", message: "Enable at least one locale." },
       ]);
     }
+    const spellings = input.locales_enabled.flatMap(
+      (locale) => db.skill.locale_invocations.find((l) => l.locale === locale)?.[invocation] ?? [],
+    );
     db.skill = {
       ...db.skill,
       content: input.content ?? db.skill.content,
@@ -1021,9 +1026,8 @@ export const handlers = [
           }
         : db.skill.endpoint,
       invocation,
-      // The server reports the first enabled locale's name; French always uses "kodi".
-      invocation_name:
-        invocation === "kodi" ? "kodi" : [...input.locales_enabled].sort()[0] === "fr-FR" ? "kodi" : "encore",
+      // The server reports the Latin name when any enabled locale says it, else the first enabled locale's spelling.
+      invocation_name: spellings.includes(invocation) ? invocation : (spellings[0] ?? invocation),
       locales_enabled: input.locales_enabled,
       needs_deploy: true,
       privacy: input.privacy ?? db.skill.privacy,

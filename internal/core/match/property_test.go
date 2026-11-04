@@ -13,7 +13,7 @@ import (
 	"github.com/nightah/encore/internal/core/media"
 )
 
-var langs = []string{"en", "de", "fr", "es", "it"}
+var langs = Languages()
 
 // titleWords mixes plain words with the things normalisation rewrites: articles, number words, ordinals, roman numerals, part words, single letters and conjunctions.
 var titleWords = []string{
@@ -50,6 +50,15 @@ func TestPropNormalizeIdempotent(t *testing.T) {
 
 var accents = strings.NewReplacer("a", "á", "e", "è", "i", "î", "o", "ö", "u", "ü", "c", "ç", "n", "ñ")
 
+// accentsFor is accents without the cedilla in Portuguese, where "ç" is a letter of its own, said "ss".
+func accentsFor(lang string) *strings.Replacer {
+	if lang == "pt" {
+		return strings.NewReplacer("a", "á", "e", "è", "i", "î", "o", "ö", "u", "ü", "n", "ñ")
+	}
+
+	return accents
+}
+
 func TestPropNormalizeInvariance(t *testing.T) {
 	seps := []string{" ", ", ", " - ", ": ", "! ", " / ", "... ", " (", ") "}
 
@@ -71,7 +80,7 @@ func TestPropNormalizeInvariance(t *testing.T) {
 		variants := map[string]string{
 			"upper":       strings.ToUpper(plain),
 			"punctuation": b.String(),
-			"diacritics":  accents.Replace(plain),
+			"diacritics":  accentsFor(lang).Replace(plain),
 			"article":     rapid.SampledFrom([]string{"The", "the", "THE"}).Draw(t, "article") + " " + plain,
 		}
 

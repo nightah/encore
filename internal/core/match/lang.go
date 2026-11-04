@@ -5,6 +5,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/nightah/encore/internal/fuzzy/loanword"
 	"github.com/nightah/encore/internal/fuzzy/phonetic/de"
 	"github.com/nightah/encore/internal/fuzzy/phonetic/en"
 	"github.com/nightah/encore/internal/fuzzy/phonetic/es"
@@ -17,10 +18,24 @@ var languages = map[string]*language{
 	"fr": french(),
 	"es": spanish(),
 	"it": italian(),
+	"ar": arabic(),
+	"hi": hindi(),
+	"ja": japanese(),
+	"nl": dutch(),
+	"pt": portuguese(),
 }
 
 // Languages lists the language codes with their own title-matching rules, sorted.
 func Languages() []string { return slices.Sorted(maps.Keys(languages)) }
+
+// ScriptLanguage returns the language whose rules read the script s is written in, whatever a library's language: "ja" for kana or kanji, "hi" for Devanagari and "ar" for Arabic letters, from the first such letter. It returns "" for text every language reads alike, such as Latin letters and digits.
+func ScriptLanguage(s string) string {
+	if o := languages["en"].foreignOwner(s); o != nil {
+		return o.code
+	}
+
+	return ""
+}
 
 // languageFor resolves a language or locale code ("de", "de-DE", "en_GB"), falling back to English.
 func languageFor(code string) *language {
@@ -34,6 +49,11 @@ func languageFor(code string) *language {
 	}
 
 	return languages["en"]
+}
+
+// nativeOf returns the native hook for a language loanword writes.
+func nativeOf(code string) func(string) []string {
+	return func(name string) []string { return loanword.Native(code, name) }
 }
 
 func set(words ...string) map[string]bool {
@@ -80,6 +100,10 @@ func (t numTable) build() map[string]numWord {
 
 	for _, w := range t.millions {
 		m[w] = numWord{val: 1_000_000, kind: numMillion}
+	}
+
+	for w, v := range t.scales {
+		m[w] = numWord{val: v, kind: numMillion}
 	}
 
 	for w, v := range t.compounds {
@@ -224,11 +248,13 @@ func french() *language {
 				"zero", "", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "",
 				"onze", "douze", "treize", "quatorze", "quinze", "seize",
 			},
-			tens:      []string{"vingt", "trente", "quarante", "cinquante", "soixante"}, //nolint:misspell // French number words.
-			extraTen:  map[string]int{"dix": 10, "vingts": 20},
-			hundreds:  []string{"cent", "cents"},
-			thousands: []string{"mille"},
-			cont:      map[string]int{"un": 1, "une": 1},
+			tens: []string{"vingt", "trente", "quarante", "cinquante", "soixante"}, //nolint:misspell // French number words.
+			// "troé" is "trois" as Québec French says it, [tʁwe].
+			extraUnits: map[string]int{"troe": 3},
+			extraTen:   map[string]int{"dix": 10, "vingts": 20},
+			hundreds:   []string{"cent", "cents"},
+			thousands:  []string{"mille"},
+			cont:       map[string]int{"un": 1, "une": 1},
 			ordinals: map[string]int{
 				"premier": 1, "premiere": 1, "second": 2, "seconde": 2, "deuxieme": 2, "troisieme": 3, "quatrieme": 4,
 				"cinquieme": 5, "sixieme": 6, "septieme": 7, "huitieme": 8, "neuvieme": 9, "dixieme": 10,
@@ -236,7 +262,7 @@ func french() *language {
 			},
 		}.build(),
 		conj:           set("et"),
-		parts:          set("partie", "chapitre"),
+		parts:          set("partie", "chapitre", "volume"),
 		phonetic:       phoneticKeysOf(fr.Encoder{}),
 		soundAlikeLead: true,
 	}
@@ -247,6 +273,9 @@ func spanish() *language {
 	for i, u := range []string{"uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve"} {
 		compounds["veinti"+u] = 21 + i
 	}
+
+	// "veintiún" and "veintiuna" are 21 before a noun ("veintiún gramos").
+	compounds["veintiun"], compounds["veintiuna"] = 21, 21
 
 	hundredsOf := suffixed(map[string]int{
 		"doscient": 200, "trescient": 300, "cuatrocient": 400, "quinient": 500, "seiscient": 600, "setecient": 700,
@@ -279,9 +308,16 @@ func spanish() *language {
 				map[string]int{"primer": 1, "tercer": 3},
 			),
 		}.build(),
-		conj:     set("y"),
-		parts:    set("parte", "capitulo"), //nolint:misspell // Spanish for "chapter".
-		phonetic: phoneticKeysOf(es.Encoder{}),
+		// The letters' names as the Ortografía de la lengua española (2010) gives them, with "ere" and "i griega"'s "ye", and the Latin American "ve" for v ("de ve de"); "eñe" folds to "ene" and is left out.
+		letterNames: map[string]string{
+			"be": "b", "ce": "c", "de": "d", "efe": "f", "ge": "g", "hache": "h", "jota": "j", "ka": "k", "ele": "l", "eme": "m",
+			"ene": "n", "pe": "p", "cu": "q", "erre": "r", "ere": "r", "ese": "s", "te": "t", "uve": "v", "ve": "v", "equis": "x", "ye": "y",
+			"zeta": "z",
+		},
+		letterWords: set("de", "te", "ese", "ve"),
+		conj:        set("y"),
+		parts:       set("parte", "capitulo", "volumen", "vol"), //nolint:misspell // Spanish for "chapter".
+		phonetic:    phoneticKeysOf(es.Encoder{}),
 	}
 }
 

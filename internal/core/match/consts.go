@@ -65,13 +65,23 @@ const (
 	homophoneSet = 0.9
 	// nonExactCap keeps fuzzy matches strictly below an exact one.
 	nonExactCap = 0.99
+	// resolvedNameFactor discounts a Doc's score against the value name Alexa's entity resolution matched (Resolved.Name): an exact name scores 0.9, enough to play when nothing else comes close, never an exact match.
+	resolvedNameFactor = 0.9
 	// digitWeight is how many characters a number token counts for in coverage: numbers tell sequels apart.
 	digitWeight = 4
 	// stackRunes is the longest string, in runes, that the edit distances handle without allocating.
 	stackRunes = 64
+	// minUnspacedCover is the fewest runes a query word needs to be covered by appearing inside the title in a language written without spaces.
+	minUnspacedCover = 3
 	// maxFused is the longest token, in bytes, that is tried as a number written as one word.
 	maxFused = 64
 )
+
+// tatweel is the Arabic kashida (U+0640), which stretches a word for justification and is dropped.
+const tatweel = 'ـ'
+
+// arabicSun are the sun letters, which the definite article assimilates to: "الناظر" is said "an-nāẓir".
+const arabicSun = "تثدذرزسشصضطظلن"
 
 const (
 	numUnit     numKind = iota // 0-19
@@ -92,3 +102,27 @@ const (
 	stThousand
 	stMillion
 )
+
+// Devanagari signs.
+const (
+	chandrabindu = 'ँ'
+	anusvara     = 'ं'
+	visarga      = 'ः'
+	nukta        = '़'
+	virama       = '्'
+)
+
+// Japanese characters (lang_ja.go).
+const (
+	// jaSmallKana are the characters that only follow another: small kana, which make one syllable with the kana before, the sokuon and the long-vowel mark.
+	jaSmallKana = "ぁぃぅぇぉゃゅょゎっァィゥェォャュョヮッー"
+	// jaNumerals are the kanji numerals kanjiNumbers reads.
+	jaNumerals = "〇零一二三四五六七八九十百千万億"
+	// maxKanjiNumeral is the longest kanji numeral, in characters, read as a number; a longer run of numerals is not one a title spells.
+	maxKanjiNumeral = 12
+	// jaCounters are the counters that follow "第" and a number in a title: part, chapter, episode, volume, season, instalment, act.
+	jaCounters = "部章話巻期弾作幕"
+)
+
+// nativeAskScore is the least score a top candidate that wins on a native alias (alias.native) needs to be asked about, rather than AskScore: a near miss written in the language's script ("द डार्क नाइट राइज़ेस" for an absent sequel) should still be not found.
+const nativeAskScore = 0.75

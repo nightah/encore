@@ -3,6 +3,12 @@
   "sessionAttributes": {
     "followup": {
       "confirm": "shutdown"
+    },
+    "question": {
+      "id": "power.confirm_shutdown",
+      "params": {
+        "kodi": "Lounge"
+      }
     }
   },
   "response": {

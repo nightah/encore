@@ -83,6 +83,32 @@ LIBRARY_TYPE:
     tv
     t. v.
     video library
+MATCH_CHOICE:
+  first: |-
+    first
+    former
+    first of them
+  last: |-
+    last
+    latter
+    last of them
+  newer: |-
+    newer
+    newest
+    new
+    more recent
+    most recent
+    latest
+    recent
+  older: |-
+    older
+    oldest
+    old
+    original
+    earlier
+  second: |-
+    second
+    other
 MEDIA_TYPE:
   album: |-
     album

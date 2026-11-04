@@ -1,0 +1,138 @@
+{
+  "attention": {
+    "empty": "لا شيء يحتاج إلى انتباهك.",
+    "libraryLanguage": {
+      "detail": "لغة العناوين فيها هي {{current}}. اضبطها على {{language}} لتُطابَق عناوينها بقواعد {{language}}.",
+      "title": "معظم عناوين {{instance}} باللغة {{language}}"
+    },
+    "links": {
+      "libraryLanguage": "تغيير لغة العناوين",
+      "needsDeploy": "التحديث الآن",
+      "open": "فتح",
+      "unlinkedDevice": "ربط الجهاز"
+    },
+    "rejected": {
+      "signature": {
+        "detail": "لم يتمكن Encore من التأكد من أن Alexa أرسلها. إذا كانت من جهاز Echo لديك، فتحقّق من أن Encore يمكنه الوصول إلى s3.amazonaws.com لجلب شهادة Amazon، ومن أن الوكيل يمرّر الطلبات دون تغيير.",
+        "title_few": "{{count, number}} طلبات مرفوضة بسبب توقيع غير صالح",
+        "title_many": "{{count, number}} طلبًا مرفوضًا بسبب توقيع غير صالح",
+        "title_one": "{{count, number}} طلب مرفوض بسبب توقيع غير صالح",
+        "title_other": "{{count, number}} طلب مرفوض بسبب توقيع غير صالح",
+        "title_two": "طلبان مرفوضان بسبب توقيع غير صالح",
+        "title_zero": "{{count, number}} طلب مرفوض بسبب توقيع غير صالح"
+      },
+      "skillId": {
+        "detail": "وقّعها Alexa لمعرّف مهارة غير الذي يتوقعه Encore. تحقّق من alexa.skill_id، أو انشر المهارة مرة أخرى.",
+        "title_few": "{{count, number}} طلبات مرفوضة لمهارة أخرى",
+        "title_many": "{{count, number}} طلبًا مرفوضًا لمهارة أخرى",
+        "title_one": "{{count, number}} طلب مرفوض لمهارة أخرى",
+        "title_other": "{{count, number}} طلب مرفوض لمهارة أخرى",
+        "title_two": "طلبان مرفوضان لمهارة أخرى",
+        "title_zero": "{{count, number}} طلب مرفوض لمهارة أخرى"
+      },
+      "timestamp": {
+        "detail": "يضع Alexa على كل طلب وقت إرساله، ويرفض Encore أي طلب يختلف عن ساعته بأكثر من 150 ثانية. تحقّق من مزامنة ساعة هذا الخادم.",
+        "title_few": "{{count, number}} طلبات مرفوضة بسبب طابع زمني قديم",
+        "title_many": "{{count, number}} طلبًا مرفوضًا بسبب طابع زمني قديم",
+        "title_one": "{{count, number}} طلب مرفوض بسبب طابع زمني قديم",
+        "title_other": "{{count, number}} طلب مرفوض بسبب طابع زمني قديم",
+        "title_two": "طلبان مرفوضان بسبب طابع زمني قديم",
+        "title_zero": "{{count, number}} طلب مرفوض بسبب طابع زمني قديم"
+      }
+    },
+    "title": "يحتاج إلى انتباه"
+  },
+  "description": "كل ما تحتاجه Alexa للوصول إلى مثيلات Kodi لديك، في لمحة واحدة. للقراءة فقط: تتم التغييرات في صفحة كل قسم.",
+  "instances": {
+    "asleep": {
+      "addMac": "أضف عنوان MAC الخاص به لتتمكن الطلبات الصوتية من إيقاظه.",
+      "manage": "الإدارة من صفحة Kodi",
+      "plain": "في وضع السكون.",
+      "since": "في وضع السكون منذ {{time}}.",
+      "willWake": "ستوقظه الطلبات الصوتية تلقائيًا."
+    },
+    "empty": {
+      "action": "أضف مثيلًا من صفحة Kodi",
+      "body": "أضف مثيل Kodi لتجد Alexa ما تتحكم فيه.",
+      "title": "لا توجد مثيلات Kodi بعد"
+    },
+    "episode": "الموسم {{season}} · الحلقة {{episode}} «{{title}}»",
+    "idle": "لا شيء قيد التشغيل.",
+    "offline": {
+      "test": "اختبره من صفحة Kodi",
+      "text": "لا يستجيب. تحقّق من أن Kodi يعمل ويمكن الوصول إليه."
+    },
+    "progress": "التقدّم {{percent}} بالمئة",
+    "title": "مثيلات Kodi"
+  },
+  "ms": "{{ms}} ملّي ث",
+  "openRequestLog": "فتح سجل الطلبات",
+  "recent": {
+    "columns": {
+      "echo": "Echo",
+      "heard": "ما سُمع",
+      "result": "النتيجة",
+      "time": "الوقت"
+    },
+    "empty": "لا توجد طلبات بعد. قل «Alexa، اسأل {{invocation}} ماذا يُعرض الآن.»",
+    "emptyNoInvocation": "لا توجد طلبات بعد.",
+    "open": "فتح طلب الساعة {{time}} في السجل",
+    "title": "الطلبات الأخيرة",
+    "viewAll": "عرض الكل"
+  },
+  "status": {
+    "endpoint": {
+      "label": "نقطة النهاية العامة",
+      "notReachable": "لا يمكن الوصول إلى {{host}} من الخارج",
+      "reachable": "يمكن الوصول إلى {{host}}",
+      "unreachable": "يتعذّر الوصول"
+    },
+    "label": "الحالة",
+    "libraries": {
+      "and": " و",
+      "count_few": "{{count, number}} مكتبات",
+      "count_many": "{{count, number}} مكتبة",
+      "count_one": "{{count, number}} مكتبة",
+      "count_other": "{{count, number}} مكتبة",
+      "count_two": "{{count, number}} مكتبتان",
+      "count_zero": "{{count, number}} مكتبة",
+      "label": "المكتبات",
+      "noneShared": "لا توجد مكتبات مشتركة",
+      "notSynced": "لم تتم المزامنة بعد",
+      "shared_few": "{{count}} مشتركة",
+      "shared_many": "{{count}} مشتركة",
+      "shared_one": "{{count}} مشتركة",
+      "shared_other": "{{count}} مشتركة",
+      "shared_two": "{{count}} مشتركتان",
+      "shared_zero": "{{count}} مشتركة",
+      "shareOne": "{{names}} تتشارك مكتبة واحدة",
+      "synced": "تمت المزامنة {{when}}"
+    },
+    "requests": {
+      "detail": "{{failed}} فاشلة · الوسيط {{ms}} ملّي ث",
+      "label": "طلبات اليوم"
+    },
+    "skill": {
+      "label": "مهارة Alexa",
+      "locales_few": "{{count, number}} لغات إقليمية",
+      "locales_many": "{{count, number}} لغة إقليمية",
+      "locales_one": "{{count, number}} لغة إقليمية",
+      "locales_other": "{{count, number}} لغة إقليمية",
+      "locales_two": "{{count, number}} لغتان إقليميتان",
+      "locales_zero": "{{count, number}} لغة إقليمية",
+      "stage": {
+        "development": "مرحلة التطوير",
+        "live": "المرحلة المباشرة",
+        "other": "مرحلة {{stage}}"
+      },
+      "state": {
+        "deploying": "جارٍ النشر…",
+        "failed": "فشل النشر",
+        "live": "مباشرة",
+        "not_deployed": "غير منشورة"
+      },
+      "updatePending": "تحديث معلّق"
+    }
+  },
+  "title": "نظرة عامة"
+}

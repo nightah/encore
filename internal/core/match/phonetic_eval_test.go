@@ -13,10 +13,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nightah/encore/internal/fuzzy/phonetic"
+	_ "github.com/nightah/encore/internal/fuzzy/phonetic/ar"
 	"github.com/nightah/encore/internal/fuzzy/phonetic/de"
 	"github.com/nightah/encore/internal/fuzzy/phonetic/en"
 	_ "github.com/nightah/encore/internal/fuzzy/phonetic/es"
 	_ "github.com/nightah/encore/internal/fuzzy/phonetic/fr"
+	_ "github.com/nightah/encore/internal/fuzzy/phonetic/pt"
 )
 
 // evalEncoder is a candidate phonetic function for TestPhoneticEval. keys returns nil for a language it does not cover, which keeps the production encoder.
@@ -160,7 +162,61 @@ const (
 	corpusOriginal = "original"
 	// corpusGrown is testdata/grown: held-out suites in every language. Cases describe what a listener hears; don't change one to suit an encoder (see docs/src/content/docs/contributing/dependencies.md).
 	corpusGrown = "grown"
+	// corpusCross is testdata/cross: held-out suites of libraries asked for in another language's script, one file per language of the requests. Its libraries share no encoder with the requests, so it is scored with production only and gated with crossFloor.
+	corpusCross = "cross"
 )
+
+// crossCorpusGlob matches the cross-language corpora.
+const crossCorpusGlob = "testdata/cross/*.yaml"
+
+// crossFloor is what production must still do on each cross-language corpus, keyed by the language of its requests (the file's name), under either retriever: decide at least correct cases right and make at most wrong wrong plays. They are the counts measured when they were set; the same rule as grownFloor moves them.
+var crossFloor = map[string]evalScore{
+	"ar": {correct: 36, wrong: 0},
+	"hi": {correct: 40, wrong: 0},
+	"ja": {correct: 23, wrong: 0},
+}
+
+// crossSuites gathers the cross-language suites, grouped by the language of their requests.
+func crossSuites(t *testing.T) map[string][]corpusSuite {
+	t.Helper()
+
+	paths, err := filepath.Glob(crossCorpusGlob)
+	require.NoError(t, err)
+	require.NotEmpty(t, paths, "no cross-language corpora")
+
+	out := map[string][]corpusSuite{}
+
+	for _, p := range paths {
+		out[strings.TrimSuffix(filepath.Base(p), ".yaml")] = loadCorpusFiles(t, p).Suites
+	}
+
+	return out
+}
+
+// evalCross scores production on one cross-language corpus, logs its misses, writes its row to table and holds it to crossFloor.
+func evalCross(t *testing.T, table *strings.Builder, retr, heard string, suites []corpusSuite) {
+	t.Helper()
+
+	var out []evalOutcome
+
+	t.Run(corpusCross+"/"+retr+"/"+heard, func(t *testing.T) {
+		out = runEval(t, suites, retr)
+	})
+
+	for _, o := range out {
+		if !o.ok {
+			t.Logf("%s %s %s current misses [%s] %q: %s", corpusCross, retr, heard, o.suite, o.heard, o.why)
+		}
+	}
+
+	got := tally(out)
+	fmt.Fprintf(table, "%-8s %-8s %-3s %-8s %s\n", corpusCross, retr, heard, "current", got)
+
+	floor, ok := crossFloor[heard]
+	require.True(t, ok, "no cross floor for %s", heard)
+	assert.GreaterOrEqual(t, got.correct, floor.correct, "%s %s %s: production must decide at least %d cases right", corpusCross, retr, heard, floor.correct)
+	assert.LessOrEqual(t, got.wrong, floor.wrong, "%s %s %s: production must make at most %d wrong plays", corpusCross, retr, heard, floor.wrong)
+}
 
 // evalSuites gathers one corpus set's suites, grouped by language.
 func evalSuites(t *testing.T, set string) map[string][]corpusSuite {
@@ -265,22 +321,27 @@ func discordant(out, ref []evalOutcome) (gains, losses int) {
 	return gains, losses
 }
 
-// fuzzyGate is how many more correct decisions than English Double Metaphone internal/fuzzy must make per language on the original corpora, and production on both sets where it has its own encoder (ownEncoder): the French and Spanish encoders earn their place only with a measurable gain.
-var fuzzyGate = map[string]int{"fr": 3, "es": 3}
+// fuzzyGate is how many more correct decisions than English Double Metaphone internal/fuzzy must make per language on the original corpora, and production on both sets where it has its own encoder (ownEncoder): each language's own encoder earns its place only with a measurable gain.
+var fuzzyGate = map[string]int{"fr": 3, "es": 3, "ar": 3, "pt": 3}
 
 // evalFull adds what TestPhoneticEval reports without gating: the trigram retriever, the "none" encoder and internal/fuzzy on the grown corpora. The phoneticeval build tag sets it, so the race-detector run of the package keeps only what the gates need.
 var evalFull bool
 
 // ownEncoder lists the gated languages production keys with their own encoder. Production is held to the same gate there, on both corpus sets, so a language that lost its encoder would fail.
-var ownEncoder = map[string]bool{"es": true, "fr": true}
+var ownEncoder = map[string]bool{"es": true, "fr": true, "ar": true, "pt": true}
 
 // grownFloor is what production must still do on each language's grown corpus, under either retriever: decide at least correct cases right and make at most wrong wrong plays. They are the counts measured when they were set. Raise them when a change gains; lower one only with the evidence that the accuracy tables in docs/src/content/docs/contributing/dependencies.md are updated with.
 var grownFloor = map[string]evalScore{
 	"de": {correct: 535, wrong: 1},
 	"en": {correct: 463, wrong: 1},
-	"es": {correct: 418, wrong: 2},
-	"fr": {correct: 408, wrong: 2},
+	"es": {correct: 752, wrong: 3},
+	"fr": {correct: 737, wrong: 3},
 	"it": {correct: 343, wrong: 1},
+	"ar": {correct: 381, wrong: 5},
+	"hi": {correct: 364, wrong: 5},
+	"ja": {correct: 288, wrong: 4},
+	"nl": {correct: 401, wrong: 4},
+	"pt": {correct: 402, wrong: 3},
 }
 
 // TestPhoneticEval measures match accuracy per corpus set and language through the real pipeline (normalise, alias, retrieve, score, decide) with each candidate phonetic encoder swapped in. It logs a table with each encoder's gains and losses against English Double Metaphone, the production encoder's misses and every case another encoder gains or loses against it; run it with -v to read them. On the grown corpora production is held to grownFloor. On both sets, production in the languages listed in ownEncoder is held to fuzzyGate against English Double Metaphone with no wrong plays added. On the original corpora internal/fuzzy is held to fuzzyGate too, and must not lose a decision or add a wrong play against production; on the grown ones it is only reported, as German production adds a rule to it there (germanKeys). Without the phoneticeval build tag it runs only the inverted retriever and the encoders the gates compare (evalFull).
@@ -299,6 +360,14 @@ func TestPhoneticEval(t *testing.T) {
 			for _, code := range slices.Sorted(maps.Keys(suites)) {
 				evalLanguage(t, &table, set, retr, code, suites[code])
 			}
+		}
+	}
+
+	cross := crossSuites(t)
+
+	for _, retr := range []string{RetrieverInverted, RetrieverTrigram} {
+		for _, heard := range slices.Sorted(maps.Keys(cross)) {
+			evalCross(t, &table, retr, heard, cross[heard])
 		}
 	}
 
@@ -390,7 +459,7 @@ func evalLanguage(t *testing.T, table *strings.Builder, set, retr, code string, 
 func BenchmarkPhoneticUpsert(b *testing.B) {
 	docs := syntheticDocs(2000, 3)
 
-	for _, code := range []string{"en", "de", "fr", "es", "it"} {
+	for _, code := range Languages() {
 		for _, enc := range evalEncoders {
 			if enc.name == "none" {
 				continue

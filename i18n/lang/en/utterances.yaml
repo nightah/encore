@@ -1,10 +1,20 @@
-# Utterance patterns, translated on Crowdin from the English file. Each key is one way of asking, and may hold several patterns, one per line. (a|b) picks one, [a|b] is optional, {Slot} is a slot. Built-in intents already understand the common phrasings; samples here only add Kodi-specific ones. An optional room at the end, such as "[(in|on) the {Room}]", lets a request name the room whose Kodi should play it; notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
+# Utterance patterns, translated on Crowdin from the English file. Each key is one way of asking, and may hold several patterns, one per line. (a|b) picks one, [a|b] is optional, {Slot} is a slot. Built-in intents already understand the common phrasings; samples here add Kodi-specific ones, and the plain words for yes, no, help, stop and cancel, which Encore also uses to tell them from a title said in answer to a question. An optional room at the end, such as "[(in|on) the {Room}]", lets a request name the room whose Kodi should play it; notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
+AMAZON.CancelIntent:
+  say_cancel: "cancel\nnever mind"
+AMAZON.HelpIntent:
+  say_help: "help"
 AMAZON.LoopOffIntent:
   loop_off: "(loop|repeat) off"
   turn_off_repeat: "(turn|switch) off (repeat|loop)"
 AMAZON.LoopOnIntent:
   loop: "(loop|repeat) (on|mode)"
   turn_repeat: "(turn|switch) on (repeat|loop)"
+AMAZON.NavigateHomeIntent:
+  go_home: "go (home|to the home screen|to the main menu)\nback to the home screen"
+AMAZON.NextIntent:
+  next_episode: "[(play|watch|skip to|go to)] [the] next episode"
+AMAZON.NoIntent:
+  say_no: "no\nnope"
 AMAZON.PauseIntent:
   pause_tv: "pause [the] (tv|telly|kodi|video|movie|show)"
 AMAZON.ResumeIntent:
@@ -15,6 +25,12 @@ AMAZON.ShuffleOffIntent:
 AMAZON.ShuffleOnIntent:
   shuffle: "shuffle (on|mode on)"
   turn_shuffle: "(turn|switch) (on|) shuffle"
+AMAZON.StartOverIntent:
+  start_over: "start (over|again)\nstart from the beginning"
+AMAZON.StopIntent:
+  say_stop: "stop"
+AMAZON.YesIntent:
+  say_yes: "yes\nyeah\nyep\nsure"
 AudioPassthrough:
   toggle_digital_audio: "toggle (digital audio|digital passthrough|passthrough audio)"
   toggle_passthrough: "toggle [audio] passthrough"
@@ -32,6 +48,14 @@ BingeShow:
   play_all: "(play|watch) all of {Show}"
   play_all_unwatched: "(play|queue up) (all|the rest of) the (unwatched|remaining) episodes of {Show} [(in|on) the {Room}]"
   start_binge_mode: "(start|turn on) binge mode (for|on) {Show} [(in|on) the {Room}]"
+ChooseMatch:
+  meant_answer: "i (meant|mean|want|said) {Answer}"
+  meant_which: "i (meant|mean|want) the {Which} [one]"
+  the_which: "the {Which} [one|film|movie|show|series]"
+  which_please: "the {Which} one please"
+ChooseMatch.Answer:
+  answer: "{Answer}\n{Answer} please"
+  which: "{Which} [one]"
 CleanLibrary:
   clean_library: "clean [up] [the|my] library"
   clean_library_2: "clean [up] [the|my] {Library} library"
@@ -88,8 +112,9 @@ ListenToAlbum:
   play_album_by: "(play|listen to) [the] album {Album} by {Artist} [(in|on) the {Room}]"
 ListenToArtist:
   play_artist: "(play|listen to) [the] artist {Artist} [(in|on) the {Room}]"
-  play_music_by: "(play|listen to) [some] (music|songs) by {Artist} [(in|on) the {Room}]"
-  play_music_by_2: "(play|listen to) [some] {Genre} (music|songs) by {Artist} [(in|on) the {Room}]"
+  play_music_by: "(play|listen to|put on) [some] (music|songs) by {Artist} [(in|on) the {Room}]"
+  play_music_by_2: "(play|listen to|put on) [some] {Genre} (music|songs) by {Artist} [(in|on) the {Room}]"
+  play_something_by: "(play|put on) something by {Artist} [(in|on) the {Room}]"
 ListenToGenre:
   play_genre: "(play|listen to) the {Genre} genre"
   play_music: "(play|listen to|put on) [some] {Genre} (music|songs|tunes) [(in|on) the {Room}]"

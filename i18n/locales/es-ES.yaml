@@ -2,4 +2,9 @@
 
 invocation: encore
 language: es
+launch:
+  also:
+    - "inicia {invocation}"
+  open: "abre {invocation}"
+  skill: "abre la skill {invocation}"
 skill_name: Encore

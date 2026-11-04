@@ -1,10 +1,18 @@
-# Utterance patterns, translated on Crowdin from the English file. Each key is one way of asking, and may hold several patterns, one per line. (a|b) picks one, [a|b] is optional, {Slot} is a slot. Built-in intents already understand the common phrasings; samples here only add Kodi-specific ones. An optional room at the end, such as "[(in|on) the {Room}]", lets a request name the room whose Kodi should play it; notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
+# Utterance patterns, translated on Crowdin from the English file. Each key is one way of asking, and may hold several patterns, one per line. (a|b) picks one, [a|b] is optional, {Slot} is a slot. Built-in intents already understand the common phrasings; samples here add Kodi-specific ones, and the plain words for yes, no, help, stop and cancel, which Encore also uses to tell them from a title said in answer to a question. An optional room at the end, such as "[(in|on) the {Room}]", lets a request name the room whose Kodi should play it; notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
+AMAZON.CancelIntent:
+  say_cancel: "annulla\nlascia perdere"
+AMAZON.HelpIntent:
+  say_help: "aiuto"
 AMAZON.LoopOffIntent:
   loop_off: "ripetizione (disattivata|off)"
   turn_off_repeat: "(disattiva|spegni|togli) [la] ripetizione\n(disattiva|spegni|togli) il loop"
 AMAZON.LoopOnIntent:
   loop: "ripetizione (attiva|on)"
   turn_repeat: "(attiva|accendi) [la] ripetizione\n(attiva|accendi) il loop"
+AMAZON.NextIntent:
+  next_episode: "[(metti|guarda|riproduci)] (il prossimo episodio|l'episodio successivo)\nprossimo episodio\nepisodio successivo\npassa all'episodio successivo"
+AMAZON.NoIntent:
+  say_no: "no"
 AMAZON.PauseIntent:
   pause_tv: "(metti in pausa|pausa) (la tv|la televisione|kodi|il video|il film|la serie)"
 AMAZON.ResumeIntent:
@@ -15,6 +23,10 @@ AMAZON.ShuffleOffIntent:
 AMAZON.ShuffleOnIntent:
   shuffle: "riproduzione casuale (attiva|on)"
   turn_shuffle: "(attiva|accendi) [la] riproduzione casuale\n(attiva|accendi) (lo shuffle|la modalità casuale)"
+AMAZON.StopIntent:
+  say_stop: "stop\nfermati"
+AMAZON.YesIntent:
+  say_yes: "sì\ncerto"
 AudioPassthrough:
   toggle_digital_audio: "(attiva|disattiva) l'audio (digitale|passthrough)"
   toggle_passthrough: "(cambia|commuta) il passthrough [audio]\npassthrough audio"
@@ -31,6 +43,14 @@ BingeShow:
   play_all: "(guarda|riproduci) tutto {Show}"
   play_all_unwatched: "(metti|mettere|riproduci|riprodurre) tutti gli episodi (non visti|rimanenti) di {Show} [(in|nel|nella) {Room}]"
   start_binge_mode: "(attiva|avvia|attivare|avviare) la modalità maratona (per|di) {Show} [(in|nel|nella) {Room}]"
+ChooseMatch:
+  meant_answer: "(intendevo|intendo|voglio) {Answer}"
+  meant_which: "(intendevo|intendo|voglio) (il|la|lo) {Which}\n(intendevo|intendo|voglio) {Which}"
+  the_which: "(il|la|lo) {Which}\n(il film|la serie) {Which}"
+  which_please: "(il|la|lo) {Which} per favore"
+ChooseMatch.Answer:
+  answer: "{Answer}\n{Answer} per favore"
+  which: "{Which}"
 CleanLibrary:
   clean_library: "(pulisci|ripulisci|pulire) [la] libreria\n(pulisci|ripulisci) l'archivio [{Library}]"
   clean_library_2: "(pulisci|ripulisci|pulire) la libreria {Library}"
@@ -82,6 +102,7 @@ ListenToArtist:
   play_artist: "(metti|mettere|riproduci|riprodurre|ascolta|ascoltare|fammi sentire) l'artista {Artist} [(in|nel|nella) {Room}]"
   play_music_by: "(metti|mettere|riproduci|riprodurre|ascolta|ascoltare|fammi sentire) [un po' di] (musica|canzoni) (di|dei|degli) {Artist}\n(metti|riproduci|ascolta) [un po' di] (musica|canzoni) (di|dei|degli) {Artist} (in|nel|nella) {Room}"
   play_music_by_2: "(metti|mettere|riproduci|riprodurre|ascolta|ascoltare) [un po' di] (musica|canzoni) {Genre} di {Artist} [(in|nel|nella) {Room}]"
+  play_something_by: "(metti|mettere|riproduci|riprodurre|fammi sentire) qualcosa (di|dei|degli) {Artist} [(in|nel|nella) {Room}]"
 ListenToGenre:
   play_genre: "(metti|riproduci|ascolta) il genere {Genre}"
   play_music: "(metti|mettere|riproduci|riprodurre|ascolta|ascoltare|fammi sentire) [un po' di] musica {Genre} [(in|nel|nella) {Room}]\n(metti|riproduci|ascolta) [delle] canzoni {Genre} [(in|nel|nella) {Room}]"

@@ -19,6 +19,10 @@
     "resume": "Déployez la skill à la main une fois le problème réglé pour les reprendre.",
     "title": "Les déploiements automatiques sont en pause"
   },
+  "autoDeployRetry": {
+    "next": "La tentative {{attempts}} sur {{max}} a échoué. Prochain essai : {{time}}.",
+    "title": "Un déploiement automatique a échoué et sera relancé"
+  },
   "content": {
     "movies": "Films",
     "music": "Musique",
@@ -27,6 +31,7 @@
   },
   "locales": {
     "build": {
+      "degraded": "Moins de titres",
       "failed": "Échec",
       "in_progress": "Compilation",
       "succeeded": "Réussi"
@@ -43,6 +48,7 @@
       "keepOne": "Gardez au moins les films, les séries ou la musique.",
       "legend": "Ce qu'elle peut lire"
     },
+    "degradedTitles": "{{kept}} sur {{total}}",
     "empty": "Rien n'est encore compilé. Déployez la skill pour compiler un modèle pour chaque langue activée.",
     "enabled": {
       "hint": "Seules les langues activées sont compilées et déployées. Un Echo ne peut utiliser la skill que si sa langue correspond à l'une d'elles. Les modifications s'appliquent au prochain déploiement.",
@@ -121,6 +127,8 @@
     "title": "Titres dans le modèle"
   },
   "warnings": {
+    "dropped": "{{locale}} : Amazon a refusé ces titres, ils ont donc été retirés : {{titles}}",
+    "thinned": "{{locale}} : Amazon n’a pas compilé le modèle avec tous les titres de la médiathèque, il a donc été compilé avec {{kept}} sur {{total}}.",
     "title": "Avertissements du dernier déploiement"
   }
 }

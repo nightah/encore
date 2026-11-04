@@ -227,6 +227,12 @@ func TestSkillStatusErrors(t *testing.T) {
 	require.ErrorContains(t, err, "get skill status: decoding response")
 }
 
+func TestImportStatusErrors(t *testing.T) {
+	c := stubClient(t, func(w http.ResponseWriter, _ *http.Request) { _, _ = w.Write([]byte(`{"status":[]}`)) })
+	_, err := c.ImportStatus(t.Context(), "import")
+	require.ErrorContains(t, err, "get import status: decoding response")
+}
+
 func TestBuildStatusProblems(t *testing.T) {
 	a, b, c := smapi.Problem{Code: "A", Message: "a"}, smapi.Problem{Code: "B", Message: "b"}, smapi.Problem{Message: "c"}
 
@@ -277,6 +283,44 @@ func TestEnableDevelopment(t *testing.T) {
 
 	err := c.EnableDevelopment(t.Context(), "amzn1.ask.skill.missing")
 	assert.Equal(t, http.StatusNotFound, smapi.StatusCode(err))
+}
+
+func TestDevelopmentEnablement(t *testing.T) {
+	fake := smapitest.New(t, smapitest.Options{})
+	c := newClient(t, fake)
+	id := fake.AddSkill(smapitest.DefaultVendorID, nil)
+
+	on, err := c.DevelopmentEnabled(t.Context(), id)
+	require.NoError(t, err)
+	assert.False(t, on)
+
+	require.NoError(t, c.DisableDevelopment(t.Context(), id), "a stage that isn't enabled is left as it is")
+	require.NoError(t, c.EnableDevelopment(t.Context(), id))
+
+	on, err = c.DevelopmentEnabled(t.Context(), id)
+	require.NoError(t, err)
+	assert.True(t, on)
+
+	require.NoError(t, c.DisableDevelopment(t.Context(), id))
+
+	on, err = c.DevelopmentEnabled(t.Context(), id)
+	require.NoError(t, err)
+	assert.False(t, on)
+
+	sk, _ := fake.Skill(id)
+	assert.False(t, sk.Enabled)
+}
+
+func TestDevelopmentEnablementErrors(t *testing.T) {
+	c := stubClient(t, func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusForbidden)
+	})
+
+	_, err := c.DevelopmentEnabled(t.Context(), "amzn1.ask.skill.1")
+	assert.Equal(t, http.StatusForbidden, smapi.StatusCode(err))
+
+	err = c.DisableDevelopment(t.Context(), "amzn1.ask.skill.1")
+	assert.Equal(t, http.StatusForbidden, smapi.StatusCode(err))
 }
 
 func TestSkillEndpoint(t *testing.T) {

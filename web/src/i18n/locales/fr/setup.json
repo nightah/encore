@@ -101,8 +101,8 @@
     "goToAmazon": "Aller au compte Amazon",
     "heading": "Déployer la skill",
     "invocation": {
+      "elsewhere": "En {{locales}}, on dit « {{name}} ».",
       "example": "« Alexa, demande à {{name}} de… »",
-      "french": "Le français utilise « kodi », car « encore » est un mot courant en français.",
       "label": "Nom d'invocation"
     },
     "locales": {

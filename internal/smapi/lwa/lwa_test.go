@@ -393,31 +393,59 @@ func TestTokenSourceRotatedTokenMustBeSaved(t *testing.T) {
 	require.ErrorIs(t, err, store.failErr)
 }
 
-func TestTokenSourceResetReloadsFromStore(t *testing.T) {
+func TestTokenSourceResetRefreshes(t *testing.T) {
 	fake := smapitest.New(t, smapitest.Options{})
 	c := newClient(t, fake)
 
 	store := &lwa.MemoryStore{}
-	require.NoError(t, store.Save(t.Context(), &oauth2.Token{AccessToken: "first", RefreshToken: "r", Expiry: time.Now().Add(time.Hour)}))
+	require.NoError(t, store.Save(t.Context(), &oauth2.Token{AccessToken: "first", RefreshToken: smapitest.DefaultRefreshToken, Expiry: time.Now().Add(time.Hour)}))
 
 	ts := c.TokenSource(store)
 
 	tok, err := ts.TokenContext(t.Context())
 	require.NoError(t, err)
 	assert.Equal(t, "first", tok.AccessToken)
-
-	require.NoError(t, store.Save(t.Context(), &oauth2.Token{AccessToken: "second", RefreshToken: "r", Expiry: time.Now().Add(time.Hour)}))
-
-	tok, err = ts.TokenContext(t.Context())
-	require.NoError(t, err)
-	assert.Equal(t, "first", tok.AccessToken, "the cached token is used until Reset")
+	assert.Equal(t, 0, fake.Refreshes(), "an unexpired token is used as it is")
 
 	ts.Reset()
 
 	tok, err = ts.TokenContext(t.Context())
 	require.NoError(t, err)
-	assert.Equal(t, "second", tok.AccessToken)
-	assert.Equal(t, 0, fake.Refreshes())
+	assert.NotEqual(t, "first", tok.AccessToken, "Reset refreshes a token that hasn't expired")
+	assert.Equal(t, 1, fake.Refreshes())
+
+	saved, err := store.Load(t.Context())
+	require.NoError(t, err)
+	assert.Equal(t, tok.AccessToken, saved.AccessToken)
+
+	again, err := ts.TokenContext(t.Context())
+	require.NoError(t, err)
+	assert.Equal(t, tok.AccessToken, again.AccessToken, "only the call after Reset refreshes")
+	assert.Equal(t, 1, fake.Refreshes())
+}
+
+func TestTokenSourceResetReloadsFromStore(t *testing.T) {
+	fake := smapitest.New(t, smapitest.Options{})
+	c := newClient(t, fake)
+
+	store := &lwa.MemoryStore{}
+	require.NoError(t, store.Save(t.Context(), &oauth2.Token{AccessToken: "first", RefreshToken: smapitest.DefaultRefreshToken, Expiry: time.Now().Add(time.Hour)}))
+
+	ts := c.TokenSource(store)
+
+	_, err := ts.TokenContext(t.Context())
+	require.NoError(t, err)
+
+	require.NoError(t, store.Save(t.Context(), &oauth2.Token{RefreshToken: "Atzr|another-client"}))
+
+	tok, err := ts.TokenContext(t.Context())
+	require.NoError(t, err)
+	assert.Equal(t, "first", tok.AccessToken, "the cached token is used until Reset")
+
+	ts.Reset()
+
+	_, err = ts.TokenContext(t.Context())
+	require.ErrorIs(t, err, lwa.ErrReauthorise, "Reset redeems the refresh token the store holds now")
 }
 
 func TestTokenSourceConcurrentCallersRefreshOnce(t *testing.T) {
@@ -469,4 +497,40 @@ func TestMemoryStoreCopies(t *testing.T) {
 	again, err := store.Load(t.Context())
 	require.NoError(t, err)
 	assert.Equal(t, "a", again.AccessToken)
+}
+
+// Only a rejection of the token the source holds costs a refresh: one already replaced, or already rejected, doesn't.
+func TestTokenSourceRejectedRefreshesOnce(t *testing.T) {
+	fake := smapitest.New(t, smapitest.Options{})
+	c := newClient(t, fake)
+
+	store := &lwa.MemoryStore{}
+	require.NoError(t, store.Save(t.Context(), &oauth2.Token{AccessToken: "first", RefreshToken: smapitest.DefaultRefreshToken, Expiry: time.Now().Add(time.Hour)}))
+
+	ts := c.TokenSource(store)
+
+	tok, err := ts.TokenContext(t.Context())
+	require.NoError(t, err)
+	require.Equal(t, "first", tok.AccessToken)
+
+	ts.Rejected("first")
+	ts.Rejected("first")
+
+	tok, err = ts.TokenContext(t.Context())
+	require.NoError(t, err)
+	assert.NotEqual(t, "first", tok.AccessToken, "a rejected token is refreshed though it hasn't expired")
+	assert.Equal(t, 1, fake.Refreshes(), "rejecting the same token twice refreshes it once")
+
+	ts.Rejected("first")
+
+	again, err := ts.TokenContext(t.Context())
+	require.NoError(t, err)
+	assert.Equal(t, tok.AccessToken, again.AccessToken, "a rejection of a token already replaced changes nothing")
+	assert.Equal(t, 1, fake.Refreshes())
+
+	ts.Rejected(tok.AccessToken)
+
+	_, err = ts.TokenContext(t.Context())
+	require.NoError(t, err)
+	assert.Equal(t, 2, fake.Refreshes(), "the current token's rejection refreshes it")
 }

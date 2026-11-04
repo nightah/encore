@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "response": {
+    "outputSpeech": {
+      "type": "PlainText",
+      "text": "Playing Dune."
+    },
+    "card": {
+      "type": "Simple",
+      "title": "Encore",
+      "content": "Playing Dune."
+    },
+    "shouldEndSession": true
+  }
+}
+

@@ -27,6 +27,7 @@ import (
 	"github.com/nightah/encore/internal/config"
 	"github.com/nightah/encore/internal/core/actions"
 	"github.com/nightah/encore/internal/smapi"
+	"github.com/nightah/encore/internal/smapi/skillpkg"
 	"github.com/nightah/encore/internal/smapi/smapitest"
 )
 
@@ -73,6 +74,16 @@ type harnessOpts struct {
 	mutate   func(*Options)
 }
 
+// embeddedSpeech is the embedded sources' Speech, built once and shared by every harness: NewSpeech expands every sample of every locale.
+var embeddedSpeech = sync.OnceValues(func() (*alexa.Speech, error) {
+	src, err := loadSources()
+	if err != nil {
+		return nil, err
+	}
+
+	return alexa.NewSpeech(src, slog.New(slog.DiscardHandler))
+})
+
 func newHarness(t *testing.T, o harnessOpts) *harness {
 	t.Helper()
 
@@ -97,10 +108,10 @@ func newHarness(t *testing.T, o harnessOpts) *harness {
 
 	h.app = a
 
-	src, err := loadSources()
+	src, err := sharedSources()
 	require.NoError(t, err)
 
-	speech, err := alexa.NewSpeech(src, log)
+	speech, err := embeddedSpeech()
 	require.NoError(t, err)
 
 	opts := Options{
@@ -112,10 +123,12 @@ func newHarness(t *testing.T, o harnessOpts) *harness {
 		Now:      func() time.Time { return time.Now().Add(time.Duration(h.skew.Load())) },
 		Discover: o.discover,
 		// Discovered instances report Kodi 21.3; the real probe is tested in package kodi.
-		ProbeVersion:   func(context.Context, string, int) (string, error) { return "21.3", nil },
-		Heartbeat:      100 * time.Millisecond,
-		StatusInterval: 200 * time.Millisecond,
-		LWAEndpoint:    h.smapi.Endpoint(),
+		ProbeVersion:    func(context.Context, string, int) (string, error) { return "21.3", nil },
+		Heartbeat:       100 * time.Millisecond,
+		StatusInterval:  200 * time.Millisecond,
+		LWAEndpoint:     h.smapi.Endpoint(),
+		DeployRetryWait: time.Millisecond,
+		buildPackage:    sharedBuild,
 		SMAPI: smapi.Options{
 			BaseURL: h.smapi.URL,
 			Retry:   smapi.RetryPolicy{Base: time.Millisecond, Max: 2 * time.Millisecond, MaxRetryAfter: time.Millisecond},
@@ -148,6 +161,28 @@ func newHarness(t *testing.T, o harnessOpts) *harness {
 	})
 
 	return h
+}
+
+// sharedSources is the embedded interaction model, loaded once for every test: no test changes it.
+var sharedSources = sync.OnceValues(loadSources)
+
+var sharedBuilt sync.Map
+
+// sharedBuild builds a package from sharedSources once for all the tests that ask for it. Every test's status poll asks for one, and each build expands every sample of every locale.
+func sharedBuild(opts skillpkg.Options) builtPackage {
+	key := optionsKey(opts)
+	if b, ok := sharedBuilt.Load(key); ok {
+		return b.(builtPackage)
+	}
+
+	src, err := sharedSources()
+	if err != nil {
+		return builtPackage{err: err}
+	}
+
+	b, _ := sharedBuilt.LoadOrStore(key, builtOf(skillpkg.Build(src, opts)))
+
+	return b.(builtPackage)
 }
 
 // setupToken reads the one-time token from the log, as an operator would.

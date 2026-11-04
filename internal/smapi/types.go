@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"sync/atomic"
 	"time"
 
 	"golang.org/x/oauth2"
@@ -24,6 +25,7 @@ type Client struct {
 	api    *smapiclient.Client
 	upload *doer
 	poll   PollConfig
+	counts *retryCounts
 }
 
 // RetryPolicy controls retries of throttled (429) and failed (5xx) requests. Zero fields take the defaults.
@@ -53,6 +55,21 @@ type Vendor struct {
 	Roles []string `json:"roles,omitempty"`
 }
 
+// SlotType is a custom slot type, or a built-in one a model extends, with its values as a skill's interaction model holds them.
+type SlotType struct {
+	Name   string          `json:"name"`
+	Values []SlotTypeValue `json:"values"`
+}
+
+// SlotTypeValue is one value of a SlotType.
+type SlotTypeValue struct {
+	ID   string `json:"id,omitempty"`
+	Name struct {
+		Value    string   `json:"value"`
+		Synonyms []string `json:"synonyms,omitempty"`
+	} `json:"name"`
+}
+
 // SkillSummary is a skill in a vendor's skill list.
 type SkillSummary struct {
 	ID           string            `json:"skillId"`
@@ -73,9 +90,11 @@ type Status string
 
 // ImportStatus is the state of a skill package import.
 type ImportStatus struct {
-	Status   Status    `json:"status"`
-	Errors   []Problem `json:"errors,omitempty"`
-	Warnings []Problem `json:"warnings,omitempty"`
+	// Raw is the response as Amazon sent it, kept so a failure it gives no reasons for can still be looked into.
+	Raw      json.RawMessage `json:"-"`
+	Status   Status          `json:"status"`
+	Errors   []Problem       `json:"errors,omitempty"`
+	Warnings []Problem       `json:"warnings,omitempty"`
 	Skill    struct {
 		ID        string           `json:"skillId"`
 		ETag      string           `json:"eTag"`
@@ -150,12 +169,80 @@ type contextTokenSource interface {
 	TokenContext(ctx context.Context) (*oauth2.Token, error)
 }
 
+// rejectingTokenSource is a token source that can be told an access token was rejected, as *lwa.TokenSource can.
+type rejectingTokenSource interface {
+	Rejected(accessToken string)
+}
+
 // doer adds authorisation and retries to an *http.Client.
 type doer struct {
 	http   *http.Client
 	tokens oauth2.TokenSource // nil for presigned S3 requests, which must not carry a bearer token
 	retry  RetryPolicy
+	counts *retryCounts
+}
+
+// RetryCounts are the requests a Client has retried, and those it gave up on after its last attempt.
+type RetryCounts struct {
+	// Throttled are the 429s retried.
+	Throttled int64
+	// Failed are the 5xx responses and network errors retried.
+	Failed int64
+	// GaveUp are the requests that still failed one of those ways on their last attempt.
+	GaveUp int64
+}
+
+type retryCounts struct {
+	throttled, failed, gaveUp atomic.Int64
 }
 
 // caller performs one generated-client request. Passing the call rather than its response keeps reading and closing the body in one place.
 type caller func() (*http.Response, error)
+
+// NLUProfile is how Alexa's NLU read one utterance against a locale's interaction model.
+type NLUProfile struct {
+	// SessionEnded is true when the utterance leaves the skill, e.g. Alexa's own exit or home intents.
+	SessionEnded bool `json:"sessionEnded"`
+	// Selected is the intent NLU chose, nil when it chose none.
+	Selected *NLUIntent `json:"selectedIntent,omitempty"`
+	// Considered are the intents NLU weighed but didn't choose, best first.
+	Considered []NLUIntent `json:"consideredIntents,omitempty"`
+}
+
+// NLUIntent is an intent with the slots NLU filled.
+type NLUIntent struct {
+	Name               string             `json:"name"`
+	ConfirmationStatus string             `json:"confirmationStatus,omitempty"`
+	Slots              map[string]NLUSlot `json:"slots,omitempty"`
+}
+
+// NLUSlot is one slot as NLU heard it: Value is the words, Resolutions the slot type values they resolved to.
+type NLUSlot struct {
+	Name        string          `json:"name"`
+	Value       string          `json:"value,omitempty"`
+	Resolutions *NLUResolutions `json:"resolutions,omitempty"`
+}
+
+// NLUResolutions are a slot's entity resolution results.
+type NLUResolutions struct {
+	PerAuthority []NLUAuthority `json:"resolutionsPerAuthority"`
+}
+
+// NLUAuthority is the resolution against one source of values, such as one custom slot type.
+type NLUAuthority struct {
+	Authority string `json:"authority"`
+	Status    struct {
+		Code string `json:"code"`
+	} `json:"status"`
+	Values []NLUValue `json:"values"`
+}
+
+// NLUValue is one resolved value, under value as in a skill request or flat as in Amazon's spec.
+type NLUValue struct {
+	Name  string `json:"name,omitempty"`
+	ID    string `json:"id,omitempty"`
+	Value *struct {
+		Name string `json:"name"`
+		ID   string `json:"id"`
+	} `json:"value,omitempty"`
+}

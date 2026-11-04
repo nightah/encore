@@ -1,0 +1,102 @@
+# Cross-language set: testdata/cross holds libraries in one language asked for in another script, held out like testdata/grown and scored separately by TestPhoneticEval, which gates each file with crossFloor.
+#
+# Japanese (ja-JP) requests against an English library. Same schema as asr_corpus.yaml; cases are scored, not asserted, so there is no xfail.
+#
+# Library: an English Kodi library as a TMDB and MusicBrainz scrape leaves it: Hollywood films under their English titles, Japanese films and anime under the English or romanised titles English releases use, and music under the names the tags carry, a few of them Japanese artists and songs tagged in Japanese. It carries near neighbours (Toy Story and 3, Frozen and II, Jurassic Park and World, The Godfather and Part II, Avatar and The Way of Water) so a wrong play is possible.
+#
+# Cases: what Alexa's ja-JP recogniser plausibly writes when a Japanese speaker asks for the title: English titles in their katakana release spelling without spaces or middle dots, long vowels written ー, numbers as ASCII digits, and Japanese titles in kanji and kana. Controls are titles the library holds in Japanese, asked for exactly. Absent titles (not_found) are well-known films and artists the library lacks, some sharing a word with it.
+#
+# Cases describe what a listener hears; don't change a case to suit the matcher's results (see docs/src/content/docs/contributing/dependencies.md).
+suites:
+  - name: english library, japanese requests
+    lang: en
+    library:
+      - {id: titanic, kind: movie, title: "Titanic", year: 1997}
+      - {id: avatar, kind: movie, title: "Avatar", year: 2009}
+      - {id: avatar2, kind: movie, title: "Avatar: The Way of Water", year: 2022}
+      - {id: frozen, kind: movie, title: "Frozen", year: 2013}
+      - {id: frozen2, kind: movie, title: "Frozen II", year: 2019}
+      - {id: toystory, kind: movie, title: "Toy Story", year: 1995}
+      - {id: toystory3, kind: movie, title: "Toy Story 3", year: 2010}
+      - {id: inception, kind: movie, title: "Inception", year: 2010}
+      - {id: interstellar, kind: movie, title: "Interstellar", year: 2014}
+      - {id: joker, kind: movie, title: "Joker", year: 2019}
+      - {id: matrix, kind: movie, title: "The Matrix", year: 1999}
+      - {id: topgun, kind: movie, title: "Top Gun: Maverick", year: 2022}
+      - {id: jurassicpark, kind: movie, title: "Jurassic Park", year: 1993}
+      - {id: jurassicworld, kind: movie, title: "Jurassic World", year: 2015}
+      - {id: lionking, kind: movie, title: "The Lion King", year: 1994}
+      - {id: godfather, kind: movie, title: "The Godfather", year: 1972}
+      - {id: godfather2, kind: movie, title: "The Godfather Part II", year: 1974}
+      - {id: forrestgump, kind: movie, title: "Forrest Gump", year: 1994}
+      - {id: aladdin, kind: movie, title: "Aladdin", year: 1992}
+      - {id: akira, kind: movie, title: "Akira", year: 1988}
+      - {id: godzilla, kind: movie, title: "Godzilla", year: 1954}
+      - {id: totoro, kind: movie, title: "My Neighbor Totoro", year: 1988}
+      - {id: senchihiro, kind: movie, title: "千と千尋の神隠し", year: 2001}
+      - {id: naruto, kind: tvshow, title: "Naruto", year: 2002}
+      - {id: friends, kind: tvshow, title: "Friends", year: 1994}
+      - {id: queen, kind: artist, title: "Queen"}
+      - {id: taylor, kind: artist, title: "Taylor Swift"}
+      - {id: coldplay, kind: artist, title: "Coldplay"}
+      - {id: yonezu, kind: artist, title: "米津玄師"}
+      - {id: yoasobi, kind: artist, title: "YOASOBI"}
+      - {id: bohemian, kind: song, title: "Bohemian Rhapsody"}
+      - {id: shapeofyou, kind: song, title: "Shape of You"}
+      - {id: lemon, kind: song, title: "Lemon"}
+      - {id: yoruni, kind: song, title: "夜に駆ける"}
+      - {id: thriller, kind: album, title: "Thriller"}
+    cases:
+      # katakana: English titles in their katakana spelling.
+      - {heard: "タイタニック", want: play, id: titanic}
+      - {heard: "アバター", want: play, id: avatar}
+      - {heard: "フローズン", want: play, id: frozen}
+      - {heard: "インセプション", want: play, id: inception}
+      - {heard: "インターステラー", want: play, id: interstellar}
+      - {heard: "ジョーカー", want: play, id: joker}
+      - {heard: "マトリックス", want: play, id: matrix}
+      - {heard: "ジュラシックパーク", want: play, id: jurassicpark}
+      - {heard: "ジュラシックワールド", want: play, id: jurassicworld}
+      - {heard: "ライオンキング", want: play, id: lionking}
+      - {heard: "フォレストガンプ", want: play, id: forrestgump}
+      - {heard: "アラジン", want: play, id: aladdin}
+      - {heard: "トイストーリー", want: play, id: toystory}
+      - {heard: "ゴッドファーザー", want: play, id: godfather}
+      - {heard: "フレンズ", want: play, id: friends}
+      - {heard: "アキラ", want: play, id: akira}
+      - {heard: "ゴジラ", want: play, id: godzilla}
+      - {heard: "ナルト", want: play, id: naruto}
+      - {heard: "クイーン", want: play, id: queen}
+      - {heard: "テイラースウィフト", want: play, id: taylor}
+      - {heard: "コールドプレイ", want: play, id: coldplay}
+      - {heard: "ボヘミアンラプソディ", want: play, id: bohemian}
+      - {heard: "シェイプオブユー", want: play, id: shapeofyou}
+      - {heard: "スリラー", want: play, id: thriller}
+      - {heard: "レモン", want: play, id: lemon}
+      - {heard: "ヨアソビ", want: play, id: yoasobi}
+      # number: sequels with ASCII digits and spelled in katakana.
+      - {heard: "トイストーリー3", want: play, id: toystory3}
+      - {heard: "フローズン2", want: play, id: frozen2}
+      - {heard: "ゴッドファーザーパート2", want: play, id: godfather2}
+      # long-vowel and loanword variants: ー dropped, ヴ written as バ.
+      - {heard: "トップガンマーヴェリック", want: play, id: topgun}
+      - {heard: "トップガンマーベリック", want: play, id: topgun}
+      - {heard: "インタステラ", want: play, id: interstellar}
+      # partial: the distinctive opening words of a title.
+      - {heard: "トトロ", want: play, id: totoro}
+      # native: titles the library holds in Japanese, asked for as they are written.
+      - {heard: "千と千尋の神隠し", want: play, id: senchihiro}
+      - {heard: "米津玄師", want: play, id: yonezu}
+      - {heard: "夜に駆ける", want: play, id: yoruni}
+      # ambiguous: a shared opening word.
+      - {heard: "ジュラシック", want: ask, among: [jurassicpark, jurassicworld]}
+      # missing sequel.
+      - {heard: "ジョーカー2", want: ask}
+      # absent.
+      - {heard: "ターミネーター", want: not_found}
+      - {heard: "バットマン", want: not_found}
+      - {heard: "ビートルズ", want: not_found}
+      - {heard: "マドンナ", want: not_found}
+      - {heard: "鬼滅の刃", want: not_found}
+      - {heard: "スターウォーズ", want: not_found}
+      - {heard: "ハリーポッター", want: not_found}

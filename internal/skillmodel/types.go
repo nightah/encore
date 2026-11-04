@@ -60,11 +60,31 @@ type Language struct {
 
 // Locale is a per-locale overlay on its language.
 type Locale struct {
-	Language   string              `yaml:"language"`
-	SkillName  string              `yaml:"skill_name"`
-	Invocation string              `yaml:"invocation"`
-	Utterances map[string][]string `yaml:"utterances"`
-	Responses  map[string]string   `yaml:"responses"`
+	Language   string `yaml:"language"`
+	SkillName  string `yaml:"skill_name"`
+	Invocation string `yaml:"invocation"`
+	// KodiInvocation is how the locale writes the "kodi" invocation choice (InvocationKodi), for a language whose script can't use the Latin name. Empty means "kodi".
+	KodiInvocation string              `yaml:"kodi_invocation"`
+	Utterances     map[string][]string `yaml:"utterances"`
+	Responses      map[string]string   `yaml:"responses"`
+	// Types adds synonyms to static slot type values, by type name and value ID, for the words the locale's speakers use where its language's types.yaml has others ("computadora" beside "ordenador").
+	Types map[string]map[string][]string `yaml:"types"`
+	// Launch is how the locale's speakers open the skill.
+	Launch Launch `yaml:"launch"`
+	// UnaccentedSamples adds each sample again without the acute accents and diaereses on its letters, for a locale whose speech recognition writes what it hears without them: es-US hears "la canción" as "la cancion", which its samples with the accent match less well. Each slot value gets synonyms without them too, so "la mas antigua" still resolves. The tilde stays, as "año" is not "ano".
+	UnaccentedSamples bool `yaml:"unaccented_samples"`
+}
+
+// Launch is a locale's phrases for opening the skill without a request, each with {invocation} where the invocation name goes. They come from the launch phrases Amazon lists for the language.
+type Launch struct {
+	// Open is the phrase the voice command pages lead with and the deploy's smoke test says.
+	Open string `yaml:"open"`
+	// Also are other launch phrases Amazon lists for the language.
+	Also []string `yaml:"also"`
+	// Skill names the invocation as a skill ("open the encore skill"), for when Alexa doesn't take the name alone for one.
+	Skill string `yaml:"skill"`
+	// PlainOpenFails marks a locale where a plain open phrase hasn't been seen to reach the skill in Amazon's simulator, so the pages lead with Skill.
+	PlainOpenFails bool `yaml:"plain_open_fails"`
 }
 
 // keyedSection is one intent or slot type of a keyed file, its entries in file order.
@@ -83,7 +103,32 @@ type keyedEntry struct {
 type InteractionModel struct {
 	InteractionModel struct {
 		LanguageModel LanguageModel `json:"languageModel"`
+		// Dialog declares the intents whose slots have samples of their own, so the skill can ask for those slots with Dialog.ElicitSlot.
+		Dialog *Dialog `json:"dialog,omitempty"`
 	} `json:"interactionModel"`
+}
+
+// Dialog is the interaction model's dialog section. The skill drives every dialog itself.
+type Dialog struct {
+	Intents            []DialogIntent `json:"intents"`
+	DelegationStrategy string         `json:"delegationStrategy"`
+}
+
+// DialogIntent is an intent in the dialog model. Nothing is required or confirmed: the skill elicits a slot only when it asks a question.
+type DialogIntent struct {
+	Name                 string            `json:"name"`
+	ConfirmationRequired bool              `json:"confirmationRequired"`
+	Prompts              map[string]string `json:"prompts"`
+	Slots                []DialogSlot      `json:"slots"`
+}
+
+// DialogSlot is a slot of a DialogIntent.
+type DialogSlot struct {
+	Name                 string            `json:"name"`
+	Type                 string            `json:"type"`
+	ConfirmationRequired bool              `json:"confirmationRequired"`
+	ElicitationRequired  bool              `json:"elicitationRequired"`
+	Prompts              map[string]string `json:"prompts"`
 }
 
 // LanguageModel is the interaction model's language model section.
@@ -104,6 +149,8 @@ type ModelIntent struct {
 type ModelSlot struct {
 	Name string `json:"name"`
 	Type string `json:"type"`
+	// Samples are what people say when the skill asks for this slot; Alexa matches them only then.
+	Samples []string `json:"samples,omitempty"`
 }
 
 // ModelType is a slot type as SMAPI expects it.
@@ -123,7 +170,7 @@ type ModelTypeValue struct {
 
 // BuildOptions are the user-specific inputs to a build.
 type BuildOptions struct {
-	// Invocation overrides the locale's default invocation name.
+	// Invocation overrides the locale's default invocation name. InvocationKodi picks the locale's own spelling of it (Locale.KodiInvocation).
 	Invocation string
 	// SlotValues supplies values per slot type at build time, for custom types and for extending built-in types such as AMAZON.Movie with library titles. For a dynamic type they replace the language's example values.
 	SlotValues map[string][]SlotValue
@@ -150,6 +197,20 @@ type Finding struct {
 type linter struct {
 	src      *Sources
 	findings []Finding
+	// script is the rules of the language of the locale being checked.
+	script scriptRules
+}
+
+// scriptRules are the invocation name and sample rules of the languages written in one script.
+type scriptRules struct {
+	// invocation reports whether a name uses only what Amazon allows in the script, and message says what that is.
+	invocation func(name string) bool
+	message    string
+	// sampleWord reports whether one word of a sample, slots left out, is written in the script, and sampleMessage says what that is.
+	sampleWord    func(word string) bool
+	sampleMessage string
+	// unspaced scripts write words without spaces (Japanese): particles attach straight to a slot, a reserved word counts anywhere in a name, and a name has no words to count.
+	unspaced bool
 }
 
 type sampleOwner struct {

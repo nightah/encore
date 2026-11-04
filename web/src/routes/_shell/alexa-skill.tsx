@@ -10,6 +10,7 @@ import { ErrorState, LoadingBlock } from "@components/ui/States";
 import {
   AmazonCard,
   AutoDeployPausedCard,
+  AutoDeployRetryCard,
   LocalesPanel,
   ModelTitlesCard,
   Timeline,
@@ -82,7 +83,8 @@ function AlexaSkillPage() {
             ) : null}
           </div>
           {running ? null : <AutoDeployPausedCard skill={skill} />}
-          <WarningsCard warnings={skill.last_deploy?.warnings ?? []} />
+          {running ? null : <AutoDeployRetryCard skill={skill} />}
+          <WarningsCard deploy={skill.last_deploy} />
           <div className="flex flex-wrap items-start gap-4.5">
             <LocalesPanel skill={skill} deploying={running} />
             <div className="flex min-w-0 flex-[2_1_320px] flex-col gap-4.5">

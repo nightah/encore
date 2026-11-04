@@ -52,6 +52,11 @@ func TestKeys(t *testing.T) {
 		{"question", []string{"KSTN"}},
 		{"champ", []string{"XN", "XNP"}},
 		{"xavier", []string{"SF", "SFR"}},
+		{"doigts", []string{"T", "TKT"}},
+		// A w after a velar is a glide.
+		{"kwe", []string{"K"}},
+		{"gwen", []string{"KN"}},
+		{"wagon", []string{"FKN"}},
 		// Pass-through and fallback.
 		{"2049", []string{"2049"}},
 		{"h", []string{"h"}},
@@ -77,6 +82,8 @@ func TestHomophones(t *testing.T) {
 		{"floret", "florette"},
 		{"engrenages", "engrenage"},
 		{"chtis", "shtis"},
+		{"quoi", "kwe"},
+		{"doigts", "does"},
 	} {
 		a, b := Encoder{}.Keys(nil, pair[0]), Encoder{}.Keys(nil, pair[1])
 		assert.True(t, shareKey(a, b), "%s %q and %s %q should share a key", pair[0], a, pair[1], b)

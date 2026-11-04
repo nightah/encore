@@ -9,24 +9,27 @@
     "attributes": {
       "pending": [
         {
-          "doc_id": "movie/2",
-          "Ref": {
+          "doc_id": "movie/4",
+          "ref": {
             "kind": "movie",
-            "id": 2
+            "id": 4
           },
-          "title": "Dune",
-          "year": 2021
-        },
-        {
-          "doc_id": "movie/1",
-          "Ref": {
-            "kind": "movie",
-            "id": 1
-          },
-          "title": "Dune",
-          "year": 1984
+          "title": "Hot Fuzz",
+          "year": 2007
         }
-      ]
+      ],
+      "question": {
+        "id": "match.confirm",
+        "messages": {
+          "title": {
+            "id": "match.title_year",
+            "params": {
+              "title": "Hot Fuzz",
+              "year": "2007"
+            }
+          }
+        }
+      }
     }
   },
   "context": {

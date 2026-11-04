@@ -2380,6 +2380,129 @@ func (e V1SkillValidationFailureType) Valid() bool {
 	}
 }
 
+// Defines values for V1SkillEvaluationsConfirmationStatusType.
+const (
+	V1SkillEvaluationsConfirmationStatusTypeCONFIRMED V1SkillEvaluationsConfirmationStatusType = "CONFIRMED"
+	V1SkillEvaluationsConfirmationStatusTypeDENIED    V1SkillEvaluationsConfirmationStatusType = "DENIED"
+	V1SkillEvaluationsConfirmationStatusTypeNONE      V1SkillEvaluationsConfirmationStatusType = "NONE"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillEvaluationsConfirmationStatusType enum.
+func (e V1SkillEvaluationsConfirmationStatusType) Valid() bool {
+	switch e {
+	case V1SkillEvaluationsConfirmationStatusTypeCONFIRMED:
+		return true
+	case V1SkillEvaluationsConfirmationStatusTypeDENIED:
+		return true
+	case V1SkillEvaluationsConfirmationStatusTypeNONE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillEvaluationsDialogActType.
+const (
+	V1SkillEvaluationsDialogActTypeDialogConfirmIntent V1SkillEvaluationsDialogActType = "Dialog.ConfirmIntent"
+	V1SkillEvaluationsDialogActTypeDialogConfirmSlot   V1SkillEvaluationsDialogActType = "Dialog.ConfirmSlot"
+	V1SkillEvaluationsDialogActTypeDialogElicitSlot    V1SkillEvaluationsDialogActType = "Dialog.ElicitSlot"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillEvaluationsDialogActType enum.
+func (e V1SkillEvaluationsDialogActType) Valid() bool {
+	switch e {
+	case V1SkillEvaluationsDialogActTypeDialogConfirmIntent:
+		return true
+	case V1SkillEvaluationsDialogActTypeDialogConfirmSlot:
+		return true
+	case V1SkillEvaluationsDialogActTypeDialogElicitSlot:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillEvaluationsResolutionsPerAuthorityStatusCode.
+const (
+	V1SkillEvaluationsResolutionsPerAuthorityStatusCodeERERROREXCEPTION V1SkillEvaluationsResolutionsPerAuthorityStatusCode = "ER_ERROR_EXCEPTION"
+	V1SkillEvaluationsResolutionsPerAuthorityStatusCodeERERRORTIMEOUT   V1SkillEvaluationsResolutionsPerAuthorityStatusCode = "ER_ERROR_TIMEOUT"
+	V1SkillEvaluationsResolutionsPerAuthorityStatusCodeERSUCCESSMATCH   V1SkillEvaluationsResolutionsPerAuthorityStatusCode = "ER_SUCCESS_MATCH"
+	V1SkillEvaluationsResolutionsPerAuthorityStatusCodeERSUCCESSNOMATCH V1SkillEvaluationsResolutionsPerAuthorityStatusCode = "ER_SUCCESS_NO_MATCH"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillEvaluationsResolutionsPerAuthorityStatusCode enum.
+func (e V1SkillEvaluationsResolutionsPerAuthorityStatusCode) Valid() bool {
+	switch e {
+	case V1SkillEvaluationsResolutionsPerAuthorityStatusCodeERERROREXCEPTION:
+		return true
+	case V1SkillEvaluationsResolutionsPerAuthorityStatusCodeERERRORTIMEOUT:
+		return true
+	case V1SkillEvaluationsResolutionsPerAuthorityStatusCodeERSUCCESSMATCH:
+		return true
+	case V1SkillEvaluationsResolutionsPerAuthorityStatusCodeERSUCCESSNOMATCH:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillInteractionModelDelegationStrategyType.
+const (
+	V1SkillInteractionModelDelegationStrategyTypeALWAYS        V1SkillInteractionModelDelegationStrategyType = "ALWAYS"
+	V1SkillInteractionModelDelegationStrategyTypeSKILLRESPONSE V1SkillInteractionModelDelegationStrategyType = "SKILL_RESPONSE"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillInteractionModelDelegationStrategyType enum.
+func (e V1SkillInteractionModelDelegationStrategyType) Valid() bool {
+	switch e {
+	case V1SkillInteractionModelDelegationStrategyTypeALWAYS:
+		return true
+	case V1SkillInteractionModelDelegationStrategyTypeSKILLRESPONSE:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillInteractionModelFallbackIntentSensitivityLevel.
+const (
+	V1SkillInteractionModelFallbackIntentSensitivityLevelHIGH   V1SkillInteractionModelFallbackIntentSensitivityLevel = "HIGH"
+	V1SkillInteractionModelFallbackIntentSensitivityLevelLOW    V1SkillInteractionModelFallbackIntentSensitivityLevel = "LOW"
+	V1SkillInteractionModelFallbackIntentSensitivityLevelMEDIUM V1SkillInteractionModelFallbackIntentSensitivityLevel = "MEDIUM"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillInteractionModelFallbackIntentSensitivityLevel enum.
+func (e V1SkillInteractionModelFallbackIntentSensitivityLevel) Valid() bool {
+	switch e {
+	case V1SkillInteractionModelFallbackIntentSensitivityLevelHIGH:
+		return true
+	case V1SkillInteractionModelFallbackIntentSensitivityLevelLOW:
+		return true
+	case V1SkillInteractionModelFallbackIntentSensitivityLevelMEDIUM:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for V1SkillInteractionModelPromptItemsType.
+const (
+	V1SkillInteractionModelPromptItemsTypePlainText V1SkillInteractionModelPromptItemsType = "PlainText"
+	V1SkillInteractionModelPromptItemsTypeSSML      V1SkillInteractionModelPromptItemsType = "SSML"
+)
+
+// Valid indicates whether the value is a known member of the V1SkillInteractionModelPromptItemsType enum.
+func (e V1SkillInteractionModelPromptItemsType) Valid() bool {
+	switch e {
+	case V1SkillInteractionModelPromptItemsTypePlainText:
+		return true
+	case V1SkillInteractionModelPromptItemsTypeSSML:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for V2SkillSimulationsConfirmationStatusType.
 const (
 	V2SkillSimulationsConfirmationStatusTypeCONFIRMED V2SkillSimulationsConfirmationStatusType = "CONFIRMED"
@@ -3747,6 +3870,117 @@ type V1SkillCreateSkillWithPackageRequest struct {
 	VendorID *string `json:"vendorId,omitempty"`
 }
 
+// V1SkillEvaluationsConfirmationStatusType An enumeration indicating whether the user has explicitly confirmed or denied the entire intent. Possible values: "NONE", "CONFIRMED", "DENIED".
+type V1SkillEvaluationsConfirmationStatusType string
+
+// V1SkillEvaluationsDialogAct A representation of question prompts to the user for multi-turn, which requires user to fill a slot value, or confirm a slot value, or confirm an intent.
+type V1SkillEvaluationsDialogAct struct {
+	// TargetSlot The name of the target slot that needs to be filled or confirmed for a dialogAct
+	TargetSlot *string                          `json:"targetSlot,omitempty"`
+	Type       *V1SkillEvaluationsDialogActType `json:"type,omitempty"`
+}
+
+// V1SkillEvaluationsDialogActType defines model for v1.skill.evaluations.DialogActType.
+type V1SkillEvaluationsDialogActType string
+
+// V1SkillEvaluationsIntent defines model for v1.skill.evaluations.Intent.
+type V1SkillEvaluationsIntent struct {
+	// ConfirmationStatus An enumeration indicating whether the user has explicitly confirmed or denied the entire intent. Possible values: "NONE", "CONFIRMED", "DENIED".
+	ConfirmationStatus *V1SkillEvaluationsConfirmationStatusType `json:"confirmationStatus,omitempty"`
+	Name               *string                                   `json:"name,omitempty"`
+
+	// Slots A map of key-value pairs that further describes what the user meant based on a predefined intent schema. The map can be empty.
+	Slots map[string]V1SkillEvaluationsSlot `json:"slots,omitempty"`
+}
+
+// V1SkillEvaluationsMultiTurn Included when the selected intent has dialog defined and the dialog is not completed.  To continue the dialog, provide the value of the token in the multiTurnToken field in the next request.
+type V1SkillEvaluationsMultiTurn struct {
+	// DialogAct A representation of question prompts to the user for multi-turn, which requires user to fill a slot value, or confirm a slot value, or confirm an intent.
+	DialogAct *V1SkillEvaluationsDialogAct `json:"dialogAct,omitempty"`
+
+	// Prompt A sample prompt defined in the dialog model for each DialogAct.
+	Prompt *string `json:"prompt,omitempty"`
+
+	// Token Opaque string which contains multi-turn related context.
+	Token *string `json:"token,omitempty"`
+}
+
+// V1SkillEvaluationsProfileNluRequest defines model for v1.skill.evaluations.ProfileNluRequest.
+type V1SkillEvaluationsProfileNluRequest struct {
+	// MultiTurnToken Opaque string which contains multi-turn related context.
+	MultiTurnToken *string `json:"multiTurnToken,omitempty"`
+
+	// Utterance Actual representation of user input to Alexa.
+	Utterance string `json:"utterance"`
+}
+
+// V1SkillEvaluationsProfileNluResponse defines model for v1.skill.evaluations.ProfileNluResponse.
+type V1SkillEvaluationsProfileNluResponse struct {
+	// ConsideredIntents All intents that Alexa considered for the utterance in the request, but did not select.
+	ConsideredIntents []V1SkillEvaluationsIntent `json:"consideredIntents,omitempty"`
+
+	// MultiTurn Included when the selected intent has dialog defined and the dialog is not completed.  To continue the dialog, provide the value of the token in the multiTurnToken field in the next request.
+	MultiTurn *V1SkillEvaluationsMultiTurn `json:"multiTurn,omitempty"`
+
+	// SelectedIntent The intent that Alexa selected for the utterance in the request.
+	SelectedIntent *V1SkillEvaluationsProfileNluSelectedIntent `json:"selectedIntent,omitempty"`
+
+	// SessionEnded Represents when an utterance results in the skill exiting. It would be true when NLU selects 1P ExitAppIntent or GoHomeIntent, and false otherwise.
+	SessionEnded *bool `json:"sessionEnded,omitempty"`
+}
+
+// V1SkillEvaluationsProfileNluSelectedIntent The intent that Alexa selected for the utterance in the request.
+type V1SkillEvaluationsProfileNluSelectedIntent = V1SkillEvaluationsIntent
+
+// V1SkillEvaluationsResolutionsPerAuthorityItems defines model for v1.skill.evaluations.ResolutionsPerAuthorityItems.
+type V1SkillEvaluationsResolutionsPerAuthorityItems struct {
+	// Authority The name of the authority for the slot values. For custom slot types, this authority label incorporates your skill ID and the slot type name.
+	Authority *string `json:"authority,omitempty"`
+
+	// Status An object representing the status of entity resolution for the slot.
+	Status *V1SkillEvaluationsResolutionsPerAuthorityStatus `json:"status,omitempty"`
+
+	// Values An array of resolved values for the slot.
+	Values []V1SkillEvaluationsResolutionsPerAuthorityValueItems `json:"values,omitempty"`
+}
+
+// V1SkillEvaluationsResolutionsPerAuthorityStatus An object representing the status of entity resolution for the slot.
+type V1SkillEvaluationsResolutionsPerAuthorityStatus struct {
+	// Code A code indicating the results of attempting to resolve the user utterance against the defined slot types. This can be one of the following:
+	// ER_SUCCESS_MATCH: The spoken value matched a value or synonym explicitly defined in your custom slot type. ER_SUCCESS_NO_MATCH: The spoken value did not match any values or synonyms explicitly defined in your custom slot type. ER_ERROR_TIMEOUT: An error occurred due to a timeout. ER_ERROR_EXCEPTION: An error occurred due to an exception during processing.
+	Code *V1SkillEvaluationsResolutionsPerAuthorityStatusCode `json:"code,omitempty"`
+}
+
+// V1SkillEvaluationsResolutionsPerAuthorityStatusCode A code indicating the results of attempting to resolve the user utterance against the defined slot types. This can be one of the following:
+// ER_SUCCESS_MATCH: The spoken value matched a value or synonym explicitly defined in your custom slot type. ER_SUCCESS_NO_MATCH: The spoken value did not match any values or synonyms explicitly defined in your custom slot type. ER_ERROR_TIMEOUT: An error occurred due to a timeout. ER_ERROR_EXCEPTION: An error occurred due to an exception during processing.
+type V1SkillEvaluationsResolutionsPerAuthorityStatusCode string
+
+// V1SkillEvaluationsResolutionsPerAuthorityValueItems An object representing the resolved value for the slot, based on the user's utterance and the slot type definition.
+type V1SkillEvaluationsResolutionsPerAuthorityValueItems struct {
+	// ID The unique ID defined for the resolved slot value. This is based on the IDs defined in the slot type definition.
+	ID *string `json:"id,omitempty"`
+
+	// Name The string for the resolved slot value.
+	Name *string `json:"name,omitempty"`
+}
+
+// V1SkillEvaluationsSlot defines model for v1.skill.evaluations.Slot.
+type V1SkillEvaluationsSlot struct {
+	// ConfirmationStatus An enumeration indicating whether the user has explicitly confirmed or denied the entire intent. Possible values: "NONE", "CONFIRMED", "DENIED".
+	ConfirmationStatus *V1SkillEvaluationsConfirmationStatusType `json:"confirmationStatus,omitempty"`
+	Name               *string                                   `json:"name,omitempty"`
+
+	// Resolutions A resolutions object representing the results of resolving the words captured from the user's utterance.
+	Resolutions *V1SkillEvaluationsSlotResolutions `json:"resolutions,omitempty"`
+	Value       *string                            `json:"value,omitempty"`
+}
+
+// V1SkillEvaluationsSlotResolutions A resolutions object representing the results of resolving the words captured from the user's utterance.
+type V1SkillEvaluationsSlotResolutions struct {
+	// ResolutionsPerAuthority An array of objects representing each possible authority for entity resolution. An authority represents the source for the data provided for the slot. For a custom slot type, the authority is the slot type you defined.
+	ResolutionsPerAuthority []V1SkillEvaluationsResolutionsPerAuthorityItems `json:"resolutionsPerAuthority,omitempty"`
+}
+
 // V1SkillImageAttributes Set of properties of the image provided by the customer.
 type V1SkillImageAttributes struct {
 	// Dimension Dimensions of an image.
@@ -3757,6 +3991,224 @@ type V1SkillImageAttributes struct {
 
 	// Size On disk storage size of image.
 	Size *V1SkillImageSize `json:"size,omitempty"`
+}
+
+// V1SkillInteractionModelDelegationStrategyType Enumerates delegation strategies used to control automatic dialog management through the defined dialog model. When no delegation strategies are defined, the value SKILL_RESPONSE is assumed.
+type V1SkillInteractionModelDelegationStrategyType string
+
+// V1SkillInteractionModelDialog Defines dialog rules e.g. slot elicitation and validation, intent chaining etc.
+type V1SkillInteractionModelDialog struct {
+	// DelegationStrategy Enumerates delegation strategies used to control automatic dialog management through the defined dialog model. When no delegation strategies are defined, the value SKILL_RESPONSE is assumed.
+	DelegationStrategy *V1SkillInteractionModelDelegationStrategyType `json:"delegationStrategy,omitempty"`
+
+	// Intents List of intents that have dialog rules associated with them. Dialogs can also span multiple intents.
+	Intents []V1SkillInteractionModelDialogIntents `json:"intents"`
+}
+
+// V1SkillInteractionModelDialogIntents defines model for v1.skill.interactionModel.DialogIntents.
+type V1SkillInteractionModelDialogIntents struct {
+	// ConfirmationRequired Describes whether confirmation of the intent is required.
+	ConfirmationRequired *bool `json:"confirmationRequired,omitempty"`
+
+	// DelegationStrategy Enumerates delegation strategies used to control automatic dialog management through the defined dialog model. When no delegation strategies are defined, the value SKILL_RESPONSE is assumed.
+	DelegationStrategy *V1SkillInteractionModelDelegationStrategyType `json:"delegationStrategy,omitempty"`
+
+	// Name Name of the intent that has a dialog specification.
+	Name string `json:"name"`
+
+	// Prompts Collection of prompts for this intent.
+	Prompts *V1SkillInteractionModelDialogIntentsPrompts `json:"prompts,omitempty"`
+
+	// Slots List of slots that have dialog rules.
+	Slots []V1SkillInteractionModelDialogSlotItems `json:"slots,omitempty"`
+}
+
+// V1SkillInteractionModelDialogIntentsPrompts Collection of prompts for this intent.
+type V1SkillInteractionModelDialogIntentsPrompts struct {
+	// Confirmation Enum value in the dialog_slots map to reference the confirmation prompt id.
+	Confirmation *string `json:"confirmation,omitempty"`
+
+	// Elicitation Enum value in the dialog_slots map to reference the elicitation prompt id.
+	Elicitation *string `json:"elicitation,omitempty"`
+}
+
+// V1SkillInteractionModelDialogPrompts Dialog prompts associated with this slot i.e. for elicitation and/or confirmation.
+type V1SkillInteractionModelDialogPrompts struct {
+	// Confirmation Reference to a prompt-id to use to confirm the slots value.
+	Confirmation *string `json:"confirmation,omitempty"`
+
+	// Elicitation Reference to a prompt-id to use If this slot value is missing.
+	Elicitation *string `json:"elicitation,omitempty"`
+}
+
+// V1SkillInteractionModelDialogSlotItems defines model for v1.skill.interactionModel.DialogSlotItems.
+type V1SkillInteractionModelDialogSlotItems struct {
+	// ConfirmationRequired Describes whether confirmation of the slot is required.
+	ConfirmationRequired *bool `json:"confirmationRequired,omitempty"`
+
+	// ElicitationRequired Describes whether elicitation of the slot is required.
+	ElicitationRequired *bool `json:"elicitationRequired,omitempty"`
+
+	// Name The name of the slot that has dialog rules associated with it.
+	Name string `json:"name"`
+
+	// Prompts Dialog prompts associated with this slot i.e. for elicitation and/or confirmation.
+	Prompts V1SkillInteractionModelDialogPrompts `json:"prompts"`
+
+	// Type Type of the slot in the dialog intent.
+	Type string `json:"type"`
+
+	// Validations List of validations for the slot. if validation fails, user will be prompted with the provided prompt.
+	Validations []V1SkillInteractionModelSlotValidation `json:"validations,omitempty"`
+}
+
+// V1SkillInteractionModelFallbackIntentSensitivity Denotes skill's sensitivity for out-of-domain utterances.
+type V1SkillInteractionModelFallbackIntentSensitivity struct {
+	// Level Skill's sensitivity level for out-of-domain utterances. By default, the sensitivity level of the skill is set to ‘LOW’.
+	// As the sensitivity level for a skill is increased, more customer utterances that are not supported by the skill will be captured by AMAZON.FallbackIntent.
+	Level V1SkillInteractionModelFallbackIntentSensitivityLevel `json:"level"`
+}
+
+// V1SkillInteractionModelFallbackIntentSensitivityLevel Skill's sensitivity level for out-of-domain utterances. By default, the sensitivity level of the skill is set to ‘LOW’.
+// As the sensitivity level for a skill is increased, more customer utterances that are not supported by the skill will be captured by AMAZON.FallbackIntent.
+type V1SkillInteractionModelFallbackIntentSensitivityLevel string
+
+// V1SkillInteractionModelIntent The set of intents your service can accept and process.
+type V1SkillInteractionModelIntent struct {
+	// GeneratedBy Name of the generator used to generate this object.
+	GeneratedBy *string `json:"generatedBy,omitempty"`
+
+	// Name Name to identify the intent.
+	Name string `json:"name"`
+
+	// Samples Phrases the user can speak e.g. to trigger an intent or provide value for a slot elicitation.
+	Samples []string `json:"samples,omitempty"`
+
+	// Slots List of slots within the intent.
+	Slots []V1SkillInteractionModelSlotDefinition `json:"slots,omitempty"`
+}
+
+// V1SkillInteractionModelInteractionModelData defines model for v1.skill.interactionModel.InteractionModelData.
+type V1SkillInteractionModelInteractionModelData struct {
+	Description      *string                                       `json:"description,omitempty"`
+	InteractionModel V1SkillInteractionModelInteractionModelSchema `json:"interactionModel"`
+	Version          *string                                       `json:"version,omitempty"`
+}
+
+// V1SkillInteractionModelInteractionModelSchema defines model for v1.skill.interactionModel.InteractionModelSchema.
+type V1SkillInteractionModelInteractionModelSchema struct {
+	// Dialog Defines dialog rules e.g. slot elicitation and validation, intent chaining etc.
+	Dialog *V1SkillInteractionModelDialog `json:"dialog,omitempty"`
+
+	// LanguageModel Define the language model.
+	LanguageModel V1SkillInteractionModelLanguageModel `json:"languageModel"`
+
+	// Prompts List of prompts.
+	Prompts []V1SkillInteractionModelPrompt `json:"prompts,omitempty"`
+}
+
+// V1SkillInteractionModelModelConfiguration Global configurations applicable to a skill's model.
+type V1SkillInteractionModelModelConfiguration struct {
+	// FallbackIntentSensitivity Denotes skill's sensitivity for out-of-domain utterances.
+	FallbackIntentSensitivity *V1SkillInteractionModelFallbackIntentSensitivity `json:"fallbackIntentSensitivity,omitempty"`
+}
+
+// V1SkillInteractionModelMultipleValuesConfig Configuration object for multiple values capturing behavior for this slot.
+type V1SkillInteractionModelMultipleValuesConfig struct {
+	// Enabled Boolean that indicates whether this slot can capture multiple values.
+	Enabled bool `json:"enabled"`
+}
+
+// V1SkillInteractionModelPrompt defines model for v1.skill.interactionModel.Prompt.
+type V1SkillInteractionModelPrompt struct {
+	// ID The prompt id, this id can be used from dialog definitions.
+	ID string `json:"id"`
+
+	// Variations List of variations of the prompt, each variation can be either a text string or a well defined ssml string depending on the type defined.
+	Variations []V1SkillInteractionModelPromptItems `json:"variations"`
+}
+
+// V1SkillInteractionModelPromptItems defines model for v1.skill.interactionModel.PromptItems.
+type V1SkillInteractionModelPromptItems struct {
+	// Type Prompt can be specified in different formats e.g. text, ssml.
+	Type *V1SkillInteractionModelPromptItemsType `json:"type,omitempty"`
+
+	// Value Specifies the prompt.
+	Value string `json:"value"`
+}
+
+// V1SkillInteractionModelPromptItemsType Prompt can be specified in different formats e.g. text, ssml.
+type V1SkillInteractionModelPromptItemsType string
+
+// V1SkillInteractionModelSlotDefinition Slot definition.
+type V1SkillInteractionModelSlotDefinition struct {
+	// MultipleValues Configuration object for multiple values capturing behavior for this slot.
+	MultipleValues *V1SkillInteractionModelMultipleValuesConfig `json:"multipleValues,omitempty"`
+
+	// Name The name of the slot.
+	Name string `json:"name"`
+
+	// Samples Phrases the user can speak e.g. to trigger an intent or provide value for a slot elicitation.
+	Samples []string `json:"samples,omitempty"`
+
+	// Type The type of the slot. It can be a built-in or custom type.
+	Type *string `json:"type,omitempty"`
+}
+
+// V1SkillInteractionModelSlotType Custom slot type to define a list of possible values for a slot. Used for items that are not covered by Amazon's built-in slot types.
+type V1SkillInteractionModelSlotType struct {
+	// GeneratedBy Name of the generator used to generate this object.
+	GeneratedBy *string `json:"generatedBy,omitempty"`
+
+	// Name The name of the custom slot type.
+	Name string `json:"name"`
+
+	// ValueSupplier Supplier object to provide slot values.
+	ValueSupplier *V1SkillInteractionModelValueSupplier `json:"valueSupplier,omitempty"`
+
+	// Values List of expected values. Values outside the list are still returned.
+	Values []V1SkillInteractionModelTypeValue `json:"values,omitempty"`
+}
+
+// V1SkillInteractionModelSlotValidation Validation on a slot with support for prompt and confirmation.
+type V1SkillInteractionModelSlotValidation struct {
+	// Prompt The prompt id that should be used if validation fails.
+	Prompt string `json:"prompt"`
+
+	// Type The exact type of validation e.g. isLessThan,isGreaterThan etc.
+	Type string `json:"type"`
+}
+
+// V1SkillInteractionModelTypeValue The value schema in type object of interaction model.
+type V1SkillInteractionModelTypeValue struct {
+	ID *string `json:"id,omitempty"`
+
+	// Name The object that contains individual type values.
+	Name V1SkillInteractionModelTypeValueObject `json:"name"`
+}
+
+// V1SkillInteractionModelTypeValueObject The object that contains individual type values.
+type V1SkillInteractionModelTypeValueObject struct {
+	Synonyms []string `json:"synonyms"`
+	Value    string   `json:"value"`
+}
+
+// V1SkillInteractionModelValueSupplier Supplier object to provide slot values.
+type V1SkillInteractionModelValueSupplier struct {
+	// Type The exact type of validation e.g.CatalogValueSupplier etc.
+	Type string `json:"type"`
+}
+
+// V1SkillInteractionModelLanguageModel Define the language model.
+type V1SkillInteractionModelLanguageModel struct {
+	Intents []V1SkillInteractionModelIntent `json:"intents"`
+
+	// InvocationName Invocation name of the skill.
+	InvocationName string `json:"invocationName"`
+
+	// ModelConfiguration Global configurations applicable to a skill's model.
+	ModelConfiguration *V1SkillInteractionModelModelConfiguration `json:"modelConfiguration,omitempty"`
+	Types              []V1SkillInteractionModelSlotType          `json:"types,omitempty"`
 }
 
 // V1SkillUpdateSkillWithPackageRequest defines model for v1.skill.updateSkillWithPackageRequest.
@@ -4088,6 +4540,9 @@ type CreateSkillPackageV1JSONRequestBody = V1SkillCreateSkillWithPackageRequest
 // ImportSkillPackageV1JSONRequestBody defines body for ImportSkillPackageV1 for application/json ContentType.
 type ImportSkillPackageV1JSONRequestBody = V1SkillUpdateSkillWithPackageRequest
 
+// ProfileNluV1JSONRequestBody defines body for ProfileNluV1 for application/json ContentType.
+type ProfileNluV1JSONRequestBody = V1SkillEvaluationsProfileNluRequest
+
 // SimulateSkillV2JSONRequestBody defines body for SimulateSkillV2 for application/json ContentType.
 type SimulateSkillV2JSONRequestBody = V2SkillSimulationsSimulationsAPIRequest
 
@@ -4204,15 +4659,49 @@ type ClientInterface interface {
 	// Creates a new import for a skill with given skillId.
 	ImportSkillPackageV1(ctx context.Context, skillID string, params *ImportSkillPackageV1Params, body ImportSkillPackageV1JSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetInteractionModelV1 performs a GET /v1/skills/{skillId}/stages/{stageV2}/interactionModel/locales/{locale} (the `GetInteractionModelV1` operationId) request.
+	//
+	// Gets the `InteractionModel` for the skill in the given stage.
+	// The path params **skillId**, **stage** and **locale** are required.
+	GetInteractionModelV1(ctx context.Context, skillID string, stageV2 string, locale string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetSkillManifestV1 performs a GET /v1/skills/{skillId}/stages/{stageV2}/manifest (the `GetSkillManifestV1` operationId) request.
 	//
 	// Returns the skill manifest for given skillId and stage.
 	GetSkillManifestV1(ctx context.Context, skillID string, stageV2 string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// DeleteSkillEnablementV1 performs a DELETE /v1/skills/{skillId}/stages/{stage}/enablement (the `DeleteSkillEnablementV1` operationId) request.
+	//
+	// Deletes the enablement for given skillId/stage and customerId (retrieved from Auth token).
+	DeleteSkillEnablementV1(ctx context.Context, skillID string, stage string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetSkillEnablementStatusV1 performs a GET /v1/skills/{skillId}/stages/{stage}/enablement (the `GetSkillEnablementStatusV1` operationId) request.
+	//
+	// Checks whether an enablement exist for given skillId/stage and customerId (retrieved from Auth token).
+	GetSkillEnablementStatusV1(ctx context.Context, skillID string, stage string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// SetSkillEnablementV1 performs a PUT /v1/skills/{skillId}/stages/{stage}/enablement (the `SetSkillEnablementV1` operationId) request.
 	//
 	// Creates/Updates the enablement for given skillId/stage and customerId (retrieved from Auth token).
 	SetSkillEnablementV1(ctx context.Context, skillID string, stage string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ProfileNluV1WithBody Profile a test utterance.
+	//
+	// This is a synchronous API that profiles an utterance against interaction model.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /v1/skills/{skillId}/stages/{stage}/interactionModel/locales/{locale}/profileNlu (the `ProfileNluV1` operationId).
+	ProfileNluV1WithBody(ctx context.Context, skillID string, stage string, locale string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ProfileNluV1 Profile a test utterance.
+	//
+	// This is a synchronous API that profiles an utterance against interaction model.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /v1/skills/{skillId}/stages/{stage}/interactionModel/locales/{locale}/profileNlu (the `ProfileNluV1` operationId).
+	ProfileNluV1(ctx context.Context, skillID string, stage string, locale string, body ProfileNluV1JSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetSkillStatusV1 performs a GET /v1/skills/{skillId}/status (the `GetSkillStatusV1` operationId) request.
 	//
@@ -4359,6 +4848,22 @@ func (c *Client) ImportSkillPackageV1(ctx context.Context, skillID string, param
 	return c.Client.Do(req)
 }
 
+// GetInteractionModelV1 performs a GET /v1/skills/{skillId}/stages/{stageV2}/interactionModel/locales/{locale} (the `GetInteractionModelV1` operationId) request.
+//
+// Gets the `InteractionModel` for the skill in the given stage.
+// The path params **skillId**, **stage** and **locale** are required.
+func (c *Client) GetInteractionModelV1(ctx context.Context, skillID string, stageV2 string, locale string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetInteractionModelV1Request(c.Server, skillID, stageV2, locale)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // GetSkillManifestV1 performs a GET /v1/skills/{skillId}/stages/{stageV2}/manifest (the `GetSkillManifestV1` operationId) request.
 //
 // Returns the skill manifest for given skillId and stage.
@@ -4374,11 +4879,79 @@ func (c *Client) GetSkillManifestV1(ctx context.Context, skillID string, stageV2
 	return c.Client.Do(req)
 }
 
+// DeleteSkillEnablementV1 performs a DELETE /v1/skills/{skillId}/stages/{stage}/enablement (the `DeleteSkillEnablementV1` operationId) request.
+//
+// Deletes the enablement for given skillId/stage and customerId (retrieved from Auth token).
+func (c *Client) DeleteSkillEnablementV1(ctx context.Context, skillID string, stage string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteSkillEnablementV1Request(c.Server, skillID, stage)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetSkillEnablementStatusV1 performs a GET /v1/skills/{skillId}/stages/{stage}/enablement (the `GetSkillEnablementStatusV1` operationId) request.
+//
+// Checks whether an enablement exist for given skillId/stage and customerId (retrieved from Auth token).
+func (c *Client) GetSkillEnablementStatusV1(ctx context.Context, skillID string, stage string, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSkillEnablementStatusV1Request(c.Server, skillID, stage)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // SetSkillEnablementV1 performs a PUT /v1/skills/{skillId}/stages/{stage}/enablement (the `SetSkillEnablementV1` operationId) request.
 //
 // Creates/Updates the enablement for given skillId/stage and customerId (retrieved from Auth token).
 func (c *Client) SetSkillEnablementV1(ctx context.Context, skillID string, stage string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewSetSkillEnablementV1Request(c.Server, skillID, stage)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ProfileNluV1WithBody Profile a test utterance.
+//
+// This is a synchronous API that profiles an utterance against interaction model.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /v1/skills/{skillId}/stages/{stage}/interactionModel/locales/{locale}/profileNlu (the `ProfileNluV1` operationId).
+func (c *Client) ProfileNluV1WithBody(ctx context.Context, skillID string, stage string, locale string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewProfileNluV1RequestWithBody(c.Server, skillID, stage, locale, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ProfileNluV1 Profile a test utterance.
+//
+// This is a synchronous API that profiles an utterance against interaction model.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /v1/skills/{skillId}/stages/{stage}/interactionModel/locales/{locale}/profileNlu (the `ProfileNluV1` operationId).
+func (c *Client) ProfileNluV1(ctx context.Context, skillID string, stage string, locale string, body ProfileNluV1JSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewProfileNluV1Request(c.Server, skillID, stage, locale, body)
 	if err != nil {
 		return nil, err
 	}
@@ -4723,6 +5296,54 @@ func NewImportSkillPackageV1RequestWithBody(server string, skillID string, param
 	return req, nil
 }
 
+// NewGetInteractionModelV1Request constructs an http.Request for the GetInteractionModelV1 method
+func NewGetInteractionModelV1Request(server string, skillID string, stageV2 string, locale string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "skillId", skillID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "stageV2", stageV2, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "locale", locale, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "languager-region; same as BCP-47 language tag format"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/skills/%s/stages/%s/interactionModel/locales/%s", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetSkillManifestV1Request constructs an http.Request for the GetSkillManifestV1 method
 func NewGetSkillManifestV1Request(server string, skillID string, stageV2 string) (*http.Request, error) {
 	var err error
@@ -4747,6 +5368,88 @@ func NewGetSkillManifestV1Request(server string, skillID string, stageV2 string)
 	}
 
 	operationPath := fmt.Sprintf("/v1/skills/%s/stages/%s/manifest", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewDeleteSkillEnablementV1Request constructs an http.Request for the DeleteSkillEnablementV1 method
+func NewDeleteSkillEnablementV1Request(server string, skillID string, stage string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "skillId", skillID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "stage", stage, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/skills/%s/stages/%s/enablement", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetSkillEnablementStatusV1Request constructs an http.Request for the GetSkillEnablementStatusV1 method
+func NewGetSkillEnablementStatusV1Request(server string, skillID string, stage string) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "skillId", skillID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "stage", stage, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/skills/%s/stages/%s/enablement", pathParam0, pathParam1)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -4801,6 +5504,67 @@ func NewSetSkillEnablementV1Request(server string, skillID string, stage string)
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewProfileNluV1Request calls the generic ProfileNluV1 builder with application/json body
+func NewProfileNluV1Request(server string, skillID string, stage string, locale string, body ProfileNluV1JSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewProfileNluV1RequestWithBody(server, skillID, stage, locale, "application/json", bodyReader)
+}
+
+// NewProfileNluV1RequestWithBody constructs an http.Request for the ProfileNluV1 method, with any body, and a specified content type
+func NewProfileNluV1RequestWithBody(server string, skillID string, stage string, locale string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "skillId", skillID, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "stage", stage, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam2 string
+
+	pathParam2, err = runtime.StyleParamWithOptions("simple", false, "locale", locale, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: "languager-region; same as BCP-47 language tag format"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/v1/skills/%s/stages/%s/interactionModel/locales/%s/profileNlu", pathParam0, pathParam1, pathParam2)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -5088,6 +5852,14 @@ type ClientWithResponsesInterface interface {
 	// Creates a new import for a skill with given skillId.
 	ImportSkillPackageV1WithResponse(ctx context.Context, skillID string, params *ImportSkillPackageV1Params, body ImportSkillPackageV1JSONRequestBody, reqEditors ...RequestEditorFn) (*ImportSkillPackageV1Response, error)
 
+	// GetInteractionModelV1WithResponse performs a GET /v1/skills/{skillId}/stages/{stageV2}/interactionModel/locales/{locale} (the `GetInteractionModelV1` operationId) request.
+	//
+	// Gets the `InteractionModel` for the skill in the given stage.
+	// The path params **skillId**, **stage** and **locale** are required.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	GetInteractionModelV1WithResponse(ctx context.Context, skillID string, stageV2 string, locale string, reqEditors ...RequestEditorFn) (*GetInteractionModelV1Response, error)
+
 	// GetSkillManifestV1WithResponse performs a GET /v1/skills/{skillId}/stages/{stageV2}/manifest (the `GetSkillManifestV1` operationId) request.
 	//
 	// Returns the skill manifest for given skillId and stage.
@@ -5095,12 +5867,44 @@ type ClientWithResponsesInterface interface {
 	// Returns a wrapper object for the known response body format(s).
 	GetSkillManifestV1WithResponse(ctx context.Context, skillID string, stageV2 string, reqEditors ...RequestEditorFn) (*GetSkillManifestV1Response, error)
 
+	// DeleteSkillEnablementV1WithResponse performs a DELETE /v1/skills/{skillId}/stages/{stage}/enablement (the `DeleteSkillEnablementV1` operationId) request.
+	//
+	// Deletes the enablement for given skillId/stage and customerId (retrieved from Auth token).
+	//
+	// Returns a wrapper object for the known response body format(s).
+	DeleteSkillEnablementV1WithResponse(ctx context.Context, skillID string, stage string, reqEditors ...RequestEditorFn) (*DeleteSkillEnablementV1Response, error)
+
+	// GetSkillEnablementStatusV1WithResponse performs a GET /v1/skills/{skillId}/stages/{stage}/enablement (the `GetSkillEnablementStatusV1` operationId) request.
+	//
+	// Checks whether an enablement exist for given skillId/stage and customerId (retrieved from Auth token).
+	//
+	// Returns a wrapper object for the known response body format(s).
+	GetSkillEnablementStatusV1WithResponse(ctx context.Context, skillID string, stage string, reqEditors ...RequestEditorFn) (*GetSkillEnablementStatusV1Response, error)
+
 	// SetSkillEnablementV1WithResponse performs a PUT /v1/skills/{skillId}/stages/{stage}/enablement (the `SetSkillEnablementV1` operationId) request.
 	//
 	// Creates/Updates the enablement for given skillId/stage and customerId (retrieved from Auth token).
 	//
 	// Returns a wrapper object for the known response body format(s).
 	SetSkillEnablementV1WithResponse(ctx context.Context, skillID string, stage string, reqEditors ...RequestEditorFn) (*SetSkillEnablementV1Response, error)
+
+	// ProfileNluV1WithBodyWithResponse Profile a test utterance.
+	//
+	// This is a synchronous API that profiles an utterance against interaction model.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /v1/skills/{skillId}/stages/{stage}/interactionModel/locales/{locale}/profileNlu (the `ProfileNluV1` operationId).
+	ProfileNluV1WithBodyWithResponse(ctx context.Context, skillID string, stage string, locale string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ProfileNluV1Response, error)
+
+	// ProfileNluV1WithResponse Profile a test utterance.
+	//
+	// This is a synchronous API that profiles an utterance against interaction model.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /v1/skills/{skillId}/stages/{stage}/interactionModel/locales/{locale}/profileNlu (the `ProfileNluV1` operationId).
+	ProfileNluV1WithResponse(ctx context.Context, skillID string, stage string, locale string, body ProfileNluV1JSONRequestBody, reqEditors ...RequestEditorFn) (*ProfileNluV1Response, error)
 
 	// GetSkillStatusV1WithResponse performs a GET /v1/skills/{skillId}/status (the `GetSkillStatusV1` operationId) request.
 	//
@@ -5615,6 +6419,111 @@ func (r ImportSkillPackageV1Response) ContentType() string {
 	return ""
 }
 
+// GetInteractionModelV1Response200Headers the declared response headers of an HTTP 200 response for GetInteractionModelV1
+type GetInteractionModelV1Response200Headers struct {
+	ContentType *string
+	ETag        *string
+}
+
+// GetInteractionModelV1Response401Headers the declared response headers of an HTTP 401 response for GetInteractionModelV1
+type GetInteractionModelV1Response401Headers struct {
+	WWWAuthenticate *string
+}
+
+type GetInteractionModelV1Response struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *V1SkillInteractionModelInteractionModelData
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *V1BadRequestError
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *V1SkillStandardizedError
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *V1BadRequestError
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *V1SkillStandardizedError
+	// JSON429 the response for an HTTP 429 `application/json` response
+	JSON429 *V1SkillStandardizedError
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *V1SkillStandardizedError
+	// JSON503 the response for an HTTP 503 `application/json` response
+	JSON503 *V1SkillStandardizedError
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *GetInteractionModelV1Response200Headers
+	// Headers401 the parsed response headers for an HTTP 401 response
+	Headers401 *GetInteractionModelV1Response401Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetInteractionModelV1Response) GetJSON200() *V1SkillInteractionModelInteractionModelData {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetInteractionModelV1Response) GetJSON400() *V1BadRequestError {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetInteractionModelV1Response) GetJSON401() *V1SkillStandardizedError {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r GetInteractionModelV1Response) GetJSON403() *V1BadRequestError {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GetInteractionModelV1Response) GetJSON404() *V1SkillStandardizedError {
+	return r.JSON404
+}
+
+// GetJSON429 returns the response for an HTTP 429 `application/json` response
+func (r GetInteractionModelV1Response) GetJSON429() *V1SkillStandardizedError {
+	return r.JSON429
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetInteractionModelV1Response) GetJSON500() *V1SkillStandardizedError {
+	return r.JSON500
+}
+
+// GetJSON503 returns the response for an HTTP 503 `application/json` response
+func (r GetInteractionModelV1Response) GetJSON503() *V1SkillStandardizedError {
+	return r.JSON503
+}
+
+// GetBody returns the raw response body bytes
+func (r GetInteractionModelV1Response) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetInteractionModelV1Response) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetInteractionModelV1Response) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetInteractionModelV1Response) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 // GetSkillManifestV1Response200Headers the declared response headers of an HTTP 200 response for GetSkillManifestV1
 type GetSkillManifestV1Response200Headers struct {
 	ContentType *string
@@ -5727,6 +6636,200 @@ func (r GetSkillManifestV1Response) ContentType() string {
 	return ""
 }
 
+// DeleteSkillEnablementV1Response204Headers the declared response headers of an HTTP 204 response for DeleteSkillEnablementV1
+type DeleteSkillEnablementV1Response204Headers struct {
+	ContentType *string
+}
+
+// DeleteSkillEnablementV1Response401Headers the declared response headers of an HTTP 401 response for DeleteSkillEnablementV1
+type DeleteSkillEnablementV1Response401Headers struct {
+	WWWAuthenticate *string
+}
+
+type DeleteSkillEnablementV1Response struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *V1BadRequestError
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *V1SkillStandardizedError
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *V1BadRequestError
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *V1SkillStandardizedError
+	// JSON429 the response for an HTTP 429 `application/json` response
+	JSON429 *V1SkillStandardizedError
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *V1SkillStandardizedError
+	// JSON503 the response for an HTTP 503 `application/json` response
+	JSON503 *V1SkillStandardizedError
+	// Headers204 the parsed response headers for an HTTP 204 response
+	Headers204 *DeleteSkillEnablementV1Response204Headers
+	// Headers401 the parsed response headers for an HTTP 401 response
+	Headers401 *DeleteSkillEnablementV1Response401Headers
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r DeleteSkillEnablementV1Response) GetJSON400() *V1BadRequestError {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r DeleteSkillEnablementV1Response) GetJSON401() *V1SkillStandardizedError {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r DeleteSkillEnablementV1Response) GetJSON403() *V1BadRequestError {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r DeleteSkillEnablementV1Response) GetJSON404() *V1SkillStandardizedError {
+	return r.JSON404
+}
+
+// GetJSON429 returns the response for an HTTP 429 `application/json` response
+func (r DeleteSkillEnablementV1Response) GetJSON429() *V1SkillStandardizedError {
+	return r.JSON429
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r DeleteSkillEnablementV1Response) GetJSON500() *V1SkillStandardizedError {
+	return r.JSON500
+}
+
+// GetJSON503 returns the response for an HTTP 503 `application/json` response
+func (r DeleteSkillEnablementV1Response) GetJSON503() *V1SkillStandardizedError {
+	return r.JSON503
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteSkillEnablementV1Response) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteSkillEnablementV1Response) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteSkillEnablementV1Response) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteSkillEnablementV1Response) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// GetSkillEnablementStatusV1Response204Headers the declared response headers of an HTTP 204 response for GetSkillEnablementStatusV1
+type GetSkillEnablementStatusV1Response204Headers struct {
+	ContentType *string
+}
+
+// GetSkillEnablementStatusV1Response401Headers the declared response headers of an HTTP 401 response for GetSkillEnablementStatusV1
+type GetSkillEnablementStatusV1Response401Headers struct {
+	WWWAuthenticate *string
+}
+
+type GetSkillEnablementStatusV1Response struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *V1BadRequestError
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *V1SkillStandardizedError
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *V1BadRequestError
+	// JSON404 the response for an HTTP 404 `application/json` response
+	JSON404 *V1SkillStandardizedError
+	// JSON429 the response for an HTTP 429 `application/json` response
+	JSON429 *V1SkillStandardizedError
+	// JSON500 the response for an HTTP 500 `application/json` response
+	JSON500 *V1SkillStandardizedError
+	// JSON503 the response for an HTTP 503 `application/json` response
+	JSON503 *V1SkillStandardizedError
+	// Headers204 the parsed response headers for an HTTP 204 response
+	Headers204 *GetSkillEnablementStatusV1Response204Headers
+	// Headers401 the parsed response headers for an HTTP 401 response
+	Headers401 *GetSkillEnablementStatusV1Response401Headers
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r GetSkillEnablementStatusV1Response) GetJSON400() *V1BadRequestError {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r GetSkillEnablementStatusV1Response) GetJSON401() *V1SkillStandardizedError {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r GetSkillEnablementStatusV1Response) GetJSON403() *V1BadRequestError {
+	return r.JSON403
+}
+
+// GetJSON404 returns the response for an HTTP 404 `application/json` response
+func (r GetSkillEnablementStatusV1Response) GetJSON404() *V1SkillStandardizedError {
+	return r.JSON404
+}
+
+// GetJSON429 returns the response for an HTTP 429 `application/json` response
+func (r GetSkillEnablementStatusV1Response) GetJSON429() *V1SkillStandardizedError {
+	return r.JSON429
+}
+
+// GetJSON500 returns the response for an HTTP 500 `application/json` response
+func (r GetSkillEnablementStatusV1Response) GetJSON500() *V1SkillStandardizedError {
+	return r.JSON500
+}
+
+// GetJSON503 returns the response for an HTTP 503 `application/json` response
+func (r GetSkillEnablementStatusV1Response) GetJSON503() *V1SkillStandardizedError {
+	return r.JSON503
+}
+
+// GetBody returns the raw response body bytes
+func (r GetSkillEnablementStatusV1Response) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetSkillEnablementStatusV1Response) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetSkillEnablementStatusV1Response) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetSkillEnablementStatusV1Response) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 // SetSkillEnablementV1Response204Headers the declared response headers of an HTTP 204 response for SetSkillEnablementV1
 type SetSkillEnablementV1Response204Headers struct {
 	ContentType *string
@@ -5825,6 +6928,131 @@ func (r SetSkillEnablementV1Response) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r SetSkillEnablementV1Response) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// ProfileNluV1Response200Headers the declared response headers of an HTTP 200 response for ProfileNluV1
+type ProfileNluV1Response200Headers struct {
+	ContentType *string
+}
+
+// ProfileNluV1Response400Headers the declared response headers of an HTTP 400 response for ProfileNluV1
+type ProfileNluV1Response400Headers struct {
+	ContentType *string
+}
+
+// ProfileNluV1Response401Headers the declared response headers of an HTTP 401 response for ProfileNluV1
+type ProfileNluV1Response401Headers struct {
+	ContentType *string
+}
+
+// ProfileNluV1Response403Headers the declared response headers of an HTTP 403 response for ProfileNluV1
+type ProfileNluV1Response403Headers struct {
+	ContentType *string
+}
+
+// ProfileNluV1Response409Headers the declared response headers of an HTTP 409 response for ProfileNluV1
+type ProfileNluV1Response409Headers struct {
+	ContentType *string
+}
+
+// ProfileNluV1Response429Headers the declared response headers of an HTTP 429 response for ProfileNluV1
+type ProfileNluV1Response429Headers struct {
+	ContentType *string
+}
+
+// ProfileNluV1Response500Headers the declared response headers of an HTTP 500 response for ProfileNluV1
+type ProfileNluV1Response500Headers struct {
+	ContentType *string
+}
+
+type ProfileNluV1Response struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *V1SkillEvaluationsProfileNluResponse
+	// JSON400 the response for an HTTP 400 `application/json` response
+	JSON400 *V1BadRequestError
+	// JSON401 the response for an HTTP 401 `application/json` response
+	JSON401 *V1Error
+	// JSON403 the response for an HTTP 403 `application/json` response
+	JSON403 *V1BadRequestError
+	// JSON409 the response for an HTTP 409 `application/json` response
+	JSON409 *V1Error
+	// JSON429 the response for an HTTP 429 `application/json` response
+	JSON429 *V1Error
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *ProfileNluV1Response200Headers
+	// Headers400 the parsed response headers for an HTTP 400 response
+	Headers400 *ProfileNluV1Response400Headers
+	// Headers401 the parsed response headers for an HTTP 401 response
+	Headers401 *ProfileNluV1Response401Headers
+	// Headers403 the parsed response headers for an HTTP 403 response
+	Headers403 *ProfileNluV1Response403Headers
+	// Headers409 the parsed response headers for an HTTP 409 response
+	Headers409 *ProfileNluV1Response409Headers
+	// Headers429 the parsed response headers for an HTTP 429 response
+	Headers429 *ProfileNluV1Response429Headers
+	// Headers500 the parsed response headers for an HTTP 500 response
+	Headers500 *ProfileNluV1Response500Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ProfileNluV1Response) GetJSON200() *V1SkillEvaluationsProfileNluResponse {
+	return r.JSON200
+}
+
+// GetJSON400 returns the response for an HTTP 400 `application/json` response
+func (r ProfileNluV1Response) GetJSON400() *V1BadRequestError {
+	return r.JSON400
+}
+
+// GetJSON401 returns the response for an HTTP 401 `application/json` response
+func (r ProfileNluV1Response) GetJSON401() *V1Error {
+	return r.JSON401
+}
+
+// GetJSON403 returns the response for an HTTP 403 `application/json` response
+func (r ProfileNluV1Response) GetJSON403() *V1BadRequestError {
+	return r.JSON403
+}
+
+// GetJSON409 returns the response for an HTTP 409 `application/json` response
+func (r ProfileNluV1Response) GetJSON409() *V1Error {
+	return r.JSON409
+}
+
+// GetJSON429 returns the response for an HTTP 429 `application/json` response
+func (r ProfileNluV1Response) GetJSON429() *V1Error {
+	return r.JSON429
+}
+
+// GetBody returns the raw response body bytes
+func (r ProfileNluV1Response) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ProfileNluV1Response) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ProfileNluV1Response) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ProfileNluV1Response) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -6381,6 +7609,20 @@ func (c *ClientWithResponses) ImportSkillPackageV1WithResponse(ctx context.Conte
 	return ParseImportSkillPackageV1Response(rsp)
 }
 
+// GetInteractionModelV1WithResponse performs a GET /v1/skills/{skillId}/stages/{stageV2}/interactionModel/locales/{locale} (the `GetInteractionModelV1` operationId) request.
+//
+// Gets the `InteractionModel` for the skill in the given stage.
+// The path params **skillId**, **stage** and **locale** are required.
+//
+// Returns a wrapper object for the known response body format(s).
+func (c *ClientWithResponses) GetInteractionModelV1WithResponse(ctx context.Context, skillID string, stageV2 string, locale string, reqEditors ...RequestEditorFn) (*GetInteractionModelV1Response, error) {
+	rsp, err := c.GetInteractionModelV1(ctx, skillID, stageV2, locale, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetInteractionModelV1Response(rsp)
+}
+
 // GetSkillManifestV1WithResponse performs a GET /v1/skills/{skillId}/stages/{stageV2}/manifest (the `GetSkillManifestV1` operationId) request.
 //
 // Returns the skill manifest for given skillId and stage.
@@ -6394,6 +7636,32 @@ func (c *ClientWithResponses) GetSkillManifestV1WithResponse(ctx context.Context
 	return ParseGetSkillManifestV1Response(rsp)
 }
 
+// DeleteSkillEnablementV1WithResponse performs a DELETE /v1/skills/{skillId}/stages/{stage}/enablement (the `DeleteSkillEnablementV1` operationId) request.
+//
+// Deletes the enablement for given skillId/stage and customerId (retrieved from Auth token).
+//
+// Returns a wrapper object for the known response body format(s).
+func (c *ClientWithResponses) DeleteSkillEnablementV1WithResponse(ctx context.Context, skillID string, stage string, reqEditors ...RequestEditorFn) (*DeleteSkillEnablementV1Response, error) {
+	rsp, err := c.DeleteSkillEnablementV1(ctx, skillID, stage, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteSkillEnablementV1Response(rsp)
+}
+
+// GetSkillEnablementStatusV1WithResponse performs a GET /v1/skills/{skillId}/stages/{stage}/enablement (the `GetSkillEnablementStatusV1` operationId) request.
+//
+// Checks whether an enablement exist for given skillId/stage and customerId (retrieved from Auth token).
+//
+// Returns a wrapper object for the known response body format(s).
+func (c *ClientWithResponses) GetSkillEnablementStatusV1WithResponse(ctx context.Context, skillID string, stage string, reqEditors ...RequestEditorFn) (*GetSkillEnablementStatusV1Response, error) {
+	rsp, err := c.GetSkillEnablementStatusV1(ctx, skillID, stage, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetSkillEnablementStatusV1Response(rsp)
+}
+
 // SetSkillEnablementV1WithResponse performs a PUT /v1/skills/{skillId}/stages/{stage}/enablement (the `SetSkillEnablementV1` operationId) request.
 //
 // Creates/Updates the enablement for given skillId/stage and customerId (retrieved from Auth token).
@@ -6405,6 +7673,36 @@ func (c *ClientWithResponses) SetSkillEnablementV1WithResponse(ctx context.Conte
 		return nil, err
 	}
 	return ParseSetSkillEnablementV1Response(rsp)
+}
+
+// ProfileNluV1WithBodyWithResponse Profile a test utterance.
+//
+// This is a synchronous API that profiles an utterance against interaction model.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /v1/skills/{skillId}/stages/{stage}/interactionModel/locales/{locale}/profileNlu (the `ProfileNluV1` operationId).
+func (c *ClientWithResponses) ProfileNluV1WithBodyWithResponse(ctx context.Context, skillID string, stage string, locale string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ProfileNluV1Response, error) {
+	rsp, err := c.ProfileNluV1WithBody(ctx, skillID, stage, locale, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseProfileNluV1Response(rsp)
+}
+
+// ProfileNluV1WithResponse Profile a test utterance.
+//
+// This is a synchronous API that profiles an utterance against interaction model.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /v1/skills/{skillId}/stages/{stage}/interactionModel/locales/{locale}/profileNlu (the `ProfileNluV1` operationId).
+func (c *ClientWithResponses) ProfileNluV1WithResponse(ctx context.Context, skillID string, stage string, locale string, body ProfileNluV1JSONRequestBody, reqEditors ...RequestEditorFn) (*ProfileNluV1Response, error) {
+	rsp, err := c.ProfileNluV1(ctx, skillID, stage, locale, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseProfileNluV1Response(rsp)
 }
 
 // GetSkillStatusV1WithResponse performs a GET /v1/skills/{skillId}/status (the `GetSkillStatusV1` operationId) request.
@@ -6925,6 +8223,111 @@ func ParseImportSkillPackageV1Response(rsp *http.Response) (*ImportSkillPackageV
 	return response, nil
 }
 
+// ParseGetInteractionModelV1Response parses an HTTP response from a GetInteractionModelV1WithResponse call
+func ParseGetInteractionModelV1Response(rsp *http.Response) (*GetInteractionModelV1Response, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetInteractionModelV1Response{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest V1SkillInteractionModelInteractionModelData
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest V1BadRequestError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest V1BadRequestError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers GetInteractionModelV1Response200Headers
+		if values := rsp.Header.Values("Content-Type"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Content-Type", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ContentType = &value
+		}
+		if values := rsp.Header.Values("ETag"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "ETag", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ETag = &value
+		}
+		response.Headers200 = &headers
+	case rsp.StatusCode == 401:
+		var headers GetInteractionModelV1Response401Headers
+		if values := rsp.Header.Values("WWW-Authenticate"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "WWW-Authenticate", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.WWWAuthenticate = &value
+		}
+		response.Headers401 = &headers
+	}
+
+	return response, nil
+}
+
 // ParseGetSkillManifestV1Response parses an HTTP response from a GetSkillManifestV1WithResponse call
 func ParseGetSkillManifestV1Response(rsp *http.Response) (*GetSkillManifestV1Response, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -7043,6 +8446,194 @@ func ParseGetSkillManifestV1Response(rsp *http.Response) (*GetSkillManifestV1Res
 	return response, nil
 }
 
+// ParseDeleteSkillEnablementV1Response parses an HTTP response from a DeleteSkillEnablementV1WithResponse call
+func ParseDeleteSkillEnablementV1Response(rsp *http.Response) (*DeleteSkillEnablementV1Response, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteSkillEnablementV1Response{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest V1BadRequestError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest V1BadRequestError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		var headers DeleteSkillEnablementV1Response204Headers
+		if values := rsp.Header.Values("Content-Type"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Content-Type", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ContentType = &value
+		}
+		response.Headers204 = &headers
+	case rsp.StatusCode == 401:
+		var headers DeleteSkillEnablementV1Response401Headers
+		if values := rsp.Header.Values("WWW-Authenticate"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "WWW-Authenticate", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.WWWAuthenticate = &value
+		}
+		response.Headers401 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseGetSkillEnablementStatusV1Response parses an HTTP response from a GetSkillEnablementStatusV1WithResponse call
+func ParseGetSkillEnablementStatusV1Response(rsp *http.Response) (*GetSkillEnablementStatusV1Response, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetSkillEnablementStatusV1Response{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest V1BadRequestError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest V1BadRequestError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 404:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON404 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 500:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON500 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 503:
+		var dest V1SkillStandardizedError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON503 = &dest
+
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		var headers GetSkillEnablementStatusV1Response204Headers
+		if values := rsp.Header.Values("Content-Type"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Content-Type", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ContentType = &value
+		}
+		response.Headers204 = &headers
+	case rsp.StatusCode == 401:
+		var headers GetSkillEnablementStatusV1Response401Headers
+		if values := rsp.Header.Values("WWW-Authenticate"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "WWW-Authenticate", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.WWWAuthenticate = &value
+		}
+		response.Headers401 = &headers
+	}
+
+	return response, nil
+}
+
 // ParseSetSkillEnablementV1Response parses an HTTP response from a SetSkillEnablementV1WithResponse call
 func ParseSetSkillEnablementV1Response(rsp *http.Response) (*SetSkillEnablementV1Response, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -7139,6 +8730,143 @@ func ParseSetSkillEnablementV1Response(rsp *http.Response) (*SetSkillEnablementV
 			headers.WWWAuthenticate = &value
 		}
 		response.Headers401 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseProfileNluV1Response parses an HTTP response from a ProfileNluV1WithResponse call
+func ParseProfileNluV1Response(rsp *http.Response) (*ProfileNluV1Response, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ProfileNluV1Response{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest V1SkillEvaluationsProfileNluResponse
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
+		var dest V1BadRequestError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON400 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 401:
+		var dest V1Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON401 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 403:
+		var dest V1BadRequestError
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON403 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 409:
+		var dest V1Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON409 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 429:
+		var dest V1Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON429 = &dest
+
+	case rsp.StatusCode == 500:
+		break // No content-type
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers ProfileNluV1Response200Headers
+		if values := rsp.Header.Values("Content-Type"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Content-Type", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ContentType = &value
+		}
+		response.Headers200 = &headers
+	case rsp.StatusCode == 400:
+		var headers ProfileNluV1Response400Headers
+		if values := rsp.Header.Values("Content-Type"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Content-Type", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ContentType = &value
+		}
+		response.Headers400 = &headers
+	case rsp.StatusCode == 401:
+		var headers ProfileNluV1Response401Headers
+		if values := rsp.Header.Values("Content-Type"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Content-Type", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ContentType = &value
+		}
+		response.Headers401 = &headers
+	case rsp.StatusCode == 403:
+		var headers ProfileNluV1Response403Headers
+		if values := rsp.Header.Values("Content-Type"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Content-Type", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ContentType = &value
+		}
+		response.Headers403 = &headers
+	case rsp.StatusCode == 409:
+		var headers ProfileNluV1Response409Headers
+		if values := rsp.Header.Values("Content-Type"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Content-Type", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ContentType = &value
+		}
+		response.Headers409 = &headers
+	case rsp.StatusCode == 429:
+		var headers ProfileNluV1Response429Headers
+		if values := rsp.Header.Values("Content-Type"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Content-Type", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ContentType = &value
+		}
+		response.Headers429 = &headers
+	case rsp.StatusCode == 500:
+		var headers ProfileNluV1Response500Headers
+		if values := rsp.Header.Values("Content-Type"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Content-Type", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: false, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ContentType = &value
+		}
+		response.Headers500 = &headers
 	}
 
 	return response, nil

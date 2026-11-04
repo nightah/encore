@@ -2,6 +2,7 @@ package skillmodel
 
 import (
 	"encoding/json"
+	"regexp"
 	"slices"
 	"strings"
 	"testing"
@@ -54,6 +55,9 @@ playback.playing: "Playing {title}."
 `,
 	"locales/en-AU.yaml": `
 language: en
+launch:
+  open: open {invocation}
+  skill: open the {invocation} skill
 skill_name: Encore
 invocation: encore test
 utterances:
@@ -62,6 +66,9 @@ utterances:
 `,
 	"locales/en-US.yaml": `
 language: en
+launch:
+  open: open {invocation}
+  skill: open the {invocation} skill
 skill_name: Encore
 invocation: encore test
 `,
@@ -199,6 +206,30 @@ func TestLintRules(t *testing.T) {
 			overrides: map[string]string{"model.yaml": strings.Replace(baseFiles["model.yaml"], "      - {name: Room, type: KODI_ROOM}\n", "      - {name: Room, type: KODI_ROOM}\n      - {name: Movie, type: KODI_ROOM}\n", 1)},
 			want:      "slot Movie has type KODI_ROOM here but AMAZON.Movie in WatchMovie", sev: Error,
 		},
+		"built-in slot alone": {
+			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie:\n    - \"{Movie}\"\n"},
+			want:      "is a AMAZON.Movie slot alone", sev: Error,
+		},
+		"slot samples for a slot the intent lacks": {
+			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie.Film:\n    - \"{Movie}\"\n"},
+			want:      "samples given for slot Film, which the intent doesn't have", sev: Error,
+		},
+		"slot sample naming no slot": {
+			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie.Movie:\n    - \"that one\"\n"},
+			want:      "names no slot", sev: Error,
+		},
+		"slot sample naming an undeclared slot": {
+			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie.Movie:\n    - \"{Film}\"\n"},
+			want:      "references undeclared slot {Film}", sev: Error,
+		},
+		"bad slot sample pattern": {
+			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie.Movie:\n    - \"({Movie}\"\n"},
+			want:      "slot Movie:", sev: Error,
+		},
+		"slot samples for an unknown intent": {
+			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  Rewind.Duration:\n    - \"{Duration}\"\n"},
+			want:      "not in model.yaml", sev: Error,
+		},
 		"unknown intent": {
 			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  Rewind:\n    - \"rewind\"\n"},
 			want:      "not in model.yaml", sev: Error,
@@ -208,11 +239,11 @@ func TestLintRules(t *testing.T) {
 			want:      "missing", sev: Error,
 		},
 		"reserved invocation word": {
-			overrides: map[string]string{"locales/en-US.yaml": "language: en\nskill_name: Encore\ninvocation: alexa remote\n"},
+			overrides: map[string]string{"locales/en-US.yaml": "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: alexa remote\n"},
 			want:      "reserved word", sev: Error,
 		},
 		"one word invocation": {
-			overrides: map[string]string{"locales/en-US.yaml": "language: en\nskill_name: Encore\ninvocation: encore\n"},
+			overrides: map[string]string{"locales/en-US.yaml": "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: encore\n"},
 			want:      "one-word invocation", sev: Warning,
 		},
 		"response placeholder mismatch": {
@@ -279,6 +310,96 @@ func TestShippedSources(t *testing.T) {
 	}
 }
 
+// TestShippedSamplesSpaceTheirSlots checks that every built sample, in every locale, has a space on each side of each slot, as Amazon fails to parse "{Movie}が見たい" and the whole Japanese model with it.
+func TestShippedSamplesSpaceTheirSlots(t *testing.T) {
+	src, err := Load(i18n.FS)
+	require.NoError(t, err)
+
+	joined := regexp.MustCompile(`[^ ]\{|\}[^ ]`)
+
+	for _, locale := range src.LocaleNames() {
+		m, err := Build(src, locale, BuildOptions{})
+		require.NoError(t, err, locale)
+
+		for _, in := range m.InteractionModel.LanguageModel.Intents {
+			for _, sample := range in.Samples {
+				assert.False(t, joined.MatchString(sample), "%s %s: %q", locale, in.Name, sample)
+			}
+		}
+	}
+}
+
+func TestSpaceSlots(t *testing.T) {
+	for in, want := range map[string]string{
+		"[映画の]{Movie}が見たい":       "[映画の] {Movie} が見たい",
+		"{Room}で映画の{Movie}をつけて":  "{Room} で映画の {Movie} をつけて",
+		"{Show}{Season}":         "{Show} {Season}",
+		"play {Movie} in {Room}": "play {Movie} in {Room}",
+		"pause":                  "pause",
+		"{{Movie}":               "{ {Movie}",
+		"a{b":                    "a{b",
+		"}{Movie}{":              "} {Movie} {",
+		"{}x":                    "{} x",
+		"  play  {Movie} ":       "play {Movie}",
+	} {
+		assert.Equal(t, want, spaceSlots(in), in)
+	}
+}
+
+// TestSpaceSlotsAsTheRegexpDoes keeps the scan in spaceSlots spacing every shipped sample as slotRef would.
+func TestSpaceSlotsAsTheRegexpDoes(t *testing.T) {
+	src, err := Load(i18n.FS)
+	require.NoError(t, err)
+
+	byRegexp := func(s string) string {
+		return strings.Join(strings.Fields(slotRef.ReplaceAllString(s, " $0 ")), " ")
+	}
+
+	n := 0
+
+	for _, locale := range src.LocaleNames() {
+		utterances, err := src.Utterances(locale)
+		require.NoError(t, err)
+
+		for _, patterns := range utterances {
+			for _, pattern := range patterns {
+				samples, err := Expand(pattern)
+				require.NoError(t, err)
+
+				for _, s := range samples {
+					assert.Equal(t, byRegexp(s), spaceSlots(s), "%s: %q", locale, s)
+					n++
+				}
+			}
+		}
+	}
+
+	assert.Positive(t, n)
+}
+
+// TestShippedFreeTextSlotsInEveryLocale keeps the free-text slots on AMAZON.SearchQuery in every locale, Dutch included: Amazon builds nl-NL models that use it and fills it, though its slot type reference leaves nl-NL off the type's list.
+func TestShippedFreeTextSlotsInEveryLocale(t *testing.T) {
+	src, err := Load(i18n.FS)
+	require.NoError(t, err)
+
+	for _, locale := range src.LocaleNames() {
+		m, err := Build(src, locale, BuildOptions{})
+		require.NoError(t, err, locale)
+
+		got := map[string]string{}
+
+		for _, in := range m.InteractionModel.LanguageModel.Intents {
+			for _, s := range in.Slots {
+				if s.Type == "AMAZON.SearchQuery" {
+					got[in.Name] = s.Name
+				}
+			}
+		}
+
+		assert.Equal(t, map[string]string{"PlayMedia": "Query", "GlobalSearch": "Query", "TypeText": "Text", "OpenFavourite": "Favourite", "LaunchAddon": "Addon"}, got, locale)
+	}
+}
+
 func TestShippedIdentifyEchoPhrasings(t *testing.T) {
 	src, err := Load(i18n.FS)
 	require.NoError(t, err)
@@ -340,4 +461,120 @@ func TestBuildWithoutContentGroups(t *testing.T) {
 	intents, _ = names(moviesOnly)
 	assert.NotContains(t, intents, "WatchEpisode")
 	assert.Contains(t, intents, "WatchRandomMovie")
+}
+
+func TestBuildKodiInvocationUsesTheLocaleSpelling(t *testing.T) {
+	src := load(t, map[string]string{
+		"locales/en-GB.yaml": "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: encore test\nkodi_invocation: kodi player\n",
+	})
+
+	for _, tt := range []struct {
+		locale, choice, want string
+	}{
+		{"en-GB", InvocationKodi, "kodi player"},
+		{"en-GB", "", "encore test"},
+		{"en-GB", "telly", "telly"},
+		{"en-US", InvocationKodi, "kodi"},
+	} {
+		m, err := Build(src, tt.locale, BuildOptions{Invocation: tt.choice})
+		require.NoError(t, err)
+		assert.Equal(t, tt.want, m.InteractionModel.LanguageModel.InvocationName, "%s with %q", tt.locale, tt.choice)
+	}
+}
+
+// TestShippedChoiceAnswerIsElicited checks that a title said on its own answers a question only as the Answer slot's own sample, under a dialog model that lets the skill elicit it, and is never a ChooseMatch sample, where it would take "stop", "help" or "yes" from Amazon's intents.
+func TestShippedChoiceAnswerIsElicited(t *testing.T) {
+	src, err := Load(i18n.FS)
+	require.NoError(t, err)
+
+	for _, locale := range src.LocaleNames() {
+		m, err := Build(src, locale, BuildOptions{})
+		require.NoError(t, err, locale)
+
+		var choose ModelIntent
+
+		for _, in := range m.InteractionModel.LanguageModel.Intents {
+			if in.Name == "ChooseMatch" {
+				choose = in
+			}
+		}
+
+		assert.NotContains(t, choose.Samples, "{Answer}", locale)
+		assert.NotContains(t, choose.Samples, "{Which}", locale)
+
+		for _, slot := range choose.Slots {
+			if slot.Name == "Answer" {
+				assert.Contains(t, slot.Samples, "{Answer}", locale)
+				assert.Contains(t, slot.Samples, "{Which}", locale)
+			}
+		}
+
+		require.NotNil(t, m.InteractionModel.Dialog, locale)
+		assert.Equal(t, "SKILL_RESPONSE", m.InteractionModel.Dialog.DelegationStrategy)
+		require.Len(t, m.InteractionModel.Dialog.Intents, 1, locale)
+
+		di := m.InteractionModel.Dialog.Intents[0]
+		assert.Equal(t, "ChooseMatch", di.Name)
+		assert.Equal(t, []DialogSlot{
+			{Name: "Which", Type: "MATCH_CHOICE", Prompts: map[string]string{}},
+			{Name: "Answer", Type: "AMAZON.Movie", Prompts: map[string]string{}},
+		}, di.Slots, locale)
+	}
+}
+
+func TestBuildWithoutSlotSamplesHasNoDialog(t *testing.T) {
+	m, err := Build(load(t, nil), "en-US", BuildOptions{})
+	require.NoError(t, err)
+	assert.Nil(t, m.InteractionModel.Dialog)
+}
+
+func TestBuildRejectsBadSlotSamplePattern(t *testing.T) {
+	_, err := Build(load(t, map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie.Movie:\n    - \"({Movie}\"\n"}), "en-US", BuildOptions{})
+	require.ErrorContains(t, err, "intent WatchMovie, slot Movie")
+}
+
+func TestBuildUnaccentedSamples(t *testing.T) {
+	const samples = `
+utterances:
+  WatchMovie:
+    - "pon la película {Movie} del año"
+    - "el pingüino {Movie}"
+  WatchMovie.Movie:
+    - "la película {Movie}"
+`
+
+	src := load(t, map[string]string{
+		"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "unaccented_samples: true" + samples,
+		"model.yaml":         strings.Replace(baseFiles["model.yaml"], "synonyms: [living room]", "synonyms: [living room, salón, sálon]", 1),
+	})
+
+	m, err := Build(src, "en-US", BuildOptions{})
+	require.NoError(t, err)
+
+	movie := m.InteractionModel.LanguageModel.Intents[1]
+	require.Equal(t, "WatchMovie", movie.Name)
+	assert.Subset(t, movie.Samples, []string{"pon la película {Movie} del año", "pon la pelicula {Movie} del año", "el pingüino {Movie}", "el pinguino {Movie}"}, "the tilde stays")
+	assert.Equal(t, 1, strings.Count(strings.Join(movie.Samples, "\n"), "put on {Movie}"), "a sample without accents isn't doubled")
+	assert.Equal(t, []string{"la película {Movie}", "la pelicula {Movie}"}, movie.Slots[0].Samples)
+
+	room := m.InteractionModel.LanguageModel.Types[0]
+	require.Equal(t, "KODI_ROOM", room.Name)
+	assert.Equal(t, []string{"living room", "salón", "sálon", "salon"}, room.Values[0].Name.Synonyms, "a slot value's words get synonyms without accents, once")
+
+	plain, err := Build(load(t, map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + samples}), "en-US", BuildOptions{})
+	require.NoError(t, err)
+	assert.NotContains(t, plain.InteractionModel.LanguageModel.Intents[1].Samples, "pon la pelicula {Movie} del año", "only a locale that asks")
+	assert.Contains(t, plain.InteractionModel.LanguageModel.Intents[1].Samples, "pon la película {Movie} del año")
+}
+
+func BenchmarkBuildShippedLocales(b *testing.B) {
+	src, err := Load(i18n.FS)
+	require.NoError(b, err)
+
+	for b.Loop() {
+		for _, locale := range src.LocaleNames() {
+			_, err := Build(src, locale, BuildOptions{})
+			require.NoError(b, err)
+		}
+	}
 }

@@ -268,7 +268,7 @@ In a dashboard-managed tunnel, add a public hostname with no path and the servic
 </TabItem>
 </Tabs>
 
-The tunnel serves Cloudflare's publicly trusted edge certificate, which Alexa accepts. Keep **Minimum TLS Version** at 1.2 or lower, and let nothing in front of the Alexa path challenge Alexa: Cloudflare Access, Bot Fight Mode or a WAF rule that serves a challenge page will break the skill.
+The tunnel serves Cloudflare's publicly trusted edge certificate, which Alexa accepts. Keep **Minimum TLS Version** at 1.2 or lower, and let nothing in front of the Alexa path challenge Alexa: Cloudflare Access, Bot Fight Mode or a WAF rule that serves a challenge page will break the skill. See [Bot protection, WAF and country blocks](#bot-protection-waf-and-country-blocks) for how to let Alexa through.
 
 ## Tailscale Funnel
 
@@ -298,6 +298,27 @@ tailscale funnel status
 </Tabs>
 
 Use `https://<machine>.<tailnet>.ts.net` as the public address.
+
+## Bot protection, WAF and country blocks
+
+Alexa's requests come from Amazon's servers, not from your Echo or your browser: server-to-server `POST`s from Amazon's data centres, often in another country than yours, with no browser to run a challenge page or JavaScript check. Anything that filters automated traffic or visitors by country therefore refuses them, usually with an immediate `403`, while everything you open in a browser still works, such as the web interface and the Login with Amazon return. The Echo answers at once with a problem reaching the skill, and nothing arrives in the [request log](/encore/guides/request-log/), because the request never reached Encore.
+
+On Cloudflare, the usual causes are:
+
+- **Bot Fight Mode** (Security → Bots, on the Free plan) challenges Amazon's servers as bots and can't be skipped for one path. Turn it off for the zone.
+- **Super Bot Fight Mode** (Pro plans and above): set **Definitely automated** to **Allow**, or add a WAF custom rule that skips Super Bot Fight Mode for the Alexa path (below).
+- **WAF custom rules, country blocks and IP access rules** that block or challenge by country, ASN or threat score. Exempt the Alexa path from them rather than allowing Amazon's addresses: Amazon publishes no list of the addresses Alexa calls from, and Encore's own signature check is what proves a request came from Alexa.
+- **Cloudflare Access** in front of the hostname: add a bypass policy for `/api/v1/alexa`, since Alexa can't sign in.
+
+To exempt the Alexa path, add a WAF custom rule (Security → WAF → Custom rules) with the expression below and the action **Skip**, skipping the remaining custom rules, rate limiting rules, managed rules and Super Bot Fight Mode, and move it to the top of the list. With [`server.base_path`](/encore/reference/configuration/#serverbase_path) set, put the base path in front.
+
+```text title="Cloudflare custom rule expression"
+(http.host eq "encore.example.net" and http.request.uri.path eq "/api/v1/alexa" and http.request.method eq "POST")
+```
+
+Then look at Security → Events: a blocked voice request shows as a `POST` to `/api/v1/alexa` with the feature that stopped it. Other proxies and firewalls do the same with geo-IP blocking (nginx `geoip`, CrowdSec, fail2ban or a router's country filter): leave the Alexa path out of them.
+
+Once requests reach Encore, Encore checks them itself. If they arrive but are refused, for example because the host's clock is wrong, the overview lists them under **Needs attention** with the check that refused them.
 
 ## Check it
 

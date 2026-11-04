@@ -51,6 +51,8 @@ type Log struct {
 type Alexa struct {
 	// SkillID is the skill's application ID; requests for any other skill are rejected. It is normally set by the deploy flow rather than by hand.
 	SkillID string `koanf:"skill_id"`
+	// SkillName names the skill in every locale, over the Alexa skill page's "Skill name" and each locale's default ("Encore"). A deploy that has no skill ID yet adopts the skill with its name, so a second instance, such as a development one, deploys a skill of its own under another name ("Encore DEV").
+	SkillName string `koanf:"skill_name"`
 	// Locales limits which locales are built and deployed, e.g. ["en-AU"]. Empty means every locale Encore ships. An Echo can only use the skill when its language matches a deployed locale; fewer locales deploy faster.
 	Locales []string `koanf:"locales"`
 	// Content lists what the skill can play: movies, tv and music (music includes music videos). Leaving a group out leaves its intents out of the skill model and its titles out of "play X" searches, and library syncs no longer fetch it from Kodi. The setup wizard asks before the first Kodi is added.
@@ -63,7 +65,7 @@ type Alexa struct {
 	DeepSearch bool `koanf:"deep_search"`
 	// QueueLimit caps how many items a shuffle or queue plays at once (Kanzi's playlist_max_items), which keeps large libraries responsive. It can also be changed under Settings › Features.
 	QueueLimit int `koanf:"queue_limit"`
-	// AutoDeploy redeploys the skill on its own when what would be deployed changes, such as new library titles or an Encore upgrade that changes the interaction model. Only a skill that has already been deployed is redeployed. A failed automatic deploy pauses automatic deploys until a deploy started by hand succeeds. It can also be changed under Settings › Features.
+	// AutoDeploy redeploys the skill on its own when what would be deployed changes, such as new library titles or an Encore upgrade that changes the interaction model. Only a skill that has already been deployed is redeployed. An automatic deploy that fails for a reason that may pass, such as Amazon being unavailable or still building, is tried again up to three times with a growing wait; any other failure, or a fourth in a row, pauses automatic deploys until a deploy started by hand succeeds. It can also be changed under Settings › Features.
 	AutoDeploy bool `koanf:"auto_deploy"`
 	// AutoDeployMinutes is how often AutoDeploy looks for changes, from 1 to 1440 and fractions such as 2.5 allowed. A change is deployed once it has stayed the same for a whole check, so it goes live within two checks. It can also be changed under Settings › Features.
 	AutoDeployMinutes float64 `koanf:"auto_deploy_minutes"`
@@ -207,7 +209,7 @@ type KodiInstance struct {
 	Broadcast string `koanf:"broadcast"`
 	// Default makes this instance answer Echo devices that aren't linked to one.
 	Default bool `koanf:"default"`
-	// Language selects title-matching rules for this library: en, de, es, fr or it. Defaults to en.
+	// Language selects title-matching rules for this library: ar, de, en, es, fr, hi, it, ja, nl or pt. Defaults to en.
 	Language string `koanf:"language"`
 	// LibraryGroup names the shared library database this instance reads (MySQL/MariaDB). Instances with the same name share one library catalog and title index. "none" (LibraryGroupNone) forces the instance to keep its own; empty lets Encore detect sharing.
 	LibraryGroup string `koanf:"library_group"`

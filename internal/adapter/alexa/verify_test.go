@@ -135,12 +135,27 @@ func (p testPKI) verifier(t *testing.T) *alexaverify.Verifier {
 		}, nil
 	})}
 
-	v, err := alexaverify.New(
+	v, err := alexaverify.New(p.options(client)...)
+	require.NoError(t, err)
+
+	return v
+}
+
+// options configure a verifier for the test root, whose certificate fetches go through client.
+func (p testPKI) options(client *http.Client) []alexaverify.Option {
+	return []alexaverify.Option{
 		alexaverify.WithRoots(p.roots),
 		alexaverify.WithClock(func() time.Time { return fixedNow }),
 		alexaverify.WithHTTPClient(client),
 		alexaverify.WithLogger(slog.New(slog.DiscardHandler)),
-	)
+	}
+}
+
+// sentVerifier is verifier with the check as sent NewVerifier adds.
+func (p testPKI) sentVerifier(t *testing.T) *Verifier {
+	t.Helper()
+
+	v, err := newVerifier(p.options(&http.Client{Transport: bundleFrom(p.bundle)})...)
 	require.NoError(t, err)
 
 	return v
@@ -245,7 +260,7 @@ func TestVerifiedRejectsOversizedBody(t *testing.T) {
 func TestVerifiedFuncReadsSkillIDPerRequest(t *testing.T) {
 	skillID := ""
 	ok := func(w http.ResponseWriter, _ *http.Request, _ []byte) { w.WriteHeader(http.StatusOK) }
-	h := VerifiedFunc(acceptAll{}, func() string { return skillID }, slog.New(slog.DiscardHandler), ok)
+	h := VerifiedFunc(acceptAll{}, func() string { return skillID }, slog.New(slog.DiscardHandler), nil, ok)
 
 	body := envelope(testSkillID, fixedNow)
 	assert.Equal(t, http.StatusOK, serve(t, h, body, "sig").Code, "any skill before one is deployed")
@@ -501,13 +516,14 @@ func TestVerifiedRejectionsLookAlike(t *testing.T) {
 		verifier RequestVerifier
 		body     io.Reader
 		stage    string
+		counted  RejectStage
 	}{
-		"unreadable body":     {verifier: acceptAll{}, body: errReader{io.ErrUnexpectedEOF}, stage: "reading body"},
-		"oversized body":      {verifier: acceptAll{}, body: bytes.NewReader(bytes.Repeat([]byte(" "), MaxRequestBytes+1)), stage: "reading body"},
-		"bad signature":       {verifier: refuse, body: bytes.NewReader(envelope(testSkillID, fixedNow)), stage: "signature verification"},
-		"undecodable":         {verifier: acceptAll{}, body: strings.NewReader("{"), stage: "decoding envelope"},
-		"for another skill":   {verifier: acceptAll{}, body: bytes.NewReader(envelope("amzn1.ask.skill.other", fixedNow)), stage: "skill ID"},
-		"with no application": {verifier: acceptAll{}, body: strings.NewReader("{}"), stage: "skill ID"},
+		"unreadable body":     {verifier: acceptAll{}, body: errReader{io.ErrUnexpectedEOF}, stage: "reading body", counted: RejectBody},
+		"oversized body":      {verifier: acceptAll{}, body: bytes.NewReader(bytes.Repeat([]byte(" "), MaxRequestBytes+1)), stage: "reading body", counted: RejectBody},
+		"bad signature":       {verifier: refuse, body: bytes.NewReader(envelope(testSkillID, fixedNow)), stage: "signature verification", counted: RejectSignature},
+		"undecodable":         {verifier: acceptAll{}, body: strings.NewReader("{"), stage: "decoding envelope", counted: RejectBody},
+		"for another skill":   {verifier: acceptAll{}, body: bytes.NewReader(envelope("amzn1.ask.skill.other", fixedNow)), stage: "skill ID", counted: RejectSkillID},
+		"with no application": {verifier: acceptAll{}, body: strings.NewReader("{}"), stage: "skill ID", counted: RejectSkillID},
 	}
 
 	var first *httptest.ResponseRecorder
@@ -516,7 +532,8 @@ func TestVerifiedRejectionsLookAlike(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			logs.Reset()
 
-			h := Verified(tc.verifier, testSkillID, log, func(http.ResponseWriter, *http.Request, []byte) { t.Error("handler ran") })
+			rejected := NewRejections(func() time.Time { return fixedNow })
+			h := VerifiedFunc(tc.verifier, func() string { return testSkillID }, log, rejected, func(http.ResponseWriter, *http.Request, []byte) { t.Error("handler ran") })
 
 			req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/api/v1/alexa", tc.body)
 			req.RemoteAddr = "203.0.113.7:4242"
@@ -539,8 +556,135 @@ func TestVerifiedRejectionsLookAlike(t *testing.T) {
 			assert.Equal(t, tc.stage, entry["stage"])
 			assert.Equal(t, "203.0.113.7:4242", entry["remote"])
 			assert.NotEmpty(t, entry["error"])
+			assert.Equal(t, []Rejection{{Stage: tc.counted, Count: 1, Recent: 1, Last: fixedNow}}, rejected.Counts(fixedNow), "the rejection is counted by the check that refused it")
 		})
 	}
+}
+
+// TestVerifyStage sorts every failure the verifier reports into the check an operator would look at.
+func TestVerifyStage(t *testing.T) {
+	for err, want := range map[error]RejectStage{
+		alexaverify.ErrMissingHeader:    RejectUnsigned,
+		alexaverify.ErrStaleTimestamp:   RejectTimestamp,
+		alexaverify.ErrCertURLInvalid:   RejectUnsigned,
+		alexaverify.ErrCertURLUserinfo:  RejectUnsigned,
+		alexaverify.ErrCertURLTraversal: RejectUnsigned,
+		alexaverify.ErrCertFetch:        RejectSignature,
+		alexaverify.ErrUntrustedChain:   RejectSignature,
+		alexaverify.ErrCertHostname:     RejectSignature,
+		alexaverify.ErrUnsupportedKey:   RejectSignature,
+		alexaverify.ErrBadSignature:     RejectSignature,
+	} {
+		assert.Equal(t, want, verifyStage(fmt.Errorf("wrapped: %w", err)), err.Error())
+	}
+}
+
+func TestRejectionsCount(t *testing.T) {
+	now := fixedNow
+	r := NewRejections(func() time.Time { return now })
+	assert.Empty(t, r.Counts(now))
+
+	r.Record(RejectSkillID)
+	r.Record(RejectTimestamp)
+	now = now.Add(time.Minute)
+	r.Record(RejectTimestamp)
+
+	assert.Equal(t, []Rejection{
+		{Stage: RejectTimestamp, Count: 2, Recent: 2, Last: fixedNow.Add(time.Minute)},
+		{Stage: RejectSkillID, Count: 1, Recent: 1, Last: fixedNow},
+	}, r.Counts(now), "stages come in the order the checks run, each with its latest rejection")
+
+	var none *Rejections
+	none.Record(RejectBody)
+
+	assert.NotNil(t, NewRejections(nil).now, "the clock defaults to time.Now")
+}
+
+// Recent counts the rejections of the last day, while Count keeps every one since Encore started.
+func TestRejectionsRecent(t *testing.T) {
+	now := fixedNow
+	r := NewRejections(func() time.Time { return now })
+
+	r.Record(RejectSignature)
+
+	now = now.Add(20 * 24 * time.Hour)
+	r.Record(RejectSignature)
+
+	assert.Equal(t, []Rejection{{Stage: RejectSignature, Count: 2, Recent: 1, Last: now}}, r.Counts(now), "a rejection weeks ago isn't a recent one")
+
+	now = now.Add(RecentRejections - time.Minute)
+	assert.Equal(t, 1, r.Counts(now)[0].Recent, "a day isn't over yet")
+
+	later := now.Add(time.Hour + time.Minute)
+	assert.Zero(t, r.Counts(later)[0].Recent, "a day after the last rejection, none is recent")
+	assert.Equal(t, 2, r.Counts(later)[0].Count)
+
+	for range 3 * 24 {
+		now = now.Add(time.Hour)
+		r.Record(RejectSignature)
+	}
+
+	assert.Equal(t, 74, r.Counts(now)[0].Count)
+	assert.Equal(t, 25, r.Counts(now)[0].Recent, "the last day's hours, counted to the hour")
+	assert.LessOrEqual(t, len(r.hours[RejectSignature]), 25, "hours older than a day are let go")
+}
+
+// A request refused for its timestamp is only put down to the clock when Alexa signed it; anything else that fails that check is somebody else's request.
+func TestVerifiedBlamesTheClockOnlyForAlexaRequests(t *testing.T) {
+	pki := newTestPKI(t)
+	stale := envelope(testSkillID, fixedNow.Add(-30*time.Minute))
+	fresh := envelope(testSkillID, fixedNow)
+	other := envelope(testSkillID, fixedNow.Add(-31*time.Minute))
+	undated := []byte(`{"request":{"type":"LaunchRequest","timestamp":"yesterday"}}`)
+
+	sent := pki.sentVerifier(t)
+
+	remembered := RememberCertURL(sent, testCertURL, func(context.Context, string) { t.Error("a refused request taught a certificate URL") })
+
+	tests := map[string]struct {
+		verifier RequestVerifier
+		body     []byte
+		hdr      http.Header
+		want     RejectStage
+	}{
+		"a stale request Alexa signed":           {verifier: sent, body: stale, hdr: signed(pki.sign(t, stale), testCertURL), want: RejectTimestamp},
+		"through RememberCertURL":                {verifier: remembered, body: stale, hdr: signed(pki.sign(t, stale), testCertURL), want: RejectTimestamp},
+		"a stale request signed by anybody else": {verifier: sent, body: stale, hdr: signed(pki.sign(t, other), testCertURL), want: RejectSignature},
+		"a stale request from another chain":     {verifier: sent, body: stale, hdr: signed(newTestPKI(t).sign(t, stale), testCertURL), want: RejectSignature},
+		"an empty envelope":                      {verifier: sent, body: []byte(`{}`), hdr: signed("x", "x"), want: RejectBody},
+		"a body that isn't JSON":                 {verifier: sent, body: []byte(`garbage`), hdr: signed("x", "x"), want: RejectBody},
+		"a timestamp that doesn't parse":         {verifier: sent, body: undated, hdr: signed("x", testCertURL), want: RejectBody},
+		"a stale request with another URL":       {verifier: sent, body: stale, hdr: signed(pki.sign(t, stale), "https://attacker.example.com/echo.api/cert.pem"), want: RejectUnsigned},
+		"a fresh request with another URL":       {verifier: sent, body: fresh, hdr: signed(pki.sign(t, fresh), "x"), want: RejectUnsigned},
+		"a fresh request with a bad signature":   {verifier: sent, body: fresh, hdr: signed(pki.sign(t, other), testCertURL), want: RejectSignature},
+		"a verifier that can't check as sent":    {verifier: pki.verifier(t), body: stale, hdr: signed(pki.sign(t, stale), testCertURL), want: RejectSignature},
+		"or wraps one that can't":                {verifier: RememberCertURL(pki.verifier(t), testCertURL, nil), body: stale, hdr: signed(pki.sign(t, stale), testCertURL), want: RejectSignature},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			rejected := NewRejections(func() time.Time { return fixedNow })
+			h := VerifiedFunc(tc.verifier, func() string { return testSkillID }, slog.New(slog.DiscardHandler), rejected, func(http.ResponseWriter, *http.Request, []byte) { t.Error("handler ran") })
+
+			assert.Equal(t, http.StatusBadRequest, post(t, h, tc.body, tc.hdr).Code)
+			assert.Equal(t, []Rejection{{Stage: tc.want, Count: 1, Recent: 1, Last: fixedNow}}, rejected.Counts(fixedNow))
+		})
+	}
+}
+
+// A stale timestamp and a missing signature are counted apart from a bad signature, so the overview can point at the host clock.
+func TestVerifiedCountsVerifierStages(t *testing.T) {
+	pki := newTestPKI(t)
+	v := pki.sentVerifier(t)
+
+	rejected := NewRejections(func() time.Time { return fixedNow })
+	h := VerifiedFunc(v, func() string { return testSkillID }, slog.New(slog.DiscardHandler), rejected, func(http.ResponseWriter, *http.Request, []byte) { t.Error("handler ran") })
+
+	stale := envelope(testSkillID, fixedNow.Add(-30*time.Minute))
+	post(t, h, stale, signed(pki.sign(t, stale), testCertURL))
+	post(t, h, stale, signed("", testCertURL))
+
+	assert.Equal(t, []Rejection{{Stage: RejectUnsigned, Count: 1, Recent: 1, Last: fixedNow}, {Stage: RejectTimestamp, Count: 1, Recent: 1, Last: fixedNow}}, rejected.Counts(fixedNow))
 }
 
 type verifierFunc func(ctx context.Context, body []byte, hdr http.Header) error
@@ -562,7 +706,7 @@ func TestVerifiedVerifiesBeforeCheckingSkill(t *testing.T) {
 		order = append(order, "skill")
 
 		return testSkillID
-	}, slog.New(slog.DiscardHandler), func(http.ResponseWriter, *http.Request, []byte) {})
+	}, slog.New(slog.DiscardHandler), nil, func(http.ResponseWriter, *http.Request, []byte) {})
 
 	serve(t, h, envelope(testSkillID, fixedNow), "sig")
 	assert.Equal(t, []string{"verify"}, order, "nothing about the body is trusted before its signature is")

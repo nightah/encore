@@ -5,6 +5,9 @@ import (
 	"maps"
 	"slices"
 	"sort"
+	"strings"
+
+	"golang.org/x/text/unicode/norm"
 )
 
 // Build produces the interaction model for one locale.
@@ -19,12 +22,7 @@ func Build(src *Sources, locale string, opts BuildOptions) (*InteractionModel, e
 		return nil, err
 	}
 
-	invocation := loc.Invocation
-	if opts.Invocation != "" {
-		invocation = opts.Invocation
-	}
-
-	lm := LanguageModel{InvocationName: invocation}
+	lm := LanguageModel{InvocationName: loc.InvocationName(opts.Invocation)}
 	used := map[string]bool{}
 	excluded := map[string]bool{}
 
@@ -40,7 +38,7 @@ func Build(src *Sources, locale string, opts BuildOptions) (*InteractionModel, e
 		mi := ModelIntent{Name: in.Name, Samples: []string{}}
 
 		for _, s := range in.Slots {
-			mi.Slots = append(mi.Slots, ModelSlot(s))
+			mi.Slots = append(mi.Slots, ModelSlot{Name: s.Name, Type: s.Type})
 			used[s.Type] = true
 		}
 
@@ -50,10 +48,34 @@ func Build(src *Sources, locale string, opts BuildOptions) (*InteractionModel, e
 				return nil, fmt.Errorf("locale %s, intent %s: %w", locale, in.Name, err)
 			}
 
-			mi.Samples = append(mi.Samples, samples...)
+			for _, sample := range samples {
+				mi.Samples = append(mi.Samples, spaceSlots(sample))
+				if loc.UnaccentedSamples {
+					mi.Samples = append(mi.Samples, spaceSlots(unaccented(sample)))
+				}
+			}
 		}
 
 		mi.Samples = dedupe(mi.Samples)
+
+		for i, slot := range mi.Slots {
+			for _, pattern := range utterances[in.Name+SlotSampleSeparator+slot.Name] {
+				samples, err := Expand(pattern)
+				if err != nil {
+					return nil, fmt.Errorf("locale %s, intent %s, slot %s: %w", locale, in.Name, slot.Name, err)
+				}
+
+				for _, sample := range samples {
+					mi.Slots[i].Samples = append(mi.Slots[i].Samples, spaceSlots(sample))
+					if loc.UnaccentedSamples {
+						mi.Slots[i].Samples = append(mi.Slots[i].Samples, spaceSlots(unaccented(sample)))
+					}
+				}
+			}
+
+			mi.Slots[i].Samples = dedupe(mi.Slots[i].Samples)
+		}
+
 		lm.Intents = append(lm.Intents, mi)
 	}
 
@@ -76,10 +98,19 @@ func Build(src *Sources, locale string, opts BuildOptions) (*InteractionModel, e
 		return nil, fmt.Errorf("locale %s: %w", locale, err)
 	}
 
+	if loc.UnaccentedSamples {
+		for i := range types {
+			for j := range types[i].Values {
+				types[i].Values[j].Name.Synonyms = unaccentedSynonyms(types[i].Values[j].Name.Value, types[i].Values[j].Name.Synonyms)
+			}
+		}
+	}
+
 	lm.Types = types
 
 	var m InteractionModel
 	m.InteractionModel.LanguageModel = lm
+	m.InteractionModel.Dialog = dialogFor(lm.Intents)
 
 	return &m, nil
 }
@@ -137,6 +168,104 @@ func buildTypes(custom []SlotType, static map[string][]SlotValue, used, dropped 
 	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 
 	return out, nil
+}
+
+// dialogFor declares the intents with a slot that has samples of its own, which Alexa matches only while the skill elicits that slot, or nil when none has.
+func dialogFor(intents []ModelIntent) *Dialog {
+	var out []DialogIntent
+
+	for _, in := range intents {
+		if !slices.ContainsFunc(in.Slots, func(s ModelSlot) bool { return len(s.Samples) > 0 }) {
+			continue
+		}
+
+		di := DialogIntent{Name: in.Name, Prompts: map[string]string{}}
+		for _, s := range in.Slots {
+			di.Slots = append(di.Slots, DialogSlot{Name: s.Name, Type: s.Type, Prompts: map[string]string{}})
+		}
+
+		out = append(out, di)
+	}
+
+	if out == nil {
+		return nil
+	}
+
+	return &Dialog{Intents: out, DelegationStrategy: delegationSkill}
+}
+
+// spaceSlots puts a space on each side of every slot reference that lacks one. Amazon fails to parse a slot joined to other text, and Japanese, which writes no spaces, attaches its particles to the slot in the sources ("{Movie}を再生して"); the space there doesn't change what Alexa hears.
+func spaceSlots(sample string) string {
+	if !strings.Contains(sample, "{") {
+		return strings.Join(strings.Fields(sample), " ")
+	}
+
+	// A scan finds the slots as slotRef does, without a regexp's allocations for every sample of every locale.
+	var b strings.Builder
+
+	b.Grow(len(sample) + 8)
+
+	for rest := sample; rest != ""; {
+		open := strings.IndexByte(rest, '{')
+		if open < 0 {
+			b.WriteString(rest)
+
+			break
+		}
+
+		end := strings.IndexAny(rest[open+1:], "{}")
+		if end < 0 {
+			b.WriteString(rest)
+
+			break
+		}
+
+		end += open + 1
+		if rest[end] == '{' {
+			b.WriteString(rest[:end])
+			rest = rest[end:]
+
+			continue
+		}
+
+		b.WriteString(rest[:open])
+		b.WriteByte(' ')
+		b.WriteString(rest[open : end+1])
+		b.WriteByte(' ')
+		rest = rest[end+1:]
+	}
+
+	return strings.Join(strings.Fields(b.String()), " ")
+}
+
+// unaccented takes the acute accents and diaereses off s's letters (Locale.UnaccentedSamples).
+func unaccented(s string) string {
+	return norm.NFC.String(strings.Map(func(r rune) rune {
+		if r == acute || r == diaeresis {
+			return -1
+		}
+
+		return r
+	}, norm.NFD.String(s)))
+}
+
+// unaccentedSynonyms adds to synonyms each of value's and their own words without accents that isn't one of them already.
+func unaccentedSynonyms(value string, synonyms []string) []string {
+	have := map[string]bool{value: true}
+	for _, s := range synonyms {
+		have[s] = true
+	}
+
+	out := slices.Clone(synonyms)
+
+	for _, s := range append([]string{value}, synonyms...) {
+		if u := unaccented(s); !have[u] {
+			have[u] = true
+			out = append(out, u)
+		}
+	}
+
+	return out
 }
 
 func dedupe(in []string) []string {

@@ -2,10 +2,13 @@ package skillmodel
 
 import (
 	"bytes"
+	"cmp"
 	"errors"
 	"fmt"
 	"io/fs"
+	"maps"
 	"path"
+	"slices"
 	"sort"
 	"strings"
 
@@ -85,9 +88,9 @@ func (s *Sources) Utterances(locale string) (map[string][]string, error) {
 	return out, nil
 }
 
-// Types returns a locale's static values for each custom slot type: the model's values followed by its language's.
+// Types returns a locale's static values for each custom slot type: the model's values followed by its language's, with the locale's synonyms added to them.
 func (s *Sources) Types(locale string) (map[string][]SlotValue, error) {
-	_, lang, err := s.resolve(locale)
+	loc, lang, err := s.resolve(locale)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +101,40 @@ func (s *Sources) Types(locale string) (map[string][]SlotValue, error) {
 		out[t.Name] = append(append([]SlotValue(nil), t.Values...), lang.Types[t.Name]...)
 	}
 
+	for _, typ := range slices.Sorted(maps.Keys(loc.Types)) {
+		if err := addSynonyms(out, typ, loc.Types[typ], s.Model); err != nil {
+			return nil, fmt.Errorf("locale %s: %w", locale, err)
+		}
+	}
+
 	return out, nil
+}
+
+// addSynonyms appends a locale's synonyms to the values of the static type typ in values, by value ID. The values are copied first, so the language's stay untouched.
+func addSynonyms(values map[string][]SlotValue, typ string, synonyms map[string][]string, model Model) error {
+	t, ok := model.Type(typ)
+
+	switch {
+	case !ok:
+		return fmt.Errorf("synonyms given for slot type %s, which model.yaml doesn't declare", typ)
+	case t.Dynamic:
+		return fmt.Errorf("synonyms given for dynamic slot type %s, whose values come from Encore at build time", typ)
+	}
+
+	vals := slices.Clone(values[typ])
+
+	for _, id := range slices.Sorted(maps.Keys(synonyms)) {
+		i := slices.IndexFunc(vals, func(v SlotValue) bool { return cmp.Or(v.ID, v.Value) == id })
+		if i < 0 {
+			return fmt.Errorf("synonyms given for value %s of slot type %s, which has no value with that ID", id, typ)
+		}
+
+		vals[i].Synonyms = append(slices.Clone(vals[i].Synonyms), synonyms[id]...)
+	}
+
+	values[typ] = vals
+
+	return nil
 }
 
 // Responses returns a locale's response strings: its language's, with the locale's overrides applied.

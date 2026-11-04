@@ -148,66 +148,69 @@ func TestDatabaseFailuresAreNotMistakenForMissingLinks(t *testing.T) {
 }
 
 func TestTargetCarriesVoiceSettings(t *testing.T) {
-	h := newHarness(t, true)
+	// In a bubble, so the instance's own MAC lookup (learnMACDelay after it starts) can't get in first on a slow machine.
+	inBubble(t, func(t *testing.T) {
+		h := newHarness(t, true)
 
-	target, err := h.app.Target(t.Context(), testDevice)
-	require.NoError(t, err)
-	assert.Equal(t, "Lounge", target.Name)
-	assert.Equal(t, config.DefaultQueueLimit, target.QueueLimit)
-	assert.Equal(t, "en", target.Language)
-	assert.False(t, target.ShutdownQuits)
-	assert.Nil(t, target.Wake, "without a MAC address there's no way to wake Kodi")
+		target, err := h.app.Target(t.Context(), testDevice)
+		require.NoError(t, err)
+		assert.Equal(t, "Lounge", target.Name)
+		assert.Equal(t, config.DefaultQueueLimit, target.QueueLimit)
+		assert.Equal(t, "en", target.Language)
+		assert.False(t, target.ShutdownQuits)
+		assert.Nil(t, target.Wake, "without a MAC address there's no way to wake Kodi")
 
-	var sent atomic.Int32
+		var sent atomic.Int32
 
-	waker := h.instance(t).Waker
-	waker.Send = func(context.Context, string, []byte) error {
-		sent.Add(1)
+		waker := h.instance(t).Waker
+		waker.Send = func(context.Context, string, []byte) error {
+			sent.Add(1)
 
-		return nil
-	}
-	waker.SetMAC(net.HardwareAddr{0xdc, 0xa6, 0x32, 0x4b, 0x19, 0x0e})
+			return nil
+		}
+		waker.SetMAC(net.HardwareAddr{0xdc, 0xa6, 0x32, 0x4b, 0x19, 0x0e})
 
-	target, err = h.app.Target(t.Context(), testDevice)
-	require.NoError(t, err)
-	require.NotNil(t, target.Wake, "a known MAC address lets a request wake Kodi")
-	require.NoError(t, target.Wake(t.Context()), "a Kodi that already answers is awake")
-	assert.Zero(t, sent.Load(), "so no packet is sent")
+		target, err = h.app.Target(t.Context(), testDevice)
+		require.NoError(t, err)
+		require.NotNil(t, target.Wake, "a known MAC address lets a request wake Kodi")
+		require.NoError(t, target.Wake(t.Context()), "a Kodi that already answers is awake")
+		assert.Zero(t, sent.Load(), "so no packet is sent")
 
-	h.app.cfg.Alexa.ShutdownQuits = true
-	h.app.cfg.Alexa.QueueLimit = 25
+		h.app.cfg.Alexa.ShutdownQuits = true
+		h.app.cfg.Alexa.QueueLimit = 25
 
-	target, err = h.app.Target(t.Context(), testDevice)
-	require.NoError(t, err)
-	assert.True(t, target.ShutdownQuits)
-	assert.Equal(t, 25, target.QueueLimit)
+		target, err = h.app.Target(t.Context(), testDevice)
+		require.NoError(t, err)
+		assert.True(t, target.ShutdownQuits)
+		assert.Equal(t, 25, target.QueueLimit)
 
-	recs, err := h.app.db.KodiInstances().List(t.Context())
-	require.NoError(t, err)
+		recs, err := h.app.db.KodiInstances().List(t.Context())
+		require.NoError(t, err)
 
-	rec := recs[0]
-	rec.ShutdownQuits, rec.Language = new(false), "de"
-	require.NoError(t, h.app.db.KodiInstances().Update(t.Context(), &rec))
-	require.NoError(t, h.app.ReloadInstance(t.Context(), rec.ID))
+		rec := recs[0]
+		rec.ShutdownQuits, rec.Language = new(false), "de"
+		require.NoError(t, h.app.db.KodiInstances().Update(t.Context(), &rec))
+		require.NoError(t, h.app.ReloadInstance(t.Context(), rec.ID))
 
-	target, err = h.app.Target(t.Context(), testDevice)
-	require.NoError(t, err)
-	assert.False(t, target.ShutdownQuits, "the instance's setting wins")
-	assert.Equal(t, "de", target.Language)
+		target, err = h.app.Target(t.Context(), testDevice)
+		require.NoError(t, err)
+		assert.False(t, target.ShutdownQuits, "the instance's setting wins")
+		assert.Equal(t, "de", target.Language)
 
-	// Settings saved in the web interface take effect without a restart.
-	assert.True(t, target.DeepSearch)
+		// Settings saved in the web interface take effect without a restart.
+		assert.True(t, target.DeepSearch)
 
-	h.app.SetSettings(func(context.Context) (*config.Config, error) {
-		eff := *h.app.cfg
-		eff.Alexa.DeepSearch = false
+		h.app.SetSettings(func(context.Context) (*config.Config, error) {
+			eff := *h.app.cfg
+			eff.Alexa.DeepSearch = false
 
-		return &eff, nil
+			return &eff, nil
+		})
+
+		target, err = h.app.Target(t.Context(), testDevice)
+		require.NoError(t, err)
+		assert.False(t, target.DeepSearch)
 	})
-
-	target, err = h.app.Target(t.Context(), testDevice)
-	require.NoError(t, err)
-	assert.False(t, target.DeepSearch)
 }
 
 func TestTargetForRoom(t *testing.T) {
@@ -297,4 +300,9 @@ func TestDeviceNameRecordsTheEcho(t *testing.T) {
 	name, err = h.app.DeviceName(ctx, "amzn1.ask.device.NEWECHO")
 	require.NoError(t, err)
 	assert.Equal(t, "Kitchen Dot", name)
+}
+
+// A woken Kodi instance must have time left to act on the request before the voice request's deadline answers for it.
+func TestWakeBudgetFitsTheRequestDeadline(t *testing.T) {
+	assert.Less(t, wakeBudget, alexa.RequestDeadline)
 }

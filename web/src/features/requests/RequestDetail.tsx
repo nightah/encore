@@ -33,10 +33,10 @@ function describeSlots(slots: Detail["slots"], via: Via | null): string {
 
 /** The room or device the request named: a device in a room, another name for a room, or the room itself. */
 function ViaLine({ via }: { via: Via }) {
-  const room = <KindPill kind={RoomAliasKind.room} className="pr-2.5" />;
+  const room = <KindPill kind={RoomAliasKind.room} className="pe-2.5" />;
   if (via.kind === RoomAliasKind.room && via.spoken === via.room) {
     return (
-      <KindPill kind={RoomAliasKind.room} className="pr-2.5">
+      <KindPill kind={RoomAliasKind.room} className="pe-2.5">
         {via.room}
       </KindPill>
     );
@@ -47,7 +47,7 @@ function ViaLine({ via }: { via: Via }) {
         ns="requests"
         i18nKey={via.kind === RoomAliasKind.device ? "detail.via.device" : "detail.via.alias"}
         values={{ room: via.room, spoken: via.spoken }}
-        components={{ room, spoken: <KindPill kind={via.kind} className="pr-2.5" /> }}
+        components={{ room, spoken: <KindPill kind={via.kind} className="pe-2.5" /> }}
       />
     </span>
   );
@@ -116,7 +116,7 @@ function Candidates({ match }: { match: MatchDetail }) {
                 })}
                 height="h-2"
               />
-              <span className="text-right font-mono text-[13px]">{formatScore(candidate.score)}</span>
+              <span className="text-end font-mono text-[13px]">{formatScore(candidate.score)}</span>
             </li>
           ))}
         </ul>

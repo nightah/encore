@@ -171,7 +171,7 @@ func newSkillHandler(ctx context.Context, v *voice, skillID func() string, simul
 		log.Warn("couldn't read the stored Alexa certificate URL", "error", err)
 	}
 
-	go alexa.WarmVerifier(ctx, verifier, certURL, log)
+	go alexa.WarmVerifier(ctx, verifier.Verifier, certURL, log)
 
 	remembered := alexa.RememberCertURL(verifier, certURL, func(ctx context.Context, url string) {
 		if err := a.DB().Settings().Set(context.WithoutCancel(ctx), certURLSetting, url); err != nil {
@@ -194,5 +194,5 @@ func newSkillHandler(ctx context.Context, v *voice, skillID func() string, simul
 		Log:           log.With("component", "alexa"),
 	}
 
-	return alexa.VerifiedFunc(remembered, skillID, log, h.ServeBody), nil
+	return alexa.VerifiedFunc(remembered, skillID, log, a.Rejections(), h.ServeBody), nil
 }

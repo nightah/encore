@@ -1,0 +1,228 @@
+# Japanese (ja-JP) phonetic evaluation corpus for TestPhoneticEval. Same schema as asr_corpus.yaml; cases are scored, not asserted, so there is no xfail.
+#
+# Library: real, well-known films, series, artists and songs as a Japanese Kodi library holds them (Japanese titles as published, foreign films under their katakana release names, some titles in Latin letters), with their original release years and near neighbours (sequels, shared words and surnames: トイ・ストーリー, 3 and 4, アナと雪の女王 and 2, ゴジラ, シン・ゴジラ and ゴジラ-1.0, 鬼滅の刃 and its film, two ハリー・ポッター, ドラゴンボール and Z, 中島みゆき and 中島美嘉, サザエさん and サザンオールスターズ) so a wrong play is possible.
+#
+# Cases: what Alexa's ja-JP recogniser plausibly writes when a Japanese speaker asks for the title: kanji, hiragana and katakana without spaces, numbers mostly as ASCII digits, Latin letters rarely and in lower case, punctuation dropped. Each mishearing sits under a "class" comment naming the confusion it models. The classes are documented Japanese spelling-to-sound ambiguities and the errors a recogniser makes when it picks another written form of the same sound: the same word in hiragana, katakana or kanji (となり/隣, サムライ/侍, いきものがかり/生き物係), long vowels written ー, う, お or dropped (セーラー/セイラー, ターミネーター/ターミネータ), small kana and sokuon (うっせぇわ/うっせえわ, スピッツ/スピツ, ポニョ/ポニヨ), dakuten, handakuten and rendaku (かみかくし/かみがくし, プラダ/ブラダ, ポッター/ボッター), ず/づ and じ/ぢ (米津 よねづ/よねず), katakana loanword variants (ヴァ/バ, ティ/チ, ウィ/ウイ, トゥ/ツー, ワ/ヤ), the middle dot and other separators dropped (トイ・ストーリー/トイストーリー), title punctuation (君の名は。, ぼっち・ざ・ろっく！, 「」), particles and okurigana written differently or dropped (は/わ, 戸締まり/戸締り), homophones written with other kanji (神隠し/髪隠し, 進撃/新劇, 名探偵/迷探偵), the short forms people say (アナ雪, 逃げ恥, ミスチル), numbers as digits, kanji numerals and katakana readings (2/ツー/二, 七人/7人, マイナスワン), and Latin titles heard in katakana or the reverse (YOASOBI/ヨアソビ, TSUNAMI/津波). Controls (exact titles) and absent titles (not_found, missing sequels) keep the decision thresholds honest.
+#
+# Cases describe what a listener hears; don't change a case to suit an encoder's results, or the comparison stops meaning anything (see docs/src/content/docs/contributing/dependencies.md).
+suites:
+  - name: japanese library
+    lang: ja
+    library:
+      - {id: sento, kind: movie, title: "千と千尋の神隠し", year: 2001}
+      - {id: kiminona, kind: movie, title: "君の名は。", year: 2016}
+      - {id: suzume, kind: movie, title: "すずめの戸締まり", year: 2022}
+      - {id: totoro, kind: movie, title: "となりのトトロ", year: 1988}
+      - {id: mononoke, kind: movie, title: "もののけ姫", year: 1997}
+      - {id: laputa, kind: movie, title: "天空の城ラピュタ", year: 1986}
+      - {id: kiki, kind: movie, title: "魔女の宅急便", year: 1989}
+      - {id: howl, kind: movie, title: "ハウルの動く城", year: 2004}
+      - {id: ponyo, kind: movie, title: "崖の上のポニョ", year: 2008}
+      - {id: shichinin, kind: movie, title: "七人の侍", year: 1954}
+      - {id: tokyo, kind: movie, title: "東京物語", year: 1953}
+      - {id: rashomon, kind: movie, title: "羅生門", year: 1950}
+      - {id: okuribito, kind: movie, title: "おくりびと", year: 2008}
+      - {id: manbiki, kind: movie, title: "万引き家族", year: 2018}
+      - {id: godzilla, kind: movie, title: "ゴジラ", year: 1954}
+      - {id: shingodzilla, kind: movie, title: "シン・ゴジラ", year: 2016}
+      - {id: minusone, kind: movie, title: "ゴジラ-1.0", year: 2023}
+      - {id: mugen, kind: movie, title: "劇場版「鬼滅の刃」無限列車編", year: 2020}
+      - {id: tora, kind: movie, title: "男はつらいよ", year: 1969}
+      - {id: battle, kind: movie, title: "バトル・ロワイアル", year: 2000}
+      - {id: akira, kind: movie, title: "AKIRA", year: 1988}
+      - {id: avengers, kind: movie, title: "アベンジャーズ", year: 2012}
+      - {id: endgame, kind: movie, title: "アベンジャーズ/エンドゲーム", year: 2019}
+      - {id: toy1, kind: movie, title: "トイ・ストーリー", year: 1995}
+      - {id: toy3, kind: movie, title: "トイ・ストーリー3", year: 2010}
+      - {id: toy4, kind: movie, title: "トイ・ストーリー4", year: 2019}
+      - {id: starwars, kind: movie, title: "スター・ウォーズ", year: 1977}
+      - {id: titanic, kind: movie, title: "タイタニック", year: 1997}
+      - {id: frozen, kind: movie, title: "アナと雪の女王", year: 2013}
+      - {id: frozen2, kind: movie, title: "アナと雪の女王2", year: 2019}
+      - {id: harry1, kind: movie, title: "ハリー・ポッターと賢者の石", year: 2001}
+      - {id: harry2, kind: movie, title: "ハリー・ポッターと秘密の部屋", year: 2002}
+      - {id: bttf, kind: movie, title: "バック・トゥ・ザ・フューチャー", year: 1985}
+      - {id: t2, kind: movie, title: "ターミネーター2", year: 1991}
+      - {id: prada, kind: movie, title: "プラダを着た悪魔", year: 2006}
+      - {id: hanzawa, kind: tvshow, title: "半沢直樹", year: 2013}
+      - {id: kimetsu, kind: tvshow, title: "鬼滅の刃", year: 2019}
+      - {id: shingeki, kind: tvshow, title: "進撃の巨人", year: 2013}
+      - {id: onepiece, kind: tvshow, title: "ONE PIECE", year: 1999}
+      - {id: conan, kind: tvshow, title: "名探偵コナン", year: 1996}
+      - {id: doraemon, kind: tvshow, title: "ドラえもん", year: 1979}
+      - {id: sazae, kind: tvshow, title: "サザエさん", year: 1969}
+      - {id: maruko, kind: tvshow, title: "ちびまる子ちゃん", year: 1990}
+      - {id: spy, kind: tvshow, title: "SPY×FAMILY", year: 2022}
+      - {id: jujutsu, kind: tvshow, title: "呪術廻戦", year: 2020}
+      - {id: nigehaji, kind: tvshow, title: "逃げるは恥だが役に立つ", year: 2016}
+      - {id: amachan, kind: tvshow, title: "あまちゃん", year: 2013}
+      - {id: dragonball, kind: tvshow, title: "ドラゴンボール", year: 1986}
+      - {id: dbz, kind: tvshow, title: "ドラゴンボールZ", year: 1989}
+      - {id: eva, kind: tvshow, title: "新世紀エヴァンゲリオン", year: 1995}
+      - {id: sailor, kind: tvshow, title: "美少女戦士セーラームーン", year: 1992}
+      - {id: cityhunter, kind: tvshow, title: "シティーハンター", year: 1987}
+      - {id: violet, kind: tvshow, title: "ヴァイオレット・エヴァーガーデン", year: 2018}
+      - {id: bocchi, kind: tvshow, title: "ぼっち・ざ・ろっく！", year: 2022}
+      - {id: utada, kind: artist, title: "宇多田ヒカル"}
+      - {id: yoasobi, kind: artist, title: "YOASOBI"}
+      - {id: yonezu, kind: artist, title: "米津玄師"}
+      - {id: mrchildren, kind: artist, title: "Mr.Children"}
+      - {id: bz, kind: artist, title: "B'z"}
+      - {id: arashi, kind: artist, title: "嵐"}
+      - {id: aimyon, kind: artist, title: "あいみょん"}
+      - {id: higedan, kind: artist, title: "Official髭男dism"}
+      - {id: southern, kind: artist, title: "サザンオールスターズ"}
+      - {id: ikimono, kind: artist, title: "いきものがかり"}
+      - {id: miyuki, kind: artist, title: "中島みゆき"}
+      - {id: mika, kind: artist, title: "中島美嘉"}
+      - {id: radwimps, kind: artist, title: "RADWIMPS"}
+      - {id: spitz, kind: artist, title: "スピッツ"}
+      - {id: vaundy, kind: artist, title: "Vaundy"}
+      - {id: zutomayo, kind: artist, title: "ずっと真夜中でいいのに。"}
+      - {id: yorunikakeru, kind: song, title: "夜に駆ける", year: 2019}
+      - {id: lemon, kind: song, title: "Lemon", year: 2018}
+      - {id: usseewa, kind: song, title: "うっせぇわ", year: 2020}
+      - {id: marigold, kind: song, title: "マリーゴールド", year: 2018}
+      - {id: senbonzakura, kind: song, title: "千本桜", year: 2011}
+      - {id: gurenge, kind: song, title: "紅蓮華", year: 2019}
+      - {id: tsunami, kind: song, title: "TSUNAMI", year: 2000}
+      - {id: sekai, kind: song, title: "世界に一つだけの花", year: 2003}
+      - {id: yukinohana, kind: song, title: "雪の華", year: 2003}
+    cases:
+      # Controls: the title as an ASR writes it.
+      - {heard: "千と千尋の神隠し", want: play, id: sento}
+      - {heard: "となりのトトロ", want: play, id: totoro}
+      - {heard: "七人の侍", want: play, id: shichinin}
+      - {heard: "半沢直樹", want: play, id: hanzawa}
+      - {heard: "進撃の巨人", want: play, id: shingeki}
+      - {heard: "タイタニック", want: play, id: titanic}
+      - {heard: "宇多田ヒカル", want: play, id: utada}
+      - {heard: "米津玄師", want: play, id: yonezu}
+      - {heard: "あいみょん", want: play, id: aimyon}
+      - {heard: "夜に駆ける", want: play, id: yorunikakeru}
+      - {heard: "ゴジラ", want: play, id: godzilla}
+      # Class script: the same word in hiragana, katakana or kanji.
+      - {heard: "せんとちひろのかみかくし", want: play, id: sento}
+      - {heard: "隣のトトロ", want: play, id: totoro}
+      - {heard: "物の怪姫", want: play, id: mononoke}
+      - {heard: "はんざわなおき", want: play, id: hanzawa}
+      - {heard: "どらえもん", want: play, id: doraemon}
+      - {heard: "あらし", want: play, id: arashi}
+      - {heard: "生き物係", want: play, id: ikimono}
+      - {heard: "送り人", want: play, id: okuribito}
+      - {heard: "七人のサムライ", want: play, id: shichinin}
+      - {heard: "ちびまるこちゃん", want: play, id: maruko}
+      # Class long-vowel: ー written as う, お or い, or dropped.
+      - {heard: "美少女戦士セイラームーン", want: play, id: sailor}
+      - {heard: "ターミネータ2", want: play, id: t2}
+      - {heard: "マリゴールド", want: play, id: marigold}
+      - {heard: "ラショウモン", want: play, id: rashomon}
+      - {heard: "シティハンター", want: play, id: cityhunter}
+      - {heard: "うっせーわ", want: play, id: usseewa}
+      # Class small-kana: small kana and sokuon written full size or dropped.
+      - {heard: "うっせえわ", want: play, id: usseewa}
+      - {heard: "スピツ", want: play, id: spitz}
+      - {heard: "崖の上のポニヨ", want: play, id: ponyo}
+      - {heard: "天空の城ラピユタ", want: play, id: laputa}
+      - {heard: "スターウオーズ", want: play, id: starwars}
+      - {heard: "ぼちざろく", want: play, id: bocchi}
+      # Class dakuten: voicing marks and rendaku added or dropped.
+      - {heard: "千と千尋のかみがくし", want: play, id: sento}
+      - {heard: "まんひき家族", want: play, id: manbiki}
+      - {heard: "生き物かかり", want: play, id: ikimono}
+      - {heard: "ブラダを着た悪魔", want: play, id: prada}
+      - {heard: "ハリーボッターと賢者の石", want: play, id: harry1}
+      - {heard: "ワンビース", want: play, id: onepiece}
+      # Class zu-ji: ず against づ and じ against ぢ.
+      - {heard: "よねずけんし", want: play, id: yonezu}
+      - {heard: "すづめの戸締まり", want: play, id: suzume}
+      - {heard: "づっと真夜中でいいのに", want: play, id: zutomayo}
+      # Class loanword: katakana loanword variants (ヴァ/バ, ティ/チ, ウィ/ウイ, トゥ/ツー, ワ/ヤ, オ/ヲ).
+      - {heard: "新世紀エバンゲリオン", want: play, id: eva}
+      - {heard: "バイオレットエバーガーデン", want: play, id: violet}
+      - {heard: "バックツーザフューチャー", want: play, id: bttf}
+      - {heard: "シチーハンター", want: play, id: cityhunter}
+      - {heard: "バトルロワイヤル", want: play, id: battle}
+      - {heard: "ラッドウインプス", want: play, id: radwimps}
+      - {heard: "バウンディ", want: play, id: vaundy}
+      # Class middle-dot: ・, / and other separators dropped.
+      - {heard: "トイストーリー", want: play, id: toy1}
+      - {heard: "シンゴジラ", want: play, id: shingodzilla}
+      - {heard: "スターウォーズ", want: play, id: starwars}
+      - {heard: "アベンジャーズエンドゲーム", want: play, id: endgame}
+      # Class punctuation: 。, ！, × and 「」 in titles.
+      - {heard: "君の名は", want: play, id: kiminona}
+      - {heard: "ずっと真夜中でいいのに", want: play, id: zutomayo}
+      - {heard: "ぼっちざろっく", want: play, id: bocchi}
+      - {heard: "鬼滅の刃無限列車編", want: play, id: mugen}
+      - {heard: "スパイファミリー", want: play, id: spy}
+      # Class particle: particles and okurigana written differently or dropped, and word order.
+      - {heard: "すずめの戸締り", want: play, id: suzume}
+      - {heard: "逃げるは恥だが役にたつ", want: play, id: nigehaji}
+      - {heard: "逃げるのは恥だが役に立つ", want: play, id: nigehaji}
+      - {heard: "男わつらいよ", want: play, id: tora}
+      - {heard: "君の名わ", want: play, id: kiminona}
+      - {heard: "万引家族", want: play, id: manbiki}
+      - {heard: "ヒカル宇多田", want: play, id: utada}
+      # Class homophone: the same sound written with other kanji (real-word substitution).
+      - {heard: "千と千尋の髪隠し", want: play, id: sento}
+      - {heard: "新劇の巨人", want: play, id: shingeki}
+      - {heard: "迷探偵コナン", want: play, id: conan}
+      - {heard: "羅城門", want: play, id: rashomon}
+      - {heard: "歌田ヒカル", want: play, id: utada}
+      - {heard: "中島美幸", want: play, id: miyuki}
+      - {heard: "雪の花", want: play, id: yukinohana}
+      - {heard: "紅蓮花", want: play, id: gurenge}
+      - {heard: "呪術回戦", want: play, id: jujutsu}
+      - {heard: "海女ちゃん", want: play, id: amachan}
+      - {heard: "魔女の宅配便", want: play, id: kiki}
+      # Class partial: distinctive opening words and the short forms people say.
+      - {heard: "ラピュタ", want: play, id: laputa}
+      - {heard: "ポニョ", want: play, id: ponyo}
+      - {heard: "千と千尋", want: play, id: sento}
+      - {heard: "アナ雪", want: play, id: frozen}
+      - {heard: "逃げ恥", want: play, id: nigehaji}
+      - {heard: "ミスチル", want: play, id: mrchildren}
+      - {heard: "サザン", want: play, id: southern}
+      # Class number: digits, kanji numerals and katakana number readings.
+      - {heard: "7人の侍", want: play, id: shichinin}
+      - {heard: "トイストーリー4", want: play, id: toy4}
+      - {heard: "トイストーリーフォー", want: play, id: toy4}
+      - {heard: "ターミネーターツー", want: play, id: t2}
+      - {heard: "アナと雪の女王ツー", want: play, id: frozen2}
+      - {heard: "アナと雪の女王二", want: play, id: frozen2}
+      - {heard: "ゴジラマイナスワン", want: play, id: minusone}
+      - {heard: "1000本桜", want: play, id: senbonzakura}
+      - {heard: "世界に1つだけの花", want: play, id: sekai}
+      - {heard: "ドラゴンボールゼット", want: play, id: dbz}
+      # Class latin: Latin titles heard in katakana, hiragana or lower-case Latin, and the reverse.
+      - {heard: "ヨアソビ", want: play, id: yoasobi}
+      - {heard: "yoasobi", want: play, id: yoasobi}
+      - {heard: "レモン", want: play, id: lemon}
+      - {heard: "アキラ", want: play, id: akira}
+      - {heard: "ワンピース", want: play, id: onepiece}
+      - {heard: "ビーズ", want: play, id: bz}
+      - {heard: "ミスターチルドレン", want: play, id: mrchildren}
+      - {heard: "オフィシャルヒゲダンディズム", want: play, id: higedan}
+      - {heard: "津波", want: play, id: tsunami}
+      - {heard: "titanic", want: play, id: titanic}
+      # Ambiguous: ask among the near neighbours.
+      - {heard: "鬼滅", want: ask, among: [kimetsu, mugen]}
+      - {heard: "ハリーポッター", want: ask, among: [harry1, harry2]}
+      - {heard: "中島", want: ask, among: [miyuki, mika]}
+      - {heard: "ドラゴン", want: ask, among: [dragonball, dbz]}
+      # Missing sequels: ask.
+      - {heard: "トイストーリー5", want: ask}
+      - {heard: "アナと雪の女王3", want: ask}
+      - {heard: "ターミネーター3", want: ask}
+      # Absent titles, including near misses that share words with the library.
+      - {heard: "思い出のマーニー", want: not_found}
+      - {heard: "コクリコ坂から", want: not_found}
+      - {heard: "天空の蜂", want: not_found}
+      - {heard: "東京ラブストーリー", want: not_found}
+      - {heard: "七つの会議", want: not_found}
+      - {heard: "シンウルトラマン", want: not_found}
+      - {heard: "君の膵臓をたべたい", want: not_found}
+      - {heard: "浜崎あゆみ", want: not_found}
+      - {heard: "倖田來未", want: not_found}
+      - {heard: "インディジョーンズ", want: not_found}

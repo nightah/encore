@@ -1,0 +1,223 @@
+# Brazilian Portuguese (pt-BR) phonetic evaluation corpus for TestPhoneticEval. Same schema as asr_corpus.yaml; cases are scored, not asserted, so there is no xfail.
+#
+# Library: real, well-known Brazilian films, series and artists and English-language films, series and artists popular in Brazil (titles as published, with their original release years; the two Godfather films carry their Brazilian titles as aliases), with near neighbours (sequels, three titles that open with Cidade, three Jorges, Tom Jobim and Tim Maia, Gilberto Gil and Gal Costa, Central do Brasil and Avenida Brasil) so a wrong play is possible.
+#
+# Cases: what a speech recogniser plausibly writes when a Brazilian Portuguese speaker asks for the title. Each mishearing is tagged with the confusion it models. The classes are documented Brazilian Portuguese spelling-to-sound ambiguities: the many spellings of /s/ (ç, ss, s, c before e/i, sc) and intervocalic s as /z/ (Cássia/Cácia, brasileiro/brazileiro), x as /ʃ/ and its ch spelling (Xuxa/Chucha, Chico/Xico), lh/li and nh/ni (filhos/filios, Bethânia/Betânha), final -l vocalised as /w/ (Brasil/Brasiu, Gil/Giu, auto/alto), nasal endings -m/-n/-ão (Jobim/Jobin), palatalised t and d before i (Tim/Chim, Djavan/Diavan), the r sounds (rr/r, h read as r in English titles, dropped infinitive r), unstressed final e and o raised to i and u (elite/eliti, Mutantes/mutantis), accents and tildes dropped, g/j before e/i, qu/k and gu/g, silent h, the epenthetic i that breaks consonant clusters (Djavan/dijavan, Skank/iskank), English titles respelled as a Brazilian says them (Friends/frends, Coldplay/coudplei), digits against number words including the feminine uma, plus real-word substitutions (Legião/região, Sintonia/sinfonia, Xuxa/chuchu). Controls (exact titles) and absent titles (not_found, missing sequels) keep the decision thresholds honest.
+#
+# Cases describe what a listener hears; don't change a case to suit an encoder's results, or the comparison stops meaning anything (see docs/src/content/docs/contributing/dependencies.md).
+suites:
+  - name: brazilian portuguese library
+    lang: pt
+    library:
+      - {id: cidadededeus, kind: movie, title: "Cidade de Deus", year: 2002}
+      - {id: central, kind: movie, title: "Central do Brasil", year: 1998}
+      - {id: tropa, kind: movie, title: "Tropa de Elite", year: 2007}
+      - {id: tropa2, kind: movie, title: "Tropa de Elite 2: O Inimigo Agora É Outro", year: 2010}
+      - {id: compadecida, kind: movie, title: "O Auto da Compadecida", year: 2000}
+      - {id: quehoras, kind: movie, title: "Que Horas Ela Volta?", year: 2015}
+      - {id: bacurau, kind: movie, title: "Bacurau", year: 2019}
+      - {id: aindaestou, kind: movie, title: "Ainda Estou Aqui", year: 2024}
+      - {id: carandiru, kind: movie, title: "Carandiru", year: 2003}
+      - {id: doisfilhos, kind: movie, title: "2 Filhos de Francisco", year: 2005}
+      - {id: minhamae, kind: movie, title: "Minha Mãe É uma Peça", year: 2013}
+      - {id: minhamae2, kind: movie, title: "Minha Mãe É uma Peça 2", year: 2016}
+      - {id: deusbrasileiro, kind: movie, title: "Deus É Brasileiro", year: 2003}
+      - {id: lisbela, kind: movie, title: "Lisbela e o Prisioneiro", year: 2003}
+      - {id: bicho, kind: movie, title: "Bicho de Sete Cabeças", year: 2001}
+      - {id: hoje, kind: movie, title: "Hoje Eu Quero Voltar Sozinho", year: 2014}
+      - {id: palhaco, kind: movie, title: "O Palhaço", year: 2011}
+      - {id: marighella, kind: movie, title: "Marighella", year: 2019}
+      - {id: seeufosse, kind: movie, title: "Se Eu Fosse Você", year: 2006}
+      - {id: pulpfiction, kind: movie, title: "Pulp Fiction", year: 1994}
+      - {id: toystory, kind: movie, title: "Toy Story", year: 1995}
+      - {id: toystory2, kind: movie, title: "Toy Story 2", year: 1999}
+      - {id: godfather, kind: movie, title: "The Godfather", aliases: ["O Poderoso Chefão"], year: 1972}
+      - {id: godfather2, kind: movie, title: "The Godfather Part II", aliases: ["O Poderoso Chefão: Parte II"], year: 1974}
+      - {id: titanic, kind: movie, title: "Titanic", year: 1997}
+      - {id: shrek, kind: movie, title: "Shrek", year: 2001}
+      - {id: matrix, kind: movie, title: "The Matrix", year: 1999}
+      - {id: frozen, kind: movie, title: "Frozen", year: 2013}
+      - {id: joker, kind: movie, title: "Joker", year: 2019}
+      - {id: tres, kind: tvshow, title: "3%", year: 2016}
+      - {id: sintonia, kind: tvshow, title: "Sintonia", year: 2019}
+      - {id: irmandade, kind: tvshow, title: "Irmandade", year: 2019}
+      - {id: cidadehomens, kind: tvshow, title: "Cidade dos Homens", year: 2002}
+      - {id: cidadeinvisivel, kind: tvshow, title: "Cidade Invisível", year: 2021}
+      - {id: sessao, kind: tvshow, title: "Sessão de Terapia", year: 2012}
+      - {id: osnormais, kind: tvshow, title: "Os Normais", year: 2001}
+      - {id: grandefamilia, kind: tvshow, title: "A Grande Família", year: 2001}
+      - {id: avenida, kind: tvshow, title: "Avenida Brasil", year: 2012}
+      - {id: chiquititas, kind: tvshow, title: "Chiquititas", year: 1997}
+      - {id: carrossel, kind: tvshow, title: "Carrossel", year: 2012}
+      - {id: friends, kind: tvshow, title: "Friends", year: 1994}
+      - {id: got, kind: tvshow, title: "Game of Thrones", year: 2011}
+      - {id: office, kind: tvshow, title: "The Office", year: 2005}
+      - {id: lost, kind: tvshow, title: "Lost", year: 2004}
+      - {id: houseofdragon, kind: tvshow, title: "House of the Dragon", year: 2022}
+      - {id: caetano, kind: artist, title: "Caetano Veloso"}
+      - {id: gil, kind: artist, title: "Gilberto Gil"}
+      - {id: galcosta, kind: artist, title: "Gal Costa"}
+      - {id: elis, kind: artist, title: "Elis Regina"}
+      - {id: anitta, kind: artist, title: "Anitta"}
+      - {id: marilia, kind: artist, title: "Marília Mendonça"}
+      - {id: legiao, kind: artist, title: "Legião Urbana"}
+      - {id: mutantes, kind: artist, title: "Os Mutantes"}
+      - {id: jobim, kind: artist, title: "Tom Jobim"}
+      - {id: timmaia, kind: artist, title: "Tim Maia"}
+      - {id: chico, kind: artist, title: "Chico Buarque"}
+      - {id: benjor, kind: artist, title: "Jorge Ben Jor"}
+      - {id: seujorge, kind: artist, title: "Seu Jorge"}
+      - {id: jorgemateus, kind: artist, title: "Jorge & Mateus"}
+      - {id: ivete, kind: artist, title: "Ivete Sangalo"}
+      - {id: robertocarlos, kind: artist, title: "Roberto Carlos"}
+      - {id: djavan, kind: artist, title: "Djavan"}
+      - {id: cassia, kind: artist, title: "Cássia Eller"}
+      - {id: bethania, kind: artist, title: "Maria Bethânia"}
+      - {id: titas, kind: artist, title: "Titãs"}
+      - {id: xuxa, kind: artist, title: "Xuxa"}
+      - {id: chitaozinho, kind: artist, title: "Chitãozinho & Xororó"}
+      - {id: henrique, kind: artist, title: "Henrique & Juliano"}
+      - {id: skank, kind: artist, title: "Skank"}
+      - {id: charlie, kind: artist, title: "Charlie Brown Jr."}
+      - {id: raul, kind: artist, title: "Raul Seixas"}
+      - {id: coldplay, kind: artist, title: "Coldplay"}
+      - {id: beatles, kind: artist, title: "The Beatles"}
+      - {id: beyonce, kind: artist, title: "Beyoncé"}
+    cases:
+      # Controls: the title as written.
+      - {heard: "cidade de deus", want: play, id: cidadededeus}
+      - {heard: "central do brasil", want: play, id: central}
+      - {heard: "tropa de elite", want: play, id: tropa}
+      - {heard: "o auto da compadecida", want: play, id: compadecida}
+      - {heard: "que horas ela volta", want: play, id: quehoras}
+      - {heard: "sintonia", want: play, id: sintonia}
+      - {heard: "caetano veloso", want: play, id: caetano}
+      - {heard: "legião urbana", want: play, id: legiao}
+      - {heard: "toy story", want: play, id: toystory}
+      - {heard: "o poderoso chefão", want: play, id: godfather}
+      - {heard: "pulp", want: play, id: pulpfiction}
+      - {heard: "lisbela", want: play, id: lisbela}
+      # ç, ss, s and c before e/i; intervocalic s as z.
+      - {heard: "sidade de deus", want: play, id: cidadededeus}
+      - {heard: "sentral do brasil", want: play, id: central}
+      - {heard: "marília mendonsa", want: play, id: marilia}
+      - {heard: "cácia eller", want: play, id: cassia}
+      - {heard: "cintonia", want: play, id: sintonia}
+      - {heard: "deus é brazileiro", want: play, id: deusbrasileiro}
+      - {heard: "bicho de sete cabessas", want: play, id: bicho}
+      - {heard: "o palhasso", want: play, id: palhaco}
+      # x as sh and the ch spelling.
+      - {heard: "chucha", want: play, id: xuxa}
+      - {heard: "xico buarque", want: play, id: chico}
+      - {heard: "xiquititas", want: play, id: chiquititas}
+      - {heard: "chitãozinho e chororó", want: play, id: chitaozinho}
+      - {heard: "raul seichas", want: play, id: raul}
+      # lh / li and nh / ni.
+      - {heard: "dois filios de francisco", want: play, id: doisfilhos}
+      - {heard: "minia mãe é uma peça", want: play, id: minhamae}
+      - {heard: "hoje eu quero voltar sozinio", want: play, id: hoje}
+      - {heard: "o paliaço", want: play, id: palhaco}
+      - {heard: "maria betânha", want: play, id: bethania}
+      # Final -l vocalised as u.
+      - {heard: "central do brasiu", want: play, id: central}
+      - {heard: "gilberto giu", want: play, id: gil}
+      - {heard: "gau costa", want: play, id: galcosta}
+      - {heard: "rau seixas", want: play, id: raul}
+      - {heard: "o alto da compadecida", want: play, id: compadecida}
+      # Nasal endings: -m, -n, -ão and the dropped plural.
+      - {heard: "tom jobin", want: play, id: jobim}
+      - {heard: "ton jobim", want: play, id: jobim}
+      - {heard: "tin maia", want: play, id: timmaia}
+      - {heard: "cidade dos homem", want: play, id: cidadehomens}
+      # Palatalised t and d before i.
+      - {heard: "chim maia", want: play, id: timmaia}
+      - {heard: "chitãs", want: play, id: titas}
+      - {heard: "diavan", want: play, id: djavan}
+      - {heard: "javan", want: play, id: djavan}
+      # r: r and rr, h read as r, dropped infinitive r.
+      - {heard: "carosel", want: play, id: carrossel}
+      - {heard: "rouse of the dragon", want: play, id: houseofdragon}
+      - {heard: "hoje eu quero voltá sozinho", want: play, id: hoje}
+      # Unstressed e and o raised to i and u.
+      - {heard: "tropa di eliti", want: play, id: tropa}
+      - {heard: "cidadi di deus", want: play, id: cidadededeus}
+      - {heard: "ivete sangalu", want: play, id: ivete}
+      - {heard: "us mutantis", want: play, id: mutantes}
+      - {heard: "ligião urbana", want: play, id: legiao}
+      - {heard: "o auto da compadicida", want: play, id: compadecida}
+      # Accents and tildes dropped.
+      - {heard: "marilia mendonca", want: play, id: marilia}
+      - {heard: "minha mae e uma peca", want: play, id: minhamae}
+      - {heard: "sessao de terapia", want: play, id: sessao}
+      - {heard: "maria bethania", want: play, id: bethania}
+      - {heard: "cidade invisivel", want: play, id: cidadeinvisivel}
+      # g and j before e and i.
+      - {heard: "elis rejina", want: play, id: elis}
+      - {heard: "jilberto gil", want: play, id: gil}
+      - {heard: "lejião urbana", want: play, id: legiao}
+      - {heard: "jorje ben jor", want: play, id: benjor}
+      # qu / k and gu / g.
+      - {heard: "ke horas ela volta", want: play, id: quehoras}
+      - {heard: "ainda estou aki", want: play, id: aindaestou}
+      - {heard: "chico buarke", want: play, id: chico}
+      - {heard: "mariguela", want: play, id: marighella}
+      # Silent h.
+      - {heard: "que oras ela volta", want: play, id: quehoras}
+      - {heard: "oje eu quero voltar sozinho", want: play, id: hoje}
+      - {heard: "enrique e juliano", want: play, id: henrique}
+      - {heard: "cidade dos omens", want: play, id: cidadehomens}
+      # Epenthetic i in consonant clusters.
+      - {heard: "dijavan", want: play, id: djavan}
+      - {heard: "iskank", want: play, id: skank}
+      - {heard: "shreki", want: play, id: shrek}
+      - {heard: "pulpi fiction", want: play, id: pulpfiction}
+      # English titles respelled as a Brazilian says them.
+      - {heard: "tói istóri", want: play, id: toystory}
+      - {heard: "frends", want: play, id: friends}
+      - {heard: "gueime of trones", want: play, id: got}
+      - {heard: "de ófici", want: play, id: office}
+      - {heard: "titanique", want: play, id: titanic}
+      - {heard: "djóker", want: play, id: joker}
+      - {heard: "coudplei", want: play, id: coldplay}
+      - {heard: "os bítous", want: play, id: beatles}
+      - {heard: "xarli braun júnior", want: play, id: charlie}
+      # Numbers: digits, words and the feminine uma.
+      - {heard: "três por cento", want: play, id: tres}
+      - {heard: "3 por cento", want: play, id: tres}
+      - {heard: "dois filhos de francisco", want: play, id: doisfilhos}
+      - {heard: "tropa de elite 2", want: play, id: tropa2}
+      - {heard: "minha mãe é 1 peça", want: play, id: minhamae}
+      - {heard: "minha mãe é uma peça dois", want: play, id: minhamae2}
+      - {heard: "toy story dois", want: play, id: toystory2}
+      - {heard: "o poderoso chefão parte dois", want: play, id: godfather2}
+      - {heard: "charlie brown junior", want: play, id: charlie}
+      # Real-word substitutions.
+      - {heard: "região urbana", want: play, id: legiao}
+      - {heard: "sinfonia", want: play, id: sintonia}
+      - {heard: "chuchu", want: play, id: xuxa}
+      - {heard: "jorge bem jor", want: play, id: benjor}
+      - {heard: "lis bela e o prisioneiro", want: play, id: lisbela}
+      - {heard: "seção de terapia", want: play, id: sessao}
+      # Ambiguous or missing: ask.
+      - {heard: "jorge", want: ask, among: [benjor, seujorge, jorgemateus]}
+      - {heard: "tropa", want: ask, among: [tropa, tropa2]}
+      - {heard: "cidade", want: ask, among: [cidadededeus, cidadehomens, cidadeinvisivel]}
+      - {heard: "tropa de elite 3", want: ask}
+      - {heard: "minha mãe é uma peça 3", want: ask}
+      - {heard: "o auto da compadecida 2", want: ask}
+      - {heard: "toy story 3", want: ask}
+      - {heard: "o poderoso chefão parte três", want: ask}
+      - {heard: "frozen 2", want: ask}
+      # Absent titles, including near misses that share words with the library.
+      - {heard: "cidade baixa", want: not_found}
+      - {heard: "aquarela do brasil", want: not_found}
+      - {heard: "que horas são", want: not_found}
+      - {heard: "elite", want: not_found}
+      - {heard: "house of cards", want: not_found}
+      - {heard: "lost in translation", want: not_found}
+      - {heard: "the crown", want: not_found}
+      - {heard: "erasmo carlos", want: not_found}
+      - {heard: "a vida invisível", want: not_found}
+      - {heard: "o homem do futuro", want: not_found}
+      - {heard: "ludmilla", want: not_found}
+      - {heard: "the last of us", want: not_found}

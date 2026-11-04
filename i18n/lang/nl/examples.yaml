@@ -1,0 +1,70 @@
+# Example values for the dynamic slot types in model.yaml (nl): deploys replace them with what is set up in Encore. Chosen for this language rather than translated, so not on Crowdin.
+
+KODI_MUSIC_VIDEO:
+  - {value: bohemian rhapsody}
+  - {value: dromen zijn bedrog}
+  - {value: take on me}
+  - {value: zoutelande}
+  - {value: radar love}
+
+# Examples only, extended from the library when available.
+KODI_PLAYLIST:
+  - {value: roadtrip, synonyms: [road trip, op reis]}
+  - {value: feest, synonyms: [party, feestje]}
+  - {value: sporten, synonyms: [workout, training]}
+  - {value: chill, synonyms: [chill out, ontspannen]}
+  - {value: kinderen, synonyms: [kids]}
+  - {value: avondeten, synonyms: [diner]}
+  - {value: best beoordeeld, synonyms: [favorieten, top]}
+
+# Examples only: deploys replace them with the rooms set up in Encore. Utterances say "in de {Room}", "in het {Room}", "op de {Room}" or a bare "op {Room}" (as in "op zolder" or "op kantoor"), so values carry no article.
+KODI_ROOM:
+  - {value: woonkamer, synonyms: [huiskamer]}
+  - {value: slaapkamer}
+  - {value: kinderkamer}
+  - {value: keuken}
+  - {value: werkkamer, synonyms: [studeerkamer]}
+  - {value: kantoor}
+  - {value: eetkamer}
+  - {value: logeerkamer}
+  - {value: thuisbioscoop, synonyms: [bioscoop]}
+  - {value: zolder}
+  - {value: kelder}
+  - {value: speelkamer}
+  - {value: garage}
+
+# Examples only, extended from the library when available.
+MEDIA_GENRE:
+  - {value: actie}
+  - {value: avontuur}
+  - {value: animatie, synonyms: [tekenfilm, tekenfilms, animatiefilm]}
+  - {value: komedie, synonyms: [komedies, grappig]}
+  - {value: misdaad, synonyms: [detective, detectives]}
+  - {value: documentaire, synonyms: [documentaires, docu]}
+  - {value: drama}
+  - {value: familie, synonyms: [familiefilm]}
+  - {value: fantasy}
+  - {value: horror, synonyms: [eng, griezel]}
+  - {value: kinderen, synonyms: [kinderfilm, jeugd]}
+  - {value: mysterie}
+  - {value: romantiek, synonyms: [romantisch, liefde]}
+  - {value: sciencefiction, synonyms: [science fiction, sci fi]}
+  - {value: thriller, synonyms: [thrillers, spanning]}
+  - {value: oorlog, synonyms: [oorlogsfilm]}
+  - {value: western, synonyms: [westerns]}
+  - {value: rock}
+  - {value: pop}
+  - {value: jazz}
+  - {value: klassiek, synonyms: [klassieke muziek]}
+  - {value: hiphop, synonyms: [hip hop, rap, nederhop]}
+  - {value: country}
+  - {value: elektronisch, synonyms: [dance, house, techno]}
+  - {value: blues}
+  - {value: metal, synonyms: [heavy metal]}
+  - {value: folk}
+  - {value: levenslied, synonyms: [nederlandstalig, smartlap]}
+  - {value: reggae}
+  - {value: soul}
+  - {value: r. en b., synonyms: [r. and b., r. n. b.]}
+  - {value: indie}
+  - {value: soundtrack, synonyms: [soundtracks, filmmuziek]}

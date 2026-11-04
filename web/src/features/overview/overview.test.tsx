@@ -3,6 +3,8 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
 import { RECENT_REQUESTS } from "@api/events";
+import type { Attention } from "@api/generated/model";
+import i18n from "@i18n/index";
 import { FakeEventSource } from "@test/eventSource";
 import { failWith, recordRequests, renderApp } from "@test/utils";
 
@@ -110,6 +112,77 @@ describe("overview", () => {
 
     FakeEventSource.emit("attention", []);
     expect(await screen.findByText("Nothing needs your attention.")).toBeInTheDocument();
+  });
+
+  describe("rejected requests", () => {
+    const rejected: Attention[] = [
+      {
+        count: 3,
+        detail: "server detail",
+        kind: "requests_rejected",
+        link: "",
+        stage: "timestamp",
+        title: "server title",
+      },
+      {
+        count: 1,
+        detail: "server detail",
+        kind: "requests_rejected",
+        link: "",
+        stage: "signature",
+        title: "server title",
+      },
+      {
+        count: 2,
+        detail: "server detail",
+        kind: "requests_rejected",
+        link: "/alexa-skill",
+        stage: "skill_id",
+        title: "server title",
+      },
+    ];
+
+    it("says which check refused them, in the interface language", async () => {
+      renderApp("/");
+      const attention = await screen.findByRole("region", { name: "Needs attention" });
+      await waitFor(() => expect(FakeEventSource.open).toBeGreaterThan(0));
+
+      FakeEventSource.emit("attention", rejected);
+
+      expect(await within(attention).findByText("3 requests rejected for a stale timestamp")).toBeInTheDocument();
+      expect(within(attention).getByText(/Check that this host's clock is synchronised/)).toBeInTheDocument();
+      expect(within(attention).getByText("1 request rejected for a bad signature")).toBeInTheDocument();
+      expect(within(attention).getByText(/s3\.amazonaws\.com/)).toBeInTheDocument();
+      expect(within(attention).getByText("2 requests for another skill rejected")).toBeInTheDocument();
+      expect(within(attention).getByRole("link", { name: "Open" })).toHaveAttribute("href", "/alexa-skill");
+      expect(within(attention).queryByText("server title")).not.toBeInTheDocument();
+    });
+
+    it("translates them", async () => {
+      await i18n.changeLanguage("ja");
+      renderApp("/");
+      const attention = await screen.findByRole("region", { name: "要対応" });
+      await waitFor(() => expect(FakeEventSource.open).toBeGreaterThan(0));
+
+      FakeEventSource.emit("attention", rejected.slice(0, 1));
+
+      expect(
+        await within(attention).findByText("タイムスタンプが古いため 3 件のリクエストを拒否しました"),
+      ).toBeInTheDocument();
+    });
+
+    it("falls back to the server's text for a check it doesn't know", async () => {
+      renderApp("/");
+      const attention = await screen.findByRole("region", { name: "Needs attention" });
+      await waitFor(() => expect(FakeEventSource.open).toBeGreaterThan(0));
+
+      FakeEventSource.emit("attention", [
+        { detail: "Some detail.", kind: "requests_rejected", link: "", title: "1 request rejected" },
+      ]);
+
+      expect(await within(attention).findByText("1 request rejected")).toBeInTheDocument();
+      expect(within(attention).getByText("Some detail.")).toBeInTheDocument();
+    });
   });
 
   it("shows an error with a retry", async () => {

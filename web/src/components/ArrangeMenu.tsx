@@ -162,7 +162,7 @@ export function ArrangeMenu({ onDone }: { onDone: () => void }) {
       {/* Seven sections and at most four in the bar: More always holds some. */}
       <ul aria-labelledby="arrange-more" className={listBox}>
         {inMore.map((item) => (
-          <li key={item.to} className={cn(row, "pl-3")}>
+          <li key={item.to} className={cn(row, "ps-3")}>
             <Name item={item} />
             <RowButton
               label={t("menu.toBar", { name: item.label })}
@@ -201,7 +201,7 @@ export function ArrangeMenu({ onDone }: { onDone: () => void }) {
 
 const listLabel = "px-5 pb-2 font-medium font-mono text-[11.5px] text-muted uppercase tracking-[0.06em]";
 const listBox = "mx-3 flex flex-col rounded-xl border border-line bg-bg";
-const row = "flex min-h-13 items-center gap-1 border-line-soft border-t pr-1.5 pl-1 first:border-t-0";
+const row = "flex min-h-13 items-center gap-1 border-line-soft border-t pe-1.5 ps-1 first:border-t-0";
 
 function Name({ item }: { item: NavItem }) {
   const Icon = item.icon;

@@ -3,6 +3,7 @@ package deploy_test
 import (
 	"archive/zip"
 	"bytes"
+	"context"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -10,6 +11,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"slices"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -32,6 +34,8 @@ type harness struct {
 	fake     *smapitest.Server
 	proxy    *httptest.Server
 	deployer *deploy.Deployer
+	// src is what deployer builds packages from.
+	src *skillmodel.Sources
 
 	mu        sync.Mutex
 	events    []deploy.Event
@@ -104,6 +108,7 @@ func newHarness(t *testing.T, opts smapitest.Options) *harness {
 	src, err := skillmodel.Load(i18n.FS)
 	require.NoError(t, err)
 
+	h.src = src
 	h.deployer = deploy.New(client, src)
 
 	return h
@@ -119,7 +124,8 @@ func (h *harness) request(state deploy.State) deploy.Request {
 			Endpoint: skillpkg.Endpoint{URI: "https://encore.example.com/api/v1/alexa"},
 			Privacy:  skillpkg.Privacy{AllowsPurchases: &no, UsesPersonalInfo: &no, IsChildDirected: &no, IsExportCompliant: &yes, ContainsAds: &no},
 		},
-		Simulate: true,
+		Simulate:        true,
+		SilentRetryWait: time.Millisecond,
 		Progress: func(ev deploy.Event) {
 			h.mu.Lock()
 			h.events = append(h.events, ev)
@@ -348,15 +354,95 @@ func TestDeployFailedImportDoesNotWait(t *testing.T) {
 	start := time.Now()
 	_, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
 
-	require.Error(t, err)
+	require.ErrorIs(t, err, deploy.ErrBuildFailed)
 	require.NotErrorIs(t, err, smapi.ErrPollTimeout)
 	assert.Less(t, time.Since(start), 5*time.Second)
 
 	var de *deploy.Error
 	require.ErrorAs(t, err, &de)
-	assert.Equal(t, deploy.StepImport, de.Step)
+	assert.Equal(t, deploy.StepBuild, de.Step)
 	assert.Contains(t, err.Error(), "Parsing error in sample", "the failed resource's errors are reported")
 	assert.Contains(t, h.timeline(), "import:failed")
+}
+
+// failedImport answers every import with body, a failed import's status, and the skill status with every locale's build still in progress, as the live API went on doing after an import whose rollback failed. It counts the skill status polls.
+func failedImport(h *harness, body string) *atomic.Int64 {
+	return failedImportWith(h, body, `{"manifest":{"lastUpdateRequest":{"status":"SUCCEEDED"}},"interactionModel":{"en-US":{"lastUpdateRequest":{"status":"IN_PROGRESS"}},"en-GB":{"lastUpdateRequest":{"status":"IN_PROGRESS"}}}}`)
+}
+
+// failedImportWith is failedImport with the skill status answering status.
+func failedImportWith(h *harness, body, status string) *atomic.Int64 {
+	var polls atomic.Int64
+
+	h.override("GET /v1/skills/{a}/{b}", func(w http.ResponseWriter, r *http.Request) {
+		if r.PathValue("a") == "imports" {
+			writeJSON(w, http.StatusOK, body)
+
+			return
+		}
+
+		polls.Add(1)
+		writeJSON(w, http.StatusOK, status)
+	})
+
+	return &polls
+}
+
+// A failed import that names a locale's errors reports them as that locale's build failure at once, without waiting on a skill status that may never finish.
+func TestDeployFailedImportReportsItsLocaleErrors(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+	polls := failedImport(h, `{"status":"FAILED","skill":{"skillId":"amzn1.ask.skill.rolledback","resources":[{"name":"Manifest","status":"ROLLBACK_FAILED"},{"name":"InteractionModel.en-US","status":"FAILED"},{"name":"InteractionModel.en-GB","status":"FAILED","errors":[{"code":"INVALID_INTERACTION_MODEL","message":"Parsing error in sample"}]}]}}`)
+
+	res, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
+	require.ErrorIs(t, err, deploy.ErrBuildFailed)
+
+	var de *deploy.Error
+	require.ErrorAs(t, err, &de)
+	assert.Equal(t, deploy.StepBuild, de.Step)
+	assert.Equal(t, map[string][]smapi.Problem{"en-GB": {{Code: "INVALID_INTERACTION_MODEL", Message: "Parsing error in sample"}}}, de.Locales)
+	assert.Equal(t, smapi.StatusFailed, res.Locales["en-GB"].Status, "the report shows the locale's errors")
+	assert.Equal(t, de.Locales["en-GB"], res.Locales["en-GB"].Errors)
+	assert.Zero(t, polls.Load(), "the import already said why")
+}
+
+// A failed import that names no locale's errors asks the skill status, but only for as long as a missing locale is waited for.
+func TestDeployFailedImportStopsAskingTheSkillStatus(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+	polls := failedImport(h, `{"status":"FAILED","skill":{"skillId":"amzn1.ask.skill.rolledback","resources":[{"name":"Manifest","status":"ROLLBACK_FAILED","errors":[{"message":"rollback failed"}]},{"name":"InteractionModel.en-GB","status":"FAILED"}]}}`)
+
+	req := h.request(deploy.State{})
+	req.SilentRetryWait = -1
+
+	_, err := h.deployer.Deploy(t.Context(), req)
+	require.NotErrorIs(t, err, smapi.ErrPollTimeout)
+
+	var de *deploy.Error
+	require.ErrorAs(t, err, &de)
+	assert.Equal(t, deploy.StepImport, de.Step)
+	assert.Equal(t, []smapi.Problem{{Message: "rollback failed"}}, de.Problems)
+	assert.EqualValues(t, 10, polls.Load())
+
+	// The import is named, and kept as Amazon answered it, to look into later.
+	assert.NotEmpty(t, de.ImportID)
+	assert.Contains(t, err.Error(), "import "+de.ImportID)
+	assert.JSONEq(t, `{"status":"FAILED","skill":{"skillId":"amzn1.ask.skill.rolledback","resources":[{"name":"Manifest","status":"ROLLBACK_FAILED","errors":[{"message":"rollback failed"}]},{"name":"InteractionModel.en-GB","status":"FAILED"}]}}`, string(de.ImportStatus))
+}
+
+// A failed import that names no locale's errors takes them from the skill status when it has them.
+func TestDeployFailedImportTakesTheSkillStatusErrors(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+	polls := failedImportWith(h,
+		`{"status":"FAILED","skill":{"skillId":"amzn1.ask.skill.rolledback","resources":[{"name":"InteractionModel.en-US","status":"SUCCEEDED"},{"name":"InteractionModel.en-GB","status":"FAILED"}]}}`,
+		`{"manifest":{"lastUpdateRequest":{"status":"SUCCEEDED"}},"interactionModel":{"en-GB":{"lastUpdateRequest":{"status":"FAILED","errors":[{"message":"Parsing error in sample"}]}}}}`)
+
+	_, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
+	require.ErrorIs(t, err, deploy.ErrBuildFailed)
+
+	var de *deploy.Error
+	require.ErrorAs(t, err, &de)
+	assert.Equal(t, deploy.StepBuild, de.Step)
+	assert.Equal(t, map[string][]smapi.Problem{"en-GB": {{Message: "Parsing error in sample"}}}, de.Locales)
+	assert.EqualValues(t, 1, polls.Load())
 }
 
 // The live API: the import reports each locale's model built, while the skill status doesn't list the locale. The import is authoritative.
@@ -469,6 +555,42 @@ func TestDeployWithoutSimulation(t *testing.T) {
 	assert.Equal(t, 0, h.fake.Calls("POST /v2/skills/{skillId}/stages/{stage}/simulations"))
 }
 
+func TestDeployDisabled(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+
+	first, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
+	require.NoError(t, err)
+
+	sk, _ := h.fake.Skill(first.State.SkillID)
+	require.True(t, sk.Enabled)
+
+	req := h.request(first.State)
+	req.Force, req.Disabled = true, true
+
+	res, err := h.deployer.Deploy(t.Context(), req)
+	require.NoError(t, err)
+
+	sk, _ = h.fake.Skill(res.State.SkillID)
+	assert.False(t, sk.Enabled, "a skill a previous deploy enabled is disabled")
+	assert.Equal(t, []string{"enable:done", "simulate:skipped"}, h.timeline()[len(h.timeline())-2:])
+	assert.Nil(t, res.Locales["en-GB"].Simulation, "a disabled skill can't be simulated")
+	assert.Equal(t, 1, h.fake.Calls("POST /v2/skills/{skillId}/stages/{stage}/simulations"), "only the first deploy simulated")
+	assert.Equal(t, 1, h.fake.Calls("PUT /v1/skills/{skillId}/stages/{stage}/enablement"), "only the first deploy enabled")
+}
+
+func TestDeployDisabledFails(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+	h.override("DELETE /v1/skills/{id}/stages/{stage}/enablement", reject)
+
+	req := h.request(deploy.State{})
+	req.Disabled = true
+
+	res, err := h.deployer.Deploy(t.Context(), req)
+	assert.Equal(t, http.StatusBadRequest, smapi.StatusCode(err))
+	assert.Equal(t, "enable:failed", h.timeline()[len(h.timeline())-1])
+	assert.Empty(t, res.State.Hash, "a failed deploy never records a hash")
+}
+
 func TestDeployPrivacyUnanswered(t *testing.T) {
 	h := newHarness(t, smapitest.Options{})
 
@@ -531,12 +653,6 @@ func TestExportPackage(t *testing.T) {
 
 	assert.Contains(t, names, "ask-resources.json")
 	assert.Contains(t, names, "skill-package/skill.json")
-}
-
-func TestOpenPhrase(t *testing.T) {
-	assert.Equal(t, "open encore", deploy.OpenPhrase("en-AU", "encore"))
-	assert.Equal(t, "öffne encore", deploy.OpenPhrase("de-DE", "encore"))
-	assert.Empty(t, deploy.OpenPhrase("pt-BR", "encore"))
 }
 
 func TestStateNeedsDeploy(t *testing.T) {
@@ -871,4 +987,85 @@ func TestExportPackageInvalidOptions(t *testing.T) {
 	var buf bytes.Buffer
 	require.Error(t, h.deployer.ExportPackage(&buf, opts))
 	assert.Zero(t, buf.Len())
+}
+
+// An import Amazon fails without saying why is imported once more after a wait, and the deploy goes through; the result says so.
+func TestDeployImportsAgainAfterASilentFailure(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+	h.fake.FailImportsWithoutDetails(1)
+
+	res, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
+	require.NoError(t, err)
+
+	sk, ok := h.fake.Skill(res.State.SkillID)
+	require.True(t, ok)
+	assert.Equal(t, 2, sk.Imports)
+	assert.NotEmpty(t, res.State.Hash, "a deploy that went through on the second import counts")
+	assert.Contains(t, strings.Join(res.Warnings, "\n"), "without saying why, so the skill package was imported again")
+
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	assert.True(t, slices.ContainsFunc(h.events, func(ev deploy.Event) bool {
+		return ev.Step == deploy.StepImport && strings.Contains(ev.Message, "importing again in")
+	}), "the wait is shown")
+}
+
+// Imported again, a package Amazon fails without saying why a second time fails the deploy, which may be tried later.
+func TestDeployImportsAgainOnlyOnce(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+	h.fake.FailImportsWithoutDetails(3)
+
+	res, err := h.deployer.Deploy(t.Context(), h.request(deploy.State{}))
+	require.ErrorContains(t, err, "no details reported")
+	assert.True(t, deploy.Transient(err), "a later deploy may go through")
+
+	sk, _ := h.fake.Skill(res.State.SkillID)
+	assert.Equal(t, 2, sk.Imports)
+}
+
+func TestDeployDoesntImportAgainWhenTold(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+	h.fake.FailImportsWithoutDetails(1)
+
+	req := h.request(deploy.State{})
+	req.SilentRetryWait = -1
+
+	res, err := h.deployer.Deploy(t.Context(), req)
+	require.ErrorContains(t, err, "no details reported")
+
+	sk, _ := h.fake.Skill(res.State.SkillID)
+	assert.Equal(t, 1, sk.Imports)
+}
+
+// A deploy stopped while it waits to import again says so, without importing. With no wait set, it waits five minutes.
+func TestDeployStoppedWhileWaitingToImportAgain(t *testing.T) {
+	for wait, says := range map[time.Duration]string{time.Hour: "1h0m0s", 0: "5m0s"} {
+		t.Run(says, func(t *testing.T) {
+			h := newHarness(t, smapitest.Options{})
+			h.fake.FailImportsWithoutDetails(1)
+
+			req := h.request(deploy.State{})
+			req.SilentRetryWait = wait
+
+			ctx, cancel := context.WithCancel(t.Context())
+
+			var waited bool
+
+			req.Progress = func(ev deploy.Event) {
+				if strings.Contains(ev.Message, "importing again in "+says) {
+					waited = true
+
+					cancel()
+				}
+			}
+
+			res, err := h.deployer.Deploy(ctx, req)
+			require.ErrorIs(t, err, context.Canceled)
+			assert.True(t, waited)
+
+			sk, _ := h.fake.Skill(res.State.SkillID)
+			assert.Equal(t, 1, sk.Imports)
+		})
+	}
 }

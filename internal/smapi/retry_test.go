@@ -195,3 +195,39 @@ func TestSleep(t *testing.T) {
 	require.ErrorIs(t, sleep(ctx, 0), context.Canceled, "a zero wait still reports an ended context")
 	require.ErrorIs(t, sleep(ctx, time.Hour), context.Canceled)
 }
+
+type failingTransport struct{ left int }
+
+func (f *failingTransport) RoundTrip(*http.Request) (*http.Response, error) {
+	if f.left > 0 {
+		f.left--
+
+		return nil, errors.New("connection reset")
+	}
+
+	return &http.Response{StatusCode: http.StatusOK, Header: http.Header{}, Body: io.NopCloser(strings.NewReader(""))}, nil
+}
+
+// A network error retried counts as failed; one the policy can't retry, such as a POST's, counts as given up only after the last attempt.
+func TestDoerCountsNetworkErrors(t *testing.T) {
+	counts := &retryCounts{}
+	d := &doer{http: &http.Client{Transport: &failingTransport{left: 2}}, retry: RetryPolicy{Base: time.Nanosecond, Max: time.Nanosecond}.withDefaults(), counts: counts}
+
+	req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "https://smapi.invalid/v1/vendors", http.NoBody)
+	require.NoError(t, err)
+
+	resp, err := d.Do(req)
+	require.NoError(t, err)
+	require.NoError(t, resp.Body.Close())
+	assert.Equal(t, int64(2), counts.failed.Load())
+
+	d.http.Transport = &failingTransport{left: 1}
+
+	req, err = http.NewRequestWithContext(t.Context(), http.MethodPost, "https://smapi.invalid/v1/skills", http.NoBody)
+	require.NoError(t, err)
+
+	_, err = d.Do(req) //nolint:bodyclose // no response on error
+	require.Error(t, err)
+	assert.Equal(t, int64(2), counts.failed.Load())
+	assert.Zero(t, counts.gaveUp.Load(), "a POST isn't retried after a network error, so it isn't given up on either")
+}

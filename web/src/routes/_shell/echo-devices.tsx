@@ -83,7 +83,7 @@ function EchoDevicesPage() {
                   <Th>{t("table.columns.controls")}</Th>
                   <Th>{t("table.columns.lastRequest")}</Th>
                   <Th>{t("table.columns.today")}</Th>
-                  <Th className="text-right">
+                  <Th className="text-end">
                     <span className="sr-only">{t("table.columns.actions")}</span>
                   </Th>
                 </tr>
@@ -124,7 +124,7 @@ function EchoDevicesPage() {
                       <Td label={t("table.columns.today")} className="font-mono">
                         {device.request_count_today}
                       </Td>
-                      <Td action className="text-right">
+                      <Td action className="text-end">
                         <Button aria-label={t("table.editNamed", { name })} onClick={() => setEditing(device)}>
                           {t("table.edit")}
                         </Button>

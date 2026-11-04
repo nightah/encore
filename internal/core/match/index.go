@@ -7,6 +7,9 @@ import (
 	"fmt"
 	"slices"
 	"strconv"
+	"strings"
+
+	"github.com/nightah/encore/internal/core/media"
 )
 
 // New returns an empty Index for a language or locale code ("en", "de-DE"). Unknown languages use English rules.
@@ -40,6 +43,9 @@ func New(lang string, cfg Config) (*Index, error) {
 		exact: make(map[string]map[string]struct{}),
 	}, nil
 }
+
+// Language returns the code of the language whose rules the index matches with ("en" for an unknown language).
+func (ix *Index) Language() string { return ix.lang.code }
 
 // Normalize returns the query form of s for this index's language.
 func (ix *Index) Normalize(s string) string {
@@ -174,7 +180,7 @@ func (ix *Index) isClosed() bool {
 // Search ranks the Docs against q.
 func (ix *Index) Search(ctx context.Context, q Query) (Result, error) {
 	qf := ix.lang.newForm(ix.lang.normalizeSpelled(q.Text, false))
-	res := Result{Normalized: qf.norm}
+	res := Result{Normalized: qf.norm, AskScore: ix.cfg.AskScore}
 
 	if len(qf.toks) == 0 {
 		return res, nil
@@ -191,7 +197,8 @@ func (ix *Index) Search(ctx context.Context, q Query) (Result, error) {
 		return res, err
 	}
 
-	entries := ix.lookup(ids, qf.norm, yq)
+	entries := ix.lookup(ids, qf.norm, yq, q.Resolved)
+	names := ix.resolvedNames(q.Resolved)
 
 	if err := ctx.Err(); err != nil {
 		return res, err
@@ -201,16 +208,39 @@ func (ix *Index) Search(ctx context.Context, q Query) (Result, error) {
 	exact := make(map[string]bool)
 	soundAlike := make(map[string]bool)
 	numbersDiffer := make(map[string]bool)
+	native := make(map[string]bool)
+
+	// plain is every candidate as its names alone score it, without the native aliases, and plainExact the Docs one of those names matches exactly.
+	var plain []Candidate
+
+	plainExact := make(map[string]bool)
 
 	for _, e := range entries {
 		if len(q.Kinds) > 0 && !slices.Contains(q.Kinds, e.doc.Kind) {
 			continue
 		}
 
-		best := ix.scoreEntry(&qf, e)
+		best, own := ix.scoreEntry(&qf, e)
 		if yq != nil && e.doc.Year == yq.year {
-			if s := ix.scoreEntry(&yq.rest, e); s.score > best.score {
+			s, o := ix.scoreEntry(&yq.rest, e)
+			if s.score > best.score {
 				best = s
+			}
+
+			if o.score > own.score {
+				own = o
+			}
+		}
+
+		// The value Alexa resolved the request to names this Doc: it scores against that name, discounted, keeping what was heard's verdict on numbers.
+		for i := range names[e.doc.ID] {
+			s, o := ix.scoreEntry(&names[e.doc.ID][i], e)
+			if s.score*resolvedNameFactor > best.score {
+				best = scored{score: s.score * resolvedNameFactor, numbersDiffer: best.numbersDiffer, native: s.native, bd: s.bd}
+			}
+
+			if o.score*resolvedNameFactor > own.score {
+				own = scored{score: o.score * resolvedNameFactor, numbersDiffer: own.numbersDiffer, bd: o.bd}
 			}
 		}
 
@@ -230,23 +260,50 @@ func (ix *Index) Search(ctx context.Context, q Query) (Result, error) {
 		best.bd.Boost = boost
 
 		cands = append(cands, Candidate{Doc: e.doc, Score: min(best.score+boost, 1), Breakdown: best.bd})
+
+		if best.native {
+			native[e.doc.ID] = true
+		}
+
+		if ix.lang.native != nil {
+			if own.exact {
+				plainExact[e.doc.ID] = true
+			}
+
+			plain = append(plain, Candidate{Doc: e.doc, Score: min(own.score+boost, 1)})
+		}
 	}
 
-	slices.SortFunc(cands, func(a, b Candidate) int {
-		return cmp.Or(
-			cmp.Compare(b.Score, a.Score),
-			compareBool(exact[b.Doc.ID], exact[a.Doc.ID]),
-			cmp.Compare(a.Doc.Title, b.Doc.Title),
-			cmp.Compare(a.Doc.ID, b.Doc.ID),
-		)
-	})
+	slices.SortFunc(cands, func(a, b Candidate) int { return compareCandidates(a, b, exact) })
+	cands = withoutCopies(cands, exact)
 
 	cfg := ix.cfg
 	if ix.lang.soundAlikeLead && len(cands) > 0 && soundAlike[cands[0].Doc.ID] {
 		cfg.TieMargin = max(cfg.TieMargin, cfg.PlayMargin)
 	}
 
+	if len(cands) > 0 && native[cands[0].Doc.ID] && !exact[cands[0].Doc.ID] {
+		// A native alias is a guess at how the recogniser spells the name, so a title it puts on top plays only when it scores well and clearly leads, and is asked about only when it scores well enough to be likely.
+		cfg.TieMargin = max(cfg.TieMargin, cfg.PlayMargin)
+		cfg.PlayMarginScore = max(cfg.PlayMarginScore, cfg.PlayScore)
+		cfg.AskScore = max(cfg.AskScore, nativeAskScore)
+	}
+
 	res.Decision, res.Margin = cfg.decide(cands, len(exact))
+	res.AskScore = cfg.AskScore
+
+	// Native aliases only add to what a title's own names find: whatever those would play, plays.
+	if res.Decision != DecisionPlay && len(plain) > 0 {
+		slices.SortFunc(plain, func(a, b Candidate) int { return compareCandidates(a, b, plainExact) })
+		plain = withoutCopies(plain, plainExact)
+
+		switch d, _ := ix.cfg.decide(plain, len(plainExact)); {
+		case d == DecisionPlay && plain[0].Doc.ID == cands[0].Doc.ID:
+			res.Decision = DecisionPlay
+		case d == DecisionAsk && res.Decision == DecisionNotFound:
+			res.Decision = DecisionAsk
+		}
+	}
 
 	// A number the best title lacks is a missing sequel or another instalment: ask rather than start the wrong one.
 	if res.Decision == DecisionPlay && numbersDiffer[cands[0].Doc.ID] {
@@ -263,16 +320,39 @@ func (ix *Index) Search(ctx context.Context, q Query) (Result, error) {
 	return res, nil
 }
 
-func (ix *Index) scoreEntry(q *form, e *entry) scored {
-	best := scored{score: -1}
+// scoreEntry returns the best score of any of the entry's aliases, and the best of those that are not native aliases.
+func (ix *Index) scoreEntry(q *form, e *entry) (best, own scored) {
+	best, own = scored{score: -1}, scored{score: -1}
 
 	for i := range e.aliases {
-		if s := ix.scoreAlias(q, &e.aliases[i], best.score); s.score > best.score {
+		a := &e.aliases[i]
+
+		floor := best.score
+		if !a.native {
+			floor = own.score
+		}
+
+		s := ix.scoreAlias(q, a, floor)
+		if s.score > best.score {
 			best = s
+		}
+
+		if !a.native && s.score > own.score {
+			own = s
 		}
 	}
 
-	return best
+	return best, own
+}
+
+// compareCandidates orders candidates by score, an exact match first among equals, then by title and ID.
+func compareCandidates(a, b Candidate, exact map[string]bool) int {
+	return cmp.Or(
+		cmp.Compare(b.Score, a.Score),
+		compareBool(exact[b.Doc.ID], exact[a.Doc.ID]),
+		cmp.Compare(a.Doc.Title, b.Doc.Title),
+		cmp.Compare(a.Doc.ID, b.Doc.ID),
+	)
 }
 
 func yearQuery(l *language, q *form) *yearQ {
@@ -289,8 +369,32 @@ func yearQuery(l *language, q *form) *yearQ {
 	return &yearQ{year: y, rest: l.newForm(q.toks[:n-1], "")}
 }
 
-// lookup resolves candidate IDs plus every exact match of norm (or of the year-less query for Docs from that year), deduplicated. Entries are immutable, so they stay valid after the lock is released.
-func (ix *Index) lookup(ids []string, norm string, yq *yearQ) []*entry {
+// resolvedNames is the query form of each resolved value's name, by Doc ID.
+func (ix *Index) resolvedNames(res []Resolved) map[string][]form {
+	var out map[string][]form
+
+	for _, r := range res {
+		if r.Name == "" {
+			continue
+		}
+
+		f := ix.lang.newForm(ix.lang.normalizeSpelled(r.Name, false))
+		if len(f.toks) == 0 {
+			continue
+		}
+
+		if out == nil {
+			out = make(map[string][]form, len(res))
+		}
+
+		out[r.ID] = append(out[r.ID], f)
+	}
+
+	return out
+}
+
+// lookup resolves candidate IDs plus every exact match of norm (or of the year-less query for Docs from that year) and every resolved Doc, deduplicated. Entries are immutable, so they stay valid after the lock is released.
+func (ix *Index) lookup(ids []string, norm string, yq *yearQ, res []Resolved) []*entry {
 	ix.mu.RLock()
 	defer ix.mu.RUnlock()
 
@@ -318,6 +422,10 @@ func (ix *Index) lookup(ids []string, norm string, yq *yearQ) []*entry {
 		}
 	}
 
+	for _, r := range res {
+		add(r.ID, 0)
+	}
+
 	for _, id := range ids {
 		add(id, 0)
 	}
@@ -334,4 +442,30 @@ func compareBool(a, b bool) int {
 	default:
 		return -1
 	}
+}
+
+// withoutCopies drops each candidate that is another copy of a better one: the same kind, title and year, as when a library holds a film twice. Asking which of two identical titles was meant can't be answered, so the first copy stands for both. exact forgets the copies dropped.
+func withoutCopies(cands []Candidate, exact map[string]bool) []Candidate {
+	type key struct {
+		kind  media.Kind
+		title string
+		year  int
+	}
+
+	seen := make(map[key]bool, len(cands))
+	out := cands[:0]
+
+	for _, c := range cands {
+		k := key{c.Doc.Kind, strings.ToLower(strings.TrimSpace(c.Doc.Title)), c.Doc.Year}
+		if seen[k] {
+			delete(exact, c.Doc.ID)
+
+			continue
+		}
+
+		seen[k] = true
+		out = append(out, c)
+	}
+
+	return out
 }

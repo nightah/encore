@@ -1,0 +1,114 @@
+{
+  "attention": {
+    "empty": "Nada precisa da sua atenção.",
+    "libraryLanguage": {
+      "detail": "O idioma dos títulos é {{current}}. Mude para {{language}} para que os títulos sejam comparados com as regras do {{language}}.",
+      "title": "A maioria dos títulos de {{instance}} está em {{language}}"
+    },
+    "links": {
+      "libraryLanguage": "Mudar o idioma dos títulos",
+      "needsDeploy": "Atualizar agora",
+      "open": "Abrir",
+      "unlinkedDevice": "Vincular dispositivo"
+    },
+    "rejected": {
+      "signature": {
+        "detail": "O Encore não conseguiu confirmar que foi a Alexa que as enviou. Se vieram do seu Echo, verifique se o Encore consegue acessar s3.amazonaws.com para obter o certificado da Amazon e se o seu proxy repassa as solicitações sem alterá-las.",
+        "title_one": "{{count, number}} solicitação recusada por assinatura inválida",
+        "title_other": "{{count, number}} solicitações recusadas por assinatura inválida"
+      },
+      "skillId": {
+        "detail": "A Alexa as assinou para um ID de skill diferente do que o Encore espera. Verifique alexa.skill_id ou implante a skill de novo.",
+        "title_one": "{{count, number}} solicitação para outra skill recusada",
+        "title_other": "{{count, number}} solicitações para outra skill recusadas"
+      },
+      "timestamp": {
+        "detail": "A Alexa marca cada solicitação com a hora em que foi enviada, e o Encore recusa as que se afastam mais de 150 segundos do próprio relógio. Verifique se o relógio deste host está sincronizado.",
+        "title_one": "{{count, number}} solicitação recusada por horário desatualizado",
+        "title_other": "{{count, number}} solicitações recusadas por horário desatualizado"
+      }
+    },
+    "title": "Precisa de atenção"
+  },
+  "description": "Tudo o que a Alexa precisa para chegar às suas instâncias do Kodi, de relance. Somente leitura: as alterações são feitas na página de cada seção.",
+  "instances": {
+    "asleep": {
+      "addMac": "Adicione o endereço MAC dela para que as solicitações por voz possam despertá-la.",
+      "manage": "Gerenciar na página do Kodi",
+      "plain": "Em suspensão.",
+      "since": "Em suspensão desde {{time}}.",
+      "willWake": "As solicitações por voz vão despertá-la automaticamente."
+    },
+    "empty": {
+      "action": "Adicione uma na página do Kodi",
+      "body": "Adicione uma instância do Kodi para a Alexa ter algo para controlar.",
+      "title": "Nenhuma instância do Kodi ainda"
+    },
+    "episode": "T{{season}} · E{{episode}} “{{title}}”",
+    "idle": "Nada em reprodução.",
+    "offline": {
+      "test": "Teste na página do Kodi",
+      "text": "Sem resposta. Verifique se o Kodi está em execução e acessível."
+    },
+    "progress": "Progresso de {{percent}} por cento",
+    "title": "Instâncias do Kodi"
+  },
+  "ms": "{{ms}} ms",
+  "openRequestLog": "Abrir o registro de solicitações",
+  "recent": {
+    "columns": {
+      "echo": "Echo",
+      "heard": "Ouvido",
+      "result": "Resultado",
+      "time": "Hora"
+    },
+    "empty": "Nenhuma solicitação ainda. Diga “Alexa, pergunte para {{invocation}} o que está tocando.”",
+    "emptyNoInvocation": "Nenhuma solicitação ainda.",
+    "open": "Abrir no registro a solicitação das {{time}}",
+    "title": "Solicitações recentes",
+    "viewAll": "Ver tudo"
+  },
+  "status": {
+    "endpoint": {
+      "label": "Endpoint público",
+      "notReachable": "{{host}} não está acessível de fora",
+      "reachable": "{{host}} acessível",
+      "unreachable": "Inacessível"
+    },
+    "label": "Status",
+    "libraries": {
+      "and": " e ",
+      "count_one": "{{count, number}} biblioteca",
+      "count_other": "{{count, number}} bibliotecas",
+      "label": "Bibliotecas",
+      "noneShared": "nenhuma compartilhada",
+      "notSynced": "Ainda não sincronizada",
+      "shared_one": "{{count}} compartilhada",
+      "shared_other": "{{count}} compartilhadas",
+      "shareOne": "{{names}} compartilham uma",
+      "synced": "Sincronizada {{when}}"
+    },
+    "requests": {
+      "detail": "{{failed}} com falha · mediana de {{ms}} ms",
+      "label": "Solicitações hoje"
+    },
+    "skill": {
+      "label": "Skill da Alexa",
+      "locales_one": "{{count, number}} localidade",
+      "locales_other": "{{count, number}} localidades",
+      "stage": {
+        "development": "Estágio de desenvolvimento",
+        "live": "Estágio publicado",
+        "other": "Estágio {{stage}}"
+      },
+      "state": {
+        "deploying": "Implantando…",
+        "failed": "Falha na implantação",
+        "live": "Publicada",
+        "not_deployed": "Não implantada"
+      },
+      "updatePending": "atualização pendente"
+    }
+  },
+  "title": "Visão geral"
+}

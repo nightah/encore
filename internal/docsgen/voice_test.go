@@ -1,11 +1,13 @@
 package docsgen
 
 import (
+	"os"
 	"testing"
 	"testing/fstest"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"go.yaml.in/yaml/v3"
 
 	"github.com/nightah/encore/i18n"
 	"github.com/nightah/encore/internal/skillmodel"
@@ -41,14 +43,14 @@ func TestVoiceCommandsOnePagePerLanguage(t *testing.T) {
 
 func TestVoiceCommandsShowAnUnnamedLanguageByItsCode(t *testing.T) {
 	src := loadSources(t)
-	src.Languages["nl"] = src.Languages["en"]
+	src.Languages["sv"] = src.Languages["en"]
 
 	pages, err := VoiceCommands(src, i18n.FS)
 	require.NoError(t, err)
 
-	page := string(pages["nl"])
-	assert.Contains(t, page, "title: nl\n")
-	assert.Contains(t, page, "editUrl: "+CrowdinProject+"/nl\n")
+	page := string(pages["sv"])
+	assert.Contains(t, page, "title: sv\n")
+	assert.Contains(t, page, "editUrl: "+CrowdinProject+"/sv\n")
 }
 
 func TestVoiceDataGroupsIntentsUnderTheirSections(t *testing.T) {
@@ -92,6 +94,35 @@ func TestVoiceDataGroupsIntentsUnderTheirSections(t *testing.T) {
 	assert.Equal(t, []skillmodel.SlotValue{{Value: "Dune"}, {Value: "Alien"}}, types[0].Values)
 	assert.True(t, types[0].Dynamic)
 	assert.Equal(t, []skillmodel.SlotValue{{Value: "Dune"}}, src.Model.Types[0].Values, "the model's values aren't changed")
+}
+
+func TestVoiceDataShowsLocaleSynonyms(t *testing.T) {
+	src := &skillmodel.Sources{
+		Model: skillmodel.Model{
+			Intents: []skillmodel.Intent{{Name: "ViewRoom", Slots: []skillmodel.Slot{{Name: "Room", Type: "ROOM"}}}},
+			Types:   []skillmodel.SlotType{{Name: "ROOM", Values: []skillmodel.SlotValue{{Value: "lounge"}}}},
+		},
+		Languages: map[string]skillmodel.Language{"en": {
+			Utterances: map[string][]string{"ViewRoom": {"show the {Room}"}},
+			Types:      map[string][]skillmodel.SlotValue{"ROOM": {{ID: "bed", Value: "bedroom"}, {ID: "den", Value: "den"}}},
+		}},
+		Locales: map[string]skillmodel.Locale{
+			"en-AU": {Language: "en", Types: map[string]map[string][]string{"ROOM": {"den": {"rumpus room"}, "lounge": {"lounge room"}}}},
+			"en-US": {Language: "en"},
+		},
+	}
+
+	types, ok := voiceData(src, "en", nil)["Types"].([]VoiceType)
+	require.True(t, ok)
+	require.Len(t, types, 1)
+	assert.Equal(t, []LocaleValues{{Locale: "en-AU", Values: []skillmodel.SlotValue{
+		{Value: "lounge", Synonyms: []string{"lounge room"}},
+		{ID: "den", Value: "den", Synonyms: []string{"rumpus room"}},
+	}}}, types[0].Extra, "each value the locale adds to, in the type's order, with only its synonyms")
+
+	pages, err := VoiceCommands(loadSources(t), i18n.FS)
+	require.NoError(t, err)
+	assert.Contains(t, string(pages["fr"]), "Also in `fr-CA`:\n\n- clip (vidéoclips)\n- chanson (toune, tounes)\n")
 }
 
 func TestSectionTitles(t *testing.T) {
@@ -156,4 +187,53 @@ func TestEditURL(t *testing.T) {
 	assert.Equal(t, CrowdinProject+"/de", editURL("de"))
 	assert.Equal(t, CrowdinProject+"/es-ES", editURL("es"), "Crowdin names Spanish by its regional variant")
 	assert.Equal(t, CrowdinProject+"/fr", editURL("fr"))
+	assert.Equal(t, CrowdinProject+"/pt-BR", editURL("pt"), "Crowdin names Portuguese by its regional variant")
+}
+
+// TestCrowdinLanguageMatchesCrowdinConfig keeps crowdinLanguage the reverse of every file's languages_mapping in .crowdin.yml.
+func TestCrowdinLanguageMatchesCrowdinConfig(t *testing.T) {
+	t.Parallel()
+
+	b, err := os.ReadFile("../../.crowdin.yml")
+	require.NoError(t, err)
+
+	var cfg struct {
+		Files []struct {
+			Source  string `yaml:"source"`
+			Mapping struct {
+				TwoLetters map[string]string `yaml:"two_letters_code"`
+			} `yaml:"languages_mapping"`
+		} `yaml:"files"`
+	}
+	require.NoError(t, yaml.Unmarshal(b, &cfg))
+	require.NotEmpty(t, cfg.Files)
+
+	for _, f := range cfg.Files {
+		require.NotEmpty(t, f.Mapping.TwoLetters, "%s maps its languages", f.Source)
+
+		for crowdin, dir := range f.Mapping.TwoLetters {
+			assert.Equal(t, crowdin, crowdinLanguage(dir), "%s: %s", f.Source, dir)
+		}
+
+		for dir, crowdin := range crowdinRegional {
+			assert.Equal(t, dir, f.Mapping.TwoLetters[crowdin], "%s maps %s", f.Source, crowdin)
+		}
+	}
+}
+
+func TestVoiceCommandsShowLaunchPhrases(t *testing.T) {
+	pages, err := VoiceCommands(loadSources(t), i18n.FS)
+	require.NoError(t, err)
+
+	assert.Contains(t, string(pages["en"]), "| `en-GB` | \"Alexa, open encore\" | \"start encore\", \"launch encore\" | \"Alexa, open the encore skill\" |\n")
+	assert.Contains(t, string(pages["ja"]), "| `ja-JP` | \"Alexa, アンコールを開いて\" |")
+	assert.Contains(t, string(pages["fr"]), "| `fr-CA` | \"Alexa, ouvre kodi\" | \"lance kodi\", \"démarre kodi\" | \"Alexa, ouvre la compétence kodi\" |\n")
+
+	for lang, locale := range map[string]string{"nl": "nl-NL", "pt": "pt-BR", "hi": "hi-IN", "ar": "ar-SA"} {
+		assert.Contains(t, string(pages[lang]), ":::caution[A plain open phrase may not start the skill]\nIn `"+locale+"`, ", lang)
+	}
+
+	for _, lang := range []string{"en", "de", "es", "fr", "it", "ja"} {
+		assert.NotContains(t, string(pages[lang]), "A plain open phrase may not start the skill", lang)
+	}
 }

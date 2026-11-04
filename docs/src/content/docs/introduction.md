@@ -22,7 +22,7 @@ Encore is in its first releases (0.x). Voice control, the web interface and skil
 - **Rooms and several Kodi instances.** Each Echo can be linked to a Kodi instance, and requests can name a room: "play Dune in the bedroom". Instances that share a MySQL/MariaDB library are detected and share one index.
 - **Wake-on-LAN.** A sleeping Kodi is woken and the request retried.
 - **A request log and match tester.** See what Alexa heard, how Encore matched it, which Kodi calls it made and how long each step took, and try queries against your library.
-- **Nine locales, five languages.** English (Australia, Canada, India, United Kingdom, United States), German, French, Spanish and Italian.
+- **Every Alexa locale: seventeen locales, ten languages.** English (Australia, Canada, India, United Kingdom, United States), German, French (France, Canada), Spanish (Spain, Mexico, United States), Italian, Dutch, Brazilian Portuguese, Arabic (Saudi Arabia), Hindi and Japanese.
 - **Runs anywhere.** A single binary and a multi-arch container image, with local, S3-compatible or WebDAV storage and an optional stateless mode for hosts without persistent volumes.
 
 ## How it fits together

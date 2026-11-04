@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"maps"
 	"net/http"
 	"slices"
 	"strings"
@@ -10,8 +11,21 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 
+	"github.com/nightah/encore/internal/adapter/alexa"
+	"github.com/nightah/encore/internal/app"
+	"github.com/nightah/encore/internal/core/match"
+	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/store"
 )
+
+// scriptKinds are the kinds libraryLanguages reads a library's script from: the titles people ask for by name, without the episodes and songs that outnumber them.
+var scriptKinds = []media.Kind{media.KindMovie, media.KindTVShow, media.KindArtist, media.KindAlbum}
+
+// languageNames are the title languages' English names, by code.
+var languageNames = map[string]string{
+	"ar": "Arabic", "de": "German", "en": "English", "es": "Spanish", "fr": "French",
+	"hi": "Hindi", "it": "Italian", "ja": "Japanese", "nl": "Dutch", "pt": "Portuguese",
+}
 
 func (a *API) registerOverview(api huma.API) {
 	ec := &endpointCache{}
@@ -80,6 +94,12 @@ func (a *API) overview(ctx context.Context, ec *endpointCache) (Overview, error)
 		return o, err
 	}
 
+	o.RejectedRequests = []RejectedRequests{}
+
+	for _, r := range a.app.Rejections().Counts(a.now()) {
+		o.RejectedRequests = append(o.RejectedRequests, RejectedRequests{Stage: string(r.Stage), Count: r.Count, LastAt: r.Last})
+	}
+
 	return o, nil
 }
 
@@ -146,6 +166,47 @@ func (a *API) checkEndpoint(ctx context.Context, ec *endpointCache, url string) 
 	return check
 }
 
+// rejectedAttention asks about voice requests refused in the last day (alexa.RecentRejections) at a check a real Alexa request can fail: the host clock, the signature, the skill ID. Requests with no signature, with a certificate URL that isn't Amazon's or with an unreadable body are left out, since any scanner on the internet sends those; a stale timestamp only counts when Alexa signed the request. An item stops showing a day after the last rejection it counts.
+func (a *API) rejectedAttention() []Attention {
+	var out []Attention
+
+	for _, r := range a.app.Rejections().Counts(a.now()) {
+		if r.Recent == 0 {
+			continue
+		}
+
+		att := Attention{Kind: "requests_rejected", Stage: string(r.Stage), Count: r.Recent}
+		n := plural(r.Recent, "1 request", "%d requests")
+
+		switch r.Stage {
+		case alexa.RejectTimestamp:
+			att.Title = n + " rejected for a stale timestamp"
+			att.Detail = "Alexa stamps each request with the time it was sent, and Encore refuses one more than 150 seconds from its own clock. Check that this host's clock is synchronised."
+		case alexa.RejectSignature:
+			att.Title = n + " rejected for a bad signature"
+			att.Detail = "Encore couldn't confirm that Alexa sent them. If they came from your Echo, check that Encore can reach s3.amazonaws.com for Amazon's certificate and that your proxy passes requests on unchanged."
+		case alexa.RejectSkillID:
+			att.Title = n + " for another skill rejected"
+			att.Detail = "Alexa signed them for a skill ID other than the one Encore expects. Check alexa.skill_id, or deploy the skill again."
+			att.Link = "/alexa-skill"
+		default:
+			continue
+		}
+
+		out = append(out, att)
+	}
+
+	return out
+}
+
+func plural(n int, one, many string) string {
+	if n == 1 {
+		return one
+	}
+
+	return fmt.Sprintf(many, n)
+}
+
 // attention is ordered most important first.
 func (a *API) attention(ctx context.Context) ([]Attention, error) {
 	out := []Attention{}
@@ -179,6 +240,8 @@ func (a *API) attention(ctx context.Context) ([]Attention, error) {
 	case info.AutoDeployPaused != "":
 		// The pause names the failure, so it stands in for deploy_failed when an automatic deploy failed.
 		out = append(out, Attention{Kind: "auto_deploy_paused", Title: "Automatic deploys are paused", Detail: strings.TrimSuffix(info.AutoDeployPaused, ".") + ". Deploy the skill by hand once it's fixed to resume them.", Link: "/alexa-skill"})
+	case info.AutoDeployRetry.V != nil:
+		// Encore is trying the automatic deploy again; the pause asks for attention if it gives up.
 	case info.State == "failed":
 		detail := ""
 		if l := info.LastDeploy.V; l != nil {
@@ -210,6 +273,10 @@ func (a *API) attention(ctx context.Context) ([]Attention, error) {
 		}
 	}
 
+	out = append(out, a.rejectedAttention()...)
+
+	out = append(out, libraryLanguages(scriptsOf(a.app.Libraries()), info.LocalesEnabled)...)
+
 	devs, err := a.app.DB().EchoDevices().List(ctx)
 	if err != nil {
 		return nil, err
@@ -233,4 +300,59 @@ func (a *API) attention(ctx context.Context) ([]Attention, error) {
 	}
 
 	return out, nil
+}
+
+// scriptsOf counts each library's films, shows, artists and albums (scriptKinds) and how many of them are written in the script of each language match.ScriptLanguage names.
+func scriptsOf(libs []app.Library) []libraryScripts {
+	out := make([]libraryScripts, 0, len(libs))
+
+	for _, lib := range libs {
+		ls := libraryScripts{source: lib.Source, language: lib.Language, scripts: map[string]int{}}
+
+		if lib.Catalog != nil {
+			for _, kind := range scriptKinds {
+				for _, it := range lib.Catalog.Items(kind) {
+					ls.titles++
+
+					if l := match.ScriptLanguage(it.Title); l != "" {
+						ls.scripts[l]++
+					}
+				}
+			}
+		}
+
+		out = append(out, ls)
+	}
+
+	return out
+}
+
+// libraryLanguages asks to change a library's title language when most of its titles are written in the script of a language the skill has a locale enabled in (Japanese, Hindi or Arabic) and the library is matched with another language's rules. Requests in that script are read with its rules in any library, but the library's titles are then matched with the other language's stop words, numbers and sound-alike keys.
+func libraryLanguages(libs []libraryScripts, locales []string) []Attention {
+	enabled := map[string]bool{}
+
+	for _, l := range locales {
+		lang, _, _ := strings.Cut(l, "-")
+		enabled[lang] = true
+	}
+
+	var out []Attention
+
+	for _, lib := range libs {
+		for _, lang := range slices.Sorted(maps.Keys(lib.scripts)) {
+			if lang == lib.language || !enabled[lang] || 2*lib.scripts[lang] <= lib.titles {
+				continue
+			}
+
+			out = append(out, Attention{
+				Kind:   "library_language",
+				Title:  fmt.Sprintf("Most of %s's titles are in %s", lib.source, languageNames[lang]),
+				Detail: fmt.Sprintf("Its title language is %s. Set it to %s so its titles are matched with the rules for %s.", languageNames[lib.language], languageNames[lang], languageNames[lang]),
+				Link:   "/kodi",
+				Params: map[string]string{"instance": lib.source, "language": lang, "current": lib.language},
+			})
+		}
+	}
+
+	return out
 }

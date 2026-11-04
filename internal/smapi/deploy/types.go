@@ -6,6 +6,7 @@ import (
 	"maps"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/nightah/encore/internal/skillmodel"
 	"github.com/nightah/encore/internal/smapi"
@@ -42,6 +43,8 @@ type State struct {
 	Hash string `json:"hash,omitempty"`
 	// SettingsHash is the hash of that package without library titles, so the caller can tell a settings change from new titles. The deployer carries it over unchanged.
 	SettingsHash string `json:"settingsHash,omitempty"`
+	// Degraded are the locales the deploy Hash stands for built with fewer slot values, which a skipped deploy reports as its own.
+	Degraded map[string]Degradation `json:"degraded,omitempty"`
 }
 
 // NeedsDeploy reports whether a package with hash differs from what was last deployed.
@@ -67,6 +70,10 @@ func (e *Error) Error() string {
 
 	if len(parts) == 0 {
 		parts = append(parts, "no details reported")
+	}
+
+	if e.ImportID != "" {
+		parts = append(parts, "import "+e.ImportID)
 	}
 
 	return fmt.Sprintf("deploy: %s failed: %s", e.Step, strings.Join(parts, "; "))
@@ -96,6 +103,8 @@ type Request struct {
 	Package skillpkg.Options
 	// Force deploys even when the package is unchanged.
 	Force bool
+	// Disabled leaves the skill disabled for testing, disabling it if it was enabled, so no device reaches it. A disabled skill can't be simulated, so Simulate is skipped.
+	Disabled bool
 	// Simulate smoke-tests the skill by opening it with the simulation API, in PrimaryLocale when that is deployed and can be simulated, else in the first locale that can.
 	Simulate      bool
 	PrimaryLocale string
@@ -103,6 +112,10 @@ type Request struct {
 	Progress func(Event)
 	// Log, if set, receives each import and build status Amazon reports, at debug level.
 	Log *slog.Logger
+	// KeepSlots are slot types a second attempt never thins out, e.g. room names, which have to be complete to be any use.
+	KeepSlots []string
+	// SilentRetryWait is how long to wait before importing once more after Amazon fails an import without saying why. Zero waits silentRetryWait; a negative wait doesn't import again.
+	SilentRetryWait time.Duration
 }
 
 // Result is a deploy's outcome. State is meaningful even when Deploy returns an error and should be persisted, so a retry reuses the skill.
@@ -111,6 +124,21 @@ type Result struct {
 	Skipped  bool                    `json:"skipped"`
 	Locales  map[string]LocaleStatus `json:"locales,omitempty"`
 	Warnings []string                `json:"warnings,omitempty"`
+	// Degraded are the locales a successful deploy built with fewer slot values than asked for.
+	Degraded map[string]Degradation `json:"degraded,omitempty"`
+}
+
+// Degradation is how a locale whose model Amazon would not build with every slot value was built with fewer.
+type Degradation struct {
+	// Reason is what Amazon said when it would not build the locale with every value.
+	Reason []smapi.Problem `json:"reason"`
+	// Dropped are the values Amazon's errors named, which were left out; when it named none, every other value of each slot type not in Request.KeepSlots was.
+	Dropped []string `json:"dropped,omitempty"`
+	// Kept and Total count the slot values, of every type, in the locale's model and asked for.
+	Kept  int `json:"kept"`
+	Total int `json:"total"`
+	// Bytes is the size of the locale's model as deployed.
+	Bytes int `json:"bytes"`
 }
 
 // Deployer deploys the skill built from src through client.
@@ -128,4 +156,27 @@ type run struct {
 	// missing counts consecutive build polls a locale has been absent from the skill status.
 	missing  map[string]int
 	imported map[string]bool
+	// retried is set once the package was built again with fewer slot values, which happens at most once a deploy.
+	retried bool
+}
+
+// simulator says phrases to one skill's simulator.
+type simulator struct {
+	client  *smapi.Client
+	skillID string
+	debug   func(msg string, args ...any)
+}
+
+// OpenCheck is how the simulator answered one locale's launch phrases.
+type OpenCheck struct {
+	Locale string `json:"locale"`
+	// Tries are the phrases said, in the order the locale lists them, up to the first that reached the skill.
+	Tries []OpenTry `json:"tries"`
+}
+
+// OpenTry is one launch phrase and the simulator's answer. Simulation is set even when the request failed, with the failure as its Error; Refused is set when the simulator turned the request down (HTTP 400), as it does for a locale it doesn't simulate.
+type OpenTry struct {
+	Phrase     string            `json:"phrase"`
+	Simulation *smapi.Simulation `json:"simulation"`
+	Refused    bool              `json:"refused,omitempty"`
 }

@@ -1,0 +1,713 @@
+# Grown set: testdata/grown is a held-out set of corpora, kept apart from the original set (asr_corpus.yaml and phonetic/). TestASRCorpus and TestPhoneticEval score both sets and report them separately.
+#
+# Dutch (nl-NL) phonetic evaluation corpus, second set, for TestPhoneticEval. Same schema as asr_corpus.yaml; cases are scored, not asserted, so there is no xfail. It adds two suites with their own libraries to the first Dutch set; no play case repeats a heard string from it, and some absent cases deliberately name titles from its library, which are not in these libraries.
+#
+# Libraries: real, well-known Dutch and Flemish films and series, English-language films and series that Dutch speakers ask for (with original release years), and Dutch and Flemish artists, albums and songs (albums and songs with their original years), with near neighbours that share words, first names or numbers (Soof and Soof 2, Bon Bini Holland and Bon Bini Holland 2, Het paard van Sinterklaas and Waar is het paard van Sinterklaas?, Ja zuster, nee zuster as both film and series, three Lord of the Rings films, Toy Story 1 to 3, Blade Runner and Blade Runner 2049, The Two Towers and Fawlty Towers, Kees & Co and Mees Kees, De Ridder and Michiel de Ruyter, World of Hurt as both album and song, Gerard Joling and Gerard Cox, Herman van Veen and Toon Hermans, Will Tura and Willeke Alberti, De Dijk and Frans Duijts) so a wrong play is possible.
+#
+# Cases: what a speech recogniser plausibly writes when a Dutch or Flemish speaker asks for the title. Each mishearing sits under a "class" comment naming the confusion it models. The classes are documented Dutch spelling-to-sound ambiguities and the errors ASR language models make when a name is out of vocabulary or a more frequent word sounds alike:
+#   ij-ei: ij, ei and the old ey/eij spellings all write one diphthong (Van Speijk/Van Speik, Kopspijkers/kopspeikers, Trijntje/treintje, De Dijk/de deik).
+#   au-ou: au and ou(w) write one diphthong, and English ow and aw are heard as it (Kauwboy/kouwboy, Douwe/Dauwe, Lee Towers/lee touwers, Fawlty Towers/fawlty touwers).
+#   g-ch: g and ch are one velar fricative in the north, so final g is written ch and the reverse; the soft southern and Flemish g is heard as h (Jeugd/jeuchd, tegenwoordig/tegenwoordich, Riphagen/Riphachen, Het Goede Doel/het hoede doel, Gert/hert).
+#   devoicing: final d and t sound alike, so d is written t and t is written d, and English final voiced consonants are devoiced (paard/paart, avond/avont, Walking Dead/walking det, drugs/druks).
+#   v-f z-s: initial v and z are devoiced in the north and f and s voiced by hypercorrection (Vader/Fader, Zusje/susje, De zaak/de saak, Familie/vamilie, Focus/vocus).
+#   sch: sch is sx at the start of a syllable and s in -isch and -sche, and English sh is written sj or sch (Medisch/medies, Schitt's/sjits, Sherlock/sjerlok, Shocking/sjokking).
+#   vowel-length: long vowels written double in closed syllables and single in open ones, so the recogniser writes them single or double the wrong way, and doubled consonants after short vowels are dropped (Mees Kees/mes kes, paard/pard, Buuren/buren, Boom/bom, Pappie/papie, Petteflet/peteflet).
+#   ui-eu-oe: the rounded vowels ui, eu, oe, uu and English oo and ou confused (Huis/heus, suiker/seuker, Jeroen/jerun, Duijts/deuts, Boer/buur, Hoover/hoever).
+#   en: the final n of -en is not said in most of the Netherlands and Flanders (vrienden/vriende, huilen/huile, werken/werke, Rowwen/rowwe).
+#   w-v: w and v swapped by Flemish, Surinamese and English-influenced speakers, and by hypercorrection (Witse/vitse, Westworld/vestworld, Will/vill, Twilight/tvilight, Vader/wader).
+#   c-k-s: c read as k or s and ch as tsj in loans and names, and letters spelled out (café/kafee, Chernobyl/tsjernobyl, Focus/fokus, Krezip/crezip, Professor T./professor tee, Dossier K./dossier kaa).
+#   diminutive: -je, -tje and -pje added, dropped or swapped for the Flemish and Brabant -ke and the colloquial -ie (Abeltje/abeltjes, Swiebertje/swiebertie, Zusje/zussie/zuske, Snollebollekes/snollebolletjes, Smurfenlied/smurfenliedje).
+#   apostrophe: 't and 'n written as het and een or with the apostrophe dropped, and the English possessive and contraction apostrophes dropped ('t Hof van Commerce/het hof van commerce, 't Is/het is, Schitt's/schitts, Lil'/lil, Chef'Special/chef special).
+#   compound: compounds and one-word names split or joined, hyphens dropped (Kopspijkers/kop spijkers, Achtste-groepers/achtstegroepers, Ghostbusters/ghost busters, Hooverphonic/hoover phonic, Welterusten/wel te rusten).
+#   english: English titles as a Dutch recogniser writes them, with the to d or de, th to t, and English vowels in Dutch spelling (The Lion King/de laion king, Jurassic/joerassic, Peaky/pieky, Calm/kalm, Animals/enimels).
+#   number: digits against words, Dutch numbers with units before tens (eenentwintig, negenenveertig), years read in hundreds, Dutch and English number words, & said as en, and the Dutch titles of English films (Toy Story 2/twee/two, 1917/negentien zeventien, 2049/tweeduizend negenenveertig, 28/achtentwintig, Se7en/zeven, The Two Towers/De Twee Torens, 3JS/drie jee es).
+#   real-word: a more frequent real word replaces the title word (Ruyter/ruiter, Clown/kloon, Abeltje/appeltje, Kees/kaas, Dana Winner/Dana winnaar, Munnik/monnik, Typhoon/tyfoon, Duijts/Duits, Normaal/normal).
+#   diacritic: diaeresis, grave and acute accents dropped (Tiësto/tiesto, Hèze/heze, café/cafe).
+# Controls (exact titles as an ASR writes them, lower case, punctuation dropped), the distinctive opening words of a title (peaky for Peaky Blinders), ambiguous requests (ask among the near neighbours), missing sequels (ask) and absent titles (not_found, including near misses that share words with library titles) keep the decision thresholds honest.
+#
+# Cases describe what a listener hears; don't change a case to suit an encoder's results, or the comparison stops meaning anything (see docs/src/content/docs/contributing/dependencies.md).
+suites:
+  - name: dutch films and series
+    lang: nl
+    library:
+      - {id: meisjerodehaar, kind: movie, title: "Het meisje met het rode haar", year: 1981}
+      - {id: antonia, kind: movie, title: "Antonia", year: 1995}
+      - {id: borgman, kind: movie, title: "Borgman", year: 2013}
+      - {id: tirza, kind: movie, title: "Tirza", year: 2010}
+      - {id: bankier, kind: movie, title: "Bankier van het verzet", year: 2018}
+      - {id: riphagen, kind: movie, title: "Riphagen", year: 2016}
+      - {id: ruyter, kind: movie, title: "Michiel de Ruyter", year: 2015}
+      - {id: bombardement, kind: movie, title: "Het bombardement", year: 2012}
+      - {id: abeltje, kind: movie, title: "Abeltje", year: 1998}
+      - {id: diktrom, kind: movie, title: "Dik Trom", year: 2010}
+      - {id: pluk, kind: movie, title: "Pluk van de Petteflet", year: 2004}
+      - {id: jazusterfilm, kind: movie, title: "Ja zuster, nee zuster", year: 2002}
+      - {id: suiker, kind: movie, title: "Hoe duur was de suiker", year: 2013}
+      - {id: publieke, kind: movie, title: "Publieke werken", year: 2015}
+      - {id: fanfare, kind: movie, title: "Fanfare", year: 1958}
+      - {id: overval, kind: movie, title: "De overval", year: 1962}
+      - {id: dokter, kind: movie, title: "Komt een vrouw bij de dokter", year: 2009}
+      - {id: brasserie, kind: movie, title: "Brasserie Romantiek", year: 2012}
+      - {id: benx, kind: movie, title: "Ben X", year: 2007}
+      - {id: girl, kind: movie, title: "Girl", year: 2018}
+      - {id: close, kind: movie, title: "Close", year: 2022}
+      - {id: belgica, kind: movie, title: "Belgica", year: 2016}
+      - {id: patser, kind: movie, title: "Patser", year: 2018}
+      - {id: black, kind: movie, title: "Black", year: 2015}
+      - {id: dossierk, kind: movie, title: "Dossier K.", year: 2009}
+      - {id: alzheimer, kind: movie, title: "De zaak Alzheimer", year: 2003}
+      - {id: zusje, kind: movie, title: "Zusje", year: 1995}
+      - {id: zakmes, kind: movie, title: "Het zakmes", year: 1992}
+      - {id: minoes, kind: movie, title: "Minoes", year: 2001}
+      - {id: soof, kind: movie, title: "Soof", year: 2013}
+      - {id: soof2, kind: movie, title: "Soof 2", year: 2016}
+      - {id: bonbini, kind: movie, title: "Bon Bini Holland", year: 2015}
+      - {id: bonbini2, kind: movie, title: "Bon Bini Holland 2", year: 2018}
+      - {id: paard, kind: movie, title: "Het paard van Sinterklaas", year: 2005}
+      - {id: waarispaard, kind: movie, title: "Waar is het paard van Sinterklaas?", year: 2007}
+      - {id: achtste, kind: movie, title: "Achtste-groepers huilen niet", year: 2012}
+      - {id: kauwboy, kind: movie, title: "Kauwboy", year: 2012}
+      - {id: meeskees, kind: movie, title: "Mees Kees", year: 2012}
+      - {id: brief, kind: movie, title: "De brief voor de koning", year: 2008}
+      - {id: koningin, kind: movie, title: "Lang leve de koningin", year: 1995}
+      - {id: vurrukkulluk, kind: movie, title: "Het leven is vurrukkulluk", year: 2018}
+      - {id: marathon, kind: movie, title: "De marathon", year: 2012}
+      - {id: oogappels, kind: tvshow, title: "Oogappels", year: 2019}
+      - {id: klokhuis, kind: tvshow, title: "Het Klokhuis", year: 1988}
+      - {id: boerzoekt, kind: tvshow, title: "Boer zoekt vrouw", year: 2004}
+      - {id: ikvertrek, kind: tvshow, title: "Ik vertrek", year: 2006}
+      - {id: spangas, kind: tvshow, title: "SpangaS", year: 2007}
+      - {id: anubis, kind: tvshow, title: "Het Huis Anubis", year: 2006}
+      - {id: samsongert, kind: tvshow, title: "Samson en Gert", year: 1990}
+      - {id: ridder, kind: tvshow, title: "De Ridder", year: 2013}
+      - {id: familie, kind: tvshow, title: "Familie", year: 1991}
+      - {id: smeris, kind: tvshow, title: "Smeris", year: 2014}
+      - {id: toon, kind: tvshow, title: "Toon", year: 2016}
+      - {id: vanspeijk, kind: tvshow, title: "Van Speijk", year: 2006}
+      - {id: bassie, kind: tvshow, title: "Bassie & Adriaan", year: 1978}
+      - {id: swiebertje, kind: tvshow, title: "Swiebertje", year: 1961}
+      - {id: pipo, kind: tvshow, title: "Pipo de Clown", year: 1958}
+      - {id: fabeltjes, kind: tvshow, title: "De Fabeltjeskrant", year: 1968}
+      - {id: jazusterserie, kind: tvshow, title: "Ja zuster, nee zuster", year: 1966}
+      - {id: kopspijkers, kind: tvshow, title: "Kopspijkers", year: 1996}
+      - {id: flikkenrotterdam, kind: tvshow, title: "Flikken Rotterdam", year: 2016}
+      - {id: rijdende, kind: tvshow, title: "De Rijdende Rechter", year: 1995}
+      - {id: keesco, kind: tvshow, title: "Kees & Co", year: 1997}
+      - {id: oppassen, kind: tvshow, title: "Oppassen!!!", year: 1991}
+      - {id: vrienden, kind: tvshow, title: "Vrienden voor het leven", year: 1990}
+      - {id: mcw, kind: tvshow, title: "Medisch Centrum West", year: 1988}
+      - {id: kotmadam, kind: tvshow, title: "De Kotmadam", year: 1991}
+      - {id: aspe, kind: tvshow, title: "Aspe", year: 2004}
+      - {id: witse, kind: tvshow, title: "Witse", year: 2004}
+      - {id: eiland, kind: tvshow, title: "Het eiland", year: 2004}
+      - {id: professort, kind: tvshow, title: "Professor T.", year: 2015}
+      - {id: tabularasa, kind: tvshow, title: "Tabula Rasa", year: 2017}
+      - {id: fellowship, kind: movie, title: "The Lord of the Rings: The Fellowship of the Ring", year: 2001}
+      - {id: twotowers, kind: movie, title: "The Lord of the Rings: The Two Towers", year: 2002}
+      - {id: returnking, kind: movie, title: "The Lord of the Rings: The Return of the King", year: 2003}
+      - {id: ghostbusters, kind: movie, title: "Ghostbusters", year: 1984}
+      - {id: jurassic, kind: movie, title: "Jurassic Park", year: 1993}
+      - {id: lionking, kind: movie, title: "The Lion King", year: 1994}
+      - {id: titanic, kind: movie, title: "Titanic", year: 1997}
+      - {id: se7en, kind: movie, title: "Se7en", year: 1995}
+      - {id: m1917, kind: movie, title: "1917", year: 2019}
+      - {id: bladerunner, kind: movie, title: "Blade Runner", year: 1982}
+      - {id: br2049, kind: movie, title: "Blade Runner 2049", year: 2017}
+      - {id: days28, kind: movie, title: "28 Days Later", year: 2002}
+      - {id: odyssey, kind: movie, title: "2001: A Space Odyssey", year: 1968}
+      - {id: toystory, kind: movie, title: "Toy Story", year: 1995}
+      - {id: toystory2, kind: movie, title: "Toy Story 2", year: 1999}
+      - {id: toystory3, kind: movie, title: "Toy Story 3", year: 2010}
+      - {id: bruges, kind: movie, title: "In Bruges", year: 2008}
+      - {id: walkingdead, kind: tvshow, title: "The Walking Dead", year: 2010}
+      - {id: office, kind: tvshow, title: "The Office", year: 2005}
+      - {id: sherlock, kind: tvshow, title: "Sherlock", year: 2010}
+      - {id: peaky, kind: tvshow, title: "Peaky Blinders", year: 2013}
+      - {id: fawlty, kind: tvshow, title: "Fawlty Towers", year: 1975}
+      - {id: westworld, kind: tvshow, title: "Westworld", year: 2016}
+      - {id: wire, kind: tvshow, title: "The Wire", year: 2002}
+      - {id: chernobyl, kind: tvshow, title: "Chernobyl", year: 2019}
+      - {id: schitts, kind: tvshow, title: "Schitt's Creek", year: 2015}
+    cases:
+      # Controls: the title as an ASR writes it.
+      - {heard: "het meisje met het rode haar", want: play, id: meisjerodehaar}
+      - {heard: "antonia", want: play, id: antonia}
+      - {heard: "borgman", want: play, id: borgman}
+      - {heard: "bankier van het verzet", want: play, id: bankier}
+      - {heard: "michiel de ruyter", want: play, id: ruyter}
+      - {heard: "abeltje", want: play, id: abeltje}
+      - {heard: "dik trom", want: play, id: diktrom}
+      - {heard: "pluk van de petteflet", want: play, id: pluk}
+      - {heard: "hoe duur was de suiker", want: play, id: suiker}
+      - {heard: "ben x", want: play, id: benx}
+      - {heard: "girl", want: play, id: girl}
+      - {heard: "close", want: play, id: close}
+      - {heard: "patser", want: play, id: patser}
+      - {heard: "soof", want: play, id: soof}
+      - {heard: "bon bini holland", want: play, id: bonbini}
+      - {heard: "kauwboy", want: play, id: kauwboy}
+      - {heard: "mees kees", want: play, id: meeskees}
+      - {heard: "het klokhuis", want: play, id: klokhuis}
+      - {heard: "boer zoekt vrouw", want: play, id: boerzoekt}
+      - {heard: "ik vertrek", want: play, id: ikvertrek}
+      - {heard: "het huis anubis", want: play, id: anubis}
+      - {heard: "samson en gert", want: play, id: samsongert}
+      - {heard: "de ridder", want: play, id: ridder}
+      - {heard: "smeris", want: play, id: smeris}
+      - {heard: "toon", want: play, id: toon}
+      - {heard: "witse", want: play, id: witse}
+      - {heard: "aspe", want: play, id: aspe}
+      - {heard: "de fabeltjeskrant", want: play, id: fabeltjes}
+      - {heard: "tabula rasa", want: play, id: tabularasa}
+      - {heard: "professor t", want: play, id: professort}
+      - {heard: "dossier k", want: play, id: dossierk}
+      - {heard: "oppassen", want: play, id: oppassen}
+      - {heard: "waar is het paard van sinterklaas", want: play, id: waarispaard}
+      - {heard: "het paard van sinterklaas", want: play, id: paard}
+      - {heard: "ja zuster nee zuster", want: play, id: jazusterfilm, kinds: [movie]}
+      - {heard: "ja zuster nee zuster", want: play, id: jazusterserie, kinds: [tvshow]}
+      - {heard: "ghostbusters", want: play, id: ghostbusters}
+      - {heard: "jurassic park", want: play, id: jurassic}
+      - {heard: "titanic", want: play, id: titanic}
+      - {heard: "sherlock", want: play, id: sherlock}
+      - {heard: "peaky blinders", want: play, id: peaky}
+      - {heard: "fawlty towers", want: play, id: fawlty}
+      - {heard: "the wire", want: play, id: wire}
+      - {heard: "in bruges", want: play, id: bruges}
+      - {heard: "toy story", want: play, id: toystory}
+      - {heard: "blade runner", want: play, id: bladerunner}
+      - {heard: "peaky", want: play, id: peaky}
+      - {heard: "jurassic", want: play, id: jurassic}
+      - {heard: "bankier", want: play, id: bankier}
+      # Class ij-ei: one diphthong, several spellings.
+      - {heard: "van speik", want: play, id: vanspeijk}
+      - {heard: "van spijk", want: play, id: vanspeijk}
+      - {heard: "kopspeikers", want: play, id: kopspijkers}
+      - {heard: "de reidende rechter", want: play, id: rijdende}
+      - {heard: "het ijland", want: play, id: eiland}
+      # Class au-ou: one diphthong, two spellings, and English ow and aw.
+      - {heard: "kouwboy", want: play, id: kauwboy}
+      - {heard: "fawlty touwers", want: play, id: fawlty}
+      - {heard: "foltie towers", want: play, id: fawlty}
+      # Class g-ch: one velar fricative, and the soft g heard as h.
+      - {heard: "riphachen", want: play, id: riphagen}
+      - {heard: "migiel de ruyter", want: play, id: ruyter}
+      - {heard: "samson en hert", want: play, id: samsongert}
+      - {heard: "belchica", want: play, id: belgica}
+      # Class devoicing: final d and t sound alike.
+      - {heard: "het paart van sinterklaas", want: play, id: paard}
+      - {heard: "waar is het paart van sinterklaas", want: play, id: waarispaard}
+      - {heard: "samson en gerd", want: play, id: samsongert}
+      - {heard: "bankier van het verzed", want: play, id: bankier}
+      - {heard: "het bombardemend", want: play, id: bombardement}
+      - {heard: "de walking det", want: play, id: walkingdead}
+      - {heard: "boer zoekd vrouw", want: play, id: boerzoekt}
+      # Class v-f z-s: initial v and z devoiced, and the reverse.
+      - {heard: "susje", want: play, id: zusje}
+      - {heard: "de saak alzheimer", want: play, id: alzheimer}
+      - {heard: "het sakmes", want: play, id: zakmes}
+      - {heard: "frienden voor het leven", want: play, id: vrienden}
+      - {heard: "de overfal", want: play, id: overval}
+      - {heard: "fan speijk", want: play, id: vanspeijk}
+      - {heard: "het leven is furrukkulluk", want: play, id: vurrukkulluk}
+      - {heard: "ja suster nee suster", want: play, id: jazusterserie, kinds: [tvshow]}
+      - {heard: "vamilie", want: play, id: familie}
+      # Class sch: sch said s in -isch, and English sh written sj or sch.
+      - {heard: "sjits creek", want: play, id: schitts}
+      - {heard: "sjerlok", want: play, id: sherlock}
+      - {heard: "scherlock", want: play, id: sherlock}
+      - {heard: "medies centrum west", want: play, id: mcw}
+      - {heard: "medisch sentrum west", want: play, id: mcw}
+      # Class vowel-length: long vowels and doubled consonants written the wrong way.
+      - {heard: "mes kes", want: play, id: meeskees}
+      - {heard: "het pard van sinterklaas", want: play, id: paard}
+      - {heard: "war is het paard van sinterklaas", want: play, id: waarispaard}
+      - {heard: "kes en co", want: play, id: keesco}
+      - {heard: "hoe dur was de suiker", want: play, id: suiker}
+      - {heard: "ogappels", want: play, id: oogappels}
+      - {heard: "ja zuster ne zuster", want: play, id: jazusterfilm, kinds: [movie]}
+      - {heard: "pluk van de peteflet", want: play, id: pluk}
+      - {heard: "de kotmaadam", want: play, id: kotmadam}
+      # Class ui-eu-oe: the rounded vowels confused.
+      - {heard: "het heus anubis", want: play, id: anubis}
+      - {heard: "hoe duur was de seuker", want: play, id: suiker}
+      - {heard: "achtste groepers heulen niet", want: play, id: achtste}
+      - {heard: "het klokheus", want: play, id: klokhuis}
+      - {heard: "buur zoekt vrouw", want: play, id: boerzoekt}
+      - {heard: "minous", want: play, id: minoes}
+      # Class en: the final n of -en not said.
+      - {heard: "vriende voor het leve", want: play, id: vrienden}
+      - {heard: "achtste groepers huile niet", want: play, id: achtste}
+      - {heard: "publieke werke", want: play, id: publieke}
+      - {heard: "het leve is vurrukkulluk", want: play, id: vurrukkulluk}
+      # Class w-v: w and v swapped.
+      - {heard: "vitse", want: play, id: witse}
+      - {heard: "vestworld", want: play, id: westworld}
+      - {heard: "de volking dead", want: play, id: walkingdead}
+      - {heard: "medisch centrum vest", want: play, id: mcw}
+      # Class c-k-s: c as k or s, ch as tsj, and letter names.
+      - {heard: "tsjernobyl", want: play, id: chernobyl}
+      - {heard: "kees en ko", want: play, id: keesco}
+      - {heard: "professor tee", want: play, id: professort}
+      - {heard: "dossier kaa", want: play, id: dossierk}
+      - {heard: "belgika", want: play, id: belgica}
+      - {heard: "pipo de klown", want: play, id: pipo}
+      - {heard: "de zaak altsheimer", want: play, id: alzheimer}
+      - {heard: "titanik", want: play, id: titanic}
+      # Class diminutive: -tje added, dropped or swapped for -ke and -ie.
+      - {heard: "abeltjes", want: play, id: abeltje}
+      - {heard: "swiebertjes", want: play, id: swiebertje}
+      - {heard: "swiebertie", want: play, id: swiebertje}
+      - {heard: "zussie", want: play, id: zusje}
+      - {heard: "zuske", want: play, id: zusje}
+      - {heard: "mees keesje", want: play, id: meeskees}
+      - {heard: "de fabelkrant", want: play, id: fabeltjes}
+      # Class apostrophe: 't for het, and the possessive apostrophe dropped.
+      - {heard: "t paard van sinterklaas", want: play, id: paard}
+      - {heard: "waar is t paard van sinterklaas", want: play, id: waarispaard}
+      - {heard: "t eiland", want: play, id: eiland}
+      - {heard: "t klokhuis", want: play, id: klokhuis}
+      - {heard: "t huis anubis", want: play, id: anubis}
+      - {heard: "t zakmes", want: play, id: zakmes}
+      - {heard: "schitts creek", want: play, id: schitts}
+      # Class compound: compounds split or joined, hyphens dropped.
+      - {heard: "kop spijkers", want: play, id: kopspijkers}
+      - {heard: "het klok huis", want: play, id: klokhuis}
+      - {heard: "achtstegroepers huilen niet", want: play, id: achtste}
+      - {heard: "achtste groepers huilen niet", want: play, id: achtste}
+      - {heard: "ghost busters", want: play, id: ghostbusters}
+      - {heard: "west world", want: play, id: westworld}
+      - {heard: "kauw boy", want: play, id: kauwboy}
+      - {heard: "oog appels", want: play, id: oogappels}
+      - {heard: "de fabeltjes krant", want: play, id: fabeltjes}
+      - {heard: "span gas", want: play, id: spangas}
+      - {heard: "rip hagen", want: play, id: riphagen}
+      # Class english: English titles as a Dutch recogniser writes them.
+      - {heard: "de lion king", want: play, id: lionking}
+      - {heard: "de laion king", want: play, id: lionking}
+      - {heard: "joerassic park", want: play, id: jurassic}
+      - {heard: "pieky blinders", want: play, id: peaky}
+      - {heard: "de office", want: play, id: office}
+      - {heard: "toi story", want: play, id: toystory}
+      - {heard: "goostbusters", want: play, id: ghostbusters}
+      - {heard: "de walking ded", want: play, id: walkingdead}
+      - {heard: "lord of de rings de return of de king", want: play, id: returnking}
+      - {heard: "de fellowship of de ring", want: play, id: fellowship}
+      - {heard: "blejd runner", want: play, id: bladerunner}
+      # Class number: digits, words, units before tens and Dutch titles.
+      - {heard: "toy story twee", want: play, id: toystory2}
+      - {heard: "toy story 2", want: play, id: toystory2}
+      - {heard: "toy story two", want: play, id: toystory2}
+      - {heard: "toy story drie", want: play, id: toystory3}
+      - {heard: "toy story three", want: play, id: toystory3}
+      - {heard: "negentien zeventien", want: play, id: m1917}
+      - {heard: "negentienhonderdzeventien", want: play, id: m1917}
+      - {heard: "1917", want: play, id: m1917}
+      - {heard: "blade runner tweeduizend negenenveertig", want: play, id: br2049}
+      - {heard: "blade runner twintig negenenveertig", want: play, id: br2049}
+      - {heard: "blade runner 2049", want: play, id: br2049}
+      - {heard: "achtentwintig days later", want: play, id: days28}
+      - {heard: "28 days later", want: play, id: days28}
+      - {heard: "twenty eight days later", want: play, id: days28}
+      - {heard: "tweeduizend een a space odyssey", want: play, id: odyssey}
+      - {heard: "2001 a space odyssey", want: play, id: odyssey}
+      - {heard: "seven", want: play, id: se7en}
+      - {heard: "zeven", want: play, id: se7en}
+      - {heard: "soof twee", want: play, id: soof2}
+      - {heard: "soof 2", want: play, id: soof2}
+      - {heard: "bon bini holland twee", want: play, id: bonbini2}
+      - {heard: "bon bini holland 2", want: play, id: bonbini2}
+      - {heard: "lord of the rings the two towers", want: play, id: twotowers}
+      - {heard: "de twee torens", want: play, id: twotowers}
+      - {heard: "8ste groepers huilen niet", want: play, id: achtste}
+      - {heard: "kees en co", want: play, id: keesco}
+      - {heard: "bassie en adriaan", want: play, id: bassie}
+      # Class real-word: a frequent word replaces a title word.
+      - {heard: "michiel de ruiter", want: play, id: ruyter}
+      - {heard: "pipo de kloon", want: play, id: pipo}
+      - {heard: "ben iks", want: play, id: benx}
+      - {heard: "cowboy", want: play, id: kauwboy}
+      - {heard: "de waaier", want: play, id: wire}
+      - {heard: "kloos", want: play, id: close}
+      - {heard: "appeltje", want: play, id: abeltje}
+      - {heard: "mees kaas", want: play, id: meeskees}
+      - {heard: "blek", want: play, id: black}
+      # Ambiguous: ask among the near neighbours.
+      - {heard: "the lord of the rings", want: ask, among: [fellowship, twotowers, returnking]}
+      - {heard: "paard van sinterklaas", want: ask, among: [paard, waarispaard]}
+      - {heard: "ja zuster nee zuster", want: ask, among: [jazusterfilm, jazusterserie]}
+      - {heard: "kees", want: ask, among: [keesco, meeskees]}
+      - {heard: "towers", want: ask, among: [twotowers, fawlty]}
+      # Missing sequels: ask.
+      - {heard: "toy story 4", want: ask}
+      - {heard: "toy story vier", want: ask}
+      - {heard: "soof drie", want: ask}
+      - {heard: "bon bini holland 3", want: ask}
+      # Absent titles, including near misses that share words with the library.
+      - {heard: "soldaat van oranje", want: not_found}
+      - {heard: "turks fruit", want: not_found}
+      - {heard: "zwartboek", want: not_found}
+      - {heard: "flodder", want: not_found}
+      - {heard: "de luizenmoeder", want: not_found}
+      - {heard: "penoza", want: not_found}
+      - {heard: "baantjer", want: not_found}
+      - {heard: "undercover", want: not_found}
+      - {heard: "wie is de mol", want: not_found}
+      - {heard: "flikken maastricht", want: not_found}
+      - {heard: "alles is familie", want: not_found}
+      - {heard: "shrek", want: not_found}
+      - {heard: "pulp fiction", want: not_found}
+      - {heard: "the godfather", want: not_found}
+      - {heard: "de vierde man", want: not_found}
+      - {heard: "the hobbit", want: not_found}
+      - {heard: "lord of the flies", want: not_found}
+      - {heard: "jurassic world", want: not_found}
+      - {heard: "fear the walking dead", want: not_found}
+      - {heard: "sherlock holmes", want: not_found}
+      - {heard: "meisje met de parel", want: not_found}
+      - {heard: "de club van sinterklaas", want: not_found}
+      - {heard: "boer zoekt vrouw internationaal", want: not_found}
+      - {heard: "west side story", want: not_found}
+      - {heard: "the lion king de musical", want: not_found}
+      - {heard: "het verdriet van belgië", want: not_found}
+      - {heard: "de kleine blonde dood", want: not_found}
+      - {heard: "de helleveeg", want: not_found}
+  - name: dutch music
+    lang: nl
+    library:
+      - {id: racoon, kind: artist, title: "Racoon"}
+      - {id: ilse, kind: artist, title: "Ilse DeLange"}
+      - {id: kensington, kind: artist, title: "Kensington"}
+      - {id: duncan, kind: artist, title: "Duncan Laurence"}
+      - {id: davina, kind: artist, title: "Davina Michelle"}
+      - {id: snollebollekes, kind: artist, title: "Snollebollekes"}
+      - {id: rowwen, kind: artist, title: "Rowwen Hèze"}
+      - {id: normaal, kind: artist, title: "Normaal"}
+      - {id: dedijk, kind: artist, title: "De Dijk"}
+      - {id: hermanvanveen, kind: artist, title: "Herman van Veen"}
+      - {id: boudewijn, kind: artist, title: "Boudewijn de Groot"}
+      - {id: toonhermans, kind: artist, title: "Toon Hermans"}
+      - {id: sonneveld, kind: artist, title: "Wim Sonneveld"}
+      - {id: shaffy, kind: artist, title: "Ramses Shaffy"}
+      - {id: liesbeth, kind: artist, title: "Liesbeth List"}
+      - {id: dannyvera, kind: artist, title: "Danny Vera"}
+      - {id: kriskross, kind: artist, title: "Kris Kross Amsterdam"}
+      - {id: snelle, kind: artist, title: "Snelle"}
+      - {id: ronnieflex, kind: artist, title: "Ronnie Flex"}
+      - {id: frenna, kind: artist, title: "Frenna"}
+      - {id: boef, kind: artist, title: "Boef"}
+      - {id: lilkleine, kind: artist, title: "Lil' Kleine"}
+      - {id: chefspecial, kind: artist, title: "Chef'Special"}
+      - {id: tiesto, kind: artist, title: "Tiësto"}
+      - {id: armin, kind: artist, title: "Armin van Buuren"}
+      - {id: garrix, kind: artist, title: "Martin Garrix"}
+      - {id: hardwell, kind: artist, title: "Hardwell"}
+      - {id: afrojack, kind: artist, title: "Afrojack"}
+      - {id: shockingblue, kind: artist, title: "Shocking Blue"}
+      - {id: focus, kind: artist, title: "Focus"}
+      - {id: helmutlotti, kind: artist, title: "Helmut Lotti"}
+      - {id: willtura, kind: artist, title: "Will Tura"}
+      - {id: hooverphonic, kind: artist, title: "Hooverphonic"}
+      - {id: deus, kind: artist, title: "dEUS"}
+      - {id: milow, kind: artist, title: "Milow"}
+      - {id: lostfreq, kind: artist, title: "Lost Frequencies"}
+      - {id: dimitri, kind: artist, title: "Dimitri Vegas & Like Mike"}
+      - {id: bartpeeters, kind: artist, title: "Bart Peeters"}
+      - {id: jansmit, kind: artist, title: "Jan Smit"}
+      - {id: joling, kind: artist, title: "Gerard Joling"}
+      - {id: gerardcox, kind: artist, title: "Gerard Cox"}
+      - {id: robdenijs, kind: artist, title: "Rob de Nijs"}
+      - {id: pauldeleeuw, kind: artist, title: "Paul de Leeuw"}
+      - {id: willeke, kind: artist, title: "Willeke Alberti"}
+      - {id: dana, kind: artist, title: "Dana Winner"}
+      - {id: hofvancommerce, kind: artist, title: "'t Hof van Commerce"}
+      - {id: vaderabraham, kind: artist, title: "Vader Abraham"}
+      - {id: toppers, kind: artist, title: "De Toppers"}
+      - {id: acda, kind: artist, title: "Acda en De Munnik"}
+      - {id: krezip, kind: artist, title: "Krezip"}
+      - {id: direct, kind: artist, title: "Di-rect"}
+      - {id: nicksimon, kind: artist, title: "Nick & Simon"}
+      - {id: jeugd, kind: artist, title: "De Jeugd van Tegenwoordig"}
+      - {id: typhoon, kind: artist, title: "Typhoon"}
+      - {id: trijntje, kind: artist, title: "Trijntje Oosterhuis"}
+      - {id: douwebob, kind: artist, title: "Douwe Bob"}
+      - {id: jeroen, kind: artist, title: "Jeroen van der Boom"}
+      - {id: kraantje, kind: artist, title: "Kraantje Pappie"}
+      - {id: goededoel, kind: artist, title: "Het Goede Doel"}
+      - {id: duijts, kind: artist, title: "Frans Duijts"}
+      - {id: leetowers, kind: artist, title: "Lee Towers"}
+      - {id: commonlinnets, kind: artist, title: "The Common Linnets"}
+      - {id: drie_js, kind: artist, title: "3JS"}
+      - {id: bzn, kind: artist, title: "BZN"}
+      - {id: worldofhurtalb, kind: album, title: "World of Hurt", year: 1998}
+      - {id: togetheralone, kind: album, title: "Together Alone", year: 1997}
+      - {id: virus, kind: album, title: "Virus", year: 1982}
+      - {id: skunk, kind: album, title: "Skunk", year: 1981}
+      - {id: moontan, kind: album, title: "Moontan", year: 1973}
+      - {id: movingwaves, kind: album, title: "Moving Waves", year: 1971}
+      - {id: motherearth, kind: album, title: "Mother Earth", year: 2000}
+      - {id: silentforce, kind: album, title: "The Silent Force", year: 2004}
+      - {id: rivals, kind: album, title: "Rivals", year: 2014}
+      - {id: vultures, kind: album, title: "Vultures", year: 2012}
+      - {id: lobidabasi, kind: album, title: "Lobi da Basi", year: 2014}
+      - {id: venus, kind: song, title: "Venus", year: 1969}
+      - {id: hocuspocus, kind: song, title: "Hocus Pocus", year: 1971}
+      - {id: twilightzone, kind: song, title: "Twilight Zone", year: 1982}
+      - {id: arcade, kind: song, title: "Arcade", year: 2019}
+      - {id: rollercoaster, kind: song, title: "Roller Coaster", year: 2019}
+      - {id: calmafter, kind: song, title: "Calm After the Storm", year: 2014}
+      - {id: dingadong, kind: song, title: "Ding-a-dong", year: 1975}
+      - {id: eenbeetje, kind: song, title: "Een beetje", year: 1959}
+      - {id: vijftienmiljoen, kind: song, title: "15 miljoen mensen", year: 1996}
+      - {id: zevendagen, kind: song, title: "Zeven dagen lang", year: 1976}
+      - {id: cafe, kind: song, title: "Het kleine café aan de haven", year: 1975}
+      - {id: smurfenlied, kind: song, title: "'t Smurfenlied", year: 1977}
+      - {id: voorbij, kind: song, title: "'t Is weer voorbij die mooie zomer", year: 1973}
+      - {id: kronenburg, kind: song, title: "Kronenburg Park", year: 1985}
+      - {id: welterusten, kind: song, title: "Welterusten meneer de president", year: 1966}
+      - {id: avond, kind: song, title: "Avond", year: 1997}
+      - {id: nolimit, kind: song, title: "No Limit", year: 1993}
+      - {id: worldofhurt, kind: song, title: "World of Hurt", year: 1998}
+      - {id: nobodyswife, kind: song, title: "Nobody's Wife", year: 1997}
+      - {id: birds, kind: song, title: "Birds", year: 2013}
+      - {id: loveyoumore, kind: song, title: "Love You More", year: 2008}
+      - {id: daargaatze, kind: song, title: "Daar gaat ze", year: 1990}
+      - {id: animals, kind: song, title: "Animals", year: 2013}
+      - {id: reality, kind: song, title: "Reality", year: 2015}
+      - {id: areyouwithme, kind: song, title: "Are You with Me", year: 2014}
+      - {id: drankdrugs, kind: song, title: "Drank & Drugs", year: 2015}
+    cases:
+      # Controls: the title as an ASR writes it.
+      - {heard: "kensington", want: play, id: kensington}
+      - {heard: "racoon", want: play, id: racoon}
+      - {heard: "ilse delange", want: play, id: ilse}
+      - {heard: "duncan laurence", want: play, id: duncan}
+      - {heard: "snollebollekes", want: play, id: snollebollekes}
+      - {heard: "normaal", want: play, id: normaal}
+      - {heard: "de dijk", want: play, id: dedijk}
+      - {heard: "herman van veen", want: play, id: hermanvanveen}
+      - {heard: "boudewijn de groot", want: play, id: boudewijn}
+      - {heard: "snelle", want: play, id: snelle}
+      - {heard: "boef", want: play, id: boef}
+      - {heard: "tiësto", want: play, id: tiesto}
+      - {heard: "armin van buuren", want: play, id: armin}
+      - {heard: "martin garrix", want: play, id: garrix}
+      - {heard: "hooverphonic", want: play, id: hooverphonic}
+      - {heard: "milow", want: play, id: milow}
+      - {heard: "lost frequencies", want: play, id: lostfreq}
+      - {heard: "jan smit", want: play, id: jansmit}
+      - {heard: "de toppers", want: play, id: toppers}
+      - {heard: "typhoon", want: play, id: typhoon}
+      - {heard: "douwe bob", want: play, id: douwebob}
+      - {heard: "de jeugd van tegenwoordig", want: play, id: jeugd}
+      - {heard: "venus", want: play, id: venus}
+      - {heard: "hocus pocus", want: play, id: hocuspocus}
+      - {heard: "arcade", want: play, id: arcade}
+      - {heard: "roller coaster", want: play, id: rollercoaster}
+      - {heard: "avond", want: play, id: avond}
+      - {heard: "kronenburg park", want: play, id: kronenburg}
+      - {heard: "daar gaat ze", want: play, id: daargaatze}
+      - {heard: "reality", want: play, id: reality}
+      - {heard: "world of hurt", want: play, id: worldofhurtalb, kinds: [album]}
+      - {heard: "world of hurt", want: play, id: worldofhurt, kinds: [song]}
+      - {heard: "mother earth", want: play, id: motherearth}
+      - {heard: "virus", want: play, id: virus}
+      - {heard: "het kleine café aan de haven", want: play, id: cafe}
+      - {heard: "15 miljoen mensen", want: play, id: vijftienmiljoen}
+      - {heard: "bzn", want: play, id: bzn}
+      - {heard: "hocus", want: play, id: hocuspocus}
+      - {heard: "welterusten", want: play, id: welterusten}
+      # Class ij-ei: one diphthong, several spellings.
+      - {heard: "de deik", want: play, id: dedijk}
+      - {heard: "treintje oosterhuis", want: play, id: trijntje}
+      - {heard: "rob de neis", want: play, id: robdenijs}
+      - {heard: "boudewein de groot", want: play, id: boudewijn}
+      # Class au-ou: one diphthong, two spellings, and English ow.
+      - {heard: "dauwe bob", want: play, id: douwebob}
+      - {heard: "lee touwers", want: play, id: leetowers}
+      - {heard: "lie tauwers", want: play, id: leetowers}
+      - {heard: "poul de leeuw", want: play, id: pauldeleeuw}
+      # Class g-ch: one velar fricative, and the soft g heard as h.
+      - {heard: "de jeuchd van tegenwoordig", want: play, id: jeugd}
+      - {heard: "de jeugd van tegenwoordich", want: play, id: jeugd}
+      - {heard: "het hoede doel", want: play, id: goededoel}
+      - {heard: "herard joling", want: play, id: joling}
+      - {heard: "kronenburch park", want: play, id: kronenburg}
+      # Class devoicing: final d and t sound alike, and English final consonants devoiced.
+      - {heard: "de jeugt van tegenwoordig", want: play, id: jeugd}
+      - {heard: "avont", want: play, id: avond}
+      - {heard: "daar gaad ze", want: play, id: daargaatze}
+      - {heard: "boudewijn de grood", want: play, id: boudewijn}
+      - {heard: "drank en druks", want: play, id: drankdrugs}
+      # Class v-f z-s: initial v and z devoiced, and the reverse.
+      - {heard: "fader abraham", want: play, id: vaderabraham}
+      - {heard: "herman fan feen", want: play, id: hermanvanveen}
+      - {heard: "fultures", want: play, id: vultures}
+      - {heard: "vocus", want: play, id: focus}
+      - {heard: "vrenna", want: play, id: frenna}
+      - {heard: "daar gaat se", want: play, id: daargaatze}
+      - {heard: "het kleine café aan de hafen", want: play, id: cafe}
+      - {heard: "fenus", want: play, id: venus}
+      - {heard: "sefen dagen lang", want: play, id: zevendagen}
+      # Class sch: English sh written sj or sch.
+      - {heard: "sjokking blue", want: play, id: shockingblue}
+      - {heard: "sjef special", want: play, id: chefspecial}
+      - {heard: "ramses sjaffie", want: play, id: shaffy}
+      - {heard: "ramses schaffy", want: play, id: shaffy}
+      # Class vowel-length: long vowels and doubled consonants written the wrong way.
+      - {heard: "armin van buren", want: play, id: armin}
+      - {heard: "boudewijn de grot", want: play, id: boudewijn}
+      - {heard: "krantje pappie", want: play, id: kraantje}
+      - {heard: "kraantje papie", want: play, id: kraantje}
+      - {heard: "een betje", want: play, id: eenbeetje}
+      - {heard: "trijntje osterhuis", want: play, id: trijntje}
+      - {heard: "jeroen van der bom", want: play, id: jeroen}
+      - {heard: "ton hermans", want: play, id: toonhermans}
+      - {heard: "herman van ven", want: play, id: hermanvanveen}
+      - {heard: "willeke alberty", want: play, id: willeke}
+      # Class ui-eu-oe: the rounded vowels confused, and English oo heard as oe.
+      - {heard: "de juigd van tegenwoordig", want: play, id: jeugd}
+      - {heard: "trijntje oosterheus", want: play, id: trijntje}
+      - {heard: "jerun van der boom", want: play, id: jeroen}
+      - {heard: "buf", want: play, id: boef}
+      - {heard: "hoeverphonic", want: play, id: hooverphonic}
+      - {heard: "racoen", want: play, id: racoon}
+      - {heard: "frans deuts", want: play, id: duijts}
+      # Class en: the final n of -en not said.
+      - {heard: "vijftien miljoen mense", want: play, id: vijftienmiljoen}
+      - {heard: "rowwe hèze", want: play, id: rowwen}
+      - {heard: "het kleine café aan de have", want: play, id: cafe}
+      - {heard: "welteruste meneer de president", want: play, id: welterusten}
+      - {heard: "zeve dage lang", want: play, id: zevendagen}
+      # Class w-v: w and v swapped.
+      - {heard: "vill tura", want: play, id: willtura}
+      - {heard: "villeke alberti", want: play, id: willeke}
+      - {heard: "vim sonneveld", want: play, id: sonneveld}
+      - {heard: "tvilight zone", want: play, id: twilightzone}
+      - {heard: "vorld of hurt", want: play, id: worldofhurt, kinds: [song]}
+      - {heard: "dana vinner", want: play, id: dana}
+      - {heard: "wader abraham", want: play, id: vaderabraham}
+      - {heard: "douve bob", want: play, id: douwebob}
+      # Class c-k-s: c as k or s in loans and names.
+      - {heard: "rakoon", want: play, id: racoon}
+      - {heard: "fokus", want: play, id: focus}
+      - {heard: "hokus pokus", want: play, id: hocuspocus}
+      - {heard: "kris cross amsterdam", want: play, id: kriskross}
+      - {heard: "crezip", want: play, id: krezip}
+      - {heard: "het kleine kafee aan de haven", want: play, id: cafe}
+      - {heard: "akda en de munnik", want: play, id: acda}
+      - {heard: "lost frequensies", want: play, id: lostfreq}
+      # Class diminutive: -tje added, dropped or swapped for -ke.
+      - {heard: "het smurfenliedje", want: play, id: smurfenlied}
+      - {heard: "kraantjes pappie", want: play, id: kraantje}
+      - {heard: "snollebolletjes", want: play, id: snollebollekes}
+      - {heard: "het kleine cafeetje aan de haven", want: play, id: cafe}
+      - {heard: "lil kleintje", want: play, id: lilkleine}
+      # Class apostrophe: 't and 'n, and the English apostrophes dropped.
+      - {heard: "het hof van commerce", want: play, id: hofvancommerce}
+      - {heard: "hof van commerce", want: play, id: hofvancommerce}
+      - {heard: "t hof van commerce", want: play, id: hofvancommerce}
+      - {heard: "het smurfenlied", want: play, id: smurfenlied}
+      - {heard: "t smurfenlied", want: play, id: smurfenlied}
+      - {heard: "het is weer voorbij die mooie zomer", want: play, id: voorbij}
+      - {heard: "t is weer voorbij die mooie zomer", want: play, id: voorbij}
+      - {heard: "lil kleine", want: play, id: lilkleine}
+      - {heard: "chef special", want: play, id: chefspecial}
+      - {heard: "nobodys wife", want: play, id: nobodyswife}
+      - {heard: "n beetje", want: play, id: eenbeetje}
+      # Class compound: compounds and one-word names split or joined.
+      - {heard: "snolle bollekes", want: play, id: snollebollekes}
+      - {heard: "hoover phonic", want: play, id: hooverphonic}
+      - {heard: "afro jack", want: play, id: afrojack}
+      - {heard: "hard well", want: play, id: hardwell}
+      - {heard: "kronenburgpark", want: play, id: kronenburg}
+      - {heard: "kriskross amsterdam", want: play, id: kriskross}
+      - {heard: "wel te rusten meneer de president", want: play, id: welterusten}
+      - {heard: "di rect", want: play, id: direct}
+      - {heard: "ding a dong", want: play, id: dingadong}
+      - {heard: "dingadong", want: play, id: dingadong}
+      - {heard: "lobidabasi", want: play, id: lobidabasi}
+      - {heard: "de jeugd van tegen woordig", want: play, id: jeugd}
+      - {heard: "ilse de lange", want: play, id: ilse}
+      # Class english: English titles as a Dutch recogniser writes them.
+      - {heard: "nobodies wife", want: play, id: nobodyswife}
+      - {heard: "kalm after de storm", want: play, id: calmafter}
+      - {heard: "de silent fors", want: play, id: silentforce}
+      - {heard: "enimels", want: play, id: animals}
+      - {heard: "are joe with me", want: play, id: areyouwithme}
+      - {heard: "laf joe more", want: play, id: loveyoumore}
+      - {heard: "twilight zoon", want: play, id: twilightzone}
+      - {heard: "no limmit", want: play, id: nolimit}
+      - {heard: "mother eart", want: play, id: motherearth}
+      - {heard: "together aloon", want: play, id: togetheralone}
+      - {heard: "de common linnets", want: play, id: commonlinnets}
+      - {heard: "berds", want: play, id: birds}
+      - {heard: "moeving waves", want: play, id: movingwaves}
+      - {heard: "afrojeck", want: play, id: afrojack}
+      # Class number: digits, words, & said as en, and letter names.
+      - {heard: "vijftien miljoen mensen", want: play, id: vijftienmiljoen}
+      - {heard: "15 miljoen", want: play, id: vijftienmiljoen}
+      - {heard: "7 dagen lang", want: play, id: zevendagen}
+      - {heard: "zeven dagen lang", want: play, id: zevendagen}
+      - {heard: "drie jee es", want: play, id: drie_js}
+      - {heard: "drie js", want: play, id: drie_js}
+      - {heard: "3js", want: play, id: drie_js}
+      - {heard: "bee zet en", want: play, id: bzn}
+      - {heard: "dimitri vegas en like mike", want: play, id: dimitri}
+      - {heard: "dimitri vegas and like mike", want: play, id: dimitri}
+      - {heard: "nick en simon", want: play, id: nicksimon}
+      - {heard: "drank en drugs", want: play, id: drankdrugs}
+      # Class real-word: a frequent word replaces a title word.
+      - {heard: "normal", want: play, id: normaal}
+      - {heard: "tyfoon", want: play, id: typhoon}
+      - {heard: "milo", want: play, id: milow}
+      - {heard: "direct", want: play, id: direct}
+      - {heard: "lost frequenties", want: play, id: lostfreq}
+      - {heard: "dana winnaar", want: play, id: dana}
+      - {heard: "acda en de monnik", want: play, id: acda}
+      - {heard: "jan smid", want: play, id: jansmit}
+      - {heard: "duncan lawrence", want: play, id: duncan}
+      - {heard: "frans duits", want: play, id: duijts}
+      - {heard: "raccoon", want: play, id: racoon}
+      # Class diacritic: accents and diaeresis dropped.
+      - {heard: "tiesto", want: play, id: tiesto}
+      - {heard: "rowwen heze", want: play, id: rowwen}
+      - {heard: "het kleine cafe aan de haven", want: play, id: cafe}
+      # Ambiguous: ask among the near neighbours.
+      - {heard: "world of hurt", want: ask, among: [worldofhurtalb, worldofhurt]}
+      - {heard: "gerard", want: ask, among: [joling, gerardcox]}
+      - {heard: "herman", want: ask, among: [hermanvanveen, toonhermans]}
+      - {heard: "will", want: ask, among: [willtura, willeke]}
+      # Absent titles, including near misses that share words or names with the library.
+      - {heard: "marco borsato", want: not_found}
+      - {heard: "andré hazes", want: not_found}
+      - {heard: "doe maar", want: not_found}
+      - {heard: "golden earring", want: not_found}
+      - {heard: "within temptation", want: not_found}
+      - {heard: "bløf", want: not_found}
+      - {heard: "anouk", want: not_found}
+      - {heard: "frans bauer", want: not_found}
+      - {heard: "guus meeuwis", want: not_found}
+      - {heard: "k3", want: not_found}
+      - {heard: "clouseau", want: not_found}
+      - {heard: "vengaboys", want: not_found}
+      - {heard: "zoutelande", want: not_found}
+      - {heard: "dromen zijn bedrog", want: not_found}
+      - {heard: "radar love", want: not_found}
+      - {heard: "zij gelooft in mij", want: not_found}
+      - {heard: "het dorp", want: not_found}
+      - {heard: "tulpen uit amsterdam", want: not_found}
+      - {heard: "brabant", want: not_found}
+      - {heard: "een beetje verliefd", want: not_found}
+      - {heard: "het is een nacht", want: not_found}
+      - {heard: "ik hou van holland", want: not_found}
+      - {heard: "arcade fire", want: not_found}
+      - {heard: "love me tender", want: not_found}
+      - {heard: "danny de munk", want: not_found}
+      - {heard: "herman brood", want: not_found}
+      - {heard: "lil nas x", want: not_found}
+      - {heard: "martin solveig", want: not_found}
+      - {heard: "gerard van maasakkers", want: not_found}
+      - {heard: "de kast", want: not_found}
+      - {heard: "het land van maas en waal", want: not_found}
+      - {heard: "oerend hard", want: not_found}

@@ -49,6 +49,8 @@ type TokenSource struct {
 
 	mu  sync.Mutex
 	tok *oauth2.Token
+	// reset makes the next call refresh even an access token that hasn't expired yet.
+	reset bool
 }
 
 // MemoryStore is a TokenStore that keeps the token in memory, for tests and one-off tools.

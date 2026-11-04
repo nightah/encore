@@ -1,0 +1,114 @@
+{
+  "attention": {
+    "empty": "Niets vraagt om je aandacht.",
+    "libraryLanguage": {
+      "detail": "De taal van titels is {{current}}. Zet die op {{language}}, zodat de titels met de regels voor het {{language}} worden vergeleken.",
+      "title": "De meeste titels van {{instance}} zijn in het {{language}}"
+    },
+    "links": {
+      "libraryLanguage": "Taal van titels wijzigen",
+      "needsDeploy": "Nu bijwerken",
+      "open": "Openen",
+      "unlinkedDevice": "Apparaat koppelen"
+    },
+    "rejected": {
+      "signature": {
+        "detail": "Encore kon niet bevestigen dat Alexa ze stuurde. Kwamen ze van je Echo, controleer dan of Encore s3.amazonaws.com kan bereiken voor het certificaat van Amazon en of je proxy verzoeken ongewijzigd doorgeeft.",
+        "title_one": "{{count, number}} verzoek geweigerd om een ongeldige handtekening",
+        "title_other": "{{count, number}} verzoeken geweigerd om een ongeldige handtekening"
+      },
+      "skillId": {
+        "detail": "Alexa ondertekende ze voor een andere skill-ID dan Encore verwacht. Controleer alexa.skill_id of implementeer de skill opnieuw.",
+        "title_one": "{{count, number}} verzoek voor een andere skill geweigerd",
+        "title_other": "{{count, number}} verzoeken voor een andere skill geweigerd"
+      },
+      "timestamp": {
+        "detail": "Alexa zet op elk verzoek de tijd waarop het verstuurd is, en Encore weigert verzoeken die meer dan 150 seconden van de eigen klok afwijken. Controleer of de klok van deze host gesynchroniseerd is.",
+        "title_one": "{{count, number}} verzoek geweigerd om een verouderde tijdstempel",
+        "title_other": "{{count, number}} verzoeken geweigerd om een verouderde tijdstempel"
+      }
+    },
+    "title": "Vraagt aandacht"
+  },
+  "description": "Alles wat Alexa nodig heeft om je Kodi-instanties te bereiken, in één oogopslag. Alleen lezen: wijzigingen doe je op de pagina van elk onderdeel.",
+  "instances": {
+    "asleep": {
+      "addMac": "Voeg het MAC-adres toe zodat spraakverzoeken hem kunnen wekken.",
+      "manage": "Beheren op de Kodi-pagina",
+      "plain": "Slaapt.",
+      "since": "Slaapt sinds {{time}}.",
+      "willWake": "Spraakverzoeken wekken hem automatisch."
+    },
+    "empty": {
+      "action": "Voeg er een toe op de Kodi-pagina",
+      "body": "Voeg een Kodi-instantie toe zodat Alexa iets heeft om te bedienen.",
+      "title": "Nog geen Kodi-instanties"
+    },
+    "episode": "S{{season}} · A{{episode}} “{{title}}”",
+    "idle": "Er speelt niets.",
+    "offline": {
+      "test": "Test hem op de Kodi-pagina",
+      "text": "Antwoordt niet. Controleer of Kodi draait en bereikbaar is."
+    },
+    "progress": "Voortgang {{percent}} procent",
+    "title": "Kodi-instanties"
+  },
+  "ms": "{{ms}} ms",
+  "openRequestLog": "Verzoekenlogboek openen",
+  "recent": {
+    "columns": {
+      "echo": "Echo",
+      "heard": "Gehoord",
+      "result": "Resultaat",
+      "time": "Tijd"
+    },
+    "empty": "Nog geen verzoeken. Zeg “Alexa, vraag {{invocation}} wat er speelt.”",
+    "emptyNoInvocation": "Nog geen verzoeken.",
+    "open": "Het verzoek van {{time}} openen in het logboek",
+    "title": "Recente verzoeken",
+    "viewAll": "Alles bekijken"
+  },
+  "status": {
+    "endpoint": {
+      "label": "Openbaar endpoint",
+      "notReachable": "{{host}} is niet bereikbaar van buitenaf",
+      "reachable": "{{host}} bereikbaar",
+      "unreachable": "Onbereikbaar"
+    },
+    "label": "Status",
+    "libraries": {
+      "and": " en ",
+      "count_one": "{{count, number}} bibliotheek",
+      "count_other": "{{count, number}} bibliotheken",
+      "label": "Bibliotheken",
+      "noneShared": "geen gedeeld",
+      "notSynced": "Nog niet gesynchroniseerd",
+      "shared_one": "{{count}} gedeeld",
+      "shared_other": "{{count}} gedeeld",
+      "shareOne": "{{names}} delen er één",
+      "synced": "Gesynchroniseerd {{when}}"
+    },
+    "requests": {
+      "detail": "{{failed}} mislukt · mediaan {{ms}} ms",
+      "label": "Verzoeken vandaag"
+    },
+    "skill": {
+      "label": "Alexa-skill",
+      "locales_one": "{{count, number}} taalregio",
+      "locales_other": "{{count, number}} taalregio's",
+      "stage": {
+        "development": "Ontwikkelingsfase",
+        "live": "Livefase",
+        "other": "Fase {{stage}}"
+      },
+      "state": {
+        "deploying": "Uitrollen…",
+        "failed": "Uitrol mislukt",
+        "live": "Live",
+        "not_deployed": "Niet uitgerold"
+      },
+      "updatePending": "update in behandeling"
+    }
+  },
+  "title": "Overzicht"
+}

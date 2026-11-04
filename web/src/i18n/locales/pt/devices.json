@@ -1,0 +1,108 @@
+{
+  "controlsKodi": "Controla o Kodi",
+  "dialog": {
+    "cancel": "Cancelar",
+    "confirmForget": "Esquecer este Echo? Ele volta, sem vínculo, na próxima vez que enviar uma solicitação.",
+    "editEcho": "Editar Echo",
+    "editTitle": "Editar {{name}}",
+    "fields": {
+      "kodi": {
+        "hint": "Diga “…na TV do quarto” para trocar em uma única solicitação."
+      },
+      "name": {
+        "hint": "A Alexa não compartilha os nomes dos dispositivos, então dê um nome a ele aqui.",
+        "label": "Nome"
+      },
+      "room": {
+        "label": "Cômodo",
+        "none": "Nenhum cômodo"
+      }
+    },
+    "forget": "Esquecer dispositivo",
+    "forgetEllipsis": "Esquecer dispositivo…",
+    "keep": "Manter",
+    "save": "Salvar"
+  },
+  "notLinked": "Não vinculado",
+  "page": {
+    "description": "Cada Echo controla um Kodi por padrão. Diga “…na TV do quarto” para trocar em uma única solicitação.",
+    "title": "Dispositivos Echo e cômodos"
+  },
+  "rooms": {
+    "add": "Adicionar cômodo",
+    "card": {
+      "add": "Adicionar",
+      "addAliasButton": "Adicionar nome falado a {{name}}",
+      "addAliasLabel": "Adicionar um nome falado para {{name}}",
+      "aliases": "Nomes falados de {{name}}",
+      "edit": "Editar cômodo {{name}}",
+      "kindLabel": "Tipo de nome falado de {{name}}",
+      "kodi": "→ Kodi “{{name}}”",
+      "noKodi": "→ nenhuma instância do Kodi",
+      "placeholder": {
+        "device": "Nome do dispositivo, por exemplo TV",
+        "room": "Nome do cômodo, por exemplo sala de estar"
+      },
+      "removeAlias": "Remover nome falado “{{alias}}”"
+    },
+    "dialog": {
+      "addTitle": "Adicionar um cômodo",
+      "cancel": "Cancelar",
+      "confirmRemove": "Remover {{name}} e seus nomes falados? Os Echos nele mantêm o vínculo com o Kodi.",
+      "editTitle": "Editar {{name}}",
+      "fields": {
+        "kodi": {
+          "hint": "Onde “…na cozinha” reproduz.",
+          "label": "Instância do Kodi",
+          "none": "Nenhuma"
+        },
+        "name": {
+          "label": "Nome",
+          "placeholder": "Cozinha"
+        }
+      },
+      "keep": "Manter",
+      "remove": "Remover cômodo",
+      "removeEllipsis": "Remover…",
+      "save": "Salvar"
+    },
+    "empty": "Nenhum cômodo ainda.",
+    "intro": "Estes nomes são adicionados ao modelo de interação da skill, para que a Alexa reconheça um <room>cômodo</room> em “toque Bluey <b>no quarto das crianças</b>” e um <device>dispositivo</device> em “toque Bluey <b>na TV</b>”.",
+    "kind": {
+      "device": "Dispositivo",
+      "room": "Cômodo"
+    },
+    "title": "Cômodos e nomes falados"
+  },
+  "table": {
+    "anUnnamedEcho": "um Echo sem nome",
+    "columns": {
+      "actions": "Ações",
+      "controls": "Controla",
+      "lastRequest": "Última solicitação",
+      "name": "Nome",
+      "room": "Cômodo",
+      "today": "Hoje"
+    },
+    "edit": "Editar",
+    "editNamed": "Editar {{name}}",
+    "empty": "Nenhum Echo ainda. Eles aparecem aqui depois da primeira solicitação à skill.",
+    "identified": "Este é o Echo com que você acabou de falar",
+    "identifyHint": "Não sabe qual Echo é qual? Diga “Alexa, pergunte para {{invocation}} qual dispositivo é este” e ele fica destacado aqui.",
+    "spokeTo": "Você acabou de falar com {{name}}.",
+    "title": "Dispositivos"
+  },
+  "unlinked": {
+    "deviceName": "Nome do dispositivo",
+    "firstRequest": {
+      "other": "Primeira solicitação em {{when}}{{heard}}. Dispositivo <mono>{{id}}</mono>",
+      "today": "Primeira solicitação hoje às {{when}}{{heard}}. Dispositivo <mono>{{id}}</mono>"
+    },
+    "link": "Vincular dispositivo",
+    "linked": "Echo vinculado.",
+    "placeholder": "Echo Dot da cozinha",
+    "title": "Novo Echo ouvido: ainda não vinculado a um Kodi",
+    "titleIdentified": "Este é o Echo com que você acabou de falar: ainda não vinculado a um Kodi"
+  },
+  "unnamed": "Echo sem nome"
+}

@@ -66,15 +66,36 @@
       "Attention": {
         "additionalProperties": false,
         "properties": {
+          "count": {
+            "description": "For requests_rejected, how many requests the check refused in the last day",
+            "format": "int64",
+            "type": "integer"
+          },
           "detail": {
             "type": "string"
           },
           "kind": {
-            "description": "unlinked_device, amazon_not_connected, amazon_reauthorise, privacy_unanswered, skill_not_deployed, needs_deploy, deploy_failed, auto_deploy_paused, instance_offline, kodi_unauthorized, no_instances",
+            "description": "unlinked_device, amazon_not_connected, amazon_reauthorise, privacy_unanswered, skill_not_deployed, needs_deploy, deploy_failed, auto_deploy_paused, instance_offline, kodi_unauthorized, no_instances, requests_rejected, library_language",
             "type": "string"
           },
           "link": {
-            "description": "A web interface route: /echo-devices, /kodi, /alexa-skill, /request-log, /library or /settings",
+            "description": "A web interface route: /echo-devices, /kodi, /alexa-skill, /request-log, /library or /settings; empty when the fix is outside Encore",
+            "type": "string"
+          },
+          "params": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "What a translation of title and detail is filled with, by name. library_language: instance (the library's source instance), language (the language most of its titles are written in) and current (its title language), as language codes such as ja or en",
+            "type": "object"
+          },
+          "stage": {
+            "description": "For requests_rejected, the check that refused them",
+            "enum": [
+              "timestamp",
+              "signature",
+              "skill_id"
+            ],
             "type": "string"
           },
           "title": {
@@ -213,6 +234,37 @@
         "required": [
           "url",
           "return_urls"
+        ],
+        "type": "object"
+      },
+      "AutoDeployRetry": {
+        "additionalProperties": false,
+        "properties": {
+          "attempts": {
+            "description": "How many automatic deploys in a row have failed this way",
+            "format": "int64",
+            "type": "integer"
+          },
+          "error": {
+            "description": "Why the last attempt failed",
+            "type": "string"
+          },
+          "max_attempts": {
+            "description": "How many may fail in a row before automatic deploys pause",
+            "format": "int64",
+            "type": "integer"
+          },
+          "next_at": {
+            "description": "The earliest the next attempt runs, at the first automatic check from then on",
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "attempts",
+          "max_attempts",
+          "next_at",
+          "error"
         ],
         "type": "object"
       },
@@ -831,7 +883,7 @@
         "additionalProperties": false,
         "properties": {
           "auto_deploy": {
-            "description": "Redeploy the skill on its own when what would be deployed changes; a failed automatic deploy pauses this until a deploy started by hand succeeds",
+            "description": "Redeploy the skill on its own when what would be deployed changes. An automatic deploy that fails for a reason that may pass, such as Amazon being unavailable, is tried again up to three times with a growing wait; any other failure, or a fourth in a row, pauses this until a deploy started by hand succeeds",
             "type": "boolean"
           },
           "auto_deploy_minutes": {
@@ -1476,6 +1528,36 @@
         },
         "type": "object"
       },
+      "LocaleDegraded": {
+        "additionalProperties": false,
+        "properties": {
+          "dropped": {
+            "description": "The titles Amazon's build errors named, which were left out; empty when it named none and every other title was left out instead",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "reasons": {
+            "description": "What Amazon said when it would not build the locale with every title",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "titles_asked_for": {
+            "description": "How many titles the locale's model was to have",
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "titles_asked_for",
+          "dropped",
+          "reasons"
+        ],
+        "type": "object"
+      },
       "LocaleDeploy": {
         "additionalProperties": false,
         "properties": {
@@ -1484,6 +1566,17 @@
             "type": [
               "string",
               "null"
+            ]
+          },
+          "degraded": {
+            "description": "Set when Amazon would not build this locale's model with every library title, so it was built with fewer and the other locales still shipped; titles and size_bytes are then what was deployed. Null otherwise",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/LocaleDegraded"
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "errors": {
@@ -1518,7 +1611,28 @@
           "errors",
           "titles",
           "size_bytes",
-          "built_at"
+          "built_at",
+          "degraded"
+        ],
+        "type": "object"
+      },
+      "LocaleInvocation": {
+        "additionalProperties": false,
+        "properties": {
+          "encore": {
+            "type": "string"
+          },
+          "kodi": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "locale",
+          "encore",
+          "kodi"
         ],
         "type": "object"
       },
@@ -1916,6 +2030,13 @@
             },
             "type": "array"
           },
+          "rejected_requests": {
+            "description": "Requests the Alexa endpoint refused since Encore started, by the check that refused them, in the order the checks run. Only stages that refused at least one request are listed.",
+            "items": {
+              "$ref": "#/components/schemas/RejectedRequests"
+            },
+            "type": "array"
+          },
           "requests_today": {
             "$ref": "#/components/schemas/RequestsToday"
           },
@@ -1930,7 +2051,8 @@
           "requests_today",
           "instances",
           "recent_requests",
-          "attention"
+          "attention",
+          "rejected_requests"
         ],
         "type": "object"
       },
@@ -2149,6 +2271,38 @@
           "added_at",
           "findable",
           "in_skill_model"
+        ],
+        "type": "object"
+      },
+      "RejectedRequests": {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "format": "int64",
+            "minimum": 1,
+            "type": "integer"
+          },
+          "last_at": {
+            "description": "When this check last refused a request",
+            "format": "date-time",
+            "type": "string"
+          },
+          "stage": {
+            "description": "body: unreadable, too large, undecodable or with no timestamp; unsigned: no signature headers, or a certificate URL that isn't Amazon's, so not from Alexa; timestamp: signed by Alexa but more than 150 seconds from Encore's clock; signature: a bad signature or certificate chain, or the chain couldn't be fetched; skill_id: signed by Alexa for another skill",
+            "enum": [
+              "body",
+              "unsigned",
+              "timestamp",
+              "signature",
+              "skill_id"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "stage",
+          "count",
+          "last_at"
         ],
         "type": "object"
       },
@@ -2770,6 +2924,17 @@
             "description": "Why automatic deploys are paused until a deploy started by hand succeeds; empty when they aren't paused or alexa.auto_deploy is off",
             "type": "string"
           },
+          "auto_deploy_retry": {
+            "description": "An automatic deploy that failed for a reason that may pass, such as Amazon being unavailable or still building, which is tried again before automatic deploys pause; null when there is none or alexa.auto_deploy is off",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AutoDeployRetry"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "content": {
             "description": "What the skill can play; music includes music videos",
             "items": {
@@ -2786,7 +2951,7 @@
             "$ref": "#/components/schemas/SkillEndpointInfo"
           },
           "invocation": {
-            "description": "encore uses each locale's own name for it (\"kodi\" in French); kodi is \"kodi\" in every locale",
+            "description": "encore uses each locale's own name for it (\"kodi\" in French and Brazilian Portuguese, \"انكور\" in Arabic, \"アンコール\" in Japanese); kodi is \"kodi\", or \"كودي\" and \"コディ\" where the name must be in the language's script. locale_invocations lists both choices for every locale",
             "enum": [
               "encore",
               "kodi"
@@ -2794,7 +2959,7 @@
             "type": "string"
           },
           "invocation_name": {
-            "description": "What people say, \"Alexa, ask \u003cinvocation_name\u003e to…\", in the first enabled locale",
+            "description": "What people say, \"Alexa, ask \u003cinvocation_name\u003e to…\": the Latin name when any enabled locale says it, else the first enabled locale's spelling",
             "type": "string"
           },
           "last_deploy": {
@@ -2806,6 +2971,13 @@
                 "type": "null"
               }
             ]
+          },
+          "locale_invocations": {
+            "description": "What people say in each available locale for each invocation choice",
+            "items": {
+              "$ref": "#/components/schemas/LocaleInvocation"
+            },
+            "type": "array"
           },
           "locales_available": {
             "items": {
@@ -2871,6 +3043,7 @@
           "skill_name",
           "locales_available",
           "locales_enabled",
+          "locale_invocations",
           "content",
           "endpoint",
           "privacy",
@@ -2879,7 +3052,8 @@
           "update_reason",
           "model_size",
           "auto_deploy",
-          "auto_deploy_paused"
+          "auto_deploy_paused",
+          "auto_deploy_retry"
         ],
         "type": "object"
       },

@@ -78,3 +78,46 @@ func readZipFile(f *zip.File) ([]byte, error) {
 
 	return io.ReadAll(io.LimitReader(rc, 8<<20))
 }
+
+// checkValues returns why the model for locale fails to build under LimitSlotValues or RejectSlotValue, or "". s.mu must be held.
+func (s *Server) checkValues(locale string, model json.RawMessage) string {
+	var m struct {
+		InteractionModel struct {
+			LanguageModel struct {
+				Types []struct {
+					Name   string `json:"name"`
+					Values []struct {
+						Name struct {
+							Value    string   `json:"value"`
+							Synonyms []string `json:"synonyms"`
+						} `json:"name"`
+					} `json:"values"`
+				} `json:"types"`
+			} `json:"languageModel"`
+		} `json:"interactionModel"`
+	}
+
+	if json.Unmarshal(model, &m) != nil {
+		return ""
+	}
+
+	for _, typ := range m.InteractionModel.LanguageModel.Types {
+		for _, v := range typ.Values {
+			if s.rejected[v.Name.Value] {
+				return fmt.Sprintf("Slot type %q has an invalid value %q.", typ.Name, v.Name.Value)
+			}
+
+			for _, syn := range v.Name.Synonyms {
+				if s.rejected[syn] {
+					return fmt.Sprintf("Slot type %q has an invalid synonym %q.", typ.Name, syn)
+				}
+			}
+		}
+
+		if limit, ok := s.valueLimits[locale+"/"+typ.Name]; ok && len(typ.Values) > limit {
+			return fmt.Sprintf("The interaction model is too large: %d values in one slot type.", len(typ.Values))
+		}
+	}
+
+	return ""
+}

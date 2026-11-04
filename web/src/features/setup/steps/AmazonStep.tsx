@@ -41,7 +41,7 @@ function ConsoleLink({ children }: { children?: ReactNode }) {
   return (
     <a href={LWA_CONSOLE} target="_blank" rel="noreferrer noopener" className="text-link hover:text-ink">
       {children}
-      <ExternalLink aria-hidden="true" className="ml-1 inline size-3.5" />
+      <ExternalLink aria-hidden="true" className="ms-1 inline size-3.5" />
       <span className="sr-only">{t("amazon.newTab")}</span>
     </a>
   );
@@ -122,7 +122,7 @@ export function AmazonStep({ nav }: StepProps) {
     <form onSubmit={submit} noValidate className="flex flex-col gap-4.5">
       <StepHeading intro={t("amazon.intro")}>{t("amazon.heading")}</StepHeading>
       {skill.amazon.needs_reauthorise ? <Callout tone="warnStrong">{t("amazon.reauthorise")}</Callout> : null}
-      <ol className="flex list-decimal flex-col gap-2 pl-5">
+      <ol className="flex list-decimal flex-col gap-2 ps-5">
         <li>
           <Trans t={t} i18nKey="amazon.instructions.open" components={{ link: <ConsoleLink /> }} />
         </li>

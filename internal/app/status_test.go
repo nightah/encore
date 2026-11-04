@@ -71,6 +71,25 @@ func TestLibrariesAreOrderedByGroup(t *testing.T) {
 	}
 }
 
+func TestLibrariesNameTheirSourceAndLanguage(t *testing.T) {
+	cfg := config.Defaults()
+	cfg.DataDir = t.TempDir()
+
+	ja := kodiConfig("Lounge", fakekodi.New(t, fakekodi.Options{}), "")
+	ja.Language = "ja"
+	cfg.Kodi = append(cfg.Kodi, ja, kodiConfig("Study", fakekodi.New(t, fakekodi.Options{}), ""))
+
+	a := openApp(t, &cfg, fastTuning())
+	t.Cleanup(func() { assert.NoError(t, a.Close()) })
+
+	got := map[string]string{}
+	for _, lib := range a.Libraries() {
+		got[lib.Source] = lib.Language
+	}
+
+	assert.Equal(t, map[string]string{"Lounge": "ja", "Study": "en"}, got)
+}
+
 func TestEvidenceRoundTrip(t *testing.T) {
 	ev := evidence{Origin: originDetected, Confirmed: []int64{1, 2}, Vetoed: []int64{3}, Reason: "a change to “Dune” wasn't seen"}
 

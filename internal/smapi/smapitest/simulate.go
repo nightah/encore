@@ -10,6 +10,14 @@ import (
 // SimulationLocales are the locales the simulation API accepts.
 var SimulationLocales = []string{"de-DE", "en-AU", "en-CA", "en-GB", "en-IN", "en-US", "fr-FR", "ja-JP"}
 
+// Reach makes simulating phrase in locale reach the skill, as "open <invocation>" does in every locale, once the skill is enabled and has a model for locale.
+func (s *Server) Reach(locale, phrase string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.reaches[locale+"\x00"+phrase] = true
+}
+
 func (s *Server) handleSimulate(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Input struct {
@@ -60,7 +68,7 @@ func (s *Server) handleSimulate(w http.ResponseWriter, r *http.Request) {
 
 	if raw, ok := sk.Models[req.Device.Locale]; ok && json.Unmarshal(raw, &model) == nil {
 		inv := model.InteractionModel.LanguageModel.InvocationName
-		if inv != "" && strings.EqualFold(req.Input.Content, "open "+inv) {
+		if inv != "" && (strings.EqualFold(req.Input.Content, "open "+inv) || s.reaches[req.Device.Locale+"\x00"+req.Input.Content]) {
 			job.reached = true
 			job.caption = "Welcome to " + inv + "."
 		}

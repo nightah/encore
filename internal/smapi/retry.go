@@ -32,7 +32,7 @@ func (p RetryPolicy) decide(req *http.Request, status int, hdr http.Header, err 
 		return 0, false
 	}
 
-	if hasBody(req) && req.GetBody == nil {
+	if !rewindable(req) {
 		return 0, false
 	}
 
@@ -41,10 +41,7 @@ func (p RetryPolicy) decide(req *http.Request, status int, hdr http.Header, err 
 		return p.backoff(attempt), idempotent(req.Method)
 	}
 
-	switch status {
-	case http.StatusTooManyRequests, http.StatusInternalServerError, http.StatusBadGateway,
-		http.StatusServiceUnavailable, http.StatusGatewayTimeout:
-	default:
+	if !retriable(status) {
 		return 0, false
 	}
 
@@ -72,6 +69,11 @@ func hasBody(req *http.Request) bool {
 	return req.Body != nil && req.Body != http.NoBody
 }
 
+// rewindable reports whether req can be sent again.
+func rewindable(req *http.Request) bool {
+	return !hasBody(req) || req.GetBody != nil
+}
+
 func idempotent(method string) bool {
 	switch method {
 	case http.MethodGet, http.MethodHead, http.MethodPut, http.MethodDelete:
@@ -96,4 +98,15 @@ func retryAfter(v string) (time.Duration, bool) {
 	}
 
 	return 0, false
+}
+
+// retriable reports whether a response with status is worth sending again: throttled, or failed on Amazon's side.
+func retriable(status int) bool {
+	switch status {
+	case http.StatusTooManyRequests, http.StatusInternalServerError, http.StatusBadGateway,
+		http.StatusServiceUnavailable, http.StatusGatewayTimeout:
+		return true
+	}
+
+	return false
 }

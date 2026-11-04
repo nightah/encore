@@ -5,7 +5,7 @@ import { RadioGroup } from "@base-ui/react/radio-group";
 import { useTranslation } from "react-i18next";
 
 import { ApiError, errorMessage } from "@api/client";
-import type { Privacy } from "@api/generated/model";
+import type { LocaleInvocation, Privacy } from "@api/generated/model";
 import {
   skillSettingsFrom,
   useActiveDeploy,
@@ -23,6 +23,7 @@ import { Callout } from "@components/ui/States";
 import { StepFooter, StepHeading, StepPending, type StepProps } from "@features/setup/shared";
 import { CONTENT, type Content, toggleContent } from "@features/skill/content";
 import { deployFraction } from "@features/skill/timeline";
+import { formatList } from "@lib/format";
 
 /** Amazon's questions, in the order Amazon asks them. Each has a label and a plain explanation of what it asks under deploy.privacy.<key>; they describe, they don't answer for the user. */
 const PRIVACY_QUESTIONS: Array<keyof Privacy> = [
@@ -123,7 +124,7 @@ export function DeployStep({ nav }: StepProps) {
         <InvocationChoice
           value={currentInvocation}
           disabled={locked}
-          french={currentLocales.includes("fr-FR")}
+          elsewhere={spokenElsewhere(skill.locale_invocations, currentLocales, currentInvocation)}
           error={fieldErrors.invocation}
           onChange={setInvocation}
         />
@@ -288,17 +289,34 @@ function YesNo({
   );
 }
 
+/** The enabled locales that say the chosen invocation differently (French says kodi for both, Japanese writes it in katakana), grouped by what they say, in locale order. */
+export function spokenElsewhere(
+  invocations: readonly LocaleInvocation[],
+  enabled: readonly string[],
+  choice: Invocation,
+): { name: string; locales: string[] }[] {
+  const out: { name: string; locales: string[] }[] = [];
+  for (const entry of invocations) {
+    const name = entry[choice];
+    if (!enabled.includes(entry.locale) || name === choice) continue;
+    const group = out.find((g) => g.name === name);
+    if (group) group.locales.push(entry.locale);
+    else out.push({ locales: [entry.locale], name });
+  }
+  return out;
+}
+
 /** The invocation name: encore or kodi, nothing else. */
 function InvocationChoice({
   value,
   disabled,
-  french,
+  elsewhere,
   error,
   onChange,
 }: {
   value: Invocation;
   disabled?: boolean;
-  french: boolean;
+  elsewhere: { name: string; locales: string[] }[];
   error?: string;
   onChange: (value: Invocation) => void;
 }) {
@@ -331,12 +349,12 @@ function InvocationChoice({
       </RadioGroup>
       <span className="text-[13px] text-muted">
         {t("deploy.invocation.example", { name: value })}
-        {value === "encore" && french ? (
-          <>
+        {elsewhere.map(({ name, locales }) => (
+          <span key={name}>
             <br />
-            {t("deploy.invocation.french")}
-          </>
-        ) : null}
+            {t("deploy.invocation.elsewhere", { locales: formatList(locales), name })}
+          </span>
+        ))}
       </span>
       {error ? <span className="text-[13px] text-bad">{error}</span> : null}
     </div>

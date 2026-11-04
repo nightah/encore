@@ -126,7 +126,12 @@ export default defineConfig({
           label: "Voice commands",
         },
         {
-          items: ["contributing", "contributing/development", "contributing/dependencies"],
+          items: [
+            "contributing",
+            "contributing/development",
+            "contributing/testing",
+            "contributing/dependencies",
+          ],
           label: "Contributing",
         },
         {

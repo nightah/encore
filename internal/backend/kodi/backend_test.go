@@ -689,6 +689,44 @@ func TestNowPlayingOutsideTheLibrary(t *testing.T) {
 	assert.False(t, np.Paused)
 }
 
+func TestNowPlayingQueued(t *testing.T) {
+	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+	ctx := t.Context()
+
+	require.NoError(t, b.Play(ctx, media.Ref{Kind: media.KindAlbum, ID: 1}, media.PlayOptions{}))
+
+	np, err := b.NowPlaying(ctx)
+	require.NoError(t, err)
+	assert.True(t, np.Queued, "the album's next track follows")
+	assert.JSONEq(t, `{"playlistid":0,"properties":["size"]}`, lastParams(t, s, "Playlist.GetProperties"))
+
+	require.NoError(t, b.Play(ctx, media.Ref{Kind: media.KindEpisode, ID: 102}, media.PlayOptions{}))
+
+	np, err = b.NowPlaying(ctx)
+	require.NoError(t, err)
+	assert.False(t, np.Queued, "nothing follows a lone episode")
+
+	s.Handle("Player.GetProperties", func(json.RawMessage) (any, *fakekodi.Error) {
+		return json.RawMessage(`{"speed":1,"playlistid":1,"position":-1}`), nil
+	})
+	calls := len(s.CallsTo("Playlist.GetProperties"))
+
+	np, err = b.NowPlaying(ctx)
+	require.NoError(t, err)
+	assert.False(t, np.Queued)
+	assert.Len(t, s.CallsTo("Playlist.GetProperties"), calls, "an item outside a playlist has no queue to ask about")
+
+	s.Handle("Player.GetProperties", func(json.RawMessage) (any, *fakekodi.Error) {
+		return json.RawMessage(`{"speed":1,"playlistid":1,"position":0}`), nil
+	})
+	s.Handle("Playlist.GetProperties", func(json.RawMessage) (any, *fakekodi.Error) {
+		return nil, &fakekodi.Error{Code: fakekodi.CodeInvalidParams, Message: "Invalid params."}
+	})
+
+	_, err = b.NowPlaying(ctx)
+	require.Error(t, err, "a failed queue lookup is reported")
+}
+
 func TestNowPlayingKinds(t *testing.T) {
 	for typ, kind := range map[string]media.Kind{"movie": media.KindMovie, "episode": media.KindEpisode, "musicvideo": media.KindMusicVideo, "song": media.KindSong} {
 		m := mapper{zone: newZone(aest)}

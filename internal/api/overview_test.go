@@ -13,9 +13,15 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/nightah/encore/internal/adapter/alexa"
+	"github.com/nightah/encore/internal/app"
 	"github.com/nightah/encore/internal/backend/kodi/fakekodi"
+	"github.com/nightah/encore/internal/core/library"
+	"github.com/nightah/encore/internal/core/match"
+	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/smapi/deploy"
 	"github.com/nightah/encore/internal/store"
+	"github.com/nightah/encore/internal/testkit"
 )
 
 func TestSummariseToday(t *testing.T) {
@@ -352,4 +358,124 @@ func TestDatabaseErrorsArePassedOn(t *testing.T) {
 
 	assert.Nil(t, s.lastDeploy(ctx), "no last deploy can be read")
 	assert.Nil(t, s.deploy(ctx, "d-1"))
+}
+
+func TestAttentionForRejectedRequests(t *testing.T) {
+	h := newHarness(t, harnessOpts{})
+	h.loungeID()
+
+	rejected := h.app.Rejections()
+
+	for range 3 {
+		rejected.Record(alexa.RejectTimestamp)
+	}
+
+	rejected.Record(alexa.RejectSignature)
+	rejected.Record(alexa.RejectSkillID)
+	rejected.Record(alexa.RejectUnsigned)
+	rejected.Record(alexa.RejectBody)
+
+	att, err := h.api.attention(t.Context())
+	require.NoError(t, err)
+
+	var got []Attention
+
+	for _, a := range att {
+		if a.Kind == "requests_rejected" {
+			got = append(got, a)
+		}
+	}
+
+	assert.Equal(t, []Attention{
+		{
+			Kind: "requests_rejected", Stage: "timestamp", Count: 3,
+			Title:  "3 requests rejected for a stale timestamp",
+			Detail: "Alexa stamps each request with the time it was sent, and Encore refuses one more than 150 seconds from its own clock. Check that this host's clock is synchronised.",
+		},
+		{
+			Kind: "requests_rejected", Stage: "signature", Count: 1,
+			Title:  "1 request rejected for a bad signature",
+			Detail: "Encore couldn't confirm that Alexa sent them. If they came from your Echo, check that Encore can reach s3.amazonaws.com for Amazon's certificate and that your proxy passes requests on unchanged.",
+		},
+		{
+			Kind: "requests_rejected", Stage: "skill_id", Count: 1, Link: "/alexa-skill",
+			Title:  "1 request for another skill rejected",
+			Detail: "Alexa signed them for a skill ID other than the one Encore expects. Check alexa.skill_id, or deploy the skill again.",
+		},
+	}, got, "unsigned requests and unreadable bodies come from scanners as often as from a misconfiguration, so they raise nothing")
+
+	var o Overview
+
+	h.admin().json(http.MethodGet, "/api/v1/overview", nil, http.StatusOK, &o)
+
+	stages := map[string]int{}
+	for _, r := range o.RejectedRequests {
+		stages[r.Stage] = r.Count
+		assert.False(t, r.LastAt.IsZero(), r.Stage)
+	}
+
+	assert.Equal(t, map[string]int{"body": 1, "unsigned": 1, "timestamp": 3, "signature": 1, "skill_id": 1}, stages, "the overview counts every stage")
+
+	h.skew.Add(int64(alexa.RecentRejections + time.Hour))
+
+	att, err = h.api.attention(t.Context())
+	require.NoError(t, err)
+	assert.NotContains(t, kinds(att), "requests_rejected", "a day without rejections clears the item")
+}
+
+func TestOverviewWithoutRejections(t *testing.T) {
+	h := newHarness(t, harnessOpts{})
+
+	var raw map[string]any
+
+	h.admin().json(http.MethodGet, "/api/v1/overview", nil, http.StatusOK, &raw)
+	assert.Equal(t, []any{}, raw["rejected_requests"], "no rejections is an empty list, not null")
+}
+
+func TestLibraryLanguages(t *testing.T) {
+	libs := []libraryScripts{
+		{source: "Lounge", language: "en", titles: 10, scripts: map[string]int{"ja": 6, "ar": 1}},
+		{source: "Study", language: "en", titles: 10, scripts: map[string]int{"ja": 5}},
+		{source: "Den", language: "ja", titles: 4, scripts: map[string]int{"ja": 4}},
+		{source: "Garage", language: "de", titles: 3, scripts: map[string]int{"hi": 2}},
+		{source: "Attic", language: "en", titles: 0, scripts: map[string]int{}},
+	}
+
+	att := libraryLanguages(libs, []string{"en-AU", "ja-JP", "hi-IN"})
+	assert.Equal(t, []Attention{
+		{
+			Kind: "library_language", Title: "Most of Lounge's titles are in Japanese", Link: "/kodi",
+			Detail: "Its title language is English. Set it to Japanese so its titles are matched with the rules for Japanese.",
+			Params: map[string]string{"instance": "Lounge", "language": "ja", "current": "en"},
+		},
+		{
+			Kind: "library_language", Title: "Most of Garage's titles are in Hindi", Link: "/kodi",
+			Detail: "Its title language is German. Set it to Hindi so its titles are matched with the rules for Hindi.",
+			Params: map[string]string{"instance": "Garage", "language": "hi", "current": "de"},
+		},
+	}, att, "half the titles is not most, and a library already in the language needs nothing")
+
+	assert.Empty(t, libraryLanguages(libs, []string{"en-AU", "de-DE"}), "only an enabled locale's language counts")
+}
+
+func TestScriptsOfCountsTitlesByScript(t *testing.T) {
+	cat := library.New("Lounge", testkit.NewBackend(
+		media.Item{Kind: media.KindMovie, ID: 1, Title: "千と千尋の神隠し"},
+		media.Item{Kind: media.KindMovie, ID: 2, Title: "Titanic"},
+		media.Item{Kind: media.KindArtist, ID: 3, Title: "米津玄師"},
+		media.Item{Kind: media.KindSong, ID: 4, Title: "夜に駆ける"},
+	), library.Options{RefreshInterval: -1})
+	require.NoError(t, cat.Sync(t.Context()))
+
+	got := scriptsOf([]app.Library{{Source: "Lounge", Language: "en", Catalog: cat}, {Source: "Study", Language: "de"}})
+	assert.Equal(t, []libraryScripts{
+		{source: "Lounge", language: "en", titles: 3, scripts: map[string]int{"ja": 2}},
+		{source: "Study", language: "de", scripts: map[string]int{}},
+	}, got, "songs are left out, and a library without a catalog has no titles")
+}
+
+func TestLanguageNamesCoverEveryTitleLanguage(t *testing.T) {
+	for _, code := range match.Languages() {
+		assert.NotEmpty(t, languageNames[code], code)
+	}
 }

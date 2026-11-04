@@ -1,0 +1,192 @@
+{
+  "card": {
+    "address": "Adres",
+    "and": " en ",
+    "defaultForUnlinked": "Standaard voor niet-gekoppelde Echo's",
+    "edit": "Bewerken",
+    "editNamed": "{{name}} bewerken",
+    "failed": "Mislukt:",
+    "hideTest": "Testresultaten verbergen",
+    "httpOnly": {
+      "scheduled": "De WebSocket staat uit. Encore synchroniseert de bibliotheek volgens een schema in plaats van live, en kan niet zien wat {{name}} afspeelt totdat je <b>Instellingen › Services › Bediening › Afstandsbediening toestaan van applicaties op andere systemen</b> inschakelt.",
+      "theSource": "de bibliotheekbron",
+      "viaSource": "De WebSocket staat uit. Bibliotheekupdates komen nog steeds binnen via {{source}} (de bibliotheekbron), maar Encore kan niet zien wat {{name}} afspeelt totdat je <b>Instellingen › Services › Bediening › Afstandsbediening toestaan van applicaties op andere systemen</b> inschakelt."
+    },
+    "library": {
+      "label": "Bibliotheek",
+      "own": "Eigen bibliotheek",
+      "sharedWith": "Gedeeld met {{names}}"
+    },
+    "mac": "MAC (Wake-on-LAN)",
+    "ms": "{{ms}} ms",
+    "notSet": "Niet ingesteld",
+    "offline": "Encore kan {{name}} niet bereiken. Controleer of Kodi draait en of het adres hieronder klopt.",
+    "passed": "Geslaagd:",
+    "shared": "Gedeelde bibliotheek",
+    "sharedSource": "Gedeelde bibliotheek · bron",
+    "stats": {
+      "findable": "vindbaar",
+      "lastEvent": "Laatste Kodi-gebeurtenis",
+      "movies_one": "{{count, number}} film",
+      "movies_other": "{{count, number}} films",
+      "newest": "Nieuwste titel",
+      "noneYet": "Nog geen",
+      "notFindable": "nog niet vindbaar",
+      "resync": "Controlesynchronisatie",
+      "resyncEvery": "Elke 15 min",
+      "resyncNext": "Elke 15 min · volgende {{time}}",
+      "sharedWith": "gedeeld met {{names}}",
+      "shows_one": "{{count, number}} serie",
+      "shows_other": "{{count, number}} series"
+    },
+    "sync": "Bibliotheek synchroniseren",
+    "test": "Verbinding testen",
+    "testing": "{{name}} testen…",
+    "testResults": "Resultaten van de verbindingstest",
+    "useForUnlinked": "Gebruiken voor niet-gekoppelde Echo's",
+    "version": "Versie",
+    "wake": "Nu wekken",
+    "wakeTimeout": {
+      "label": "Time-out voor wekken",
+      "value": "60 s, daarna “hij wordt nog wakker”"
+    },
+    "waking": "Wekken… (wachten op Kodi)"
+  },
+  "dialog": {
+    "add": "Kodi-instantie toevoegen",
+    "addTitle": "Een Kodi-instantie toevoegen",
+    "cancel": "Annuleren",
+    "close": "Sluiten",
+    "confirmRemove": "{{name}} verwijderen? Echo's die eraan gekoppeld zijn, werken niet meer totdat je ze opnieuw koppelt.",
+    "description": "In Kodi moeten “Afstandsbediening via HTTP toestaan” en “van applicaties op andere systemen” zijn ingeschakeld.",
+    "editTitle": "{{name}} bewerken",
+    "errors": {
+      "mac": "Voer een MAC-adres in zoals DC:A6:32:4B:19:0E, of laat het leeg.",
+      "name": "Geef het een naam, zoals de kamer waarin het staat.",
+      "url": "Voer een http://- of https://-adres in, bijv. http://192.168.1.20:8080/jsonrpc.",
+      "websocketUrl": "Voer een ws://- of wss://-adres in, of laat het leeg."
+    },
+    "fields": {
+      "broadcast": {
+        "hint": "Alleen als Wake-on-LAN naar een specifiek subnet moet.",
+        "label": "Broadcastadres"
+      },
+      "language": {
+        "hint": "De regels waarmee gesproken titels met deze bibliotheek worden vergeleken.",
+        "label": "Taal van titels"
+      },
+      "mac": {
+        "hint": "Hiermee kunnen spraakverzoeken deze Kodi-instantie wekken als die slaapt.",
+        "label": "MAC-adres (Wake-on-LAN)"
+      },
+      "name": {
+        "hint": "Wordt getoond op Echo's en in het verzoekenlogboek.",
+        "label": "Naam"
+      },
+      "password": {
+        "hint": "Versleuteld opgeslagen.",
+        "label": "Kodi-wachtwoord",
+        "saved": "Er is een wachtwoord opgeslagen. Laat dit leeg om het te behouden."
+      },
+      "shutdown": {
+        "hint": "Wat “Alexa, vraag encore om af te sluiten” doet op deze Kodi-instantie.",
+        "inherit": "Volgens Instellingen › Functies",
+        "label": "“Afsluiten”",
+        "power_off": "Het apparaat uitschakelen",
+        "quit": "Kodi afsluiten"
+      },
+      "timezone": {
+        "hint": "Waar deze Kodi-instantie staat. Laat het leeg om het af te leiden uit de klok van Kodi.",
+        "label": "Tijdzone"
+      },
+      "url": {
+        "label": "JSON-RPC-URL"
+      },
+      "username": {
+        "label": "Kodi-gebruikersnaam"
+      },
+      "websocketUrl": {
+        "hint": "Voor live bibliotheekupdates en wat er nu speelt. Meestal poort 9090.",
+        "label": "WebSocket-URL"
+      }
+    },
+    "keep": "Behouden",
+    "managed": "Deze instantie komt uit encore.yml of ENCORE_*-variabelen. Wijzig het daar.",
+    "remove": "Verwijderen",
+    "removeEllipsis": "Verwijderen…",
+    "save": "Opslaan"
+  },
+  "discovered": {
+    "add": "Toevoegen",
+    "addNamed": "{{name}} toevoegen",
+    "intro": "Gevonden met mDNS (<mono>{{service}}</mono>). Kodi op een ander VLAN verschijnt hier niet; voeg het handmatig toe.",
+    "lastScan": "Laatste scan {{when}} · scant doorlopend",
+    "none": "Niets nieuws gevonden.",
+    "scanning": "Bezig met scannen…",
+    "searching": "Zoeken naar Kodi met mDNS. Dit duurt een paar seconden.",
+    "title": "Gevonden op je netwerk",
+    "unavailable": "Detectie is nu niet beschikbaar.",
+    "version": "Kodi {{version}}"
+  },
+  "library": {
+    "explanation": {
+      "common": {
+        "many": "Encore houdt één bibliotheek en één titelindex voor ze bij, synchroniseert die vanaf de bibliotheekbron en luistert naar wijzigingen van ze allemaal.",
+        "two": "Encore houdt één bibliotheek en één titelindex voor ze bij, synchroniseert die vanaf de bibliotheekbron en luistert naar wijzigingen van allebei."
+      },
+      "confirmed": {
+        "many": "Deze instanties gebruiken dezelfde Kodi-database: afspelen op één ervan wijzigde de bekeken-status en het hervatpunt op allemaal tegelijk.",
+        "two": "Deze instanties gebruiken dezelfde Kodi-database: afspelen op één ervan wijzigde de bekeken-status en het hervatpunt op allebei tegelijk."
+      },
+      "likely": {
+        "check": {
+          "many": "De volgende keer dat er iets wordt afgespeeld, controleert Encore of de bekeken-status en het hervatpunt op allemaal tegelijk veranderen; als dat zo is, wordt dit Bevestigd gedeeld.",
+          "two": "De volgende keer dat er iets wordt afgespeeld, controleert Encore of de bekeken-status en het hervatpunt op beide instanties tegelijk veranderen; als dat zo is, wordt dit Bevestigd gedeeld."
+        },
+        "evidence": "Deze instanties lijken dezelfde Kodi-database te gebruiken: {{evidence}}.",
+        "plain": "Deze instanties lijken dezelfde Kodi-database te gebruiken."
+      },
+      "manual": "Je hebt deze instanties handmatig gegroepeerd."
+    },
+    "fallback": "De bron is onbereikbaar, dus Encore synchroniseert vanaf {{name}}.",
+    "share": {
+      "add": "Een instantie toevoegen",
+      "alreadyShared": "Deelt een bibliotheek met {{names}}; als je hem aanvinkt, gaat hij naar deze bibliotheek.",
+      "cancel": "Annuleren",
+      "confirm_one": "Bibliotheek delen",
+      "confirm_other": "Bibliotheek delen tussen {{count}}",
+      "description": "Vink de Kodi-instanties aan die dezelfde Kodi-database gebruiken, zoals MySQL. Encore houdt dan één bibliotheek en titelindex voor ze bij.",
+      "legend": "Kodi-instanties",
+      "open": "Een bibliotheek delen",
+      "sourceHint": "De eerste instantie die je aanvinkt, wordt de bibliotheekbron; je kunt dat later wijzigen.",
+      "title": "Een bibliotheek delen"
+    },
+    "source": "Bibliotheekbron",
+    "sourceHint": "Als de bron slaapt, synchroniseert Encore vanaf een andere instantie in de groep die wakker is. Afspelen gebeurt nog steeds op de instantie die de Echo bedient.",
+    "split": {
+      "cancel": "Annuleren",
+      "confirm": "Splitsen",
+      "currentSource": "Huidige bibliotheekbron",
+      "description": "Kies de instantie met een eigen Kodi-database. Encore synchroniseert en indexeert die dan afzonderlijk.",
+      "legend": "Instantie met een eigen bibliotheek",
+      "open": "Niet gedeeld? Splitsen",
+      "title": "De gedeelde bibliotheek splitsen"
+    },
+    "state": {
+      "confirmed_shared": "Bevestigd gedeeld",
+      "likely_shared": "Waarschijnlijk gedeeld",
+      "manual": "Handmatig gegroepeerd",
+      "solo": "Eigen bibliotheek"
+    },
+    "title": "Gedeelde bibliotheek: {{name}}"
+  },
+  "page": {
+    "addManually": "Kodi handmatig toevoegen",
+    "description": "Elke Kodi die Encore kan bedienen. De bibliotheekindex blijft live bij via de WebSocket-gebeurtenissen van Kodi.",
+    "empty": {
+      "body": "Voeg er een toe die op je netwerk is gevonden, of voer het adres in. In Kodi moet “Afstandsbediening via HTTP toestaan” zijn ingeschakeld.",
+      "title": "Nog geen Kodi-instanties"
+    },
+    "title": "Kodi-instanties"
+  }
+}

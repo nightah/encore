@@ -157,6 +157,10 @@ func (s *Server) startImport(w http.ResponseWriter, skillID, vendorID, location 
 	}
 
 	job := &importJob{id: s.nextID("import-"), skillID: sk.ID, failed: map[string]string{}, skipped: map[string]bool{}}
+	if s.unexplained > 0 {
+		s.unexplained--
+		job.unexplained = true
+	}
 
 	pkg, err := parsePackage(data)
 	if err != nil {
@@ -174,6 +178,8 @@ func (s *Server) startImport(w http.ResponseWriter, skillID, vendorID, location 
 
 		for _, loc := range job.locales {
 			if msg, bad := s.failLocales[loc]; bad {
+				job.failed[loc] = msg
+			} else if msg := s.checkValues(loc, pkg.models[loc]); msg != "" {
 				job.failed[loc] = msg
 			}
 		}
@@ -227,6 +233,19 @@ func (s *Server) handleImportStatus(w http.ResponseWriter, id string) {
 	if job.polls < s.opts.Pending {
 		job.polls++
 		resp["status"] = "IN_PROGRESS"
+		writeJSON(w, http.StatusOK, resp)
+
+		return
+	}
+
+	if job.unexplained {
+		resources := []map[string]any{{"name": "Manifest", "action": "UPDATE", "status": "ROLLBACK_FAILED"}}
+		for _, loc := range job.locales {
+			resources = append(resources, map[string]any{"name": "InteractionModel." + s.localeKey(loc), "action": "UPDATE", "status": "FAILED"})
+		}
+
+		resp["status"] = "FAILED"
+		resp["skill"] = map[string]any{"skillId": job.skillID, "resources": resources}
 		writeJSON(w, http.StatusOK, resp)
 
 		return
@@ -355,6 +374,21 @@ func (s *Server) handleEnable(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+func (s *Server) handleDisable(w http.ResponseWriter, r *http.Request) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	sk, ok := s.skills[r.PathValue("skillId")]
+	if !ok || !sk.Enabled {
+		writeError(w, http.StatusNotFound, "enablement not found")
+
+		return
+	}
+
+	sk.Enabled = false
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (s *Server) handleGetEnablement(w http.ResponseWriter, r *http.Request) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -383,4 +417,26 @@ func (s *Server) handleGetManifest(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = w.Write(sk.Manifest)
+}
+
+func (s *Server) handleGetModel(w http.ResponseWriter, r *http.Request) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	sk, ok := s.skills[r.PathValue("skillId")]
+	if !ok {
+		writeError(w, http.StatusNotFound, "skill not found")
+
+		return
+	}
+
+	model, ok := sk.Models[r.PathValue("locale")]
+	if !ok {
+		writeError(w, http.StatusNotFound, "no interaction model for locale %s", r.PathValue("locale"))
+
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_, _ = w.Write(model)
 }

@@ -24,7 +24,7 @@ export interface StepProps {
   nav: StepNav;
 }
 
-/** Back on the left; "Skip for now" and the step's primary action on the right. */
+/** Back at the start; "Skip for now" and the step's primary action at the end (the right, or the left in a right-to-left language). */
 export function StepFooter({ nav, primary }: { nav: StepNav; primary: ReactNode }) {
   const { t } = useTranslation("setup");
   return (

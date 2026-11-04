@@ -14,10 +14,14 @@ afterEach(() => vi.restoreAllMocks());
 describe("browserLanguage", () => {
   it.each([
     [["de-AT", "en"], "de"],
-    [["pt-BR", "fr-CA", "de"], "fr"],
+    [["pt-BR", "fr-CA", "de"], "pt"],
+    [["zh-CN", "fr-CA", "de"], "fr"],
+    [["ar-SA"], "ar"],
+    [["nl-BE"], "nl"],
     [["IT"], "it"],
     [["es-419"], "es"],
-    [["ja", "zh-Hant"], "en"],
+    [["ja", "zh-Hant"], "ja"],
+    [["ko", "zh-Hant"], "en"],
     [[], "en"],
   ])("picks the first supported language of %j", (languages, expected) => {
     browserPrefers(languages);
@@ -57,6 +61,14 @@ describe("setLanguage", () => {
     expect(document.documentElement.lang).toBe("fr");
     expect(i18n.t("actions.tryAgain")).toBe(i18n.getResource("fr", "common", "actions.tryAgain"));
     expect(i18n.t("actions.tryAgain")).not.toBe("Try again");
+  });
+
+  it("sets the document's direction with its language", async () => {
+    await i18n.changeLanguage("ar");
+    expect(document.documentElement.lang).toBe("ar");
+    expect(document.documentElement.dir).toBe("rtl");
+    await setLanguage("fr");
+    expect(document.documentElement.dir).toBe("ltr");
   });
 
   it("forgets the choice and follows the browser for undefined", async () => {

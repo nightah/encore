@@ -6,7 +6,9 @@
  * OpenAPI spec version: 1
  */
 import type { AmazonConnection } from "./amazonConnection.ts";
+import type { AutoDeployRetry } from "./autoDeployRetry.ts";
 import type { LastDeploy } from "./lastDeploy.ts";
+import type { LocaleInvocation } from "./localeInvocation.ts";
 import type { ModelSize } from "./modelSize.ts";
 import type { Privacy } from "./privacy.ts";
 import type { SkillEndpointInfo } from "./skillEndpointInfo.ts";
@@ -21,14 +23,18 @@ export interface SkillInfo {
   auto_deploy: boolean;
   /** Why automatic deploys are paused until a deploy started by hand succeeds; empty when they aren't paused or alexa.auto_deploy is off */
   auto_deploy_paused: string;
+  /** An automatic deploy that failed for a reason that may pass, such as Amazon being unavailable or still building, which is tried again before automatic deploys pause; null when there is none or alexa.auto_deploy is off */
+  auto_deploy_retry: AutoDeployRetry | null;
   /** What the skill can play; music includes music videos */
   content: SkillInfoContentItem[];
   endpoint: SkillEndpointInfo;
-  /** encore uses each locale's own name for it ("kodi" in French); kodi is "kodi" in every locale */
+  /** encore uses each locale's own name for it ("kodi" in French and Brazilian Portuguese, "انكور" in Arabic, "アンコール" in Japanese); kodi is "kodi", or "كودي" and "コディ" where the name must be in the language's script. locale_invocations lists both choices for every locale */
   invocation: SkillInfoInvocation;
-  /** What people say, "Alexa, ask <invocation_name> to…", in the first enabled locale */
+  /** What people say, "Alexa, ask <invocation_name> to…": the Latin name when any enabled locale says it, else the first enabled locale's spelling */
   invocation_name: string;
   last_deploy: LastDeploy | null;
+  /** What people say in each available locale for each invocation choice */
+  locale_invocations: LocaleInvocation[];
   locales_available: string[];
   locales_enabled: string[];
   model_size: ModelSize | null;

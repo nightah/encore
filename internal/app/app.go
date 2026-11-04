@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"sync"
 
+	"github.com/nightah/encore/internal/adapter/alexa"
 	"github.com/nightah/encore/internal/backend/kodi"
 	"github.com/nightah/encore/internal/blobstore"
 	"github.com/nightah/encore/internal/config"
@@ -40,6 +41,7 @@ func newApp(ctx context.Context, cfg *config.Config, log *slog.Logger, tune tuni
 		instances: map[int64]*Instance{}, groups: map[int64]*group{}, prints: map[int64]*kodi.LibraryFingerprint{},
 	}
 	a.recorder = newRecorder(db.RequestLog(), log.With("component", "requestlog"))
+	a.rejections = alexa.NewRejections(nil)
 
 	// Snapshots only speed up start-up, so a store that can't be opened isn't fatal.
 	if a.blobs, err = blobstore.Open(cfg.Storage, cfg.DataDir); err != nil {

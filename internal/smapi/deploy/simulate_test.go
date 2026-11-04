@@ -8,24 +8,29 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/nightah/encore/i18n"
+	"github.com/nightah/encore/internal/skillmodel"
 	"github.com/nightah/encore/internal/smapi"
 	"github.com/nightah/encore/internal/smapi/deploy"
 	"github.com/nightah/encore/internal/smapi/smapitest"
 )
 
 func TestOpenPhraseLanguages(t *testing.T) {
+	src, err := skillmodel.Load(i18n.FS)
+	require.NoError(t, err)
+
 	for locale, want := range map[string]string{
-		"en-AU": "open encore",
-		"en-IN": "open encore",
-		"fr-FR": "ouvre encore",
-		"fr-CA": "ouvre encore",
-		"ja-JP": "encoreを開いて",
-		"de-DE": "öffne encore",
-		"de":    "öffne encore",
-		"es-ES": "",
+		"en-AU": "open lounge remote",
+		"en-IN": "open lounge remote",
+		"fr-FR": "ouvre lounge remote",
+		"fr-CA": "ouvre lounge remote",
+		"de-DE": "öffne lounge remote",
+		"es-MX": "abre lounge remote",
+		"hi-IN": "lounge remote शुरू करो",
+		"de":    "",
 		"":      "",
 	} {
-		assert.Equal(t, want, deploy.OpenPhrase(locale, "encore"), locale)
+		assert.Equal(t, want, deploy.OpenPhrase(src, locale, "lounge remote"), locale)
 	}
 }
 
@@ -33,7 +38,7 @@ func TestDeploySkipsSimulationWithoutSupportedLocale(t *testing.T) {
 	h := newHarness(t, smapitest.Options{})
 
 	req := h.request(deploy.State{})
-	req.Package.Locales = []string{"es-ES", "it-IT"}
+	req.Package.Locales = []string{"es-ES", "es-MX", "es-US", "it-IT"}
 
 	res, err := h.deployer.Deploy(t.Context(), req)
 	require.NoError(t, err)

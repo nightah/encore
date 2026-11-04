@@ -2,12 +2,14 @@ package deploy
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"maps"
 	"net/http"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/nightah/encore/internal/skillmodel"
 	"github.com/nightah/encore/internal/smapi"
@@ -104,6 +106,7 @@ func (r *run) deploy(ctx context.Context) error {
 
 	if !r.req.Force && !r.res.State.NeedsDeploy(pkg.Hash()) {
 		r.res.Skipped = true
+		r.res.Degraded = r.res.State.Degraded
 		r.done("Unchanged since the last deploy")
 
 		for _, s := range []Step{StepVendor, StepSkill, StepUpload, StepImport, StepBuild, StepEnable, StepSimulate} {
@@ -114,7 +117,7 @@ func (r *run) deploy(ctx context.Context) error {
 	}
 
 	// Until this deploy succeeds, what is live no longer matches any known hash.
-	r.res.State.Hash = ""
+	r.res.State.Hash, r.res.State.Degraded = "", nil
 	r.done(fmt.Sprintf("%d locales, hash %.12s", len(pkg.Locales()), pkg.Hash()))
 
 	if err := r.resolveVendor(ctx); err != nil {
@@ -125,6 +128,81 @@ func (r *run) deploy(ctx context.Context) error {
 		return err
 	}
 
+	err = r.ship(ctx)
+	if de, ok := errors.AsType[*Error](err); ok && de.silent() && r.req.SilentRetryWait >= 0 {
+		if err = r.awaitRetry(ctx, de); err == nil {
+			err = r.ship(ctx)
+		}
+	}
+
+	if err != nil {
+		de, ok := errors.AsType[*Error](err)
+		if !ok || !r.degrade(de) {
+			return err
+		}
+
+		if err := r.ship(ctx); err != nil {
+			r.res.Degraded = nil
+
+			return err
+		}
+	}
+
+	if r.req.Disabled {
+		r.start(StepEnable, "Disabling the skill for testing")
+
+		if err := r.d.client.DisableDevelopment(ctx, r.res.State.SkillID); err != nil {
+			return err
+		}
+
+		r.done("Not enabled on any device")
+	} else {
+		r.start(StepEnable, "Enabling the skill for testing")
+
+		if err := r.d.client.EnableDevelopment(ctx, r.res.State.SkillID); err != nil {
+			return err
+		}
+
+		r.done("Enabled on devices registered to your Amazon account")
+	}
+
+	if err := r.simulate(ctx); err != nil {
+		return err
+	}
+
+	// A package deployed with fewer slot values still counts as this one, so it isn't deployed again until something changes.
+	r.res.State.Hash, r.res.State.Degraded = pkg.Hash(), r.res.Degraded
+
+	return nil
+}
+
+// awaitRetry waits to import again after Amazon failed import de without saying why: straight away, the skill is still rolling that import back and the next one fails too.
+func (r *run) awaitRetry(ctx context.Context, de *Error) error {
+	wait := r.req.SilentRetryWait
+	if wait == 0 {
+		wait = silentRetryWait
+	}
+
+	r.res.Warnings = append(r.res.Warnings, fmt.Sprintf("Amazon rolled import %s back without saying why, so the skill package was imported again", de.ImportID))
+	r.emit(Event{Step: StepImport, State: StateRunning, Message: fmt.Sprintf("Amazon rolled the import back without saying why; importing again in %s", wait.Round(time.Second))})
+
+	t := time.NewTimer(wait)
+	defer t.Stop()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-t.C:
+	}
+
+	r.res.Locales = map[string]LocaleStatus{}
+	r.imported, r.missing = nil, nil
+
+	return nil
+}
+
+// ship uploads the package, imports it and waits for its models to build.
+func (r *run) ship(ctx context.Context) error {
 	location, err := r.upload(ctx)
 	if err != nil {
 		return err
@@ -134,25 +212,164 @@ func (r *run) deploy(ctx context.Context) error {
 		return err
 	}
 
-	if err := r.waitForBuild(ctx); err != nil {
-		return err
+	return r.waitForBuild(ctx)
+}
+
+// degrade prepares a second attempt, once a deploy, after Amazon would not build some locales' models for reasons it named. A locale whose errors quote some of its slot values is built without them; otherwise, when other locales did build, it keeps every other value of each slot type but Request.KeepSlots. Locales that failed without a reason are left as they are, as their failure may pass. It reports false when nothing would change, and the failure stands.
+func (r *run) degrade(de *Error) bool {
+	if r.retried || len(de.Locales) == 0 {
+		return false
 	}
 
-	r.start(StepEnable, "Enabling the skill for testing")
+	partial := len(de.Locales) < len(r.pkg.Locales())
+	values := r.req.Package.SlotValues
+	total := countValues(values)
+	overrides := map[string]map[string][]skillmodel.SlotValue{}
+	degraded := map[string]Degradation{}
 
-	if err := r.d.client.EnableDevelopment(ctx, r.res.State.SkillID); err != nil {
-		return err
+	for _, loc := range slices.Sorted(maps.Keys(de.Locales)) {
+		problems := de.Locales[loc]
+		if (&Error{Locales: map[string][]smapi.Problem{loc: problems}}).unexplained() {
+			continue
+		}
+
+		own, dropped := withoutNamed(values, r.pkg.Models[loc], problems)
+		if len(dropped) == 0 {
+			if !partial {
+				continue
+			}
+
+			own = thinned(values, r.req.KeepSlots)
+		}
+
+		if kept := countValues(own); kept < total {
+			overrides[loc] = own
+			degraded[loc] = Degradation{Reason: problems, Dropped: dropped, Kept: kept, Total: total}
+		}
 	}
 
-	r.done("Enabled on devices registered to your Amazon account")
-
-	if err := r.simulate(ctx); err != nil {
-		return err
+	if len(overrides) == 0 {
+		return false
 	}
 
-	r.res.State.Hash = pkg.Hash()
+	opts := r.req.Package
+	opts.LocaleSlotValues = overrides
 
-	return nil
+	pkg, err := r.d.Build(opts)
+	if err != nil {
+		return false
+	}
+
+	for _, f := range pkg.Files {
+		loc := strings.TrimSuffix(strings.TrimPrefix(f.Name, skillpkg.ModelDir), ".json")
+		if d, ok := degraded[loc]; ok && strings.HasPrefix(f.Name, skillpkg.ModelDir) {
+			d.Bytes = len(f.Data)
+			degraded[loc] = d
+		}
+	}
+
+	locales := slices.Sorted(maps.Keys(overrides))
+	r.emit(Event{Step: StepBuild, State: StateFailed, Message: "Amazon could not build " + strings.Join(locales, ", ") + "; deploying again with fewer library titles there", Locales: r.snapshot()})
+	r.step = ""
+
+	r.retried = true
+	r.pkg = pkg
+	r.res.Degraded = degraded
+	r.res.Locales = map[string]LocaleStatus{}
+	r.imported, r.missing = nil, nil
+
+	return true
+}
+
+func countValues(values map[string][]skillmodel.SlotValue) int {
+	n := 0
+	for _, vs := range values {
+		n += len(vs)
+	}
+
+	return n
+}
+
+// withoutNamed leaves out the values that problems quote, by value or synonym, ignoring case, and returns them. Amazon quotes built, the model it was given, whose values are cleaned for it (skillpkg.CleanSlotText) and may carry synonyms the build added, such as native-script forms, so a value is also left out when its cleaned text is that of a value built quotes.
+func withoutNamed(values map[string][]skillmodel.SlotValue, built *skillmodel.InteractionModel, problems []smapi.Problem) (map[string][]skillmodel.SlotValue, []string) {
+	var text strings.Builder
+
+	for _, p := range problems {
+		text.WriteString(strings.ToLower(p.Message))
+		text.WriteByte('\n')
+	}
+
+	msg := text.String()
+	quoted := func(s string) bool {
+		s = strings.ToLower(s)
+		for _, q := range valueQuotes {
+			if strings.Contains(msg, q[0]+s+q[1]) {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	named := map[string]map[string]bool{}
+
+	if built != nil {
+		for _, typ := range built.InteractionModel.LanguageModel.Types {
+			for _, v := range typ.Values {
+				if quoted(v.Name.Value) || slices.ContainsFunc(v.Name.Synonyms, quoted) {
+					if named[typ.Name] == nil {
+						named[typ.Name] = map[string]bool{}
+					}
+
+					named[typ.Name][strings.ToLower(v.Name.Value)] = true
+				}
+			}
+		}
+	}
+
+	out := make(map[string][]skillmodel.SlotValue, len(values))
+
+	var dropped []string
+
+	for _, typ := range slices.Sorted(maps.Keys(values)) {
+		kept := make([]skillmodel.SlotValue, 0, len(values[typ]))
+
+		for _, v := range values[typ] {
+			if v.Value != "" && (quoted(v.Value) || slices.ContainsFunc(v.Synonyms, quoted) || named[typ][strings.ToLower(skillpkg.CleanSlotText(v.Value))]) {
+				dropped = append(dropped, v.Value)
+
+				continue
+			}
+
+			kept = append(kept, v)
+		}
+
+		out[typ] = kept
+	}
+
+	return out, dropped
+}
+
+// thinned keeps every other value of each slot type but keep, starting with the second, so a type of one value loses it.
+func thinned(values map[string][]skillmodel.SlotValue, keep []string) map[string][]skillmodel.SlotValue {
+	out := make(map[string][]skillmodel.SlotValue, len(values))
+
+	for typ, vs := range values {
+		if slices.Contains(keep, typ) {
+			out[typ] = vs
+
+			continue
+		}
+
+		half := make([]skillmodel.SlotValue, 0, len(vs)/2)
+		for i := 1; i < len(vs); i += 2 {
+			half = append(half, vs[i])
+		}
+
+		out[typ] = half
+	}
+
+	return out
 }
 
 func (r *run) resolveVendor(ctx context.Context) error {
@@ -297,16 +514,26 @@ func (r *run) importPackage(ctx context.Context, location string) error {
 		return nil
 	}
 
-	failure := &Error{Step: StepImport, Problems: status.Errors}
+	failure := &Error{Step: StepImport, Problems: status.Errors, ImportID: importID, ImportStatus: status.Raw}
 
 	// Resources report their own errors whether they failed outright or were rolled back.
 	for _, res := range status.Skill.Resources {
 		failure.Problems = append(failure.Problems, res.Errors...)
 	}
 
-	// A failed import is usually a failed model build; the skill status has the per-locale details. A locale whose import was rolled back may never report a build; pollBuild gives up on those, and then the import's own errors are the ones to report.
+	// A failed import is usually a failed model build. The import names the locales that failed and why, while the rest were only rolled back.
+	r.recordImported(status.Skill.Resources)
+
+	if locales := r.importFailures(status.Skill.Resources); len(locales) > 0 {
+		r.emit(Event{Step: StepImport, State: StateFailed, Message: "Amazon could not build the interaction models"})
+		r.step = StepBuild
+
+		return &Error{Step: StepBuild, Locales: locales}
+	}
+
+	// Without the import's reasons, the skill status may have them. After a rollback it can report the builds in progress for good, so it's asked only as long as a missing locale is waited for; pollBuild also gives up on a locale that never reports, and then the import's own errors are the ones to report.
 	if r.res.State.SkillID != "" {
-		if err := r.pollBuild(ctx, false); err == nil {
+		if err := r.pollBuild(ctx, false, missingLocalePolls); err == nil {
 			if locales := r.failedLocales(); len(locales) > 0 && !onlyUnreported(locales) {
 				r.emit(Event{Step: StepImport, State: StateFailed, Message: "Amazon could not build the interaction models"})
 				r.step = StepBuild
@@ -330,7 +557,7 @@ func (r *run) waitForBuild(ctx context.Context) error {
 		return nil
 	}
 
-	if err := r.pollBuild(ctx, true); err != nil {
+	if err := r.pollBuild(ctx, true, 0); err != nil {
 		return err
 	}
 
@@ -344,8 +571,16 @@ func (r *run) waitForBuild(ctx context.Context) error {
 	return nil
 }
 
-func (r *run) pollBuild(ctx context.Context, progress bool) error {
+// pollBuild waits for every package locale's build to finish, or, when limit is above zero, for at most limit polls, after which it returns errGaveUp.
+func (r *run) pollBuild(ctx context.Context, progress bool, limit int) error {
+	polls := 0
+
 	return r.d.client.Poll(ctx, func(ctx context.Context) (bool, error) {
+		polls++
+		if limit > 0 && polls > limit {
+			return false, errGaveUp
+		}
+
 		st, err := r.d.client.SkillStatus(ctx, r.res.State.SkillID)
 		if err != nil {
 			return false, err
@@ -432,7 +667,7 @@ func (r *run) failedLocales() map[string][]smapi.Problem {
 		if ls.Status == smapi.StatusFailed {
 			errs := ls.Errors
 			if len(errs) == 0 {
-				errs = []smapi.Problem{{Message: "build failed without details"}}
+				errs = []smapi.Problem{{Message: unexplainedBuild}}
 			}
 
 			out[loc] = errs
@@ -456,17 +691,43 @@ func resourceSummary(resources []smapi.ResourceStatus) []string {
 }
 
 // Amazon names import resources "InteractionModel.en-AU" or "interactionModels.en_AU".
-func (r *run) recordImported(resources []smapi.ResourceStatus) {
+// importFailures returns the errors of each package locale whose import failed with them, and records those locales as failed.
+func (r *run) importFailures(resources []smapi.ResourceStatus) map[string][]smapi.Problem {
+	var out map[string][]smapi.Problem
+
 	for _, res := range resources {
-		kind, loc, ok := strings.Cut(res.Name, ".")
-		// SKIPPED means the model didn't change, so the one Amazon already built stands.
-		built := res.Status == smapi.StatusSucceeded || res.Status == smapi.StatusSkipped
-		if !ok || !strings.HasPrefix(strings.ToLower(kind), "interactionmodel") || !built {
+		loc, ok := resourceLocale(res.Name)
+		if !ok || res.Status != smapi.StatusFailed || len(res.Errors) == 0 || !slices.Contains(r.pkg.Locales(), loc) {
 			continue
 		}
 
-		loc = strings.ReplaceAll(loc, "_", "-")
-		if !slices.Contains(r.pkg.Locales(), loc) {
+		if out == nil {
+			out = map[string][]smapi.Problem{}
+		}
+
+		out[loc] = res.Errors
+		r.res.Locales[loc] = LocaleStatus{Status: smapi.StatusFailed, Errors: res.Errors, Warnings: res.Warnings}
+	}
+
+	return out
+}
+
+// resourceLocale returns the locale an import resource is the interaction model of.
+func resourceLocale(name string) (string, bool) {
+	kind, loc, ok := strings.Cut(name, ".")
+	if !ok || !strings.HasPrefix(strings.ToLower(kind), "interactionmodel") {
+		return "", false
+	}
+
+	return strings.ReplaceAll(loc, "_", "-"), true
+}
+
+func (r *run) recordImported(resources []smapi.ResourceStatus) {
+	for _, res := range resources {
+		loc, ok := resourceLocale(res.Name)
+		// SKIPPED means the model didn't change, so the one Amazon already built stands.
+		built := res.Status == smapi.StatusSucceeded || res.Status == smapi.StatusSkipped
+		if !ok || !built || !slices.Contains(r.pkg.Locales(), loc) {
 			continue
 		}
 

@@ -1,0 +1,684 @@
+# Grown set: testdata/grown is a held-out set of corpora, kept apart from the original set (asr_corpus.yaml and phonetic/). TestASRCorpus and TestPhoneticEval score both sets and report them separately.
+#
+# Japanese (ja-JP) phonetic evaluation corpus, second set, for TestPhoneticEval. Same schema as asr_corpus.yaml; cases are scored, not asserted, so there is no xfail. It adds two suites with their own libraries to the first Japanese set; no play case repeats a heard string from it, and some absent cases deliberately name titles from its library, which are not in these libraries.
+#
+# Libraries: real, well-known titles as a Japanese Kodi library holds them, with their original release years: Japanese films, series and anime under their Japanese titles, foreign films under their katakana release names, and Japanese artists, albums and songs, some in Latin letters (back number, LiSA, VARIETY). Each library carries near neighbours that share words, names or numbers (ジュラシック・パーク / ワールド, ロード・オブ・ザ・リング and 二つの塔, ゴッドファーザー and PART II, スパイダーマン and 2, 20世紀少年 and 第2章, 鋼の錬金術師 and FULLMETAL ALCHEMIST, 機動戦士ガンダム and SEED, 踊る大捜査線 the series and THE MOVIE, 東京ラブストーリー / 東京リベンジャーズ, おしん / 【推しの子】, 山下達郎 / 山下智久, 乃木坂46 / 欅坂46 / 日向坂46, two songs called さくら, 桜坂, 恋 / 恋するフォーチュンクッキー, 時代 / 新時代, 赤いスイートピー / 青い珊瑚礁) so a wrong play is possible.
+#
+# Cases: what Alexa's ja-JP recogniser plausibly writes when a Japanese speaker asks for the title: kanji, hiragana and katakana without spaces, numbers mostly as ASCII digits and sometimes as kanji numerals, Latin letters rarely and in lower case, punctuation dropped. Each mishearing sits under a "class" comment naming the confusion it models. The classes are documented Japanese spelling-to-sound ambiguities and the errors a recogniser makes when it picks another written form of the same sound:
+#   script: the same word written in hiragana, katakana or kanji, and kanji readings written out (耳をすませば/耳を澄ませば, 柚子/ゆず, 秋桜/コスモス, 花水木/ハナミズキ).
+#   long-vowel: long vowels written ー, う, お or い, or shortened (ジョーカー/ジョカー, スイートピー/スイトピー, 緑黄色/りょくおしょく, グレイ/グレー).
+#   small-kana: small kana and sokuon written full size or dropped (ジュラシック/ジユラシック, ゴッド/ゴド, ポルノグラフィティ/ポルノグラフイティ).
+#   dakuten: voicing marks and handakuten added or dropped, and rendaku (ゴッド/ゴット, パプリカ/バブリカ, 借りぐらし/借りくらし, 飛行/びこう).
+#   zu-ji: ず against づ and じ against ぢ (涼宮 すずみや/すづみや, 地獄 じごく/ぢごく, ハナミズキ/ハナミヅキ).
+#   loanword: katakana loanword variants (ヴァ/バ, ヴェ/ベ, ティ/チ, ディ/デイ, ウィ/ウイ, ウォ/ウオ, フォ/ホ, ラブ/ラヴ), e.g. プラスティック/プラスチック, マーヴェリック/マーベリック, フォレスト/ホレスト.
+#   middle-dot: the middle dot, slash and spaces between title parts dropped (ジュラシック・パーク/ジュラシックパーク, フォレスト・ガンプ/一期一会).
+#   punctuation: ！, 。, 、, 【】, ☆, × and 〜 in titles (カメラを止めるな！, どんなときも。, 世界の中心で、愛をさけぶ, 【推しの子】, まどか☆マギカ, HUNTER×HUNTER).
+#   particle: particles and okurigana written differently or dropped, including は/わ (君たちはどう生きるか/君たちわ, 愛をこめて/愛を込めて, 上を向いて/上向いて).
+#   homophone: the same sound written with other kanji, often a more frequent real word (錬金術師/錬金術士, 香水/降水, 糸/意図, 残響散歌/残響讃歌, 家政婦のミタ/家政婦の見た).
+#   partial: the distinctive opening words of a title and the short forms people say (ナウシカ, 時かけ, カメ止め, ワンオク, ドリカム, モー娘).
+#   number: digits, kanji numerals and katakana readings, and numbers a recogniser writes as digits inside words (秒速5/秒速五, 46/フォーティーシックス, PART II/パート2/パートツー, 三十郎/30郎, 少女A/少女エー).
+#   latin: Latin titles heard in katakana and katakana titles heard in Latin letters (HERO/ヒーロー, VIVANT/ビバン, Aimer/エメ, SUKIYAKI/スキヤキ, NARUTO/naruto).
+# Controls (exact titles as an ASR writes them), ambiguous requests (ask among the near neighbours), missing sequels (ask) and absent titles (not_found, including near misses that share words or names with library titles) keep the decision thresholds honest.
+#
+# Cases describe what a listener hears; don't change a case to suit an encoder's results, or the comparison stops meaning anything (see docs/src/content/docs/contributing/dependencies.md).
+suites:
+  - name: japanese films and series
+    lang: ja
+    library:
+      - {id: nausicaa, kind: movie, title: "風の谷のナウシカ", year: 1984}
+      - {id: hotaru, kind: movie, title: "火垂るの墓", year: 1988}
+      - {id: porco, kind: movie, title: "紅の豚", year: 1992}
+      - {id: mimi, kind: movie, title: "耳をすませば", year: 1995}
+      - {id: arrietty, kind: movie, title: "借りぐらしのアリエッティ", year: 2010}
+      - {id: kazetachinu, kind: movie, title: "風立ちぬ", year: 2013}
+      - {id: kimitachi, kind: movie, title: "君たちはどう生きるか", year: 2023}
+      - {id: neko, kind: movie, title: "猫の恩返し", year: 2002}
+      - {id: pompoko, kind: movie, title: "平成狸合戦ぽんぽこ", year: 1994}
+      - {id: byosoku, kind: movie, title: "秒速5センチメートル", year: 2007}
+      - {id: kotonoha, kind: movie, title: "言の葉の庭", year: 2013}
+      - {id: tokikake, kind: movie, title: "時をかける少女", year: 2006}
+      - {id: summerwars, kind: movie, title: "サマーウォーズ", year: 2009}
+      - {id: ookami, kind: movie, title: "おおかみこどもの雨と雪", year: 2012}
+      - {id: bakemono, kind: movie, title: "バケモノの子", year: 2015}
+      - {id: belle, kind: movie, title: "竜とそばかすの姫", year: 2021}
+      - {id: kimisui, kind: movie, title: "君の膵臓をたべたい", year: 2017}
+      - {id: kokuhaku, kind: movie, title: "告白", year: 2010}
+      - {id: shimotsuma, kind: movie, title: "下妻物語", year: 2004}
+      - {id: sekachu, kind: movie, title: "世界の中心で、愛をさけぶ", year: 2004}
+      - {id: odorumovie, kind: movie, title: "踊る大捜査線 THE MOVIE", year: 1998}
+      - {id: always, kind: movie, title: "ALWAYS 三丁目の夕日", year: 2005}
+      - {id: seiki20, kind: movie, title: "20世紀少年", year: 2008}
+      - {id: seiki20b, kind: movie, title: "20世紀少年 第2章 最後の希望", year: 2009}
+      - {id: kametome, kind: movie, title: "カメラを止めるな！", year: 2017}
+      - {id: drivemycar, kind: movie, title: "ドライブ・マイ・カー", year: 2021}
+      - {id: kaibutsu, kind: movie, title: "怪物", year: 2023}
+      - {id: fune, kind: movie, title: "舟を編む", year: 2013}
+      - {id: kirishima, kind: movie, title: "桐島、部活やめるってよ", year: 2012}
+      - {id: paprika, kind: movie, title: "パプリカ", year: 2006}
+      - {id: sennen, kind: movie, title: "千年女優", year: 2002}
+      - {id: kokaku, kind: movie, title: "GHOST IN THE SHELL / 攻殻機動隊", aliases: ["攻殻機動隊"], year: 1995}
+      - {id: zatoichi, kind: movie, title: "座頭市", year: 2003}
+      - {id: yojimbo, kind: movie, title: "用心棒", year: 1961}
+      - {id: tsubaki, kind: movie, title: "椿三十郎", year: 1962}
+      - {id: kakushi, kind: movie, title: "隠し砦の三悪人", year: 1958}
+      - {id: tengoku, kind: movie, title: "天国と地獄", year: 1963}
+      - {id: ugetsu, kind: movie, title: "雨月物語", year: 1953}
+      - {id: yatsuhaka, kind: movie, title: "八つ墓村", year: 1977}
+      - {id: inugami, kind: movie, title: "犬神家の一族", year: 1976}
+      - {id: jurassic, kind: movie, title: "ジュラシック・パーク", year: 1993}
+      - {id: jurassicworld, kind: movie, title: "ジュラシック・ワールド", year: 2015}
+      - {id: lotr1, kind: movie, title: "ロード・オブ・ザ・リング", year: 2001}
+      - {id: lotr2, kind: movie, title: "ロード・オブ・ザ・リング/二つの塔", year: 2002}
+      - {id: shawshank, kind: movie, title: "ショーシャンクの空に", year: 1994}
+      - {id: gump, kind: movie, title: "フォレスト・ガンプ/一期一会", year: 1994}
+      - {id: godfather, kind: movie, title: "ゴッドファーザー", year: 1972}
+      - {id: godfather2, kind: movie, title: "ゴッドファーザー PART II", year: 1974}
+      - {id: topgun, kind: movie, title: "トップガン", year: 1986}
+      - {id: maverick, kind: movie, title: "トップガン マーヴェリック", year: 2022}
+      - {id: bohemian, kind: movie, title: "ボヘミアン・ラプソディ", year: 2018}
+      - {id: zootopia, kind: movie, title: "ズートピア", year: 2016}
+      - {id: nemo, kind: movie, title: "ファインディング・ニモ", year: 2003}
+      - {id: baymax, kind: movie, title: "ベイマックス", year: 2014}
+      - {id: lalaland, kind: movie, title: "ラ・ラ・ランド", year: 2016}
+      - {id: diehard, kind: movie, title: "ダイ・ハード", year: 1988}
+      - {id: et, kind: movie, title: "E.T.", year: 1982}
+      - {id: spiderman, kind: movie, title: "スパイダーマン", year: 2002}
+      - {id: spiderman2, kind: movie, title: "スパイダーマン2", year: 2004}
+      - {id: joker, kind: movie, title: "ジョーカー", year: 2019}
+      - {id: parasite, kind: movie, title: "パラサイト 半地下の家族", year: 2019}
+      - {id: odoru, kind: tvshow, title: "踊る大捜査線", year: 1997}
+      - {id: furuhata, kind: tvshow, title: "古畑任三郎", year: 1994}
+      - {id: aibou, kind: tvshow, title: "相棒", year: 2000}
+      - {id: hero, kind: tvshow, title: "HERO", year: 2001}
+      - {id: longvac, kind: tvshow, title: "ロングバケーション", year: 1996}
+      - {id: tokyolove, kind: tvshow, title: "東京ラブストーリー", year: 1991}
+      - {id: kitanokuni, kind: tvshow, title: "北の国から", year: 1981}
+      - {id: kinpachi, kind: tvshow, title: "3年B組金八先生", year: 1979}
+      - {id: oshin, kind: tvshow, title: "おしん", year: 1983}
+      - {id: mita, kind: tvshow, title: "家政婦のミタ", year: 2011}
+      - {id: legalhigh, kind: tvshow, title: "リーガル・ハイ", year: 2012}
+      - {id: vivant, kind: tvshow, title: "VIVANT", year: 2023}
+      - {id: shitamachi, kind: tvshow, title: "下町ロケット", year: 2015}
+      - {id: doctorx, kind: tvshow, title: "ドクターX〜外科医・大門未知子〜", year: 2012}
+      - {id: hagaren, kind: tvshow, title: "鋼の錬金術師", year: 2003}
+      - {id: hagarenfa, kind: tvshow, title: "鋼の錬金術師 FULLMETAL ALCHEMIST", year: 2009}
+      - {id: jojo, kind: tvshow, title: "ジョジョの奇妙な冒険", year: 2012}
+      - {id: gintama, kind: tvshow, title: "銀魂", year: 2006}
+      - {id: naruto, kind: tvshow, title: "NARUTO -ナルト-", year: 2002}
+      - {id: hunter, kind: tvshow, title: "HUNTER×HUNTER", year: 2011}
+      - {id: heroaca, kind: tvshow, title: "僕のヒーローアカデミア", year: 2016}
+      - {id: chainsaw, kind: tvshow, title: "チェンソーマン", year: 2022}
+      - {id: frieren, kind: tvshow, title: "葬送のフリーレン", year: 2023}
+      - {id: oshinoko, kind: tvshow, title: "【推しの子】", year: 2023}
+      - {id: tokyorev, kind: tvshow, title: "東京リベンジャーズ", year: 2021}
+      - {id: pokemon, kind: tvshow, title: "ポケットモンスター", year: 1997}
+      - {id: shinchan, kind: tvshow, title: "クレヨンしんちゃん", year: 1992}
+      - {id: haruhi, kind: tvshow, title: "涼宮ハルヒの憂鬱", year: 2006}
+      - {id: keion, kind: tvshow, title: "けいおん！", year: 2009}
+      - {id: uchu, kind: tvshow, title: "宇宙兄弟", year: 2012}
+      - {id: gundam, kind: tvshow, title: "機動戦士ガンダム", year: 1979}
+      - {id: gundamseed, kind: tvshow, title: "機動戦士ガンダムSEED", year: 2002}
+      - {id: madoka, kind: tvshow, title: "魔法少女まどか☆マギカ", year: 2011}
+    cases:
+      # Controls: the title as an ASR writes it.
+      - {heard: "風の谷のナウシカ", want: play, id: nausicaa}
+      - {heard: "火垂るの墓", want: play, id: hotaru}
+      - {heard: "紅の豚", want: play, id: porco}
+      - {heard: "耳をすませば", want: play, id: mimi}
+      - {heard: "風立ちぬ", want: play, id: kazetachinu}
+      - {heard: "時をかける少女", want: play, id: tokikake}
+      - {heard: "サマーウォーズ", want: play, id: summerwars}
+      - {heard: "告白", want: play, id: kokuhaku}
+      - {heard: "怪物", want: play, id: kaibutsu}
+      - {heard: "用心棒", want: play, id: yojimbo}
+      - {heard: "天国と地獄", want: play, id: tengoku}
+      - {heard: "座頭市", want: play, id: zatoichi}
+      - {heard: "八つ墓村", want: play, id: yatsuhaka}
+      - {heard: "犬神家の一族", want: play, id: inugami}
+      - {heard: "ジョーカー", want: play, id: joker}
+      - {heard: "トップガン", want: play, id: topgun}
+      - {heard: "ズートピア", want: play, id: zootopia}
+      - {heard: "古畑任三郎", want: play, id: furuhata}
+      - {heard: "北の国から", want: play, id: kitanokuni}
+      - {heard: "おしん", want: play, id: oshin}
+      - {heard: "下町ロケット", want: play, id: shitamachi}
+      - {heard: "葬送のフリーレン", want: play, id: frieren}
+      - {heard: "宇宙兄弟", want: play, id: uchu}
+      - {heard: "機動戦士ガンダム", want: play, id: gundam}
+      - {heard: "千年女優", want: play, id: sennen}
+      - {heard: "20世紀少年", want: play, id: seiki20}
+      - {heard: "スパイダーマン", want: play, id: spiderman}
+      - {heard: "東京リベンジャーズ", want: play, id: tokyorev}
+      # Class script: the same word in hiragana, katakana or kanji.
+      - {heard: "かぜのたにのなうしか", want: play, id: nausicaa}
+      - {heard: "ほたるの墓", want: play, id: hotaru}
+      - {heard: "くれないのぶた", want: play, id: porco}
+      - {heard: "耳を澄ませば", want: play, id: mimi}
+      - {heard: "借り暮らしのアリエッティ", want: play, id: arrietty}
+      - {heard: "ねこのおんがえし", want: play, id: neko}
+      - {heard: "狼こどもの雨と雪", want: play, id: ookami}
+      - {heard: "おおかみ子供の雨と雪", want: play, id: ookami}
+      - {heard: "化け物の子", want: play, id: bakemono}
+      - {heard: "君の膵臓を食べたい", want: play, id: kimisui}
+      - {heard: "ようじんぼう", want: play, id: yojimbo}
+      - {heard: "いぬがみけのいちぞく", want: play, id: inugami}
+      - {heard: "くれよんしんちゃん", want: play, id: shinchan}
+      - {heard: "ふるはたにんざぶろう", want: play, id: furuhata}
+      - {heard: "ぎんたま", want: play, id: gintama}
+      - {heard: "はがねのれんきんじゅつし", want: play, id: hagaren}
+      - {heard: "じょじょの奇妙な冒険", want: play, id: jojo}
+      - {heard: "うちゅうきょうだい", want: play, id: uchu}
+      - {heard: "隠しとりでの三悪人", want: play, id: kakushi}
+      - {heard: "ことのはの庭", want: play, id: kotonoha}
+      - {heard: "平成たぬき合戦ぽんぽこ", want: play, id: pompoko}
+      # Class long-vowel: ー written as う, お or い, or dropped.
+      - {heard: "ジョカー", want: play, id: joker}
+      - {heard: "ジョーカ", want: play, id: joker}
+      - {heard: "ショシャンクの空に", want: play, id: shawshank}
+      - {heard: "ロドオブザリング", want: play, id: lotr1}
+      - {heard: "ザトーイチ", want: play, id: zatoichi}
+      - {heard: "葬送のフリレン", want: play, id: frieren}
+      - {heard: "チェーンソーマン", want: play, id: chainsaw}
+      - {heard: "チェンソマン", want: play, id: chainsaw}
+      - {heard: "リガルハイ", want: play, id: legalhigh}
+      - {heard: "ロングバケイション", want: play, id: longvac}
+      - {heard: "東京ラブストーリ", want: play, id: tokyolove}
+      # Class small-kana: small kana and sokuon written full size or dropped.
+      - {heard: "ジュラシクパーク", want: play, id: jurassic}
+      - {heard: "ジユラシックパーク", want: play, id: jurassic}
+      - {heard: "ジヨジヨの奇妙な冒険", want: play, id: jojo}
+      - {heard: "ゴドファーザー", want: play, id: godfather}
+      - {heard: "ポケトモンスター", want: play, id: pokemon}
+      - {heard: "トプガン", want: play, id: topgun}
+      - {heard: "ベイマクス", want: play, id: baymax}
+      - {heard: "桐島部活やめるてよ", want: play, id: kirishima}
+      # Class dakuten: voicing marks and handakuten added or dropped, and rendaku.
+      - {heard: "ゴットファーザー", want: play, id: godfather}
+      - {heard: "バブリカ", want: play, id: paprika}
+      - {heard: "ボヘミアンラブソディ", want: play, id: bohemian}
+      - {heard: "スバイダーマン", want: play, id: spiderman}
+      - {heard: "ズートビア", want: play, id: zootopia}
+      - {heard: "借りくらしのアリエッティ", want: play, id: arrietty}
+      - {heard: "平成狸合戦ぼんぼこ", want: play, id: pompoko}
+      - {heard: "バラサイト半地下の家族", want: play, id: parasite}
+      - {heard: "火たるの墓", want: play, id: hotaru}
+      # Class zu-ji: ず against づ and じ against ぢ.
+      - {heard: "すづみやハルヒの憂鬱", want: play, id: haruhi}
+      - {heard: "天国とぢごく", want: play, id: tengoku}
+      - {heard: "ヅートピア", want: play, id: zootopia}
+      - {heard: "はがねのれんきんぢゅつし", want: play, id: hagaren}
+      # Class loanword: katakana loanword variants.
+      - {heard: "トップガンマベリック", want: play, id: maverick}
+      - {heard: "トップガンマーベリック", want: play, id: maverick}
+      - {heard: "ボヘミアンラプソディー", want: play, id: bohemian}
+      - {heard: "ボヘミアンラプソデイ", want: play, id: bohemian}
+      - {heard: "借りぐらしのアリエッテイ", want: play, id: arrietty}
+      - {heard: "ファインデイングニモ", want: play, id: nemo}
+      - {heard: "サマーウオーズ", want: play, id: summerwars}
+      - {heard: "ロードオヴザリング", want: play, id: lotr1}
+      - {heard: "ホレストガンプ", want: play, id: gump}
+      - {heard: "ドライヴマイカー", want: play, id: drivemycar}
+      - {heard: "ロングヴァケーション", want: play, id: longvac}
+      # Class middle-dot: the middle dot, slash and spaces between title parts dropped.
+      - {heard: "ジュラシックパーク", want: play, id: jurassic}
+      - {heard: "ジュラシックワールド", want: play, id: jurassicworld}
+      - {heard: "ロードオブザリング", want: play, id: lotr1}
+      - {heard: "ロードオブザリング二つの塔", want: play, id: lotr2}
+      - {heard: "フォレストガンプ一期一会", want: play, id: gump}
+      - {heard: "ファインディングニモ", want: play, id: nemo}
+      - {heard: "ラララランド", want: play, id: lalaland}
+      - {heard: "ダイハード", want: play, id: diehard}
+      - {heard: "ボヘミアンラプソディ", want: play, id: bohemian}
+      - {heard: "トップガンマーヴェリック", want: play, id: maverick}
+      - {heard: "パラサイト半地下の家族", want: play, id: parasite}
+      # Class punctuation: ！, 、, 【】, ☆, × and 〜 dropped.
+      - {heard: "カメラを止めるな", want: play, id: kametome}
+      - {heard: "世界の中心で愛をさけぶ", want: play, id: sekachu}
+      - {heard: "桐島部活やめるってよ", want: play, id: kirishima}
+      - {heard: "推しの子", want: play, id: oshinoko}
+      - {heard: "けいおん", want: play, id: keion}
+      - {heard: "魔法少女まどかマギカ", want: play, id: madoka}
+      - {heard: "ドクターエックス外科医大門未知子", want: play, id: doctorx}
+      # Class particle: particles and okurigana written differently or dropped.
+      - {heard: "カメラ止めるな", want: play, id: kametome}
+      - {heard: "カメラをとめるな", want: play, id: kametome}
+      - {heard: "世界の中心で愛を叫ぶ", want: play, id: sekachu}
+      - {heard: "世界の中心に愛をさけぶ", want: play, id: sekachu}
+      - {heard: "君たちはどう生きるのか", want: play, id: kimitachi}
+      - {heard: "君たちわどう生きるか", want: play, id: kimitachi}
+      - {heard: "耳すませば", want: play, id: mimi}
+      - {heard: "風たちぬ", want: play, id: kazetachinu}
+      - {heard: "舟編む", want: play, id: fune}
+      - {heard: "桐島部活辞めるってよ", want: play, id: kirishima}
+      - {heard: "隠し砦三悪人", want: play, id: kakushi}
+      - {heard: "北国から", want: play, id: kitanokuni}
+      - {heard: "猫恩返し", want: play, id: neko}
+      # Class homophone: the same sound written with other kanji, often a more frequent real word.
+      - {heard: "蛍の墓", want: play, id: hotaru}
+      - {heard: "クレヨン新ちゃん", want: play, id: shinchan}
+      - {heard: "軽音", want: play, id: keion}
+      - {heard: "鋼の錬金術士", want: play, id: hagaren}
+      - {heard: "言葉の庭", want: play, id: kotonoha}
+      - {heard: "涼宮ハルヒの憂欝", want: play, id: haruhi}
+      - {heard: "龍とそばかすの姫", want: play, id: belle}
+      - {heard: "古畑仁三郎", want: play, id: furuhata}
+      - {heard: "家政婦の見た", want: play, id: mita}
+      - {heard: "押しの子", want: play, id: oshinoko}
+      - {heard: "送葬のフリーレン", want: play, id: frieren}
+      - {heard: "犬上家の一族", want: play, id: inugami}
+      - {heard: "座頭一", want: play, id: zatoichi}
+      - {heard: "船を編む", want: play, id: fune}
+      - {heard: "下妻ものがたり", want: play, id: shimotsuma}
+      - {heard: "時を駆ける少女", want: play, id: tokikake}
+      # Class partial: distinctive opening words and the short forms people say.
+      - {heard: "ナウシカ", want: play, id: nausicaa}
+      - {heard: "アリエッティ", want: play, id: arrietty}
+      - {heard: "ぽんぽこ", want: play, id: pompoko}
+      - {heard: "時かけ", want: play, id: tokikake}
+      - {heard: "おおかみこども", want: play, id: ookami}
+      - {heard: "キミスイ", want: play, id: kimisui}
+      - {heard: "セカチュー", want: play, id: sekachu}
+      - {heard: "カメ止め", want: play, id: kametome}
+      - {heard: "桐島", want: play, id: kirishima}
+      - {heard: "ハルヒ", want: play, id: haruhi}
+      - {heard: "まどマギ", want: play, id: madoka}
+      - {heard: "ヒロアカ", want: play, id: heroaca}
+      - {heard: "ジョジョ", want: play, id: jojo}
+      - {heard: "ポケモン", want: play, id: pokemon}
+      - {heard: "しんちゃん", want: play, id: shinchan}
+      - {heard: "ロンバケ", want: play, id: longvac}
+      - {heard: "金八先生", want: play, id: kinpachi}
+      - {heard: "攻殻機動隊", want: play, id: kokaku}
+      - {heard: "三丁目の夕日", want: play, id: always}
+      # Class number: digits, kanji numerals and katakana number readings.
+      - {heard: "秒速五センチメートル", want: play, id: byosoku}
+      - {heard: "秒速5cm", want: play, id: byosoku}
+      - {heard: "二十世紀少年", want: play, id: seiki20}
+      - {heard: "20世紀少年第2章", want: play, id: seiki20b}
+      - {heard: "20世紀少年第二章最後の希望", want: play, id: seiki20b}
+      - {heard: "always三丁目の夕日", want: play, id: always}
+      - {heard: "オールウェイズ3丁目の夕日", want: play, id: always}
+      - {heard: "ゴッドファーザーパート2", want: play, id: godfather2}
+      - {heard: "ゴッドファーザーパートツー", want: play, id: godfather2}
+      - {heard: "ゴッドファーザー2", want: play, id: godfather2}
+      - {heard: "スパイダーマンツー", want: play, id: spiderman2}
+      - {heard: "3年b組金八先生", want: play, id: kinpachi}
+      - {heard: "三年b組金八先生", want: play, id: kinpachi}
+      - {heard: "3年ビー組金八先生", want: play, id: kinpachi}
+      - {heard: "椿30郎", want: play, id: tsubaki}
+      - {heard: "8つ墓村", want: play, id: yatsuhaka}
+      - {heard: "古畑任3郎", want: play, id: furuhata}
+      - {heard: "ロードオブザリング2つの塔", want: play, id: lotr2}
+      - {heard: "1000年女優", want: play, id: sennen}
+      # Class latin: Latin titles heard in katakana and the reverse.
+      - {heard: "ヒーロー", want: play, id: hero}
+      - {heard: "hero", want: play, id: hero}
+      - {heard: "ビバン", want: play, id: vivant}
+      - {heard: "ヴィヴァン", want: play, id: vivant}
+      - {heard: "ナルト", want: play, id: naruto}
+      - {heard: "naruto", want: play, id: naruto}
+      - {heard: "ハンターハンター", want: play, id: hunter}
+      - {heard: "イーティー", want: play, id: et}
+      - {heard: "ゴーストインザシェル", want: play, id: kokaku}
+      - {heard: "ghost in the shell", want: play, id: kokaku}
+      - {heard: "機動戦士ガンダムシード", want: play, id: gundamseed}
+      - {heard: "鋼の錬金術師フルメタルアルケミスト", want: play, id: hagarenfa}
+      - {heard: "踊る大捜査線ザムービー", want: play, id: odorumovie}
+      - {heard: "ドクターエックス", want: play, id: doctorx}
+      - {heard: "jurassic park", want: play, id: jurassic}
+      # Ambiguous: ask among the near neighbours.
+      - {heard: "ハガレン", want: ask, among: [hagaren, hagarenfa]}
+      - {heard: "ガンダム", want: ask, among: [gundam, gundamseed]}
+      - {heard: "踊る", want: ask, among: [odoru, odorumovie]}
+      - {heard: "ジュラシック", want: ask, among: [jurassic, jurassicworld]}
+      - {heard: "東京", want: ask, among: [tokyolove, tokyorev]}
+      # Missing sequels: ask.
+      - {heard: "ジュラシックパーク2", want: ask}
+      - {heard: "ゴッドファーザーパート3", want: ask}
+      - {heard: "スパイダーマン3", want: ask}
+      - {heard: "ロードオブザリング王の帰還", want: ask}
+      - {heard: "20世紀少年最終章", want: ask}
+      - {heard: "ジュラシックワールド炎の王国", want: ask}
+      # Absent titles, including near misses that share words with the library.
+      - {heard: "千と千尋の神隠し", want: not_found}
+      - {heard: "君の名は", want: not_found}
+      - {heard: "となりのトトロ", want: not_found}
+      - {heard: "もののけ姫", want: not_found}
+      - {heard: "七人の侍", want: not_found}
+      - {heard: "東京物語", want: not_found}
+      - {heard: "半沢直樹", want: not_found}
+      - {heard: "進撃の巨人", want: not_found}
+      - {heard: "鬼滅の刃", want: not_found}
+      - {heard: "名探偵コナン", want: not_found}
+      - {heard: "トイストーリー", want: not_found}
+      - {heard: "タイタニック", want: not_found}
+      - {heard: "スターウォーズ", want: not_found}
+      - {heard: "アベンジャーズ", want: not_found}
+      - {heard: "東京ゴッドファーザーズ", want: not_found}
+      - {heard: "怪物くん", want: not_found}
+      - {heard: "天国の本屋", want: not_found}
+      - {heard: "風の電話", want: not_found}
+      - {heard: "宇宙戦艦ヤマト", want: not_found}
+      - {heard: "機動警察パトレイバー", want: not_found}
+      - {heard: "魔法少女リリカルなのは", want: not_found}
+      - {heard: "東京喰種", want: not_found}
+      - {heard: "銀河鉄道999", want: not_found}
+      - {heard: "ドクターコトー診療所", want: not_found}
+      - {heard: "犬王", want: not_found}
+      - {heard: "時をかけるおばさん", want: not_found}
+      - {heard: "下町ボブスレー", want: not_found}
+      - {heard: "北の国のアリス", want: not_found}
+      - {heard: "踊る大紐育", want: not_found}
+  - name: japanese music
+    lang: ja
+    library:
+      - {id: amuro, kind: artist, title: "安室奈美恵"}
+      - {id: shiina, kind: artist, title: "椎名林檎"}
+      - {id: jihen, kind: artist, title: "東京事変"}
+      - {id: fujiikaze, kind: artist, title: "藤井風"}
+      - {id: hoshino, kind: artist, title: "星野源"}
+      - {id: backnumber, kind: artist, title: "back number"}
+      - {id: yuuri, kind: artist, title: "優里"}
+      - {id: aimer, kind: artist, title: "Aimer"}
+      - {id: lisa, kind: artist, title: "LiSA"}
+      - {id: oneok, kind: artist, title: "ONE OK ROCK"}
+      - {id: sukima, kind: artist, title: "スキマスイッチ"}
+      - {id: yuzu, kind: artist, title: "ゆず"}
+      - {id: kobukuro, kind: artist, title: "コブクロ"}
+      - {id: porno, kind: artist, title: "ポルノグラフィティ"}
+      - {id: larc, kind: artist, title: "L'Arc〜en〜Ciel"}
+      - {id: glay, kind: artist, title: "GLAY"}
+      - {id: xjapan, kind: artist, title: "X JAPAN"}
+      - {id: seiko, kind: artist, title: "松田聖子"}
+      - {id: yuming, kind: artist, title: "松任谷由実"}
+      - {id: momoe, kind: artist, title: "山口百恵"}
+      - {id: akina, kind: artist, title: "中森明菜"}
+      - {id: mariya, kind: artist, title: "竹内まりや"}
+      - {id: tatsuro, kind: artist, title: "山下達郎"}
+      - {id: yamapi, kind: artist, title: "山下智久"}
+      - {id: dreams, kind: artist, title: "DREAMS COME TRUE"}
+      - {id: superfly, kind: artist, title: "Superfly"}
+      - {id: ryokushaka, kind: artist, title: "緑黄色社会"}
+      - {id: nogi, kind: artist, title: "乃木坂46"}
+      - {id: keyaki, kind: artist, title: "欅坂46"}
+      - {id: hinata, kind: artist, title: "日向坂46"}
+      - {id: akb, kind: artist, title: "AKB48"}
+      - {id: momusu, kind: artist, title: "モーニング娘。"}
+      - {id: momoclo, kind: artist, title: "ももいろクローバーZ"}
+      - {id: mrsgreen, kind: artist, title: "Mrs. GREEN APPLE"}
+      - {id: yorushika, kind: artist, title: "ヨルシカ"}
+      - {id: kome, kind: artist, title: "米米CLUB"}
+      - {id: fukuyama, kind: artist, title: "福山雅治"}
+      - {id: zard, kind: artist, title: "ZARD"}
+      - {id: creepy, kind: artist, title: "Creepy Nuts"}
+      - {id: kuwata, kind: artist, title: "桑田佳祐"}
+      - {id: muzai, kind: album, title: "無罪モラトリアム", year: 1999}
+      - {id: sweet19, kind: album, title: "SWEET 19 BLUES", year: 1996}
+      - {id: popvirus, kind: album, title: "POP VIRUS", year: 2018}
+      - {id: foryou, kind: album, title: "FOR YOU", year: 1982}
+      - {id: variety, kind: album, title: "VARIETY", year: 1984}
+      - {id: encore, kind: album, title: "アンコール", year: 2019}
+      - {id: koi, kind: song, title: "恋", year: 2016}
+      - {id: shinunoga, kind: song, title: "死ぬのがいいわ", year: 2020}
+      - {id: dryflower, kind: song, title: "ドライフラワー", year: 2020}
+      - {id: zankyo, kind: song, title: "残響散歌", year: 2022}
+      - {id: homura, kind: song, title: "炎", year: 2020}
+      - {id: plastic, kind: song, title: "プラスティック・ラブ", year: 1984}
+      - {id: sweetpea, kind: song, title: "赤いスイートピー", year: 1982}
+      - {id: sango, kind: song, title: "青い珊瑚礁", year: 1980}
+      - {id: shoujoa, kind: song, title: "少女A", year: 1982}
+      - {id: desire, kind: song, title: "DESIRE -情熱-", year: 1986}
+      - {id: iihi, kind: song, title: "いい日旅立ち", year: 1978}
+      - {id: cosmos, kind: song, title: "秋桜", year: 1977}
+      - {id: lalala, kind: song, title: "LA・LA・LA LOVE SONG", year: 1996}
+      - {id: donnatoki, kind: song, title: "どんなときも。", year: 1991}
+      - {id: makenaide, kind: song, title: "負けないで", year: 1993}
+      - {id: roman, kind: song, title: "浪漫飛行", year: 1990}
+      - {id: kimigairu, kind: song, title: "君がいるだけで", year: 1992}
+      - {id: aotonatsu, kind: song, title: "青と夏", year: 2018}
+      - {id: tadakimi, kind: song, title: "ただ君に晴れ", year: 2018}
+      - {id: bling, kind: song, title: "Bling-Bang-Bang-Born", year: 2024}
+      - {id: kousui, kind: song, title: "香水", year: 2020}
+      - {id: hanamizuki, kind: song, title: "ハナミズキ", year: 2004}
+      - {id: takane, kind: song, title: "高嶺の花子さん", year: 2013}
+      - {id: natsuiro, kind: song, title: "夏色", year: 1998}
+      - {id: eikou, kind: song, title: "栄光の架橋", year: 2004}
+      - {id: sakuramori, kind: song, title: "さくら（独唱）", year: 2003}
+      - {id: sakuraketsu, kind: song, title: "さくら", year: 2005}
+      - {id: sakurazaka, kind: song, title: "桜坂", year: 2000}
+      - {id: ito, kind: song, title: "糸", year: 1992}
+      - {id: jidai, kind: song, title: "時代", year: 1975}
+      - {id: shinjidai, kind: song, title: "新時代", year: 2022}
+      - {id: kurenai, kind: song, title: "紅", year: 1989}
+      - {id: fortune, kind: song, title: "恋するフォーチュンクッキー", year: 2013}
+      - {id: influencer, kind: song, title: "インフルエンサー", year: 2017}
+      - {id: silent, kind: song, title: "サイレントマジョリティー", year: 2016}
+      - {id: however, kind: song, title: "HOWEVER", year: 1997}
+      - {id: hanataba, kind: song, title: "愛をこめて花束を", year: 2008}
+      - {id: getwild, kind: song, title: "Get Wild", year: 1987}
+      - {id: mixnuts, kind: song, title: "ミックスナッツ", year: 2022}
+      - {id: ueomuite, kind: song, title: "上を向いて歩こう", aliases: ["SUKIYAKI"], year: 1961}
+    cases:
+      # Controls: the title as an ASR writes it.
+      - {heard: "安室奈美恵", want: play, id: amuro}
+      - {heard: "椎名林檎", want: play, id: shiina}
+      - {heard: "東京事変", want: play, id: jihen}
+      - {heard: "藤井風", want: play, id: fujiikaze}
+      - {heard: "星野源", want: play, id: hoshino}
+      - {heard: "ゆず", want: play, id: yuzu}
+      - {heard: "コブクロ", want: play, id: kobukuro}
+      - {heard: "松田聖子", want: play, id: seiko}
+      - {heard: "山口百恵", want: play, id: momoe}
+      - {heard: "竹内まりや", want: play, id: mariya}
+      - {heard: "山下達郎", want: play, id: tatsuro}
+      - {heard: "福山雅治", want: play, id: fukuyama}
+      - {heard: "ヨルシカ", want: play, id: yorushika}
+      - {heard: "緑黄色社会", want: play, id: ryokushaka}
+      - {heard: "無罪モラトリアム", want: play, id: muzai}
+      - {heard: "恋", want: play, id: koi}
+      - {heard: "死ぬのがいいわ", want: play, id: shinunoga}
+      - {heard: "ドライフラワー", want: play, id: dryflower}
+      - {heard: "残響散歌", want: play, id: zankyo}
+      - {heard: "炎", want: play, id: homura}
+      - {heard: "負けないで", want: play, id: makenaide}
+      - {heard: "浪漫飛行", want: play, id: roman}
+      - {heard: "香水", want: play, id: kousui}
+      - {heard: "ハナミズキ", want: play, id: hanamizuki}
+      - {heard: "桜坂", want: play, id: sakurazaka}
+      - {heard: "糸", want: play, id: ito}
+      - {heard: "時代", want: play, id: jidai}
+      - {heard: "新時代", want: play, id: shinjidai}
+      - {heard: "紅", want: play, id: kurenai}
+      - {heard: "上を向いて歩こう", want: play, id: ueomuite}
+      # Class script: the same word in hiragana, katakana or kanji, and kanji readings written out.
+      - {heard: "あむろなみえ", want: play, id: amuro}
+      - {heard: "しいなりんご", want: play, id: shiina}
+      - {heard: "椎名りんご", want: play, id: shiina}
+      - {heard: "ほしのげん", want: play, id: hoshino}
+      - {heard: "柚子", want: play, id: yuzu}
+      - {heard: "こぶくろ", want: play, id: kobukuro}
+      - {heard: "まつだせいこ", want: play, id: seiko}
+      - {heard: "ざんきょうさんか", want: play, id: zankyo}
+      - {heard: "ほむら", want: play, id: homura}
+      - {heard: "いと", want: play, id: ito}
+      - {heard: "こうすい", want: play, id: kousui}
+      - {heard: "花水木", want: play, id: hanamizuki}
+      - {heard: "なついろ", want: play, id: natsuiro}
+      - {heard: "くれない", want: play, id: kurenai}
+      - {heard: "コスモス", want: play, id: cosmos}
+      - {heard: "さくらざか", want: play, id: sakurazaka}
+      - {heard: "桜独唱", want: play, id: sakuramori}
+      - {heard: "モーニングむすめ", want: play, id: momusu}
+      - {heard: "りょくおうしょくしゃかい", want: play, id: ryokushaka}
+      - {heard: "ゆうり", want: play, id: yuuri}
+      - {heard: "ロマン飛行", want: play, id: roman}
+      - {heard: "良い日旅立ち", want: play, id: iihi}
+      - {heard: "うえをむいてあるこう", want: play, id: ueomuite}
+      - {heard: "ただきみにはれ", want: play, id: tadakimi}
+      - {heard: "高嶺のはなこさん", want: play, id: takane}
+      # Class long-vowel: ー written as う, お or い, or dropped.
+      - {heard: "赤いスイトピー", want: play, id: sweetpea}
+      - {heard: "りょくおしょくしゃかい", want: play, id: ryokushaka}
+      - {heard: "インフルエンサ", want: play, id: influencer}
+      - {heard: "サイレントマジョリティ", want: play, id: silent}
+      - {heard: "恋するフォチュンクッキー", want: play, id: fortune}
+      - {heard: "グレー", want: play, id: glay}
+      - {heard: "モニング娘", want: play, id: momusu}
+      - {heard: "スパーフライ", want: play, id: superfly}
+      - {heard: "アンコル", want: play, id: encore}
+      - {heard: "トーキョー事変", want: play, id: jihen}
+      - {heard: "ユーリ", want: play, id: yuuri}
+      # Class small-kana: small kana and sokuon written full size or dropped.
+      - {heard: "ミクスナッツ", want: play, id: mixnuts}
+      - {heard: "ミックスナツ", want: play, id: mixnuts}
+      - {heard: "スキマスイチ", want: play, id: sukima}
+      - {heard: "ポルノグラフイティ", want: play, id: porno}
+      - {heard: "ポルノグラフィテイ", want: play, id: porno}
+      - {heard: "恋するフォーチユンクッキー", want: play, id: fortune}
+      - {heard: "恋するフォーチュンクキー", want: play, id: fortune}
+      # Class dakuten: voicing marks and handakuten added or dropped, and rendaku.
+      - {heard: "ボルノグラフィティ", want: play, id: porno}
+      - {heard: "コプクロ", want: play, id: kobukuro}
+      - {heard: "トライフラワー", want: play, id: dryflower}
+      - {heard: "浪漫びこう", want: play, id: roman}
+      - {heard: "栄光のかけばし", want: play, id: eikou}
+      - {heard: "ハナミスキ", want: play, id: hanamizuki}
+      - {heard: "いい日たびたち", want: play, id: iihi}
+      - {heard: "ブリンバンバンポン", want: play, id: bling}
+      # Class zu-ji: ず against づ and じ against ぢ.
+      - {heard: "ハナミヅキ", want: play, id: hanamizuki}
+      - {heard: "ゆづ", want: play, id: yuzu}
+      - {heard: "ふぢいかぜ", want: play, id: fujiikaze}
+      - {heard: "新ぢだい", want: play, id: shinjidai}
+      # Class loanword: katakana loanword variants.
+      - {heard: "プラスチックラブ", want: play, id: plastic}
+      - {heard: "プラスティックラヴ", want: play, id: plastic}
+      - {heard: "赤いスウィートピー", want: play, id: sweetpea}
+      - {heard: "赤いスウイートピー", want: play, id: sweetpea}
+      - {heard: "ハウエバー", want: play, id: however}
+      - {heard: "ハウエヴァー", want: play, id: however}
+      - {heard: "無罪モラトリウム", want: play, id: muzai}
+      - {heard: "ヴァラエティ", want: play, id: variety}
+      - {heard: "バラエティー", want: play, id: variety}
+      # Class punctuation: 。, （）, ・ and - dropped.
+      - {heard: "どんなときも", want: play, id: donnatoki}
+      - {heard: "モーニング娘", want: play, id: momusu}
+      - {heard: "さくら独唱", want: play, id: sakuramori}
+      - {heard: "デザイア情熱", want: play, id: desire}
+      - {heard: "プラスティックラブ", want: play, id: plastic}
+      # Class particle: particles and okurigana written differently or dropped.
+      - {heard: "愛を込めて花束を", want: play, id: hanataba}
+      - {heard: "愛をこめて花束", want: play, id: hanataba}
+      - {heard: "上向いて歩こう", want: play, id: ueomuite}
+      - {heard: "君が居るだけで", want: play, id: kimigairu}
+      - {heard: "死ぬのはいいわ", want: play, id: shinunoga}
+      - {heard: "死ぬのがいいは", want: play, id: shinunoga}
+      - {heard: "いい日旅立", want: play, id: iihi}
+      - {heard: "栄光架橋", want: play, id: eikou}
+      - {heard: "ただ君に晴", want: play, id: tadakimi}
+      - {heard: "どんな時も", want: play, id: donnatoki}
+      # Class homophone: the same sound written with other kanji, often a more frequent real word.
+      - {heard: "鯉", want: play, id: koi}
+      - {heard: "インフルエンザー", want: play, id: influencer}
+      - {heard: "降水", want: play, id: kousui}
+      - {heard: "意図", want: play, id: ito}
+      - {heard: "焔", want: play, id: homura}
+      - {heard: "高根の花子さん", want: play, id: takane}
+      - {heard: "栄光の掛け橋", want: play, id: eikou}
+      - {heard: "浪漫非行", want: play, id: roman}
+      - {heard: "残響讃歌", want: play, id: zankyo}
+      - {heard: "星野元", want: play, id: hoshino}
+      - {heard: "松田清子", want: play, id: seiko}
+      - {heard: "竹内マリア", want: play, id: mariya}
+      - {heard: "ただ君に張れ", want: play, id: tadakimi}
+      # Class partial: distinctive opening words and the short forms people say.
+      - {heard: "安室", want: play, id: amuro}
+      - {heard: "ワンオク", want: play, id: oneok}
+      - {heard: "ポルノ", want: play, id: porno}
+      - {heard: "ラルク", want: play, id: larc}
+      - {heard: "ドリカム", want: play, id: dreams}
+      - {heard: "ミセス", want: play, id: mrsgreen}
+      - {heard: "ももクロ", want: play, id: momoclo}
+      - {heard: "モー娘", want: play, id: momusu}
+      - {heard: "リョクシャカ", want: play, id: ryokushaka}
+      - {heard: "米米", want: play, id: kome}
+      - {heard: "フォーチュンクッキー", want: play, id: fortune}
+      - {heard: "スイートピー", want: play, id: sweetpea}
+      - {heard: "上を向いて", want: play, id: ueomuite}
+      - {heard: "ユーミン", want: play, id: yuming}
+      - {heard: "達郎", want: play, id: tatsuro}
+      - {heard: "高嶺の花子", want: play, id: takane}
+      # Class number: digits, kanji numerals and katakana number readings.
+      - {heard: "乃木坂46", want: play, id: nogi}
+      - {heard: "乃木坂フォーティーシックス", want: play, id: nogi}
+      - {heard: "のぎざかよんじゅうろく", want: play, id: nogi}
+      - {heard: "欅坂フォーティーシックス", want: play, id: keyaki}
+      - {heard: "日向坂46", want: play, id: hinata}
+      - {heard: "ひなた坂46", want: play, id: hinata}
+      - {heard: "エーケービーフォーティーエイト", want: play, id: akb}
+      - {heard: "akb48", want: play, id: akb}
+      - {heard: "akb四十八", want: play, id: akb}
+      - {heard: "スウィートナインティーンブルース", want: play, id: sweet19}
+      - {heard: "sweet 19 blues", want: play, id: sweet19}
+      - {heard: "スイート19ブルース", want: play, id: sweet19}
+      - {heard: "少女エー", want: play, id: shoujoa}
+      - {heard: "少女a", want: play, id: shoujoa}
+      - {heard: "ももいろクローバーゼット", want: play, id: momoclo}
+      - {heard: "エックスジャパン", want: play, id: xjapan}
+      - {heard: "x japan", want: play, id: xjapan}
+      # Class latin: Latin titles heard in katakana and the reverse.
+      - {heard: "バックナンバー", want: play, id: backnumber}
+      - {heard: "back number", want: play, id: backnumber}
+      - {heard: "エメ", want: play, id: aimer}
+      - {heard: "リサ", want: play, id: lisa}
+      - {heard: "ワンオクロック", want: play, id: oneok}
+      - {heard: "グレイ", want: play, id: glay}
+      - {heard: "ラルクアンシエル", want: play, id: larc}
+      - {heard: "ドリームズカムトゥルー", want: play, id: dreams}
+      - {heard: "スーパーフライ", want: play, id: superfly}
+      - {heard: "ミセスグリーンアップル", want: play, id: mrsgreen}
+      - {heard: "米米クラブ", want: play, id: kome}
+      - {heard: "ザード", want: play, id: zard}
+      - {heard: "クリーピーナッツ", want: play, id: creepy}
+      - {heard: "ブリンバンバンボン", want: play, id: bling}
+      - {heard: "ポップウイルス", want: play, id: popvirus}
+      - {heard: "ポップウィルス", want: play, id: popvirus}
+      - {heard: "フォーユー", want: play, id: foryou}
+      - {heard: "ゲットワイルド", want: play, id: getwild}
+      - {heard: "デザイア", want: play, id: desire}
+      - {heard: "ラララブソング", want: play, id: lalala}
+      - {heard: "スキヤキ", want: play, id: ueomuite}
+      # Ambiguous: ask among the near neighbours.
+      - {heard: "山下", want: ask, among: [tatsuro, yamapi]}
+      - {heard: "さくら", want: ask, among: [sakuramori, sakuraketsu]}
+      - {heard: "桜", want: ask, among: [sakuramori, sakuraketsu]}
+      # Absent titles, including near misses that share words or names with the library.
+      - {heard: "宇多田ヒカル", want: not_found}
+      - {heard: "米津玄師", want: not_found}
+      - {heard: "あいみょん", want: not_found}
+      - {heard: "嵐", want: not_found}
+      - {heard: "スピッツ", want: not_found}
+      - {heard: "中島みゆき", want: not_found}
+      - {heard: "サザンオールスターズ", want: not_found}
+      - {heard: "ヨアソビ", want: not_found}
+      - {heard: "夜に駆ける", want: not_found}
+      - {heard: "レモン", want: not_found}
+      - {heard: "千本桜", want: not_found}
+      - {heard: "雪の華", want: not_found}
+      - {heard: "世界に1つだけの花", want: not_found}
+      - {heard: "うっせえわ", want: not_found}
+      - {heard: "安室透", want: not_found}
+      - {heard: "椎名へきる", want: not_found}
+      - {heard: "藤井フミヤ", want: not_found}
+      - {heard: "松田優作", want: not_found}
+      - {heard: "ゆずれない願い", want: not_found}
+      - {heard: "恋人よ", want: not_found}
+      - {heard: "青い山脈", want: not_found}
+      - {heard: "夏祭り", want: not_found}
+      - {heard: "さくらんぼ", want: not_found}
+      - {heard: "時の流れに身をまかせ", want: not_found}
+      - {heard: "炎のたからもの", want: not_found}
+      - {heard: "ske48", want: not_found}
+      - {heard: "モーニングコーヒー", want: not_found}
+      - {heard: "櫻坂46", want: not_found}
+      - {heard: "見上げてごらん夜の星を", want: not_found}

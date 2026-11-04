@@ -55,12 +55,20 @@ func TestLintLocaleRules(t *testing.T) {
 		want   string
 	}{
 		"unknown language":         {locale: "language: xx\nskill_name: Encore\ninvocation: encore test\n", want: `error: en-US: unknown language "xx"`},
-		"missing skill name":       {locale: "language: en\ninvocation: encore test\n", want: "error: en-US: skill_name is required"},
-		"uppercase invocation":     {locale: "language: en\nskill_name: Encore\ninvocation: Encore Test\n", want: "must be lowercase letters"},
-		"digits in invocation":     {locale: "language: en\nskill_name: Encore\ninvocation: encore 2\n", want: "must be lowercase letters"},
-		"empty invocation":         {locale: "language: en\nskill_name: Encore\n", want: `invocation name "" must be lowercase letters`},
-		"trailing period":          {locale: "language: en\nskill_name: Encore\ninvocation: encore.\n", want: "must be lowercase letters"},
-		"reserved word, any place": {locale: "language: en\nskill_name: Encore\ninvocation: my echo remote\n", want: `contains the reserved word "echo"`},
+		"missing skill name":       {locale: "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\ninvocation: encore test\n", want: "error: en-US: skill_name is required"},
+		"uppercase invocation":     {locale: "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: Encore Test\n", want: "must be lowercase letters"},
+		"digits in invocation":     {locale: "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: encore 2\n", want: "must be lowercase letters"},
+		"empty invocation":         {locale: "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\n", want: `invocation name "" must be lowercase letters`},
+		"trailing period":          {locale: "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: encore.\n", want: "must be lowercase letters"},
+		"reserved word, any place": {locale: "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: my echo remote\n", want: `contains the reserved word "echo"`},
+		"no launch phrases":        {locale: "language: en\nskill_name: Encore\ninvocation: encore test\n", want: "error: en-US: launch.open is required"},
+		"no skill launch phrase":   {locale: "language: en\nlaunch:\n  open: open {invocation}\nskill_name: Encore\ninvocation: encore test\n", want: "error: en-US: launch.skill is required"},
+		"launch without the name":  {locale: "language: en\nlaunch:\n  open: open {invocation}\n  also: [open it]\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: encore test\n", want: `error: en-US: launch phrase "open it" must name {invocation} once`},
+		"launch naming it twice":   {locale: "language: en\nlaunch:\n  open: open {invocation} {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: encore test\n", want: `launch phrase "open {invocation} {invocation}" must name {invocation} once`},
+		"synonyms for an unknown value": {
+			locale: "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: encore test\ntypes:\n  KODI_ROOM:\n    attic: [loft]\n",
+			want:   "error: en-US: synonyms given for value attic of slot type KODI_ROOM, which has no value with that ID",
+		},
 	}
 
 	for name, tt := range tests {
@@ -71,9 +79,14 @@ func TestLintLocaleRules(t *testing.T) {
 	}
 }
 
+func TestLintChecksTheKodiInvocation(t *testing.T) {
+	got := messages(Lint(load(t, map[string]string{"locales/en-US.yaml": "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: encore test\nkodi_invocation: kodi 2\n"})), Error)
+	assert.True(t, containsSubstring(got, `invocation name "kodi 2" must be lowercase letters`), "got %q", got)
+}
+
 func TestLintAcceptsValidInvocations(t *testing.T) {
 	for _, inv := range []string{"encore test", "kodi's remote", "t.v. remote", "my reopen box"} {
-		findings := Lint(load(t, map[string]string{"locales/en-US.yaml": "language: en\nskill_name: Encore\ninvocation: " + inv + "\n"}))
+		findings := Lint(load(t, map[string]string{"locales/en-US.yaml": "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: " + inv + "\n"}))
 		assert.Empty(t, messages(findings, Error), inv)
 		assert.False(t, containsSubstring(messages(findings, Warning), "one-word"), "%s has more than one word", inv)
 	}
@@ -81,7 +94,7 @@ func TestLintAcceptsValidInvocations(t *testing.T) {
 
 func TestLintOrdersErrorsBeforeWarningsInOnePlace(t *testing.T) {
 	// The one-word warning is found before the missing skill name, so only sorting puts the error first.
-	src := load(t, map[string]string{"locales/en-US.yaml": "language: en\ninvocation: encore\n"})
+	src := load(t, map[string]string{"locales/en-US.yaml": "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\ninvocation: encore\n"})
 
 	var got []string
 
@@ -98,7 +111,7 @@ func TestLintOrdersErrorsBeforeWarningsInOnePlace(t *testing.T) {
 }
 
 func TestLintSharedWordingNamesTheFirstIntent(t *testing.T) {
-	src := load(t, map[string]string{"locales/en-US.yaml": "language: en\nskill_name: Encore\ninvocation: encore test\nutterances:\n  ViewRoom:\n    - \"put on {Room}\"\n"})
+	src := load(t, map[string]string{"locales/en-US.yaml": "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: encore test\nutterances:\n  ViewRoom:\n    - \"put on {Room}\"\n"})
 	src.Model.Intents = append(src.Model.Intents, Intent{Name: "ViewGenre", Slots: []Slot{{Name: "Genre", Type: "KODI_ROOM"}}})
 
 	lang := src.Languages["en"]
@@ -201,7 +214,7 @@ func TestLintBuiltinIntentsNeedNoSamples(t *testing.T) {
 }
 
 func TestLintFindingsAreOrdered(t *testing.T) {
-	src := load(t, map[string]string{"locales/en-US.yaml": "language: en\nskill_name: Encore\ninvocation: encore\nutterances:\n  Rewind:\n    - \"rewind\"\n"})
+	src := load(t, map[string]string{"locales/en-US.yaml": "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: encore\nutterances:\n  Rewind:\n    - \"rewind\"\n"})
 
 	findings := Lint(src)
 	require.NotEmpty(t, findings)
@@ -246,5 +259,197 @@ func TestPlaceholders(t *testing.T) {
 		"Lecture de {titre} à {salle}": "[salle, titre]",
 	} {
 		assert.Equal(t, want, placeholders(in), in)
+	}
+}
+
+// lintLocale lints a test locale, xx-XX, of language with the given invocation name and, for a language other than English, utterances, returning the locale's findings.
+func lintLocale(t *testing.T, language, invocation, utterances string) (errs, warnings []string) {
+	t.Helper()
+
+	files := map[string]string{"locales/xx-XX.yaml": "language: " + language + "\nskill_name: Encore\ninvocation: \"" + invocation + "\"\n"}
+	if language != ReferenceLanguage {
+		files["lang/"+language+"/utterances.yaml"] = utterances
+		files["lang/"+language+"/responses.yaml"] = "{}"
+	}
+
+	for _, f := range Lint(load(t, files)) {
+		switch {
+		case f.Locale != "xx-XX":
+		case f.Severity == Error:
+			errs = append(errs, f.Message)
+		default:
+			warnings = append(warnings, f.Message)
+		}
+	}
+
+	return errs, warnings
+}
+
+func TestLintInvocationPerScript(t *testing.T) {
+	tests := []struct {
+		language, invocation string
+		// want is part of the error the name must raise; empty means it must raise none.
+		want string
+	}{
+		// Latin script: lowercase letters with their accents, spaces, apostrophes and periods.
+		{"en", "encore test", ""},
+		{"en", "t.v. remote", ""},
+		{"en", "Encore Test", "must be lowercase letters, spaces, apostrophes or periods"},
+		{"en", "encore 2", "must be lowercase letters, spaces, apostrophes or periods"},
+		{"en", "encore.", "must be lowercase letters, spaces, apostrophes or periods"},
+		{"en", "", `invocation name "" must be lowercase letters`},
+		{"de", "fernbedienung für kodi", ""},
+		{"de", "große leinwand", ""},
+		{"pt", "sessão de pipoca", ""},
+		{"pt", "pipoca já", ""},
+		{"pt", "Pipoca Já", "must be lowercase letters"},
+		{"fr", "télé kodi", ""},
+		{"fr", "кино пульт", "must be lowercase letters"},
+		{"nl", "n. o. s. kijken", ""},
+		// Japanese: kana and kanji, ー, and acronyms as lowercase letters each followed by a space.
+		{"ja", "アンコール", ""},
+		{"ja", "映画のリモコン", ""},
+		{"ja", "えんこーる", ""},
+		{"ja", "a b c ニュース", ""},
+		{"ja", "encore", "must be Hiragana, Katakana or Kanji"},
+		{"ja", "ab ニュース", "must be Hiragana, Katakana or Kanji"},
+		{"ja", "アンコール a", "must be Hiragana, Katakana or Kanji"},
+		{"ja", "アンコール 映画", "must be Hiragana, Katakana or Kanji"},
+		{"ja", "アンコール1", "must be Hiragana, Katakana or Kanji"},
+		// Hindi: Devanagari words with their vowel signs, and lowercase Latin for English words.
+		{"hi", "एनकोर", ""},
+		{"hi", "मेरा टीवी", ""},
+		{"hi", "कोडी remote", ""},
+		{"hi", "encore test", ""},
+		{"hi", "एनकोर Remote", "must be Devanagari words"},
+		{"hi", "एनकोर २", "must be Devanagari words"},
+		{"hi", "एनकोर  रिमोट", "must be Devanagari words"},
+		// Arabic: Arabic words, and lowercase Latin for loanwords.
+		{"ar", "انكور", ""},
+		{"ar", "kodi ريموت", ""},
+		{"ar", "انكور ٢", "must be Arabic words"},
+		{"ar", "Kodi", "must be Arabic words"},
+		{"ar", "ريموت ", "must be Arabic words"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.language+"/"+tt.invocation, func(t *testing.T) {
+			errs, _ := lintLocale(t, tt.language, tt.invocation, "{}")
+			if tt.want == "" {
+				assert.False(t, containsSubstring(errs, "invocation name"), "got %q", errs)
+			} else {
+				assert.True(t, containsSubstring(errs, tt.want), "want %q, got %q", tt.want, errs)
+			}
+		})
+	}
+}
+
+func TestLintReservedWordsPerLanguage(t *testing.T) {
+	tests := []struct {
+		language, invocation string
+	}{
+		{"en", "my echo remote"},
+		{"de", "alexa kino"},
+		{"fr", "appli kodi"},
+		{"fr", "application télé"},
+		{"pt", "abrir filmes"},
+		{"pt", "aplicativo kodi"},
+		{"pt", "começar cinema"},
+		{"nl", "speel films"},
+		{"nl", "kodi skill"},
+		{"ja", "アレクサリモコン"},
+		{"ja", "映画を開始"},
+		{"ja", "アマゾン映画"},
+		{"hi", "अलेक्सा रिमोट"},
+		{"hi", "कोडी app"},
+		// Hindi's nukta is reserved whether written as one code point or two.
+		{"hi", "ऐमेज़ोन टीवी"},
+		{"hi", "ऐमेज़ोन टीवी"},
+		{"ar", "افتحي انكور"},
+		{"ar", "امازون ريموت"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.language+"/"+tt.invocation, func(t *testing.T) {
+			errs, _ := lintLocale(t, tt.language, tt.invocation, "{}")
+			assert.True(t, containsSubstring(errs, "contains the reserved word"), "got %q", errs)
+		})
+	}
+
+	for _, tt := range []struct{ language, invocation string }{{"en", "speel films"}, {"de", "abrir filmes"}, {"ja", "アンコール"}, {"fr", "kodi"}} {
+		errs, _ := lintLocale(t, tt.language, tt.invocation, "{}")
+		assert.False(t, containsSubstring(errs, "reserved word"), "%s %q is reserved only in other languages: %q", tt.language, tt.invocation, errs)
+	}
+}
+
+func TestLintOneWordInvocationWarning(t *testing.T) {
+	for _, tt := range []struct {
+		language, invocation string
+		warn                 bool
+	}{
+		{"en", "encore", true},
+		{"en", "encore test", false},
+		{"hi", "एनकोर", true},
+		{"ar", "انكور", true},
+		{"ja", "アンコール", false},
+	} {
+		_, warnings := lintLocale(t, tt.language, tt.invocation, "{}")
+		assert.Equal(t, tt.warn, containsSubstring(warnings, "one-word invocation"), "%s %q: %q", tt.language, tt.invocation, warnings)
+	}
+}
+
+func TestLintSamplesPerScript(t *testing.T) {
+	tests := []struct {
+		language, sample string
+		// want is part of the error the sample must raise; empty means it must raise none.
+		want string
+	}{
+		{"hi", "{Movie} चलाओ", ""},
+		{"hi", "फ़िल्म {Movie} दिखाओ", ""},
+		{"hi", "play करो {Movie}", ""},
+		{"hi", "{Movie} चलाओ २", "spell out numbers"},
+		{"hi", "{Movie}को चलाओ", "joins slot {Movie} to other text"},
+		{"ja", "{Movie}を再生して", ""},
+		{"ja", "映画の{Movie}を見せて", ""},
+		{"ja", "{Movie}を2回再生", "spell out numbers"},
+		{"de", "spiele {Movie}s", "joins slot {Movie} to other text"},
+		{"pt", "assistir {Movie}", ""},
+		{"ar", "شغل {Movie}", ""},
+		{"ar", "شغل{Movie}", "joins slot {Movie} to other text"},
+		// Each word is in the language's script, or lowercase Latin where Amazon allows English words.
+		{"hi", "{Movie} F चलाओ", `has the word "F", which isn't Devanagari or lowercase Latin`},
+		{"hi", "{Movie} شغل", "which isn't Devanagari or lowercase Latin"},
+		{"ar", "play {Movie}", ""},
+		{"ar", "शुरू {Movie}", "which isn't Arabic or lowercase Latin"},
+		{"ja", "{Movie}をplayして", ""},
+		{"ja", "{Movie}をPlayして", "which isn't Hiragana, Katakana, Kanji or lowercase Latin"},
+		{"ja", "{Movie}를재생", "which isn't Hiragana, Katakana, Kanji or lowercase Latin"},
+		{"de", "spiele den film {Movie} ab", ""},
+		{"de", "spiele den Film {Movie} ab", `has the word "Film", which isn't lowercase Latin`},
+		{"pt", "toca o filme {Movie} já", ""},
+		{"pt", "смотреть {Movie}", "which isn't lowercase Latin"},
+		{"nl", "zet 't journal op", ""},
+		{"nl", "speel r. en b.", ""},
+		{"fr", "mets l'émission {Movie}", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.language+"/"+tt.sample, func(t *testing.T) {
+			errs, _ := lintLocale(t, tt.language, "encore test", "WatchMovie:\n  play: \""+tt.sample+"\"\n")
+
+			var samples []string
+
+			for _, e := range errs {
+				if strings.HasPrefix(e, "sample ") {
+					samples = append(samples, e)
+				}
+			}
+
+			if tt.want == "" {
+				assert.Empty(t, samples)
+			} else {
+				assert.True(t, containsSubstring(samples, tt.want), "want %q, got %q", tt.want, samples)
+			}
+		})
 	}
 }
