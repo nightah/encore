@@ -92,13 +92,13 @@ jobs:
         run: docker run --rm -v "$PWD:/repo:ro" -w /repo trufflesecurity/trufflehog:3.99.8 --fail --no-update --log-level=-1 filesystem -x .trufflehog .
 
       - name: typos
-        run: pipx run typos==1.51.1 --format brief
+        run: pipx run typos==1.52.0 --format brief
 
       - name: yamllint
         run: pipx run yamllint==1.38.0 --strict --format github .
 
       - name: zizmor
-        run: pipx run zizmor==1.31.1 --no-progress --format github .github/workflows
+        run: pipx run zizmor==1.32.0 --no-progress --format github .github/workflows
 
       - name: Image scripts
         run: |
