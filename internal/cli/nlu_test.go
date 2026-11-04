@@ -463,6 +463,19 @@ func TestGenDeployWithLibrary(t *testing.T) {
 	assert.Equal(t, 1, own2.Imports, "the library's skill is only read")
 }
 
+func TestGenDeployStopsWhenTheLibraryCantBeRead(t *testing.T) {
+	fake, flags := liveFake(t)
+	own := fake.AddSkill(smapitest.DefaultVendorID, map[string]string{"en-GB": "Encore"})
+	ci := fake.AddSkill(smapitest.DefaultVendorID, map[string]string{"en-GB": ciSkillName})
+	fake.InjectRoute("GET /v1/skills/{skillId}/stages/{stage}/interactionModel/locales/{locale}", http.StatusForbidden)
+
+	_, _, err := runCLI(t, append([]string{"gen", "deploy", "--skill", ci, "--invocation", "encore", "--locale", "en-GB", "--library-skill", own, "--poll-interval", "1ms"}, flags...)...)
+	require.ErrorContains(t, err, "403")
+
+	sk, _ := fake.Skill(ci)
+	assert.Empty(t, sk.Models["en-GB"], "nothing is deployed without the library's titles")
+}
+
 func TestWithLibraryReportsSMAPIErrors(t *testing.T) {
 	fake := smapitest.New(t, smapitest.Options{})
 	c := fakeClient(t, fake)

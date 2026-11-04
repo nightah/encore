@@ -1038,24 +1038,34 @@ func TestDeployDoesntImportAgainWhenTold(t *testing.T) {
 	assert.Equal(t, 1, sk.Imports)
 }
 
-// A deploy stopped while it waits to import again says so, without importing.
+// A deploy stopped while it waits to import again says so, without importing. With no wait set, it waits five minutes.
 func TestDeployStoppedWhileWaitingToImportAgain(t *testing.T) {
-	h := newHarness(t, smapitest.Options{})
-	h.fake.FailImportsWithoutDetails(1)
+	for wait, says := range map[time.Duration]string{time.Hour: "1h0m0s", 0: "5m0s"} {
+		t.Run(says, func(t *testing.T) {
+			h := newHarness(t, smapitest.Options{})
+			h.fake.FailImportsWithoutDetails(1)
 
-	req := h.request(deploy.State{})
-	req.SilentRetryWait = time.Hour
+			req := h.request(deploy.State{})
+			req.SilentRetryWait = wait
 
-	ctx, cancel := context.WithCancel(t.Context())
-	req.Progress = func(ev deploy.Event) {
-		if strings.Contains(ev.Message, "importing again in 1h0m0s") {
-			cancel()
-		}
+			ctx, cancel := context.WithCancel(t.Context())
+
+			var waited bool
+
+			req.Progress = func(ev deploy.Event) {
+				if strings.Contains(ev.Message, "importing again in "+says) {
+					waited = true
+
+					cancel()
+				}
+			}
+
+			res, err := h.deployer.Deploy(ctx, req)
+			require.ErrorIs(t, err, context.Canceled)
+			assert.True(t, waited)
+
+			sk, _ := h.fake.Skill(res.State.SkillID)
+			assert.Equal(t, 1, sk.Imports)
+		})
 	}
-
-	res, err := h.deployer.Deploy(ctx, req)
-	require.ErrorIs(t, err, context.Canceled)
-
-	sk, _ := h.fake.Skill(res.State.SkillID)
-	assert.Equal(t, 1, sk.Imports)
 }

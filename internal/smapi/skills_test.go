@@ -227,6 +227,12 @@ func TestSkillStatusErrors(t *testing.T) {
 	require.ErrorContains(t, err, "get skill status: decoding response")
 }
 
+func TestImportStatusErrors(t *testing.T) {
+	c := stubClient(t, func(w http.ResponseWriter, _ *http.Request) { _, _ = w.Write([]byte(`{"status":[]}`)) })
+	_, err := c.ImportStatus(t.Context(), "import")
+	require.ErrorContains(t, err, "get import status: decoding response")
+}
+
 func TestBuildStatusProblems(t *testing.T) {
 	a, b, c := smapi.Problem{Code: "A", Message: "a"}, smapi.Problem{Code: "B", Message: "b"}, smapi.Problem{Message: "c"}
 

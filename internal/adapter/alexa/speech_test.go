@@ -157,3 +157,34 @@ func TestBareCommandInAnUnknownLocale(t *testing.T) {
 	_, ok = h.Speech.BareCommand("xx-XX", "Dune")
 	assert.False(t, ok, "a title is no command")
 }
+
+func TestNewSpeechRejectsBrokenAnswerAndContinueSamples(t *testing.T) {
+	for intent, pattern := range map[string]string{
+		"AMAZON.YesIntent": "(yes|yeah",
+		continueIntent:     "continue (watching|playing",
+		nextEpisodeIntent:  "continue (watching|playing {Show}",
+	} {
+		t.Run(intent, func(t *testing.T) {
+			_, err := NewSpeech(speechSources(t, map[string]string{
+				"en-US": fmt.Sprintf("language: en\nutterances:\n  %s:\n    - %q\n", intent, pattern),
+			}), slog.New(slog.DiscardHandler))
+			require.ErrorContains(t, err, "locale en-US")
+		})
+	}
+}
+
+func TestAnswersAndLastShowFallBackToTheFallbackLocale(t *testing.T) {
+	s, err := NewSpeech(speechSources(t, map[string]string{
+		"en-US": "language: en\nutterances:\n" +
+			"  AMAZON.YesIntent:\n    - \"yes\"\n" +
+			"  ContinueWatching:\n    - \"continue watching the last show\"\n" +
+			"  WatchNextEpisode:\n    - \"continue watching {Show}\"\n",
+	}), slog.New(slog.DiscardHandler))
+	require.NoError(t, err)
+
+	name, ok := s.AnswerIntent("xx-XX", "Yes")
+	assert.True(t, ok, "a locale Encore doesn't have reads answers as en-US does")
+	assert.Equal(t, "AMAZON.YesIntent", name)
+	assert.True(t, s.MeansLastShow("xx-XX", "the last show"))
+	assert.False(t, s.MeansLastShow("xx-XX", "frasier"))
+}

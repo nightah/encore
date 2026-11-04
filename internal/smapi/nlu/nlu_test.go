@@ -453,3 +453,16 @@ func TestFallbackIsLeftToTheHandlerTests(t *testing.T) {
 	require.ErrorContains(t, f.Check(src), "AMAZON.FallbackIntent can't be expected")
 	assert.NotContains(t, (nlu.Fixture{Locale: "en-GB"}).Missing(src), "AMAZON.FallbackIntent", "no row needs to expect it")
 }
+
+func TestRunFailsAReadingWithTheWrongSlotValue(t *testing.T) {
+	r, fake := runner(t)
+	r.Reread = func(string, nlu.Reading) []nlu.Reading {
+		return []nlu.Reading{{Intent: "ListenToSong", Slots: map[string]string{"Song": "heath"}}}
+	}
+
+	fake.Profile("en-GB", "play the song heat", smapitest.NLUAnswer{Intent: "PlayMedia", Slots: map[string]string{"Query": "the song heat"}})
+
+	res, err := r.Run(t.Context(), nlu.Fixture{Locale: "en-GB", Cases: []nlu.Case{{Utterance: "play the song heat", Intent: "ListenToSong", Slots: map[string]string{"Song": "heat"}}}})
+	require.NoError(t, err)
+	assert.Equal(t, nlu.OutcomeFail, res[0].Outcome(), "Encore reads the intent right but the song wrong")
+}
