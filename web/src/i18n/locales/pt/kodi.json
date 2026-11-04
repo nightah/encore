@@ -27,8 +27,6 @@
     "stats": {
       "findable": "encontráveis",
       "lastEvent": "Último evento do Kodi",
-      "movies_one": "{{count, number}} filme",
-      "movies_other": "{{count, number}} filmes",
       "newest": "Título mais recente",
       "noneYet": "Nenhum ainda",
       "notFindable": "ainda não encontráveis",
@@ -36,6 +34,8 @@
       "resyncEvery": "A cada 15 min",
       "resyncNext": "A cada 15 min · próxima às {{time}}",
       "sharedWith": "compartilhada com {{names}}",
+      "movies_one": "{{count, number}} filme",
+      "movies_other": "{{count, number}} filmes",
       "shows_one": "{{count, number}} série",
       "shows_other": "{{count, number}} séries"
     },
@@ -153,13 +153,13 @@
       "add": "Adicionar uma instância",
       "alreadyShared": "Compartilha uma biblioteca com {{names}}; marcá-la a move para esta.",
       "cancel": "Cancelar",
-      "confirm_one": "Compartilhar biblioteca",
-      "confirm_other": "Compartilhar biblioteca entre {{count}}",
       "description": "Marque as instâncias do Kodi que usam o mesmo banco de dados do Kodi, como MySQL. O Encore passa a manter uma biblioteca e um índice de títulos para elas.",
       "legend": "Instâncias do Kodi",
       "open": "Compartilhar uma biblioteca",
       "sourceHint": "A primeira instância que você marcar vira a fonte da biblioteca; você pode alterá-la depois.",
-      "title": "Compartilhar uma biblioteca"
+      "title": "Compartilhar uma biblioteca",
+      "confirm_one": "Compartilhar biblioteca",
+      "confirm_other": "Compartilhar biblioteca entre {{count}}"
     },
     "source": "Fonte da biblioteca",
     "sourceHint": "Se a fonte estiver em suspensão, o Encore sincroniza a partir de outra instância do grupo que esteja ativa. A reprodução continua indo para a instância que o Echo controla.",

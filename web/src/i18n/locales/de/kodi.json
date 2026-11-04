@@ -27,8 +27,6 @@
     "stats": {
       "findable": "auffindbar",
       "lastEvent": "Letztes Kodi-Ereignis",
-      "movies_one": "{{count, number}} Film",
-      "movies_other": "{{count, number}} Filme",
       "newest": "Neuester Titel",
       "noneYet": "Noch keines",
       "notFindable": "noch nicht auffindbar",
@@ -36,6 +34,8 @@
       "resyncEvery": "Alle 15 Min.",
       "resyncNext": "Alle 15 Min. · nächster um {{time}}",
       "sharedWith": "geteilt mit {{names}}",
+      "movies_one": "{{count, number}} Film",
+      "movies_other": "{{count, number}} Filme",
       "shows_one": "{{count, number}} Serie",
       "shows_other": "{{count, number}} Serien"
     },
@@ -153,13 +153,13 @@
       "add": "Instanz hinzufügen",
       "alreadyShared": "Teilt eine Mediathek mit {{names}}; beim Auswählen wechselt sie in diese.",
       "cancel": "Abbrechen",
-      "confirm_one": "Mediathek teilen",
-      "confirm_other": "Mediathek zwischen {{count}} teilen",
       "description": "Wähle die Kodi-Instanzen, die dieselbe Kodi-Datenbank nutzen, etwa MySQL. Encore führt dann eine Mediathek und einen Titelindex für sie.",
       "legend": "Kodi-Instanzen",
       "open": "Mediathek teilen",
       "sourceHint": "Die zuerst gewählte Instanz wird zur Mediathek-Quelle; du kannst sie danach ändern.",
-      "title": "Mediathek teilen"
+      "title": "Mediathek teilen",
+      "confirm_one": "Mediathek teilen",
+      "confirm_other": "Mediathek zwischen {{count}} teilen"
     },
     "source": "Mediathek-Quelle",
     "sourceHint": "Ist die Quelle im Ruhezustand, synchronisiert Encore von einer anderen wachen Instanz der Gruppe. Die Wiedergabe geht weiterhin an die Instanz, die das Echo steuert.",

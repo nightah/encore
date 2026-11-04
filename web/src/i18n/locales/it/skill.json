@@ -119,12 +119,12 @@
   },
   "titles": {
     "empty": "Visibile dopo la prima distribuzione.",
+    "limit": "Il modello di ogni lingua deve restare sotto il limite di {{limit}} di Amazon.",
+    "title": "Titoli nel modello",
     "inModel_one": "<count>{{n}} titolo</count> nel modello (prima quelli in corso e i recenti)",
     "inModel_other": "<count>{{n}} titoli</count> nel modello (prima quelli in corso e i recenti)",
-    "limit": "Il modello di ogni lingua deve restare sotto il limite di {{limit}} di Amazon.",
     "serverOnly_one": "<count>{{n}} titolo</count> riconosciuto solo sul server",
-    "serverOnly_other": "<count>{{n}} titoli</count> riconosciuti solo sul server",
-    "title": "Titoli nel modello"
+    "serverOnly_other": "<count>{{n}} titoli</count> riconosciuti solo sul server"
   },
   "warnings": {
     "dropped": "{{locale}}: Amazon ha rifiutato questi titoli, quindi sono stati esclusi: {{titles}}",

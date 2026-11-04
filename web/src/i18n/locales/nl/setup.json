@@ -95,8 +95,6 @@
     "contentNote": "Als je er een weglaat, verdwijnen de spraakopdrachten ervan uit de skill.",
     "deploy": "Skill uitrollen",
     "deploying": "Uitrollen…",
-    "duration_one": "meestal 2 tot 3 minuten voor één taalregio",
-    "duration_other": "meestal 3 tot 5 minuten voor {{count}} taalregio's",
     "failed": "De uitrol is mislukt bij “{{step}}”: {{message}}.",
     "goToAmazon": "Naar Amazon-account",
     "heading": "De skill uitrollen",
@@ -129,17 +127,19 @@
         "label": "De skill voldoet aan de exportregels"
       },
       "legend": "Privacyvragen van Amazon (beantwoord ze zelf)",
-      "unanswered_one": "Nog {{count}} vraag te beantwoorden voordat je uitrolt.",
-      "unanswered_other": "Nog {{count}} vragen te beantwoorden voordat je uitrolt.",
       "uses_personal_info": {
         "about": "Of de skill persoonlijke gegevens verzamelt van de mensen die hem gebruiken, zoals namen, e-mailadressen, telefoonnummers of locatie. Encore vraagt hier niet om: het ziet de apparaat-ID van elke Echo en wat eraan gevraagd is, en bewaart dat op je eigen server.",
         "label": "De skill verzamelt persoonlijke gegevens"
-      }
+      },
+      "unanswered_one": "Nog {{count}} vraag te beantwoorden voordat je uitrolt.",
+      "unanswered_other": "Nog {{count}} vragen te beantwoorden voordat je uitrolt."
     },
     "progress": "Uitrollen, {{percent}} procent klaar",
     "starting": "Starten",
     "succeeded": "Uitgerold. De skill is ingeschakeld om te testen op je Amazon-account.",
-    "tryAgain": "Opnieuw proberen"
+    "tryAgain": "Opnieuw proberen",
+    "duration_one": "meestal 2 tot 3 minuten voor één taalregio",
+    "duration_other": "meestal 3 tot 5 minuten voor {{count}} taalregio's"
   },
   "hello": {
     "alexaPlus": "Schakel op Alexa+-apparaten de skill eenmalig in via de Alexa+ Store in de Alexa-app als “vraag {{invocation}}” niet wordt herkend.",

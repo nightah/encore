@@ -71,8 +71,6 @@
   },
   "summary": {
     "backups": "Sauvegardes",
-    "episodes_one": "{{count, number}} épisode",
-    "episodes_other": "{{count, number}} épisodes",
     "label": "Résumé de la bibliothèque",
     "lastBackup": "dernière sauvegarde {{when}}",
     "libraries": "Bibliothèques",
@@ -84,7 +82,9 @@
     "s3": "Compatible S3",
     "shows": "Séries",
     "songs": "morceaux",
-    "synced": "synchronisée {{when}}"
+    "synced": "synchronisée {{when}}",
+    "episodes_one": "{{count, number}} épisode",
+    "episodes_other": "{{count, number}} épisodes"
   },
   "verdict": {
     "ask": "Demanderait",

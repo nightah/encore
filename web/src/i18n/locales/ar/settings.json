@@ -36,19 +36,19 @@
         "label": "كلمة المرور"
       },
       "session": {
+        "label": "مدة الجلسة",
+        "days_zero": "{{count}} يوم",
+        "days_one": "{{count}} يوم",
+        "days_two": "{{count}} يومان",
         "days_few": "{{count}} أيام",
         "days_many": "{{count}} يومًا",
-        "days_one": "{{count}} يوم",
         "days_other": "{{count}} يوم",
-        "days_two": "{{count}} يومان",
-        "days_zero": "{{count}} يوم",
+        "hours_zero": "{{count}} ساعة",
+        "hours_one": "{{count}} ساعة",
+        "hours_two": "{{count}} ساعتان",
         "hours_few": "{{count}} ساعات",
         "hours_many": "{{count}} ساعة",
-        "hours_one": "{{count}} ساعة",
-        "hours_other": "{{count}} ساعة",
-        "hours_two": "{{count}} ساعتان",
-        "hours_zero": "{{count}} ساعة",
-        "label": "مدة الجلسة"
+        "hours_other": "{{count}} ساعة"
       },
       "totp": {
         "hint": "استخدم تطبيق مصادقة كخطوة ثانية.",
@@ -188,21 +188,21 @@
       "title": "نشر تغييرات المهارة تلقائيًا"
     },
     "auto_deploy_minutes": {
-      "hint_hours_few": "يصبح التغيير فعّالًا خلال فحصين (نحو {{count, number}} ساعات).",
-      "hint_hours_many": "يصبح التغيير فعّالًا خلال فحصين (نحو {{count, number}} ساعة).",
-      "hint_hours_one": "يصبح التغيير فعّالًا خلال فحصين (نحو {{count, number}} ساعة).",
-      "hint_hours_other": "يصبح التغيير فعّالًا خلال فحصين (نحو {{count, number}} ساعة).",
-      "hint_hours_two": "يصبح التغيير فعّالًا خلال فحصين (نحو {{count, number}} ساعتين).",
-      "hint_hours_zero": "يصبح التغيير فعّالًا خلال فحصين (نحو {{count, number}} ساعة).",
-      "hint_minutes_few": "يصبح التغيير فعّالًا خلال فحصين (نحو {{count, number}} دقائق).",
-      "hint_minutes_many": "يصبح التغيير فعّالًا خلال فحصين (نحو {{count, number}} دقيقة).",
-      "hint_minutes_one": "يصبح التغيير فعّالًا خلال فحصين (نحو {{count, number}} دقيقة).",
-      "hint_minutes_other": "يصبح التغيير فعّالًا خلال فحصين (نحو {{count, number}} دقيقة).",
-      "hint_minutes_two": "يصبح التغيير فعّالًا خلال فحصين (نحو {{count, number}} دقيقتين).",
-      "hint_minutes_zero": "يصبح التغيير فعّالًا خلال فحصين (نحو {{count, number}} دقيقة).",
       "hintInvalid": "من 1 إلى {{max}} دقيقة.",
       "title": "التحقق من التغييرات كل",
-      "unit": "دقيقة"
+      "unit": "دقيقة",
+      "hint_hours_zero": "يصبح التغيير فعّالًا خلال فحصين (نحو {{count, number}} ساعة).",
+      "hint_hours_one": "يصبح التغيير فعّالًا خلال فحصين (نحو {{count, number}} ساعة).",
+      "hint_hours_two": "يصبح التغيير فعّالًا خلال فحصين (نحو {{count, number}} ساعتين).",
+      "hint_hours_few": "يصبح التغيير فعّالًا خلال فحصين (نحو {{count, number}} ساعات).",
+      "hint_hours_many": "يصبح التغيير فعّالًا خلال فحصين (نحو {{count, number}} ساعة).",
+      "hint_hours_other": "يصبح التغيير فعّالًا خلال فحصين (نحو {{count, number}} ساعة).",
+      "hint_minutes_zero": "يصبح التغيير فعّالًا خلال فحصين (نحو {{count, number}} دقيقة).",
+      "hint_minutes_one": "يصبح التغيير فعّالًا خلال فحصين (نحو {{count, number}} دقيقة).",
+      "hint_minutes_two": "يصبح التغيير فعّالًا خلال فحصين (نحو {{count, number}} دقيقتين).",
+      "hint_minutes_few": "يصبح التغيير فعّالًا خلال فحصين (نحو {{count, number}} دقائق).",
+      "hint_minutes_many": "يصبح التغيير فعّالًا خلال فحصين (نحو {{count, number}} دقيقة).",
+      "hint_minutes_other": "يصبح التغيير فعّالًا خلال فحصين (نحو {{count, number}} دقيقة)."
     },
     "confirm_sound": {
       "hint": "تشغّل Alexa صوتًا قصيرًا بعد أوامر مثل الإيقاف المؤقت أو رفع الصوت، بدلًا من البقاء صامتة",
@@ -313,13 +313,13 @@
       },
       "hint": "قاعدة البيانات مع تصدير الإعدادات. تُستبعد الأسرار.",
       "keep": {
+        "label": "الاحتفاظ بـ",
+        "count_zero": "{{count}} نسخة احتياطية",
+        "count_one": "{{count}} نسخة احتياطية",
+        "count_two": "{{count}} نسختان احتياطيتان",
         "count_few": "{{count}} نسخ احتياطية",
         "count_many": "{{count}} نسخة احتياطية",
-        "count_one": "{{count}} نسخة احتياطية",
-        "count_other": "{{count}} نسخة احتياطية",
-        "count_two": "{{count}} نسختان احتياطيتان",
-        "count_zero": "{{count}} نسخة احتياطية",
-        "label": "الاحتفاظ بـ"
+        "count_other": "{{count}} نسخة احتياطية"
       },
       "label": "النسخ الاحتياطية",
       "last": {

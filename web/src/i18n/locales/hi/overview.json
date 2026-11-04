@@ -78,15 +78,15 @@
     "label": "स्थिति",
     "libraries": {
       "and": " और ",
-      "count_one": "{{count, number}} लाइब्रेरी",
-      "count_other": "{{count, number}} लाइब्रेरी",
       "label": "लाइब्रेरी",
       "noneShared": "कोई साझा नहीं",
       "notSynced": "अभी सिंक नहीं हुआ",
-      "shared_one": "{{count}} साझा",
-      "shared_other": "{{count}} साझा",
       "shareOne": "{{names}} एक लाइब्रेरी साझा करते हैं",
-      "synced": "सिंक हुआ {{when}}"
+      "synced": "सिंक हुआ {{when}}",
+      "count_one": "{{count, number}} लाइब्रेरी",
+      "count_other": "{{count, number}} लाइब्रेरी",
+      "shared_one": "{{count}} साझा",
+      "shared_other": "{{count}} साझा"
     },
     "requests": {
       "detail": "{{failed}} विफल · मीडियन {{ms}} ms",
@@ -94,8 +94,6 @@
     },
     "skill": {
       "label": "Alexa स्किल",
-      "locales_one": "{{count, number}} लोकेल",
-      "locales_other": "{{count, number}} लोकेल",
       "stage": {
         "development": "डेवलपमेंट स्टेज",
         "live": "लाइव स्टेज",
@@ -107,7 +105,9 @@
         "live": "लाइव",
         "not_deployed": "डिप्लॉय नहीं हुआ"
       },
-      "updatePending": "अपडेट बाकी"
+      "updatePending": "अपडेट बाकी",
+      "locales_one": "{{count, number}} लोकेल",
+      "locales_other": "{{count, number}} लोकेल"
     }
   },
   "title": "अवलोकन"

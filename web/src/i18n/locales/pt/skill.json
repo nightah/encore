@@ -119,12 +119,12 @@
   },
   "titles": {
     "empty": "Exibido após a primeira implantação.",
+    "limit": "O modelo de cada localidade precisa ficar abaixo do limite de {{limit}} da Amazon.",
+    "title": "Títulos no modelo",
     "inModel_one": "<count>{{n}} título</count> no modelo (em andamento e recentes primeiro)",
     "inModel_other": "<count>{{n}} títulos</count> no modelo (em andamento e recentes primeiro)",
-    "limit": "O modelo de cada localidade precisa ficar abaixo do limite de {{limit}} da Amazon.",
     "serverOnly_one": "<count>{{n}} título</count> com correspondência só no servidor",
-    "serverOnly_other": "<count>{{n}} títulos</count> com correspondência só no servidor",
-    "title": "Títulos no modelo"
+    "serverOnly_other": "<count>{{n}} títulos</count> com correspondência só no servidor"
   },
   "warnings": {
     "dropped": "{{locale}}: a Amazon rejeitou estes títulos, então eles foram deixados de fora: {{titles}}",

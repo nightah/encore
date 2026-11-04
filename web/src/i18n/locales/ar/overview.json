@@ -14,30 +14,30 @@
     "rejected": {
       "signature": {
         "detail": "لم يتمكن Encore من التأكد من أن Alexa أرسلها. إذا كانت من جهاز Echo لديك، فتحقّق من أن Encore يمكنه الوصول إلى s3.amazonaws.com لجلب شهادة Amazon، ومن أن الوكيل يمرّر الطلبات دون تغيير.",
+        "title_zero": "{{count, number}} طلب مرفوض بسبب توقيع غير صالح",
+        "title_one": "{{count, number}} طلب مرفوض بسبب توقيع غير صالح",
+        "title_two": "طلبان مرفوضان بسبب توقيع غير صالح",
         "title_few": "{{count, number}} طلبات مرفوضة بسبب توقيع غير صالح",
         "title_many": "{{count, number}} طلبًا مرفوضًا بسبب توقيع غير صالح",
-        "title_one": "{{count, number}} طلب مرفوض بسبب توقيع غير صالح",
-        "title_other": "{{count, number}} طلب مرفوض بسبب توقيع غير صالح",
-        "title_two": "طلبان مرفوضان بسبب توقيع غير صالح",
-        "title_zero": "{{count, number}} طلب مرفوض بسبب توقيع غير صالح"
+        "title_other": "{{count, number}} طلب مرفوض بسبب توقيع غير صالح"
       },
       "skillId": {
         "detail": "وقّعها Alexa لمعرّف مهارة غير الذي يتوقعه Encore. تحقّق من alexa.skill_id، أو انشر المهارة مرة أخرى.",
+        "title_zero": "{{count, number}} طلب مرفوض لمهارة أخرى",
+        "title_one": "{{count, number}} طلب مرفوض لمهارة أخرى",
+        "title_two": "طلبان مرفوضان لمهارة أخرى",
         "title_few": "{{count, number}} طلبات مرفوضة لمهارة أخرى",
         "title_many": "{{count, number}} طلبًا مرفوضًا لمهارة أخرى",
-        "title_one": "{{count, number}} طلب مرفوض لمهارة أخرى",
-        "title_other": "{{count, number}} طلب مرفوض لمهارة أخرى",
-        "title_two": "طلبان مرفوضان لمهارة أخرى",
-        "title_zero": "{{count, number}} طلب مرفوض لمهارة أخرى"
+        "title_other": "{{count, number}} طلب مرفوض لمهارة أخرى"
       },
       "timestamp": {
         "detail": "يضع Alexa على كل طلب وقت إرساله، ويرفض Encore أي طلب يختلف عن ساعته بأكثر من 150 ثانية. تحقّق من مزامنة ساعة هذا الخادم.",
+        "title_zero": "{{count, number}} طلب مرفوض بسبب طابع زمني قديم",
+        "title_one": "{{count, number}} طلب مرفوض بسبب طابع زمني قديم",
+        "title_two": "طلبان مرفوضان بسبب طابع زمني قديم",
         "title_few": "{{count, number}} طلبات مرفوضة بسبب طابع زمني قديم",
         "title_many": "{{count, number}} طلبًا مرفوضًا بسبب طابع زمني قديم",
-        "title_one": "{{count, number}} طلب مرفوض بسبب طابع زمني قديم",
-        "title_other": "{{count, number}} طلب مرفوض بسبب طابع زمني قديم",
-        "title_two": "طلبان مرفوضان بسبب طابع زمني قديم",
-        "title_zero": "{{count, number}} طلب مرفوض بسبب طابع زمني قديم"
+        "title_other": "{{count, number}} طلب مرفوض بسبب طابع زمني قديم"
       }
     },
     "title": "يحتاج إلى انتباه"
@@ -90,23 +90,23 @@
     "label": "الحالة",
     "libraries": {
       "and": " و",
-      "count_few": "{{count, number}} مكتبات",
-      "count_many": "{{count, number}} مكتبة",
-      "count_one": "{{count, number}} مكتبة",
-      "count_other": "{{count, number}} مكتبة",
-      "count_two": "{{count, number}} مكتبتان",
-      "count_zero": "{{count, number}} مكتبة",
       "label": "المكتبات",
       "noneShared": "لا توجد مكتبات مشتركة",
       "notSynced": "لم تتم المزامنة بعد",
+      "shareOne": "{{names}} تتشارك مكتبة واحدة",
+      "synced": "تمت المزامنة {{when}}",
+      "count_zero": "{{count, number}} مكتبة",
+      "count_one": "{{count, number}} مكتبة",
+      "count_two": "{{count, number}} مكتبتان",
+      "count_few": "{{count, number}} مكتبات",
+      "count_many": "{{count, number}} مكتبة",
+      "count_other": "{{count, number}} مكتبة",
+      "shared_zero": "{{count}} مشتركة",
+      "shared_one": "{{count}} مشتركة",
+      "shared_two": "{{count}} مشتركتان",
       "shared_few": "{{count}} مشتركة",
       "shared_many": "{{count}} مشتركة",
-      "shared_one": "{{count}} مشتركة",
-      "shared_other": "{{count}} مشتركة",
-      "shared_two": "{{count}} مشتركتان",
-      "shared_zero": "{{count}} مشتركة",
-      "shareOne": "{{names}} تتشارك مكتبة واحدة",
-      "synced": "تمت المزامنة {{when}}"
+      "shared_other": "{{count}} مشتركة"
     },
     "requests": {
       "detail": "{{failed}} فاشلة · الوسيط {{ms}} ملّي ث",
@@ -114,12 +114,6 @@
     },
     "skill": {
       "label": "مهارة Alexa",
-      "locales_few": "{{count, number}} لغات إقليمية",
-      "locales_many": "{{count, number}} لغة إقليمية",
-      "locales_one": "{{count, number}} لغة إقليمية",
-      "locales_other": "{{count, number}} لغة إقليمية",
-      "locales_two": "{{count, number}} لغتان إقليميتان",
-      "locales_zero": "{{count, number}} لغة إقليمية",
       "stage": {
         "development": "مرحلة التطوير",
         "live": "المرحلة المباشرة",
@@ -131,7 +125,13 @@
         "live": "مباشرة",
         "not_deployed": "غير منشورة"
       },
-      "updatePending": "تحديث معلّق"
+      "updatePending": "تحديث معلّق",
+      "locales_zero": "{{count, number}} لغة إقليمية",
+      "locales_one": "{{count, number}} لغة إقليمية",
+      "locales_two": "{{count, number}} لغتان إقليميتان",
+      "locales_few": "{{count, number}} لغات إقليمية",
+      "locales_many": "{{count, number}} لغة إقليمية",
+      "locales_other": "{{count, number}} لغة إقليمية"
     }
   },
   "title": "نظرة عامة"

@@ -27,8 +27,6 @@
     "stats": {
       "findable": "vindbaar",
       "lastEvent": "Laatste Kodi-gebeurtenis",
-      "movies_one": "{{count, number}} film",
-      "movies_other": "{{count, number}} films",
       "newest": "Nieuwste titel",
       "noneYet": "Nog geen",
       "notFindable": "nog niet vindbaar",
@@ -36,6 +34,8 @@
       "resyncEvery": "Elke 15 min",
       "resyncNext": "Elke 15 min · volgende {{time}}",
       "sharedWith": "gedeeld met {{names}}",
+      "movies_one": "{{count, number}} film",
+      "movies_other": "{{count, number}} films",
       "shows_one": "{{count, number}} serie",
       "shows_other": "{{count, number}} series"
     },
@@ -153,13 +153,13 @@
       "add": "Een instantie toevoegen",
       "alreadyShared": "Deelt een bibliotheek met {{names}}; als je hem aanvinkt, gaat hij naar deze bibliotheek.",
       "cancel": "Annuleren",
-      "confirm_one": "Bibliotheek delen",
-      "confirm_other": "Bibliotheek delen tussen {{count}}",
       "description": "Vink de Kodi-instanties aan die dezelfde Kodi-database gebruiken, zoals MySQL. Encore houdt dan één bibliotheek en titelindex voor ze bij.",
       "legend": "Kodi-instanties",
       "open": "Een bibliotheek delen",
       "sourceHint": "De eerste instantie die je aanvinkt, wordt de bibliotheekbron; je kunt dat later wijzigen.",
-      "title": "Een bibliotheek delen"
+      "title": "Een bibliotheek delen",
+      "confirm_one": "Bibliotheek delen",
+      "confirm_other": "Bibliotheek delen tussen {{count}}"
     },
     "source": "Bibliotheekbron",
     "sourceHint": "Als de bron slaapt, synchroniseert Encore vanaf een andere instantie in de groep die wakker is. Afspelen gebeurt nog steeds op de instantie die de Echo bedient.",

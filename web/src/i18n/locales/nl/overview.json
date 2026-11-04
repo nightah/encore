@@ -78,15 +78,15 @@
     "label": "Status",
     "libraries": {
       "and": " en ",
-      "count_one": "{{count, number}} bibliotheek",
-      "count_other": "{{count, number}} bibliotheken",
       "label": "Bibliotheken",
       "noneShared": "geen gedeeld",
       "notSynced": "Nog niet gesynchroniseerd",
-      "shared_one": "{{count}} gedeeld",
-      "shared_other": "{{count}} gedeeld",
       "shareOne": "{{names}} delen er één",
-      "synced": "Gesynchroniseerd {{when}}"
+      "synced": "Gesynchroniseerd {{when}}",
+      "count_one": "{{count, number}} bibliotheek",
+      "count_other": "{{count, number}} bibliotheken",
+      "shared_one": "{{count}} gedeeld",
+      "shared_other": "{{count}} gedeeld"
     },
     "requests": {
       "detail": "{{failed}} mislukt · mediaan {{ms}} ms",
@@ -94,8 +94,6 @@
     },
     "skill": {
       "label": "Alexa-skill",
-      "locales_one": "{{count, number}} taalregio",
-      "locales_other": "{{count, number}} taalregio's",
       "stage": {
         "development": "Ontwikkelingsfase",
         "live": "Livefase",
@@ -107,7 +105,9 @@
         "live": "Live",
         "not_deployed": "Niet uitgerold"
       },
-      "updatePending": "update in behandeling"
+      "updatePending": "update in behandeling",
+      "locales_one": "{{count, number}} taalregio",
+      "locales_other": "{{count, number}} taalregio's"
     }
   },
   "title": "Overzicht"

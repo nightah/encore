@@ -119,12 +119,12 @@
   },
   "titles": {
     "empty": "Se muestra tras el primer despliegue.",
+    "limit": "El modelo de cada configuración regional debe quedar por debajo del límite de {{limit}} de Amazon.",
+    "title": "Títulos en el modelo",
     "inModel_one": "<count>{{n}} título</count> en el modelo (primero los que están en curso y los recientes)",
     "inModel_other": "<count>{{n}} títulos</count> en el modelo (primero los que están en curso y los recientes)",
-    "limit": "El modelo de cada configuración regional debe quedar por debajo del límite de {{limit}} de Amazon.",
     "serverOnly_one": "<count>{{n}} título</count> que solo se busca en el servidor",
-    "serverOnly_other": "<count>{{n}} títulos</count> que solo se buscan en el servidor",
-    "title": "Títulos en el modelo"
+    "serverOnly_other": "<count>{{n}} títulos</count> que solo se buscan en el servidor"
   },
   "warnings": {
     "dropped": "{{locale}}: Amazon rechazó estos títulos, así que se dejaron fuera: {{titles}}",

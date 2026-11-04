@@ -78,15 +78,15 @@
     "label": "Stato",
     "libraries": {
       "and": " e ",
-      "count_one": "{{count, number}} libreria",
-      "count_other": "{{count, number}} librerie",
       "label": "Librerie",
       "noneShared": "nessuna condivisa",
       "notSynced": "Non ancora sincronizzate",
-      "shared_one": "{{count}} condivisa",
-      "shared_other": "{{count}} condivise",
       "shareOne": "{{names}} ne condividono una",
-      "synced": "Sincronizzate {{when}}"
+      "synced": "Sincronizzate {{when}}",
+      "count_one": "{{count, number}} libreria",
+      "count_other": "{{count, number}} librerie",
+      "shared_one": "{{count}} condivisa",
+      "shared_other": "{{count}} condivise"
     },
     "requests": {
       "detail": "{{failed}} non riuscite · mediana {{ms}} ms",
@@ -94,8 +94,6 @@
     },
     "skill": {
       "label": "Skill di Alexa",
-      "locales_one": "{{count, number}} lingua",
-      "locales_other": "{{count, number}} lingue",
       "stage": {
         "development": "Fase di sviluppo",
         "live": "Fase pubblicata",
@@ -107,7 +105,9 @@
         "live": "Pubblicata",
         "not_deployed": "Non distribuita"
       },
-      "updatePending": "aggiornamento in sospeso"
+      "updatePending": "aggiornamento in sospeso",
+      "locales_one": "{{count, number}} lingua",
+      "locales_other": "{{count, number}} lingue"
     }
   },
   "title": "Panoramica"

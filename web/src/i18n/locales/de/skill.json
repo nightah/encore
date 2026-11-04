@@ -119,12 +119,12 @@
   },
   "titles": {
     "empty": "Wird nach der ersten Bereitstellung angezeigt.",
+    "limit": "Das Modell jedes Gebietsschemas muss unter Amazons Grenze von {{limit}} bleiben.",
+    "title": "Titel im Modell",
     "inModel_one": "<count>{{n}} Titel</count> im Modell (laufende und neueste zuerst)",
     "inModel_other": "<count>{{n}} Titel</count> im Modell (laufende und neueste zuerst)",
-    "limit": "Das Modell jedes Gebietsschemas muss unter Amazons Grenze von {{limit}} bleiben.",
     "serverOnly_one": "<count>{{n}} Titel</count> nur auf dem Server abgeglichen",
-    "serverOnly_other": "<count>{{n}} Titel</count> nur auf dem Server abgeglichen",
-    "title": "Titel im Modell"
+    "serverOnly_other": "<count>{{n}} Titel</count> nur auf dem Server abgeglichen"
   },
   "warnings": {
     "dropped": "{{locale}}: Amazon hat diese Titel abgelehnt, daher wurden sie weggelassen: {{titles}}",

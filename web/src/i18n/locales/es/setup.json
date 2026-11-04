@@ -95,8 +95,6 @@
     "contentNote": "Si quitas alguno, sus comandos de voz desaparecen de la skill.",
     "deploy": "Implementar skill",
     "deploying": "Implementando…",
-    "duration_one": "suele tardar de 2 a 3 minutos para una configuración regional",
-    "duration_other": "suele tardar de 3 a 5 minutos para {{count}} configuraciones regionales",
     "failed": "La implementación falló en «{{step}}»: {{message}}.",
     "goToAmazon": "Ir a la cuenta de Amazon",
     "heading": "Implementa la skill",
@@ -129,17 +127,19 @@
         "label": "La skill cumple las normas de exportación"
       },
       "legend": "Preguntas de privacidad de Amazon (respóndelas tú)",
-      "unanswered_one": "Queda {{count}} pregunta por responder antes de implementar.",
-      "unanswered_other": "Quedan {{count}} preguntas por responder antes de implementar.",
       "uses_personal_info": {
         "about": "Si la skill recopila datos personales de quienes la usan, como nombres, direcciones de correo electrónico, números de teléfono o la ubicación. Encore no pide ninguno de ellos: ve el ID de dispositivo de cada Echo y lo que se le pidió, y lo guarda en tu propio servidor.",
         "label": "La skill recopila información personal"
-      }
+      },
+      "unanswered_one": "Queda {{count}} pregunta por responder antes de implementar.",
+      "unanswered_other": "Quedan {{count}} preguntas por responder antes de implementar."
     },
     "progress": "Implementando, {{percent}} por ciento completado",
     "starting": "Iniciando",
     "succeeded": "Implementada. La skill está habilitada para pruebas en tu cuenta de Amazon.",
-    "tryAgain": "Reintentar"
+    "tryAgain": "Reintentar",
+    "duration_one": "suele tardar de 2 a 3 minutos para una configuración regional",
+    "duration_other": "suele tardar de 3 a 5 minutos para {{count}} configuraciones regionales"
   },
   "hello": {
     "alexaPlus": "En los dispositivos con Alexa+, habilita la skill una vez desde la tienda de Alexa+ de la app de Alexa si no se reconoce «pide a {{invocation}}».",

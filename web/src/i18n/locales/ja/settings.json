@@ -36,9 +36,9 @@
         "label": "パスワード"
       },
       "session": {
+        "label": "セッションの長さ",
         "days_other": "{{count}} 日",
-        "hours_other": "{{count}} 時間",
-        "label": "セッションの長さ"
+        "hours_other": "{{count}} 時間"
       },
       "totp": {
         "hint": "2 段階目として認証アプリを使用します。",
@@ -178,11 +178,11 @@
       "title": "スキルの変更を自動でデプロイ"
     },
     "auto_deploy_minutes": {
-      "hint_hours_other": "変更は 2 回の確認以内に反映されます（約 {{count, number}} 時間）。",
-      "hint_minutes_other": "変更は 2 回の確認以内に反映されます（約 {{count, number}} 分）。",
       "hintInvalid": "1～{{max}} 分で指定してください。",
       "title": "変更を確認する間隔",
-      "unit": "分"
+      "unit": "分",
+      "hint_hours_other": "変更は 2 回の確認以内に反映されます（約 {{count, number}} 時間）。",
+      "hint_minutes_other": "変更は 2 回の確認以内に反映されます（約 {{count, number}} 分）。"
     },
     "confirm_sound": {
       "hint": "一時停止や音量アップなどのコマンドの後、無音ではなく短い音を Alexa が鳴らします",
@@ -293,8 +293,8 @@
       },
       "hint": "データベースと設定のエクスポート。シークレットは除外されます。",
       "keep": {
-        "count_other": "{{count}} 件のバックアップ",
-        "label": "保持数"
+        "label": "保持数",
+        "count_other": "{{count}} 件のバックアップ"
       },
       "label": "バックアップ",
       "last": {
