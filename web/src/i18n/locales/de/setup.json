@@ -101,8 +101,8 @@
     "goToAmazon": "Zum Amazon-Konto",
     "heading": "Skill bereitstellen",
     "invocation": {
+      "elsewhere": "",
       "example": "„Alexa, frag {{name}} …“",
-      "french": "Französisch verwendet „kodi“, weil „encore“ auf Französisch „noch einmal“ bedeutet.",
       "label": "Aufrufname"
     },
     "locales": {
