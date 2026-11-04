@@ -13,21 +13,13 @@ export type ListRequestsParams = {
    * @maximum 200
    */
   limit?: number;
-  /**
-   * Only requests older than this ID
-   */
+  /** Only requests older than this ID */
   before?: number;
-  /**
-   * Only requests from this Echo device ID
-   */
+  /** Only requests from this Echo device ID */
   device?: number;
   outcome?: ListRequestsOutcome;
-  /**
-   * Search intent, heard text, speech and target
-   */
+  /** Search intent, heard text, speech and target */
   q?: string;
-  /**
-   * Only requests from an Echo, leaving out the simulator's during deploy smoke tests
-   */
+  /** Only requests from an Echo, leaving out the simulator's during deploy smoke tests */
   echo?: boolean;
 };

@@ -8,12 +8,8 @@
 import type { AuthorizeAmazonThen } from "./authorizeAmazonThen.ts";
 
 export type AuthorizeAmazonParams = {
-  /**
-   * One of return_urls, to choose the flow explicitly
-   */
+  /** One of return_urls, to choose the flow explicitly */
   return_url?: string;
-  /**
-   * The page the callback returns to
-   */
+  /** The page the callback returns to */
   then?: AuthorizeAmazonThen;
 };
