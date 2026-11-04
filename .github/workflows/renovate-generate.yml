@@ -1,5 +1,5 @@
 ---
-# Regenerates code on Renovate's codegen branch and commits it back. The hosted Renovate app can't run go generate, so a bump that changes generated output would otherwise fail CI's stale-code checks until someone ran 'make generate' by hand. The codegen group in .renovaterc.json lists the dependencies that change it; updates to the rest never reach this workflow.
+# Regenerates code on Renovate's codegen branch and commits it back. The hosted Renovate app can't run go generate or pnpm generate:api, so a bump that changes generated output would otherwise fail CI's stale-code checks until someone ran 'make generate' or 'pnpm -C web generate:api' by hand. The codegen group in .renovaterc.json lists the dependencies that change it; updates to the rest never reach this workflow.
 name: Renovate Generate
 
 on:
@@ -12,6 +12,8 @@ on:
       - go.sum
       - tools/go.mod
       - tools/go.sum
+      - web/package.json
+      - web/pnpm-lock.yaml
 
 # A newer push from Renovate supersedes the run for the older one, whose commit would be refused anyway (expectedHeadOid).
 concurrency:
@@ -45,8 +47,23 @@ jobs:
           go-version-file: go.mod
           cache: false
 
+      # Reads the pnpm version from the "packageManager" field.
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          package_json_file: web/package.json
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 26.x
+
       - name: go generate
         run: go generate ./...
+
+      # After go generate, so the client is built from the OpenAPI document it may have just rewritten.
+      - name: pnpm generate:api
+        run: |
+          pnpm -C web install --frozen-lockfile
+          pnpm -C web generate:api
 
       - name: Collect the changes
         id: diff
@@ -122,7 +139,7 @@ jobs:
               variables: {input: {
                 branch: {repositoryNameWithOwner: $repo, branchName: $branch},
                 expectedHeadOid: $head,
-                message: {headline: "build(deps): regenerate code", body: "Output of go generate ./... for the updated dependencies."},
+                message: {headline: "build(deps): regenerate code", body: "Output of go generate ./... and pnpm -C web generate:api for the updated dependencies."},
                 fileChanges: {additions: $additions, deletions: $deletions}
               }}
             }' > "${RUNNER_TEMP}/request.json"

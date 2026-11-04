@@ -173,7 +173,7 @@ The release notes are GitHub's, generated from the pull requests merged since th
 
 Renovate (the hosted app, configured in `.renovaterc.json`) opens the dependency pull requests. After a Go update it runs `go mod tidy` in the updated module and in every module that replaces it with a local path (`gomodTidyAll`), so `benchmarks/` stays in step with the root module.
 
-The hosted app can't run `go generate`, so the dependencies whose updates change generated code (oapi-codegen and kin-openapi for the SMAPI client, huma for the OpenAPI document, cobra and pflag for the CLI reference) share one group, on the `renovate/codegen` branch. There, `renovate-generate.yml` runs `go generate ./...` without write access and commits whatever changed as the `encore-helper` app, which GitHub signs and which starts CI. Renovate ignores the app's commits (`gitIgnoredAuthors`), so it keeps rebasing the branch, and each rebase is regenerated in turn. A dependency that starts shaping generated code belongs in that group.
+The hosted app can't run `go generate` or `pnpm generate:api`, so the dependencies whose updates change generated code (oapi-codegen and kin-openapi for the SMAPI client, huma for the OpenAPI document, cobra and pflag for the CLI reference, orval for the web API client) share one group, on the `renovate/codegen` branch. There, `renovate-generate.yml` runs `go generate ./...` and then `pnpm -C web generate:api` without write access and commits whatever changed as the `encore-helper` app, which GitHub signs and which starts CI. Renovate ignores the app's commits (`gitIgnoredAuthors`), so it keeps rebasing the branch, and each rebase is regenerated in turn. A dependency that starts shaping generated code belongs in that group.
 
 ## Screenshots
 
