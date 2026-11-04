@@ -46,6 +46,25 @@
     "versionUnknown": "غير معروف حتى يصل Encore إلى Kodi"
   },
   "loading": "جارٍ التحميل…",
+  "menu": {
+    "arrange": "ترتيب القائمة",
+    "done": "تم",
+    "empty": "لا شيء هنا بعد.",
+    "full": "شريط القائمة ممتلئ. انقل قسمًا إلى «المزيد» أولًا.",
+    "inBar": "شريط القائمة · حتى {{max}}",
+    "inMore": "في «المزيد»",
+    "label": "شريط القائمة",
+    "more": "المزيد",
+    "moveDown": "نقل {{name}} إلى الأسفل",
+    "moved": "أصبح {{name}} الآن في الموضع {{position}} من {{count}} في شريط القائمة.",
+    "movedToMore": "نُقل {{name}} إلى «المزيد».",
+    "moveUp": "نقل {{name}} إلى الأعلى",
+    "reset": "استعادة الترتيب الافتراضي",
+    "savedHere": "محفوظ على هذا الجهاز.",
+    "theme": "المظهر",
+    "toBar": "إضافة {{name}} إلى شريط القائمة",
+    "toMore": "نقل {{name}} إلى «المزيد»"
+  },
   "nav": {
     "alexaSkill": "مهارة Alexa",
     "echoDevices": "أجهزة Echo",
@@ -54,7 +73,16 @@
     "library": "المكتبة",
     "overview": "نظرة عامة",
     "requestLog": "سجل الطلبات",
-    "settings": "الإعدادات"
+    "settings": "الإعدادات",
+    "short": {
+      "alexaSkill": "المهارة",
+      "echoDevices": "Echo",
+      "kodi": "Kodi",
+      "library": "المكتبة",
+      "overview": "نظرة عامة",
+      "requestLog": "الطلبات",
+      "settings": "الإعدادات"
+    }
   },
   "notFound": {
     "back": "العودة إلى النظرة العامة",
