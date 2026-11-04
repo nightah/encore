@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -104,7 +105,7 @@ func TestStatusCacheKeepsTheNewestProbe(t *testing.T) {
 	assert.True(t, st.Connected, "and doesn't replace it in the cache")
 }
 
-// cachedStatus waits for the startup poll to cache the Lounge's status, so a test's own probes are the only ones.
+// cachedStatus waits for the startup poll to cache the Lounge's status and finish, so a test's own probes are the only ones.
 func cachedStatus(t *testing.T, h *harness) int64 {
 	t.Helper()
 
@@ -115,11 +116,62 @@ func cachedStatus(t *testing.T, h *harness) int64 {
 		defer h.api.status.mu.Unlock()
 
 		e, ok := h.api.status.entries[lounge]
+		// Publishing attention is the first poll's last step, after which it waits out StatusInterval.
+		_, polled := h.api.status.published["attention"]
 
-		return ok && e.st.KodiVersion != ""
+		return ok && e.st.KodiVersion != "" && polled
 	}, 10*time.Second, 20*time.Millisecond)
 
 	return lounge
+}
+
+// heldLibraries holds the first List until release is closed. The status poll lists libraries after caching each status and before publishing attention, so this holds the first poll part-way through.
+type heldLibraries struct {
+	Libraries
+
+	once    sync.Once
+	entered chan struct{}
+	release chan struct{}
+}
+
+func (l *heldLibraries) List(ctx context.Context) ([]Library, error) {
+	l.once.Do(func() {
+		close(l.entered)
+
+		select {
+		case <-l.release:
+		case <-ctx.Done():
+		}
+	})
+
+	return l.Libraries.List(ctx)
+}
+
+func TestCachedStatusWaitsForTheFirstPoll(t *testing.T) {
+	held := &heldLibraries{entered: make(chan struct{}), release: make(chan struct{})}
+	h := newHarness(t, harnessOpts{
+		mutate: func(o *Options) { o.StatusInterval = time.Hour },
+		beforeRun: func(h *harness) {
+			held.Libraries = h.api.libraries
+			h.api.libraries = held
+		},
+	})
+
+	select {
+	case <-held.entered:
+	case <-time.After(10 * time.Second):
+		t.Fatal("the first poll never listed the libraries")
+	}
+
+	var released atomic.Bool
+
+	time.AfterFunc(200*time.Millisecond, func() {
+		released.Store(true)
+		close(held.release)
+	})
+
+	cachedStatus(t, h)
+	assert.True(t, released.Load(), "a poll still under way would probe a status the test then makes stale, and Kodi would see a ping the test didn't ask for")
 }
 
 // wsPings waits for the instance's WebSocket, then counts the pings Kodi has had over it. Each probe pings over the WebSocket once while it is up; a full probe also checks the credentials with a ping over HTTP, which isn't counted.

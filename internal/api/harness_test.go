@@ -72,6 +72,8 @@ type harnessOpts struct {
 	noKodi   bool
 	discover func(ctx context.Context) ([]kodi.Instance, error)
 	mutate   func(*Options)
+	// beforeRun sees the API once it is built, before it starts running.
+	beforeRun func(*harness)
 }
 
 // embeddedSpeech is the embedded sources' Speech, built once and shared by every harness: NewSpeech expands every sample of every locale.
@@ -144,6 +146,10 @@ func newHarness(t *testing.T, o harnessOpts) *harness {
 
 	h.api, err = New(ctx, opts)
 	require.NoError(t, err)
+
+	if o.beforeRun != nil {
+		o.beforeRun(h)
+	}
 
 	var wg sync.WaitGroup
 
