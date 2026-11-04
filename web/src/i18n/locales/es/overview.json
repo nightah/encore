@@ -1,10 +1,32 @@
 {
   "attention": {
     "empty": "No hay nada que requiera tu atención.",
+    "libraryLanguage": {
+      "detail": "",
+      "title": ""
+    },
     "links": {
+      "libraryLanguage": "",
       "needsDeploy": "Actualizar ahora",
       "open": "Abrir",
       "unlinkedDevice": "Vincular dispositivo"
+    },
+    "rejected": {
+      "signature": {
+        "detail": "",
+        "title_one": "",
+        "title_other": ""
+      },
+      "skillId": {
+        "detail": "",
+        "title_one": "",
+        "title_other": ""
+      },
+      "timestamp": {
+        "detail": "",
+        "title_one": "",
+        "title_other": ""
+      }
     },
     "title": "Requiere atención"
   },
