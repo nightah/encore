@@ -27,7 +27,6 @@
     "stats": {
       "findable": "検索可能",
       "lastEvent": "最後の Kodi イベント",
-      "movies_other": "映画 {{count, number}} 本",
       "newest": "最新のタイトル",
       "noneYet": "まだありません",
       "notFindable": "まだ検索できません",
@@ -35,6 +34,7 @@
       "resyncEvery": "15 分ごと",
       "resyncNext": "15 分ごと · 次回 {{time}}",
       "sharedWith": "{{names}}と共有",
+      "movies_other": "映画 {{count, number}} 本",
       "shows_other": "テレビ番組 {{count, number}} 本"
     },
     "sync": "ライブラリを同期",
@@ -151,12 +151,12 @@
       "add": "インスタンスを追加",
       "alreadyShared": "{{names}}とライブラリを共有しています。チェックするとこのライブラリに移動します。",
       "cancel": "キャンセル",
-      "confirm_other": "{{count}} 台でライブラリを共有",
       "description": "MySQL など、同じ Kodi データベースを使用している Kodi インスタンスにチェックを入れてください。Encore はそれらに対してひとつのライブラリとタイトルインデックスを保持します。",
       "legend": "Kodi インスタンス",
       "open": "ライブラリを共有",
       "sourceHint": "最初にチェックしたインスタンスがライブラリソースになります。後から変更できます。",
-      "title": "ライブラリを共有"
+      "title": "ライブラリを共有",
+      "confirm_other": "{{count}} 台でライブラリを共有"
     },
     "source": "ライブラリソース",
     "sourceHint": "ソースがスリープ中の場合、Encore はグループ内の起動している別のインスタンスから同期します。再生は引き続き Echo が操作するインスタンスで行われます。",

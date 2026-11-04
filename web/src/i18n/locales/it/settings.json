@@ -36,11 +36,11 @@
         "label": "Password"
       },
       "session": {
+        "label": "Durata della sessione",
         "days_one": "{{count}} giorno",
         "days_other": "{{count}} giorni",
         "hours_one": "{{count}} ora",
-        "hours_other": "{{count}} ore",
-        "label": "Durata della sessione"
+        "hours_other": "{{count}} ore"
       },
       "totp": {
         "hint": "Usa un'app di autenticazione come secondo passaggio.",
@@ -180,13 +180,13 @@
       "title": "Distribuisci automaticamente le modifiche alla skill"
     },
     "auto_deploy_minutes": {
+      "hintInvalid": "Da 1 a {{max}} minuti.",
+      "title": "Cerca modifiche ogni",
+      "unit": "min",
       "hint_hours_one": "Una modifica è attiva entro due controlli (circa {{count, number}} ora).",
       "hint_hours_other": "Una modifica è attiva entro due controlli (circa {{count, number}} ore).",
       "hint_minutes_one": "Una modifica è attiva entro due controlli (circa {{count, number}} minuto).",
-      "hint_minutes_other": "Una modifica è attiva entro due controlli (circa {{count, number}} minuti).",
-      "hintInvalid": "Da 1 a {{max}} minuti.",
-      "title": "Cerca modifiche ogni",
-      "unit": "min"
+      "hint_minutes_other": "Una modifica è attiva entro due controlli (circa {{count, number}} minuti)."
     },
     "confirm_sound": {
       "hint": "Alexa riproduce un breve suono dopo comandi come pausa o alza il volume, invece di restare in silenzio",
@@ -297,9 +297,9 @@
       },
       "hint": "Database più esportazione della configurazione. I segreti sono esclusi.",
       "keep": {
+        "label": "Conserva",
         "count_one": "{{count}} backup",
-        "count_other": "{{count}} backup",
-        "label": "Conserva"
+        "count_other": "{{count}} backup"
       },
       "label": "Backup",
       "last": {

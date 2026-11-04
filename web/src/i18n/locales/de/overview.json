@@ -78,15 +78,15 @@
     "label": "Status",
     "libraries": {
       "and": " und ",
-      "count_one": "{{count, number}} Mediathek",
-      "count_other": "{{count, number}} Mediatheken",
       "label": "Mediatheken",
       "noneShared": "keine geteilt",
       "notSynced": "Noch nicht synchronisiert",
-      "shared_one": "{{count}} geteilt",
-      "shared_other": "{{count}} geteilt",
       "shareOne": "{{names}} teilen sich eine",
-      "synced": "Synchronisiert {{when}}"
+      "synced": "Synchronisiert {{when}}",
+      "count_one": "{{count, number}} Mediathek",
+      "count_other": "{{count, number}} Mediatheken",
+      "shared_one": "{{count}} geteilt",
+      "shared_other": "{{count}} geteilt"
     },
     "requests": {
       "detail": "{{failed}} fehlgeschlagen · Median {{ms}} ms",
@@ -94,8 +94,6 @@
     },
     "skill": {
       "label": "Alexa-Skill",
-      "locales_one": "{{count, number}} Sprachregion",
-      "locales_other": "{{count, number}} Sprachregionen",
       "stage": {
         "development": "Entwicklungsphase",
         "live": "Live-Phase",
@@ -107,7 +105,9 @@
         "live": "Live",
         "not_deployed": "Nicht bereitgestellt"
       },
-      "updatePending": "Update ausstehend"
+      "updatePending": "Update ausstehend",
+      "locales_one": "{{count, number}} Sprachregion",
+      "locales_other": "{{count, number}} Sprachregionen"
     }
   },
   "title": "Übersicht"

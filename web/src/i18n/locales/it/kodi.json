@@ -27,8 +27,6 @@
     "stats": {
       "findable": "trovabile",
       "lastEvent": "Ultimo evento di Kodi",
-      "movies_one": "{{count, number}} film",
-      "movies_other": "{{count, number}} film",
       "newest": "Titolo più recente",
       "noneYet": "Ancora nessuno",
       "notFindable": "non ancora trovabile",
@@ -36,6 +34,8 @@
       "resyncEvery": "Ogni 15 min",
       "resyncNext": "Ogni 15 min · prossima alle {{time}}",
       "sharedWith": "condivisa con {{names}}",
+      "movies_one": "{{count, number}} film",
+      "movies_other": "{{count, number}} film",
       "shows_one": "{{count, number}} serie",
       "shows_other": "{{count, number}} serie"
     },
@@ -153,13 +153,13 @@
       "add": "Aggiungi un'istanza",
       "alreadyShared": "Condivide una libreria con {{names}}; selezionandola passa a questa.",
       "cancel": "Annulla",
-      "confirm_one": "Condividi libreria",
-      "confirm_other": "Condividi libreria tra {{count}}",
       "description": "Seleziona le istanze di Kodi che usano lo stesso database di Kodi, come MySQL. Encore terrà una sola libreria e un solo indice dei titoli per loro.",
       "legend": "Istanze di Kodi",
       "open": "Condividi una libreria",
       "sourceHint": "La prima istanza selezionata diventa l'origine della libreria; puoi cambiarla in seguito.",
-      "title": "Condividi una libreria"
+      "title": "Condividi una libreria",
+      "confirm_one": "Condividi libreria",
+      "confirm_other": "Condividi libreria tra {{count}}"
     },
     "source": "Sorgente della libreria",
     "sourceHint": "Se la sorgente è in standby, Encore sincronizza da un'altra istanza attiva del gruppo. La riproduzione va comunque all'istanza controllata dall'Echo.",

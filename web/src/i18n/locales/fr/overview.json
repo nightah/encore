@@ -78,15 +78,15 @@
     "label": "État",
     "libraries": {
       "and": " et ",
-      "count_one": "{{count, number}} bibliothèque",
-      "count_other": "{{count, number}} bibliothèques",
       "label": "Bibliothèques",
       "noneShared": "aucune partagée",
       "notSynced": "Pas encore synchronisées",
-      "shared_one": "{{count}} partagée",
-      "shared_other": "{{count}} partagées",
       "shareOne": "{{names}} en partagent une",
-      "synced": "Synchronisées {{when}}"
+      "synced": "Synchronisées {{when}}",
+      "count_one": "{{count, number}} bibliothèque",
+      "count_other": "{{count, number}} bibliothèques",
+      "shared_one": "{{count}} partagée",
+      "shared_other": "{{count}} partagées"
     },
     "requests": {
       "detail": "{{failed}} en échec · médiane {{ms}} ms",
@@ -94,8 +94,6 @@
     },
     "skill": {
       "label": "Skill Alexa",
-      "locales_one": "{{count, number}} langue",
-      "locales_other": "{{count, number}} langues",
       "stage": {
         "development": "Phase de développement",
         "live": "Phase publiée",
@@ -107,7 +105,9 @@
         "live": "En ligne",
         "not_deployed": "Non déployée"
       },
-      "updatePending": "mise à jour en attente"
+      "updatePending": "mise à jour en attente",
+      "locales_one": "{{count, number}} langue",
+      "locales_other": "{{count, number}} langues"
     }
   },
   "title": "Vue d'ensemble"

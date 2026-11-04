@@ -154,6 +154,19 @@
           }
         }
       }
+    },
+    {
+      "assist": {
+        "actions": {
+          "source": {
+            "useSortedKeys": "off"
+          }
+        }
+      },
+      "formatter": {
+        "enabled": false
+      },
+      "includes": ["src/i18n/locales/**", "!src/i18n/locales/en/**"]
     }
   ],
   "vcs": {

@@ -17,3 +17,10 @@ indent_style = tab
 # Templates control their own final newline: the generated files must match what's committed.
 [*.tmpl]
 insert_final_newline = unset
+
+# Crowdin writes the translated web files without a final newline; the English ones are written by hand.
+[web/src/i18n/locales/*/*.json]
+insert_final_newline = unset
+
+[web/src/i18n/locales/en/*.json]
+insert_final_newline = true

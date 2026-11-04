@@ -71,7 +71,6 @@
   },
   "summary": {
     "backups": "バックアップ",
-    "episodes_other": "{{count, number}} エピソード",
     "label": "ライブラリの概要",
     "lastBackup": "最終バックアップ {{when}}",
     "libraries": "ライブラリ",
@@ -83,7 +82,8 @@
     "s3": "S3 互換",
     "shows": "テレビ番組",
     "songs": "曲",
-    "synced": "{{when}}に同期"
+    "synced": "{{when}}に同期",
+    "episodes_other": "{{count, number}} エピソード"
   },
   "verdict": {
     "ask": "確認する",

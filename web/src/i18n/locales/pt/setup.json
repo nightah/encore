@@ -95,8 +95,6 @@
     "contentNote": "Deixar um de fora remove os comandos de voz dele da skill.",
     "deploy": "Implantar skill",
     "deploying": "Implantando…",
-    "duration_one": "geralmente de 2 a 3 minutos para uma localidade",
-    "duration_other": "geralmente de 3 a 5 minutos para {{count}} localidades",
     "failed": "A implantação falhou em “{{step}}”: {{message}}.",
     "goToAmazon": "Ir para a conta da Amazon",
     "heading": "Implantar a skill",
@@ -129,17 +127,19 @@
         "label": "A skill está em conformidade com as regras de exportação"
       },
       "legend": "Perguntas de privacidade da Amazon (responda você mesmo)",
-      "unanswered_one": "Falta responder {{count}} pergunta antes de implantar.",
-      "unanswered_other": "Faltam responder {{count}} perguntas antes de implantar.",
       "uses_personal_info": {
         "about": "Se a skill coleta dados pessoais de quem a usa, como nomes, endereços de e-mail, números de telefone ou localização. O Encore não pede nenhum deles: ele vê o ID de dispositivo de cada Echo e o que foi pedido a ele, e guarda isso no seu próprio servidor.",
         "label": "A skill coleta informações pessoais"
-      }
+      },
+      "unanswered_one": "Falta responder {{count}} pergunta antes de implantar.",
+      "unanswered_other": "Faltam responder {{count}} perguntas antes de implantar."
     },
     "progress": "Implantando, {{percent}} por cento concluído",
     "starting": "Iniciando",
     "succeeded": "Implantada. A skill está ativada para testes na sua conta da Amazon.",
-    "tryAgain": "Tentar de novo"
+    "tryAgain": "Tentar de novo",
+    "duration_one": "geralmente de 2 a 3 minutos para uma localidade",
+    "duration_other": "geralmente de 3 a 5 minutos para {{count}} localidades"
   },
   "hello": {
     "alexaPlus": "Em dispositivos com Alexa+, ative a skill uma vez pela Alexa+ Store do app Alexa se “pergunte para {{invocation}}” não for reconhecido.",

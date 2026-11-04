@@ -78,15 +78,15 @@
     "label": "Status",
     "libraries": {
       "and": " e ",
-      "count_one": "{{count, number}} biblioteca",
-      "count_other": "{{count, number}} bibliotecas",
       "label": "Bibliotecas",
       "noneShared": "nenhuma compartilhada",
       "notSynced": "Ainda não sincronizada",
-      "shared_one": "{{count}} compartilhada",
-      "shared_other": "{{count}} compartilhadas",
       "shareOne": "{{names}} compartilham uma",
-      "synced": "Sincronizada {{when}}"
+      "synced": "Sincronizada {{when}}",
+      "count_one": "{{count, number}} biblioteca",
+      "count_other": "{{count, number}} bibliotecas",
+      "shared_one": "{{count}} compartilhada",
+      "shared_other": "{{count}} compartilhadas"
     },
     "requests": {
       "detail": "{{failed}} com falha · mediana de {{ms}} ms",
@@ -94,8 +94,6 @@
     },
     "skill": {
       "label": "Skill da Alexa",
-      "locales_one": "{{count, number}} localidade",
-      "locales_other": "{{count, number}} localidades",
       "stage": {
         "development": "Estágio de desenvolvimento",
         "live": "Estágio publicado",
@@ -107,7 +105,9 @@
         "live": "Publicada",
         "not_deployed": "Não implantada"
       },
-      "updatePending": "atualização pendente"
+      "updatePending": "atualização pendente",
+      "locales_one": "{{count, number}} localidade",
+      "locales_other": "{{count, number}} localidades"
     }
   },
   "title": "Visão geral"

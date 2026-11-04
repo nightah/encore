@@ -46,6 +46,25 @@
     "versionUnknown": "Encore के Kodi तक पहुँचने पर पता चलेगा"
   },
   "loading": "लोड हो रहा है…",
+  "menu": {
+    "arrange": "मेनू व्यवस्थित करें",
+    "done": "हो गया",
+    "empty": "अभी यहाँ कुछ नहीं है।",
+    "full": "मेनू बार भर गया है। पहले किसी सेक्शन को “और” में ले जाएँ।",
+    "inBar": "मेनू बार · अधिकतम {{max}}",
+    "inMore": "“और” में",
+    "label": "मेनू बार",
+    "more": "और",
+    "moveDown": "{{name}} को नीचे ले जाएँ",
+    "moved": "{{name}} अब मेनू बार में {{count}} में से {{position}} पर है।",
+    "movedToMore": "{{name}} को “और” में ले जाया गया।",
+    "moveUp": "{{name}} को ऊपर ले जाएँ",
+    "reset": "डिफ़ॉल्ट पर लौटाएँ",
+    "savedHere": "इस डिवाइस पर सेव है।",
+    "theme": "थीम",
+    "toBar": "{{name}} को मेनू बार में जोड़ें",
+    "toMore": "{{name}} को “और” में ले जाएँ"
+  },
   "nav": {
     "alexaSkill": "Alexa स्किल",
     "echoDevices": "Echo डिवाइस",
@@ -54,7 +73,16 @@
     "library": "लाइब्रेरी",
     "overview": "अवलोकन",
     "requestLog": "अनुरोध लॉग",
-    "settings": "सेटिंग्स"
+    "settings": "सेटिंग्स",
+    "short": {
+      "alexaSkill": "स्किल",
+      "echoDevices": "Echo",
+      "kodi": "Kodi",
+      "library": "लाइब्रेरी",
+      "overview": "अवलोकन",
+      "requestLog": "अनुरोध",
+      "settings": "सेटिंग्स"
+    }
   },
   "notFound": {
     "back": "अवलोकन पर वापस जाएँ",

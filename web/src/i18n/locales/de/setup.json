@@ -95,8 +95,6 @@
     "contentNote": "Lässt du etwas weg, entfallen die zugehörigen Sprachbefehle im Skill.",
     "deploy": "Skill bereitstellen",
     "deploying": "Wird bereitgestellt …",
-    "duration_one": "dauert meist 2 bis 3 Minuten für ein Gebietsschema",
-    "duration_other": "dauert meist 3 bis 5 Minuten für {{count}} Gebietsschemas",
     "failed": "Die Bereitstellung ist bei „{{step}}“ fehlgeschlagen: {{message}}.",
     "goToAmazon": "Zum Amazon-Konto",
     "heading": "Skill bereitstellen",
@@ -129,17 +127,19 @@
         "label": "Der Skill erfüllt die Exportbestimmungen"
       },
       "legend": "Amazons Datenschutzfragen (beantworte sie selbst)",
-      "unanswered_one": "Noch {{count}} Frage offen, bevor du bereitstellen kannst.",
-      "unanswered_other": "Noch {{count}} Fragen offen, bevor du bereitstellen kannst.",
       "uses_personal_info": {
         "about": "Ob der Skill personenbezogene Daten von den Nutzern erhebt, etwa Namen, E-Mail-Adressen, Telefonnummern oder den Standort. Encore fragt nichts davon ab: Es sieht die Geräte-ID jedes Echos und was es gefragt wurde, und speichert das auf deinem eigenen Server.",
         "label": "Der Skill erhebt personenbezogene Daten"
-      }
+      },
+      "unanswered_one": "Noch {{count}} Frage offen, bevor du bereitstellen kannst.",
+      "unanswered_other": "Noch {{count}} Fragen offen, bevor du bereitstellen kannst."
     },
     "progress": "Wird bereitgestellt, {{percent}} Prozent erledigt",
     "starting": "Wird gestartet",
     "succeeded": "Bereitgestellt. Der Skill ist in deinem Amazon-Konto zum Testen aktiviert.",
-    "tryAgain": "Erneut versuchen"
+    "tryAgain": "Erneut versuchen",
+    "duration_one": "dauert meist 2 bis 3 Minuten für ein Gebietsschema",
+    "duration_other": "dauert meist 3 bis 5 Minuten für {{count}} Gebietsschemas"
   },
   "hello": {
     "alexaPlus": "Auf Alexa+-Geräten aktivierst du den Skill einmalig im Alexa+ Store der Alexa-App, falls „frag {{invocation}}“ nicht erkannt wird.",

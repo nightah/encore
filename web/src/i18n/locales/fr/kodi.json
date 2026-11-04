@@ -27,8 +27,6 @@
     "stats": {
       "findable": "trouvable",
       "lastEvent": "Dernier événement Kodi",
-      "movies_one": "{{count, number}} film",
-      "movies_other": "{{count, number}} films",
       "newest": "Titre le plus récent",
       "noneYet": "Aucun pour l'instant",
       "notFindable": "pas encore trouvable",
@@ -36,6 +34,8 @@
       "resyncEvery": "Toutes les 15 min",
       "resyncNext": "Toutes les 15 min · prochaine à {{time}}",
       "sharedWith": "partagée avec {{names}}",
+      "movies_one": "{{count, number}} film",
+      "movies_other": "{{count, number}} films",
       "shows_one": "{{count, number}} série",
       "shows_other": "{{count, number}} séries"
     },
@@ -153,13 +153,13 @@
       "add": "Ajouter une instance",
       "alreadyShared": "Partage une bibliothèque avec {{names}} ; la cocher la déplace dans celle-ci.",
       "cancel": "Annuler",
-      "confirm_one": "Partager la bibliothèque",
-      "confirm_other": "Partager la bibliothèque entre {{count}}",
       "description": "Cochez les instances Kodi qui utilisent la même base de données Kodi, comme MySQL. Encore tiendra alors une seule bibliothèque et un seul index de titres pour elles.",
       "legend": "Instances Kodi",
       "open": "Partager une bibliothèque",
       "sourceHint": "La première instance cochée devient la source de la bibliothèque ; vous pourrez la changer ensuite.",
-      "title": "Partager une bibliothèque"
+      "title": "Partager une bibliothèque",
+      "confirm_one": "Partager la bibliothèque",
+      "confirm_other": "Partager la bibliothèque entre {{count}}"
     },
     "source": "Source de la bibliothèque",
     "sourceHint": "Si la source est en veille, Encore synchronise depuis une autre instance éveillée du groupe. La lecture va toujours à l'instance que pilote l'Echo.",

@@ -119,12 +119,12 @@
   },
   "titles": {
     "empty": "पहले डिप्लॉय के बाद दिखता है।",
+    "limit": "हर लोकेल का मॉडल Amazon की {{limit}} की सीमा से कम रहना चाहिए।",
+    "title": "मॉडल में टाइटल",
     "inModel_one": "मॉडल में <count>{{n}} टाइटल</count> (जारी और हाल के पहले)",
     "inModel_other": "मॉडल में <count>{{n}} टाइटल</count> (जारी और हाल के पहले)",
-    "limit": "हर लोकेल का मॉडल Amazon की {{limit}} की सीमा से कम रहना चाहिए।",
     "serverOnly_one": "<count>{{n}} टाइटल</count> का मिलान सिर्फ़ सर्वर पर होता है",
-    "serverOnly_other": "<count>{{n}} टाइटल</count> का मिलान सिर्फ़ सर्वर पर होता है",
-    "title": "मॉडल में टाइटल"
+    "serverOnly_other": "<count>{{n}} टाइटल</count> का मिलान सिर्फ़ सर्वर पर होता है"
   },
   "warnings": {
     "dropped": "{{locale}}: Amazon ने ये टाइटल अस्वीकार किए, इसलिए इन्हें हटा दिया गया: {{titles}}",

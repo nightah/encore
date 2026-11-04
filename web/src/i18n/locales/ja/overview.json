@@ -75,13 +75,13 @@
     "label": "ステータス",
     "libraries": {
       "and": "、",
-      "count_other": "{{count, number}} 件のライブラリ",
       "label": "ライブラリ",
       "noneShared": "共有なし",
       "notSynced": "未同期",
-      "shared_other": "{{count}} 件共有",
       "shareOne": "{{names}}がひとつを共有",
-      "synced": "{{when}}に同期"
+      "synced": "{{when}}に同期",
+      "count_other": "{{count, number}} 件のライブラリ",
+      "shared_other": "{{count}} 件共有"
     },
     "requests": {
       "detail": "{{failed}} 件失敗 · 中央値 {{ms}} ミリ秒",
@@ -89,7 +89,6 @@
     },
     "skill": {
       "label": "Alexa スキル",
-      "locales_other": "{{count, number}} 件のロケール",
       "stage": {
         "development": "開発ステージ",
         "live": "ライブステージ",
@@ -101,7 +100,8 @@
         "live": "公開中",
         "not_deployed": "未デプロイ"
       },
-      "updatePending": "更新待ち"
+      "updatePending": "更新待ち",
+      "locales_other": "{{count, number}} 件のロケール"
     }
   },
   "title": "概要"

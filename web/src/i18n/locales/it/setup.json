@@ -95,8 +95,6 @@
     "contentNote": "Se ne escludi uno, i suoi comandi vocali vengono rimossi dalla skill.",
     "deploy": "Distribuisci skill",
     "deploying": "Distribuzione in corso…",
-    "duration_one": "di solito da 2 a 3 minuti per una lingua",
-    "duration_other": "di solito da 3 a 5 minuti per {{count}} lingue",
     "failed": "La distribuzione non è riuscita al passaggio «{{step}}»: {{message}}.",
     "goToAmazon": "Vai all'account Amazon",
     "heading": "Distribuisci la skill",
@@ -129,17 +127,19 @@
         "label": "La skill è conforme alle norme sull'esportazione"
       },
       "legend": "Domande di Amazon sulla privacy (rispondi tu)",
-      "unanswered_one": "Manca {{count}} risposta prima di poter distribuire.",
-      "unanswered_other": "Mancano {{count}} risposte prima di poter distribuire.",
       "uses_personal_info": {
         "about": "Se la skill raccoglie dati personali da chi la usa, come nomi, indirizzi email, numeri di telefono o posizione. Encore non chiede nessuno di questi dati: vede l'ID dispositivo di ogni Echo e cosa gli è stato chiesto, e conserva queste informazioni sul tuo server.",
         "label": "La skill raccoglie informazioni personali"
-      }
+      },
+      "unanswered_one": "Manca {{count}} risposta prima di poter distribuire.",
+      "unanswered_other": "Mancano {{count}} risposte prima di poter distribuire."
     },
     "progress": "Distribuzione in corso, {{percent}} percento completato",
     "starting": "Avvio",
     "succeeded": "Distribuita. La skill è abilitata per i test sul tuo account Amazon.",
-    "tryAgain": "Riprova"
+    "tryAgain": "Riprova",
+    "duration_one": "di solito da 2 a 3 minuti per una lingua",
+    "duration_other": "di solito da 3 a 5 minuti per {{count}} lingue"
   },
   "hello": {
     "alexaPlus": "Sui dispositivi Alexa+, abilita la skill una volta dall'Alexa+ Store nell'app Alexa se «chiedi a {{invocation}}» non viene riconosciuto.",

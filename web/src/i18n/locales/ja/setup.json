@@ -94,7 +94,6 @@
     "contentNote": "外したものの音声コマンドはスキルから削除されます。",
     "deploy": "スキルをデプロイ",
     "deploying": "デプロイ中…",
-    "duration_other": "{{count}} 件のロケールで通常 2～5 分",
     "failed": "「{{step}}」でデプロイに失敗しました：{{message}}。",
     "goToAmazon": "Amazon アカウントへ",
     "heading": "スキルをデプロイ",
@@ -127,16 +126,17 @@
         "label": "スキルは輸出規制に準拠"
       },
       "legend": "Amazon のプライバシーに関する質問（ご自身で回答してください）",
-      "unanswered_other": "デプロイ前に回答が必要な質問が残り {{count}} 件あります。",
       "uses_personal_info": {
         "about": "名前、メールアドレス、電話番号、位置情報など、スキルの利用者から個人情報を収集するかどうかです。Encore はこれらを一切求めません。Encore が把握するのは各 Echo のデバイス ID と依頼内容だけで、それはあなた自身のサーバーに保存されます。",
         "label": "スキルは個人情報を収集する"
-      }
+      },
+      "unanswered_other": "デプロイ前に回答が必要な質問が残り {{count}} 件あります。"
     },
     "progress": "デプロイ中、{{percent}} パーセント完了",
     "starting": "開始中",
     "succeeded": "デプロイしました。スキルはあなたの Amazon アカウントでテスト用に有効になっています。",
-    "tryAgain": "再試行"
+    "tryAgain": "再試行",
+    "duration_other": "{{count}} 件のロケールで通常 2～5 分"
   },
   "hello": {
     "alexaPlus": "Alexa+ デバイスで「{{invocation}}で」が認識されない場合は、Alexa アプリの Alexa+ ストアからスキルを一度有効にしてください。",

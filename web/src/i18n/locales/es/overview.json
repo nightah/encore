@@ -78,15 +78,15 @@
     "label": "Estado",
     "libraries": {
       "and": " y ",
-      "count_one": "{{count, number}} biblioteca",
-      "count_other": "{{count, number}} bibliotecas",
       "label": "Bibliotecas",
       "noneShared": "ninguna compartida",
       "notSynced": "Aún sin sincronizar",
-      "shared_one": "{{count}} compartida",
-      "shared_other": "{{count}} compartidas",
       "shareOne": "{{names}} comparten una",
-      "synced": "Sincronizado {{when}}"
+      "synced": "Sincronizado {{when}}",
+      "count_one": "{{count, number}} biblioteca",
+      "count_other": "{{count, number}} bibliotecas",
+      "shared_one": "{{count}} compartida",
+      "shared_other": "{{count}} compartidas"
     },
     "requests": {
       "detail": "{{failed}} fallidas · mediana {{ms}} ms",
@@ -94,8 +94,6 @@
     },
     "skill": {
       "label": "Skill de Alexa",
-      "locales_one": "{{count, number}} configuración regional",
-      "locales_other": "{{count, number}} configuraciones regionales",
       "stage": {
         "development": "Fase de desarrollo",
         "live": "Fase publicada",
@@ -107,7 +105,9 @@
         "live": "Publicada",
         "not_deployed": "Sin desplegar"
       },
-      "updatePending": "actualización pendiente"
+      "updatePending": "actualización pendiente",
+      "locales_one": "{{count, number}} configuración regional",
+      "locales_other": "{{count, number}} configuraciones regionales"
     }
   },
   "title": "Resumen"

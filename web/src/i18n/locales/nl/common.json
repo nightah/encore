@@ -46,6 +46,25 @@
     "versionUnknown": "Onbekend totdat Encore Kodi bereikt"
   },
   "loading": "Laden…",
+  "menu": {
+    "arrange": "Menu indelen",
+    "done": "Klaar",
+    "empty": "Hier staat nog niets.",
+    "full": "De menubalk is vol. Verplaats eerst een onderdeel naar Meer.",
+    "inBar": "Menubalk · maximaal {{max}}",
+    "inMore": "Onder Meer",
+    "label": "Menubalk",
+    "more": "Meer",
+    "moveDown": "{{name}} omlaag verplaatsen",
+    "moved": "{{name}} staat nu op plek {{position}} van {{count}} in de menubalk.",
+    "movedToMore": "{{name}} staat nu onder Meer.",
+    "moveUp": "{{name}} omhoog verplaatsen",
+    "reset": "Standaardindeling herstellen",
+    "savedHere": "Opgeslagen op dit apparaat.",
+    "theme": "Thema",
+    "toBar": "{{name}} aan de menubalk toevoegen",
+    "toMore": "{{name}} naar Meer verplaatsen"
+  },
   "nav": {
     "alexaSkill": "Alexa-skill",
     "echoDevices": "Echo-apparaten",
@@ -54,7 +73,16 @@
     "library": "Bibliotheek",
     "overview": "Overzicht",
     "requestLog": "Verzoekenlogboek",
-    "settings": "Instellingen"
+    "settings": "Instellingen",
+    "short": {
+      "alexaSkill": "Skill",
+      "echoDevices": "Echo's",
+      "kodi": "Kodi",
+      "library": "Bibliotheek",
+      "overview": "Overzicht",
+      "requestLog": "Verzoeken",
+      "settings": "Instellingen"
+    }
   },
   "notFound": {
     "back": "Terug naar het overzicht",

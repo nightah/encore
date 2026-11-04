@@ -36,11 +36,11 @@
         "label": "Mot de passe"
       },
       "session": {
+        "label": "Durée de session",
         "days_one": "{{count}} jour",
         "days_other": "{{count}} jours",
         "hours_one": "{{count}} heure",
-        "hours_other": "{{count}} heures",
-        "label": "Durée de session"
+        "hours_other": "{{count}} heures"
       },
       "totp": {
         "hint": "Utilisez une application d'authentification comme deuxième étape.",
@@ -180,13 +180,13 @@
       "title": "Déployer automatiquement les modifications de la skill"
     },
     "auto_deploy_minutes": {
+      "hintInvalid": "De 1 à {{max}} minutes.",
+      "title": "Rechercher des changements toutes les",
+      "unit": "min",
       "hint_hours_one": "Un changement est en ligne en deux vérifications au plus (environ {{count, number}} heure).",
       "hint_hours_other": "Un changement est en ligne en deux vérifications au plus (environ {{count, number}} heures).",
       "hint_minutes_one": "Un changement est en ligne en deux vérifications au plus (environ {{count, number}} minute).",
-      "hint_minutes_other": "Un changement est en ligne en deux vérifications au plus (environ {{count, number}} minutes).",
-      "hintInvalid": "De 1 à {{max}} minutes.",
-      "title": "Rechercher des changements toutes les",
-      "unit": "min"
+      "hint_minutes_other": "Un changement est en ligne en deux vérifications au plus (environ {{count, number}} minutes)."
     },
     "confirm_sound": {
       "hint": "Alexa émet un son bref après des commandes comme pause ou monter le volume, au lieu de rester silencieuse",
@@ -297,9 +297,9 @@
       },
       "hint": "Base de données et export de la configuration. Les secrets sont exclus.",
       "keep": {
+        "label": "Conserver",
         "count_one": "{{count}} sauvegarde",
-        "count_other": "{{count}} sauvegardes",
-        "label": "Conserver"
+        "count_other": "{{count}} sauvegardes"
       },
       "label": "Sauvegardes",
       "last": {

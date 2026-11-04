@@ -119,12 +119,12 @@
   },
   "titles": {
     "empty": "Wordt getoond na de eerste uitrol.",
+    "limit": "Het model van elke taalregio moet onder de limiet van {{limit}} van Amazon blijven.",
+    "title": "Titels in het model",
     "inModel_one": "<count>{{n}} titel</count> in het model (bezig en recent eerst)",
     "inModel_other": "<count>{{n}} titels</count> in het model (bezig en recent eerst)",
-    "limit": "Het model van elke taalregio moet onder de limiet van {{limit}} van Amazon blijven.",
     "serverOnly_one": "<count>{{n}} titel</count> alleen op de server gematcht",
-    "serverOnly_other": "<count>{{n}} titels</count> alleen op de server gematcht",
-    "title": "Titels in het model"
+    "serverOnly_other": "<count>{{n}} titels</count> alleen op de server gematcht"
   },
   "warnings": {
     "dropped": "{{locale}}: Amazon weigerde deze titels, dus zijn ze weggelaten: {{titles}}",

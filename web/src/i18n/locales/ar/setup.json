@@ -67,12 +67,12 @@
     "instructions": {
       "credentials": "الصق Client ID وClient Secret الخاصين بملف التعريف أدناه.",
       "open": "افتح <link>وحدة تحكم Login with Amazon</link> وأنشئ ملف تعريف أمان باسم «encore».",
+      "returnUrls_zero": "ضمن Web Settings، أضف عنوان Allowed Return URL هذا:",
+      "returnUrls_one": "ضمن Web Settings، أضف عنوان Allowed Return URL هذا:",
+      "returnUrls_two": "ضمن Web Settings، أضف عنوانَي Allowed Return URLs هذين:",
       "returnUrls_few": "ضمن Web Settings، أضف عناوين Allowed Return URLs هذه:",
       "returnUrls_many": "ضمن Web Settings، أضف عناوين Allowed Return URLs هذه:",
-      "returnUrls_one": "ضمن Web Settings، أضف عنوان Allowed Return URL هذا:",
-      "returnUrls_other": "ضمن Web Settings، أضف عناوين Allowed Return URLs هذه:",
-      "returnUrls_two": "ضمن Web Settings، أضف عنوانَي Allowed Return URLs هذين:",
-      "returnUrls_zero": "ضمن Web Settings، أضف عنوان Allowed Return URL هذا:"
+      "returnUrls_other": "ضمن Web Settings، أضف عناوين Allowed Return URLs هذه:"
     },
     "intro": "ينشر Encore المهارة باستخدام ملف تعريف الأمان الخاص بك في Login with Amazon. تنشئه مرة واحدة، في نحو دقيقتين.",
     "newTab": " (يُفتح في علامة تبويب جديدة)",
@@ -99,12 +99,6 @@
     "contentNote": "استبعاد أحدها يزيل أوامره الصوتية من المهارة.",
     "deploy": "نشر المهارة",
     "deploying": "جارٍ النشر…",
-    "duration_few": "عادةً من 3 إلى 5 دقائق لعدد {{count}} من اللغات الإقليمية",
-    "duration_many": "عادةً من 3 إلى 5 دقائق لعدد {{count}} من اللغات الإقليمية",
-    "duration_one": "عادةً من 2 إلى 3 دقائق للغة إقليمية واحدة",
-    "duration_other": "عادةً من 3 إلى 5 دقائق لعدد {{count}} من اللغات الإقليمية",
-    "duration_two": "عادةً من 3 إلى 5 دقائق لعدد {{count}} من اللغات الإقليمية",
-    "duration_zero": "عادةً من 2 إلى 3 دقائق للغة إقليمية واحدة",
     "failed": "فشل النشر عند «{{step}}»: {{message}}.",
     "goToAmazon": "الانتقال إلى حساب Amazon",
     "heading": "نشر المهارة",
@@ -137,21 +131,27 @@
         "label": "المهارة ممتثلة لقوانين التصدير"
       },
       "legend": "أسئلة الخصوصية من Amazon (أجب عنها بنفسك)",
-      "unanswered_few": "تبقّت {{count}} أسئلة للإجابة عنها قبل النشر.",
-      "unanswered_many": "تبقّى {{count}} سؤالًا للإجابة عنها قبل النشر.",
-      "unanswered_one": "تبقّى {{count}} سؤال للإجابة عنه قبل النشر.",
-      "unanswered_other": "تبقّى {{count}} سؤال للإجابة عنها قبل النشر.",
-      "unanswered_two": "تبقّى {{count}} سؤالان للإجابة عنهما قبل النشر.",
-      "unanswered_zero": "تبقّى {{count}} سؤال للإجابة عنه قبل النشر.",
       "uses_personal_info": {
         "about": "ما إذا كانت المهارة تجمع بيانات شخصية من مستخدميها، مثل الأسماء أو عناوين البريد الإلكتروني أو أرقام الهواتف أو الموقع. لا يطلب Encore أيًّا منها: فهو يرى معرّف جهاز كل Echo وما طُلب منه، ويحتفظ بذلك على خادمك الخاص.",
         "label": "تجمع المهارة معلومات شخصية"
-      }
+      },
+      "unanswered_zero": "تبقّى {{count}} سؤال للإجابة عنه قبل النشر.",
+      "unanswered_one": "تبقّى {{count}} سؤال للإجابة عنه قبل النشر.",
+      "unanswered_two": "تبقّى {{count}} سؤالان للإجابة عنهما قبل النشر.",
+      "unanswered_few": "تبقّت {{count}} أسئلة للإجابة عنها قبل النشر.",
+      "unanswered_many": "تبقّى {{count}} سؤالًا للإجابة عنها قبل النشر.",
+      "unanswered_other": "تبقّى {{count}} سؤال للإجابة عنها قبل النشر."
     },
     "progress": "جارٍ النشر، اكتمل بنسبة {{percent}} بالمئة",
     "starting": "جارٍ البدء",
     "succeeded": "تم النشر. المهارة مفعّلة للاختبار على حساب Amazon الخاص بك.",
-    "tryAgain": "حاول مرة أخرى"
+    "tryAgain": "حاول مرة أخرى",
+    "duration_zero": "عادةً من 2 إلى 3 دقائق للغة إقليمية واحدة",
+    "duration_one": "عادةً من 2 إلى 3 دقائق للغة إقليمية واحدة",
+    "duration_two": "عادةً من 3 إلى 5 دقائق لعدد {{count}} من اللغات الإقليمية",
+    "duration_few": "عادةً من 3 إلى 5 دقائق لعدد {{count}} من اللغات الإقليمية",
+    "duration_many": "عادةً من 3 إلى 5 دقائق لعدد {{count}} من اللغات الإقليمية",
+    "duration_other": "عادةً من 3 إلى 5 دقائق لعدد {{count}} من اللغات الإقليمية"
   },
   "hello": {
     "alexaPlus": "على أجهزة Alexa+، فعّل المهارة مرة واحدة من متجر Alexa+ في تطبيق Alexa إذا لم يُتعرَّف على «اسأل {{invocation}}».",

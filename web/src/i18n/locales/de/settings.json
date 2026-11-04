@@ -36,11 +36,11 @@
         "label": "Passwort"
       },
       "session": {
+        "label": "Sitzungsdauer",
         "days_one": "{{count}} Tag",
         "days_other": "{{count}} Tage",
         "hours_one": "{{count}} Stunde",
-        "hours_other": "{{count}} Stunden",
-        "label": "Sitzungsdauer"
+        "hours_other": "{{count}} Stunden"
       },
       "totp": {
         "hint": "Nutze eine Authenticator-App als zweiten Schritt.",
@@ -180,13 +180,13 @@
       "title": "Skill-Änderungen automatisch bereitstellen"
     },
     "auto_deploy_minutes": {
+      "hintInvalid": "Von 1 bis {{max}} Minuten.",
+      "title": "Nach Änderungen suchen alle",
+      "unit": "Min.",
       "hint_hours_one": "Eine Änderung ist nach höchstens zwei Prüfungen live (etwa {{count, number}} Stunde).",
       "hint_hours_other": "Eine Änderung ist nach höchstens zwei Prüfungen live (etwa {{count, number}} Stunden).",
       "hint_minutes_one": "Eine Änderung ist nach höchstens zwei Prüfungen live (etwa {{count, number}} Minute).",
-      "hint_minutes_other": "Eine Änderung ist nach höchstens zwei Prüfungen live (etwa {{count, number}} Minuten).",
-      "hintInvalid": "Von 1 bis {{max}} Minuten.",
-      "title": "Nach Änderungen suchen alle",
-      "unit": "Min."
+      "hint_minutes_other": "Eine Änderung ist nach höchstens zwei Prüfungen live (etwa {{count, number}} Minuten)."
     },
     "confirm_sound": {
       "hint": "Alexa spielt nach Befehlen wie Pause oder Lauter einen kurzen Ton ab, statt still zu bleiben",
@@ -297,9 +297,9 @@
       },
       "hint": "Datenbank plus Konfigurationsexport. Geheimnisse sind ausgenommen.",
       "keep": {
+        "label": "Aufbewahren",
         "count_one": "{{count}} Backup",
-        "count_other": "{{count}} Backups",
-        "label": "Aufbewahren"
+        "count_other": "{{count}} Backups"
       },
       "label": "Backups",
       "last": {

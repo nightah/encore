@@ -36,11 +36,11 @@
         "label": "Wachtwoord"
       },
       "session": {
+        "label": "Sessieduur",
         "days_one": "{{count}} dag",
         "days_other": "{{count}} dagen",
         "hours_one": "{{count}} uur",
-        "hours_other": "{{count}} uur",
-        "label": "Sessieduur"
+        "hours_other": "{{count}} uur"
       },
       "totp": {
         "hint": "Gebruik een authenticator-app als tweede stap.",
@@ -180,13 +180,13 @@
       "title": "Skillwijzigingen automatisch uitrollen"
     },
     "auto_deploy_minutes": {
+      "hintInvalid": "Van 1 tot {{max}} minuten.",
+      "title": "Controleren op wijzigingen elke",
+      "unit": "min",
       "hint_hours_one": "Een wijziging is binnen twee controles live (ongeveer {{count, number}} uur).",
       "hint_hours_other": "Een wijziging is binnen twee controles live (ongeveer {{count, number}} uur).",
       "hint_minutes_one": "Een wijziging is binnen twee controles live (ongeveer {{count, number}} minuut).",
-      "hint_minutes_other": "Een wijziging is binnen twee controles live (ongeveer {{count, number}} minuten).",
-      "hintInvalid": "Van 1 tot {{max}} minuten.",
-      "title": "Controleren op wijzigingen elke",
-      "unit": "min"
+      "hint_minutes_other": "Een wijziging is binnen twee controles live (ongeveer {{count, number}} minuten)."
     },
     "confirm_sound": {
       "hint": "Alexa speelt een kort geluid na opdrachten zoals pauzeren of volume omhoog, in plaats van stil te blijven",
@@ -297,9 +297,9 @@
       },
       "hint": "Database plus configuratie-export. Geheimen worden uitgesloten.",
       "keep": {
+        "label": "Bewaren",
         "count_one": "{{count}} back-up",
-        "count_other": "{{count}} back-ups",
-        "label": "Bewaren"
+        "count_other": "{{count}} back-ups"
       },
       "label": "Back-ups",
       "last": {

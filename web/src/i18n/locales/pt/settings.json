@@ -36,11 +36,11 @@
         "label": "Senha"
       },
       "session": {
+        "label": "Duração da sessão",
         "days_one": "{{count}} dia",
         "days_other": "{{count}} dias",
         "hours_one": "{{count}} hora",
-        "hours_other": "{{count}} horas",
-        "label": "Duração da sessão"
+        "hours_other": "{{count}} horas"
       },
       "totp": {
         "hint": "Use um app autenticador como segunda etapa.",
@@ -180,13 +180,13 @@
       "title": "Implantar alterações da skill automaticamente"
     },
     "auto_deploy_minutes": {
+      "hintInvalid": "De 1 a {{max}} minutos.",
+      "title": "Verificar alterações a cada",
+      "unit": "min",
       "hint_hours_one": "Uma alteração entra no ar em até duas verificações (cerca de {{count, number}} hora).",
       "hint_hours_other": "Uma alteração entra no ar em até duas verificações (cerca de {{count, number}} horas).",
       "hint_minutes_one": "Uma alteração entra no ar em até duas verificações (cerca de {{count, number}} minuto).",
-      "hint_minutes_other": "Uma alteração entra no ar em até duas verificações (cerca de {{count, number}} minutos).",
-      "hintInvalid": "De 1 a {{max}} minutos.",
-      "title": "Verificar alterações a cada",
-      "unit": "min"
+      "hint_minutes_other": "Uma alteração entra no ar em até duas verificações (cerca de {{count, number}} minutos)."
     },
     "confirm_sound": {
       "hint": "A Alexa toca um som curto após comandos como pausar ou aumentar o volume, em vez de ficar em silêncio",
@@ -297,9 +297,9 @@
       },
       "hint": "Banco de dados mais a exportação da configuração. Os segredos ficam de fora.",
       "keep": {
+        "label": "Manter",
         "count_one": "{{count}} backup",
-        "count_other": "{{count}} backups",
-        "label": "Manter"
+        "count_other": "{{count}} backups"
       },
       "label": "Backups",
       "last": {

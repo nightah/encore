@@ -119,10 +119,10 @@
   },
   "titles": {
     "empty": "最初のデプロイ後に表示されます。",
-    "inModel_other": "モデル内の<count>{{n}} 件のタイトル</count>（進行中と最近のものが先頭）",
     "limit": "各ロケールのモデルは Amazon の上限 {{limit}} 未満に収める必要があります。",
-    "serverOnly_other": "サーバー上でのみ照合される<count>{{n}} 件のタイトル</count>",
-    "title": "モデル内のタイトル"
+    "title": "モデル内のタイトル",
+    "inModel_other": "モデル内の<count>{{n}} 件のタイトル</count>（進行中と最近のものが先頭）",
+    "serverOnly_other": "サーバー上でのみ照合される<count>{{n}} 件のタイトル</count>"
   },
   "warnings": {
     "dropped": "{{locale}}：Amazon がこれらのタイトルを拒否したため、除外しました：{{titles}}",

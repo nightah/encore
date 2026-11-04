@@ -95,8 +95,6 @@
     "contentNote": "En retirer un supprime ses commandes vocales de la skill.",
     "deploy": "Déployer la skill",
     "deploying": "Déploiement…",
-    "duration_one": "en général 2 à 3 minutes pour une langue",
-    "duration_other": "en général 3 à 5 minutes pour {{count}} langues",
     "failed": "Le déploiement a échoué à l'étape « {{step}} » : {{message}}.",
     "goToAmazon": "Aller au compte Amazon",
     "heading": "Déployer la skill",
@@ -129,17 +127,19 @@
         "label": "La skill est conforme aux règles d'exportation"
       },
       "legend": "Questions de confidentialité d'Amazon (répondez-y vous-même)",
-      "unanswered_one": "Encore {{count}} question à laquelle répondre avant de déployer.",
-      "unanswered_other": "Encore {{count}} questions auxquelles répondre avant de déployer.",
       "uses_personal_info": {
         "about": "Si la skill collecte des données personnelles auprès de ses utilisateurs, comme des noms, adresses e-mail, numéros de téléphone ou la localisation. Encore ne demande rien de tout cela : il voit l'identifiant de chaque Echo et ce qui lui a été demandé, et conserve ces informations sur votre propre serveur.",
         "label": "La skill collecte des informations personnelles"
-      }
+      },
+      "unanswered_one": "Encore {{count}} question à laquelle répondre avant de déployer.",
+      "unanswered_other": "Encore {{count}} questions auxquelles répondre avant de déployer."
     },
     "progress": "Déploiement, {{percent}} pour cent effectués",
     "starting": "Démarrage",
     "succeeded": "Déployée. La skill est activée pour les tests sur votre compte Amazon.",
-    "tryAgain": "Réessayer"
+    "tryAgain": "Réessayer",
+    "duration_one": "en général 2 à 3 minutes pour une langue",
+    "duration_other": "en général 3 à 5 minutes pour {{count}} langues"
   },
   "hello": {
     "alexaPlus": "Sur les appareils Alexa+, activez la skill une fois depuis la boutique Alexa+ de l'application Alexa si « demande à {{invocation}} » n'est pas reconnu.",

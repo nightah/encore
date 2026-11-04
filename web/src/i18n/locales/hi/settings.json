@@ -36,11 +36,11 @@
         "label": "पासवर्ड"
       },
       "session": {
+        "label": "सेशन की अवधि",
         "days_one": "{{count}} दिन",
         "days_other": "{{count}} दिन",
         "hours_one": "{{count}} घंटा",
-        "hours_other": "{{count}} घंटे",
-        "label": "सेशन की अवधि"
+        "hours_other": "{{count}} घंटे"
       },
       "totp": {
         "hint": "दूसरे चरण के रूप में ऑथेंटिकेटर ऐप इस्तेमाल करें।",
@@ -180,13 +180,13 @@
       "title": "स्किल के बदलाव अपने-आप डिप्लॉय करें"
     },
     "auto_deploy_minutes": {
+      "hintInvalid": "1 से {{max}} मिनट तक।",
+      "title": "बदलावों की जाँच हर",
+      "unit": "मिनट",
       "hint_hours_one": "कोई बदलाव दो जाँचों के भीतर लाइव हो जाता है (लगभग {{count, number}} घंटा)।",
       "hint_hours_other": "कोई बदलाव दो जाँचों के भीतर लाइव हो जाता है (लगभग {{count, number}} घंटे)।",
       "hint_minutes_one": "कोई बदलाव दो जाँचों के भीतर लाइव हो जाता है (लगभग {{count, number}} मिनट)।",
-      "hint_minutes_other": "कोई बदलाव दो जाँचों के भीतर लाइव हो जाता है (लगभग {{count, number}} मिनट)।",
-      "hintInvalid": "1 से {{max}} मिनट तक।",
-      "title": "बदलावों की जाँच हर",
-      "unit": "मिनट"
+      "hint_minutes_other": "कोई बदलाव दो जाँचों के भीतर लाइव हो जाता है (लगभग {{count, number}} मिनट)।"
     },
     "confirm_sound": {
       "hint": "रोकने या आवाज़ बढ़ाने जैसे कमांड के बाद Alexa चुप रहने के बजाय एक छोटी आवाज़ बजाता है",
@@ -297,9 +297,9 @@
       },
       "hint": "डेटाबेस और कॉन्फ़िग एक्सपोर्ट। सीक्रेट शामिल नहीं होते।",
       "keep": {
+        "label": "रखें",
         "count_one": "{{count}} बैकअप",
-        "count_other": "{{count}} बैकअप",
-        "label": "रखें"
+        "count_other": "{{count}} बैकअप"
       },
       "label": "बैकअप",
       "last": {

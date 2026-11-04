@@ -71,12 +71,6 @@
   },
   "summary": {
     "backups": "النسخ الاحتياطية",
-    "episodes_few": "{{count, number}} حلقات",
-    "episodes_many": "{{count, number}} حلقة",
-    "episodes_one": "{{count, number}} حلقة",
-    "episodes_other": "{{count, number}} حلقة",
-    "episodes_two": "{{count, number}} حلقتان",
-    "episodes_zero": "{{count, number}} حلقة",
     "label": "ملخص المكتبة",
     "lastBackup": "آخر نسخة احتياطية {{when}}",
     "libraries": "المكتبات",
@@ -88,7 +82,13 @@
     "s3": "متوافق مع S3",
     "shows": "المسلسلات التلفزيونية",
     "songs": "أغانٍ",
-    "synced": "تمت المزامنة {{when}}"
+    "synced": "تمت المزامنة {{when}}",
+    "episodes_zero": "{{count, number}} حلقة",
+    "episodes_one": "{{count, number}} حلقة",
+    "episodes_two": "{{count, number}} حلقتان",
+    "episodes_few": "{{count, number}} حلقات",
+    "episodes_many": "{{count, number}} حلقة",
+    "episodes_other": "{{count, number}} حلقة"
   },
   "verdict": {
     "ask": "ستسأل",
