@@ -336,6 +336,13 @@ WatchRandomShow:
   play_any_show: "(speel|start) zomaar een [{Genre}] serie\nzet zomaar een [{Genre}] serie op"
   play_random_show: "(speel|start) een (willekeurige|random) [{Genre}] serie [(in de|in het|op de|op) {Room}]\nzet een willekeurige [{Genre}] serie op [(in de|in het|op de) {Room}]"
   surprise_me_with: "verras me met een [{Genre}] serie"
+WatchSeason:
+  play_ordinal_only: "(speel|start) het {Ordinal} seizoen [(in de|in het|op de|op) {Room}]"
+  play_ordinal_season: "(speel|start) het {Ordinal} seizoen van {Show} [(in de|in het|op de|op) {Room}]\nzet het {Ordinal} seizoen van {Show} op [(in de|in het|op de) {Room}]\n(speel|start) het hele {Ordinal} seizoen van {Show} [(in de|in het|op de|op) {Room}]"
+  play_season: "(speel|start) seizoen {Season} van {Show} [(in de|in het|op de|op) {Room}]\nzet seizoen {Season} van {Show} op [(in de|in het|op de) {Room}]\nseizoen {Season} van {Show} af te spelen"
+  play_season_only: "(speel|start) seizoen {Season} [(in de|in het|op de|op) {Room}]\nzet seizoen {Season} op [(in de|in het|op de) {Room}]"
+  play_show_season: "(speel|start) {Show} seizoen {Season} [(in de|in het|op de|op) {Room}]"
+  play_whole_season: "(speel|start) het hele seizoen {Season} van {Show} [(in de|in het|op de|op) {Room}]"
 WhatAlbums:
   list_albums_by: "(noem|geef) [me] de albums van {Artist}"
   what_albums_by: "welke albums van {Artist} (heb ik|hebben we|heb je)"
