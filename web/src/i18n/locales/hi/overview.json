@@ -45,13 +45,26 @@
       "title": "अभी कोई Kodi इंस्टेंस नहीं है"
     },
     "episode": "S{{season}} · E{{episode}} “{{title}}”",
+    "hdr": {
+      "dolbyvision": "Dolby Vision",
+      "hdr10": "HDR10",
+      "hdr10plus": "HDR10+",
+      "hlg": "HLG"
+    },
     "idle": "कुछ नहीं चल रहा।",
     "offline": {
       "test": "Kodi पेज पर इसे टेस्ट करें",
       "text": "जवाब नहीं दे रहा। जाँचें कि Kodi चल रहा है और उस तक पहुँचा जा सकता है।"
     },
     "progress": "प्रगति {{percent}} प्रतिशत",
-    "title": "Kodi इंस्टेंस"
+    "quality": {
+      "720p": "720p",
+      "1080p": "1080p",
+      "2160p": "4K",
+      "sd": "SD"
+    },
+    "title": "Kodi इंस्टेंस",
+    "video": "तस्वीर"
   },
   "ms": "{{ms}} ms",
   "openRequestLog": "अनुरोध लॉग खोलें",
