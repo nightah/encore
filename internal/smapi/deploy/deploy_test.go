@@ -1024,6 +1024,36 @@ func TestDeployImportsAgainOnlyOnce(t *testing.T) {
 	assert.Equal(t, 2, sk.Imports)
 }
 
+// Asked to, a deploy imports again more than once while Amazon keeps failing imports without saying why, waiting longer each time.
+func TestDeployImportsAgainAsOftenAsAsked(t *testing.T) {
+	h := newHarness(t, smapitest.Options{})
+	h.fake.FailImportsWithoutDetails(3)
+
+	req := h.request(deploy.State{})
+	req.SilentRetryWait = time.Millisecond
+	req.SilentRetries = 3
+
+	res, err := h.deployer.Deploy(t.Context(), req)
+	require.NoError(t, err)
+	assert.NotEmpty(t, res.State.Hash)
+
+	sk, _ := h.fake.Skill(res.State.SkillID)
+	assert.Equal(t, 4, sk.Imports)
+
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	var waits []string
+
+	for _, ev := range h.events {
+		if _, wait, ok := strings.Cut(ev.Message, "importing again in "); ok {
+			waits = append(waits, wait)
+		}
+	}
+
+	assert.Equal(t, []string{"1ms", "2ms", "3ms"}, waits, "each retry waits longer")
+}
+
 func TestDeployDoesntImportAgainWhenTold(t *testing.T) {
 	h := newHarness(t, smapitest.Options{})
 	h.fake.FailImportsWithoutDetails(1)

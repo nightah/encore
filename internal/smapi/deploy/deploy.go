@@ -128,9 +128,16 @@ func (r *run) deploy(ctx context.Context) error {
 		return err
 	}
 
+	retries := max(r.req.SilentRetries, 1)
+
 	err = r.ship(ctx)
-	if de, ok := errors.AsType[*Error](err); ok && de.silent() && r.req.SilentRetryWait >= 0 {
-		if err = r.awaitRetry(ctx, de); err == nil {
+	for retry := 1; retry <= retries && r.req.SilentRetryWait >= 0; retry++ {
+		de, ok := errors.AsType[*Error](err)
+		if !ok || !de.silent() {
+			break
+		}
+
+		if err = r.awaitRetry(ctx, de, retry); err == nil {
 			err = r.ship(ctx)
 		}
 	}
@@ -176,15 +183,17 @@ func (r *run) deploy(ctx context.Context) error {
 	return nil
 }
 
-// awaitRetry waits to import again after Amazon failed import de without saying why: straight away, the skill is still rolling that import back and the next one fails too.
-func (r *run) awaitRetry(ctx context.Context, de *Error) error {
+// awaitRetry waits to import again after Amazon failed import de without saying why: straight away, the skill is still rolling that import back and the next one fails too. Each retry waits longer, as one that failed after the first wait may need longer still.
+func (r *run) awaitRetry(ctx context.Context, de *Error, retry int) error {
 	wait := r.req.SilentRetryWait
 	if wait == 0 {
 		wait = silentRetryWait
 	}
 
+	wait *= time.Duration(retry)
+
 	r.res.Warnings = append(r.res.Warnings, fmt.Sprintf("Amazon rolled import %s back without saying why, so the skill package was imported again", de.ImportID))
-	r.emit(Event{Step: StepImport, State: StateRunning, Message: fmt.Sprintf("Amazon rolled the import back without saying why; importing again in %s", wait.Round(time.Second))})
+	r.emit(Event{Step: StepImport, State: StateRunning, Message: fmt.Sprintf("Amazon rolled the import back without saying why; importing again in %s", wait.Round(time.Millisecond))})
 
 	t := time.NewTimer(wait)
 	defer t.Stop()
