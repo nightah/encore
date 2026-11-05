@@ -196,6 +196,20 @@
       "hint": "Search every media type when the type isn't said",
       "title": "Deep search for “play X”"
     },
+    "groups": {
+      "kodi": {
+        "note": "What Encore does on your Kodi instances when it plays or powers them",
+        "title": "Kodi"
+      },
+      "skill": {
+        "note": "How Encore keeps your skill on Amazon up to date",
+        "title": "Alexa skill"
+      },
+      "voice": {
+        "note": "How Encore reads and answers what you say to Alexa",
+        "title": "Voice requests"
+      }
+    },
     "preferred_quality": {
       "720p": "720p",
       "1080p": "1080p",
