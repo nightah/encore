@@ -88,6 +88,25 @@
         "label": "Kodi-Passwort",
         "saved": "Ein Passwort ist gespeichert. Lass das Feld leer, um es zu behalten."
       },
+      "preferred_quality": {
+        "720p": "720p",
+        "1080p": "1080p",
+        "2160p": "4K (2160p)",
+        "highest": "Die beste verfügbare",
+        "hint": "Welche Kopie abgespielt wird, wenn ein Film oder eine Folge mehrfach in der Mediathek ist, etwa in 4K und 1080p.",
+        "inherit": "Wie unter Einstellungen › Funktionen",
+        "label": "Bevorzugte Qualität",
+        "screen": "Passend zu diesem Bildschirm",
+        "screen_known": "Ihr Bildschirm hat {{quality}}, {{width}}×{{height}}.",
+        "screen_quality": {
+          "720p": "720p",
+          "1080p": "1080p",
+          "2160p": "4K",
+          "sd": "SD"
+        },
+        "screen_unknown": "Encore erkennt den Bildschirm, sobald die Instanz verbunden ist.",
+        "sd": "SD"
+      },
       "shutdown": {
         "hint": "Was „Alexa, sag encore, fahr herunter“ bei dieser Kodi-Instanz macht.",
         "inherit": "Wie unter Einstellungen › Funktionen",

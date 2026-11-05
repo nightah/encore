@@ -88,6 +88,25 @@
         "label": "Kodi-wachtwoord",
         "saved": "Er is een wachtwoord opgeslagen. Laat dit leeg om het te behouden."
       },
+      "preferred_quality": {
+        "720p": "720p",
+        "1080p": "1080p",
+        "2160p": "4K (2160p)",
+        "highest": "De beste die er is",
+        "hint": "Welke kopie wordt afgespeeld als een film of aflevering meer dan eens in de bibliotheek staat, zoals in 4K en 1080p.",
+        "inherit": "Volgens Instellingen › Functies",
+        "label": "Voorkeurskwaliteit",
+        "screen": "Passend bij dit scherm",
+        "screen_known": "Het scherm is {{quality}}, {{width}}×{{height}}.",
+        "screen_quality": {
+          "720p": "720p",
+          "1080p": "1080p",
+          "2160p": "4K",
+          "sd": "SD"
+        },
+        "screen_unknown": "Encore leert het scherm kennen zodra de instantie verbinding maakt.",
+        "sd": "SD"
+      },
       "shutdown": {
         "hint": "Wat “Alexa, vraag encore om af te sluiten” doet op deze Kodi-instantie.",
         "inherit": "Volgens Instellingen › Functies",

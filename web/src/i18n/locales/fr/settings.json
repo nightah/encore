@@ -196,6 +196,30 @@
       "hint": "Chercher dans tous les types de média quand le type n'est pas précisé",
       "title": "Recherche approfondie pour « mets X »"
     },
+    "groups": {
+      "kodi": {
+        "note": "Ce que fait Encore sur vos instances Kodi quand il lance la lecture ou les allume et les éteint",
+        "title": "Kodi"
+      },
+      "skill": {
+        "note": "Comment Encore tient votre skill à jour sur Amazon",
+        "title": "Skill Alexa"
+      },
+      "voice": {
+        "note": "Comment Encore comprend ce que vous dites à Alexa et y répond",
+        "title": "Demandes vocales"
+      }
+    },
+    "preferred_quality": {
+      "720p": "720p",
+      "1080p": "1080p",
+      "2160p": "4K (2160p)",
+      "highest": "La meilleure disponible",
+      "hint": "Quelle copie est lue quand un film ou un épisode figure plusieurs fois dans la médiathèque, par exemple en 4K et en 1080p : cette qualité, sinon la meilleure en dessous, sinon la plus proche au-dessus. La lecture reprend là où une copie s’est arrêtée. « Selon chaque écran » lit la copie la plus proche de l’écran de chaque instance Kodi, et une instance peut changer ce choix.",
+      "screen": "Selon chaque écran",
+      "sd": "SD",
+      "title": "Qualité préférée"
+    },
     "queue_limit": {
       "hint": "Le nombre maximal d’éléments qu’une lecture aléatoire ou une file lit à la fois, pour que les grandes bibliothèques restent réactives",
       "title": "Limite de file"

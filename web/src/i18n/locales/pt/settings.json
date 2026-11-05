@@ -196,6 +196,30 @@
       "hint": "Buscar em todos os tipos de mídia quando o tipo não é dito",
       "title": "Busca ampla para “toque X”"
     },
+    "groups": {
+      "kodi": {
+        "note": "O que o Encore faz nas suas instâncias do Kodi ao reproduzir ou ao ligá-las e desligá-las",
+        "title": "Kodi"
+      },
+      "skill": {
+        "note": "Como o Encore mantém sua skill na Amazon atualizada",
+        "title": "Skill da Alexa"
+      },
+      "voice": {
+        "note": "Como o Encore entende e responde ao que você diz para a Alexa",
+        "title": "Pedidos por voz"
+      }
+    },
+    "preferred_quality": {
+      "720p": "720p",
+      "1080p": "1080p",
+      "2160p": "4K (2160p)",
+      "highest": "A melhor disponível",
+      "hint": "Qual cópia toca quando um filme ou episódio está na biblioteca mais de uma vez, como em 4K e 1080p: essa qualidade, senão a melhor abaixo, senão a mais próxima acima. A reprodução continua de onde qualquer cópia parou. “De acordo com cada tela” toca a cópia mais próxima da tela de cada instância do Kodi, e uma instância pode mudar isso.",
+      "screen": "De acordo com cada tela",
+      "sd": "SD",
+      "title": "Qualidade preferida"
+    },
     "queue_limit": {
       "hint": "O máximo de itens que uma reprodução aleatória ou fila toca de uma vez, o que mantém bibliotecas grandes ágeis",
       "title": "Limite da fila"
