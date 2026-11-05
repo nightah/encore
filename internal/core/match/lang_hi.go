@@ -2,6 +2,7 @@ package match
 
 import (
 	"strings"
+	"unicode"
 	"unicode/utf8"
 
 	"github.com/nightah/encore/internal/fuzzy/phonetic/en"
@@ -198,9 +199,13 @@ func (h hindiRomanizer) romanize(tok string) string {
 			end += n
 		}
 
-		if dev {
+		switch {
+		case dev:
 			b.WriteString(h.word(tok[:end]))
-		} else {
+		case b.Len() > 0:
+			// Marks of another script right after a Devanagari word were its letters' and can't go on its romanisation, where they would make a letter another pass reads differently ("à" for अ with a grave).
+			b.WriteString(strings.TrimLeftFunc(tok[:end], func(r rune) bool { return unicode.Is(unicode.M, r) }))
+		default:
 			b.WriteString(tok[:end])
 		}
 

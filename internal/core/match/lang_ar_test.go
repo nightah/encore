@@ -105,13 +105,20 @@ func TestNormalizeArabic(t *testing.T) {
 		// ½ is "ونص".
 		{"8½", "8 wns"},
 		{"ثمانية ونص", "8 wns"},
+		// A letter of the Arabic block without a Latin form, such as ػ, is a word of its own, as a second pass would make it; a leading a is then the article.
+		{"آػ", "ػ"},
+		{"ػآ", "ػ a"},
+		// Only an Arabic letter is set apart: a letter of another script keeps its marks.
+		{"ؠᛮ\u0300", "ؠ ᛮ\u0300"},
 		// The locale is enough.
 		{"", ""},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.in, func(t *testing.T) {
-			assert.Equal(t, tt.want, Normalize("ar", tt.in))
+			got := Normalize("ar", tt.in)
+			assert.Equal(t, tt.want, got)
+			assert.Equal(t, got, Normalize("ar", got), "normalising it again")
 		})
 	}
 

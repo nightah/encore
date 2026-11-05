@@ -246,6 +246,9 @@ func TestNormalizeJapaneseIdempotent(t *testing.T) {
 		{"Ελλάδα", "ελλαδα"},
 		{"दिल चाहता है", "dil chahta hai"},
 		{"々अ", "々 a"},
+		// A mark of another script after a Devanagari letter isn't carried onto its romanisation, where a second pass would drop it.
+		{"अ\u0300", "a"},
+		{"दिल\u0301", "dil"},
 		{"ᛮ̀", "ᛮ̀"},
 		{"モスクワМосква", "mosukuwa москва"},
 		{"ア́", "a"},
