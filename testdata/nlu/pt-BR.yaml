@@ -26,7 +26,7 @@ cases:
   - {utterance: "coloca o trailer", intent: WatchMovieTrailer}
   - {utterance: "continua a coleção cidade de deus", intent: WatchNextInCollection, slots: {Movie: "cidade de deus"}}
   - {utterance: "coloca sintonia episódio 3 da temporada 2", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "sintonia"}}
-  - {utterance: "coloca a temporada 2 de sintonia", intent: WatchSeason, slots: {Season: "2", Show: "sintonia"}, pending: "WatchSeason is in the model from the next deploy"}
+  - {utterance: "coloca a temporada 2 de sintonia", intent: WatchSeason, slots: {Season: "2", Show: "sintonia"}}
   - {utterance: "coloca sintonia desde o começo", intent: WatchFirstEpisode, slots: {Show: "sintonia"}}
   - {utterance: "coloca o último de sintonia", intent: WatchLatestEpisode, slots: {Show: "sintonia"}}
   - {utterance: "continua a última série", intent: ContinueWatching}
@@ -104,10 +104,10 @@ cases:
   - {utterance: "coloca o último episódio de sintonia", intent: WatchLatestEpisode, slots: {Show: "sintonia"}}
   - {utterance: "coloca o primeiro episódio de sintonia", intent: WatchFirstEpisode, slots: {Show: "sintonia"}}
   - {utterance: "coloca o episódio um de sintonia", intent: WatchFirstEpisode, slots: {Show: "sintonia"}}
-  - {utterance: "coloca a segunda temporada de sintonia", intent: WatchSeason, slots: {Ordinal: "02", Show: "sintonia"}, pending: "WatchSeason is in the model from the next deploy"}
-  - {utterance: "coloca sintonia temporada 2", intent: WatchSeason, slots: {Season: "2", Show: "sintonia"}, pending: "WatchSeason is in the model from the next deploy"}
-  - {utterance: "coloca a temporada 2 de sintonia na sala", intent: WatchSeason, slots: {Room: "", Season: "2", Show: "sintonia"}, pending: "WatchSeason is in the model from the next deploy"}
-  - {utterance: "coloca a temporada 3", intent: WatchSeason, slots: {Season: "3"}, pending: "WatchSeason is in the model from the next deploy"}
+  - {utterance: "coloca a segunda temporada de sintonia", intent: WatchSeason, slots: {Ordinal: "02", Show: "sintonia"}}
+  - {utterance: "coloca sintonia temporada 2", intent: WatchSeason, slots: {Season: "2", Show: "sintonia"}}
+  - {utterance: "coloca a temporada 2 de sintonia na sala", intent: WatchSeason, slots: {Room: "", Season: "2", Show: "sintonia"}}
+  - {utterance: "coloca a temporada 3", intent: WatchSeason, slots: {Season: "3"}}
   # Music by an artist, including the one-shot forms.
   - {utterance: "toca umas músicas de anitta", intent: ListenToArtist, slots: {Artist: "anitta"}}
   - {utterance: "quero ouvir umas músicas de anitta", intent: ListenToArtist, slots: {Artist: "anitta"}}

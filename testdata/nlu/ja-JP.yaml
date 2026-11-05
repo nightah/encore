@@ -26,7 +26,7 @@ cases:
   - {utterance: "予告編を再生してください", intent: WatchMovieTrailer}
   - {utterance: "千と千尋の神隠しシリーズの続きを見せてください", intent: WatchNextInCollection, slots: {Movie: "千と千尋の神隠し"}}
   - {utterance: "鬼滅の刃のシーズン2のエピソード3を再生してください", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "鬼滅の刃"}}
-  - {utterance: "鬼滅の刃のシーズン2を再生してください", intent: WatchSeason, slots: {Season: "2", Show: "鬼滅の刃"}, pending: "WatchSeason is in the model from the next deploy"}
+  - {utterance: "鬼滅の刃のシーズン2を再生してください", intent: WatchSeason, slots: {Season: "2", Show: "鬼滅の刃"}}
   - {utterance: "鬼滅の刃を最初から再生してください", intent: WatchFirstEpisode, slots: {Show: "鬼滅の刃"}}
   - {utterance: "鬼滅の刃の最新話を再生してください", intent: WatchLatestEpisode, slots: {Show: "鬼滅の刃"}}
   - {utterance: "最後に見ていた番組を再開してください", intent: ContinueWatching}
@@ -105,11 +105,11 @@ cases:
   - {utterance: "鬼滅の刃の最新のエピソードを再生してください", intent: WatchLatestEpisode, slots: {Show: "鬼滅の刃"}}
   - {utterance: "鬼滅の刃の一番最初のエピソードを再生してください", intent: WatchFirstEpisode, slots: {Show: "鬼滅の刃"}}
   - {utterance: "鬼滅の刃の第一話を再生してください", intent: WatchFirstEpisode, slots: {Show: "鬼滅の刃"}}
-  - {utterance: "鬼滅の刃のセカンドシーズンを再生して", intent: WatchSeason, slots: {Ordinal: "02", Show: "鬼滅の刃"}, pending: "WatchSeason is in the model from the next deploy"}
-  - {utterance: "鬼滅の刃の第2期を見せて", intent: WatchSeason, slots: {Season: "2", Show: "鬼滅の刃"}, pending: "WatchSeason is in the model from the next deploy"}
-  - {utterance: "寝室で鬼滅の刃のシーズン2を再生して", intent: WatchSeason, slots: {Room: "", Season: "2", Show: "鬼滅の刃"}, pending: "WatchSeason is in the model from the next deploy"}
-  - {utterance: "鬼滅の刃のシーズン2を全部再生して", intent: WatchSeason, slots: {Season: "2", Show: "鬼滅の刃"}, pending: "WatchSeason is in the model from the next deploy"}
-  - {utterance: "シーズン3を再生して", intent: WatchSeason, slots: {Season: "3"}, pending: "WatchSeason is in the model from the next deploy"}
+  - {utterance: "鬼滅の刃のセカンドシーズンを再生して", intent: WatchSeason, slots: {Ordinal: "02", Show: "鬼滅の刃"}}
+  - {utterance: "鬼滅の刃の第2期を見せて", intent: WatchSeason, slots: {Season: "2", Show: "鬼滅の刃"}}
+  - {utterance: "寝室で鬼滅の刃のシーズン2を再生して", intent: WatchSeason, slots: {Room: "", Season: "2", Show: "鬼滅の刃"}}
+  - {utterance: "鬼滅の刃のシーズン2を全部再生して", intent: WatchSeason, slots: {Season: "2", Show: "鬼滅の刃"}}
+  - {utterance: "シーズン3を再生して", intent: WatchSeason, slots: {Season: "3"}}
   # Music by an artist, including the one-shot forms.
   - {utterance: "宇多田ヒカルの曲を再生してください", intent: ListenToArtist, slots: {Artist: "宇多田ヒカル"}}
   - {utterance: "宇多田ヒカルの花束を君にという曲を再生してください", intent: ListenToSong, slots: {Artist: "宇多田ヒカル", Song: "花束を君に"}}

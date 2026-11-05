@@ -26,7 +26,7 @@ cases:
   - {utterance: "pon el tráiler", intent: WatchMovieTrailer}
   - {utterance: "sigue con la saga el laberinto del fauno", intent: WatchNextInCollection, slots: {Movie: "el laberinto del fauno"}}
   - {utterance: "pon la casa de papel capítulo 3 de la temporada 2", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "la casa de papel"}}
-  - {utterance: "pon la temporada 2 de la casa de papel", intent: WatchSeason, slots: {Season: "2", Show: "la casa de papel"}, pending: "WatchSeason is in the model from the next deploy"}
+  - {utterance: "pon la temporada 2 de la casa de papel", intent: WatchSeason, slots: {Season: "2", Show: "la casa de papel"}}
   - {utterance: "pon la casa de papel desde el principio", intent: WatchFirstEpisode, slots: {Show: "la casa de papel"}}
   - {utterance: "pon lo último de la casa de papel", intent: WatchLatestEpisode, slots: {Show: "la casa de papel"}}
   - {utterance: "continúa la última serie", intent: ContinueWatching}
@@ -105,10 +105,10 @@ cases:
   - {utterance: "pon el último capítulo de la casa de papel", intent: WatchLatestEpisode, slots: {Show: "la casa de papel"}}
   - {utterance: "pon el primer capítulo de la casa de papel", intent: WatchFirstEpisode, slots: {Show: "la casa de papel"}}
   - {utterance: "pon el capítulo uno de la casa de papel", intent: WatchFirstEpisode, slots: {Show: "la casa de papel"}}
-  - {utterance: "pon la segunda temporada de la casa de papel", intent: WatchSeason, slots: {Ordinal: "02", Show: "la casa de papel"}, pending: "WatchSeason is in the model from the next deploy"}
-  - {utterance: "pon la casa de papel temporada 2", intent: WatchSeason, slots: {Season: "2", Show: "la casa de papel"}, pending: "WatchSeason is in the model from the next deploy"}
-  - {utterance: "pon la temporada 2 de la casa de papel en el salón", intent: WatchSeason, slots: {Room: "", Season: "2", Show: "la casa de papel"}, pending: "WatchSeason is in the model from the next deploy"}
-  - {utterance: "pon la temporada 3", intent: WatchSeason, slots: {Season: "3"}, pending: "WatchSeason is in the model from the next deploy"}
+  - {utterance: "pon la segunda temporada de la casa de papel", intent: WatchSeason, slots: {Ordinal: "02", Show: "la casa de papel"}}
+  - {utterance: "pon la casa de papel temporada 2", intent: WatchSeason, slots: {Season: "2", Show: "la casa de papel"}}
+  - {utterance: "pon la temporada 2 de la casa de papel en el salón", intent: WatchSeason, slots: {Room: "", Season: "2", Show: "la casa de papel"}}
+  - {utterance: "pon la temporada 3", intent: WatchSeason, slots: {Season: "3"}}
   # Music by an artist, including the one-shot forms.
   - {utterance: "pon algo de música de shakira", intent: ListenToArtist, slots: {Artist: "shakira"}}
   - {utterance: "pon canciones de shakira", intent: ListenToArtist, slots: {Artist: "shakira"}}

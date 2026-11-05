@@ -26,7 +26,7 @@ cases:
   - {utterance: "mets la bande-annonce", intent: WatchMovieTrailer}
   - {utterance: "continue la saga intouchables", intent: WatchNextInCollection, slots: {Movie: "intouchables"}}
   - {utterance: "mets lupin épisode 3 saison 2", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "lupin"}}
-  - {utterance: "fais jouer la saison 2 de lupin", intent: WatchSeason, slots: {Season: "2", Show: "lupin"}, pending: "WatchSeason is in the model from the next deploy"}
+  - {utterance: "fais jouer la saison 2 de lupin", intent: WatchSeason, slots: {Season: "2", Show: "lupin"}}
   - {utterance: "mets lupin depuis le début", intent: WatchFirstEpisode, slots: {Show: "lupin"}}
   - {utterance: "mets le dernier lupin", intent: WatchLatestEpisode, slots: {Show: "lupin"}}
   - {utterance: "reprends ma dernière série", intent: ContinueWatching}
@@ -105,10 +105,10 @@ cases:
   - {utterance: "mets le premier épisode de lupin", intent: WatchFirstEpisode, slots: {Show: "lupin"}}
   - {utterance: "mets le tout premier épisode de lupin", intent: WatchFirstEpisode, slots: {Show: "lupin"}}
   - {utterance: "fais jouer le premier épisode de lupin", intent: WatchFirstEpisode, slots: {Show: "lupin"}}
-  - {utterance: "mets la deuxième saison de lupin", intent: WatchSeason, slots: {Ordinal: "02", Show: "lupin"}, pending: "WatchSeason is in the model from the next deploy"}
-  - {utterance: "mets lupin saison 2", intent: WatchSeason, slots: {Season: "2", Show: "lupin"}, pending: "WatchSeason is in the model from the next deploy"}
-  - {utterance: "mets la saison 2 de lupin dans le salon", intent: WatchSeason, slots: {Room: "", Season: "2", Show: "lupin"}, pending: "WatchSeason is in the model from the next deploy"}
-  - {utterance: "mets la saison 3", intent: WatchSeason, slots: {Season: "3"}, pending: "WatchSeason is in the model from the next deploy"}
+  - {utterance: "mets la deuxième saison de lupin", intent: WatchSeason, slots: {Ordinal: "02", Show: "lupin"}}
+  - {utterance: "mets lupin saison 2", intent: WatchSeason, slots: {Season: "2", Show: "lupin"}}
+  - {utterance: "mets la saison 2 de lupin dans le salon", intent: WatchSeason, slots: {Room: "", Season: "2", Show: "lupin"}}
+  - {utterance: "mets la saison 3", intent: WatchSeason, slots: {Season: "3"}}
   # Music by an artist, including the one-shot forms.
   - {utterance: "mets de la musique de stromae", intent: ListenToArtist, slots: {Artist: "stromae"}}
   - {utterance: "je veux écouter de la musique de stromae", intent: ListenToArtist, slots: {Artist: "stromae"}}

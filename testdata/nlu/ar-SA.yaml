@@ -26,7 +26,7 @@ cases:
   - {utterance: "شغلي الإعلان", intent: WatchMovieTrailer}
   - {utterance: "كملي سلسلة الرسالة", intent: WatchNextInCollection, slots: {Movie: "الرسالة"}}
   - {utterance: "شغلي مسلسل باب الحارة الحلقة 3 من الموسم 2", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "باب الحارة"}}
-  - {utterance: "شغلي الموسم 2 من مسلسل باب الحارة", intent: WatchSeason, slots: {Season: "2", Show: "باب الحارة"}, pending: "WatchSeason is in the model from the next deploy"}
+  - {utterance: "شغلي الموسم 2 من مسلسل باب الحارة", intent: WatchSeason, slots: {Season: "2", Show: "باب الحارة"}}
   - {utterance: "شغلي مسلسل باب الحارة من البداية", intent: WatchFirstEpisode, slots: {Show: "باب الحارة"}}
   - {utterance: "شغلي آخر باب الحارة", intent: WatchLatestEpisode, slots: {Show: "باب الحارة"}}
   - {utterance: "كملي آخر مسلسل", intent: ContinueWatching}
@@ -104,11 +104,11 @@ cases:
   - {utterance: "شغلي آخر حلقة من مسلسل باب الحارة", intent: WatchLatestEpisode, slots: {Show: "باب الحارة"}}
   - {utterance: "شغلي أول حلقة من مسلسل باب الحارة", intent: WatchFirstEpisode, slots: {Show: "باب الحارة"}}
   - {utterance: "شغلي اول حلقة من مسلسل باب الحارة", intent: WatchFirstEpisode, slots: {Show: "باب الحارة"}}
-  - {utterance: "شغلي الموسم الثاني من مسلسل باب الحارة", intent: WatchSeason, slots: {Ordinal: "02", Show: "باب الحارة"}, pending: "WatchSeason is in the model from the next deploy"}
-  - {utterance: "شغلي مسلسل باب الحارة الموسم 2", intent: WatchSeason, slots: {Season: "2", Show: "باب الحارة"}, pending: "WatchSeason is in the model from the next deploy"}
-  - {utterance: "شغلي الموسم 2 من مسلسل باب الحارة في المجلس", intent: WatchSeason, slots: {Room: "", Season: "2", Show: "باب الحارة"}, pending: "WatchSeason is in the model from the next deploy"}
-  - {utterance: "شغلي كل حلقات الموسم 2 من مسلسل باب الحارة", intent: WatchSeason, slots: {Season: "2", Show: "باب الحارة"}, pending: "WatchSeason is in the model from the next deploy"}
-  - {utterance: "شغلي الموسم 3", intent: WatchSeason, slots: {Season: "3"}, pending: "WatchSeason is in the model from the next deploy"}
+  - {utterance: "شغلي الموسم الثاني من مسلسل باب الحارة", intent: WatchSeason, slots: {Ordinal: "02", Show: "باب الحارة"}}
+  - {utterance: "شغلي مسلسل باب الحارة الموسم 2", intent: WatchSeason, slots: {Season: "2", Show: "باب الحارة"}}
+  - {utterance: "شغلي الموسم 2 من مسلسل باب الحارة في المجلس", intent: WatchSeason, slots: {Room: "", Season: "2", Show: "باب الحارة"}}
+  - {utterance: "شغلي كل حلقات الموسم 2 من مسلسل باب الحارة", intent: WatchSeason, slots: {Season: "2", Show: "باب الحارة"}}
+  - {utterance: "شغلي الموسم 3", intent: WatchSeason, slots: {Season: "3"}}
   # Music by an artist, including the one-shot forms.
   - {utterance: "شغلي أغاني عمرو دياب", intent: ListenToArtist, slots: {Artist: "عمرو دياب"}}
   - {utterance: "ابغى اسمع أغاني عمرو دياب", intent: ListenToArtist, slots: {Artist: "عمرو دياب"}}

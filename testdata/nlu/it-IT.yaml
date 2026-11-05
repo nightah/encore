@@ -26,7 +26,7 @@ cases:
   - {utterance: "metti il trailer", intent: WatchMovieTrailer}
   - {utterance: "continua la saga di la vita è bella", intent: WatchNextInCollection, slots: {Movie: "la vita è bella"}}
   - {utterance: "metti gomorra episodio 3 della stagione 2", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "gomorra"}}
-  - {utterance: "metti la stagione 2 di gomorra", intent: WatchSeason, slots: {Season: "2", Show: "gomorra"}, pending: "WatchSeason is in the model from the next deploy"}
+  - {utterance: "metti la stagione 2 di gomorra", intent: WatchSeason, slots: {Season: "2", Show: "gomorra"}}
   - {utterance: "metti gomorra dall'inizio", intent: WatchFirstEpisode, slots: {Show: "gomorra"}}
   - {utterance: "metti il nuovo episodio di gomorra", intent: WatchLatestEpisode, slots: {Show: "gomorra"}}
   - {utterance: "continua l'ultima serie", intent: ContinueWatching}
@@ -105,10 +105,10 @@ cases:
   - {utterance: "metti l'ultimo episodio di gomorra", intent: WatchLatestEpisode, slots: {Show: "gomorra"}}
   - {utterance: "metti il primo episodio di gomorra", intent: WatchFirstEpisode, slots: {Show: "gomorra"}}
   - {utterance: "metti il primissimo episodio di gomorra", intent: WatchFirstEpisode, slots: {Show: "gomorra"}}
-  - {utterance: "metti la seconda stagione di gomorra", intent: WatchSeason, slots: {Ordinal: "02", Show: "gomorra"}, pending: "WatchSeason is in the model from the next deploy"}
-  - {utterance: "metti gomorra stagione 2", intent: WatchSeason, slots: {Season: "2", Show: "gomorra"}, pending: "WatchSeason is in the model from the next deploy"}
-  - {utterance: "metti la stagione 2 di gomorra in salotto", intent: WatchSeason, slots: {Room: "", Season: "2", Show: "gomorra"}, pending: "WatchSeason is in the model from the next deploy"}
-  - {utterance: "metti la stagione 3", intent: WatchSeason, slots: {Season: "3"}, pending: "WatchSeason is in the model from the next deploy"}
+  - {utterance: "metti la seconda stagione di gomorra", intent: WatchSeason, slots: {Ordinal: "02", Show: "gomorra"}}
+  - {utterance: "metti gomorra stagione 2", intent: WatchSeason, slots: {Season: "2", Show: "gomorra"}}
+  - {utterance: "metti la stagione 2 di gomorra in salotto", intent: WatchSeason, slots: {Room: "", Season: "2", Show: "gomorra"}}
+  - {utterance: "metti la stagione 3", intent: WatchSeason, slots: {Season: "3"}}
   # Music by an artist, including the one-shot forms.
   - {utterance: "metti un po' di musica di vasco rossi", intent: ListenToArtist, slots: {Artist: "vasco rossi"}}
   - {utterance: "metti la canzone albachiara di vasco rossi", intent: ListenToSong, slots: {Artist: "vasco rossi", Song: "albachiara"}}
