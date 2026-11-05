@@ -319,6 +319,13 @@ WatchRandomShow:
   play_any_show: "(spiele|spiel|zeige|zeig) [mir] irgendeine [{Genre}] serie"
   play_random_show: "(spiele|spiel|zeige|zeig) [mir] eine (zufällige|beliebige) [{Genre}] serie [(im|in der) {Room}]\n(spiele|spiel|zeige|zeig) [mir] eine zufällige serie aus dem genre {Genre} [(im|in der) {Room}]"
   surprise_me_with: "überrasche mich mit einer [{Genre}] serie"
+WatchSeason:
+  play_ordinal_only: "(spiele|spiel|zeige|zeig|starte|start) [mir] die {Ordinal} staffel [(im|in der) {Room}]"
+  play_ordinal_season: "(spiele|spiel|zeige|zeig|starte|start) [mir] die {Ordinal} staffel von {Show} [(im|in der) {Room}]\n(spiele|spiel|zeige|zeig) [mir] die ganze {Ordinal} staffel von {Show} [(im|in der) {Room}]"
+  play_season: "(spiele|spiel|zeige|zeig|starte|start) [mir] staffel {Season} von {Show} [(im|in der) {Room}]\nstaffel {Season} von {Show} (zu spielen|abzuspielen|zu zeigen)"
+  play_season_only: "(spiele|spiel|zeige|zeig|starte|start) [mir] staffel {Season} [(im|in der) {Room}]"
+  play_show_season: "(spiele|spiel|zeige|zeig|starte|start) [mir] {Show} staffel {Season} [(im|in der) {Room}]"
+  play_whole_season: "(spiele|spiel|zeige|zeig) [mir] die ganze staffel {Season} von {Show} [(im|in der) {Room}]"
 WhatAlbums:
   list_albums_by: "(liste|nenne|nenn) [mir] die alben von {Artist} [auf]"
   what_albums_by: "welche alben von {Artist} (habe ich|haben wir|hast du)"
