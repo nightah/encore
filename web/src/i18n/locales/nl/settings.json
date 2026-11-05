@@ -196,6 +196,30 @@
       "hint": "In elk mediatype zoeken als het type niet wordt genoemd",
       "title": "Diep zoeken voor “speel X”"
     },
+    "groups": {
+      "kodi": {
+        "note": "Wat Encore op je Kodi-instanties doet als het afspeelt of ze aan- en uitzet",
+        "title": "Kodi"
+      },
+      "skill": {
+        "note": "Hoe Encore je skill bij Amazon actueel houdt",
+        "title": "Alexa-skill"
+      },
+      "voice": {
+        "note": "Hoe Encore begrijpt en beantwoordt wat je tegen Alexa zegt",
+        "title": "Spraakverzoeken"
+      }
+    },
+    "preferred_quality": {
+      "720p": "720p",
+      "1080p": "1080p",
+      "2160p": "4K (2160p)",
+      "highest": "De beste die er is",
+      "hint": "Welke kopie wordt afgespeeld als een film of aflevering meer dan eens in de bibliotheek staat, zoals in 4K en 1080p: die kwaliteit, anders de beste daaronder, anders de dichtstbijzijnde daarboven. Het afspelen gaat verder waar een van de kopieën was gestopt. “Passend bij elk scherm” speelt de kopie die het dichtst bij het scherm van elke Kodi-instantie ligt, en een instantie kan dat aanpassen.",
+      "screen": "Passend bij elk scherm",
+      "sd": "SD",
+      "title": "Voorkeurskwaliteit"
+    },
     "queue_limit": {
       "hint": "Het maximale aantal items dat een shuffle of wachtrij in één keer afspeelt, zodat grote bibliotheken snel blijven reageren",
       "title": "Wachtrijlimiet"
