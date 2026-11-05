@@ -242,7 +242,8 @@ jobs:
     name: SMAPI live
     if: github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-26.04
-    timeout-minutes: 45
+    # Room for the deploy's three retries after Amazon fails an import without saying why, and the NLU checks after them.
+    timeout-minutes: 90
     environment: smapi-live
     env:
       SMAPI_CLIENT_ID: ${{ secrets.SMAPI_CLIENT_ID }}
@@ -301,9 +302,9 @@ jobs:
         continue-on-error: true
         run: |
           set -o pipefail
-          make nlu-deploy 2>&1 | tee nlu-deploy.log
+          make nlu-deploy NLU_FLAGS=--silent-retries=3 2>&1 | tee nlu-deploy.log
 
-      # Amazon now and then fails an import of many locales without saying why; the deploy imports once more five minutes later. The summary records how often that's needed and whether it gets through, to tell whether once is enough.
+      # Amazon now and then fails an import of many locales without saying why, and has done so twice running; the deploy imports again up to three times, five, ten and fifteen minutes later. The summary records how often that's needed and whether it gets through, to tell whether three is enough.
       - name: Record the deploy
         if: ${{ !cancelled() && steps.nlu-deploy.outcome != 'skipped' }}
         env:

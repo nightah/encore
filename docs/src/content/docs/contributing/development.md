@@ -137,7 +137,7 @@ make nlu
 make nlu-open NLU_INVOCATION=encore
 ```
 
-While `make nlu-open` checks it, the skill answers on your own Echos too, so give it the invocation your everyday skill doesn't use: `NLU_INVOCATION` is `encore` or `kodi`. Its endpoint is a placeholder neither check reaches, so opening it on an Echo only gets an error. Leave it unpublished. Now and then Amazon fails a whole import of many locales without saying why (the deploy reports "import failed: no details reported"), most often just after another import failed; the same deploy run again goes through.
+While `make nlu-open` checks it, the skill answers on your own Echos too, so give it the invocation your everyday skill doesn't use: `NLU_INVOCATION` is `encore` or `kodi`. Its endpoint is a placeholder neither check reaches, so opening it on an Echo only gets an error. Leave it unpublished. Now and then Amazon fails a whole import of many locales without saying why (the deploy reports "import failed: no details reported"), most often just after another import failed, so the deploy imports again five minutes later. It can fail that way twice running: `NLU_FLAGS=--silent-retries=3` imports again up to three times, five, ten and fifteen minutes apart, as the nightly job does, and the same deploy run later still goes through when that isn't enough.
 
 In place of a library, each locale's model gets the titles its fixtures ask for (`breaking bad`, `queen` and so on) in the built-in title types, as Encore adds a library's titles. Without them Alexa reads title requests as a skill with an empty library would: most go to the catch-all search, and on the English locales `AMAZON.Musician` swaps a spoken artist for an entity of Amazon's own ("queen" comes back as "Paula Abdul").
 

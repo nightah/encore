@@ -369,6 +369,7 @@ func newGenDeployCommand() *cobra.Command {
 		dir        string
 		library    string
 		retryWait  time.Duration
+		retries    int
 	)
 
 	cmd := &cobra.Command{
@@ -442,6 +443,7 @@ func newGenDeployCommand() *cobra.Command {
 				Force:           true,
 				Disabled:        true,
 				SilentRetryWait: retryWait,
+				SilentRetries:   retries,
 				Progress: func(ev deploy.Event) {
 					if ev.Message != "" {
 						fmt.Fprintf(stderr, "%s %s: %s\n", ev.Step, ev.State, ev.Message)
@@ -470,7 +472,8 @@ func newGenDeployCommand() *cobra.Command {
 	cmd.Flags().StringVar(&vendor, "vendor", "", "the developer account's vendor ID (env "+envVendorID+")")
 	cmd.Flags().StringVar(&dir, "fixtures", defaultNLUFixtures, "directory of <locale>.yaml fixtures whose titles stand in for a library")
 	cmd.Flags().StringVar(&library, "library-skill", "", "a skill Encore deploys, whose library titles to add, e.g. your own (env "+envLibrarySkill+"); it is only read")
-	cmd.Flags().DurationVar(&retryWait, "retry-wait", 0, "how long to wait before importing again after Amazon fails an import without saying why (default five minutes)")
+	cmd.Flags().DurationVar(&retryWait, "retry-wait", 0, "how long to wait before importing again after Amazon fails an import without saying why, and each further time that much longer (default five minutes)")
+	cmd.Flags().IntVar(&retries, "silent-retries", 1, "how many times to import again after Amazon fails imports without saying why")
 	_ = cmd.Flags().MarkHidden("retry-wait")
 	_ = cmd.MarkFlagRequired("invocation")
 

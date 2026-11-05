@@ -114,8 +114,10 @@ type Request struct {
 	Log *slog.Logger
 	// KeepSlots are slot types a second attempt never thins out, e.g. room names, which have to be complete to be any use.
 	KeepSlots []string
-	// SilentRetryWait is how long to wait before importing once more after Amazon fails an import without saying why. Zero waits silentRetryWait; a negative wait doesn't import again.
+	// SilentRetryWait is how long to wait before importing again after Amazon fails an import without saying why, and each further time that wait once more. Zero waits silentRetryWait; a negative wait doesn't import again.
 	SilentRetryWait time.Duration
+	// SilentRetries is how many times to import again after Amazon fails imports without saying why. Zero imports once more, which is usually enough.
+	SilentRetries int
 }
 
 // Result is a deploy's outcome. State is meaningful even when Deploy returns an error and should be persisted, so a retry reuses the skill.
