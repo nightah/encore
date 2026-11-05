@@ -268,6 +268,44 @@ func TestReroute(t *testing.T) {
 	}
 }
 
+func TestRerouteReadsTheSeasonOffTheShow(t *testing.T) {
+	speech := shippedSpeech(t)
+
+	season := func(show, season, ordinal string) Intent {
+		slots := map[string]Slot{"Show": {Name: "Show", Value: show}, "Room": {Name: "Room"}}
+		if season != "" {
+			slots["Season"] = Slot{Name: "Season", Value: season}
+		}
+
+		if ordinal != "" {
+			slots["Ordinal"] = Slot{Name: "Ordinal", Value: ordinal}
+		}
+
+		return Intent{Name: "WatchSeason", Slots: slots}
+	}
+
+	for _, tc := range []struct {
+		name, locale string
+		in, want     Intent
+	}{
+		{"es-US puts the season in the show", "es-US", season("2 de la casa de papel", "", ""), season("la casa de papel", "2", "")},
+		{"by each language's own join", "de-DE", season("2 von dark", "", ""), season("dark", "2", "")},
+		{"in English", "en-AU", season("3 of breaking bad", "", ""), season("breaking bad", "3", "")},
+		{"a locale without seasons of its own reads English's", "xx-XX", season("3 of breaking bad", "", ""), season("breaking bad", "3", "")},
+		{"a show that starts with a number and no join", "en-AU", season("24 hour party people", "", ""), season("24 hour party people", "", "")},
+		{"a season heard already", "es-US", season("2 de la casa de papel", "4", ""), season("2 de la casa de papel", "4", "")},
+		{"an ordinal heard already", "es-US", season("2 de la casa de papel", "", "tercera"), season("2 de la casa de papel", "", "tercera")},
+		{"too short to hold a show", "es-US", season("2 de", "", ""), season("2 de", "", "")},
+	} {
+		assert.Equal(t, tc.want, speech.Reroute(tc.locale, tc.in), tc.name)
+	}
+}
+
+func TestSeasonJoinsRejectBrokenPatterns(t *testing.T) {
+	_, err := seasonJoins(map[string][]string{"WatchSeason": {"play (season {Season} of {Show}"}})
+	require.Error(t, err)
+}
+
 func TestGenericWordsNeedTheTitleSlot(t *testing.T) {
 	got, err := genericWords("en", map[string][]string{
 		"ListenToSongOrAlbum": {"play {Title} by {Artist}", "play the record by {Artist}"},

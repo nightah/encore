@@ -38,6 +38,7 @@ func NewSpeech(src *skillmodel.Sources, log *slog.Logger) (*Speech, error) {
 		kindNouns:   map[string][]kindNoun{},
 		answerWords: map[string]map[string]string{},
 		lastShow:    map[string]map[string]bool{},
+		seasonJoins: map[string]map[string]bool{},
 		log:         log,
 	}
 
@@ -79,6 +80,10 @@ func NewSpeech(src *skillmodel.Sources, log *slog.Logger) (*Speech, error) {
 		}
 
 		if s.lastShow[locale], err = lastShowWords(utterances); err != nil {
+			return nil, fmt.Errorf("locale %s: %w", locale, err)
+		}
+
+		if s.seasonJoins[locale], err = seasonJoins(utterances); err != nil {
 			return nil, fmt.Errorf("locale %s: %w", locale, err)
 		}
 
@@ -125,6 +130,32 @@ func (s *Speech) LastShow(locale string, intent Intent) Intent {
 	}
 
 	return Intent{Name: continueIntent, Slots: keepSlots(intent.Slots, "Room")}
+}
+
+// seasonJoins collects the words WatchSeason's samples put between {Season} and {Show}, folded.
+func seasonJoins(utterances map[string][]string) (map[string]bool, error) {
+	out := map[string]bool{}
+
+	for _, pattern := range utterances[seasonIntent] {
+		samples, err := skillmodel.Expand(pattern)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, sample := range samples {
+			_, rest, ok := strings.Cut(sample, "{Season}")
+			if !ok {
+				continue
+			}
+
+			join, _, ok := strings.Cut(rest, "{Show}")
+			if join = foldWords(join); ok && join != "" && !strings.Contains(join, "{") {
+				out[join] = true
+			}
+		}
+	}
+
+	return out, nil
 }
 
 // foldWords folds what was heard for comparing whole phrases: accents off Latin letters, case and spacing ignored.

@@ -95,8 +95,9 @@ const playlistType = "KODI_PLAYLIST"
 // answerIntents are the built-in intents a question's answer may be instead of a title.
 var answerIntents = []string{"AMAZON.YesIntent", "AMAZON.NoIntent", "AMAZON.HelpIntent", "AMAZON.StopIntent", "AMAZON.CancelIntent"}
 
-// continueIntent and nextEpisodeIntent are the intents "continue watching the last show" and "continue watching {Show}" belong to.
+// continueIntent and nextEpisodeIntent are the intents "continue watching the last show" and "continue watching {Show}" belong to, and seasonIntent is "play season 2 of {Show}"'s.
 const (
 	continueIntent    = "ContinueWatching"
 	nextEpisodeIntent = "WatchNextEpisode"
+	seasonIntent      = "WatchSeason"
 )
