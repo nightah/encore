@@ -153,6 +153,9 @@ MEDIA_TYPE:
     qualcosa da guardare
     video
 NAV_ACTION:
+  back: |-
+    indietro
+    torna indietro
   down: |-
     giù
     in basso
