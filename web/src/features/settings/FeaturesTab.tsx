@@ -143,7 +143,7 @@ function QualitySetting({ settings, save }: { settings: Settings; save: ReturnTy
       </label>
       <Select
         id={id}
-        className="w-full shrink-0 sm:w-44"
+        className="w-full shrink-0 sm:w-auto sm:min-w-44 sm:max-w-64"
         value={settings.features.preferred_quality}
         disabled={managed || save.isPending}
         onChange={(event) =>

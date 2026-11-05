@@ -215,8 +215,8 @@
       "1080p": "1080p",
       "2160p": "4K (2160p)",
       "highest": "The best there is",
-      "hint": "Which copy plays when a film or episode is in the library more than once, such as in 4K and 1080p: that quality, else the best below it, else the closest above. Playback carries on from where any copy stopped. A Kodi instance can override it.",
-      "screen": "Match each Kodi instance’s screen",
+      "hint": "Which copy plays when a film or episode is in the library more than once, such as in 4K and 1080p: that quality, else the best below it, else the closest above. Playback carries on from where any copy stopped. Match each screen plays the copy closest to each Kodi instance’s own screen, and an instance can override it.",
+      "screen": "Match each screen",
       "sd": "SD",
       "title": "Preferred quality"
     },

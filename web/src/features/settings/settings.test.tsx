@@ -403,7 +403,7 @@ describe("Settings page", () => {
     renderApp("/settings?tab=features");
     const quality = await screen.findByRole("combobox", { name: /Preferred quality/ });
     expect(quality).toHaveValue("screen");
-    expect(within(quality).getByRole("option", { name: "Match each Kodi instance’s screen" })).toBeInTheDocument();
+    expect(within(quality).getByRole("option", { name: "Match each screen" })).toBeInTheDocument();
     expect(screen.getByText(/Playback carries on from where any copy stopped/)).toBeInTheDocument();
 
     await user.selectOptions(quality, "1080p");
