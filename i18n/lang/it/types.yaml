@@ -153,9 +153,6 @@ MEDIA_TYPE:
     qualcosa da guardare
     video
 NAV_ACTION:
-  back: |-
-    indietro
-    torna indietro
   down: |-
     giù
     in basso
@@ -214,6 +211,37 @@ NAV_DIRECTION:
   left: "sinistra\na sinistra\nverso sinistra"
   right: "destra\na destra\nverso destra"
   up: "su\nin alto\nverso l'alto"
+ORDINAL:
+  "01": |-
+    prima
+    primo
+  "02": |-
+    seconda
+    secondo
+  "03": |-
+    terza
+    terzo
+  "04": |-
+    quarta
+    quarto
+  "05": |-
+    quinta
+    quinto
+  "06": |-
+    sesta
+    sesto
+  "07": |-
+    settima
+    settimo
+  "08": |-
+    ottava
+    ottavo
+  "09": |-
+    nona
+    nono
+  "10": |-
+    decima
+    decimo
 POWER_ACTION:
   hibernate: |-
     iberna
