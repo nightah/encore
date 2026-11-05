@@ -987,6 +987,11 @@ func TestScreen(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, media.Screen{Width: 3840, Height: 2160}, screen, "a GUI at 1080p that switches to 4K for playback")
 
+	s.SetScreen(1920, 1080, "0384x02160060.00000pstd", "0000002160060.00000pstd", "0384000000060.00000pstd", "-1000-2160060.00000pstd")
+	screen, err = b.Screen(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, media.Screen{Width: 1920, Height: 1080}, screen, "a mode that isn't five digits of each, or has no size or a negative one, is skipped")
+
 	s.Handle("Settings.GetSettingValue", func(json.RawMessage) (any, *fakekodi.Error) {
 		return nil, &fakekodi.Error{Code: fakekodi.CodeInvalidParams, Message: "Invalid params."}
 	})

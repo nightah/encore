@@ -1,6 +1,7 @@
 package media_test
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -242,6 +243,16 @@ func TestPreferCopies(t *testing.T) {
 		assert.Equal(t, 1, next.ID)
 	})
 
+	t.Run("a show whose episodes can't be listed keeps the backend's answer", func(t *testing.T) {
+		t.Parallel()
+
+		kit := unlistedEpisodes{testkit.NewBackend(ep(1, 1, 1, media.Quality1080p, 0), ep(2, 1, 1, media.Quality2160p, 0))}
+
+		next, err := media.PreferCopies(kit, media.Quality2160p, nil).NextEpisode(t.Context(), 7)
+		require.NoError(t, err)
+		assert.Equal(t, 1, next.ID)
+	})
+
 	t.Run("a failure is passed on", func(t *testing.T) {
 		t.Parallel()
 
@@ -260,4 +271,11 @@ func TestPreferCopies(t *testing.T) {
 		require.NoError(t, media.PreferCopies(kit, media.Quality1080p, nil).Play(t.Context(), media.Ref{Kind: media.KindTVShow, ID: 7}, media.PlayOptions{Shuffle: true}))
 		assert.Equal(t, []string{"Play tvshow/7 shuffle 1080p"}, kit.Calls())
 	})
+}
+
+// unlistedEpisodes answers NextEpisode but can't list a show's episodes.
+type unlistedEpisodes struct{ *testkit.Backend }
+
+func (unlistedEpisodes) Episodes(context.Context, int) ([]media.Item, error) {
+	return nil, errors.New("offline")
 }

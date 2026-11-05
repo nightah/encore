@@ -334,6 +334,45 @@ func TestTheScreenIsLearnedAndRechecked(t *testing.T) {
 	})
 }
 
+func TestAnUnchangedScreenIsntSavedAgain(t *testing.T) {
+	inBubble(t, func(t *testing.T) {
+		h := newHarness(t, true)
+		ctx := t.Context()
+		inst := h.instance(t)
+		tune := defaultTuning()
+
+		h.kodi.SetScreen(1920, 1080)
+		after(t, tune.learnMACDelay, func() bool { return inst.Screen() == media.Screen{Width: 1920, Height: 1080} }, "learned once the connection settles")
+
+		// Changed behind the instance's back, so a save at the next check would show.
+		require.NoError(t, h.app.DB().KodiInstances().SetScreen(ctx, inst.id, 1, 1))
+
+		reads := 0
+		h.kodi.Handle("XBMC.GetInfoLabels", func(params json.RawMessage) (any, *fakekodi.Error) {
+			var req struct{ Labels []string }
+			if err := json.Unmarshal(params, &req); err != nil {
+				return nil, &fakekodi.Error{Code: fakekodi.CodeInvalidParams, Message: err.Error()}
+			}
+
+			labels := map[string]string{}
+			for _, l := range req.Labels {
+				labels[l] = map[string]string{"System.ScreenWidth": "1920", "System.ScreenHeight": "1080"}[l]
+			}
+
+			if _, ok := labels["System.ScreenWidth"]; ok {
+				reads++
+			}
+
+			return labels, nil
+		})
+		after(t, tune.screenRecheck, func() bool { return reads > 0 }, "the screen is read again at the next check")
+
+		rec, err := h.app.DB().KodiInstances().Get(ctx, inst.id)
+		require.NoError(t, err)
+		assert.Equal(t, media.Screen{Width: 1, Height: 1}, media.Screen{Width: rec.ScreenWidth, Height: rec.ScreenHeight}, "the same screen isn't written again")
+	})
+}
+
 func TestAStoredScreenIsUsedFromTheStart(t *testing.T) {
 	inBubble(t, func(t *testing.T) {
 		h := newHarness(t, true)
