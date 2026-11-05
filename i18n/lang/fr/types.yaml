@@ -154,6 +154,10 @@ MEDIA_TYPE:
     vidéo
     vidéos
 NAV_ACTION:
+  back: |-
+    retour
+    en arrière
+    reviens
   down: |-
     en bas
     bas
