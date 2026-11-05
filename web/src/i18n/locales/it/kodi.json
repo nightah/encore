@@ -88,9 +88,28 @@
         "label": "Password di Kodi",
         "saved": "Una password è salvata. Lascia vuoto per mantenerla."
       },
+      "preferred_quality": {
+        "720p": "720p",
+        "1080p": "1080p",
+        "2160p": "4K (2160p)",
+        "highest": "La migliore disponibile",
+        "hint": "Quale copia viene riprodotta quando un film o un episodio è nella libreria più di una volta, per esempio in 4K e in 1080p.",
+        "inherit": "Segui Impostazioni › Funzionalità",
+        "label": "Qualità preferita",
+        "screen": "In base a questo schermo",
+        "screen_known": "Il suo schermo è {{quality}}, {{width}}×{{height}}.",
+        "screen_quality": {
+          "720p": "720p",
+          "1080p": "1080p",
+          "2160p": "4K",
+          "sd": "SD"
+        },
+        "screen_unknown": "Encore riconosce il suo schermo appena si connette.",
+        "sd": "SD"
+      },
       "shutdown": {
         "hint": "Cosa fa «Alexa, chiedi a encore di spegnere» su questa istanza di Kodi.",
-        "inherit": "Segui Impostazioni › Funzioni",
+        "inherit": "Segui Impostazioni › Funzionalità",
         "label": "«Spegni»",
         "power_off": "Spegni il dispositivo",
         "quit": "Chiudi Kodi"
