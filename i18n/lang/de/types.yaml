@@ -172,6 +172,9 @@ MEDIA_TYPE:
     video
     videos
 NAV_ACTION:
+  back: |-
+    zurück
+    eins zurück
   down: |-
     runter
     nach unten
