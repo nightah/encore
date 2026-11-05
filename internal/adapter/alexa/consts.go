@@ -34,6 +34,8 @@ const (
 	sessionPending  = "pending"
 	sessionFollowup = "followup"
 	sessionQuestion = "question"
+	// sessionRoom is the room a request named, so the answer to its question plays there too.
+	sessionRoom = "room"
 )
 
 // ConfirmSoundURL is the sound from Amazon's sound library that acknowledges a command with nothing to say.

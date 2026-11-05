@@ -61,7 +61,7 @@ When two titles are close, Alexa asks which one you meant, naming each with its 
 - "no" offers the next closest matches, two at a time, until there are none left
 - "yes" plays the title when Alexa offered only one, and asks again when it offered two
 
-If Alexa doesn't understand the answer, it asks the same question again instead of giving up, and "help" says how to answer. Each language's page lists its ways of answering under "Answering a question".
+The answer plays where the question was about: after "play Dune on the TV", "the second one" plays on the TV's Kodi instance, not this Echo's. If Alexa doesn't understand the answer, it asks the same question again instead of giving up, and "help" says how to answer. Each language's page lists its ways of answering under "Answering a question".
 
 ## Every phrase, by language
 
