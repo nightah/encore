@@ -147,6 +147,8 @@ type exportedKodi struct {
 	Language      string `yaml:"language,omitempty"`
 	Timezone      string `yaml:"timezone,omitempty"`
 	ShutdownQuits *bool  `yaml:"shutdown_quits,omitempty"`
+	// PreferredQuality is empty when the instance follows alexa.preferred_quality.
+	PreferredQuality string `yaml:"preferred_quality,omitempty"`
 }
 
 // DeployEvent is one step of a deploy's progress.
@@ -251,10 +253,19 @@ type Instance struct {
 	Language           string               `json:"language" doc:"Title-matching rules for this library"`
 	Timezone           string               `json:"timezone" doc:"The Kodi host's IANA time zone; empty when learnt from Kodi's clock"`
 	Shutdown           string               `json:"shutdown" enum:"inherit,quit,power_off" doc:"What \"shut down\" does; inherit follows Settings › Features"`
+	PreferredQuality   string               `json:"preferred_quality" enum:"inherit,screen,highest,2160p,1080p,720p,sd" doc:"Which copy plays when the library holds a film or episode more than once; inherit follows Settings › Features, and screen matches this instance's screen"`
+	Screen             Nullable[Screen]     `json:"screen" doc:"The largest picture this instance's display shows, as Kodi last reported it; null until Encore has asked"`
 	ManagedByConfig    bool                 `json:"managed_by_config"`
 	Status             InstanceStatus       `json:"status"`
 	Library            InstanceLibrary      `json:"library"`
 	NowPlaying         Nullable[NowPlaying] `json:"now_playing"`
+}
+
+// Screen is a Kodi instance's display.
+type Screen struct {
+	Width   int    `json:"width"`
+	Height  int    `json:"height"`
+	Quality string `json:"quality" enum:"2160p,1080p,720p,sd" doc:"The quality of copy that fills the screen"`
 }
 
 // InstanceStatus is a Kodi instance's connection state.
@@ -297,20 +308,26 @@ type NowPlaying struct {
 	DurationS int    `json:"duration_s"`
 	Paused    bool   `json:"paused"`
 	ArtURL    string `json:"art_url" doc:"The item's poster or thumbnail, fetched from Kodi through encore; empty when Kodi has none"`
+	Quality   string `json:"quality" doc:"The picture's quality: 2160p, 1080p, 720p or sd from the stream playing, else from the library; empty when unknown, as for music"`
+	HDR       string `json:"hdr" doc:"The HDR format as Kodi names it, such as hdr10, dolbyvision or hlg; empty for SDR or when unknown"`
+	Width     int    `json:"width" doc:"The picture's width in pixels; 0 when unknown"`
+	Height    int    `json:"height" doc:"The picture's height in pixels; 0 when unknown"`
+	Codec     string `json:"codec" doc:"The video codec as Kodi names it, such as hevc or h264; empty when unknown"`
 }
 
 // InstanceInput creates or changes a Kodi instance. On PATCH every field is optional.
 type InstanceInput struct {
-	Name         *string `json:"name,omitempty" minLength:"1" maxLength:"64"`
-	URL          *string `json:"url,omitempty" doc:"HTTP JSON-RPC endpoint, e.g. http://192.168.1.20:8080/jsonrpc"`
-	WebSocketURL *string `json:"websocket_url,omitempty" doc:"e.g. ws://192.168.1.20:9090/jsonrpc; empty disables live updates"`
-	Username     *string `json:"username,omitempty"`
-	Password     *string `json:"password,omitempty" doc:"Write-only; empty removes it"`
-	MAC          *string `json:"mac,omitempty"`
-	Broadcast    *string `json:"broadcast,omitempty"`
-	Language     *string `json:"language,omitempty" doc:"Title-matching rules, e.g. en or de"`
-	Timezone     *string `json:"timezone,omitempty" doc:"The Kodi host's IANA time zone; empty learns it from Kodi's clock"`
-	Shutdown     *string `json:"shutdown,omitempty" enum:"inherit,quit,power_off"`
+	Name             *string `json:"name,omitempty" minLength:"1" maxLength:"64"`
+	URL              *string `json:"url,omitempty" doc:"HTTP JSON-RPC endpoint, e.g. http://192.168.1.20:8080/jsonrpc"`
+	WebSocketURL     *string `json:"websocket_url,omitempty" doc:"e.g. ws://192.168.1.20:9090/jsonrpc; empty disables live updates"`
+	Username         *string `json:"username,omitempty"`
+	Password         *string `json:"password,omitempty" doc:"Write-only; empty removes it"`
+	MAC              *string `json:"mac,omitempty"`
+	Broadcast        *string `json:"broadcast,omitempty"`
+	Language         *string `json:"language,omitempty" doc:"Title-matching rules, e.g. en or de"`
+	Timezone         *string `json:"timezone,omitempty" doc:"The Kodi host's IANA time zone; empty learns it from Kodi's clock"`
+	Shutdown         *string `json:"shutdown,omitempty" enum:"inherit,quit,power_off"`
+	PreferredQuality *string `json:"preferred_quality,omitempty" enum:"inherit,screen,highest,2160p,1080p,720p,sd" doc:"Which copy plays when the library holds a film or episode more than once; inherit follows Settings › Features"`
 }
 
 // Check is one step of a connection test.
@@ -697,7 +714,7 @@ type Settings struct {
 	Auth     AuthSettings    `json:"auth"`
 	Storage  StorageSettings `json:"storage"`
 	Secrets  SecretsInfo     `json:"secrets"`
-	Features Features        `json:"features" doc:"The alexa.deep_search, alexa.shutdown_quits, alexa.confirm_sound, alexa.queue_limit, alexa.auto_deploy and alexa.auto_deploy_minutes config keys"`
+	Features Features        `json:"features" doc:"The alexa.deep_search, alexa.shutdown_quits, alexa.preferred_quality, alexa.confirm_sound, alexa.queue_limit, alexa.auto_deploy and alexa.auto_deploy_minutes config keys"`
 	Logging  LoggingSettings `json:"logging"`
 	Locale   LocaleSettings  `json:"locale"`
 	Managed  []string        `json:"managed" doc:"Dotted keys set by encore.yml or ENCORE_* variables; shown read-only"`
@@ -796,10 +813,11 @@ type SecretsInfo struct {
 	RotatedAt *time.Time `json:"rotated_at"`
 }
 
-// Features are optional behaviours. They are the config keys alexa.deep_search, alexa.shutdown_quits, alexa.confirm_sound, alexa.queue_limit, alexa.auto_deploy and alexa.auto_deploy_minutes.
+// Features are optional behaviours. They are the config keys alexa.deep_search, alexa.shutdown_quits, alexa.preferred_quality, alexa.confirm_sound, alexa.queue_limit, alexa.auto_deploy and alexa.auto_deploy_minutes.
 type Features struct {
 	DeepSearch        bool    `json:"deep_search" doc:"\"Play X\" also searches music when the request doesn't say what kind of title X is"`
 	ShutdownQuits     bool    `json:"shutdown_quits" doc:"\"Shut down\" quits Kodi instead of powering off the device; a Kodi instance's own kodi[].shutdown_quits wins"`
+	PreferredQuality  string  `json:"preferred_quality" enum:"screen,highest,2160p,1080p,720p,sd" doc:"Which copy plays when the library holds a film or episode more than once, such as in both 2160p and 1080p: that quality, else the best below it, else the least above it. screen matches each Kodi instance's screen, and plays the best copy until it is known. Playback carries on where any copy stopped. A Kodi instance's own kodi[].preferred_quality wins"`
 	ConfirmSound      bool    `json:"confirm_sound" doc:"A short sound answers commands that have nothing to say, such as pause or volume up"`
 	QueueLimit        int     `json:"queue_limit" doc:"The most items a shuffle or queue plays at once"`
 	AutoDeploy        bool    `json:"auto_deploy" doc:"Redeploy the skill on its own when what would be deployed changes. An automatic deploy that fails for a reason that may pass, such as Amazon being unavailable, is tried again up to three times with a growing wait; any other failure, or a fourth in a row, pauses this until a deploy started by hand succeeds"`
@@ -933,6 +951,7 @@ type FeaturesPatch struct {
 	_                 struct{} `additionalProperties:"true"`
 	DeepSearch        *bool    `json:"deep_search,omitempty"`
 	ShutdownQuits     *bool    `json:"shutdown_quits,omitempty"`
+	PreferredQuality  *string  `json:"preferred_quality,omitempty" enum:"screen,highest,2160p,1080p,720p,sd"`
 	ConfirmSound      *bool    `json:"confirm_sound,omitempty"`
 	QueueLimit        *int     `json:"queue_limit,omitempty" minimum:"1" maximum:"1000"`
 	AutoDeploy        *bool    `json:"auto_deploy,omitempty"`

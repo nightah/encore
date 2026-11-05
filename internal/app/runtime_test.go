@@ -1,6 +1,7 @@
 package app
 
 import (
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/nightah/encore/internal/backend/kodi/fakekodi"
 	"github.com/nightah/encore/internal/config"
+	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/store"
 )
 
@@ -285,4 +287,66 @@ func TestFirstNonEmpty(t *testing.T) {
 func TestInstanceLanguageDefaultsToEnglish(t *testing.T) {
 	assert.Equal(t, "en", (&Instance{}).language())
 	assert.Equal(t, "de", (&Instance{Record: store.KodiInstance{Language: "de"}}).language())
+}
+
+func TestTheScreenIsLearnedAndRechecked(t *testing.T) {
+	inBubble(t, func(t *testing.T) {
+		h := newHarness(t, true)
+		ctx := t.Context()
+		inst := h.instance(t)
+		tune := defaultTuning()
+
+		stored := func() media.Screen {
+			rec, err := h.app.DB().KodiInstances().Get(ctx, inst.id)
+			require.NoError(t, err)
+
+			return media.Screen{Width: rec.ScreenWidth, Height: rec.ScreenHeight}
+		}
+
+		quality := func() media.Quality {
+			target, err := h.app.Target(ctx, testDevice)
+			require.NoError(t, err)
+
+			return target.Quality
+		}
+
+		h.kodi.SetScreen(1920, 1080, "0384002160023.97602pstd")
+		assert.Equal(t, media.QualityHighest, quality(), "the best copy until the screen is known")
+
+		after(t, tune.learnMACDelay, func() bool { return stored() == media.Screen{Width: 3840, Height: 2160} }, "read and saved once the connection settles, with the 4K mode Kodi switches to")
+		assert.Equal(t, media.Quality2160p, quality(), "the default matches the screen")
+
+		h.kodi.SetScreen(1280, 720)
+		after(t, tune.screenRecheck, func() bool { return inst.Screen() == media.Screen{Width: 1280, Height: 720} }, "a new TV is noticed at the next check")
+		assert.Equal(t, media.Quality720p, quality())
+		assert.Equal(t, media.Screen{Width: 1280, Height: 720}, stored())
+
+		h.kodi.Handle("XBMC.GetInfoLabels", func(json.RawMessage) (any, *fakekodi.Error) {
+			return nil, &fakekodi.Error{Code: fakekodi.CodeInvalidParams, Message: "Invalid params."}
+		})
+		h.kodi.SetScreen(3840, 2160)
+		after(t, tune.screenRecheck, func() bool { return inst.Screen() == media.Screen{Width: 1280, Height: 720} }, "a failed read keeps what was known")
+
+		h.kodi.Handle("XBMC.GetInfoLabels", func(json.RawMessage) (any, *fakekodi.Error) {
+			return map[string]string{"System.ScreenWidth": "3840", "System.ScreenHeight": "2160"}, nil
+		})
+		after(t, tune.screenRetry, func() bool { return inst.Screen() == media.Screen{Width: 3840, Height: 2160} }, "and is retried sooner than the next check")
+	})
+}
+
+func TestAStoredScreenIsUsedFromTheStart(t *testing.T) {
+	inBubble(t, func(t *testing.T) {
+		h := newHarness(t, true)
+		ctx := t.Context()
+
+		recs, err := h.app.DB().KodiInstances().List(ctx)
+		require.NoError(t, err)
+
+		require.NoError(t, h.app.DB().KodiInstances().SetScreen(ctx, recs[0].ID, 1920, 1080))
+		require.NoError(t, h.app.ReloadInstance(ctx, recs[0].ID))
+
+		target, err := h.app.Target(ctx, testDevice)
+		require.NoError(t, err)
+		assert.Equal(t, media.Quality1080p, target.Quality, "a sleeping Kodi's screen is remembered")
+	})
 }

@@ -377,6 +377,21 @@ describe("Settings page", () => {
     await waitFor(() => expect(getDb().settings.features.shutdown_quits).toBe(!before));
   });
 
+  it("saves the preferred quality as soon as another is picked", async () => {
+    const user = userEvent.setup();
+    const log = recordRequests();
+    renderApp("/settings?tab=features");
+    const quality = await screen.findByRole("combobox", { name: /Preferred quality/ });
+    expect(quality).toHaveValue("screen");
+    expect(within(quality).getByRole("option", { name: "Match each Kodi instance’s screen" })).toBeInTheDocument();
+    expect(screen.getByText(/Playback carries on from where any copy stopped/)).toBeInTheDocument();
+
+    await user.selectOptions(quality, "1080p");
+    await waitFor(() => expect(getDb().settings.features.preferred_quality).toBe("1080p"));
+    expect(log.find((r) => r.method === "PATCH")?.body).toEqual({ features: { preferred_quality: "1080p" } });
+    await waitFor(() => expect(quality).toHaveValue("1080p"));
+  });
+
   it("offers automatic skill deploys, on by default, after deep search", async () => {
     const user = userEvent.setup();
     const log = recordRequests();

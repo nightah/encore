@@ -17,6 +17,31 @@ func newKodi(name string) *KodiInstance {
 	return &KodiInstance{Name: name, Scheme: "http", Host: name + ".lan", Port: 8080, Path: "/jsonrpc", WSPort: 9090}
 }
 
+func TestKodiInstanceScreenIsSavedOnItsOwn(t *testing.T) {
+	db, _ := openTest(t, Options{})
+	ctx := t.Context()
+	repo := db.KodiInstances()
+
+	k := newKodi("lounge")
+	require.NoError(t, repo.Create(ctx, k))
+
+	// An edit read before the screen was learned and saved after it, as when the MAC address is learned at the same moment.
+	stale, err := repo.Get(ctx, k.ID)
+	require.NoError(t, err)
+
+	require.NoError(t, repo.SetScreen(ctx, k.ID, 3840, 2160))
+
+	stale.MAC = "aa:bb:cc:dd:ee:ff"
+	require.NoError(t, repo.Update(ctx, &stale))
+
+	got, err := repo.Get(ctx, k.ID)
+	require.NoError(t, err)
+	assert.Equal(t, [2]int{3840, 2160}, [2]int{got.ScreenWidth, got.ScreenHeight}, "the edit keeps the screen")
+	assert.Equal(t, "aa:bb:cc:dd:ee:ff", got.MAC, "and the screen kept the edit's fields alone")
+
+	require.ErrorIs(t, repo.SetScreen(ctx, 999, 1920, 1080), ErrNotFound)
+}
+
 func TestKodiInstancesCRUD(t *testing.T) {
 	db, clk := openTest(t, Options{})
 	ctx := t.Context()
@@ -26,7 +51,7 @@ func TestKodiInstancesCRUD(t *testing.T) {
 	k.Username = "kodi"
 	k.PasswordSecretRef = "kodi/1/password"
 	k.MAC = "aa:bb:cc:dd:ee:ff"
-	k.Language, k.Timezone, k.ShutdownQuits = "de", "Australia/Melbourne", new(true)
+	k.Language, k.Timezone, k.ShutdownQuits, k.PreferredQuality = "de", "Australia/Melbourne", new(true), "1080p"
 	require.NoError(t, repo.Create(ctx, k))
 	assert.NotZero(t, k.ID)
 	assert.Equal(t, clk.Now(), k.CreatedAt)
@@ -38,13 +63,14 @@ func TestKodiInstancesCRUD(t *testing.T) {
 	clk.Advance(time.Minute)
 
 	k.Port = 8081
-	k.ShutdownQuits = nil
+	k.ShutdownQuits, k.PreferredQuality = nil, "screen"
 	require.NoError(t, repo.Update(ctx, k))
 
 	got, err = repo.Get(ctx, k.ID)
 	require.NoError(t, err)
 	assert.Equal(t, 8081, got.Port)
 	assert.Nil(t, got.ShutdownQuits, "nil follows alexa.shutdown_quits")
+	assert.Equal(t, "screen", got.PreferredQuality)
 	assert.Equal(t, clk.Now(), got.UpdatedAt)
 	assert.True(t, got.UpdatedAt.After(got.CreatedAt))
 
@@ -54,6 +80,10 @@ func TestKodiInstancesCRUD(t *testing.T) {
 	bad := newKodi("bad")
 	bad.Port = 0
 	require.ErrorIs(t, repo.Create(ctx, bad), ErrInvalid)
+
+	bad = newKodi("bad")
+	bad.PreferredQuality = "4k"
+	require.ErrorIs(t, repo.Create(ctx, bad), ErrInvalid, "only the qualities Encore knows")
 
 	require.NoError(t, repo.Delete(ctx, k.ID))
 	_, err = repo.Get(ctx, k.ID)

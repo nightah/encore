@@ -48,7 +48,7 @@ func docFor(item *media.Item, userAliases []string, now time.Time) (match.Doc, b
 		return match.Doc{}, false
 	}
 
-	doc := match.Doc{ID: docID(item.Ref()), Kind: item.Kind, Ref: item.Ref(), Title: item.Title, Year: item.Year}
+	doc := match.Doc{ID: docID(item.Ref()), Kind: item.Kind, Ref: item.Ref(), Title: item.Title, Year: item.Year, Copy: item.Copy()}
 
 	for _, alias := range append([]string{item.SortTitle, item.OriginalTitle}, userAliases...) {
 		if alias != "" && alias != item.Title && !slices.Contains(doc.Aliases, alias) {

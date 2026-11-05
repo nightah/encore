@@ -221,6 +221,23 @@ func TestNextPlaysTheFollowingEpisodeWhenNothingIsQueued(t *testing.T) {
 	}
 }
 
+func TestNextFromACopyTheListDidNotKeep(t *testing.T) {
+	ep := func(id, episode int, q media.Quality) media.Item {
+		return media.Item{Kind: media.KindEpisode, ID: id, ShowID: 7, ShowTitle: "Severance", Season: 1, Episode: episode, Quality: q}
+	}
+	uhd1, fhd1, uhd2, fhd2 := ep(71, 1, media.Quality2160p), ep(81, 1, media.Quality1080p), ep(72, 2, media.Quality2160p), ep(82, 2, media.Quality1080p)
+
+	target, backend, _ := newTarget(uhd1, fhd1, uhd2, fhd2)
+	target.Backend = media.PreferCopies(target.Backend, media.Quality2160p, nil)
+	backend.SetPlaying(&media.NowPlaying{Item: fhd1})
+
+	o := newService().Next(t.Context(), target)
+
+	require.NoError(t, o.Err)
+	assert.Equal(t, "playback.playing_episode", o.Say.ID)
+	assert.Equal(t, []string{"NowPlaying", "Episodes 7", "Play episode/72 resume 2160p"}, backend.Calls(), "the 1080p copy of 1x01 is playing; 1x02 follows in the preferred copy")
+}
+
 func TestNextFailures(t *testing.T) {
 	playing := &media.NowPlaying{Item: media.Item{Kind: media.KindEpisode, ID: 71, ShowID: 7, Season: 1, Episode: 1}}
 

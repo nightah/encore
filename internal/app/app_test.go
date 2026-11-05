@@ -174,6 +174,44 @@ func TestEndToEndNextEpisode(t *testing.T) {
 	})
 }
 
+func TestEndToEndCopiesFollowThePreferredQuality(t *testing.T) {
+	inBubble(t, func(t *testing.T) {
+		stream := func(width, height int) *fakekodi.StreamDetails {
+			return &fakekodi.StreamDetails{Video: []fakekodi.VideoStream{{Codec: "hevc", Width: width, Height: height}}}
+		}
+
+		lib := fakekodi.DefaultLibrary()
+		hotFuzz := lib.Movies[5]
+		hotFuzz.StreamDetails = stream(1920, 1080)
+		lib.Movies[5].StreamDetails = stream(3840, 1600)
+		lib.Movies[5].Resume = fakekodi.Resume{Position: 282, Total: 7260}
+		hotFuzz.MovieID = 60
+		lib.Movies = append(lib.Movies, hotFuzz)
+
+		woe := lib.Episodes[1]
+		woe.StreamDetails = stream(1920, 1080)
+		lib.Episodes[1].StreamDetails = stream(3840, 2160)
+		woe.EpisodeID = 120
+		lib.Episodes = append(lib.Episodes, woe)
+
+		kodi := newKodi(t, fakekodi.Options{Library: lib})
+		h := startHarness(t, onFakes(defaultTuning()), config.KodiInstance{Name: "Lounge", URL: kodi.URL(), WebSocketURL: kodi.WebSocketURL(), Default: true, PreferredQuality: "1080p"})
+		h.kodi = kodi
+		h.waitIndexed(t)
+
+		resp := h.say(t, "WatchMovie", "Movie", "hot fuzz")
+		assert.Equal(t, "Playing Hot Fuzz.", speech(resp), "two copies are one title")
+
+		resp = h.say(t, "WatchNextEpisode", "Show", "severance")
+		assert.Contains(t, speech(resp), "Severance, season 2, episode 4")
+
+		calls := h.kodi.CallsTo("Player.Open")
+		require.Len(t, calls, 2)
+		assert.JSONEq(t, `{"item":{"movieid":60},"options":{"resume":{"minutes":4,"seconds":42}}}`, string(calls[0].Params), "the instance prefers 1080p over the 2160p copy, carrying on where that stopped")
+		assert.Contains(t, string(calls[1].Params), `"episodeid":120`, "and the 1080p copy of the episode")
+	})
+}
+
 func TestEndToEndUnlinkedDevice(t *testing.T) {
 	inBubble(t, func(t *testing.T) {
 		h := newHarness(t, false)

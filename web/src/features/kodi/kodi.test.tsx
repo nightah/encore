@@ -157,7 +157,7 @@ describe("Kodi instances page", () => {
     expect(await screen.findByRole("article", { name: "LibreELEC-Study" })).toBeInTheDocument();
   });
 
-  it("saves an instance's title language, time zone and shutdown behaviour", async () => {
+  it("saves an instance's title language, time zone, shutdown behaviour and preferred quality", async () => {
     const user = userEvent.setup();
     const log = recordRequests();
     renderApp("/kodi");
@@ -167,18 +167,24 @@ describe("Kodi instances page", () => {
     const dialog = await screen.findByRole("dialog", { name: "Edit Lounge" });
     const shutdown = within(dialog).getByRole("combobox", { name: "“Shut down”" });
     expect(shutdown).toHaveValue("inherit");
+    const quality = within(dialog).getByRole("combobox", { name: "Preferred quality" });
+    expect(quality).toHaveValue("inherit");
+    expect(within(dialog).getByText(/Its screen is 4K, 3840×2160\./)).toBeInTheDocument();
 
     await user.selectOptions(within(dialog).getByRole("combobox", { name: "Title language" }), "de");
     await user.type(within(dialog).getByRole("textbox", { name: "Time zone" }), "Australia/Melbourne");
     await user.selectOptions(shutdown, "quit");
+    await user.selectOptions(quality, "Match this screen");
     await user.click(within(dialog).getByRole("button", { name: "Save" }));
 
     await waitFor(() => expect(getDb().instances.find((i) => i.name === "Lounge")?.shutdown).toBe("quit"));
     expect(log.find((r) => r.method === "PATCH")?.body).toMatchObject({
       language: "de",
+      preferred_quality: "screen",
       shutdown: "quit",
       timezone: "Australia/Melbourne",
     });
+    expect(getDb().instances.find((i) => i.name === "Lounge")?.preferred_quality).toBe("screen");
   });
 
   it("forgets an unconfirmed removal when the dialog closes", async () => {
@@ -669,6 +675,7 @@ describe("Kodi instance dialog", () => {
     await user.type(within(dialog).getByRole("textbox", { name: "Name" }), "  Garage ");
     await user.type(within(dialog).getByRole("textbox", { name: "JSON-RPC URL" }), "http://192.168.1.60:8080/jsonrpc");
     await user.type(within(dialog).getByLabelText("Kodi password"), "hunter2");
+    expect(within(dialog).getByText(/Encore learns its screen once it connects\./)).toBeInTheDocument();
     await user.click(within(dialog).getByRole("button", { name: "Add Kodi instance" }));
 
     expect(await screen.findByRole("article", { name: "Garage" })).toBeInTheDocument();
@@ -677,6 +684,7 @@ describe("Kodi instance dialog", () => {
       language: "en",
       name: "Garage",
       password: "hunter2",
+      preferred_quality: "inherit",
       shutdown: "inherit",
       timezone: "",
       url: "http://192.168.1.60:8080/jsonrpc",

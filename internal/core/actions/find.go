@@ -26,7 +26,7 @@ func (s *Service) candidates(ctx context.Context, t Target, name string, kinds .
 		return nil, nil
 	}
 
-	q := match.Query{Text: name, Kinds: kinds, Limit: candidateLimit}
+	q := match.Query{Text: name, Kinds: kinds, Limit: candidateLimit, Quality: t.Quality}
 
 	res, err := t.Matcher.Search(ctx, q)
 	if err != nil {

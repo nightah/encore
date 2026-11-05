@@ -3,8 +3,10 @@ package fakekodi
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"path"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -22,6 +24,7 @@ func (s *Server) registerDefaults() {
 	}
 	s.handlers["XBMC.GetInfoLabels"] = s.getInfoLabels
 	s.handlers["Files.GetDirectory"] = s.filesGetDirectory
+	s.handlers["Settings.GetSettingValue"] = s.settingsGetSettingValue
 
 	if s.opts.DatabaseName != "" {
 		s.handlers["Database.GetDatabaseName"] = s.databaseGetDatabaseName
@@ -71,7 +74,10 @@ func (s *Server) getInfoLabels(params json.RawMessage) (any, *Error) {
 	}
 
 	s.mu.Lock()
-	known := map[string]string{"Network.MacAddress": s.mac, "System.FriendlyName": "Kodi (fake)", "System.Time(hh:mm:ss xx)": s.state.clock}
+	known := map[string]string{
+		"Network.MacAddress": s.mac, "System.FriendlyName": "Kodi (fake)", "System.Time(hh:mm:ss xx)": s.state.clock,
+		"System.ScreenWidth": strconv.Itoa(s.state.screen[0]), "System.ScreenHeight": strconv.Itoa(s.state.screen[1]),
+	}
 	s.mu.Unlock()
 
 	out := map[string]string{}
@@ -80,6 +86,25 @@ func (s *Server) getInfoLabels(params json.RawMessage) (any, *Error) {
 	}
 
 	return out, nil
+}
+
+// settingsGetSettingValue knows only videoscreen.whitelist; Kodi answers an unknown setting with invalid params.
+func (s *Server) settingsGetSettingValue(params json.RawMessage) (any, *Error) {
+	var p struct {
+		Setting string `json:"setting"`
+	}
+	if err := decode(params, &p); err != nil {
+		return nil, err
+	}
+
+	if p.Setting != "videoscreen.whitelist" {
+		return nil, &Error{Code: CodeInvalidParams, Message: "Invalid params."}
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	return map[string]any{"value": append([]string{}, s.state.whitelist...)}, nil
 }
 
 func (s *Server) filesGetDirectory(params json.RawMessage) (any, *Error) {
@@ -102,6 +127,10 @@ func (s *Server) filesGetDirectory(params json.RawMessage) (any, *Error) {
 		return entries, nil
 	}
 
+	if strings.HasPrefix(p.Directory, versionsDirectory) {
+		return movieVersions(lib, p.Directory), nil
+	}
+
 	files := []map[string]any{}
 
 	for _, pl := range lib.Playlists {
@@ -111,6 +140,34 @@ func (s *Server) filesGetDirectory(params json.RawMessage) (any, *Error) {
 	}
 
 	return map[string]any{"files": files, "limits": map[string]int{"start": 0, "end": len(files), "total": len(files)}}, nil
+}
+
+// movieVersions answers videodb://movies/titles/?videoversionid=-1&movieid=N: every version of the film, or its one file when it has no others.
+func movieVersions(lib *Library, dir string) map[string]any {
+	files := []map[string]any{}
+
+	u, err := url.Parse(dir)
+	id, _ := strconv.Atoi(u.Query().Get("movieid"))
+
+	if i := slices.IndexFunc(lib.Movies, func(m Movie) bool { return m.MovieID == id }); err == nil && i >= 0 {
+		m := lib.Movies[i]
+
+		versions := m.Versions
+		if len(versions) == 0 {
+			versions = []Version{{File: m.File, StreamDetails: m.StreamDetails, Resume: m.Resume}}
+		}
+
+		for _, v := range versions {
+			f := map[string]any{"file": v.File, "filetype": "file", "id": m.MovieID, "label": m.Label, "title": m.Title, "type": "movie", "resume": v.Resume}
+			if v.StreamDetails != nil {
+				f["streamdetails"] = v.StreamDetails
+			}
+
+			files = append(files, f)
+		}
+	}
+
+	return map[string]any{"files": files, "limits": map[string]int{"start": 0, "end": len(files), "total": len(files)}}
 }
 
 func (s *Server) applicationGetProperties(json.RawMessage) (any, *Error) {

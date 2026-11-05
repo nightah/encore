@@ -10,6 +10,7 @@ import (
 
 	"github.com/nightah/encore/internal/backend/kodi"
 	"github.com/nightah/encore/internal/core/actions"
+	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/store"
 )
 
@@ -40,7 +41,7 @@ func (a *App) applyConfiguredInstances(ctx context.Context) error {
 		rec := byName[c.Name]
 		rec.Name, rec.Scheme, rec.Host, rec.Port, rec.Path = c.Name, kc.Scheme, kc.Host, kc.Port, kc.Path
 		rec.WSPort, rec.MAC, rec.BroadcastAddr = kc.WebSocketPort, c.MAC, c.Broadcast
-		rec.Language, rec.Timezone, rec.ShutdownQuits = c.Language, c.Timezone, c.ShutdownQuits
+		rec.Language, rec.Timezone, rec.ShutdownQuits, rec.PreferredQuality = c.Language, c.Timezone, c.ShutdownQuits, c.PreferredQuality
 
 		rec.Username = firstNonEmpty(c.Username, kc.Username)
 		if password := firstNonEmpty(c.Password, kc.Password); password != "" {
@@ -135,7 +136,10 @@ func (a *App) newInstance(ctx context.Context, rec store.KodiInstance) (*Instanc
 		waker.SetMAC(mac)
 	}
 
-	return &Instance{Record: rec, Client: client, Backend: backend, Waker: waker, id: rec.ID, name: rec.Name, log: log, db: a.db}, nil
+	inst := &Instance{Record: rec, Client: client, Backend: backend, Waker: waker, id: rec.ID, name: rec.Name, log: log, db: a.db}
+	inst.screen.Store(&media.Screen{Width: rec.ScreenWidth, Height: rec.ScreenHeight})
+
+	return inst, nil
 }
 
 // timezone returns nil, which means learn the offset from Kodi's clock, for an empty or unknown zone. Config and API validation have already checked it.
@@ -161,14 +165,16 @@ func (i *Instance) language() string {
 }
 
 // run keeps only the connection; the library is kept by the instance's group.
-func (i *Instance) run(ctx context.Context, learnMACDelay time.Duration) {
+func (i *Instance) run(ctx context.Context, tune tuning) {
 	// Waited for, so nothing writes to the database once the instance has stopped.
 	var wg sync.WaitGroup
 	defer wg.Wait()
 
 	if i.Waker.MAC() == nil {
-		wg.Go(func() { i.learnMAC(ctx, learnMACDelay) })
+		wg.Go(func() { i.learnMAC(ctx, tune.learnMACDelay) })
 	}
+
+	wg.Go(func() { i.learnScreen(ctx, tune) })
 
 	if err := i.Client.Run(ctx); err != nil && !errors.Is(err, context.Canceled) {
 		i.log.Error("kodi connection stopped", "error", err)
@@ -206,6 +212,56 @@ func (i *Instance) saveMAC(ctx context.Context) {
 	}
 
 	i.log.Info("learned MAC address for Wake-on-LAN", "mac", rec.MAC)
+}
+
+// Screen is the largest picture the instance's display shows, as last read from Kodi; zero until it has been.
+func (i *Instance) Screen() media.Screen { return *i.screen.Load() }
+
+// learnScreen reads the screen once the connection has settled, then again every screenRecheck, or every screenRetry while Kodi doesn't answer, saving it when it changes.
+func (i *Instance) learnScreen(ctx context.Context, tune tuning) {
+	wait := tune.learnMACDelay
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(wait):
+		}
+
+		wait = tune.screenRecheck
+		if !i.saveScreen(ctx, tune.pingTimeout) {
+			wait = tune.screenRetry
+		}
+	}
+}
+
+func (i *Instance) saveScreen(ctx context.Context, timeout time.Duration) bool {
+	rctx, cancel := context.WithTimeout(ctx, timeout)
+	screen, err := i.Backend.Screen(rctx)
+
+	cancel()
+
+	if err != nil {
+		i.log.Debug("couldn't read the screen resolution yet", "error", err)
+
+		return false
+	}
+
+	if screen == i.Screen() {
+		return true
+	}
+
+	i.screen.Store(&screen)
+
+	if err := i.db.KodiInstances().SetScreen(ctx, i.id, screen.Width, screen.Height); err != nil {
+		i.log.Warn("saving screen resolution", "error", err)
+
+		return true
+	}
+
+	i.log.Info("learned screen resolution", "width", screen.Width, "height", screen.Height)
+
+	return true
 }
 
 // Callers hold App.mu.

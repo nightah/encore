@@ -6,12 +6,16 @@ import { errorMessage } from "@api/client";
 import type { Settings } from "@api/generated/model";
 import { isManaged, useSaveSettings } from "@api/settings";
 import { ManagedBadge } from "@components/ui/Chip";
-import { Input, Switch } from "@components/ui/Field";
+import { Input, Select, Switch } from "@components/ui/Field";
 import { FormError } from "@features/settings/FormError";
 
 /** Titled by settings:features.<key>. */
 const FEATURES = ["confirm_sound", "deep_search", "auto_deploy", "shutdown_quits"] as const satisfies ReadonlyArray<
   keyof Settings["features"]
+>;
+
+const QUALITIES = ["screen", "highest", "2160p", "1080p", "720p", "sd"] as const satisfies ReadonlyArray<
+  Settings["features"]["preferred_quality"]
 >;
 
 const QUEUE_LIMIT_MAX = 1000;
@@ -62,6 +66,9 @@ export function FeaturesTab({ settings }: { settings: Settings }) {
           </div>
         );
       })}
+      <div className="border-line-soft border-b py-3.5">
+        <QualitySetting settings={settings} save={save} />
+      </div>
       <div className="py-3.5">
         <NumberSetting
           key={settings.features.queue_limit}
@@ -72,6 +79,41 @@ export function FeaturesTab({ settings }: { settings: Settings }) {
           hint={() => t("features.queue_limit.hint")}
         />
       </div>
+    </div>
+  );
+}
+
+/** Saves as soon as another quality is picked. */
+function QualitySetting({ settings, save }: { settings: Settings; save: ReturnType<typeof useSaveSettings> }) {
+  const { t } = useTranslation("settings");
+  const managed = isManaged(settings, "features.preferred_quality");
+  const id = "feature-preferred_quality";
+  return (
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+      <label htmlFor={id} className="flex flex-col">
+        <span className="flex flex-wrap items-center gap-2 font-semibold">
+          {t("features.preferred_quality.title")}
+          {managed ? <ManagedBadge /> : null}
+        </span>
+        <span className="text-[13px] text-muted">{t("features.preferred_quality.hint")}</span>
+      </label>
+      <Select
+        id={id}
+        className="w-full shrink-0 sm:w-44"
+        value={settings.features.preferred_quality}
+        disabled={managed || save.isPending}
+        onChange={(event) =>
+          save.mutate({
+            features: { preferred_quality: event.target.value as Settings["features"]["preferred_quality"] },
+          })
+        }
+      >
+        {QUALITIES.map((value) => (
+          <option key={value} value={value}>
+            {t(`features.preferred_quality.${value}`)}
+          </option>
+        ))}
+      </Select>
     </div>
   );
 }

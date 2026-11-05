@@ -20,6 +20,7 @@ import (
 	"github.com/nightah/encore/internal/app"
 	"github.com/nightah/encore/internal/backend/kodi"
 	"github.com/nightah/encore/internal/core/match"
+	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/secrets"
 	"github.com/nightah/encore/internal/store"
 )
@@ -195,6 +196,8 @@ func (a *API) toInstance(ctx context.Context, rec store.KodiInstance, st app.Ins
 		Language:           cmp.Or(rec.Language, "en"),
 		Timezone:           rec.Timezone,
 		Shutdown:           shutdownOf(rec.ShutdownQuits),
+		PreferredQuality:   qualityOf(rec.PreferredQuality),
+		Screen:             screenOf(rec),
 		ManagedByConfig:    a.managedInstance(rec.Name),
 		Status:             InstanceStatus{State: "offline"},
 	}
@@ -229,7 +232,9 @@ func (a *API) toInstance(ctx context.Context, rec store.KodiInstance, st app.Ins
 			Kind: string(np.Item.Kind), Title: np.Item.Title, Show: np.Item.ShowTitle,
 			Season: np.Item.Season, Episode: np.Item.Episode,
 			PositionS: int(np.Position.Seconds()), DurationS: int(np.Duration.Seconds()), Paused: np.Paused,
-			ArtURL: artURL(rec.ID, np.Item.Art.Cover()),
+			ArtURL:  artURL(rec.ID, np.Item.Art.Cover()),
+			Quality: string(np.Item.Quality), HDR: np.Item.HDR,
+			Width: np.Video.Width, Height: np.Video.Height, Codec: np.Video.Codec,
 		})
 	}
 
@@ -414,8 +419,27 @@ func applyInstanceBehaviour(rec *store.KodiInstance, in InstanceInput) error {
 		}
 	}
 
+	if in.PreferredQuality != nil {
+		rec.PreferredQuality = *in.PreferredQuality
+		if rec.PreferredQuality == qualityInherit {
+			rec.PreferredQuality = ""
+		}
+	}
+
 	return nil
 }
+
+func screenOf(rec store.KodiInstance) Nullable[Screen] {
+	s := media.Screen{Width: rec.ScreenWidth, Height: rec.ScreenHeight}
+	if s.Quality() == "" {
+		return Nullable[Screen]{}
+	}
+
+	return Some(Screen{Width: s.Width, Height: s.Height, Quality: string(s.Quality())})
+}
+
+// qualityOf is how the API shows an instance's preferred quality: inherit when it follows Settings › Features.
+func qualityOf(q string) string { return cmp.Or(q, qualityInherit) }
 
 func shutdownOf(q *bool) string {
 	switch {

@@ -132,6 +132,14 @@ func (b *Backend) Play(_ context.Context, ref media.Ref, opts media.PlayOptions)
 		mode += fmt.Sprintf(" limit %d", opts.Limit)
 	}
 
+	if opts.From > 0 {
+		mode += " from " + opts.From.String()
+	}
+
+	if opts.Quality != "" {
+		mode += " " + string(opts.Quality)
+	}
+
 	if err := b.record("Play %s/%d%s", ref.Kind, ref.ID, mode); err != nil {
 		return err
 	}

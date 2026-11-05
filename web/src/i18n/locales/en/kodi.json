@@ -88,6 +88,25 @@
         "label": "Kodi password",
         "saved": "A password is saved. Leave this empty to keep it."
       },
+      "preferred_quality": {
+        "720p": "720p",
+        "1080p": "1080p",
+        "2160p": "4K (2160p)",
+        "highest": "The best there is",
+        "hint": "Which copy plays when a film or episode is in the library more than once, such as in 4K and 1080p.",
+        "inherit": "Follow Settings › Features",
+        "label": "Preferred quality",
+        "screen": "Match this screen",
+        "screen_known": "Its screen is {{quality}}, {{width}}×{{height}}.",
+        "screen_quality": {
+          "720p": "720p",
+          "1080p": "1080p",
+          "2160p": "4K",
+          "sd": "SD"
+        },
+        "screen_unknown": "Encore learns its screen once it connects.",
+        "sd": "SD"
+      },
       "shutdown": {
         "hint": "What “Alexa, ask encore to shut down” does on this Kodi instance.",
         "inherit": "Follow Settings › Features",

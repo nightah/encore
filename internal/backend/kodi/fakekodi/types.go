@@ -128,6 +128,17 @@ type Movie struct {
 	Trailer       string   `json:"trailer"`
 	Set           string   `json:"set"`
 	SetID         int      `json:"setid"`
+	// StreamDetails is left out when nil, as Kodi leaves it out for a file it hasn't read yet.
+	StreamDetails *StreamDetails `json:"streamdetails,omitempty"`
+	// Versions are the film's files when Kodi holds it in more than one version (Kodi 21 and later); Files.GetDirectory lists them. The movie's own fields describe its default version.
+	Versions []Version `json:"-"`
+}
+
+// Version is one file of a film held in several versions.
+type Version struct {
+	File          string
+	StreamDetails *StreamDetails
+	Resume        Resume
 }
 
 // TVShow is a library TV show.
@@ -162,6 +173,8 @@ type Episode struct {
 	LastPlayed    string `json:"lastplayed"`
 	Resume        Resume `json:"resume"`
 	File          string `json:"file,omitempty"`
+	// StreamDetails is left out when nil, as Kodi leaves it out for a file it hasn't read yet.
+	StreamDetails *StreamDetails `json:"streamdetails,omitempty"`
 }
 
 // MusicVideo is a library music video.
@@ -220,6 +233,20 @@ type Song struct {
 	PlayCount     int      `json:"playcount"`
 	DateAdded     string   `json:"dateadded"`
 	LastPlayed    string   `json:"lastplayed"`
+}
+
+// StreamDetails is what Kodi read of a file's streams. Only the video streams are modelled.
+type StreamDetails struct {
+	Video []VideoStream `json:"video"`
+}
+
+// VideoStream is one video stream of a file, as StreamDetails lists it.
+type VideoStream struct {
+	Codec  string `json:"codec"`
+	Width  int    `json:"width"`
+	Height int    `json:"height"`
+	// HDRType is hdr10, dolbyvision or hlg, as Kodi names them; empty for SDR.
+	HDRType string `json:"hdrtype"`
 }
 
 // Resume is a saved playback position in seconds. Kodi always reports it, zero when there is none.
@@ -281,6 +308,10 @@ type playerState struct {
 	subtitle    int
 	clock       string
 
+	// screen is the GUI's resolution as System.ScreenWidth and System.ScreenHeight report it, and whitelist the videoscreen.whitelist modes.
+	screen    [2]int
+	whitelist []string
+
 	playlists map[int][]Item
 }
 
@@ -303,6 +334,8 @@ type Item struct {
 	File      string   `json:"file,omitempty"`
 	// Art references images the fake's web server serves at /image/.
 	Art map[string]string `json:"art,omitempty"`
+	// StreamDetails is the library's record of the file; Player.GetProperties reports its first video stream as currentvideostream.
+	StreamDetails *StreamDetails `json:"streamdetails,omitempty"`
 
 	resume float64
 }

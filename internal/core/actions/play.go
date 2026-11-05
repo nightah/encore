@@ -14,7 +14,7 @@ import (
 
 // PlayTitle finds a title and plays it. TV shows play their next unwatched episode.
 func (s *Service) PlayTitle(ctx context.Context, t Target, req TitleRequest, progress Progress) Outcome {
-	q := match.Query{Text: req.Query, Kinds: req.Kinds, Hints: map[string]float64{}, Resolved: req.Resolved}
+	q := match.Query{Text: req.Query, Kinds: req.Kinds, Hints: map[string]float64{}, Resolved: req.Resolved, Quality: t.Quality}
 
 	for id, b := range req.Hints {
 		q.Hints[id] = b

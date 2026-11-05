@@ -41,6 +41,11 @@ func (s *Service) Next(ctx context.Context, t Target) Outcome {
 	}
 
 	i := slices.IndexFunc(eps, func(e media.Item) bool { return e.ID == np.Item.ID })
+	if i < 0 && np.Item.Episode > 0 {
+		// Another copy of the episode is playing than the one the list kept.
+		i = slices.IndexFunc(eps, func(e media.Item) bool { return e.Season == np.Item.Season && e.Episode == np.Item.Episode })
+	}
+
 	if i < 0 {
 		return s.Transport(ctx, t, media.TransportNext)
 	}

@@ -13,13 +13,14 @@ import (
 var (
 	movieFields = kodirpc.VideoFieldsMovie{
 		"title", "sorttitle", "originaltitle", "year", "genre", "playcount", "resume", "runtime", "dateadded", "lastplayed",
-		"trailer", "set", "setid",
+		"trailer", "set", "setid", "streamdetails",
 	}
 	tvShowFields = kodirpc.VideoFieldsTVShow{
 		"title", "sorttitle", "originaltitle", "year", "genre", "playcount", "dateadded", "lastplayed",
 	}
 	episodeFields = kodirpc.VideoFieldsEpisode{
 		"title", "originaltitle", "showtitle", "tvshowid", "season", "episode", "playcount", "resume", "runtime", "dateadded", "lastplayed",
+		"streamdetails",
 	}
 	musicVideoFields = kodirpc.VideoFieldsMusicVideo{
 		"title", "artist", "album", "year", "genre", "playcount", "resume", "runtime", "dateadded", "lastplayed",
@@ -33,7 +34,7 @@ var (
 	}
 	playingFields = kodirpc.ListFieldsAll{
 		"title", "sorttitle", "originaltitle", "showtitle", "tvshowid", "season", "episode", "artist", "album", "year",
-		"genre", "playcount", "resume", "runtime", "duration", "dateadded", "lastplayed", "art", "thumbnail",
+		"genre", "playcount", "resume", "runtime", "duration", "dateadded", "lastplayed", "art", "thumbnail", "streamdetails",
 	}
 )
 
@@ -63,6 +64,17 @@ func resumeOf(r *kodirpc.VideoResume) time.Duration {
 	return seconds(r.Position)
 }
 
+// videoOf is the quality and HDR format of the first video stream.
+func videoOf(s *kodirpc.VideoStreams) (media.Quality, string) {
+	if s == nil || len(s.Video) == 0 {
+		return "", ""
+	}
+
+	v := s.Video[0]
+
+	return media.QualityOf(v.Width, v.Height), v.Hdrtype
+}
+
 func titleOr(title, label string) string {
 	if title != "" {
 		return title
@@ -88,7 +100,7 @@ func genres(g kodirpc.ArrayString) []string {
 }
 
 func (m mapper) movie(v *kodirpc.VideoDetailsMovie) media.Item {
-	return media.Item{
+	it := media.Item{
 		Kind:          media.KindMovie,
 		ID:            int(v.MovieID),
 		Title:         titleOr(v.Title, v.Label),
@@ -105,6 +117,9 @@ func (m mapper) movie(v *kodirpc.VideoDetailsMovie) media.Item {
 		SetID:         int(v.SetID),
 		SetTitle:      v.Set,
 	}
+	it.Quality, it.HDR = videoOf(v.Streamdetails)
+
+	return it
 }
 
 func (m mapper) tvShow(v *kodirpc.VideoDetailsTVShow) media.Item {
@@ -123,7 +138,7 @@ func (m mapper) tvShow(v *kodirpc.VideoDetailsTVShow) media.Item {
 }
 
 func (m mapper) episode(v *kodirpc.VideoDetailsEpisode) media.Item {
-	return media.Item{
+	it := media.Item{
 		Kind:          media.KindEpisode,
 		ID:            int(v.EpisodeID),
 		Title:         titleOr(v.Title, v.Label),
@@ -138,6 +153,9 @@ func (m mapper) episode(v *kodirpc.VideoDetailsEpisode) media.Item {
 		DateAdded:     m.parseTime(v.Dateadded),
 		LastPlayed:    m.parseTime(v.Lastplayed),
 	}
+	it.Quality, it.HDR = videoOf(v.Streamdetails)
+
+	return it
 }
 
 func (m mapper) musicVideo(v *kodirpc.VideoDetailsMusicVideo) media.Item {
@@ -222,6 +240,7 @@ func (m mapper) playing(v *kodirpc.ListItemAll) media.Item {
 		LastPlayed:    m.parseTime(v.Lastplayed),
 		Art:           artOf(v.Art, v.Thumbnail),
 	}
+	it.Quality, it.HDR = videoOf(v.Streamdetails)
 
 	switch v.Type {
 	case kodirpc.ListItemBaseTypeMovie:

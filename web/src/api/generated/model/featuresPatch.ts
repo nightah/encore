@@ -5,6 +5,7 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
+import type { FeaturesPatchPreferredQuality } from "./featuresPatchPreferredQuality.ts";
 
 export interface FeaturesPatch {
   auto_deploy?: boolean;
@@ -15,6 +16,7 @@ export interface FeaturesPatch {
   auto_deploy_minutes?: number;
   confirm_sound?: boolean;
   deep_search?: boolean;
+  preferred_quality?: FeaturesPatchPreferredQuality;
   /**
    * @minimum 1
    * @maximum 1000

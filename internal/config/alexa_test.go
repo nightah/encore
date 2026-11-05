@@ -53,3 +53,46 @@ kodi:
 	assert.False(t, *cfg.Kodi[0].ShutdownQuits)
 	assert.Nil(t, cfg.Kodi[1].ShutdownQuits, "unset means use alexa.shutdown_quits")
 }
+
+func TestPreferredQuality(t *testing.T) {
+	cfg, err := Load(Options{Environ: environ()})
+	require.NoError(t, err)
+	assert.Equal(t, "screen", cfg.Alexa.PreferredQuality, "each instance's own screen")
+
+	cfg, err = Load(Options{Environ: environ("ENCORE_ALEXA_PREFERRED_QUALITY=1080p")})
+	require.NoError(t, err)
+	assert.Equal(t, "1080p", cfg.Alexa.PreferredQuality)
+
+	_, err = Load(Options{Environ: environ("ENCORE_ALEXA_PREFERRED_QUALITY=4k")})
+	require.ErrorContains(t, err, `alexa.preferred_quality "4k"`)
+
+	path := filepath.Join(t.TempDir(), "encore.yml")
+	require.NoError(t, os.WriteFile(path, []byte(`
+kodi:
+  - name: Lounge
+    url: http://kodi:8080/jsonrpc
+    preferred_quality: 2160p
+  - name: Study
+    url: http://study:8080/jsonrpc
+  - name: Bedroom
+    url: http://bedroom:8080/jsonrpc
+    preferred_quality: full hd
+`), 0o600))
+
+	_, err = Load(Options{File: path, Environ: environ()})
+	require.ErrorContains(t, err, `kodi[2].preferred_quality "full hd"`)
+
+	require.NoError(t, os.WriteFile(path, []byte(`
+kodi:
+  - name: Lounge
+    url: http://kodi:8080/jsonrpc
+    preferred_quality: 2160p
+  - name: Study
+    url: http://study:8080/jsonrpc
+`), 0o600))
+
+	cfg, err = Load(Options{File: path, Environ: environ()})
+	require.NoError(t, err)
+	assert.Equal(t, "2160p", cfg.Kodi[0].PreferredQuality)
+	assert.Empty(t, cfg.Kodi[1].PreferredQuality, "unset means use alexa.preferred_quality")
+}

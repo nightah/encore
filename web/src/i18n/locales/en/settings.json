@@ -196,6 +196,16 @@
       "hint": "Search every media type when the type isn't said",
       "title": "Deep search for “play X”"
     },
+    "preferred_quality": {
+      "720p": "720p",
+      "1080p": "1080p",
+      "2160p": "4K (2160p)",
+      "highest": "The best there is",
+      "hint": "Which copy plays when a film or episode is in the library more than once, such as in 4K and 1080p: that quality, else the best below it, else the closest above. Playback carries on from where any copy stopped. A Kodi instance can override it.",
+      "screen": "Match each Kodi instance’s screen",
+      "sd": "SD",
+      "title": "Preferred quality"
+    },
     "queue_limit": {
       "hint": "The most items a shuffle or queue plays at once, which keeps large libraries responsive",
       "title": "Queue limit"

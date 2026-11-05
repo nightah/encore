@@ -17,6 +17,8 @@ import (
 	"github.com/knadh/koanf/providers/file"
 	"github.com/knadh/koanf/providers/posflag"
 	"github.com/knadh/koanf/v2"
+
+	"github.com/nightah/encore/internal/core/media"
 )
 
 var localePattern = regexp.MustCompile(`^[a-z]{2}-[A-Z]{2}$`)
@@ -34,7 +36,7 @@ func Defaults() Config {
 		Server:  Server{Address: ":8080", BasePath: "/", TrustedProxies: []string{"127.0.0.1/32", "::1/128"}},
 		Log:     Log{Level: "info", Format: "auto"},
 		DataDir: DefaultDataDir(),
-		Alexa:   Alexa{QueueLimit: DefaultQueueLimit, DeepSearch: true, ConfirmSound: true, AutoDeploy: true, AutoDeployMinutes: DefaultAutoDeployMinutes, Content: []string{ContentMovies, ContentTV, ContentMusic}},
+		Alexa:   Alexa{PreferredQuality: string(media.QualityScreen), QueueLimit: DefaultQueueLimit, DeepSearch: true, ConfirmSound: true, AutoDeploy: true, AutoDeployMinutes: DefaultAutoDeployMinutes, Content: []string{ContentMovies, ContentTV, ContentMusic}},
 		Storage: Storage{
 			Backend: BackendLocal,
 			S3:      StorageS3{Addressing: AddressingAuto},
@@ -160,6 +162,10 @@ func (c *Config) Validate() error {
 	errs = append(errs, validateKodi(c.Kodi)...)
 	errs = append(errs, c.validateRoomsAndDevices()...)
 	errs = append(errs, c.validateStateless()...)
+
+	if !media.Quality(c.Alexa.PreferredQuality).IsPreference() {
+		errs = append(errs, fmt.Errorf("alexa.preferred_quality %q must be screen, highest, 2160p, 1080p, 720p or sd", c.Alexa.PreferredQuality))
+	}
 
 	if c.Alexa.QueueLimit < 1 {
 		errs = append(errs, fmt.Errorf("alexa.queue_limit %d must be at least 1", c.Alexa.QueueLimit))
@@ -291,6 +297,7 @@ func defaultsMap() map[string]any {
 		"alexa.shutdown_quits":      d.Alexa.ShutdownQuits,
 		"alexa.confirm_sound":       d.Alexa.ConfirmSound,
 		"alexa.deep_search":         d.Alexa.DeepSearch,
+		"alexa.preferred_quality":   d.Alexa.PreferredQuality,
 		"alexa.queue_limit":         d.Alexa.QueueLimit,
 		"alexa.auto_deploy":         d.Alexa.AutoDeploy,
 		"alexa.auto_deploy_minutes": d.Alexa.AutoDeployMinutes,

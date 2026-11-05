@@ -9,12 +9,22 @@
 export interface NowPlaying {
   /** The item's poster or thumbnail, fetched from Kodi through encore; empty when Kodi has none */
   art_url: string;
+  /** The video codec as Kodi names it, such as hevc or h264; empty when unknown */
+  codec: string;
   duration_s: number;
   episode: number;
+  /** The HDR format as Kodi names it, such as hdr10, dolbyvision or hlg; empty for SDR or when unknown */
+  hdr: string;
+  /** The picture's height in pixels; 0 when unknown */
+  height: number;
   kind: string;
   paused: boolean;
   position_s: number;
+  /** The picture's quality: 2160p, 1080p, 720p or sd from the stream playing, else from the library; empty when unknown, as for music */
+  quality: string;
   season: number;
   show: string;
   title: string;
+  /** The picture's width in pixels; 0 when unknown */
+  width: number;
 }

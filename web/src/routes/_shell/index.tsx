@@ -1,7 +1,7 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 
-import type { Attention, Instance, Library, Overview } from "@api/generated/model";
+import type { Attention, Instance, Library, NowPlaying, Overview } from "@api/generated/model";
 import { useLibraries } from "@api/kodi";
 import { useOverview } from "@api/overview";
 import { useInvocationName } from "@api/skill";
@@ -155,6 +155,7 @@ function InstanceCard({ instance }: { instance: Instance }) {
               <span className="font-mono text-[13px] text-muted">
                 {formatPosition(playing.position_s)} / {formatPosition(playing.duration_s)}
               </span>
+              <VideoChips playing={playing} />
             </div>
           </div>
           <Meter value={progress} label={t("instances.progress", { percent: Math.round(progress) })} height="h-1.5" />
@@ -169,6 +170,42 @@ function InstanceCard({ instance }: { instance: Instance }) {
         <span>{transportLabel(instance)}</span>
       </div>
     </Card>
+  );
+}
+
+const QUALITIES = ["2160p", "1080p", "720p", "sd"] as const;
+const HDR_FORMATS = ["dolbyvision", "hdr10", "hdr10plus", "hlg"] as const;
+
+const isOneOf = <T extends string>(list: readonly T[], value: string): value is T => list.includes(value as T);
+
+/** The exact stream behind the quality, such as "3840×1600 · HEVC"; undefined when its size isn't known. */
+function streamDetail({ width, height, codec }: NowPlaying): string | undefined {
+  if (width <= 0 || height <= 0) return undefined;
+  return [`${width}×${height}`, codec.toUpperCase()].filter(Boolean).join(" · ");
+}
+
+/** The picture's quality and HDR format, such as 4K and Dolby Vision, with the exact stream on hover; nothing when neither is known. An HDR format Encore doesn't name is shown as Kodi names it. */
+function VideoChips({ playing }: { playing: NowPlaying }) {
+  const { t } = useTranslation("overview");
+  const { quality, hdr } = playing;
+  if (!quality && !hdr) return null;
+  return (
+    <ul className="mt-1 flex flex-wrap gap-1.5" aria-label={t("instances.video")}>
+      {isOneOf(QUALITIES, quality) ? (
+        <li>
+          <Chip tone="outline" className="px-2 py-px font-mono text-[11.5px]" title={streamDetail(playing)}>
+            {t(`instances.quality.${quality}`)}
+          </Chip>
+        </li>
+      ) : null}
+      {hdr ? (
+        <li>
+          <Chip tone="outline" className="px-2 py-px font-mono text-[11.5px]">
+            {isOneOf(HDR_FORMATS, hdr) ? t(`instances.hdr.${hdr}`) : hdr.toUpperCase()}
+          </Chip>
+        </li>
+      ) : null}
+    </ul>
   );
 }
 

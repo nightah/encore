@@ -353,14 +353,19 @@ describe("overview page", () => {
         name: "Lounge",
         now_playing: {
           art_url: "",
+          codec: "",
           duration_s: 8400,
           episode: 0,
+          hdr: "",
+          height: 0,
           kind: "movie",
           paused: false,
           position_s: 4200,
+          quality: "1080p",
           season: 0,
           show: "",
           title: "Conclave",
+          width: 0,
         },
       },
     ];
@@ -374,6 +379,37 @@ describe("overview page", () => {
     expect(card).not.toHaveTextContent(/S\d+ · E\d+/);
     expect(within(card).getByText("1:10:00 / 2:20:00")).toBeInTheDocument();
     expect(within(card).getByRole("meter", { name: "Progress 50 percent" })).toBeInTheDocument();
+    const picture = within(card).getByRole("list", { name: "Picture" });
+    expect(picture).toHaveTextContent(/^1080p$/);
+    expect(within(picture).getByText("1080p")).not.toHaveAttribute("title");
+  });
+
+  it("labels what's playing with its quality and HDR format", async () => {
+    const db = getDb();
+    const [first] = db.instances;
+    const sample = first?.now_playing;
+    if (!first || !sample) throw new Error("the sample has an instance playing");
+    const playing = (name: string, quality: string, hdr: string, codec = "") => ({
+      ...first,
+      name,
+      now_playing: { ...sample, codec, hdr, height: 1600, quality, width: 3840 },
+    });
+    db.instances = [
+      playing("Lounge", "2160p", "dolbyvision", "hevc"),
+      playing("Den", "", "hdr-vivid"),
+      playing("Kitchen", "", ""),
+      playing("Study", "2160p", ""),
+    ];
+    renderApp("/");
+
+    const card = async (name: string) =>
+      (await screen.findByRole("heading", { level: 3, name })).closest("div")?.parentElement as HTMLElement;
+    const lounge = within(await card("Lounge")).getByRole("list", { name: "Picture" });
+    expect(within(lounge).getByText("4K")).toHaveAttribute("title", "3840×1600 · HEVC");
+    expect(within(lounge).getByText("Dolby Vision")).toBeInTheDocument();
+    expect(within(await card("Den")).getByRole("list", { name: "Picture" })).toHaveTextContent(/^HDR-VIVID$/);
+    expect(within(await card("Kitchen")).queryByRole("list", { name: "Picture" })).not.toBeInTheDocument();
+    expect(within(await card("Study")).getByText("4K")).toHaveAttribute("title", "3840×1600");
   });
 
   it("shows an empty install as not set up yet", async () => {

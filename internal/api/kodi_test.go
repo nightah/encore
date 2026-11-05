@@ -138,10 +138,12 @@ func TestKodiInstanceLifecycle(t *testing.T) {
 	assert.Equal(t, "en", renamed.Language)
 	assert.Empty(t, renamed.Timezone, "learnt from Kodi's clock")
 	assert.Equal(t, "inherit", renamed.Shutdown)
+	assert.Equal(t, "inherit", renamed.PreferredQuality)
 
 	var tuned Instance
 
-	c.json(http.MethodPatch, path, map[string]string{"language": "de", "timezone": "Australia/Melbourne", "shutdown": "quit"}, http.StatusOK, &tuned)
+	c.json(http.MethodPatch, path, map[string]string{"language": "de", "timezone": "Australia/Melbourne", "shutdown": "quit", "preferred_quality": "2160p"}, http.StatusOK, &tuned)
+	assert.Equal(t, "2160p", tuned.PreferredQuality)
 	assert.Equal(t, "de", tuned.Language)
 	assert.Equal(t, "Australia/Melbourne", tuned.Timezone)
 	assert.Equal(t, "quit", tuned.Shutdown)
@@ -149,6 +151,13 @@ func TestKodiInstanceLifecycle(t *testing.T) {
 	rec, err := h.app.DB().KodiInstances().Get(t.Context(), created.ID)
 	require.NoError(t, err)
 	assert.Equal(t, new(true), rec.ShutdownQuits)
+	assert.Equal(t, "2160p", rec.PreferredQuality)
+	assert.Nil(t, tuned.Screen.V, "no screen until Encore has asked")
+
+	require.NoError(t, h.app.DB().KodiInstances().SetScreen(t.Context(), rec.ID, 3840, 1600))
+	c.json(http.MethodGet, path, nil, http.StatusOK, &tuned)
+	require.NotNil(t, tuned.Screen.V)
+	assert.Equal(t, Screen{Width: 3840, Height: 1600, Quality: "2160p"}, *tuned.Screen.V)
 
 	for field, value := range map[string]string{"language": "xx", "timezone": "Mars/Olympus"} {
 		p := c.do(http.MethodPatch, path, map[string]string{field: value}).problem(t)
@@ -156,7 +165,8 @@ func TestKodiInstanceLifecycle(t *testing.T) {
 		assert.Equal(t, "body."+field, p.Errors[0].Location)
 	}
 
-	c.json(http.MethodPatch, path, map[string]string{"timezone": "", "shutdown": "inherit"}, http.StatusOK, &tuned)
+	c.json(http.MethodPatch, path, map[string]string{"timezone": "", "shutdown": "inherit", "preferred_quality": "inherit"}, http.StatusOK, &tuned)
+	assert.Equal(t, "inherit", tuned.PreferredQuality)
 	assert.Empty(t, tuned.Timezone)
 	assert.Equal(t, "inherit", tuned.Shutdown)
 	assert.Equal(t, "de", tuned.Language, "fields left out are kept")
@@ -627,8 +637,9 @@ func TestToInstanceDescribesStatus(t *testing.T) {
 		Counts: app.LibraryCounts{Movies: 2, Shows: 1, Episodes: 9, Songs: 4},
 		Newest: &media.Item{Kind: media.KindEpisode, ID: 5, Title: "The Rains of Castamere", ShowTitle: "Game of Thrones", Year: 2013},
 		NowPlaying: &media.NowPlaying{
-			Item:     media.Item{Kind: media.KindEpisode, Title: "Pilot", ShowTitle: "Severance", Season: 1, Episode: 1, Art: media.Artwork{Thumb: "image://thumb/"}},
+			Item:     media.Item{Kind: media.KindEpisode, Title: "Pilot", ShowTitle: "Severance", Season: 1, Episode: 1, Art: media.Artwork{Thumb: "image://thumb/"}, Quality: media.Quality2160p, HDR: "dolbyvision"},
 			Position: 90*time.Second + 900*time.Millisecond, Duration: time.Hour, Paused: true,
+			Video: media.Video{Width: 3840, Height: 2160, Codec: "hevc"},
 		},
 	}
 
@@ -644,7 +655,7 @@ func TestToInstanceDescribesStatus(t *testing.T) {
 
 	np := inst.NowPlaying.V
 	require.NotNil(t, np)
-	assert.Equal(t, NowPlaying{Kind: "episode", Title: "Pilot", Show: "Severance", Season: 1, Episode: 1, PositionS: 90, DurationS: 3600, Paused: true, ArtURL: "/api/v1/kodi/instances/42/art?ref=image%3A%2F%2Fthumb%2F"}, *np)
+	assert.Equal(t, NowPlaying{Kind: "episode", Title: "Pilot", Show: "Severance", Season: 1, Episode: 1, PositionS: 90, DurationS: 3600, Paused: true, ArtURL: "/api/v1/kodi/instances/42/art?ref=image%3A%2F%2Fthumb%2F", Quality: "2160p", HDR: "dolbyvision", Width: 3840, Height: 2160, Codec: "hevc"}, *np)
 
 	movie := h.api.toInstance(t.Context(), rec, app.InstanceStatus{Newest: &media.Item{Kind: media.KindMovie, Title: "Dune", ShowTitle: "ignored"}}, true)
 	assert.Equal(t, "Dune", movie.Library.NewestTitle.V.Title, "only episodes take the show's name")

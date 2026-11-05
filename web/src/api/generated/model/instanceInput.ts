@@ -5,6 +5,7 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
+import type { InstanceInputPreferredQuality } from "./instanceInputPreferredQuality.ts";
 import type { InstanceInputShutdown } from "./instanceInputShutdown.ts";
 
 export interface InstanceInput {
@@ -19,6 +20,8 @@ export interface InstanceInput {
   name?: string;
   /** Write-only; empty removes it */
   password?: string;
+  /** Which copy plays when the library holds a film or episode more than once; inherit follows Settings › Features */
+  preferred_quality?: InstanceInputPreferredQuality;
   shutdown?: InstanceInputShutdown;
   /** The Kodi host's IANA time zone; empty learns it from Kodi's clock */
   timezone?: string;

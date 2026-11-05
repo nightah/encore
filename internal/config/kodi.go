@@ -11,6 +11,7 @@ import (
 
 	"github.com/nightah/encore/internal/backend/kodi"
 	"github.com/nightah/encore/internal/core/match"
+	"github.com/nightah/encore/internal/core/media"
 )
 
 // NoLibraryGroup reports whether the instance is forced to keep a library of its own.
@@ -47,6 +48,10 @@ func validateKodi(instances []KodiInstance) []error {
 			if _, err := time.LoadLocation(k.Timezone); err != nil {
 				errs = append(errs, fmt.Errorf("%s.timezone %q is not a known IANA time zone", where, k.Timezone))
 			}
+		}
+
+		if !media.Quality(k.PreferredQuality).IsPreference() {
+			errs = append(errs, fmt.Errorf("%s.preferred_quality %q must be screen, highest, 2160p, 1080p, 720p or sd", where, k.PreferredQuality))
 		}
 
 		if k.Language != "" && !slices.Contains(match.Languages(), k.Language) {

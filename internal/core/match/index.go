@@ -275,7 +275,7 @@ func (ix *Index) Search(ctx context.Context, q Query) (Result, error) {
 	}
 
 	slices.SortFunc(cands, func(a, b Candidate) int { return compareCandidates(a, b, exact) })
-	cands = withoutCopies(cands, exact)
+	cands, copies := withoutCopies(cands, exact)
 
 	cfg := ix.cfg
 	if ix.lang.soundAlikeLead && len(cands) > 0 && soundAlike[cands[0].Doc.ID] {
@@ -295,7 +295,7 @@ func (ix *Index) Search(ctx context.Context, q Query) (Result, error) {
 	// Native aliases only add to what a title's own names find: whatever those would play, plays.
 	if res.Decision != DecisionPlay && len(plain) > 0 {
 		slices.SortFunc(plain, func(a, b Candidate) int { return compareCandidates(a, b, plainExact) })
-		plain = withoutCopies(plain, plainExact)
+		plain, _ = withoutCopies(plain, plainExact)
 
 		switch d, _ := ix.cfg.decide(plain, len(plainExact)); {
 		case d == DecisionPlay && plain[0].Doc.ID == cands[0].Doc.ID:
@@ -316,6 +316,7 @@ func (ix *Index) Search(ctx context.Context, q Query) (Result, error) {
 	}
 
 	res.Candidates = cands[:min(limit, len(cands))]
+	preferCopies(res.Candidates, copies, q.Quality)
 
 	return res, nil
 }
@@ -444,28 +445,54 @@ func compareBool(a, b bool) int {
 	}
 }
 
-// withoutCopies drops each candidate that is another copy of a better one: the same kind, title and year, as when a library holds a film twice. Asking which of two identical titles was meant can't be answered, so the first copy stands for both. exact forgets the copies dropped.
-func withoutCopies(cands []Candidate, exact map[string]bool) []Candidate {
+// withoutCopies drops each candidate that is another copy of a better one: the same kind, title and year, as when a library holds a film twice. Asking which of two identical titles was meant can't be answered, so the first copy stands for both until preferCopies chooses which to play. exact forgets the copies dropped, and copies maps each candidate kept to the copies it stands for.
+func withoutCopies(cands []Candidate, exact map[string]bool) ([]Candidate, map[string][]Doc) {
 	type key struct {
 		kind  media.Kind
 		title string
 		year  int
 	}
 
-	seen := make(map[key]bool, len(cands))
+	seen := make(map[key]string, len(cands))
+	copies := map[string][]Doc{}
 	out := cands[:0]
 
 	for _, c := range cands {
 		k := key{c.Doc.Kind, strings.ToLower(strings.TrimSpace(c.Doc.Title)), c.Doc.Year}
-		if seen[k] {
+		if first, ok := seen[k]; ok {
 			delete(exact, c.Doc.ID)
+			copies[first] = append(copies[first], c.Doc)
 
 			continue
 		}
 
-		seen[k] = true
+		seen[k] = c.Doc.ID
 		out = append(out, c)
 	}
 
-	return out
+	return out, copies
+}
+
+// preferCopies swaps each candidate standing for copies of a title for the copy to play, as media.BestCopy chooses it, noting where another copy stopped further along. The score stays the title's.
+func preferCopies(cands []Candidate, copies map[string][]Doc, prefer media.Quality) {
+	for i := range cands {
+		others := copies[cands[i].Doc.ID]
+		if len(others) == 0 {
+			continue
+		}
+
+		docs := append([]Doc{cands[i].Doc}, others...)
+		cs := make([]media.Copy, len(docs))
+
+		for j := range docs {
+			cs[j] = docs[j].Copy
+		}
+
+		best := media.BestCopy(prefer, cs)
+		cands[i].Doc = docs[best]
+
+		if furthest := media.FurthestResume(cs); furthest > cs[best].Resume {
+			cands[i].From = furthest
+		}
+	}
 }

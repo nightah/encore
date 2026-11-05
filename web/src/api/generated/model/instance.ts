@@ -6,9 +6,11 @@
  * OpenAPI spec version: 1
  */
 import type { InstanceLibrary } from "./instanceLibrary.ts";
+import type { InstancePreferredQuality } from "./instancePreferredQuality.ts";
 import type { InstanceShutdown } from "./instanceShutdown.ts";
 import type { InstanceStatus } from "./instanceStatus.ts";
 import type { NowPlaying } from "./nowPlaying.ts";
+import type { Screen } from "./screen.ts";
 
 export interface Instance {
   broadcast: string;
@@ -22,6 +24,10 @@ export interface Instance {
   managed_by_config: boolean;
   name: string;
   now_playing: NowPlaying | null;
+  /** Which copy plays when the library holds a film or episode more than once; inherit follows Settings › Features, and screen matches this instance's screen */
+  preferred_quality: InstancePreferredQuality;
+  /** The largest picture this instance's display shows, as Kodi last reported it; null until Encore has asked */
+  screen: Screen | null;
   /** What "shut down" does; inherit follows Settings › Features */
   shutdown: InstanceShutdown;
   status: InstanceStatus;
