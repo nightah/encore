@@ -261,7 +261,11 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, tr *requestT
 	readings := []Intent{intent}
 
 	// An answer to a question names no room, but plays in the room the question was about.
-	room := cmp.Or(strings.TrimSpace(intent.Slots["Room"].Value), sessionRoomOf(env.Session.Attributes))
+	slotRoom := strings.TrimSpace(intent.Slots["Room"].Value)
+	room := cmp.Or(slotRoom, sessionRoomOf(env.Session.Attributes))
+
+	// unknownRoom is the room Alexa heard when no room is called that and the request is being read as its title instead.
+	var unknownRoom error
 
 	switch {
 	case intent.Name == "PlayMedia":
@@ -270,9 +274,15 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, tr *requestT
 	case room != "":
 		target, err = h.Targets.TargetForRoom(ctx, deviceID, room)
 
-		// A room renamed or removed while the question waited can't be told apart from the Echo's own any more.
-		if errors.Is(err, ErrUnknownRoom) && strings.TrimSpace(intent.Slots["Room"].Value) == "" {
+		switch titles := h.Speech.RoomAsTitle(locale, intent); {
+		case !errors.Is(err, ErrUnknownRoom):
+		case slotRoom == "":
+			// A room renamed or removed while the question waited can't be told apart from the Echo's own any more.
 			room = ""
+			target, err = h.Targets.Target(ctx, deviceID)
+		case len(titles) > 0:
+			// Alexa may have cut the end off a title as a room: "watch murder in paris" as Movie "murder", Room "paris".
+			unknownRoom, readings, room = err, titles, ""
 			target, err = h.Targets.Target(ctx, deviceID)
 		}
 	default:
@@ -280,14 +290,7 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, tr *requestT
 	}
 
 	if err != nil {
-		o := actions.Outcome{Say: actions.Message{ID: "error.generic"}, EndSession: true, Err: err}
-
-		switch {
-		case errors.Is(err, ErrUnlinked):
-			o.Say = actions.Message{ID: "error.device_unlinked"}
-		case errors.Is(err, ErrUnknownRoom):
-			o.Say = actions.Message{ID: "error.unknown_room", Params: map[string]string{"room": intent.Slots["Room"].Value}}
-		}
+		o := targetFailure(err, intent)
 
 		return h.respond(locale, o, false), &o
 	}
@@ -313,6 +316,13 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, tr *requestT
 		}
 	}
 
+	// No title is called that either, so the room was meant: say it isn't known.
+	if unknownRoom != nil && o.Missed() {
+		o = targetFailure(unknownRoom, intent)
+
+		return h.respond(locale, o, false), &o
+	}
+
 	if o.AskAgain {
 		if question == nil {
 			msg := fallbackMessage()
@@ -328,6 +338,20 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, tr *requestT
 	}
 
 	return resp, &o
+}
+
+// targetFailure answers a request whose target couldn't be found.
+func targetFailure(err error, intent Intent) actions.Outcome {
+	o := actions.Outcome{Say: actions.Message{ID: "error.generic"}, EndSession: true, Err: err}
+
+	switch {
+	case errors.Is(err, ErrUnlinked):
+		o.Say = actions.Message{ID: "error.device_unlinked"}
+	case errors.Is(err, ErrUnknownRoom):
+		o.Say = actions.Message{ID: "error.unknown_room", Params: map[string]string{"room": intent.Slots["Room"].Value}}
+	}
+
+	return o
 }
 
 // targetInQuery finds a room named in a search query, returning it with its target. An AMAZON.SearchQuery slot can't share an utterance with another slot, so "play frozen in the lounge" arrives as the query "frozen in the lounge"; when its ending (or, in some languages, its start) names a known room, the room is taken off the query and its Kodi instance is the target.

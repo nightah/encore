@@ -31,6 +31,7 @@ func NewSpeech(src *skillmodel.Sources, log *slog.Logger) (*Speech, error) {
 		languages:   map[string]string{},
 		slotIDs:     map[string]map[string]map[string]string{},
 		roomPhrases: map[string][]roomPhrase{},
+		roomTitles:  map[string]map[string][]string{},
 		queryForms:  map[string][]queryForm{},
 		bareSlots:   map[string][]bareSlot{},
 		generic:     map[string]map[string]bool{},
@@ -64,6 +65,8 @@ func NewSpeech(src *skillmodel.Sources, log *slog.Logger) (*Speech, error) {
 		if s.roomPhrases[locale], err = roomPhrases(s.languages[locale], utterances); err != nil {
 			return nil, fmt.Errorf("locale %s: %w", locale, err)
 		}
+
+		s.roomTitles[locale] = roomTitles(utterances)
 
 		if s.queryForms[locale], err = languageQueryForms(s.languages[locale], src.Model, utterances); err != nil {
 			return nil, fmt.Errorf("locale %s: %w", locale, err)
@@ -300,6 +303,49 @@ func (s *Speech) RoomSplits(locale, query string) []RoomSplit {
 				out = append(out, RoomSplit{Title: joinUnits(lang, words[j+len(p.after):]), Room: joinUnits(lang, words[len(p.before):j])})
 			}
 		}
+	}
+
+	return out
+}
+
+// RoomAsTitle reads intent, whose Room slot names no room the caller knows, as Alexa having cut the end off the title: "watch the movie murder in paris" heard as Movie "murder" and Room "paris" is read as Movie "murder in paris". There is one reading for each way the locale's samples lead into a room ("in the", "on the", "in", "on"), with the room's words put back on the slot its samples put before the room, and none when that slot is empty or the room comes first. The caller tries each until one finds something.
+func (s *Speech) RoomAsTitle(locale string, intent Intent) []Intent {
+	phrases, ok := s.roomPhrases[locale]
+	if !ok {
+		locale, phrases = fallbackLocale, s.roomPhrases[fallbackLocale]
+	}
+
+	lang := s.languages[locale]
+	room := strings.TrimSpace(intent.Slots["Room"].Value)
+
+	var title string
+
+	for _, name := range s.roomTitles[locale][intent.Name] {
+		if strings.TrimSpace(intent.Slots[name].Value) != "" {
+			title = name
+
+			break
+		}
+	}
+
+	if room == "" || title == "" {
+		return nil
+	}
+
+	var out []Intent
+
+	// roomPhrases holds each phrase once, so each reading is different.
+	for _, p := range phrases {
+		if p.first || len(p.before) == 0 || len(p.after) > 0 {
+			continue
+		}
+
+		value := joinUnits(lang, slices.Concat(units(lang, intent.Slots[title].Value), p.before, units(lang, room)))
+
+		slots := maps.Clone(intent.Slots)
+		delete(slots, "Room")
+		slots[title] = Slot{Name: title, Value: value}
+		out = append(out, Intent{Name: intent.Name, Slots: slots})
 	}
 
 	return out
@@ -666,6 +712,30 @@ func roomPhrases(lang string, utterances map[string][]string) ([]roomPhrase, err
 	}
 
 	return out, nil
+}
+
+// roomTitles finds, per intent, the slots that come just before an optional room ending a sample.
+func roomTitles(utterances map[string][]string) map[string][]string {
+	out := map[string][]string{}
+
+	for intent, patterns := range utterances {
+		for _, pattern := range patterns {
+			if _, after, place := roomAround(pattern); place != roomLast || strings.TrimSpace(after) != "" {
+				continue
+			}
+
+			head := strings.TrimSpace(pattern[:strings.LastIndex(pattern[:strings.LastIndex(pattern, "{Room}")], "[")])
+			if m := placeholder.FindAllStringSubmatchIndex(head, -1); len(m) > 0 {
+				if last := m[len(m)-1]; last[1] == len(head) {
+					if name := head[last[2]:last[3]]; !slices.Contains(out[intent], name) {
+						out[intent] = append(out[intent], name)
+					}
+				}
+			}
+		}
+	}
+
+	return out
 }
 
 // expandOrEmpty is Expand, with nothing at all expanding to the empty phrase.

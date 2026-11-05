@@ -115,10 +115,17 @@ func newHandler(t *testing.T) (*Handler, *testkit.Backend, *memRecorder) {
 func newRoomHandler(t *testing.T) (*Handler, *testkit.Backend, *testkit.Backend, *memRecorder) {
 	t.Helper()
 
+	return newRoomHandlerWith(t)
+}
+
+// newRoomHandlerWith is newRoomHandler with more titles in the library.
+func newRoomHandlerWith(t *testing.T, more ...media.Item) (*Handler, *testkit.Backend, *testkit.Backend, *memRecorder) {
+	t.Helper()
+
 	log := slog.New(slog.DiscardHandler)
 	speech := sharedSpeech(t)
 
-	items := testkit.SampleLibrary()
+	items := append(testkit.SampleLibrary(), more...)
 	backend := testkit.NewBackend(items...)
 	bedroom := testkit.NewBackend(items...)
 	matcher := &testkit.Matcher{Docs: testkit.Docs(items...)}

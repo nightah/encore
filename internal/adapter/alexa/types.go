@@ -96,6 +96,8 @@ type Speech struct {
 	slotIDs map[string]map[string]map[string]string
 	// roomPhrases holds, per locale, the words its utterances put around {Room} ("in the", "im", "で"), lowercased and split into words (units).
 	roomPhrases map[string][]roomPhrase
+	// roomTitles holds, per locale and intent, the slots its samples put just before an optional room at the end ("Movie" for "watch {Movie} [in the {Room}]"), in the order first seen.
+	roomTitles map[string]map[string][]string
 	// queryForms holds, per locale, the film, TV and music intents' samples as they'd reach PlayMedia's search query, most specific first.
 	queryForms map[string][]queryForm
 	// bareSlots holds, per locale, the slots of custom types that a sample of their intent is alone ("{NavAction}"), in model order.
