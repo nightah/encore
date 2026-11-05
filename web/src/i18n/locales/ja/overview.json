@@ -42,13 +42,26 @@
       "title": "まだ Kodi インスタンスがありません"
     },
     "episode": "S{{season}} · E{{episode}}「{{title}}」",
+    "hdr": {
+      "dolbyvision": "Dolby Vision",
+      "hdr10": "HDR10",
+      "hdr10plus": "HDR10+",
+      "hlg": "HLG"
+    },
     "idle": "何も再生していません。",
     "offline": {
       "test": "Kodi ページでテスト",
       "text": "応答がありません。Kodi が起動していて、接続できるか確認してください。"
     },
     "progress": "進捗 {{percent}} パーセント",
-    "title": "Kodi インスタンス"
+    "quality": {
+      "720p": "720p",
+      "1080p": "1080p",
+      "2160p": "4K",
+      "sd": "SD"
+    },
+    "title": "Kodi インスタンス",
+    "video": "映像"
   },
   "ms": "{{ms}} ミリ秒",
   "openRequestLog": "リクエストログを開く",
