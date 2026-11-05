@@ -412,6 +412,13 @@ describe("Settings page", () => {
     await waitFor(() => expect(quality).toHaveValue("1080p"));
   });
 
+  it("shows the preferred quality as managed, and won't change it, when config sets it", async () => {
+    getDb().settings.managed = ["features.preferred_quality"];
+    renderApp("/settings?tab=features");
+    const quality = await screen.findByRole("combobox", { name: /Preferred quality.*Managed by config/ });
+    expect(quality).toBeDisabled();
+  });
+
   it("offers automatic skill deploys, on by default", async () => {
     const user = userEvent.setup();
     const log = recordRequests();
