@@ -151,6 +151,9 @@ MEDIA_TYPE:
     動画
     ビデオ
 NAV_ACTION:
+  back: |-
+    戻る
+    バック
   down: |-
     下
     下方向
