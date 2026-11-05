@@ -14,6 +14,8 @@ Alexa hands Encore what it heard, such as "rocky two" or "the avengers end game"
 4. **Score** each candidate by how well the words, characters and sounds agree. An exact match scores 1. A year at the end of the request ("dune 2021") is matched against the release year, and numbers must match exactly, so "rocky 2" never plays "Rocky 3". Asking for a sequel your library doesn't have ("crocodile dundee 2" when it only has "Crocodile Dundee") makes Alexa ask rather than play the original.
 5. **Decide.** Encore plays the best match when it's exact and unique, or clearly ahead of the rest. When two or more are close, Alexa asks which one you meant (see [answering a question](/encore/voice-commands/#answering-a-question)). When nothing scores well enough, Alexa says it couldn't find it.
 
+A library can hold a title more than once, such as a film in both 4K and 1080p. Copies with the same kind, title and year are one choice, so Alexa never asks which of two identical titles you meant, and Encore plays the copy that [suits the Kodi instance](/encore/guides/kodi/#copies-in-different-qualities), by default the one matching its screen. Episodes work the same way: a show's episode in two qualities is queued and played once.
+
 The rules for a library follow its Kodi instance's `language` (English by default), set in [config](/encore/reference/configuration/#kodilanguage).
 
 [`alexa.deep_search`](/encore/reference/configuration/#alexadeep_search) (on by default) makes "play X" search music as well as films and TV when the request doesn't say what kind of title it is.
