@@ -2,6 +2,7 @@ package match
 
 import (
 	"strings"
+	"unicode"
 	"unicode/utf8"
 
 	"github.com/nightah/encore/internal/fuzzy/phonetic/ar"
@@ -225,7 +226,7 @@ func withoutArticle(tok string) string {
 	return tok[cut:]
 }
 
-// romanizeArabic writes an Arabic token as a Latin consonant skeleton (arabicLatin), so an Arabic request and an English title asked for in Arabic letters meet ("تايتانك", "titanic"). Short vowels are not written in Arabic and stay out; the long vowels are their letters: ا as a, و and ي as u and i after a consonant and as w and y at the start of a word or after a vowel. A final ه is a ta marbuta, folded to ه, and is written a, as it is said. A token without Arabic letters is returned as it is.
+// romanizeArabic writes an Arabic token as a Latin consonant skeleton (arabicLatin), so an Arabic request and an English title asked for in Arabic letters meet ("تايتانك", "titanic"). Short vowels are not written in Arabic and stay out; the long vowels are their letters: ا as a, و and ي as u and i after a consonant and as w and y at the start of a word or after a vowel. A final ه is a ta marbuta, folded to ه, and is written a, as it is said. A letter without a Latin form is written as it is, as a word of its own. A token without Arabic letters is returned as it is.
 func romanizeArabic(tok string) string {
 	if !strings.ContainsFunc(tok, isArabicLetter) {
 		return tok
@@ -260,9 +261,21 @@ func romanizeArabic(tok string) string {
 
 			vowel = true
 		default:
-			if s, ok := arabicLatin[r]; ok {
+			s, ok := arabicLatin[r]
+
+			switch {
+			case ok:
 				b.WriteString(s)
-			} else {
+			case isArabicLetter(r) && unicode.IsLetter(r):
+				// An Arabic letter without a Latin form stays as it is, in a word of its own, as a second pass would split it from the Latin letters around it.
+				b.WriteByte(' ')
+				b.WriteRune(r)
+				b.WriteByte(' ')
+
+				vowel = true
+
+				continue
+			default:
 				b.WriteRune(r)
 			}
 
@@ -270,7 +283,7 @@ func romanizeArabic(tok string) string {
 		}
 	}
 
-	return b.String()
+	return strings.Join(strings.Fields(b.String()), " ")
 }
 
 // isArabicLetter reports whether r is in the Arabic block, where the letters romanizeArabic writes are.
