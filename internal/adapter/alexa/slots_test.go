@@ -129,6 +129,17 @@ func TestRoomInSearchQuery(t *testing.T) {
 	assert.Equal(t, "hot fuzz in the bedroom", rec.entries[0].Slots["Query"], "the log keeps what was heard")
 }
 
+func TestRoomWithoutArticleInSearchQuery(t *testing.T) {
+	h, lounge, bedroom, rec := newRoomHandler(t)
+
+	serveBody(t, h, intentRequest(t, "PlayMedia", map[string]slotSpec{"Query": {value: "hot fuzz on bedroom"}}))
+	assert.Empty(t, lounge.Calls())
+	assert.Equal(t, []string{"Play movie/4 resume"}, bedroom.Calls(), "\"on bedroom\" names the room as \"on the bedroom\" does")
+
+	require.Len(t, rec.entries, 1)
+	assert.Equal(t, "Bedroom", rec.entries[0].Target)
+}
+
 func TestRoomInSearchQueryUnknownRoom(t *testing.T) {
 	h, _, bedroom, rec := newRoomHandler(t)
 
@@ -188,21 +199,27 @@ func TestRoomSplits(t *testing.T) {
 		locale, query string
 		want          []RoomSplit
 	}{
-		{"en-AU", "frozen in the lounge room", []RoomSplit{{"frozen", "lounge room"}}},
-		{"en-AU", "frozen on the TV", []RoomSplit{{"frozen", "TV"}}},
+		// The bare "in" and "on" also read the article as part of the room; no room is called "the lounge room", so the caller moves on.
+		{"en-AU", "frozen in the lounge room", []RoomSplit{{"frozen", "lounge room"}, {"frozen", "the lounge room"}}},
+		{"en-AU", "frozen on the TV", []RoomSplit{{"frozen", "TV"}, {"frozen", "the TV"}}},
+		{"en-AU", "the martian on TV", []RoomSplit{{"the martian", "TV"}}},
+		// Without a room called Paris, the caller searches the whole query.
+		{"en-AU", "murder in paris", []RoomSplit{{"murder", "paris"}}},
 		{"en-AU", "the man in the iron mask in the lounge", []RoomSplit{
 			{"the man", "iron mask in the lounge"},
+			{"the man", "the iron mask in the lounge"},
 			{"the man in the iron mask", "lounge"},
+			{"the man in the iron mask", "the lounge"},
 		}},
 		{"en-AU", "frozen", nil},
 		{"en-AU", "in the lounge", nil},
-		{"en-AU", "frozen in the", nil},
+		{"en-AU", "frozen in the", []RoomSplit{{"frozen", "the"}}},
 		{"de-DE", "die eiskönigin im wohnzimmer", []RoomSplit{{"die eiskönigin", "wohnzimmer"}}},
 		{"de-DE", "die eiskönigin in der küche", []RoomSplit{{"die eiskönigin", "küche"}}},
 		{"fr-FR", "la reine des neiges au salon", []RoomSplit{{"la reine des neiges", "salon"}}},
 		{"es-ES", "frozen en el salón", []RoomSplit{{"frozen", "salón"}}},
 		{"it-IT", "frozen nel salotto", []RoomSplit{{"frozen", "salotto"}}},
-		{"xx-XX", "frozen in the lounge", []RoomSplit{{"frozen", "lounge"}}},
+		{"xx-XX", "frozen in the lounge", []RoomSplit{{"frozen", "lounge"}, {"frozen", "the lounge"}}},
 	} {
 		assert.Equal(t, tc.want, speech.RoomSplits(tc.locale, tc.query), "%s %q", tc.locale, tc.query)
 	}
@@ -324,4 +341,89 @@ func TestFoldLatin(t *testing.T) {
 	} {
 		assert.Equal(t, want, foldLatin(in), in)
 	}
+}
+
+func TestUnknownRoomIsReadAsTheEndOfTheTitle(t *testing.T) {
+	murder := media.Item{Kind: media.KindMovie, ID: 50, Title: "Murder in Paris", Year: 2023}
+	live := media.Item{Kind: media.KindMovie, ID: 51, Title: "Live on Broadway", Year: 2019}
+
+	for name, tc := range map[string]struct {
+		intent string
+		slots  map[string]slotSpec
+		played []string
+		said   string
+	}{
+		"in, cut off as a room": {
+			intent: "WatchMovie", slots: map[string]slotSpec{"Movie": {value: "murder"}, "Room": {value: "paris"}},
+			played: []string{"Play movie/50 resume"},
+		},
+		"on, cut off as a room": {
+			intent: "WatchMovie", slots: map[string]slotSpec{"Movie": {value: "live"}, "Room": {value: "broadway"}},
+			played: []string{"Play movie/51 resume"},
+		},
+		"a room that isn't known and no title either": {
+			intent: "WatchMovie", slots: map[string]slotSpec{"Movie": {value: "dune"}, "Room": {value: "den"}},
+			said: "error.unknown_room",
+		},
+		"a known room still plays there": {
+			intent: "WatchMovie", slots: map[string]slotSpec{"Movie": {value: "hot fuzz"}, "Room": {value: "bedroom"}},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			h, lounge, bedroom, rec := newRoomHandlerWith(t, murder, live)
+
+			serveBody(t, h, intentRequest(t, tc.intent, tc.slots))
+			require.Len(t, rec.entries, 1)
+
+			switch {
+			case tc.said != "":
+				assert.Empty(t, lounge.Calls())
+				assert.Empty(t, bedroom.Calls())
+				assert.Equal(t, "I don't know a room called den.", rec.entries[0].Speech)
+			case tc.played == nil:
+				assert.Empty(t, lounge.Calls())
+				assert.Equal(t, []string{"Play movie/4 resume"}, bedroom.Calls())
+			default:
+				assert.Equal(t, tc.played, lounge.Calls(), "the title plays on this Echo's Kodi instance")
+				assert.Empty(t, bedroom.Calls())
+				assert.Equal(t, "Lounge", rec.entries[0].Target)
+			}
+		})
+	}
+}
+
+func TestRoomAsTitle(t *testing.T) {
+	speech := sharedSpeech(t)
+
+	readings := speech.RoomAsTitle("en-AU", Intent{Name: "WatchMovie", Slots: map[string]Slot{"Movie": {Name: "Movie", Value: "murder"}, "Room": {Name: "Room", Value: "paris"}}})
+
+	var titles []string
+	for _, r := range readings {
+		assert.NotContains(t, r.Slots, "Room")
+		titles = append(titles, r.Slots["Movie"].Value)
+	}
+
+	assert.Equal(t, []string{"murder in the paris", "murder on the paris", "murder in paris", "murder on paris"}, titles)
+
+	assert.Nil(t, speech.RoomAsTitle("en-AU", Intent{Name: "WatchMovie", Slots: map[string]Slot{"Room": {Name: "Room", Value: "paris"}}}), "no title to put it on")
+	assert.Nil(t, speech.RoomAsTitle("en-AU", Intent{Name: "Pause", Slots: map[string]Slot{"Room": {Name: "Room", Value: "paris"}}}), "an intent with no title before its room")
+	assert.NotEmpty(t, speech.RoomAsTitle("xx-XX", Intent{Name: "WatchMovie", Slots: map[string]Slot{"Movie": {Name: "Movie", Value: "murder"}, "Room": {Name: "Room", Value: "paris"}}}), "an unknown locale reads as English")
+}
+
+func TestRoomAsTitleSkipsRoomsThatAreNotAtTheEnd(t *testing.T) {
+	// No shipped language puts some rooms after the title and others before it or inside a phrase, but one could.
+	speech := &Speech{
+		languages: map[string]string{"xx-XX": "en"},
+		roomPhrases: map[string][]roomPhrase{"xx-XX": {
+			{before: []string{"in"}, first: true},
+			{before: []string{"by"}, after: []string{"please"}},
+			{after: []string{"room"}},
+			{before: []string{"at"}},
+		}},
+		roomTitles: map[string]map[string][]string{"xx-XX": {"WatchMovie": {"Movie"}}},
+	}
+
+	readings := speech.RoomAsTitle("xx-XX", Intent{Name: "WatchMovie", Slots: map[string]Slot{"Movie": {Name: "Movie", Value: "murder"}, "Room": {Name: "Room", Value: "paris"}}})
+	require.Len(t, readings, 1)
+	assert.Equal(t, "murder at paris", readings[0].Slots["Movie"].Value)
 }

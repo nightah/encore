@@ -22,7 +22,7 @@ In French the invocation name is always "kodi" ("Alexa, demande à kodi de …")
 
 ## Rooms
 
-Commands that start playback accept a room at the end: "play Dune in the bedroom" plays on the bedroom's Kodi instance, whichever Echo you're talking to. In Japanese and Hindi the room comes first or before the verb: 「リビングで映画デューンを再生して」, "बेडरूम में शोले चलाओ". See [Echo devices and rooms](/encore/guides/echo-devices/).
+Commands that start playback accept a room at the end: "play Dune in the bedroom" or "play Dune on TV" plays on that room's or device's Kodi instance, whichever Echo you're talking to. In Japanese and Hindi the room comes first or before the verb: 「リビングで映画デューンを再生して」, "बेडरूम में शोले चलाओ". See [Echo devices and rooms](/encore/guides/echo-devices/).
 
 ## Episodes
 

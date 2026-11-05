@@ -30,13 +30,13 @@ The page also shows when each Echo was first and last seen and how many requests
 A room has a name, an optional Kodi instance that plays there, and spoken names of two kinds:
 
 - **Room names** are other names people use for the room ("living room" and "family room" for the lounge), said as "…in the living room".
-- **Devices** are things in the room ("TV", "projector"), said as "…on the TV".
+- **Devices** are things in the room ("TV", "projector"), said as "…on the TV" or "…on TV".
 
 Pick the kind next to the name when you add it; the page colours room names and devices differently. Both kinds pick the room's Kodi instance, and names must be unique across rooms.
 
 Requests that start playback accept a room or device at the end: "Alexa, ask encore to play the next episode of Severance in the bedroom", "... put on some jazz in the kitchen", "... play Bluey on the TV". Encore ignores a leading "the", matches the name against rooms and their spoken names, and plays on that room's Kodi.
 
-This also works for a plain "play …" request, which Alexa hears as one search phrase: "play Frozen in the lounge" arrives as "Frozen in the lounge". When the end of that phrase names a known room or device after the language's room wording ("in the", "on the"; "im", "in der"; "dans le", "au"; …), Encore takes it off the title and plays on that room's Kodi. If it names no room, the whole phrase is searched as a title. A room without a Kodi instance falls back to the Echo's own instance; a name that matches no room gets "I don't know a room called …". The [voice commands](/encore/voice-commands/) pages show which commands take a `{Room}`.
+This also works for a plain "play …" request, which Alexa hears as one search phrase: "play Frozen in the lounge" arrives as "Frozen in the lounge". When the end of that phrase names a known room or device after the language's room wording ("in the", "on the", "in", "on"; "im", "in der"; "dans le", "au"; …), Encore takes it off the title and plays on that room's Kodi. If it names no room, the whole phrase is searched as a title. A room without a Kodi instance falls back to the Echo's own instance; a name that matches no room gets "I don't know a room called …". Alexa can also cut the end off a title as a room: "watch the movie Murder in Paris" may arrive as the film "murder" in the room "paris". When no room is called that, Encore puts the words back and searches for "murder in Paris" on the Echo's own Kodi instance, and only says it doesn't know the room when no title is called that either. The [voice commands](/encore/voice-commands/) pages show which commands take a `{Room}`.
 
 Rooms work as soon as you add them. They also become slot values the next time you [deploy the skill](/encore/guides/deploy-skill/#redeploying), which helps Alexa hear unusual room names.
 

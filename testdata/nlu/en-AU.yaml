@@ -95,6 +95,9 @@ cases:
   - {utterance: "continue watching breaking bad in the living room", intent: WatchNextEpisode, slots: {Room: "", Show: "breaking bad"}}
   - {utterance: "play some music by queen in the living room", intent: ListenToArtist, slots: {Artist: "queen", Room: ""}}
   - {utterance: "pause in the living room", intent: RoomControl, slots: {Command: "pause", Room: ""}}
+  - {utterance: "play the movie dune on tv", intent: WatchMovie, slots: {Movie: "dune", Room: ""}}
+  - {utterance: "pause on tv", intent: RoomControl, slots: {Command: "pause", Room: ""}}
+  - {utterance: "play the movie dune in bedroom", intent: WatchMovie, slots: {Movie: "dune", Room: ""}}
   - {utterance: "pause the tv in the living room", intent: RoomControl, slots: {Command: "pause", Room: ""}}
   # Episodes and seasons, including the one-shot forms.
   - {utterance: "play breaking bad season 2 episode 3", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "breaking bad"}}
