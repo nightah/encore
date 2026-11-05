@@ -129,6 +129,17 @@ func TestRoomInSearchQuery(t *testing.T) {
 	assert.Equal(t, "hot fuzz in the bedroom", rec.entries[0].Slots["Query"], "the log keeps what was heard")
 }
 
+func TestRoomWithoutArticleInSearchQuery(t *testing.T) {
+	h, lounge, bedroom, rec := newRoomHandler(t)
+
+	serveBody(t, h, intentRequest(t, "PlayMedia", map[string]slotSpec{"Query": {value: "hot fuzz on bedroom"}}))
+	assert.Empty(t, lounge.Calls())
+	assert.Equal(t, []string{"Play movie/4 resume"}, bedroom.Calls(), "\"on bedroom\" names the room as \"on the bedroom\" does")
+
+	require.Len(t, rec.entries, 1)
+	assert.Equal(t, "Bedroom", rec.entries[0].Target)
+}
+
 func TestRoomInSearchQueryUnknownRoom(t *testing.T) {
 	h, _, bedroom, rec := newRoomHandler(t)
 
@@ -189,7 +200,11 @@ func TestRoomSplits(t *testing.T) {
 		want          []RoomSplit
 	}{
 		{"en-AU", "frozen in the lounge room", []RoomSplit{{"frozen", "lounge room"}}},
-		{"en-AU", "frozen on the TV", []RoomSplit{{"frozen", "TV"}}},
+		// The bare "on" reads "the TV" as the room too; no room is called that, so the caller moves on.
+		{"en-AU", "frozen on the TV", []RoomSplit{{"frozen", "TV"}, {"frozen", "the TV"}}},
+		{"en-AU", "the martian on TV", []RoomSplit{{"the martian", "TV"}}},
+		// Only "on" goes without its article: "Murder in Paris" stays a title.
+		{"en-AU", "murder in paris", nil},
 		{"en-AU", "the man in the iron mask in the lounge", []RoomSplit{
 			{"the man", "iron mask in the lounge"},
 			{"the man in the iron mask", "lounge"},

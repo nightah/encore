@@ -30,7 +30,7 @@ The page also shows when each Echo was first and last seen and how many requests
 A room has a name, an optional Kodi instance that plays there, and spoken names of two kinds:
 
 - **Room names** are other names people use for the room ("living room" and "family room" for the lounge), said as "…in the living room".
-- **Devices** are things in the room ("TV", "projector"), said as "…on the TV".
+- **Devices** are things in the room ("TV", "projector"), said as "…on the TV" or "…on TV".
 
 Pick the kind next to the name when you add it; the page colours room names and devices differently. Both kinds pick the room's Kodi instance, and names must be unique across rooms.
 
