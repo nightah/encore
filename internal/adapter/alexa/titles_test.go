@@ -296,6 +296,7 @@ func TestRerouteReadsTheSeasonOffTheShow(t *testing.T) {
 		{"a season heard already", "es-US", season("2 de la casa de papel", "4", ""), season("2 de la casa de papel", "4", "")},
 		{"an ordinal heard already", "es-US", season("2 de la casa de papel", "", "tercera"), season("2 de la casa de papel", "", "tercera")},
 		{"too short to hold a show", "es-US", season("2 de", "", ""), season("2 de", "", "")},
+		{"a show that doesn't start with a number", "en-AU", season("the 3 of us", "", ""), season("the 3 of us", "", "")},
 	} {
 		assert.Equal(t, tc.want, speech.Reroute(tc.locale, tc.in), tc.name)
 	}
