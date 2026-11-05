@@ -366,7 +366,27 @@ describe("Settings page", () => {
   it("offers the confirmation sound, on by default", async () => {
     renderApp("/settings?tab=features");
     expect(await screen.findByRole("switch", { name: /Confirm commands with a sound/ })).toBeChecked();
-    expect(screen.getAllByRole("switch")[0]).toHaveAccessibleName(/Confirm commands with a sound/);
+  });
+
+  it("groups the features by what they act on: voice requests, Kodi and the skill on Amazon", async () => {
+    renderApp("/settings?tab=features");
+    const voice = await screen.findByRole("region", { name: "Voice requests" });
+    expect(within(voice).getByText("How Encore reads and answers what you say to Alexa")).toBeInTheDocument();
+    expect(
+      within(voice)
+        .getAllByRole("switch")
+        .map((s) => s.getAttribute("aria-label")),
+    ).toEqual(["Deep search for “play X”", "Confirm commands with a sound"]);
+
+    const kodi = screen.getByRole("region", { name: "Kodi" });
+    expect(within(kodi).getByRole("combobox", { name: /Preferred quality/ })).toBeInTheDocument();
+    expect(within(kodi).getByRole("spinbutton", { name: /Queue limit/ })).toBeInTheDocument();
+    expect(within(kodi).getByRole("switch", { name: "“Shutdown” quits Kodi" })).toBeInTheDocument();
+
+    const skill = screen.getByRole("region", { name: "Alexa skill" });
+    expect(within(skill).getByText("How Encore keeps your skill on Amazon up to date")).toBeInTheDocument();
+    expect(within(skill).getByRole("switch", { name: "Deploy skill changes automatically" })).toBeInTheDocument();
+    expect(within(skill).getByRole("spinbutton", { name: /Check for changes every/ })).toBeInTheDocument();
   });
 
   it("saves a feature switch straight away", async () => {
@@ -377,15 +397,35 @@ describe("Settings page", () => {
     await waitFor(() => expect(getDb().settings.features.shutdown_quits).toBe(!before));
   });
 
-  it("offers automatic skill deploys, on by default, after deep search", async () => {
+  it("saves the preferred quality as soon as another is picked", async () => {
+    const user = userEvent.setup();
+    const log = recordRequests();
+    renderApp("/settings?tab=features");
+    const quality = await screen.findByRole("combobox", { name: /Preferred quality/ });
+    expect(quality).toHaveValue("screen");
+    expect(within(quality).getByRole("option", { name: "Match each screen" })).toBeInTheDocument();
+    expect(screen.getByText(/Playback carries on from where any copy stopped/)).toBeInTheDocument();
+
+    await user.selectOptions(quality, "1080p");
+    await waitFor(() => expect(getDb().settings.features.preferred_quality).toBe("1080p"));
+    expect(log.find((r) => r.method === "PATCH")?.body).toEqual({ features: { preferred_quality: "1080p" } });
+    await waitFor(() => expect(quality).toHaveValue("1080p"));
+  });
+
+  it("shows the preferred quality as managed, and won't change it, when config sets it", async () => {
+    getDb().settings.managed = ["features.preferred_quality"];
+    renderApp("/settings?tab=features");
+    const quality = await screen.findByRole("combobox", { name: /Preferred quality.*Managed by config/ });
+    expect(quality).toBeDisabled();
+  });
+
+  it("offers automatic skill deploys, on by default", async () => {
     const user = userEvent.setup();
     const log = recordRequests();
     renderApp("/settings?tab=features");
     const toggle = await screen.findByRole("switch", { name: "Deploy skill changes automatically" });
     expect(toggle).toBeChecked();
     expect(screen.getByText(/any other failure pauses this until you deploy by hand/)).toBeInTheDocument();
-    const switches = screen.getAllByRole("switch");
-    expect(switches[switches.indexOf(toggle) - 1]).toHaveAccessibleName("Deep search for “play X”");
 
     await user.click(toggle);
     await waitFor(() => expect(getDb().settings.features.auto_deploy).toBe(false));

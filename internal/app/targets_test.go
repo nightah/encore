@@ -178,23 +178,26 @@ func TestTargetCarriesVoiceSettings(t *testing.T) {
 
 		h.app.cfg.Alexa.ShutdownQuits = true
 		h.app.cfg.Alexa.QueueLimit = 25
+		h.app.cfg.Alexa.PreferredQuality = "1080p"
 
 		target, err = h.app.Target(t.Context(), testDevice)
 		require.NoError(t, err)
 		assert.True(t, target.ShutdownQuits)
 		assert.Equal(t, 25, target.QueueLimit)
+		assert.Equal(t, media.Quality1080p, target.Quality)
 
 		recs, err := h.app.db.KodiInstances().List(t.Context())
 		require.NoError(t, err)
 
 		rec := recs[0]
-		rec.ShutdownQuits, rec.Language = new(false), "de"
+		rec.ShutdownQuits, rec.Language, rec.PreferredQuality = new(false), "de", "2160p"
 		require.NoError(t, h.app.db.KodiInstances().Update(t.Context(), &rec))
 		require.NoError(t, h.app.ReloadInstance(t.Context(), rec.ID))
 
 		target, err = h.app.Target(t.Context(), testDevice)
 		require.NoError(t, err)
 		assert.False(t, target.ShutdownQuits, "the instance's setting wins")
+		assert.Equal(t, media.Quality2160p, target.Quality, "the instance's quality wins")
 		assert.Equal(t, "de", target.Language)
 
 		// Settings saved in the web interface take effect without a restart.

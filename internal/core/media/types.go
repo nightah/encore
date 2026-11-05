@@ -2,6 +2,7 @@ package media
 
 import (
 	"context"
+	"sync"
 	"time"
 )
 
@@ -48,8 +49,42 @@ type Item struct {
 	DateAdded  time.Time
 	LastPlayed time.Time
 
+	// Quality is a film's or episode's video resolution; empty when the backend doesn't know it.
+	Quality Quality
+	// HDR is the video's HDR format as the backend names it, such as hdr10, dolbyvision or hlg; empty for SDR or when unknown.
+	HDR string
+
 	// Art holds the backend's image references; for Kodi, image:// URLs fetched through its web server.
 	Art Artwork
+}
+
+// Quality is a video's resolution class. As a preference, empty or QualityHighest asks for the best copy there is.
+type Quality string
+
+// Screen is the largest picture a media centre's display can show, in pixels; zero when it isn't known.
+type Screen struct {
+	Width, Height int
+}
+
+// Copy is what choosing between copies of a title looks at.
+type Copy struct {
+	Quality Quality
+	// Resume is where playback of this copy stopped; zero when it hasn't been started or was finished.
+	Resume time.Duration
+}
+
+// ResumePoints are positions to start items from that their own bookmarks don't hold: where another copy of the same title stopped, further than the copy chosen to play. They are kept for one request and are safe for concurrent use.
+type ResumePoints struct {
+	mu     sync.Mutex
+	points map[Ref]time.Duration
+}
+
+// copyChooser is a Backend that lists one copy of each episode, chosen as OneCopyEach chooses, and starts an item from its resume point when it has one.
+type copyChooser struct {
+	Backend
+
+	quality Quality
+	points  *ResumePoints
 }
 
 // Artwork is an item's images as the backend refers to them.
@@ -67,6 +102,10 @@ type PlayOptions struct {
 	Shuffle bool
 	// Limit caps how many items a shuffled container queues; zero means no cap.
 	Limit int
+	// Quality chooses between copies of an episode when a show is shuffled, or between a film's versions; empty prefers the best.
+	Quality Quality
+	// From is where to start when Resume is set, in place of the item's own bookmark: a position another copy of the title reached. Zero keeps the bookmark.
+	From time.Duration
 }
 
 // Transport is a playback control command.
@@ -110,6 +149,15 @@ type NowPlaying struct {
 	Paused   bool
 	// Queued is whether another item follows this one in the play queue.
 	Queued bool
+	// Video is the picture playing; zero when unknown, as for music.
+	Video Video
+}
+
+// Video is a video stream's frame size and codec, such as 3840×1600 HEVC.
+type Video struct {
+	Width, Height int
+	// Codec is as the backend names it, such as hevc or h264.
+	Codec string
 }
 
 // Info describes a backend instance.

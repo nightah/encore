@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useId, useState } from "react";
 
 import { useTranslation } from "react-i18next";
 
@@ -6,72 +6,158 @@ import { errorMessage } from "@api/client";
 import type { Settings } from "@api/generated/model";
 import { isManaged, useSaveSettings } from "@api/settings";
 import { ManagedBadge } from "@components/ui/Chip";
-import { Input, Switch } from "@components/ui/Field";
+import { Input, Select, Switch } from "@components/ui/Field";
 import { FormError } from "@features/settings/FormError";
 
 /** Titled by settings:features.<key>. */
-const FEATURES = ["confirm_sound", "deep_search", "auto_deploy", "shutdown_quits"] as const satisfies ReadonlyArray<
-  keyof Settings["features"]
+type SwitchFeature = "confirm_sound" | "deep_search" | "auto_deploy" | "shutdown_quits";
+
+const QUALITIES = ["screen", "highest", "2160p", "1080p", "720p", "sd"] as const satisfies ReadonlyArray<
+  Settings["features"]["preferred_quality"]
 >;
 
 const QUEUE_LIMIT_MAX = 1000;
 const AUTO_DEPLOY_MINUTES_MAX = 24 * 60;
 
-/** Each switch saves straight away. */
+/** Each setting saves straight away. The settings are grouped by what they act on: what's said to Alexa, the Kodi instances, and the skill on Amazon. */
 export function FeaturesTab({ settings }: { settings: Settings }) {
   const { t } = useTranslation("settings");
   const save = useSaveSettings();
   return (
-    <div className="flex flex-col">
-      <h2 className="mb-1.5 font-display font-semibold text-lg">{t("features.title")}</h2>
-      <FormError message={save.error ? errorMessage(save.error) : undefined} />
-      {FEATURES.map((key) => {
-        const managed = isManaged(settings, `features.${key}`);
-        const title = t(`features.${key}.title`);
-        return (
-          <div key={key} className="flex flex-col border-line-soft border-b py-3.5">
-            <div className="flex items-center justify-between gap-4">
-              <span className="flex flex-col">
-                <span className="flex flex-wrap items-center gap-2 font-semibold">
-                  {title}
-                  {managed ? <ManagedBadge /> : null}
-                </span>
-                <span className="text-[13px] text-muted">{t(`features.${key}.hint`)}</span>
-              </span>
-              <Switch
-                label={title}
-                checked={settings.features[key]}
-                disabled={managed || save.isPending}
-                onCheckedChange={(checked) => save.mutate({ features: { [key]: checked } })}
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1.5">
+        <h2 className="font-display font-semibold text-lg">{t("features.title")}</h2>
+        <FormError message={save.error ? errorMessage(save.error) : undefined} />
+      </div>
+      <Group title={t("features.groups.voice.title")} note={t("features.groups.voice.note")}>
+        <SwitchSetting settings={settings} save={save} field="deep_search" />
+        <SwitchSetting settings={settings} save={save} field="confirm_sound" />
+      </Group>
+      <Group title={t("features.groups.kodi.title")} note={t("features.groups.kodi.note")}>
+        <Row>
+          <QualitySetting settings={settings} save={save} />
+        </Row>
+        <Row>
+          <NumberSetting
+            key={settings.features.queue_limit}
+            settings={settings}
+            save={save}
+            field="queue_limit"
+            max={QUEUE_LIMIT_MAX}
+            hint={() => t("features.queue_limit.hint")}
+          />
+        </Row>
+        <SwitchSetting settings={settings} save={save} field="shutdown_quits" />
+      </Group>
+      <Group title={t("features.groups.skill.title")} note={t("features.groups.skill.note")}>
+        <SwitchSetting settings={settings} save={save} field="auto_deploy">
+          {settings.features.auto_deploy ? (
+            <div className="mt-3 ms-1 border-line border-s-2 ps-4">
+              <NumberSetting
+                key={settings.features.auto_deploy_minutes}
+                settings={settings}
+                save={save}
+                field="auto_deploy_minutes"
+                max={AUTO_DEPLOY_MINUTES_MAX}
+                fractional
+                unit={t("features.auto_deploy_minutes.unit")}
+                hint={(n) => <AutoDeployHint minutes={n} />}
               />
             </div>
-            {key === "auto_deploy" && settings.features.auto_deploy ? (
-              <div className="mt-3 ms-1 border-line border-s-2 ps-4">
-                <NumberSetting
-                  key={settings.features.auto_deploy_minutes}
-                  settings={settings}
-                  save={save}
-                  field="auto_deploy_minutes"
-                  max={AUTO_DEPLOY_MINUTES_MAX}
-                  fractional
-                  unit={t("features.auto_deploy_minutes.unit")}
-                  hint={(n) => <AutoDeployHint minutes={n} />}
-                />
-              </div>
-            ) : null}
-          </div>
-        );
-      })}
-      <div className="py-3.5">
-        <NumberSetting
-          key={settings.features.queue_limit}
-          settings={settings}
-          save={save}
-          field="queue_limit"
-          max={QUEUE_LIMIT_MAX}
-          hint={() => t("features.queue_limit.hint")}
+          ) : null}
+        </SwitchSetting>
+      </Group>
+    </div>
+  );
+}
+
+/** A titled group of settings, with a line saying what they act on. */
+function Group({ title, note, children }: { title: string; note: string; children: ReactNode }) {
+  const id = useId();
+  return (
+    <section aria-labelledby={id} className="flex flex-col">
+      <div className="flex flex-col gap-0.5 border-line border-b pb-2">
+        <h3 id={id} className="font-medium font-mono text-[11.5px] text-muted uppercase tracking-[0.06em]">
+          {title}
+        </h3>
+        <p className="text-[13px] text-muted">{note}</p>
+      </div>
+      <div className="flex flex-col [&>*:last-child]:border-b-0">{children}</div>
+    </section>
+  );
+}
+
+function Row({ children }: { children: ReactNode }) {
+  return <div className="border-line-soft border-b py-3.5">{children}</div>;
+}
+
+function SwitchSetting({
+  settings,
+  save,
+  field,
+  children,
+}: {
+  settings: Settings;
+  save: ReturnType<typeof useSaveSettings>;
+  field: SwitchFeature;
+  children?: ReactNode;
+}) {
+  const { t } = useTranslation("settings");
+  const managed = isManaged(settings, `features.${field}`);
+  const title = t(`features.${field}.title`);
+  return (
+    <div className="flex flex-col border-line-soft border-b py-3.5">
+      <div className="flex items-center justify-between gap-4">
+        <span className="flex flex-col">
+          <span className="flex flex-wrap items-center gap-2 font-semibold">
+            {title}
+            {managed ? <ManagedBadge /> : null}
+          </span>
+          <span className="text-[13px] text-muted">{t(`features.${field}.hint`)}</span>
+        </span>
+        <Switch
+          label={title}
+          checked={settings.features[field]}
+          disabled={managed || save.isPending}
+          onCheckedChange={(checked) => save.mutate({ features: { [field]: checked } })}
         />
       </div>
+      {children}
+    </div>
+  );
+}
+
+/** Saves as soon as another quality is picked. */
+function QualitySetting({ settings, save }: { settings: Settings; save: ReturnType<typeof useSaveSettings> }) {
+  const { t } = useTranslation("settings");
+  const managed = isManaged(settings, "features.preferred_quality");
+  const id = "feature-preferred_quality";
+  return (
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+      <label htmlFor={id} className="flex flex-col">
+        <span className="flex flex-wrap items-center gap-2 font-semibold">
+          {t("features.preferred_quality.title")}
+          {managed ? <ManagedBadge /> : null}
+        </span>
+        <span className="text-[13px] text-muted">{t("features.preferred_quality.hint")}</span>
+      </label>
+      <Select
+        id={id}
+        className="w-full shrink-0 sm:w-auto sm:min-w-44 sm:max-w-64"
+        value={settings.features.preferred_quality}
+        disabled={managed || save.isPending}
+        onChange={(event) =>
+          save.mutate({
+            features: { preferred_quality: event.target.value as Settings["features"]["preferred_quality"] },
+          })
+        }
+      >
+        {QUALITIES.map((value) => (
+          <option key={value} value={value}>
+            {t(`features.preferred_quality.${value}`)}
+          </option>
+        ))}
+      </Select>
     </div>
   );
 }

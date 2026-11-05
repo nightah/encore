@@ -44,6 +44,8 @@ type Target struct {
 	DeepSearch bool
 	// ConfirmSound acknowledges a success with nothing to say with a short sound instead of silence.
 	ConfirmSound bool
+	// Quality is the copy to play when the library holds a film or episode more than once; empty prefers the best.
+	Quality media.Quality
 	// Disabled lists the content groups the skill was set up without; the zero value allows everything.
 	Disabled []media.Content
 	// Via is set when the request named a room or device; a room without its own Kodi instance plays on the Echo's, so the target can be another room's.

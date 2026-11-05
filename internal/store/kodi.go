@@ -19,7 +19,7 @@ func scanKodi(s scanner) (KodiInstance, error) {
 	)
 
 	err := s.Scan(&k.ID, &k.Name, &k.Scheme, &k.Host, &k.Port, &k.Path, &k.Username, &k.PasswordSecretRef,
-		&k.WSPort, &k.MAC, &k.BroadcastAddr, &k.IsDefaultForUnlinked, &k.Language, &k.Timezone, &quits, &group, &created, &updated)
+		&k.WSPort, &k.MAC, &k.BroadcastAddr, &k.IsDefaultForUnlinked, &k.Language, &k.Timezone, &quits, &k.PreferredQuality, &k.ScreenWidth, &k.ScreenHeight, &group, &created, &updated)
 	if err != nil {
 		return KodiInstance{}, mapErr(err)
 	}
@@ -48,10 +48,10 @@ func (r KodiInstances) Create(ctx context.Context, k *KodiInstance) error {
 
 		err := tx.QueryRowContext(ctx, `INSERT INTO kodi_instances
 			(name, scheme, host, port, path, username, password_secret_ref, ws_port, mac, broadcast_addr, is_default_for_unlinked,
-			 language, timezone, shutdown_quits, library_group_id, created_at, updated_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
+			 language, timezone, shutdown_quits, preferred_quality, screen_width, screen_height, library_group_id, created_at, updated_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
 			k.Name, k.Scheme, k.Host, k.Port, k.Path, k.Username, k.PasswordSecretRef, k.WSPort, k.MAC, k.BroadcastAddr,
-			k.IsDefaultForUnlinked, k.Language, k.Timezone, k.ShutdownQuits, nullID(k.LibraryGroupID), toMillis(now), toMillis(now)).Scan(&k.ID)
+			k.IsDefaultForUnlinked, k.Language, k.Timezone, k.ShutdownQuits, k.PreferredQuality, k.ScreenWidth, k.ScreenHeight, nullID(k.LibraryGroupID), toMillis(now), toMillis(now)).Scan(&k.ID)
 		if err != nil {
 			return fmt.Errorf("creating kodi instance: %w", mapErr(err))
 		}
@@ -62,7 +62,7 @@ func (r KodiInstances) Create(ctx context.Context, k *KodiInstance) error {
 	})
 }
 
-// Update saves every field of k except CreatedAt and LibraryGroupID. If k is the default for unlinked devices, any previous default is cleared.
+// Update saves every field of k except CreatedAt, LibraryGroupID and the screen, which SetScreen saves. If k is the default for unlinked devices, any previous default is cleared.
 func (r KodiInstances) Update(ctx context.Context, k *KodiInstance) error {
 	now := r.db.stamp()
 
@@ -75,9 +75,9 @@ func (r KodiInstances) Update(ctx context.Context, k *KodiInstance) error {
 
 		err := affected(tx.ExecContext(ctx, `UPDATE kodi_instances SET
 			name = ?, scheme = ?, host = ?, port = ?, path = ?, username = ?, password_secret_ref = ?, ws_port = ?,
-			mac = ?, broadcast_addr = ?, is_default_for_unlinked = ?, language = ?, timezone = ?, shutdown_quits = ?, updated_at = ? WHERE id = ?`,
+			mac = ?, broadcast_addr = ?, is_default_for_unlinked = ?, language = ?, timezone = ?, shutdown_quits = ?, preferred_quality = ?, updated_at = ? WHERE id = ?`,
 			k.Name, k.Scheme, k.Host, k.Port, k.Path, k.Username, k.PasswordSecretRef, k.WSPort,
-			k.MAC, k.BroadcastAddr, k.IsDefaultForUnlinked, k.Language, k.Timezone, k.ShutdownQuits, toMillis(now), k.ID))
+			k.MAC, k.BroadcastAddr, k.IsDefaultForUnlinked, k.Language, k.Timezone, k.ShutdownQuits, k.PreferredQuality, toMillis(now), k.ID))
 		if err != nil {
 			return fmt.Errorf("updating kodi instance %d: %w", k.ID, err)
 		}
@@ -127,6 +127,16 @@ func (r KodiInstances) Get(ctx context.Context, id int64) (KodiInstance, error) 
 	}
 
 	return k, nil
+}
+
+// SetScreen saves the screen Encore read from instance id's Kodi, leaving every other field alone, so it can't undo a change saved meanwhile.
+func (r KodiInstances) SetScreen(ctx context.Context, id int64, width, height int) error {
+	err := affected(r.db.write.ExecContext(ctx, `UPDATE kodi_instances SET screen_width = ?, screen_height = ? WHERE id = ?`, width, height, id))
+	if err != nil {
+		return fmt.Errorf("saving the screen of kodi instance %d: %w", id, err)
+	}
+
+	return nil
 }
 
 // Default returns the default instance for unlinked devices, or ErrNotFound.

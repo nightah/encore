@@ -88,6 +88,25 @@
         "label": "Contraseña de Kodi",
         "saved": "Hay una contraseña guardada. Deja esto vacío para conservarla."
       },
+      "preferred_quality": {
+        "720p": "720p",
+        "1080p": "1080p",
+        "2160p": "4K (2160p)",
+        "highest": "La mejor disponible",
+        "hint": "Qué copia se reproduce cuando una película o un episodio está más de una vez en la biblioteca, por ejemplo en 4K y en 1080p.",
+        "inherit": "Seguir Ajustes › Funciones",
+        "label": "Calidad preferida",
+        "screen": "Según esta pantalla",
+        "screen_known": "Su pantalla es {{quality}}, {{width}}×{{height}}.",
+        "screen_quality": {
+          "720p": "720p",
+          "1080p": "1080p",
+          "2160p": "4K",
+          "sd": "SD"
+        },
+        "screen_unknown": "Encore conoce su pantalla en cuanto se conecta.",
+        "sd": "SD"
+      },
       "shutdown": {
         "hint": "Lo que hace «Alexa, pide a encore que apague» en esta instancia de Kodi.",
         "inherit": "Seguir Ajustes › Funciones",

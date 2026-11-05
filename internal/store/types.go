@@ -118,6 +118,10 @@ type KodiInstance struct {
 	Timezone string
 	// ShutdownQuits overrides alexa.shutdown_quits for this instance; nil follows it.
 	ShutdownQuits *bool
+	// PreferredQuality overrides alexa.preferred_quality for this instance; empty follows it.
+	PreferredQuality string
+	// ScreenWidth and ScreenHeight are the largest picture the instance's display showed when Encore last asked; 0 until it has. Only KodiInstances.SetScreen changes them.
+	ScreenWidth, ScreenHeight int
 	// LibraryGroupID is the library group the instance belongs to; 0 until one is assigned. Update leaves it alone; change it with LibraryGroups().Save or Assign.
 	LibraryGroupID int64
 	CreatedAt      time.Time

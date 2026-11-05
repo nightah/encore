@@ -21,3 +21,6 @@ const (
 	smallStep = 30
 	bigStep   = 600
 )
+
+// versionsDirectory begins the videodb URL that lists a film's versions.
+const versionsDirectory = "videodb://movies/titles/?"

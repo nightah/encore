@@ -5,6 +5,7 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
+import type { FeaturesPreferredQuality } from "./featuresPreferredQuality.ts";
 
 export interface Features {
   /** Redeploy the skill on its own when what would be deployed changes. An automatic deploy that fails for a reason that may pass, such as Amazon being unavailable, is tried again up to three times with a growing wait; any other failure, or a fourth in a row, pauses this until a deploy started by hand succeeds */
@@ -15,6 +16,8 @@ export interface Features {
   confirm_sound: boolean;
   /** "Play X" also searches music when the request doesn't say what kind of title X is */
   deep_search: boolean;
+  /** Which copy plays when the library holds a film or episode more than once, such as in both 2160p and 1080p: that quality, else the best below it, else the least above it. screen matches each Kodi instance's screen, and plays the best copy until it is known. Playback carries on where any copy stopped. A Kodi instance's own kodi[].preferred_quality wins */
+  preferred_quality: FeaturesPreferredQuality;
   /** The most items a shuffle or queue plays at once */
   queue_limit: number;
   /** "Shut down" quits Kodi instead of powering off the device; a Kodi instance's own kodi[].shutdown_quits wins */

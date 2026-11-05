@@ -88,9 +88,28 @@
         "label": "Mot de passe Kodi",
         "saved": "Un mot de passe est enregistré. Laissez ce champ vide pour le conserver."
       },
+      "preferred_quality": {
+        "720p": "720p",
+        "1080p": "1080p",
+        "2160p": "4K (2160p)",
+        "highest": "La meilleure disponible",
+        "hint": "Quelle copie est lue quand un film ou un épisode figure plusieurs fois dans la médiathèque, par exemple en 4K et en 1080p.",
+        "inherit": "Suivre Paramètres › Fonctionnalités",
+        "label": "Qualité préférée",
+        "screen": "Selon cet écran",
+        "screen_known": "Son écran est en {{quality}}, {{width}}×{{height}}.",
+        "screen_quality": {
+          "720p": "720p",
+          "1080p": "1080p",
+          "2160p": "4K",
+          "sd": "SD"
+        },
+        "screen_unknown": "Encore découvre son écran dès qu’elle se connecte.",
+        "sd": "SD"
+      },
       "shutdown": {
         "hint": "Ce que fait « Alexa, demande à kodi d’éteindre » sur cette instance Kodi.",
-        "inherit": "Suivre Réglages › Fonctions",
+        "inherit": "Suivre Paramètres › Fonctionnalités",
         "label": "« Éteindre »",
         "power_off": "Éteindre l’appareil",
         "quit": "Quitter Kodi"

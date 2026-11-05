@@ -37,6 +37,13 @@ func (s *Server) streamPropertiesLocked(props map[string]any) {
 	props["subtitles"] = []Stream{}
 	props["currentaudiostream"] = map[string]any{}
 	props["currentsubtitle"] = map[string]any{}
+	// Kodi reports an empty stream rather than none.
+	props["currentvideostream"] = map[string]any{"codec": "", "height": 0, "index": 0, "language": "", "name": "", "width": 0}
+
+	if d := s.state.playing.StreamDetails; d != nil && len(d.Video) > 0 {
+		v := d.Video[0]
+		props["currentvideostream"] = map[string]any{"codec": v.Codec, "height": v.Height, "index": 0, "language": "", "name": "", "width": v.Width}
+	}
 
 	if s.state.playing.playerID() != videoPlayerID {
 		return

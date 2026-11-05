@@ -1,6 +1,7 @@
 package app
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"github.com/nightah/encore/internal/adapter/alexa"
 	"github.com/nightah/encore/internal/config"
 	"github.com/nightah/encore/internal/core/actions"
+	"github.com/nightah/encore/internal/core/match"
 	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/store"
 )
@@ -132,6 +134,7 @@ func (a *App) instanceTarget(ctx context.Context, id int64) (actions.Target, boo
 	t.ShutdownQuits = voice.ShutdownQuits
 	t.DeepSearch = voice.DeepSearch
 	t.ConfirmSound = voice.ConfirmSound
+	t.Quality = media.Quality(cmp.Or(inst.Record.PreferredQuality, voice.PreferredQuality)).ForScreen(inst.Screen())
 
 	for _, c := range media.Contents {
 		if !slices.Contains(voice.Content, string(c)) {
@@ -143,7 +146,24 @@ func (a *App) instanceTarget(ctx context.Context, id int64) (actions.Target, boo
 		t.ShutdownQuits = *q
 	}
 
+	points := &media.ResumePoints{}
+	t.Matcher = resumeMatcher{Matcher: t.Matcher, points: points}
+	t.Backend = media.PreferCopies(t.Backend, t.Quality, points)
+
 	return t, true
+}
+
+// Search implements actions.Matcher.
+func (m resumeMatcher) Search(ctx context.Context, q match.Query) (match.Result, error) {
+	res, err := m.Matcher.Search(ctx, q)
+
+	for _, c := range res.Candidates {
+		if c.From > 0 {
+			m.points.Set(c.Doc.Ref, c.From)
+		}
+	}
+
+	return res, err
 }
 
 func cutArticle(spoken string) (string, bool) {

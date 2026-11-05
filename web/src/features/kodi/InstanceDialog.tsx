@@ -23,6 +23,10 @@ const optionalUrl = (pattern: RegExp, message: string) =>
 
 const SHUTDOWN = ["inherit", "quit", "power_off"] as const satisfies ReadonlyArray<Instance["shutdown"]>;
 
+const QUALITY = ["inherit", "screen", "highest", "2160p", "1080p", "720p", "sd"] as const satisfies ReadonlyArray<
+  Instance["preferred_quality"]
+>;
+
 const makeSchema = (t: TFunction<"kodi">) =>
   z.object({
     broadcast: z.string().trim(),
@@ -30,6 +34,7 @@ const makeSchema = (t: TFunction<"kodi">) =>
     mac: optionalUrl(/^([0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}$/, t("dialog.errors.mac")),
     name: z.string().trim().min(1, t("dialog.errors.name")),
     password: z.string(),
+    preferred_quality: z.enum(QUALITY),
     shutdown: z.enum(SHUTDOWN),
     timezone: z.string().trim(),
     url: z
@@ -48,6 +53,7 @@ const EMPTY: InstanceForm = {
   mac: "",
   name: "",
   password: "",
+  preferred_quality: "inherit",
   shutdown: "inherit",
   timezone: "",
   url: "",
@@ -62,6 +68,7 @@ function fromInstance(instance: Instance): InstanceForm {
     mac: instance.mac,
     name: instance.name,
     password: "",
+    preferred_quality: instance.preferred_quality,
     shutdown: instance.shutdown,
     timezone: instance.timezone,
     url: instance.url,
@@ -114,6 +121,7 @@ export function InstanceDialog({ open, onClose, instance, prefill }: InstanceDia
     const body: InstanceBody = {
       language: values.language,
       name: values.name,
+      preferred_quality: values.preferred_quality,
       shutdown: values.shutdown,
       timezone: values.timezone,
       url: values.url,
@@ -251,6 +259,30 @@ export function InstanceDialog({ open, onClose, instance, prefill }: InstanceDia
               {SHUTDOWN.map((value) => (
                 <option key={value} value={value}>
                   {t(`dialog.fields.shutdown.${value}`)}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field
+            label={t("dialog.fields.preferred_quality.label")}
+            error={errors.preferred_quality?.message}
+            hint={
+              <>
+                {t("dialog.fields.preferred_quality.hint")}{" "}
+                {instance?.screen
+                  ? t("dialog.fields.preferred_quality.screen_known", {
+                      height: instance.screen.height,
+                      quality: t(`dialog.fields.preferred_quality.screen_quality.${instance.screen.quality}`),
+                      width: instance.screen.width,
+                    })
+                  : t("dialog.fields.preferred_quality.screen_unknown")}
+              </>
+            }
+          >
+            <Select disabled={managed} {...form.register("preferred_quality")}>
+              {QUALITY.map((value) => (
+                <option key={value} value={value}>
+                  {t(`dialog.fields.preferred_quality.${value}`)}
                 </option>
               ))}
             </Select>

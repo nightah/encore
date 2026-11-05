@@ -48,7 +48,7 @@ func NewServer(opts Options) *Server {
 		opts:     opts,
 		handlers: map[string]HandlerFunc{},
 		clients:  map[*websocket.Conn]struct{}{},
-		state:    playerState{volume: 50, playlists: map[int][]Item{}, repeat: "off", clock: "09:42:17 PM"},
+		state:    playerState{volume: 50, playlists: map[int][]Item{}, repeat: "off", clock: "09:42:17 PM", screen: [2]int{1920, 1080}},
 		mac:      opts.MAC,
 	}
 	s.settled = sync.NewCond(&s.mu)
@@ -204,6 +204,14 @@ func (s *Server) SetClock(clock string) {
 	defer s.mu.Unlock()
 
 	s.state.clock = clock
+}
+
+// SetScreen sets the GUI's resolution, which System.ScreenWidth and System.ScreenHeight report, and the playback modes videoscreen.whitelist lists, such as "0384002160060.00000pstd".
+func (s *Server) SetScreen(width, height int, whitelist ...string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.state.screen, s.state.whitelist = [2]int{width, height}, whitelist
 }
 
 // Handle overrides or adds the handler for method.

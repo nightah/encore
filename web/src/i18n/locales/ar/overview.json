@@ -57,13 +57,26 @@
       "title": "لا توجد مثيلات Kodi بعد"
     },
     "episode": "الموسم {{season}} · الحلقة {{episode}} «{{title}}»",
+    "hdr": {
+      "dolbyvision": "Dolby Vision",
+      "hdr10": "HDR10",
+      "hdr10plus": "HDR10+",
+      "hlg": "HLG"
+    },
     "idle": "لا شيء قيد التشغيل.",
     "offline": {
       "test": "اختبره من صفحة Kodi",
       "text": "لا يستجيب. تحقّق من أن Kodi يعمل ويمكن الوصول إليه."
     },
     "progress": "التقدّم {{percent}} بالمئة",
-    "title": "مثيلات Kodi"
+    "quality": {
+      "720p": "720p",
+      "1080p": "1080p",
+      "2160p": "4K",
+      "sd": "SD"
+    },
+    "title": "مثيلات Kodi",
+    "video": "الصورة"
   },
   "ms": "{{ms}} ملّي ث",
   "openRequestLog": "فتح سجل الطلبات",

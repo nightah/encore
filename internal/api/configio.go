@@ -144,7 +144,7 @@ func (a *API) exportConfig(ctx context.Context, withSecrets bool) ([]byte, error
 	for _, r := range recs {
 		e := exportedKodi{
 			Name: r.Name, URL: httpURL(r), WebSocketURL: wsURL(r), Username: r.Username, MAC: r.MAC, Broadcast: r.BroadcastAddr, Default: r.IsDefaultForUnlinked,
-			Language: r.Language, Timezone: r.Timezone, ShutdownQuits: r.ShutdownQuits,
+			Language: r.Language, Timezone: r.Timezone, ShutdownQuits: r.ShutdownQuits, PreferredQuality: r.PreferredQuality,
 		}
 
 		if withSecrets && r.PasswordSecretRef != "" {
@@ -254,10 +254,10 @@ func (a *API) importKodi(ctx context.Context, kd exportedKodi) (string, error) {
 		return "", errors.New("managed by config")
 	}
 
-	lang, shutdown := cmp.Or(kd.Language, "en"), shutdownOf(kd.ShutdownQuits)
+	lang, shutdown, quality := cmp.Or(kd.Language, "en"), shutdownOf(kd.ShutdownQuits), qualityOf(kd.PreferredQuality)
 	in := InstanceInput{
 		Name: &kd.Name, URL: &kd.URL, WebSocketURL: &kd.WebSocketURL, Username: &kd.Username, MAC: &kd.MAC, Broadcast: &kd.Broadcast,
-		Language: &lang, Timezone: &kd.Timezone, Shutdown: &shutdown,
+		Language: &lang, Timezone: &kd.Timezone, Shutdown: &shutdown, PreferredQuality: &quality,
 	}
 	if kd.Password != "" {
 		in.Password = &kd.Password

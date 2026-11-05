@@ -196,6 +196,30 @@
       "hint": "Busca en todos los tipos de contenido cuando no se dice el tipo",
       "title": "Búsqueda profunda para «pon X»"
     },
+    "groups": {
+      "kodi": {
+        "note": "Lo que hace Encore en tus instancias de Kodi al reproducir o al encenderlas y apagarlas",
+        "title": "Kodi"
+      },
+      "skill": {
+        "note": "Cómo mantiene Encore al día tu skill en Amazon",
+        "title": "Skill de Alexa"
+      },
+      "voice": {
+        "note": "Cómo entiende y responde Encore lo que le dices a Alexa",
+        "title": "Peticiones por voz"
+      }
+    },
+    "preferred_quality": {
+      "720p": "720p",
+      "1080p": "1080p",
+      "2160p": "4K (2160p)",
+      "highest": "La mejor disponible",
+      "hint": "Qué copia se reproduce cuando una película o un episodio está más de una vez en la biblioteca, por ejemplo en 4K y en 1080p: esa calidad; si no, la mejor por debajo, y si no, la más cercana por encima. La reproducción sigue desde donde se paró cualquier copia. «Según cada pantalla» reproduce la copia más cercana a la pantalla de cada instancia de Kodi, y una instancia puede cambiarlo.",
+      "screen": "Según cada pantalla",
+      "sd": "SD",
+      "title": "Calidad preferida"
+    },
     "queue_limit": {
       "hint": "El máximo de elementos que reproduce a la vez una reproducción aleatoria o una cola, para que las bibliotecas grandes respondan con fluidez",
       "title": "Límite de cola"

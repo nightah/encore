@@ -19,6 +19,17 @@ const (
 	ContentMusic  Content = "music"
 )
 
+// Video qualities, lowest first, and the preference for the best copy there is.
+const (
+	QualitySD      Quality = "sd"
+	Quality720p    Quality = "720p"
+	Quality1080p   Quality = "1080p"
+	Quality2160p   Quality = "2160p"
+	QualityHighest Quality = "highest"
+	// QualityScreen prefers copies the media centre's screen can show at full size, falling back to the best when the screen isn't known.
+	QualityScreen Quality = "screen"
+)
+
 // Transport commands.
 const (
 	TransportPause     Transport = "pause"

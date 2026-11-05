@@ -45,13 +45,26 @@
       "title": "Aucune instance Kodi pour l'instant"
     },
     "episode": "S{{season}} · É{{episode}} « {{title}} »",
+    "hdr": {
+      "dolbyvision": "Dolby Vision",
+      "hdr10": "HDR10",
+      "hdr10plus": "HDR10+",
+      "hlg": "HLG"
+    },
     "idle": "Aucune lecture en cours.",
     "offline": {
       "test": "La tester sur la page Kodi",
       "text": "Ne répond pas. Vérifiez que Kodi est lancé et joignable."
     },
     "progress": "Progression {{percent}} pour cent",
-    "title": "Instances Kodi"
+    "quality": {
+      "720p": "720p",
+      "1080p": "1080p",
+      "2160p": "4K",
+      "sd": "SD"
+    },
+    "title": "Instances Kodi",
+    "video": "Image"
   },
   "ms": "{{ms}} ms",
   "openRequestLog": "Ouvrir le journal des demandes",

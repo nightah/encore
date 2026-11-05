@@ -20,7 +20,8 @@ func (it *Item) playerID() int {
 func movieItem(m *Movie) Item {
 	return Item{
 		Type: "movie", ID: m.MovieID, Label: m.Label, Title: m.Title, Year: m.Year, Genre: m.Genre, Runtime: m.Runtime, resume: m.Resume.Position,
-		Art: map[string]string{"poster": fmt.Sprintf("image://fake/movie-%d-poster.png/", m.MovieID)},
+		Art:           map[string]string{"poster": fmt.Sprintf("image://fake/movie-%d-poster.png/", m.MovieID)},
+		StreamDetails: m.StreamDetails,
 	}
 }
 
@@ -28,7 +29,8 @@ func episodeItem(e *Episode) Item {
 	return Item{
 		Type: "episode", ID: e.EpisodeID, Label: e.Label, Title: e.Title, ShowTitle: e.ShowTitle, TVShowID: e.TVShowID,
 		Season: e.Season, Episode: e.Episode, Runtime: e.Runtime, resume: e.Resume.Position,
-		Art: map[string]string{"thumb": fmt.Sprintf("image://fake/episode-%d-thumb.png/", e.EpisodeID)},
+		Art:           map[string]string{"thumb": fmt.Sprintf("image://fake/episode-%d-thumb.png/", e.EpisodeID)},
+		StreamDetails: e.StreamDetails,
 	}
 }
 
@@ -109,6 +111,10 @@ func (s *Server) resolve(ref *itemRef) ([]Item, bool) {
 	case ref.PartyMode == "music":
 		return songsWhere(lib.Songs, func(*Song) bool { return true })
 	case ref.File != "":
+		if item, ok := versionItem(lib, ref.File); ok {
+			return []Item{item}, true
+		}
+
 		label := ref.File[strings.LastIndex(ref.File, "/")+1:]
 
 		return []Item{{Type: "unknown", Label: label, File: ref.File}}, true
@@ -119,6 +125,22 @@ func (s *Server) resolve(ref *itemRef) ([]Item, bool) {
 	}
 
 	return nil, false
+}
+
+// versionItem is the film a version's file belongs to, as Kodi plays it: with that version's stream details.
+func versionItem(lib *Library, file string) (Item, bool) {
+	for i := range lib.Movies {
+		for _, v := range lib.Movies[i].Versions {
+			if v.File == file {
+				item := movieItem(&lib.Movies[i])
+				item.File, item.StreamDetails, item.resume = v.File, v.StreamDetails, v.Resume.Position
+
+				return item, true
+			}
+		}
+	}
+
+	return Item{}, false
 }
 
 func songsWhere(songs []Song, keep func(*Song) bool) ([]Item, bool) {

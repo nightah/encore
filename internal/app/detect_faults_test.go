@@ -14,6 +14,7 @@ import (
 	"github.com/nightah/encore/internal/backend/kodi"
 	"github.com/nightah/encore/internal/backend/kodi/fakekodi"
 	"github.com/nightah/encore/internal/config"
+	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/store"
 	"github.com/nightah/encore/internal/testkit"
 )
@@ -337,4 +338,30 @@ func TestASplitThatFailsPartWayRunsTheGroupsItSaved(t *testing.T) {
 			assert.Equal(t, want, runtimeMembers(a))
 		})
 	}
+}
+
+func TestAScreenThatCantBeSavedIsStillUsed(t *testing.T) {
+	inBubble(t, func(t *testing.T) {
+		srv := newKodi(t, fakekodi.Options{})
+		srv.SetScreen(3840, 2160)
+
+		cfg, faults := faultyConfig(t, kodiConfig("Lounge", srv, ""))
+		logs := &lockedBuffer{}
+
+		a, err := newApp(t.Context(), cfg, slog.New(slog.NewTextHandler(logs, nil)), fastTuning())
+		require.NoError(t, err)
+
+		faults.Inject(testkit.Fault{Op: testkit.Update, Table: "kodi_instances", When: "NEW.screen_width IS NOT OLD.screen_width"})
+		startApp(t, a)
+
+		lounge := a.instanceNamed(t, "Lounge")
+
+		soon(t, func() bool { return logs.has(`msg="saving screen resolution"`) })
+		assert.Equal(t, media.Screen{Width: 3840, Height: 2160}, lounge.Screen(), "the screen read is used though it couldn't be saved")
+		assert.False(t, logs.has(`msg="learned screen resolution"`))
+
+		rec, err := a.DB().KodiInstances().Get(t.Context(), lounge.id)
+		require.NoError(t, err)
+		assert.Zero(t, rec.ScreenWidth)
+	})
 }

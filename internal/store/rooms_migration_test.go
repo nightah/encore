@@ -56,7 +56,7 @@ func TestRoomAliasKindMigrationOnExistingDatabase(t *testing.T) {
 	down, err := goose.NewProvider(goose.DialectSQLite3, db.write, fsys)
 	require.NoError(t, err)
 
-	_, err = down.Down(ctx)
+	_, err = down.DownTo(ctx, 1)
 	require.NoError(t, err)
 
 	_, err = down.Up(ctx)

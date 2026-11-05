@@ -101,6 +101,7 @@ func (b *Backend) playShuffled(ctx context.Context, ref media.Ref, opts media.Pl
 
 		var episodes []media.Item
 		if episodes, err = b.Episodes(ctx, ref.ID); err == nil {
+			episodes = media.OneCopyEach(episodes, opts.Quality)
 			items = make([]kodirpc.PlaylistItem, len(episodes))
 			for i := range episodes {
 				items[i] = kodirpc.NewPlaylistItemFromEpisodeID(kodirpc.PlaylistItemEpisodeID{EpisodeID: kodirpc.LibraryID(episodes[i].ID)})

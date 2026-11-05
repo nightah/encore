@@ -12,6 +12,7 @@ import (
 	"github.com/nightah/encore/internal/backend/kodi"
 	"github.com/nightah/encore/internal/blobstore"
 	"github.com/nightah/encore/internal/config"
+	"github.com/nightah/encore/internal/core/actions"
 	"github.com/nightah/encore/internal/core/library"
 	"github.com/nightah/encore/internal/core/match"
 	"github.com/nightah/encore/internal/core/media"
@@ -66,6 +67,9 @@ type Instance struct {
 	group *group
 	log   *slog.Logger
 	db    *store.DB
+
+	// screen is the largest picture the display shows, as last read from Kodi; it starts from Record's.
+	screen atomic.Pointer[media.Screen]
 
 	cancel context.CancelFunc
 	done   chan struct{}
@@ -177,11 +181,21 @@ type tuning struct {
 	// snapshotEvery limits how often a library snapshot is written; snapshotCheck is how often the need is checked.
 	snapshotEvery time.Duration
 	snapshotCheck time.Duration
-	// learnMACDelay gives a new connection time to settle before the MAC address is read for Wake-on-LAN.
+	// learnMACDelay gives a new connection time to settle before the MAC address is read for Wake-on-LAN, and the screen for the preferred quality.
 	learnMACDelay time.Duration
+	// screenRecheck is how often the screen is read again once known, and screenRetry how soon after a failed read.
+	screenRecheck time.Duration
+	screenRetry   time.Duration
 	catalog       library.Options
 	// kodiClient, when set, carries every request to Kodi; tests route it to fakes in memory.
 	kodiClient *http.Client
+}
+
+// resumeMatcher notes where each candidate should start playing when another copy of its title stopped further along, for the target's backend to start it there.
+type resumeMatcher struct {
+	actions.Matcher
+
+	points *media.ResumePoints
 }
 
 // groupBackend is the backend a library group's catalog syncs from. Library reads go to the active member: the group's source while it's reachable, otherwise another reachable member, so a sleeping source isn't woken just to sync. Library events from every member reach the catalog, since with a shared database only the Kodi instance that made a change reports it.

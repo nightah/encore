@@ -55,7 +55,7 @@ kodi:
     mac: "DC:A6:32:00:00:01"
 ```
 
-In config, `language` is the title-matching rules for that library (`en` by default; `ar`, `de`, `es`, `fr`, `hi`, `it`, `ja`, `nl` and `pt` have their own, and a request in Japanese, Devanagari or Arabic script is read with the Japanese, Hindi or Arabic rules whatever the library's language), `shutdown_quits` the "shut down" choice and `timezone` the time zone; `library_group` exists only in config (see [shared libraries](/encore/guides/shared-libraries/)). Kodi writes library dates (such as when a title was added) in its host's local time: set the time zone to an IANA name such as `Australia/Melbourne`, or leave it empty and Encore learns the host's UTC offset from Kodi's clock, rechecking it every six hours. See [`kodi`](/encore/reference/configuration/#kodi) in the configuration reference.
+In config, `language` is the title-matching rules for that library (`en` by default; `ar`, `de`, `es`, `fr`, `hi`, `it`, `ja`, `nl` and `pt` have their own, and a request in Japanese, Devanagari or Arabic script is read with the Japanese, Hindi or Arabic rules whatever the library's language), `shutdown_quits` the "shut down" choice, `preferred_quality` the [copy to play](#copies-in-different-qualities) and `timezone` the time zone; `library_group` exists only in config (see [shared libraries](/encore/guides/shared-libraries/)). Kodi writes library dates (such as when a title was added) in its host's local time: set the time zone to an IANA name such as `Australia/Melbourne`, or leave it empty and Encore learns the host's UTC offset from Kodi's clock, rechecking it every six hours. See [`kodi`](/encore/reference/configuration/#kodi) in the configuration reference.
 
 ## The default instance
 
@@ -73,3 +73,13 @@ If a Kodi host is asleep when a request arrives, Encore sends Wake-on-LAN packet
 ## "Shut down" and desktops
 
 "Alexa, ask encore to shut down" powers off the Kodi host. For Kodi running on a desktop computer, where you'd rather just close Kodi, turn on **"Shutdown" quits Kodi** in **Settings** → **Features** ([`alexa.shutdown_quits`](/encore/reference/configuration/#alexashutdown_quits)). Each instance can override it with **"Shut down"** in its dialog, or `shutdown_quits` for an instance declared in config.
+
+## Copies in different qualities
+
+When the library holds a film or episode more than once, such as in both 4K and 1080p, Encore treats the copies as one title and plays the one that suits the Kodi instance playing it. That includes a film Kodi holds in several versions (Kodi 21 and later): Encore plays the version that suits the instance by its file, so Kodi doesn't ask on the TV which version to play. By default that's the copy that matches the instance's screen: Encore asks Kodi for its screen shortly after connecting and every six hours after, and shows what it found under **Preferred quality** in the instance's dialog. A Kodi whose interface runs at 1080p but switches to 4K for playback (a 4K mode in Kodi's **Settings** → **System** → **Display** → **Whitelist**) counts as 4K. Until Encore has asked, the best copy plays.
+
+To choose instead, set **Preferred quality** under **Settings** → **Features** ([`alexa.preferred_quality`](/encore/reference/configuration/#alexapreferred_quality)): **Match each screen** (`screen`, the default: the copy closest to each instance's own screen), **The best there is** (`highest`), **4K (2160p)**, **1080p**, **720p** or **SD**. Each instance can override it with **Preferred quality** in its dialog, or `preferred_quality` for an instance declared in config.
+
+Encore plays a copy in the chosen quality, else the best copy below it, else the closest above it, so a 1080p screen plays 1080p, then 720p, and 4K only when there's nothing smaller. Playback carries on from the furthest point any copy reached, so a film started in 4K carries on in 1080p on a 1080p screen. For episodes, an episode counts as watched when any copy of it is, so "next episode" and a binge skip it whichever copy you watched.
+
+Encore reads each file's quality from the video size Kodi records for it, which Kodi reads when it scans the file or, for some network shares, when it first plays it. A file Kodi hasn't read yet has no quality and comes after every copy whose quality is known.

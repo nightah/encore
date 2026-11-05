@@ -152,6 +152,13 @@ func backendOps() []backendOp {
 		)
 	}
 
+	// A film's versions are only a preference: without them it plays as Kodi chooses.
+	for i := range ops {
+		if ops[i].name == "play "+string(media.KindMovie) {
+			ops[i].tolerated = dirs
+		}
+	}
+
 	for _, cmd := range []media.Transport{media.TransportPause, media.TransportStop, media.TransportNext, media.TransportPrevious, media.TransportStartOver} {
 		ops = append(ops, backendOp{name: "transport " + string(cmd), playing: true, run: func(ctx context.Context, b *Backend) error { return b.Transport(ctx, cmd) }})
 	}
@@ -295,8 +302,8 @@ func TestUnknownRequestsAreRejectedLocally(t *testing.T) {
 	}
 
 	for _, c := range s.Calls()[sent:] {
-		assert.Contains(t, []string{kodirpc.MethodPlayerGetActivePlayers, kodirpc.MethodPlayerOpen, kodirpc.MethodXBMCGetInfoLabels}, c.Method,
-			"only shuffle movie reaches Kodi, and invalid commands may check for a player first")
+		assert.Contains(t, []string{kodirpc.MethodPlayerGetActivePlayers, kodirpc.MethodFilesGetDirectory, kodirpc.MethodPlayerOpen, kodirpc.MethodXBMCGetInfoLabels}, c.Method,
+			"only shuffle movie reaches Kodi, asking for its versions, and invalid commands may check for a player first")
 	}
 
 	items, err := b.RecentlyAdded(ctx, media.KindPlaylist, time.Time{})

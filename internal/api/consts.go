@@ -124,3 +124,6 @@ const (
 	shutdownQuit     = "quit"
 	shutdownPowerOff = "power_off"
 )
+
+// qualityInherit is the value of Instance.PreferredQuality for an instance that follows Settings › Features.
+const qualityInherit = "inherit"

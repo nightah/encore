@@ -599,6 +599,8 @@ export const handlers = [
       managed_by_config: false,
       name: input.name?.trim() ?? "",
       now_playing: null,
+      preferred_quality: input.preferred_quality ?? "inherit",
+      screen: null,
       shutdown: input.shutdown ?? "inherit",
       status: {
         api_version: "13.5.0",

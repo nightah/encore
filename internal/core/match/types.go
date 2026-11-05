@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 	"sync"
+	"time"
 	"unicode/utf8"
 
 	"github.com/nightah/encore/internal/core/media"
@@ -21,6 +22,8 @@ type Doc struct {
 	Year    int
 	// Boost is a small static ranking hint in [0, 0.05], e.g. for in-progress or recently added items.
 	Boost float64
+	// Copy is what decides between copies of the title, the same kind, title and year, as when a library holds a film in both 2160p and 1080p.
+	Copy media.Copy
 }
 
 // Query is a search request.
@@ -35,6 +38,8 @@ type Query struct {
 	Hints map[string]float64
 	// Resolved are the Docs Alexa's entity resolution matched the request to. Each is scored as a candidate even when retrieval misses it.
 	Resolved []Resolved
+	// Quality is the copy to prefer when a title has several; empty prefers the best.
+	Quality media.Quality
 }
 
 // Resolved is one value Alexa's entity resolution matched a request to.
@@ -60,6 +65,8 @@ type Candidate struct {
 	Doc       Doc
 	Score     float64
 	Breakdown Breakdown
+	// From is where another copy of the title stopped, when that's further than Doc's own resume point, so playback can carry on there in Doc; zero otherwise.
+	From time.Duration
 }
 
 // Decision is what the caller should do with a result.

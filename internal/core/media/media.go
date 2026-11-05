@@ -7,6 +7,9 @@ import (
 // Contents lists every content group.
 var Contents = []Content{ContentMovies, ContentTV, ContentMusic}
 
+// Qualities lists the video qualities, lowest first.
+var Qualities = []Quality{QualitySD, Quality720p, Quality1080p, Quality2160p}
+
 // ContentOf returns the group a kind belongs to, or "" for kinds outside any group, such as playlists.
 func ContentOf(k Kind) Content {
 	switch k {

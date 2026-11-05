@@ -358,7 +358,7 @@ func TestConfigExportImport(t *testing.T) {
 	h := newHarness(t, harnessOpts{noKodi: true})
 	c := h.admin()
 
-	c.json(http.MethodPost, "/api/v1/kodi/instances", map[string]string{"name": "Bedroom", "url": h.kodi.URL(), "password": "kodipw", "language": "de", "timezone": "Australia/Melbourne", "shutdown": "quit"}, http.StatusCreated, nil)
+	c.json(http.MethodPost, "/api/v1/kodi/instances", map[string]string{"name": "Bedroom", "url": h.kodi.URL(), "password": "kodipw", "language": "de", "timezone": "Australia/Melbourne", "shutdown": "quit", "preferred_quality": "1080p"}, http.StatusCreated, nil)
 	c.json(http.MethodPatch, "/api/v1/settings", map[string]any{"storage": map[string]any{"webdav": map[string]any{"password": "davpw"}}}, http.StatusOK, nil)
 
 	resp := c.do(http.MethodGet, "/api/v1/config/export", nil)
@@ -366,7 +366,7 @@ func TestConfigExportImport(t *testing.T) {
 	assert.Equal(t, "application/yaml", resp.header.Get("Content-Type"))
 
 	out := string(resp.body)
-	assert.True(t, contains(out, "name: Bedroom", "language: de", "timezone: Australia/Melbourne", "shutdown_quits: true", "backups:", "schedule: daily@03:00"), out)
+	assert.True(t, contains(out, "name: Bedroom", "language: de", "timezone: Australia/Melbourne", "shutdown_quits: true", "preferred_quality: 1080p", "backups:", "schedule: daily@03:00"), out)
 	assert.NotContains(t, out, "kodipw")
 	assert.NotContains(t, out, "davpw")
 
@@ -390,6 +390,7 @@ func TestConfigExportImport(t *testing.T) {
 		"    url: " + h.kodi.URL(),
 		"    language: fr",
 		"    shutdown_quits: false",
+		"    preferred_quality: 720p",
 		"",
 	}, "\n")
 
@@ -413,6 +414,7 @@ func TestConfigExportImport(t *testing.T) {
 	require.GreaterOrEqual(t, i, 0)
 	assert.Equal(t, "fr", list[i].Language)
 	assert.Equal(t, "power_off", list[i].Shutdown)
+	assert.Equal(t, "720p", list[i].PreferredQuality)
 	assert.Empty(t, list[i].Timezone)
 
 	assert.Equal(t, http.StatusUnprocessableEntity, c.do(http.MethodPost, "/api/v1/config/import", []byte("storage:\n  backend: tape\n"), "Content-Type", "application/yaml").status)
@@ -446,6 +448,25 @@ func TestServerAndQueueLimitSettings(t *testing.T) {
 
 	c.json(http.MethodPatch, "/api/v1/settings", map[string]any{"server": map[string]any{"base_path": "/"}}, http.StatusOK, &s)
 	assert.Equal(t, "/", s.Server.BasePath)
+}
+
+func TestPreferredQualitySetting(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+
+	var s Settings
+
+	c.json(http.MethodGet, "/api/v1/settings", nil, http.StatusOK, &s)
+	assert.Equal(t, "screen", s.Features.PreferredQuality)
+
+	c.json(http.MethodPatch, "/api/v1/settings", map[string]any{"features": map[string]any{"preferred_quality": "1080p"}}, http.StatusOK, &s)
+	assert.Equal(t, "1080p", s.Features.PreferredQuality)
+
+	eff, err := h.api.prefs.Effective(t.Context())
+	require.NoError(t, err)
+	assert.Equal(t, "1080p", eff.Alexa.PreferredQuality)
+
+	assert.Equal(t, http.StatusUnprocessableEntity, c.do(http.MethodPatch, "/api/v1/settings", map[string]any{"features": map[string]any{"preferred_quality": "4k"}}).status)
 }
 
 func TestBasePathManagedByConfig(t *testing.T) {

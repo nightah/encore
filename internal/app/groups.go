@@ -29,6 +29,8 @@ func defaultTuning() tuning {
 		snapshotEvery:     5 * time.Minute,
 		snapshotCheck:     15 * time.Second,
 		learnMACDelay:     5 * time.Second,
+		screenRecheck:     6 * time.Hour,
+		screenRetry:       10 * time.Minute,
 	}
 }
 

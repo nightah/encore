@@ -63,6 +63,8 @@ type Alexa struct {
 	ConfirmSound bool `koanf:"confirm_sound"`
 	// DeepSearch makes "play X" search music as well as films and TV when the request doesn't say which (Kanzi's deep_search).
 	DeepSearch bool `koanf:"deep_search"`
+	// PreferredQuality chooses which copy plays when the library holds a film or episode more than once, such as in both 2160p and 1080p: screen (the default), highest, 2160p, 1080p, 720p or sd. screen matches each Kodi instance's display, as Kodi reports it, and plays the best copy until Encore has learned it. Encore plays a copy in the chosen quality, else the best below it, else the least above it; playback carries on from where any copy stopped. A Kodi instance can override it.
+	PreferredQuality string `koanf:"preferred_quality"`
 	// QueueLimit caps how many items a shuffle or queue plays at once (Kanzi's playlist_max_items), which keeps large libraries responsive. It can also be changed under Settings › Features.
 	QueueLimit int `koanf:"queue_limit"`
 	// AutoDeploy redeploys the skill on its own when what would be deployed changes, such as new library titles or an Encore upgrade that changes the interaction model. Only a skill that has already been deployed is redeployed. An automatic deploy that fails for a reason that may pass, such as Amazon being unavailable or still building, is tried again up to three times with a growing wait; any other failure, or a fourth in a row, pauses automatic deploys until a deploy started by hand succeeds. It can also be changed under Settings › Features.
@@ -215,6 +217,8 @@ type KodiInstance struct {
 	LibraryGroup string `koanf:"library_group"`
 	// ShutdownQuits overrides alexa.shutdown_quits for this instance when set.
 	ShutdownQuits *bool `koanf:"shutdown_quits"`
+	// PreferredQuality overrides alexa.preferred_quality for this instance when set: screen, highest, 2160p, 1080p, 720p or sd.
+	PreferredQuality string `koanf:"preferred_quality"`
 	// Timezone is the Kodi host's IANA time zone (e.g. "Australia/Melbourne"), which Kodi writes library dates in. Empty means learn the UTC offset from Kodi's clock.
 	Timezone string `koanf:"timezone"`
 }

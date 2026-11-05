@@ -910,3 +910,224 @@ func TestZoneIsLearnedFromKodi(t *testing.T) {
 		})
 	}
 }
+
+func TestLibraryQuality(t *testing.T) {
+	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+	ctx := t.Context()
+
+	s.Update(func(l *fakekodi.Library) {
+		l.Movies[2].StreamDetails = &fakekodi.StreamDetails{Video: []fakekodi.VideoStream{{Codec: "hevc", Width: 3840, Height: 1600}}}
+		l.Episodes[0].StreamDetails = &fakekodi.StreamDetails{Video: []fakekodi.VideoStream{{Codec: "h264", Width: 1920, Height: 1080}}}
+		l.Episodes[1].StreamDetails = &fakekodi.StreamDetails{}
+	})
+
+	movies, err := b.Library(ctx, media.KindMovie)
+	require.NoError(t, err)
+	assert.Equal(t, media.Quality2160p, movies[2].Quality)
+	assert.Empty(t, movies[0].Quality, "a file Kodi hasn't read has no quality")
+
+	eps, err := b.Episodes(ctx, 1)
+	require.NoError(t, err)
+	assert.Equal(t, []media.Quality{media.Quality1080p, "", ""}, []media.Quality{eps[0].Quality, eps[1].Quality, eps[2].Quality})
+
+	for _, method := range []string{"VideoLibrary.GetMovies", "VideoLibrary.GetEpisodes"} {
+		var params struct {
+			Properties []string `json:"properties"`
+		}
+
+		require.NoError(t, json.Unmarshal([]byte(lastParams(t, s, method)), &params))
+		assert.Contains(t, params.Properties, "streamdetails", method)
+	}
+}
+
+func TestPlayShuffledShowQueuesOneCopyOfEachEpisode(t *testing.T) {
+	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+
+	uhd := &fakekodi.StreamDetails{Video: []fakekodi.VideoStream{{Width: 3840, Height: 2160}}}
+
+	s.Update(func(l *fakekodi.Library) {
+		l.Episodes[1].StreamDetails = &fakekodi.StreamDetails{Video: []fakekodi.VideoStream{{Width: 1920, Height: 1080}}}
+		copyOf := l.Episodes[1]
+		copyOf.EpisodeID, copyOf.StreamDetails = 104, uhd
+		l.Episodes = append(l.Episodes, copyOf)
+	})
+
+	require.NoError(t, b.Play(t.Context(), media.Ref{Kind: media.KindTVShow, ID: 1}, media.PlayOptions{Shuffle: true, Quality: media.Quality2160p}))
+
+	var params struct {
+		Item []map[string]int `json:"item"`
+	}
+
+	require.NoError(t, json.Unmarshal([]byte(lastParams(t, s, "Playlist.Add")), &params))
+
+	var ids []int
+	for _, it := range params.Item {
+		ids = append(ids, it["episodeid"])
+	}
+
+	assert.ElementsMatch(t, []int{101, 103, 104}, ids, "the 2160p copy of 2x04 stands in for the 1080p one")
+}
+
+func TestScreen(t *testing.T) {
+	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+	ctx := t.Context()
+
+	screen, err := b.Screen(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, media.Screen{Width: 1920, Height: 1080}, screen)
+	assert.Equal(t, media.Quality1080p, screen.Quality())
+
+	s.SetScreen(3840, 2160)
+	screen, err = b.Screen(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, media.Screen{Width: 3840, Height: 2160}, screen)
+
+	s.SetScreen(1920, 1080, "0192001080060.00000pstd", "0384002160023.97602pstd", "DESKTOP", "00128")
+	screen, err = b.Screen(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, media.Screen{Width: 3840, Height: 2160}, screen, "a GUI at 1080p that switches to 4K for playback")
+
+	s.SetScreen(1920, 1080, "0384x02160060.00000pstd", "0000002160060.00000pstd", "0384000000060.00000pstd", "-1000-2160060.00000pstd")
+	screen, err = b.Screen(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, media.Screen{Width: 1920, Height: 1080}, screen, "a mode that isn't five digits of each, or has no size or a negative one, is skipped")
+
+	s.Handle("Settings.GetSettingValue", func(json.RawMessage) (any, *fakekodi.Error) {
+		return nil, &fakekodi.Error{Code: fakekodi.CodeInvalidParams, Message: "Invalid params."}
+	})
+	s.SetScreen(1280, 720)
+	screen, err = b.Screen(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, media.Screen{Width: 1280, Height: 720}, screen, "without a whitelist the GUI's resolution stands")
+
+	s.Handle("XBMC.GetInfoLabels", func(json.RawMessage) (any, *fakekodi.Error) {
+		return nil, &fakekodi.Error{Code: fakekodi.CodeInvalidParams, Message: "Invalid params."}
+	})
+	_, err = b.Screen(ctx)
+	require.Error(t, err)
+}
+
+func TestNowPlayingQuality(t *testing.T) {
+	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+	ctx := t.Context()
+
+	s.Update(func(l *fakekodi.Library) {
+		l.Movies[5].StreamDetails = &fakekodi.StreamDetails{Video: []fakekodi.VideoStream{{Codec: "hevc", Width: 3840, Height: 1600, HDRType: "hdr10"}}}
+	})
+
+	movies, err := b.Library(ctx, media.KindMovie)
+	require.NoError(t, err)
+	assert.Equal(t, media.Quality2160p, movies[5].Quality)
+	assert.Equal(t, "hdr10", movies[5].HDR)
+
+	require.NoError(t, b.Play(ctx, media.Ref{Kind: media.KindMovie, ID: 6}, media.PlayOptions{}))
+
+	np, err := b.NowPlaying(ctx)
+	require.NoError(t, err)
+	require.NotNil(t, np)
+	assert.Equal(t, media.Quality2160p, np.Item.Quality)
+	assert.Equal(t, "hdr10", np.Item.HDR)
+	assert.Equal(t, media.Video{Width: 3840, Height: 1600, Codec: "hevc"}, np.Video)
+
+	// The stream playing wins over the library's record, which may be out of date.
+	s.Handle("Player.GetProperties", func(json.RawMessage) (any, *fakekodi.Error) {
+		return map[string]any{"speed": 1, "position": -1, "currentvideostream": map[string]any{"codec": "h264", "width": 1280, "height": 720}}, nil
+	})
+
+	np, err = b.NowPlaying(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, media.Quality720p, np.Item.Quality)
+	assert.Equal(t, media.Video{Width: 1280, Height: 720, Codec: "h264"}, np.Video, "the stream playing wins")
+
+	s.Handle("Player.GetProperties", func(json.RawMessage) (any, *fakekodi.Error) {
+		return map[string]any{"speed": 1, "position": -1, "currentvideostream": map[string]any{"codec": "", "width": 1280, "height": 720}}, nil
+	})
+
+	np, err = b.NowPlaying(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, media.Video{Width: 1280, Height: 720, Codec: "hevc"}, np.Video, "a codec the stream doesn't name comes from the library")
+
+	s.Handle("Player.GetProperties", func(json.RawMessage) (any, *fakekodi.Error) {
+		return map[string]any{"speed": 1, "position": -1, "currentvideostream": map[string]any{"codec": "", "width": 0, "height": 0}}, nil
+	})
+
+	np, err = b.NowPlaying(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, media.Quality2160p, np.Item.Quality, "an empty stream leaves the library's record")
+	assert.Equal(t, media.Video{Width: 3840, Height: 1600, Codec: "hevc"}, np.Video)
+}
+
+func TestPlayAMovieInTheVersionThatSuits(t *testing.T) {
+	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+	ctx := t.Context()
+
+	const (
+		uhd = "nfs://nas/Movies-4K/Hot Fuzz (2007)/Hot Fuzz (2007) [Bluray-2160p].mkv"
+		fhd = "nfs://nas/Movies/Hot Fuzz (2007)/Hot Fuzz (2007) [Bluray-1080p].mkv"
+	)
+
+	stream := func(width, height int) *fakekodi.StreamDetails {
+		return &fakekodi.StreamDetails{Video: []fakekodi.VideoStream{{Width: width, Height: height}}}
+	}
+
+	s.Update(func(l *fakekodi.Library) {
+		l.Movies[5].File, l.Movies[5].StreamDetails = uhd, stream(3840, 1600)
+		l.Movies[5].Versions = []fakekodi.Version{{File: uhd, StreamDetails: stream(3840, 1600)}, {File: fhd, StreamDetails: stream(1920, 800)}}
+	})
+
+	opened := func() string {
+		t.Helper()
+
+		return lastParams(t, s, "Player.Open")
+	}
+
+	require.NoError(t, b.Play(ctx, media.Ref{Kind: media.KindMovie, ID: 6}, media.PlayOptions{Resume: true, Quality: media.Quality1080p}))
+	assert.JSONEq(t, `{"item":{"file":"`+fhd+`"},"options":{"resume":true}}`, opened(), "the 1080p version, by its file so Kodi doesn't ask which")
+
+	np, err := b.NowPlaying(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, "Hot Fuzz", np.Item.Title)
+	assert.Equal(t, media.Quality1080p, np.Item.Quality)
+
+	require.NoError(t, b.Play(ctx, media.Ref{Kind: media.KindMovie, ID: 6}, media.PlayOptions{Quality: media.QualityHighest}))
+	assert.JSONEq(t, `{"item":{"file":"`+uhd+`"},"options":{"resume":false}}`, opened())
+
+	s.Update(func(l *fakekodi.Library) {
+		l.Movies[5].Versions[1].Resume = fakekodi.Resume{Position: 600, Total: 7260}
+	})
+	require.NoError(t, b.Play(ctx, media.Ref{Kind: media.KindMovie, ID: 6}, media.PlayOptions{Resume: true, Quality: media.Quality2160p}))
+	assert.JSONEq(t, `{"item":{"file":"`+uhd+`"},"options":{"resume":{"minutes":10}}}`, opened(), "the version that suits, from where the other version stopped")
+
+	require.NoError(t, b.Play(ctx, media.Ref{Kind: media.KindMovie, ID: 6}, media.PlayOptions{Quality: media.Quality2160p}))
+	assert.JSONEq(t, `{"item":{"file":"`+uhd+`"},"options":{"resume":false}}`, opened(), "from the start when not resuming")
+
+	require.NoError(t, b.Play(ctx, media.Ref{Kind: media.KindMovie, ID: 6}, media.PlayOptions{Resume: true, Quality: media.Quality1080p}))
+	assert.JSONEq(t, `{"item":{"file":"`+fhd+`"},"options":{"resume":true}}`, opened(), "its own bookmark is as far as any")
+
+	s.Update(func(l *fakekodi.Library) {
+		l.Movies[5].Versions[0].Resume, l.Movies[5].Versions[1].Resume = fakekodi.Resume{Position: 282, Total: 9080}, fakekodi.Resume{}
+	})
+	require.NoError(t, b.Play(ctx, media.Ref{Kind: media.KindMovie, ID: 6}, media.PlayOptions{Resume: true, Quality: media.Quality1080p}))
+	assert.JSONEq(t, `{"item":{"file":"`+fhd+`"},"options":{"resume":{"minutes":4,"seconds":42}}}`, opened(), "a 1080p screen plays the 1080p version, not the 4K one started earlier")
+
+	require.NoError(t, b.Play(ctx, media.Ref{Kind: media.KindMovie, ID: 4}, media.PlayOptions{Resume: true, From: time.Hour + 2*time.Minute + 3*time.Second + 400*time.Millisecond}))
+	assert.JSONEq(t, `{"item":{"movieid":4},"options":{"resume":{"hours":1,"minutes":2,"seconds":3,"milliseconds":400}}}`, opened(), "a point another copy reached")
+
+	require.NoError(t, b.Play(ctx, media.Ref{Kind: media.KindMovie, ID: 4}, media.PlayOptions{Quality: media.Quality1080p}))
+	assert.JSONEq(t, `{"item":{"movieid":4},"options":{"resume":false}}`, opened(), "a film with one version plays by its ID")
+
+	s.Handle("Files.GetDirectory", func(json.RawMessage) (any, *fakekodi.Error) {
+		return nil, &fakekodi.Error{Code: fakekodi.CodeInvalidParams, Message: "Invalid params."}
+	})
+	require.NoError(t, b.Play(ctx, media.Ref{Kind: media.KindMovie, ID: 6}, media.PlayOptions{Quality: media.Quality1080p}))
+	assert.JSONEq(t, `{"item":{"movieid":6},"options":{"resume":false}}`, opened(), "a Kodi that can't list versions chooses itself")
+
+	s.Handle("Files.GetDirectory", func(json.RawMessage) (any, *fakekodi.Error) {
+		return map[string]any{"files": []map[string]any{
+			{"file": uhd, "filetype": "file", "id": 7, "type": "movie"},
+			{"file": fhd, "filetype": "file", "id": 8, "type": "movie"},
+		}}, nil
+	})
+	require.NoError(t, b.Play(ctx, media.Ref{Kind: media.KindMovie, ID: 6}, media.PlayOptions{Quality: media.Quality1080p}))
+	assert.JSONEq(t, `{"item":{"movieid":6},"options":{"resume":false}}`, opened(), "other films' files aren't versions")
+}

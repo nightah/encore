@@ -172,6 +172,7 @@ function settings(now: number): Settings {
       auto_deploy_minutes: 5,
       confirm_sound: true,
       deep_search: true,
+      preferred_quality: "screen",
       queue_limit: 100,
       shutdown_quits: false,
     },

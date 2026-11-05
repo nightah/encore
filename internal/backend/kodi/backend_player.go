@@ -1,10 +1,12 @@
 package kodi
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
 	"math"
+	"time"
 
 	"github.com/nightah/encore/internal/backend/kodi/kodirpc"
 	"github.com/nightah/encore/internal/core/media"
@@ -15,7 +17,7 @@ func ptr[T any](v T) *T { return &v }
 // Play implements media.Backend. A TV show plays its next episode. With opts.Shuffle, shows, artists, albums and playlists are expanded, shuffled and capped here and queued in that order.
 func (b *Backend) Play(ctx context.Context, ref media.Ref, opts media.PlayOptions) error {
 	id := kodirpc.LibraryID(ref.ID)
-	resume := &kodirpc.PlayerOpenOptions{Resume: kodirpc.NewPlayerOpenOptionsResumeFromBool(opts.Resume)}
+	resume := resumeFrom(opts.Resume, opts.From)
 
 	if opts.Shuffle {
 		switch ref.Kind {
@@ -26,6 +28,11 @@ func (b *Backend) Play(ctx context.Context, ref media.Ref, opts media.PlayOption
 
 	switch ref.Kind {
 	case media.KindMovie:
+		// By file, so the version that suits the screen plays, and Kodi doesn't ask on the TV which version to play.
+		if file, from, ok := b.versionFile(ctx, ref.ID, opts.Quality); ok {
+			return b.open(ctx, kodirpc.NewPlaylistItemFromFile(kodirpc.PlaylistItemFile{File: file}), resumeFrom(opts.Resume, max(opts.From, from)))
+		}
+
 		return b.open(ctx, kodirpc.NewPlaylistItemFromMovieID(kodirpc.PlaylistItemMovieID{MovieID: id}), resume)
 	case media.KindEpisode:
 		return b.open(ctx, kodirpc.NewPlaylistItemFromEpisodeID(kodirpc.PlaylistItemEpisodeID{EpisodeID: id}), resume)
@@ -54,6 +61,20 @@ func (b *Backend) Play(ctx context.Context, ref media.Ref, opts media.PlayOption
 	}
 
 	return fmt.Errorf("kodi: can't play %q: %w", ref.Kind, errUnsupportedKind)
+}
+
+// resumeFrom is Player.Open's resume option: from a position when one is given, as when another copy of the title stopped there, else from the item's own bookmark when resume is set.
+func resumeFrom(resume bool, from time.Duration) *kodirpc.PlayerOpenOptions {
+	if !resume || from <= 0 {
+		return &kodirpc.PlayerOpenOptions{Resume: kodirpc.NewPlayerOpenOptionsResumeFromBool(resume)}
+	}
+
+	t := from.Round(time.Millisecond)
+	pos := kodirpc.PlayerPositionTime{
+		Hours: int(t / time.Hour), Minutes: int(t % time.Hour / time.Minute), Seconds: int(t % time.Minute / time.Second), Milliseconds: int(t % time.Second / time.Millisecond),
+	}
+
+	return &kodirpc.PlayerOpenOptions{Resume: kodirpc.NewPlayerOpenOptionsResumeFromPlayerPositionTime(pos)}
 }
 
 func (b *Backend) open(ctx context.Context, item kodirpc.PlaylistItem, opts *kodirpc.PlayerOpenOptions) error {
@@ -227,7 +248,7 @@ func (b *Backend) NowPlaying(ctx context.Context) (*media.NowPlaying, error) {
 
 	props, err := b.c.PlayerGetProperties(ctx, kodirpc.PlayerGetPropertiesParams{
 		PlayerID:   player,
-		Properties: []kodirpc.PlayerPropertyName{"speed", "time", "totaltime", "playlistid", "position"},
+		Properties: []kodirpc.PlayerPropertyName{"speed", "time", "totaltime", "playlistid", "position", "currentvideostream"},
 	})
 	if err != nil {
 		return nil, err
@@ -255,6 +276,16 @@ func (b *Backend) NowPlaying(ctx context.Context) (*media.NowPlaying, error) {
 
 	if np.Duration == 0 {
 		np.Duration = np.Item.Runtime
+	}
+
+	if d := item.Item.Streamdetails; d != nil && len(d.Video) > 0 {
+		np.Video = media.Video{Width: d.Video[0].Width, Height: d.Video[0].Height, Codec: d.Video[0].Codec}
+	}
+
+	// The stream playing knows its size even for a file outside the library, or one whose details Kodi hasn't stored.
+	if v := props.Currentvideostream; v != nil && v.Width > 0 {
+		np.Video = media.Video{Width: v.Width, Height: v.Height, Codec: cmp.Or(v.Codec, np.Video.Codec)}
+		np.Item.Quality = media.QualityOf(v.Width, v.Height)
 	}
 
 	return np, nil

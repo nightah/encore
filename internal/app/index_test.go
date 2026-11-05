@@ -70,7 +70,7 @@ func TestDocFor(t *testing.T) {
 			name: "in progress",
 			item: media.Item{Kind: media.KindMovie, ID: 3, Title: "Dune: Part Two", Resume: time.Hour, DateAdded: now.Add(-time.Hour)},
 			ok:   true,
-			want: match.Doc{ID: "movie/3", Kind: media.KindMovie, Ref: media.Ref{Kind: media.KindMovie, ID: 3}, Title: "Dune: Part Two", Boost: inProgressBoost},
+			want: match.Doc{ID: "movie/3", Kind: media.KindMovie, Ref: media.Ref{Kind: media.KindMovie, ID: 3}, Title: "Dune: Part Two", Boost: inProgressBoost, Copy: media.Copy{Resume: time.Hour}},
 		},
 		{
 			name: "recently added",
@@ -83,6 +83,12 @@ func TestDocFor(t *testing.T) {
 			item: media.Item{Kind: media.KindMovie, ID: 8, Title: "Rocky II", DateAdded: now.Add(-recentlyAddedFor)},
 			ok:   true,
 			want: match.Doc{ID: "movie/8", Kind: media.KindMovie, Ref: media.Ref{Kind: media.KindMovie, ID: 8}, Title: "Rocky II"},
+		},
+		{
+			name: "a copy in 2160p",
+			item: media.Item{Kind: media.KindMovie, ID: 9, Title: "Rocky II", Quality: media.Quality2160p},
+			ok:   true,
+			want: match.Doc{ID: "movie/9", Kind: media.KindMovie, Ref: media.Ref{Kind: media.KindMovie, ID: 9}, Title: "Rocky II", Copy: media.Copy{Quality: media.Quality2160p}},
 		},
 	}
 
