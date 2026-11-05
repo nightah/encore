@@ -148,6 +148,11 @@ MEDIA_TYPE:
     vídeo
     vídeos
 NAV_ACTION:
+  back: |-
+    atrás
+    vuelve
+    volver
+    hacia atrás
   down: |-
     abajo
     hacia abajo
