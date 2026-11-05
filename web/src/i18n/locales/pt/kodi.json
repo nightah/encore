@@ -88,6 +88,25 @@
         "label": "Senha do Kodi",
         "saved": "Há uma senha salva. Deixe em branco para mantê-la."
       },
+      "preferred_quality": {
+        "720p": "720p",
+        "1080p": "1080p",
+        "2160p": "4K (2160p)",
+        "highest": "A melhor disponível",
+        "hint": "Qual cópia toca quando um filme ou episódio está na biblioteca mais de uma vez, como em 4K e 1080p.",
+        "inherit": "Seguir Configurações › Recursos",
+        "label": "Qualidade preferida",
+        "screen": "De acordo com esta tela",
+        "screen_known": "A tela é {{quality}}, {{width}}×{{height}}.",
+        "screen_quality": {
+          "720p": "720p",
+          "1080p": "1080p",
+          "2160p": "4K",
+          "sd": "SD"
+        },
+        "screen_unknown": "O Encore descobre a tela assim que a instância se conecta.",
+        "sd": "SD"
+      },
       "shutdown": {
         "hint": "O que “Alexa, peça para encore desligar” faz nesta instância do Kodi.",
         "inherit": "Seguir Configurações › Recursos",
