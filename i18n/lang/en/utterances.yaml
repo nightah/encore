@@ -169,6 +169,7 @@ PlayerRewind:
   rewind: "(rewind|go back|skip back|jump back) [by] {Duration}"
   rewind_2: "(rewind|go back|skip back|jump back) {Size}"
   rewind_3: "rewind"
+  rewind_bare: "(go|skip|jump) back"
   rewind_it: "rewind (it|this|the video)"
 PlayerRotate:
   rotate: "rotate {Rotation}"

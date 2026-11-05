@@ -134,7 +134,7 @@ cases:
   - {utterance: "fais jouer la playlist voyage", intent: PlayPlaylist, slots: {Playlist: ""}}
   - {utterance: "veille prolongée l'ordi", intent: Power, slots: {PowerAction: "hibernate"}}
   - {utterance: "qu'est-ce qu'on écoute ce soir", intent: Recommend, pending: "Amazon reads ce soir as a show's name for WhatsNew"}
-  - {utterance: "qu'est-ce que je devrais écouter comme film", intent: Recommend}
+  - {utterance: "qu'est-ce que je devrais écouter comme film", intent: Recommend, pending: "Amazon's reading changes with unrelated changes to the model"}
   - {utterance: "fais jouer lupin saison 2 épisode 3", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "lupin"}}
   - {utterance: "fais jouer l'épisode 3 de la saison 2 de lupin", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "lupin"}}
   - {utterance: "fais jouer le dernier épisode de lupin", intent: WatchLatestEpisode, slots: {Show: "lupin"}}

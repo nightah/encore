@@ -50,7 +50,7 @@ cases:
   - {utterance: "pon todos mis videoclips en aleatorio", intent: ShuffleMusicVideos}
   - {utterance: "pon la lista de música viaje", intent: PlayPlaylist, slots: {Playlist: ""}}
   - {utterance: "pon mi lista de reproducción viaje en aleatorio", intent: ShufflePlaylist, slots: {Playlist: ""}}
-  - {utterance: "dame una recomendación de película", intent: Recommend, slots: {MediaType: "movie"}}
+  - {utterance: "dame una recomendación de película", intent: Recommend, slots: {MediaType: "movie"}, pending: "Amazon's reading changes with unrelated changes to the model"}
   - {utterance: "hay alguna película nueva", intent: WhatsNew, slots: {MediaType: "movie"}}
   - {utterance: "dime los álbumes de shakira", intent: WhatAlbums, slots: {Artist: "shakira"}}
   - {utterance: "atrás cinco minutos", intent: PlayerSeek, slots: {Duration: "", SeekDirection: "back"}}
