@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "response": {
+    "outputSpeech": {
+      "type": "PlainText",
+      "text": "I couldn't find season 7 of Severance."
+    },
+    "shouldEndSession": true
+  }
+}
+

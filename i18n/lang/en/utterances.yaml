@@ -338,6 +338,13 @@ WatchRandomShow:
   play_any_show: "(play|watch) (any|some) [{Genre}] (show|t. v. show)"
   play_random_show: "(play|watch|put on) a random [{Genre}] (show|t. v. show) [(in|on) the {Room}]"
   surprise_me_with: "surprise me with a [{Genre}] (show|t. v. show)"
+WatchSeason:
+  play_ordinal_only: "(play|watch|put on) the {Ordinal} (season|series) [(in|on) the {Room}]"
+  play_ordinal_season: "(play|watch|put on|start) the {Ordinal} (season|series) of {Show} [(in|on) the {Room}]\n(play|watch|put on) the whole {Ordinal} (season|series) of {Show} [(in|on) the {Room}]"
+  play_season: "(play|watch|put on|start) (season|series) {Season} of {Show} [(in|on) the {Room}]"
+  play_season_only: "(play|watch|put on|start) (season|series) {Season} [(in|on) the {Room}]"
+  play_show_season: "(play|watch|put on|start) {Show} (season|series) {Season} [(in|on) the {Room}]"
+  play_whole_season: "(play|watch|put on|binge) (all of|the whole of) (season|series) {Season} of {Show} [(in|on) the {Room}]"
 WhatAlbums:
   list_albums_by: "(list|name) [the] albums by {Artist}"
   what_albums_by: "what albums by {Artist} (do i|do we|do you) have"

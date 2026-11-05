@@ -216,6 +216,30 @@ NAV_DIRECTION:
   left: "vers la gauche\nà gauche"
   right: "vers la droite\nà droite"
   up: "vers le haut\nen haut"
+ORDINAL:
+  "01": |-
+    première
+    premier
+  "02": |-
+    deuxième
+    seconde
+    second
+  "03": |-
+    troisième
+  "04": |-
+    quatrième
+  "05": |-
+    cinquième
+  "06": |-
+    sixième
+  "07": |-
+    septième
+  "08": |-
+    huitième
+  "09": |-
+    neuvième
+  "10": |-
+    dixième
 POWER_ACTION:
   hibernate: |-
     veille prolongée

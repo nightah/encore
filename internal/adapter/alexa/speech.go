@@ -1,6 +1,7 @@
 package alexa
 
 import (
+	"cmp"
 	"fmt"
 	"log/slog"
 	"maps"
@@ -304,23 +305,24 @@ func (s *Speech) RoomSplits(locale, query string) []RoomSplit {
 	return out
 }
 
-// Reinterpret reads a PlayMedia search query, with any room already taken off it, as the film, TV or music intents, or the commands with only numbers in them ("pon el volumen a 30", "metti in pausa la tv"), whose samples it is, most specific first, followed by the query itself and then by a reading that only splits it between title slots ("bohemian rhapsody by queen" as a song by an artist), which "stand by me" is too, so it is tried only once the query found nothing. Alexa can hear "play the next episode of bluey" or "play the movie frozen" as PlayMedia with the query "the next episode of bluey" or "the movie frozen", since an AMAZON.SearchQuery slot takes any words; searched as a title, it matches nothing. The caller tries each reading until one finds something.
+// Reinterpret reads a PlayMedia search query, with any room already taken off it, as the film, TV or music intents, or the commands with only numbers in them ("pon el volumen a 30", "metti in pausa la tv"), whose samples it is, most specific first, followed by the query itself and then by a reading that only splits it between title slots ("bohemian rhapsody by queen" as a song by an artist), which "stand by me" is too, so it is tried only once the query found nothing. A query ending in an episode code ("bluey s2e3") is read as that episode first. Alexa can hear "play the next episode of bluey" or "play the movie frozen" as PlayMedia with the query "the next episode of bluey" or "the movie frozen", since an AMAZON.SearchQuery slot takes any words; searched as a title, it matches nothing. The caller tries each reading until one finds something.
 func (s *Speech) Reinterpret(locale string, intent Intent) []Intent {
 	forms, ok := s.queryForms[locale]
 	if !ok {
 		locale, forms = fallbackLocale, s.queryForms[fallbackLocale]
 	}
 
-	words := units(s.languages[locale], intent.Slots["Query"].Value)
-	for i, w := range words {
-		if o, ok := ordinals[s.languages[locale]][strings.ToLower(w)]; ok {
-			words[i] = o
-		}
-	}
+	query := intent.Slots["Query"].Value
+	words := units(s.languages[locale], query)
+	spelled := spellOrdinals(s.languages[locale], words)
 
 	var out []Intent
 
 	seen := map[string]bool{}
+
+	if coded, ok := codedEpisode(query); ok {
+		out = append(out, coded)
+	}
 
 	read := func(loose bool, most int) {
 		n := 0
@@ -335,8 +337,19 @@ func (s *Speech) Reinterpret(locale string, intent Intent) []Intent {
 			}
 
 			values, ok := form.match(words)
+			if !ok && !slices.Equal(spelled, words) {
+				values, ok = form.match(spelled)
+			}
+
 			if !ok {
 				continue
+			}
+
+			// A form's ordinal slot takes any words, so a reading whose ordinal isn't one ("the man who season of") is no reading at all.
+			if ordinal, has := values["Ordinal"]; has {
+				if _, ok := s.Ordinal(locale, ordinal); !ok {
+					continue
+				}
 			}
 
 			reading := Intent{Name: form.intent, Slots: map[string]Slot{}}
@@ -359,7 +372,6 @@ func (s *Speech) Reinterpret(locale string, intent Intent) []Intent {
 	return out
 }
 
-// ordinals maps the ordinals Alexa writes as digits in a search query to the words the samples spell out.
 // numberWords are the words for one, as a number or the first, that Amazon writes as a digit in a query it heard them in: "un capítulo" arrives as "1 capítulo" (es-US drops the accent too), "el primer capítulo" as "el 1.ᵉʳ capítulo", "اول حلقة" as "1 حلقة". Only languages it was seen doing this in are listed.
 var numberWords = map[string]map[string]string{
 	"es": {"un": "1", "uno": "1", "una": "1", "primer": "1", "primero": "1", "primera": "1", "1.ᵉʳ": "1", "1.º": "1", "1.ª": "1", "1º": "1", "1ª": "1"},
@@ -378,12 +390,6 @@ func sameWord(lang, heard, sample string) bool {
 	}
 
 	return canon(heard) == canon(sample)
-}
-
-var ordinals = map[string]map[string]string{
-	"en": {"1st": "first"},
-	"nl": {"1e": "eerste", "1ste": "eerste"},
-	"pt": {"1º": "primeiro", "1°": "primeiro"},
 }
 
 // BareCommand reads a title said on its own as the one-word command it may be. Alexa can hear "select", said after a remote-style command, as an answer to a question (ChooseMatch's lone {Answer}) rather than Navigate's lone {NavAction}, since both samples are a slot alone; heard is the intent with that slot when it is one of the slot's values in locale.
@@ -503,7 +509,8 @@ func languageQueryForms(lang string, model skillmodel.Model, utterances map[stri
 		}
 	}
 
-	slices.SortStableFunc(out, func(a, b queryForm) int { return b.literals - a.literals })
+	// Of forms as specific, the one with fewer slots that take any words reads first: "الموسم 2 من بلوي" is season {Season}, which its ordinal form would read too.
+	slices.SortStableFunc(out, func(a, b queryForm) int { return cmp.Or(b.literals-a.literals, a.free-b.free) })
 
 	return out, nil
 }
@@ -543,16 +550,14 @@ func newQueryForm(intent string, words []string, carriers, trailers [][]string, 
 		}
 	}
 
-	free := 0
-
 	for _, w := range form.words {
 		if isSlotRef(w) && !numbers[w[1:len(w)-1]] {
-			free++
+			form.free++
 		}
 	}
 
 	edged := !isSlotRef(form.words[0]) || !isSlotRef(form.words[len(form.words)-1])
-	form.loose = free >= 2 && !edged
+	form.loose = form.free >= 2 && !edged
 
 	return form, form.literals > 0
 }

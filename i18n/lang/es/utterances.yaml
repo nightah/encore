@@ -313,6 +313,13 @@ WatchRandomMusicVideo:
 WatchRandomShow:
   play_random_show: "(pon|ponme|ponga|reproduce|reproduzca) una serie (aleatoria|al azar|cualquiera) [en (el|la) {Room}]\n(pon|ponme|ponga|reproduce|reproduzca) una serie de {Genre} [aleatoria|al azar|cualquiera] [en (el|la) {Room}]"
   surprise_me_with: "sorpréndeme con una serie [de {Genre}]"
+WatchSeason:
+  play_ordinal_only: "(pon|ponme|ponga|reproduce|reproduzca) la {Ordinal} temporada [en (el|la) {Room}]"
+  play_ordinal_season: "(pon|ponme|ponga|reproduce|reproduzca) la {Ordinal} temporada de {Show} [en (el|la) {Room}]\n(pon|ponme|reproduce) la {Ordinal} temporada (completa|entera) de {Show} [en (el|la) {Room}]"
+  play_season: "(pon|ponme|ponga|reproduce|reproduzca) la temporada {Season} de {Show} [en (el|la) {Room}]"
+  play_season_only: "(pon|ponme|ponga|reproduce|reproduzca) la temporada {Season} [en (el|la) {Room}]"
+  play_show_season: "(pon|ponme|reproduce) {Show} temporada {Season} [en (el|la) {Room}]"
+  play_whole_season: "(pon|ponme|reproduce) la temporada {Season} (completa|entera) de {Show} [en (el|la) {Room}]\n(pon|ponme|reproduce) toda la temporada {Season} de {Show} [en (el|la) {Room}]"
 WhatAlbums:
   list_albums_by: "(dime|enumera) [los] (álbumes|discos) de {Artist}"
   what_albums_by: "qué (álbumes|discos) de {Artist} (tengo|tenemos|tienes)"

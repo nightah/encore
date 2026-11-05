@@ -196,6 +196,76 @@ func (s *Service) Episode(ctx context.Context, t Target, show string, season, ep
 	return s.playItem(ctx, t, eps[i], progress)
 }
 
+// Season plays a season of a show from its first unwatched episode (one in progress first), or from its first episode when every one has been watched, with the rest of the season queued after it, up to the queue limit. An empty show means the show playing now.
+func (s *Service) Season(ctx context.Context, t Target, show string, season int, progress Progress) Outcome {
+	showID, title, o := s.seasonShow(ctx, t, show, season)
+	if o != nil {
+		return *o
+	}
+
+	eps, err := s.episodes(ctx, t, showID, progress)
+	if err != nil {
+		return failure(t, err)
+	}
+
+	eps = filter(eps, func(e media.Item) bool { return e.Season == season })
+	if len(eps) == 0 {
+		return done(say("tv.no_season", map[string]string{"show": title, "season": strconv.Itoa(season)}))
+	}
+
+	slices.SortStableFunc(eps, func(a, b media.Item) int { return cmp.Compare(a.Episode, b.Episode) })
+
+	start := slices.IndexFunc(eps, media.Item.InProgress)
+	if start < 0 {
+		start = max(0, slices.IndexFunc(eps, unwatched))
+	}
+
+	first := eps[start]
+	refs := make([]media.Ref, 0, min(len(eps)-start, t.queueLimit()))
+
+	for _, e := range eps[start:min(len(eps), start+t.queueLimit())] {
+		refs = append(refs, e.Ref())
+	}
+
+	if err := t.Backend.Queue(ctx, refs); err != nil {
+		return failure(t, err)
+	}
+
+	o2 := done(say("tv.playing_season", map[string]string{
+		"show":    title,
+		"season":  strconv.Itoa(season),
+		"episode": strconv.Itoa(first.Episode),
+		"title":   first.Title,
+	}))
+	o2.Played = &first
+
+	return o2
+}
+
+// seasonShow finds the show a season is asked of: the named one, or without a name the show of the episode playing now.
+func (s *Service) seasonShow(ctx context.Context, t Target, show string, season int) (int, string, *Outcome) {
+	if show != "" {
+		doc, o := s.show(ctx, t, show)
+
+		return doc.Ref.ID, doc.Title, o
+	}
+
+	np, err := t.Backend.NowPlaying(ctx)
+	if err != nil {
+		o := failure(t, err)
+
+		return 0, "", &o
+	}
+
+	if np == nil || np.Item.Kind != media.KindEpisode || np.Item.ShowID == 0 {
+		o := done(say("tv.season_needs_show", map[string]string{"season": strconv.Itoa(season)}))
+
+		return 0, "", &o
+	}
+
+	return np.Item.ShowID, np.Item.ShowTitle, nil
+}
+
 // FirstEpisode plays a show's first episode, ignoring specials.
 func (s *Service) FirstEpisode(ctx context.Context, t Target, show string, progress Progress) Outcome {
 	doc, o := s.show(ctx, t, show)

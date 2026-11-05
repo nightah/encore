@@ -102,6 +102,13 @@ func (h *Handler) dispatch(ctx context.Context, env *RequestEnvelope, t actions.
 		}
 
 		return svc.Episode(ctx, t, sl.value("Show"), season, episode, progress)
+	case "WatchSeason":
+		season, ok := sl.season()
+		if !ok {
+			return reprompt(fallbackMessage())
+		}
+
+		return svc.Season(ctx, t, sl.value("Show"), season, progress)
 	case "WatchFirstEpisode":
 		return svc.FirstEpisode(ctx, t, sl.value("Show"), progress)
 	case "WatchLatestEpisode":

@@ -311,6 +311,13 @@ WatchRandomShow:
   play_any_show: "(mets|mettre|lance|lancer) n'importe quelle série [(de|du genre) {Genre}]"
   play_random_show: "(mets|mettre|lance|lancer|joue|jouer|passe|passer) une série [(de|du genre) {Genre}] au hasard [(dans le|dans la|au|à la) {Room}]"
   surprise_me_with: "surprends-moi avec une série [(de|du genre) {Genre}]"
+WatchSeason:
+  play_ordinal_only: "(mets|mettre|lance|lancer|joue|jouer|passe|passer) la {Ordinal} saison [(dans le|dans la|au|à la) {Room}]"
+  play_ordinal_season: "(mets|mettre|lance|lancer|joue|jouer|passe|passer) la {Ordinal} saison de {Show} [(dans le|dans la|au|à la) {Room}]\n(mets|mettre|lance|lancer) toute la {Ordinal} saison de {Show} [(dans le|dans la|au|à la) {Room}]"
+  play_season: "(mets|mettre|lance|lancer|joue|jouer|passe|passer) la saison {Season} de {Show} [(dans le|dans la|au|à la) {Room}]"
+  play_season_only: "(mets|mettre|lance|lancer|joue|jouer|passe|passer) la saison {Season} [(dans le|dans la|au|à la) {Room}]"
+  play_show_season: "(mets|mettre|lance|lancer) {Show} saison {Season} [(dans le|dans la|au|à la) {Room}]"
+  play_whole_season: "(mets|mettre|lance|lancer) toute la saison {Season} de {Show} [(dans le|dans la|au|à la) {Room}]"
 WhatAlbums:
   list_albums_by: "(liste|cite|énumère|donne-moi) les albums de {Artist}"
   what_albums_by: "quels albums de {Artist} (ai-je|avons-nous|as-tu|est-ce que j'ai|j'ai)"

@@ -26,6 +26,7 @@ cases:
   - {utterance: "ट्रेलर दिखाओ", intent: WatchMovieTrailer}
   - {utterance: "शोले सीरीज़ जारी रखो", intent: WatchNextInCollection, slots: {Movie: "शोले"}}
   - {utterance: "पंचायत के सीज़न 2 का एपिसोड 3 चलाओ", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "पंचायत"}}
+  - {utterance: "पंचायत का सीज़न 2 चलाओ", intent: WatchSeason, slots: {Season: "2", Show: "पंचायत"}}
   - {utterance: "पंचायत शुरू से चलाओ", intent: WatchFirstEpisode, slots: {Show: "पंचायत"}}
   - {utterance: "पंचायत का नया एपिसोड चलाओ", intent: WatchLatestEpisode, slots: {Show: "पंचायत"}}
   - {utterance: "पिछला शो जारी रखो", intent: ContinueWatching}
@@ -106,6 +107,11 @@ cases:
   - {utterance: "पंचायत का लेटेस्ट एपिसोड चलाओ", intent: WatchLatestEpisode, slots: {Show: "पंचायत"}}
   - {utterance: "पंचायत का पहला एपिसोड चलाओ", intent: WatchFirstEpisode, slots: {Show: "पंचायत"}}
   - {utterance: "पंचायत का बिलकुल पहला एपिसोड चलाओ", intent: WatchFirstEpisode, slots: {Show: "पंचायत"}}
+  - {utterance: "पंचायत का दूसरा सीज़न चलाओ", intent: WatchSeason, slots: {Ordinal: "02", Show: "पंचायत"}}
+  - {utterance: "पंचायत सीज़न 2 लगाओ", intent: WatchSeason, slots: {Season: "2", Show: "पंचायत"}}
+  - {utterance: "हॉल में पंचायत का सीज़न 2 चलाओ", intent: WatchSeason, slots: {Room: "", Season: "2", Show: "पंचायत"}}
+  - {utterance: "पंचायत का पूरा सीज़न 2 चलाओ", intent: WatchSeason, slots: {Season: "2", Show: "पंचायत"}}
+  - {utterance: "सीज़न 3 चलाओ", intent: WatchSeason, slots: {Season: "3"}}
   # Music by an artist, including the one-shot forms.
   - {utterance: "अरिजीत सिंह के गाने बजाओ", intent: ListenToArtist, slots: {Artist: "अरिजीत सिंह"}}
   - {utterance: "अरिजीत सिंह का म्यूज़िक बजाओ", intent: ListenToArtist, slots: {Artist: "अरिजीत सिंह"}}

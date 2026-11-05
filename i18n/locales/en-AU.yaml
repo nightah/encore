@@ -13,3 +13,6 @@ skill_name: Encore
 utterances:
   WatchMovie:
     - "chuck on [the movie] {Movie}"
+  WatchSeason:
+    - "chuck on (season|series) {Season} of {Show}"
+    - "chuck on the {Ordinal} (season|series) of {Show}"

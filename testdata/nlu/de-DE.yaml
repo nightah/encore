@@ -26,6 +26,7 @@ cases:
   - {utterance: "spiele mir den trailer", intent: WatchMovieTrailer}
   - {utterance: "setze die das boot reihe fort", intent: WatchNextInCollection, slots: {Movie: "das boot"}}
   - {utterance: "spiele mir dark folge 3 von staffel 2", intent: WatchEpisode, slots: {Episode: "3", Season: "2", Show: "dark"}}
+  - {utterance: "spiele staffel 2 von dark", intent: WatchSeason, slots: {Season: "2", Show: "dark"}}
   - {utterance: "spiele mir dark von anfang an", intent: WatchFirstEpisode, slots: {Show: "dark"}}
   - {utterance: "spiele mir die neueste dark folge", intent: WatchLatestEpisode, slots: {Show: "dark"}}
   - {utterance: "setze die letzte serie fort", intent: ContinueWatching}
@@ -109,6 +110,11 @@ cases:
   - {utterance: "spiele mir die neueste folge von dark", intent: WatchLatestEpisode, slots: {Show: "dark"}}
   - {utterance: "spiele mir die erste folge von dark", intent: WatchFirstEpisode, slots: {Show: "dark"}}
   - {utterance: "spiele mir erste folge von dark", intent: WatchFirstEpisode, slots: {Show: "dark"}}
+  - {utterance: "spiele mir die zweite staffel von dark", intent: WatchSeason, slots: {Ordinal: "02", Show: "dark"}}
+  - {utterance: "spiele mir dark staffel 2", intent: WatchSeason, slots: {Season: "2", Show: "dark"}}
+  - {utterance: "spiele staffel 2 von dark im schlafzimmer", intent: WatchSeason, slots: {Room: "", Season: "2", Show: "dark"}}
+  - {utterance: "staffel 2 von dark abzuspielen", intent: WatchSeason, slots: {Season: "2", Show: "dark"}}
+  - {utterance: "spiele staffel 3", intent: WatchSeason, slots: {Season: "3"}}
   # Music by an artist, including the one-shot forms.
   - {utterance: "spiele mir etwas musik von rammstein", intent: ListenToArtist, slots: {Artist: "rammstein"}}
   - {utterance: "spiele mir ein paar lieder von rammstein", intent: ListenToArtist, slots: {Artist: "rammstein"}}

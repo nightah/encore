@@ -42,6 +42,7 @@ responses:
   remote.no_text: "No entendí qué quieres escribir."
   streams.audio_unknown: "Cambié el audio."
   tv.no_episode: "No encontré el episodio {episode} de la temporada {season} de {show}."
+  tv.no_season: "No encontré la temporada {season} de {show}."
 
 skill_name: Encore
 
@@ -93,3 +94,7 @@ utterances:
     - "(sigue|continúa) con la serie {Show} [en (el|la|mi) {Room}]"
   WatchRandomShow:
     - "(pon|ponme) un programa (al azar|cualquiera) [en (el|la|mi) {Room}]"
+  WatchSeason:
+    - "(quiero|queremos) ver la temporada {Season} de {Show} [en (el|la|mi) {Room}]"
+    - "(pon|ponme|reproduce) la {Ordinal} temporada de la serie {Show} [en (el|la|mi) {Room}]"
+    - "dale play a la temporada {Season} de {Show} [en (el|la|mi) {Room}]"

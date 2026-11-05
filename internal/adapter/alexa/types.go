@@ -129,8 +129,8 @@ type queryForm struct {
 	words []string
 	// numbers names the slots that take a number.
 	numbers map[string]bool
-	// literals counts the words that aren't slots, so the most specific form is tried first.
-	literals int
+	// literals counts the words that aren't slots, so the most specific form is tried first, and free the slots that take any words, so of forms as specific the one with fewer is.
+	literals, free int
 	// unspaced joins a slot's words without spaces, for a language written without them (units).
 	unspaced bool
 	// lang is the language, whose number words a query may hold as digits (sameWord).
@@ -397,4 +397,10 @@ type Card struct {
 type handled struct {
 	resp    ResponseEnvelope
 	outcome *actions.Outcome
+}
+
+// unspacedOne is how a language written without spaces spells the digit 1 as an ordinal: the numeral, and the counters before or after it that make it one ("第" in "第一話", "話" in "一話目").
+type unspacedOne struct {
+	numeral       string
+	before, after []string
 }

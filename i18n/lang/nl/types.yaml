@@ -212,6 +212,27 @@ NAV_DIRECTION:
   left: "naar links\nlinks"
   right: "naar rechts\nrechts"
   up: "naar boven\nomhoog"
+ORDINAL:
+  "01": |-
+    eerste
+  "02": |-
+    tweede
+  "03": |-
+    derde
+  "04": |-
+    vierde
+  "05": |-
+    vijfde
+  "06": |-
+    zesde
+  "07": |-
+    zevende
+  "08": |-
+    achtste
+  "09": |-
+    negende
+  "10": |-
+    tiende
 POWER_ACTION:
   hibernate: |-
     sluimerstand

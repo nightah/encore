@@ -96,3 +96,8 @@ utterances:
   WatchRandomShow:
     - "(mets|mettre|fais jouer|faire jouer) une émission [(de|du genre) {Genre}] au hasard [(dans le|dans la|au|à la) {Room}]"
     - "je (veux|voudrais) écouter une (émission|série) [(de|du genre) {Genre}]"
+  WatchSeason:
+    - "(fais jouer|faire jouer) la saison {Season} de {Show} [(dans le|dans la|au|à la) {Room}]"
+    - "(fais jouer|faire jouer) la {Ordinal} saison de {Show} [(dans le|dans la|au|à la) {Room}]"
+    - "(mets|mettre|fais jouer|faire jouer) la saison {Season} (de l'émission|du téléroman) {Show} [(dans le|dans la|au|à la) {Room}]"
+    - "je (veux|voudrais) écouter la saison {Season} de {Show}"

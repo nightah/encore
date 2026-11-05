@@ -312,6 +312,13 @@ WatchRandomShow:
   play_any_show: "(metti|guarda) una serie [t. v.] [[di] {Genre}] qualsiasi"
   play_random_show: "(metti|mettere|guarda|guardare|riproduci|riprodurre) una serie [[di] {Genre}] (a caso|casuale) [(in|nel|nella) {Room}]"
   surprise_me_with: "sorprendimi con una serie [[di] {Genre}]"
+WatchSeason:
+  play_ordinal_only: "(metti|mettere|guarda|guardare|riproduci|riprodurre) la {Ordinal} stagione [(in|nel|nella) {Room}]"
+  play_ordinal_season: "(metti|mettere|guarda|guardare|riproduci|riprodurre) la {Ordinal} stagione di {Show} [(in|nel|nella) {Room}]\n(metti|guarda|riproduci) tutta la {Ordinal} stagione di {Show} [(in|nel|nella) {Room}]"
+  play_season: "(metti|mettere|guarda|guardare|riproduci|riprodurre) la stagione {Season} di {Show} [(in|nel|nella) {Room}]"
+  play_season_only: "(metti|mettere|guarda|guardare|riproduci|riprodurre) la stagione {Season} [(in|nel|nella) {Room}]"
+  play_show_season: "(metti|guarda|riproduci) {Show} stagione {Season} [(in|nel|nella) {Room}]"
+  play_whole_season: "(metti|guarda|riproduci) tutta la stagione {Season} di {Show} [(in|nel|nella) {Room}]"
 WhatAlbums:
   list_albums_by: "elenca gli album (di|dei|degli) {Artist}"
   what_albums_by: "(che|quali) album (di|dei|degli) {Artist} (ho|abbiamo|hai)"
