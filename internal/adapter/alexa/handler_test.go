@@ -834,3 +834,86 @@ func TestSlotValues(t *testing.T) {
 	assert.Nil(t, slotValues(nil))
 	assert.Equal(t, map[string]string{"Movie": "dune"}, slotValues(map[string]Slot{"Movie": {Value: "dune"}, "Room": {}}), "empty slots are left out")
 }
+
+// TestAnswerPlaysInTheRoomAskedAbout checks that answering a question about a title asked for in another room plays it there, not on the Echo's own Kodi instance: the answer names no room, so the session has to remember it.
+func TestAnswerPlaysInTheRoomAskedAbout(t *testing.T) {
+	for name, tc := range map[string]struct {
+		ask    []byte
+		answer func(t *testing.T) RequestEnvelope
+	}{
+		"a room slot, answered yes": {
+			ask: intentRequest(t, "WatchMovie", map[string]slotSpec{"Movie": {value: "fuzz"}, "Room": {value: "bedroom"}}),
+			answer: func(t *testing.T) RequestEnvelope {
+				return requestOf(t, mustRead(t, "testdata/golden/yes-after-question/request.json"))
+			},
+		},
+		"a room in the search query, answered by position": {
+			ask: intentRequest(t, "PlayMedia", map[string]slotSpec{"Query": {value: "fuzz in the bedroom"}}),
+			answer: func(t *testing.T) RequestEnvelope {
+				return requestOf(t, intentRequest(t, chooseIntent, map[string]slotSpec{whichSlot: {value: "first"}}))
+			},
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			h, lounge, bedroom, rec := newRoomHandler(t)
+
+			var resp ResponseEnvelope
+			require.NoError(t, json.Unmarshal(serveBody(t, h, tc.ask), &resp))
+			require.NotNil(t, resp.SessionAttributes[sessionPending], "Alexa asks which one")
+
+			answer := tc.answer(t)
+			answer.Session.Attributes = resp.SessionAttributes
+
+			body, err := json.Marshal(answer)
+			require.NoError(t, err)
+
+			serveBody(t, h, body)
+			assert.Empty(t, lounge.Calls(), "the Echo's own Kodi instance plays nothing")
+			assert.Equal(t, []string{"Play movie/4 resume"}, bedroom.Calls(), "the answer plays in the bedroom")
+
+			require.Len(t, rec.entries, 2)
+			assert.Equal(t, "Bedroom", rec.entries[1].Target)
+		})
+	}
+}
+
+func requestOf(t *testing.T, body []byte) RequestEnvelope {
+	t.Helper()
+
+	var env RequestEnvelope
+	require.NoError(t, json.Unmarshal(body, &env))
+
+	return env
+}
+
+func TestAnswerAfterTheRoomWentAway(t *testing.T) {
+	h, lounge, bedroom, rec := newRoomHandler(t)
+
+	var resp ResponseEnvelope
+	require.NoError(t, json.Unmarshal(serveBody(t, h, intentRequest(t, "WatchMovie", map[string]slotSpec{"Movie": {value: "fuzz"}, "Room": {value: "bedroom"}})), &resp))
+	assert.Equal(t, "bedroom", resp.SessionAttributes[sessionRoom])
+
+	// The bedroom was removed while the question waited.
+	resp.SessionAttributes[sessionRoom] = "attic"
+
+	answer := requestOf(t, mustRead(t, "testdata/golden/yes-after-question/request.json"))
+	answer.Session.Attributes = resp.SessionAttributes
+
+	body, err := json.Marshal(answer)
+	require.NoError(t, err)
+
+	serveBody(t, h, body)
+	assert.Empty(t, bedroom.Calls())
+	assert.Equal(t, []string{"Play movie/4 resume"}, lounge.Calls(), "the Echo's own Kodi instance plays it rather than an error about a room nobody named")
+	require.Len(t, rec.entries, 2)
+	assert.Equal(t, "Lounge", rec.entries[1].Target)
+}
+
+func TestAQuestionOnTheEchosOwnKodiRemembersNoRoom(t *testing.T) {
+	h, _, _, _ := newRoomHandler(t)
+
+	var resp ResponseEnvelope
+	require.NoError(t, json.Unmarshal(serveBody(t, h, intentRequest(t, "WatchMovie", map[string]slotSpec{"Movie": {value: "fuzz"}})), &resp))
+	require.NotNil(t, resp.SessionAttributes[sessionPending])
+	assert.NotContains(t, resp.SessionAttributes, sessionRoom)
+}

@@ -1,6 +1,7 @@
 package alexa
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
@@ -259,12 +260,21 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, tr *requestT
 	// The ways to read the request, tried in turn until one finds something: a search query may name a film, TV or music intent's sample.
 	readings := []Intent{intent}
 
-	switch room := strings.TrimSpace(intent.Slots["Room"].Value); {
+	// An answer to a question names no room, but plays in the room the question was about.
+	room := cmp.Or(strings.TrimSpace(intent.Slots["Room"].Value), sessionRoomOf(env.Session.Attributes))
+
+	switch {
 	case intent.Name == "PlayMedia":
-		target, intent, err = h.targetInQuery(ctx, deviceID, locale, intent)
+		target, intent, room, err = h.targetInQuery(ctx, deviceID, locale, intent)
 		readings = h.Speech.Reinterpret(locale, intent)
 	case room != "":
 		target, err = h.Targets.TargetForRoom(ctx, deviceID, room)
+
+		// A room renamed or removed while the question waited can't be told apart from the Echo's own any more.
+		if errors.Is(err, ErrUnknownRoom) && strings.TrimSpace(intent.Slots["Room"].Value) == "" {
+			room = ""
+			target, err = h.Targets.Target(ctx, deviceID)
+		}
 	default:
 		target, err = h.Targets.Target(ctx, deviceID)
 	}
@@ -312,11 +322,16 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, tr *requestT
 		o = askAgain(env, o.Say.ID, *question)
 	}
 
-	return h.respond(locale, o, target.ConfirmSound), &o
+	resp := h.respond(locale, o, target.ConfirmSound)
+	if resp.SessionAttributes != nil && room != "" {
+		resp.SessionAttributes[sessionRoom] = room
+	}
+
+	return resp, &o
 }
 
-// targetInQuery finds a room named in a search query. An AMAZON.SearchQuery slot can't share an utterance with another slot, so "play frozen in the lounge" arrives as the query "frozen in the lounge"; when its ending (or, in some languages, its start) names a known room, the room is taken off the query and its Kodi instance is the target.
-func (h *Handler) targetInQuery(ctx context.Context, deviceID, locale string, intent Intent) (actions.Target, Intent, error) {
+// targetInQuery finds a room named in a search query, returning it with its target. An AMAZON.SearchQuery slot can't share an utterance with another slot, so "play frozen in the lounge" arrives as the query "frozen in the lounge"; when its ending (or, in some languages, its start) names a known room, the room is taken off the query and its Kodi instance is the target.
+func (h *Handler) targetInQuery(ctx context.Context, deviceID, locale string, intent Intent) (actions.Target, Intent, string, error) {
 	const title = "Query"
 
 	for _, split := range h.Speech.RoomSplits(locale, intent.Slots[title].Value) {
@@ -326,18 +341,18 @@ func (h *Handler) targetInQuery(ctx context.Context, deviceID, locale string, in
 		case errors.Is(err, ErrUnknownRoom):
 			continue
 		case err != nil:
-			return actions.Target{}, intent, err
+			return actions.Target{}, intent, "", err
 		}
 
 		slots := maps.Clone(intent.Slots)
 		slots[title] = Slot{Name: title, Value: split.Title}
 
-		return target, Intent{Name: intent.Name, Slots: slots}, nil
+		return target, Intent{Name: intent.Name, Slots: slots}, split.Room, nil
 	}
 
 	target, err := h.Targets.Target(ctx, deviceID)
 
-	return target, intent, err
+	return target, intent, "", err
 }
 
 // respond renders an outcome as an Alexa response. With confirm, a success that has nothing to say plays ConfirmSoundURL instead of answering with silence.
@@ -519,6 +534,14 @@ func sessionQuestionOf(attrs map[string]any) *actions.Message {
 	}
 
 	return &q
+}
+
+func sessionRoomOf(attrs map[string]any) string {
+	var room string
+
+	sessionValue(attrs, sessionRoom, &room)
+
+	return room
 }
 
 func sessionFollowupOf(attrs map[string]any) *actions.Followup {
