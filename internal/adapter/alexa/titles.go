@@ -1,7 +1,9 @@
 package alexa
 
 import (
+	"maps"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/nightah/encore/internal/core/match"
@@ -186,6 +188,10 @@ func containsPhrase(words, phrase []string) bool {
 
 // Reroute reads a music request whose title slot names no title (Generic) as the request it is: "play music by queen" heard as ListenToSongOrAlbum or ListenToSong is queen's music, and "play some songs" heard as PlayMedia or ListenToSong is any music, shuffled.
 func (s *Speech) Reroute(locale string, intent Intent) Intent {
+	if intent.Name == seasonIntent {
+		return s.seasonFromShow(locale, intent)
+	}
+
 	slot := map[string]string{"ListenToSongOrAlbum": "Title", "ListenToSong": "Song", "PlayMedia": "Query"}[intent.Name]
 	if slot == "" {
 		return intent
@@ -199,6 +205,41 @@ func (s *Speech) Reroute(locale string, intent Intent) Intent {
 		return Intent{Name: "ListenToArtist", Slots: keepSlots(intent.Slots, "Artist", "Room")}
 	case bare && strings.TrimSpace(intent.Slots["Album"].Value) == "":
 		return Intent{Name: "PartyMode", Slots: keepSlots(intent.Slots, "Room")}
+	}
+
+	return intent
+}
+
+// seasonFromShow reads a season Amazon left at the front of the show back off it: "2 de la casa de papel" with no season is season 2 of "la casa de papel", when "de" is what the locale's season samples put between the season and the show. A request with a season or an ordinal is returned as it is, so a title that starts with a number keeps it.
+func (s *Speech) seasonFromShow(locale string, intent Intent) Intent {
+	if strings.TrimSpace(intent.Slots["Season"].Value) != "" || strings.TrimSpace(intent.Slots["Ordinal"].Value) != "" {
+		return intent
+	}
+
+	joins, ok := s.seasonJoins[locale]
+	if !ok {
+		joins = s.seasonJoins[fallbackLocale]
+	}
+
+	words := strings.Fields(intent.Slots["Show"].Value)
+	if len(words) < 3 {
+		return intent
+	}
+
+	if _, err := strconv.Atoi(words[0]); err != nil {
+		return intent
+	}
+
+	for n := len(words) - 2; n >= 1; n-- {
+		if !joins[foldWords(strings.Join(words[1:1+n], " "))] {
+			continue
+		}
+
+		out := Intent{Name: intent.Name, Slots: maps.Clone(intent.Slots)}
+		out.Slots["Season"] = Slot{Name: "Season", Value: words[0]}
+		out.Slots["Show"] = Slot{Name: "Show", Value: strings.Join(words[1+n:], " ")}
+
+		return out
 	}
 
 	return intent

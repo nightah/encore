@@ -5,7 +5,7 @@ cases:
   - {utterance: "cancel", intent: AMAZON.CancelIntent}
   - {utterance: "help", intent: AMAZON.HelpIntent}
   - {utterance: "stop", intent: AMAZON.StopIntent, also: [{intent: RoomControl, slots: {Command: stop}}]}
-  - {utterance: "go home", intent: AMAZON.NavigateHomeIntent, also: [{intent: Navigate, slots: {NavAction: home}}]}
+  - {utterance: "go home", intent: AMAZON.NavigateHomeIntent, also: [{intent: Navigate, slots: {NavAction: home}}], pending: "Amazon's reading changes with unrelated changes to the model"}
   - {utterance: "pause the tv", intent: AMAZON.PauseIntent}
   - {utterance: "resume the tv", intent: AMAZON.ResumeIntent}
   - {utterance: "next", intent: AMAZON.NextIntent, also: [{intent: RoomControl, slots: {Command: next}}]}
@@ -72,7 +72,7 @@ cases:
   - {utterance: "identify this echo", intent: IdentifyEcho}
   - {utterance: "next the subtitles", intent: Subtitles, slots: {SubtitleAction: "next"}}
   - {utterance: "next audio", intent: AudioStream, slots: {Step: "next"}}
-  - {utterance: "go back", intent: Navigate, slots: {NavAction: "back"}, also: [{intent: PlayerRewind}]}
+  - {utterance: "go back", intent: Navigate, slots: {NavAction: "back"}, also: [{intent: PlayerRewind}, {intent: PlayerSeek, slots: {SeekDirection: "back"}}]}
   - {utterance: "enter the text hello", intent: TypeText, slots: {Text: ""}}
   - {utterance: "show the movies", intent: ViewLibrary, slots: {Section: "movies"}}
   - {utterance: "show the music playlist road trip", intent: ViewPlaylist, slots: {Playlist: ""}}

@@ -32,6 +32,7 @@ KODI_ROOM:
   - {value: rumpus room, synonyms: [games room]}
   - {value: den}
   - {value: garage}
+  - {value: tv, synonyms: [tv room]}
 
 # Examples only, extended from the library when available.
 MEDIA_GENRE:

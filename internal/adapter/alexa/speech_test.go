@@ -58,6 +58,13 @@ func TestNewSpeechRejectsBrokenQueryCarrier(t *testing.T) {
 	require.ErrorContains(t, err, "locale en-US")
 }
 
+func TestNewSpeechRejectsBrokenSeasonPattern(t *testing.T) {
+	_, err := NewSpeech(speechSources(t, map[string]string{
+		"en-US": "language: en\nutterances:\n  WatchSeason:\n    - \"play (season {Season} of {Show}\"\n",
+	}), slog.New(slog.DiscardHandler))
+	require.ErrorContains(t, err, "locale en-US")
+}
+
 func TestQueryFormsRejectBrokenTVSample(t *testing.T) {
 	model := skillmodel.Model{Intents: []skillmodel.Intent{{Name: "WatchLatestEpisode", Content: media.ContentTV}}}
 

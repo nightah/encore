@@ -110,7 +110,9 @@ type Speech struct {
 	answerWords map[string]map[string]string
 	// lastShow holds, per locale, the folded words a "continue watching" sample has where a next-episode sample has its show ("the last show"), so a next-episode request for them continues the last show.
 	lastShow map[string]map[string]bool
-	log      *slog.Logger
+	// seasonJoins holds, per locale, the folded words WatchSeason's samples put between {Season} and {Show} ("of", "de"), so a season Amazon left at the front of the show ("2 de la casa de papel") can be read back off it.
+	seasonJoins map[string]map[string]bool
+	log         *slog.Logger
 }
 
 // bareSlot is a slot an intent's sample is alone: Navigate's {NavAction} of type NAV_ACTION.

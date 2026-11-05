@@ -36,9 +36,9 @@ Each phrase below is one of the skill's own samples, and Amazon's language model
 
 | Say | Meaning | Amazon reads it as | It should |
 | --- | --- | --- | --- |
-| ابغى اشوف فيلم الرسالة | I want to watch the film The Message | a film called "اشوف فيلم الرسالة" | play the film الرسالة |
 | لورا خمس دقائق | Back five minutes | a skip of five minutes, with no direction | skip back five minutes |
 | رجعي لورا خمس دقائق | Go back five minutes | a skip, without the time | rewind five minutes |
+| ابغى اقتراح فيلم | I want a film suggestion | nothing, after some changes to the model | recommend a film |
 
 ### German (`de-DE`)
 
@@ -46,17 +46,18 @@ Each phrase below is one of the skill's own samples, and Amazon's language model
 | --- | --- | --- | --- |
 | geh zur startseite | Go to the home screen | nothing | go to Kodi's home screen |
 
-### English (`en-GB`)
+### English (`en-US`)
 
 | Say | Meaning | Amazon reads it as | It should |
 | --- | --- | --- | --- |
-| go back | Go back | nothing, now and then | go back a screen |
+| go home | Go home | nothing, after some changes to the model | go to Kodi's home screen |
 
 ### Spanish (`es-MX`)
 
 | Say | Meaning | Amazon reads it as | It should |
 | --- | --- | --- | --- |
 | dale play a la casa de papel | Play Money Heist | nothing | play La Casa de Papel |
+| dame una recomendación de película | Give me a film recommendation | nothing, after some changes to the model | recommend a film |
 
 ### Spanish (`es-US`)
 
@@ -71,6 +72,7 @@ Each phrase below is one of the skill's own samples, and Amazon's language model
 | Say | Meaning | Amazon reads it as | It should |
 | --- | --- | --- | --- |
 | qu'est-ce qu'on écoute ce soir | What shall we listen to tonight? | what's new in a show called "ce soir" | recommend something |
+| qu'est-ce que je devrais écouter comme film | What film should I watch? | nothing, after some changes to the model | recommend a film |
 
 ### Hindi (`hi-IN`)
 
@@ -97,6 +99,8 @@ Each phrase below is one of the skill's own samples, and Amazon's language model
 | speel wat muziek van marco borsato | Play some Marco Borsato | a search for "whatmuziek van marco borsato" | play the artist |
 | speel wat muziek van marco borsato in de slaapkamer | Play some Marco Borsato in the bedroom | a search for "whatmuziek van marco borsato in de slaapkamer" | play the artist in the bedroom |
 | zet de luizenmoeder seizoen 2 aflevering 3 op in de slaapkamer | Put on De Luizenmoeder season 2 episode 3 in the bedroom | binge a show called "de luizenmoeder seizoen 2 aflevering 3" | play that episode in the bedroom |
+| ik wil een tip voor een film | I want a tip for a film | a recommendation without the kind, after some changes to the model | recommend a film |
+| draai met de klok mee | Turn clockwise | nothing, after some changes to the model | rotate the picture clockwise |
 
 ### Portuguese (`pt-BR`)
 
