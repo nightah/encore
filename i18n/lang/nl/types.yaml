@@ -153,6 +153,9 @@ MEDIA_TYPE:
     video
     video's
 NAV_ACTION:
+  back: |-
+    terug
+    een terug
   down: |-
     omlaag
     naar beneden
