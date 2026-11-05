@@ -45,13 +45,26 @@
       "title": "Nenhuma instância do Kodi ainda"
     },
     "episode": "T{{season}} · E{{episode}} “{{title}}”",
+    "hdr": {
+      "dolbyvision": "Dolby Vision",
+      "hdr10": "HDR10",
+      "hdr10plus": "HDR10+",
+      "hlg": "HLG"
+    },
     "idle": "Nada em reprodução.",
     "offline": {
       "test": "Teste na página do Kodi",
       "text": "Sem resposta. Verifique se o Kodi está em execução e acessível."
     },
     "progress": "Progresso de {{percent}} por cento",
-    "title": "Instâncias do Kodi"
+    "quality": {
+      "720p": "720p",
+      "1080p": "1080p",
+      "2160p": "4K",
+      "sd": "SD"
+    },
+    "title": "Instâncias do Kodi",
+    "video": "Imagem"
   },
   "ms": "{{ms}} ms",
   "openRequestLog": "Abrir o registro de solicitações",
