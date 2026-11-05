@@ -147,10 +147,6 @@ MEDIA_TYPE:
     vídeo
     vídeos
 NAV_ACTION:
-  back: |-
-    voltar
-    volta
-    para trás
   down: |-
     para baixo
     pra baixo
@@ -204,6 +200,37 @@ NAV_DIRECTION:
   left: "para a esquerda\npra esquerda"
   right: "para a direita\npra direita"
   up: "para cima\npra cima"
+ORDINAL:
+  "01": |-
+    primeira
+    primeiro
+  "02": |-
+    segunda
+    segundo
+  "03": |-
+    terceira
+    terceiro
+  "04": |-
+    quarta
+    quarto
+  "05": |-
+    quinta
+    quinto
+  "06": |-
+    sexta
+    sexto
+  "07": |-
+    sétima
+    sétimo
+  "08": |-
+    oitava
+    oitavo
+  "09": |-
+    nona
+    nono
+  "10": |-
+    décima
+    décimo
 POWER_ACTION:
   hibernate: |-
     hiberna
