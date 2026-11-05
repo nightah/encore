@@ -45,13 +45,26 @@
       "title": "Nog geen Kodi-instanties"
     },
     "episode": "S{{season}} · A{{episode}} “{{title}}”",
+    "hdr": {
+      "dolbyvision": "Dolby Vision",
+      "hdr10": "HDR10",
+      "hdr10plus": "HDR10+",
+      "hlg": "HLG"
+    },
     "idle": "Er speelt niets.",
     "offline": {
       "test": "Test hem op de Kodi-pagina",
       "text": "Antwoordt niet. Controleer of Kodi draait en bereikbaar is."
     },
     "progress": "Voortgang {{percent}} procent",
-    "title": "Kodi-instanties"
+    "quality": {
+      "720p": "720p",
+      "1080p": "1080p",
+      "2160p": "4K",
+      "sd": "SD"
+    },
+    "title": "Kodi-instanties",
+    "video": "Beeld"
   },
   "ms": "{{ms}} ms",
   "openRequestLog": "Verzoekenlogboek openen",
