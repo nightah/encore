@@ -172,9 +172,6 @@ MEDIA_TYPE:
     video
     videos
 NAV_ACTION:
-  back: |-
-    zurück
-    eins zurück
   down: |-
     runter
     nach unten
@@ -231,6 +228,38 @@ NAV_DIRECTION:
   left: "nach links\nlinks"
   right: "nach rechts\nrechts"
   up: "nach oben\nhoch\nrauf"
+ORDINAL:
+  "01": |-
+    erste
+    ersten
+  "02": |-
+    zweite
+    zweiten
+  "03": |-
+    dritte
+    dritten
+  "04": |-
+    vierte
+    vierten
+  "05": |-
+    fünfte
+    fünften
+  "06": |-
+    sechste
+    sechsten
+  "07": |-
+    siebte
+    siebten
+    siebente
+  "08": |-
+    achte
+    achten
+  "09": |-
+    neunte
+    neunten
+  "10": |-
+    zehnte
+    zehnten
 POWER_ACTION:
   hibernate: |-
     ruhezustand
