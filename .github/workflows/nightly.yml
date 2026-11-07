@@ -192,7 +192,7 @@ jobs:
 
       - name: Start rclone WebDAV
         run: |
-          docker run -d --name rclone -p 8081:80 rclone/rclone:1.75.2 \
+          docker run -d --name rclone -p 8081:80 rclone/rclone:1.76.0 \
             serve webdav /data --addr :80 \
             --user "${ENCORE_CONTRACT_WEBDAV_USERNAME}" --pass "${ENCORE_CONTRACT_WEBDAV_PASSWORD}"
           for _ in $(seq 1 30); do
