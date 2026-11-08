@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	"modernc.org/sqlite"
@@ -109,7 +110,13 @@ func dsn(path string, readOnly bool) string {
 		q.Set("_txlock", "immediate")
 	}
 
-	u := url.URL{Scheme: "file", Path: path, RawQuery: q.Encode()}
+	// SQLite wants a Windows path as file:///C:/dir/file.db; without the leading slash, url.URL writes file://C:... and SQLite reads the drive as the URI authority.
+	p := filepath.ToSlash(path)
+	if !strings.HasPrefix(p, "/") {
+		p = "/" + p
+	}
+
+	u := url.URL{Scheme: "file", Path: p, RawQuery: q.Encode()}
 
 	return u.String()
 }

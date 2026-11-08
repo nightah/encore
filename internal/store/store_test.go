@@ -415,3 +415,14 @@ func TestClosedDatabaseErrors(t *testing.T) {
 		assert.NotErrorIs(t, err, ErrNotFound, "%s: a broken database is not an empty one", name)
 	}
 }
+
+func TestDSNPath(t *testing.T) {
+	t.Parallel()
+
+	for path, want := range map[string]string{
+		"/var/lib/encore/encore.db":            "file:///var/lib/encore/encore.db?",
+		"C:/Users/Some User/AppData/encore.db": "file:///C:/Users/Some%20User/AppData/encore.db?",
+	} {
+		assert.True(t, strings.HasPrefix(dsn(path, false), want), dsn(path, false))
+	}
+}
