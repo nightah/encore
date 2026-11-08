@@ -466,3 +466,115 @@ func TestRunFailsAReadingWithTheWrongSlotValue(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, nlu.OutcomeFail, res[0].Outcome(), "Encore reads the intent right but the song wrong")
 }
+
+// throttledProfiler answers each utterance with HTTP 429 until it has been asked throttles times, then with intent, and records when each request arrives.
+type throttledProfiler struct {
+	mu        sync.Mutex
+	start     time.Time
+	throttles map[string]int
+	asked     map[string][]time.Duration
+	intent    string
+	status    int
+}
+
+func (p *throttledProfiler) ProfileNLU(_ context.Context, _, _, utterance string) (*smapi.NLUProfile, error) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	p.asked[utterance] = append(p.asked[utterance], time.Since(p.start))
+
+	if len(p.asked[utterance]) <= p.throttles[utterance] {
+		return nil, &smapi.Error{Op: "profile utterance", StatusCode: p.status, Message: "We are experiencing heavy traffic at the moment. Please try again later."}
+	}
+
+	return &smapi.NLUProfile{Selected: &smapi.NLUIntent{Name: p.intent}}, nil
+}
+
+// TestRunAsksThrottledRowsAgainAfterCoolingDown checks that a row the client gave up on because Amazon throttled or failed it is asked once more after the rest of the run and a cool-down, rather than failing the run, and that a second give-up still fails.
+func TestRunAsksThrottledRowsAgainAfterCoolingDown(t *testing.T) {
+	for _, status := range []int{http.StatusTooManyRequests, http.StatusServiceUnavailable} {
+		t.Run(http.StatusText(status), func(t *testing.T) {
+			synctest.Test(t, func(t *testing.T) {
+				p := &throttledProfiler{start: time.Now(), throttles: map[string]int{"b": 1, "c": 2}, asked: map[string][]time.Duration{}, intent: "Mute", status: status}
+				r := &nlu.Runner{Client: p, SkillID: "s", Rate: 2, Cooldown: time.Minute}
+
+				res, err := r.Run(t.Context(), nlu.Fixture{Locale: "en-GB", Cases: []nlu.Case{{Utterance: "a", Intent: "Mute"}, {Utterance: "b", Intent: "Mute"}, {Utterance: "c", Intent: "Mute"}}})
+				require.NoError(t, err)
+				require.Len(t, res, 3)
+
+				assert.Len(t, p.asked["a"], 1)
+				require.Len(t, p.asked["b"], 2)
+				require.Len(t, p.asked["c"], 2, "asked again only once")
+
+				// The first pass sends its three rows at 0s, 0.5s and 1s, in whichever order the rows reach the pacer; the second waits a minute after the last of them.
+				again := []time.Duration{p.asked["b"][1], p.asked["c"][1]}
+				slices.Sort(again)
+				assert.Equal(t, []time.Duration{time.Minute + time.Second, time.Minute + 1500*time.Millisecond}, again)
+
+				assert.Equal(t, nlu.OutcomePass, res[1].Outcome())
+				assert.Equal(t, 2, res[1].Probes, "probes count both passes")
+				assert.Equal(t, nlu.OutcomeFail, res[2].Outcome())
+				assert.Equal(t, status, smapi.StatusCode(res[2].Err))
+				assert.Equal(t, nlu.Summary{Pass: 2, Fail: 1}, nlu.Summarise(res))
+			})
+		})
+	}
+}
+
+// A row that failed for a reason throttling doesn't explain isn't asked again.
+func TestRunDoesNotAskAgainAfterOtherErrors(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		p := &throttledProfiler{start: time.Now(), throttles: map[string]int{"a": 1}, asked: map[string][]time.Duration{}, intent: "Mute", status: http.StatusForbidden}
+		r := &nlu.Runner{Client: p, SkillID: "s", Cooldown: time.Minute}
+
+		res, err := r.Run(t.Context(), nlu.Fixture{Locale: "en-GB", Cases: []nlu.Case{{Utterance: "a", Intent: "Mute"}}})
+		require.NoError(t, err)
+		assert.Len(t, p.asked["a"], 1)
+		assert.Equal(t, nlu.OutcomeFail, res[0].Outcome())
+	})
+}
+
+// A run stopped while throttled rows cool down says so.
+func TestRunCancelledWhileCoolingDown(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		p := &throttledProfiler{start: time.Now(), throttles: map[string]int{"a": 1}, asked: map[string][]time.Duration{}, intent: "Mute", status: http.StatusTooManyRequests}
+		r := &nlu.Runner{Client: p, SkillID: "s", Cooldown: time.Hour}
+
+		ctx, cancel := context.WithTimeout(t.Context(), time.Minute)
+		defer cancel()
+
+		res, err := r.Run(ctx, nlu.Fixture{Locale: "en-GB", Cases: []nlu.Case{{Utterance: "a", Intent: "Mute"}}})
+		require.ErrorIs(t, err, context.DeadlineExceeded)
+		assert.Nil(t, res)
+		assert.Len(t, p.asked["a"], 1)
+	})
+}
+
+func TestRunCoolsDownForAMinuteByDefault(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		p := &throttledProfiler{start: time.Now(), throttles: map[string]int{"a": 1}, asked: map[string][]time.Duration{}, intent: "Mute", status: http.StatusTooManyRequests}
+		r := &nlu.Runner{Client: p, SkillID: "s"}
+
+		res, err := r.Run(t.Context(), nlu.Fixture{Locale: "en-GB", Cases: []nlu.Case{{Utterance: "a", Intent: "Mute"}}})
+		require.NoError(t, err)
+		assert.Equal(t, []time.Duration{0, time.Minute}, p.asked["a"])
+		assert.Equal(t, nlu.OutcomePass, res[0].Outcome())
+	})
+}
+
+// A run stopped while throttled rows are asked again says so.
+func TestRunCancelledWhileAskingAgain(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		p := &throttledProfiler{start: time.Now(), throttles: map[string]int{"a": 1, "b": 1}, asked: map[string][]time.Duration{}, intent: "Mute", status: http.StatusTooManyRequests}
+		r := &nlu.Runner{Client: p, SkillID: "s", Rate: 1, Cooldown: time.Minute}
+
+		// The first pass asks at 0s and 1s, the second at 61s and would at 62s.
+		ctx, cancel := context.WithTimeout(t.Context(), time.Minute+1500*time.Millisecond)
+		defer cancel()
+
+		res, err := r.Run(ctx, nlu.Fixture{Locale: "en-GB", Cases: []nlu.Case{{Utterance: "a", Intent: "Mute"}, {Utterance: "b", Intent: "Mute"}}})
+		require.ErrorIs(t, err, context.DeadlineExceeded)
+		assert.Nil(t, res)
+		assert.Equal(t, 3, len(p.asked["a"])+len(p.asked["b"]), "the last ask never went")
+	})
+}

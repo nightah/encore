@@ -8,6 +8,8 @@ const (
 	defaultWait     = 2 * time.Second
 	// defaultRate keeps under profileNlu's limit, which is for a whole developer account, shared by every skill and locale: a full run at 2.5 a second had half its attempts throttled and got through about 2.3 a second, after a short burst.
 	defaultRate = 2.0
+	// defaultCooldown lets a throttled account's limit recover before the rows it cost are asked again.
+	defaultCooldown = time.Minute
 )
 
 // maxInFlight caps the requests waiting on Amazon at once; at defaultRate and half a second a request, about one is.
