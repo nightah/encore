@@ -424,9 +424,10 @@ jobs:
           # The default timeout of 3x the coverage run times out mutants on a busy runner; 10x keeps the results stable between runs.
           mapfile -t shard < <(.github/scripts/mutation-shard.sh "${SHARD}")
           set -o pipefail
-          # A mutant can loop forever while allocating (i++ turned to i-- in match's tokenisers grows a slice without end), which takes the 16 GB runner down with the job. gremlins runs in a scope capped below that, so the kernel kills only the runaway test, gremlins counts it as KILLED, and OOMPolicy=continue keeps the rest going; setpriv drops back to the runner user, and env restores the PATH and HOME sudo resets.
-          sudo --preserve-env systemd-run --scope --quiet -p MemoryMax=12G -p MemorySwapMax=0 -p OOMPolicy=continue -- \
-            setpriv --reuid="$(id -u)" --regid="$(id -g)" --init-groups env HOME="${HOME}" PATH="${PATH}" \
+          # A mutant can loop forever while allocating (i++ turned to i-- in match's tokenisers grows a slice without end), which takes the 16 GB runner down with the job. gremlins runs in a scope capped below that, so the kernel kills only the runaway test, gremlins counts it as KILLED, and OOMPolicy=continue keeps the rest going. setpriv drops back to the runner user, and env -i restores this step's environment, which the runner's sudo resets and won't preserve.
+          mapfile -d '' -t environment < <(env -0)
+          sudo systemd-run --scope --quiet -p MemoryMax=12G -p MemorySwapMax=0 -p OOMPolicy=continue -- \
+            setpriv --reuid="$(id -u)" --regid="$(id -g)" --init-groups env -i "${environment[@]}" \
             gremlins unleash --timeout-coefficient 10 "${shard[@]}" --output gremlins.json ./internal/core | tee gremlins.txt
 
       - name: Mutation summary
