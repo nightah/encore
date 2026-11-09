@@ -9,9 +9,9 @@ set -euo pipefail
 root="internal/core"
 
 declare -A shards=(
-  [match-1]="match/similarity.go match/inverted.go match/alias.go match/lang_ar.go match/trigram.go match/config.go"
+  [match-1]="match/similarity.go match/inverted.go match/alias.go match/lang_ar.go match/trigram.go match/config.go match/lang_hi.go"
   [match-2]="match/numbers.go match/normalize.go match/fuzz.go match/phonetic.go match/external.go match/retriever.go match/match.go"
-  [match-3]="match/lang_ja.go match/lang_hi.go match/index.go match/score.go match/lang.go match/lang_nl.go"
+  [match-3]="match/lang_ja.go match/index.go match/score.go match/lang.go match/lang_nl.go"
 )
 
 shard="${1:-}"
