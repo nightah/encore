@@ -115,7 +115,8 @@ func (b *Backend) CleanLibrary(ctx context.Context, db media.Database) error {
 
 	switch db {
 	case media.DatabaseVideo:
-		_, err = b.c.VideoLibraryClean(ctx, kodirpc.VideoLibraryCleanParams{})
+		// With dialogs, Kodi cleans the video library modally and only replies once the clean is done, long after Alexa's deadline; without them it queues the clean and replies at once. The music clean is always queued.
+		_, err = b.c.VideoLibraryClean(ctx, kodirpc.VideoLibraryCleanParams{Showdialogs: ptr(false)})
 	case media.DatabaseMusic:
 		_, err = b.c.AudioLibraryClean(ctx, kodirpc.AudioLibraryCleanParams{})
 	default:
