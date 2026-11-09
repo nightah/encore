@@ -49,6 +49,8 @@ type Runner struct {
 	Reread func(locale string, heard Reading) []Reading
 	// Rate is how many profileNlu requests a second are sent, reprobes included, across every fixture. Default 2, under Amazon's limit for a developer account.
 	Rate float64
+	// Cooldown is the pause, after every row has been asked, before the rows the client gave up on because Amazon throttled or failed them are asked once more. Default 1m.
+	Cooldown time.Duration
 }
 
 // pacer spaces requests at least interval apart.

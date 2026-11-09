@@ -367,13 +367,20 @@ jobs:
         run: go test -count=1 ./...
 
   mutation:
-    name: Mutation testing (gremlins)
+    name: Mutation testing (gremlins, ${{ matrix.shard }})
     # Weekly: only on the Sunday schedule, or on demand.
     if: >-
       (github.event_name == 'schedule' && github.event.schedule == '0 17 * * 0') ||
       (github.event_name == 'workflow_dispatch' && inputs.mutation)
     runs-on: ubuntu-26.04
+    # One run of internal/core takes longer than a hosted runner lasts (match alone has two thirds of the mutants), so it is split into shards of about 20 minutes each; .github/scripts/mutation-shard.sh lists their files.
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [match-1, match-2, match-3, rest]
     timeout-minutes: 60
+    env:
+      SHARD: ${{ matrix.shard }}
     # Advisory only: the score is reported, never gated (no thresholds), and surviving mutants don't fail the nightly.
     continue-on-error: true
     steps:
@@ -415,15 +422,20 @@ jobs:
           export PATH="${RUNNER_TEMP}/mutation-bin:${PATH}"
           # gremlins takes a directory and tests every package below it, i.e. the equivalent of ./internal/core/...
           # The default timeout of 3x the coverage run times out mutants on a busy runner; 10x keeps the results stable between runs.
+          mapfile -t shard < <(.github/scripts/mutation-shard.sh "${SHARD}")
           set -o pipefail
-          gremlins unleash --timeout-coefficient 10 --output gremlins.json ./internal/core | tee gremlins.txt
+          # A mutant can loop forever while allocating (i++ turned to i-- in match's tokenisers grows a slice without end), which takes the 16 GB runner down with the job. gremlins runs in a scope capped below that, so the kernel kills only the runaway test, gremlins counts it as KILLED, and OOMPolicy=continue keeps the rest going. setpriv drops back to the runner user, and env -i restores this step's environment, which the runner's sudo resets and won't preserve.
+          mapfile -d '' -t environment < <(env -0)
+          sudo systemd-run --scope --quiet -p MemoryMax=12G -p MemorySwapMax=0 -p OOMPolicy=continue -- \
+            setpriv --reuid="$(id -u)" --regid="$(id -g)" --init-groups env -i "${environment[@]}" \
+            gremlins unleash --timeout-coefficient 10 "${shard[@]}" --output gremlins.json ./internal/core | tee gremlins.txt
 
       - name: Mutation summary
         if: always()
         run: |
           [ -f gremlins.json ] || exit 0
           {
-            echo "### Mutation testing (internal/core, advisory)"
+            echo "### Mutation testing (internal/core, ${SHARD}, advisory)"
             echo
             jq -r '"| Efficacy | Mutant coverage | Killed | Lived | Not covered | Not viable |",
               "| --- | --- | --- | --- | --- | --- |",

@@ -3,6 +3,7 @@ package nlu
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 	"sync"
 	"time"
@@ -13,7 +14,7 @@ import (
 	"github.com/nightah/encore/internal/smapi"
 )
 
-// Run profiles every row of fixtures, all at once at Rate, and returns their results in fixture and row order. It returns early only when ctx ends.
+// Run profiles every row of fixtures, all at once at Rate, asks the rows Amazon throttled once more after Cooldown, and returns their results in fixture and row order. It returns early only when ctx ends.
 func (r *Runner) Run(ctx context.Context, fixtures ...Fixture) ([]Result, error) {
 	rate := r.Rate
 	if rate <= 0 {
@@ -30,17 +31,66 @@ func (r *Runner) Run(ctx context.Context, fixtures ...Fixture) ([]Result, error)
 		}
 	}
 
+	all := make([]int, len(out))
+	for i := range out {
+		all[i] = i
+	}
+
+	if err := r.pass(ctx, p, out, all); err != nil {
+		return nil, err
+	}
+
+	// Amazon's limit is for the whole account, so a row the client gave up on is asked once more after the rest have gone and the limit has had time to recover.
+	var again []int
+
+	for i, res := range out {
+		if throttled(res.Err) {
+			again = append(again, i)
+		}
+	}
+
+	if len(again) == 0 {
+		return out, nil
+	}
+
+	cooldown := r.Cooldown
+	if cooldown <= 0 {
+		cooldown = defaultCooldown
+	}
+
+	if err := sleep(ctx, cooldown); err != nil {
+		return nil, err
+	}
+
+	before := make([]int, len(out))
+	for _, i := range again {
+		before[i] = out[i].Probes
+	}
+
+	if err := r.pass(ctx, p, out, again); err != nil {
+		return nil, err
+	}
+
+	for _, i := range again {
+		out[i].Probes += before[i]
+	}
+
+	return out, nil
+}
+
+// pass profiles the rows of out at indices, at most maxInFlight at once.
+func (r *Runner) pass(ctx context.Context, p *pacer, out []Result, indices []int) error {
 	sem := make(chan struct{}, maxInFlight)
 
 	var wg sync.WaitGroup
 
-	for i := range out {
+	for _, i := range indices {
 		select {
 		case sem <- struct{}{}:
 		case <-ctx.Done():
 			wg.Wait()
 
-			return nil, ctx.Err()
+			return ctx.Err()
 		}
 
 		wg.Go(func() {
@@ -52,11 +102,30 @@ func (r *Runner) Run(ctx context.Context, fixtures ...Fixture) ([]Result, error)
 
 	wg.Wait()
 
-	if err := ctx.Err(); err != nil {
-		return nil, err
+	return ctx.Err()
+}
+
+// throttled reports whether err is a response the client retried until it gave up: Amazon throttling the account, or failing on its side.
+func throttled(err error) bool {
+	switch smapi.StatusCode(err) {
+	case http.StatusTooManyRequests, http.StatusInternalServerError, http.StatusBadGateway, http.StatusServiceUnavailable, http.StatusGatewayTimeout:
+		return true
 	}
 
-	return out, nil
+	return false
+}
+
+// sleep waits d, or until ctx ends.
+func sleep(ctx context.Context, d time.Duration) error {
+	t := time.NewTimer(d)
+	defer t.Stop()
+
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-t.C:
+		return nil
+	}
 }
 
 // wait blocks until the next request may be sent, or ctx ends.

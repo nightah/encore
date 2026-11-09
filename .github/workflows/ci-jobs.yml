@@ -109,6 +109,9 @@ jobs:
       - name: Mutation go wrapper
         run: .github/scripts/mutation-go_test.sh
 
+      - name: Mutation shards
+        run: .github/scripts/mutation-shard_test.sh
+
       - name: Next version script
         run: .github/scripts/next-version_test.sh
 
