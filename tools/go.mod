@@ -9,7 +9,7 @@ require (
 )
 
 require (
-	actionlint.kjanat.dev v1.17.0 // indirect
+	actionlint.kjanat.dev v1.17.1 // indirect
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/air-verse/air v1.67.4 // indirect
 	github.com/andybalholm/brotli v1.2.0 // indirect
