@@ -81,7 +81,7 @@ jobs:
       - name: osv-scanner
         run: |
           pnpm -C web sbom --sbom-format cyclonedx --prod --lockfile-only > "${RUNNER_TEMP}/web.cdx.json"
-          docker run --rm -v "$PWD:/repo:ro" -v "${RUNNER_TEMP}:/sbom:ro" -w /repo ghcr.io/google/osv-scanner:v2.7.0 \
+          docker run --rm -v "$PWD:/repo:ro" -v "${RUNNER_TEMP}:/sbom:ro" -w /repo ghcr.io/google/osv-scanner:v2.7.1 \
             scan source --config .osv-scanner.toml -L go.mod -L /sbom/web.cdx.json
 
       # Preinstalled on GitHub's Ubuntu runners.
