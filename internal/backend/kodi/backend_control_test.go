@@ -395,6 +395,9 @@ func TestSystemAndLibrary(t *testing.T) {
 		assert.Len(t, s.CallsTo(m), 1, m)
 	}
 
+	// A video clean with dialogs blocks Kodi's reply until the clean finishes.
+	assert.JSONEq(t, `{"showdialogs":false}`, string(s.CallsTo("VideoLibrary.Clean")[0].Params))
+
 	require.Error(t, b.ScanLibrary(ctx, "pictures"))
 	require.Error(t, b.CleanLibrary(ctx, "pictures"))
 }
