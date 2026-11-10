@@ -91,6 +91,8 @@ cases:
   - {utterance: "oui s'il te plaît", intent: AMAZON.YesIntent}
   - {utterance: "non merci", intent: AMAZON.NoIntent}
   - {utterance: "je veux dire le plus ancien", intent: ChooseMatch, slots: {Which: "older"}}
+  - {utterance: "je veux dire dune de 2021", intent: ChooseMatch, slots: {Answer: "dune", Year: "2021"}}
+  - {utterance: "celui de 1984", intent: ChooseMatch, slots: {Year: "1984"}}
   - {utterance: "je veux dire l'autre", intent: ChooseMatch, slots: {Which: "second"}}
   # Bare titles, which free-text and title slots compete for.
   - {utterance: "joue intouchables", intent: PlayMedia, slots: {Query: "intouchables"}}

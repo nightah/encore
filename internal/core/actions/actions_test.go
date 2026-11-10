@@ -949,6 +949,8 @@ func TestChoose(t *testing.T) {
 	album := Choice{DocID: "album/80", Ref: media.Ref{Kind: media.KindAlbum, ID: 80}, Title: "Odyssey", Year: 2005}
 	song := Choice{DocID: "song/81", Ref: media.Ref{Kind: media.KindSong, ID: 81}, Title: "Odyssey", Year: 2024}
 	film := Choice{DocID: "movie/82", Ref: media.Ref{Kind: media.KindMovie, ID: 82}, Title: "The Odyssey", Year: 2026}
+	orwell := Choice{DocID: "movie/83", Ref: media.Ref{Kind: media.KindMovie, ID: 83}, Title: "1984", Year: 1956}
+	brazil := Choice{DocID: "movie/84", Ref: media.Ref{Kind: media.KindMovie, ID: 84}, Title: "Brazil", Year: 1984}
 
 	tests := map[string]struct {
 		answer  Answer
@@ -980,6 +982,18 @@ func TestChoose(t *testing.T) {
 		"year after from offered": {answer: Answer{Title: "dune from 1984"}, pending: []Choice{old, remake}, play: "movie/1"},
 		"no article shared":       {answer: Answer{Title: "odyssey"}, pending: []Choice{album, song}, more: []Choice{film}, again: true},
 		"kind kept back":          {answer: Answer{Title: "hot fuzz"}, pending: []Choice{album, song}, more: []Choice{film}, play: "movie/4"},
+		// A year said with the answer ("dune from 2021", "the one from 1984") picks the choice from that year.
+		"title and year":     {answer: Answer{Title: "dune", Year: 2021}, pending: []Choice{old, remake}, play: "movie/2"},
+		"year alone":         {answer: Answer{Year: 1984}, pending: []Choice{old, remake}, play: "movie/1"},
+		"year kept back":     {answer: Answer{Year: 2026}, pending: []Choice{album, song}, more: []Choice{film}, play: "movie/82"},
+		"article and year":   {answer: Answer{Title: "the odyssey", Year: 2026}, pending: []Choice{album, song}, more: []Choice{film}, play: "movie/82"},
+		"article left out":   {answer: Answer{Title: "odyssey", Year: 2026}, pending: []Choice{album, song}, more: []Choice{film}, play: "movie/82"},
+		"year shared":        {answer: Answer{Year: 2021}, pending: []Choice{remake, sameYear}, again: true},
+		"year of none":       {answer: Answer{Year: 1999}, pending: []Choice{old, remake}, again: true},
+		"position over year": {answer: Answer{Which: AnswerSecond, Year: 1984}, pending: []Choice{old, remake}, play: "movie/2"},
+		// A year heard as the title ("die uit 1984" as the answer "1984") picks the choice from that year, unless a choice is called that.
+		"year as the title":   {answer: Answer{Title: "1984"}, pending: []Choice{old, remake}, play: "movie/1"},
+		"title that's a year": {answer: Answer{Title: "1984"}, pending: []Choice{orwell, brazil}, play: "movie/83"},
 	}
 
 	for name, tc := range tests {
@@ -997,6 +1011,44 @@ func TestChoose(t *testing.T) {
 				return
 			}
 
+			assert.Equal(t, []string{"Play " + tc.play + " resume"}, backend.Calls())
+		})
+	}
+}
+
+func TestAnswerTitle(t *testing.T) {
+	old := Choice{DocID: "movie/1", Ref: media.Ref{Kind: media.KindMovie, ID: 1}, Title: "Dune", Year: 1984}
+	remake := Choice{DocID: "movie/2", Ref: media.Ref{Kind: media.KindMovie, ID: 2}, Title: "Dune", Year: 2021}
+	sequel := Choice{DocID: "movie/3", Ref: media.Ref{Kind: media.KindMovie, ID: 3}, Title: "Dune: Part Two", Year: 2024}
+
+	for name, tc := range map[string]struct {
+		title   string
+		pending []Choice
+		more    []Choice
+		play    string
+	}{
+		"no question":            {title: "dune 1984"},
+		"no title":               {pending: []Choice{old, remake}},
+		"a choice with its year": {title: "dune from 2021", pending: []Choice{old, remake}, play: "movie/2"},
+		"a choice kept back":     {title: "dune part two", pending: []Choice{old, remake}, more: []Choice{sequel}, play: "movie/3"},
+		"only its year":          {title: "1984", pending: []Choice{old, remake}, play: "movie/1"},
+		"a title several share":  {title: "dune", pending: []Choice{old, remake}},
+		"another title":          {title: "hot fuzz", pending: []Choice{old, remake}},
+	} {
+		t.Run(name, func(t *testing.T) {
+			target, backend, _ := newTarget()
+
+			o, ok := newService().AnswerTitle(t.Context(), target, tc.title, tc.pending, tc.more, nil)
+
+			if tc.play == "" {
+				assert.False(t, ok, "not an answer: the intent searches as it would")
+				assert.Empty(t, backend.Calls())
+
+				return
+			}
+
+			require.True(t, ok)
+			assert.Equal(t, "playback.playing_movie", o.Say.ID)
 			assert.Equal(t, []string{"Play " + tc.play + " resume"}, backend.Calls())
 		})
 	}

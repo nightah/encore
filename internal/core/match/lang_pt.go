@@ -39,8 +39,9 @@ func portuguese() *language {
 				"non": 9, "decim": 10, "vigesim": 20, "trigesim": 30, "centesim": 100, "milesim": 1000,
 			}, "o", "a", "os", "as"),
 		}.build(),
-		conj:     set("e"),
-		parts:    set("parte", "capitulo", "temporada", "volume", "vol"), //nolint:misspell // Portuguese for "chapter".
-		phonetic: phoneticKeysOf(pt.Encoder{}),
+		conj:      set("e"),
+		parts:     set("parte", "capitulo", "temporada", "volume", "vol"), //nolint:misspell // Portuguese for "chapter".
+		yearJoins: set("de", "do"),
+		phonetic:  phoneticKeysOf(pt.Encoder{}),
 	}
 }

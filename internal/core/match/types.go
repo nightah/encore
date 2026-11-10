@@ -409,7 +409,7 @@ type language struct {
 	unitsFirst bool
 	conj       map[string]bool
 	parts      map[string]bool
-	// yearJoins are the words that put a year after a title ("from" in "the odyssey from 2026"), which go with the year.
+	// yearJoins are the words that put a year after a title, as each language's question names it ("from" in "the odyssey from 2026", "uit" in "dune uit 2021"), which go with the year.
 	yearJoins map[string]bool
 	phonetic  phoneticFunc
 	// soundAlikeLead makes a top candidate that won on sound alone (scored.soundAlike) lead by Config.PlayMargin to play, not just Config.TieMargin. It suits an encoder that merges spellings differing only in silent letters, which different titles often do.

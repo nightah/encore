@@ -45,12 +45,17 @@ BingeShow:
   start_binge_mode: "(attiva|avvia|attivare|avviare) la modalità maratona (per|di) {Show} [(in|nel|nella) {Room}]"
 ChooseMatch:
   meant_answer: "(intendevo|intendo|voglio) {Answer}"
+  meant_answer_year: "(intendevo|intendo|voglio) {Answer} del {Year}"
   meant_which: "(intendevo|intendo|voglio) (il|la|lo) {Which}\n(intendevo|intendo|voglio) {Which}"
+  meant_year: "(intendevo|intendo|voglio) (quello|quella) del {Year}"
   the_which: "(il|la|lo) {Which}\n(il film|la serie) {Which}"
+  the_year: "(quello|quella) del {Year}"
   which_please: "(il|la|lo) {Which} per favore"
 ChooseMatch.Answer:
   answer: "{Answer}\n{Answer} per favore"
+  answer_year: "{Answer} del {Year}\n{Answer} {Year}"
   which: "{Which}"
+  year: "del {Year}\n{Year}"
 CleanLibrary:
   clean_library: "(pulisci|ripulisci|pulire) [la] libreria\n(pulisci|ripulisci) l'archivio [{Library}]"
   clean_library_2: "(pulisci|ripulisci|pulire) la libreria {Library}"

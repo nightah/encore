@@ -46,12 +46,17 @@ BingeShow:
   start_binge_mode: "(active|activer|lance|lancer) le mode marathon (pour|sur) {Show} [(dans le|dans la|au|à la) {Room}]"
 ChooseMatch:
   meant_answer: "je (veux dire|voulais dire|veux) {Answer}"
+  meant_answer_year: "je (veux dire|voulais dire|veux) {Answer} de {Year}"
   meant_which: "je (veux dire|voulais dire|veux) (le|la) {Which}\nje (veux dire|voulais dire|veux) {Which}"
+  meant_year: "je (veux dire|voulais dire|veux) (celui|celle) de {Year}"
   the_which: "(le|la) {Which}\n(le film|la série) {Which}"
+  the_year: "(celui|celle) de {Year}"
   which_please: "(le|la) {Which} (s'il te plaît|s'il vous plaît)"
 ChooseMatch.Answer:
   answer: "{Answer}\n{Answer} s'il te plaît\n{Answer} s'il vous plaît"
+  answer_year: "{Answer} de {Year}\n{Answer} {Year}"
   which: "{Which}"
+  year: "de {Year}\n{Year}"
 CleanLibrary:
   clean_library: "(nettoie|nettoyer) (la|ma) bibliothèque"
   clean_library_2: "(nettoie|nettoyer) (la|ma) bibliothèque {Library}"

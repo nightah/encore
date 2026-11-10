@@ -57,7 +57,8 @@ When two titles are close, Alexa asks which one you meant, naming each with its 
 
 - "the first one", "the second one" or "the last one" picks by position
 - "the newer one" or "the older one" picks by release year
-- the title on its own, such as "Dune Part Two", picks it, among the choices offered and the close matches not offered yet; a title that isn't one of them is searched for instead. An article picks the title that starts with it ("the odyssey" is *The Odyssey*, not *Odyssey*), and a year may follow the title ("the odyssey from 2026"). Alexa sometimes hears an answer as another command, such as "the odyssey from 2026" as the next episode of a show; when the title names one of the choices, it still answers the question
+- the year, as Alexa named it, picks the title from that year: "the one from 2021", or with the title, "Dune from 2021" or "I mean Dune from 2021"
+- the title on its own, such as "Dune Part Two", picks it, among the choices offered and the close matches not offered yet; a title that isn't one of them is searched for instead. An article picks the title that starts with it ("the odyssey" is *The Odyssey*, not *Odyssey*), and a year may follow the title ("the odyssey from 2026"). Alexa sometimes hears an answer as another command, such as "the odyssey from 2026" as the next episode of a show, or "odyssey from 2005" as a seek to minute 2005; when the title or year names one of the choices, it still answers the question, and a seek heard while a question waits never moves the video
 - "no" offers the next closest matches, two at a time, until there are none left
 - "yes" plays the title when Alexa offered only one, and asks again when it offered two
 

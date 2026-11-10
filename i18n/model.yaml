@@ -44,6 +44,8 @@ intents:
       - {name: Which, type: MATCH_CHOICE}
       # A title said on its own; acted on only while a question's titles are waiting.
       - {name: Answer, type: AMAZON.Movie}
+      # "Dune from 2021", "the one from 1984": the release year the question names each title with.
+      - {name: Year, type: AMAZON.NUMBER}
 
   # Movies.
   - name: WatchRandomMovie

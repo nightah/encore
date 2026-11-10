@@ -48,12 +48,17 @@ BingeShow:
   start_binge_mode: "(فعلي|شغلي) (وضع المشاهدة المتواصلة|المشاهدة المتواصلة) (لمسلسل|على مسلسل) {Show} [في {Room}]"
 ChooseMatch:
   meant_answer: "(قصدي|كان قصدي|أقصد) {Answer}"
+  meant_answer_year: "(قصدي|كان قصدي|أقصد) {Answer} (لعام|سنة|من سنة) {Year}"
   meant_which: "(قصدي|كان قصدي|أقصد|ابغى|ابي|أريد) {Which}"
+  meant_year: "(قصدي|كان قصدي|أقصد) اللي (لعام|سنة|من سنة) {Year}"
   the_which: "(الفيلم|المسلسل|اللي) {Which}"
+  the_year: "اللي (لعام|سنة|من سنة) {Year}"
   which_please: "{Which} لو سمحت\n(الفيلم|المسلسل) {Which} لو سمحت"
 ChooseMatch.Answer:
   answer: "{Answer}\n{Answer} لو سمحت"
+  answer_year: "{Answer} (لعام|سنة) {Year}\n{Answer} {Year}"
   which: "{Which}"
+  year: "(لعام|سنة) {Year}\n{Year}"
 CleanLibrary:
   clean_library: "(نظفي|نظف) (المكتبة|مكتبتي)"
   clean_library_2: "(نظفي|نظف) مكتبة {Library}"

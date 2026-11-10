@@ -67,6 +67,7 @@ func dutch() *language {
 		unitsFirst: true,
 		conj:       set("en"),
 		parts:      set("deel", "hoofdstuk", "seizoen", "volume", "vol", "part", "chapter"),
+		yearJoins:  set("uit", "van"),
 		phonetic:   phoneticKeysOf(en.Encoder{}),
 	}
 }

@@ -63,6 +63,8 @@ Each phrase below is one of the skill's own samples, and Amazon's language model
 
 | Say | Meaning | Amazon reads it as | It should |
 | --- | --- | --- | --- |
+| dame una recomendación de película | Give me a film recommendation | a random film, after some changes to the model | recommend a film |
+| me refiero a dune de 2021 | I mean Dune from 2021 | nothing, though es-ES and es-MX understand it | answer the question with Dune from 2021 |
 | dale play a ojos así de shakira | Play Ojos Así by Shakira | a song called "play a ojos así" | play the song |
 | dale play a la casa de papel | Play Money Heist | the next episode of a show called "play a la casa de papel" | play La Casa de Papel |
 | quiero ver el capítulo 3 de la temporada 2 de la casa de papel | I want to watch season 2 episode 3 of Money Heist | the next episode, with the season and episode in the show's name | play that episode |
@@ -79,7 +81,7 @@ Each phrase below is one of the skill's own samples, and Amazon's language model
 | Say | Meaning | Amazon reads it as | It should |
 | --- | --- | --- | --- |
 | मुझे फ़िल्म शोले देखनी है | I want to watch the film Sholay | nothing it understands | play the film शोले |
-| पांच मिनट पीछे करो | Go back five minutes | a rewind, without the time | rewind five minutes |
+| पांच मिनट पीछे | Five minutes back | nothing, though it understands it with करो | skip back five minutes |
 | म्यूट | Mute | nothing | mute |
 | फ़ेवरेट आज तक खोलो | Open the favourite Aaj Tak | nothing | open the favourite आज तक |
 | मैं फ़िल्म शोले देखना चाहता हूँ | I want to watch the film Sholay | an album | play the film शोले |
@@ -90,6 +92,13 @@ Each phrase below is one of the skill's own samples, and Amazon's language model
 | --- | --- | --- | --- |
 | riprendi la tv | Resume the TV | nothing | resume |
 
+### Japanese (`ja-JP`)
+
+| Say | Meaning | Amazon reads it as | It should |
+| --- | --- | --- | --- |
+| 2001年の千と千尋の神隠しです | Spirited Away from 2001, please | the answer, without the year | answer the question with Spirited Away from 2001 |
+| 1984年の方 | The one from 1984 | an answer, without the year | answer the question with the title from 1984 |
+
 ### Dutch (`nl-NL`)
 
 | Say | Meaning | Amazon reads it as | It should |
@@ -99,8 +108,6 @@ Each phrase below is one of the skill's own samples, and Amazon's language model
 | speel wat muziek van marco borsato | Play some Marco Borsato | a search for "whatmuziek van marco borsato" | play the artist |
 | speel wat muziek van marco borsato in de slaapkamer | Play some Marco Borsato in the bedroom | a search for "whatmuziek van marco borsato in de slaapkamer" | play the artist in the bedroom |
 | zet de luizenmoeder seizoen 2 aflevering 3 op in de slaapkamer | Put on De Luizenmoeder season 2 episode 3 in the bedroom | binge a show called "de luizenmoeder seizoen 2 aflevering 3" | play that episode in the bedroom |
-| ik wil een tip voor een film | I want a tip for a film | a recommendation without the kind, after some changes to the model | recommend a film |
-| draai met de klok mee | Turn clockwise | nothing, after some changes to the model | rotate the picture clockwise |
 
 ### Portuguese (`pt-BR`)
 

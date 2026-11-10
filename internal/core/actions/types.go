@@ -185,6 +185,8 @@ type Answer struct {
 	Which string
 	// Title is a title said on its own: one the question found, or another to search for.
 	Title string
+	// Year is a release year said with the answer ("dune from 2021") or alone ("the one from 1984"), as the question names its titles.
+	Year int
 }
 
 // SeekRequest moves the playhead. By wins over Step; To is an absolute position.

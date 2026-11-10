@@ -119,3 +119,6 @@ var kindSearches = map[media.Kind]string{
 	media.KindArtist: "SearchMusic",
 	media.KindAlbum:  "SearchMusic",
 }
+
+// titleSlots are the slots that hold a title said to a title intent, which a question's answer may arrive in.
+var titleSlots = []string{"Movie", "Show", "Query"}

@@ -275,6 +275,14 @@ type Request struct {
 	Locale    string `json:"locale"`
 	Intent    Intent `json:"intent"`
 	Reason    string `json:"reason,omitempty"`
+	// Error is why Alexa ended a session with reason ERROR.
+	Error *ErrorDetail `json:"error,omitempty"`
+}
+
+// ErrorDetail is the error a SessionEndedRequest with reason ERROR carries.
+type ErrorDetail struct {
+	Type    string `json:"type"`
+	Message string `json:"message"`
 }
 
 // Intent is the recognised intent and its slots.

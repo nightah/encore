@@ -8,6 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
+	"maps"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -541,6 +542,41 @@ func TestRecorderMarksSimulatorRequests(t *testing.T) {
 	require.Len(t, rec2.entries, 1)
 	assert.False(t, rec.entries[0].Simulated)
 	assert.True(t, rec2.entries[0].Simulated, "a request during the deploy smoke test")
+}
+
+// TestSessionEndLogsWhy checks that the request log keeps Amazon's reason for ending a session, and its error: an answer Alexa couldn't match to any intent is never sent, and shows only as a session that ended after the question was asked again.
+func TestSessionEndLogsWhy(t *testing.T) {
+	ended := func(t *testing.T, request map[string]any) string {
+		t.Helper()
+
+		var env map[string]any
+		require.NoError(t, json.Unmarshal(mustRead(t, "testdata/golden/session-ended/request.json"), &env))
+		env["request"] = request
+
+		body, err := json.Marshal(env)
+		require.NoError(t, err)
+
+		h, _, rec := newHandler(t)
+		serveBody(t, h, body)
+		require.Len(t, rec.entries, 1)
+
+		return rec.entries[0].Note
+	}
+
+	base := map[string]any{"requestId": "amzn1.echo-api.request.1", "timestamp": "2026-10-26T09:00:00Z", "locale": "en-AU", "type": "SessionEndedRequest"}
+
+	with := func(kv ...any) map[string]any {
+		m := maps.Clone(base)
+		for i := 0; i < len(kv); i += 2 {
+			m[kv[i].(string)] = kv[i+1]
+		}
+
+		return m
+	}
+
+	assert.Equal(t, "session ended: EXCEEDED_MAX_REPROMPTS", ended(t, with("reason", "EXCEEDED_MAX_REPROMPTS")))
+	assert.Equal(t, "session ended: ERROR (INVALID_RESPONSE: bad speech)", ended(t, with("reason", "ERROR", "error", map[string]any{"type": "INVALID_RESPONSE", "message": "bad speech"})))
+	assert.Empty(t, ended(t, base), "nothing to say without a reason")
 }
 
 func TestConfirmSound(t *testing.T) {

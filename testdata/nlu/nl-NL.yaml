@@ -50,7 +50,7 @@ cases:
   - {utterance: "speel alle komedie muziekvideo's", intent: ShuffleMusicVideos, slots: {Genre: ""}}
   - {utterance: "speel de muziekafspeellijst roadtrip", intent: PlayPlaylist, slots: {Playlist: ""}}
   - {utterance: "speel de roadtrip afspeellijst in willekeurige volgorde", intent: ShufflePlaylist, slots: {Playlist: ""}}
-  - {utterance: "ik wil een tip voor een film", intent: Recommend, slots: {MediaType: "movie"}, pending: "Amazon's reading changes with unrelated changes to the model"}
+  - {utterance: "ik wil een tip voor een film", intent: Recommend, slots: {MediaType: "movie"}}
   - {utterance: "zijn er nog nieuwe film", intent: WhatsNew, slots: {MediaType: "movie"}}
   - {utterance: "noem me de albums van marco borsato", intent: WhatAlbums, slots: {Artist: "marco borsato"}}
   - {utterance: "vijf minuten terug", intent: PlayerSeek, slots: {Duration: "", SeekDirection: "back"}}
@@ -58,7 +58,7 @@ cases:
   - {utterance: "ga naar het tijdstip vijf minuten", intent: PlayerSeekTo, slots: {Position: ""}}
   - {utterance: "herhaalmodus op alles", intent: Repeat, slots: {RepeatMode: "all"}}
   - {utterance: "vergroot het beeld", intent: PlayerZoom}
-  - {utterance: "draai met de klok mee", intent: PlayerRotate, slots: {Rotation: "clockwise"}, pending: "Amazon's reading changes with unrelated changes to the model"}
+  - {utterance: "draai met de klok mee", intent: PlayerRotate, slots: {Rotation: "clockwise"}}
   - {utterance: "verschuif het beeld naar beneden", intent: PlayerMove, slots: {Direction: "down"}}
   - {utterance: "sluit het volledige scherm", intent: Fullscreen}
   - {utterance: "stereoscopische modus", intent: StereoscopicMode}
@@ -91,6 +91,8 @@ cases:
   - {utterance: "ja graag", intent: AMAZON.YesIntent}
   - {utterance: "nee dank je", intent: AMAZON.NoIntent}
   - {utterance: "ik bedoel de oudere", intent: ChooseMatch, slots: {Which: "older"}}
+  - {utterance: "ik bedoel dune uit 2021", intent: ChooseMatch, slots: {Answer: "dune", Year: "2021"}, also: [{intent: ChooseMatch, slots: {Answer: "dune uit 2021"}}]}
+  - {utterance: "die uit 1984", intent: ChooseMatch, slots: {Year: "1984"}, also: [{intent: WatchMovie, slots: {Movie: "1984"}}]}
   # Bare titles, which free-text and title slots compete for.
   - {utterance: "speel zwartboek", intent: PlayMedia, slots: {Query: "zwartboek"}}
   - {utterance: "zwartboek af te spelen", intent: PlayMedia, slots: {Query: "zwartboek"}}

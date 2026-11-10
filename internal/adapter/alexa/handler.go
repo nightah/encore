@@ -144,7 +144,7 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, tr *requestT
 
 	switch env.Request.Type {
 	case TypeSessionEnded:
-		return ResponseEnvelope{Version: "1.0"}, nil
+		return ResponseEnvelope{Version: "1.0"}, sessionEnded(env.Request)
 	case TypeLaunch:
 		welcome := actions.Message{ID: "launch.welcome"}
 		help := helpMessage()
@@ -607,6 +607,20 @@ func slotValues(slots map[string]Slot) map[string]string {
 	}
 
 	return out
+}
+
+// sessionEnded notes why Alexa ended a session, for the request log: an answer it couldn't match to any intent never reaches Encore, and shows only as a session that ended after the question was asked again (EXCEEDED_MAX_REPROMPTS).
+func sessionEnded(r Request) *actions.Outcome {
+	if r.Reason == "" {
+		return nil
+	}
+
+	note := "session ended: " + r.Reason
+	if r.Error != nil {
+		note += " (" + r.Error.Type + ": " + r.Error.Message + ")"
+	}
+
+	return &actions.Outcome{Note: note}
 }
 
 func describeOutcome(o actions.Outcome) string {

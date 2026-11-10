@@ -52,3 +52,9 @@ const (
 
 // scoreTie is how close two match scores are to count as a tie.
 const scoreTie = 1e-6
+
+// minYear and maxYear bound a number read as a release year in an answer.
+const (
+	minYear = 1880
+	maxYear = 2100
+)

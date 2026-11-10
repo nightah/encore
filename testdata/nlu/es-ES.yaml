@@ -91,6 +91,8 @@ cases:
   - {utterance: "sí por favor", intent: AMAZON.YesIntent}
   - {utterance: "no gracias", intent: AMAZON.NoIntent}
   - {utterance: "me refiero a la más antigua", intent: ChooseMatch, slots: {Which: "older"}}
+  - {utterance: "me refiero a dune de 2021", intent: ChooseMatch, slots: {Answer: "dune", Year: "2021"}, also: [{intent: ChooseMatch, slots: {Answer: "dune de 2021"}}]}
+  - {utterance: "la de 1984", intent: ChooseMatch, slots: {Year: "1984"}, also: [{intent: WatchNextInCollection, slots: {Movie: "1984"}}, {intent: WatchMovie, slots: {Movie: "1984"}}]}
   # Bare titles, which free-text and title slots compete for.
   - {utterance: "reproduce la casa de papel", intent: PlayMedia, slots: {Query: "la casa de papel"}}
   - {utterance: "pon la casa de papel", intent: PlayMedia, slots: {Query: "la casa de papel"}}

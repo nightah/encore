@@ -361,53 +361,97 @@ func TestNextEpisodeOfAFilmPlaysTheFilm(t *testing.T) {
 	assert.False(t, containsPrefix(backend.Calls(), "Play"), "films switched off stay off: %q", backend.Calls())
 }
 
-// TestAnswerHeardAsAnotherIntent covers an answer to "did you mean" that Amazon sends as a new request: after "odyssey" asks about the album and the song Odyssey, "the odyssey from 2026" came as WatchNextEpisode, nearest "play {Show} from where i left off". Whichever title intent it arrives as, a title that names one of the question's choices answers it.
+// TestAnswerHeardAsAnotherIntent covers an answer to "did you mean" that Amazon sends as a new request: after "odyssey" asks about the album and the song Odyssey, "the odyssey from 2026" came as WatchNextEpisode, nearest "play {Show} from where i left off", and "i mean odyssey from 2005" as a seek to minute 2005. Whichever intent it arrives as, a title or year that names one of the question's choices answers it.
 func TestAnswerHeardAsAnotherIntent(t *testing.T) {
+	const film, album = "Play movie/82 resume", "Play album/80"
+
+	for name, tc := range map[string]struct {
+		intent string
+		slots  map[string]slotSpec
+		want   string
+	}{
+		"next episode":            {"WatchNextEpisode", map[string]slotSpec{"Show": {value: "the odyssey from 2026"}}, film},
+		"movie":                   {"WatchMovie", map[string]slotSpec{"Movie": {value: "the odyssey from 2026"}}, film},
+		"play":                    {"PlayMedia", map[string]slotSpec{"Query": {value: "the odyssey from 2026"}}, film},
+		"answer with from":        {chooseIntent, map[string]slotSpec{"Answer": {value: "the odyssey from 2026"}}, film},
+		"answer with an article":  {chooseIntent, map[string]slotSpec{"Answer": {value: "the odyssey"}}, film},
+		"next episode of offered": {"WatchNextEpisode", map[string]slotSpec{"Show": {value: "odyssey from 2005"}}, album},
+		"answer and year":         {chooseIntent, map[string]slotSpec{"Answer": {value: "odyssey"}, "Year": {value: "2005"}}, album},
+		"year alone":              {chooseIntent, map[string]slotSpec{"Year": {value: "2026"}}, film},
+		"seek to the year":        {"PlayerSeekTo", map[string]slotSpec{"Minute": {value: "2005"}}, album},
+		// Any title slot answers: "la de 1984" came as WatchNextInCollection and "die uit 1984" as WatchMovie, with the year as the title.
+		"collection's year":    {"WatchNextInCollection", map[string]slotSpec{"Movie": {value: "2005"}}, album},
+		"movie's year":         {"WatchMovie", map[string]slotSpec{"Movie": {value: "2026"}}, film},
+		"answer that's a year": {chooseIntent, map[string]slotSpec{"Answer": {value: "2005"}}, album},
+	} {
+		t.Run(name, func(t *testing.T) {
+			h, backend, resp := askOdyssey(t)
+
+			serveAnswer(t, h, resp, tc.intent, tc.slots)
+			assert.True(t, containsPrefix(backend.Calls(), tc.want), "want %q, got %q", tc.want, backend.Calls())
+		})
+	}
+}
+
+// TestNewRequestWhileAsking checks that a title intent naming none of the question's choices is a new request, not an answer: asked about Odyssey, "watch hot fuzz" plays Hot Fuzz.
+func TestNewRequestWhileAsking(t *testing.T) {
+	h, backend, resp := askOdyssey(t)
+
+	serveAnswer(t, h, resp, "WatchMovie", map[string]slotSpec{"Movie": {value: "hot fuzz"}})
+	assert.Equal(t, []string{"Play movie/4 resume"}, backend.Calls())
+}
+
+// TestSeekWhileAskingAsksAgain checks that a seek to a minute no choice was released in, heard while a question waits, asks the question again rather than moving the playhead: it was an answer Amazon heard as a seek.
+func TestSeekWhileAskingAsksAgain(t *testing.T) {
+	h, backend, resp := askOdyssey(t)
+
+	res := serveAnswer(t, h, resp, "PlayerSeekTo", map[string]slotSpec{"Minute": {value: "10"}})
+	assert.False(t, containsPrefix(backend.Calls(), "Seek"), "nothing seeks: %q", backend.Calls())
+	assert.Contains(t, string(res), "Odyssey from 2005", "the question is asked again: %s", res)
+
+	h, backend, _ = newHandler(t)
+	serveBody(t, h, intentRequest(t, "PlayerSeekTo", map[string]slotSpec{"Minute": {value: "10"}}))
+	assert.True(t, containsPrefix(backend.Calls(), "Seek"), "without a question, a seek seeks: %q", backend.Calls())
+}
+
+// askOdyssey asks "play odyssey" of a library holding the album and song Odyssey and the film The Odyssey, searched with the real matcher and deep search, and returns the response that asks which one.
+func askOdyssey(t *testing.T) (*Handler, *testkit.Backend, ResponseEnvelope) {
+	t.Helper()
+
 	odyssey := []media.Item{
 		{Kind: media.KindAlbum, ID: 80, Title: "Odyssey", Year: 2005},
 		{Kind: media.KindSong, ID: 81, Title: "Odyssey", Year: 2024},
 		{Kind: media.KindMovie, ID: 82, Title: "The Odyssey", Year: 2026},
 	}
 
-	for _, tc := range []struct{ intent, slot, answer string }{
-		{"WatchNextEpisode", "Show", "the odyssey from 2026"},
-		{"WatchMovie", "Movie", "the odyssey from 2026"},
-		{"PlayMedia", "Query", "the odyssey from 2026"},
-		{chooseIntent, "Answer", "the odyssey from 2026"},
-		{chooseIntent, "Answer", "the odyssey"},
-		{"WatchNextEpisode", "Show", "odyssey from 2005"},
-	} {
-		t.Run(tc.intent+" "+tc.answer, func(t *testing.T) {
-			h, backend, _, _ := newRoomHandlerWith(t, odyssey...)
+	h, backend, _, _ := newRoomHandlerWith(t, odyssey...)
 
-			ix, err := match.New("en", match.Config{})
-			require.NoError(t, err)
-			t.Cleanup(func() { _ = ix.Close() })
-			require.NoError(t, ix.Upsert(testkit.Docs(append(testkit.SampleLibrary(), odyssey...)...)...))
+	ix, err := match.New("en", match.Config{})
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = ix.Close() })
+	require.NoError(t, ix.Upsert(testkit.Docs(append(testkit.SampleLibrary(), odyssey...)...)...))
 
-			ft := h.Targets.(fakeTargets)
-			ft.target.Matcher, ft.target.DeepSearch = ix, true
-			h.Targets = ft
+	ft := h.Targets.(fakeTargets)
+	ft.target.Matcher, ft.target.DeepSearch = ix, true
+	h.Targets = ft
 
-			var resp ResponseEnvelope
-			require.NoError(t, json.Unmarshal(serveBody(t, h, intentRequest(t, "PlayMedia", map[string]slotSpec{"Query": {value: "odyssey"}})), &resp))
-			require.NotNil(t, resp.SessionAttributes[sessionPending], "Alexa asks which one")
-			require.Empty(t, backend.Calls())
+	var resp ResponseEnvelope
+	require.NoError(t, json.Unmarshal(serveBody(t, h, intentRequest(t, "PlayMedia", map[string]slotSpec{"Query": {value: "odyssey"}})), &resp))
+	require.NotNil(t, resp.SessionAttributes[sessionPending], "Alexa asks which one")
+	require.Empty(t, backend.Calls())
 
-			answer := requestOf(t, intentRequest(t, tc.intent, map[string]slotSpec{tc.slot: {value: tc.answer}}))
-			answer.Session.Attributes = resp.SessionAttributes
+	return h, backend, resp
+}
 
-			body, err := json.Marshal(answer)
-			require.NoError(t, err)
+// serveAnswer sends intent with slots in the session the question resp asked in.
+func serveAnswer(t *testing.T, h *Handler, resp ResponseEnvelope, intent string, slots map[string]slotSpec) []byte {
+	t.Helper()
 
-			serveBody(t, h, body)
+	answer := requestOf(t, intentRequest(t, intent, slots))
+	answer.Session.Attributes = resp.SessionAttributes
 
-			want := "Play movie/82 resume"
-			if tc.answer == "odyssey from 2005" {
-				want = "Play album/80"
-			}
+	body, err := json.Marshal(answer)
+	require.NoError(t, err)
 
-			assert.True(t, containsPrefix(backend.Calls(), want), "want %q, got %q", want, backend.Calls())
-		})
-	}
+	return serveBody(t, h, body)
 }
