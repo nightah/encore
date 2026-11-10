@@ -43,11 +43,11 @@ export function useDiscovered() {
   });
 }
 
-/** The skin Kodi is running now, asked each time the dialog opens since it can change at any moment. Pass undefined while there's no instance to ask about. */
-export function useInstanceSkin(id: number | undefined) {
+/** The skin Kodi is running now, asked each time the dialog opens since it can change at any moment. */
+export function useInstanceSkin(id: number) {
   return useQuery({
-    queryFn: id === undefined ? skipToken : ({ signal }) => getKodiInstanceSkin(id, { signal }),
-    queryKey: keys.instanceSkin(id ?? 0),
+    queryFn: ({ signal }) => getKodiInstanceSkin(id, { signal }),
+    queryKey: keys.instanceSkin(id),
     staleTime: 0,
   });
 }
