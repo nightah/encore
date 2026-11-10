@@ -23,18 +23,28 @@ func (l *language) normalize(s string, aggressive bool) []string {
 
 // normalizeSpelled also returns the tokens before numbers were rewritten, joined without spaces, so compounds such as "Zweiohrküken" still meet "zwei ohr küken".
 func (l *language) normalizeSpelled(s string, aggressive bool) (toks []string, spelled string) {
+	toks, spelled, _ = l.normalizeArticle(s, aggressive)
+
+	return toks, spelled
+}
+
+// normalizeArticle also returns the leading articles normalizing removed, joined with spaces, so two titles that differ only in one ("The Odyssey" / "Odyssey") can still be told apart.
+func (l *language) normalizeArticle(s string, aggressive bool) (toks []string, spelled, article string) {
 	toks = joinLetters(l.spellLetters(l.scriptWords(l.tokenize(s))))
 
 	// Articles go first so a numeral straight after one ("The II") isn't taken as following a word.
-	for len(toks) > 1 && l.articles[toks[0]] {
-		toks = toks[1:]
+	n := 0
+	for len(toks) > n+1 && l.articles[toks[n]] {
+		n++
 	}
+
+	article, toks = strings.Join(toks[:n], " "), toks[n:]
 
 	spelled = strings.Join(toks, "")
 	toks = romans(toks, aggressive)
 	toks = l.numbers(toks)
 
-	return l.dropParts(toks), spelled
+	return l.dropParts(toks), spelled, article
 }
 
 func (l *language) tokenize(s string) []string {

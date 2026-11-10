@@ -309,6 +309,75 @@ func TestSearchYear(t *testing.T) {
 	assert.Equal(t, DecisionAsk, res.Decision)
 }
 
+// TestSearchSpokenArticle checks that an article the request says picks the one title it starts among titles that are otherwise the same name: "the odyssey" is the film The Odyssey, not the album or song Odyssey that a search of music as well (deep search) also finds, and only a request without the article asks between them.
+func TestSearchSpokenArticle(t *testing.T) {
+	retrievers(t, func(t *testing.T, retr string) {
+		ix := newIndex(t, retr,
+			Doc{ID: "o05", Kind: media.KindAlbum, Title: "Odyssey", Year: 2005},
+			Doc{ID: "o24", Kind: media.KindSong, Title: "Odyssey", Year: 2024},
+			movie("the", "The Odyssey", 2026),
+			Doc{ID: "bonus", Kind: media.KindSong, Title: "Odyssey (Bonus Track)", Year: 2002},
+			Doc{ID: "xix", Kind: media.KindSong, Title: "Odyssey XIX", Year: 2012},
+			movie("2001", "2001: A Space Odyssey", 1968),
+		)
+
+		for _, q := range []string{"the odyssey", "The Odyssey", "the odyssey 2026", "the odyssey from 2026", "odyssey 2026"} {
+			res, err := ix.Search(t.Context(), Query{Text: q})
+			require.NoError(t, err)
+
+			best, _ := res.Best()
+			assert.Equal(t, DecisionPlay, res.Decision, q)
+			assert.Equal(t, "the", best.Doc.ID, q)
+		}
+
+		for q, want := range map[string]string{"odyssey 2024": "o24", "odyssey from 2005": "o05", "the odyssey 2005": "o05"} {
+			res, err := ix.Search(t.Context(), Query{Text: q})
+			require.NoError(t, err)
+
+			best, _ := res.Best()
+			assert.Equal(t, DecisionPlay, res.Decision, q)
+			assert.Equal(t, want, best.Doc.ID, q)
+		}
+
+		// Without an article nothing is named as said, since the recogniser may have missed one: all three exact titles are asked about.
+		res, err := ix.Search(t.Context(), Query{Text: "odyssey"})
+		require.NoError(t, err)
+		require.GreaterOrEqual(t, len(res.Candidates), 3)
+		assert.Equal(t, DecisionAsk, res.Decision)
+		assert.ElementsMatch(t, []string{"o05", "o24", "the"}, []string{res.Candidates[0].Doc.ID, res.Candidates[1].Doc.ID, res.Candidates[2].Doc.ID})
+
+		// Articles are dropped so a request finds a title whether or not either says one, and that still holds: only a tie between exact titles is settled by the article.
+		for _, tc := range []struct {
+			q    string
+			docs []Doc
+			want string
+			dec  Decision
+		}{
+			{"matrix", []Doc{movie("m", "The Matrix", 1999), movie("r", "The Matrix Reloaded", 2003)}, "m", DecisionPlay},
+			{"the colony", []Doc{{ID: "show", Kind: media.KindTVShow, Title: "Colony", Year: 2016}}, "show", DecisionPlay},
+			{"a quiet place", []Doc{movie("qp", "Quiet Place", 2018)}, "qp", DecisionPlay},
+			{"the colony", []Doc{{ID: "show", Kind: media.KindTVShow, Title: "Colony", Year: 2016}, movie("film", "The Colony", 2013)}, "film", DecisionPlay},
+			{"colony", []Doc{{ID: "show", Kind: media.KindTVShow, Title: "Colony", Year: 2016}, movie("film", "The Colony", 2013)}, "show", DecisionAsk},
+			{"the odyssey", []Doc{{ID: "o05", Kind: media.KindAlbum, Title: "Odyssey", Year: 2005}, {ID: "o24", Kind: media.KindSong, Title: "Odyssey", Year: 2024}}, "o05", DecisionAsk},
+		} {
+			res, err := newIndex(t, retr, tc.docs...).Search(t.Context(), Query{Text: tc.q})
+			require.NoError(t, err)
+
+			best, _ := res.Best()
+			assert.Equal(t, tc.dec, res.Decision, tc.q)
+			assert.Equal(t, tc.want, best.Doc.ID, tc.q)
+		}
+
+		// An article that is the whole title stays: "The" is not "A".
+		ix = newIndex(t, retr, movie("a", "A", 2001), movie("the1", "The", 2002))
+		res, err = ix.Search(t.Context(), Query{Text: "the"})
+		require.NoError(t, err)
+
+		best, _ := res.Best()
+		assert.Equal(t, "the1", best.Doc.ID)
+	})
+}
+
 // TestSearchAsksForMissingSequel checks that a number the best title lacks stops a play: with no sibling to compete, a long title must not outscore the number and start the original instead of asking.
 func TestSearchAsksForMissingSequel(t *testing.T) {
 	retrievers(t, func(t *testing.T, retr string) {

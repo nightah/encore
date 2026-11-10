@@ -62,7 +62,7 @@ func (l *language) newEntry(d Doc) *entry {
 
 		for _, v := range variants {
 			for _, aggressive := range []bool{false, true} {
-				toks, spelled := l.normalizeSpelled(v, aggressive)
+				toks, spelled, article := l.normalizeArticle(v, aggressive)
 				if len(toks) == 0 {
 					continue
 				}
@@ -79,7 +79,9 @@ func (l *language) newEntry(d Doc) *entry {
 				}
 
 				seen[norm] = len(e.aliases)
-				e.aliases = append(e.aliases, alias{form: l.newForm(toks, spelled), text: text, derived: derived, native: native})
+				f := l.newForm(toks, spelled)
+				f.article = article
+				e.aliases = append(e.aliases, alias{form: f, text: text, derived: derived, native: native})
 			}
 		}
 	}

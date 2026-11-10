@@ -183,9 +183,10 @@ func english() *language {
 				"eightieth": 80, "ninetieth": 90, "hundredth": 100,
 			},
 		}.build(),
-		conj:     set("and"),
-		parts:    set("part", "chapter", "volume", "vol"),
-		phonetic: phoneticKeysOf(en.Encoder{}),
+		conj:      set("and"),
+		parts:     set("part", "chapter", "volume", "vol"),
+		yearJoins: set("from"),
+		phonetic:  phoneticKeysOf(en.Encoder{}),
 	}
 }
 

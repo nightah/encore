@@ -179,7 +179,9 @@ func (ix *Index) isClosed() bool {
 
 // Search ranks the Docs against q.
 func (ix *Index) Search(ctx context.Context, q Query) (Result, error) {
-	qf := ix.lang.newForm(ix.lang.normalizeSpelled(q.Text, false))
+	toks, spelled, article := ix.lang.normalizeArticle(q.Text, false)
+	qf := ix.lang.newForm(toks, spelled)
+	qf.article = article
 	res := Result{Normalized: qf.norm, AskScore: ix.cfg.AskScore}
 
 	if len(qf.toks) == 0 {
@@ -206,6 +208,7 @@ func (ix *Index) Search(ctx context.Context, q Query) (Result, error) {
 
 	cands := make([]Candidate, 0, len(entries))
 	exact := make(map[string]bool)
+	literal := make(map[string]bool)
 	soundAlike := make(map[string]bool)
 	numbersDiffer := make(map[string]bool)
 	native := make(map[string]bool)
@@ -248,6 +251,10 @@ func (ix *Index) Search(ctx context.Context, q Query) (Result, error) {
 			exact[e.doc.ID] = true
 		}
 
+		if best.literal {
+			literal[e.doc.ID] = true
+		}
+
 		if best.soundAlike {
 			soundAlike[e.doc.ID] = true
 		}
@@ -274,8 +281,20 @@ func (ix *Index) Search(ctx context.Context, q Query) (Result, error) {
 		}
 	}
 
-	slices.SortFunc(cands, func(a, b Candidate) int { return compareCandidates(a, b, exact) })
+	slices.SortFunc(cands, func(a, b Candidate) int { return compareCandidates(a, b, exact, literal) })
 	cands, copies := withoutCopies(cands, exact)
+
+	// Among exact matches, those that also start with the request's articles are what was named: "the odyssey" plays The Odyssey rather than asking about Odyssey.
+	exactDocs, literalDocs := len(exact), 0
+	for _, c := range cands {
+		if exact[c.Doc.ID] && literal[c.Doc.ID] {
+			literalDocs++
+		}
+	}
+
+	if literalDocs > 0 {
+		exactDocs = literalDocs
+	}
 
 	cfg := ix.cfg
 	if ix.lang.soundAlikeLead && len(cands) > 0 && soundAlike[cands[0].Doc.ID] {
@@ -289,12 +308,12 @@ func (ix *Index) Search(ctx context.Context, q Query) (Result, error) {
 		cfg.AskScore = max(cfg.AskScore, nativeAskScore)
 	}
 
-	res.Decision, res.Margin = cfg.decide(cands, len(exact))
+	res.Decision, res.Margin = cfg.decide(cands, exactDocs)
 	res.AskScore = cfg.AskScore
 
 	// Native aliases only add to what a title's own names find: whatever those would play, plays.
 	if res.Decision != DecisionPlay && len(plain) > 0 {
-		slices.SortFunc(plain, func(a, b Candidate) int { return compareCandidates(a, b, plainExact) })
+		slices.SortFunc(plain, func(a, b Candidate) int { return compareCandidates(a, b, plainExact, nil) })
 		plain, _ = withoutCopies(plain, plainExact)
 
 		switch d, _ := ix.cfg.decide(plain, len(plainExact)); {
@@ -346,11 +365,12 @@ func (ix *Index) scoreEntry(q *form, e *entry) (best, own scored) {
 	return best, own
 }
 
-// compareCandidates orders candidates by score, an exact match first among equals, then by title and ID.
-func compareCandidates(a, b Candidate, exact map[string]bool) int {
+// compareCandidates orders candidates by score, an exact match first among equals and one named with the request's articles (literal) first among those, then by title and ID.
+func compareCandidates(a, b Candidate, exact, literal map[string]bool) int {
 	return cmp.Or(
 		cmp.Compare(b.Score, a.Score),
 		compareBool(exact[b.Doc.ID], exact[a.Doc.ID]),
+		compareBool(literal[b.Doc.ID], literal[a.Doc.ID]),
 		cmp.Compare(a.Doc.Title, b.Doc.Title),
 		cmp.Compare(a.Doc.ID, b.Doc.ID),
 	)
@@ -367,7 +387,16 @@ func yearQuery(l *language, q *form) *yearQ {
 		return nil
 	}
 
-	return &yearQ{year: y, rest: l.newForm(q.toks[:n-1], "")}
+	// A word that joins the year to the title ("the odyssey from 2026") goes with it.
+	rest := q.toks[:n-1]
+	if len(rest) > 1 && l.yearJoins[rest[len(rest)-1]] {
+		rest = rest[:len(rest)-1]
+	}
+
+	f := l.newForm(rest, "")
+	f.article = q.article
+
+	return &yearQ{year: y, rest: f}
 }
 
 // resolvedNames is the query form of each resolved value's name, by Doc ID.
