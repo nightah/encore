@@ -5,9 +5,9 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { LibraryCounts } from "./libraryCounts.ts";
-import type { LibraryMember } from "./libraryMember.ts";
-import type { LibraryState } from "./libraryState.ts";
+import type { LibraryCounts } from "@api/generated/model/libraryCounts.ts";
+import type { LibraryMember } from "@api/generated/model/libraryMember.ts";
+import type { LibraryState } from "@api/generated/model/libraryState.ts";
 
 export interface Library {
   counts: LibraryCounts;

@@ -5,10 +5,10 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { AuthSettingsMode } from "./authSettingsMode.ts";
-import type { HeaderAuth } from "./headerAuth.ts";
-import type { LocalAuth } from "./localAuth.ts";
-import type { OIDCAuth } from "./oIDCAuth.ts";
+import type { AuthSettingsMode } from "@api/generated/model/authSettingsMode.ts";
+import type { HeaderAuth } from "@api/generated/model/headerAuth.ts";
+import type { LocalAuth } from "@api/generated/model/localAuth.ts";
+import type { OIDCAuth } from "@api/generated/model/oIDCAuth.ts";
 
 export interface AuthSettings {
   header: HeaderAuth;

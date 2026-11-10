@@ -5,7 +5,7 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { ListRequestsOutcome } from "./listRequestsOutcome.ts";
+import type { ListRequestsOutcome } from "@api/generated/model/listRequestsOutcome.ts";
 
 export type ListRequestsParams = {
   /**

@@ -5,8 +5,8 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { S3PatchAddressing } from "./s3PatchAddressing.ts";
-import type { S3PatchSse } from "./s3PatchSse.ts";
+import type { S3PatchAddressing } from "@api/generated/model/s3PatchAddressing.ts";
+import type { S3PatchSse } from "@api/generated/model/s3PatchSse.ts";
 
 export interface S3Patch {
   access_key?: string;

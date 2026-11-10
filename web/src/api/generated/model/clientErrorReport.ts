@@ -5,7 +5,7 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { ClientErrorReportKind } from "./clientErrorReportKind.ts";
+import type { ClientErrorReportKind } from "@api/generated/model/clientErrorReportKind.ts";
 
 export interface ClientErrorReport {
   /** render: a page failed to draw; unhandled: an uncaught error or rejected promise */

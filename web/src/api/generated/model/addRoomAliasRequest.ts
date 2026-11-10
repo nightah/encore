@@ -5,7 +5,7 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { AddRoomAliasRequestKind } from "./addRoomAliasRequestKind.ts";
+import type { AddRoomAliasRequestKind } from "@api/generated/model/addRoomAliasRequestKind.ts";
 
 export interface AddRoomAliasRequest {
   /**

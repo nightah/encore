@@ -5,7 +5,7 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { WouldCallParams } from "./wouldCallParams.ts";
+import type { WouldCallParams } from "@api/generated/model/wouldCallParams.ts";
 
 export interface WouldCall {
   method: string;

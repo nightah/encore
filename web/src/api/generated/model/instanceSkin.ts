@@ -5,8 +5,8 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { InstanceSkinSearchMode } from "./instanceSkinSearchMode.ts";
-import type { Skin } from "./skin.ts";
+import type { InstanceSkinSearchMode } from "@api/generated/model/instanceSkinSearchMode.ts";
+import type { Skin } from "@api/generated/model/skin.ts";
 
 export interface InstanceSkin {
   /** The search mode in effect for the instance, its own or Settings › Features' */

@@ -5,9 +5,9 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { InstanceInputPreferredQuality } from "./instanceInputPreferredQuality.ts";
-import type { InstanceInputSearchMode } from "./instanceInputSearchMode.ts";
-import type { InstanceInputShutdown } from "./instanceInputShutdown.ts";
+import type { InstanceInputPreferredQuality } from "@api/generated/model/instanceInputPreferredQuality.ts";
+import type { InstanceInputSearchMode } from "@api/generated/model/instanceInputSearchMode.ts";
+import type { InstanceInputShutdown } from "@api/generated/model/instanceInputShutdown.ts";
 
 export interface InstanceInput {
   broadcast?: string;

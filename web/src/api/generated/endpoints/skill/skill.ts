@@ -5,8 +5,6 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-
-import { orvalFetch } from "../../../orvalFetch.ts";
 import type {
   Accepted,
   AuthorizeAmazonParams,
@@ -20,7 +18,8 @@ import type {
   SkillInfo,
   SkillSettingsInput,
   UpdateSkillContentRequest,
-} from "../../model";
+} from "@api/generated/model";
+import { orvalFetch } from "@api/orvalFetch.ts";
 
 export const getLwaCallbackUrl = (params?: LwaCallbackParams) => {
   const normalizedParams = new URLSearchParams();

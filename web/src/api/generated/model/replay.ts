@@ -5,8 +5,8 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { Match } from "./match.ts";
-import type { WouldCall } from "./wouldCall.ts";
+import type { Match } from "@api/generated/model/match.ts";
+import type { WouldCall } from "@api/generated/model/wouldCall.ts";
 
 export interface Replay {
   match: Match | null;

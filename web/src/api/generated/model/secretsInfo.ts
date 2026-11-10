@@ -5,7 +5,7 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { SecretsInfoKeySource } from "./secretsInfoKeySource.ts";
+import type { SecretsInfoKeySource } from "@api/generated/model/secretsInfoKeySource.ts";
 
 export interface SecretsInfo {
   key_id: string;

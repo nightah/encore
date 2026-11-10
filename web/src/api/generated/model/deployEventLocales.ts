@@ -5,6 +5,6 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { LocaleStatus } from "./localeStatus.ts";
+import type { LocaleStatus } from "@api/generated/model/localeStatus.ts";
 
 export type DeployEventLocales = { [key: string]: LocaleStatus };

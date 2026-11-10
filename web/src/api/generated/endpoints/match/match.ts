@@ -5,9 +5,14 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-
-import { orvalFetch } from "../../../orvalFetch.ts";
-import type { CreateAliasRequest, ListAliasesParams, MatchResult, TestMatchRequest, TitleAlias } from "../../model";
+import type {
+  CreateAliasRequest,
+  ListAliasesParams,
+  MatchResult,
+  TestMatchRequest,
+  TitleAlias,
+} from "@api/generated/model";
+import { orvalFetch } from "@api/orvalFetch.ts";
 
 export const getListAliasesUrl = (params: ListAliasesParams) => {
   const normalizedParams = new URLSearchParams();

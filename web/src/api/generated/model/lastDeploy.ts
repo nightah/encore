@@ -5,8 +5,8 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { LastDeployState } from "./lastDeployState.ts";
-import type { LocaleDeploy } from "./localeDeploy.ts";
+import type { LastDeployState } from "@api/generated/model/lastDeployState.ts";
+import type { LocaleDeploy } from "@api/generated/model/localeDeploy.ts";
 
 export interface LastDeploy {
   at: string;

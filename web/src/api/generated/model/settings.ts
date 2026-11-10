@@ -5,13 +5,13 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { AuthSettings } from "./authSettings.ts";
-import type { Features } from "./features.ts";
-import type { LocaleSettings } from "./localeSettings.ts";
-import type { LoggingSettings } from "./loggingSettings.ts";
-import type { SecretsInfo } from "./secretsInfo.ts";
-import type { ServerSettings } from "./serverSettings.ts";
-import type { StorageSettings } from "./storageSettings.ts";
+import type { AuthSettings } from "@api/generated/model/authSettings.ts";
+import type { Features } from "@api/generated/model/features.ts";
+import type { LocaleSettings } from "@api/generated/model/localeSettings.ts";
+import type { LoggingSettings } from "@api/generated/model/loggingSettings.ts";
+import type { SecretsInfo } from "@api/generated/model/secretsInfo.ts";
+import type { ServerSettings } from "@api/generated/model/serverSettings.ts";
+import type { StorageSettings } from "@api/generated/model/storageSettings.ts";
 
 export interface Settings {
   auth: AuthSettings;

@@ -5,9 +5,8 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-
-import { orvalFetch } from "../../../orvalFetch.ts";
-import type { Device, UpdateDeviceRequest } from "../../model";
+import type { Device, UpdateDeviceRequest } from "@api/generated/model";
+import { orvalFetch } from "@api/orvalFetch.ts";
 
 export const getListDevicesUrl = () => {
   return `/api/v1/devices`;

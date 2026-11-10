@@ -5,7 +5,7 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { UpdateSkillContentRequestContentItem } from "./updateSkillContentRequestContentItem.ts";
+import type { UpdateSkillContentRequestContentItem } from "@api/generated/model/updateSkillContentRequestContentItem.ts";
 
 export interface UpdateSkillContentRequest {
   /**

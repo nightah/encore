@@ -5,12 +5,12 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { KodiCall } from "./kodiCall.ts";
-import type { Match } from "./match.ts";
-import type { RequestDetailOutcome } from "./requestDetailOutcome.ts";
-import type { RequestDetailSlots } from "./requestDetailSlots.ts";
-import type { Timing } from "./timing.ts";
-import type { Via } from "./via.ts";
+import type { KodiCall } from "@api/generated/model/kodiCall.ts";
+import type { Match } from "@api/generated/model/match.ts";
+import type { RequestDetailOutcome } from "@api/generated/model/requestDetailOutcome.ts";
+import type { RequestDetailSlots } from "@api/generated/model/requestDetailSlots.ts";
+import type { Timing } from "@api/generated/model/timing.ts";
+import type { Via } from "@api/generated/model/via.ts";
 
 export interface RequestDetail {
   /**

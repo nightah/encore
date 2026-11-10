@@ -5,8 +5,8 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { S3SettingsAddressing } from "./s3SettingsAddressing.ts";
-import type { S3SettingsSse } from "./s3SettingsSse.ts";
+import type { S3SettingsAddressing } from "@api/generated/model/s3SettingsAddressing.ts";
+import type { S3SettingsSse } from "@api/generated/model/s3SettingsSse.ts";
 
 export interface S3Settings {
   access_key: string;

@@ -5,7 +5,7 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { LoggingSettingsLevel } from "./loggingSettingsLevel.ts";
+import type { LoggingSettingsLevel } from "@api/generated/model/loggingSettingsLevel.ts";
 
 export interface LoggingSettings {
   /** The least severe messages written to the log; applies straight away */

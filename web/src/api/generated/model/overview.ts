@@ -5,14 +5,14 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { Attention } from "./attention.ts";
-import type { EndpointCheck } from "./endpointCheck.ts";
-import type { Instance } from "./instance.ts";
-import type { OverviewLibs } from "./overviewLibs.ts";
-import type { OverviewSkill } from "./overviewSkill.ts";
-import type { RejectedRequests } from "./rejectedRequests.ts";
-import type { RequestSummary } from "./requestSummary.ts";
-import type { RequestsToday } from "./requestsToday.ts";
+import type { Attention } from "@api/generated/model/attention.ts";
+import type { EndpointCheck } from "@api/generated/model/endpointCheck.ts";
+import type { Instance } from "@api/generated/model/instance.ts";
+import type { OverviewLibs } from "@api/generated/model/overviewLibs.ts";
+import type { OverviewSkill } from "@api/generated/model/overviewSkill.ts";
+import type { RejectedRequests } from "@api/generated/model/rejectedRequests.ts";
+import type { RequestSummary } from "@api/generated/model/requestSummary.ts";
+import type { RequestsToday } from "@api/generated/model/requestsToday.ts";
 
 export interface Overview {
   attention: Attention[];

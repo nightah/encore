@@ -5,7 +5,7 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { InstanceStatusState } from "./instanceStatusState.ts";
+import type { InstanceStatusState } from "@api/generated/model/instanceStatusState.ts";
 
 export interface InstanceStatus {
   api_version: string;

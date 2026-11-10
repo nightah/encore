@@ -5,13 +5,13 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { InstanceLibrary } from "./instanceLibrary.ts";
-import type { InstancePreferredQuality } from "./instancePreferredQuality.ts";
-import type { InstanceSearchMode } from "./instanceSearchMode.ts";
-import type { InstanceShutdown } from "./instanceShutdown.ts";
-import type { InstanceStatus } from "./instanceStatus.ts";
-import type { NowPlaying } from "./nowPlaying.ts";
-import type { Screen } from "./screen.ts";
+import type { InstanceLibrary } from "@api/generated/model/instanceLibrary.ts";
+import type { InstancePreferredQuality } from "@api/generated/model/instancePreferredQuality.ts";
+import type { InstanceSearchMode } from "@api/generated/model/instanceSearchMode.ts";
+import type { InstanceShutdown } from "@api/generated/model/instanceShutdown.ts";
+import type { InstanceStatus } from "@api/generated/model/instanceStatus.ts";
+import type { NowPlaying } from "@api/generated/model/nowPlaying.ts";
+import type { Screen } from "@api/generated/model/screen.ts";
 
 export interface Instance {
   broadcast: string;
