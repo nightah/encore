@@ -1,0 +1,124 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# CodeRabbit (https://coderabbit.ai): AI review of pull requests. Its comments are suggestions for the author and maintainer to weigh, not requirements; the checks that gate a merge stay in CI. Settings left out keep CodeRabbit's defaults.
+language: en-AU
+tone_instructions: Be brief and specific. Comment only on bugs, security, missed edge cases, missing tests and departures from the conventions in CONTRIBUTING.md; skip style that the linters already enforce.
+early_access: false
+
+reviews:
+  profile: chill
+  # Reviews advise; they never block a merge.
+  request_changes_workflow: false
+  high_level_summary: true
+  high_level_summary_in_walkthrough: true
+  collapse_walkthrough: true
+  sequence_diagrams: true
+  poem: false
+  in_progress_fortune: false
+  # Labels come from the title's type and scope (.github/workflows/pr-labels.yml), and there is one maintainer to review.
+  suggested_labels: false
+  auto_apply_labels: false
+  suggested_reviewers: false
+  auto_assign_reviewers: false
+
+  auto_review:
+    enabled: true
+    drafts: false
+    # Bots (Renovate, the encore-helper app, Crowdin) are skipped by default; ask for a review on one with "@coderabbitai review".
+    ignore_title_keywords:
+      - "wip"
+      - "release:"
+
+  # Generated code is regenerated, not edited, and CI fails on any diff from `make generate`. The OpenAPI document stays in so API changes are reviewed.
+  path_filters:
+    - "!**/*.gen.go"
+    - "!**/*.gen.ts"
+    - "!web/src/api/generated/**"
+    - "!docs/dist/**"
+
+  path_instructions:
+    - path: "**/*"
+      instructions: |-
+        Prose (Markdown, comments, YAML, UI strings) is Australian English (licence, authorise) and keeps one line per paragraph with no hard wrapping. "Encore" is capitalised in prose but the command, binary, module, encore.yml and ENCORE_* variables are lower case. Say "Kodi instances", never Kodi boxes or servers.
+        Code, tests, test data and CI hold no history: no commit hashes, dates, "as of" or "previously" notes. History belongs in docs and commit messages.
+        Pre-1.0 there is no backward-compatibility code for changes that were never released.
+    - path: "**/*.go"
+      instructions: |-
+        Each package keeps constants in consts.go, types in types.go, sentinel errors and error types in errors.go and its package comment in doc.go (enforced by go test ./internal/layout/); flag a new constant, type or error declared elsewhere.
+        Exported identifiers have doc comments; unexported ones get one only when the name can't say what it's for. Comments inside functions explain why, not what.
+        Log lines use instance= and backend= for a Kodi instance, host= for an address and a single component=; human text is quoted with “”, error= appears only when there is one, and secrets or tokens are never logged.
+    - path: "**/*_test.go"
+      instructions: |-
+        A fix needs a regression test that fails without it. Tests must be deterministic: flag sleeps, wall-clock timing and races; prefer testing/synctest and explicit synchronisation. Examples with a time zone use Australia/Melbourne.
+    - path: "internal/store/migrations/*.sql"
+      instructions: |-
+        Released migrations are never edited; a schema change adds the next numbered file. Each has both -- +goose Up and -- +goose Down, Up works on any database the previous release could have written, and tables follow the existing shape: STRICT, timestamps as Unix milliseconds in INTEGER, booleans as INTEGER 0/1 with a CHECK, NOT NULL with a default where a value always exists. Changing a column's type or constraints needs a table rebuild in SQLite. The repository code in internal/store and its tests change in the same pull request.
+    - path: "internal/api/**"
+      instructions: |-
+        The API reference is generated from these handlers: new or changed operations need a Summary and Description, doc/enum/default struct tags and an apiTag entry, and internal/api/openapi.json plus web/src/api/generated must be regenerated, never edited by hand.
+    - path: "web/src/**"
+      instructions: |-
+        Biome and tsc enforce formatting and types; don't comment on either. Imports go through the per-folder aliases (@api/..., @components/..., @features/..., @src/...), never relative paths or @/. New UI strings are added in English only (web/src/i18n/locales/en); Crowdin supplies the other languages. Tests run without CSS at a 1280x900 viewport, so they can't assert on layout or responsive behaviour. Tests wait on what the user sees, not on mock internals, and force slow paths (such as held-back MSW responses) rather than relying on timing.
+    - path: "i18n/**"
+      instructions: |-
+        Only i18n/lang/en is written by hand; the other languages and i18n/locales come from Crowdin. Keys are sorted, values double-quoted and there are no blank lines (yamllint). For utterances, flag a sample that is only a built-in slot type inside an intent, since it would steal "stop" or "help" from Amazon's intents; those belong in an Intent.Slot section.
+    - path: ".github/workflows/**"
+      instructions: |-
+        Actions are pinned to full commit SHAs, permissions are least-privilege per job and untrusted input never reaches a run: block directly (actionlint and zizmor run in CI). Release jobs must keep SLSA Build Level 3 provenance intact.
+    - path: "docs/src/content/docs/**"
+      instructions: |-
+        The reference pages (configuration.md, cli.md, api/endpoints.md) are generated by internal/docsgen and must not be edited by hand; change the Go source or templates instead. Check that behaviour, settings and command changes in the same pull request are reflected here.
+
+  pre_merge_checks:
+    # commitlint checks the title in CI, and the convention leaves most unexported Go identifiers undocumented.
+    title:
+      mode: "off"
+    docstrings:
+      mode: "off"
+    description:
+      mode: warning
+    issue_assessment:
+      mode: warning
+
+  finishing_touches:
+    # Generated docstrings would go against the Go comment convention above.
+    docstrings:
+      enabled: false
+    unit_tests:
+      enabled: true
+
+  tools:
+    golangci-lint:
+      enabled: true
+      config_file: .golangci.yml
+    # Linters Encore doesn't use, or that duplicate one it does: typos checks spelling, Biome lints the web and docs code, TruffleHog finds secrets, and the SQL linters don't speak SQLite or goose.
+    markdownlint:
+      enabled: false
+    languagetool:
+      enabled: false
+    eslint:
+      enabled: false
+    oxc:
+      enabled: false
+    gitleaks:
+      enabled: false
+    sqlfluff:
+      enabled: false
+    squawk:
+      enabled: false
+
+chat:
+  auto_reply: true
+  art: false
+
+knowledge_base:
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - CONTRIBUTING.md
+      - docs/src/content/docs/contributing/*.md
+  learnings:
+    scope: local
+  issues:
+    scope: local
+  pull_requests:
+    scope: local
