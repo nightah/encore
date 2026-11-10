@@ -3,6 +3,7 @@ package kodi
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"slices"
 	"strings"
 	"time"
@@ -20,35 +21,30 @@ var skinProfiles = []skinProfile{
 	{ID: "skin.aeon.tajo", Name: "Aeon Tajo", Kind: skinSearchNative},
 	// Amber ships script-globalsearch.xml. Its own search dialog 1122 needs a builtin runner Amber doesn't depend on.
 	{ID: "skin.amber", Name: "Amber", Kind: skinSearchNative},
-	// Arctic Fuse 2: 1080i/Includes_Search.xml (Search_Window_Def) types Home's CustomSearchTerm property into edit 9099 as the standalone search window 1080i/Custom_1185_Search.xml opens, then clears it. Window 1105 is the search hub, which can be turned off.
+	// Arctic Fuse 2: the standalone search window 1080i/Custom_1185_Search.xml, whose Search_Window_Def (1080i/Includes_Search.xml) types into edit 9099. Window 1105 is the search hub, which can be turned off.
 	{
-		ID: "skin.arctic.fuse.2", Name: "Arctic Fuse 2", Kind: skinSearchBuiltins, Requires: []string{addonSkinVariables}, Window: "1185",
-		run: searchTermWindow("SetProperty(CustomSearchTerm,%s,Home)", "1185"),
+		ID: "skin.arctic.fuse.2", Name: "Arctic Fuse 2", Kind: skinSearchEditControl, Requires: []string{addonSkinVariables}, Window: "1185",
+		run: typeIntoWindow("ActivateWindow(1185)", "1185", "9099"),
 	},
-	// Arctic Fuse 3: 1080i/Custom_1105_Search.xml, whose rows all read edit 3000 (1080i/Includes_Search.xml). It has no search-term hook, so the query is typed in. ReplaceWindow matches the Home switcher's own Search tab (1080i/Includes_Home.xml), so Back and Home behave as usual.
+	// Arctic Fuse 3: 1080i/Custom_1105_Search.xml, whose rows all read edit 3000 (1080i/Includes_Search.xml). ReplaceWindow matches the Home switcher's own Search tab (1080i/Includes_Home.xml), so Back and Home behave as usual.
 	{
 		ID: "skin.arctic.fuse.3", Name: "Arctic Fuse 3", Kind: skinSearchEditControl, Requires: []string{addonSkinVariables}, Window: "1105",
-		run: func(ctx context.Context, b *Backend, q string) error {
-			if err := b.runBuiltins(ctx, "ReplaceWindow(1105)"); err != nil {
-				return err
-			}
-
-			if err := b.waitVisible(ctx, "1105", windowWait); err != nil {
-				return err
-			}
-
-			return b.runAddon(ctx, addonSkinVariables, "set_editcontrol=3000", "text="+cleanQuery(q))
-		},
+		run: typeIntoWindow("ReplaceWindow(1105)", "1105", "3000"),
 	},
-	// Arctic Horizon 2 (omega): 1080i/Custom_1114_Search.xml types Home's CustomSearchTerm property into edit 9099 as it opens.
-	{
-		ID: "skin.arctic.horizon.2", Name: "Arctic Horizon 2", Kind: skinSearchBuiltins, Requires: []string{addonSkinVariables}, Window: "1114",
-		run: searchTermWindow("SetProperty(CustomSearchTerm,%s,Home)", "1114"),
-	},
-	// Arctic Zephyr 2: Resurrection Mod: 1080i/Custom_1138_Search.xml searches for Skin.String(SearchTerm) and goes back when it's empty; the skin's own "search for this" sets it the same way.
+	// Arctic Zephyr 2: Resurrection Mod: 1080i/Custom_1138_Search.xml searches for Skin.String(SearchTerm) and goes back when it's empty, so the term is set before the window opens, as the skin's own "search for this" does.
 	{
 		ID: "skin.arctic.zephyr.2.resurrection.mod", Name: "Arctic Zephyr 2: Resurrection Mod", Kind: skinSearchBuiltins, Requires: []string{addonSkinVariables}, Window: "1138",
-		run: searchTermWindow("Skin.SetString(SearchTerm,%s)", "1138"),
+		run: func(ctx context.Context, b *Backend, q string) error {
+			if err := b.skinCommand(ctx, "Skin.SetString(SearchTerm,"+builtinParam(q)+")"); err != nil {
+				return err
+			}
+
+			if err := b.skinCommand(ctx, "ActivateWindow(1138)"); err != nil {
+				return err
+			}
+
+			return b.waitVisible(ctx, "1138", windowWait)
+		},
 	},
 	// Arctic Zephyr Mod depends on Global Search and ships script-globalsearch.xml.
 	{ID: "skin.arctic.zephyr.mod", Name: "Arctic Zephyr Mod", Kind: skinSearchNative},
@@ -214,14 +210,22 @@ func (b *Backend) missingAddons(ctx context.Context, ids []string) ([]string, er
 	return missing, nil
 }
 
-// searchTermWindow hands the query to the skin in the builtin setTerm (with %s where the query goes) and opens window, whose search reads it as it opens.
-func searchTermWindow(setTerm, window string) func(ctx context.Context, b *Backend, q string) error {
+// typeIntoWindow opens a skin's search window with the builtin open, focuses its edit control and types the query, which so never passes through Kodi's builtin parser.
+func typeIntoWindow(open, window, control string) func(ctx context.Context, b *Backend, q string) error {
 	return func(ctx context.Context, b *Backend, q string) error {
-		if err := b.runBuiltins(ctx, fmt.Sprintf(setTerm, builtinParam(q)), "ActivateWindow("+window+")"); err != nil {
+		if err := b.skinCommand(ctx, open); err != nil {
 			return err
 		}
 
-		return b.waitVisible(ctx, window, windowWait)
+		if err := b.waitVisible(ctx, window, windowWait); err != nil {
+			return err
+		}
+
+		if err := b.skinCommand(ctx, "SetFocus("+control+")"); err != nil {
+			return err
+		}
+
+		return b.sendTextDone(ctx, cleanQuery(q))
 	}
 }
 
@@ -256,12 +260,15 @@ func helperKeyboard(helper string, wait time.Duration) func(ctx context.Context,
 	}
 }
 
-// runBuiltins runs Kodi builtins in order through script.skinvariables, which JSON-RPC can't do itself.
-func (b *Backend) runBuiltins(ctx context.Context, builtins ...string) error {
-	return b.runAddon(ctx, addonSkinVariables, "run_executebuiltin="+strings.Join(builtins, "||"))
+// skinCommand runs a Kodi builtin, which JSON-RPC can't do itself, through the skin's copy of a script.skinvariables rules file whose last action is the builtin passed as its command. It goes through the add-on's plugin, listed with Files.GetDirectory so no window opens: Addons.ExecuteAddon would open that plugin rather than run its script, because Kodi's RunAddon prefers a plugin. The rules file closes any OSD first.
+func (b *Backend) skinCommand(ctx context.Context, builtin string) error {
+	dir := skinVariablesPlugin + "?info=run_executebuiltin&command=" + url.QueryEscape(builtin) + "&&" + skinCommandRules
+	_, err := b.c.FilesGetDirectory(ctx, kodirpc.FilesGetDirectoryParams{Directory: dir})
+
+	return err
 }
 
-// runAddon runs an add-on with args as its argv. Kodi quotes each argument of an array as one builtin parameter, so commas and quotes reach the add-on as sent; an object's values would be split at commas.
+// runAddon runs a script add-on with args as its argv. Kodi quotes each argument of an array as one builtin parameter, where an object's values would be split at commas. An add-on that is also a plugin opens as the plugin instead.
 func (b *Backend) runAddon(ctx context.Context, id string, args ...string) error {
 	_, err := b.c.AddonsExecuteAddon(ctx, kodirpc.AddonsExecuteAddonParams{AddonID: id, Params: kodirpc.NewAddonsExecuteAddonParams2FromArray(args)})
 

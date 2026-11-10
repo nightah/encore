@@ -3,6 +3,7 @@ package kodi
 import (
 	"context"
 	"encoding/json"
+	"net/url"
 	"slices"
 	"strings"
 	"testing"
@@ -32,13 +33,36 @@ func skinBackend(t *testing.T, skin string, addons ...string) (*Backend, *fakeko
 	return b, s
 }
 
-// uiCalls lists the calls that change what Kodi shows, in order, as "method params" with the params compacted.
+// uiCalls lists the calls that change what Kodi shows, in order, as "method params" with the params compacted. A builtin run through script.skinvariables' plugin shows as "builtin <command>".
 func uiCalls(t *testing.T, s *fakekodi.Server) []string {
 	t.Helper()
 
 	var out []string
 
 	for _, c := range s.Calls() {
+		if c.Method == "Files.GetDirectory" {
+			var p struct {
+				Directory string `json:"directory"`
+			}
+			require.NoError(t, json.Unmarshal(c.Params, &p))
+
+			rest, ok := strings.CutPrefix(p.Directory, "plugin://script.skinvariables/?info=run_executebuiltin&command=")
+			if !ok {
+				continue
+			}
+
+			command, rules, ok := strings.Cut(rest, "&&")
+			require.True(t, ok, p.Directory)
+			assert.Equal(t, "special://skin/shortcuts/builtins/skinvariables-closeosd.json", rules)
+
+			builtin, err := url.QueryUnescape(command)
+			require.NoError(t, err)
+
+			out = append(out, "builtin "+builtin)
+
+			continue
+		}
+
 		if c.Method != "Addons.ExecuteAddon" && c.Method != "Input.SendText" && c.Method != "GUI.ActivateWindow" {
 			continue
 		}
@@ -54,6 +78,31 @@ func uiCalls(t *testing.T, s *fakekodi.Server) []string {
 	return out
 }
 
+// TestSkinVariablesRunsThroughItsPlugin guards against running script.skinvariables with Addons.ExecuteAddon: the add-on is also a plugin, which Kodi's RunAddon prefers, so Kodi opens the plugin's listing instead of running the script.
+func TestSkinVariablesRunsThroughItsPlugin(t *testing.T) {
+	for _, p := range skinProfiles {
+		if !slices.Contains(p.Requires, addonSkinVariables) {
+			continue
+		}
+
+		t.Run(p.ID, func(t *testing.T) {
+			synctest.Test(t, func(t *testing.T) {
+				b, s := skinBackend(t, p.ID, addonSkinVariables)
+				s.ShowWindow(p.Window, 0)
+
+				_, err := b.SkinSearch(t.Context(), "dune", "")
+				require.NoError(t, err)
+
+				for _, c := range s.CallsTo("Addons.ExecuteAddon") {
+					assert.NotContains(t, string(c.Params), addonSkinVariables)
+				}
+
+				assert.NotEmpty(t, s.CallsTo("Files.GetDirectory"), "builtins run through the plugin")
+			})
+		})
+	}
+}
+
 func TestSkinSearchProfiles(t *testing.T) {
 	tests := []struct {
 		skin    string
@@ -64,26 +113,24 @@ func TestSkinSearchProfiles(t *testing.T) {
 		{
 			skin: "skin.arctic.fuse.3", addons: []string{addonSkinVariables}, windows: map[string]int{"1105": 2},
 			want: []string{
-				`Addons.ExecuteAddon {"addonid":"script.skinvariables","params":["run_executebuiltin=ReplaceWindow(1105)"]}`,
-				`Addons.ExecuteAddon {"addonid":"script.skinvariables","params":["set_editcontrol=3000","text=dune, part \"two\""]}`,
+				`builtin ReplaceWindow(1105)`,
+				`builtin SetFocus(3000)`,
+				`Input.SendText {"done":true,"text":"dune, part \"two\""}`,
 			},
 		},
 		{
 			skin: "skin.arctic.fuse.2", addons: []string{addonSkinVariables}, windows: map[string]int{"1185": 1},
 			want: []string{
-				`Addons.ExecuteAddon {"addonid":"script.skinvariables","params":["run_executebuiltin=SetProperty(CustomSearchTerm,\"dune, part \\\"two\\\"\",Home)||ActivateWindow(1185)"]}`,
-			},
-		},
-		{
-			skin: "skin.arctic.horizon.2", addons: []string{addonSkinVariables}, windows: map[string]int{"1114": 0},
-			want: []string{
-				`Addons.ExecuteAddon {"addonid":"script.skinvariables","params":["run_executebuiltin=SetProperty(CustomSearchTerm,\"dune, part \\\"two\\\"\",Home)||ActivateWindow(1114)"]}`,
+				`builtin ActivateWindow(1185)`,
+				`builtin SetFocus(9099)`,
+				`Input.SendText {"done":true,"text":"dune, part \"two\""}`,
 			},
 		},
 		{
 			skin: "skin.arctic.zephyr.2.resurrection.mod", addons: []string{addonSkinVariables}, windows: map[string]int{"1138": 0},
 			want: []string{
-				`Addons.ExecuteAddon {"addonid":"script.skinvariables","params":["run_executebuiltin=Skin.SetString(SearchTerm,\"dune, part \\\"two\\\"\")||ActivateWindow(1138)"]}`,
+				`builtin Skin.SetString(SearchTerm,"dune, part \"two\"")`,
+				`builtin ActivateWindow(1138)`,
 			},
 		},
 		{
@@ -177,7 +224,7 @@ func TestSkinSearchLeavesOtherSkinsAlone(t *testing.T) {
 			want: media.Skin{ID: "skin.ciro", Search: media.SkinSearchNoProfile},
 		},
 		{
-			name: "a skin's own profile wins over the one chosen", skin: "skin.aeon.tajo", profile: "skin.arctic.horizon.2", addons: []string{addonSkinVariables},
+			name: "a skin's own profile wins over the one chosen", skin: "skin.aeon.tajo", profile: "skin.arctic.fuse.2", addons: []string{addonSkinVariables},
 			want: media.Skin{ID: "skin.aeon.tajo", Name: "Aeon Tajo", Profile: "skin.aeon.tajo", Search: media.SkinSearchNative},
 		},
 	}
@@ -198,14 +245,16 @@ func TestSkinSearchLeavesOtherSkinsAlone(t *testing.T) {
 
 func TestSkinSearchWithAChosenProfile(t *testing.T) {
 	synctest.Test(t, func(t *testing.T) {
-		b, s := skinBackend(t, "skin.arctic.horizon.2.1", addonSkinVariables)
-		s.ShowWindow("1114", 0)
+		b, s := skinBackend(t, "skin.arctic.fuse.2.mod", addonSkinVariables)
+		s.ShowWindow("1185", 0)
 
-		skin, err := b.SkinSearch(t.Context(), "dune", "skin.arctic.horizon.2")
+		skin, err := b.SkinSearch(t.Context(), "dune", "skin.arctic.fuse.2")
 		require.NoError(t, err)
-		assert.Equal(t, media.Skin{ID: "skin.arctic.horizon.2.1", Profile: "skin.arctic.horizon.2", Search: media.SkinSearchSupported}, skin)
+		assert.Equal(t, media.Skin{ID: "skin.arctic.fuse.2.mod", Profile: "skin.arctic.fuse.2", Search: media.SkinSearchSupported}, skin)
 		assert.Equal(t, []string{
-			`Addons.ExecuteAddon {"addonid":"script.skinvariables","params":["run_executebuiltin=SetProperty(CustomSearchTerm,\"dune\",Home)||ActivateWindow(1114)"]}`,
+			`builtin ActivateWindow(1185)`,
+			`builtin SetFocus(9099)`,
+			`Input.SendText {"done":true,"text":"dune"}`,
 		}, uiCalls(t, s))
 	})
 }
@@ -291,7 +340,7 @@ func TestSkinSearchFailures(t *testing.T) {
 	t.Run("the window opening step fails", func(t *testing.T) {
 		synctest.Test(t, func(t *testing.T) {
 			b, s := skinBackend(t, "skin.arctic.fuse.3", addonSkinVariables)
-			s.Handle("Addons.ExecuteAddon", func(json.RawMessage) (any, *fakekodi.Error) {
+			s.Handle("Files.GetDirectory", func(json.RawMessage) (any, *fakekodi.Error) {
 				return nil, &fakekodi.Error{Code: CodeInvalidParams, Message: "Invalid params."}
 			})
 
@@ -401,7 +450,7 @@ func TestSkinProfiles(t *testing.T) {
 	profiles[0].Requires = append(profiles[0].Requires, "changed")
 	assert.NotContains(t, skinProfiles[0].Requires, "changed", "callers get copies")
 
-	assert.Equal(t, []string{"skin.arctic.fuse.2", "skin.arctic.fuse.3", "skin.arctic.horizon.2", "skin.arctic.zephyr.2.resurrection.mod", "skin.fentastic", "skin.nimbus"}, SkinProfileIDs())
+	assert.Equal(t, []string{"skin.arctic.fuse.2", "skin.arctic.fuse.3", "skin.arctic.zephyr.2.resurrection.mod", "skin.fentastic", "skin.nimbus"}, SkinProfileIDs())
 	assert.True(t, IsSkinProfile("skin.nimbus"))
 	assert.False(t, IsSkinProfile("skin.estuary"), "runs Global Search")
 	assert.False(t, IsSkinProfile("skin.unknown"))
@@ -529,4 +578,32 @@ func splitParams(s string) []string {
 	}
 
 	return append(out, trim(param))
+}
+
+func TestSkinCommandFailures(t *testing.T) {
+	for _, tt := range []struct {
+		skin, window, fail string
+	}{
+		{"skin.arctic.fuse.3", "1105", "SetFocus"},
+		{"skin.arctic.zephyr.2.resurrection.mod", "1138", "Skin.SetString"},
+		{"skin.arctic.zephyr.2.resurrection.mod", "1138", "ActivateWindow"},
+	} {
+		t.Run(tt.skin+" "+tt.fail, func(t *testing.T) {
+			synctest.Test(t, func(t *testing.T) {
+				b, s := skinBackend(t, tt.skin, addonSkinVariables)
+				s.ShowWindow(tt.window, 0)
+				s.Handle("Files.GetDirectory", func(p json.RawMessage) (any, *fakekodi.Error) {
+					if strings.Contains(string(p), tt.fail) {
+						return nil, &fakekodi.Error{Code: CodeInvalidParams, Message: "Invalid params."}
+					}
+
+					return map[string]any{"files": []any{}, "limits": map[string]int{"start": 0, "end": 0, "total": 0}}, nil
+				})
+
+				_, err := b.SkinSearch(t.Context(), "dune", "")
+				require.Error(t, err)
+				assert.NotContains(t, strings.Join(uiCalls(t, s), "\n"), "Input.SendText", "nothing is typed")
+			})
+		})
+	}
 }

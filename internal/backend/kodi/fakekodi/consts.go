@@ -33,3 +33,6 @@ const (
 	visiblePrefix = "Window.IsVisible("
 	visibleSuffix = ")"
 )
+
+// pluginScheme starts the paths of add-ons' plugin listings.
+const pluginScheme = "plugin://"

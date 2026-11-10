@@ -115,7 +115,7 @@ kodi:
   - name: Lounge
     url: http://kodi:8080/jsonrpc
     search_mode: skin
-    skin_profile: skin.arctic.horizon.2
+    skin_profile: skin.arctic.fuse.2
   - name: Study
     url: http://study:8080/jsonrpc
   - name: Bedroom
@@ -133,7 +133,7 @@ kodi:
   - name: Lounge
     url: http://kodi:8080/jsonrpc
     search_mode: skin
-    skin_profile: skin.arctic.horizon.2
+    skin_profile: skin.arctic.fuse.2
   - name: Study
     url: http://study:8080/jsonrpc
 `), 0o600))
@@ -141,7 +141,7 @@ kodi:
 	cfg, err = Load(Options{File: path, Environ: environ()})
 	require.NoError(t, err)
 	assert.Equal(t, "skin", cfg.Kodi[0].SearchMode)
-	assert.Equal(t, "skin.arctic.horizon.2", cfg.Kodi[0].SkinProfile)
+	assert.Equal(t, "skin.arctic.fuse.2", cfg.Kodi[0].SkinProfile)
 	assert.Empty(t, cfg.Kodi[1].SearchMode, "unset means use alexa.search_mode")
 	assert.Empty(t, cfg.Kodi[1].SkinProfile)
 }

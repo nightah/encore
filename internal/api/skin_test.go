@@ -29,14 +29,14 @@ func TestInstanceSearchMode(t *testing.T) {
 
 	var tuned Instance
 
-	c.json(http.MethodPatch, path, map[string]string{"search_mode": "skin", "skin_profile": " skin.arctic.horizon.2 "}, http.StatusOK, &tuned)
+	c.json(http.MethodPatch, path, map[string]string{"search_mode": "skin", "skin_profile": " skin.arctic.fuse.2 "}, http.StatusOK, &tuned)
 	assert.Equal(t, "skin", tuned.SearchMode)
-	assert.Equal(t, "skin.arctic.horizon.2", tuned.SkinProfile)
+	assert.Equal(t, "skin.arctic.fuse.2", tuned.SkinProfile)
 
 	rec, err := h.app.DB().KodiInstances().Get(t.Context(), created.ID)
 	require.NoError(t, err)
 	assert.Equal(t, "skin", rec.SearchMode)
-	assert.Equal(t, "skin.arctic.horizon.2", rec.SkinProfile)
+	assert.Equal(t, "skin.arctic.fuse.2", rec.SkinProfile)
 
 	for field, value := range map[string]string{"skin_profile": "skin.estuary", "search_mode": "native"} {
 		resp := c.do(http.MethodPatch, path, map[string]string{field: value})

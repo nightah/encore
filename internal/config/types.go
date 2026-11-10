@@ -223,7 +223,7 @@ type KodiInstance struct {
 	PreferredQuality string `koanf:"preferred_quality"`
 	// SearchMode overrides alexa.search_mode for this instance when set: global_search or skin.
 	SearchMode string `koanf:"search_mode"`
-	// SkinProfile names a skin whose search steps to use when the instance's skin isn't one Encore knows, such as a fork that keeps its parent's windows, e.g. skin.arctic.horizon.2. It applies only in skin search mode, and never to a skin Encore knows.
+	// SkinProfile names a skin whose search steps to use when the instance's skin isn't one Encore knows, such as a fork that keeps its parent's windows, e.g. skin.arctic.fuse.2. It applies only in skin search mode, and never to a skin Encore knows.
 	SkinProfile string `koanf:"skin_profile"`
 	// Timezone is the Kodi host's IANA time zone (e.g. "Australia/Melbourne"), which Kodi writes library dates in. Empty means learn the UTC offset from Kodi's clock.
 	Timezone string `koanf:"timezone"`

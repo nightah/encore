@@ -953,26 +953,26 @@ describe("Kodi instance search", () => {
     let dialog = await screen.findByRole("dialog", { name: "Edit Bedroom" });
     const profile = within(dialog).getByRole("combobox", { name: "Skin profile" });
     expect(profile).toHaveValue("");
-    await waitFor(() => expect(within(profile).getByRole("option", { name: "Arctic Horizon 2" })).toBeInTheDocument());
+    await waitFor(() => expect(within(profile).getByRole("option", { name: "Arctic Fuse 2" })).toBeInTheDocument());
     expect(within(profile).queryByRole("option", { name: "Estuary" })).not.toBeInTheDocument();
 
     await user.selectOptions(within(dialog).getByRole("combobox", { name: "Search" }), "The skin’s own search");
-    await user.selectOptions(profile, "Arctic Horizon 2");
+    await user.selectOptions(profile, "Arctic Fuse 2");
     await user.click(within(dialog).getByRole("button", { name: "Save" }));
 
     await waitFor(() =>
-      expect(getDb().instances.find((i) => i.name === "Bedroom")?.skin_profile).toBe("skin.arctic.horizon.2"),
+      expect(getDb().instances.find((i) => i.name === "Bedroom")?.skin_profile).toBe("skin.arctic.fuse.2"),
     );
     expect(log.find((r) => r.method === "PATCH")?.body).toMatchObject({
       search_mode: "skin",
-      skin_profile: "skin.arctic.horizon.2",
+      skin_profile: "skin.arctic.fuse.2",
     });
     await waitFor(() => expect(dialog).not.toBeInTheDocument());
 
     await user.click(bedroom.getByRole("button", { name: "Edit Bedroom" }));
     dialog = await screen.findByRole("dialog", { name: "Edit Bedroom" });
     expect(
-      await within(dialog).findByText("skin.copacetic: skin search supported as Arctic Horizon 2."),
+      await within(dialog).findByText("skin.copacetic: skin search supported as Arctic Fuse 2."),
     ).toBeInTheDocument();
   });
 

@@ -223,7 +223,7 @@ export function instances(now: number): Instance[] {
 export const SKIN_PROFILES: SkinProfile[] = [
   { how: "native_global_search", id: "skin.aeon.nox.silvo", name: "Aeon Nox: SiLVO", native: true, requires: [] },
   {
-    how: "builtins",
+    how: "edit_control",
     id: "skin.arctic.fuse.2",
     name: "Arctic Fuse 2",
     native: false,
@@ -237,14 +237,6 @@ export const SKIN_PROFILES: SkinProfile[] = [
     native: false,
     requires: ["script.skinvariables"],
     window: "1105",
-  },
-  {
-    how: "builtins",
-    id: "skin.arctic.horizon.2",
-    name: "Arctic Horizon 2",
-    native: false,
-    requires: ["script.skinvariables"],
-    window: "1114",
   },
   { how: "native_global_search", id: "skin.estuary", name: "Estuary", native: true, requires: [] },
   {

@@ -114,9 +114,9 @@ const (
 const (
 	// skinSearchNative skins draw Global Search's window themselves, so a search runs Global Search.
 	skinSearchNative skinSearchKind = "native_global_search"
-	// skinSearchBuiltins hands the query to the skin in a skin string or window property that its search window reads as it opens.
+	// skinSearchBuiltins hands the query to the skin in a skin string that its search window reads as it opens.
 	skinSearchBuiltins skinSearchKind = "builtins"
-	// skinSearchEditControl opens the search window and types the query into its edit control.
+	// skinSearchEditControl opens the search window, focuses its edit control and types the query.
 	skinSearchEditControl skinSearchKind = "edit_control"
 	// skinSearchKeyboard opens the search window and its keyboard through the skin's helper add-on, then types the query.
 	skinSearchKeyboard skinSearchKind = "keyboard"
@@ -127,6 +127,12 @@ const (
 	addonSkinVariables   = "script.skinvariables"
 	addonNimbusHelper    = "script.nimbus.helper"
 	addonFENtasticHelper = "script.fentastic.helper"
+)
+
+// skinVariablesPlugin is script.skinvariables' plugin, and skinCommandRules the rules file Arctic skins ship for it whose last action is a command passed in the plugin's URL.
+const (
+	skinVariablesPlugin = "plugin://script.skinvariables/"
+	skinCommandRules    = "special://skin/shortcuts/builtins/skinvariables-closeosd.json"
 )
 
 // skinSetting is the Kodi setting that holds the active skin's add-on ID.

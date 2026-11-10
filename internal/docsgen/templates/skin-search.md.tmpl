@@ -27,7 +27,9 @@ In skin mode, a search:
 
 If the skin isn't in the table, already skins Global Search, lacks an add-on its search needs, or a step fails or its window doesn't open within a few seconds, Encore runs Global Search instead, and says so in the [request log]({{base}}/guides/request-log/) entry's note, e.g. `skin search: skin.copacetic has no profile; used Global Search`. A skin search doesn't need Global Search to be installed; falling back to it does, and Alexa says so when it's missing.
 
-JSON-RPC can't run Kodi's builtin commands or open a skin's custom windows, so Encore drives the skin through an add-on on the Kodi host: [Skin Variables](https://github.com/jurialmunkey/script.skinvariables) (`script.skinvariables`), which the skins below already depend on, or the skin's own helper add-on.
+JSON-RPC can't run Kodi's builtin commands, and `GUI.ActivateWindow` only opens Kodi's named windows, not a skin's custom ones, so Encore drives the skin through an add-on on the Kodi host: [Skin Variables](https://github.com/jurialmunkey/script.skinvariables) (`script.skinvariables`), which the Arctic skins below already depend on, or the skin's own helper add-on.
+
+Skin Variables is both a script and a plugin, and Kodi's `Addons.ExecuteAddon` opens such an add-on as its plugin rather than running its script. So Encore lists the plugin's `run_executebuiltin` route with `Files.GetDirectory`, which opens no window, pointing it at `shortcuts/builtins/skinvariables-closeosd.json`: a rules file these skins ship that closes any on-screen display and then runs the command it's given, such as `ReplaceWindow(1105)`. Where it can, Encore then focuses the search box that way and types what you said itself, so it never passes through Kodi's builtin parser.
 
 ## Skins with their own search
 
@@ -50,23 +52,25 @@ Any skin not listed runs Global Search, with Global Search's own look where the 
 - **Copacetic** (`skin.copacetic`): its search dialog is driven by a part of its helper add-on that isn't public.
 - **Mimic LR** (`skin.mimic.lr`): it ships only the window names older versions of Global Search used.
 - **Confluence**.
+- **Arctic Horizon 2** (`skin.arctic.horizon.2`): it depends on Skin Variables but ships no rules file Encore can run commands through.
 - **Amber**'s own search dialog, **Bingie** and **Titan Bingie Mod**: they don't depend on an add-on Encore can run builtin commands through.
 
 Embuary, AuraMod and Aeon MadNox don't load on Kodi 21, the oldest Kodi Encore supports.
 
 ## Forks
 
-Forks of a skin, such as Arctic Horizon 2.1 or the many Arctic Fuse mods, have add-on IDs of their own, and Encore doesn't guess that they keep their parent's windows. When a fork does, set **Skin profile** in the instance's dialog (`skin_profile` in config) to the skin it was forked from, e.g. Arctic Horizon 2 (`skin.arctic.horizon.2`). The profile applies only while Kodi runs a skin Encore doesn't know, and only in skin mode. If the fork has moved things, the window won't open in time and Encore falls back to Global Search, which the request log notes.
+Forks of a skin, such as the many Arctic Fuse mods, have add-on IDs of their own, and Encore doesn't guess that they keep their parent's windows. When a fork does, set **Skin profile** in the instance's dialog (`skin_profile` in config) to the skin it was forked from, e.g. Arctic Fuse 2 (`skin.arctic.fuse.2`). The fork also needs its parent's `skinvariables-closeosd.json`. The profile applies only while Kodi runs a skin Encore doesn't know, and only in skin mode. If the fork has moved things, the window won't open in time and Encore falls back to Global Search, which the request log notes.
 
 ## Where the steps come from
 
 Each skin's steps were read from its source at the versions below, so they can be checked again when a skin changes.
 
-- Arctic Fuse 3, `704de2c` (3.4.20): `1080i/Custom_1105_Search.xml`; `1080i/Includes_Search.xml`, whose results all read search box `3000`; `1080i/Includes_Home.xml`, whose Search tab opens window `1105` with `ReplaceWindow`, as Encore does, so Back and Home behave as usual.
-- Arctic Fuse 2, `e138a25` (omega): `1080i/Includes_Search.xml` (`Search_Window_Def`, which types the `CustomSearchTerm` window property into box `9099`), `Custom_1185_Search.xml` and `Custom_1105_Hub_Search.xml`. Encore opens the standalone search `1185`, since the search hub `1105` can be turned off.
-- Arctic Horizon 2, `8423735` (omega): `1080i/Custom_1114_Search.xml`.
-- Arctic Zephyr 2: Resurrection Mod, `2b34e4a`: `1080i/Custom_1138_Search.xml`, which searches for `Skin.String(SearchTerm)`, as the skin's own "search for this" sets it.
-- Skin Variables, `13f8c2e` (2.2.16): `resources/lib/script.py`, `resources/lib/methods/builtins.py` (`run_executebuiltin`) and `resources/lib/methods/controls.py` (`set_editcontrol`).
+- Arctic Fuse 3, `704de2c` (3.4.20): `1080i/Custom_1105_Search.xml`; `1080i/Includes_Search.xml`, whose results all read search box `3000`; `1080i/Includes_Home.xml`, whose Search tab opens window `1105` with `ReplaceWindow`, as Encore does, so Back and Home behave as usual; `shortcuts/builtins/skinvariables-closeosd.json`.
+- Arctic Fuse 2, `e138a25` (omega): `1080i/Includes_Search.xml` (`Search_Window_Def`, whose search box is `9099`), `Custom_1185_Search.xml`, `Custom_1105_Hub_Search.xml` and `shortcuts/builtins/skinvariables-closeosd.json`. Encore opens the standalone search `1185`, since the search hub `1105` can be turned off.
+- Arctic Horizon 2, `8423735` (omega): `1080i/Custom_1114_Search.xml`, and no rules files.
+- Arctic Zephyr 2: Resurrection Mod, `2b34e4a`: `1080i/Custom_1138_Search.xml`, which searches for `Skin.String(SearchTerm)`, as the skin's own "search for this" sets it, and `shortcuts/builtins/skinvariables-closeosd.json`.
+- Skin Variables, `13f8c2e` (2.2.16): `addon.xml`, which declares both a script and a video plugin; `resources/lib/plugin.py` and `resources/lib/lists/koditools/builtins.py` (the plugin's `run_executebuiltin` route); `resources/lib/operations.py` (how a rules file's actions take the URL's parameters).
+- Kodi Omega and master: `xbmc/interfaces/builtins/AddonBuiltins.cpp`, where `RunAddon` opens an add-on that is also a plugin as the plugin; `xbmc/interfaces/json-rpc/AddonsOperations.cpp`, which turns `Addons.ExecuteAddon` into `RunAddon`; `xbmc/interfaces/json-rpc/JSONServiceDescription.cpp`, which holds `GUI.ActivateWindow` to Kodi's named windows.
 - Nimbus Helper, `e42d2ff`, and FENtastic Helper: `resources/lib/modules/router.py` and `search_utils.py` (`open_search_window`, `search_input`). FENtastic's helper reloads the skin the first time its search history is empty, so its window gets longer to open.
 - Kodi Omega: `addons/skin.estuary/xml/Custom_1107_SearchDialog.xml`, Estuary's search dialog, which launches Global Search.
 - Kodi's skin repository, omega branch `a52e842`: Aeon Nox: SiLVO, Aeon Tajo, Amber, Arctic Zephyr Mod, Copacetic, FTV and Mimic LR.

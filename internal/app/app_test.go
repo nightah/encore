@@ -303,17 +303,29 @@ func TestEndToEndSkinSearch(t *testing.T) {
 
 		assert.Equal(t, "Searching for dune.", speech(h.say(t, "GlobalSearch", "Query", "dune")))
 
-		calls := kodi.CallsTo("Addons.ExecuteAddon")
-		require.Len(t, calls, 2)
-		assert.JSONEq(t, `{"addonid":"script.skinvariables","params":["run_executebuiltin=ReplaceWindow(1105)"]}`, string(calls[0].Params))
-		assert.JSONEq(t, `{"addonid":"script.skinvariables","params":["set_editcontrol=3000","text=dune"]}`, string(calls[1].Params))
+		var plugin []string
+
+		for _, c := range kodi.CallsTo("Files.GetDirectory") {
+			if strings.Contains(string(c.Params), "plugin://script.skinvariables/") {
+				plugin = append(plugin, string(c.Params))
+			}
+		}
+
+		require.Len(t, plugin, 2, "the window is opened and its search box focused through script.skinvariables' plugin")
+		assert.Contains(t, plugin[0], "command=ReplaceWindow%281105%29")
+		assert.Contains(t, plugin[1], "command=SetFocus%283000%29")
+
+		typed := kodi.CallsTo("Input.SendText")
+		require.Len(t, typed, 1)
+		assert.JSONEq(t, `{"text":"dune","done":true}`, string(typed[0].Params))
+		assert.Empty(t, kodi.CallsTo("Addons.ExecuteAddon"), "Global Search isn't run")
 
 		kodi.SetSkin("skin.copacetic")
 		h.say(t, "GlobalSearch", "Query", "alien")
 
-		calls = kodi.CallsTo("Addons.ExecuteAddon")
-		require.Len(t, calls, 3, "the skin is read again with each request")
-		assert.JSONEq(t, `{"addonid":"script.globalsearch","params":{"searchstring":"alien"}}`, string(calls[2].Params))
+		calls := kodi.CallsTo("Addons.ExecuteAddon")
+		require.Len(t, calls, 1, "the skin is read again with each request")
+		assert.JSONEq(t, `{"addonid":"script.globalsearch","params":{"searchstring":"alien"}}`, string(calls[0].Params))
 
 		var notes []string
 

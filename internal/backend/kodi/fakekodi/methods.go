@@ -154,6 +154,14 @@ func (s *Server) filesGetDirectory(params json.RawMessage) (any, *Error) {
 		return nil, err
 	}
 
+	// A plugin runs and lists what it adds; script.skinvariables' run_executebuiltin route adds one empty item.
+	if strings.HasPrefix(p.Directory, pluginScheme) {
+		return map[string]any{
+			"files":  []map[string]any{{"file": "", "filetype": "directory", "label": "None", "type": "unknown"}},
+			"limits": map[string]int{"start": 0, "end": 1, "total": 1},
+		}, nil
+	}
+
 	media := path.Base(strings.TrimSuffix(p.Directory, "/"))
 
 	s.mu.Lock()

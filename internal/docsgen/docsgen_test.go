@@ -197,7 +197,7 @@ func TestSkinSearchGuide(t *testing.T) {
 	out := string(page)
 	assert.Contains(t, out, GeneratedMarker)
 	assert.Contains(t, out, "| Arctic Fuse 3 | `skin.arctic.fuse.3` | `script.skinvariables` | `1105` | Typed into the window's search box |")
-	assert.Contains(t, out, "| Arctic Horizon 2 | `skin.arctic.horizon.2` | `script.skinvariables` | `1114` | Handed to the skin, which fills it in as the window opens |")
+	assert.Contains(t, out, "| Arctic Zephyr 2: Resurrection Mod | `skin.arctic.zephyr.2.resurrection.mod` | `script.skinvariables` | `1138` | Handed to the skin, which fills it in as the window opens |")
 	assert.Contains(t, out, "| Nimbus | `skin.nimbus` | `script.nimbus.helper` | `1121` | Typed into the keyboard the skin's helper opens |")
 	assert.Contains(t, out, "| Estuary | `skin.estuary` |\n")
 

@@ -107,7 +107,7 @@ func TestSkinSearch(t *testing.T) {
 	target, backend, _ := newTarget()
 	backend.SetSkin(media.Skin{ID: "skin.arctic.fuse.3", Profile: "skin.arctic.fuse.3", Search: media.SkinSearchSupported}, nil)
 	target.SearchMode = media.SearchModeSkin
-	target.SkinProfile = "skin.arctic.horizon.2"
+	target.SkinProfile = "skin.arctic.fuse.2"
 
 	o := newService().GlobalSearch(t.Context(), target, "dune")
 	assert.Equal(t, "addon.searching", o.Say.ID)
@@ -115,12 +115,12 @@ func TestSkinSearch(t *testing.T) {
 	assert.True(t, o.EndSession)
 	require.NoError(t, o.Err)
 	assert.Equal(t, "skin search: opened skin.arctic.fuse.3's search", o.Note)
-	assert.Equal(t, []string{"SkinSearch dune profile=skin.arctic.horizon.2"}, backend.Calls(), "Global Search isn't needed")
+	assert.Equal(t, []string{"SkinSearch dune profile=skin.arctic.fuse.2"}, backend.Calls(), "Global Search isn't needed")
 
-	backend.SetSkin(media.Skin{ID: "skin.ah2.fork", Profile: "skin.arctic.horizon.2", Search: media.SkinSearchSupported}, nil)
+	backend.SetSkin(media.Skin{ID: "skin.af2.fork", Profile: "skin.arctic.fuse.2", Search: media.SkinSearchSupported}, nil)
 	o = newService().GlobalSearch(t.Context(), target, "dune")
 	assert.Equal(t, "addon.searching", o.Say.ID)
-	assert.Equal(t, "skin search: opened skin.ah2.fork's search as skin.arctic.horizon.2", o.Note)
+	assert.Equal(t, "skin search: opened skin.af2.fork's search as skin.arctic.fuse.2", o.Note)
 }
 
 func TestSkinSearchFallsBackToGlobalSearch(t *testing.T) {

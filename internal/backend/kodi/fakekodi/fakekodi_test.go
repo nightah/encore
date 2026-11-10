@@ -251,3 +251,11 @@ func TestAddonDetails(t *testing.T) {
 	_, resp = post(t, s, "", "", "Addons.GetAddonDetails", "bad")
 	require.NotNil(t, resp.Error)
 }
+
+func TestPluginListing(t *testing.T) {
+	s := New(t, Options{})
+
+	_, resp := post(t, s, "", "", "Files.GetDirectory", map[string]any{"directory": "plugin://script.skinvariables/?info=run_executebuiltin&command=SetFocus%283000%29&&special://skin/shortcuts/builtins/skinvariables-closeosd.json"})
+	require.Nil(t, resp.Error)
+	assert.JSONEq(t, `{"files":[{"file":"","filetype":"directory","label":"None","type":"unknown"}],"limits":{"start":0,"end":1,"total":1}}`, string(resp.Result), "as script.skinvariables lists after running builtins")
+}

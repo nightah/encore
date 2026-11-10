@@ -52,7 +52,7 @@ func TestKodiInstancesCRUD(t *testing.T) {
 	k.PasswordSecretRef = "kodi/1/password"
 	k.MAC = "aa:bb:cc:dd:ee:ff"
 	k.Language, k.Timezone, k.ShutdownQuits, k.PreferredQuality = "de", "Australia/Melbourne", new(true), "1080p"
-	k.SearchMode, k.SkinProfile = "skin", "skin.arctic.horizon.2"
+	k.SearchMode, k.SkinProfile = "skin", "skin.arctic.fuse.2"
 	require.NoError(t, repo.Create(ctx, k))
 	assert.NotZero(t, k.ID)
 	assert.Equal(t, clk.Now(), k.CreatedAt)
