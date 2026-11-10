@@ -185,8 +185,8 @@ importers:
         specifier: 1.170.46
         version: 1.170.46(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       i18next:
-        specifier: 26.7.2
-        version: 26.7.2(typescript@7.0.2)
+        specifier: 27.0.1
+        version: 27.0.1(typescript@7.0.2)
       lucide-react:
         specifier: 1.70.0
         version: 1.70.0(@types/react@19.3.0)(react@19.3.1)
@@ -201,7 +201,7 @@ importers:
         version: 7.91.0(@types/react@19.3.0)(react@19.3.1)
       react-i18next:
         specifier: 18.0.0
-        version: 18.0.0(i18next@26.7.2(typescript@7.0.2))(react@19.3.1)(typescript@7.0.2)
+        version: 18.0.0(i18next@27.0.1(typescript@7.0.2))(react@19.3.1)(typescript@7.0.2)
       zod:
         specifier: 4.6.7
         version: 4.6.7
@@ -1867,8 +1867,9 @@ packages:
     resolution: {integrity: sha512-eKCa6bwnJhvxj14kZk5NCPc6Hb6BdsU9DZcOnmQKSnO1VKrfV0zCvtttPZUsBvjmNDn8rpcJfpwSYnHBjc95MQ==}
     engines: {node: '>=18.18.0'}
 
-  i18next@26.7.2:
-    resolution: {integrity: sha512-RsOY3BeaCDdkk52NeJSFAXELQ2rQXBO/tOub6L8ue2ICPfR/FRDWDOfEDg4xMPd1SqO5goVYQ6i72qWEUB/PPw==}
+  i18next@27.0.1:
+    resolution: {integrity: sha512-KaE5ozP8UUeVpOJIwMVbbnpRKpyYQuxd9ZbseJoDzezE3nvLnZZQn20pkzyIJwPI2Uet/Qs3WzPTG812f6F/Eg==}
+    engines: {node: '>=22'}
     peerDependencies:
       typescript: ^5 || ^6 || ^7
     peerDependenciesMeta:
@@ -4138,7 +4139,7 @@ snapshots:
 
   human-signals@8.0.1: {}
 
-  i18next@26.7.2(typescript@7.0.2):
+  i18next@27.0.1(typescript@7.0.2):
     optionalDependencies:
       typescript: 7.0.2
 
@@ -4497,10 +4498,10 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.3.0
 
-  react-i18next@18.0.0(i18next@26.7.2(typescript@7.0.2))(react@19.3.1)(typescript@7.0.2):
+  react-i18next@18.0.0(i18next@27.0.1(typescript@7.0.2))(react@19.3.1)(typescript@7.0.2):
     dependencies:
       html-parse-stringify: 4.0.1
-      i18next: 26.7.2(typescript@7.0.2)
+      i18next: 27.0.1(typescript@7.0.2)
       react: 19.3.1
     optionalDependencies:
       typescript: 7.0.2
