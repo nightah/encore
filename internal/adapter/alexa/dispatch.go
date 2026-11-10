@@ -68,7 +68,17 @@ func (h *Handler) dispatch(ctx context.Context, env *RequestEnvelope, t actions.
 	case "WatchMovie":
 		return h.playTitle(ctx, locale, t, sl.title("Movie", []media.Kind{media.KindMovie}, pending), false, progress)
 	case "WatchNextEpisode":
-		return h.playTitle(ctx, locale, t, sl.title("Show", []media.Kind{media.KindTVShow}, pending), false, progress)
+		req := sl.title("Show", []media.Kind{media.KindTVShow}, pending)
+
+		o := h.playTitle(ctx, locale, t, req, false, progress)
+		// Amazon sends a film here when its words come close to a sample ("play the odyssey from 2026" for "play {Show} from where i left off"): a title no show has is tried as a film.
+		if o.Missed() && t.Allows(media.KindMovie) {
+			if film := svc.PlayTitle(ctx, t, actions.TitleRequest{Query: req.Query, Kinds: []media.Kind{media.KindMovie}, Pending: req.Pending}, progress); !film.Missed() {
+				return film
+			}
+		}
+
+		return o
 	case "PlayMedia":
 		// Without deep search, a title of unsaid kind is a film or a show.
 		kinds := []media.Kind{media.KindMovie, media.KindTVShow}

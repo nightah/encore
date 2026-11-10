@@ -28,7 +28,7 @@ Commands that start playback accept a room at the end: "play Dune in the bedroom
 
 Ask for an episode of a show by where it falls, or by its number:
 
-- "play the next episode of Bluey" plays the first one you haven't watched ("play Bluey from where I left off" too)
+- "play the next episode of Bluey" plays the first one you haven't watched ("play Bluey from where I left off" too). When no show has the name, a film that does plays instead, as Alexa sometimes sends a film here ("play the odyssey from 2026")
 - "play the first episode of Bluey" or "play Bluey from the start"
 - "play the latest episode of Bluey" ("newest", "most recent" and "last" work too)
 - "play a random episode of Bluey"

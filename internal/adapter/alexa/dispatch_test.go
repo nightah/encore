@@ -340,3 +340,22 @@ func TestSearchWithTheKindInTheQuery(t *testing.T) {
 		assert.Equal(t, []string{want}, backend.Calls(), query)
 	}
 }
+
+// TestNextEpisodeOfAFilmPlaysTheFilm covers Amazon sending a film to WatchNextEpisode: "play the odyssey from 2026" is closest to "play {Show} from where i left off". A title no show has is tried as a film, but a show still wins its own name.
+func TestNextEpisodeOfAFilmPlaysTheFilm(t *testing.T) {
+	h, backend, _ := newHandler(t)
+
+	serveBody(t, h, intentRequest(t, "WatchNextEpisode", map[string]slotSpec{"Show": {value: "hot fuzz"}}))
+	assert.Equal(t, []string{"Play movie/4 resume"}, backend.Calls(), "no show is called that, so the film plays")
+
+	h, backend, _, _ = newRoomHandlerWith(t, media.Item{Kind: media.KindMovie, ID: 90, Title: "Severance", Year: 2024})
+
+	serveBody(t, h, intentRequest(t, "WatchNextEpisode", map[string]slotSpec{"Show": {value: "severance"}}))
+	assert.NotContains(t, backend.Calls(), "Play movie/90 resume", "the show comes first: %q", backend.Calls())
+	assert.True(t, containsPrefix(backend.Calls(), "Play episode/"), "its next episode plays: %q", backend.Calls())
+
+	h, backend = withDisabled(t, false, media.ContentMovies)
+
+	serveBody(t, h, intentRequest(t, "WatchNextEpisode", map[string]slotSpec{"Show": {value: "hot fuzz"}}))
+	assert.False(t, containsPrefix(backend.Calls(), "Play"), "films switched off stay off: %q", backend.Calls())
+}
