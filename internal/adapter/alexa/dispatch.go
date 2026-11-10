@@ -36,6 +36,16 @@ func (h *Handler) dispatch(ctx context.Context, env *RequestEnvelope, t actions.
 		}
 	}
 
+	// Amazon sends an answer to "did you mean" as whichever intent its words come closest to ("the odyssey from 2026" as the next episode of a show), so a title intent that names one of the question's choices answers it.
+	answer := func(req actions.TitleRequest) (actions.Outcome, bool) {
+		var more []actions.Choice
+		if followup != nil {
+			more = followup.More
+		}
+
+		return svc.AnswerTitle(ctx, t, req.Query, pending, more, progress)
+	}
+
 	if c := h.IntentContent[intent.Name]; c != "" && slices.Contains(t.Disabled, c) {
 		return actions.ContentDisabled()
 	}
@@ -66,9 +76,17 @@ func (h *Handler) dispatch(ctx context.Context, env *RequestEnvelope, t actions.
 
 	// Playing by name.
 	case "WatchMovie":
-		return h.playTitle(ctx, locale, t, sl.title("Movie", []media.Kind{media.KindMovie}, pending), false, progress)
+		req := sl.title("Movie", []media.Kind{media.KindMovie}, pending)
+		if o, ok := answer(req); ok {
+			return o
+		}
+
+		return h.playTitle(ctx, locale, t, req, false, progress)
 	case "WatchNextEpisode":
 		req := sl.title("Show", []media.Kind{media.KindTVShow}, pending)
+		if o, ok := answer(req); ok {
+			return o
+		}
 
 		o := h.playTitle(ctx, locale, t, req, false, progress)
 		// Amazon sends a film here when its words come close to a sample ("play the odyssey from 2026" for "play {Show} from where i left off"): a title no show has is tried as a film.
@@ -97,7 +115,12 @@ func (h *Handler) dispatch(ctx context.Context, env *RequestEnvelope, t actions.
 			}
 		}
 
-		return h.playTitle(ctx, locale, t, sl.title("Query", kinds, pending), true, progress)
+		req := sl.title("Query", kinds, pending)
+		if o, ok := answer(req); ok {
+			return o
+		}
+
+		return h.playTitle(ctx, locale, t, req, true, progress)
 
 	// Movies.
 	case "WatchRandomMovie":

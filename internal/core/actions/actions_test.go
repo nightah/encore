@@ -946,6 +946,9 @@ func TestChoose(t *testing.T) {
 	sequel := Choice{DocID: "movie/3", Ref: media.Ref{Kind: media.KindMovie, ID: 3}, Title: "Dune: Part Two", Year: 2024}
 	undated := Choice{DocID: "playlist/70", Ref: media.Ref{Kind: media.KindPlaylist, ID: 70}, Title: "Road Trip"}
 	sameYear := Choice{DocID: "movie/4", Ref: media.Ref{Kind: media.KindMovie, ID: 4}, Title: "Hot Fuzz", Year: 2021}
+	album := Choice{DocID: "album/80", Ref: media.Ref{Kind: media.KindAlbum, ID: 80}, Title: "Odyssey", Year: 2005}
+	song := Choice{DocID: "song/81", Ref: media.Ref{Kind: media.KindSong, ID: 81}, Title: "Odyssey", Year: 2024}
+	film := Choice{DocID: "movie/82", Ref: media.Ref{Kind: media.KindMovie, ID: 82}, Title: "The Odyssey", Year: 2026}
 
 	tests := map[string]struct {
 		answer  Answer
@@ -971,6 +974,12 @@ func TestChoose(t *testing.T) {
 		"title kept back":      {answer: Answer{Title: "dune part two"}, pending: []Choice{old, remake}, more: []Choice{sequel}, play: "movie/3"},
 		"title shared":         {answer: Answer{Title: "dune"}, pending: []Choice{old, remake}, again: true},
 		"another title":        {answer: Answer{Title: "hot fuzz"}, pending: []Choice{old, remake}, play: "movie/4"},
+		// An article said picks the title that starts with it, and a year may follow "from", as the matcher reads them.
+		"article kept back":       {answer: Answer{Title: "the odyssey"}, pending: []Choice{album, song}, more: []Choice{film}, play: "movie/82"},
+		"year after from":         {answer: Answer{Title: "the odyssey from 2026"}, pending: []Choice{album, song}, more: []Choice{film}, play: "movie/82"},
+		"year after from offered": {answer: Answer{Title: "dune from 1984"}, pending: []Choice{old, remake}, play: "movie/1"},
+		"no article shared":       {answer: Answer{Title: "odyssey"}, pending: []Choice{album, song}, more: []Choice{film}, again: true},
+		"kind kept back":          {answer: Answer{Title: "hot fuzz"}, pending: []Choice{album, song}, more: []Choice{film}, play: "movie/4"},
 	}
 
 	for name, tc := range tests {

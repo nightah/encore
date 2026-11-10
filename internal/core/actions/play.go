@@ -73,9 +73,11 @@ func (s *Service) Choose(ctx context.Context, t Target, a Answer, pending, more 
 		return Outcome{Say: say("match.which_one", nil), AskAgain: true}
 	}
 
-	switch named := titled(t.language(), a.Title, append(slices.Clone(pending), more...)); len(named) {
+	all := append(slices.Clone(pending), more...)
+
+	switch named := titled(t.language(), a.Title, all); len(named) {
 	case 0:
-		return s.PlayTitle(ctx, t, TitleRequest{Query: a.Title, Kinds: kindsOf(pending), Pending: pending}, progress)
+		return s.PlayTitle(ctx, t, TitleRequest{Query: a.Title, Kinds: kindsOf(all), Pending: pending}, progress)
 	case 1:
 		return s.playChoice(ctx, t, named[0], progress)
 	default:
@@ -146,17 +148,39 @@ func byYear(offered []Choice, newest bool) (Choice, bool) {
 
 // titled returns the choices called title, with or without their year ("dune 2021").
 func titled(lang, title string, choices []Choice) []Choice {
-	heard := match.Normalize(lang, title)
-
-	var out []Choice
+	var out, literal []Choice
 
 	for _, c := range choices {
-		if heard == match.Normalize(lang, c.Title) || c.Year > 0 && heard == match.Normalize(lang, c.Title+" "+strconv.Itoa(c.Year)) {
+		same, lit := match.SameTitle(lang, title, c.Title, c.Year)
+		if same {
 			out = append(out, c)
+		}
+
+		if lit {
+			literal = append(literal, c)
 		}
 	}
 
+	// An article said picks the titles that start with it, as the matcher does: "the odyssey" is The Odyssey, not Odyssey.
+	if len(literal) > 0 {
+		return literal
+	}
+
 	return out
+}
+
+// AnswerTitle plays the one choice of a "did you mean" question that title names, as Choose does for an answer, and reports whether one did. It lets an answer Amazon sent as another intent, such as "the odyssey from 2026" as the next episode of a show, answer the question.
+func (s *Service) AnswerTitle(ctx context.Context, t Target, title string, pending, more []Choice, progress Progress) (Outcome, bool) {
+	if len(pending) == 0 || title == "" {
+		return Outcome{}, false
+	}
+
+	named := titled(t.language(), title, append(slices.Clone(pending), more...))
+	if len(named) != 1 {
+		return Outcome{}, false
+	}
+
+	return s.playChoice(ctx, t, named[0], progress), true
 }
 
 func kindsOf(choices []Choice) []media.Kind {

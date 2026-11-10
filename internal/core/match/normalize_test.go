@@ -480,3 +480,25 @@ func TestTokenizeScripts(t *testing.T) {
 		})
 	}
 }
+
+func TestSameTitle(t *testing.T) {
+	for _, tc := range []struct {
+		heard, title  string
+		year          int
+		same, literal bool
+	}{
+		{"the odyssey", "The Odyssey", 2026, true, true},
+		{"the odyssey", "Odyssey", 2005, true, false},
+		{"odyssey", "The Odyssey", 2026, true, false},
+		{"the odyssey 2026", "The Odyssey", 2026, true, true},
+		{"the odyssey from 2026", "The Odyssey", 2026, true, true},
+		{"the odyssey from 2026", "Odyssey", 2005, false, false},
+		{"odyssey from 2005", "Odyssey", 2005, true, false},
+		{"the odyssey from 2026", "The Odyssey", 0, false, false},
+		{"", "The Odyssey", 2026, false, false},
+	} {
+		same, literal := SameTitle("en", tc.heard, tc.title, tc.year)
+		assert.Equal(t, tc.same, same, "%q / %q", tc.heard, tc.title)
+		assert.Equal(t, tc.literal, literal, "%q / %q", tc.heard, tc.title)
+	}
+}

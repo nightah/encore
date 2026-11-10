@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
+	"github.com/nightah/encore/internal/core/match"
 	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/testkit"
 )
@@ -358,4 +359,55 @@ func TestNextEpisodeOfAFilmPlaysTheFilm(t *testing.T) {
 
 	serveBody(t, h, intentRequest(t, "WatchNextEpisode", map[string]slotSpec{"Show": {value: "hot fuzz"}}))
 	assert.False(t, containsPrefix(backend.Calls(), "Play"), "films switched off stay off: %q", backend.Calls())
+}
+
+// TestAnswerHeardAsAnotherIntent covers an answer to "did you mean" that Amazon sends as a new request: after "odyssey" asks about the album and the song Odyssey, "the odyssey from 2026" came as WatchNextEpisode, nearest "play {Show} from where i left off". Whichever title intent it arrives as, a title that names one of the question's choices answers it.
+func TestAnswerHeardAsAnotherIntent(t *testing.T) {
+	odyssey := []media.Item{
+		{Kind: media.KindAlbum, ID: 80, Title: "Odyssey", Year: 2005},
+		{Kind: media.KindSong, ID: 81, Title: "Odyssey", Year: 2024},
+		{Kind: media.KindMovie, ID: 82, Title: "The Odyssey", Year: 2026},
+	}
+
+	for _, tc := range []struct{ intent, slot, answer string }{
+		{"WatchNextEpisode", "Show", "the odyssey from 2026"},
+		{"WatchMovie", "Movie", "the odyssey from 2026"},
+		{"PlayMedia", "Query", "the odyssey from 2026"},
+		{chooseIntent, "Answer", "the odyssey from 2026"},
+		{chooseIntent, "Answer", "the odyssey"},
+		{"WatchNextEpisode", "Show", "odyssey from 2005"},
+	} {
+		t.Run(tc.intent+" "+tc.answer, func(t *testing.T) {
+			h, backend, _, _ := newRoomHandlerWith(t, odyssey...)
+
+			ix, err := match.New("en", match.Config{})
+			require.NoError(t, err)
+			t.Cleanup(func() { _ = ix.Close() })
+			require.NoError(t, ix.Upsert(testkit.Docs(append(testkit.SampleLibrary(), odyssey...)...)...))
+
+			ft := h.Targets.(fakeTargets)
+			ft.target.Matcher, ft.target.DeepSearch = ix, true
+			h.Targets = ft
+
+			var resp ResponseEnvelope
+			require.NoError(t, json.Unmarshal(serveBody(t, h, intentRequest(t, "PlayMedia", map[string]slotSpec{"Query": {value: "odyssey"}})), &resp))
+			require.NotNil(t, resp.SessionAttributes[sessionPending], "Alexa asks which one")
+			require.Empty(t, backend.Calls())
+
+			answer := requestOf(t, intentRequest(t, tc.intent, map[string]slotSpec{tc.slot: {value: tc.answer}}))
+			answer.Session.Attributes = resp.SessionAttributes
+
+			body, err := json.Marshal(answer)
+			require.NoError(t, err)
+
+			serveBody(t, h, body)
+
+			want := "Play movie/82 resume"
+			if tc.answer == "odyssey from 2005" {
+				want = "Play album/80"
+			}
+
+			assert.True(t, containsPrefix(backend.Calls(), want), "want %q, got %q", want, backend.Calls())
+		})
+	}
 }

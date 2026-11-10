@@ -1,6 +1,7 @@
 package match
 
 import (
+	"slices"
 	"strconv"
 	"strings"
 	"unicode"
@@ -462,6 +463,27 @@ func (l *language) dropParts(toks []string) []string {
 	}
 
 	return out
+}
+
+// SameTitle reports whether heard names title, as the matcher would match them exactly: normalized alike, or alike once a year after the title ("the odyssey 2026", "the odyssey from 2026") is taken as year. literal also reports that heard starts with an article and title starts with the same one ("the odyssey" / "The Odyssey", not "Odyssey").
+func SameTitle(lang, heard, title string, year int) (same, literal bool) {
+	l := languageFor(lang)
+
+	h, _, ha := l.normalizeArticle(heard, false)
+	n, _, ta := l.normalizeArticle(title, false)
+
+	if len(h) == 0 {
+		return false, false
+	}
+
+	same = slices.Equal(h, n)
+	if !same && year > 0 {
+		if yq := yearQuery(l, &form{toks: h}); yq != nil && yq.year == year {
+			same = slices.Equal(yq.rest.toks, n)
+		}
+	}
+
+	return same, same && ha != "" && ha == ta
 }
 
 // StopWord reports whether word is one of the language's articles or stop words, such as "the", "of" or Japanese "の", which a title search treats as filler.
