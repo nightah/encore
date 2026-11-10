@@ -54,6 +54,14 @@ func validateKodi(instances []KodiInstance) []error {
 			errs = append(errs, fmt.Errorf("%s.preferred_quality %q must be screen, highest, 2160p, 1080p, 720p or sd", where, k.PreferredQuality))
 		}
 
+		if !media.SearchMode(k.SearchMode).IsValid() {
+			errs = append(errs, fmt.Errorf("%s.search_mode %q must be library, global_search or skin", where, k.SearchMode))
+		}
+
+		if k.SkinProfile != "" && !kodi.IsSkinProfile(k.SkinProfile) {
+			errs = append(errs, fmt.Errorf("%s.skin_profile %q must be one of %s", where, k.SkinProfile, strings.Join(kodi.SkinProfileIDs(), ", ")))
+		}
+
 		if k.Language != "" && !slices.Contains(match.Languages(), k.Language) {
 			errs = append(errs, fmt.Errorf("%s.language %q must be one of %s", where, k.Language, strings.Join(match.Languages(), ", ")))
 		}

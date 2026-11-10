@@ -22,6 +22,7 @@ import type {
   ImportResult,
   Instance,
   InstanceInput,
+  InstanceSkin,
   Library,
   LoginRequest,
   Match,
@@ -41,6 +42,7 @@ import type {
   SettingsPatch,
   SkillInfo,
   SkillSettingsInput,
+  SkinProfile,
   StorageTest,
   TOTPEnrollment,
   TestMatchRequest,
@@ -52,7 +54,7 @@ import type {
 } from "@api/generated/model";
 import type { Health } from "@api/health";
 import { mockArt } from "@mocks/art";
-import type { MockDb, Scenario } from "@mocks/data";
+import { type MockDb, SKIN_PROFILES, type Scenario } from "@mocks/data";
 import { createDb } from "@mocks/db";
 import { fuzzyMatch } from "@mocks/requests";
 import { basePath } from "@src/basePath";
@@ -183,6 +185,22 @@ function summary(r: RequestDetail): RequestSummary {
     simulated: r.simulated,
     target: r.target,
     time: r.time,
+  };
+}
+
+/** The skin an instance's Kodi runs and what a skin search does on it, resolved as Encore resolves it: the skin's own profile, else the instance's skin_profile. */
+function skinOf(instance: Instance): InstanceSkin["skin"] {
+  const id = db.skins[instance.id] ?? (instance.id in db.skins ? null : "skin.estuary");
+  if (!id) return null;
+  const own = SKIN_PROFILES.find((p) => p.id === id);
+  const borrowed = own ? undefined : SKIN_PROFILES.find((p) => p.id === instance.skin_profile && !p.native);
+  const profile = own ?? borrowed;
+  return {
+    id,
+    missing: [],
+    name: own?.name ?? id,
+    profile: profile?.id ?? "",
+    search: profile ? (profile.native ? "native_global_search" : "supported") : "no_profile",
   };
 }
 
@@ -364,6 +382,7 @@ function scheduleHello() {
       kodi_calls: [{ method: "Player.GetActivePlayers", ms: 14, ok: true }],
       locale: "en-AU",
       match: null,
+      note: "",
       outcome: "ok",
       simulated: false,
       slots: {},
@@ -553,6 +572,17 @@ export const handlers = [
     return new HttpResponse(svg, { headers: { "Content-Type": "image/svg+xml" } });
   }),
 
+  http.get(`${API}/kodi/instances/:id/skin`, ({ request, params }) => {
+    const denied = guard(request);
+    if (denied) return denied;
+    const instance = instanceById(Number(params.id));
+    if (!instance) return problem(404, "Not Found");
+    const mode = instance.search_mode === "inherit" ? db.settings.features.search_mode : instance.search_mode;
+    return json<InstanceSkin>({ search_mode: mode, skin: skinOf(instance) });
+  }),
+
+  http.get(`${API}/kodi/skin-profiles`, ({ request }) => guard(request) ?? json<SkinProfile[]>(SKIN_PROFILES)),
+
   http.get(`${API}/kodi/instances/:id`, ({ request, params }) => {
     const denied = guard(request);
     if (denied) return denied;
@@ -601,7 +631,9 @@ export const handlers = [
       now_playing: null,
       preferred_quality: input.preferred_quality ?? "inherit",
       screen: null,
+      search_mode: input.search_mode ?? "inherit",
       shutdown: input.shutdown ?? "inherit",
+      skin_profile: input.skin_profile ?? "",
       status: {
         api_version: "13.5.0",
         kodi_version: "21.3",
@@ -659,6 +691,11 @@ export const handlers = [
       return problem(409, "Conflict", "This Kodi instance is managed by config and can't be changed here.");
     }
     const input = await body<InstanceInput>(request);
+    if (input.skin_profile && !SKIN_PROFILES.some((p) => p.id === input.skin_profile && !p.native)) {
+      return problem(422, "Unprocessable Entity", "Check the highlighted fields.", [
+        { location: "body.skin_profile", message: "Choose a skin profile Encore knows." },
+      ]);
+    }
     const { password, ...rest } = input;
     const next = patchInstance(instance.id, {
       ...rest,

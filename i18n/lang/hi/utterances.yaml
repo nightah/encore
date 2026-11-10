@@ -90,6 +90,7 @@ Fullscreen:
 GlobalSearch:
   do_global_search: "{Query} की ग्लोबल (सर्च|खोज) करो"
   global_search: "ग्लोबल सर्च में {Query} (ढूँढो|ढूंढो|खोजो)"
+  search_for: "{Query} (सर्च करो|search करो)"
   search_kodi_for: "(कोडी|kodi) में {Query} (ढूँढो|ढूंढो|खोजो|सर्च करो)\nसब जगह {Query} (ढूँढो|ढूंढो|खोजो)\nसारे (ऐड ऑन|ऐडऑन) में {Query} (ढूँढो|ढूंढो|खोजो)"
 IdentifyEcho:
   identify_this_echo: "इस (इको|echo|डिवाइस|स्पीकर) की पहचान बताओ"
@@ -151,7 +152,6 @@ PlayMedia:
   play: "{Query} (चलाओ|चलाइए|चलाए|बजाओ|बजाइए|बजाए|play करो|प्ले करो|चला दो|बजा दो)"
   put: "{Query} (लगाओ|लगाइए|लगाए|लगा दो)"
   queue_up: "{Query} (कतार|क्यू|queue) में (लगाओ|डालो)"
-  search_for: "{Query} (सर्च करो|search करो)"
 PlayPlaylist:
   play_music_playlist: "(म्यूज़िक|वीडियो|स्मार्ट) प्लेलिस्ट {Playlist} (चलाओ|बजाओ|शुरू करो)"
   play_playlist: "[{Room} में] [मेरी] (प्लेलिस्ट|playlist) {Playlist} (बजाओ|बजाइए|बजाए|चलाओ|चलाइए|चलाए|सुनाओ|play करो|प्ले करो)"
@@ -208,6 +208,15 @@ RoomControl:
   in_the: "{Room} में {Command}"
   playback: "{Room} में (प्लेबैक|playback) {Command}"
   tv: "{Room} (का|वाला) (टीवी|कोडी|kodi|म्यूज़िक|वीडियो) {Command}"
+SearchMovies:
+  search_films_for: "(फ़िल्मों|फिल्मों) में {Query} (ढूँढो|ढूंढो|खोजो|सर्च करो)"
+  search_for_film: "{Query} (फ़िल्म|फिल्म|मूवी) (ढूँढो|ढूंढो|खोजो|सर्च करो)"
+SearchMusic:
+  search_for_music: "{Query} (आर्टिस्ट|कलाकार|बैंड|एल्बम) (ढूँढो|ढूंढो|खोजो|सर्च करो)"
+  search_music_for: "(गानों|म्यूज़िक) में {Query} (ढूँढो|ढूंढो|खोजो|सर्च करो)"
+SearchTVShows:
+  search_for_show: "{Query} (शो|सीरियल|सीरीज़) (ढूँढो|ढूंढो|खोजो|सर्च करो)"
+  search_shows_for: "(शोज़|सीरियलों) में {Query} (ढूँढो|ढूंढो|खोजो|सर्च करो)"
 ShuffleAlbum:
   shuffle_album: "[{Room} में] (एल्बम|album) {Album} (शफ़ल करो|शफल करो|shuffle करो)"
   shuffle_album_2: "{Album} (एल्बम|album) (शफ़ल करो|शफल करो|shuffle करो)\n{Artist} का {Album} (एल्बम|album) (शफ़ल करो|शफल करो|shuffle करो)"

@@ -224,6 +224,13 @@
       "hint": "Het maximale aantal items dat een shuffle of wachtrij in één keer afspeelt, zodat grote bibliotheken snel blijven reageren",
       "title": "Wachtrijlimiet"
     },
+    "search_mode": {
+      "global_search": "Global Search",
+      "hint": "Wat “zoek naar…” op Kodi opent. De bibliotheek toont de passende films, series, muziekvideo’s, artiesten of albums in Kodi’s eigen bibliotheekweergave, zonder add-ons. Global Search en de eigen zoekfunctie van de skin tonen de bibliotheek als ze niet kunnen werken. Een instantie kan dat aanpassen.",
+      "library": "In de bibliotheek tonen",
+      "skin": "De eigen zoekfunctie van de skin",
+      "title": "Zoeken"
+    },
     "shutdown_quits": {
       "hint": "In plaats van het apparaat uit te schakelen",
       "title": "“Afsluiten” sluit Kodi af"

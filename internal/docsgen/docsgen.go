@@ -14,6 +14,7 @@ import (
 	"text/template"
 
 	"github.com/nightah/encore/i18n"
+	"github.com/nightah/encore/internal/backend/kodi"
 	"github.com/nightah/encore/internal/cli"
 	"github.com/nightah/encore/internal/skillmodel"
 )
@@ -25,19 +26,21 @@ var templates embed.FS
 func Generate(root string) (map[string][]byte, error) {
 	out := map[string][]byte{}
 
-	cfg, err := ConfigReference(filepath.Join(root, "internal", "config"))
-	if err != nil {
-		return nil, fmt.Errorf("configuration reference: %w", err)
+	for _, page := range []struct {
+		path, name string
+		render     func() ([]byte, error)
+	}{
+		{"/reference/configuration.md", "configuration reference", func() ([]byte, error) { return ConfigReference(filepath.Join(root, "internal", "config")) }},
+		{"/reference/cli.md", "CLI reference", func() ([]byte, error) { return CLIReference(cli.NewRootCommand(io.Discard, io.Discard)) }},
+		{"/guides/search.md", "search guide", func() ([]byte, error) { return SearchGuide(kodi.SkinProfiles()) }},
+	} {
+		b, err := page.render()
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", page.name, err)
+		}
+
+		out[ContentDir+page.path] = b
 	}
-
-	out[ContentDir+"/reference/configuration.md"] = cfg
-
-	cmd, err := CLIReference(cli.NewRootCommand(io.Discard, io.Discard))
-	if err != nil {
-		return nil, fmt.Errorf("CLI reference: %w", err)
-	}
-
-	out[ContentDir+"/reference/cli.md"] = cmd
 
 	spec, err := fs.ReadFile(os.DirFS(root), "internal/api/openapi.json")
 	if err != nil {

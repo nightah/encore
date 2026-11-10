@@ -42,6 +42,7 @@ func (a *App) applyConfiguredInstances(ctx context.Context) error {
 		rec.Name, rec.Scheme, rec.Host, rec.Port, rec.Path = c.Name, kc.Scheme, kc.Host, kc.Port, kc.Path
 		rec.WSPort, rec.MAC, rec.BroadcastAddr = kc.WebSocketPort, c.MAC, c.Broadcast
 		rec.Language, rec.Timezone, rec.ShutdownQuits, rec.PreferredQuality = c.Language, c.Timezone, c.ShutdownQuits, c.PreferredQuality
+		rec.SearchMode, rec.SkinProfile = c.SearchMode, c.SkinProfile
 
 		rec.Username = firstNonEmpty(c.Username, kc.Username)
 		if password := firstNonEmpty(c.Password, kc.Password); password != "" {

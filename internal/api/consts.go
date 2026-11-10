@@ -127,3 +127,9 @@ const (
 
 // qualityInherit is the value of Instance.PreferredQuality for an instance that follows Settings › Features.
 const qualityInherit = "inherit"
+
+// searchModeInherit is the value of Instance.SearchMode for an instance that follows Settings › Features.
+const searchModeInherit = "inherit"
+
+// skinTimeout caps how long the instance page waits for Kodi to say which skin it runs.
+const skinTimeout = 5 * time.Second

@@ -82,6 +82,10 @@ LIBRARY_TYPE:
     टीवी
     video
 MATCH_CHOICE:
+  film: |-
+    फ़िल्म
+    फिल्म
+    मूवी
   first: |-
     पहला
     पहली
@@ -112,6 +116,10 @@ MATCH_CHOICE:
     दूसरा
     दूसरी
     दूसरे
+  show: |-
+    शो
+    सीरियल
+    सीरीज़
 MEDIA_TYPE:
   album: |-
     एल्बम

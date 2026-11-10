@@ -79,6 +79,10 @@ cases:
   - {utterance: "お気に入りのニュースを開いてください", intent: OpenFavourite, slots: {Favourite: ""}}
   - {utterance: "ユーチューブを起動してください", intent: LaunchAddon, slots: {Addon: ""}}
   - {utterance: "鬼滅の刃をグローバル検索してください", intent: GlobalSearch, slots: {Query: "鬼滅の刃"}}
+  - {utterance: "鬼滅の刃を検索して", intent: GlobalSearch, slots: {Query: "鬼滅の刃"}}
+  - {utterance: "映画の千と千尋の神隠しを検索して", intent: SearchMovies, slots: {Query: "千と千尋の神隠し"}}
+  - {utterance: "番組の鬼滅の刃を検索して", intent: SearchTVShows, slots: {Query: "鬼滅の刃"}}
+  - {utterance: "アーティストの米津玄師を検索して", intent: SearchMusic, slots: {Query: "米津玄師"}}
   - {utterance: "コディを休止状態にしてください", intent: Power, slots: {PowerAction: "hibernate"}}
   - {utterance: "イジェクト", intent: EjectMedia}
   - {utterance: "新しい映画を確認してください", intent: UpdateLibrary}

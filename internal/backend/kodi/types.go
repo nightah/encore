@@ -279,3 +279,53 @@ type Waker struct {
 
 // SendFunc delivers one UDP datagram to addr ("host:port").
 type SendFunc func(ctx context.Context, addr string, payload []byte) error
+
+// skinProfile is how to open one skin's own search with a query filled in.
+type skinProfile struct {
+	// ID is the skin's add-on ID, as lookandfeel.skin reports it, and Name its display name.
+	ID, Name string
+	Kind     skinSearchKind
+	// Requires lists the add-ons that must be installed and enabled for run to work.
+	Requires []string
+	// Window is the window run opens, as Window.IsVisible takes it; empty for skinSearchNative.
+	Window string
+	// run opens the search; nil for skinSearchNative.
+	run func(ctx context.Context, b *Backend, q string) error
+}
+
+// skinSearchKind is how a skin profile fills in the query.
+type skinSearchKind string
+
+// SkinProfile describes a skin whose search Encore knows, for the web interface and the docs.
+type SkinProfile struct {
+	// ID is the skin's add-on ID and Name its display name.
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	// Native is true for a skin that draws Global Search's window itself, where a search runs Global Search.
+	Native bool `json:"native"`
+	// Requires lists the add-ons the skin's search needs, Window the window it opens and How how it fills in the query.
+	Requires []string `json:"requires"`
+	Window   string   `json:"window,omitempty"`
+	How      string   `json:"how"`
+}
+
+// titleFilter is how one library section is narrowed to the titles containing some text: the window that shows it, its root path, and the smart playlist type and field that filter it.
+type titleFilter struct {
+	window      kodirpc.GUIWindow
+	root        string
+	kind, field string
+}
+
+// smartPlaylist is the subset of a Kodi smart playlist (xsp) that a filtered library path carries as JSON.
+type smartPlaylist struct {
+	Rules struct {
+		And []smartPlaylistRule `json:"and"`
+	} `json:"rules"`
+	Type string `json:"type"`
+}
+
+type smartPlaylistRule struct {
+	Field    string   `json:"field"`
+	Operator string   `json:"operator"`
+	Value    []string `json:"value"`
+}

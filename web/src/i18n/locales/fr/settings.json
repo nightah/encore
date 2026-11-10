@@ -224,6 +224,13 @@
       "hint": "Le nombre maximal d’éléments qu’une lecture aléatoire ou une file lit à la fois, pour que les grandes bibliothèques restent réactives",
       "title": "Limite de file"
     },
+    "search_mode": {
+      "global_search": "Global Search",
+      "hint": "Ce qu’ouvre « cherche… » sur Kodi. La bibliothèque affiche les films, séries, clips, artistes ou albums correspondants dans la vue de bibliothèque de Kodi, sans aucune extension. Global Search et la recherche propre au skin affichent la bibliothèque à la place quand ils ne peuvent pas fonctionner. Une instance peut changer ce choix.",
+      "library": "L’afficher dans la bibliothèque",
+      "skin": "La recherche propre au skin",
+      "title": "Recherche"
+    },
     "shutdown_quits": {
       "hint": "Au lieu d'éteindre l'appareil",
       "title": "« Éteindre » quitte Kodi"

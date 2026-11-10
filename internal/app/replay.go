@@ -223,6 +223,18 @@ func (b dryBackend) ExecuteAddon(_ context.Context, id string, params map[string
 	return nil
 }
 
+// SkinSearch reads the skin as a search would and records the search instead of opening it.
+func (b dryBackend) SkinSearch(ctx context.Context, query, profile string) (media.Skin, error) {
+	skin, err := b.Skin(ctx, profile)
+	if err != nil || skin.Search != media.SkinSearchSupported {
+		return skin, err
+	}
+
+	b.run.record("SkinSearch", map[string]any{"skin": skin.ID, "profile": skin.Profile, "query": query})
+
+	return skin, nil
+}
+
 func (b dryBackend) System(_ context.Context, cmd media.SystemCommand) error {
 	b.run.record("System", map[string]any{"command": cmd})
 

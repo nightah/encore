@@ -22,6 +22,8 @@ type Backend struct {
 	favourites []media.Favourite
 	addons     []media.Addon
 	clock      time.Time
+	skin       media.Skin
+	skinErr    error
 
 	Err error
 }

@@ -1,5 +1,4 @@
 # Responses keyed by message ID, translated on Crowdin from the English file. {placeholders} are filled by the handler, and every language uses the same ones (the linter checks); notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
-addon.no_global_search: "グローバル検索にはGlobal Searchアドオンが必要です。コディにインストールしてから、もう一度お試しください。"
 addon.not_found: "{addon}というアドオンが見つかりませんでした。"
 addon.opening: "{addon}を開きます。"
 addon.searching: "{query}を検索します。"
@@ -101,6 +100,7 @@ recommend.nothing: "すみません、おすすめできるものがありませ
 recommend.show: "番組{title}はいかがですか？"
 recommend.song: "{artist}の{title}はいかがですか？"
 remote.no_text: "入力する内容が聞き取れませんでした。"
+search.film_or_show: "{title}は映画と番組のどちらですか？"
 streams.audio_language: "音声は{language}です。"
 streams.audio_named: "音声は{name}です。"
 streams.audio_unknown: "音声を切り替えました。"

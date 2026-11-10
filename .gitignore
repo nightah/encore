@@ -35,6 +35,7 @@ encore.yml
 /docs/src/content/docs/reference/configuration.md
 /docs/src/content/docs/reference/cli.md
 /docs/src/content/docs/reference/api/endpoints.md
+/docs/src/content/docs/guides/search.md
 /docs/src/content/docs/voice-commands/*.md
 !/docs/src/content/docs/voice-commands/index.md
 

@@ -1,5 +1,4 @@
 # Responses keyed by message ID, translated on Crowdin from the English file. {placeholders} are filled by the handler, and every language uses the same ones (the linter checks); notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
-addon.no_global_search: "ग्लोबल सर्च के लिए Global Search ऐड-ऑन चाहिए। उसे Kodi में इंस्टॉल करके फिर से कोशिश कीजिए।"
 addon.not_found: "मुझे {addon} नाम का कोई ऐड-ऑन नहीं मिल पाया।"
 addon.opening: "{addon} खोल रही हूँ।"
 addon.searching: "{query} ढूँढ रही हूँ।"
@@ -101,6 +100,7 @@ recommend.nothing: "माफ़ कीजिए, मेरे पास सु�
 recommend.show: "शो {title} कैसा रहेगा?"
 recommend.song: "{artist} का {title} कैसा रहेगा?"
 remote.no_text: "मैं समझ नहीं पाई कि क्या टाइप करना है।"
+search.film_or_show: "आपको {title} फ़िल्म चाहिए या शो?"
 streams.audio_language: "ऑडियो: {language}।"
 streams.audio_named: "ऑडियो: {name}।"
 streams.audio_unknown: "ऑडियो बदल दिया।"

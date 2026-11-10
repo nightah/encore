@@ -149,6 +149,9 @@ type exportedKodi struct {
 	ShutdownQuits *bool  `yaml:"shutdown_quits,omitempty"`
 	// PreferredQuality is empty when the instance follows alexa.preferred_quality.
 	PreferredQuality string `yaml:"preferred_quality,omitempty"`
+	// SearchMode is empty when the instance follows alexa.search_mode.
+	SearchMode  string `yaml:"search_mode,omitempty"`
+	SkinProfile string `yaml:"skin_profile,omitempty"`
 }
 
 // DeployEvent is one step of a deploy's progress.
@@ -254,6 +257,8 @@ type Instance struct {
 	Timezone           string               `json:"timezone" doc:"The Kodi host's IANA time zone; empty when learnt from Kodi's clock"`
 	Shutdown           string               `json:"shutdown" enum:"inherit,quit,power_off" doc:"What \"shut down\" does; inherit follows Settings › Features"`
 	PreferredQuality   string               `json:"preferred_quality" enum:"inherit,screen,highest,2160p,1080p,720p,sd" doc:"Which copy plays when the library holds a film or episode more than once; inherit follows Settings › Features, and screen matches this instance's screen"`
+	SearchMode         string               `json:"search_mode" enum:"inherit,library,global_search,skin" doc:"How \"search for X\" searches; inherit follows Settings › Features"`
+	SkinProfile        string               `json:"skin_profile" doc:"The skin whose search steps to use when this instance's skin isn't one Encore knows, from GET /kodi/skin-profiles; empty for none"`
 	Screen             Nullable[Screen]     `json:"screen" doc:"The largest picture this instance's display shows, as Kodi last reported it; null until Encore has asked"`
 	ManagedByConfig    bool                 `json:"managed_by_config"`
 	Status             InstanceStatus       `json:"status"`
@@ -328,6 +333,23 @@ type InstanceInput struct {
 	Timezone         *string `json:"timezone,omitempty" doc:"The Kodi host's IANA time zone; empty learns it from Kodi's clock"`
 	Shutdown         *string `json:"shutdown,omitempty" enum:"inherit,quit,power_off"`
 	PreferredQuality *string `json:"preferred_quality,omitempty" enum:"inherit,screen,highest,2160p,1080p,720p,sd" doc:"Which copy plays when the library holds a film or episode more than once; inherit follows Settings › Features"`
+	SearchMode       *string `json:"search_mode,omitempty" enum:"inherit,library,global_search,skin" doc:"How \"search for X\" searches; inherit follows Settings › Features"`
+	SkinProfile      *string `json:"skin_profile,omitempty" doc:"The skin whose search steps to use when this instance's skin isn't one Encore knows: a profile from GET /kodi/skin-profiles that isn't native, or empty for none"`
+}
+
+// InstanceSkin is a Kodi instance's active skin and what "search for X" does on it.
+type InstanceSkin struct {
+	SearchMode string         `json:"search_mode" enum:"library,global_search,skin" doc:"The search mode in effect for the instance, its own or Settings › Features'"`
+	Skin       Nullable[Skin] `json:"skin" doc:"The active skin; null when Kodi can't be reached"`
+}
+
+// Skin is a Kodi skin and what a skin search does on it.
+type Skin struct {
+	ID      string   `json:"id" doc:"The skin's add-on ID, e.g. skin.arctic.fuse.3"`
+	Name    string   `json:"name" doc:"The skin's name; its add-on ID when Kodi doesn't say"`
+	Profile string   `json:"profile" doc:"The skin profile whose steps apply: the skin's own, the instance's skin_profile for a skin Encore doesn't know, or empty for none"`
+	Search  string   `json:"search" enum:"supported,native_global_search,no_profile,missing_addons" doc:"In skin mode: supported opens the skin's own search; native_global_search runs Global Search, which the skin draws, or shows the library's matching titles when Global Search isn't installed; no_profile and missing_addons show the library's matching titles"`
+	Missing []string `json:"missing" doc:"The add-ons the skin's search needs that aren't installed and enabled, for missing_addons"`
 }
 
 // Check is one step of a connection test.
@@ -593,6 +615,7 @@ type RequestDetail struct {
 	KodiCalls []KodiCall        `json:"kodi_calls" doc:"The JSON-RPC calls the request made, in order"`
 	Timing    Nullable[Timing]  `json:"timing" doc:"How long each phase took; null for requests logged before Encore recorded it"`
 	Speech    string            `json:"speech"`
+	Note      string            `json:"note" doc:"Why the action did what it did, when it chose, e.g. why a skin search fell back to Global Search; empty otherwise"`
 }
 
 // Via is a room name said in a request ("on the TV"): the name that matched, whether it names the room or a device in it, and the room. Spoken equals Room when the room's own name was said.
@@ -681,6 +704,7 @@ type loggedMatch struct {
 		Why     match.Breakdown `json:"breakdown"`
 	} `json:"candidates"`
 	Error string `json:"error"`
+	Note  string `json:"note"`
 }
 
 // captureRecorder keeps the one entry a replay produces.
@@ -714,7 +738,7 @@ type Settings struct {
 	Auth     AuthSettings    `json:"auth"`
 	Storage  StorageSettings `json:"storage"`
 	Secrets  SecretsInfo     `json:"secrets"`
-	Features Features        `json:"features" doc:"The alexa.deep_search, alexa.shutdown_quits, alexa.preferred_quality, alexa.confirm_sound, alexa.queue_limit, alexa.auto_deploy and alexa.auto_deploy_minutes config keys"`
+	Features Features        `json:"features" doc:"The alexa.deep_search, alexa.shutdown_quits, alexa.preferred_quality, alexa.search_mode, alexa.confirm_sound, alexa.queue_limit, alexa.auto_deploy and alexa.auto_deploy_minutes config keys"`
 	Logging  LoggingSettings `json:"logging"`
 	Locale   LocaleSettings  `json:"locale"`
 	Managed  []string        `json:"managed" doc:"Dotted keys set by encore.yml or ENCORE_* variables; shown read-only"`
@@ -813,11 +837,12 @@ type SecretsInfo struct {
 	RotatedAt *time.Time `json:"rotated_at"`
 }
 
-// Features are optional behaviours. They are the config keys alexa.deep_search, alexa.shutdown_quits, alexa.preferred_quality, alexa.confirm_sound, alexa.queue_limit, alexa.auto_deploy and alexa.auto_deploy_minutes.
+// Features are optional behaviours. They are the config keys alexa.deep_search, alexa.shutdown_quits, alexa.preferred_quality, alexa.search_mode, alexa.confirm_sound, alexa.queue_limit, alexa.auto_deploy and alexa.auto_deploy_minutes.
 type Features struct {
 	DeepSearch        bool    `json:"deep_search" doc:"\"Play X\" also searches music when the request doesn't say what kind of title X is"`
 	ShutdownQuits     bool    `json:"shutdown_quits" doc:"\"Shut down\" quits Kodi instead of powering off the device; a Kodi instance's own kodi[].shutdown_quits wins"`
 	PreferredQuality  string  `json:"preferred_quality" enum:"screen,highest,2160p,1080p,720p,sd" doc:"Which copy plays when the library holds a film or episode more than once, such as in both 2160p and 1080p: that quality, else the best below it, else the least above it. screen matches each Kodi instance's screen, and plays the best copy until it is known. Playback carries on where any copy stopped. A Kodi instance's own kodi[].preferred_quality wins"`
+	SearchMode        string  `json:"search_mode" enum:"library,global_search,skin" doc:"How \"search for X\" searches: library shows the library's matching films, TV shows, music videos, artists or albums in Kodi's own library view; global_search runs the Global Search add-on; and skin opens the active skin's own search when Encore knows the skin. When global_search or skin can't run, the search shows the library instead. A Kodi instance's own kodi[].search_mode wins"`
 	ConfirmSound      bool    `json:"confirm_sound" doc:"A short sound answers commands that have nothing to say, such as pause or volume up"`
 	QueueLimit        int     `json:"queue_limit" doc:"The most items a shuffle or queue plays at once"`
 	AutoDeploy        bool    `json:"auto_deploy" doc:"Redeploy the skill on its own when what would be deployed changes. An automatic deploy that fails for a reason that may pass, such as Amazon being unavailable, is tried again up to three times with a growing wait; any other failure, or a fourth in a row, pauses this until a deploy started by hand succeeds"`
@@ -952,6 +977,7 @@ type FeaturesPatch struct {
 	DeepSearch        *bool    `json:"deep_search,omitempty"`
 	ShutdownQuits     *bool    `json:"shutdown_quits,omitempty"`
 	PreferredQuality  *string  `json:"preferred_quality,omitempty" enum:"screen,highest,2160p,1080p,720p,sd"`
+	SearchMode        *string  `json:"search_mode,omitempty" enum:"library,global_search,skin"`
 	ConfirmSound      *bool    `json:"confirm_sound,omitempty"`
 	QueueLimit        *int     `json:"queue_limit,omitempty" minimum:"1" maximum:"1000"`
 	AutoDeploy        *bool    `json:"auto_deploy,omitempty"`

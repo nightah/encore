@@ -12,6 +12,8 @@ import (
 	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/nightah/encore/internal/backend/kodi"
 )
 
 var update = flag.Bool("update", false, "rewrite the generated documentation pages")
@@ -184,4 +186,26 @@ func TestFlagDefaultsFromUsage(t *testing.T) {
 	}
 
 	assert.Equal(t, map[string]string{"server.address": ":8080", "log.format": "auto", "locale": "all", "plain": "x", "none": ""}, got)
+}
+
+func TestSearchGuide(t *testing.T) {
+	t.Parallel()
+
+	page, err := SearchGuide(kodi.SkinProfiles())
+	require.NoError(t, err)
+
+	out := string(page)
+	assert.Contains(t, out, GeneratedMarker)
+	assert.Contains(t, out, "| Arctic Fuse 3 | `skin.arctic.fuse.3` | `script.skinvariables` | `1105` | Typed into the window's search box |")
+	assert.Contains(t, out, "| Arctic Zephyr 2: Resurrection Mod | `skin.arctic.zephyr.2.resurrection.mod` | `script.skinvariables` | `1138` | Handed to the skin, which fills it in as the window opens |")
+	assert.Contains(t, out, "| Nimbus | `skin.nimbus` | `script.nimbus.helper` | `1121` | Typed into the keyboard the skin's helper opens |")
+	assert.Contains(t, out, "| Estuary | `skin.estuary` |\n")
+
+	for _, p := range kodi.SkinProfiles() {
+		assert.Contains(t, out, "`"+p.ID+"`", "every skin Encore knows is listed")
+	}
+
+	page, err = SearchGuide([]kodi.SkinProfile{{ID: "skin.x", Name: "X", Requires: []string{"a", "b"}, Window: "1", How: "something_new"}})
+	require.NoError(t, err)
+	assert.Contains(t, string(page), "| X | `skin.x` | `a`, `b` | `1` | something_new |", "a new way of filling in the query still shows")
 }

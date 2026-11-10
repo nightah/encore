@@ -396,7 +396,7 @@ func TestShippedFreeTextSlotsInEveryLocale(t *testing.T) {
 			}
 		}
 
-		assert.Equal(t, map[string]string{"PlayMedia": "Query", "GlobalSearch": "Query", "TypeText": "Text", "OpenFavourite": "Favourite", "LaunchAddon": "Addon"}, got, locale)
+		assert.Equal(t, map[string]string{"PlayMedia": "Query", "GlobalSearch": "Query", "SearchMovies": "Query", "SearchTVShows": "Query", "SearchMusic": "Query", "TypeText": "Text", "OpenFavourite": "Favourite", "LaunchAddon": "Addon"}, got, locale)
 	}
 }
 

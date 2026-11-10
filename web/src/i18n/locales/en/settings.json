@@ -224,6 +224,13 @@
       "hint": "The most items a shuffle or queue plays at once, which keeps large libraries responsive",
       "title": "Queue limit"
     },
+    "search_mode": {
+      "global_search": "Global Search",
+      "hint": "What “search for…” opens on Kodi. The library shows the matching films, TV shows, music videos, artists or albums in Kodi’s own library view, and needs no add-ons. Global Search and the skin’s own search show the library instead when they can’t run. An instance can override it.",
+      "library": "Show it in the library",
+      "skin": "The skin’s own search",
+      "title": "Search"
+    },
     "shutdown_quits": {
       "hint": "Instead of powering off the device",
       "title": "“Shutdown” quits Kodi"

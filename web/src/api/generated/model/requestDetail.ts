@@ -29,6 +29,8 @@ export interface RequestDetail {
   locale: string;
   /** A logged candidate's kind and media_id are looked up in the target instance's index when the entry predates them */
   match: Match | null;
+  /** Why the action did what it did, when it chose, e.g. why a skin search fell back to Global Search; empty otherwise */
+  note: string;
   outcome: RequestDetailOutcome;
   /** Sent by Amazon's simulator during a deploy's smoke test, not by an Echo */
   simulated: boolean;

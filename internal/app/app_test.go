@@ -22,6 +22,7 @@ import (
 	"github.com/nightah/encore/internal/backend/kodi/fakekodi"
 	"github.com/nightah/encore/internal/config"
 	"github.com/nightah/encore/internal/core/actions"
+	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/secrets"
 	"github.com/nightah/encore/internal/skillmodel"
 	"github.com/nightah/encore/internal/store"
@@ -282,4 +283,79 @@ func TestSavingTheLearnedMACLeavesTheRecordAlone(t *testing.T) {
 		default:
 		}
 	}
+}
+
+func TestEndToEndSkinSearch(t *testing.T) {
+	inBubble(t, func(t *testing.T) {
+		lib := fakekodi.DefaultLibrary()
+		lib.Addons = append(lib.Addons,
+			fakekodi.Addon{AddonID: "script.skinvariables", Type: "xbmc.python.script", Name: "Skin Variables", Enabled: true},
+			fakekodi.Addon{AddonID: "skin.copacetic", Type: "xbmc.gui.skin", Name: "Copacetic", Enabled: true},
+		)
+
+		kodi := newKodi(t, fakekodi.Options{Library: lib})
+		kodi.SetSkin("skin.arctic.fuse.3")
+		kodi.ShowWindow("1105", 1)
+
+		h := startHarness(t, onFakes(defaultTuning()), config.KodiInstance{Name: "Lounge", URL: kodi.URL(), WebSocketURL: kodi.WebSocketURL(), Default: true, SearchMode: "skin"})
+		h.kodi = kodi
+		h.waitIndexed(t)
+
+		assert.Equal(t, "Searching for dune.", speech(h.say(t, "GlobalSearch", "Query", "dune")))
+
+		var plugin []string
+
+		for _, c := range kodi.CallsTo("Files.GetDirectory") {
+			if strings.Contains(string(c.Params), "plugin://script.skinvariables/") {
+				plugin = append(plugin, string(c.Params))
+			}
+		}
+
+		require.Len(t, plugin, 2, "the window is opened and its search box focused through script.skinvariables' plugin")
+		assert.Contains(t, plugin[0], "command=ReplaceWindow%281105%29")
+		assert.Contains(t, plugin[1], "command=SetFocus%283000%29")
+
+		typed := kodi.CallsTo("Input.SendText")
+		require.Len(t, typed, 1)
+		assert.JSONEq(t, `{"text":"dune","done":true}`, string(typed[0].Params))
+		assert.Empty(t, kodi.CallsTo("Addons.ExecuteAddon"), "Global Search isn't run")
+
+		kodi.SetSkin("skin.copacetic")
+		h.say(t, "GlobalSearch", "Query", "hot fuzz")
+
+		opened := kodi.CallsTo("GUI.ActivateWindow")
+		require.NotEmpty(t, opened, "the skin is read again with each request, and a skin without a profile shows the library")
+		assert.Contains(t, string(opened[len(opened)-1].Params), `videodb://movies/titles/?xsp=`)
+		assert.Contains(t, string(opened[len(opened)-1].Params), `hot%20fuzz`)
+		assert.Empty(t, kodi.CallsTo("Addons.ExecuteAddon"), "not Global Search")
+
+		var notes []string
+
+		settled(t, func() bool {
+			entries, err := h.app.DB().RequestLog().List(t.Context(), store.RequestLogQuery{Limit: 10})
+			if err != nil || len(entries) < 2 {
+				return false
+			}
+
+			notes = notes[:0]
+
+			for _, e := range entries {
+				var m loggedMatch
+				require.NoError(t, json.Unmarshal(e.Match, &m))
+				notes = append(notes, m.Note)
+			}
+
+			return true
+		})
+
+		assert.ElementsMatch(t, []string{"skin search: opened skin.arctic.fuse.3's search", "skin search: skin.copacetic has no profile; showed the library"}, notes)
+
+		skin, mode, err := h.app.InstanceSkin(t.Context(), h.instance(t).id)
+		require.NoError(t, err)
+		assert.Equal(t, media.SearchModeSkin, mode)
+		assert.Equal(t, media.Skin{ID: "skin.copacetic", Name: "Copacetic", Search: media.SkinSearchNoProfile}, skin)
+
+		_, _, err = h.app.InstanceSkin(t.Context(), 999)
+		require.ErrorIs(t, err, ErrNoRuntime)
+	})
 }

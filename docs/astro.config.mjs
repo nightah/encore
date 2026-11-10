@@ -109,6 +109,7 @@ export default defineConfig({
             "guides/reverse-proxy",
             "guides/deploy-skill",
             "guides/kodi",
+            "guides/search",
             "guides/echo-devices",
             "guides/shared-libraries",
             "guides/matching",

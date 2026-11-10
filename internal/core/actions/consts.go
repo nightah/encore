@@ -39,11 +39,16 @@ const lastShows = 5
 // nukta is the Devanagari sign that marks a borrowed sound (फ़ f, ज़ z), which streamKey drops.
 const nukta = "\u093c"
 
-// Positions an Answer can name among the titles a question offered.
+// Positions an Answer can name among the titles a question offered, and the kinds it can name ("the film", "the show").
 const (
 	AnswerFirst  = "first"
 	AnswerSecond = "second"
 	AnswerLast   = "last"
 	AnswerNewer  = "newer"
 	AnswerOlder  = "older"
+	AnswerFilm   = "film"
+	AnswerShow   = "show"
 )
+
+// scoreTie is how close two match scores are to count as a tie.
+const scoreTie = 1e-6

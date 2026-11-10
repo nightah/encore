@@ -25,7 +25,9 @@ var (
 	errUnsupportedKind = errors.New("unsupported kind")
 	errMixedQueue      = errors.New("kodi: a queue can't mix songs and video")
 	errFavouriteType   = errors.New("kodi: this kind of favourite can't be opened remotely")
-	errNoHost          = errors.New("no host to connect to")
+	// A skin search's window or keyboard didn't open in time.
+	errWindowNotVisible = errors.New("window didn't open")
+	errNoHost           = errors.New("no host to connect to")
 	// The request never left the process, so retrying it over HTTP is safe.
 	errNotSent = errors.New("request not sent")
 

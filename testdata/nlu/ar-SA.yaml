@@ -79,6 +79,10 @@ cases:
   - {utterance: "افتحي المفضل الجزيرة", intent: OpenFavourite, slots: {Favourite: ""}}
   - {utterance: "نفذي يوتيوب", intent: LaunchAddon, slots: {Addon: ""}}
   - {utterance: "سوي بحث شامل عن باب الحارة", intent: GlobalSearch, slots: {Query: "باب الحارة"}}
+  - {utterance: "دوري على باب الحارة", intent: GlobalSearch, slots: {Query: "باب الحارة"}}
+  - {utterance: "دوري على فيلم الرسالة", intent: SearchMovies, slots: {Query: "الرسالة"}}
+  - {utterance: "دوري على مسلسل باب الحارة", intent: SearchTVShows, slots: {Query: "باب الحارة"}}
+  - {utterance: "دوري على الفنان عمرو دياب", intent: SearchMusic, slots: {Query: "عمرو دياب"}}
   - {utterance: "السبات كودي", intent: Power, slots: {PowerAction: "hibernate"}}
   - {utterance: "إخراج القرص", intent: EjectMedia}
   - {utterance: "شوفي إذا فيه أفلام جديدة", intent: UpdateLibrary}

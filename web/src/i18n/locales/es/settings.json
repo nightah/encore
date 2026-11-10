@@ -224,6 +224,13 @@
       "hint": "El máximo de elementos que reproduce a la vez una reproducción aleatoria o una cola, para que las bibliotecas grandes respondan con fluidez",
       "title": "Límite de cola"
     },
+    "search_mode": {
+      "global_search": "Global Search",
+      "hint": "Lo que abre «busca…» en Kodi. La biblioteca muestra las películas, series, vídeos musicales, artistas o álbumes que coinciden en la vista de biblioteca de Kodi, y no necesita complementos. Global Search y la búsqueda propia de la skin muestran la biblioteca cuando no pueden funcionar. Una instancia puede cambiarlo.",
+      "library": "Mostrarlo en la biblioteca",
+      "skin": "La búsqueda propia de la skin",
+      "title": "Búsqueda"
+    },
     "shutdown_quits": {
       "hint": "En lugar de apagar el dispositivo",
       "title": "«Apagar» cierra Kodi"

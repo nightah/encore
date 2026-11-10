@@ -52,7 +52,7 @@ func (h *Handler) ServeBody(w http.ResponseWriter, r *http.Request, body []byte)
 	entry.KodiCalls, entry.Target, entry.Via, entry.MatchTime = tr.snapshot()
 
 	if outcome != nil {
-		entry.Match, entry.Err = outcome.Match, outcome.Err
+		entry.Match, entry.Err, entry.Note = outcome.Match, outcome.Err, outcome.Note
 		entry.Outcome = describeOutcome(*outcome)
 	} else {
 		// Session ends and launches have no action outcome; they were handled fine.

@@ -25,6 +25,7 @@ Opening an entry shows:
 - the **slots** Alexa filled (title, room, numbers, …). Alexa has one Room slot for both rooms and devices, so it reads **Device** when it named a device, as in `Command = "stop", Device = "TV"`; the log keeps it as Room, and Replay sends it that way.
 - under **Target Kodi**, the room or device the request named: a device and its room ("TV device in Lounge"), another name for a room, or the room itself. A room named at the end of a search ("play Bluey in the lounge") shows here too, though it never fills the Room slot. A room without its own Kodi instance plays on the Echo's, so the target can differ from the room shown. See [rooms](/encore/guides/echo-devices/#rooms).
 - the **match**: the normalised query, the decision and its margin, and the candidates with their score breakdown (see [matching](/encore/guides/matching/)).
+- a **note** when Encore chose how to carry out the request, such as why a [search](/encore/guides/search/) showed the library.
 - the **Kodi calls** Encore made, in order, with each one's duration and result.
 - the **timing**: how long verifying Alexa's signature, matching and talking to Kodi took, and the total Alexa waited for an answer. Verifying needs Amazon's signing certificate, which Encore downloads once and keeps in memory; on start it fetches the one the last request used, so the first request after a restart doesn't wait for it.
 - the **speech** Alexa was given to say.

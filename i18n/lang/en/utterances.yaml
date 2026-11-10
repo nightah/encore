@@ -94,6 +94,7 @@ Fullscreen:
 GlobalSearch:
   do_global_search: "(do a|run a) global search for {Query}"
   global_search: "global search [for] {Query}"
+  search_for: "search for {Query}"
   search_kodi_for: "search (kodi|everywhere|all add ons|all addons|every addon) for {Query}"
 IdentifyEcho:
   identify_this_echo: "identify this (echo|device|speaker)"
@@ -156,7 +157,7 @@ PlayMedia:
   play: "play {Query}"
   put: "put on {Query}"
   queue_up: "queue up {Query}"
-  search_for: "search for {Query}"
+  start_playing: "start playing {Query}"
 PlayPlaylist:
   play_music_playlist: "(play|start) [the] (music|video|smart) playlist {Playlist}"
   play_playlist: "(play|start|listen to|watch) [my] playlist {Playlist} [(in the|on the|in|on) {Room}]"
@@ -219,6 +220,15 @@ RoomControl:
   in_the: "{Command} (in the|on the|in|on) {Room}"
   playback: "{Command} playback (in|on) [the] {Room}"
   tv: "{Command} [the] (tv|telly|kodi|music|movie|show|video) (in|on) [the] {Room}"
+SearchMovies:
+  search_films_for: "search [kodi|my|the] (films|movies) for {Query}"
+  search_for_film: "search [kodi] for (the|a) (film|movie) {Query}"
+SearchMusic:
+  search_for_music: "search [kodi] for (the|an|a) (artist|band|album) {Query}"
+  search_music_for: "search [kodi|my|the] music for {Query}"
+SearchTVShows:
+  search_for_show: "search [kodi] for (the|a) (show|tv show|t. v. show|series) {Query}"
+  search_shows_for: "search [kodi|my|the] (shows|tv shows|t. v. shows) for {Query}"
 ShuffleAlbum:
   shuffle_album: "shuffle [the] album {Album} [(in the|on the|in|on) {Room}]"
   shuffle_album_2: "shuffle the {Album} album [by {Artist}]"

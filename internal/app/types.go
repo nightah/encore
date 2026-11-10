@@ -305,6 +305,7 @@ type loggedMatch struct {
 	Margin     float64           `json:"margin,omitempty"`
 	Candidates []loggedCandidate `json:"candidates,omitempty"`
 	Error      string            `json:"error,omitempty"`
+	Note       string            `json:"note,omitempty"`
 }
 
 type loggedVia struct {

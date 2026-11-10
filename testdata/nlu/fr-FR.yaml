@@ -79,6 +79,10 @@ cases:
   - {utterance: "ouvre mon favori france inter", intent: OpenFavourite, slots: {Favourite: ""}}
   - {utterance: "lance youtube", intent: LaunchAddon, slots: {Addon: ""}}
   - {utterance: "fais une recherche globale de intouchables", intent: GlobalSearch, slots: {Query: "intouchables"}}
+  - {utterance: "cherche intouchables", intent: GlobalSearch, slots: {Query: "intouchables"}}
+  - {utterance: "cherche le film intouchables", intent: SearchMovies, slots: {Query: "intouchables"}}
+  - {utterance: "cherche la série lupin", intent: SearchTVShows, slots: {Query: "lupin"}}
+  - {utterance: "cherche l'artiste stromae", intent: SearchMusic, slots: {Query: "stromae"}}
   - {utterance: "veille prolongée kodi", intent: Power, slots: {PowerAction: "hibernate"}}
   - {utterance: "éjecte", intent: EjectMedia}
   - {utterance: "regarde s'il y a de nouveaux films", intent: UpdateLibrary}

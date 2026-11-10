@@ -79,6 +79,10 @@ cases:
   - {utterance: "open my favourite bbc news", intent: OpenFavourite, slots: {Favourite: ""}}
   - {utterance: "launch youtube", intent: LaunchAddon, slots: {Addon: ""}}
   - {utterance: "do a global search for dune", intent: GlobalSearch, slots: {Query: "dune"}}
+  - {utterance: "search for dune", intent: GlobalSearch, slots: {Query: "dune"}}
+  - {utterance: "search for the film dune", intent: SearchMovies, slots: {Query: "dune"}}
+  - {utterance: "search for the show severance", intent: SearchTVShows, slots: {Query: "severance"}}
+  - {utterance: "search for the band queen", intent: SearchMusic, slots: {Query: "queen"}}
   - {utterance: "hibernate kodi", intent: Power, slots: {PowerAction: "hibernate"}}
   - {utterance: "eject", intent: EjectMedia}
   - {utterance: "look for new movies", intent: UpdateLibrary}

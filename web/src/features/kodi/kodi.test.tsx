@@ -685,7 +685,9 @@ describe("Kodi instance dialog", () => {
       name: "Garage",
       password: "hunter2",
       preferred_quality: "inherit",
+      search_mode: "inherit",
       shutdown: "inherit",
+      skin_profile: "",
       timezone: "",
       url: "http://192.168.1.60:8080/jsonrpc",
       username: "kodi",
@@ -889,5 +891,138 @@ describe("Kodi instance dialog", () => {
     await user.click(within(dialog).getByRole("button", { name: "Add Kodi instance" }));
 
     expect(await within(dialog).findByRole("alert")).toHaveTextContent("Name and URL are required.");
+  });
+});
+
+describe("Kodi instance search", () => {
+  it("shows the skin Kodi is running and what a search does on it", async () => {
+    let release = () => {};
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    server.use(
+      http.get("*/api/v1/kodi/instances/1/skin", async () => {
+        await held;
+        return HttpResponse.json({
+          search_mode: "global_search",
+          skin: {
+            id: "skin.arctic.fuse.3",
+            missing: [],
+            name: "Arctic Fuse 3",
+            profile: "skin.arctic.fuse.3",
+            search: "supported",
+          },
+        });
+      }),
+    );
+    const user = userEvent.setup();
+    renderApp("/kodi");
+    const lounge = await card("Lounge");
+
+    await user.click(lounge.getByRole("button", { name: "Edit Lounge" }));
+    const dialog = await screen.findByRole("dialog", { name: "Edit Lounge" });
+    expect(within(dialog).getByRole("combobox", { name: "Search" })).toHaveValue("inherit");
+    expect(await within(dialog).findByText("Checking which skin Kodi is using…")).toBeInTheDocument();
+
+    release();
+    expect(
+      await within(dialog).findByText("Arctic Fuse 3: skin search supported. Skin search isn’t selected here."),
+    ).toBeInTheDocument();
+  });
+
+  it.each([
+    ["Bedroom", "skin.copacetic: no profile, so searches show the library. Skin search isn’t selected here."],
+    ["Kids' room", "Encore couldn’t ask Kodi which skin it’s using."],
+  ])("says what a search does on %s", async (name, status) => {
+    const user = userEvent.setup();
+    renderApp("/kodi");
+    const instance = await card(name);
+
+    await user.click(instance.getByRole("button", { name: `Edit ${name}` }));
+    const dialog = await screen.findByRole("dialog", { name: `Edit ${name}` });
+    expect(await within(dialog).findByText(status)).toBeInTheDocument();
+  });
+
+  it("saves the search mode and a skin profile for a skin Encore doesn't know", async () => {
+    const user = userEvent.setup();
+    const log = recordRequests();
+    renderApp("/kodi");
+    const bedroom = await card("Bedroom");
+
+    await user.click(bedroom.getByRole("button", { name: "Edit Bedroom" }));
+    let dialog = await screen.findByRole("dialog", { name: "Edit Bedroom" });
+    const profile = within(dialog).getByRole("combobox", { name: "Skin profile" });
+    expect(profile).toHaveValue("");
+    await waitFor(() => expect(within(profile).getByRole("option", { name: "Arctic Fuse 2" })).toBeInTheDocument());
+    expect(within(profile).queryByRole("option", { name: "Estuary" })).not.toBeInTheDocument();
+
+    await user.selectOptions(within(dialog).getByRole("combobox", { name: "Search" }), "The skin’s own search");
+    await user.selectOptions(profile, "Arctic Fuse 2");
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    await waitFor(() =>
+      expect(getDb().instances.find((i) => i.name === "Bedroom")?.skin_profile).toBe("skin.arctic.fuse.2"),
+    );
+    expect(log.find((r) => r.method === "PATCH")?.body).toMatchObject({
+      search_mode: "skin",
+      skin_profile: "skin.arctic.fuse.2",
+    });
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
+
+    await user.click(bedroom.getByRole("button", { name: "Edit Bedroom" }));
+    dialog = await screen.findByRole("dialog", { name: "Edit Bedroom" });
+    expect(
+      await within(dialog).findByText("skin.copacetic: skin search supported as Arctic Fuse 2."),
+    ).toBeInTheDocument();
+  });
+
+  it("puts a skin profile the server rejects under the field", async () => {
+    server.use(
+      http.get("*/api/v1/kodi/skin-profiles", () =>
+        HttpResponse.json([
+          { how: "builtins", id: "skin.retired", name: "Retired", native: false, requires: [], window: "1100" },
+        ]),
+      ),
+    );
+    const user = userEvent.setup();
+    renderApp("/kodi");
+    const bedroom = await card("Bedroom");
+
+    await user.click(bedroom.getByRole("button", { name: "Edit Bedroom" }));
+    const dialog = await screen.findByRole("dialog", { name: "Edit Bedroom" });
+    const profile = within(dialog).getByRole("combobox", { name: "Skin profile" });
+    await waitFor(() => expect(within(profile).getByRole("option", { name: "Retired" })).toBeInTheDocument());
+    await user.selectOptions(profile, "Retired");
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    expect(await within(dialog).findByText("Choose a skin profile Encore knows.")).toBeInTheDocument();
+  });
+
+  it("shows a missing add-on", async () => {
+    server.use(
+      http.get("*/api/v1/kodi/instances/1/skin", () =>
+        HttpResponse.json({
+          search_mode: "skin",
+          skin: {
+            id: "skin.arctic.fuse.3",
+            missing: ["script.skinvariables"],
+            name: "Arctic Fuse 3",
+            profile: "skin.arctic.fuse.3",
+            search: "missing_addons",
+          },
+        }),
+      ),
+    );
+    const user = userEvent.setup();
+    renderApp("/kodi");
+    const lounge = await card("Lounge");
+
+    await user.click(lounge.getByRole("button", { name: "Edit Lounge" }));
+    const dialog = await screen.findByRole("dialog", { name: "Edit Lounge" });
+    expect(
+      await within(dialog).findByText(
+        "Arctic Fuse 3: skin search needs script.skinvariables, so searches show the library for now.",
+      ),
+    ).toBeInTheDocument();
   });
 });

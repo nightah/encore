@@ -79,6 +79,10 @@ cases:
   - {utterance: "फ़ेवरेट आज तक खोलो", intent: OpenFavourite, slots: {Favourite: ""}, pending: "Amazon finds no intent for a favourite's name it doesn't know"}
   - {utterance: "यूट्यूब चालू करो", intent: LaunchAddon, slots: {Addon: ""}}
   - {utterance: "शोले की ग्लोबल सर्च करो", intent: GlobalSearch, slots: {Query: "शोले"}}
+  - {utterance: "शोले सर्च करो", intent: GlobalSearch, slots: {Query: "शोले"}}
+  - {utterance: "शोले फ़िल्म ढूँढो", intent: SearchMovies, slots: {Query: "शोले"}}
+  - {utterance: "पंचायत शो ढूँढो", intent: SearchTVShows, slots: {Query: "पंचायत"}}
+  - {utterance: "अरिजीत सिंह आर्टिस्ट ढूँढो", intent: SearchMusic, slots: {Query: "अरिजीत सिंह"}}
   - {utterance: "कोडी हाइबरनेट करो", intent: Power, slots: {PowerAction: "hibernate"}}
   - {utterance: "इजेक्ट करो", intent: EjectMedia}
   - {utterance: "नई फ़िल्में ढूँढो", intent: UpdateLibrary}

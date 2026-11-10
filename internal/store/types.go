@@ -120,6 +120,10 @@ type KodiInstance struct {
 	ShutdownQuits *bool
 	// PreferredQuality overrides alexa.preferred_quality for this instance; empty follows it.
 	PreferredQuality string
+	// SearchMode overrides alexa.search_mode for this instance; empty follows it.
+	SearchMode string
+	// SkinProfile names the skin whose search steps to use when the instance's skin has none of its own; empty uses none.
+	SkinProfile string
 	// ScreenWidth and ScreenHeight are the largest picture the instance's display showed when Encore last asked; 0 until it has. Only KodiInstances.SetScreen changes them.
 	ScreenWidth, ScreenHeight int
 	// LibraryGroupID is the library group the instance belongs to; 0 until one is assigned. Update leaves it alone; change it with LibraryGroups().Save or Assign.

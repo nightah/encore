@@ -247,6 +247,11 @@ type Remote interface {
 	Addons(ctx context.Context) ([]Addon, error)
 	// ExecuteAddon launches an add-on with optional parameters.
 	ExecuteAddon(ctx context.Context, id string, params map[string]string) error
+
+	// Skin reports the active skin and what searching does on it. profile names the skin whose search steps to use when the active skin has none of its own; empty uses none.
+	Skin(ctx context.Context, profile string) (Skin, error)
+	// SkinSearch opens the active skin's own search with query filled in when Skin reports SkinSearchSupported, and returns the skin either way. A skin reported any other way is left alone for the caller to search another way; an error means the skin's search steps failed part way.
+	SkinSearch(ctx context.Context, query, profile string) (Skin, error)
 }
 
 // Host controls the machine and the library databases.
@@ -305,6 +310,8 @@ type View struct {
 	Genre string
 	// Playlist is the playlist for SectionPlaylist.
 	Playlist Ref
+	// Title narrows the movies, TV shows, music videos, artists or albums sections to titles containing it, ignoring case.
+	Title string
 }
 
 // Favourite is an entry in the media centre's favourites.
@@ -324,6 +331,24 @@ type Addon struct {
 	// Type is the add-on's kind, e.g. "xbmc.python.pluginsource".
 	Type string
 }
+
+// Skin is the media centre's active skin and what searching does on it.
+type Skin struct {
+	// ID is the skin's add-on ID, e.g. "skin.arctic.fuse.3", and Name its display name.
+	ID, Name string
+	// Profile is the skin whose search steps apply: ID itself, a profile chosen for a skin without one, or empty when there are none.
+	Profile string
+	// Search is what a search does on this skin.
+	Search SkinSearch
+	// Missing lists the add-ons the skin's search needs that aren't installed and enabled, for SkinSearchMissingAddons.
+	Missing []string
+}
+
+// SkinSearch is what a search does on a skin.
+type SkinSearch string
+
+// SearchMode chooses how a search request searches: with Global Search, or with the skin's own search.
+type SearchMode string
 
 // SystemCommand changes the media centre's power state or ejects a disc.
 type SystemCommand string

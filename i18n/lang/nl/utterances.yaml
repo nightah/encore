@@ -92,6 +92,7 @@ Fullscreen:
 GlobalSearch:
   do_global_search: "(doe|start) een globale zoekopdracht naar {Query}"
   global_search: "globaal zoeken naar {Query}\nzoek overal naar {Query}"
+  search_for: "zoek naar {Query}"
   search_kodi_for: "(doorzoek|zoek in) (kodi|alle add ons|alle addons|alles) naar {Query}"
 IdentifyEcho:
   identify_this_echo: "identificeer (deze echo|dit apparaat|deze speaker)"
@@ -154,7 +155,6 @@ PlayMedia:
   play: "speel {Query}\n{Query} af te spelen"
   put: "zet {Query} op"
   queue_up: "zet {Query} in de wachtrij"
-  search_for: "zoek naar {Query}"
 PlayPlaylist:
   play_music_playlist: "(speel|start) de (muziekafspeellijst|videoafspeellijst|slimme afspeellijst) {Playlist}"
   play_playlist: "(speel|start|draai) [mijn] (afspeellijst|playlist) {Playlist} [(in de|in het|op de|op) {Room}]\nik wil de afspeellijst {Playlist} horen"
@@ -216,6 +216,15 @@ RoomControl:
   in_the: "{Command} (in de|in het|op de|op) {Room}"
   playback: "{Command} het afspelen (in de|in het|op de|op) {Room}"
   tv: "{Command} (de tv|kodi|de muziek|de film|de serie|de video) (in de|in het|op de|op) {Room}"
+SearchMovies:
+  search_films_for: "(doorzoek|zoek in) [mijn|de] films naar {Query}"
+  search_for_film: "zoek [in kodi] naar de film {Query}"
+SearchMusic:
+  search_for_music: "zoek [in kodi] naar (de artiest|de band|het album) {Query}"
+  search_music_for: "(doorzoek|zoek in) [mijn|de] muziek naar {Query}"
+SearchTVShows:
+  search_for_show: "zoek [in kodi] naar (de serie|het programma) {Query}"
+  search_shows_for: "(doorzoek|zoek in) [mijn|de] series naar {Query}"
 ShuffleAlbum:
   shuffle_album: "shuffle het album {Album} [(in de|in het|op de|op) {Room}]\n(speel|draai) het album {Album} in willekeurige volgorde [(in de|in het|op de|op) {Room}]"
   shuffle_album_2: "shuffle de (plaat|c. d.) {Album} [van {Artist}]"

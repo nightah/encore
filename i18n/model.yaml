@@ -300,6 +300,19 @@ intents:
   - name: GlobalSearch
     slots:
       - {name: Query, type: AMAZON.SearchQuery}
+  # Searching one part of the library ("search for the film X"); Amazon won't take a SearchQuery slot beside another slot, so each part has its own intent.
+  - name: SearchMovies
+    content: movies
+    slots:
+      - {name: Query, type: AMAZON.SearchQuery}
+  - name: SearchTVShows
+    content: tv
+    slots:
+      - {name: Query, type: AMAZON.SearchQuery}
+  - name: SearchMusic
+    content: music
+    slots:
+      - {name: Query, type: AMAZON.SearchQuery}
 
   # The machine and the library.
   - name: Power

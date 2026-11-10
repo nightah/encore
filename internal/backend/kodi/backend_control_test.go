@@ -277,6 +277,26 @@ func TestShowView(t *testing.T) {
 		{media.View{Section: media.SectionFavourites}, `{"window":"favouritesbrowser"}`},
 		{media.View{Section: media.SectionSubtitleSearch}, `{"window":"subtitlesearch"}`},
 		{
+			media.View{Section: media.SectionMovies, Title: "the matrix"},
+			`{"window":"videos","parameters":["videodb://movies/titles/?xsp=%7B%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22title%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B%22the%20matrix%22%5D%7D%5D%7D%2C%22type%22%3A%22movies%22%7D","return"]}`,
+		},
+		{
+			media.View{Section: media.SectionTVShows, Title: "star"},
+			`{"window":"videos","parameters":["videodb://tvshows/titles/?xsp=%7B%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22title%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B%22star%22%5D%7D%5D%7D%2C%22type%22%3A%22tvshows%22%7D","return"]}`,
+		},
+		{
+			media.View{Section: media.SectionArtists, Title: "daft & punk"},
+			`{"window":"music","parameters":["musicdb://artists/?xsp=%7B%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22artist%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B%22daft%20%26%20punk%22%5D%7D%5D%7D%2C%22type%22%3A%22artists%22%7D","return"]}`,
+		},
+		{
+			media.View{Section: media.SectionAlbums, Title: "discovery"},
+			`{"window":"music","parameters":["musicdb://albums/?xsp=%7B%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22album%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B%22discovery%22%5D%7D%5D%7D%2C%22type%22%3A%22albums%22%7D","return"]}`,
+		},
+		{
+			media.View{Section: media.SectionMusicVideos, Title: "thriller"},
+			`{"window":"videos","parameters":["videodb://musicvideos/titles/?xsp=%7B%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22title%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B%22thriller%22%5D%7D%5D%7D%2C%22type%22%3A%22musicvideos%22%7D","return"]}`,
+		},
+		{
 			media.View{Section: media.SectionPlaylist, Playlist: media.Ref{Kind: media.KindPlaylist, ID: playlistID("special://profile/playlists/music/Road Trip.m3u")}},
 			`{"window":"music","parameters":["special://profile/playlists/music/Road Trip.m3u","return"]}`,
 		},
@@ -290,6 +310,7 @@ func TestShowView(t *testing.T) {
 	assert.JSONEq(t, `{"type":"tvshow"}`, lastParams(t, s, "VideoLibrary.GetGenres"))
 	require.ErrorIs(t, b.ShowView(ctx, media.View{Section: media.SectionMovies, Genre: "Western"}), media.ErrNotFound)
 	require.ErrorIs(t, b.ShowView(ctx, media.View{Section: media.SectionAlbums, Genre: "Rock"}), errUnsupportedKind)
+	require.ErrorIs(t, b.ShowView(ctx, media.View{Section: media.SectionRecentMovies, Title: "dune"}), errUnsupportedKind)
 }
 
 func TestFavourites(t *testing.T) {

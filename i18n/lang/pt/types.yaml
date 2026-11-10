@@ -67,6 +67,8 @@ LIBRARY_TYPE:
     séries
     tv
 MATCH_CHOICE:
+  film: |-
+    filme
   first: |-
     primeiro
     primeira
@@ -95,6 +97,9 @@ MATCH_CHOICE:
     segunda
     outro
     outra
+  show: |-
+    série
+    programa
 MEDIA_TYPE:
   album: |-
     álbum

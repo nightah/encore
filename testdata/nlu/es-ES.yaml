@@ -79,6 +79,10 @@ cases:
   - {utterance: "abre mi favorito rtve", intent: OpenFavourite, slots: {Favourite: ""}}
   - {utterance: "lanza youtube", intent: LaunchAddon, slots: {Addon: ""}}
   - {utterance: "haz una búsqueda global de la casa de papel", intent: GlobalSearch, slots: {Query: "la casa de papel"}}
+  - {utterance: "busca la casa de papel", intent: GlobalSearch, slots: {Query: "la casa de papel"}}
+  - {utterance: "busca la película el laberinto del fauno", intent: SearchMovies, slots: {Query: "el laberinto del fauno"}}
+  - {utterance: "busca la serie la casa de papel", intent: SearchTVShows, slots: {Query: "la casa de papel"}}
+  - {utterance: "busca el grupo mecano", intent: SearchMusic, slots: {Query: "mecano"}}
   - {utterance: "hiberna kodi", intent: Power, slots: {PowerAction: "hibernate"}}
   - {utterance: "expulsa", intent: EjectMedia}
   - {utterance: "comprueba si hay películas nuevas", intent: UpdateLibrary}

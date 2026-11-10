@@ -14,6 +14,7 @@
     "kodiCalls": "Kodi calls",
     "loading": "Loading the request…",
     "noCalls": "None.",
+    "note": "Note",
     "replay": "Replay (dry run)",
     "replayResult": {
       "label": "Replay result",

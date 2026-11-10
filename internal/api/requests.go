@@ -219,6 +219,8 @@ func toDetail(e store.RequestLogEntry, devs map[string]store.EchoDevice) Request
 		d.Via = Some(*m.Via)
 	}
 
+	d.Note = m.Note
+
 	if len(e.KodiCalls) > 0 {
 		_ = json.Unmarshal(e.KodiCalls, &d.KodiCalls)
 	}

@@ -663,9 +663,13 @@ func TestBackendFailuresAreReported(t *testing.T) {
 		{"launch addon", []string{"ExecuteAddon"}, false, withAddons, func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.LaunchAddon(ctx, t, "youtube")
 		}},
-		{"global search addons", []string{"Addons"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome { return s.GlobalSearch(ctx, t, "dune") }},
-		{"global search", []string{"ExecuteAddon"}, false, withAddons, func(ctx context.Context, s *Service, t Target) Outcome {
-			return s.GlobalSearch(ctx, t, "dune")
+		{"global search addons", []string{"Addons"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+			t.SearchMode = media.SearchModeGlobal
+
+			return s.GlobalSearch(ctx, t, "dune", nil)
+		}},
+		{"library search", []string{"ShowView"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+			return s.GlobalSearch(ctx, t, "hot fuzz", nil)
 		}},
 		{"play title", []string{"Play"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.PlayTitle(ctx, t, TitleRequest{Query: "hot fuzz"}, nil)

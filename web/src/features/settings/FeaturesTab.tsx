@@ -12,8 +12,15 @@ import { FormError } from "@features/settings/FormError";
 /** Titled by settings:features.<key>. */
 type SwitchFeature = "confirm_sound" | "deep_search" | "auto_deploy" | "shutdown_quits";
 
+/** Titled by settings:features.<key>. */
+type SelectFeature = "preferred_quality" | "search_mode";
+
 const QUALITIES = ["screen", "highest", "2160p", "1080p", "720p", "sd"] as const satisfies ReadonlyArray<
   Settings["features"]["preferred_quality"]
+>;
+
+const SEARCH_MODES = ["library", "global_search", "skin"] as const satisfies ReadonlyArray<
+  Settings["features"]["search_mode"]
 >;
 
 const QUEUE_LIMIT_MAX = 1000;
@@ -35,7 +42,20 @@ export function FeaturesTab({ settings }: { settings: Settings }) {
       </Group>
       <Group title={t("features.groups.kodi.title")} note={t("features.groups.kodi.note")}>
         <Row>
-          <QualitySetting settings={settings} save={save} />
+          <SelectSetting
+            settings={settings}
+            save={save}
+            field="preferred_quality"
+            options={QUALITIES.map((value) => [value, t(`features.preferred_quality.${value}`)])}
+          />
+        </Row>
+        <Row>
+          <SelectSetting
+            settings={settings}
+            save={save}
+            field="search_mode"
+            options={SEARCH_MODES.map((value) => [value, t(`features.search_mode.${value}`)])}
+          />
         </Row>
         <Row>
           <NumberSetting
@@ -127,34 +147,41 @@ function SwitchSetting({
   );
 }
 
-/** Saves as soon as another quality is picked. */
-function QualitySetting({ settings, save }: { settings: Settings; save: ReturnType<typeof useSaveSettings> }) {
+/** Saves as soon as another option is picked. */
+function SelectSetting({
+  settings,
+  save,
+  field,
+  options,
+}: {
+  settings: Settings;
+  save: ReturnType<typeof useSaveSettings>;
+  field: SelectFeature;
+  /** Each option's value and label. */
+  options: ReadonlyArray<readonly [string, string]>;
+}) {
   const { t } = useTranslation("settings");
-  const managed = isManaged(settings, "features.preferred_quality");
-  const id = "feature-preferred_quality";
+  const managed = isManaged(settings, `features.${field}`);
+  const id = `feature-${field}`;
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
       <label htmlFor={id} className="flex flex-col">
         <span className="flex flex-wrap items-center gap-2 font-semibold">
-          {t("features.preferred_quality.title")}
+          {t(`features.${field}.title`)}
           {managed ? <ManagedBadge /> : null}
         </span>
-        <span className="text-[13px] text-muted">{t("features.preferred_quality.hint")}</span>
+        <span className="text-[13px] text-muted">{t(`features.${field}.hint`)}</span>
       </label>
       <Select
         id={id}
         className="w-full shrink-0 sm:w-auto sm:min-w-44 sm:max-w-64"
-        value={settings.features.preferred_quality}
+        value={settings.features[field]}
         disabled={managed || save.isPending}
-        onChange={(event) =>
-          save.mutate({
-            features: { preferred_quality: event.target.value as Settings["features"]["preferred_quality"] },
-          })
-        }
+        onChange={(event) => save.mutate({ features: { [field]: event.target.value } })}
       >
-        {QUALITIES.map((value) => (
+        {options.map(([value, label]) => (
           <option key={value} value={value}>
-            {t(`features.preferred_quality.${value}`)}
+            {label}
           </option>
         ))}
       </Select>

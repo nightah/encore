@@ -41,3 +41,8 @@ func (i Item) InProgress() bool { return i.Resume > 0 }
 
 // Remaining is how long is left of the current item.
 func (n NowPlaying) Remaining() time.Duration { return max(0, n.Duration-n.Position) }
+
+// IsValid reports whether m is a search mode, or empty for the default.
+func (m SearchMode) IsValid() bool {
+	return m == "" || m == SearchModeLibrary || m == SearchModeGlobal || m == SearchModeSkin
+}

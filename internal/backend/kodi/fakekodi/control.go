@@ -80,6 +80,7 @@ func (s *Server) registerControl() {
 	s.handlers["AudioLibrary.GetGenres"] = s.audioGenres
 	s.handlers["Favourites.GetFavourites"] = s.favourites
 	s.handlers["Addons.GetAddons"] = s.addons
+	s.handlers["Addons.GetAddonDetails"] = s.addonDetails
 }
 
 // Like Kodi's Player.* methods, the command fails without an active player.
@@ -310,6 +311,26 @@ func (s *Server) addons(params json.RawMessage) (any, *Error) {
 	}
 
 	return map[string]any{"addons": out, "limits": map[string]int{"start": 0, "end": len(out), "total": len(out)}}, nil
+}
+
+func (s *Server) addonDetails(params json.RawMessage) (any, *Error) {
+	var p struct {
+		AddonID string `json:"addonid"`
+	}
+	if err := decode(params, &p); err != nil {
+		return nil, err
+	}
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	for _, a := range s.opts.Library.Addons {
+		if a.AddonID == p.AddonID {
+			return map[string]any{"addon": map[string]any{"addonid": a.AddonID, "type": a.Type, "name": a.Name}, "limits": map[string]int{"start": 0, "end": 1, "total": 1}}, nil
+		}
+	}
+
+	return nil, &Error{Code: CodeInvalidParams, Message: "Invalid params."}
 }
 
 // Serves Files.GetDirectory on a playlist file. Callers hold s.mu.

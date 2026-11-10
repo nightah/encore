@@ -198,3 +198,64 @@ func TestNotifyReachesAClientStillBeingRegistered(t *testing.T) {
 		assert.Equal(t, 1, s.WebSocketClients())
 	})
 }
+
+func TestSkinAndWindows(t *testing.T) {
+	s := New(t, Options{})
+
+	_, resp := post(t, s, "", "", "Settings.GetSettingValue", map[string]any{"setting": "lookandfeel.skin"})
+	require.Nil(t, resp.Error)
+	assert.JSONEq(t, `{"value":"skin.estuary"}`, string(resp.Result), "Kodi's default skin")
+
+	s.SetSkin("skin.nimbus")
+	_, resp = post(t, s, "", "", "Settings.GetSettingValue", map[string]any{"setting": "lookandfeel.skin"})
+	assert.JSONEq(t, `{"value":"skin.nimbus"}`, string(resp.Result))
+
+	_, resp = post(t, s, "", "", "Settings.GetSettingValue", map[string]any{"setting": "audiooutput.volumesteps"})
+	require.NotNil(t, resp.Error)
+
+	_, resp = post(t, s, "", "", "Settings.GetSettingValue", "bad")
+	require.NotNil(t, resp.Error)
+
+	s.ShowWindow("1121", 1)
+	s.ShowWindow("home", 0)
+	s.ShowWindow("virtualkeyboard", -1)
+
+	poll := func() string {
+		_, resp := post(t, s, "", "", "XBMC.GetInfoBooleans", map[string]any{"booleans": []string{"Window.IsVisible(1121)", "Window.IsVisible(home)", "Window.IsVisible(virtualkeyboard)", "Window.IsVisible(1105)", "System.HasAddon(x)", "Window.IsVisible(broken"}})
+		require.Nil(t, resp.Error)
+
+		return string(resp.Result)
+	}
+
+	assert.JSONEq(t, `{"Window.IsVisible(1121)":false,"Window.IsVisible(home)":true,"Window.IsVisible(virtualkeyboard)":false,"Window.IsVisible(1105)":false,"System.HasAddon(x)":false,"Window.IsVisible(broken":false}`, poll(), "booleans, as Kodi sends them")
+	assert.JSONEq(t, `{"Window.IsVisible(1121)":true,"Window.IsVisible(home)":true,"Window.IsVisible(virtualkeyboard)":false,"Window.IsVisible(1105)":false,"System.HasAddon(x)":false,"Window.IsVisible(broken":false}`, poll(), "1121 shows after one poll")
+
+	_, resp = post(t, s, "", "", "XBMC.GetInfoBooleans", "bad")
+	require.NotNil(t, resp.Error)
+}
+
+func TestAddonDetails(t *testing.T) {
+	s := New(t, Options{})
+	s.Update(func(l *Library) {
+		l.Addons = []Addon{{AddonID: "skin.copacetic", Type: "xbmc.gui.skin", Name: "Copacetic"}}
+	})
+
+	_, resp := post(t, s, "", "", "Addons.GetAddonDetails", map[string]any{"addonid": "skin.copacetic", "properties": []string{"name"}})
+	require.Nil(t, resp.Error)
+	assert.JSONEq(t, `{"addon":{"addonid":"skin.copacetic","type":"xbmc.gui.skin","name":"Copacetic"},"limits":{"start":0,"end":1,"total":1}}`, string(resp.Result))
+
+	_, resp = post(t, s, "", "", "Addons.GetAddonDetails", map[string]any{"addonid": "skin.gone"})
+	require.NotNil(t, resp.Error)
+	assert.Equal(t, CodeInvalidParams, resp.Error.Code)
+
+	_, resp = post(t, s, "", "", "Addons.GetAddonDetails", "bad")
+	require.NotNil(t, resp.Error)
+}
+
+func TestPluginListing(t *testing.T) {
+	s := New(t, Options{})
+
+	_, resp := post(t, s, "", "", "Files.GetDirectory", map[string]any{"directory": "plugin://script.skinvariables/?info=run_executebuiltin&command=SetFocus%283000%29&&special://skin/shortcuts/builtins/skinvariables-closeosd.json"})
+	require.Nil(t, resp.Error)
+	assert.JSONEq(t, `{"files":[{"file":"","filetype":"directory","label":"None","type":"unknown"}],"limits":{"start":0,"end":1,"total":1}}`, string(resp.Result), "as script.skinvariables lists after running builtins")
+}

@@ -7,6 +7,7 @@
  */
 import type { InstanceLibrary } from "./instanceLibrary.ts";
 import type { InstancePreferredQuality } from "./instancePreferredQuality.ts";
+import type { InstanceSearchMode } from "./instanceSearchMode.ts";
 import type { InstanceShutdown } from "./instanceShutdown.ts";
 import type { InstanceStatus } from "./instanceStatus.ts";
 import type { NowPlaying } from "./nowPlaying.ts";
@@ -28,8 +29,12 @@ export interface Instance {
   preferred_quality: InstancePreferredQuality;
   /** The largest picture this instance's display shows, as Kodi last reported it; null until Encore has asked */
   screen: Screen | null;
+  /** How "search for X" searches; inherit follows Settings › Features */
+  search_mode: InstanceSearchMode;
   /** What "shut down" does; inherit follows Settings › Features */
   shutdown: InstanceShutdown;
+  /** The skin whose search steps to use when this instance's skin isn't one Encore knows, from GET /kodi/skin-profiles; empty for none */
+  skin_profile: string;
   status: InstanceStatus;
   /** The Kodi host's IANA time zone; empty when learnt from Kodi's clock */
   timezone: string;

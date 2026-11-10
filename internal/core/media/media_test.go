@@ -176,3 +176,13 @@ func TestReportCallFromSeveralGoroutines(t *testing.T) {
 	wg.Wait()
 	assert.Equal(t, 16, count)
 }
+
+func TestSearchModeIsValid(t *testing.T) {
+	t.Parallel()
+
+	for _, m := range []SearchMode{"", SearchModeGlobal, SearchModeSkin} {
+		assert.True(t, m.IsValid(), m)
+	}
+
+	assert.False(t, SearchMode("native").IsValid())
+}

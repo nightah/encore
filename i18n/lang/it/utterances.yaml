@@ -85,6 +85,7 @@ Fullscreen:
 GlobalSearch:
   do_global_search: "(fai|esegui|fare) una ricerca globale (di|per) {Query}"
   global_search: "ricerca globale [di] {Query}"
+  search_for: "(cerca|cercare) {Query}"
   search_kodi_for: "cerca (su kodi|ovunque|in tutti gli add on|in tutti gli addon) {Query}\ncerca {Query} (su kodi|ovunque|in tutti gli add on)"
 IdentifyEcho:
   what_is_this: "come si chiama questo (echo|dispositivo)"
@@ -142,7 +143,6 @@ PlayMedia:
   play: "(riproduci|riprodurre) {Query}"
   put: "(metti|mettere) {Query}"
   queue_up: "metti in coda {Query}"
-  search_for: "(cerca|cercare) {Query}"
 PlayPlaylist:
   play_music_playlist: "(metti|riproduci|avvia) la playlist (musicale|video|intelligente) {Playlist}"
   play_playlist: "(metti|mettere|riproduci|riprodurre|ascolta|avvia|avviare|guarda) la [mia] playlist {Playlist} [(in|nel|nella) {Room}]"
@@ -203,6 +203,15 @@ RoomControl:
   in_the: "{Command} (in|nel|nella) {Room}"
   playback: "{Command} la riproduzione (in|nel|nella) {Room}"
   tv: "{Command} (la tv|kodi|la musica|il film|la serie|il video) (in|nel|nella) {Room}"
+SearchMovies:
+  search_films_for: "cerca tra [i miei|i] film {Query}"
+  search_for_film: "cerca [su kodi] il film {Query}"
+SearchMusic:
+  search_for_music: "cerca [su kodi] (l'artista|il gruppo|la band|l'album) {Query}"
+  search_music_for: "cerca nella [mia] musica {Query}"
+SearchTVShows:
+  search_for_show: "cerca [su kodi] (la serie|il programma) {Query}"
+  search_shows_for: "cerca tra [le mie|le] serie {Query}"
 ShuffleAlbum:
   shuffle_album: "(mescola|mescolare) l'album {Album} [(in|nel|nella) {Room}]"
   shuffle_album_2: "(riproduci|riprodurre|metti|mettere) l'album {Album} [di {Artist}] in ordine casuale"

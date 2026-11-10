@@ -96,3 +96,52 @@ kodi:
 	assert.Equal(t, "2160p", cfg.Kodi[0].PreferredQuality)
 	assert.Empty(t, cfg.Kodi[1].PreferredQuality, "unset means use alexa.preferred_quality")
 }
+
+func TestSearchMode(t *testing.T) {
+	cfg, err := Load(Options{Environ: environ()})
+	require.NoError(t, err)
+	assert.Equal(t, "library", cfg.Alexa.SearchMode, "the library by default")
+
+	cfg, err = Load(Options{Environ: environ("ENCORE_ALEXA_SEARCH_MODE=skin")})
+	require.NoError(t, err)
+	assert.Equal(t, "skin", cfg.Alexa.SearchMode)
+
+	_, err = Load(Options{Environ: environ("ENCORE_ALEXA_SEARCH_MODE=native")})
+	require.ErrorContains(t, err, `alexa.search_mode "native" must be library, global_search or skin`)
+
+	path := filepath.Join(t.TempDir(), "encore.yml")
+	require.NoError(t, os.WriteFile(path, []byte(`
+kodi:
+  - name: Lounge
+    url: http://kodi:8080/jsonrpc
+    search_mode: skin
+    skin_profile: skin.arctic.fuse.2
+  - name: Study
+    url: http://study:8080/jsonrpc
+  - name: Bedroom
+    url: http://bedroom:8080/jsonrpc
+    search_mode: skins
+    skin_profile: skin.estuary
+`), 0o600))
+
+	_, err = Load(Options{File: path, Environ: environ()})
+	require.ErrorContains(t, err, `kodi[2].search_mode "skins" must be library, global_search or skin`)
+	require.ErrorContains(t, err, `kodi[2].skin_profile "skin.estuary" must be one of skin.arctic.fuse.2, skin.arctic.fuse.3,`, "a profile that runs Global Search can't stand in")
+
+	require.NoError(t, os.WriteFile(path, []byte(`
+kodi:
+  - name: Lounge
+    url: http://kodi:8080/jsonrpc
+    search_mode: skin
+    skin_profile: skin.arctic.fuse.2
+  - name: Study
+    url: http://study:8080/jsonrpc
+`), 0o600))
+
+	cfg, err = Load(Options{File: path, Environ: environ()})
+	require.NoError(t, err)
+	assert.Equal(t, "skin", cfg.Kodi[0].SearchMode)
+	assert.Equal(t, "skin.arctic.fuse.2", cfg.Kodi[0].SkinProfile)
+	assert.Empty(t, cfg.Kodi[1].SearchMode, "unset means use alexa.search_mode")
+	assert.Empty(t, cfg.Kodi[1].SkinProfile)
+}
