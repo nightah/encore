@@ -23,9 +23,9 @@ reviews:
   auto_review:
     enabled: true
     drafts: false
-    # Bots (Renovate, the encore-helper app, Crowdin) are skipped by default; ask for a review on one with "@coderabbitai review".
+    # Bots (Renovate, the encore-helper app) are skipped by default; Crowdin and release pull requests are skipped by title. Ask for a review on any of them with "@coderabbitai review".
     ignore_title_keywords:
-      - "wip"
+      - "l10n:"
       - "release:"
 
   # Generated code is regenerated, not edited, and CI fails on any diff from `make generate`. The OpenAPI document stays in so API changes are reviewed.
