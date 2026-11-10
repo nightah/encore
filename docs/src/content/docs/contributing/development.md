@@ -70,6 +70,7 @@ The configuration, CLI, API endpoints and voice-command reference pages here are
 ## Tests
 
 - **Go:** `go test -race ./...`. Kodi is replaced by a fake JSON-RPC server (`internal/backend/kodi/fakekodi`) and Amazon's APIs by fakes, so nothing external is needed.
+- **Fuzz:** `go test` replays each fuzz target's seed inputs, including those in the package's `testdata/fuzz`. The nightly CI run fuzzes every target for 10 minutes; when one fails, download its `fuzz-<target>` artifact and commit the input to that package's `testdata/fuzz/<target>/` along with the fix. To fuzz locally, run `go test -run '^$' -fuzz '^FuzzParseKey$' -fuzztime 1m ./internal/secrets`.
 - **Web:** `pnpm test` (Vitest) in `web/`, in headless Chromium against the same mock API as `pnpm dev:mock`. Install the browser once with `pnpm exec playwright install chromium`; `make test` does it for you.
 - **Browser:** `pnpm test:e2e:mock` runs Playwright against the mock API; `pnpm test:e2e` builds Encore and runs the first-run journey against a real server and a fake Kodi.
 - **Contract:** the `contract` build tag runs against real services, nightly in CI. To run them locally:
