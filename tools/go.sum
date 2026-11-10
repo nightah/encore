@@ -1,5 +1,5 @@
-actionlint.kjanat.dev v1.17.0 h1:wzkg6amflGqcF4QlkSERw0L1kdGSb/z2KZ7aidlgD74=
-actionlint.kjanat.dev v1.17.0/go.mod h1:9BVNedMJ1sZTdAiszWaOl+H4IiKD9PfKrkwqpxeB+ao=
+actionlint.kjanat.dev v1.17.1 h1:U3XJTs+lw0IkukJmij6LHVEWU/QPfsgQkWBcQxYjJ4M=
+actionlint.kjanat.dev v1.17.1/go.mod h1:QbZOVqvJsCzttFMNdI2Mk/DJtTbthwHDC8nknVQHX5M=
 dario.cat/mergo v1.0.2 h1:85+piFYR1tMbRrLcDwR18y4UKJ3aH1Tbzi24VRW1TK8=
 dario.cat/mergo v1.0.2/go.mod h1:E/hbnu0NxMFBjpMIE34DRGLWqDy0g5FuKDhCb31ngxA=
 github.com/BurntSushi/locker v0.0.0-20171006230638-a6e239ea1c69 h1:+tu3HOoMXB7RXEINRVIpxJCT+KdYiI7LAEAUrOw3dIU=
