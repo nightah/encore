@@ -3,7 +3,7 @@
 name: Scorecard
 
 on:
-  # Branch protection and rulesets feed the Branch-Protection check, so a change to them re-scores.
+  # A change to classic branch protection re-scores the Branch-Protection check. Repository rulesets have no workflow trigger, so a ruleset change is picked up by the next push to main or the weekly run.
   branch_protection_rule: {}
   push:
     branches: [main]
