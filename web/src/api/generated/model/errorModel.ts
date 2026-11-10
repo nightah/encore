@@ -5,7 +5,7 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { ErrorDetail } from "./errorDetail.ts";
+import type { ErrorDetail } from "@api/generated/model/errorDetail.ts";
 
 export interface ErrorModel {
   /** A human-readable explanation specific to this occurrence of the problem. */

@@ -5,7 +5,7 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { TestMatchRequestKindsItem } from "./testMatchRequestKindsItem.ts";
+import type { TestMatchRequestKindsItem } from "@api/generated/model/testMatchRequestKindsItem.ts";
 
 export interface TestMatchRequest {
   kinds?: TestMatchRequestKindsItem[];

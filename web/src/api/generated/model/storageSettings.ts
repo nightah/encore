@@ -5,11 +5,11 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { BackupSettings } from "./backupSettings.ts";
-import type { LocalStorage } from "./localStorage.ts";
-import type { S3Settings } from "./s3Settings.ts";
-import type { StorageSettingsBackend } from "./storageSettingsBackend.ts";
-import type { WebDAVSettings } from "./webDAVSettings.ts";
+import type { BackupSettings } from "@api/generated/model/backupSettings.ts";
+import type { LocalStorage } from "@api/generated/model/localStorage.ts";
+import type { S3Settings } from "@api/generated/model/s3Settings.ts";
+import type { StorageSettingsBackend } from "@api/generated/model/storageSettingsBackend.ts";
+import type { WebDAVSettings } from "@api/generated/model/webDAVSettings.ts";
 
 export interface StorageSettings {
   backend: StorageSettingsBackend;

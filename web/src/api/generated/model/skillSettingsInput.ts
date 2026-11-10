@@ -5,10 +5,10 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { Privacy } from "./privacy.ts";
-import type { SkillEndpoint } from "./skillEndpoint.ts";
-import type { SkillSettingsInputContentItem } from "./skillSettingsInputContentItem.ts";
-import type { SkillSettingsInputInvocation } from "./skillSettingsInputInvocation.ts";
+import type { Privacy } from "@api/generated/model/privacy.ts";
+import type { SkillEndpoint } from "@api/generated/model/skillEndpoint.ts";
+import type { SkillSettingsInputContentItem } from "@api/generated/model/skillSettingsInputContentItem.ts";
+import type { SkillSettingsInputInvocation } from "@api/generated/model/skillSettingsInputInvocation.ts";
 
 export interface SkillSettingsInput {
   /** What the skill can play; music includes music videos. Omit to keep the current choice. */

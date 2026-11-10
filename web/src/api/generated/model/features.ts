@@ -5,8 +5,8 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { FeaturesPreferredQuality } from "./featuresPreferredQuality.ts";
-import type { FeaturesSearchMode } from "./featuresSearchMode.ts";
+import type { FeaturesPreferredQuality } from "@api/generated/model/featuresPreferredQuality.ts";
+import type { FeaturesSearchMode } from "@api/generated/model/featuresSearchMode.ts";
 
 export interface Features {
   /** Redeploy the skill on its own when what would be deployed changes. An automatic deploy that fails for a reason that may pass, such as Amazon being unavailable, is tried again up to three times with a growing wait; any other failure, or a fourth in a row, pauses this until a deploy started by hand succeeds */

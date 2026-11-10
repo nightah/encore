@@ -5,7 +5,7 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { Check } from "./check.ts";
+import type { Check } from "@api/generated/model/check.ts";
 
 export interface TestResult {
   checks: Check[];

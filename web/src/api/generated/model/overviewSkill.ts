@@ -5,8 +5,8 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { OverviewSkillState } from "./overviewSkillState.ts";
-import type { OverviewSkillUpdateReason } from "./overviewSkillUpdateReason.ts";
+import type { OverviewSkillState } from "@api/generated/model/overviewSkillState.ts";
+import type { OverviewSkillUpdateReason } from "@api/generated/model/overviewSkillUpdateReason.ts";
 
 export interface OverviewSkill {
   locales: string[];

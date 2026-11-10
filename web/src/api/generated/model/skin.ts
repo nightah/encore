@@ -5,7 +5,7 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { SkinSearch } from "./skinSearch.ts";
+import type { SkinSearch } from "@api/generated/model/skinSearch.ts";
 
 export interface Skin {
   /** The skin's add-on ID, e.g. skin.arctic.fuse.3 */

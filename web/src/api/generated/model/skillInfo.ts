@@ -5,17 +5,17 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { AmazonConnection } from "./amazonConnection.ts";
-import type { AutoDeployRetry } from "./autoDeployRetry.ts";
-import type { LastDeploy } from "./lastDeploy.ts";
-import type { LocaleInvocation } from "./localeInvocation.ts";
-import type { ModelSize } from "./modelSize.ts";
-import type { Privacy } from "./privacy.ts";
-import type { SkillEndpointInfo } from "./skillEndpointInfo.ts";
-import type { SkillInfoContentItem } from "./skillInfoContentItem.ts";
-import type { SkillInfoInvocation } from "./skillInfoInvocation.ts";
-import type { SkillInfoState } from "./skillInfoState.ts";
-import type { SkillInfoUpdateReason } from "./skillInfoUpdateReason.ts";
+import type { AmazonConnection } from "@api/generated/model/amazonConnection.ts";
+import type { AutoDeployRetry } from "@api/generated/model/autoDeployRetry.ts";
+import type { LastDeploy } from "@api/generated/model/lastDeploy.ts";
+import type { LocaleInvocation } from "@api/generated/model/localeInvocation.ts";
+import type { ModelSize } from "@api/generated/model/modelSize.ts";
+import type { Privacy } from "@api/generated/model/privacy.ts";
+import type { SkillEndpointInfo } from "@api/generated/model/skillEndpointInfo.ts";
+import type { SkillInfoContentItem } from "@api/generated/model/skillInfoContentItem.ts";
+import type { SkillInfoInvocation } from "@api/generated/model/skillInfoInvocation.ts";
+import type { SkillInfoState } from "@api/generated/model/skillInfoState.ts";
+import type { SkillInfoUpdateReason } from "@api/generated/model/skillInfoUpdateReason.ts";
 
 export interface SkillInfo {
   amazon: AmazonConnection;

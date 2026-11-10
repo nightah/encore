@@ -5,7 +5,7 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { AuthorizeAmazonThen } from "./authorizeAmazonThen.ts";
+import type { AuthorizeAmazonThen } from "@api/generated/model/authorizeAmazonThen.ts";
 
 export type AuthorizeAmazonParams = {
   /** One of return_urls, to choose the flow explicitly */

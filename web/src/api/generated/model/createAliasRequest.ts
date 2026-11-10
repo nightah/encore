@@ -5,7 +5,7 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { CreateAliasRequestKind } from "./createAliasRequestKind.ts";
+import type { CreateAliasRequestKind } from "@api/generated/model/createAliasRequestKind.ts";
 
 export interface CreateAliasRequest {
   /**

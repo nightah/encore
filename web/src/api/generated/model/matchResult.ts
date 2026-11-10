@@ -5,8 +5,8 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { Candidate } from "./candidate.ts";
-import type { MatchResultDecision } from "./matchResultDecision.ts";
+import type { Candidate } from "@api/generated/model/candidate.ts";
+import type { MatchResultDecision } from "@api/generated/model/matchResultDecision.ts";
 
 export interface MatchResult {
   candidates: Candidate[];

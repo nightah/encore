@@ -5,8 +5,8 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { DeployEvent } from "./deployEvent.ts";
-import type { DeployState } from "./deployState.ts";
+import type { DeployEvent } from "@api/generated/model/deployEvent.ts";
+import type { DeployState } from "@api/generated/model/deployState.ts";
 
 export interface Deploy {
   error: string;

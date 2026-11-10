@@ -5,8 +5,8 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { AttentionParams } from "./attentionParams.ts";
-import type { AttentionStage } from "./attentionStage.ts";
+import type { AttentionParams } from "@api/generated/model/attentionParams.ts";
+import type { AttentionStage } from "@api/generated/model/attentionStage.ts";
 
 export interface Attention {
   /** For requests_rejected, how many requests the check refused in the last day */

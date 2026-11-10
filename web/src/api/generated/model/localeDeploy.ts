@@ -5,8 +5,8 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { LocaleDegraded } from "./localeDegraded.ts";
-import type { LocaleDeployStatus } from "./localeDeployStatus.ts";
+import type { LocaleDegraded } from "@api/generated/model/localeDegraded.ts";
+import type { LocaleDeployStatus } from "@api/generated/model/localeDeployStatus.ts";
 
 export interface LocaleDeploy {
   /** @nullable */

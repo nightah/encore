@@ -5,7 +5,7 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { RequestSummaryOutcome } from "./requestSummaryOutcome.ts";
+import type { RequestSummaryOutcome } from "@api/generated/model/requestSummaryOutcome.ts";
 
 export interface RequestSummary {
   /**

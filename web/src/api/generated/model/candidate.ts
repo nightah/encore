@@ -5,7 +5,7 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { Breakdown } from "./breakdown.ts";
+import type { Breakdown } from "@api/generated/model/breakdown.ts";
 
 export interface Candidate {
   breakdown: Breakdown;

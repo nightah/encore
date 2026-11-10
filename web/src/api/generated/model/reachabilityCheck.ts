@@ -5,8 +5,8 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { ReachabilityCheckLevel } from "./reachabilityCheckLevel.ts";
-import type { ReachabilityCheckName } from "./reachabilityCheckName.ts";
+import type { ReachabilityCheckLevel } from "@api/generated/model/reachabilityCheckLevel.ts";
+import type { ReachabilityCheckName } from "@api/generated/model/reachabilityCheckName.ts";
 
 export interface ReachabilityCheck {
   detail: string;

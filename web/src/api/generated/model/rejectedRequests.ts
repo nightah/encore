@@ -5,7 +5,7 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { RejectedRequestsStage } from "./rejectedRequestsStage.ts";
+import type { RejectedRequestsStage } from "@api/generated/model/rejectedRequestsStage.ts";
 
 export interface RejectedRequests {
   /** @minimum 1 */

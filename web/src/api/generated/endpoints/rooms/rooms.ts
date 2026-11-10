@@ -5,9 +5,8 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-
-import { orvalFetch } from "../../../orvalFetch.ts";
-import type { AddRoomAliasRequest, CreateRoomRequest, Room, RoomAlias, UpdateRoomRequest } from "../../model";
+import type { AddRoomAliasRequest, CreateRoomRequest, Room, RoomAlias, UpdateRoomRequest } from "@api/generated/model";
+import { orvalFetch } from "@api/orvalFetch.ts";
 
 export const getListRoomsUrl = () => {
   return `/api/v1/rooms`;

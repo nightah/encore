@@ -5,8 +5,8 @@
  * The contract between Encore's web interface and its server. See https://nightah.github.io/encore/reference/api/.
  * OpenAPI spec version: 1
  */
-import type { AuthStateMode } from "./authStateMode.ts";
-import type { User } from "./user.ts";
+import type { AuthStateMode } from "@api/generated/model/authStateMode.ts";
+import type { User } from "@api/generated/model/user.ts";
 
 export interface AuthState {
   authenticated: boolean;
