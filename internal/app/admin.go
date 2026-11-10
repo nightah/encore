@@ -178,7 +178,7 @@ func (a *App) InstanceSkin(ctx context.Context, id int64) (media.Skin, media.Sea
 		return media.Skin{}, "", err
 	}
 
-	mode := media.SearchMode(cmp.Or(inst.Record.SearchMode, a.voiceSettings(ctx).SearchMode, string(media.SearchModeGlobal)))
+	mode := media.SearchMode(cmp.Or(inst.Record.SearchMode, a.voiceSettings(ctx).SearchMode, string(media.SearchModeLibrary)))
 	skin, err := inst.Backend.Skin(ctx, inst.Record.SkinProfile)
 
 	return skin, mode, err

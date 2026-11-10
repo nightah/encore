@@ -83,6 +83,23 @@ func (s *Service) Choose(ctx context.Context, t Target, a Answer, pending, more 
 	}
 }
 
+// ofKind returns the only choice offered of kind; with none or several, the answer chooses nothing.
+func ofKind(offered []Choice, kind media.Kind) (Choice, bool) {
+	var found []Choice
+
+	for _, c := range offered {
+		if c.Ref.Kind == kind {
+			found = append(found, c)
+		}
+	}
+
+	if len(found) != 1 {
+		return Choice{}, false
+	}
+
+	return found[0], true
+}
+
 // at returns the choice at a position among those offered.
 func at(which string, offered []Choice) (Choice, bool) {
 	if len(offered) == 0 {
@@ -100,6 +117,10 @@ func at(which string, offered []Choice) (Choice, bool) {
 		return offered[len(offered)-1], true
 	case AnswerNewer, AnswerOlder:
 		return byYear(offered, which == AnswerNewer)
+	case AnswerFilm:
+		return ofKind(offered, media.KindMovie)
+	case AnswerShow:
+		return ofKind(offered, media.KindTVShow)
 	}
 
 	return Choice{}, false

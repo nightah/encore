@@ -2,7 +2,9 @@ package kodi
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"net/url"
 	"strconv"
 	"strings"
 
@@ -92,6 +94,30 @@ var genreRoots = map[media.Section]struct {
 	media.SectionMusic:       {windowMusic, "musicdb://genres/", ""},
 }
 
+// titleFilters are the library sections a view can narrow to the titles containing some text, with a smart playlist rule in the path.
+var titleFilters = map[media.Section]titleFilter{
+	media.SectionMovies:      {windowVideos, "videodb://movies/titles/", "movies", "title"},
+	media.SectionTVShows:     {windowVideos, "videodb://tvshows/titles/", "tvshows", "title"},
+	media.SectionMusicVideos: {windowVideos, "videodb://musicvideos/titles/", "musicvideos", "title"},
+	media.SectionArtists:     {windowMusic, "musicdb://artists/", "artists", "artist"},
+	media.SectionAlbums:      {windowMusic, "musicdb://albums/", "albums", "album"},
+}
+
+// path is the section's listing narrowed to the titles containing text, ignoring case.
+func (f titleFilter) path(text string) string {
+	rules := smartPlaylist{Type: f.kind}
+	rules.Rules.And = []smartPlaylistRule{{Field: f.field, Operator: "contains", Value: []string{text}}}
+
+	var b strings.Builder
+
+	enc := json.NewEncoder(&b)
+	enc.SetEscapeHTML(false)
+	_ = enc.Encode(rules)
+
+	// Spaces as %20: Kodi doesn't read + as a space in a path.
+	return f.root + "?xsp=" + strings.ReplaceAll(url.QueryEscape(strings.TrimSpace(b.String())), "+", "%20")
+}
+
 // ShowView implements media.Backend.
 func (b *Backend) ShowView(ctx context.Context, v media.View) error {
 	switch v.Section {
@@ -111,6 +137,15 @@ func (b *Backend) ShowView(ctx context.Context, v media.View) error {
 		}
 
 		return b.activate(ctx, window, pl.path, "return")
+	}
+
+	if v.Title != "" {
+		f, ok := titleFilters[v.Section]
+		if !ok {
+			return fmt.Errorf("kodi: %s can't be filtered by title: %w", v.Section, errUnsupportedKind)
+		}
+
+		return b.activate(ctx, f.window, f.path(v.Title), "return")
 	}
 
 	if v.Genre != "" {

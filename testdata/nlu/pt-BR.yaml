@@ -79,6 +79,10 @@ cases:
   - {utterance: "abre o favorito globoplay", intent: OpenFavourite, slots: {Favourite: ""}}
   - {utterance: "executa youtube", intent: LaunchAddon, slots: {Addon: ""}}
   - {utterance: "faz uma busca global por cidade de deus", intent: GlobalSearch, slots: {Query: "cidade de deus"}}
+  - {utterance: "procura cidade de deus", intent: GlobalSearch, slots: {Query: "cidade de deus"}}
+  - {utterance: "procura o filme cidade de deus", intent: SearchMovies, slots: {Query: "cidade de deus"}}
+  - {utterance: "procura a série sintonia", intent: SearchTVShows, slots: {Query: "sintonia"}}
+  - {utterance: "procura a banda legião urbana", intent: SearchMusic, slots: {Query: "legião urbana"}}
   - {utterance: "hiberna o kodi", intent: Power, slots: {PowerAction: "hibernate"}}
   - {utterance: "ejeta", intent: EjectMedia}
   - {utterance: "verifica se tem filmes novos", intent: UpdateLibrary}

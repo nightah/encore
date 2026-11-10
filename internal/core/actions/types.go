@@ -46,7 +46,7 @@ type Target struct {
 	ConfirmSound bool
 	// Quality is the copy to play when the library holds a film or episode more than once; empty prefers the best.
 	Quality media.Quality
-	// SearchMode is how a search request searches; empty means media.SearchModeGlobal.
+	// SearchMode is how a search request searches; empty means media.SearchModeLibrary.
 	SearchMode media.SearchMode
 	// SkinProfile names the skin whose search steps to use when the active skin has none of its own.
 	SkinProfile string
@@ -121,6 +121,13 @@ type Followup struct {
 	Confirm media.SystemCommand `json:"confirm,omitempty"`
 	// More are the titles a "did you mean" question found but hasn't offered yet; "no" offers them next.
 	More []Choice `json:"more,omitempty"`
+	// Search is the library search waiting to hear whether the film or the TV show was meant.
+	Search *SearchRequest `json:"search,omitempty"`
+}
+
+// SearchRequest is a library search waiting on a question. It round-trips through session state as JSON.
+type SearchRequest struct {
+	Query string `json:"query"`
 }
 
 // Service runs actions.

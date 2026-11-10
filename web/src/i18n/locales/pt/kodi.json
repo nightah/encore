@@ -112,13 +112,14 @@
         "hint": "O que “procure…” abre nesta instância.",
         "inherit": "Seguir Configurações › Recursos",
         "label": "Busca",
+        "library": "Mostrar na biblioteca",
         "skin": "A busca própria da skin",
         "status": {
           "checking": "Verificando qual skin o Kodi está usando…",
-          "missing_addons": "{{skin}}: a busca da skin precisa de {{addons}}, então por enquanto usa o Global Search.",
-          "native_global_search": "{{skin}}: já dá seu próprio visual ao Global Search.",
-          "no_profile": "{{skin}}: sem perfil, então usa o Global Search.",
-          "off": "A busca da skin está desligada aqui.",
+          "missing_addons": "{{skin}}: a busca da skin precisa de {{addons}}, então por enquanto as buscas mostram a biblioteca.",
+          "native_global_search": "{{skin}}: a busca dela é o Global Search, ao qual dá seu próprio visual.",
+          "no_profile": "{{skin}}: sem perfil, então as buscas mostram a biblioteca.",
+          "off": "A busca da skin não está selecionada aqui.",
           "supported": "{{skin}}: busca da skin compatível.",
           "supported_as": "{{skin}}: busca da skin compatível como {{profile}}.",
           "unknown": "O Encore não conseguiu perguntar ao Kodi qual skin ele está usando."

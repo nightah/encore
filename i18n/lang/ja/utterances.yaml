@@ -92,6 +92,7 @@ Fullscreen:
 GlobalSearch:
   do_global_search: "{Query}をグローバル検索して[ください]"
   global_search: "グローバル検索で{Query}を(探して|検索して)[ください]"
+  search_for: "{Query}を検索して[ください]"
   search_kodi_for: "(コディ全体|すべてのアドオン|全部のアドオン)で{Query}を(検索して|探して)[ください]"
 IdentifyEcho:
   identify_this_echo: "この(エコー|デバイス|スピーカー)を(識別して|特定して)[ください]"
@@ -154,7 +155,6 @@ PlayMedia:
   play: "{Query}を(再生して|再生してください|再生する|再生)"
   put: "{Query}を(かけて|流して|つけて|見せて)[ください]"
   queue_up: "{Query}を(キューに追加して|キューに入れて|順番待ちに追加して)[ください]"
-  search_for: "{Query}を検索して[ください]"
 PlayPlaylist:
   play_music_playlist: "(音楽|ビデオ|スマート)プレイリスト[の]{Playlist}を(再生して|かけて|開始して)[ください]"
   play_playlist: "[{Room}で]プレイリスト[の]{Playlist}を(再生して|かけて|流して|聴かせて|見せて)[ください]"
@@ -212,6 +212,15 @@ RoomControl:
   in_the: "{Room}で{Command}[ください]"
   playback: "{Room}の方で{Command}[ください]"
   tv: "{Room}の(テレビ|コディ|音楽|映画|番組|ビデオ)を{Command}[ください]"
+SearchMovies:
+  search_films_for: "映画から{Query}を(検索して|探して)[ください]"
+  search_for_film: "映画の{Query}を(検索して|探して)[ください]"
+SearchMusic:
+  search_for_music: "(アーティストの|バンドの|アルバムの){Query}を(検索して|探して)[ください]"
+  search_music_for: "音楽から{Query}を(検索して|探して)[ください]"
+SearchTVShows:
+  search_for_show: "(番組の|ドラマの){Query}を(検索して|探して)[ください]"
+  search_shows_for: "(番組|ドラマ)から{Query}を(検索して|探して)[ください]"
 ShuffleAlbum:
   shuffle_album: "[{Room}で]アルバム[の]{Album}をシャッフル(して|再生して)[ください]"
   shuffle_album_2: "[{Artist}の]{Album}というアルバムをシャッフル(して|再生して)[ください]"

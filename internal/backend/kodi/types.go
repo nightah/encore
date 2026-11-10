@@ -308,3 +308,24 @@ type SkinProfile struct {
 	Window   string   `json:"window,omitempty"`
 	How      string   `json:"how"`
 }
+
+// titleFilter is how one library section is narrowed to the titles containing some text: the window that shows it, its root path, and the smart playlist type and field that filter it.
+type titleFilter struct {
+	window      kodirpc.GUIWindow
+	root        string
+	kind, field string
+}
+
+// smartPlaylist is the subset of a Kodi smart playlist (xsp) that a filtered library path carries as JSON.
+type smartPlaylist struct {
+	Rules struct {
+		And []smartPlaylistRule `json:"and"`
+	} `json:"rules"`
+	Type string `json:"type"`
+}
+
+type smartPlaylistRule struct {
+	Field    string   `json:"field"`
+	Operator string   `json:"operator"`
+	Value    []string `json:"value"`
+}

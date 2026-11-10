@@ -14,5 +14,6 @@ export type InstanceInputSearchMode = (typeof InstanceInputSearchMode)[keyof typ
 export const InstanceInputSearchMode = {
   global_search: "global_search",
   inherit: "inherit",
+  library: "library",
   skin: "skin",
 } as const;

@@ -36,7 +36,7 @@ func Defaults() Config {
 		Server:  Server{Address: ":8080", BasePath: "/", TrustedProxies: []string{"127.0.0.1/32", "::1/128"}},
 		Log:     Log{Level: "info", Format: "auto"},
 		DataDir: DefaultDataDir(),
-		Alexa:   Alexa{PreferredQuality: string(media.QualityScreen), SearchMode: string(media.SearchModeGlobal), QueueLimit: DefaultQueueLimit, DeepSearch: true, ConfirmSound: true, AutoDeploy: true, AutoDeployMinutes: DefaultAutoDeployMinutes, Content: []string{ContentMovies, ContentTV, ContentMusic}},
+		Alexa:   Alexa{PreferredQuality: string(media.QualityScreen), SearchMode: string(media.SearchModeLibrary), QueueLimit: DefaultQueueLimit, DeepSearch: true, ConfirmSound: true, AutoDeploy: true, AutoDeployMinutes: DefaultAutoDeployMinutes, Content: []string{ContentMovies, ContentTV, ContentMusic}},
 		Storage: Storage{
 			Backend: BackendLocal,
 			S3:      StorageS3{Addressing: AddressingAuto},
@@ -168,7 +168,7 @@ func (c *Config) Validate() error {
 	}
 
 	if !media.SearchMode(c.Alexa.SearchMode).IsValid() {
-		errs = append(errs, fmt.Errorf("alexa.search_mode %q must be global_search or skin", c.Alexa.SearchMode))
+		errs = append(errs, fmt.Errorf("alexa.search_mode %q must be library, global_search or skin", c.Alexa.SearchMode))
 	}
 
 	if c.Alexa.QueueLimit < 1 {

@@ -926,12 +926,12 @@ describe("Kodi instance search", () => {
 
     release();
     expect(
-      await within(dialog).findByText("Arctic Fuse 3: skin search supported. Skin search is off here."),
+      await within(dialog).findByText("Arctic Fuse 3: skin search supported. Skin search isn’t selected here."),
     ).toBeInTheDocument();
   });
 
   it.each([
-    ["Bedroom", "skin.copacetic: no profile, so it uses Global Search. Skin search is off here."],
+    ["Bedroom", "skin.copacetic: no profile, so searches show the library. Skin search isn’t selected here."],
     ["Kids' room", "Encore couldn’t ask Kodi which skin it’s using."],
   ])("says what a search does on %s", async (name, status) => {
     const user = userEvent.setup();
@@ -1021,7 +1021,7 @@ describe("Kodi instance search", () => {
     const dialog = await screen.findByRole("dialog", { name: "Edit Lounge" });
     expect(
       await within(dialog).findByText(
-        "Arctic Fuse 3: skin search needs script.skinvariables, so it uses Global Search for now.",
+        "Arctic Fuse 3: skin search needs script.skinvariables, so searches show the library for now.",
       ),
     ).toBeInTheDocument();
   });

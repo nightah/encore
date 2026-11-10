@@ -100,14 +100,14 @@ kodi:
 func TestSearchMode(t *testing.T) {
 	cfg, err := Load(Options{Environ: environ()})
 	require.NoError(t, err)
-	assert.Equal(t, "global_search", cfg.Alexa.SearchMode, "Global Search by default")
+	assert.Equal(t, "library", cfg.Alexa.SearchMode, "the library by default")
 
 	cfg, err = Load(Options{Environ: environ("ENCORE_ALEXA_SEARCH_MODE=skin")})
 	require.NoError(t, err)
 	assert.Equal(t, "skin", cfg.Alexa.SearchMode)
 
 	_, err = Load(Options{Environ: environ("ENCORE_ALEXA_SEARCH_MODE=native")})
-	require.ErrorContains(t, err, `alexa.search_mode "native" must be global_search or skin`)
+	require.ErrorContains(t, err, `alexa.search_mode "native" must be library, global_search or skin`)
 
 	path := filepath.Join(t.TempDir(), "encore.yml")
 	require.NoError(t, os.WriteFile(path, []byte(`
@@ -125,7 +125,7 @@ kodi:
 `), 0o600))
 
 	_, err = Load(Options{File: path, Environ: environ()})
-	require.ErrorContains(t, err, `kodi[2].search_mode "skins" must be global_search or skin`)
+	require.ErrorContains(t, err, `kodi[2].search_mode "skins" must be library, global_search or skin`)
 	require.ErrorContains(t, err, `kodi[2].skin_profile "skin.estuary" must be one of skin.arctic.fuse.2, skin.arctic.fuse.3,`, "a profile that runs Global Search can't stand in")
 
 	require.NoError(t, os.WriteFile(path, []byte(`

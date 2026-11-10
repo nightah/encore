@@ -112,13 +112,14 @@
         "hint": "What “search for…” opens on this instance.",
         "inherit": "Follow Settings › Features",
         "label": "Search",
+        "library": "Show it in the library",
         "skin": "The skin’s own search",
         "status": {
           "checking": "Checking which skin Kodi is using…",
-          "missing_addons": "{{skin}}: skin search needs {{addons}}, so it uses Global Search for now.",
-          "native_global_search": "{{skin}}: already skins Global Search.",
-          "no_profile": "{{skin}}: no profile, so it uses Global Search.",
-          "off": "Skin search is off here.",
+          "missing_addons": "{{skin}}: skin search needs {{addons}}, so searches show the library for now.",
+          "native_global_search": "{{skin}}: its search is Global Search, which it skins.",
+          "no_profile": "{{skin}}: no profile, so searches show the library.",
+          "off": "Skin search isn’t selected here.",
           "supported": "{{skin}}: skin search supported.",
           "supported_as": "{{skin}}: skin search supported as {{profile}}.",
           "unknown": "Encore couldn’t ask Kodi which skin it’s using."

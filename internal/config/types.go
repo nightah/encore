@@ -65,7 +65,7 @@ type Alexa struct {
 	DeepSearch bool `koanf:"deep_search"`
 	// PreferredQuality chooses which copy plays when the library holds a film or episode more than once, such as in both 2160p and 1080p: screen (the default), highest, 2160p, 1080p, 720p or sd. screen matches each Kodi instance's display, as Kodi reports it, and plays the best copy until Encore has learned it. Encore plays a copy in the chosen quality, else the best below it, else the least above it; playback carries on from where any copy stopped. A Kodi instance can override it.
 	PreferredQuality string `koanf:"preferred_quality"`
-	// SearchMode chooses how "search for X" searches: global_search (the default) runs the Global Search add-on, and skin opens the active skin's own search with the query filled in when Encore knows the skin, else runs Global Search. The skin is read from Kodi with each request, so changing skins needs nothing in Encore. A Kodi instance can override it.
+	// SearchMode chooses how "search for X" searches: library (the default) shows the library's matching films, TV shows, music videos, artists or albums in Kodi's own library view; global_search runs the Global Search add-on; and skin opens the active skin's own search with the query filled in when Encore knows the skin. When global_search or skin can't run, as when the add-on isn't installed or the skin isn't one Encore knows, the search shows the library instead. The skin is read from Kodi with each request, so changing skins needs nothing in Encore. A Kodi instance can override it.
 	SearchMode string `koanf:"search_mode"`
 	// QueueLimit caps how many items a shuffle or queue plays at once (Kanzi's playlist_max_items), which keeps large libraries responsive. It can also be changed under Settings › Features.
 	QueueLimit int `koanf:"queue_limit"`
@@ -221,7 +221,7 @@ type KodiInstance struct {
 	ShutdownQuits *bool `koanf:"shutdown_quits"`
 	// PreferredQuality overrides alexa.preferred_quality for this instance when set: screen, highest, 2160p, 1080p, 720p or sd.
 	PreferredQuality string `koanf:"preferred_quality"`
-	// SearchMode overrides alexa.search_mode for this instance when set: global_search or skin.
+	// SearchMode overrides alexa.search_mode for this instance when set: library, global_search or skin.
 	SearchMode string `koanf:"search_mode"`
 	// SkinProfile names a skin whose search steps to use when the instance's skin isn't one Encore knows, such as a fork that keeps its parent's windows, e.g. skin.arctic.fuse.2. It applies only in skin search mode, and never to a skin Encore knows.
 	SkinProfile string `koanf:"skin_profile"`

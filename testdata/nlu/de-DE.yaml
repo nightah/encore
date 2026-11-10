@@ -79,6 +79,10 @@ cases:
   - {utterance: "öffne den favoriten tagesschau", intent: OpenFavourite, slots: {Favourite: ""}}
   - {utterance: "führe youtube aus", intent: LaunchAddon, slots: {Addon: ""}}
   - {utterance: "starte eine globale suche nach das boot", intent: GlobalSearch, slots: {Query: "das boot"}}
+  - {utterance: "suche nach das boot", intent: GlobalSearch, slots: {Query: "das boot"}}
+  - {utterance: "suche nach dem film das boot", intent: SearchMovies, slots: {Query: "das boot"}}
+  - {utterance: "suche nach der serie dark", intent: SearchTVShows, slots: {Query: "dark"}}
+  - {utterance: "suche nach der band rammstein", intent: SearchMusic, slots: {Query: "rammstein"}}
   - {utterance: "kodi ruhezustand", intent: Power, slots: {PowerAction: "hibernate"}}
   - {utterance: "auswerfen", intent: EjectMedia}
   - {utterance: "suche nach neuen filmen", intent: UpdateLibrary}

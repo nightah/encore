@@ -216,7 +216,7 @@ func TestRequestDetailNote(t *testing.T) {
 	h := newHarness(t, harnessOpts{noKodi: true})
 	c := h.admin()
 
-	match, err := json.Marshal(map[string]any{"target": "Lounge", "note": "skin search: skin.copacetic has no profile; used Global Search"})
+	match, err := json.Marshal(map[string]any{"target": "Lounge", "note": "skin search: skin.copacetic has no profile; showed the library"})
 	require.NoError(t, err)
 
 	entries := []store.RequestLogEntry{
@@ -231,7 +231,7 @@ func TestRequestDetailNote(t *testing.T) {
 	var d RequestDetail
 
 	c.json(http.MethodGet, fmt.Sprintf("/api/v1/requests/%d", entries[0].ID), nil, http.StatusOK, &d)
-	assert.Equal(t, "skin search: skin.copacetic has no profile; used Global Search", d.Note)
+	assert.Equal(t, "skin search: skin.copacetic has no profile; showed the library", d.Note)
 	require.NotNil(t, d.Match.V)
 	assert.Equal(t, "Lounge", d.Match.V.Target)
 

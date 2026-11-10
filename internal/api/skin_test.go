@@ -77,7 +77,7 @@ func TestInstanceSkin(t *testing.T) {
 	}, 10*time.Second, 50*time.Millisecond, "the instance runs")
 
 	c.json(http.MethodGet, path, nil, http.StatusOK, &skin)
-	assert.Equal(t, "global_search", skin.SearchMode)
+	assert.Equal(t, "library", skin.SearchMode)
 	require.NotNil(t, skin.Skin.V)
 	assert.Equal(t, Skin{ID: "skin.estuary", Name: "Estuary", Profile: "skin.estuary", Search: "native_global_search", Missing: []string{}}, *skin.Skin.V)
 

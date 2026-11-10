@@ -226,7 +226,8 @@
     },
     "search_mode": {
       "global_search": "Global Search",
-      "hint": "O que “procure…” abre no Kodi. A busca própria da skin preenche o que foi dito quando o Encore conhece a skin e, se não, usa o Global Search. Uma instância pode mudar isso.",
+      "hint": "O que “procure…” abre no Kodi. A biblioteca mostra os filmes, séries, videoclipes, artistas ou álbuns correspondentes na visualização de biblioteca do próprio Kodi, sem precisar de complementos. O Global Search e a busca própria da skin mostram a biblioteca quando não conseguem funcionar. Uma instância pode mudar isso.",
+      "library": "Mostrar na biblioteca",
       "skin": "A busca própria da skin",
       "title": "Busca"
     },

@@ -52,12 +52,17 @@ func (h *Handler) dispatch(ctx context.Context, env *RequestEnvelope, t actions.
 		// Only reached when a recommendation is waiting for an answer: suggest another.
 		return svc.Recommend(ctx, t, *followup.Recommend, pending)
 	case chooseIntent:
+		answer := actions.Answer{Which: sl.id("Which", "MATCH_CHOICE"), Title: sl.value("Answer")}
+		if followup != nil && followup.Search != nil {
+			return svc.ChooseSearch(ctx, t, answer, pending, *followup.Search)
+		}
+
 		var more []actions.Choice
 		if followup != nil {
 			more = followup.More
 		}
 
-		return svc.Choose(ctx, t, actions.Answer{Which: sl.id("Which", "MATCH_CHOICE"), Title: sl.value("Answer")}, pending, more, progress)
+		return svc.Choose(ctx, t, answer, pending, more, progress)
 
 	// Playing by name.
 	case "WatchMovie":
@@ -367,7 +372,13 @@ func (h *Handler) dispatchRemote(ctx context.Context, t actions.Target, intent I
 	case "LaunchAddon":
 		return svc.LaunchAddon(ctx, t, sl.value("Addon"))
 	case "GlobalSearch":
-		return svc.GlobalSearch(ctx, t, sl.value("Query"))
+		return svc.GlobalSearch(ctx, t, sl.value("Query"), nil)
+	case "SearchMovies":
+		return svc.GlobalSearch(ctx, t, sl.value("Query"), []media.Kind{media.KindMovie})
+	case "SearchTVShows":
+		return svc.GlobalSearch(ctx, t, sl.value("Query"), []media.Kind{media.KindTVShow})
+	case "SearchMusic":
+		return svc.GlobalSearch(ctx, t, sl.value("Query"), []media.Kind{media.KindArtist, media.KindAlbum})
 	case "Power":
 		cmd, ok := powerCommands[sl.id("PowerAction", "POWER_ACTION")]
 		if !ok {

@@ -16,6 +16,6 @@ export interface Skin {
   name: string;
   /** The skin profile whose steps apply: the skin's own, the instance's skin_profile for a skin Encore doesn't know, or empty for none */
   profile: string;
-  /** In skin mode: supported opens the skin's own search; native_global_search runs Global Search, which the skin already draws; no_profile and missing_addons run Global Search's default look instead */
+  /** In skin mode: supported opens the skin's own search; native_global_search runs Global Search, which the skin draws, or shows the library's matching titles when Global Search isn't installed; no_profile and missing_addons show the library's matching titles */
   search: SkinSearch;
 }

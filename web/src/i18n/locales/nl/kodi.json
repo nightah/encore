@@ -112,13 +112,14 @@
         "hint": "Wat “zoek naar…” op deze instantie opent.",
         "inherit": "Volgens Instellingen › Functies",
         "label": "Zoeken",
+        "library": "In de bibliotheek tonen",
         "skin": "De eigen zoekfunctie van de skin",
         "status": {
           "checking": "Encore vraagt Kodi welke skin draait…",
-          "missing_addons": "{{skin}}: zoeken via de skin heeft {{addons}} nodig, dus voorlopig wordt Global Search gebruikt.",
-          "native_global_search": "{{skin}}: geeft Global Search al een eigen uiterlijk.",
-          "no_profile": "{{skin}}: geen profiel, dus Global Search wordt gebruikt.",
-          "off": "Zoeken via de skin staat hier uit.",
+          "missing_addons": "{{skin}}: zoeken via de skin heeft {{addons}} nodig, dus zoekopdrachten tonen voorlopig de bibliotheek.",
+          "native_global_search": "{{skin}}: zoeken gaat via Global Search, dat de skin een eigen uiterlijk geeft.",
+          "no_profile": "{{skin}}: geen profiel, dus zoekopdrachten tonen de bibliotheek.",
+          "off": "Zoeken via de skin is hier niet gekozen.",
           "supported": "{{skin}}: zoeken via de skin wordt ondersteund.",
           "supported_as": "{{skin}}: zoeken via de skin wordt ondersteund als {{profile}}.",
           "unknown": "Encore kon Kodi niet vragen welke skin draait."

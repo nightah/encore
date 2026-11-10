@@ -175,7 +175,7 @@ function settings(now: number): Settings {
       deep_search: true,
       preferred_quality: "screen",
       queue_limit: 100,
-      search_mode: "global_search",
+      search_mode: "library",
       shutdown_quits: false,
     },
     locale: { default_locale: "en-AU", timezone: "Australia/Melbourne" },

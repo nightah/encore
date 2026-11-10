@@ -19,7 +19,9 @@ const QUALITIES = ["screen", "highest", "2160p", "1080p", "720p", "sd"] as const
   Settings["features"]["preferred_quality"]
 >;
 
-const SEARCH_MODES = ["global_search", "skin"] as const satisfies ReadonlyArray<Settings["features"]["search_mode"]>;
+const SEARCH_MODES = ["library", "global_search", "skin"] as const satisfies ReadonlyArray<
+  Settings["features"]["search_mode"]
+>;
 
 const QUEUE_LIMIT_MAX = 1000;
 const AUTO_DEPLOY_MINUTES_MAX = 24 * 60;

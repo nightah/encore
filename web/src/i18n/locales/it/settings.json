@@ -226,7 +226,8 @@
     },
     "search_mode": {
       "global_search": "Global Search",
-      "hint": "Cosa apre «cerca…» su Kodi. La ricerca della skin inserisce quanto detto quando Encore conosce la skin, altrimenti usa Global Search. Un’istanza può cambiarlo.",
+      "hint": "Cosa apre «cerca…» su Kodi. La libreria mostra i film, le serie TV, i video musicali, gli artisti o gli album corrispondenti nella vista libreria di Kodi, senza bisogno di add-on. Global Search e la ricerca della skin mostrano invece la libreria quando non possono funzionare. Un’istanza può cambiarlo.",
+      "library": "Mostralo nella libreria",
       "skin": "La ricerca della skin",
       "title": "Ricerca"
     },

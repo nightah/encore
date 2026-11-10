@@ -120,8 +120,8 @@ func TestRecorderRow(t *testing.T) {
 	})
 
 	t.Run("a note on what the action chose is logged with the target", func(t *testing.T) {
-		row := toRow(alexa.LogEntry{Intent: "GlobalSearch", Target: "Lounge", Note: "skin search: skin.copacetic has no profile; used Global Search"})
-		assert.JSONEq(t, `{"target":"Lounge","note":"skin search: skin.copacetic has no profile; used Global Search"}`, string(row.Match))
+		row := toRow(alexa.LogEntry{Intent: "GlobalSearch", Target: "Lounge", Note: "skin search: skin.copacetic has no profile; showed the library"})
+		assert.JSONEq(t, `{"target":"Lounge","note":"skin search: skin.copacetic has no profile; showed the library"}`, string(row.Match))
 
 		row = toRow(alexa.LogEntry{Intent: "GlobalSearch", Note: "skin search: opened skin.arctic.fuse.3's search"})
 		assert.JSONEq(t, `{"note":"skin search: opened skin.arctic.fuse.3's search"}`, string(row.Match), "even without a target")

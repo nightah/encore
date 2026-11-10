@@ -7,7 +7,7 @@
  */
 
 /**
- * In skin mode: supported opens the skin's own search; native_global_search runs Global Search, which the skin already draws; no_profile and missing_addons run Global Search's default look instead
+ * In skin mode: supported opens the skin's own search; native_global_search runs Global Search, which the skin draws, or shows the library's matching titles when Global Search isn't installed; no_profile and missing_addons show the library's matching titles
  */
 export type SkinSearch = (typeof SkinSearch)[keyof typeof SkinSearch];
 

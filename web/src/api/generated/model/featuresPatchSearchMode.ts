@@ -10,5 +10,6 @@ export type FeaturesPatchSearchMode = (typeof FeaturesPatchSearchMode)[keyof typ
 
 export const FeaturesPatchSearchMode = {
   global_search: "global_search",
+  library: "library",
   skin: "skin",
 } as const;

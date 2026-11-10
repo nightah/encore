@@ -310,6 +310,8 @@ type View struct {
 	Genre string
 	// Playlist is the playlist for SectionPlaylist.
 	Playlist Ref
+	// Title narrows the movies, TV shows, music videos, artists or albums sections to titles containing it, ignoring case.
+	Title string
 }
 
 // Favourite is an entry in the media centre's favourites.

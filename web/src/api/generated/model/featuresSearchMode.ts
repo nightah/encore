@@ -7,11 +7,12 @@
  */
 
 /**
- * How "search for X" searches: global_search runs the Global Search add-on, and skin opens the active skin's own search when Encore knows the skin, else runs Global Search. A Kodi instance's own kodi[].search_mode wins
+ * How "search for X" searches: library shows the library's matching films, TV shows, music videos, artists or albums in Kodi's own library view; global_search runs the Global Search add-on; and skin opens the active skin's own search when Encore knows the skin. When global_search or skin can't run, the search shows the library instead. A Kodi instance's own kodi[].search_mode wins
  */
 export type FeaturesSearchMode = (typeof FeaturesSearchMode)[keyof typeof FeaturesSearchMode];
 
 export const FeaturesSearchMode = {
   global_search: "global_search",
+  library: "library",
   skin: "skin",
 } as const;

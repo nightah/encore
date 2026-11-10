@@ -120,13 +120,14 @@
         "hint": "ما يفتحه «ابحث عن…» على هذا المثيل.",
         "inherit": "اتباع الإعدادات › الميزات",
         "label": "البحث",
+        "library": "عرضها في المكتبة",
         "skin": "بحث الواجهة نفسها",
         "status": {
           "checking": "جارٍ التحقق من الواجهة التي يستخدمها Kodi…",
-          "missing_addons": "{{skin}}: يحتاج بحث الواجهة إلى {{addons}}، لذا يُستخدم Global Search حاليًا.",
-          "native_global_search": "{{skin}}: تعرض Global Search بمظهرها مسبقًا.",
-          "no_profile": "{{skin}}: لا يوجد ملف تعريف، لذا يُستخدم Global Search.",
-          "off": "بحث الواجهة متوقف هنا.",
+          "missing_addons": "{{skin}}: يحتاج بحث الواجهة إلى {{addons}}، لذا تعرض عمليات البحث المكتبة حاليًا.",
+          "native_global_search": "{{skin}}: بحثها هو Global Search، وهي تعرضه بمظهرها.",
+          "no_profile": "{{skin}}: لا يوجد ملف تعريف، لذا تعرض عمليات البحث المكتبة.",
+          "off": "بحث الواجهة غير محدد هنا.",
           "supported": "{{skin}}: بحث الواجهة مدعوم.",
           "supported_as": "{{skin}}: بحث الواجهة مدعوم بصفتها {{profile}}.",
           "unknown": "لم يتمكن Encore من سؤال Kodi عن الواجهة التي يستخدمها."

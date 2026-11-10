@@ -3,6 +3,7 @@ package actions
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/nightah/encore/internal/core/media"
@@ -96,51 +97,70 @@ func (s *Service) LaunchAddon(ctx context.Context, t Target, name string) Outcom
 	return done(say("addon.opening", map[string]string{"addon": addons[i].Name}))
 }
 
-// GlobalSearch searches for query: in the skin's own search when the target is set up for it and Encore knows how, else with the Global Search add-on, when it's installed.
-func (s *Service) GlobalSearch(ctx context.Context, t Target, query string) Outcome {
+// GlobalSearch searches for query the way the target is set up to: in the library (the default), with the Global Search add-on, or in the skin's own search, which is Global Search for a skin that draws it. Global Search or the skin's search shows the library instead when it can't run. kinds narrows a library search, as in "search for the film X"; the other two search everything.
+func (s *Service) GlobalSearch(ctx context.Context, t Target, query string, kinds []media.Kind) Outcome {
 	if strings.TrimSpace(query) == "" {
 		return done(say("remote.no_text", nil))
 	}
 
-	if t.SearchMode != media.SearchModeSkin {
-		return s.globalSearch(ctx, t, query)
+	var note string
+
+	switch t.SearchMode {
+	case media.SearchModeSkin:
+		skin, err := t.Backend.SkinSearch(ctx, query, t.SkinProfile)
+		if err == nil && skin.Search == media.SkinSearchSupported {
+			o := done(say("addon.searching", map[string]string{"query": query}))
+			o.Note = "skin search: " + skinUsed(skin)
+
+			return o
+		}
+
+		// A skin that draws Global Search's window has no other search: Global Search is its own.
+		if err == nil && skin.Search == media.SkinSearchNative {
+			o, why := s.globalSearch(ctx, t, query)
+			if why == "" {
+				o.Note = "skin search: " + skin.ID + " skins Global Search; used Global Search"
+
+				return o
+			}
+
+			note = "skin search: " + skin.ID + " skins Global Search, but " + why + "; showed the library"
+
+			break
+		}
+
+		note = "skin search: " + skinFallback(skin, err) + "; showed the library"
+	case media.SearchModeGlobal:
+		o, why := s.globalSearch(ctx, t, query)
+		if why == "" {
+			return o
+		}
+
+		note = "global search: " + why + "; showed the library"
 	}
 
-	skin, err := t.Backend.SkinSearch(ctx, query, t.SkinProfile)
-	if err == nil && skin.Search == media.SkinSearchSupported {
-		o := done(say("addon.searching", map[string]string{"query": query}))
-		o.Note = "skin search: " + skinUsed(skin)
-
-		return o
-	}
-
-	o := s.globalSearch(ctx, t, query)
-	o.Note = "skin search: " + skinFallback(skin, err) + "; used Global Search"
+	o := s.librarySearch(ctx, t, query, kinds)
+	o.Note = note
 
 	return o
 }
 
-func (s *Service) globalSearch(ctx context.Context, t Target, query string) Outcome {
+// globalSearch runs the Global Search add-on. It returns why it didn't when the library should be shown instead.
+func (s *Service) globalSearch(ctx context.Context, t Target, query string) (Outcome, string) {
 	addons, err := t.Backend.Addons(ctx)
 	if err != nil {
-		return failure(t, err)
+		return failure(t, err), ""
 	}
 
-	installed := false
-
-	for _, a := range addons {
-		installed = installed || a.ID == globalSearchAddon
-	}
-
-	if !installed {
-		return done(say("addon.no_global_search", nil))
+	if !slices.ContainsFunc(addons, func(a media.Addon) bool { return a.ID == globalSearchAddon }) {
+		return Outcome{}, globalSearchAddon + " isn't installed"
 	}
 
 	if err := t.Backend.ExecuteAddon(ctx, globalSearchAddon, map[string]string{"searchstring": query}); err != nil {
-		return failure(t, err)
+		return Outcome{}, "running " + globalSearchAddon + " failed: " + err.Error()
 	}
 
-	return done(say("addon.searching", map[string]string{"query": query}))
+	return done(say("addon.searching", map[string]string{"query": query})), ""
 }
 
 // skinUsed describes the skin search that ran, for the request log.
@@ -159,8 +179,6 @@ func skinFallback(skin media.Skin, err error) string {
 		return "couldn't read the skin: " + err.Error()
 	case err != nil:
 		return skin.ID + " failed: " + err.Error()
-	case skin.Search == media.SkinSearchNative:
-		return skin.ID + " skins Global Search"
 	case skin.Search == media.SkinSearchMissingAddons:
 		return skin.ID + " needs " + strings.Join(skin.Missing, ", ")
 	default:

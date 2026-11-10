@@ -185,7 +185,7 @@ func TestTargetCarriesVoiceSettings(t *testing.T) {
 		assert.True(t, target.ShutdownQuits)
 		assert.Equal(t, 25, target.QueueLimit)
 		assert.Equal(t, media.Quality1080p, target.Quality)
-		assert.Equal(t, media.SearchModeGlobal, target.SearchMode, "Global Search by default")
+		assert.Equal(t, media.SearchModeLibrary, target.SearchMode, "the library by default")
 		assert.Empty(t, target.SkinProfile)
 
 		h.app.cfg.Alexa.SearchMode = "skin"

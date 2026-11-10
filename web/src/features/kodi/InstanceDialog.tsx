@@ -27,7 +27,9 @@ const QUALITY = ["inherit", "screen", "highest", "2160p", "1080p", "720p", "sd"]
   Instance["preferred_quality"]
 >;
 
-const SEARCH_MODES = ["inherit", "global_search", "skin"] as const satisfies ReadonlyArray<Instance["search_mode"]>;
+const SEARCH_MODES = ["inherit", "library", "global_search", "skin"] as const satisfies ReadonlyArray<
+  Instance["search_mode"]
+>;
 
 const makeSchema = (t: TFunction<"kodi">) =>
   z.object({
@@ -361,7 +363,7 @@ function SkinStatus({ id }: { id: number }) {
             addons: status.missing.join(", "),
             skin: status.name,
           })}
-      {data?.search_mode === "global_search" ? ` ${t("dialog.fields.search_mode.status.off")}` : null}
+      {data?.search_mode !== "skin" ? ` ${t("dialog.fields.search_mode.status.off")}` : null}
     </span>
   );
 }

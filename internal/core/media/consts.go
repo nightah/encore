@@ -44,9 +44,11 @@ const (
 
 // Search modes.
 const (
-	// SearchModeGlobal searches with the Global Search add-on.
+	// SearchModeLibrary shows the library's titles that match, in the media centre's own library views.
+	SearchModeLibrary SearchMode = "library"
+	// SearchModeGlobal searches with the Global Search add-on, else as SearchModeLibrary.
 	SearchModeGlobal SearchMode = "global_search"
-	// SearchModeSkin opens the skin's own search when Encore knows how, else searches with Global Search.
+	// SearchModeSkin opens the skin's own search when Encore knows how, else searches as SearchModeLibrary.
 	SearchModeSkin SearchMode = "skin"
 )
 

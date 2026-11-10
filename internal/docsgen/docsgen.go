@@ -52,12 +52,12 @@ func Generate(root string) (map[string][]byte, error) {
 
 	out[ContentDir+"/reference/api/endpoints.md"] = endpoints
 
-	skins, err := SkinSearchGuide(kodi.SkinProfiles())
+	search, err := SearchGuide(kodi.SkinProfiles())
 	if err != nil {
-		return nil, fmt.Errorf("skin search guide: %w", err)
+		return nil, fmt.Errorf("search guide: %w", err)
 	}
 
-	out[ContentDir+"/guides/skin-search.md"] = skins
+	out[ContentDir+"/guides/search.md"] = search
 
 	src, err := skillmodel.Load(i18n.FS)
 	if err != nil {

@@ -480,7 +480,7 @@ func TestSearchModeSetting(t *testing.T) {
 	var s Settings
 
 	c.json(http.MethodGet, "/api/v1/settings", nil, http.StatusOK, &s)
-	assert.Equal(t, "global_search", s.Features.SearchMode)
+	assert.Equal(t, "library", s.Features.SearchMode)
 
 	c.json(http.MethodPatch, "/api/v1/settings", map[string]any{"features": map[string]any{"search_mode": "skin"}}, http.StatusOK, &s)
 	assert.Equal(t, "skin", s.Features.SearchMode)

@@ -458,7 +458,7 @@ func applyInstanceBehaviour(rec *store.KodiInstance, in InstanceInput) error {
 		}
 
 		if !media.SearchMode(mode).IsValid() {
-			return fieldError("body.search_mode", "must be inherit, global_search or skin", mode)
+			return fieldError("body.search_mode", "must be inherit, library, global_search or skin", mode)
 		}
 
 		rec.SearchMode = mode

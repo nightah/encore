@@ -4,8 +4,8 @@ import (
 	"github.com/nightah/encore/internal/backend/kodi"
 )
 
-// SkinSearchGuide renders the skin search guide, whose table of skins comes from the skin profiles Encore ships.
-func SkinSearchGuide(profiles []kodi.SkinProfile) ([]byte, error) {
+// SearchGuide renders the search guide, whose tables of skins come from the skin profiles Encore ships.
+func SearchGuide(profiles []kodi.SkinProfile) ([]byte, error) {
 	var own, native []kodi.SkinProfile
 
 	for _, p := range profiles {
@@ -16,5 +16,5 @@ func SkinSearchGuide(profiles []kodi.SkinProfile) ([]byte, error) {
 		}
 	}
 
-	return render("skin-search.md.tmpl", map[string]any{"Own": own, "Native": native})
+	return render("search.md.tmpl", map[string]any{"Own": own, "Native": native})
 }

@@ -110,13 +110,14 @@
         "hint": "このインスタンスで「〜を検索して」と言ったときに開くものです。",
         "inherit": "設定 › 機能 に従う",
         "label": "検索",
+        "library": "ライブラリで表示",
         "skin": "スキン自身の検索",
         "status": {
           "checking": "Kodi が使っているスキンを確認しています…",
-          "missing_addons": "{{skin}}: スキンの検索には {{addons}} が必要なため、当面は Global Search を使います。",
-          "native_global_search": "{{skin}}: Global Search の見た目をすでにスキンで整えています。",
-          "no_profile": "{{skin}}: プロファイルがないため、Global Search を使います。",
-          "off": "ここではスキンの検索はオフです。",
+          "missing_addons": "{{skin}}: スキンの検索には {{addons}} が必要なため、当面はライブラリを表示します。",
+          "native_global_search": "{{skin}}: このスキンの検索は Global Search で、見た目をスキンで整えています。",
+          "no_profile": "{{skin}}: プロファイルがないため、ライブラリを表示します。",
+          "off": "ここではスキンの検索は選ばれていません。",
           "supported": "{{skin}}: スキンの検索に対応しています。",
           "supported_as": "{{skin}}: {{profile}} としてスキンの検索に対応しています。",
           "unknown": "Encore は Kodi に使用中のスキンを確認できませんでした。"

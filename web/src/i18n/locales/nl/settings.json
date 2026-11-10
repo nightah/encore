@@ -226,7 +226,8 @@
     },
     "search_mode": {
       "global_search": "Global Search",
-      "hint": "Wat “zoek naar…” op Kodi opent. De eigen zoekfunctie van de skin vult in wat er gezegd is als Encore de skin kent, en anders wordt Global Search gebruikt. Een instantie kan dat aanpassen.",
+      "hint": "Wat “zoek naar…” op Kodi opent. De bibliotheek toont de passende films, series, muziekvideo’s, artiesten of albums in Kodi’s eigen bibliotheekweergave, zonder add-ons. Global Search en de eigen zoekfunctie van de skin tonen de bibliotheek als ze niet kunnen werken. Een instantie kan dat aanpassen.",
+      "library": "In de bibliotheek tonen",
       "skin": "De eigen zoekfunctie van de skin",
       "title": "Zoeken"
     },

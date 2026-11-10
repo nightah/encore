@@ -611,14 +611,14 @@ describe("Request notes", () => {
       heard: "search for dune",
       id: 9100,
       intent: "GlobalSearch",
-      note: "skin search: skin.copacetic has no profile; used Global Search",
+      note: "skin search: skin.copacetic has no profile; showed the library",
       time: new Date().toISOString(),
     });
     renderApp("/request-log");
 
     expect(await screen.findByRole("heading", { level: 2, name: "“search for dune”" })).toBeInTheDocument();
     expect(screen.getByText("Note")).toBeInTheDocument();
-    expect(screen.getByText("skin search: skin.copacetic has no profile; used Global Search")).toBeInTheDocument();
+    expect(screen.getByText("skin search: skin.copacetic has no profile; showed the library")).toBeInTheDocument();
   });
 });
 

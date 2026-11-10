@@ -254,6 +254,10 @@ func (b *Backend) ShowView(_ context.Context, v media.View) error {
 		desc += " genre " + v.Genre
 	}
 
+	if v.Title != "" {
+		desc += " title " + v.Title
+	}
+
 	if v.Section == media.SectionPlaylist {
 		desc += fmt.Sprintf(" %s/%d", v.Playlist.Kind, v.Playlist.ID)
 	}

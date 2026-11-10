@@ -79,6 +79,10 @@ cases:
   - {utterance: "open mijn favoriet npo start", intent: OpenFavourite, slots: {Favourite: ""}}
   - {utterance: "voer youtube uit", intent: LaunchAddon, slots: {Addon: ""}}
   - {utterance: "doe een globale zoekopdracht naar zwartboek", intent: GlobalSearch, slots: {Query: "zwartboek"}}
+  - {utterance: "zoek naar zwartboek", intent: GlobalSearch, slots: {Query: "zwartboek"}}
+  - {utterance: "zoek naar de film zwartboek", intent: SearchMovies, slots: {Query: "zwartboek"}}
+  - {utterance: "zoek naar de serie undercover", intent: SearchTVShows, slots: {Query: "undercover"}}
+  - {utterance: "zoek naar de band golden earring", intent: SearchMusic, slots: {Query: "golden earring"}}
   - {utterance: "sluimerstand kodi", intent: Power, slots: {PowerAction: "hibernate"}}
   - {utterance: "uitwerpen", intent: EjectMedia}
   - {utterance: "zoek naar nieuwe films", intent: UpdateLibrary}

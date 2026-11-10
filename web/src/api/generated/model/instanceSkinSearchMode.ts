@@ -13,5 +13,6 @@ export type InstanceSkinSearchMode = (typeof InstanceSkinSearchMode)[keyof typeo
 
 export const InstanceSkinSearchMode = {
   global_search: "global_search",
+  library: "library",
   skin: "skin",
 } as const;

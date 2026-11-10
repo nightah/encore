@@ -188,10 +188,10 @@ func TestFlagDefaultsFromUsage(t *testing.T) {
 	assert.Equal(t, map[string]string{"server.address": ":8080", "log.format": "auto", "locale": "all", "plain": "x", "none": ""}, got)
 }
 
-func TestSkinSearchGuide(t *testing.T) {
+func TestSearchGuide(t *testing.T) {
 	t.Parallel()
 
-	page, err := SkinSearchGuide(kodi.SkinProfiles())
+	page, err := SearchGuide(kodi.SkinProfiles())
 	require.NoError(t, err)
 
 	out := string(page)
@@ -205,7 +205,7 @@ func TestSkinSearchGuide(t *testing.T) {
 		assert.Contains(t, out, "`"+p.ID+"`", "every skin Encore knows is listed")
 	}
 
-	page, err = SkinSearchGuide([]kodi.SkinProfile{{ID: "skin.x", Name: "X", Requires: []string{"a", "b"}, Window: "1", How: "something_new"}})
+	page, err = SearchGuide([]kodi.SkinProfile{{ID: "skin.x", Name: "X", Requires: []string{"a", "b"}, Window: "1", How: "something_new"}})
 	require.NoError(t, err)
 	assert.Contains(t, string(page), "| X | `skin.x` | `a`, `b` | `1` | something_new |", "a new way of filling in the query still shows")
 }

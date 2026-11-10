@@ -112,13 +112,14 @@
         "hint": "Was „Suche nach …“ auf dieser Instanz öffnet.",
         "inherit": "Wie unter Einstellungen › Funktionen",
         "label": "Suche",
+        "library": "In der Mediathek zeigen",
         "skin": "Die eigene Suche des Skins",
         "status": {
           "checking": "Encore fragt Kodi, welcher Skin läuft …",
-          "missing_addons": "{{skin}}: Die Skin-Suche braucht {{addons}}, deshalb wird vorerst Global Search verwendet.",
-          "native_global_search": "{{skin}}: gestaltet Global Search bereits selbst.",
-          "no_profile": "{{skin}}: kein Profil, deshalb wird Global Search verwendet.",
-          "off": "Die Skin-Suche ist hier aus.",
+          "missing_addons": "{{skin}}: Die Skin-Suche braucht {{addons}}, deshalb zeigen Suchen vorerst die Mediathek.",
+          "native_global_search": "{{skin}}: Seine Suche ist Global Search, das er selbst gestaltet.",
+          "no_profile": "{{skin}}: kein Profil, deshalb zeigen Suchen die Mediathek.",
+          "off": "Die Skin-Suche ist hier nicht ausgewählt.",
           "supported": "{{skin}}: Skin-Suche wird unterstützt.",
           "supported_as": "{{skin}}: Skin-Suche wird als {{profile}} unterstützt.",
           "unknown": "Encore konnte Kodi nicht fragen, welcher Skin läuft."

@@ -79,6 +79,10 @@ cases:
   - {utterance: "apri il preferito rai news", intent: OpenFavourite, slots: {Favourite: ""}}
   - {utterance: "avvia youtube", intent: LaunchAddon, slots: {Addon: ""}}
   - {utterance: "fai una ricerca globale di gomorra", intent: GlobalSearch, slots: {Query: "gomorra"}}
+  - {utterance: "cerca gomorra", intent: GlobalSearch, slots: {Query: "gomorra"}}
+  - {utterance: "cerca il film la vita è bella", intent: SearchMovies, slots: {Query: "la vita è bella"}}
+  - {utterance: "cerca la serie gomorra", intent: SearchTVShows, slots: {Query: "gomorra"}}
+  - {utterance: "cerca l'artista vasco rossi", intent: SearchMusic, slots: {Query: "vasco rossi"}}
   - {utterance: "iberna kodi", intent: Power, slots: {PowerAction: "hibernate"}}
   - {utterance: "espelli il disco", intent: EjectMedia}
   - {utterance: "cerca nuovi film", intent: UpdateLibrary}

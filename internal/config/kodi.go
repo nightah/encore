@@ -55,7 +55,7 @@ func validateKodi(instances []KodiInstance) []error {
 		}
 
 		if !media.SearchMode(k.SearchMode).IsValid() {
-			errs = append(errs, fmt.Errorf("%s.search_mode %q must be global_search or skin", where, k.SearchMode))
+			errs = append(errs, fmt.Errorf("%s.search_mode %q must be library, global_search or skin", where, k.SearchMode))
 		}
 
 		if k.SkinProfile != "" && !kodi.IsSkinProfile(k.SkinProfile) {

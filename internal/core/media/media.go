@@ -44,5 +44,5 @@ func (n NowPlaying) Remaining() time.Duration { return max(0, n.Duration-n.Posit
 
 // IsValid reports whether m is a search mode, or empty for the default.
 func (m SearchMode) IsValid() bool {
-	return m == "" || m == SearchModeGlobal || m == SearchModeSkin
+	return m == "" || m == SearchModeLibrary || m == SearchModeGlobal || m == SearchModeSkin
 }

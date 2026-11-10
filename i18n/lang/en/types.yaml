@@ -84,6 +84,9 @@ LIBRARY_TYPE:
     t. v.
     video library
 MATCH_CHOICE:
+  film: |-
+    film
+    movie
   first: |-
     first
     former
@@ -109,6 +112,11 @@ MATCH_CHOICE:
   second: |-
     second
     other
+  show: |-
+    show
+    tv show
+    t. v. show
+    series
 MEDIA_TYPE:
   album: |-
     album

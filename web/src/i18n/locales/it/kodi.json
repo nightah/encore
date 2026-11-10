@@ -112,13 +112,14 @@
         "hint": "Cosa apre «cerca…» su questa istanza.",
         "inherit": "Segui Impostazioni › Funzionalità",
         "label": "Ricerca",
+        "library": "Mostralo nella libreria",
         "skin": "La ricerca della skin",
         "status": {
           "checking": "Encore chiede a Kodi quale skin usa…",
-          "missing_addons": "{{skin}}: la ricerca della skin richiede {{addons}}, quindi per ora usa Global Search.",
-          "native_global_search": "{{skin}}: dà già il suo aspetto a Global Search.",
-          "no_profile": "{{skin}}: nessun profilo, quindi usa Global Search.",
-          "off": "La ricerca della skin qui è disattivata.",
+          "missing_addons": "{{skin}}: la ricerca della skin richiede {{addons}}, quindi per ora le ricerche mostrano la libreria.",
+          "native_global_search": "{{skin}}: la sua ricerca è Global Search, a cui dà il suo aspetto.",
+          "no_profile": "{{skin}}: nessun profilo, quindi le ricerche mostrano la libreria.",
+          "off": "La ricerca della skin qui non è selezionata.",
           "supported": "{{skin}}: ricerca della skin supportata.",
           "supported_as": "{{skin}}: ricerca della skin supportata come {{profile}}.",
           "unknown": "Encore non è riuscito a chiedere a Kodi quale skin usa."

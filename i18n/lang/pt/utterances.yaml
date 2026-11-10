@@ -92,6 +92,7 @@ Fullscreen:
 GlobalSearch:
   do_global_search: "(faz|fazer) uma (busca|pesquisa) global (por|de) {Query}"
   global_search: "(busca|pesquisa) global [por|de] {Query}"
+  search_for: "(procura|procurar|busca|buscar|pesquisa|pesquisar) {Query}"
   search_kodi_for: "(procura|procurar|busca|buscar|pesquisa|pesquisar) {Query} (no kodi|em todo lugar|em todos os complementos|em todos os add ons)\n(procura|procurar|busca|buscar|pesquisa|pesquisar) (no kodi|em todo lugar|em todos os complementos) por {Query}"
 IdentifyEcho:
   identify_this_echo: "(identifica|identificar) (este|esse) (echo|dispositivo|aparelho)"
@@ -154,7 +155,6 @@ PlayMedia:
   play: "(toca|tocar|toque|reproduz|reproduzir|reproduza) {Query}"
   put: "(coloca|colocar|coloque|bota|botar|bote|põe|pôr|ponha|passa|passar|passe) {Query}"
   queue_up: "(adiciona|adicionar|coloca|colocar|coloque) {Query} na fila"
-  search_for: "(procura|procurar|busca|buscar|pesquisa|pesquisar) {Query}"
 PlayPlaylist:
   play_music_playlist: "(toca|tocar|toque|coloca|colocar|coloque|reproduz|reproduzir|reproduza) a playlist (de música|de vídeo|inteligente) {Playlist}"
   play_playlist: "(toca|tocar|toque|coloca|colocar|coloque|bota|botar|bote|reproduz|reproduzir|reproduza) [a|minha] playlist {Playlist} [(na|no) {Room}]\n(toca|tocar|toque|coloca|colocar|coloque|reproduz|reproduzir|reproduza) [a|minha] lista de reprodução {Playlist} [(na|no) {Room}]"
@@ -216,6 +216,15 @@ RoomControl:
   in_the: "{Command} (na|no) {Room}"
   playback: "{Command} a reprodução (na|no) {Room}"
   tv: "{Command} (a tv|o kodi|a música|o filme|a série|o vídeo) (na|no) {Room}"
+SearchMovies:
+  search_films_for: "(procura|busca|pesquisa) nos [meus] filmes {Query}"
+  search_for_film: "(procura|busca|pesquisa) [no kodi] o filme {Query}"
+SearchMusic:
+  search_for_music: "(procura|busca|pesquisa) [no kodi] (o artista|a artista|a banda|o álbum) {Query}"
+  search_music_for: "(procura|busca|pesquisa) nas [minhas] músicas {Query}"
+SearchTVShows:
+  search_for_show: "(procura|busca|pesquisa) [no kodi] (a série|o programa) {Query}"
+  search_shows_for: "(procura|busca|pesquisa) nas [minhas] séries {Query}"
 ShuffleAlbum:
   shuffle_album: "(embaralha|embaralhar|mistura|misturar) o álbum {Album} [(na|no) {Room}]\n(toca|tocar|coloca|colocar) o álbum {Album} no (aleatório|modo aleatório) [(na|no) {Room}]"
   shuffle_album_2: "(embaralha|embaralhar|mistura|misturar) o disco {Album} [(de|do|da) {Artist}]"

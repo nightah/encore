@@ -417,8 +417,9 @@ describe("Settings page", () => {
     const log = recordRequests();
     renderApp("/settings?tab=features");
     const search = await screen.findByRole("combobox", { name: /^Search/ });
-    expect(search).toHaveValue("global_search");
-    expect(screen.getByText(/uses Global Search otherwise/)).toBeInTheDocument();
+    expect(search).toHaveValue("library");
+    expect(within(search).getByRole("option", { name: "Global Search" })).toBeInTheDocument();
+    expect(screen.getByText(/needs no add-ons/)).toBeInTheDocument();
 
     await user.selectOptions(search, "The skin’s own search");
     await waitFor(() => expect(getDb().settings.features.search_mode).toBe("skin"));

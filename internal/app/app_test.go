@@ -321,11 +321,13 @@ func TestEndToEndSkinSearch(t *testing.T) {
 		assert.Empty(t, kodi.CallsTo("Addons.ExecuteAddon"), "Global Search isn't run")
 
 		kodi.SetSkin("skin.copacetic")
-		h.say(t, "GlobalSearch", "Query", "alien")
+		h.say(t, "GlobalSearch", "Query", "hot fuzz")
 
-		calls := kodi.CallsTo("Addons.ExecuteAddon")
-		require.Len(t, calls, 1, "the skin is read again with each request")
-		assert.JSONEq(t, `{"addonid":"script.globalsearch","params":{"searchstring":"alien"}}`, string(calls[0].Params))
+		opened := kodi.CallsTo("GUI.ActivateWindow")
+		require.NotEmpty(t, opened, "the skin is read again with each request, and a skin without a profile shows the library")
+		assert.Contains(t, string(opened[len(opened)-1].Params), `videodb://movies/titles/?xsp=`)
+		assert.Contains(t, string(opened[len(opened)-1].Params), `hot%20fuzz`)
+		assert.Empty(t, kodi.CallsTo("Addons.ExecuteAddon"), "not Global Search")
 
 		var notes []string
 
@@ -346,7 +348,7 @@ func TestEndToEndSkinSearch(t *testing.T) {
 			return true
 		})
 
-		assert.ElementsMatch(t, []string{"skin search: opened skin.arctic.fuse.3's search", "skin search: skin.copacetic has no profile; used Global Search"}, notes)
+		assert.ElementsMatch(t, []string{"skin search: opened skin.arctic.fuse.3's search", "skin search: skin.copacetic has no profile; showed the library"}, notes)
 
 		skin, mode, err := h.app.InstanceSkin(t.Context(), h.instance(t).id)
 		require.NoError(t, err)

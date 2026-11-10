@@ -917,8 +917,9 @@
             "type": "integer"
           },
           "search_mode": {
-            "description": "How \"search for X\" searches: global_search runs the Global Search add-on, and skin opens the active skin's own search when Encore knows the skin, else runs Global Search. A Kodi instance's own kodi[].search_mode wins",
+            "description": "How \"search for X\" searches: library shows the library's matching films, TV shows, music videos, artists or albums in Kodi's own library view; global_search runs the Global Search add-on; and skin opens the active skin's own search when Encore knows the skin. When global_search or skin can't run, the search shows the library instead. A Kodi instance's own kodi[].search_mode wins",
             "enum": [
+              "library",
               "global_search",
               "skin"
             ],
@@ -978,6 +979,7 @@
           },
           "search_mode": {
             "enum": [
+              "library",
               "global_search",
               "skin"
             ],
@@ -1147,6 +1149,7 @@
             "description": "How \"search for X\" searches; inherit follows Settings › Features",
             "enum": [
               "inherit",
+              "library",
               "global_search",
               "skin"
             ],
@@ -1247,6 +1250,7 @@
             "description": "How \"search for X\" searches; inherit follows Settings › Features",
             "enum": [
               "inherit",
+              "library",
               "global_search",
               "skin"
             ],
@@ -1340,6 +1344,7 @@
           "search_mode": {
             "description": "The search mode in effect for the instance, its own or Settings › Features'",
             "enum": [
+              "library",
               "global_search",
               "skin"
             ],
@@ -3328,7 +3333,7 @@
             "type": "string"
           },
           "search": {
-            "description": "In skin mode: supported opens the skin's own search; native_global_search runs Global Search, which the skin already draws; no_profile and missing_addons run Global Search's default look instead",
+            "description": "In skin mode: supported opens the skin's own search; native_global_search runs Global Search, which the skin draws, or shows the library's matching titles when Global Search isn't installed; no_profile and missing_addons show the library's matching titles",
             "enum": [
               "supported",
               "native_global_search",
