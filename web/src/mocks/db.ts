@@ -8,6 +8,7 @@ import {
   devices as sampleDevices,
   instances as sampleInstances,
   libraries as sampleLibraries,
+  skins as sampleSkins,
 } from "@mocks/data";
 import { olderRequests, sampleRequests } from "@mocks/requests";
 
@@ -174,6 +175,7 @@ function settings(now: number): Settings {
       deep_search: true,
       preferred_quality: "screen",
       queue_limit: 100,
+      search_mode: "global_search",
       shutdown_quits: false,
     },
     locale: { default_locale: "en-AU", timezone: "Australia/Melbourne" },
@@ -358,5 +360,6 @@ export function createDb(scenario: Scenario = "configured", now = Date.now()): M
     settings: settings(now),
     setupToken: "K7QF-2M9X-PL4D",
     skill: skill(now, fresh),
+    skins: fresh ? {} : sampleSkins(),
   };
 }

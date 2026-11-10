@@ -224,6 +224,12 @@
       "hint": "Het maximale aantal items dat een shuffle of wachtrij in één keer afspeelt, zodat grote bibliotheken snel blijven reageren",
       "title": "Wachtrijlimiet"
     },
+    "search_mode": {
+      "global_search": "Global Search",
+      "hint": "Wat “zoek naar…” op Kodi opent. De eigen zoekfunctie van de skin vult in wat er gezegd is als Encore de skin kent, en anders wordt Global Search gebruikt. Een instantie kan dat aanpassen.",
+      "skin": "De eigen zoekfunctie van de skin",
+      "title": "Zoeken"
+    },
     "shutdown_quits": {
       "hint": "In plaats van het apparaat uit te schakelen",
       "title": "“Afsluiten” sluit Kodi af"

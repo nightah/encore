@@ -46,6 +46,10 @@ type Target struct {
 	ConfirmSound bool
 	// Quality is the copy to play when the library holds a film or episode more than once; empty prefers the best.
 	Quality media.Quality
+	// SearchMode is how a search request searches; empty means media.SearchModeGlobal.
+	SearchMode media.SearchMode
+	// SkinProfile names the skin whose search steps to use when the active skin has none of its own.
+	SkinProfile string
 	// Disabled lists the content groups the skill was set up without; the zero value allows everything.
 	Disabled []media.Content
 	// Via is set when the request named a room or device; a room without its own Kodi instance plays on the Echo's, so the target can be another room's.
@@ -100,6 +104,8 @@ type Outcome struct {
 	Played *media.Item
 	// Match is the search result behind the outcome, for the request log.
 	Match *match.Result
+	// Note explains a choice the action made, for the request log, e.g. why a skin search fell back to Global Search.
+	Note string
 	// Err is the internal error behind a failure message, for logging only.
 	Err error
 }

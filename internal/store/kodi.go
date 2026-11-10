@@ -19,7 +19,7 @@ func scanKodi(s scanner) (KodiInstance, error) {
 	)
 
 	err := s.Scan(&k.ID, &k.Name, &k.Scheme, &k.Host, &k.Port, &k.Path, &k.Username, &k.PasswordSecretRef,
-		&k.WSPort, &k.MAC, &k.BroadcastAddr, &k.IsDefaultForUnlinked, &k.Language, &k.Timezone, &quits, &k.PreferredQuality, &k.ScreenWidth, &k.ScreenHeight, &group, &created, &updated)
+		&k.WSPort, &k.MAC, &k.BroadcastAddr, &k.IsDefaultForUnlinked, &k.Language, &k.Timezone, &quits, &k.PreferredQuality, &k.SearchMode, &k.SkinProfile, &k.ScreenWidth, &k.ScreenHeight, &group, &created, &updated)
 	if err != nil {
 		return KodiInstance{}, mapErr(err)
 	}
@@ -48,10 +48,10 @@ func (r KodiInstances) Create(ctx context.Context, k *KodiInstance) error {
 
 		err := tx.QueryRowContext(ctx, `INSERT INTO kodi_instances
 			(name, scheme, host, port, path, username, password_secret_ref, ws_port, mac, broadcast_addr, is_default_for_unlinked,
-			 language, timezone, shutdown_quits, preferred_quality, screen_width, screen_height, library_group_id, created_at, updated_at)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
+			 language, timezone, shutdown_quits, preferred_quality, search_mode, skin_profile, screen_width, screen_height, library_group_id, created_at, updated_at)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
 			k.Name, k.Scheme, k.Host, k.Port, k.Path, k.Username, k.PasswordSecretRef, k.WSPort, k.MAC, k.BroadcastAddr,
-			k.IsDefaultForUnlinked, k.Language, k.Timezone, k.ShutdownQuits, k.PreferredQuality, k.ScreenWidth, k.ScreenHeight, nullID(k.LibraryGroupID), toMillis(now), toMillis(now)).Scan(&k.ID)
+			k.IsDefaultForUnlinked, k.Language, k.Timezone, k.ShutdownQuits, k.PreferredQuality, k.SearchMode, k.SkinProfile, k.ScreenWidth, k.ScreenHeight, nullID(k.LibraryGroupID), toMillis(now), toMillis(now)).Scan(&k.ID)
 		if err != nil {
 			return fmt.Errorf("creating kodi instance: %w", mapErr(err))
 		}
@@ -75,9 +75,9 @@ func (r KodiInstances) Update(ctx context.Context, k *KodiInstance) error {
 
 		err := affected(tx.ExecContext(ctx, `UPDATE kodi_instances SET
 			name = ?, scheme = ?, host = ?, port = ?, path = ?, username = ?, password_secret_ref = ?, ws_port = ?,
-			mac = ?, broadcast_addr = ?, is_default_for_unlinked = ?, language = ?, timezone = ?, shutdown_quits = ?, preferred_quality = ?, updated_at = ? WHERE id = ?`,
+			mac = ?, broadcast_addr = ?, is_default_for_unlinked = ?, language = ?, timezone = ?, shutdown_quits = ?, preferred_quality = ?, search_mode = ?, skin_profile = ?, updated_at = ? WHERE id = ?`,
 			k.Name, k.Scheme, k.Host, k.Port, k.Path, k.Username, k.PasswordSecretRef, k.WSPort,
-			k.MAC, k.BroadcastAddr, k.IsDefaultForUnlinked, k.Language, k.Timezone, k.ShutdownQuits, k.PreferredQuality, toMillis(now), k.ID))
+			k.MAC, k.BroadcastAddr, k.IsDefaultForUnlinked, k.Language, k.Timezone, k.ShutdownQuits, k.PreferredQuality, k.SearchMode, k.SkinProfile, toMillis(now), k.ID))
 		if err != nil {
 			return fmt.Errorf("updating kodi instance %d: %w", k.ID, err)
 		}

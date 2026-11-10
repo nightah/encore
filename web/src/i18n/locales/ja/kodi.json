@@ -105,12 +105,34 @@
         "screen_unknown": "接続すると Encore が画面を認識します。",
         "sd": "SD"
       },
+      "search_mode": {
+        "global_search": "Global Search",
+        "hint": "このインスタンスで「〜を検索して」と言ったときに開くものです。",
+        "inherit": "設定 › 機能 に従う",
+        "label": "検索",
+        "skin": "スキン自身の検索",
+        "status": {
+          "checking": "Kodi が使っているスキンを確認しています…",
+          "missing_addons": "{{skin}}: スキンの検索には {{addons}} が必要なため、当面は Global Search を使います。",
+          "native_global_search": "{{skin}}: Global Search の見た目をすでにスキンで整えています。",
+          "no_profile": "{{skin}}: プロファイルがないため、Global Search を使います。",
+          "off": "ここではスキンの検索はオフです。",
+          "supported": "{{skin}}: スキンの検索に対応しています。",
+          "supported_as": "{{skin}}: {{profile}} としてスキンの検索に対応しています。",
+          "unknown": "Encore は Kodi に使用中のスキンを確認できませんでした。"
+        }
+      },
       "shutdown": {
         "hint": "「アレクサ、encore でシャットダウンして」と言ったときに、この Kodi インスタンスで行う動作です。",
         "inherit": "設定 › 機能 に従う",
         "label": "「シャットダウン」",
         "power_off": "デバイスの電源を切る",
         "quit": "Kodi を終了"
+      },
+      "skin_profile": {
+        "hint": "フォークなど Encore が知らないスキンで、このスキンと同じ方法で検索します。スキンの検索でのみ使います。",
+        "label": "スキンのプロファイル",
+        "none": "なし"
       },
       "timezone": {
         "hint": "この Kodi インスタンスの所在地です。空欄にすると Kodi の時計から取得します。",

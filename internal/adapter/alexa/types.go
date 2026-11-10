@@ -52,8 +52,10 @@ type LogEntry struct {
 	Slots     map[string]string
 	Target    string
 	// Via is the room or device the request named, if it named one.
-	Via     actions.Via
-	Match   *match.Result
+	Via   actions.Via
+	Match *match.Result
+	// Note explains a choice the action made, e.g. why a skin search fell back to Global Search.
+	Note    string
 	Speech  string
 	Outcome string
 	Err     error

@@ -135,6 +135,8 @@ func (a *App) instanceTarget(ctx context.Context, id int64) (actions.Target, boo
 	t.DeepSearch = voice.DeepSearch
 	t.ConfirmSound = voice.ConfirmSound
 	t.Quality = media.Quality(cmp.Or(inst.Record.PreferredQuality, voice.PreferredQuality)).ForScreen(inst.Screen())
+	t.SearchMode = media.SearchMode(cmp.Or(inst.Record.SearchMode, voice.SearchMode))
+	t.SkinProfile = inst.Record.SkinProfile
 
 	for _, c := range media.Contents {
 		if !slices.Contains(voice.Content, string(c)) {

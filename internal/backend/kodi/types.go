@@ -279,3 +279,32 @@ type Waker struct {
 
 // SendFunc delivers one UDP datagram to addr ("host:port").
 type SendFunc func(ctx context.Context, addr string, payload []byte) error
+
+// skinProfile is how to open one skin's own search with a query filled in.
+type skinProfile struct {
+	// ID is the skin's add-on ID, as lookandfeel.skin reports it, and Name its display name.
+	ID, Name string
+	Kind     skinSearchKind
+	// Requires lists the add-ons that must be installed and enabled for run to work.
+	Requires []string
+	// Window is the window run opens, as Window.IsVisible takes it; empty for skinSearchNative.
+	Window string
+	// run opens the search; nil for skinSearchNative.
+	run func(ctx context.Context, b *Backend, q string) error
+}
+
+// skinSearchKind is how a skin profile fills in the query.
+type skinSearchKind string
+
+// SkinProfile describes a skin whose search Encore knows, for the web interface and the docs.
+type SkinProfile struct {
+	// ID is the skin's add-on ID and Name its display name.
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	// Native is true for a skin that draws Global Search's window itself, where a search runs Global Search.
+	Native bool `json:"native"`
+	// Requires lists the add-ons the skin's search needs, Window the window it opens and How how it fills in the query.
+	Requires []string `json:"requires"`
+	Window   string   `json:"window,omitempty"`
+	How      string   `json:"how"`
+}

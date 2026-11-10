@@ -30,6 +30,26 @@ const (
 	QualityScreen Quality = "screen"
 )
 
+// What a search does on a skin.
+const (
+	// SkinSearchSupported opens the skin's own search.
+	SkinSearchSupported SkinSearch = "supported"
+	// SkinSearchNative means the skin draws Global Search's window itself, so Global Search already looks native.
+	SkinSearchNative SkinSearch = "native_global_search"
+	// SkinSearchNoProfile means Encore doesn't know how to drive the skin's search.
+	SkinSearchNoProfile SkinSearch = "no_profile"
+	// SkinSearchMissingAddons means the add-ons the skin's search needs aren't installed and enabled.
+	SkinSearchMissingAddons SkinSearch = "missing_addons"
+)
+
+// Search modes.
+const (
+	// SearchModeGlobal searches with the Global Search add-on.
+	SearchModeGlobal SearchMode = "global_search"
+	// SearchModeSkin opens the skin's own search when Encore knows how, else searches with Global Search.
+	SearchModeSkin SearchMode = "skin"
+)
+
 // Transport commands.
 const (
 	TransportPause     Transport = "pause"

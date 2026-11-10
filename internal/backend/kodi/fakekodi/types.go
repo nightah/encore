@@ -312,6 +312,10 @@ type playerState struct {
 	screen    [2]int
 	whitelist []string
 
+	// skin is lookandfeel.skin, and windows counts down the Window.IsVisible polls until each scripted window shows; a negative count never shows.
+	skin    string
+	windows map[string]int
+
 	playlists map[int][]Item
 }
 

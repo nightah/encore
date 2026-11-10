@@ -55,6 +55,29 @@ func TestDryBackendSendsNoWrites(t *testing.T) {
 	assert.Len(t, run.Calls(), len(writes))
 }
 
+func TestDryBackendRecordsSkinSearches(t *testing.T) {
+	kodi := testkit.NewBackend()
+	run := &DryRun{}
+	b := dryBackend{Backend: kodi, run: run}
+
+	kodi.SetSkin(media.Skin{ID: "skin.copacetic", Search: media.SkinSearchNoProfile}, nil)
+	skin, err := b.SkinSearch(t.Context(), "dune", "")
+	require.NoError(t, err)
+	assert.Equal(t, media.SkinSearchNoProfile, skin.Search)
+	assert.Empty(t, run.Calls(), "a skin without a profile would search with Global Search instead")
+
+	kodi.SetSkin(media.Skin{ID: "skin.ah2.fork", Profile: "skin.arctic.horizon.2", Search: media.SkinSearchSupported}, errBroken)
+	skin, err = b.SkinSearch(t.Context(), "dune", "skin.arctic.horizon.2")
+	require.NoError(t, err, "nothing runs, so nothing fails")
+	assert.Equal(t, media.SkinSearchSupported, skin.Search)
+	assert.Equal(t, []Call{{Method: "SkinSearch", Params: map[string]any{"skin": "skin.ah2.fork", "profile": "skin.arctic.horizon.2", "query": "dune"}}}, run.Calls())
+	assert.Equal(t, []string{"Skin ", "Skin skin.arctic.horizon.2"}, kodi.Calls(), "only the skin is read")
+
+	kodi.Err = errBroken
+	_, err = b.SkinSearch(t.Context(), "dune", "")
+	require.ErrorIs(t, err, errBroken)
+}
+
 func TestDryBackendRecordsWhatWouldBeSent(t *testing.T) {
 	to, set, mute := 90*time.Second, 40, true
 

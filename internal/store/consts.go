@@ -11,7 +11,7 @@ const aliasColumns = `id, kodi_instance_id, media_kind, media_id, alias, normali
 
 const deviceColumns = `id, alexa_device_id, display_name, room_id, kodi_instance_id, first_seen, last_seen, request_count`
 
-const kodiColumns = `id, name, scheme, host, port, path, username, password_secret_ref, ws_port, mac, broadcast_addr, is_default_for_unlinked, language, timezone, shutdown_quits, preferred_quality, screen_width, screen_height, library_group_id, created_at, updated_at`
+const kodiColumns = `id, name, scheme, host, port, path, username, password_secret_ref, ws_port, mac, broadcast_addr, is_default_for_unlinked, language, timezone, shutdown_quits, preferred_quality, search_mode, skin_profile, screen_width, screen_height, library_group_id, created_at, updated_at`
 
 // Library group states.
 const (

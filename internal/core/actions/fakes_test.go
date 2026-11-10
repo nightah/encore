@@ -237,6 +237,14 @@ func (f *flaky) ExecuteAddon(ctx context.Context, id string, params map[string]s
 	return f.Backend.ExecuteAddon(ctx, id, params)
 }
 
+func (f *flaky) SkinSearch(ctx context.Context, query, profile string) (media.Skin, error) {
+	if err := f.err("SkinSearch"); err != nil {
+		return media.Skin{}, err
+	}
+
+	return f.Backend.SkinSearch(ctx, query, profile)
+}
+
 func (f *flaky) Clock(ctx context.Context) (time.Time, error) {
 	if err := f.err("Clock"); err != nil {
 		return time.Time{}, err

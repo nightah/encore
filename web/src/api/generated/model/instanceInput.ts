@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1
  */
 import type { InstanceInputPreferredQuality } from "./instanceInputPreferredQuality.ts";
+import type { InstanceInputSearchMode } from "./instanceInputSearchMode.ts";
 import type { InstanceInputShutdown } from "./instanceInputShutdown.ts";
 
 export interface InstanceInput {
@@ -22,7 +23,11 @@ export interface InstanceInput {
   password?: string;
   /** Which copy plays when the library holds a film or episode more than once; inherit follows Settings › Features */
   preferred_quality?: InstanceInputPreferredQuality;
+  /** How "search for X" searches; inherit follows Settings › Features */
+  search_mode?: InstanceInputSearchMode;
   shutdown?: InstanceInputShutdown;
+  /** The skin whose search steps to use when this instance's skin isn't one Encore knows: a profile from GET /kodi/skin-profiles that isn't native, or empty for none */
+  skin_profile?: string;
   /** The Kodi host's IANA time zone; empty learns it from Kodi's clock */
   timezone?: string;
   /** HTTP JSON-RPC endpoint, e.g. http://192.168.1.20:8080/jsonrpc */

@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1
  */
 import type { FeaturesPatchPreferredQuality } from "./featuresPatchPreferredQuality.ts";
+import type { FeaturesPatchSearchMode } from "./featuresPatchSearchMode.ts";
 
 export interface FeaturesPatch {
   auto_deploy?: boolean;
@@ -22,6 +23,7 @@ export interface FeaturesPatch {
    * @maximum 1000
    */
   queue_limit?: number;
+  search_mode?: FeaturesPatchSearchMode;
   shutdown_quits?: boolean;
   [key: string]: unknown;
 }

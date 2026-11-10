@@ -23,6 +23,7 @@ func (s *Server) registerDefaults() {
 		return map[string]bool{"canshutdown": true, "cansuspend": true, "canhibernate": false, "canreboot": true}, nil
 	}
 	s.handlers["XBMC.GetInfoLabels"] = s.getInfoLabels
+	s.handlers["XBMC.GetInfoBooleans"] = s.getInfoBooleans
 	s.handlers["Files.GetDirectory"] = s.filesGetDirectory
 	s.handlers["Settings.GetSettingValue"] = s.settingsGetSettingValue
 
@@ -97,14 +98,52 @@ func (s *Server) settingsGetSettingValue(params json.RawMessage) (any, *Error) {
 		return nil, err
 	}
 
-	if p.Setting != "videoscreen.whitelist" {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	switch p.Setting {
+	case "videoscreen.whitelist":
+		return map[string]any{"value": append([]string{}, s.state.whitelist...)}, nil
+	case "lookandfeel.skin":
+		return map[string]any{"value": s.state.skin}, nil
+	default:
 		return nil, &Error{Code: CodeInvalidParams, Message: "Invalid params."}
+	}
+}
+
+// getInfoBooleans answers Window.IsVisible for the windows ShowWindow scripted, as Kodi does: with booleans, though its schema says strings. Any other boolean is false.
+func (s *Server) getInfoBooleans(params json.RawMessage) (any, *Error) {
+	var p struct {
+		Booleans []string `json:"booleans"`
+	}
+	if err := decode(params, &p); err != nil {
+		return nil, err
 	}
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	return map[string]any{"value": append([]string{}, s.state.whitelist...)}, nil
+	out := map[string]bool{}
+
+	for _, b := range p.Booleans {
+		window, ok := strings.CutPrefix(b, visiblePrefix)
+		if !ok || !strings.HasSuffix(window, visibleSuffix) {
+			out[b] = false
+
+			continue
+		}
+
+		window = strings.TrimSuffix(window, visibleSuffix)
+
+		polls, scripted := s.state.windows[window]
+		out[b] = scripted && polls == 0
+
+		if scripted && polls > 0 {
+			s.state.windows[window] = polls - 1
+		}
+	}
+
+	return out, nil
 }
 
 func (s *Server) filesGetDirectory(params json.RawMessage) (any, *Error) {

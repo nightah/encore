@@ -412,6 +412,26 @@ describe("Settings page", () => {
     await waitFor(() => expect(quality).toHaveValue("1080p"));
   });
 
+  it("saves how a search searches as soon as another way is picked", async () => {
+    const user = userEvent.setup();
+    const log = recordRequests();
+    renderApp("/settings?tab=features");
+    const search = await screen.findByRole("combobox", { name: /^Search/ });
+    expect(search).toHaveValue("global_search");
+    expect(screen.getByText(/uses Global Search otherwise/)).toBeInTheDocument();
+
+    await user.selectOptions(search, "The skin’s own search");
+    await waitFor(() => expect(getDb().settings.features.search_mode).toBe("skin"));
+    expect(log.find((r) => r.method === "PATCH")?.body).toEqual({ features: { search_mode: "skin" } });
+    await waitFor(() => expect(search).toHaveValue("skin"));
+  });
+
+  it("shows the search mode as managed when config sets it", async () => {
+    getDb().settings.managed = ["features.search_mode"];
+    renderApp("/settings?tab=features");
+    expect(await screen.findByRole("combobox", { name: /^Search.*Managed by config/ })).toBeDisabled();
+  });
+
   it("shows the preferred quality as managed, and won't change it, when config sets it", async () => {
     getDb().settings.managed = ["features.preferred_quality"];
     renderApp("/settings?tab=features");

@@ -97,6 +97,7 @@ func (p SettingsPatch) changes() []Change {
 		c.flag("alexa.deep_search", f.DeepSearch)
 		c.flag("alexa.shutdown_quits", f.ShutdownQuits)
 		c.str("alexa.preferred_quality", f.PreferredQuality)
+		c.str("alexa.search_mode", f.SearchMode)
 		c.flag("alexa.confirm_sound", f.ConfirmSound)
 		c.num("alexa.queue_limit", f.QueueLimit)
 		c.flag("alexa.auto_deploy", f.AutoDeploy)

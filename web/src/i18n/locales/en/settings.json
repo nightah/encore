@@ -224,6 +224,12 @@
       "hint": "The most items a shuffle or queue plays at once, which keeps large libraries responsive",
       "title": "Queue limit"
     },
+    "search_mode": {
+      "global_search": "Global Search",
+      "hint": "What “search for…” opens on Kodi. The skin’s own search fills in what was said when Encore knows the skin, and uses Global Search otherwise. An instance can override it.",
+      "skin": "The skin’s own search",
+      "title": "Search"
+    },
     "shutdown_quits": {
       "hint": "Instead of powering off the device",
       "title": "“Shutdown” quits Kodi"

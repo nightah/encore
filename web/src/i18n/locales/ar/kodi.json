@@ -115,12 +115,34 @@
         "screen_unknown": "يتعرّف Encore على شاشته بمجرد اتصاله.",
         "sd": "SD"
       },
+      "search_mode": {
+        "global_search": "Global Search",
+        "hint": "ما يفتحه «ابحث عن…» على هذا المثيل.",
+        "inherit": "اتباع الإعدادات › الميزات",
+        "label": "البحث",
+        "skin": "بحث الواجهة نفسها",
+        "status": {
+          "checking": "جارٍ التحقق من الواجهة التي يستخدمها Kodi…",
+          "missing_addons": "{{skin}}: يحتاج بحث الواجهة إلى {{addons}}، لذا يُستخدم Global Search حاليًا.",
+          "native_global_search": "{{skin}}: تعرض Global Search بمظهرها مسبقًا.",
+          "no_profile": "{{skin}}: لا يوجد ملف تعريف، لذا يُستخدم Global Search.",
+          "off": "بحث الواجهة متوقف هنا.",
+          "supported": "{{skin}}: بحث الواجهة مدعوم.",
+          "supported_as": "{{skin}}: بحث الواجهة مدعوم بصفتها {{profile}}.",
+          "unknown": "لم يتمكن Encore من سؤال Kodi عن الواجهة التي يستخدمها."
+        }
+      },
       "shutdown": {
         "hint": "ما يفعله «Alexa، اطلب من encore إيقاف التشغيل» على مثيل Kodi هذا.",
         "inherit": "اتباع الإعدادات › الميزات",
         "label": "«إيقاف التشغيل»",
         "power_off": "إطفاء الجهاز",
         "quit": "إغلاق Kodi"
+      },
+      "skin_profile": {
+        "hint": "لواجهة لا يعرفها Encore، مثل نسخة معدّلة، ابحث بطريقة هذه الواجهة. يُستخدم مع بحث الواجهة فقط.",
+        "label": "ملف تعريف الواجهة",
+        "none": "لا شيء"
       },
       "timezone": {
         "hint": "مكان مثيل Kodi هذا. اتركه فارغًا لمعرفته من ساعة Kodi.",

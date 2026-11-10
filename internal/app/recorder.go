@@ -82,10 +82,10 @@ func toRow(e alexa.LogEntry) store.RequestLogEntry {
 	kodi := min(kodiTime(e.KodiCalls), max(0, e.Duration-e.Verify-e.MatchTime))
 	row.Timing, _ = json.Marshal(loggedTiming{VerifyMS: e.Verify.Milliseconds(), MatchMS: e.MatchTime.Milliseconds(), KodiMS: kodi.Milliseconds()})
 
-	if e.Match != nil {
-		row.Match, _ = json.Marshal(summariseMatch(e.Match, e.Target, e.Via, e.Err))
-	} else if e.Target != "" || e.Err != nil {
-		row.Match, _ = json.Marshal(summariseMatch(nil, e.Target, e.Via, e.Err))
+	if e.Match != nil || e.Target != "" || e.Err != nil || e.Note != "" {
+		m := summariseMatch(e.Match, e.Target, e.Via, e.Err)
+		m.Note = e.Note
+		row.Match, _ = json.Marshal(m)
 	}
 
 	return row

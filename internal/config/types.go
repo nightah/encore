@@ -65,6 +65,8 @@ type Alexa struct {
 	DeepSearch bool `koanf:"deep_search"`
 	// PreferredQuality chooses which copy plays when the library holds a film or episode more than once, such as in both 2160p and 1080p: screen (the default), highest, 2160p, 1080p, 720p or sd. screen matches each Kodi instance's display, as Kodi reports it, and plays the best copy until Encore has learned it. Encore plays a copy in the chosen quality, else the best below it, else the least above it; playback carries on from where any copy stopped. A Kodi instance can override it.
 	PreferredQuality string `koanf:"preferred_quality"`
+	// SearchMode chooses how "search for X" searches: global_search (the default) runs the Global Search add-on, and skin opens the active skin's own search with the query filled in when Encore knows the skin, else runs Global Search. The skin is read from Kodi with each request, so changing skins needs nothing in Encore. A Kodi instance can override it.
+	SearchMode string `koanf:"search_mode"`
 	// QueueLimit caps how many items a shuffle or queue plays at once (Kanzi's playlist_max_items), which keeps large libraries responsive. It can also be changed under Settings › Features.
 	QueueLimit int `koanf:"queue_limit"`
 	// AutoDeploy redeploys the skill on its own when what would be deployed changes, such as new library titles or an Encore upgrade that changes the interaction model. Only a skill that has already been deployed is redeployed. An automatic deploy that fails for a reason that may pass, such as Amazon being unavailable or still building, is tried again up to three times with a growing wait; any other failure, or a fourth in a row, pauses automatic deploys until a deploy started by hand succeeds. It can also be changed under Settings › Features.
@@ -219,6 +221,10 @@ type KodiInstance struct {
 	ShutdownQuits *bool `koanf:"shutdown_quits"`
 	// PreferredQuality overrides alexa.preferred_quality for this instance when set: screen, highest, 2160p, 1080p, 720p or sd.
 	PreferredQuality string `koanf:"preferred_quality"`
+	// SearchMode overrides alexa.search_mode for this instance when set: global_search or skin.
+	SearchMode string `koanf:"search_mode"`
+	// SkinProfile names a skin whose search steps to use when the instance's skin isn't one Encore knows, such as a fork that keeps its parent's windows, e.g. skin.arctic.horizon.2. It applies only in skin search mode, and never to a skin Encore knows.
+	SkinProfile string `koanf:"skin_profile"`
 	// Timezone is the Kodi host's IANA time zone (e.g. "Australia/Melbourne"), which Kodi writes library dates in. Empty means learn the UTC offset from Kodi's clock.
 	Timezone string `koanf:"timezone"`
 }

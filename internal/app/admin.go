@@ -1,6 +1,7 @@
 package app
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"io"
@@ -168,6 +169,19 @@ func (a *App) InstanceImage(ctx context.Context, id int64, ref string) (io.ReadC
 	}
 
 	return inst.Client.Image(ctx, ref)
+}
+
+// InstanceSkin reads an instance's active skin from Kodi and what a search does on it, with the search mode in effect for the instance.
+func (a *App) InstanceSkin(ctx context.Context, id int64) (media.Skin, media.SearchMode, error) {
+	inst, err := a.runtime(id)
+	if err != nil {
+		return media.Skin{}, "", err
+	}
+
+	mode := media.SearchMode(cmp.Or(inst.Record.SearchMode, a.voiceSettings(ctx).SearchMode, string(media.SearchModeGlobal)))
+	skin, err := inst.Backend.Skin(ctx, inst.Record.SkinProfile)
+
+	return skin, mode, err
 }
 
 // RecentlyAdded returns the n newest movies, shows, episodes and songs in an instance's catalog, newest first.

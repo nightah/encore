@@ -224,6 +224,12 @@
       "hint": "Le nombre maximal d’éléments qu’une lecture aléatoire ou une file lit à la fois, pour que les grandes bibliothèques restent réactives",
       "title": "Limite de file"
     },
+    "search_mode": {
+      "global_search": "Global Search",
+      "hint": "Ce qu’ouvre « cherche… » sur Kodi. La recherche propre au skin reprend ce qui a été dit quand Encore connaît le skin, et utilise Global Search sinon. Une instance peut changer ce choix.",
+      "skin": "La recherche propre au skin",
+      "title": "Recherche"
+    },
     "shutdown_quits": {
       "hint": "Au lieu d'éteindre l'appareil",
       "title": "« Éteindre » quitte Kodi"

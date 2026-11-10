@@ -107,12 +107,34 @@
         "screen_unknown": "Encore erkennt den Bildschirm, sobald die Instanz verbunden ist.",
         "sd": "SD"
       },
+      "search_mode": {
+        "global_search": "Global Search",
+        "hint": "Was „Suche nach …“ auf dieser Instanz öffnet.",
+        "inherit": "Wie unter Einstellungen › Funktionen",
+        "label": "Suche",
+        "skin": "Die eigene Suche des Skins",
+        "status": {
+          "checking": "Encore fragt Kodi, welcher Skin läuft …",
+          "missing_addons": "{{skin}}: Die Skin-Suche braucht {{addons}}, deshalb wird vorerst Global Search verwendet.",
+          "native_global_search": "{{skin}}: gestaltet Global Search bereits selbst.",
+          "no_profile": "{{skin}}: kein Profil, deshalb wird Global Search verwendet.",
+          "off": "Die Skin-Suche ist hier aus.",
+          "supported": "{{skin}}: Skin-Suche wird unterstützt.",
+          "supported_as": "{{skin}}: Skin-Suche wird als {{profile}} unterstützt.",
+          "unknown": "Encore konnte Kodi nicht fragen, welcher Skin läuft."
+        }
+      },
       "shutdown": {
         "hint": "Was „Alexa, sag encore, fahr herunter“ bei dieser Kodi-Instanz macht.",
         "inherit": "Wie unter Einstellungen › Funktionen",
         "label": "„Herunterfahren“",
         "power_off": "Gerät ausschalten",
         "quit": "Kodi beenden"
+      },
+      "skin_profile": {
+        "hint": "Für einen Skin, den Encore nicht kennt, etwa einen Fork: so suchen, wie dieser es tut. Gilt nur bei der Skin-Suche.",
+        "label": "Skin-Profil",
+        "none": "Keins"
       },
       "timezone": {
         "hint": "Wo diese Kodi-Instanz steht. Leer lassen, um sie aus Kodis Uhr zu ermitteln.",

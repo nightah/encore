@@ -211,3 +211,30 @@ func TestSimulatedRequests(t *testing.T) {
 	assert.Equal(t, 1, ov.RequestsToday.Total, "the simulator's requests don't count")
 	assert.Len(t, ov.RecentRequests, 1)
 }
+
+func TestRequestDetailNote(t *testing.T) {
+	h := newHarness(t, harnessOpts{noKodi: true})
+	c := h.admin()
+
+	match, err := json.Marshal(map[string]any{"target": "Lounge", "note": "skin search: skin.copacetic has no profile; used Global Search"})
+	require.NoError(t, err)
+
+	entries := []store.RequestLogEntry{
+		{DeviceID: "amzn1.ask.device.X", Intent: "GlobalSearch", Match: match},
+		{DeviceID: "amzn1.ask.device.X", Intent: "WatchMovie", Match: logMatch(t, "Lounge", "play")},
+	}
+
+	for i := range entries {
+		require.NoError(t, h.app.DB().RequestLog().Insert(t.Context(), &entries[i]))
+	}
+
+	var d RequestDetail
+
+	c.json(http.MethodGet, fmt.Sprintf("/api/v1/requests/%d", entries[0].ID), nil, http.StatusOK, &d)
+	assert.Equal(t, "skin search: skin.copacetic has no profile; used Global Search", d.Note)
+	require.NotNil(t, d.Match.V)
+	assert.Equal(t, "Lounge", d.Match.V.Target)
+
+	c.json(http.MethodGet, fmt.Sprintf("/api/v1/requests/%d", entries[1].ID), nil, http.StatusOK, &d)
+	assert.Empty(t, d.Note)
+}

@@ -107,12 +107,34 @@
         "screen_unknown": "Encore learns its screen once it connects.",
         "sd": "SD"
       },
+      "search_mode": {
+        "global_search": "Global Search",
+        "hint": "What “search for…” opens on this instance.",
+        "inherit": "Follow Settings › Features",
+        "label": "Search",
+        "skin": "The skin’s own search",
+        "status": {
+          "checking": "Checking which skin Kodi is using…",
+          "missing_addons": "{{skin}}: skin search needs {{addons}}, so it uses Global Search for now.",
+          "native_global_search": "{{skin}}: already skins Global Search.",
+          "no_profile": "{{skin}}: no profile, so it uses Global Search.",
+          "off": "Skin search is off here.",
+          "supported": "{{skin}}: skin search supported.",
+          "supported_as": "{{skin}}: skin search supported as {{profile}}.",
+          "unknown": "Encore couldn’t ask Kodi which skin it’s using."
+        }
+      },
       "shutdown": {
         "hint": "What “Alexa, ask encore to shut down” does on this Kodi instance.",
         "inherit": "Follow Settings › Features",
         "label": "“Shut down”",
         "power_off": "Power off the device",
         "quit": "Quit Kodi"
+      },
+      "skin_profile": {
+        "hint": "For a skin Encore doesn’t know, such as a fork, search the way this one does. Only used with skin search.",
+        "label": "Skin profile",
+        "none": "None"
       },
       "timezone": {
         "hint": "Where this Kodi instance is. Leave it empty to learn it from Kodi’s clock.",

@@ -224,6 +224,12 @@
       "hint": "O máximo de itens que uma reprodução aleatória ou fila toca de uma vez, o que mantém bibliotecas grandes ágeis",
       "title": "Limite da fila"
     },
+    "search_mode": {
+      "global_search": "Global Search",
+      "hint": "O que “procure…” abre no Kodi. A busca própria da skin preenche o que foi dito quando o Encore conhece a skin e, se não, usa o Global Search. Uma instância pode mudar isso.",
+      "skin": "A busca própria da skin",
+      "title": "Busca"
+    },
     "shutdown_quits": {
       "hint": "Em vez de desligar o dispositivo",
       "title": "“Desligar” sai do Kodi"

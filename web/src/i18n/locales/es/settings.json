@@ -224,6 +224,12 @@
       "hint": "El máximo de elementos que reproduce a la vez una reproducción aleatoria o una cola, para que las bibliotecas grandes respondan con fluidez",
       "title": "Límite de cola"
     },
+    "search_mode": {
+      "global_search": "Global Search",
+      "hint": "Lo que abre «busca…» en Kodi. La búsqueda propia de la skin rellena lo dicho cuando Encore conoce la skin y, si no, usa Global Search. Una instancia puede cambiarlo.",
+      "skin": "La búsqueda propia de la skin",
+      "title": "Búsqueda"
+    },
     "shutdown_quits": {
       "hint": "En lugar de apagar el dispositivo",
       "title": "«Apagar» cierra Kodi"

@@ -7,7 +7,16 @@
  */
 
 import { orvalFetch } from "../../../orvalFetch.ts";
-import type { Accepted, DiscoveredInstance, GetKodiArtParams, Instance, InstanceInput, TestResult } from "../../model";
+import type {
+  Accepted,
+  DiscoveredInstance,
+  GetKodiArtParams,
+  Instance,
+  InstanceInput,
+  InstanceSkin,
+  SkinProfile,
+  TestResult,
+} from "../../model";
 
 export const getListDiscoveredKodiUrl = () => {
   return `/api/v1/kodi/discovered`;
@@ -181,6 +190,24 @@ export const setDefaultKodiInstance = async (id: number, options?: Parameters<ty
   });
 };
 
+export const getGetKodiInstanceSkinUrl = (id: number) => {
+  return `/api/v1/kodi/instances/${id}/skin`;
+};
+
+/**
+ * Asks Kodi which skin it runs, each time, and says what "search for X" does on it. `skin` is null when Kodi can't be reached.
+ * @summary Get a Kodi instance's skin
+ */
+export const getKodiInstanceSkin = async (
+  id: number,
+  options?: Parameters<typeof orvalFetch>[1],
+): Promise<InstanceSkin> => {
+  return orvalFetch<InstanceSkin>(getGetKodiInstanceSkinUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
 export const getSyncKodiInstanceUrl = (id: number) => {
   return `/api/v1/kodi/instances/${id}/sync`;
 };
@@ -222,5 +249,20 @@ export const wakeKodiInstance = async (id: number, options?: Parameters<typeof o
   return orvalFetch<Accepted>(getWakeKodiInstanceUrl(id), {
     ...options,
     method: "POST",
+  });
+};
+
+export const getListSkinProfilesUrl = () => {
+  return `/api/v1/kodi/skin-profiles`;
+};
+
+/**
+ * A Kodi instance's `skin_profile` takes the ID of one that isn't `native`.
+ * @summary List the skins whose search Encore knows
+ */
+export const listSkinProfiles = async (options?: Parameters<typeof orvalFetch>[1]): Promise<SkinProfile[]> => {
+  return orvalFetch<SkinProfile[]>(getListSkinProfilesUrl(), {
+    ...options,
+    method: "GET",
   });
 };

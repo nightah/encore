@@ -185,12 +185,21 @@ func TestTargetCarriesVoiceSettings(t *testing.T) {
 		assert.True(t, target.ShutdownQuits)
 		assert.Equal(t, 25, target.QueueLimit)
 		assert.Equal(t, media.Quality1080p, target.Quality)
+		assert.Equal(t, media.SearchModeGlobal, target.SearchMode, "Global Search by default")
+		assert.Empty(t, target.SkinProfile)
+
+		h.app.cfg.Alexa.SearchMode = "skin"
+
+		target, err = h.app.Target(t.Context(), testDevice)
+		require.NoError(t, err)
+		assert.Equal(t, media.SearchModeSkin, target.SearchMode)
 
 		recs, err := h.app.db.KodiInstances().List(t.Context())
 		require.NoError(t, err)
 
 		rec := recs[0]
 		rec.ShutdownQuits, rec.Language, rec.PreferredQuality = new(false), "de", "2160p"
+		rec.SearchMode, rec.SkinProfile = "global_search", "skin.nimbus"
 		require.NoError(t, h.app.db.KodiInstances().Update(t.Context(), &rec))
 		require.NoError(t, h.app.ReloadInstance(t.Context(), rec.ID))
 
@@ -198,6 +207,8 @@ func TestTargetCarriesVoiceSettings(t *testing.T) {
 		require.NoError(t, err)
 		assert.False(t, target.ShutdownQuits, "the instance's setting wins")
 		assert.Equal(t, media.Quality2160p, target.Quality, "the instance's quality wins")
+		assert.Equal(t, media.SearchModeGlobal, target.SearchMode, "the instance's search mode wins")
+		assert.Equal(t, "skin.nimbus", target.SkinProfile)
 		assert.Equal(t, "de", target.Language)
 
 		// Settings saved in the web interface take effect without a restart.

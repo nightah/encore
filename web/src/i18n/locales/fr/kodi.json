@@ -107,12 +107,34 @@
         "screen_unknown": "Encore découvre son écran dès qu’elle se connecte.",
         "sd": "SD"
       },
+      "search_mode": {
+        "global_search": "Global Search",
+        "hint": "Ce qu’ouvre « cherche… » sur cette instance.",
+        "inherit": "Suivre Paramètres › Fonctionnalités",
+        "label": "Recherche",
+        "skin": "La recherche propre au skin",
+        "status": {
+          "checking": "Encore demande à Kodi quel skin il utilise…",
+          "missing_addons": "{{skin}} : la recherche du skin a besoin de {{addons}}, elle utilise donc Global Search pour l’instant.",
+          "native_global_search": "{{skin}} : habille déjà Global Search.",
+          "no_profile": "{{skin}} : aucun profil, elle utilise donc Global Search.",
+          "off": "La recherche du skin est désactivée ici.",
+          "supported": "{{skin}} : recherche du skin prise en charge.",
+          "supported_as": "{{skin}} : recherche du skin prise en charge comme {{profile}}.",
+          "unknown": "Encore n’a pas pu demander à Kodi quel skin il utilise."
+        }
+      },
       "shutdown": {
         "hint": "Ce que fait « Alexa, demande à kodi d’éteindre » sur cette instance Kodi.",
         "inherit": "Suivre Paramètres › Fonctionnalités",
         "label": "« Éteindre »",
         "power_off": "Éteindre l’appareil",
         "quit": "Quitter Kodi"
+      },
+      "skin_profile": {
+        "hint": "Pour un skin qu’Encore ne connaît pas, comme un fork, chercher comme celui-ci. Utilisé seulement avec la recherche du skin.",
+        "label": "Profil de skin",
+        "none": "Aucun"
       },
       "timezone": {
         "hint": "Là où se trouve cette instance Kodi. Laissez vide pour le déduire de l’horloge de Kodi.",

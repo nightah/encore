@@ -3,8 +3,10 @@ import { queryOptions, skipToken, useMutation, useQuery, useQueryClient } from "
 import {
   createKodiInstance,
   deleteKodiInstance,
+  getKodiInstanceSkin,
   listDiscoveredKodi,
   listKodiInstances,
+  listSkinProfiles,
   setDefaultKodiInstance,
   syncKodiInstance,
   testKodiInstance,
@@ -38,6 +40,24 @@ export function useDiscovered() {
     queryFn: ({ signal }) => listDiscoveredKodi({ signal }),
     queryKey: keys.discovered,
     refetchInterval: 30_000,
+  });
+}
+
+/** The skin Kodi is running now, asked each time the dialog opens since it can change at any moment. Pass undefined while there's no instance to ask about. */
+export function useInstanceSkin(id: number | undefined) {
+  return useQuery({
+    queryFn: id === undefined ? skipToken : ({ signal }) => getKodiInstanceSkin(id, { signal }),
+    queryKey: keys.instanceSkin(id ?? 0),
+    staleTime: 0,
+  });
+}
+
+/** The skins whose search Encore knows; they only change with Encore. */
+export function useSkinProfiles() {
+  return useQuery({
+    queryFn: ({ signal }) => listSkinProfiles({ signal }),
+    queryKey: keys.skinProfiles,
+    staleTime: Number.POSITIVE_INFINITY,
   });
 }
 

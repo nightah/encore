@@ -107,12 +107,34 @@
         "screen_unknown": "Encore leert het scherm kennen zodra de instantie verbinding maakt.",
         "sd": "SD"
       },
+      "search_mode": {
+        "global_search": "Global Search",
+        "hint": "Wat “zoek naar…” op deze instantie opent.",
+        "inherit": "Volgens Instellingen › Functies",
+        "label": "Zoeken",
+        "skin": "De eigen zoekfunctie van de skin",
+        "status": {
+          "checking": "Encore vraagt Kodi welke skin draait…",
+          "missing_addons": "{{skin}}: zoeken via de skin heeft {{addons}} nodig, dus voorlopig wordt Global Search gebruikt.",
+          "native_global_search": "{{skin}}: geeft Global Search al een eigen uiterlijk.",
+          "no_profile": "{{skin}}: geen profiel, dus Global Search wordt gebruikt.",
+          "off": "Zoeken via de skin staat hier uit.",
+          "supported": "{{skin}}: zoeken via de skin wordt ondersteund.",
+          "supported_as": "{{skin}}: zoeken via de skin wordt ondersteund als {{profile}}.",
+          "unknown": "Encore kon Kodi niet vragen welke skin draait."
+        }
+      },
       "shutdown": {
         "hint": "Wat “Alexa, vraag encore om af te sluiten” doet op deze Kodi-instantie.",
         "inherit": "Volgens Instellingen › Functies",
         "label": "“Afsluiten”",
         "power_off": "Het apparaat uitschakelen",
         "quit": "Kodi afsluiten"
+      },
+      "skin_profile": {
+        "hint": "Voor een skin die Encore niet kent, zoals een fork: zoek zoals deze dat doet. Alleen gebruikt bij zoeken via de skin.",
+        "label": "Skinprofiel",
+        "none": "Geen"
       },
       "timezone": {
         "hint": "Waar deze Kodi-instantie staat. Laat het leeg om het af te leiden uit de klok van Kodi.",

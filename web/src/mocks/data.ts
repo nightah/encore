@@ -12,6 +12,7 @@ import type {
   Room,
   Settings,
   SkillInfo,
+  SkinProfile,
   TitleAlias,
 } from "@api/generated/model";
 import { mockArtUrl } from "@mocks/art";
@@ -43,6 +44,8 @@ export interface MockDb {
   settings: Settings;
   attention: Attention[];
   rejectedRequests: RejectedRequests[];
+  /** The skin each instance's Kodi runs, by instance ID; null for a Kodi that can't be asked. */
+  skins: Record<number, string | null>;
   nextId: number;
   helloSent: boolean;
 }
@@ -121,7 +124,9 @@ export function instances(now: number): Instance[] {
       },
       preferred_quality: "inherit",
       screen: { height: 2160, quality: "2160p", width: 3840 },
+      search_mode: "inherit",
       shutdown: "inherit",
+      skin_profile: "",
       status: {
         api_version: "13.5.0",
         kodi_version: "21.3",
@@ -157,7 +162,9 @@ export function instances(now: number): Instance[] {
       now_playing: null,
       preferred_quality: "inherit",
       screen: { height: 1080, quality: "1080p", width: 1920 },
+      search_mode: "inherit",
       shutdown: "inherit",
+      skin_profile: "",
       status: {
         api_version: "13.1000.0",
         kodi_version: "22.0-rc1",
@@ -193,7 +200,9 @@ export function instances(now: number): Instance[] {
       now_playing: null,
       preferred_quality: "1080p",
       screen: null,
+      search_mode: "skin",
       shutdown: "quit",
+      skin_profile: "",
       status: {
         api_version: "13.5.0",
         kodi_version: "21.2",
@@ -208,6 +217,49 @@ export function instances(now: number): Instance[] {
       websocket_url: "ws://192.168.1.44:9090/jsonrpc",
     },
   ];
+}
+
+/** The skins whose search Encore knows, as GET /kodi/skin-profiles lists them. */
+export const SKIN_PROFILES: SkinProfile[] = [
+  { how: "native_global_search", id: "skin.aeon.nox.silvo", name: "Aeon Nox: SiLVO", native: true, requires: [] },
+  {
+    how: "builtins",
+    id: "skin.arctic.fuse.2",
+    name: "Arctic Fuse 2",
+    native: false,
+    requires: ["script.skinvariables"],
+    window: "1185",
+  },
+  {
+    how: "edit_control",
+    id: "skin.arctic.fuse.3",
+    name: "Arctic Fuse 3",
+    native: false,
+    requires: ["script.skinvariables"],
+    window: "1105",
+  },
+  {
+    how: "builtins",
+    id: "skin.arctic.horizon.2",
+    name: "Arctic Horizon 2",
+    native: false,
+    requires: ["script.skinvariables"],
+    window: "1114",
+  },
+  { how: "native_global_search", id: "skin.estuary", name: "Estuary", native: true, requires: [] },
+  {
+    how: "keyboard",
+    id: "skin.nimbus",
+    name: "Nimbus",
+    native: false,
+    requires: ["script.nimbus.helper"],
+    window: "1121",
+  },
+];
+
+/** Lounge runs a skin Encore knows, Bedroom one it doesn't, and the Kids' room is asleep. */
+export function skins(): Record<number, string | null> {
+  return { 1: "skin.arctic.fuse.3", 2: "skin.copacetic", 3: null };
 }
 
 export function libraries(now: number): Library[] {

@@ -24,3 +24,12 @@ const (
 
 // versionsDirectory begins the videodb URL that lists a film's versions.
 const versionsDirectory = "videodb://movies/titles/?"
+
+// DefaultSkin is the skin a fake reports until SetSkin changes it: Kodi's default.
+const DefaultSkin = "skin.estuary"
+
+// visiblePrefix and visibleSuffix wrap a window in the info boolean that asks whether it is showing.
+const (
+	visiblePrefix = "Window.IsVisible("
+	visibleSuffix = ")"
+)

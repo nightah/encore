@@ -14,6 +14,7 @@ import (
 	"text/template"
 
 	"github.com/nightah/encore/i18n"
+	"github.com/nightah/encore/internal/backend/kodi"
 	"github.com/nightah/encore/internal/cli"
 	"github.com/nightah/encore/internal/skillmodel"
 )
@@ -50,6 +51,13 @@ func Generate(root string) (map[string][]byte, error) {
 	}
 
 	out[ContentDir+"/reference/api/endpoints.md"] = endpoints
+
+	skins, err := SkinSearchGuide(kodi.SkinProfiles())
+	if err != nil {
+		return nil, fmt.Errorf("skin search guide: %w", err)
+	}
+
+	out[ContentDir+"/guides/skin-search.md"] = skins
 
 	src, err := skillmodel.Load(i18n.FS)
 	if err != nil {

@@ -7,7 +7,7 @@ import { z } from "zod";
 
 import { ApiError, errorMessage, fieldErrorsOf } from "@api/client";
 import type { Instance, InstanceInput as InstanceBody } from "@api/generated/model";
-import { useCreateInstance, useDeleteInstance, useUpdateInstance } from "@api/kodi";
+import { useCreateInstance, useDeleteInstance, useInstanceSkin, useSkinProfiles, useUpdateInstance } from "@api/kodi";
 import { Button } from "@components/ui/Button";
 import { ManagedBadge } from "@components/ui/Chip";
 import { Dialog } from "@components/ui/Dialog";
@@ -27,6 +27,8 @@ const QUALITY = ["inherit", "screen", "highest", "2160p", "1080p", "720p", "sd"]
   Instance["preferred_quality"]
 >;
 
+const SEARCH_MODES = ["inherit", "global_search", "skin"] as const satisfies ReadonlyArray<Instance["search_mode"]>;
+
 const makeSchema = (t: TFunction<"kodi">) =>
   z.object({
     broadcast: z.string().trim(),
@@ -35,7 +37,9 @@ const makeSchema = (t: TFunction<"kodi">) =>
     name: z.string().trim().min(1, t("dialog.errors.name")),
     password: z.string(),
     preferred_quality: z.enum(QUALITY),
+    search_mode: z.enum(SEARCH_MODES),
     shutdown: z.enum(SHUTDOWN),
+    skin_profile: z.string(),
     timezone: z.string().trim(),
     url: z
       .string()
@@ -54,7 +58,9 @@ const EMPTY: InstanceForm = {
   name: "",
   password: "",
   preferred_quality: "inherit",
+  search_mode: "inherit",
   shutdown: "inherit",
+  skin_profile: "",
   timezone: "",
   url: "",
   username: "kodi",
@@ -69,7 +75,9 @@ function fromInstance(instance: Instance): InstanceForm {
     name: instance.name,
     password: "",
     preferred_quality: instance.preferred_quality,
+    search_mode: instance.search_mode,
     shutdown: instance.shutdown,
+    skin_profile: instance.skin_profile,
     timezone: instance.timezone,
     url: instance.url,
     username: instance.username,
@@ -95,6 +103,7 @@ export function InstanceDialog({ open, onClose, instance, prefill }: InstanceDia
   const remove = useDeleteInstance();
   const [confirmRemove, setConfirmRemove] = useState(false);
   const managed = instance?.managed_by_config ?? false;
+  const profiles = useSkinProfiles();
   const form = useForm<InstanceForm>({
     defaultValues: EMPTY,
     resolver: zodResolver(schema),
@@ -122,7 +131,9 @@ export function InstanceDialog({ open, onClose, instance, prefill }: InstanceDia
       language: values.language,
       name: values.name,
       preferred_quality: values.preferred_quality,
+      search_mode: values.search_mode,
       shutdown: values.shutdown,
+      skin_profile: values.skin_profile,
       timezone: values.timezone,
       url: values.url,
     };
@@ -287,6 +298,39 @@ export function InstanceDialog({ open, onClose, instance, prefill }: InstanceDia
               ))}
             </Select>
           </Field>
+          <Field
+            label={t("dialog.fields.search_mode.label")}
+            error={errors.search_mode?.message}
+            hint={
+              <>
+                {t("dialog.fields.search_mode.hint")} {open && instance ? <SkinStatus id={instance.id} /> : null}
+              </>
+            }
+          >
+            <Select disabled={managed} {...form.register("search_mode")}>
+              {SEARCH_MODES.map((value) => (
+                <option key={value} value={value}>
+                  {t(`dialog.fields.search_mode.${value}`)}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field
+            label={t("dialog.fields.skin_profile.label")}
+            error={errors.skin_profile?.message}
+            hint={t("dialog.fields.skin_profile.hint")}
+          >
+            <Select disabled={managed} {...form.register("skin_profile")}>
+              <option value="">{t("dialog.fields.skin_profile.none")}</option>
+              {(profiles.data ?? [])
+                .filter((p) => !p.native)
+                .map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name}
+                  </option>
+                ))}
+            </Select>
+          </Field>
         </FieldGrid>
         {failure && !hasFieldErrors ? (
           <p role="alert" className="rounded-[10px] bg-bad-bg px-3.5 py-2.5 text-bad">
@@ -295,5 +339,29 @@ export function InstanceDialog({ open, onClose, instance, prefill }: InstanceDia
         ) : null}
       </form>
     </Dialog>
+  );
+}
+
+/** The skin Kodi is running and what a search does on it, e.g. "Arctic Fuse 3: skin search supported." */
+function SkinStatus({ id }: { id: number }) {
+  const { t } = useTranslation("kodi");
+  const skin = useInstanceSkin(id);
+  const profiles = useSkinProfiles();
+  if (skin.isPending) return <span>{t("dialog.fields.search_mode.status.checking")}</span>;
+  const data = skin.data;
+  const status = data?.skin;
+  if (!status) return <span>{t("dialog.fields.search_mode.status.unknown")}</span>;
+  const profile = profiles.data?.find((p) => p.id === status.profile)?.name ?? status.profile;
+  const borrowed = status.search === "supported" && status.profile !== status.id;
+  return (
+    <span data-testid="skin-status">
+      {borrowed
+        ? t("dialog.fields.search_mode.status.supported_as", { profile, skin: status.name })
+        : t(`dialog.fields.search_mode.status.${status.search}`, {
+            addons: status.missing.join(", "),
+            skin: status.name,
+          })}
+      {data?.search_mode === "global_search" ? ` ${t("dialog.fields.search_mode.status.off")}` : null}
+    </span>
   );
 }

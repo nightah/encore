@@ -10,6 +10,7 @@ export const keys = {
   devices: ["devices"] as const,
   discovered: ["kodi", "discovered"] as const,
   instance: (id: number) => ["kodi", "instances", id] as const,
+  instanceSkin: (id: number) => ["kodi", "instances", id, "skin"] as const,
   instances: ["kodi", "instances"] as const,
   libraries: ["libraries"] as const,
   overview: ["overview"] as const,
@@ -21,4 +22,5 @@ export const keys = {
   rooms: ["rooms"] as const,
   settings: ["settings"] as const,
   skill: ["skill"] as const,
+  skinProfiles: ["kodi", "skin-profiles"] as const,
 };

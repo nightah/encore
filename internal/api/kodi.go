@@ -83,6 +83,29 @@ func (a *API) registerKodi(api huma.API) {
 			return out, a.problemFor(ctx, err)
 		})
 
+	huma.Register(api, protected(huma.Operation{OperationID: "getKodiInstanceSkin", Method: http.MethodGet, Path: Prefix + "/kodi/instances/{id}/skin", Tags: []string{"kodi"}, Summary: "Get a Kodi instance's skin", Description: "Asks Kodi which skin it runs, each time, and says what \"search for X\" does on it. `skin` is null when Kodi can't be reached."}),
+		func(ctx context.Context, in *idPath) (*body[InstanceSkin], error) {
+			ctx, cancel := context.WithTimeout(ctx, skinTimeout)
+			defer cancel()
+
+			skin, mode, err := a.app.InstanceSkin(ctx, in.ID)
+			if errors.Is(err, app.ErrNoRuntime) {
+				return nil, a.problemFor(ctx, err)
+			}
+
+			out := &body[InstanceSkin]{Body: InstanceSkin{SearchMode: string(mode)}}
+			if err == nil {
+				out.Body.Skin = Some(toSkin(skin))
+			}
+
+			return out, nil
+		})
+
+	huma.Register(api, protected(huma.Operation{OperationID: "listSkinProfiles", Method: http.MethodGet, Path: Prefix + "/kodi/skin-profiles", Tags: []string{"kodi"}, Summary: "List the skins whose search Encore knows", Description: "A Kodi instance's `skin_profile` takes the ID of one that isn't `native`."}),
+		func(context.Context, *struct{}) (*body[[]kodi.SkinProfile], error) {
+			return &body[[]kodi.SkinProfile]{Body: kodi.SkinProfiles()}, nil
+		})
+
 	huma.Register(api, protected(huma.Operation{OperationID: "syncKodiInstance", Method: http.MethodPost, Path: Prefix + "/kodi/instances/{id}/sync", Tags: []string{"kodi"}, Summary: "Reload a Kodi instance's library", Description: "Runs in the background.", DefaultStatus: http.StatusAccepted}),
 		func(ctx context.Context, in *idPath) (*body[Accepted], error) {
 			if _, err := a.app.InstanceStatus(ctx, in.ID, false); err != nil {
@@ -197,6 +220,8 @@ func (a *API) toInstance(ctx context.Context, rec store.KodiInstance, st app.Ins
 		Timezone:           rec.Timezone,
 		Shutdown:           shutdownOf(rec.ShutdownQuits),
 		PreferredQuality:   qualityOf(rec.PreferredQuality),
+		SearchMode:         cmp.Or(rec.SearchMode, searchModeInherit),
+		SkinProfile:        rec.SkinProfile,
 		Screen:             screenOf(rec),
 		ManagedByConfig:    a.managedInstance(rec.Name),
 		Status:             InstanceStatus{State: "offline"},
@@ -426,7 +451,33 @@ func applyInstanceBehaviour(rec *store.KodiInstance, in InstanceInput) error {
 		}
 	}
 
+	if in.SearchMode != nil {
+		mode := *in.SearchMode
+		if mode == searchModeInherit {
+			mode = ""
+		}
+
+		if !media.SearchMode(mode).IsValid() {
+			return fieldError("body.search_mode", "must be inherit, global_search or skin", mode)
+		}
+
+		rec.SearchMode = mode
+	}
+
+	if in.SkinProfile != nil {
+		p := strings.TrimSpace(*in.SkinProfile)
+		if p != "" && !kodi.IsSkinProfile(p) {
+			return fieldError("body.skin_profile", "must be empty or one of "+strings.Join(kodi.SkinProfileIDs(), ", "), p)
+		}
+
+		rec.SkinProfile = p
+	}
+
 	return nil
+}
+
+func toSkin(s media.Skin) Skin {
+	return Skin{ID: s.ID, Name: s.Name, Profile: s.Profile, Search: string(s.Search), Missing: append([]string{}, s.Missing...)}
 }
 
 func screenOf(rec store.KodiInstance) Nullable[Screen] {

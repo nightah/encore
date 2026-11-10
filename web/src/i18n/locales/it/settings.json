@@ -224,6 +224,12 @@
       "hint": "Il numero massimo di elementi che una riproduzione casuale o una coda riproduce alla volta, per mantenere reattive le librerie grandi",
       "title": "Limite della coda"
     },
+    "search_mode": {
+      "global_search": "Global Search",
+      "hint": "Cosa apre «cerca…» su Kodi. La ricerca della skin inserisce quanto detto quando Encore conosce la skin, altrimenti usa Global Search. Un’istanza può cambiarlo.",
+      "skin": "La ricerca della skin",
+      "title": "Ricerca"
+    },
     "shutdown_quits": {
       "hint": "Invece di spegnere il dispositivo",
       "title": "«Spegni» chiude Kodi"

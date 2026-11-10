@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -86,4 +87,105 @@ func TestUpdateLibraryStopsAtTheFirstFailure(t *testing.T) {
 	target, _, _ = newTarget()
 	o := newService().UpdateLibrary(t.Context(), target, false, media.DatabaseVideo)
 	assert.Equal(t, "library.scan_video", o.Say.ID)
+}
+
+func TestGlobalSearchModeRunsGlobalSearchOnly(t *testing.T) {
+	for _, mode := range []media.SearchMode{"", media.SearchModeGlobal} {
+		target, backend, _ := newTarget()
+		withAddons(backend)
+		backend.SetSkin(media.Skin{ID: "skin.arctic.fuse.3", Search: media.SkinSearchSupported}, nil)
+		target.SearchMode = mode
+
+		o := newService().GlobalSearch(t.Context(), target, "dune")
+		assert.Equal(t, "addon.searching", o.Say.ID)
+		assert.Empty(t, o.Note)
+		assert.Equal(t, []string{"Addons", "ExecuteAddon script.globalsearch searchstring=dune"}, backend.Calls(), "mode %q leaves the skin alone", mode)
+	}
+}
+
+func TestSkinSearch(t *testing.T) {
+	target, backend, _ := newTarget()
+	backend.SetSkin(media.Skin{ID: "skin.arctic.fuse.3", Profile: "skin.arctic.fuse.3", Search: media.SkinSearchSupported}, nil)
+	target.SearchMode = media.SearchModeSkin
+	target.SkinProfile = "skin.arctic.horizon.2"
+
+	o := newService().GlobalSearch(t.Context(), target, "dune")
+	assert.Equal(t, "addon.searching", o.Say.ID)
+	assert.Equal(t, "dune", o.Say.Params["query"])
+	assert.True(t, o.EndSession)
+	require.NoError(t, o.Err)
+	assert.Equal(t, "skin search: opened skin.arctic.fuse.3's search", o.Note)
+	assert.Equal(t, []string{"SkinSearch dune profile=skin.arctic.horizon.2"}, backend.Calls(), "Global Search isn't needed")
+
+	backend.SetSkin(media.Skin{ID: "skin.ah2.fork", Profile: "skin.arctic.horizon.2", Search: media.SkinSearchSupported}, nil)
+	o = newService().GlobalSearch(t.Context(), target, "dune")
+	assert.Equal(t, "addon.searching", o.Say.ID)
+	assert.Equal(t, "skin search: opened skin.ah2.fork's search as skin.arctic.horizon.2", o.Note)
+}
+
+func TestSkinSearchFallsBackToGlobalSearch(t *testing.T) {
+	tests := []struct {
+		name string
+		skin media.Skin
+		err  error
+		fail bool
+		note string
+	}{
+		{
+			name: "no profile", skin: media.Skin{ID: "skin.copacetic", Search: media.SkinSearchNoProfile},
+			note: "skin search: skin.copacetic has no profile; used Global Search",
+		},
+		{
+			name: "skins Global Search", skin: media.Skin{ID: "skin.estuary", Profile: "skin.estuary", Search: media.SkinSearchNative},
+			note: "skin search: skin.estuary skins Global Search; used Global Search",
+		},
+		{
+			name: "missing add-ons", skin: media.Skin{ID: "skin.arctic.fuse.3", Profile: "skin.arctic.fuse.3", Search: media.SkinSearchMissingAddons, Missing: []string{"script.skinvariables"}},
+			note: "skin search: skin.arctic.fuse.3 needs script.skinvariables; used Global Search",
+		},
+		{
+			name: "step failed", skin: media.Skin{ID: "skin.arctic.fuse.3", Profile: "skin.arctic.fuse.3", Search: media.SkinSearchSupported}, err: fmt.Errorf("kodi: skin.arctic.fuse.3 search: %w", errBoom),
+			note: "skin search: skin.arctic.fuse.3 failed: kodi: skin.arctic.fuse.3 search: boom; used Global Search",
+		},
+		{
+			name: "skin unreadable", fail: true,
+			note: "skin search: couldn't read the skin: boom; used Global Search",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			target, backend, _ := newTarget()
+			withAddons(backend)
+			backend.SetSkin(tt.skin, tt.err)
+			target.SearchMode = media.SearchModeSkin
+
+			if tt.fail {
+				target, _ = failing(target, backend, errBoom, "SkinSearch")
+			}
+
+			o := newService().GlobalSearch(t.Context(), target, "dune")
+			assert.Equal(t, "addon.searching", o.Say.ID)
+			require.NoError(t, o.Err)
+			assert.Equal(t, tt.note, o.Note)
+
+			calls := backend.Calls()
+			assert.Equal(t, []string{"Addons", "ExecuteAddon script.globalsearch searchstring=dune"}, calls[len(calls)-2:], "Global Search runs once")
+		})
+	}
+}
+
+func TestSkinSearchWithoutGlobalSearch(t *testing.T) {
+	target, backend, _ := newTarget()
+	backend.SetSkin(media.Skin{ID: "skin.copacetic", Search: media.SkinSearchNoProfile}, nil)
+	target.SearchMode = media.SearchModeSkin
+
+	o := newService().GlobalSearch(t.Context(), target, "dune")
+	assert.Equal(t, "addon.no_global_search", o.Say.ID)
+	assert.Equal(t, "skin search: skin.copacetic has no profile; used Global Search", o.Note)
+
+	backend.SetSkin(media.Skin{ID: "skin.arctic.fuse.3", Profile: "skin.arctic.fuse.3", Search: media.SkinSearchSupported}, nil)
+	assert.Equal(t, "addon.searching", newService().GlobalSearch(t.Context(), target, "dune").Say.ID, "a skin search doesn't need Global Search")
+
+	assert.Equal(t, "remote.no_text", newService().GlobalSearch(t.Context(), target, "  ").Say.ID)
 }

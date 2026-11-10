@@ -107,12 +107,34 @@
         "screen_unknown": "O Encore descobre a tela assim que a instância se conecta.",
         "sd": "SD"
       },
+      "search_mode": {
+        "global_search": "Global Search",
+        "hint": "O que “procure…” abre nesta instância.",
+        "inherit": "Seguir Configurações › Recursos",
+        "label": "Busca",
+        "skin": "A busca própria da skin",
+        "status": {
+          "checking": "Verificando qual skin o Kodi está usando…",
+          "missing_addons": "{{skin}}: a busca da skin precisa de {{addons}}, então por enquanto usa o Global Search.",
+          "native_global_search": "{{skin}}: já dá seu próprio visual ao Global Search.",
+          "no_profile": "{{skin}}: sem perfil, então usa o Global Search.",
+          "off": "A busca da skin está desligada aqui.",
+          "supported": "{{skin}}: busca da skin compatível.",
+          "supported_as": "{{skin}}: busca da skin compatível como {{profile}}.",
+          "unknown": "O Encore não conseguiu perguntar ao Kodi qual skin ele está usando."
+        }
+      },
       "shutdown": {
         "hint": "O que “Alexa, peça para encore desligar” faz nesta instância do Kodi.",
         "inherit": "Seguir Configurações › Recursos",
         "label": "“Desligar”",
         "power_off": "Desligar o dispositivo",
         "quit": "Sair do Kodi"
+      },
+      "skin_profile": {
+        "hint": "Para uma skin que o Encore não conhece, como um fork, buscar do jeito desta. Só é usado com a busca da skin.",
+        "label": "Perfil de skin",
+        "none": "Nenhum"
       },
       "timezone": {
         "hint": "Onde esta instância do Kodi está. Deixe em branco para descobrir pelo relógio do Kodi.",

@@ -916,6 +916,14 @@
             "format": "int64",
             "type": "integer"
           },
+          "search_mode": {
+            "description": "How \"search for X\" searches: global_search runs the Global Search add-on, and skin opens the active skin's own search when Encore knows the skin, else runs Global Search. A Kodi instance's own kodi[].search_mode wins",
+            "enum": [
+              "global_search",
+              "skin"
+            ],
+            "type": "string"
+          },
           "shutdown_quits": {
             "description": "\"Shut down\" quits Kodi instead of powering off the device; a Kodi instance's own kodi[].shutdown_quits wins",
             "type": "boolean"
@@ -925,6 +933,7 @@
           "deep_search",
           "shutdown_quits",
           "preferred_quality",
+          "search_mode",
           "confirm_sound",
           "queue_limit",
           "auto_deploy",
@@ -966,6 +975,13 @@
             "maximum": 1000,
             "minimum": 1,
             "type": "integer"
+          },
+          "search_mode": {
+            "enum": [
+              "global_search",
+              "skin"
+            ],
+            "type": "string"
           },
           "shutdown_quits": {
             "type": "boolean"
@@ -1127,6 +1143,15 @@
               }
             ]
           },
+          "search_mode": {
+            "description": "How \"search for X\" searches; inherit follows Settings › Features",
+            "enum": [
+              "inherit",
+              "global_search",
+              "skin"
+            ],
+            "type": "string"
+          },
           "shutdown": {
             "description": "What \"shut down\" does; inherit follows Settings › Features",
             "enum": [
@@ -1134,6 +1159,10 @@
               "quit",
               "power_off"
             ],
+            "type": "string"
+          },
+          "skin_profile": {
+            "description": "The skin whose search steps to use when this instance's skin isn't one Encore knows, from GET /kodi/skin-profiles; empty for none",
             "type": "string"
           },
           "status": {
@@ -1169,6 +1198,8 @@
           "timezone",
           "shutdown",
           "preferred_quality",
+          "search_mode",
+          "skin_profile",
           "screen",
           "managed_by_config",
           "status",
@@ -1212,12 +1243,25 @@
             ],
             "type": "string"
           },
+          "search_mode": {
+            "description": "How \"search for X\" searches; inherit follows Settings › Features",
+            "enum": [
+              "inherit",
+              "global_search",
+              "skin"
+            ],
+            "type": "string"
+          },
           "shutdown": {
             "enum": [
               "inherit",
               "quit",
               "power_off"
             ],
+            "type": "string"
+          },
+          "skin_profile": {
+            "description": "The skin whose search steps to use when this instance's skin isn't one Encore knows: a profile from GET /kodi/skin-profiles that isn't native, or empty for none",
             "type": "string"
           },
           "timezone": {
@@ -1287,6 +1331,35 @@
           "episodes",
           "songs",
           "newest_title"
+        ],
+        "type": "object"
+      },
+      "InstanceSkin": {
+        "additionalProperties": false,
+        "properties": {
+          "search_mode": {
+            "description": "The search mode in effect for the instance, its own or Settings › Features'",
+            "enum": [
+              "global_search",
+              "skin"
+            ],
+            "type": "string"
+          },
+          "skin": {
+            "description": "The active skin; null when Kodi can't be reached",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Skin"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "search_mode",
+          "skin"
         ],
         "type": "object"
       },
@@ -2476,6 +2549,10 @@
               }
             ]
           },
+          "note": {
+            "description": "Why the action did what it did, when it chose, e.g. why a skin search fell back to Global Search; empty otherwise",
+            "type": "string"
+          },
           "outcome": {
             "enum": [
               "played",
@@ -2539,6 +2616,7 @@
           "kodi_calls",
           "timing",
           "speech",
+          "note",
           "id",
           "time",
           "device_name",
@@ -2943,7 +3021,7 @@
           },
           "features": {
             "$ref": "#/components/schemas/Features",
-            "description": "The alexa.deep_search, alexa.shutdown_quits, alexa.preferred_quality, alexa.confirm_sound, alexa.queue_limit, alexa.auto_deploy and alexa.auto_deploy_minutes config keys"
+            "description": "The alexa.deep_search, alexa.shutdown_quits, alexa.preferred_quality, alexa.search_mode, alexa.confirm_sound, alexa.queue_limit, alexa.auto_deploy and alexa.auto_deploy_minutes config keys"
           },
           "locale": {
             "$ref": "#/components/schemas/LocaleSettings"
@@ -3224,6 +3302,82 @@
           "locales_enabled",
           "endpoint",
           "privacy"
+        ],
+        "type": "object"
+      },
+      "Skin": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "The skin's add-on ID, e.g. skin.arctic.fuse.3",
+            "type": "string"
+          },
+          "missing": {
+            "description": "The add-ons the skin's search needs that aren't installed and enabled, for missing_addons",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "name": {
+            "description": "The skin's name; its add-on ID when Kodi doesn't say",
+            "type": "string"
+          },
+          "profile": {
+            "description": "The skin profile whose steps apply: the skin's own, the instance's skin_profile for a skin Encore doesn't know, or empty for none",
+            "type": "string"
+          },
+          "search": {
+            "description": "In skin mode: supported opens the skin's own search; native_global_search runs Global Search, which the skin already draws; no_profile and missing_addons run Global Search's default look instead",
+            "enum": [
+              "supported",
+              "native_global_search",
+              "no_profile",
+              "missing_addons"
+            ],
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "profile",
+          "search",
+          "missing"
+        ],
+        "type": "object"
+      },
+      "SkinProfile": {
+        "additionalProperties": false,
+        "properties": {
+          "how": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "native": {
+            "type": "boolean"
+          },
+          "requires": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "window": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "native",
+          "requires",
+          "how"
         ],
         "type": "object"
       },
@@ -4806,6 +4960,54 @@
         ]
       }
     },
+    "/api/v1/kodi/instances/{id}/skin": {
+      "get": {
+        "description": "Asks Kodi which skin it runs, each time, and says what \"search for X\" does on it. `skin` is null when Kodi can't be reached.",
+        "operationId": "getKodiInstanceSkin",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstanceSkin"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Get a Kodi instance's skin",
+        "tags": [
+          "kodi"
+        ]
+      }
+    },
     "/api/v1/kodi/instances/{id}/sync": {
       "post": {
         "description": "Runs in the background.",
@@ -4944,6 +5146,46 @@
           }
         ],
         "summary": "Wake a Kodi instance with Wake-on-LAN",
+        "tags": [
+          "kodi"
+        ]
+      }
+    },
+    "/api/v1/kodi/skin-profiles": {
+      "get": {
+        "description": "A Kodi instance's `skin_profile` takes the ID of one that isn't `native`.",
+        "operationId": "listSkinProfiles",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SkinProfile"
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "default": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorModel"
+                }
+              }
+            },
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "List the skins whose search Encore knows",
         "tags": [
           "kodi"
         ]

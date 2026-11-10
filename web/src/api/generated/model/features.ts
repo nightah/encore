@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1
  */
 import type { FeaturesPreferredQuality } from "./featuresPreferredQuality.ts";
+import type { FeaturesSearchMode } from "./featuresSearchMode.ts";
 
 export interface Features {
   /** Redeploy the skill on its own when what would be deployed changes. An automatic deploy that fails for a reason that may pass, such as Amazon being unavailable, is tried again up to three times with a growing wait; any other failure, or a fourth in a row, pauses this until a deploy started by hand succeeds */
@@ -20,6 +21,8 @@ export interface Features {
   preferred_quality: FeaturesPreferredQuality;
   /** The most items a shuffle or queue plays at once */
   queue_limit: number;
+  /** How "search for X" searches: global_search runs the Global Search add-on, and skin opens the active skin's own search when Encore knows the skin, else runs Global Search. A Kodi instance's own kodi[].search_mode wins */
+  search_mode: FeaturesSearchMode;
   /** "Shut down" quits Kodi instead of powering off the device; a Kodi instance's own kodi[].shutdown_quits wins */
   shutdown_quits: boolean;
 }

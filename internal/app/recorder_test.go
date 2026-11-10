@@ -119,6 +119,14 @@ func TestRecorderRow(t *testing.T) {
 		assert.JSONEq(t, `{"target":"Lounge","via":{"spoken":"TV","kind":"device","room":"Lounge"}}`, string(row.Match))
 	})
 
+	t.Run("a note on what the action chose is logged with the target", func(t *testing.T) {
+		row := toRow(alexa.LogEntry{Intent: "GlobalSearch", Target: "Lounge", Note: "skin search: skin.copacetic has no profile; used Global Search"})
+		assert.JSONEq(t, `{"target":"Lounge","note":"skin search: skin.copacetic has no profile; used Global Search"}`, string(row.Match))
+
+		row = toRow(alexa.LogEntry{Intent: "GlobalSearch", Note: "skin search: opened skin.arctic.fuse.3's search"})
+		assert.JSONEq(t, `{"note":"skin search: opened skin.arctic.fuse.3's search"}`, string(row.Match), "even without a target")
+	})
+
 	t.Run("matching that took longer than the request leaves Kodi nothing", func(t *testing.T) {
 		row := toRow(alexa.LogEntry{Duration: 10 * time.Millisecond, MatchTime: 20 * time.Millisecond, KodiCalls: []media.Call{{Method: "Player.Open", Duration: 5 * time.Millisecond}}})
 		assert.JSONEq(t, `{"verify_ms":0,"match_ms":20,"kodi_ms":0}`, string(row.Timing))

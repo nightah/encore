@@ -253,6 +253,13 @@ export function RequestDetailPane({ id, inline = false }: { id: number; inline?:
       ) : null}
       {detail.match?.error ? <p className="text-[13px] text-bad">{detail.match.error}</p> : null}
 
+      {detail.note ? (
+        <div className="flex flex-col gap-1.5">
+          <Label>{t("detail.note")}</Label>
+          <p className="wrap-anywhere font-mono text-[13px]">{detail.note}</p>
+        </div>
+      ) : null}
+
       <div className="flex flex-col gap-1.5">
         <Label>{t("detail.kodiCalls")}</Label>
         {detail.kodi_calls.length ? (

@@ -109,3 +109,38 @@ const (
 	windowFavourites     kodirpc.GUIWindow = "favouritesbrowser"
 	windowSubtitleSearch kodirpc.GUIWindow = "subtitlesearch"
 )
+
+// How a skin profile fills in the query.
+const (
+	// skinSearchNative skins draw Global Search's window themselves, so a search runs Global Search.
+	skinSearchNative skinSearchKind = "native_global_search"
+	// skinSearchBuiltins hands the query to the skin in a skin string or window property that its search window reads as it opens.
+	skinSearchBuiltins skinSearchKind = "builtins"
+	// skinSearchEditControl opens the search window and types the query into its edit control.
+	skinSearchEditControl skinSearchKind = "edit_control"
+	// skinSearchKeyboard opens the search window and its keyboard through the skin's helper add-on, then types the query.
+	skinSearchKeyboard skinSearchKind = "keyboard"
+)
+
+// Add-ons skin profiles drive.
+const (
+	addonSkinVariables   = "script.skinvariables"
+	addonNimbusHelper    = "script.nimbus.helper"
+	addonFENtasticHelper = "script.fentastic.helper"
+)
+
+// skinSetting is the Kodi setting that holds the active skin's add-on ID.
+const skinSetting = "lookandfeel.skin"
+
+// How often and how long a skin search waits for a window to open. A helper that rebuilds the skin on first use, as FENtastic's does, gets longer.
+const (
+	windowPollInterval = 100 * time.Millisecond
+	windowWait         = 3 * time.Second
+	windowWaitReload   = 10 * time.Second
+)
+
+// windowKeyboard is Kodi's on-screen keyboard dialog, and windowHome the home window, as Window.IsVisible takes them.
+const (
+	windowKeyboard = "virtualkeyboard"
+	windowHomeName = "home"
+)

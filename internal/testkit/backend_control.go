@@ -35,6 +35,14 @@ func (b *Backend) SetAddons(a ...media.Addon) {
 	b.addons = a
 }
 
+// SetSkin sets the skin Skin and SkinSearch report, and the error SkinSearch returns when the skin is supported.
+func (b *Backend) SetSkin(s media.Skin, searchErr error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	b.skin, b.skinErr = s, searchErr
+}
+
 // SetClock sets what Clock reports.
 func (b *Backend) SetClock(t time.Time) {
 	b.mu.Lock()
@@ -291,6 +299,34 @@ func (b *Backend) ExecuteAddon(_ context.Context, id string, params map[string]s
 	}
 
 	return b.record("ExecuteAddon %s", desc)
+}
+
+// Skin implements media.Backend.
+func (b *Backend) Skin(_ context.Context, profile string) (media.Skin, error) {
+	if err := b.record("Skin %s", profile); err != nil {
+		return media.Skin{}, err
+	}
+
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	return b.skin, nil
+}
+
+// SkinSearch implements media.Backend; it searches only when the skin set with SetSkin is supported.
+func (b *Backend) SkinSearch(_ context.Context, query, profile string) (media.Skin, error) {
+	if err := b.record("SkinSearch %s profile=%s", query, profile); err != nil {
+		return media.Skin{}, err
+	}
+
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	if b.skin.Search != media.SkinSearchSupported {
+		return b.skin, nil
+	}
+
+	return b.skin, b.skinErr
 }
 
 // Clock implements media.Backend.

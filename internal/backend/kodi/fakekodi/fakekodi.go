@@ -48,7 +48,7 @@ func NewServer(opts Options) *Server {
 		opts:     opts,
 		handlers: map[string]HandlerFunc{},
 		clients:  map[*websocket.Conn]struct{}{},
-		state:    playerState{volume: 50, playlists: map[int][]Item{}, repeat: "off", clock: "09:42:17 PM", screen: [2]int{1920, 1080}},
+		state:    playerState{volume: 50, playlists: map[int][]Item{}, repeat: "off", clock: "09:42:17 PM", screen: [2]int{1920, 1080}, skin: DefaultSkin, windows: map[string]int{}},
 		mac:      opts.MAC,
 	}
 	s.settled = sync.NewCond(&s.mu)
@@ -212,6 +212,22 @@ func (s *Server) SetScreen(width, height int, whitelist ...string) {
 	defer s.mu.Unlock()
 
 	s.state.screen, s.state.whitelist = [2]int{width, height}, whitelist
+}
+
+// SetSkin sets the active skin's add-on ID, as Settings.GetSettingValue reports lookandfeel.skin; DefaultSkin at first.
+func (s *Server) SetSkin(id string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.state.skin = id
+}
+
+// ShowWindow makes XBMC.GetInfoBooleans report Window.IsVisible(window) true from the poll after the next afterPolls polls of it: 0 shows it at once, and a negative count never does. A window never set this way isn't visible.
+func (s *Server) ShowWindow(window string, afterPolls int) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.state.windows[window] = afterPolls
 }
 
 // Handle overrides or adds the handler for method.

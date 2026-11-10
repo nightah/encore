@@ -52,6 +52,7 @@ func TestKodiInstancesCRUD(t *testing.T) {
 	k.PasswordSecretRef = "kodi/1/password"
 	k.MAC = "aa:bb:cc:dd:ee:ff"
 	k.Language, k.Timezone, k.ShutdownQuits, k.PreferredQuality = "de", "Australia/Melbourne", new(true), "1080p"
+	k.SearchMode, k.SkinProfile = "skin", "skin.arctic.horizon.2"
 	require.NoError(t, repo.Create(ctx, k))
 	assert.NotZero(t, k.ID)
 	assert.Equal(t, clk.Now(), k.CreatedAt)
@@ -64,6 +65,7 @@ func TestKodiInstancesCRUD(t *testing.T) {
 
 	k.Port = 8081
 	k.ShutdownQuits, k.PreferredQuality = nil, "screen"
+	k.SearchMode, k.SkinProfile = "", ""
 	require.NoError(t, repo.Update(ctx, k))
 
 	got, err = repo.Get(ctx, k.ID)
@@ -71,6 +73,8 @@ func TestKodiInstancesCRUD(t *testing.T) {
 	assert.Equal(t, 8081, got.Port)
 	assert.Nil(t, got.ShutdownQuits, "nil follows alexa.shutdown_quits")
 	assert.Equal(t, "screen", got.PreferredQuality)
+	assert.Empty(t, got.SearchMode, "empty follows alexa.search_mode")
+	assert.Empty(t, got.SkinProfile)
 	assert.Equal(t, clk.Now(), got.UpdatedAt)
 	assert.True(t, got.UpdatedAt.After(got.CreatedAt))
 
@@ -84,6 +88,10 @@ func TestKodiInstancesCRUD(t *testing.T) {
 	bad = newKodi("bad")
 	bad.PreferredQuality = "4k"
 	require.ErrorIs(t, repo.Create(ctx, bad), ErrInvalid, "only the qualities Encore knows")
+
+	bad = newKodi("bad")
+	bad.SearchMode = "native"
+	require.ErrorIs(t, repo.Create(ctx, bad), ErrInvalid, "only the search modes Encore knows")
 
 	require.NoError(t, repo.Delete(ctx, k.ID))
 	_, err = repo.Get(ctx, k.ID)
