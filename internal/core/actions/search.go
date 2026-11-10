@@ -36,7 +36,7 @@ func (s *Service) librarySearch(ctx context.Context, t Target, query string, kin
 		return failure(t, err)
 	}
 
-	best, other, ok := bestOfKinds(t.language(), query, res, kinds)
+	best, other, ok := bestOfKinds(t.language(), query, res)
 	if !ok || res.Decision == match.DecisionNotFound {
 		// A word that's only part of titles ("star") may score too low to match any, yet still be in them.
 		for _, k := range kinds {
@@ -100,15 +100,11 @@ func (s *Service) showMatches(ctx context.Context, t Target, query string, kind 
 	return done(say("addon.searching", map[string]string{"query": query}))
 }
 
-// bestOfKinds picks the candidate whose kind a search shows. Candidates that tie on score go to the one whose title is most exactly the query, then to the first kind in searchKinds, so a film beats its soundtrack. other is a TV show that ties with a winning film on both counts, or the reverse, which only asking can settle.
-func bestOfKinds(lang, query string, res match.Result, kinds []media.Kind) (match.Candidate, *match.Candidate, bool) {
+// bestOfKinds picks the candidate whose kind a search shows, from candidates the search already limited to the kinds asked for. Candidates that tie on score go to the one whose title is most exactly the query, then to the first kind in searchKinds, so a film beats its soundtrack. other is a TV show that ties with a winning film on both counts, or the reverse, which only asking can settle.
+func bestOfKinds(lang, query string, res match.Result) (match.Candidate, *match.Candidate, bool) {
 	var tied []match.Candidate
 
 	for _, c := range res.Candidates {
-		if !slices.Contains(kinds, c.Doc.Kind) {
-			continue
-		}
-
 		if len(tied) > 0 && tied[0].Score-c.Score > scoreTie {
 			break
 		}
@@ -131,13 +127,8 @@ func bestOfKinds(lang, query string, res match.Result, kinds []media.Kind) (matc
 			return 0
 		}
 	}
-	rank := func(c match.Candidate) int {
-		if i := slices.Index(searchKinds, c.Doc.Kind); i >= 0 {
-			return i
-		}
-
-		return len(searchKinds)
-	}
+	// The search asked only for kinds in searchKinds.
+	rank := func(c match.Candidate) int { return slices.Index(searchKinds, c.Doc.Kind) }
 
 	slices.SortStableFunc(tied, func(a, b match.Candidate) int {
 		if exact(a) != exact(b) {
@@ -147,8 +138,9 @@ func bestOfKinds(lang, query string, res match.Result, kinds []media.Kind) (matc
 		return rank(a) - rank(b)
 	})
 
+	// Only a title said exactly is worth asking about: "star" tying a Star Wars film with a Star Trek show shows the films.
 	best := tied[0]
-	if best.Doc.Kind != media.KindMovie && best.Doc.Kind != media.KindTVShow {
+	if exact(best) == 0 || best.Doc.Kind != media.KindMovie && best.Doc.Kind != media.KindTVShow {
 		return best, nil, true
 	}
 

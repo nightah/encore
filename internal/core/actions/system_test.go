@@ -364,3 +364,27 @@ func TestSkinSearchOnASkinThatDrawsGlobalSearch(t *testing.T) {
 	assert.Equal(t, "skin search: skin.estuary skins Global Search; used Global Search", o.Note)
 	assert.Equal(t, []string{"SkinSearch dune profile=", "Addons", "ExecuteAddon script.globalsearch searchstring=dune"}, backend.Calls(), "its own search is Global Search")
 }
+
+// TestLibrarySearchDoesntAskAboutPartialMatches guards against asking "the film or the TV show?" when a film and a show only both contain what was said, which isn't either one's name.
+func TestLibrarySearchDoesntAskAboutPartialMatches(t *testing.T) {
+	target, backend, _ := newTarget()
+	target.Matcher = matcherFunc(func(match.Query) match.Result {
+		return match.Result{Normalized: "star", Decision: match.DecisionAsk, Candidates: []match.Candidate{
+			{Doc: match.Doc{ID: "tvshow/30", Kind: media.KindTVShow, Ref: media.Ref{Kind: media.KindTVShow, ID: 30}, Title: "Star Trek"}, Score: 0.7},
+			{Doc: match.Doc{ID: "movie/30", Kind: media.KindMovie, Ref: media.Ref{Kind: media.KindMovie, ID: 30}, Title: "Star Wars"}, Score: 0.7},
+			{Doc: match.Doc{ID: "album/30", Kind: media.KindAlbum, Ref: media.Ref{Kind: media.KindAlbum, ID: 30}, Title: "Star"}, Score: 0.5},
+		}}
+	})
+
+	o := newService().GlobalSearch(t.Context(), target, "star", nil)
+	assert.Equal(t, "addon.searching", o.Say.ID)
+	assert.Equal(t, []string{"ShowView movies title star"}, backend.Calls(), "films first, without asking; the album scored lower")
+}
+
+func TestSkinSearchWhenKodiFails(t *testing.T) {
+	target, backend, _ := newTarget()
+	target.SearchMode = media.SearchModeSkin
+	backend.Err = errBoom
+
+	assertFailed(t, newService().GlobalSearch(t.Context(), target, "hot fuzz", nil))
+}

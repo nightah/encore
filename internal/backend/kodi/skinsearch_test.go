@@ -275,6 +275,18 @@ func TestSkinSearchFailures(t *testing.T) {
 		})
 	})
 
+	t.Run("search window never opens", func(t *testing.T) {
+		synctest.Test(t, func(t *testing.T) {
+			b, s := skinBackend(t, "skin.nimbus", addonNimbusHelper)
+			s.ShowWindow("home", 0)
+			s.ShowWindow("1121", -1)
+
+			_, err := b.SkinSearch(t.Context(), "dune", "")
+			require.ErrorIs(t, err, errWindowNotVisible)
+			assert.NotContains(t, strings.Join(uiCalls(t, s), "\n"), "search_input", "the keyboard isn't opened")
+		})
+	})
+
 	t.Run("keyboard never opens", func(t *testing.T) {
 		synctest.Test(t, func(t *testing.T) {
 			b, s := skinBackend(t, "skin.nimbus", addonNimbusHelper)

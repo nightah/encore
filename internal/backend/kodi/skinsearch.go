@@ -190,10 +190,6 @@ func (b *Backend) resolveSkin(ctx context.Context, override string) (media.Skin,
 
 // missingAddons returns the add-ons in ids that aren't installed and enabled.
 func (b *Backend) missingAddons(ctx context.Context, ids []string) ([]string, error) {
-	if len(ids) == 0 {
-		return nil, nil
-	}
-
 	r, err := b.c.AddonsGetAddons(ctx, kodirpc.AddonsGetAddonsParams{Enabled: kodirpc.NewAddonsGetAddonsEnabledFromBool(true)})
 	if err != nil {
 		return nil, err
