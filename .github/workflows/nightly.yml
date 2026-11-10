@@ -1,6 +1,6 @@
 name: Nightly
 
-# The nightly runs what needs something outside the tree: real Kodi, MinIO, rclone and Nextcloud servers, Amazon's live API, the pinned libraries the benchmarks module compares the in-tree code with, and the slow mutation run. A change to Encore's own code or test data should never fail here first: its gates, the matcher's accuracy on the corpora and on absent titles included, run in CI (ci-jobs.yml) on every push and pull request.
+# The nightly runs what needs something outside the tree: real Kodi, MinIO, rclone and Nextcloud servers, Amazon's live API, the pinned libraries the benchmarks module compares the in-tree code with, and the slow fuzzing and mutation runs. A change to Encore's own code or test data should never fail here first: its gates, the matcher's accuracy on the corpora and on absent titles included, run in CI (ci-jobs.yml) on every push and pull request.
 on:
   schedule:
     # Daily at 17:00 UTC, split so Sunday's run can be told apart: every job runs on both schedules, mutation testing only on the Sunday one.
@@ -365,6 +365,115 @@ jobs:
 
       - name: Parity tests
         run: go test -count=1 ./...
+
+  # Lists every Go fuzz target, so a new one is fuzzed without editing this workflow.
+  fuzz-targets:
+    name: Fuzz targets
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    outputs:
+      targets: ${{ steps.list.outputs.targets }}
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: false
+
+      # CI's test cache from main (ci-jobs.yml); nightly runs never save their own.
+      - name: Restore the Go cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: go-test-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('go.mod', 'go.sum', 'tools/go.mod', 'tools/go.sum') }}
+          restore-keys: go-test-${{ runner.os }}-${{ runner.arch }}-
+
+      # go test -list prints a package's matching tests, then an "ok" line naming the package.
+      - name: List
+        id: list
+        run: |
+          set -o pipefail
+          module="$(go list -m)"
+          targets="$(go test -list '^Fuzz' ./... | awk -v module="${module}" '
+            /^Fuzz/ { names[++n] = $1; next }
+            /^ok/ { for (i = 1; i <= n; i++) print "." substr($2, length(module) + 1), names[i]; n = 0 }
+          ' | jq -Rnc '[inputs | split(" ") | {package: .[0], target: .[1]}]')"
+          echo "${targets}" | jq .
+          echo "targets=${targets}" >> "${GITHUB_OUTPUT}"
+
+  fuzz:
+    name: Fuzz (${{ matrix.target }})
+    needs: fuzz-targets
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.fuzz-targets.outputs.targets) }}
+    env:
+      PACKAGE: ${{ matrix.package }}
+      TARGET: ${{ matrix.target }}
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: false
+
+      # CI's test cache from main (ci-jobs.yml); nightly runs never save their own.
+      - name: Restore the Go cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: go-test-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('go.mod', 'go.sum', 'tools/go.mod', 'tools/go.sum') }}
+          restore-keys: go-test-${{ runner.os }}-${{ runner.arch }}-
+
+      # The inputs the fuzzer found interesting on earlier nights, so each run carries on from the last rather than starting from the seeds again. Go keeps them in its build cache, apart from the seed corpus in testdata/fuzz.
+      - name: Restore the fuzz corpus
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/go-build/fuzz
+          key: go-fuzz-${{ matrix.target }}-${{ github.run_id }}
+          restore-keys: go-fuzz-${{ matrix.target }}-
+
+      - name: Fuzz
+        run: go test -run '^$' -fuzz "^${TARGET}\$" -fuzztime 10m "${PACKAGE}"
+
+      - name: Save the fuzz corpus
+        if: always()
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/go-build/fuzz
+          key: go-fuzz-${{ matrix.target }}-${{ github.run_id }}
+
+      # A failing input is written to the package's testdata/fuzz/<target>; commit it there and go test replays it as a regression test on every run.
+      - name: Upload the failing input
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: fuzz-${{ matrix.target }}
+          path: ${{ matrix.package }}/testdata/fuzz/${{ matrix.target }}
+          retention-days: 30
 
   mutation:
     name: Mutation testing (gremlins, ${{ matrix.shard }})
