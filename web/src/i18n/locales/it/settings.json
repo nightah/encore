@@ -224,6 +224,13 @@
       "hint": "Il numero massimo di elementi che una riproduzione casuale o una coda riproduce alla volta, per mantenere reattive le librerie grandi",
       "title": "Limite della coda"
     },
+    "search_mode": {
+      "global_search": "Global Search",
+      "hint": "Cosa apre «cerca…» su Kodi. La libreria mostra i film, le serie TV, i video musicali, gli artisti o gli album corrispondenti nella vista libreria di Kodi, senza bisogno di add-on. Global Search e la ricerca della skin mostrano invece la libreria quando non possono funzionare. Un’istanza può cambiarlo.",
+      "library": "Mostralo nella libreria",
+      "skin": "La ricerca della skin",
+      "title": "Ricerca"
+    },
     "shutdown_quits": {
       "hint": "Invece di spegnere il dispositivo",
       "title": "«Spegni» chiude Kodi"
