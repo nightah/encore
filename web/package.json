@@ -41,7 +41,7 @@
     "@mswjs/interceptors": "0.45.11",
     "@playwright/test": "1.65.0",
     "@tailwindcss/vite": "4.3.5",
-    "@tanstack/router-plugin": "1.168.48",
+    "@tanstack/router-plugin": "1.169.0",
     "@testing-library/dom": "10.4.2",
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.3",
