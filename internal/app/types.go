@@ -14,6 +14,7 @@ import (
 	"github.com/nightah/encore/internal/config"
 	"github.com/nightah/encore/internal/core/actions"
 	"github.com/nightah/encore/internal/core/library"
+	"github.com/nightah/encore/internal/core/livetv"
 	"github.com/nightah/encore/internal/core/match"
 	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/secrets"
@@ -59,6 +60,8 @@ type Instance struct {
 	Catalog *library.Catalog
 	Index   *match.Index
 	Waker   *kodi.Waker
+	// Guide finds the instance's live TV channels. It reads through Backend, so a dry run's target still reads real channels.
+	Guide *livetv.Guide
 
 	// id and name are copies of Record's.
 	id   int64

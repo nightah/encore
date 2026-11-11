@@ -11,7 +11,7 @@ import type { SkillSettingsInputContentItem } from "@api/generated/model/skillSe
 import type { SkillSettingsInputInvocation } from "@api/generated/model/skillSettingsInputInvocation.ts";
 
 export interface SkillSettingsInput {
-  /** What the skill can play; music includes music videos. Omit to keep the current choice. */
+  /** What the skill can play; music includes music videos, and livetv is Kodi's live TV channels. Omit to keep the current choice. */
   content?: SkillSettingsInputContentItem[];
   endpoint: SkillEndpoint;
   /** encore uses each locale's own name for it ("kodi" in French); kodi is "kodi" in every locale */

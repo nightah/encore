@@ -9,6 +9,7 @@
 export type SkillInfoContentItem = (typeof SkillInfoContentItem)[keyof typeof SkillInfoContentItem];
 
 export const SkillInfoContentItem = {
+  livetv: "livetv",
   movies: "movies",
   music: "music",
   tv: "tv",

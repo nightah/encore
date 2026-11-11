@@ -48,6 +48,12 @@ cases:
   - {utterance: "mets le clip de bohemian rhapsody", intent: WatchMusicVideo, slots: {MusicVideo: ""}}
   - {utterance: "mets un clip du genre comédie au hasard", intent: WatchRandomMusicVideo, slots: {Genre: ""}}
   - {utterance: "mélange tous les clips du genre comédie", intent: ShuffleMusicVideos, slots: {Genre: ""}}
+  - {utterance: "mets la chaîne tf1", intent: WatchChannel, slots: {Channel: ""}}
+  - {utterance: "mets la chaîne numéro douze", intent: WatchChannelNumber, slots: {ChannelNumber: "12"}}
+  - {utterance: "affiche le guide des programmes", intent: OpenTVGuide}
+  - {utterance: "montre les chaînes télé", intent: OpenTVGuide, slots: {LiveView: "channels"}}
+  - {utterance: "qu'est-ce qu'il y a sur m6 en ce moment", intent: WhatsOn, slots: {Channel: "m6"}}
+  - {utterance: "je veux regarder le match de hockey en direct", intent: WatchLive, slots: {Programme: ""}}
   - {utterance: "mets la playlist musicale voyage", intent: PlayPlaylist, slots: {Playlist: ""}}
   - {utterance: "mets la playlist voyage en aléatoire", intent: ShufflePlaylist, slots: {Playlist: ""}}
   - {utterance: "donne-moi une recommandation de film", intent: Recommend, slots: {MediaType: "movie"}}
@@ -138,6 +144,10 @@ cases:
   - {utterance: "pèse sur retour 2 fois", intent: Navigate, slots: {Count: "2", NavAction: "back"}}
   - {utterance: "fais jouer intouchables", intent: PlayMedia, slots: {Query: "intouchables"}}
   - {utterance: "fais jouer la playlist voyage", intent: PlayPlaylist, slots: {Playlist: ""}}
+  - {utterance: "syntonise arte", intent: WatchChannel, slots: {Channel: "arte"}}
+  - {utterance: "change de poste pour m6", intent: WatchChannel, slots: {Channel: "m6"}}
+  - {utterance: "ouvre l'horaire télé", intent: OpenTVGuide}
+  - {utterance: "montre-moi les postes télé", intent: OpenTVGuide, slots: {LiveView: "channels"}}
   - {utterance: "veille prolongée l'ordi", intent: Power, slots: {PowerAction: "hibernate"}}
   - {utterance: "qu'est-ce qu'on écoute ce soir", intent: Recommend, pending: "Amazon reads ce soir as a show's name for WhatsNew"}
   - {utterance: "qu'est-ce que je devrais écouter comme film", intent: Recommend}

@@ -67,6 +67,15 @@ LIBRARY_TYPE:
     الأفلام
     المسلسلات
     التلفزيون
+LIVETV_VIEW:
+  channels: |-
+    قنوات
+    قائمة قنوات
+  guide: |-
+    دليل
+    دليل برامج
+    جدول برامج
+    برامج
 MATCH_CHOICE:
   film: |-
     الفيلم

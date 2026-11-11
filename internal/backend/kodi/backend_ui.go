@@ -125,6 +125,10 @@ func (b *Backend) ShowView(ctx context.Context, v media.View) error {
 		return b.activate(ctx, windowFavourites)
 	case media.SectionSubtitleSearch:
 		return b.activate(ctx, windowSubtitleSearch)
+	case media.SectionTVGuide:
+		return b.activate(ctx, windowTVGuide)
+	case media.SectionTVChannels:
+		return b.activate(ctx, windowTVChannels)
 	case media.SectionPlaylist:
 		pl, err := b.playlistFile(ctx, v.Playlist.ID)
 		if err != nil {

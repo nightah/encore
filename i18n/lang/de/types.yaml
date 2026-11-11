@@ -73,6 +73,21 @@ LIBRARY_TYPE:
     filme
     serien
     videobibliothek
+LIVETV_VIEW:
+  channels: |-
+    sender
+    senderliste
+    kanäle
+    kanalliste
+    fernsehsender
+    tv sender
+    live tv sender
+    tv senderliste
+  guide: |-
+    programm
+    programmübersicht
+    programmführer
+    guide
 MATCH_CHOICE:
   film: |-
     film

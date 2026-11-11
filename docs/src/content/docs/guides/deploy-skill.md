@@ -59,7 +59,7 @@ Paste the `refresh_token` value under **Paste a refresh token**. It must have be
 On the **Deploy skill** step or the Alexa skill page:
 
 - **Locales.** Pick the locales to build. See [locales](#locales) below.
-- **What it can play.** Movies, TV shows and music, all on by default. Turning one off leaves its voice commands out of the skill (so Alexa won't route "play the album …" to Encore without music), and "play X" stops searching those titles. Music includes music videos. Keep at least one; set it as code with [`alexa.content`](/encore/reference/configuration/#alexacontent), e.g. `content: [movies, tv]`.
+- **What it can play.** Movies, TV shows and music, all on by default, and [live TV](/encore/guides/live-tv/), off until you turn it on. Turning one off leaves its voice commands out of the skill (so Alexa won't route "play the album …" to Encore without music), and "play X" stops searching those titles. Music includes music videos. Keep at least one; set it as code with [`alexa.content`](/encore/reference/configuration/#alexacontent), e.g. `content: [movies, tv]`.
 - **Invocation name.** Choose **encore** or **kodi** ("Alexa, ask kodi to…"). French and Brazilian Portuguese say "kodi" for both, and Arabic and Japanese spell each in their own script; see [locales](#locales) for every locale's name.
 - **Skill name.** Empty uses each locale's default.
 - **Endpoint.** The public `https://` URL of `/api/v1/alexa`, served with a certificate from a public authority (see [what Alexa requires](/encore/guides/reverse-proxy/#what-alexa-requires)).

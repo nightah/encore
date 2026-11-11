@@ -45,6 +45,7 @@ func TestDryBackendSendsNoWrites(t *testing.T) {
 		func() error { return b.System(ctx, media.SystemCommand("shutdown")) },
 		func() error { return b.ScanLibrary(ctx, media.Database("video")) },
 		func() error { return b.CleanLibrary(ctx, media.Database("video")) },
+		func() error { return b.PlayChannel(ctx, 24) },
 	}
 
 	for _, w := range writes {
@@ -102,6 +103,7 @@ func TestDryBackendRecordsWhatWouldBeSent(t *testing.T) {
 		}, "Player.Open", map[string]any{"kind": media.KindMovie, "id": 6, "resume": true, "shuffle": false}},
 		{"play file", func(b dryBackend) error { return b.PlayFile(t.Context(), "/media/a.mkv") }, "Player.Open", map[string]any{"file": "/media/a.mkv"}},
 		{"party mode", func(b dryBackend) error { return b.PartyMode(t.Context()) }, "Player.Open", map[string]any{"partymode": true}},
+		{"channel", func(b dryBackend) error { return b.PlayChannel(t.Context(), 24) }, "Player.Open", map[string]any{"channelid": 24}},
 	}
 
 	for _, c := range cases {

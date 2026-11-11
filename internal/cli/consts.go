@@ -22,8 +22,8 @@ const (
 // ciSkillName is the only skill name gen deploy deploys to, in every locale the skill has a name in, so it can never replace the skill Encore deploys for a user. Encore looks its own skill up by the name it gives it, "Encore", so it never adopts this one either.
 const ciSkillName = "Encore NLU CI"
 
-// standInTypes are the slot types Encore fills from a library (app.SlotValues): the built-in title types it extends, and its own music video and playlist types. gen deploy fills them with the titles the NLU fixtures ask for, so the skill reads them as it would with a library that has them.
-var standInTypes = []string{"AMAZON.Movie", "AMAZON.TVSeries", "AMAZON.Musician", "AMAZON.MusicAlbum", "KODI_MUSIC_VIDEO", "KODI_PLAYLIST"}
+// standInTypes are the slot types Encore fills from a library (app.SlotValues): the built-in title types it extends, and its own music video, playlist and channel types. gen deploy fills them with the titles the NLU fixtures ask for, so the skill reads them as it would with a library that has them.
+var standInTypes = []string{"AMAZON.Movie", "AMAZON.TVSeries", "AMAZON.Musician", "AMAZON.MusicAlbum", "KODI_MUSIC_VIDEO", "KODI_PLAYLIST", channelType}
 
 // ciEndpoint is the endpoint gen deploy gives the skill. Profiling and the simulator's launch checks never reach it.
 const ciEndpoint = "https://encore.invalid/api/v1/alexa"
@@ -33,3 +33,6 @@ const defaultNLUFixtures = "testdata/nlu"
 
 // simulateLocale is the locale gen simulate says utterances in when neither --locale nor a cases file names one.
 const simulateLocale = "en-US"
+
+// channelType is the slot type of a Kodi instance's live TV channels.
+const channelType = "KODI_CHANNEL"

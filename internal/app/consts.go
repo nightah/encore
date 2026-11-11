@@ -51,5 +51,12 @@ const RoomSlot = "KODI_ROOM"
 // playlistSlot is the custom slot type of playlist names.
 const playlistSlot = "KODI_PLAYLIST"
 
+// channelSlot is the custom slot type of live TV channel names, with the most names the model takes from every Kodi instance together, and channelWait how long each instance has to list its channels at deploy time.
+const (
+	channelSlot  = "KODI_CHANNEL"
+	channelLimit = 1000
+	channelWait  = 5 * time.Second
+)
+
 // snapshotTimeout bounds one snapshot read or write, so a slow blob store can't hold up start-up or shutdown for long.
 const snapshotTimeout = 30 * time.Second

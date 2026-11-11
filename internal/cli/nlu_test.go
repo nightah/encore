@@ -4,12 +4,15 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/fs"
 	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
+	"testing/fstest"
 	"time"
 
 	"github.com/stretchr/testify/assert"
@@ -351,6 +354,10 @@ func TestGenDeployRefuses(t *testing.T) {
 	require.ErrorContains(t, deployTo(""), "name the skill with --skill")
 	require.ErrorContains(t, deployTo(own, "--fixtures", fixtureDir(t, map[string]string{"en-GB.yaml": "locale: en-AU\n"})), "named for")
 
+	unreadable := fixtureDir(t, map[string]string{"en-GB.yaml": enGBFixture})
+	require.NoError(t, os.MkdirAll(filepath.Join(unreadable, "channels", "en.txt"), 0o750))
+	require.ErrorContains(t, deployTo(own, "--fixtures", unreadable), "en.txt", "a channel list that can't be read")
+
 	_, _, err := runCLI(t, append([]string{"gen", "deploy", "--skill", own}, flags...)...)
 	require.ErrorContains(t, err, `required flag(s) "invocation" not set`)
 
@@ -430,9 +437,46 @@ func TestStandInLibrary(t *testing.T) {
 		"en-GB": {
 			"AMAZON.Movie":    {{Value: "alien"}, {Value: "dune"}},
 			"AMAZON.Musician": {{Value: "queen"}},
-			"KODI_PLAYLIST":   {{Value: "road trip"}},
+			"KODI_PLAYLIST":   {{Value: "chill out"}, {Value: "dinner"}, {Value: "kids"}, {Value: "party"}, {Value: "road trip"}, {Value: "top rated"}, {Value: "workout"}},
 		},
-	}, standInLibrary(loadSources(t), fixtures), "only the title types, once each and sorted; a locale without titles keeps the model's own")
+	}, standInLibrary(loadSources(t), fixtures, nil), "only the title types, once each and sorted, with the language's examples of its own types, as a skill with a library has more than the fixtures name; a locale without titles keeps the model's own")
+}
+
+func TestStandInLibraryChannels(t *testing.T) {
+	fixtures := []nlu.Fixture{
+		{Locale: "en-AU", Cases: []nlu.Case{{Utterance: "switch to abc news", Intent: "WatchChannel", Slots: map[string]string{"Channel": "abc news"}}}},
+		{Locale: "de-DE", Cases: []nlu.Case{{Utterance: "lauter", Intent: "VolumeUp"}}},
+	}
+
+	got := standInLibrary(loadSources(t), fixtures, map[string][]string{"en": {"9Go!", "ABC NEWS", "Racing.com"}})
+
+	var names []string
+	for _, v := range got["en-AU"]["KODI_CHANNEL"] {
+		names = append(names, v.Value)
+	}
+
+	assert.Contains(t, names, "9Go!", "a language's channels stand in for a Kodi instance's")
+	assert.Contains(t, names, "seven", "beside its examples")
+	assert.Equal(t, 1, countFold(names, "abc news"), "and the fixtures', once each, ignoring case")
+	assert.Equal(t, []string{"9 Go!"}, got["en-AU"]["KODI_CHANNEL"][slices.IndexFunc(got["en-AU"]["KODI_CHANNEL"], func(v skillmodel.SlotValue) bool { return v.Value == "9Go!" })].Synonyms, "spoken as the skill Encore deploys has them")
+	assert.NotContains(t, got, "de-DE", "a language without channels keeps the model's own")
+}
+
+func TestStandInChannels(t *testing.T) {
+	got, err := standInChannels(fstest.MapFS{
+		"channels/en.txt": {Data: []byte("Seven\n\n  ABC NEWS  \n")},
+		"channels/de.txt": {Data: []byte("Das Erste")},
+		"en-AU.yaml":      {Data: []byte("locale: en-AU\n")},
+	})
+	require.NoError(t, err)
+	assert.Equal(t, map[string][]string{"en": {"Seven", "ABC NEWS"}, "de": {"Das Erste"}}, got)
+
+	_, err = standInChannels(fstest.MapFS{"channels/en.txt": {Mode: fs.ModeDir}})
+	require.Error(t, err)
+
+	shipped, err := standInChannels(os.DirFS("../../testdata/nlu"))
+	require.NoError(t, err)
+	assert.Greater(t, len(shipped["en"]), 100, "the shipped English channels are a real setup's")
 }
 
 func TestGenDeployWithLibrary(t *testing.T) {
@@ -448,7 +492,7 @@ func TestGenDeployWithLibrary(t *testing.T) {
 
 	_, stderr, err := runCLI(t, append([]string{"gen", "deploy", "--skill", ci, "--invocation", "encore", "--locale", "en-GB", "--locale", "de-DE", "--fixtures", dir, "--poll-interval", "1ms"}, flags...)...)
 	require.NoError(t, err)
-	assert.Contains(t, stderr, "library: 15 titles in en-GB from skill "+own, "three titles, and the example music videos and playlists a model without a library has")
+	assert.Contains(t, stderr, "library: 21 titles in en-GB from skill "+own, "three titles, and the example music videos, playlists and channels a model without a library has")
 	assert.Contains(t, stderr, "library: skill "+own+" has no de-DE model; using the fixtures' titles")
 
 	sk, _ := fake.Skill(ci)
@@ -499,6 +543,15 @@ func TestRereaderReadsQueriesAsTheHandlerDoes(t *testing.T) {
 	assert.Contains(t, read("en-GB", "dune"), nlu.Reading{Intent: "PlayMedia", Slots: map[string]string{"Query": "dune"}}, "and the query as it stands")
 }
 
+func TestRereaderTakesALeadInOffATitle(t *testing.T) {
+	speech, err := alexa.NewSpeech(loadSources(t), slog.New(slog.DiscardHandler))
+	require.NoError(t, err)
+
+	got := rereader(speech)("ar-SA", nlu.Reading{Intent: "WatchMovie", Slots: map[string]string{"Movie": "اشوف فيلم الرسالة"}})
+	assert.Equal(t, nlu.Reading{Intent: "WatchMovie", Slots: map[string]string{"Movie": "اشوف فيلم الرسالة"}}, got[0], "the request as heard comes first")
+	assert.Contains(t, got, nlu.Reading{Intent: "WatchMovie", Slots: map[string]string{"Movie": "الرسالة"}}, "as the handler reads it once that finds nothing")
+}
+
 func TestRereaderRewritesAsTheHandlerDoes(t *testing.T) {
 	speech, err := alexa.NewSpeech(loadSources(t), slog.New(slog.DiscardHandler))
 	require.NoError(t, err)
@@ -508,4 +561,16 @@ func TestRereaderRewritesAsTheHandlerDoes(t *testing.T) {
 	assert.Equal(t, []nlu.Reading{{Intent: "ContinueWatching", Slots: map[string]string{"Room": "bedroom"}}}, read("en-AU", nlu.Reading{Intent: "WatchNextEpisode", Slots: map[string]string{"Show": "the last show", "Room": "bedroom"}}), "the last show continues watching")
 	assert.Equal(t, []nlu.Reading{{Intent: "ListenToArtist", Slots: map[string]string{"Artist": "queen"}}}, read("en-AU", nlu.Reading{Intent: "ListenToSongOrAlbum", Slots: map[string]string{"Title": "music", "Artist": "queen"}}), "music by an artist is the artist's")
 	assert.Equal(t, []nlu.Reading{{Intent: "WatchMovie", Slots: map[string]string{"Movie": "dune"}}}, read("en-AU", nlu.Reading{Intent: "WatchMovie", Slots: map[string]string{"Movie": "dune"}}), "anything else stands")
+}
+
+func countFold(names []string, want string) int {
+	n := 0
+
+	for _, s := range names {
+		if strings.EqualFold(s, want) {
+			n++
+		}
+	}
+
+	return n
 }

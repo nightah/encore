@@ -1,11 +1,15 @@
 package media
 
 import (
+	"strconv"
 	"time"
 )
 
 // Contents lists every content group.
-var Contents = []Content{ContentMovies, ContentTV, ContentMusic}
+var Contents = []Content{ContentMovies, ContentTV, ContentMusic, ContentLiveTV}
+
+// LibraryContents lists the content groups backed by the library, leaving out live TV.
+var LibraryContents = []Content{ContentMovies, ContentTV, ContentMusic}
 
 // Qualities lists the video qualities, lowest first.
 var Qualities = []Quality{QualitySD, Quality720p, Quality1080p, Quality2160p}
@@ -19,6 +23,8 @@ func ContentOf(k Kind) Content {
 		return ContentTV
 	case KindArtist, KindAlbum, KindSong, KindMusicVideo:
 		return ContentMusic
+	case KindChannel:
+		return ContentLiveTV
 	}
 
 	return ""
@@ -41,6 +47,18 @@ func (i Item) InProgress() bool { return i.Resume > 0 }
 
 // Remaining is how long is left of the current item.
 func (n NowPlaying) Remaining() time.Duration { return max(0, n.Duration-n.Position) }
+
+// Number is the channel's number as it is shown, such as "24" or "7.2".
+func (c Channel) Number() string {
+	if c.SubNumber > 0 {
+		return strconv.Itoa(c.Major) + "." + strconv.Itoa(c.SubNumber)
+	}
+
+	return strconv.Itoa(c.Major)
+}
+
+// OnAt reports whether the broadcast is airing at t.
+func (b Broadcast) OnAt(t time.Time) bool { return !t.Before(b.Start) && t.Before(b.End) }
 
 // IsValid reports whether m is a search mode, or empty for the default.
 func (m SearchMode) IsValid() bool {

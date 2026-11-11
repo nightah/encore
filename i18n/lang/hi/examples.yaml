@@ -1,5 +1,14 @@
 # Example values for the dynamic slot types in model.yaml (hi): deploys replace them with what is set up in Encore. Chosen for this language rather than translated, so not on Crowdin.
 
+# Examples only: deploys replace them with the channels of the Kodi instances that have live TV.
+KODI_CHANNEL:
+  - {value: आज तक, synonyms: [aaj tak]}
+  - {value: स्टार प्लस, synonyms: [star plus]}
+  - {value: ज़ी टीवी, synonyms: [zee tv]}
+  - {value: सोनी टीवी, synonyms: [सोनी]}
+  - {value: कलर्स, synonyms: [colors]}
+  - {value: डीडी नेशनल, synonyms: [दूरदर्शन]}
+
 KODI_MUSIC_VIDEO:
   - {value: तुम ही हो, synonyms: [tum hi ho]}
   - {value: केसरिया, synonyms: [kesariya]}

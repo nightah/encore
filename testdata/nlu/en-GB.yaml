@@ -48,6 +48,12 @@ cases:
   - {utterance: "play the music video for bohemian rhapsody", intent: WatchMusicVideo, slots: {MusicVideo: ""}}
   - {utterance: "play a comedy music video", intent: WatchRandomMusicVideo, slots: {Genre: ""}}
   - {utterance: "play all my comedy music videos", intent: ShuffleMusicVideos, slots: {Genre: ""}}
+  - {utterance: "switch to abc news", intent: WatchChannel, slots: {Channel: "abc news"}}
+  - {utterance: "switch to channel number twenty four", intent: WatchChannelNumber, slots: {ChannelNumber: "24"}}
+  - {utterance: "open the tv guide", intent: OpenTVGuide, slots: {LiveView: "guide"}}
+  - {utterance: "show the tv channels", intent: OpenTVGuide, slots: {LiveView: "channels"}}
+  - {utterance: "what's on seven", intent: WhatsOn, slots: {Channel: "seven"}}
+  - {utterance: "watch the cricket live", intent: WatchLive, slots: {Programme: ""}}
   - {utterance: "play the music playlist road trip", intent: PlayPlaylist, slots: {Playlist: ""}}
   - {utterance: "play the road trip playlist shuffled", intent: ShufflePlaylist, slots: {Playlist: ""}}
   - {utterance: "give me a movie recommendation", intent: Recommend, slots: {MediaType: "movie"}}
@@ -97,6 +103,7 @@ cases:
   # Bare titles, which free-text and title slots compete for.
   - {utterance: "play dune", intent: PlayMedia, slots: {Query: "dune"}}
   - {utterance: "put on dune", intent: PlayMedia, slots: {Query: "dune"}}
+  - {utterance: "put on abc news", intent: PlayMedia, slots: {Query: "abc news"}}
   # Rooms.
   - {utterance: "play the movie dune in the living room", intent: WatchMovie, slots: {Movie: "dune", Room: ""}}
   - {utterance: "continue watching breaking bad in the living room", intent: WatchNextEpisode, slots: {Room: "", Show: "breaking bad"}}

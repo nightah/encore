@@ -188,13 +188,13 @@ func (c *Config) Validate() error {
 	}
 
 	for _, g := range c.Alexa.Content {
-		if g != ContentMovies && g != ContentTV && g != ContentMusic {
-			errs = append(errs, fmt.Errorf("alexa.content: %q is not one of movies, tv or music", g))
+		if g != ContentMovies && g != ContentTV && g != ContentMusic && g != ContentLiveTV {
+			errs = append(errs, fmt.Errorf("alexa.content: %q is not one of movies, tv, music or livetv", g))
 		}
 	}
 
 	if len(c.Alexa.Content) == 0 {
-		errs = append(errs, errors.New("alexa.content must list at least one of movies, tv or music"))
+		errs = append(errs, errors.New("alexa.content must list at least one of movies, tv, music or livetv"))
 	}
 
 	return errors.Join(errs...)

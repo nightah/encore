@@ -10,6 +10,7 @@ export type UpdateSkillContentRequestContentItem =
   (typeof UpdateSkillContentRequestContentItem)[keyof typeof UpdateSkillContentRequestContentItem];
 
 export const UpdateSkillContentRequestContentItem = {
+  livetv: "livetv",
   movies: "movies",
   music: "music",
   tv: "tv",

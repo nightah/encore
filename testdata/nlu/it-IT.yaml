@@ -48,6 +48,13 @@ cases:
   - {utterance: "metti il video musicale di bohemian rhapsody", intent: WatchMusicVideo, slots: {MusicVideo: ""}}
   - {utterance: "metti un video musicale commedia a caso", intent: WatchRandomMusicVideo, slots: {Genre: ""}}
   - {utterance: "mescola tutti i video musicali commedia", intent: ShuffleMusicVideos, slots: {Genre: ""}}
+  - {utterance: "passa su rai uno", intent: WatchChannel, slots: {Channel: "rai uno"}}
+  - {utterance: "passa al canale numero ventiquattro", intent: WatchChannelNumber, slots: {ChannelNumber: "24"}}
+  - {utterance: "apri la guida tv", intent: OpenTVGuide}
+  - {utterance: "mostra i canali della tv", intent: OpenTVGuide, slots: {LiveView: "channels"}}
+  - {utterance: "mostra i canali tv", intent: OpenTVGuide, slots: {LiveView: "channels"}, pending: "Amazon leaves LiveView empty, so the guide opens, though canali della tv fills it"}
+  - {utterance: "cosa c'è su canale cinque", intent: WhatsOn, slots: {Channel: "canale cinque"}}
+  - {utterance: "guarda la partita in diretta", intent: WatchLive, slots: {Programme: ""}}
   - {utterance: "metti la playlist musicale viaggio", intent: PlayPlaylist, slots: {Playlist: ""}}
   - {utterance: "riproduci la mia playlist viaggio in ordine casuale", intent: ShufflePlaylist, slots: {Playlist: ""}}
   - {utterance: "dammi un consiglio su un film", intent: Recommend, slots: {MediaType: "movie"}}

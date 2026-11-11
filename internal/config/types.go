@@ -55,7 +55,7 @@ type Alexa struct {
 	SkillName string `koanf:"skill_name"`
 	// Locales limits which locales are built and deployed, e.g. ["en-AU"]. Empty means every locale Encore ships. An Echo can only use the skill when its language matches a deployed locale; fewer locales deploy faster.
 	Locales []string `koanf:"locales"`
-	// Content lists what the skill can play: movies, tv and music (music includes music videos). Leaving a group out leaves its intents out of the skill model and its titles out of "play X" searches, and library syncs no longer fetch it from Kodi. The setup wizard asks before the first Kodi is added.
+	// Content lists what the skill can play: movies, tv, music (music includes music videos) and livetv, the media centre's live TV channels. Leaving a group out leaves its intents out of the skill model and its titles out of "play X" searches, and library syncs no longer fetch it from Kodi. The setup wizard asks before the first Kodi is added.
 	Content []string `koanf:"content"`
 	// ShutdownQuits makes "shut down" quit Kodi rather than power off the machine, for Kodi running on a desktop. A Kodi instance can override it.
 	ShutdownQuits bool `koanf:"shutdown_quits"`

@@ -39,12 +39,14 @@ Each phrase below is one of the skill's own samples, and Amazon's language model
 | لورا خمس دقائق | Back five minutes | a skip of five minutes, with no direction | skip back five minutes |
 | رجعي لورا خمس دقائق | Go back five minutes | a skip, without the time | rewind five minutes |
 | ابغى اقتراح فيلم | I want a film suggestion | nothing, after some changes to the model | recommend a film |
+| حولي على ام بي سي | Switch to MBC | nothing, when the skill knows only a few channels | switch to the channel MBC |
 
 ### German (`de-DE`)
 
 | Say | Meaning | Amazon reads it as | It should |
 | --- | --- | --- | --- |
 | geh zur startseite | Go to the home screen | nothing | go to Kodi's home screen |
+| öffne das tv programm | Open the TV guide | shuffling a show called "das TV programm" | open the TV guide |
 
 ### English (`en-US`)
 
@@ -66,7 +68,6 @@ Each phrase below is one of the skill's own samples, and Amazon's language model
 | ve al inicio | Go to the home screen | nothing | go to Kodi's home screen |
 | dame una recomendación de película | Give me a film recommendation | a random film, after some changes to the model | recommend a film |
 | me refiero a dune de 2021 | I mean Dune from 2021 | nothing, though es-ES and es-MX understand it | answer the question with Dune from 2021 |
-| dale play a ojos así de shakira | Play Ojos Así by Shakira | a song called "play a ojos así" | play the song |
 | dale play a la casa de papel | Play Money Heist | the next episode of a show called "play a la casa de papel" | play La Casa de Papel |
 | quiero ver el capítulo 3 de la temporada 2 de la casa de papel | I want to watch season 2 episode 3 of Money Heist | the next episode, with the season and episode in the show's name | play that episode |
 
@@ -92,6 +93,7 @@ Each phrase below is one of the skill's own samples, and Amazon's language model
 | Say | Meaning | Amazon reads it as | It should |
 | --- | --- | --- | --- |
 | riprendi la tv | Resume the TV | nothing | resume |
+| mostra i canali tv | Show the TV channels | the TV guide, without saying which | show the channel list |
 
 ### Japanese (`ja-JP`)
 
@@ -106,13 +108,8 @@ Each phrase below is one of the skill's own samples, and Amazon's language model
 | --- | --- | --- | --- |
 | vorige | Previous | nothing | go to the previous item |
 | ik bedoel dune uit 2021 | I mean Dune from 2021 | watching a film called "2021" | answer the question with Dune from 2021 |
+| wat is er nu op npo een | What's on NPO 1 now | nothing, when the skill knows only a few channels | say what's on NPO 1 |
 | zet het volume op 30 | Set the volume to 30 | volume up | set the volume to 30 |
 | speel wat muziek van marco borsato | Play some Marco Borsato | a search for "whatmuziek van marco borsato" | play the artist |
 | speel wat muziek van marco borsato in de slaapkamer | Play some Marco Borsato in the bedroom | a search for "whatmuziek van marco borsato in de slaapkamer" | play the artist in the bedroom |
 | zet de luizenmoeder seizoen 2 aflevering 3 op in de slaapkamer | Put on De Luizenmoeder season 2 episode 3 in the bedroom | binge a show called "de luizenmoeder seizoen 2 aflevering 3" | play that episode in the bedroom |
-
-### Portuguese (`pt-BR`)
-
-| Say | Meaning | Amazon reads it as | It should |
-| --- | --- | --- | --- |
-| retrocede cinco minutos | Rewind five minutes | a rewind, without the time | rewind five minutes |

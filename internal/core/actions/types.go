@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/nightah/encore/internal/core/livetv"
 	"github.com/nightah/encore/internal/core/match"
 	"github.com/nightah/encore/internal/core/media"
 )
@@ -14,6 +15,16 @@ import (
 // Matcher finds library titles; *match.Index implements it.
 type Matcher interface {
 	Search(ctx context.Context, q match.Query) (match.Result, error)
+}
+
+// LiveGuide finds the instance's live TV channels and what's on them; *livetv.Guide implements it.
+type LiveGuide interface {
+	Available(ctx context.Context) (bool, error)
+	Find(ctx context.Context, spoken string) (livetv.Found, error)
+	// ByNumber takes sub as -1 when no number after the point was said.
+	ByNumber(ctx context.Context, major, sub int) (media.Channel, bool, error)
+	ChannelNow(ctx context.Context, id int) (media.Channel, bool, error)
+	FindProgramme(ctx context.Context, spoken string) (livetv.Programme, bool, error)
 }
 
 // Library is the instance's in-memory catalog; *library.Catalog implements it.
@@ -32,6 +43,8 @@ type Target struct {
 	Matcher Matcher
 	// Library is optional; without it a miss is final.
 	Library Library
+	// Guide is the instance's live TV; nil when it has none Encore can reach.
+	Guide LiveGuide
 	// Wake is optional; when set, an unreachable backend is woken and the action retried once.
 	Wake func(ctx context.Context) error
 	// Language is the library's language, used to compare spoken names with titles; empty means English.

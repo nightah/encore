@@ -72,6 +72,19 @@ LIBRARY_TYPE:
     t. v.
     dei video
     dei film
+LIVETV_VIEW:
+  channels: |-
+    canali
+    lista dei canali
+    lista canali
+    canali tv
+    canali della tv
+    lista dei canali tv
+  guide: |-
+    guida
+    guida ai programmi
+    programmi
+    palinsesto
 MATCH_CHOICE:
   film: |-
     film

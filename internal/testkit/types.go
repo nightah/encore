@@ -24,6 +24,8 @@ type Backend struct {
 	clock      time.Time
 	skin       media.Skin
 	skinErr    error
+	channels   []media.Channel
+	liveTV     bool
 
 	Err error
 }

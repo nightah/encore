@@ -18,6 +18,11 @@ func (t Target) Allows(kind media.Kind) bool {
 	return c == "" || !slices.Contains(t.Disabled, c)
 }
 
+// LibraryLimited reports whether the skill was set up without some of the library, so a search must leave those titles out. Live TV isn't the library, so leaving it out limits nothing.
+func (t Target) LibraryLimited() bool {
+	return slices.ContainsFunc(t.Disabled, func(c media.Content) bool { return slices.Contains(media.LibraryContents, c) })
+}
+
 // Allowed returns the kinds the skill was set up to play, in order.
 func (t Target) Allowed(kinds []media.Kind) []media.Kind {
 	out := make([]media.Kind, 0, len(kinds))

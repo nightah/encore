@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/nightah/encore/internal/core/library"
+	"github.com/nightah/encore/internal/core/livetv"
 	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/skillmodel"
 )
@@ -75,6 +76,10 @@ func (a *App) SlotValues(ctx context.Context) (map[string][]skillmodel.SlotValue
 		out[playlistSlot] = vs
 	}
 
+	if channels := a.channelValues(ctx); len(channels) > 0 {
+		out[channelSlot] = channels
+	}
+
 	rooms, err := a.roomValues(ctx)
 	if err != nil {
 		return nil, err
@@ -105,6 +110,60 @@ func (a *App) titleAliases(ctx context.Context, members []int64, kind media.Kind
 	}
 
 	return out, nil
+}
+
+// channelValues are the channel names of the Kodi instances with live TV, once each, when the skill plays live TV. An instance that can't list them in time is left out rather than failing the deploy: custom slots take unlisted names anyway.
+func (a *App) channelValues(ctx context.Context) []skillmodel.SlotValue {
+	if !slices.Contains(a.voiceSettings(ctx).Content, string(media.ContentLiveTV)) {
+		return nil
+	}
+
+	a.mu.RLock()
+	instances := make([]*Instance, 0, len(a.instances))
+	for _, inst := range a.instances {
+		instances = append(instances, inst)
+	}
+	a.mu.RUnlock()
+
+	slices.SortFunc(instances, func(x, y *Instance) int { return cmp.Compare(x.id, y.id) })
+
+	var out []skillmodel.SlotValue
+
+	seen := map[string]bool{}
+
+	for _, inst := range instances {
+		names, err := inst.channelNames(ctx)
+		if err != nil {
+			inst.log.DebugContext(ctx, "no channels for the skill model", "error", err)
+
+			continue
+		}
+
+		for _, n := range names {
+			if key := strings.ToLower(n); !seen[key] {
+				seen[key] = true
+				// As it's spoken too, so Alexa knows "nine go" for 9Go! and "racing dot com" for Racing.com.
+				out = append(out, skillmodel.SlotValue{Value: n, Synonyms: livetv.Aliases(inst.Guide.Language(), n)})
+			}
+		}
+	}
+
+	slices.SortFunc(out, func(x, y skillmodel.SlotValue) int {
+		return cmp.Compare(strings.ToLower(x.Value), strings.ToLower(y.Value))
+	})
+
+	return out[:min(len(out), channelLimit)]
+}
+
+func (i *Instance) channelNames(ctx context.Context) ([]string, error) {
+	ctx, cancel := context.WithTimeout(ctx, channelWait)
+	defer cancel()
+
+	if ok, err := i.Guide.Available(ctx); err != nil || !ok {
+		return nil, err
+	}
+
+	return i.Guide.Names(ctx)
 }
 
 func (a *App) roomValues(ctx context.Context) ([]skillmodel.SlotValue, error) {

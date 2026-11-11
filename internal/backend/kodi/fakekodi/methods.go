@@ -33,6 +33,7 @@ func (s *Server) registerDefaults() {
 
 	s.registerPlayer()
 	s.registerControl()
+	s.registerPVR()
 
 	s.handlers["VideoLibrary.GetMovies"] = listOf(s, "movies", func(l *Library) []Movie { return l.Movies }, nil)
 	s.handlers["VideoLibrary.GetTVShows"] = listOf(s, "tvshows", func(l *Library) []TVShow { return l.TVShows }, nil)

@@ -350,6 +350,10 @@ func describe(msg Message, key string, c Choice) Message {
 func (s *Service) playDoc(ctx context.Context, t Target, doc match.Doc, progress Progress) Outcome {
 	ref := doc.Ref
 
+	if ref.Kind == media.KindChannel {
+		return s.tune(ctx, t, media.Channel{ID: ref.ID, Name: doc.Title}, progress)
+	}
+
 	if ref.Kind == media.KindTVShow {
 		var ep media.Item
 

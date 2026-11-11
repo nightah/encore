@@ -67,6 +67,16 @@ LIBRARY_TYPE:
     séries
     télé
     de films
+LIVETV_VIEW:
+  channels: |-
+    chaînes
+    liste des chaînes
+    chaînes en direct
+  guide: |-
+    guide
+    guide des programmes
+    programme
+    programmes
 MATCH_CHOICE:
   film: |-
     film

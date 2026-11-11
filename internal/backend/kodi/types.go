@@ -329,3 +329,30 @@ type smartPlaylistRule struct {
 	Operator string   `json:"operator"`
 	Value    []string `json:"value"`
 }
+
+type pvrChannels struct {
+	Channels []pvrChannel `json:"channels"`
+}
+
+type pvrChannel struct {
+	ChannelID        int           `json:"channelid"`
+	Channel          string        `json:"channel"`
+	ChannelNumber    int           `json:"channelnumber"`
+	SubChannelNumber int           `json:"subchannelnumber"`
+	ClientID         int           `json:"clientid"`
+	Hidden           bool          `json:"hidden"`
+	Locked           bool          `json:"locked"`
+	Now              *pvrBroadcast `json:"broadcastnow"`
+	Next             *pvrBroadcast `json:"broadcastnext"`
+}
+
+type pvrBroadcast struct {
+	Title       string    `json:"title"`
+	EpisodeName string    `json:"episodename"`
+	Genre       flexGenre `json:"genre"`
+	StartTime   string    `json:"starttime"`
+	EndTime     string    `json:"endtime"`
+}
+
+// A genre Kodi sends as a list or a string; a list is joined with " / ", as Kodi shows it.
+type flexGenre string

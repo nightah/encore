@@ -51,6 +51,9 @@ extend-exclude = [
   "go.mod",
   # Speech-recognition test data spells titles the way Alexa mishears them.
   "internal/core/match/testdata/",
+  # A Kodi instance's channel names as its IPTV sources spell them ("Channel News Asia (CNA)").
+  "internal/core/livetv/testdata/",
+  "testdata/nlu/channels/",
   # Random words that pin the phonetic encoders' codes.
   "internal/fuzzy/phonetic/*/testdata/",
   # Double Metaphone's rules match letter sequences ("PN", "ALLE"), not words.

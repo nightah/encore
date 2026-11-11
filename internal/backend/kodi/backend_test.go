@@ -673,6 +673,20 @@ func TestNowPlayingOutsideTheLibrary(t *testing.T) {
 	playing(t, b)
 
 	s.Handle("Player.GetItem", func(json.RawMessage) (any, *fakekodi.Error) {
+		return json.RawMessage(`{"item":{"type":"unknown","id":42,"label":"trailer.mkv","duration":0,"runtime":60}}`), nil
+	})
+
+	np, err := b.NowPlaying(t.Context())
+	require.NoError(t, err)
+	require.NotNil(t, np)
+	assert.Equal(t, media.Item{Title: "trailer.mkv", Runtime: time.Minute}, np.Item, "no kind and no ID for a file outside the library")
+}
+
+func TestNowPlayingChannel(t *testing.T) {
+	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+	playing(t, b)
+
+	s.Handle("Player.GetItem", func(json.RawMessage) (any, *fakekodi.Error) {
 		return json.RawMessage(`{"item":{"type":"channel","id":42,"label":"ABC News","duration":0,"runtime":1800}}`), nil
 	})
 	s.Handle("Player.GetProperties", func(json.RawMessage) (any, *fakekodi.Error) {
@@ -683,7 +697,7 @@ func TestNowPlayingOutsideTheLibrary(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, np)
 
-	assert.Equal(t, media.Item{Title: "ABC News", Runtime: 30 * time.Minute}, np.Item, "no kind and no ID for something outside the library")
+	assert.Equal(t, media.Item{Kind: media.KindChannel, ID: 42, Title: "ABC News", Runtime: 30 * time.Minute}, np.Item, "a TV channel keeps its channel ID")
 	assert.Equal(t, 5*time.Minute, np.Position)
 	assert.Equal(t, 30*time.Minute, np.Duration, "without a total time the runtime is the duration")
 	assert.False(t, np.Paused)

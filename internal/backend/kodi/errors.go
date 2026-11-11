@@ -3,6 +3,7 @@ package kodi
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/nightah/encore/internal/backend/kodi/kodirpc"
 	"github.com/nightah/encore/internal/core/media"
@@ -54,6 +55,8 @@ func (e *RPCError) Is(target error) bool {
 		return e.Code == CodeNotFound || e.Code == CodeInvalidParams && itemLookups[e.Method]
 	case media.ErrUnavailable:
 		return e.Code == CodeUnavailable
+	case media.ErrNoLiveTV:
+		return e.Code == CodeFailedToExecute && strings.HasPrefix(e.Method, "PVR.")
 	}
 
 	return false

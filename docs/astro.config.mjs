@@ -110,6 +110,7 @@ export default defineConfig({
             "guides/deploy-skill",
             "guides/kodi",
             "guides/search",
+            "guides/live-tv",
             "guides/echo-devices",
             "guides/shared-libraries",
             "guides/matching",

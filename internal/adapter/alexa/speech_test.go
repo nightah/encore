@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"pgregory.net/rapid"
 
+	"github.com/nightah/encore/i18n"
 	"github.com/nightah/encore/internal/core/actions"
 	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/skillmodel"
@@ -194,4 +195,53 @@ func TestAnswersAndLastShowFallBackToTheFallbackLocale(t *testing.T) {
 	assert.Equal(t, "AMAZON.YesIntent", name)
 	assert.True(t, s.MeansLastShow("xx-XX", "the last show"))
 	assert.False(t, s.MeansLastShow("xx-XX", "frasier"))
+}
+
+func TestRenderDropsAStopAfterANameEndingInOne(t *testing.T) {
+	src, err := skillmodel.Load(i18n.FS)
+	require.NoError(t, err)
+
+	s, err := NewSpeech(src, slog.New(slog.DiscardHandler))
+	require.NoError(t, err)
+
+	switching := func(channel string) actions.Message {
+		return actions.Message{ID: "livetv.switching", Params: map[string]string{"channel": channel}}
+	}
+
+	assert.Equal(t, "Switching to 9Go!", s.Render("en-AU", switching("9Go!")), "not 9Go!.")
+	assert.Equal(t, "Switching to Who's Line?", s.Render("en-AU", switching("Who's Line?")))
+	assert.Equal(t, "Switching to Seven.", s.Render("en-AU", switching("Seven")))
+	assert.Equal(t, "Switching to Racing.com.", s.Render("en-AU", switching("Racing.com")), "a dot inside a name isn't the end of it")
+	assert.Equal(t, "9Go!に切り替えます。", s.Render("ja-JP", switching("9Go!")), "only a stop straight after the name goes")
+	assert.Equal(t, "Switching to 9Go! for Hot Seat!", s.Render("en-AU", actions.Message{ID: "livetv.switching_programme", Params: map[string]string{"channel": "9Go!", "title": "Hot Seat!"}}))
+}
+
+func TestWithoutLeadIn(t *testing.T) {
+	src, err := skillmodel.Load(i18n.FS)
+	require.NoError(t, err)
+
+	s, err := NewSpeech(src, slog.New(slog.DiscardHandler))
+	require.NoError(t, err)
+
+	movie := func(name, value string, more ...Slot) Intent {
+		slots := map[string]Slot{"Movie": {Name: "Movie", Value: value}}
+		for _, sl := range more {
+			slots[sl.Name] = sl
+		}
+
+		return Intent{Name: name, Slots: slots}
+	}
+
+	assert.Equal(t, []Intent{movie("WatchMovie", "الرسالة")}, s.WithoutLeadIn("ar-SA", movie("WatchMovie", "اشوف فيلم الرسالة")), "the end of ابغى اشوف فيلم {Movie}")
+	assert.Equal(t, []Intent{movie("WatchMovie", "dune")}, s.WithoutLeadIn("en-AU", movie("WatchMovie", "The Movie dune")), "ignoring case")
+	assert.Equal(t, []Intent{movie("WatchMovie", "dune", Slot{Name: "Room", Value: "lounge"})}, s.WithoutLeadIn("en-AU", movie("WatchMovie", "movie dune", Slot{Name: "Room", Value: "lounge"})), "other slots are kept")
+	assert.Empty(t, s.WithoutLeadIn("en-AU", movie("WatchMovie", "dune")), "a title without a lead-in has no other reading")
+	assert.Empty(t, s.WithoutLeadIn("en-AU", movie("WatchMovie", "the movie")), "nor one that is all lead-in")
+	assert.Empty(t, s.WithoutLeadIn("en-AU", movie("WatchMovie", "")))
+	assert.Equal(t, s.WithoutLeadIn("en-US", movie("WatchMovie", "movie dune")), s.WithoutLeadIn("xx-XX", movie("WatchMovie", "movie dune")), "an unknown locale reads as the fallback")
+}
+
+func TestLeadInsRejectsABrokenPattern(t *testing.T) {
+	_, err := leadIns("en", map[string][]string{"WatchMovie": {"play (the {Movie}"}})
+	require.Error(t, err)
 }

@@ -142,6 +142,11 @@ Navigate:
 OpenFavourite:
   open_favourite: "(öffne|öffnen|zeige|zeig|starte|start) [den|meinen] favoriten {Favourite}"
   play_from_favourites: "(spiele|spiel|öffne|öffnen) {Favourite} aus [meinen] favoriten"
+OpenTVGuide:
+  open_guide: "(öffne|öffnen|zeige|zeig) [das|den|die|mein|meinen|meine] (fernsehprogramm|tv programm|programmführer|programmübersicht|epg)\n(geh|gehe) zum (fernsehprogramm|programmführer|epg)\n(geh|gehe) zur programmübersicht\n(fernsehprogramm|programmführer|programmübersicht|epg) (öffnen|anzeigen)"
+  open_tv_view: "(öffne|öffnen|zeige|zeig) [das|den|die|mein|meinen|meine] (tv|live tv) {LiveView}\n(geh|gehe) (zum|zur|zu den) (tv|live tv) {LiveView}\n(tv|live tv) {LiveView} (öffnen|anzeigen)\n(öffne|öffnen|zeige|zeig) [mir] [die|meine] {LiveView}"
+  show_me_guide: "(zeige|zeig) mir [das|den|die|mein|meinen|meine] (fernsehprogramm|tv programm|programmführer|programmübersicht|epg)\n(zeige|zeig) mir [das|den|die|mein|meinen|meine] (tv|live tv) {LiveView}"
+  whats_on_tv: "was (läuft|kommt) [heute|heute abend|gerade|jetzt] im (fernsehen|tv)"
 PartyMode:
   lets_party: "lass uns feiern\nzeit für (eine party|party)"
   play_all_music: "(spiele|spiel) (alle|zufällige|irgendwelche) musik [(im|in der) {Room}]\n(spiele|spiel) meine ganze musik [(im|in der) {Room}]"
@@ -282,6 +287,16 @@ VolumeUp:
   raise_volume: "(erhöhe|erhöh) die lautstärke"
   turn_up: "(dreh|drehe) die lautstärke (hoch|auf)"
   volume_up: "lautstärke (hoch|rauf)"
+WatchChannel:
+  change_channel: "(wechsle|wechsel) [den sender] (auf|zu) {Channel} [(im|in der) {Room}]\n(wechsle|wechsel) zum sender {Channel} [(im|in der) {Room}]"
+  go_to_channel: "(geh|gehe) zum sender {Channel} [(im|in der) {Room}]"
+  put_on_channel: "(mach|mache) den sender {Channel} an"
+  switch_to: "(schalte|schalt) [um] auf {Channel} [(im|in der) {Room}]\n(schalte|schalt) auf {Channel} um\nauf {Channel} umschalten"
+  tune_to: "(stell|stelle) auf {Channel} [(im|in der) {Room}]\n(stell|stelle) den sender {Channel} ein"
+  watch_channel: "(zeige|zeig) [mir] den sender {Channel} [(im|in der) {Room}]\nich (möchte|will) den sender {Channel} (sehen|schauen|gucken)"
+WatchChannelNumber:
+  channel_number: "(schalte|schalt|wechsle|wechsel|geh|gehe|stell|stelle) (auf|zu) (kanal|programm) [nummer] {ChannelNumber} [punkt {SubNumber}] [(im|in der) {Room}]\n(schalte|schalt|wechsle|wechsel|geh|gehe|stell|stelle) (auf|zu) sender nummer {ChannelNumber} [punkt {SubNumber}] [(im|in der) {Room}]"
+  put_on_number: "(mach|mache) (kanal|programm) [nummer] {ChannelNumber} [punkt {SubNumber}] an\nich (möchte|will) (kanal|programm) [nummer] {ChannelNumber} [punkt {SubNumber}] (sehen|schauen|gucken)"
 WatchEpisode:
   play_episode_season: "(spiele|spiel|zeige|zeig) [mir] {Show} (folge|episode) {Episode} (von|aus) staffel {Season}"
   play_episode_season_2: "(spiele|spiel|zeige|zeig) [mir] (folge|episode) {Episode} (der|von|aus) staffel {Season} von {Show}"
@@ -295,6 +310,8 @@ WatchLatestEpisode:
   play_latest: "(spiele|spiel|zeige|zeig) [mir] die (neueste|aktuellste) {Show} (folge|episode)"
   play_latest_episode: "(spiele|spiel|zeige|zeig|starte|start) [mir] die (neueste|aktuellste|letzte) (folge|episode) von {Show} [(im|in der) {Room}]"
   play_latest_episode_2: "(spiele|spiel|zeige|zeig) [mir] (neueste|aktuellste) (folge|episode) von {Show} [(im|in der) {Room}]"
+WatchLive:
+  watch_live: "ich (möchte|will) {Programme} live (sehen|schauen|gucken)\n(zeige|zeig) [mir] {Programme} live\n(mach|mache) {Programme} live an\n(schaue|schau|gucke|guck) {Programme} live\n(zeige|zeig) [mir] {Programme} im (fernsehen|live tv)"
 WatchMovie:
   i_want_watch: "ich (möchte|will) [den film] {Movie} (sehen|schauen|anschauen|gucken)"
   lets_watch: "lass uns [den film] {Movie} (schauen|anschauen|gucken)"
@@ -355,3 +372,5 @@ WhatsNew:
   whats_new: "was gibt es neues"
   whats_new_2: "was gibt es neues (bei|von) {Show}"
   whats_new_watch: "was gibt es neues zum (anschauen|hören|gucken)"
+WhatsOn:
+  whats_on: "was (läuft|kommt) [gerade|jetzt|im moment] (auf|bei) {Channel}\nwas (läuft|kommt) (auf|bei) {Channel} (gerade|jetzt|im moment)\nwas (läuft|kommt) [gerade|jetzt] auf dem sender {Channel}\nwas gibt es [gerade|jetzt] (auf|bei) {Channel}"

@@ -48,6 +48,12 @@ cases:
   - {utterance: "speel de muziekvideo van bohemian rhapsody", intent: WatchMusicVideo, slots: {MusicVideo: ""}}
   - {utterance: "speel een willekeurige komedie muziekvideo", intent: WatchRandomMusicVideo, slots: {Genre: ""}}
   - {utterance: "speel alle komedie muziekvideo's", intent: ShuffleMusicVideos, slots: {Genre: ""}}
+  - {utterance: "zap naar rtl vier", intent: WatchChannel, slots: {Channel: "rtl vier"}}
+  - {utterance: "ga naar kanaal nummer vierentwintig", intent: WatchChannelNumber, slots: {ChannelNumber: "24"}}
+  - {utterance: "open de tv gids", intent: OpenTVGuide}
+  - {utterance: "toon de tv zenders", intent: OpenTVGuide, slots: {LiveView: "channels"}}
+  - {utterance: "wat is er nu op npo een", intent: WhatsOn, slots: {Channel: "npo een"}, pending: "Amazon reads it as no intent while the model has only a few channels, as the NLU check's skill does; with a Kodi instance's channels it reads WhatsOn"}
+  - {utterance: "kijk live naar het voetbal", intent: WatchLive, slots: {Programme: ""}}
   - {utterance: "speel de muziekafspeellijst roadtrip", intent: PlayPlaylist, slots: {Playlist: ""}}
   - {utterance: "speel de roadtrip afspeellijst in willekeurige volgorde", intent: ShufflePlaylist, slots: {Playlist: ""}}
   - {utterance: "ik wil een tip voor een film", intent: Recommend, slots: {MediaType: "movie"}}

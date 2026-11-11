@@ -19,7 +19,7 @@ type Model struct {
 type Intent struct {
 	Name  string `yaml:"name"`
 	Slots []Slot `yaml:"slots"`
-	// Content is the group the intent belongs to (movies, tv or music); the skill can be built without a group's intents. Empty means the intent is always included.
+	// Content is the group the intent belongs to (movies, tv, music or livetv); the skill can be built without a group's intents. Empty means the intent is always included.
 	Content media.Content `yaml:"content"`
 }
 

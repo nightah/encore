@@ -151,6 +151,11 @@ Navigate:
 OpenFavourite:
   open_favourite: "(open|start|toon) [mijn] favoriet {Favourite}"
   play_from_favourites: "(speel|open) {Favourite} uit [mijn] favorieten"
+OpenTVGuide:
+  open_guide: "(toon|open) [de] (gids|tv gids|programmagids|e. p. g.)\nga naar [de] (gids|tv gids|programmagids|e. p. g.)"
+  open_tv_view: "(toon|open) [de|mijn] (tv|live tv) {LiveView}\nga naar [de|mijn] (tv|live tv) {LiveView}"
+  show_me_guide: "laat [me] [de] (gids|tv gids|programmagids) zien\nlaat [me] [de|mijn] (tv|live tv) {LiveView} zien"
+  whats_on_tv: "wat is er [vanavond] op (tv|televisie)\nwat komt er [vanavond] op (tv|televisie)"
 PartyMode:
   lets_party: "(laten we|tijd om te) feesten\ntijd voor een feestje"
   play_all_music: "(speel|draai|shuffle) (alle|willekeurige) muziek [(in de|in het|op de|op) {Room}]"
@@ -299,6 +304,16 @@ VolumeUp:
   raise_volume: "(verhoog|vergroot) het volume"
   turn_up: "zet het volume (hoger|harder)"
   volume_up: "volume (omhoog|hoger)"
+WatchChannel:
+  change_channel: "(verander|wissel) [het] kanaal naar {Channel} [(in de|in het|op de|op) {Room}]\nzet de tv op {Channel} [(in de|in het|op de|op) {Room}]"
+  go_to_channel: "ga naar (zender|kanaal) {Channel} [(in de|in het|op de|op) {Room}]"
+  put_on_channel: "zet (zender|kanaal) {Channel} op\nzet (de zender|het kanaal) {Channel} aan [(in de|in het|op de|op) {Room}]"
+  switch_to: "(schakel|zap|ga) over naar {Channel} [(in de|in het|op de|op) {Room}]\nzap naar {Channel} [(in de|in het|op de|op) {Room}]"
+  tune_to: "stem af op {Channel} [(in de|in het|op de|op) {Room}]"
+  watch_channel: "kijk naar (zender|kanaal) {Channel} [(in de|in het|op de|op) {Room}]\nik wil naar {Channel} kijken"
+WatchChannelNumber:
+  channel_number: "(ga|schakel|zap) naar kanaal nummer {ChannelNumber} [punt {SubNumber}] [(in de|in het|op de|op) {Room}]"
+  put_on_number: "zet kanaal nummer {ChannelNumber} [punt {SubNumber}] op\n(kies|kijk naar) kanaal nummer {ChannelNumber} [punt {SubNumber}]"
 WatchEpisode:
   play_episode_season: "(speel|start) {Show} aflevering {Episode} van seizoen {Season}\nzet {Show} aflevering {Episode} van seizoen {Season} op"
   play_episode_season_2: "(speel|start) aflevering {Episode} van seizoen {Season} van {Show}\nzet aflevering {Episode} van seizoen {Season} van {Show} op"
@@ -312,6 +327,8 @@ WatchLatestEpisode:
   play_latest: "(speel|start) de (nieuwste|laatste) {Show} aflevering"
   play_latest_episode: "(speel|start) de (nieuwste|laatste|meest recente) aflevering van {Show} [(in de|in het|op de|op) {Room}]\nzet de (nieuwste|laatste) aflevering van {Show} op [(in de|in het|op de) {Room}]"
   play_latest_episode_2: "ik wil de (nieuwste|laatste) aflevering van {Show} (kijken|zien)"
+WatchLive:
+  watch_live: "kijk live naar {Programme}\n(zoek|zap naar) {Programme} op live tv\nkijk {Programme} live\nzet {Programme} live op\nik wil {Programme} live (kijken|zien)"
 WatchMovie:
   i_want_watch: "ik wil [de film] {Movie} (kijken|zien)"
   lets_watch: "laten we [de film] {Movie} kijken"
@@ -373,3 +390,5 @@ WhatsNew:
   whats_new: "wat is er nieuw"
   whats_new_2: "wat is er nieuw (bij|van) {Show}"
   whats_new_watch: "wat is er nieuw om (te kijken|naar te luisteren)"
+WhatsOn:
+  whats_on: "wat is er op {Channel}\nwat is er op (zender|kanaal) {Channel}\nwat is er (nu|op dit moment) op {Channel}\nwat is er te zien op {Channel}\nwat komt er (nu|straks) op {Channel}"

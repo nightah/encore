@@ -251,6 +251,9 @@ func (m mapper) playing(v *kodirpc.ListItemAll) media.Item {
 		it.Kind = media.KindMusicVideo
 	case kodirpc.ListItemBaseTypeSong:
 		it.Kind = media.KindSong
+	case kodirpc.ListItemBaseTypeChannel:
+		// The ID is the channel's, and the title the programme on now.
+		it.Kind = media.KindChannel
 	default:
 		// Not a library item; an ID would be meaningless.
 		it.ID = 0

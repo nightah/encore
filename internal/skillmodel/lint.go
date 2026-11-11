@@ -220,7 +220,7 @@ func (l *linter) model() {
 		intents[in.Name] = true
 
 		if in.Content != "" && !slices.Contains(media.Contents, in.Content) {
-			l.add(Error, "", in.Name, "content %q is not one of movies, tv or music", in.Content)
+			l.add(Error, "", in.Name, "content %q is not one of movies, tv, music or livetv", in.Content)
 		}
 
 		slots := map[string]bool{}

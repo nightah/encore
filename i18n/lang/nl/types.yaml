@@ -77,6 +77,15 @@ LIBRARY_TYPE:
     films
     series
     videobibliotheek
+LIVETV_VIEW:
+  channels: |-
+    zenders
+    zenderlijst
+    kanalen
+    kanalenlijst
+  guide: |-
+    gids
+    programmagids
 MATCH_CHOICE:
   film: |-
     film

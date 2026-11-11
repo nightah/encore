@@ -48,6 +48,12 @@ cases:
   - {utterance: "شغلي كليب تملي معاك", intent: WatchMusicVideo, slots: {MusicVideo: ""}}
   - {utterance: "شغلي كليب أكشن عشوائي", intent: WatchRandomMusicVideo, slots: {Genre: ""}}
   - {utterance: "شغلي كل الكليبات أكشن عشوائي", intent: ShuffleMusicVideos, slots: {Genre: ""}}
+  - {utterance: "حولي على ام بي سي", intent: WatchChannel, slots: {Channel: "ام بي سي"}, pending: "Amazon reads it as no intent while the model has only a few channels, as the NLU check's skill does; with a Kodi instance's channels it reads WatchChannel"}
+  - {utterance: "حولي على القناة رقم اربعة وعشرين", intent: WatchChannelNumber, slots: {ChannelNumber: "24"}}
+  - {utterance: "افتحي دليل التلفزيون", intent: OpenTVGuide, slots: {LiveView: "guide"}}
+  - {utterance: "اعرضي قنوات التلفزيون", intent: OpenTVGuide, slots: {LiveView: "channels"}}
+  - {utterance: "وش على العربية", intent: WhatsOn, slots: {Channel: "العربية"}}
+  - {utterance: "شغلي مباراة الهلال مباشر", intent: WatchLive, slots: {Programme: ""}}
   - {utterance: "شغلي قائمة الأغاني رحلة", intent: PlayPlaylist, slots: {Playlist: ""}}
   - {utterance: "شغلي قائمة التشغيل رحلة عشوائي", intent: ShufflePlaylist, slots: {Playlist: ""}}
   - {utterance: "ابغى اقتراح فيلم", intent: Recommend, slots: {MediaType: "movie"}, pending: "Amazon's reading changes with unrelated changes to the model"}

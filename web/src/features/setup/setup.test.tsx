@@ -1377,7 +1377,7 @@ describe("setup deploy step", () => {
 
   it.each([
     ["locales", "body.locales_enabled", "choose at least one locale"],
-    ["content", "body.content", "choose at least one of movies, tv or music"],
+    ["content", "body.content", "choose at least one of movies, tv, music or livetv"],
   ])("puts a rejected %s choice under it", async (_name, location, message) => {
     startAt(5);
     server.use(http.put("*/api/v1/skill/settings", () => problem422([{ location, message }], "validation failed")));

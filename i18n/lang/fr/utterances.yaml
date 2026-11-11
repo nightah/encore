@@ -139,6 +139,11 @@ Navigate:
 OpenFavourite:
   open_favourite: "(ouvre|ouvrir|affiche|afficher|lance|lancer|démarre|démarrer) [mon|le] favori {Favourite}"
   play_from_favourites: "(mets|mettre|ouvre|ouvrir|lance|lancer) {Favourite} (depuis|dans) (mes|les) favoris"
+OpenTVGuide:
+  open_guide: "(ouvre|ouvrir|affiche|afficher) (le guide télé|le guide tv|le guide des programmes|le programme télé|le programme tv)\n(va|aller) sur (le guide télé|le guide tv|le guide des programmes|le programme télé|le programme tv)"
+  open_tv_view: "(ouvre|ouvrir|affiche|afficher) [le|la|les|mon|ma|mes] {LiveView} (télé|tv|de la télé)\n(va|aller) sur [le|la|les|mon|ma|mes] {LiveView} (télé|tv|de la télé)"
+  show_me_guide: "(montre|montre-moi|montrer) (le guide télé|le guide tv|le guide des programmes|le programme télé|le programme tv)\n(montre|montre-moi|montrer) [le|la|les|mon|ma|mes] {LiveView} (télé|tv|de la télé)"
+  whats_on_tv: "qu'est-ce qu'il y a à la télé [ce soir]\nqu'est-ce qui passe à la télé [ce soir|en ce moment]\nil y a quoi à la télé [ce soir]"
 PartyMode:
   lets_party: "(c'est l'heure de|on va) faire la fête"
   play_all_music: "(mets|mettre|joue|jouer|lance|lancer|mélange|mélanger) toute la musique [(dans le|dans la|au|à la) {Room}]\n(mets|mettre|joue|jouer|lance|lancer) (de la musique au hasard|n'importe quelle musique) [(dans le|dans la|au|à la) {Room}]"
@@ -276,6 +281,15 @@ VolumeUp:
   make_it_louder: "(mets|mettre) plus fort\nc'est trop bas"
   turn_up: "(monte|monter|augmente|augmenter) le (volume|son)"
   volume_up: "volume plus fort"
+WatchChannel:
+  change_channel: "(change|changer) (de chaîne|la chaîne) pour {Channel} [(dans le|dans la|au|à la) {Room}]"
+  go_to_channel: "(va|aller) sur la chaîne {Channel} [(dans le|dans la|au|à la) {Room}]"
+  put_on_channel: "(mets|mettre) la chaîne {Channel} [(dans le|dans la|au|à la) {Room}]\n(mets|mettre) la télé sur la chaîne {Channel} [(dans le|dans la|au|à la) {Room}]"
+  switch_to: "(passe|passer|zappe|zapper|bascule|basculer) sur [la chaîne] {Channel} [(dans le|dans la|au|à la) {Room}]"
+  watch_channel: "(regarde|regarder) la chaîne {Channel} [(dans le|dans la|au|à la) {Room}]\non regarde la chaîne {Channel}\nje (veux|voudrais) regarder la chaîne {Channel}"
+WatchChannelNumber:
+  channel_number: "(passe|passer|va|aller|zappe|zapper) sur la chaîne numéro {ChannelNumber} [(point|virgule) {SubNumber}] [(dans le|dans la|au|à la) {Room}]"
+  put_on_number: "(mets|mettre|regarde|regarder) la chaîne numéro {ChannelNumber} [(point|virgule) {SubNumber}]"
 WatchEpisode:
   play_episode_season: "(mets|mettre|lance|lancer) {Show} épisode {Episode} saison {Season}"
   play_episode_season_2: "(mets|mettre|lance|lancer|joue|jouer|passe|passer) l'épisode {Episode} de la saison {Season} de {Show} [(dans le|dans la|au|à la) {Room}]"
@@ -289,6 +303,8 @@ WatchLatestEpisode:
   play_latest: "(mets|mettre|lance|lancer) le dernier {Show}"
   play_latest_episode: "(mets|mettre|lance|lancer|joue|jouer|passe|passer) le (dernier|nouvel) épisode de {Show} [(dans le|dans la|au|à la) {Room}]"
   play_latest_episode_2: "(mets|mettre|lance|lancer|joue|jouer|passe|passer) l'épisode le plus récent de {Show} [(dans le|dans la|au|à la) {Room}]"
+WatchLive:
+  watch_live: "(mets|mettre|regarde|regarder) {Programme} en direct\nje (veux|voudrais) (regarder|voir) {Programme} en direct"
 WatchMovie:
   i_want_watch: "je (veux|voudrais) (regarder|voir) [le film] {Movie}"
   lets_watch: "on (regarde|va regarder) [le film] {Movie}\n(regardons|regarder) le film {Movie}"
@@ -347,3 +363,5 @@ WhatsNew:
   whats_new: "quoi de neuf\nqu'est-ce qu'il y a de nouveau [à (regarder|écouter)]"
   whats_new_2: "quoi de neuf (dans|sur|pour) {Show}"
   whats_new_watch: "quoi de neuf à (regarder|écouter)"
+WhatsOn:
+  whats_on: "qu'est-ce qui passe sur [la chaîne] {Channel} [en ce moment|maintenant]\nqu'est-ce qu'il y a sur [la chaîne] {Channel} [en ce moment|maintenant]\nil y a quoi sur {Channel} [en ce moment|maintenant]"

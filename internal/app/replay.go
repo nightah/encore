@@ -211,6 +211,12 @@ func (b dryBackend) ShowView(_ context.Context, v media.View) error {
 	return nil
 }
 
+func (b dryBackend) PlayChannel(_ context.Context, id int) error {
+	b.run.record("Player.Open", map[string]any{"channelid": id})
+
+	return nil
+}
+
 func (b dryBackend) OpenFavourite(_ context.Context, f media.Favourite) error {
 	b.run.record("Favourites.Open", map[string]any{"title": f.Title})
 

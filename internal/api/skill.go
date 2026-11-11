@@ -577,7 +577,7 @@ func (a *API) registerSkill(api huma.API) {
 	huma.Register(api, protected(huma.Operation{OperationID: "updateSkillContent", Method: http.MethodPut, Path: Prefix + "/skill/content", Tags: []string{"skill"}, Summary: "Change what the skill plays", Description: "Saves alexa.content alone, as the setup wizard does before the first Kodi is added, so its first library sync fetches only what the skill plays. Applies on the next deploy for the skill model, at once for library syncs."}),
 		func(ctx context.Context, in *struct {
 			Body struct {
-				Content []string `json:"content" minItems:"1" enum:"movies,tv,music" doc:"What the skill can play; music includes music videos"`
+				Content []string `json:"content" minItems:"1" enum:"movies,tv,music,livetv" doc:"What the skill can play; music includes music videos, and livetv is Kodi's live TV channels"`
 			}
 		},
 		) (*body[SkillInfo], error) {
@@ -693,7 +693,7 @@ func (s *skillService) saveSettings(ctx context.Context, in SkillSettingsInput) 
 
 	content := orderContent(in.Content)
 	if in.Content != nil && len(content) == 0 {
-		return fieldError("body.content", "choose at least one of movies, tv or music", nil)
+		return fieldError("body.content", "choose at least one of movies, tv, music or livetv", nil)
 	}
 
 	ep := in.Endpoint

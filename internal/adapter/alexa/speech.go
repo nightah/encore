@@ -32,6 +32,7 @@ func NewSpeech(src *skillmodel.Sources, log *slog.Logger) (*Speech, error) {
 		slotIDs:     map[string]map[string]map[string]string{},
 		roomPhrases: map[string][]roomPhrase{},
 		roomTitles:  map[string]map[string][]string{},
+		leadIns:     map[string]map[string]map[string][][]string{},
 		queryForms:  map[string][]queryForm{},
 		bareSlots:   map[string][]bareSlot{},
 		generic:     map[string]map[string]bool{},
@@ -68,6 +69,10 @@ func NewSpeech(src *skillmodel.Sources, log *slog.Logger) (*Speech, error) {
 		}
 
 		s.roomTitles[locale] = roomTitles(utterances)
+
+		if s.leadIns[locale], err = leadIns(s.languages[locale], utterances); err != nil {
+			return nil, fmt.Errorf("locale %s: %w", locale, err)
+		}
 
 		if s.queryForms[locale], err = languageQueryForms(s.languages[locale], src.Model, utterances); err != nil {
 			return nil, fmt.Errorf("locale %s: %w", locale, err)
@@ -261,31 +266,58 @@ func (s *Speech) Render(locale string, msg actions.Message) string {
 
 	lang := s.languages[locale]
 
-	return placeholder.ReplaceAllStringFunc(text, func(m string) string {
-		name := m[1 : len(m)-1]
+	var out strings.Builder
 
-		if d, ok := msg.Durations[name]; ok {
-			return spokenDuration(lang, d)
+	last := 0
+
+	for _, m := range placeholder.FindAllStringSubmatchIndex(text, -1) {
+		out.WriteString(text[last:m[0]])
+		last = m[1]
+
+		v := s.value(locale, lang, msg, text[m[2]:m[3]])
+		out.WriteString(v)
+
+		// A name ending a sentence itself, as 9Go! or "Who's Line?" do, takes the place of the stop after it.
+		if r, size := utf8.DecodeRuneInString(text[last:]); strings.ContainsRune(sentenceStops, r) && endsSentence(v) {
+			last += size
 		}
+	}
 
-		if t, ok := msg.Times[name]; ok {
-			return spokenTime(locale, lang, t)
-		}
+	out.WriteString(text[last:])
 
-		if code, ok := msg.Languages[name]; ok {
-			return languageName(locale, code)
-		}
+	return out.String()
+}
 
-		if list, ok := msg.Lists[name]; ok {
-			return spokenList(lang, list)
-		}
+// endsSentence reports whether v ends with a mark that ends a sentence.
+func endsSentence(v string) bool {
+	r, _ := utf8.DecodeLastRuneInString(v)
 
-		if sub, ok := msg.Messages[name]; ok {
-			return s.Render(locale, sub)
-		}
+	return r != utf8.RuneError && strings.ContainsRune(sentenceEnds, r)
+}
 
-		return msg.Params[name]
-	})
+// value is what placeholder name says in msg.
+func (s *Speech) value(locale, lang string, msg actions.Message, name string) string {
+	if d, ok := msg.Durations[name]; ok {
+		return spokenDuration(lang, d)
+	}
+
+	if t, ok := msg.Times[name]; ok {
+		return spokenTime(locale, lang, t)
+	}
+
+	if code, ok := msg.Languages[name]; ok {
+		return languageName(locale, code)
+	}
+
+	if list, ok := msg.Lists[name]; ok {
+		return spokenList(lang, list)
+	}
+
+	if sub, ok := msg.Messages[name]; ok {
+		return s.Render(locale, sub)
+	}
+
+	return msg.Params[name]
 }
 
 // SlotID returns the ID of a custom slot type's value or synonym as heard in locale, or "" when it isn't one. Values without an ID are their own ID.
@@ -767,6 +799,90 @@ func roomTitles(utterances map[string][]string) map[string][]string {
 	}
 
 	return out
+}
+
+// WithoutLeadIn reads intent with each slot's value less the words one of its samples says just before the slot, when Alexa has put the end of them into the value: ar-SA "ابغى اشوف فيلم الرسالة" can come as WatchMovie with the Movie "اشوف فيلم الرسالة", though "ابغى اشوف فيلم {Movie}" is its own sample. The caller tries these readings only once the request as heard found nothing, so a title that starts with such words is still found as it is.
+func (s *Speech) WithoutLeadIn(locale string, intent Intent) []Intent {
+	slots, ok := s.leadIns[locale]
+	if !ok {
+		locale, slots = fallbackLocale, s.leadIns[fallbackLocale]
+	}
+
+	lang := s.languages[locale]
+
+	var out []Intent
+
+	seen := map[string]bool{}
+
+	for _, name := range slices.Sorted(maps.Keys(slots[intent.Name])) {
+		words := units(lang, strings.TrimSpace(intent.Slots[name].Value))
+
+		for _, lead := range slots[intent.Name][name] {
+			// The longest end of the lead-in the value starts with, leaving a title.
+			for n := min(len(lead), len(words)-1); n > 0; n-- {
+				if !wordsFold(words[:n], lead[len(lead)-n:]) {
+					continue
+				}
+
+				value := joinUnits(lang, words[n:])
+				if key := name + "\x00" + value; !seen[key] {
+					seen[key] = true
+
+					slots := maps.Clone(intent.Slots)
+					slots[name] = Slot{Name: name, Value: value}
+					out = append(out, Intent{Name: intent.Name, Slots: slots})
+				}
+
+				break
+			}
+		}
+	}
+
+	return out
+}
+
+// leadIns collects, for each intent's slots, the words its samples say just before each one, back to the start or the slot before. A room is left out: a title is never heard in one.
+func leadIns(lang string, utterances map[string][]string) (map[string]map[string][][]string, error) {
+	out := map[string]map[string][][]string{}
+
+	for intent, patterns := range utterances {
+		seen := map[string]bool{}
+
+		for _, pattern := range patterns {
+			samples, err := skillmodel.Expand(pattern)
+			if err != nil {
+				return nil, fmt.Errorf("%s: %w", intent, err)
+			}
+
+			for _, sample := range samples {
+				from := 0
+
+				for _, m := range placeholder.FindAllStringSubmatchIndex(sample, -1) {
+					name, lead := sample[m[2]:m[3]], units(lang, sample[from:m[0]])
+					from = m[1]
+
+					if name == "Room" || len(lead) == 0 || seen[name+"\x00"+strings.Join(lead, " ")] {
+						continue
+					}
+
+					seen[name+"\x00"+strings.Join(lead, " ")] = true
+
+					if out[intent] == nil {
+						out[intent] = map[string][][]string{}
+					}
+
+					out[intent][name] = append(out[intent][name], lead)
+				}
+			}
+		}
+	}
+
+	return out, nil
+}
+
+// wordsFold reports whether two runs of words are the same, ignoring case.
+func wordsFold(a, b []string) bool {
+	return slices.EqualFunc(a, b, strings.EqualFold)
 }
 
 // expandOrEmpty is Expand, with nothing at all expanding to the empty phrase.

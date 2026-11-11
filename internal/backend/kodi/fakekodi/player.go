@@ -118,6 +118,10 @@ func (s *Server) resolve(ref *itemRef) ([]Item, bool) {
 		label := ref.File[strings.LastIndex(ref.File, "/")+1:]
 
 		return []Item{{Type: "unknown", Label: label, File: ref.File}}, true
+	case ref.ChannelID != 0:
+		if c, ok := s.channel(ref.ChannelID); ok {
+			return []Item{channelItem(&c)}, true
+		}
 	case ref.PlaylistID != nil:
 		items := s.state.playlists[*ref.PlaylistID]
 

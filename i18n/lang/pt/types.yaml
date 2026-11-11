@@ -66,6 +66,17 @@ LIBRARY_TYPE:
     filmes
     séries
     tv
+LIVETV_VIEW:
+  channels: |-
+    canais
+    lista de canais
+    guia de canais
+  guide: |-
+    guia
+    guia de programação
+    programação
+    grade de programação
+    grade
 MATCH_CHOICE:
   film: |-
     filme

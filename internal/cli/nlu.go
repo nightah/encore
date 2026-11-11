@@ -6,10 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"log/slog"
 	"maps"
 	"net/http"
 	"os"
+	"path"
 	"slices"
 	"strings"
 	"time"
@@ -19,6 +21,7 @@ import (
 
 	"github.com/nightah/encore/i18n"
 	"github.com/nightah/encore/internal/adapter/alexa"
+	"github.com/nightah/encore/internal/core/livetv"
 	"github.com/nightah/encore/internal/skillmodel"
 	"github.com/nightah/encore/internal/smapi"
 	"github.com/nightah/encore/internal/smapi/deploy"
@@ -170,6 +173,11 @@ func rereader(speech *alexa.Speech) func(locale string, heard nlu.Reading) []nlu
 		out := []nlu.Reading{readingOf(in, "")}
 
 		if in.Name != "PlayMedia" {
+			// As the handler does once the request as heard finds nothing.
+			for _, in := range speech.WithoutLeadIn(locale, in) {
+				out = append(out, readingOf(in, ""))
+			}
+
 			return out
 		}
 
@@ -410,6 +418,11 @@ func newGenDeployCommand() *cobra.Command {
 				return err
 			}
 
+			channels, err := standInChannels(os.DirFS(dir))
+			if err != nil {
+				return err
+			}
+
 			c, skill, err := sf.client()
 			if err != nil {
 				return err
@@ -424,7 +437,7 @@ func newGenDeployCommand() *cobra.Command {
 				return err
 			}
 
-			values := standInLibrary(src, fixtures)
+			values := standInLibrary(src, fixtures, channels)
 
 			if from := cmp.Or(library, os.Getenv(envLibrarySkill)); from != "" {
 				if values, err = withLibrary(cmd.Context(), c, from, locales, values, cmd.ErrOrStderr()); err != nil {
@@ -486,7 +499,7 @@ func newGenDeployCommand() *cobra.Command {
 }
 
 // standInLibrary returns, for each fixture's locale, the values its rows give slots of the standInTypes, as a library with those titles would supply them.
-func standInLibrary(src *skillmodel.Sources, fixtures []nlu.Fixture) map[string]map[string][]skillmodel.SlotValue {
+func standInLibrary(src *skillmodel.Sources, fixtures []nlu.Fixture, channels map[string][]string) map[string]map[string][]skillmodel.SlotValue {
 	types := map[string]map[string]string{}
 
 	for _, in := range src.Model.Intents {
@@ -512,9 +525,35 @@ func standInLibrary(src *skillmodel.Sources, fixtures []nlu.Fixture) map[string]
 			}
 		}
 
+		// A Kodi instance's channels, as many as a real live TV setup has, in place of the few the fixtures name.
+		lang := src.Locales[f.Locale].Language
+		for _, name := range channels[lang] {
+			if !slices.ContainsFunc(values[channelType], func(v skillmodel.SlotValue) bool { return strings.EqualFold(v.Value, name) }) {
+				values[channelType] = append(values[channelType], skillmodel.SlotValue{Value: name})
+			}
+		}
+
 		if len(values) > 0 {
-			for _, vs := range values {
+			// A skill with a library has far more of its own channels, playlists and music videos than the fixtures name, and Alexa weighs a type with two or three values too lightly, so the examples they replace stay.
+			examples := src.Languages[src.Locales[f.Locale].Language].Examples
+
+			for typ, vs := range values {
+				for _, ex := range examples[typ] {
+					if !slices.ContainsFunc(vs, func(v skillmodel.SlotValue) bool { return strings.EqualFold(v.Value, ex.Value) }) {
+						vs = append(vs, skillmodel.SlotValue{Value: ex.Value})
+					}
+				}
+
 				slices.SortFunc(vs, func(a, b skillmodel.SlotValue) int { return strings.Compare(a.Value, b.Value) })
+
+				// Spoken as the skill Encore deploys gives a channel, so Alexa knows "nine go" for 9Go!.
+				if typ == channelType {
+					for i := range vs {
+						vs[i].Synonyms = livetv.Aliases(lang, vs[i].Value)
+					}
+				}
+
+				values[typ] = vs
 			}
 
 			out[f.Locale] = values
@@ -522,6 +561,31 @@ func standInLibrary(src *skillmodel.Sources, fixtures []nlu.Fixture) map[string]
 	}
 
 	return out
+}
+
+// standInChannels reads channels/<language>.txt from the fixtures, one channel's name a line, for gen deploy to stand in for a Kodi instance's channels. A language without a file has none.
+func standInChannels(fsys fs.FS) (map[string][]string, error) {
+	// Glob fails only on a malformed pattern, and this one is fixed.
+	names, _ := fs.Glob(fsys, "channels/*.txt")
+
+	out := map[string][]string{}
+
+	for _, name := range names {
+		b, err := fs.ReadFile(fsys, name)
+		if err != nil {
+			return nil, err
+		}
+
+		lang := strings.TrimSuffix(path.Base(name), ".txt")
+
+		for line := range strings.Lines(string(b)) {
+			if line = strings.TrimSpace(line); line != "" {
+				out[lang] = append(out[lang], line)
+			}
+		}
+	}
+
+	return out, nil
 }
 
 // withLibrary adds to values, for each of locales, the standInTypes values in the development model of the skill from, which it only reads. A locale from has no model for keeps values' own; a title already there by value or synonym, ignoring case, isn't added twice.

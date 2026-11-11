@@ -1,6 +1,6 @@
 # Language-neutral interaction model: intents, their slots and custom slot types. Utterances, responses and the words of custom slot types live under lang/<language>/.
 #
-# Intents tagged with content (movies, tv or music; music takes music videos along) are left out of skills deployed without that group. Untagged intents, such as playback control and "play X", are always included.
+# Intents tagged with content (movies, tv, music or livetv; music takes music videos along) are left out of skills deployed without that group. Untagged intents, such as playback control and "play X", are always included.
 #
 # Kanzi's near-duplicate intents are merged into slot-parameterised ones (PlayerSeek, Navigate, ViewLibrary, Recommend, Power...). Intents that start playback take an optional Room slot: "... in the bedroom" plays on that room's Kodi instance.
 intents:
@@ -195,6 +195,32 @@ intents:
       - {name: Artist, type: AMAZON.Musician}
       - {name: Room, type: KODI_ROOM}
 
+  # Live TV: Kodi's TV channels and guide, from a PVR client. Channels are found by name first, so "switch to seven" is the channel named Seven; "channel number 7" goes by number.
+  - name: WatchChannel
+    content: livetv
+    slots:
+      - {name: Channel, type: KODI_CHANNEL}
+      - {name: Room, type: KODI_ROOM}
+  - name: WatchChannelNumber
+    content: livetv
+    slots:
+      - {name: ChannelNumber, type: AMAZON.NUMBER}
+      - {name: SubNumber, type: AMAZON.NUMBER}
+      - {name: Room, type: KODI_ROOM}
+  - name: OpenTVGuide
+    content: livetv
+    slots:
+      - {name: LiveView, type: LIVETV_VIEW}
+  - name: WhatsOn
+    content: livetv
+    slots:
+      - {name: Channel, type: KODI_CHANNEL}
+  # "Watch the cricket live": a programme on now. A SearchQuery slot can't have a Room beside it.
+  - name: WatchLive
+    content: livetv
+    slots:
+      - {name: Programme, type: AMAZON.SearchQuery}
+
   # Playlists, including smart playlists.
   - name: PlayPlaylist
     slots:
@@ -336,6 +362,8 @@ types:
   - {name: MEDIA_GENRE, dynamic: true}
   # Music video titles come from the library at deploy time; Amazon has no built-in music video type outside a few English locales.
   - {name: KODI_MUSIC_VIDEO, dynamic: true}
+  # Channel names come from the Kodi instances' live TV at deploy time.
+  - {name: KODI_CHANNEL, dynamic: true}
   - name: MEDIA_TYPE
   - name: MATCH_CHOICE
   - name: ORDINAL
@@ -352,3 +380,4 @@ types:
   - name: STREAM_STEP
   - name: POWER_ACTION
   - name: TRANSPORT_COMMAND
+  - name: LIVETV_VIEW

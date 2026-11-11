@@ -48,6 +48,12 @@ cases:
   - {utterance: "म्यूज़िक वीडियो तुम ही हो चलाओ", intent: WatchMusicVideo, slots: {MusicVideo: ""}}
   - {utterance: "कोई रैंडम एक्शन म्यूज़िक वीडियो चलाओ", intent: WatchRandomMusicVideo, slots: {Genre: ""}}
   - {utterance: "सारे मेरे एक्शन म्यूज़िक वीडियो शफ़ल करो", intent: ShuffleMusicVideos, slots: {Genre: ""}}
+  - {utterance: "स्टार प्लस पर स्विच करो", intent: WatchChannel, slots: {Channel: "स्टार प्लस"}}
+  - {utterance: "चैनल नंबर चौबीस लगाओ", intent: WatchChannelNumber, slots: {ChannelNumber: "24"}}
+  - {utterance: "टीवी गाइड खोलो", intent: OpenTVGuide}
+  - {utterance: "टीवी चैनल दिखाओ", intent: OpenTVGuide, slots: {LiveView: "channels"}}
+  - {utterance: "कलर्स पर क्या चल रहा है", intent: WhatsOn, slots: {Channel: "कलर्स"}}
+  - {utterance: "क्रिकेट लाइव दिखाओ", intent: WatchLive, slots: {Programme: ""}}
   - {utterance: "म्यूज़िक प्लेलिस्ट सफ़र चलाओ", intent: PlayPlaylist, slots: {Playlist: ""}}
   - {utterance: "मेरी सफ़र प्लेलिस्ट शफ़ल में चलाओ", intent: ShufflePlaylist, slots: {Playlist: ""}}
   - {utterance: "मुझे कोई फ़िल्म सुझाओ", intent: Recommend, slots: {MediaType: "movie"}}
