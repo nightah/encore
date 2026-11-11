@@ -19,3 +19,6 @@ var errNoTimestamp = errors.New("alexa: request carries no timestamp")
 
 // errUnconfirmed means the verifier can't check a request as of the time it was sent.
 var errUnconfirmed = errors.New("alexa: verifier can't check a request as sent")
+
+// ErrSessionError is why the request log counts a session Alexa ended with reason ERROR, such as for a response it couldn't use, as an error.
+var ErrSessionError = errors.New("alexa: Alexa ended the session with an error")

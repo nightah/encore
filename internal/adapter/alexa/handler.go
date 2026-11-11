@@ -70,7 +70,15 @@ func (h *Handler) ServeBody(w http.ResponseWriter, r *http.Request, body []byte)
 		h.Recorder.Record(r.Context(), entry)
 	}
 
-	if entry.Err != nil {
+	switch {
+	case errors.Is(entry.Err, ErrSessionError):
+		var detail ErrorDetail
+		if env.Request.Error != nil {
+			detail = *env.Request.Error
+		}
+
+		h.Log.WarnContext(r.Context(), "Alexa ended the session with an error", "error_type", detail.Type, "message", detail.Message)
+	case entry.Err != nil:
 		h.Log.WarnContext(r.Context(), "action failed", "intent", entry.Intent, "target", entry.Target, "error", entry.Err)
 	}
 
@@ -609,18 +617,23 @@ func slotValues(slots map[string]Slot) map[string]string {
 	return out
 }
 
-// sessionEnded notes why Alexa ended a session, for the request log: an answer it couldn't match to any intent never reaches Encore, and shows only as a session that ended after the question was asked again (EXCEEDED_MAX_REPROMPTS).
+// sessionEnded notes why Alexa ended a session, for the request log: an answer it couldn't match to any intent never reaches Encore, and shows only as a session that ended after the question was asked again (EXCEEDED_MAX_REPROMPTS). A session Alexa ended with an error, such as for a response it couldn't use, is logged as one.
 func sessionEnded(r Request) *actions.Outcome {
 	if r.Reason == "" {
 		return nil
 	}
 
-	note := "session ended: " + r.Reason
+	o := &actions.Outcome{Note: "session ended: " + r.Reason}
+
 	if r.Error != nil {
-		note += " (" + r.Error.Type + ": " + r.Error.Message + ")"
+		o.Note += " (" + r.Error.Type + ": " + r.Error.Message + ")"
 	}
 
-	return &actions.Outcome{Note: note}
+	if r.Reason == sessionEndedError {
+		o.Err = ErrSessionError
+	}
+
+	return o
 }
 
 func describeOutcome(o actions.Outcome) string {

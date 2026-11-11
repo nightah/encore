@@ -125,3 +125,6 @@ var searchIntents = map[string]bool{globalSearchIntent: true, "SearchMovies": tr
 
 // titleSlots are the slots that hold a title said to a title intent, which a question's answer may arrive in.
 var titleSlots = []string{"Movie", "Show", "Query"}
+
+// sessionEndedError is the reason Alexa gives for a session it ended with an error.
+const sessionEndedError = "ERROR"
