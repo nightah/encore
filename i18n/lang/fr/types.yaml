@@ -68,6 +68,8 @@ LIBRARY_TYPE:
     télé
     de films
 MATCH_CHOICE:
+  film: |-
+    film
   first: |-
     premier
     première
@@ -101,6 +103,9 @@ MATCH_CHOICE:
     seconde
     autre
     l'autre
+  show: |-
+    série
+    émission
 MEDIA_TYPE:
   album: |-
     album
