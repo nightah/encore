@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/nightah/encore/internal/buildinfo"
@@ -66,13 +67,19 @@ func (s *Server) Run(ctx context.Context) error {
 
 // Serve serves on ln until ctx is cancelled.
 func (s *Server) Serve(ctx context.Context, ln net.Listener) error {
+	// A graceful shutdown waits for requests to finish, and an event stream finishes only when its request does: end the streams as shutdown starts, so it doesn't wait out its timeout whenever the web interface is open.
+	streams, endStreams := context.WithCancel(context.WithoutCancel(ctx))
+	defer endStreams()
+
 	srv := &http.Server{
-		Handler:           s.handler,
+		Handler:           endStreamsOnShutdown(streams, s.handler),
 		ReadHeaderTimeout: 10 * time.Second,
 		ReadTimeout:       30 * time.Second,
 		IdleTimeout:       2 * time.Minute,
 		ErrorLog:          slog.NewLogLogger(s.log.Handler(), slog.LevelWarn),
 	}
+
+	srv.RegisterOnShutdown(endStreams)
 
 	errc := make(chan error, 1)
 
@@ -99,6 +106,25 @@ func (s *Server) Serve(ctx context.Context, ln net.Listener) error {
 	}
 
 	return nil
+}
+
+// endStreamsOnShutdown ends each event stream's request when streams ends; ordinary requests are left to finish.
+func endStreamsOnShutdown(streams context.Context, h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.Contains(r.Header.Get("Accept"), eventStream) {
+			h.ServeHTTP(w, r)
+
+			return
+		}
+
+		ctx, cancel := context.WithCancel(r.Context())
+		defer cancel()
+
+		stop := context.AfterFunc(streams, cancel)
+		defer stop()
+
+		h.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
 
 func handleHealthz(w http.ResponseWriter, _ *http.Request) {

@@ -11,6 +11,7 @@ import { type Plugin, defineConfig } from "vite";
 
 // Relative, unlike the rest of the code: Vite loads this file before its aliases exist. The extension is for Vite's native config loader.
 import { baseUIEntries } from "./src/dev/baseUI.ts";
+import { quietProxyRefusals } from "./src/dev/proxyLog.ts";
 import { testDeps } from "./src/dev/testDeps.ts";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
@@ -54,6 +55,8 @@ export default defineConfig(({ mode }) => ({
     tailwindcss(),
     keepGitkeep(),
     mode === "mock" ? mockServiceWorker() : null,
+    // While air restarts the Go server, the proxy's refused requests are reported once, not each with a stack trace. Vitest has no proxy.
+    mode === "test" ? null : quietProxyRefusals(apiTarget),
   ],
   resolve: { tsconfigPaths: true },
   server: {

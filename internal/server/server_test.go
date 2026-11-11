@@ -208,6 +208,100 @@ func TestServeShutsDownOnCancel(t *testing.T) {
 	assert.NoError(t, <-done)
 }
 
+// TestServeEndsEventStreamsOnShutdown checks that shutting down ends the web interface's event streams, which last until their request ends, while an ordinary request in flight still finishes. A graceful shutdown that waited for the streams ran out its whole timeout whenever a browser was open, and air, which waits five seconds, started the next Encore before this one let go of the data directory. A browser's EventSource asks for the stream alone; other clients may list it among other types.
+func TestServeEndsEventStreamsOnShutdown(t *testing.T) {
+	for _, accept := range []string{"text/event-stream", "text/html;q=0.9, text/event-stream"} {
+		t.Run(accept, func(t *testing.T) { testServeEndsEventStreams(t, accept) })
+	}
+}
+
+func testServeEndsEventStreams(t *testing.T, accept string) {
+	t.Helper()
+
+	streaming, ended := make(chan struct{}), make(chan struct{})
+	slowStarted, release := make(chan struct{}), make(chan struct{})
+
+	// The slow request is released once, in the test or, should it fail first, in its cleanup, so the server never waits on it forever.
+	var once sync.Once
+
+	releaseSlow := func() { once.Do(func() { close(release) }) }
+	t.Cleanup(releaseSlow)
+
+	api := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/v1/events" {
+			w.WriteHeader(http.StatusOK)
+			http.NewResponseController(w).Flush()
+			close(streaming)
+			<-r.Context().Done()
+			close(ended)
+
+			return
+		}
+
+		close(slowStarted)
+		<-release
+		w.WriteHeader(http.StatusNoContent)
+	})
+
+	srv, err := New(config.Server{Address: "127.0.0.1:0", BasePath: "/"}, slog.New(slog.DiscardHandler), Deps{API: api})
+	require.NoError(t, err)
+
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	require.NoError(t, err)
+
+	ctx, cancel := context.WithCancel(t.Context())
+	done := make(chan error, 1)
+
+	go func() { done <- srv.Serve(ctx, ln) }()
+
+	base := "http://" + ln.Addr().String() + "/api/v1/"
+
+	stream, err := http.NewRequestWithContext(t.Context(), http.MethodGet, base+"events", http.NoBody)
+	require.NoError(t, err)
+	stream.Header.Set("Accept", accept)
+
+	resp, err := http.DefaultClient.Do(stream)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = resp.Body.Close() })
+	<-streaming
+
+	slow := make(chan int, 1)
+
+	go func() {
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, base+"slow", http.NoBody)
+		if err != nil {
+			slow <- 0
+
+			return
+		}
+
+		r, err := http.DefaultClient.Do(req)
+		if err != nil {
+			slow <- 0
+
+			return
+		}
+
+		_ = r.Body.Close()
+		slow <- r.StatusCode
+	}()
+	<-slowStarted
+
+	cancel()
+	releaseSlow()
+
+	assert.Equal(t, http.StatusNoContent, <-slow, "the ordinary request finishes")
+
+	// Waiting for the stream would run the graceful shutdown out of time, and Serve would say so.
+	require.NoError(t, <-done)
+
+	select {
+	case <-ended:
+	default:
+		t.Fatal("the event stream outlived the server")
+	}
+}
+
 func TestAPIDocs(t *testing.T) {
 	h := newTestServer(t, config.Server{BasePath: "/"}, Deps{})
 
