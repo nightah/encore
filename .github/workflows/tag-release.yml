@@ -63,6 +63,7 @@ jobs:
         with:
           egress-policy: audit
 
+      # GitHub treats a new ref as a workflow change when the tagged commit's .github/workflows differs from main's, as it does once anything touching workflows merges after the release commit, and refuses it without the workflows permission.
       - name: App token
         id: app
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
@@ -70,6 +71,7 @@ jobs:
           client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
           permission-contents: write
+          permission-workflows: write
 
       - name: Push the tag
         env:
