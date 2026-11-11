@@ -224,6 +224,13 @@
       "hint": "O máximo de itens que uma reprodução aleatória ou fila toca de uma vez, o que mantém bibliotecas grandes ágeis",
       "title": "Limite da fila"
     },
+    "search_mode": {
+      "global_search": "Global Search",
+      "hint": "O que “procure…” abre no Kodi. A biblioteca mostra os filmes, séries, videoclipes, artistas ou álbuns correspondentes na visualização de biblioteca do próprio Kodi, sem precisar de complementos. O Global Search e a busca própria da skin mostram a biblioteca quando não conseguem funcionar. Uma instância pode mudar isso.",
+      "library": "Mostrar na biblioteca",
+      "skin": "A busca própria da skin",
+      "title": "Busca"
+    },
     "shutdown_quits": {
       "hint": "Em vez de desligar o dispositivo",
       "title": "“Desligar” sai do Kodi"
