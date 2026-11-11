@@ -91,6 +91,8 @@ cases:
   - {utterance: "はいお願いします", intent: AMAZON.YesIntent}
   - {utterance: "いいえ結構です", intent: AMAZON.NoIntent}
   - {utterance: "古い方です", intent: ChooseMatch, slots: {Which: "older"}}
+  - {utterance: "2001年の千と千尋の神隠しです", intent: ChooseMatch, slots: {Answer: "千と千尋の神隠し", Year: "2001"}, pending: "Amazon fills no Year from {Year}年 typed in"}
+  - {utterance: "1984年の方", intent: ChooseMatch, slots: {Year: "1984"}, pending: "Amazon fills no Year from {Year}年 typed in"}
   # Bare titles, which free-text and title slots compete for.
   - {utterance: "鬼滅の刃を再生して", intent: PlayMedia, slots: {Query: "鬼滅の刃"}}
   - {utterance: "鬼滅の刃をかけてください", intent: PlayMedia, slots: {Query: "鬼滅の刃"}}

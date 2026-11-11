@@ -69,18 +69,53 @@ func (s *Service) Choose(ctx context.Context, t Target, a Answer, pending, more 
 		return s.playChoice(ctx, t, c, progress)
 	}
 
-	if a.Which != "" || a.Title == "" {
+	all := append(slices.Clone(pending), more...)
+
+	switch {
+	case a.Which != "", a.Title == "" && a.Year == 0:
+		return Outcome{Say: say("match.which_one", nil), AskAgain: true}
+	case a.Title == "":
+		if c, ok := fromYear(all, a.Year); ok {
+			return s.playChoice(ctx, t, c, progress)
+		}
+
 		return Outcome{Say: say("match.which_one", nil), AskAgain: true}
 	}
 
-	switch named := titled(t.language(), a.Title, append(slices.Clone(pending), more...)); len(named) {
+	title := a.Title
+	if a.Year > 0 {
+		title += " " + strconv.Itoa(a.Year)
+	}
+
+	switch named := titled(t.language(), title, all); len(named) {
 	case 0:
-		return s.PlayTitle(ctx, t, TitleRequest{Query: a.Title, Kinds: kindsOf(pending), Pending: pending}, progress)
+		if c, ok := yearTitle(title, all); ok {
+			return s.playChoice(ctx, t, c, progress)
+		}
+
+		return s.PlayTitle(ctx, t, TitleRequest{Query: title, Kinds: kindsOf(all), Pending: pending}, progress)
 	case 1:
 		return s.playChoice(ctx, t, named[0], progress)
 	default:
 		return Outcome{Say: say("match.which_one", nil), AskAgain: true}
 	}
+}
+
+// fromYear returns the only choice released in year; with none or several, the answer chooses nothing.
+func fromYear(choices []Choice, year int) (Choice, bool) {
+	var found []Choice
+
+	for _, c := range choices {
+		if c.Year == year {
+			found = append(found, c)
+		}
+	}
+
+	if len(found) != 1 {
+		return Choice{}, false
+	}
+
+	return found[0], true
 }
 
 // ofKind returns the only choice offered of kind; with none or several, the answer chooses nothing.
@@ -146,17 +181,57 @@ func byYear(offered []Choice, newest bool) (Choice, bool) {
 
 // titled returns the choices called title, with or without their year ("dune 2021").
 func titled(lang, title string, choices []Choice) []Choice {
-	heard := match.Normalize(lang, title)
-
-	var out []Choice
+	var out, literal []Choice
 
 	for _, c := range choices {
-		if heard == match.Normalize(lang, c.Title) || c.Year > 0 && heard == match.Normalize(lang, c.Title+" "+strconv.Itoa(c.Year)) {
+		same, lit := match.SameTitle(lang, title, c.Title, c.Year)
+		if same {
 			out = append(out, c)
+		}
+
+		if lit {
+			literal = append(literal, c)
 		}
 	}
 
+	// An article said picks the titles that start with it, as the matcher does: "the odyssey" is The Odyssey, not Odyssey.
+	if len(literal) > 0 {
+		return literal
+	}
+
 	return out
+}
+
+// AnswerTitle plays the one choice of a "did you mean" question that title names, as Choose does for an answer, and reports whether one did. It lets an answer Amazon sent as another intent, such as "the odyssey from 2026" as the next episode of a show, answer the question.
+func (s *Service) AnswerTitle(ctx context.Context, t Target, title string, pending, more []Choice, progress Progress) (Outcome, bool) {
+	if len(pending) == 0 || title == "" {
+		return Outcome{}, false
+	}
+
+	all := append(slices.Clone(pending), more...)
+
+	named := titled(t.language(), title, all)
+	if len(named) == 0 {
+		if c, ok := yearTitle(title, all); ok {
+			return s.playChoice(ctx, t, c, progress), true
+		}
+	}
+
+	if len(named) != 1 {
+		return Outcome{}, false
+	}
+
+	return s.playChoice(ctx, t, named[0], progress), true
+}
+
+// yearTitle returns the only choice from the year a title made only of one names ("1984" for "die uit 1984", which Amazon heard as a film called 1984). Callers try it once no choice has that title, so a film called 1984 still wins.
+func yearTitle(title string, choices []Choice) (Choice, bool) {
+	y, err := strconv.Atoi(strings.TrimSpace(title))
+	if err != nil || y < minYear || y > maxYear {
+		return Choice{}, false
+	}
+
+	return fromYear(choices, y)
 }
 
 func kindsOf(choices []Choice) []media.Kind {

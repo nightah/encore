@@ -91,6 +91,8 @@ cases:
   - {utterance: "ايوه", intent: AMAZON.YesIntent}
   - {utterance: "لا شكرا", intent: AMAZON.NoIntent}
   - {utterance: "قصدي الأقدم", intent: ChooseMatch, slots: {Which: "older"}}
+  - {utterance: "قصدي الرسالة لعام 1976", intent: ChooseMatch, slots: {Answer: "الرسالة", Year: "1976"}}
+  - {utterance: "اللي لعام 1984", intent: ChooseMatch, slots: {Year: "1984"}}
   # Bare titles, which free-text and title slots compete for.
   - {utterance: "شغلي باب الحارة", intent: PlayMedia, slots: {Query: "باب الحارة"}}
   - {utterance: "حطي باب الحارة", intent: PlayMedia, slots: {Query: "باب الحارة"}}

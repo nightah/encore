@@ -518,6 +518,7 @@ func TestShippedChoiceAnswerIsElicited(t *testing.T) {
 		assert.Equal(t, []DialogSlot{
 			{Name: "Which", Type: "MATCH_CHOICE", Prompts: map[string]string{}},
 			{Name: "Answer", Type: "AMAZON.Movie", Prompts: map[string]string{}},
+			{Name: "Year", Type: "AMAZON.NUMBER", Prompts: map[string]string{}},
 		}, di.Slots, locale)
 	}
 }

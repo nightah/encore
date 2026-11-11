@@ -183,9 +183,10 @@ func english() *language {
 				"eightieth": 80, "ninetieth": 90, "hundredth": 100,
 			},
 		}.build(),
-		conj:     set("and"),
-		parts:    set("part", "chapter", "volume", "vol"),
-		phonetic: phoneticKeysOf(en.Encoder{}),
+		conj:      set("and"),
+		parts:     set("part", "chapter", "volume", "vol"),
+		yearJoins: set("from"),
+		phonetic:  phoneticKeysOf(en.Encoder{}),
 	}
 }
 
@@ -229,6 +230,7 @@ func german() *language {
 		unitsFirst: true,
 		conj:       set("und"),
 		parts:      set("teil", "kapitel"),
+		yearJoins:  set("von", "aus"),
 		phonetic:   germanKeys(de.Encoder{}),
 	}
 }
@@ -263,6 +265,7 @@ func french() *language {
 		}.build(),
 		conj:           set("et"),
 		parts:          set("partie", "chapitre", "volume"),
+		yearJoins:      set("de", "du"),
 		phonetic:       phoneticKeysOf(fr.Encoder{}),
 		soundAlikeLead: true,
 	}
@@ -317,6 +320,7 @@ func spanish() *language {
 		letterWords: set("de", "te", "ese", "ve"),
 		conj:        set("y"),
 		parts:       set("parte", "capitulo", "volumen", "vol"), //nolint:misspell // Spanish for "chapter".
+		yearJoins:   set("de", "del"),
 		phonetic:    phoneticKeysOf(es.Encoder{}),
 	}
 }
@@ -370,10 +374,11 @@ func italian() *language {
 				"non": 9, "decim": 10,
 			}, "o", "a"),
 		}.build(),
-		fused:    true,
-		elided:   elided,
-		conj:     set("e"),
-		parts:    set("parte", "capitolo"),
-		phonetic: phoneticKeysOf(en.Encoder{}),
+		fused:     true,
+		elided:    elided,
+		conj:      set("e"),
+		parts:     set("parte", "capitolo"),
+		yearJoins: set("del", "dal"),
+		phonetic:  phoneticKeysOf(en.Encoder{}),
 	}
 }

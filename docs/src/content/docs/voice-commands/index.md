@@ -28,7 +28,7 @@ Commands that start playback accept a room at the end: "play Dune in the bedroom
 
 Ask for an episode of a show by where it falls, or by its number:
 
-- "play the next episode of Bluey" plays the first one you haven't watched ("play Bluey from where I left off" too)
+- "play the next episode of Bluey" plays the first one you haven't watched ("play Bluey from where I left off" too). When no show has the name, a film that does plays instead, as Alexa sometimes sends a film here ("play the odyssey from 2026")
 - "play the first episode of Bluey" or "play Bluey from the start"
 - "play the latest episode of Bluey" ("newest", "most recent" and "last" work too)
 - "play a random episode of Bluey"
@@ -57,7 +57,8 @@ When two titles are close, Alexa asks which one you meant, naming each with its 
 
 - "the first one", "the second one" or "the last one" picks by position
 - "the newer one" or "the older one" picks by release year
-- the title on its own, such as "Dune Part Two", picks it; a title that isn't one of the choices is searched for instead
+- the year, as Alexa named it, picks the title from that year: "the one from 2021", or with the title, "Dune from 2021" or "I mean Dune from 2021"
+- the title on its own, such as "Dune Part Two", picks it, among the choices offered and the close matches not offered yet; a title that isn't one of them is searched for instead. An article picks the title that starts with it ("the odyssey" is *The Odyssey*, not *Odyssey*), and a year may follow the title ("the odyssey from 2026"). Alexa sometimes hears an answer as another command, such as "the odyssey from 2026" as the next episode of a show, or "odyssey from 2005" as a seek to minute 2005; when the title or year names one of the choices, it still answers the question, and a seek heard while a question waits never moves the video
 - "no" offers the next closest matches, two at a time, until there are none left
 - "yes" plays the title when Alexa offered only one, and asks again when it offered two
 

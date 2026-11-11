@@ -480,3 +480,50 @@ func TestTokenizeScripts(t *testing.T) {
 		})
 	}
 }
+
+func TestSameTitle(t *testing.T) {
+	for _, tc := range []struct {
+		heard, title  string
+		year          int
+		same, literal bool
+	}{
+		{"the odyssey", "The Odyssey", 2026, true, true},
+		{"the odyssey", "Odyssey", 2005, true, false},
+		{"odyssey", "The Odyssey", 2026, true, false},
+		{"the odyssey 2026", "The Odyssey", 2026, true, true},
+		{"the odyssey from 2026", "The Odyssey", 2026, true, true},
+		{"the odyssey from 2026", "Odyssey", 2005, false, false},
+		{"odyssey from 2005", "Odyssey", 2005, true, false},
+		{"the odyssey from 2026", "The Odyssey", 0, false, false},
+		{"", "The Odyssey", 2026, false, false},
+	} {
+		same, literal := SameTitle("en", tc.heard, tc.title, tc.year)
+		assert.Equal(t, tc.same, same, "%q / %q", tc.heard, tc.title)
+		assert.Equal(t, tc.literal, literal, "%q / %q", tc.heard, tc.title)
+	}
+}
+
+// TestSameTitleYearJoins checks each language's word between a title and its year, as its question says it, when Amazon leaves the year in the title ("ik bedoel dune uit 2021" heard as the answer "dune uit 2021").
+func TestSameTitleYearJoins(t *testing.T) {
+	for _, tc := range []struct{ lang, heard string }{
+		{"de", "dune von 2021"},
+		{"de", "dune aus 2021"},
+		{"fr", "dune de 2021"},
+		{"es", "dune de 2021"},
+		{"it", "dune del 2021"},
+		{"nl", "dune uit 2021"},
+		{"pt", "dune de 2021"},
+		{"ar", "دون لعام 2021"},
+	} {
+		title := "Dune"
+		if tc.lang == "ar" {
+			title = "دون"
+		}
+
+		same, _ := SameTitle(tc.lang, tc.heard, title, 2021)
+		assert.True(t, same, "%s %q", tc.lang, tc.heard)
+	}
+
+	same, _ := SameTitle("nl", "dune uit 2021", "Dune", 1984)
+	assert.False(t, same, "another year is another title")
+}

@@ -68,6 +68,7 @@ func arabic() *language {
 		unitsFirst:  true,
 		conj:        romanizeSet("و", "and"),
 		parts:       romanizeSet("جز", "موسم", "فصل", "مجلد", "بارت", "part", "chapter", "volume", "vol"),
+		yearJoins:   romanizeSet("لعام", "عام", "سنة"),
 		phonetic:    phoneticKeysOf(ar.Encoder{}),
 	}
 }

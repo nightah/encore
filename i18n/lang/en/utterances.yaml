@@ -50,12 +50,17 @@ BingeShow:
   start_binge_mode: "(start|turn on) binge mode (for|on) {Show} [(in the|on the|in|on) {Room}]"
 ChooseMatch:
   meant_answer: "i (meant|mean|want|said) {Answer}"
+  meant_answer_year: "i (meant|mean|want|said) {Answer} from {Year}"
   meant_which: "i (meant|mean|want) the {Which} [one]"
+  meant_year: "i (meant|mean|want) the one from {Year}"
   the_which: "the {Which} [one|film|movie|show|series]"
+  the_year: "the one from {Year}\nthe {Year} one"
   which_please: "the {Which} one please"
 ChooseMatch.Answer:
   answer: "{Answer}\n{Answer} please"
+  answer_year: "{Answer} from {Year}\n{Answer} {Year}"
   which: "{Which} [one]"
+  year: "from {Year}\n{Year}"
 CleanLibrary:
   clean_library: "clean [up] [the|my] library"
   clean_library_2: "clean [up] [the|my] {Library} library"

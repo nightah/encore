@@ -91,6 +91,8 @@ cases:
   - {utterance: "sì grazie", intent: AMAZON.YesIntent}
   - {utterance: "no grazie", intent: AMAZON.NoIntent}
   - {utterance: "intendevo il più vecchio", intent: ChooseMatch, slots: {Which: "older"}}
+  - {utterance: "intendevo dune del 2021", intent: ChooseMatch, slots: {Answer: "dune", Year: "2021"}}
+  - {utterance: "quello del 1984", intent: ChooseMatch, slots: {Year: "1984"}}
   - {utterance: "intendevo l'altro", intent: ChooseMatch, slots: {Which: "second"}}
   # Bare titles, which free-text and title slots compete for.
   - {utterance: "riproduci gomorra", intent: PlayMedia, slots: {Query: "gomorra"}}

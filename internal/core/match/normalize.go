@@ -1,6 +1,7 @@
 package match
 
 import (
+	"slices"
 	"strconv"
 	"strings"
 	"unicode"
@@ -23,18 +24,28 @@ func (l *language) normalize(s string, aggressive bool) []string {
 
 // normalizeSpelled also returns the tokens before numbers were rewritten, joined without spaces, so compounds such as "Zweiohrküken" still meet "zwei ohr küken".
 func (l *language) normalizeSpelled(s string, aggressive bool) (toks []string, spelled string) {
+	toks, spelled, _ = l.normalizeArticle(s, aggressive)
+
+	return toks, spelled
+}
+
+// normalizeArticle also returns the leading articles normalizing removed, joined with spaces, so two titles that differ only in one ("The Odyssey" / "Odyssey") can still be told apart.
+func (l *language) normalizeArticle(s string, aggressive bool) (toks []string, spelled, article string) {
 	toks = joinLetters(l.spellLetters(l.scriptWords(l.tokenize(s))))
 
 	// Articles go first so a numeral straight after one ("The II") isn't taken as following a word.
-	for len(toks) > 1 && l.articles[toks[0]] {
-		toks = toks[1:]
+	n := 0
+	for len(toks) > n+1 && l.articles[toks[n]] {
+		n++
 	}
+
+	article, toks = strings.Join(toks[:n], " "), toks[n:]
 
 	spelled = strings.Join(toks, "")
 	toks = romans(toks, aggressive)
 	toks = l.numbers(toks)
 
-	return l.dropParts(toks), spelled
+	return l.dropParts(toks), spelled, article
 }
 
 func (l *language) tokenize(s string) []string {
@@ -452,6 +463,27 @@ func (l *language) dropParts(toks []string) []string {
 	}
 
 	return out
+}
+
+// SameTitle reports whether heard names title, as the matcher would match them exactly: normalized alike, or alike once a year after the title ("the odyssey 2026", "the odyssey from 2026") is taken as year. literal also reports that heard starts with an article and title starts with the same one ("the odyssey" / "The Odyssey", not "Odyssey").
+func SameTitle(lang, heard, title string, year int) (same, literal bool) {
+	l := languageFor(lang)
+
+	h, _, ha := l.normalizeArticle(heard, false)
+	n, _, ta := l.normalizeArticle(title, false)
+
+	if len(h) == 0 {
+		return false, false
+	}
+
+	same = slices.Equal(h, n)
+	if !same && year > 0 {
+		if yq := yearQuery(l, &form{toks: h}); yq != nil && yq.year == year {
+			same = slices.Equal(yq.rest.toks, n)
+		}
+	}
+
+	return same, same && ha != "" && ha == ta
 }
 
 // StopWord reports whether word is one of the language's articles or stop words, such as "the", "of" or Japanese "の", which a title search treats as filler.

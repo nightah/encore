@@ -119,3 +119,12 @@ var kindSearches = map[media.Kind]string{
 	media.KindArtist: "SearchMusic",
 	media.KindAlbum:  "SearchMusic",
 }
+
+// searchIntents are the searches, which search even while a question waits, though their Query is a title slot.
+var searchIntents = map[string]bool{globalSearchIntent: true, "SearchMovies": true, "SearchTVShows": true, "SearchMusic": true}
+
+// titleSlots are the slots that hold a title said to a title intent, which a question's answer may arrive in.
+var titleSlots = []string{"Movie", "Show", "Query"}
+
+// sessionEndedError is the reason Alexa gives for a session it ended with an error.
+const sessionEndedError = "ERROR"

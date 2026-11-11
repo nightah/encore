@@ -36,6 +36,35 @@ func (h *Handler) dispatch(ctx context.Context, env *RequestEnvelope, t actions.
 		}
 	}
 
+	if len(pending) > 0 && intent.Name != chooseIntent {
+		var more []actions.Choice
+		if followup != nil {
+			more = followup.More
+		}
+
+		// While a question waits, a seek to a minute is an answer Amazon misheard ("i mean odyssey from 2005" as minute 2005): the year picks a choice, or the question is asked again, and the playhead stays.
+		if m, ok := sl.number("Minute"); ok && intent.Name == "PlayerSeekTo" {
+			return svc.Choose(ctx, t, actions.Answer{Year: m}, pending, more, progress)
+		}
+
+		// Amazon sends an answer as whichever intent its words come closest to ("the odyssey from 2026" as the next episode of a show, "la de 1984" as the next film in a collection called 1984), so a title slot that names one of the question's choices, or only its year, answers it. A search still searches.
+		for _, name := range titleSlots {
+			if searchIntents[intent.Name] {
+				break
+			}
+
+			if sl.value(name) == "" {
+				continue
+			}
+
+			if o, ok := svc.AnswerTitle(ctx, t, sl.title(name, nil, pending).Query, pending, more, progress); ok {
+				return o
+			}
+
+			break
+		}
+	}
+
 	if c := h.IntentContent[intent.Name]; c != "" && slices.Contains(t.Disabled, c) {
 		return actions.ContentDisabled()
 	}
@@ -53,6 +82,10 @@ func (h *Handler) dispatch(ctx context.Context, env *RequestEnvelope, t actions.
 		return svc.Recommend(ctx, t, *followup.Recommend, pending)
 	case chooseIntent:
 		answer := actions.Answer{Which: sl.id("Which", "MATCH_CHOICE"), Title: sl.value("Answer")}
+		if y, ok := sl.number("Year"); ok {
+			answer.Year = y
+		}
+
 		if followup != nil && followup.Search != nil {
 			return svc.ChooseSearch(ctx, t, answer, pending, *followup.Search)
 		}
@@ -68,7 +101,17 @@ func (h *Handler) dispatch(ctx context.Context, env *RequestEnvelope, t actions.
 	case "WatchMovie":
 		return h.playTitle(ctx, locale, t, sl.title("Movie", []media.Kind{media.KindMovie}, pending), false, progress)
 	case "WatchNextEpisode":
-		return h.playTitle(ctx, locale, t, sl.title("Show", []media.Kind{media.KindTVShow}, pending), false, progress)
+		req := sl.title("Show", []media.Kind{media.KindTVShow}, pending)
+
+		o := h.playTitle(ctx, locale, t, req, false, progress)
+		// Amazon sends a film here when its words come close to a sample ("play the odyssey from 2026" for "play {Show} from where i left off"): a title no show has is tried as a film.
+		if o.Missed() && t.Allows(media.KindMovie) {
+			if film := svc.PlayTitle(ctx, t, actions.TitleRequest{Query: req.Query, Kinds: []media.Kind{media.KindMovie}, Pending: req.Pending}, progress); !film.Missed() {
+				return film
+			}
+		}
+
+		return o
 	case "PlayMedia":
 		// Without deep search, a title of unsaid kind is a film or a show.
 		kinds := []media.Kind{media.KindMovie, media.KindTVShow}

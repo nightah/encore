@@ -48,12 +48,17 @@ BingeShow:
   start_binge_mode: "[{Room}で]{Show}の一気見モードを(開始して|オンにして|始めて)[ください]"
 ChooseMatch:
   meant_answer: "{Answer}(です|のことです|でお願い|でお願いします)"
+  meant_answer_year: "{Year}年の{Answer}(です|のことです|でお願い|でお願いします)"
   meant_which: "{Which}(です|のことです)"
+  meant_year: "{Year}年の(方|ほう|やつ)(です|のことです|でお願いします)"
   the_which: "{Which}で"
+  the_year: "{Year}年の(方|ほう|やつ)"
   which_please: "{Which}で(お願い|お願いします)\n{Which}にして[ください]"
 ChooseMatch.Answer:
   answer: "{Answer}\n{Answer}の方\n{Answer}のほう"
+  answer_year: "{Year}年の{Answer}\n{Answer}の{Year}年(の方|のほう)"
   which: "{Which}"
+  year: "{Year}年\n{Year}年の"
 CleanLibrary:
   clean_library: "ライブラリを(クリーンアップして|整理して|掃除して)[ください]"
   clean_library_2: "{Library}ライブラリを(クリーンアップして|整理して|掃除して)[ください]"

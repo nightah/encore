@@ -313,6 +313,8 @@ type trigramSlot struct {
 type scored struct {
 	score float64
 	exact bool
+	// literal is set on an exact match that starts with the articles the query starts with ("the odyssey" / "The Odyssey", not "Odyssey"). A query without an article sets it on nothing: the recogniser may have missed one.
+	literal bool
 	// soundAlike is set when the alias won on sound alone: the strings sound identical but their text is not close enough to score as well.
 	soundAlike bool
 	// numbersDiffer is set when the query carries a number and the alias does not carry the same ones ("crocodile dundee 2" against "Crocodile Dundee"): a missing sequel, which may be asked about but never played. A title's own number the query leaves out ("star wars a new hope") does not count.
@@ -336,6 +338,8 @@ type form struct {
 	spelled string
 	// digits are the number tokens concatenated in order ("blink 1 82" -> "182"), which must agree before two forms count as the same title.
 	digits string
+	// article is the leading articles normalizing removed ("the" for "The Odyssey"), which break a tie between exact matches.
+	article string
 }
 
 type alias struct {
@@ -405,7 +409,9 @@ type language struct {
 	unitsFirst bool
 	conj       map[string]bool
 	parts      map[string]bool
-	phonetic   phoneticFunc
+	// yearJoins are the words that put a year after a title, as each language's question names it ("from" in "the odyssey from 2026", "uit" in "dune uit 2021"), which go with the year.
+	yearJoins map[string]bool
+	phonetic  phoneticFunc
 	// soundAlikeLead makes a top candidate that won on sound alone (scored.soundAlike) lead by Config.PlayMargin to play, not just Config.TieMargin. It suits an encoder that merges spellings differing only in silent letters, which different titles often do.
 	soundAlikeLead bool
 }

@@ -91,6 +91,9 @@ cases:
   - {utterance: "yes please", intent: AMAZON.YesIntent}
   - {utterance: "no thanks", intent: AMAZON.NoIntent}
   - {utterance: "i meant the older one", intent: ChooseMatch, slots: {Which: "older"}}
+  - {utterance: "i mean dune from 2021", intent: ChooseMatch, slots: {Answer: "dune", Year: "2021"}}
+  - {utterance: "i mean the odyssey from 2005", intent: ChooseMatch, slots: {Answer: "the odyssey", Year: "2005"}}
+  - {utterance: "the one from 1984", intent: ChooseMatch, slots: {Year: "1984"}}
   # Bare titles, which free-text and title slots compete for.
   - {utterance: "play dune", intent: PlayMedia, slots: {Query: "dune"}}
   - {utterance: "put on dune", intent: PlayMedia, slots: {Query: "dune"}}

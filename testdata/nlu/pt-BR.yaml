@@ -91,6 +91,8 @@ cases:
   - {utterance: "sim por favor", intent: AMAZON.YesIntent}
   - {utterance: "não obrigado", intent: AMAZON.NoIntent}
   - {utterance: "eu quis dizer o mais antigo", intent: ChooseMatch, slots: {Which: "older"}}
+  - {utterance: "eu quis dizer cidade de deus de 2002", intent: ChooseMatch, slots: {Answer: "cidade de deus", Year: "2002"}}
+  - {utterance: "o de 1984", intent: ChooseMatch, slots: {Year: "1984"}}
   # Bare titles, which free-text and title slots compete for.
   - {utterance: "toca cidade de deus", intent: PlayMedia, slots: {Query: "cidade de deus"}}
   - {utterance: "coloca cidade de deus", intent: PlayMedia, slots: {Query: "cidade de deus"}}
