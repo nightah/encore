@@ -74,6 +74,9 @@ LIBRARY_TYPE:
     serien
     videobibliothek
 MATCH_CHOICE:
+  film: |-
+    film
+    spielfilm
   first: |-
     erste
     ersten
@@ -112,6 +115,10 @@ MATCH_CHOICE:
     zweites
     andere
     anderen
+  show: |-
+    serie
+    sendung
+    fernsehserie
 MEDIA_TYPE:
   album: |-
     album
