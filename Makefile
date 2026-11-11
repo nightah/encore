@@ -13,6 +13,8 @@ IMAGE    = encore:dev
 
 # make dev: the Go server (on :8080, rebuilt and restarted by air when its sources change; see .air.toml) and the Vite dev server, which proxies /api to it. Override on the command line, e.g. to reach it through a reverse proxy: make dev DEV_HOST=0.0.0.0 DEV_HOSTS=dev.example.net
 DEV_DATA_DIR = $(HOME)/.local/share/encore-dev
+# make dev records its air and vite PIDs here, so a second make dev can find them.
+DEV_PIDS     = $(DEV_DATA_DIR)/dev.pids
 DEV_HOST     = localhost
 DEV_PORT     = 3000
 DEV_HOSTS    =
@@ -131,14 +133,34 @@ build-noui: ## Build the Encore binary without the embedded UI
 run: ## Run the server locally with debug logging
 	ENCORE_LOG_LEVEL=debug $(GO) run ./cmd/encore serve
 
-dev: web-install ## Run the Go server (rebuilt and restarted by air on changes) and the Vite dev server together; Ctrl-C stops both
+# dev_find sets pids to what is already running against DEV_DATA_DIR, and found to a line about each: make dev's air and vite, by the PIDs it recorded, and the Encore holding the data directory's lock, with the air that started it. Each PID is checked against its command, as a PID may have been reused. Recipes run with sh -e, so a missing file or a process already gone must not fail it.
+define dev_find
+pids=; found=; \
+for p in $$(cat '$(DEV_PIDS)' 2>/dev/null || true); do \
+	what=$$(ps -o args= -p "$$p" 2>/dev/null | grep -owE 'air|vite' | head -1); \
+	if [ -n "$$what" ]; then pids="$$pids $$p"; found="$$found\nencore: make dev's $$what (pid $$p) is running for $(DEV_DATA_DIR)"; fi; \
+done; \
+p=$$(cat '$(DEV_DATA_DIR)/encore.lock' 2>/dev/null || true); \
+if [ -n "$$p" ] && ps -o args= -p "$$p" 2>/dev/null | grep -qw encore-dev; then \
+	pp=$$(ps -o ppid= -p "$$p" 2>/dev/null | tr -d ' '); pids="$$pids $$p"; \
+	found="$$found\nencore: Encore (pid $$p, started by pid $$pp) is using $(DEV_DATA_DIR)"; \
+	if ps -o args= -p "$$pp" 2>/dev/null | grep -qw air; then case " $$pids " in *" $$pp "*) ;; *) pids="$$pids $$pp";; esac; fi; \
+fi
+endef
+
+dev: web-install ## Run the Go server (rebuilt and restarted by air on changes) and the Vite dev server together; Ctrl-C or closing the terminal stops both. Refuses to start while another is running against DEV_DATA_DIR, and says how to stop it
+	@$(dev_find); \
+	if [ -n "$$found" ]; then printf '%b\n' "$${found#\\n}" "encore: stop them with: kill$$pids (or use another DEV_DATA_DIR)" >&2; exit 1; fi
 	@echo "encore: data in $(DEV_DATA_DIR); UI at http://$(DEV_HOST):$(DEV_PORT)"
-	@# Background jobs ignore SIGINT in a non-interactive shell, so the trap stops both explicitly. air and vite run without their go tool and pnpm wrappers so their PIDs are the ones signalled; air stops the server gracefully.
+	@# Background jobs ignore SIGINT in a non-interactive shell, so the trap stops both explicitly, and on HUP too, as closing the terminal sends: without it air outlives the terminal and keeps restarting Encore. air and vite run without their go tool and pnpm wrappers so their PIDs are the ones signalled; air stops the server gracefully.
 	@air=$$($(GO) tool -modfile=tools/go.mod -n air) || exit 1; \
+	mkdir -p '$(DEV_DATA_DIR)'; \
 	ENCORE_DATA_DIR='$(DEV_DATA_DIR)' $(if $(DEV_PROXIES),ENCORE_SERVER_TRUSTED_PROXIES='$(DEV_PROXIES)') $(if $(DEV_SKILL_NAME),ENCORE_ALEXA_SKILL_NAME='$(DEV_SKILL_NAME)') "$$air" -c .air.toml & srv=$$!; \
 	(cd web && VITE_ALLOWED_HOSTS='$(DEV_HOSTS)' exec ./node_modules/.bin/vite --host '$(DEV_HOST)' --port '$(DEV_PORT)') & ui=$$!; \
-	trap 'kill $$srv $$ui 2>/dev/null; wait; exit 0' INT TERM; \
-	wait
+	echo "$$srv $$ui" > '$(DEV_PIDS)'; \
+	stop() { kill $$srv $$ui 2>/dev/null || true; wait || true; rm -f '$(DEV_PIDS)'; }; \
+	trap 'stop; exit 0' INT TERM HUP; \
+	wait; stop
 
 web-dev: ## Start the Vite dev server
 	$(PNPM) -C web dev

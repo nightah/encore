@@ -7,10 +7,11 @@ import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react";
 import { playwright } from "@vitest/browser-playwright";
 import { msw } from "msw/vite";
-import { type Plugin, defineConfig } from "vite";
+import { type Plugin, createLogger, defineConfig } from "vite";
 
 // Relative, unlike the rest of the code: Vite loads this file before its aliases exist. The extension is for Vite's native config loader.
 import { baseUIEntries } from "./src/dev/baseUI.ts";
+import { quietRefusals } from "./src/dev/proxyLog.ts";
 import { testDeps } from "./src/dev/testDeps.ts";
 
 const root = fileURLToPath(new URL(".", import.meta.url));
@@ -46,6 +47,8 @@ export default defineConfig(({ mode }) => ({
   },
   // One dependency cache per mode: the dev server and a mock-mode server (pnpm dev:mock, the mock e2e run) pre-bundle differently, and a shared cache would make each rebuild it under the other, breaking open pages ("error loading dynamically imported module").
   cacheDir: resolve(root, "node_modules/.vite", mode),
+  // While air restarts the Go server, the proxy's refused requests are reported once, not each with a stack trace.
+  customLogger: mode === "test" ? undefined : quietRefusals(createLogger(), apiTarget),
   optimizeDeps: { include: [...new Set([...baseUIEntries(root), ...(mode === "test" ? testDeps(root) : [])])] },
   plugins: [
     // Must run before the React plugin. No route HMR glue under Vitest: it never runs there (no import.meta.hot), and its source map points back into each route file, so coverage counted it as untested route code.
