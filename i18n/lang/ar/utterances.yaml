@@ -92,6 +92,7 @@ Fullscreen:
 GlobalSearch:
   do_global_search: "(سوي|اعملي) (بحث شامل|بحث عام) عن {Query}"
   global_search: "(بحث شامل|بحث عام) عن {Query}"
+  search_for: "(دوري على|دور على|ابحثي عن|ابحث عن) {Query}"
   search_kodi_for: "(دوري|ابحثي|دور|ابحث) (في كل مكان|في كودي|في كل الإضافات) عن {Query}\n(دوري على|ابحثي عن) {Query} في كل مكان"
 IdentifyEcho:
   identify_this_echo: "(عرفيني|عرفني) (بهذا الجهاز|على هذا الجهاز)"
@@ -154,7 +155,6 @@ PlayMedia:
   play: "(شغلي|شغل|شغلي لي|تشغيل|يشغل|أن يشغل) {Query}"
   put: "(حطي|حط|حطي لي) {Query}"
   queue_up: "(ضيفي|أضيفي) {Query} (للقائمة|لقائمة الانتظار)"
-  search_for: "(دوري على|دور على|ابحثي عن|ابحث عن) {Query}"
 PlayPlaylist:
   play_music_playlist: "(شغلي|شغل) (قائمة الأغاني|قائمة الفيديو|القائمة الذكية) {Playlist}"
   play_playlist: "(شغلي|شغل|ابدئي) (قائمة التشغيل|قائمة|البلاي ليست) {Playlist} [في {Room}]"
@@ -214,6 +214,15 @@ RoomControl:
   in_the: "{Command} في {Room}"
   playback: "{Command} التشغيل في {Room}"
   tv: "{Command} (التلفزيون|كودي|الموسيقى|الفيلم|المسلسل|الفيديو) في {Room}"
+SearchMovies:
+  search_films_for: "(دوري|ابحثي) في (الأفلام|افلامي) عن {Query}"
+  search_for_film: "(دوري على|ابحثي عن) فيلم {Query}"
+SearchMusic:
+  search_for_music: "(دوري على|ابحثي عن) (الفنان|الفنانة|الفرقة|ألبوم|البوم) {Query}"
+  search_music_for: "(دوري|ابحثي) في (الأغاني|الموسيقى) عن {Query}"
+SearchTVShows:
+  search_for_show: "(دوري على|ابحثي عن) (مسلسل|برنامج) {Query}"
+  search_shows_for: "(دوري|ابحثي) في (المسلسلات|مسلسلاتي) عن {Query}"
 ShuffleAlbum:
   shuffle_album: "(اخلطي|خلطي) (ألبوم|البوم) {Album} [في {Room}]"
   shuffle_album_2: "(شغلي|شغل) (ألبوم|البوم) {Album} [(حق|للفنان|للفنانة) {Artist}] (عشوائي|بشكل عشوائي)"
