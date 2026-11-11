@@ -224,6 +224,13 @@
       "hint": "Die maximale Anzahl an Titeln, die eine Zufallswiedergabe oder Warteschlange auf einmal abspielt, damit große Mediatheken flüssig bleiben",
       "title": "Wiedergabelimit"
     },
+    "search_mode": {
+      "global_search": "Global Search",
+      "hint": "Was „Suche nach …“ in Kodi öffnet. Die Mediathek zeigt die passenden Filme, Serien, Musikvideos, Interpreten oder Alben in Kodis eigener Mediatheksansicht und braucht keine Add-ons. Global Search und die eigene Suche des Skins zeigen stattdessen die Mediathek, wenn sie nicht laufen können. Eine Instanz kann das ändern.",
+      "library": "In der Mediathek zeigen",
+      "skin": "Die eigene Suche des Skins",
+      "title": "Suche"
+    },
     "shutdown_quits": {
       "hint": "Statt das Gerät auszuschalten",
       "title": "„Herunterfahren“ beendet Kodi"
