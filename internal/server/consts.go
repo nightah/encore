@@ -47,3 +47,6 @@ const placeholderIndex = `<!doctype html>
 <title>Encore</title></head>
 <body><main><h1>Encore</h1><p>The web interface is not included in this build. The API is available under <code>api/v1/</code>.</p></main></body></html>
 `
+
+// eventStream is the media type of the web interface's event streams, which a browser's EventSource asks for.
+const eventStream = "text/event-stream"

@@ -14,6 +14,7 @@ import (
 	"sync"
 	"testing"
 	"testing/fstest"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -206,6 +207,82 @@ func TestServeShutsDownOnCancel(t *testing.T) {
 
 	cancel()
 	assert.NoError(t, <-done)
+}
+
+// TestServeEndsEventStreamsOnShutdown checks that shutting down ends the web interface's event streams, which last until their request ends, while an ordinary request in flight still finishes. A graceful shutdown that waited for the streams took its whole timeout whenever a browser was open, and air, which waits five seconds, started the next Encore before this one let go of the data directory.
+func TestServeEndsEventStreamsOnShutdown(t *testing.T) {
+	streaming, slowStarted, release := make(chan struct{}), make(chan struct{}), make(chan struct{})
+
+	api := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("Accept") == "text/event-stream" {
+			w.WriteHeader(http.StatusOK)
+			http.NewResponseController(w).Flush()
+			close(streaming)
+			<-r.Context().Done()
+
+			return
+		}
+
+		close(slowStarted)
+		<-release
+		w.WriteHeader(http.StatusNoContent)
+	})
+
+	srv, err := New(config.Server{Address: "127.0.0.1:0", BasePath: "/"}, slog.New(slog.DiscardHandler), Deps{API: api})
+	require.NoError(t, err)
+
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	require.NoError(t, err)
+
+	ctx, cancel := context.WithCancel(t.Context())
+	done := make(chan error, 1)
+
+	go func() { done <- srv.Serve(ctx, ln) }()
+
+	base := "http://" + ln.Addr().String() + "/api/v1/"
+
+	stream, err := http.NewRequestWithContext(t.Context(), http.MethodGet, base+"events", http.NoBody)
+	require.NoError(t, err)
+	stream.Header.Set("Accept", "text/event-stream")
+
+	resp, err := http.DefaultClient.Do(stream)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = resp.Body.Close() })
+	<-streaming
+
+	slow := make(chan int, 1)
+
+	go func() {
+		req, err := http.NewRequestWithContext(t.Context(), http.MethodGet, base+"slow", http.NoBody)
+		if err != nil {
+			slow <- 0
+
+			return
+		}
+
+		r, err := http.DefaultClient.Do(req)
+		if err != nil {
+			slow <- 0
+
+			return
+		}
+
+		_ = r.Body.Close()
+		slow <- r.StatusCode
+	}()
+	<-slowStarted
+
+	cancel()
+	close(release)
+
+	assert.Equal(t, http.StatusNoContent, <-slow, "the ordinary request finishes")
+
+	select {
+	case err := <-done:
+		require.NoError(t, err)
+	case <-time.After(3 * time.Second):
+		t.Fatal("shutdown waited for the event stream")
+	}
 }
 
 func TestAPIDocs(t *testing.T) {
