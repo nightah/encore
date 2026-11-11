@@ -69,6 +69,10 @@ LIBRARY_TYPE:
     テレビ番組
     ビデオライブラリ
 MATCH_CHOICE:
+  film: |-
+    映画
+    映画の方
+    映画のほう
   first: |-
     一つ目
     一つ目の方
@@ -114,6 +118,11 @@ MATCH_CHOICE:
     二番目
     後の方
     後のほう
+  show: |-
+    番組
+    ドラマ
+    番組の方
+    ドラマの方
 MEDIA_TYPE:
   album: |-
     アルバム
