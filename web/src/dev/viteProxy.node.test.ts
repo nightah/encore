@@ -4,7 +4,7 @@ import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { type ViteDevServer, createServer } from "vite";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 // The dev server's /api/v1/events proxy must pass the stream through with its headers: without Content-Type: text/event-stream, the browser's EventSource rejects it and the UI gets no live updates.
 describe("dev server event stream proxy", () => {
@@ -36,6 +36,15 @@ describe("dev server event stream proxy", () => {
     backend?.closeAllConnections();
     backend?.close();
     delete process.env.ENCORE_API_URL;
+  });
+
+  // The config wraps the dev server's own logger rather than supplying one, so logLevel and clearScreen, from the command line or here, still apply.
+  it("keeps the log level it was given", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    vite.config.logger.warn("a warning");
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
   });
 
   it("keeps the event stream's content type and delivers events", async () => {

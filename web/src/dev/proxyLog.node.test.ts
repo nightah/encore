@@ -1,13 +1,13 @@
 import type { LogErrorOptions, Logger } from "vite";
 import { describe, expect, it } from "vitest";
 
-import { quietRefusals } from "@src/dev/proxyLog.ts";
+import { quietProxyRefusals, quietRefusals } from "@src/dev/proxyLog.ts";
 
 function fakeLogger() {
   const calls: { level: string; msg: string }[] = [];
   const logger = {
     clearScreen: () => {},
-    error: (msg: string) => calls.push({ level: "error", msg }),
+    error: (msg: string, _options?: LogErrorOptions) => calls.push({ level: "error", msg }),
     hasErrorLogged: () => false,
     hasWarned: false,
     info: (msg: string) => calls.push({ level: "info", msg }),
@@ -52,5 +52,23 @@ describe("quietRefusals", () => {
     log.error("something else");
 
     expect(calls.map((c) => c.msg)).toEqual(["http proxy error: /api/v1/skill", "something else"]);
+  });
+
+  // The plugin wraps the logger Vite built from its own options (logLevel, clearScreen) in place, so those options still apply.
+  it("wraps the dev server's own logger in place", () => {
+    let now = 0;
+    const { calls, logger } = fakeLogger();
+    const plugin = quietProxyRefusals("http://127.0.0.1:8080", () => now);
+    const configResolved = plugin.configResolved as (config: { logger: Logger }) => void;
+
+    configResolved({ logger });
+
+    logger.error("http proxy error: /api/v1/skill", refused());
+    now = 1_000;
+    logger.error("http proxy error: /api/v1/skill", refused());
+    logger.error("something else");
+
+    expect(calls.map((c) => c.level)).toEqual(["warn", "error"]);
+    expect(plugin.apply).toBe("serve");
   });
 });
