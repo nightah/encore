@@ -1,5 +1,4 @@
 # Responses keyed by message ID, translated on Crowdin from the English file. {placeholders} are filled by the handler, and every language uses the same ones (the linter checks); notes for each language are in the contributing guide (docs/src/content/docs/contributing/index.md).
-addon.no_global_search: "يحتاج البحث الشامل إلى إضافة Global Search. يرجى تثبيتها في كودي ثم المحاولة مرة أخرى."
 addon.not_found: "لم أجد إضافة باسم {addon}."
 addon.opening: "جاري فتح {addon}."
 addon.searching: "جاري البحث عن {query}."
@@ -101,6 +100,7 @@ recommend.nothing: "عذرا، ليس لدي ما أقترحه."
 recommend.show: "ما رأيك في مسلسل {title}؟"
 recommend.song: "ما رأيك في {title} لـ {artist}؟"
 remote.no_text: "لم أفهم ما المطلوب كتابته."
+search.film_or_show: "هل تقصد الفيلم أم المسلسل {title}؟"
 streams.audio_language: "الصوت: {language}."
 streams.audio_named: "الصوت: {name}."
 streams.audio_unknown: "تم تغيير الصوت."
