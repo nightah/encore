@@ -18,7 +18,7 @@ require (
 	github.com/mattn/go-isatty v0.0.24
 	github.com/miekg/dns v1.1.73
 	github.com/minio/minio-go/v7 v7.4.1
-	github.com/oapi-codegen/runtime v1.8.0
+	github.com/oapi-codegen/runtime v1.9.0
 	github.com/pressly/goose/v3 v3.30.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.1.0
