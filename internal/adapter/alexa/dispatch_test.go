@@ -327,3 +327,16 @@ func TestNonsenseHeardAsATitlePlaysNothing(t *testing.T) {
 		})
 	}
 }
+
+// TestSearchWithTheKindInTheQuery checks that a plain search Amazon heard with the kind of title in its query searches that kind for the title alone, as the search of that kind would.
+func TestSearchWithTheKindInTheQuery(t *testing.T) {
+	for query, want := range map[string]string{
+		"the film hot fuzz": "ShowView movies title hot fuzz",
+		"the show bluey":    "ShowView tvshows title bluey",
+	} {
+		h, backend, _ := newHandler(t)
+
+		serveBody(t, h, intentRequest(t, "GlobalSearch", map[string]slotSpec{"Query": {value: query}}))
+		assert.Equal(t, []string{want}, backend.Calls(), query)
+	}
+}

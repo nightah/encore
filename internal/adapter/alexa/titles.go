@@ -188,8 +188,11 @@ func containsPhrase(words, phrase []string) bool {
 
 // Reroute reads a music request whose title slot names no title (Generic) as the request it is: "play music by queen" heard as ListenToSongOrAlbum or ListenToSong is queen's music, and "play some songs" heard as PlayMedia or ListenToSong is any music, shuffled.
 func (s *Speech) Reroute(locale string, intent Intent) Intent {
-	if intent.Name == seasonIntent {
+	switch intent.Name {
+	case seasonIntent:
 		return s.seasonFromShow(locale, intent)
+	case globalSearchIntent:
+		return s.searchFromKind(locale, intent)
 	}
 
 	slot := map[string]string{"ListenToSongOrAlbum": "Title", "ListenToSong": "Song", "PlayMedia": "Query"}[intent.Name]
@@ -208,6 +211,27 @@ func (s *Speech) Reroute(locale string, intent Intent) Intent {
 	}
 
 	return intent
+}
+
+// searchFromKind reads a plain search whose query starts or ends with a kind of title as the search for that kind: "دوري على فيلم الرسالة" heard as a search for "فيلم الرسالة" searches the films for "الرسالة", as SearchMovies' own sample says, rather than typing the word for film into Kodi's search. A kind with no search of its own, such as a song, is searched as it was heard.
+func (s *Speech) searchFromKind(locale string, intent Intent) Intent {
+	query, ok := intent.Slots[querySlot]
+	if !ok {
+		return intent
+	}
+
+	title, kind, ok := s.StripKind(locale, query.Value)
+	name := kindSearches[kind]
+
+	if !ok || name == "" {
+		return intent
+	}
+
+	slots := maps.Clone(intent.Slots)
+	query.Value = title
+	slots[querySlot] = query
+
+	return Intent{Name: name, Slots: slots}
 }
 
 // seasonFromShow reads a season Amazon left at the front of the show back off it: "2 de la casa de papel" with no season is season 2 of "la casa de papel", when "de" is what the locale's season samples put between the season and the show. A request with a season or an ordinal is returned as it is, so a title that starts with a number keeps it.

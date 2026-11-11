@@ -1,6 +1,10 @@
 package alexa
 
-import "time"
+import (
+	"time"
+
+	"github.com/nightah/encore/internal/core/media"
+)
 
 // MaxRequestBytes caps the request body. Alexa envelopes with APL and device context are a few kilobytes; anything near this is not Alexa.
 const MaxRequestBytes = 256 << 10
@@ -101,3 +105,17 @@ const (
 	nextEpisodeIntent = "WatchNextEpisode"
 	seasonIntent      = "WatchSeason"
 )
+
+// globalSearchIntent is "search for {Query}", and querySlot the slot it and the searches of one kind fill.
+const (
+	globalSearchIntent = "GlobalSearch"
+	querySlot          = "Query"
+)
+
+// kindSearches are the searches of one kind of title, by the kind StripKind reads off a plain search's query.
+var kindSearches = map[media.Kind]string{
+	media.KindMovie:  "SearchMovies",
+	media.KindTVShow: "SearchTVShows",
+	media.KindArtist: "SearchMusic",
+	media.KindAlbum:  "SearchMusic",
+}
