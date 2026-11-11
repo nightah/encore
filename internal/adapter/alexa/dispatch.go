@@ -47,8 +47,12 @@ func (h *Handler) dispatch(ctx context.Context, env *RequestEnvelope, t actions.
 			return svc.Choose(ctx, t, actions.Answer{Year: m}, pending, more, progress)
 		}
 
-		// Amazon sends an answer as whichever intent its words come closest to ("the odyssey from 2026" as the next episode of a show, "la de 1984" as the next film in a collection called 1984), so a title slot that names one of the question's choices, or only its year, answers it.
+		// Amazon sends an answer as whichever intent its words come closest to ("the odyssey from 2026" as the next episode of a show, "la de 1984" as the next film in a collection called 1984), so a title slot that names one of the question's choices, or only its year, answers it. A search still searches.
 		for _, name := range titleSlots {
+			if searchIntents[intent.Name] {
+				break
+			}
+
 			if sl.value(name) == "" {
 				continue
 			}

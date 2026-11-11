@@ -401,6 +401,17 @@ func TestNewRequestWhileAsking(t *testing.T) {
 	assert.Equal(t, []string{"Play movie/4 resume"}, backend.Calls())
 }
 
+// TestSearchWhileAsking checks that a search heard while a question waits searches, as it would at any other time, rather than answering the question with a title it names.
+func TestSearchWhileAsking(t *testing.T) {
+	for _, intent := range []string{"GlobalSearch", "SearchMovies"} {
+		h, backend, resp := askOdyssey(t)
+
+		serveAnswer(t, h, resp, intent, map[string]slotSpec{"Query": {value: "the odyssey from 2026"}})
+		assert.False(t, containsPrefix(backend.Calls(), "Play"), "%s plays nothing: %q", intent, backend.Calls())
+		assert.True(t, containsPrefix(backend.Calls(), "ShowView"), "%s shows the search: %q", intent, backend.Calls())
+	}
+}
+
 // TestSeekWhileAskingAsksAgain checks that a seek to a minute no choice was released in, heard while a question waits, asks the question again rather than moving the playhead: it was an answer Amazon heard as a seek.
 func TestSeekWhileAskingAsksAgain(t *testing.T) {
 	h, backend, resp := askOdyssey(t)
