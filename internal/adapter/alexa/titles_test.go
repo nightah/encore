@@ -268,6 +268,35 @@ func TestReroute(t *testing.T) {
 	}
 }
 
+// TestRerouteReadsTheKindOffASearch covers a search Amazon hears as the plain one, with the kind of title left in the query: ar-SA "دوري على فيلم الرسالة" came as GlobalSearch for "فيلم الرسالة", though "دوري على فيلم {Query}" is SearchMovies' own sample, and a search typed into Kodi would then include the word for film.
+func TestRerouteReadsTheKindOffASearch(t *testing.T) {
+	speech := shippedSpeech(t)
+
+	search := func(intent, query string) Intent {
+		return Intent{Name: intent, Slots: map[string]Slot{"Query": {Name: "Query", Value: query}}}
+	}
+
+	for _, tc := range []struct {
+		locale, query string
+		want          Intent
+	}{
+		{"ar-SA", "فيلم الرسالة", search("SearchMovies", "الرسالة")},
+		{"ar-SA", "مسلسل باب الحارة", search("SearchTVShows", "باب الحارة")},
+		{"en-AU", "the film dune", search("SearchMovies", "dune")},
+		{"en-AU", "the show bluey", search("SearchTVShows", "bluey")},
+		{"en-AU", "the band queen", search("SearchMusic", "queen")},
+		{"en-AU", "the album innuendo", search("SearchMusic", "innuendo")},
+		// A title without a kind word, and a kind there is no search of its own for, are searched as they are.
+		{"en-AU", "dune", search("GlobalSearch", "dune")},
+		{"en-AU", "the song bohemian rhapsody", search("GlobalSearch", "the song bohemian rhapsody")},
+	} {
+		assert.Equal(t, tc.want, speech.Reroute(tc.locale, search("GlobalSearch", tc.query)), "%s %q", tc.locale, tc.query)
+	}
+
+	empty := Intent{Name: "GlobalSearch"}
+	assert.Equal(t, empty, speech.Reroute("en-AU", empty), "a search without a query is left as it is")
+}
+
 func TestRerouteReadsTheSeasonOffTheShow(t *testing.T) {
 	speech := shippedSpeech(t)
 
