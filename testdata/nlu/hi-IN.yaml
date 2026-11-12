@@ -54,7 +54,7 @@ cases:
   - {utterance: "क्या कोई नया फ़िल्म आया है", intent: WhatsNew, slots: {MediaType: "movie"}}
   - {utterance: "अरिजीत सिंह के एल्बम बताओ", intent: WhatAlbums, slots: {Artist: "अरिजीत सिंह"}}
   - {utterance: "पांच मिनट पीछे", intent: PlayerSeek, slots: {Duration: "", SeekDirection: "back"}, pending: "Amazon finds no intent here, though it does with करो"}
-  - {utterance: "पांच मिनट पीछे करो", intent: PlayerRewind, slots: {Duration: ""}}
+  - {utterance: "पांच मिनट पीछे करो", intent: PlayerRewind, slots: {Duration: ""}, pending: "Amazon fills no Duration from पांच मिनट here, though it does without करो"}
   - {utterance: "पांच मिनट के निशान पर जाओ", intent: PlayerSeekTo, slots: {Position: ""}}
   - {utterance: "रिपीट मोड सब", intent: Repeat, slots: {RepeatMode: "all"}}
   - {utterance: "एनहांस करो", intent: PlayerZoom}

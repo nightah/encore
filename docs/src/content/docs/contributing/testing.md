@@ -63,6 +63,7 @@ Each phrase below is one of the skill's own samples, and Amazon's language model
 
 | Say | Meaning | Amazon reads it as | It should |
 | --- | --- | --- | --- |
+| ve al inicio | Go to the home screen | nothing | go to Kodi's home screen |
 | dame una recomendación de película | Give me a film recommendation | a random film, after some changes to the model | recommend a film |
 | me refiero a dune de 2021 | I mean Dune from 2021 | nothing, though es-ES and es-MX understand it | answer the question with Dune from 2021 |
 | dale play a ojos así de shakira | Play Ojos Así by Shakira | a song called "play a ojos así" | play the song |
@@ -74,12 +75,12 @@ Each phrase below is one of the skill's own samples, and Amazon's language model
 | Say | Meaning | Amazon reads it as | It should |
 | --- | --- | --- | --- |
 | qu'est-ce qu'on écoute ce soir | What shall we listen to tonight? | what's new in a show called "ce soir" | recommend something |
-| qu'est-ce que je devrais écouter comme film | What film should I watch? | nothing, after some changes to the model | recommend a film |
 
 ### Hindi (`hi-IN`)
 
 | Say | Meaning | Amazon reads it as | It should |
 | --- | --- | --- | --- |
+| पांच मिनट पीछे करो | Go back five minutes | a rewind, without the time | rewind five minutes |
 | मुझे फ़िल्म शोले देखनी है | I want to watch the film Sholay | nothing it understands | play the film शोले |
 | पांच मिनट पीछे | Five minutes back | nothing, though it understands it with करो | skip back five minutes |
 | म्यूट | Mute | nothing | mute |
@@ -104,6 +105,7 @@ Each phrase below is one of the skill's own samples, and Amazon's language model
 | Say | Meaning | Amazon reads it as | It should |
 | --- | --- | --- | --- |
 | vorige | Previous | nothing | go to the previous item |
+| ik bedoel dune uit 2021 | I mean Dune from 2021 | watching a film called "2021" | answer the question with Dune from 2021 |
 | zet het volume op 30 | Set the volume to 30 | volume up | set the volume to 30 |
 | speel wat muziek van marco borsato | Play some Marco Borsato | a search for "whatmuziek van marco borsato" | play the artist |
 | speel wat muziek van marco borsato in de slaapkamer | Play some Marco Borsato in the bedroom | a search for "whatmuziek van marco borsato in de slaapkamer" | play the artist in the bedroom |
