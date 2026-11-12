@@ -276,7 +276,7 @@ func (g *Guide) FindProgramme(ctx context.Context, spoken string) (Programme, bo
 		return Programme{}, false, nil
 	}
 
-	ix, err := newIndex(g.lang, docs)
+	ix, err := g.newIndex(docs)
 	if err != nil {
 		return Programme{}, false, err
 	}

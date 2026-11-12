@@ -462,6 +462,7 @@ func TestNewDefaults(t *testing.T) {
 	g := New(&source{}, "fr", Options{})
 	assert.Equal(t, "fr", g.Language())
 	assert.WithinDuration(t, time.Now(), g.now(), time.Minute, "the wall clock")
+	assert.Equal(t, match.RetrieverTrigram, g.match.Retriever, "trigrams, for a list this small")
 
 	_, ok, err := g.FindProgramme(t.Context(), "anything")
 	require.NoError(t, err)
@@ -659,4 +660,29 @@ func TestUnnamedChannelsAreNotMatched(t *testing.T) {
 	names, err := g.Names(t.Context())
 	require.NoError(t, err)
 	assert.Equal(t, []string{"Seven"}, names)
+}
+
+func TestMatcherRefused(t *testing.T) {
+	now := time.Date(2026, 11, 11, 21, 26, 0, 0, melbourne(t))
+	src := &source{available: true, channels: []media.Channel{
+		{ID: 1, Name: "ABC TV", Major: 21, Now: &media.Broadcast{Title: "Austin", Start: now.Add(-5 * time.Minute), End: now.Add(25 * time.Minute)}},
+	}}
+	g := New(src, "en", Options{Now: (&clock{t: now}).now, Match: match.Config{Retriever: "nope"}})
+
+	_, err := g.Find(t.Context(), "abc tv")
+	require.ErrorContains(t, err, `unknown retriever "nope"`)
+	_, _, err = g.FindProgramme(t.Context(), "austin")
+	require.ErrorContains(t, err, `unknown retriever "nope"`)
+
+	// Refused, nothing was kept: the next request fetches again.
+	_, err = g.Find(t.Context(), "abc tv")
+	require.Error(t, err)
+	assert.Equal(t, 2, src.lists)
+}
+
+func TestNewIndexRefusesADocWithoutID(t *testing.T) {
+	g, _, _ := guideFor(t, nil)
+
+	_, err := g.newIndex([]match.Doc{{Kind: media.KindChannel, Title: "ABC TV"}})
+	require.ErrorContains(t, err, "doc without ID")
 }

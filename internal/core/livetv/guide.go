@@ -17,7 +17,11 @@ func New(src media.LiveTV, lang string, opts Options) *Guide {
 		opts.Now = time.Now
 	}
 
-	return &Guide{src: src, lang: lang, now: opts.Now}
+	if opts.Match.Retriever == "" {
+		opts.Match.Retriever = match.RetrieverTrigram
+	}
+
+	return &Guide{src: src, lang: lang, now: opts.Now, match: opts.Match}
 }
 
 // Language is the language names are matched in.
@@ -200,12 +204,12 @@ func (g *Guide) build(channels []media.Channel) (*match.Index, error) {
 		})
 	}
 
-	return newIndex(g.lang, docs)
+	return g.newIndex(docs)
 }
 
 // newIndex is a small index of docs, as a guide's channels or the programmes on now and next are.
-func newIndex(lang string, docs []match.Doc) (*match.Index, error) {
-	ix, err := match.New(lang, match.Config{Retriever: match.RetrieverTrigram})
+func (g *Guide) newIndex(docs []match.Doc) (*match.Index, error) {
+	ix, err := match.New(g.lang, g.match)
 	if err != nil {
 		return nil, err
 	}

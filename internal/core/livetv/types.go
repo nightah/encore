@@ -10,9 +10,10 @@ import (
 
 // Guide finds one media centre instance's channels and what's on them. It is safe for concurrent use.
 type Guide struct {
-	src  media.LiveTV
-	lang string
-	now  func() time.Time
+	src   media.LiveTV
+	lang  string
+	now   func() time.Time
+	match match.Config
 
 	// load serialises fetches, so requests arriving together share one.
 	load sync.Mutex
@@ -34,6 +35,8 @@ type Guide struct {
 type Options struct {
 	// Now is the clock; nil means time.Now.
 	Now func() time.Time
+	// Match tunes the matcher for channel names and programme titles; an unset Retriever means match.RetrieverTrigram, for a list this small.
+	Match match.Config
 }
 
 // Found is what a channel request found.
