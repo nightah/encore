@@ -12,4 +12,6 @@ var (
 	ErrUnreachable = errors.New("media: backend unreachable")
 	// ErrNothingPlaying means a playback command needs an active player and there is none.
 	ErrNothingPlaying = errors.New("media: nothing playing")
+	// ErrNoLiveTV means the media centre has no live TV, or its TV service hasn't started.
+	ErrNoLiveTV = errors.New("media: no live TV")
 )

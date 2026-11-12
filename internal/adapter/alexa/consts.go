@@ -124,7 +124,16 @@ var kindSearches = map[media.Kind]string{
 var searchIntents = map[string]bool{globalSearchIntent: true, "SearchMovies": true, "SearchTVShows": true, "SearchMusic": true}
 
 // titleSlots are the slots that hold a title said to a title intent, which a question's answer may arrive in.
-var titleSlots = []string{"Movie", "Show", "Query"}
+var titleSlots = []string{"Movie", "Show", "Query", "Channel"}
+
+// liveViewChannels is LIVETV_VIEW's ID for the channel list; the other opens the guide.
+const liveViewChannels = "channels"
 
 // sessionEndedError is the reason Alexa gives for a session it ended with an error.
 const sessionEndedError = "ERROR"
+
+// sentenceStops are the full stops a response puts after a placeholder, and sentenceEnds the marks a name may end with that stand in for one.
+const (
+	sentenceStops = ".。।"
+	sentenceEnds  = ".!?…！？。।"
+)

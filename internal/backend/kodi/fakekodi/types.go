@@ -22,6 +22,8 @@ type Options struct {
 	MAC string
 	// DatabaseName is what Database.GetDatabaseName reports for the video database, e.g. "MyVideos131". Empty leaves the method out, as before Kodi 22.
 	DatabaseName string
+	// PVR seeds live TV. Nil reports live TV unavailable, as Kodi does with no PVR client. It belongs to the server rather than the shared Library, because each Kodi instance keeps its own TV database.
+	PVR *PVR
 }
 
 // Server is a fake Kodi.
@@ -356,6 +358,7 @@ type itemRef struct {
 	PlaylistID   *int   `json:"playlistid"`
 	Position     int    `json:"position"`
 	PartyMode    string `json:"partymode"`
+	ChannelID    int    `json:"channelid"`
 }
 
 // Stream is an audio or subtitle stream as Player.GetProperties reports it.
@@ -395,4 +398,32 @@ type filter struct {
 	// AlbumID and ArtistID are AudioLibrary.GetSongs' ID filters.
 	AlbumID  *int `json:"albumid"`
 	ArtistID *int `json:"artistid"`
+}
+
+// PVR is the fake's live TV: its channels and what the guide says is on them.
+type PVR struct {
+	Channels []Channel
+}
+
+// Channel is a TV channel. Kodi leaves hidden channels out of PVR.GetChannels.
+type Channel struct {
+	ChannelID        int
+	Channel          string
+	ChannelNumber    int
+	SubChannelNumber int
+	ClientID         int
+	Hidden           bool
+	Locked           bool
+	// Now and Next are reported as broadcastnow and broadcastnext; nil leaves them out, as for a channel the guide has nothing for.
+	Now, Next *Broadcast
+}
+
+// Broadcast is a guide entry. StartTime and EndTime are UTC in TimeLayout, as Kodi reports them.
+type Broadcast struct {
+	BroadcastID int
+	Title       string
+	EpisodeName string
+	// Genre is a list, as Kodi 21 and 22 send it, although their schema says a string.
+	Genre              []string
+	StartTime, EndTime string
 }

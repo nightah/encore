@@ -25,7 +25,7 @@ export interface SkillInfo {
   auto_deploy_paused: string;
   /** An automatic deploy that failed for a reason that may pass, such as Amazon being unavailable or still building, which is tried again before automatic deploys pause; null when there is none or alexa.auto_deploy is off */
   auto_deploy_retry: AutoDeployRetry | null;
-  /** What the skill can play; music includes music videos */
+  /** What the skill can play; music includes music videos, and livetv is Kodi's live TV channels */
   content: SkillInfoContentItem[];
   endpoint: SkillEndpointInfo;
   /** encore uses each locale's own name for it ("kodi" in French and Brazilian Portuguese, "انكور" in Arabic, "アンコール" in Japanese); kodi is "kodi", or "كودي" and "コディ" where the name must be in the language's script. locale_invocations lists both choices for every locale */

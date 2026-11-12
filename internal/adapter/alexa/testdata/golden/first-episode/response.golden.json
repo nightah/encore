@@ -3,12 +3,12 @@
   "response": {
     "outputSpeech": {
       "type": "PlainText",
-      "text": "Playing Severance, season 2, episode 3, Who Is Alive?."
+      "text": "Playing Severance, season 2, episode 3, Who Is Alive?"
     },
     "card": {
       "type": "Simple",
       "title": "Encore",
-      "content": "Playing Severance, season 2, episode 3, Who Is Alive?."
+      "content": "Playing Severance, season 2, episode 3, Who Is Alive?"
     },
     "shouldEndSession": true
   }

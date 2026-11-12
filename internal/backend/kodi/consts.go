@@ -27,6 +27,8 @@ const (
 	CodeInternalError  = -32603
 	CodeNotFound       = -32098
 	CodeUnavailable    = -32097
+	// CodeFailedToExecute is what PVR methods answer while Kodi has no live TV.
+	CodeFailedToExecute = -32100
 )
 
 // What Kodi's web server last made of the configured credentials.
@@ -108,6 +110,8 @@ const (
 	windowMusic          kodirpc.GUIWindow = "music"
 	windowFavourites     kodirpc.GUIWindow = "favouritesbrowser"
 	windowSubtitleSearch kodirpc.GUIWindow = "subtitlesearch"
+	windowTVGuide        kodirpc.GUIWindow = "tvguide"
+	windowTVChannels     kodirpc.GUIWindow = "tvchannels"
 )
 
 // How a skin profile fills in the query.
@@ -150,3 +154,9 @@ const (
 	windowKeyboard = "virtualkeyboard"
 	windowHomeName = "home"
 )
+
+// channelFields are the channel properties Encore reads; the guide adds broadcastnow and broadcastnext.
+var channelFields = kodirpc.PVRFieldsChannel{
+	kodirpc.PVRFieldsChannelItemChannel, kodirpc.PVRFieldsChannelItemChannelnumber, kodirpc.PVRFieldsChannelItemSubchannelnumber,
+	kodirpc.PVRFieldsChannelItemClientid, kodirpc.PVRFieldsChannelItemHidden, kodirpc.PVRFieldsChannelItemLocked,
+}

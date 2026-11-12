@@ -24,6 +24,8 @@
     "title": "An automatic deploy failed and will be tried again"
   },
   "content": {
+    "liveTV": "Live TV",
+    "liveTVHint": "Kodi's TV channels and guide; needs a PVR add-on",
     "movies": "Movies",
     "music": "Music",
     "musicHint": "Includes music videos",
@@ -44,8 +46,8 @@
       "titles": "Library titles"
     },
     "content": {
-      "hint": "Leaving one out removes its voice commands from the skill. Music includes music videos.",
-      "keepOne": "Keep at least one of movies, TV shows or music.",
+      "hint": "Leaving one out removes its voice commands from the skill. Music includes music videos. Live TV needs a PVR add-on in Kodi.",
+      "keepOne": "Keep at least one of movies, TV shows, music or live TV.",
       "legend": "What it can play"
     },
     "degradedTitles": "{{kept}} of {{total}}",

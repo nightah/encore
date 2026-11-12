@@ -1,5 +1,14 @@
 # Example values for the dynamic slot types in model.yaml (ja): deploys replace them with what is set up in Encore. Chosen for this language rather than translated, so not on Crowdin.
 
+# Examples only: deploys replace them with the channels of the Kodi instances that have live TV. Spelt in kana as they are spoken, as the acronyms in MEDIA_GENRE are.
+KODI_CHANNEL:
+  - {value: エヌエイチケー, synonyms: [エヌエイチケー総合]}
+  - {value: 日本テレビ, synonyms: [日テレ]}
+  - {value: テレビ朝日, synonyms: [テレ朝]}
+  - {value: ティービーエス}
+  - {value: テレビ東京, synonyms: [テレ東]}
+  - {value: フジテレビ}
+
 KODI_MUSIC_VIDEO:
   - {value: 夜に駆ける}
   - {value: レモン, synonyms: [lemon]}

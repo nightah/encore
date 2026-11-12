@@ -83,6 +83,16 @@ LIBRARY_TYPE:
     tv
     t. v.
     video library
+LIVETV_VIEW:
+  channels: |-
+    channels
+    channel list
+    channel guide
+  guide: |-
+    guide
+    programme guide
+    program guide
+    listings
 MATCH_CHOICE:
   film: |-
     film

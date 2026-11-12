@@ -48,6 +48,12 @@ cases:
   - {utterance: "pon el videoclip de bohemian rhapsody", intent: WatchMusicVideo, slots: {MusicVideo: ""}}
   - {utterance: "pon un videoclip aleatorio", intent: WatchRandomMusicVideo}
   - {utterance: "pon todos mis videoclips en aleatorio", intent: ShuffleMusicVideos}
+  - {utterance: "cambia a antena tres", intent: WatchChannel, slots: {Channel: "antena tres"}}
+  - {utterance: "pon el canal número veinticuatro", intent: WatchChannelNumber, slots: {ChannelNumber: "24"}}
+  - {utterance: "abre la guía de la tele", intent: OpenTVGuide, slots: {LiveView: "guide"}}
+  - {utterance: "muestra los canales de la tele", intent: OpenTVGuide, slots: {LiveView: "channels"}}
+  - {utterance: "qué pasan en telecinco", intent: WhatsOn, slots: {Channel: "telecinco"}}
+  - {utterance: "pon el partido en vivo", intent: WatchLive, slots: {Programme: ""}}
   - {utterance: "pon la lista de música viaje", intent: PlayPlaylist, slots: {Playlist: ""}}
   - {utterance: "pon mi lista de reproducción viaje en aleatorio", intent: ShufflePlaylist, slots: {Playlist: ""}}
   - {utterance: "dame una recomendación de película", intent: Recommend, slots: {MediaType: "movie"}, pending: "Amazon's reading changes with unrelated changes to the model"}
@@ -132,7 +138,7 @@ cases:
   - {utterance: "pon la rola ojos así", intent: ListenToSong, slots: {Song: "ojos así"}}
   - {utterance: "pon la rola ojos así de shakira", intent: ListenToSong, slots: {Artist: "shakira", Song: "ojos así"}}
   - {utterance: "quiero escuchar la rola ojos así de shakira", intent: ListenToSong, slots: {Artist: "shakira", Song: "ojos así"}}
-  - {utterance: "dale play a ojos así de shakira", intent: ListenToSongOrAlbum, slots: {Artist: "shakira", Title: "ojos así"}, pending: "Amazon keeps play a from dale play a in the Title slot"}
+  - {utterance: "dale play a ojos así de shakira", intent: ListenToSongOrAlbum, slots: {Artist: "shakira", Title: "ojos así"}}
   - {utterance: "dale play a la casa de papel", intent: PlayMedia, slots: {Query: "la casa de papel"}, pending: "Amazon reads it as the next episode of a show called play a la casa de papel"}
   - {utterance: "hiberna la computadora", intent: Power, slots: {PowerAction: "hibernate"}}
   - {utterance: "pon la computadora a hiberna", intent: Power, slots: {PowerAction: "hibernate"}}

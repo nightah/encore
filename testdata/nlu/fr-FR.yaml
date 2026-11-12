@@ -48,6 +48,12 @@ cases:
   - {utterance: "mets le clip de bohemian rhapsody", intent: WatchMusicVideo, slots: {MusicVideo: ""}}
   - {utterance: "mets un clip du genre comédie au hasard", intent: WatchRandomMusicVideo, slots: {Genre: ""}}
   - {utterance: "mélange tous les clips du genre comédie", intent: ShuffleMusicVideos, slots: {Genre: ""}}
+  - {utterance: "passe sur france deux", intent: WatchChannel, slots: {Channel: "france deux"}}
+  - {utterance: "passe sur la chaîne numéro vingt-quatre", intent: WatchChannelNumber, slots: {ChannelNumber: "24"}}
+  - {utterance: "ouvre le guide télé", intent: OpenTVGuide}
+  - {utterance: "affiche les chaînes télé", intent: OpenTVGuide, slots: {LiveView: "channels"}}
+  - {utterance: "qu'est-ce qui passe sur arte", intent: WhatsOn, slots: {Channel: "arte"}}
+  - {utterance: "mets le match de rugby en direct", intent: WatchLive, slots: {Programme: ""}}
   - {utterance: "mets la playlist musicale voyage", intent: PlayPlaylist, slots: {Playlist: ""}}
   - {utterance: "mets la playlist voyage en aléatoire", intent: ShufflePlaylist, slots: {Playlist: ""}}
   - {utterance: "donne-moi une recommandation de film", intent: Recommend, slots: {MediaType: "movie"}}

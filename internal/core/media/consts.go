@@ -10,6 +10,8 @@ const (
 	KindSong       Kind = "song"
 	KindMusicVideo Kind = "musicvideo"
 	KindPlaylist   Kind = "playlist"
+	// KindChannel is a live TV channel; its ID is the backend's channel ID, not a library ID.
+	KindChannel Kind = "channel"
 )
 
 // Content groups, in the order they are offered.
@@ -17,6 +19,8 @@ const (
 	ContentMovies Content = "movies"
 	ContentTV     Content = "tv"
 	ContentMusic  Content = "music"
+	// ContentLiveTV is the media centre's live TV channels and guide, not a library.
+	ContentLiveTV Content = "livetv"
 )
 
 // Video qualities, lowest first, and the preference for the best copy there is.
@@ -144,6 +148,8 @@ const (
 	SectionFavourites        Section = "favourites"
 	SectionPlaylist          Section = "playlist"
 	SectionSubtitleSearch    Section = "subtitlesearch"
+	SectionTVGuide           Section = "tvguide"
+	SectionTVChannels        Section = "tvchannels"
 )
 
 // System commands. SystemQuit exits the media centre application without touching the machine.

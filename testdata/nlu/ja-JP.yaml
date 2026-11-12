@@ -48,6 +48,12 @@ cases:
   - {utterance: "ミュージックビデオの夜に駆けるを再生してください", intent: WatchMusicVideo, slots: {MusicVideo: ""}}
   - {utterance: "何かアクションのミュージックビデオを再生してください", intent: WatchRandomMusicVideo, slots: {Genre: ""}}
   - {utterance: "アクションのミュージックビデオをシャッフルしてください", intent: ShuffleMusicVideos, slots: {Genre: ""}}
+  - {utterance: "チャンネルをフジテレビに変えて", intent: WatchChannel, slots: {Channel: "フジテレビ"}}
+  - {utterance: "チャンネル番号二十四に切り替えて", intent: WatchChannelNumber, slots: {ChannelNumber: "24"}}
+  - {utterance: "テレビの番組表を開いて", intent: OpenTVGuide, slots: {LiveView: "guide"}}
+  - {utterance: "テレビのチャンネル一覧を見せて", intent: OpenTVGuide, slots: {LiveView: "channels"}}
+  - {utterance: "日本テレビで今何やってる", intent: WhatsOn, slots: {Channel: "日本テレビ"}}
+  - {utterance: "野球の生中継を見せて", intent: WatchLive, slots: {Programme: ""}}
   - {utterance: "音楽プレイリストのドライブを再生してください", intent: PlayPlaylist, slots: {Playlist: ""}}
   - {utterance: "ドライブのプレイリストをシャッフルで再生してください", intent: ShufflePlaylist, slots: {Playlist: ""}}
   - {utterance: "おすすめの映画を教えてください", intent: Recommend, slots: {MediaType: "movie"}}

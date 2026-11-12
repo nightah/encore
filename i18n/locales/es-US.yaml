@@ -1,6 +1,6 @@
 # es-US inherits lang/es, which is written for Spain; this overlay adds what US Hispanic speakers say and replaces responses that sound Peninsular. Most of them speak Mexican Spanish, and Alexa uses tú in the US too, so the overlay is the same as es-MX's, apart from es-US's unaccented samples; change both together. "encore" is not a Spanish word, and US Spanish speakers know it from English, so it doesn't clash with anything Alexa understands.
 #
-# Utterances add "la rola" (a song), "la compu" and "la computadora" for the computer, "dale play", "en mi {Room}" ("en mi recámara", "en mi cuarto"), "quiero seguir viendo" and "el capítulo nuevo". Responses use the preterite where Spain uses the perfect ("no encontré", not "no he encontrado"), "está bien" for "vale", "configuración" for "ajustes", "video" for "vídeo" and "cuarto" for "habitación". Times are read on the twelve-hour clock ("3:04 p. m."), so the end time follows "hora de término" rather than "a las", which would have to be "a la" at one o'clock, and comes before a semicolon, since "p. m." already ends in a period.
+# Utterances add "la rola" (a song), "la compu" and "la computadora" for the computer, "dale play", "en mi {Room}" ("en mi recámara", "en mi cuarto"), "quiero seguir viendo", "el capítulo nuevo", "cámbiale al canal", "qué pasan en" and "en vivo" for live TV. Responses use the preterite where Spain uses the perfect ("no encontré", not "no he encontrado"), "está bien" for "vale", "configuración" for "ajustes", "video" for "vídeo" and "cuarto" for "habitación". Times are read on the twelve-hour clock ("3:04 p. m."), so the end time follows "hora de término" rather than "a las", which would have to be "a la" at one o'clock, and comes before a semicolon or ends the response, since "p. m." already ends in a period; "hora de inicio" does the same for a start time.
 
 invocation: encore
 language: es
@@ -27,6 +27,13 @@ responses:
   library.no_genre: "No encontré nada del género {genre} en tu biblioteca."
   library.scan_both: "Actualizando tus bibliotecas de video y de música."
   library.scan_video: "Actualizando tu biblioteca de video."
+  livetv.channel_not_found: "No encontré ningún canal llamado {channel}."
+  livetv.now: "Ahora en {channel}: {title}. Hora de término: {end}"
+  livetv.now_next: "Ahora en {channel}: {title}; hora de término: {end}; después, {next}."
+  livetv.programme_later: "{title} empieza en {channel}. Hora de inicio: {start}"
+  livetv.programme_not_found: "No encontré {title} en la tele, ni ahora ni a continuación."
+  livetv.unavailable: "{kodi} no tiene configurada la televisión en vivo. Agrega un cliente PVR en Kodi para ver canales de televisión."
+  livetv.which_channel: "¿Qué canal? Di qué pasan en, y luego el nombre del canal."
   match.cancelled: "Está bien, olvídalo."
   match.no_more: "No encontré más coincidencias."
   match.not_found: "No encontré {query} en tu biblioteca."
@@ -72,6 +79,8 @@ utterances:
     - "(quiero escuchar|escuchar) la rola {Song} [de {Artist}]"
   ListenToSongOrAlbum:
     - "dale play a {Title} de {Artist} [en (el|la|mi) {Room}]"
+  OpenTVGuide:
+    - "qué (pasan|están pasando) en la (tele|televisión) [hoy|ahorita|esta noche]"
   PlayMedia:
     - "dale play a {Query}"
   Power:
@@ -80,10 +89,19 @@ utterances:
   RoomControl:
     - "{Command} en mi {Room}"
     - "{Command} [la] (tele|kodi|música|película|peli|serie) en mi {Room}"
+  WatchChannel:
+    - "cámbiale (a|al canal) {Channel} [en (el|la|mi) {Room}]"
+    - "(pon|ponme) el canal {Channel} en mi {Room}"
+  WatchChannelNumber:
+    - "cámbiale al canal número {ChannelNumber} [punto {SubNumber}] [en (el|la|mi) {Room}]"
   WatchEpisode:
     - "quiero ver el (capítulo|episodio) {Episode} de la temporada {Season} de {Show} [en (el|la|mi) {Room}]"
   WatchLatestEpisode:
     - "(pon|ponme|reproduce) el (capítulo|episodio) nuevo de {Show} [en (el|la|mi) {Room}]"
+  WatchLive:
+    - "(pon|ponme) {Programme} en vivo"
+    - "(quiero|queremos) ver {Programme} en vivo"
+    - "ver {Programme} en vivo"
   WatchMovie:
     - "(pon|ponme|reproduce) la (película|peli) {Movie} en mi {Room}"
     - "(quiero|queremos) ver la peli {Movie}"
@@ -98,3 +116,6 @@ utterances:
     - "(quiero|queremos) ver la temporada {Season} de {Show} [en (el|la|mi) {Room}]"
     - "(pon|ponme|reproduce) la {Ordinal} temporada de la serie {Show} [en (el|la|mi) {Room}]"
     - "dale play a la temporada {Season} de {Show} [en (el|la|mi) {Room}]"
+  WhatsOn:
+    - "qué (pasan|están pasando) en {Channel} [ahora|ahorita]"
+    - "qué (pasan|están pasando) en el canal {Channel}"

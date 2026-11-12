@@ -1,5 +1,14 @@
 # Example values for the dynamic slot types in model.yaml (nl): deploys replace them with what is set up in Encore. Chosen for this language rather than translated, so not on Crowdin.
 
+# Examples only: deploys replace them with the channels of the Kodi instances that have live TV.
+KODI_CHANNEL:
+  - {value: npo een, synonyms: [npo 1]}
+  - {value: npo twee, synonyms: [npo 2]}
+  - {value: rtl vier, synonyms: [rtl 4]}
+  - {value: sbs zes, synonyms: [sbs 6]}
+  - {value: net vijf, synonyms: [net 5]}
+  - {value: veronica}
+
 KODI_MUSIC_VIDEO:
   - {value: bohemian rhapsody}
   - {value: dromen zijn bedrog}

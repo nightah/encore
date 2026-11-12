@@ -1078,7 +1078,7 @@ type SkillInfo struct {
 	LocalesEnabled   []string         `json:"locales_enabled"`
 	// LocaleInvocations spell each choice per locale: some languages write the names in their own script, and French says kodi for both.
 	LocaleInvocations []LocaleInvocation        `json:"locale_invocations" doc:"What people say in each available locale for each invocation choice"`
-	Content           []string                  `json:"content" enum:"movies,tv,music" doc:"What the skill can play; music includes music videos"`
+	Content           []string                  `json:"content" enum:"movies,tv,music,livetv" doc:"What the skill can play; music includes music videos, and livetv is Kodi's live TV channels"`
 	Endpoint          SkillEndpointInfo         `json:"endpoint"`
 	Privacy           Privacy                   `json:"privacy" doc:"Each answer is null until it's given; deploys are refused until all are answered"`
 	LastDeploy        Nullable[LastDeploy]      `json:"last_deploy"`
@@ -1164,7 +1164,7 @@ type SkillSettingsInput struct {
 	Invocation     string        `json:"invocation" enum:"encore,kodi" default:"encore" doc:"encore uses each locale's own name for it (\"kodi\" in French); kodi is \"kodi\" in every locale"`
 	SkillName      string        `json:"skill_name" maxLength:"50" doc:"Empty uses each locale's default"`
 	LocalesEnabled []string      `json:"locales_enabled"`
-	Content        []string      `json:"content,omitempty" enum:"movies,tv,music" doc:"What the skill can play; music includes music videos. Omit to keep the current choice."`
+	Content        []string      `json:"content,omitempty" enum:"movies,tv,music,livetv" doc:"What the skill can play; music includes music videos, and livetv is Kodi's live TV channels. Omit to keep the current choice."`
 	Endpoint       SkillEndpoint `json:"endpoint"`
 	Privacy        Privacy       `json:"privacy"`
 }

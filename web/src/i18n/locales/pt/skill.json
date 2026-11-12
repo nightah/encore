@@ -24,6 +24,8 @@
     "title": "Uma implantação automática falhou e será tentada de novo"
   },
   "content": {
+    "liveTV": "TV ao vivo",
+    "liveTVHint": "Os canais e o guia de TV do Kodi; requer um complemento PVR",
     "movies": "Filmes",
     "music": "Música",
     "musicHint": "Inclui videoclipes",
@@ -44,8 +46,8 @@
       "titles": "Títulos da biblioteca"
     },
     "content": {
-      "hint": "Deixar um de fora remove os comandos de voz dele da skill. Música inclui videoclipes.",
-      "keepOne": "Mantenha pelo menos um entre filmes, séries de TV ou música.",
+      "hint": "Deixar um de fora remove os comandos de voz dele da skill. Música inclui videoclipes. A TV ao vivo requer um complemento PVR no Kodi.",
+      "keepOne": "Mantenha pelo menos um entre filmes, séries de TV, música ou TV ao vivo.",
       "legend": "O que ela pode reproduzir"
     },
     "degradedTitles": "{{kept}} de {{total}}",

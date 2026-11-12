@@ -1044,8 +1044,8 @@ export const handlers = [
       ]);
     }
     if (input.content && !input.content.length) {
-      return problem(422, "Unprocessable Entity", "choose at least one of movies, tv or music", [
-        { location: "body.content", message: "choose at least one of movies, tv or music" },
+      return problem(422, "Unprocessable Entity", "choose at least one of movies, tv, music or livetv", [
+        { location: "body.content", message: "choose at least one of movies, tv, music or livetv" },
       ]);
     }
     if (!input.locales_enabled?.length) {
@@ -1082,8 +1082,8 @@ export const handlers = [
     if (denied) return denied;
     const input = await body<Partial<UpdateSkillContentRequest>>(request);
     if (!input.content?.length) {
-      return problem(422, "Unprocessable Entity", "choose at least one of movies, tv or music", [
-        { location: "body.content", message: "choose at least one of movies, tv or music" },
+      return problem(422, "Unprocessable Entity", "choose at least one of movies, tv, music or livetv", [
+        { location: "body.content", message: "choose at least one of movies, tv, music or livetv" },
       ]);
     }
     const content = input.content;

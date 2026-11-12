@@ -182,6 +182,7 @@ type Backend interface {
 	Player
 	Remote
 	Host
+	LiveTV
 }
 
 // Source reads the library and reports changes to it.
@@ -252,6 +253,16 @@ type Remote interface {
 	Skin(ctx context.Context, profile string) (Skin, error)
 	// SkinSearch opens the active skin's own search with query filled in when Skin reports SkinSearchSupported, and returns the skin either way. A skin reported any other way is left alone for the caller to search another way; an error means the skin's search steps failed part way.
 	SkinSearch(ctx context.Context, query, profile string) (Skin, error)
+}
+
+// LiveTV lists and tunes the media centre's live TV channels.
+type LiveTV interface {
+	// LiveTVAvailable reports whether the media centre has live TV ready to watch. It is false while the media centre is still starting its TV service.
+	LiveTVAvailable(ctx context.Context) (bool, error)
+	// Channels returns the visible TV channels in channel number order. With guide set, each carries what's on now and next where the guide knows. It returns ErrNoLiveTV when the media centre has no live TV.
+	Channels(ctx context.Context, guide bool) ([]Channel, error)
+	// PlayChannel tunes to a channel by its ID.
+	PlayChannel(ctx context.Context, id int) error
 }
 
 // Host controls the machine and the library databases.
@@ -364,3 +375,27 @@ type Call struct {
 }
 
 type callObserverKey struct{}
+
+// Channel is a live TV channel.
+type Channel struct {
+	ID   int
+	Name string
+	// Major and SubNumber are the channel's number as the media centre shows it, 7.2 being Major 7, SubNumber 2. SubNumber is 0 when there is none.
+	Major, SubNumber int
+	// Client is the backend's TV source the channel comes from; two sources can give channels the same number or name.
+	Client int
+	Hidden bool
+	// Locked channels need a PIN to watch.
+	Locked bool
+	// Now and Next are what's on now and next, nil when the guide doesn't know or wasn't asked for.
+	Now, Next *Broadcast
+}
+
+// Broadcast is one programme in the TV guide. Start and End are instants in the media centre's time zone.
+type Broadcast struct {
+	Title string
+	// Episode is the episode's name, empty when there is none.
+	Episode    string
+	Genre      string
+	Start, End time.Time
+}

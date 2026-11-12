@@ -41,9 +41,9 @@ func TestContentSettingsShapeTheLibrary(t *testing.T) {
 
 		target, err := h.app.Target(ctx, testDevice)
 		require.NoError(t, err)
-		assert.Equal(t, []media.Content{media.ContentMovies, media.ContentMusic}, target.Disabled)
+		assert.Equal(t, []media.Content{media.ContentMovies, media.ContentMusic, media.ContentLiveTV}, target.Disabled)
 
-		content(config.ContentMovies, config.ContentTV, config.ContentMusic)
+		content(config.ContentMovies, config.ContentTV, config.ContentMusic, config.ContentLiveTV)
 
 		settled(t, func() bool { return h.app.Findable(id, movie) }, "turning movies on fetches them from Kodi straight away")
 

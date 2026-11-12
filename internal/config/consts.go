@@ -21,6 +21,7 @@ const (
 	ContentMovies = "movies"
 	ContentTV     = "tv"
 	ContentMusic  = "music"
+	ContentLiveTV = "livetv"
 )
 
 // DefaultQueueLimit is alexa.queue_limit's default, as in Kanzi.

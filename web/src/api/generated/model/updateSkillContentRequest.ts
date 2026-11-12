@@ -9,7 +9,7 @@ import type { UpdateSkillContentRequestContentItem } from "@api/generated/model/
 
 export interface UpdateSkillContentRequest {
   /**
-   * What the skill can play; music includes music videos
+   * What the skill can play; music includes music videos, and livetv is Kodi's live TV channels
    * @minItems 1
    */
   content: UpdateSkillContentRequestContentItem[];

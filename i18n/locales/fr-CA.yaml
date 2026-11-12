@@ -1,7 +1,7 @@
 # fr-CA inherits lang/fr, which is written for France; this overlay adds what Québécois speakers say and replaces responses that sound European. Alexa says "vous" in Canadian French too.
 # "encore" means "again" (and "still") in Québec French as in France, so fr-CA uses "kodi" even when encore is chosen, as fr-FR does.
 #
-# Utterances add "fais jouer" (play), "fais-moi entendre", "écouter" for watching ("écouter un film", "qu'est-ce qu'on écoute"), "l'émission" and "le téléroman" for a series, "la toune" for a song, "le vidéoclip", "pèse sur" (press), "mets ça sur pause" and "l'ordi". Responses say "liste de lecture" for a playlist, "vidéoclip" for a music video and "compétence" for a skill, as Amazon and the Office québécois de la langue française do in Canada.
+# Utterances add "fais jouer" (play), "fais-moi entendre", "écouter" for watching ("écouter un film", "qu'est-ce qu'on écoute"), "l'émission" and "le téléroman" for a series, "la toune" for a song, "le vidéoclip", "pèse sur" (press), "mets ça sur pause", "l'ordi", and "syntonise" and "le poste" for a TV channel ("change de poste pour arte"), with "l'horaire télé" for the guide. Responses say "liste de lecture" for a playlist, "vidéoclip" for a music video and "compétence" for a skill, as Amazon and the Office québécois de la langue française do in Canada.
 
 invocation: kodi
 language: fr
@@ -31,6 +31,8 @@ types:
     musicvideos: [vidéoclips, mes vidéoclips]
     recentmusicvideos: [vidéoclips ajoutés récemment, nouveaux vidéoclips, derniers vidéoclips, vidéoclips récents]
     tvshows: [mes émissions, téléromans]
+  LIVETV_VIEW:
+    channels: [postes, liste des postes]
   MEDIA_TYPE:
     musicvideo: [vidéoclips]
     song: [toune, tounes]
@@ -61,6 +63,8 @@ utterances:
   Navigate:
     - "(pèse sur|peser sur) {NavAction}"
     - "(pèse sur|peser sur) {NavAction} {Count} fois"
+  OpenTVGuide:
+    - "(ouvre|ouvrir|affiche|afficher|montre|montre-moi|montrer) l'horaire (télé|tv|des émissions)"
   PlayMedia:
     - "(fais jouer|faire jouer) {Query}"
   PlayPlaylist:
@@ -70,6 +74,11 @@ utterances:
   Recommend:
     - "qu'est-ce qu'on écoute [ce soir]"
     - "qu'est-ce que je (devrais|pourrais) écouter comme (film|série|émission)"
+  WatchChannel:
+    - "(syntonise|syntoniser) [la chaîne|le poste] {Channel} [(dans le|dans la|au|à la) {Room}]"
+    - "(change|changer) de poste pour {Channel} [(dans le|dans la|au|à la) {Room}]"
+    - "(mets|mettre|écoute|écouter) le poste {Channel} [(dans le|dans la|au|à la) {Room}]"
+    - "(écoute|écouter) la chaîne {Channel} [(dans le|dans la|au|à la) {Room}]"
   WatchEpisode:
     - "(fais jouer|faire jouer) {Show} saison {Season} épisode {Episode} [(dans le|dans la|au|à la) {Room}]"
     - "(fais jouer|faire jouer) l'épisode {Episode} de la saison {Season} de {Show} [(dans le|dans la|au|à la) {Room}]"
@@ -77,6 +86,8 @@ utterances:
     - "(fais jouer|faire jouer) le premier épisode de {Show} [(dans le|dans la|au|à la) {Room}]"
   WatchLatestEpisode:
     - "(fais jouer|faire jouer) le (dernier|nouvel) épisode de {Show} [(dans le|dans la|au|à la) {Room}]"
+  WatchLive:
+    - "(écoute|écouter) {Programme} en direct"
   WatchMovie:
     - "(fais jouer|faire jouer) le film {Movie} [(dans le|dans la|au|à la) {Room}]"
     - "je (veux|voudrais) écouter le film {Movie}"

@@ -24,6 +24,8 @@
     "title": "Una distribuzione automatica non è riuscita e verrà ritentata"
   },
   "content": {
+    "liveTV": "TV in diretta",
+    "liveTVHint": "I canali TV e la guida di Kodi; richiede un add-on PVR",
     "movies": "Film",
     "music": "Musica",
     "musicHint": "Include i video musicali",
@@ -44,8 +46,8 @@
       "titles": "Titoli della libreria"
     },
     "content": {
-      "hint": "Escluderne uno rimuove i relativi comandi vocali dalla skill. La musica include i video musicali.",
-      "keepOne": "Lascia attivo almeno uno tra film, serie TV e musica.",
+      "hint": "Escluderne uno rimuove i relativi comandi vocali dalla skill. La musica include i video musicali. La TV in diretta richiede un add-on PVR in Kodi.",
+      "keepOne": "Lascia attivo almeno uno tra film, serie TV, musica e TV in diretta.",
       "legend": "Cosa può riprodurre"
     },
     "degradedTitles": "{{kept}} di {{total}}",

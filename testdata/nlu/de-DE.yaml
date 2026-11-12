@@ -48,6 +48,13 @@ cases:
   - {utterance: "spiele mir das musikvideo zu bohemian rhapsody", intent: WatchMusicVideo, slots: {MusicVideo: ""}}
   - {utterance: "spiele mir ein zufälliges komödie musikvideo", intent: WatchRandomMusicVideo, slots: {Genre: ""}}
   - {utterance: "spiele mir alle meine komödie musikvideos", intent: ShuffleMusicVideos, slots: {Genre: ""}}
+  - {utterance: "schalte auf zdf um", intent: WatchChannel, slots: {Channel: "zdf"}}
+  - {utterance: "schalte auf kanal nummer vierundzwanzig", intent: WatchChannelNumber, slots: {ChannelNumber: "24"}}
+  - {utterance: "öffne das fernsehprogramm", intent: OpenTVGuide}
+  - {utterance: "öffne das tv programm", intent: OpenTVGuide, pending: "Amazon reads das TV programm as a show to shuffle, though fernsehprogramm opens the guide"}
+  - {utterance: "zeig die tv sender", intent: OpenTVGuide, slots: {LiveView: "channels"}}
+  - {utterance: "was läuft auf pro sieben", intent: WhatsOn, slots: {Channel: "pro sieben"}}
+  - {utterance: "ich will die tagesschau live sehen", intent: WatchLive, slots: {Programme: ""}}
   - {utterance: "spiele die wiedergabeliste roadtrip", intent: PlayPlaylist, slots: {Playlist: ""}}
   - {utterance: "spiele meine playlist roadtrip zufällig", intent: ShufflePlaylist, slots: {Playlist: ""}}
   - {utterance: "ich möchte eine film empfehlung", intent: Recommend, slots: {MediaType: "movie"}}

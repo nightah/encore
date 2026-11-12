@@ -1,9 +1,12 @@
 package app
 
 import (
+	"context"
+	"encoding/json"
 	"maps"
 	"slices"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -11,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/nightah/encore/internal/backend/kodi/fakekodi"
+	"github.com/nightah/encore/internal/config"
 	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/skillmodel"
 	"github.com/nightah/encore/internal/store"
@@ -196,4 +200,59 @@ func TestSlotValuesIgnorePlayback(t *testing.T) {
 	unplayed := build(time.Time{})
 	assert.Equal(t, []string{"Arrival", "Dune"}, []string{unplayed[0].Value, unplayed[1].Value}, "sorted by title")
 	assert.Equal(t, unplayed, build(time.Date(2026, 10, 27, 10, 53, 0, 0, time.UTC)), "playing a title doesn't change the model")
+}
+
+func TestSlotValuesNameTheChannelsWhenTheSkillPlaysLiveTV(t *testing.T) {
+	inBubble(t, func(t *testing.T) {
+		pvr := newKodi(t, fakekodi.Options{PVR: fakekodi.AustralianTV(time.Now())})
+		same := newKodi(t, fakekodi.Options{PVR: &fakekodi.PVR{Channels: []fakekodi.Channel{{ChannelID: 1, Channel: "seven", ChannelNumber: 71}, {ChannelID: 2, Channel: "Gecko TV", ChannelNumber: 17}}}})
+		none := newKodi(t, fakekodi.Options{})
+		broken := newKodi(t, fakekodi.Options{PVR: &fakekodi.PVR{Channels: []fakekodi.Channel{{ChannelID: 1, Channel: "Garage TV", ChannelNumber: 5}}}})
+		broken.Handle("PVR.GetProperties", func(json.RawMessage) (any, *fakekodi.Error) {
+			return nil, &fakekodi.Error{Code: fakekodi.CodeInvalidParams, Message: "Invalid params."}
+		})
+		a, _ := runApp(t, t.TempDir(), fastTuning(), kodiConfig("Lounge", pvr, "none"), kodiConfig("Bedroom", same, "none"), kodiConfig("Study", none, "none"), kodiConfig("Garage", broken, "none"))
+
+		out, err := a.SlotValues(t.Context())
+		require.NoError(t, err)
+		assert.NotContains(t, out, "KODI_CHANNEL", "the skill doesn't play live TV until it's turned on")
+
+		a.SetSettings(func(context.Context) (*config.Config, error) {
+			eff := *a.cfg
+			eff.Alexa.Content = []string{config.ContentMovies, config.ContentLiveTV}
+
+			return &eff, nil
+		})
+
+		out, err = a.SlotValues(t.Context())
+		require.NoError(t, err)
+
+		var names []string
+		for _, v := range out["KODI_CHANNEL"] {
+			names = append(names, v.Value)
+		}
+
+		assert.Contains(t, names, "9Go!")
+		assert.Contains(t, names, "Gecko TV", "every instance with live TV adds its channels")
+		assert.NotContains(t, names, "Test Card", "hidden channels are left out")
+		assert.NotContains(t, names, "Garage TV", "an instance whose live TV can't be checked adds none, and the rest still do")
+		assert.Equal(t, 1, countFold(names, "seven"), "a name two instances have is one value")
+		assert.Equal(t, 1, countFold(names, "bbc news"), "and so is a name one instance has twice")
+		assert.True(t, slices.IsSortedFunc(names, func(x, y string) int { return strings.Compare(strings.ToLower(x), strings.ToLower(y)) }))
+
+		i := slices.IndexFunc(out["KODI_CHANNEL"], func(v skillmodel.SlotValue) bool { return v.Value == "9Go!" })
+		assert.Equal(t, []string{"9 Go!"}, out["KODI_CHANNEL"][i].Synonyms, "a name is also given as it's spoken, so Alexa knows nine go")
+	})
+}
+
+func countFold(names []string, want string) int {
+	n := 0
+
+	for _, s := range names {
+		if strings.EqualFold(s, want) {
+			n++
+		}
+	}
+
+	return n
 }

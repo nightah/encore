@@ -9,6 +9,8 @@ const (
 	CodeInvalidParams  = -32602
 	CodeNotFound       = -32098
 	CodeUnavailable    = -32097
+	// CodeFailedToExecute is what Kodi answers a PVR method with while it has no live TV.
+	CodeFailedToExecute = -32100
 )
 
 const (

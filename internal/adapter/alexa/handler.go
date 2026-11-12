@@ -297,6 +297,11 @@ func (h *Handler) handle(ctx context.Context, env *RequestEnvelope, tr *requestT
 		target, err = h.Targets.Target(ctx, deviceID)
 	}
 
+	// Alexa may have put the end of the words before a title into it; a search query's readings already take them off.
+	if intent.Name != "PlayMedia" {
+		readings = append(readings, h.Speech.WithoutLeadIn(locale, intent)...)
+	}
+
 	if err != nil {
 		o := targetFailure(err, intent)
 

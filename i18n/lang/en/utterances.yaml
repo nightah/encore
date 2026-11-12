@@ -153,6 +153,11 @@ Navigate:
 OpenFavourite:
   open_favourite: "(open|show|go to|launch|start) [my|the] (favourite|favorite) {Favourite}"
   play_from_favourites: "(play|open) {Favourite} from [my] (favourites|favorites)"
+OpenTVGuide:
+  open_guide: "(show|open|go to|bring up|pull up) [the] (guide|programme guide|program guide|epg)"
+  open_tv_view: "(show|open|go to|bring up|pull up) [the|my] (tv|live tv) {LiveView}"
+  show_me_guide: "show me [the] (guide|programme guide|program guide)\nshow me [the|my] (tv|live tv) {LiveView}"
+  whats_on_tv: "what's on (tv|telly) [tonight]"
 PartyMode:
   lets_party: "(let's|time to) party"
   play_all_music: "(play|shuffle|listen to) (all|random|any) music [(in the|on the|in|on) {Room}]"
@@ -303,6 +308,16 @@ VolumeUp:
   raise_volume: "(raise|increase) [the] volume"
   turn_up: "(turn|crank) [it|the volume] up"
   volume_up: "volume up"
+WatchChannel:
+  change_channel: "(change|switch|turn) [the] channel to {Channel} [(in the|on the|in|on) {Room}]"
+  go_to_channel: "go to channel {Channel} [(in the|on the|in|on) {Room}]"
+  put_on_channel: "put on channel {Channel} [(in the|on the|in|on) {Room}]\nput on the {Channel} channel"
+  switch_to: "(switch|change|flick|turn) (to|over to) {Channel} [(in the|on the|in|on) {Room}]"
+  tune_to: "tune [in] to {Channel} [(in the|on the|in|on) {Room}]"
+  watch_channel: "watch channel {Channel} [(in the|on the|in|on) {Room}]"
+WatchChannelNumber:
+  channel_number: "(switch|change|go|turn|flick) to channel number {ChannelNumber} [point {SubNumber}] [(in the|on the|in|on) {Room}]"
+  put_on_number: "(put on|watch) channel number {ChannelNumber} [point {SubNumber}]"
 WatchEpisode:
   play_episode_season: "(play|watch) {Show} episode {Episode} of (season|series) {Season}"
   play_episode_season_2: "(play|watch|put on) episode {Episode} (of|from) (season|series) {Season} of {Show}"
@@ -316,6 +331,8 @@ WatchLatestEpisode:
   play_latest: "(play|watch|put on) the (latest|newest) {Show} [episode]"
   play_latest_episode: "(play|watch|put on) the (latest|newest|most recent|last) episode of {Show} [(in the|on the|in|on) {Room}]"
   play_latest_episode_2: "(play|watch|put on) (latest|newest) episode of {Show} [(in the|on the|in|on) {Room}]"
+WatchLive:
+  watch_live: "(watch|put on) {Programme} live\nwatch {Programme} on live tv\n(find|switch to|tune in to) {Programme} on live tv\nput on the live {Programme}"
 WatchMovie:
   i_want_watch: "i want to watch [the movie] {Movie}"
   lets_watch: "let's watch [the movie] {Movie}"
@@ -377,3 +394,5 @@ WhatsNew:
   whats_new: "what's new"
   whats_new_2: "what's new (in|on|for) {Show}"
   whats_new_watch: "what's new to (watch|listen to)"
+WhatsOn:
+  whats_on: "what's on {Channel}\nwhat's on channel {Channel}\nwhat is on {Channel} [right now|now]\nwhat's on {Channel} (now|right now|at the moment)"

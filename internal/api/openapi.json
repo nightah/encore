@@ -3138,12 +3138,13 @@
             ]
           },
           "content": {
-            "description": "What the skill can play; music includes music videos",
+            "description": "What the skill can play; music includes music videos, and livetv is Kodi's live TV channels",
             "items": {
               "enum": [
                 "movies",
                 "tv",
-                "music"
+                "music",
+                "livetv"
               ],
               "type": "string"
             },
@@ -3263,12 +3264,13 @@
         "additionalProperties": true,
         "properties": {
           "content": {
-            "description": "What the skill can play; music includes music videos. Omit to keep the current choice.",
+            "description": "What the skill can play; music includes music videos, and livetv is Kodi's live TV channels. Omit to keep the current choice.",
             "items": {
               "enum": [
                 "movies",
                 "tv",
-                "music"
+                "music",
+                "livetv"
               ],
               "type": "string"
             },
@@ -3663,12 +3665,13 @@
         "additionalProperties": false,
         "properties": {
           "content": {
-            "description": "What the skill can play; music includes music videos",
+            "description": "What the skill can play; music includes music videos, and livetv is Kodi's live TV channels",
             "items": {
               "enum": [
                 "movies",
                 "tv",
-                "music"
+                "music",
+                "livetv"
               ],
               "type": "string"
             },

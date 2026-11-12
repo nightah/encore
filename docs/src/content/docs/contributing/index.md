@@ -107,6 +107,7 @@ The scope becomes the pull request's `area/<scope>` label.
 | `layout` | The package layout test (`internal/layout`) |
 | `lefthook` | The Git hooks (`.lefthook.yml`) |
 | `library` | Library sync and the title index (`internal/core/library`) |
+| `livetv` | Finding live TV channels and what's on them (`internal/core/livetv`) |
 | `logs` | Log messages and logging |
 | `match` | Title matching (`internal/core/match`) |
 | `media` | The media backend contract (`internal/core/media`) |

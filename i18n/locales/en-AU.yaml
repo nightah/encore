@@ -11,6 +11,9 @@ launch:
 skill_name: Encore
 
 utterances:
+  WatchChannel:
+    - "chuck on channel {Channel}"
+    - "chuck on the {Channel} channel"
   WatchMovie:
     - "chuck on [the movie] {Movie}"
   WatchSeason:

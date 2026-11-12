@@ -55,6 +55,7 @@ export default {
         "layout",
         "lefthook",
         "library",
+        "livetv",
         "logs",
         "match",
         "media",

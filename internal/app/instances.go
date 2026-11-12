@@ -10,6 +10,7 @@ import (
 
 	"github.com/nightah/encore/internal/backend/kodi"
 	"github.com/nightah/encore/internal/core/actions"
+	"github.com/nightah/encore/internal/core/livetv"
 	"github.com/nightah/encore/internal/core/media"
 	"github.com/nightah/encore/internal/store"
 )
@@ -139,6 +140,7 @@ func (a *App) newInstance(ctx context.Context, rec store.KodiInstance) (*Instanc
 
 	inst := &Instance{Record: rec, Client: client, Backend: backend, Waker: waker, id: rec.ID, name: rec.Name, log: log, db: a.db}
 	inst.screen.Store(&media.Screen{Width: rec.ScreenWidth, Height: rec.ScreenHeight})
+	inst.Guide = livetv.New(backend, inst.language(), livetv.Options{})
 
 	return inst, nil
 }
@@ -267,7 +269,7 @@ func (i *Instance) saveScreen(ctx context.Context, timeout time.Duration) bool {
 
 // Callers hold App.mu.
 func (i *Instance) target() actions.Target {
-	t := actions.Target{Name: i.name, Backend: i.Backend, Matcher: i.Index, Library: i.Catalog}
+	t := actions.Target{Name: i.name, Backend: i.Backend, Matcher: i.Index, Library: i.Catalog, Guide: i.Guide}
 
 	if i.Waker.MAC() != nil {
 		t.Wake = func(ctx context.Context) error { return i.Waker.WakeAndWait(ctx, wakeBudget) }

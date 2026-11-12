@@ -24,6 +24,8 @@
     "title": "Eine automatische Bereitstellung ist fehlgeschlagen und wird wiederholt"
   },
   "content": {
+    "liveTV": "Live-TV",
+    "liveTVHint": "Kodis TV-Sender und Programmführer; erfordert ein PVR-Add-on",
     "movies": "Filme",
     "music": "Musik",
     "musicHint": "Einschließlich Musikvideos",
@@ -44,8 +46,8 @@
       "titles": "Titel aus der Mediathek"
     },
     "content": {
-      "hint": "Lässt du etwas weg, entfallen die zugehörigen Sprachbefehle im Skill. Musik umfasst auch Musikvideos.",
-      "keepOne": "Lass mindestens Filme, Serien oder Musik aktiviert.",
+      "hint": "Lässt du etwas weg, entfallen die zugehörigen Sprachbefehle im Skill. Musik umfasst auch Musikvideos. Live-TV erfordert ein PVR-Add-on in Kodi.",
+      "keepOne": "Lass mindestens Filme, Serien, Musik oder Live-TV aktiviert.",
       "legend": "Was der Skill abspielen kann"
     },
     "degradedTitles": "{{kept}} von {{total}}",

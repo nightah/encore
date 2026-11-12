@@ -120,17 +120,29 @@ func (h *Handler) dispatch(ctx context.Context, env *RequestEnvelope, t actions.
 		}
 
 		// With content groups switched off, only what's left is searched.
-		if len(t.Disabled) > 0 {
+		if t.LibraryLimited() {
 			if kinds == nil {
 				kinds = append(kinds, media.KindMovie, media.KindTVShow, media.KindArtist, media.KindAlbum, media.KindSong, media.KindMusicVideo)
 			}
 
 			if kinds = t.Allowed(kinds); len(kinds) == 0 {
+				if o, ok := svc.TuneIfChannel(ctx, t, sl.value("Query"), progress); ok {
+					return o
+				}
+
 				return actions.ContentDisabled()
 			}
 		}
 
-		return h.playTitle(ctx, locale, t, sl.title("Query", kinds, pending), true, progress)
+		o := h.playTitle(ctx, locale, t, sl.title("Query", kinds, pending), true, progress)
+		// A title the library hasn't may be a channel: "put on ABC News".
+		if o.Missed() {
+			if tuned, ok := svc.TuneIfChannel(ctx, t, sl.value("Query"), progress); ok {
+				return tuned
+			}
+		}
+
+		return o
 
 	// Movies.
 	case "WatchRandomMovie":
@@ -225,7 +237,8 @@ func (h *Handler) dispatch(ctx context.Context, env *RequestEnvelope, t actions.
 			}
 		}
 
-		if (kind != "" && !t.Allows(kind)) || (kind == "" && len(t.Disabled) == len(media.Contents)) {
+		// No kind means none of films, shows and albums is allowed: the skill plays none of the library.
+		if kind == "" || !t.Allows(kind) {
 			return actions.ContentDisabled()
 		}
 
@@ -236,6 +249,33 @@ func (h *Handler) dispatch(ctx context.Context, env *RequestEnvelope, t actions.
 		})
 	case "WhatAlbums":
 		return svc.AlbumsBy(ctx, t, sl.value("Artist"))
+
+	// Live TV.
+	case "WatchChannel":
+		return svc.WatchChannel(ctx, t, sl.value("Channel"), progress)
+	case "WatchChannelNumber":
+		n, ok := sl.number("ChannelNumber")
+		if !ok {
+			return svc.WatchChannel(ctx, t, sl.value("ChannelNumber"), progress)
+		}
+
+		sub, ok := sl.number("SubNumber")
+		if !ok {
+			sub = -1
+		}
+
+		return svc.WatchChannelNumber(ctx, t, n, sub, progress)
+	case "OpenTVGuide":
+		section := media.SectionTVGuide
+		if sl.id("LiveView", "LIVETV_VIEW") == liveViewChannels {
+			section = media.SectionTVChannels
+		}
+
+		return svc.OpenTVGuide(ctx, t, section, progress)
+	case "WhatsOn":
+		return svc.WhatsOn(ctx, t, sl.value("Channel"), progress)
+	case "WatchLive":
+		return svc.WatchLive(ctx, t, sl.value("Programme"), progress)
 	}
 
 	return h.dispatchControl(ctx, t, intent, sl)

@@ -101,10 +101,17 @@ func (h *harness) waitIndexed(t *testing.T) {
 func (h *harness) say(t *testing.T, intent, slot, value string) alexa.ResponseEnvelope {
 	t.Helper()
 
+	return h.sayIn(t, "en-AU", intent, slot, value)
+}
+
+// sayIn is say in locale.
+func (h *harness) sayIn(t *testing.T, locale, intent, slot, value string) alexa.ResponseEnvelope {
+	t.Helper()
+
 	body := fmt.Appendf(nil, `{"version":"1.0","session":{"new":true,"attributes":{}},
 		"context":{"System":{"device":{"deviceId":%q}}},
-		"request":{"type":"IntentRequest","requestId":"req-%d","timestamp":"2026-10-26T09:00:00Z","locale":"en-AU",
-		"intent":{"name":%q,"slots":{%q:{"name":%q,"value":%q}}}}}`, testDevice, time.Now().UnixNano(), intent, slot, slot, value)
+		"request":{"type":"IntentRequest","requestId":"req-%d","timestamp":"2026-10-26T09:00:00Z","locale":%q,
+		"intent":{"name":%q,"slots":{%q:{"name":%q,"value":%q}}}}}`, testDevice, time.Now().UnixNano(), locale, intent, slot, slot, value)
 
 	rec := httptest.NewRecorder()
 	h.handler.ServeBody(rec, httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/api/v1/alexa", bytes.NewReader(body)), body)
@@ -357,5 +364,25 @@ func TestEndToEndSkinSearch(t *testing.T) {
 
 		_, _, err = h.app.InstanceSkin(t.Context(), 999)
 		require.ErrorIs(t, err, ErrNoRuntime)
+	})
+}
+
+// TestEndToEndTitleHeardWithItsLeadIn covers Alexa putting the words a sample says before the title into the title: ar-SA "ابغى اشوف فيلم الرسالة" came as WatchMovie with the Movie "اشوف فيلم الرسالة", though "ابغى اشوف فيلم {Movie}" is its own sample.
+func TestEndToEndTitleHeardWithItsLeadIn(t *testing.T) {
+	inBubble(t, func(t *testing.T) {
+		lib := fakekodi.DefaultLibrary()
+		lib.Movies = append(lib.Movies, fakekodi.Movie{MovieID: 50, Label: "الرسالة", Title: "الرسالة", Year: 1976, Runtime: 10620, DateAdded: "2020-01-01 10:00:00"})
+
+		kodi := newKodi(t, fakekodi.Options{Library: lib})
+		h := startHarness(t, onFakes(defaultTuning()), config.KodiInstance{Name: "Lounge", URL: kodi.URL(), WebSocketURL: kodi.WebSocketURL(), Default: true, Language: "ar"})
+		h.kodi = kodi
+		h.waitIndexed(t)
+
+		resp := h.sayIn(t, "ar-SA", "WatchMovie", "Movie", "اشوف فيلم الرسالة")
+		assert.Equal(t, "تشغيل الرسالة.", speech(resp))
+
+		calls := kodi.CallsTo("Player.Open")
+		require.Len(t, calls, 1)
+		assert.Contains(t, string(calls[0].Params), `"movieid":50`)
 	})
 }

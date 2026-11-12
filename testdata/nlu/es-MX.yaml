@@ -48,6 +48,12 @@ cases:
   - {utterance: "pon el videoclip de bohemian rhapsody", intent: WatchMusicVideo, slots: {MusicVideo: ""}}
   - {utterance: "pon un videoclip aleatorio", intent: WatchRandomMusicVideo}
   - {utterance: "pon todos mis videoclips en aleatorio", intent: ShuffleMusicVideos}
+  - {utterance: "cambia a antena tres", intent: WatchChannel, slots: {Channel: "antena tres"}}
+  - {utterance: "pon el canal número veinticuatro", intent: WatchChannelNumber, slots: {ChannelNumber: "24"}}
+  - {utterance: "abre la guía de la tele", intent: OpenTVGuide, slots: {LiveView: "guide"}}
+  - {utterance: "muestra los canales de la tele", intent: OpenTVGuide, slots: {LiveView: "channels"}}
+  - {utterance: "qué pasan en telecinco", intent: WhatsOn, slots: {Channel: "telecinco"}}
+  - {utterance: "pon el partido en vivo", intent: WatchLive, slots: {Programme: ""}}
   - {utterance: "pon la lista de música viaje", intent: PlayPlaylist, slots: {Playlist: ""}}
   - {utterance: "pon mi lista de reproducción viaje en aleatorio", intent: ShufflePlaylist, slots: {Playlist: ""}}
   - {utterance: "dame una recomendación de película", intent: Recommend, slots: {MediaType: "movie"}, pending: "Amazon's reading changes with unrelated changes to the model"}

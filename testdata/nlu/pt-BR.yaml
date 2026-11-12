@@ -48,13 +48,19 @@ cases:
   - {utterance: "toca o clipe de evidências", intent: WatchMusicVideo, slots: {MusicVideo: ""}}
   - {utterance: "toca um clipe aleatório", intent: WatchRandomMusicVideo}
   - {utterance: "toca todos os meus clipes", intent: ShuffleMusicVideos}
+  - {utterance: "muda para a globo", intent: WatchChannel, slots: {Channel: "globo"}}
+  - {utterance: "muda pro canal número vinte e quatro", intent: WatchChannelNumber, slots: {ChannelNumber: "24"}}
+  - {utterance: "abre o guia da tv", intent: OpenTVGuide, slots: {LiveView: "guide"}}
+  - {utterance: "mostra os canais da tv", intent: OpenTVGuide, slots: {LiveView: "channels"}}
+  - {utterance: "o que está passando no sbt", intent: WhatsOn, slots: {Channel: "sbt"}}
+  - {utterance: "coloca o jogo do flamengo ao vivo", intent: WatchLive, slots: {Programme: ""}}
   - {utterance: "toca a playlist de música viagem", intent: PlayPlaylist, slots: {Playlist: ""}}
   - {utterance: "toca a playlist viagem no aleatório", intent: ShufflePlaylist, slots: {Playlist: ""}}
   - {utterance: "me dá uma recomendação de filme", intent: Recommend, slots: {MediaType: "movie"}}
   - {utterance: "tem algum filme novo para assistir", intent: WhatsNew, slots: {MediaType: "movie"}}
   - {utterance: "lista os álbuns de anitta", intent: WhatAlbums, slots: {Artist: "anitta"}}
   - {utterance: "para trás cinco minutos", intent: PlayerSeek, slots: {Duration: "", SeekDirection: "back"}}
-  - {utterance: "retrocede cinco minutos", intent: PlayerRewind, slots: {Duration: ""}, pending: "Amazon fills no Duration from cinco minutos, which es-ES's same sample does"}
+  - {utterance: "retrocede cinco minutos", intent: PlayerRewind, slots: {Duration: ""}}
   - {utterance: "vai para a posição cinco minutos", intent: PlayerSeekTo, slots: {Position: ""}}
   - {utterance: "modo repetir tudo", intent: Repeat, slots: {RepeatMode: "all"}}
   - {utterance: "melhora a imagem", intent: PlayerZoom}

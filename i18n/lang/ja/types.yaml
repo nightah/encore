@@ -68,6 +68,15 @@ LIBRARY_TYPE:
     映画
     テレビ番組
     ビデオライブラリ
+LIVETV_VIEW:
+  channels: |-
+    チャンネル一覧
+    チャンネルリスト
+    チャンネル
+  guide: |-
+    番組表
+    番組ガイド
+    ガイド
 MATCH_CHOICE:
   film: |-
     映画

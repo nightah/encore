@@ -81,6 +81,20 @@ LIBRARY_TYPE:
     फ़िल्म
     टीवी
     video
+LIVETV_VIEW:
+  channels: |-
+    चैनल
+    चैनल लिस्ट
+    चैनलों की लिस्ट
+    चैनल सूची
+    चैनल गाइड
+    channels
+  guide: |-
+    गाइड
+    प्रोग्राम गाइड
+    शेड्यूल
+    लिस्टिंग
+    guide
 MATCH_CHOICE:
   film: |-
     फ़िल्म

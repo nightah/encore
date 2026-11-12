@@ -23,7 +23,7 @@ func TestLintModelRules(t *testing.T) {
 		},
 		"unknown content group": {
 			mutate: func(s *Sources) { s.Model.Intents[1].Content = "podcasts" },
-			want:   `error: WatchMovie: content "podcasts" is not one of movies, tv or music`,
+			want:   `error: WatchMovie: content "podcasts" is not one of movies, tv, music or livetv`,
 		},
 		"slot declared twice": {
 			mutate: func(s *Sources) {

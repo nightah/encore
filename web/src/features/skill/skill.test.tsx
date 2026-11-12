@@ -78,8 +78,18 @@ describe("Alexa skill page", () => {
     await user.click(await findEnabledButton({ name: "TV shows", pressed: true }));
     await waitFor(() => expect(getDb().skill.content).toEqual(["movies"]));
     await user.click(await findEnabledButton({ name: "Movies", pressed: true }));
-    expect(await screen.findByText("Keep at least one of movies, TV shows or music.")).toBeInTheDocument();
+    expect(await screen.findByText("Keep at least one of movies, TV shows, music or live TV.")).toBeInTheDocument();
     expect(getDb().skill.content).toEqual(["movies"]);
+  });
+
+  it("turns live TV on, which is off until asked for", async () => {
+    const user = userEvent.setup();
+    renderApp("/alexa-skill");
+
+    const live = await findEnabledButton({ name: "Live TV", pressed: false });
+    expect(screen.getByText(/Live TV needs a PVR add-on in Kodi/)).toBeInTheDocument();
+    await user.click(live);
+    await waitFor(() => expect(getDb().skill.content).toEqual(["movies", "tv", "music", "livetv"]));
   });
 
   it("says when only new library titles are waiting for a deploy", async () => {

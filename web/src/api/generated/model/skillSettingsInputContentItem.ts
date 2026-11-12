@@ -10,6 +10,7 @@ export type SkillSettingsInputContentItem =
   (typeof SkillSettingsInputContentItem)[keyof typeof SkillSettingsInputContentItem];
 
 export const SkillSettingsInputContentItem = {
+  livetv: "livetv",
   movies: "movies",
   music: "music",
   tv: "tv",

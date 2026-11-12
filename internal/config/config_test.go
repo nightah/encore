@@ -192,7 +192,7 @@ func TestAlexaContent(t *testing.T) {
 	assert.Equal(t, []string{"movies", "tv"}, cfg.Alexa.Content)
 
 	_, err = Load(Options{Environ: environ("ENCORE_ALEXA_CONTENT=movies,podcasts")})
-	require.ErrorContains(t, err, `"podcasts" is not one of movies, tv or music`)
+	require.ErrorContains(t, err, `"podcasts" is not one of movies, tv, music or livetv`)
 }
 
 func TestEnvNames(t *testing.T) {

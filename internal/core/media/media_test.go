@@ -38,7 +38,7 @@ func TestContentsAreEachReachableFromAKind(t *testing.T) {
 
 	reached := map[Content]bool{}
 
-	for _, k := range []Kind{KindMovie, KindTVShow, KindEpisode, KindArtist, KindAlbum, KindSong, KindMusicVideo, KindPlaylist} {
+	for _, k := range []Kind{KindMovie, KindTVShow, KindEpisode, KindArtist, KindAlbum, KindSong, KindMusicVideo, KindPlaylist, KindChannel} {
 		reached[ContentOf(k)] = true
 	}
 
@@ -46,7 +46,8 @@ func TestContentsAreEachReachableFromAKind(t *testing.T) {
 		assert.True(t, reached[c], "no kind belongs to %q", c)
 	}
 
-	assert.Equal(t, []Content{ContentMovies, ContentTV, ContentMusic}, Contents, "the offered order")
+	assert.Equal(t, []Content{ContentMovies, ContentTV, ContentMusic, ContentLiveTV}, Contents, "the offered order")
+	assert.Equal(t, []Content{ContentMovies, ContentTV, ContentMusic}, LibraryContents, "live TV isn't the library")
 }
 
 func TestArtworkCoverPrefersThePoster(t *testing.T) {
