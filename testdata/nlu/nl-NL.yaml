@@ -91,7 +91,7 @@ cases:
   - {utterance: "ja graag", intent: AMAZON.YesIntent}
   - {utterance: "nee dank je", intent: AMAZON.NoIntent}
   - {utterance: "ik bedoel de oudere", intent: ChooseMatch, slots: {Which: "older"}}
-  - {utterance: "ik bedoel dune uit 2021", intent: ChooseMatch, slots: {Answer: "dune", Year: "2021"}, also: [{intent: ChooseMatch, slots: {Answer: "dune uit 2021"}}]}
+  - {utterance: "ik bedoel dune uit 2021", intent: ChooseMatch, slots: {Answer: "dune", Year: "2021"}, also: [{intent: ChooseMatch, slots: {Answer: "dune uit 2021"}}], pending: "Amazon reads it as watching a film called 2021, though it is one of ChooseMatch's samples"}
   - {utterance: "die uit 1984", intent: ChooseMatch, slots: {Year: "1984"}, also: [{intent: WatchMovie, slots: {Movie: "1984"}}]}
   # Bare titles, which free-text and title slots compete for.
   - {utterance: "speel zwartboek", intent: PlayMedia, slots: {Query: "zwartboek"}}
