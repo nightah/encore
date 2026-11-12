@@ -3,9 +3,9 @@ name: Nightly
 # The nightly runs what needs something outside the tree: real Kodi, MinIO, rclone and Nextcloud servers, Amazon's live API, the pinned libraries the benchmarks module compares the in-tree code with, and the slow fuzzing and mutation runs. A change to Encore's own code or test data should never fail here first: its gates, the matcher's accuracy on the corpora and on absent titles included, run in CI (ci-jobs.yml) on every push and pull request.
 on:
   schedule:
-    # Daily at 17:00 UTC, split so Sunday's run can be told apart: every job runs on both schedules, mutation testing only on the Sunday one.
-    - cron: "0 17 * * 1-6"
-    - cron: "0 17 * * 0"
+    # Daily at 14:23 UTC, split so Sunday's run can be told apart: every job runs on both schedules, mutation testing only on the Sunday one.
+    - cron: "23 14 * * 1-6"
+    - cron: "23 14 * * 0"
   workflow_dispatch:
     inputs:
       mutation:
@@ -479,7 +479,7 @@ jobs:
     name: Mutation testing (gremlins, ${{ matrix.shard }})
     # Weekly: only on the Sunday schedule, or on demand.
     if: >-
-      (github.event_name == 'schedule' && github.event.schedule == '0 17 * * 0') ||
+      (github.event_name == 'schedule' && github.event.schedule == '23 14 * * 0') ||
       (github.event_name == 'workflow_dispatch' && inputs.mutation)
     runs-on: ubuntu-26.04
     # One run of internal/core takes longer than a hosted runner lasts (match alone has two thirds of the mutants), so it is split into shards of about 20 minutes each; .github/scripts/mutation-shard.sh lists their files.
