@@ -19,7 +19,7 @@ require (
 	github.com/miekg/dns v1.1.73
 	github.com/minio/minio-go/v7 v7.4.1
 	github.com/oapi-codegen/runtime v1.9.0
-	github.com/pressly/goose/v3 v3.30.0
+	github.com/pressly/goose/v3 v3.30.1
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.1.0
 	github.com/stretchr/testify v1.12.1
@@ -46,7 +46,7 @@ require (
 	github.com/klauspost/cpuid/v2 v2.4.1 // indirect
 	github.com/klauspost/crc32 v1.3.0 // indirect
 	github.com/knadh/koanf/maps v0.1.2 // indirect
-	github.com/mfridman/interpolate v0.0.2 // indirect
+	github.com/mfridman/interpolate v0.2.0 // indirect
 	github.com/minio/crc64nvme v1.1.1 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
