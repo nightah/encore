@@ -25,7 +25,7 @@ func (c *Client) Simulate(ctx context.Context, skillID, locale, text string) (st
 	return c.simulate(ctx, skillID, locale, text, smapiclient.V2SkillSimulationsSessionModeFORCENEWSESSION)
 }
 
-// SimulateInSession is Simulate in the session the last simulation left open, so a dialog's next turn reaches the skill as an answer. With no session open it starts one.
+// SimulateInSession is Simulate in the session the last simulation left open, so a dialogue's next turn reaches the skill as an answer. With no session open it starts one.
 func (c *Client) SimulateInSession(ctx context.Context, skillID, locale, text string) (string, error) {
 	return c.simulate(ctx, skillID, locale, text, smapiclient.V2SkillSimulationsSessionModeDEFAULT)
 }

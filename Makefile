@@ -111,7 +111,7 @@ nlu-open: ## Say each locale's launch phrases to Amazon's simulator against the 
 	$(GO) run ./cmd/encore gen open $(if $(filter kodi,$(NLU_INVOCATION)),--invocation kodi) $(NLU_FLAGS)
 
 simulate: ## Say utterances, or a cases file, to Amazon's simulator and show or check what Alexa heard and the skill answered, by default with make dev's skill, as Encore in DEV_DATA_DIR reaches it (ENCORE_DATA_DIR picks another); SIM_FLAGS holds the flags and quoted utterances, e.g. SIM_FLAGS='-f cases.yaml'. It really controls your Kodi instances
-	$(if $(ENCORE_DATA_DIR),,ENCORE_DATA_DIR='$(DEV_DATA_DIR)') $(GO) run ./cmd/encore gen simulate $(SIM_FLAGS)
+	ENCORE_DATA_DIR='$(or $(ENCORE_DATA_DIR),$(DEV_DATA_DIR))' $(GO) run ./cmd/encore gen simulate $(SIM_FLAGS)
 
 test-web: web-browser ## Run web unit tests (in headless Chromium)
 	$(PNPM) -C web test

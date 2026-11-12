@@ -38,7 +38,7 @@ func newGenSimulateCommand() *cobra.Command {
 		Long: "Says each utterance to the simulation API in turn, as typed text, and reports the intent and slots Alexa read, whether the skill was reached and what it and Alexa said. Include the invocation, as in “ask encore to switch to abc news”.\n" +
 			"With --file, the utterances come from a YAML file of cases, each of which may expect an intent, slots and a regular expression Alexa's reply must match, and the command fails when any case doesn't.\n" +
 			"The simulator sends the skill's endpoint real requests: against a skill Encore deployed, the utterances really control your Kodi instances. The skill must be enabled for testing; one that isn't is enabled while the utterances are said and disabled again after.\n" +
-			"By default the skill is the one Encore deployed, reached with the Login with Amazon connection Encore keeps in its data directory, in its default locale; the data directory is only read, so this can run beside the server. --skill names another, reached with " + envClientID + ", " + envClientSecret + " and " + envRefreshToken + " when they're set, else with Encore's connection. With no data directory to read, the skill " + envSkillID + " names is used with those variables.",
+			"By default the skill is the one Encore deployed, reached with the Login with Amazon connection Encore keeps in its data directory, in its default locale; its database is only read, so this can run beside the server. --skill names another, reached with " + envClientID + ", " + envClientSecret + " and " + envRefreshToken + " when they're set, else with Encore's connection. With no data directory to read, the skill " + envSkillID + " names is used with those variables.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cases, err := simulationCases(file, args)
 			if err != nil {
@@ -88,7 +88,7 @@ func newGenSimulateCommand() *cobra.Command {
 	sf.register(cmd)
 	cmd.Flags().StringVarP(&locale, "locale", "l", "", "the locale to say the utterances in, overriding a file's own (default the data directory's default locale, else "+simulateLocale+")")
 	cmd.Flags().StringVarP(&file, "file", "f", "", "a YAML file of cases to say and check, instead of utterances")
-	cmd.Flags().BoolVar(&inSession, "session", false, "say every utterance after the first in the session the one before left open, as a dialog's answers")
+	cmd.Flags().BoolVar(&inSession, "session", false, "say every utterance after the first in the session the one before left open, as a dialogue's answers")
 	cmd.Flags().BoolVar(&asJSON, "json", false, "print each result as a line of JSON")
 
 	return cmd
@@ -149,7 +149,7 @@ func (cs simCases) locale(sc simCase, flag, fallback string) string {
 	return cmp.Or(flag, sc.Locale, cs.Locale, fallback)
 }
 
-// simulationTarget picks the skill to simulate, a client to reach it with and a default locale. A skill named with --skill is reached with the SMAPI_* credentials when they're set, else with those Encore keeps in its data directory. With no --skill, the skill Encore deployed is used, with its credentials and default locale from the data directory, and failing that the skill SMAPI_SKILL_ID names with the SMAPI_* credentials.
+// simulationTarget picks the skill to simulate, a client to reach it with and a default locale. A skill named with --skill is reached with the SMAPI_* credentials when they're set, else with those Encore keeps in its data directory, and takes the data directory's locale only when it is the skill stored there. With no --skill, the skill Encore deployed is used, with its credentials and default locale from the data directory, and failing that the skill SMAPI_SKILL_ID names with the SMAPI_* credentials.
 func (f *smapiFlags) simulationTarget(cmd *cobra.Command) (*smapi.Client, string, string, error) {
 	env := os.Getenv(envClientID) != "" && os.Getenv(envClientSecret) != "" && os.Getenv(envRefreshToken) != ""
 
@@ -165,7 +165,12 @@ func (f *smapiFlags) simulationTarget(cmd *cobra.Command) (*smapi.Client, string
 	case dirErr == nil:
 		c, err := f.clientWith(access.ClientID, access.ClientSecret, access.RefreshToken)
 
-		return c, cmp.Or(f.skill, access.SkillID), access.Locale, err
+		// The stored locale is the stored skill's; another takes the default.
+		if f.skill != "" && f.skill != access.SkillID {
+			return c, f.skill, "", err
+		}
+
+		return c, access.SkillID, access.Locale, err
 	case f.skill == "" && env && os.Getenv(envSkillID) != "":
 		c, skill, err := f.client()
 
@@ -333,7 +338,12 @@ func writeSimulation(b *strings.Builder, sim *smapi.Simulation) {
 		}
 	}
 
-	if sim.Status == smapi.SimulationSuccessful && len(sim.Responses) == 0 {
+	switch {
+	case len(sim.Responses) > 0:
+	case sim.Invoked:
+		// The endpoint answered with something the simulator didn't pass on as a skill response, such as an error page.
+		fmt.Fprintf(b, "  skill:   reached, but its response couldn't be read\n")
+	case sim.Status == smapi.SimulationSuccessful:
 		fmt.Fprintf(b, "  skill:   not reached\n")
 	}
 

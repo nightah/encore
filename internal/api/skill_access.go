@@ -12,7 +12,7 @@ import (
 	"github.com/nightah/encore/internal/store"
 )
 
-// ReadSkillAccess reads what Encore keeps for reaching the skill it deploys through SMAPI: the Login with Amazon security profile and token from the Alexa skill page, the skill's ID and the locale to talk to it in: the default locale from Settings when the skill has it, else the skill's first. It only reads, so a tool can use it beside a running server. ErrNoSkillAccess means Encore isn't connected to Amazon, or hasn't deployed its skill.
+// ReadSkillAccess reads what Encore keeps for reaching the skill it deploys through SMAPI: the Login with Amazon security profile and token from the Alexa skill page, the skill's ID and the locale to talk to it in: the default locale from Settings when the skill has it, else the skill's first, every shipped locale when none is chosen. It only reads, so a tool can use it beside a running server. ErrNoSkillAccess means Encore isn't connected to Amazon, or hasn't deployed its skill.
 func ReadSkillAccess(ctx context.Context, cfg *config.Config, db *store.DB, sec *secrets.Store) (SkillAccess, error) {
 	settings := db.Settings()
 
@@ -41,8 +41,18 @@ func ReadSkillAccess(ctx context.Context, cfg *config.Config, db *store.DB, sec 
 		return SkillAccess{}, err
 	}
 
-	// As the server picks it: the default locale when the skill has it, else the skill's first.
-	if enabled := eff.Alexa.Locales; len(enabled) > 0 && !slices.Contains(enabled, loc.DefaultLocale) {
+	// As the server picks it: the default locale when the skill has it, else the skill's first; a skill without locales of its own chosen has every shipped one.
+	enabled := eff.Alexa.Locales
+	if len(enabled) == 0 {
+		src, err := loadSources()
+		if err != nil {
+			return SkillAccess{}, err
+		}
+
+		enabled = src.LocaleNames()
+	}
+
+	if !slices.Contains(enabled, loc.DefaultLocale) {
 		loc.DefaultLocale = enabled[0]
 	}
 

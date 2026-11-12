@@ -67,10 +67,11 @@ describe("mock service worker", () => {
     expect(body).not.toContain("PACKAGE_VERSION");
   });
 
+  // Resolving the config loads every plugin, twice, which takes longer than the default 5 seconds on a busy runner.
   it("leaves the worker out of builds", async () => {
     for (const mode of ["production", "mock"]) {
       const config = await resolveConfig({ configFile, logLevel: "silent", mode }, "build");
       expect(config.plugins.map((plugin) => plugin.name)).not.toContain("msw");
     }
-  });
+  }, 30_000);
 });

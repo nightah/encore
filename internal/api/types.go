@@ -1208,6 +1208,6 @@ type SkillAccess struct {
 	ClientSecret string
 	RefreshToken string
 	SkillID      string
-	// Locale is the default locale from Settings when the skill has it, else the skill's first; empty when neither is set.
+	// Locale is the default locale from Settings when the skill has it, else the skill's first, of every shipped locale when none is chosen.
 	Locale string
 }

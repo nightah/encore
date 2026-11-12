@@ -229,6 +229,14 @@ func TestGenSimulateFailsWhenStoppedOrUnwritable(t *testing.T) {
 
 	err := runCLIWith(t.Context(), t, failOn("3 passed"), append([]string{"gen", "simulate", "--skill", skill, "-f", file}, flags...)...)
 	require.ErrorIs(t, err, assert.AnError, "nor the tally")
+
+	disabled := fake.AddSkill(smapitest.DefaultVendorID, nil)
+
+	err = runCLIWith(t.Context(), t, &failAfter{}, append([]string{"gen", "simulate", "--skill", disabled, "open encore"}, flags...)...)
+	require.ErrorIs(t, err, assert.AnError)
+
+	sk, _ := fake.Skill(disabled)
+	assert.False(t, sk.Enabled, "a skill enabled only to simulate is disabled again when the report can't be written")
 }
 
 func TestReplyFallsBackToTheSkillsSpeech(t *testing.T) {
@@ -356,4 +364,25 @@ func TestGenSimulateNeedsASkill(t *testing.T) {
 			assert.ErrorContains(t, err, want)
 		})
 	}
+}
+
+func TestGenSimulateAnotherSkillTakesNoStoredLocale(t *testing.T) {
+	fake, flags := liveFake(t)
+	other := simulatedSkill(t, fake)
+	encoreDataDir(t, fake, fake.AddSkill(smapitest.DefaultVendorID, nil))
+
+	out, _, err := runCLI(t, append([]string{"gen", "simulate", "--skill", other, "ask encore what's on seven"}, flags...)...)
+	require.NoError(t, err)
+	assert.Contains(t, out, "en-US answer", "the stored skill's en-AU is its own, so another skill is said to in "+simulateLocale)
+}
+
+func TestWriteSimulationReachedWithoutAResponse(t *testing.T) {
+	var b strings.Builder
+
+	writeSimulation(&b, &smapi.Simulation{Status: smapi.SimulationSuccessful, Invoked: true})
+	assert.Equal(t, "  intent:  no intent\n  skill:   reached, but its response couldn't be read\n", b.String(), "the simulator says it reached the endpoint, whatever came back")
+
+	b.Reset()
+	writeSimulation(&b, &smapi.Simulation{Status: smapi.SimulationSuccessful})
+	assert.Equal(t, "  intent:  no intent\n  skill:   not reached\n", b.String())
 }

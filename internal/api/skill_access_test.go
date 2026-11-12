@@ -35,7 +35,8 @@ func TestReadSkillAccess(t *testing.T) {
 		ClientSecret: "client-secret",
 		RefreshToken: "Atzr|refresh",
 		SkillID:      "amzn1.ask.skill.deployed",
-	}, got, "with no locales chosen and no default, the locale is left to the caller")
+		Locale:       "ar-SA",
+	}, got, "with no locales chosen and no default, the server speaks the first shipped locale")
 }
 
 func TestReadSkillAccessLocale(t *testing.T) {
@@ -46,6 +47,7 @@ func TestReadSkillAccessLocale(t *testing.T) {
 		"the default":                   {locales: []string{"en-GB", "en-AU"}, def: "en-AU", out: "en-AU"},
 		"the skill's first":             {locales: []string{"en-AU", "en-GB"}, def: "de-DE", out: "en-AU"},
 		"the default with every locale": {def: "en-GB", out: "en-GB"},
+		"the first shipped locale":      {out: "ar-SA"},
 	} {
 		t.Run(name, func(t *testing.T) {
 			h := newHarness(t, harnessOpts{noKodi: true})

@@ -97,7 +97,7 @@ func Open(ctx context.Context, opts Options) (*DB, error) {
 	return db, nil
 }
 
-// OpenReadOnly opens the existing database at path for reading alone, as a tool beside a running server may: nothing is created or migrated, and every write fails. The database must be at the schema version this build carries (SchemaVersion), since a different version may not have the tables or columns it reads.
+// OpenReadOnly opens the existing database at path for reading alone, as a tool beside a running server may: the database file is neither created nor migrated, and every write fails. SQLite still creates the -wal and -shm files beside it when they are missing, as reading a WAL database needs them, and leaves them there. The database must be at the schema version this build carries (SchemaVersion), since a different version may not have the tables or columns it reads.
 func OpenReadOnly(ctx context.Context, path string) (*DB, error) {
 	path, err := filepath.Abs(path)
 	if err != nil {
