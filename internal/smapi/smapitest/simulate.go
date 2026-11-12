@@ -10,6 +10,22 @@ import (
 // SimulationLocales are the locales the simulation API accepts.
 var SimulationLocales = []string{"de-DE", "en-AU", "en-CA", "en-GB", "en-IN", "en-US", "fr-FR", "ja-JP"}
 
+// Answer makes simulating phrase in locale answer a, reaching the skill unless a is Unresolved, once the skill is enabled.
+func (s *Server) Answer(locale, phrase string, a Answer) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	s.answers[locale+"\x00"+phrase] = a
+}
+
+// SessionModes are the session modes the simulations asked for, in order.
+func (s *Server) SessionModes() []string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	return slices.Clone(s.modes)
+}
+
 // Reach makes simulating phrase in locale reach the skill, as "open <invocation>" does in every locale, once the skill is enabled and has a model for locale.
 func (s *Server) Reach(locale, phrase string) {
 	s.mu.Lock()
@@ -26,6 +42,9 @@ func (s *Server) handleSimulate(w http.ResponseWriter, r *http.Request) {
 		Device struct {
 			Locale string `json:"locale"`
 		} `json:"device"`
+		Session struct {
+			Mode string `json:"mode"`
+		} `json:"session"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Input.Content == "" {
@@ -46,6 +65,13 @@ func (s *Server) handleSimulate(w http.ResponseWriter, r *http.Request) {
 	sk, ok := s.skills[r.PathValue("skillId")]
 	if !ok {
 		writeError(w, http.StatusNotFound, "skill not found")
+
+		return
+	}
+
+	if s.busy < s.opts.BusySimulations {
+		s.busy++
+		writeError(w, http.StatusConflict, "%s", BusyMessage)
 
 		return
 	}
@@ -73,6 +99,15 @@ func (s *Server) handleSimulate(w http.ResponseWriter, r *http.Request) {
 			job.caption = "Welcome to " + inv + "."
 		}
 	}
+
+	if a, ok := s.answers[req.Device.Locale+"\x00"+req.Input.Content]; ok {
+		job = &simJob{answer: &a, reached: !a.Unresolved, caption: a.Speech}
+		if a.Unresolved {
+			job.failure = UnresolvedMessage
+		}
+	}
+
+	s.modes = append(s.modes, req.Session.Mode)
 
 	if s.unresolved < s.opts.UnresolvedSimulations {
 		s.unresolved++
@@ -106,18 +141,29 @@ func (s *Server) handleGetSimulation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if job.failure != "" {
-		writeJSON(w, http.StatusOK, map[string]any{"id": id, "status": "FAILED", "result": map[string]any{"error": map[string]any{"message": job.failure}}})
+		result := map[string]any{"error": map[string]any{"message": job.failure}}
+		if job.answer != nil {
+			result["alexaExecutionInfo"] = map[string]any{"consideredIntents": job.answer.considered()}
+		}
+
+		writeJSON(w, http.StatusOK, map[string]any{"id": id, "status": "FAILED", "result": result})
 
 		return
 	}
 
-	result := map[string]any{
-		"alexaExecutionInfo": map[string]any{
-			"alexaResponses": []any{map[string]any{"type": "Speech", "content": map[string]any{"caption": job.caption}}},
-		},
+	info := map[string]any{
+		"alexaResponses": []any{map[string]any{"type": "Speech", "content": map[string]any{"caption": job.caption}}},
 	}
 
-	if job.reached {
+	result := map[string]any{"alexaExecutionInfo": info}
+
+	if a := job.answer; a != nil {
+		info["consideredIntents"] = a.considered()
+		result["skillExecutionInfo"] = map[string]any{"invocations": []any{map[string]any{
+			"invocationRequest":  map[string]any{"endpoint": "https://example.invalid", "body": map[string]any{"version": "1.0", "request": map[string]any{"type": "IntentRequest"}}},
+			"invocationResponse": map[string]any{"body": map[string]any{"version": "1.0", "response": a.response()}},
+		}}}
+	} else if job.reached {
 		// The real body mixes strings and objects at the top level, which the generated client cannot decode.
 		result["skillExecutionInfo"] = map[string]any{"invocations": []any{map[string]any{
 			"invocationRequest":  map[string]any{"endpoint": "https://example.invalid", "body": map[string]any{"version": "1.0", "request": map[string]any{"type": "LaunchRequest"}}},
@@ -126,4 +172,51 @@ func (s *Server) handleGetSimulation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{"id": id, "status": "SUCCESSFUL", "result": result})
+}
+
+// considered is the answer's intent as the simulator lists the intents it weighed, with an empty slot for Alexa's unfilled ones.
+func (a *Answer) considered() []any {
+	slots := map[string]any{"Room": map[string]any{"name": "Room", "confirmationStatus": "NONE", "source": "USER"}}
+
+	for name, v := range a.Slots {
+		slot := map[string]any{"name": name, "value": v, "confirmationStatus": "NONE", "source": "USER"}
+		if r, ok := a.Resolved[name]; ok {
+			slot["resolutions"] = map[string]any{"resolutionsPerAuthority": []any{
+				map[string]any{"authority": "amzn1.er-authority.echo-sdk.TYPE", "status": map[string]any{"code": "ER_SUCCESS_NO_MATCH"}},
+				map[string]any{"authority": "amzn1.er-authority.echo-sdk.TYPE", "status": map[string]any{"code": "ER_SUCCESS_MATCH"}, "values": []any{map[string]any{"value": map[string]any{"name": r, "id": "id"}}}},
+			}}
+		}
+
+		slots[name] = slot
+	}
+
+	return []any{map[string]any{"name": a.Intent, "confirmationStatus": "NONE", "slots": slots}, map[string]any{"name": "AMAZON.FallbackIntent"}}
+}
+
+// response is the skill's response body for the answer: PlainText speech, SSML reprompt, as Encore's own replies vary.
+func (a *Answer) response() map[string]any {
+	r := map[string]any{}
+
+	if a.Speech != "" {
+		r["outputSpeech"] = map[string]any{"type": "PlainText", "text": a.Speech}
+	}
+
+	if a.Reprompt != "" {
+		r["reprompt"] = map[string]any{"outputSpeech": map[string]any{"type": "SSML", "ssml": "<speak>" + a.Reprompt + "</speak>"}}
+	}
+
+	if a.EndSession != nil {
+		r["shouldEndSession"] = *a.EndSession
+	}
+
+	if len(a.Directives) > 0 {
+		ds := make([]any, 0, len(a.Directives))
+		for _, d := range a.Directives {
+			ds = append(ds, map[string]any{"type": d})
+		}
+
+		r["directives"] = ds
+	}
+
+	return r
 }

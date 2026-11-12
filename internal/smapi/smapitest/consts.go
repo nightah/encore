@@ -11,3 +11,6 @@ const (
 
 // UnresolvedMessage is Amazon's error for an utterance the simulator can't match, which it also gives just after a model goes live.
 const UnresolvedMessage = "This utterance did not resolve to any intent in your skill. Please invoke your skill and try again with a different utterance or update your interaction model to include this utterance before testing again."
+
+// BusyMessage is Amazon's error, with HTTP 409, for a simulation asked for while the skill's last one is still being processed.
+const BusyMessage = "This simulation request conflicts with another one currently being processed."

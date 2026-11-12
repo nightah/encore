@@ -49,6 +49,13 @@ func (f *smapiFlags) client() (*smapi.Client, string, error) {
 		return nil, "", fmt.Errorf("name the skill with --skill or %s; the Alexa skill page in Encore shows its ID", envSkillID)
 	}
 
+	c, err := f.clientWith(id, secret, refresh)
+
+	return c, skill, err
+}
+
+// clientWith authorises with a security profile's client ID and secret and a refresh token it issued.
+func (f *smapiFlags) clientWith(id, secret, refresh string) (*smapi.Client, error) {
 	cfg := lwa.Config{Credentials: lwa.Credentials{ClientID: id, ClientSecret: secret}}
 	if f.tokenURL != "" {
 		cfg.Endpoint = &oauth2.Endpoint{TokenURL: f.tokenURL}
@@ -56,16 +63,14 @@ func (f *smapiFlags) client() (*smapi.Client, string, error) {
 
 	lc, err := lwa.New(cfg)
 	if err != nil {
-		return nil, "", err
+		return nil, err
 	}
 
 	store := &lwa.MemoryStore{}
 	// MemoryStore.Save doesn't fail.
 	_ = store.Save(context.Background(), &oauth2.Token{RefreshToken: refresh})
 
-	c, err := smapi.New(lc.TokenSource(store), smapi.Options{BaseURL: f.smapiURL, Poll: smapi.PollConfig{Interval: f.poll, MaxInterval: f.poll}})
-
-	return c, skill, err
+	return smapi.New(lc.TokenSource(store), smapi.Options{BaseURL: f.smapiURL, Poll: smapi.PollConfig{Interval: f.poll, MaxInterval: f.poll}})
 }
 
 func newGenNLUCommand() *cobra.Command {

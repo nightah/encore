@@ -8,6 +8,7 @@ PNPM     = pnpm
 DOCKER   = docker
 GOLANGCI = golangci-lint
 NLU_FLAGS =
+SIM_FLAGS =
 BIN      = bin/encore
 IMAGE    = encore:dev
 
@@ -109,6 +110,9 @@ nlu: ## Profile testdata/nlu's utterances against the deployed skill with SMAPI'
 nlu-open: ## Say each locale's launch phrases to Amazon's simulator against the deployed skill and report which locales it refuses (same credentials as nlu; NLU_FLAGS adds flags, e.g. NLU_FLAGS='--invocation kodi', or NLU_INVOCATION=kodi as for nlu-deploy)
 	$(GO) run ./cmd/encore gen open $(if $(filter kodi,$(NLU_INVOCATION)),--invocation kodi) $(NLU_FLAGS)
 
+simulate: ## Say utterances, or a cases file, to Amazon's simulator and show or check what Alexa heard and the skill answered, by default with make dev's skill, as Encore in DEV_DATA_DIR reaches it (ENCORE_DATA_DIR picks another); SIM_FLAGS holds the flags and quoted utterances, e.g. SIM_FLAGS='-f cases.yaml'. It really controls your Kodi instances
+	ENCORE_DATA_DIR='$(or $(ENCORE_DATA_DIR),$(DEV_DATA_DIR))' $(GO) run ./cmd/encore gen simulate $(SIM_FLAGS)
+
 test-web: web-browser ## Run web unit tests (in headless Chromium)
 	$(PNPM) -C web test
 
@@ -181,6 +185,6 @@ clean: ## Remove build outputs (keeps internal/server/dist/.gitkeep)
 	rm -rf bin dist coverage.out benchmarks/bench-*.txt web/playwright-report web/test-results docs/dist docs/.astro
 	find internal/server/dist -mindepth 1 ! -name .gitkeep -exec rm -rf {} +
 
-.PHONY: help version patch minor major icons generate lint lint-go lint-repo lint-web test test-go test-tools test-benchmarks bench nlu-deploy nlu nlu-open test-web \
+.PHONY: help version patch minor major icons generate lint lint-go lint-repo lint-web test test-go test-tools test-benchmarks bench nlu-deploy nlu nlu-open simulate test-web \
 	test-contract web-install web-browser web-build build build-noui run dev web-dev docs-install docs docs-dev \
 	docker clean

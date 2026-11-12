@@ -59,6 +59,7 @@ To reach it through a reverse proxy, override the host and allowed host names, a
 | `make docs` / `make docs-dev` | Builds this site into `docs/dist` (checking links) / serves it locally |
 | `make test-contract` | Contract tests against a real Kodi, MinIO and WebDAV server |
 | `make nlu-deploy` / `make nlu` / `make nlu-open` | Deploys the working tree's model to a skill kept for the checks, then checks how Alexa reads the fixture utterances, and which locales the simulator opens the skill in (see [NLU checks](#nlu-checks)) |
+| `make simulate` | Says utterances, or a file of cases, to Amazon's simulator against a deployed skill, and shows or checks what Alexa heard and the skill answered (see [Simulating a skill](#simulating-a-skill)) |
 | `make docker` | Builds a local container image, `encore:dev` |
 
 ## Generated code
@@ -122,6 +123,42 @@ make nlu NLU_FLAGS='-l nl-NL -v'  # one locale, listing the rows that pass too
 Profiling reads the built models, so deploy first, and expect the odd row to need a second ask: Amazon's NLU now and then answers no intent, so such a row is asked twice more before it fails, and its occasional 500s are retried. Amazon throttles `profileNlu` past about 2.3 requests a second for a whole developer account, shared by every skill and locale, so the run sends 2 a second (`NLU_FLAGS='--rate …'`) and a full run takes about 16 minutes; the report ends with how many requests were throttled and retried. A row whose request is still throttled, or still failing on Amazon's side, when its retries run out is asked once more a minute after the rest of the run, and fails only if that ask fails too. Only one run at a time stays under the limit; check the locales you changed with `-l` while you work. Each row names an utterance, the intent and the slots it should fill (an empty value takes any words; a custom type's value may be its ID; case and accents don't count, as they don't to Encore's matcher). A row may list `also:` readings that do the same thing ("repeat off" as `Repeat` with `RepeatMode: "off"`), and a row passes when Encore reads what Amazon heard as the row expects, as the handler does: a `PlayMedia` query as the film, TV or music command it may be, "continue watching the last show" heard as the next episode of a show called "the last show" as `ContinueWatching`, and music by an artist heard as a title as that artist's music. The report marks either with `(via …)`, and a failing row shows the words Amazon put in each slot. A row that needs a model change you haven't deployed yet takes `pending: <why>`: it's reported but doesn't fail the run, and once it passes the run says to drop the mark. Every pending row is also listed for testers in [Testing a language](/encore/contributing/testing/), with what it means and what Amazon reads it as, and a test fails until the page and the pending rows match. Add rows for every locale when you add or change phrasings, including the risky ones: bare titles, the forms one-shot requests take, rooms, episodes and seasons, and music by an artist.
 
 `make nlu-open` says each locale's launch phrases (`launch` in `i18n/locales/<locale>.yaml`) to Amazon's simulator in turn, until one reaches the skill, and reports the locales the simulator refuses and those where none got through; pass `NLU_FLAGS='--invocation kodi'` if the skill was deployed with kodi. Neither check hears speech, so how Alexa hears the invocation name can only be tried on an Echo.
+
+### Simulating a skill
+
+`make simulate` (`encore gen simulate`) types utterances to Amazon's simulator, as the Alexa developer console's Test tab does, and reports for each the intent and slots Alexa read (with the value a custom type resolved them to), whether the skill was reached, whether it ended the session, the directives it sent and what Alexa said. Unlike `make nlu`, the simulator sends the skill's endpoint real requests, so it tests Encore's answers as well as Amazon's NLU, and the utterances really control your Kodi instances. Include the invocation in each utterance.
+
+By default it simulates the skill Encore deployed from its data directory, reached with the Login with Amazon connection from Encore's Alexa skill page, in the default locale from Settings (or the skill's first locale when it doesn't have that one). It only reads the data directory's database, so it can run beside the server (SQLite may add its `-wal` and `-shm` files there, as the server does), and it needs the build's schema version: run it from the same tree as the server. `encore gen simulate` reads the data directory Encore's config names (`ENCORE_DATA_DIR`, `-c`), and `make simulate` defaults to `make dev`'s, `DEV_DATA_DIR`. `--skill` simulates another skill, reached with the `SMAPI_*` credentials `make nlu` uses when they're set, else with Encore's own; with no data directory to read, the skill `SMAPI_SKILL_ID` names is used with those credentials. A skill that isn't enabled for testing is enabled only while it simulates.
+
+```sh
+make simulate SIM_FLAGS='"ask encore to switch to abc news"'              # make dev's skill
+encore gen simulate "ask encore what's on seven"                          # Encore's own skill, from its data directory
+encore gen simulate --session "ask encore to play dune" "the second one"  # a dialogue's turns, in one session
+encore gen simulate --json -l en-GB "ask encore to open the tv guide"     # one line of JSON each, in another locale
+encore gen simulate --skill amzn1.ask.skill.… "open encore"               # another skill
+make simulate SIM_FLAGS='-f cases.yaml'                                   # check a file of cases
+```
+
+Each quoted utterance is said in turn, each in a new session unless `--session` is given, and only the utterances are typed; for `encore gen simulate "ask encore what's on seven"` the report is:
+
+```
+“ask encore what's on seven”
+  intent:  WhatsOn Channel="7" (Seven)
+  skill:   reached, session ended
+  Alexa:   “On Seven now: The Morning Show, until 12:00 pm. Then Seven's National News At Noon.”
+```
+
+With `--file`, the utterances come from a YAML file of cases, and the command fails when any case falls short. Each case may name a `locale` and expect an `intent`, `slots` (as in the NLU fixtures: an empty value takes any words, otherwise the words or the value they resolve to must match, ignoring case) and `says`, a regular expression Alexa's reply must match. A passing case prints one line; a failing one says what fell short, then what Alexa heard and said. `--locale` overrides the locales the file names.
+
+```yaml
+locale: en-AU
+cases:
+  - {utterance: "ask encore what's on seven", intent: WhatsOn, slots: {Channel: seven}, says: "^On Seven now: "}
+  - {utterance: "ask encore to switch to channel number twenty four", intent: WatchChannelNumber, slots: {ChannelNumber: "24"}}
+  - {utterance: "ask encore to open the tv guide", intent: OpenTVGuide, slots: {LiveView: guide}}
+```
+
+The simulator answers one utterance at a time for each skill, and turns another down until the last is done; the command waits for it. It simulates only `de-DE`, `en-AU`, `en-CA`, `en-GB`, `en-IN`, `en-US`, `fr-FR` and `ja-JP`, and refuses other locales. Against the `Encore NLU CI` skill, whose endpoint is a placeholder, it checks intents and slots, but the skill never answers.
 
 ### A skill for the checks
 

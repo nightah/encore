@@ -10,3 +10,6 @@ var (
 	ErrConflict = errors.New("already exists")
 	ErrInvalid  = errors.New("invalid")
 )
+
+// ErrSchemaVersion is returned by OpenReadOnly for a database at a schema version other than this build's.
+var ErrSchemaVersion = errors.New("schema version differs")

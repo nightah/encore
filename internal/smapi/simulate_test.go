@@ -141,3 +141,118 @@ func TestSimulationIgnoresEmptyCaptions(t *testing.T) {
 	assert.Equal(t, []string{"Hi"}, sim.Captions)
 	assert.False(t, sim.Invoked, "an empty invocations list means the skill was not reached")
 }
+
+func TestSayReadsIntentSlotsAndReply(t *testing.T) {
+	fake := smapitest.New(t, smapitest.Options{Pending: 1})
+	c := newClient(t, fake)
+	skillID := enabledSkill(t, c, "en-AU")
+
+	ended := true
+	fake.Answer("en-AU", "ask encore what's on abc news", smapitest.Answer{
+		Intent:     "WhatsOn",
+		Slots:      map[string]string{"Channel": "ABC news"},
+		Resolved:   map[string]string{"Channel": "ABC NEWS"},
+		Speech:     "On ABC NEWS now: ABC News Mornings, until 12:00 pm.",
+		Reprompt:   "Anything else?",
+		EndSession: &ended,
+		Directives: []string{"Dialog.Delegate"},
+	})
+
+	sim, err := c.Say(t.Context(), skillID, "en-AU", "ask encore what's on abc news", false)
+	require.NoError(t, err)
+
+	assert.Equal(t, smapi.SimulationSuccessful, sim.Status)
+	assert.True(t, sim.Invoked)
+	assert.Equal(t, "WhatsOn", sim.Intent)
+	assert.Equal(t, map[string]smapi.SimulationSlot{"Channel": {Value: "ABC news", Resolved: "ABC NEWS"}}, sim.Slots, "an empty slot is left out, and the value comes from the authority that matched")
+	assert.Equal(t, []smapi.SkillResponse{{
+		Request:    "IntentRequest",
+		Speech:     "On ABC NEWS now: ABC News Mornings, until 12:00 pm.",
+		Reprompt:   "<speak>Anything else?</speak>",
+		EndSession: &ended,
+		Directives: []string{"Dialog.Delegate"},
+	}}, sim.Responses)
+	assert.Equal(t, []string{"On ABC NEWS now: ABC News Mornings, until 12:00 pm."}, sim.Captions)
+}
+
+func TestSayReportsTheIntentWeighedWhenUnresolved(t *testing.T) {
+	fake := smapitest.New(t, smapitest.Options{})
+	c := newClient(t, fake)
+	skillID := enabledSkill(t, c, "en-AU")
+
+	fake.Answer("en-AU", "ask encore to switch to nine go", smapitest.Answer{Intent: "WatchChannel", Slots: map[string]string{"Channel": "9 go"}, Unresolved: true})
+
+	sim, err := c.Say(t.Context(), skillID, "en-AU", "ask encore to switch to nine go", false)
+	require.NoError(t, err)
+
+	assert.Equal(t, smapi.SimulationFailed, sim.Status)
+	assert.Equal(t, smapitest.UnresolvedMessage, sim.Error)
+	assert.Equal(t, "WatchChannel", sim.Intent)
+	assert.Equal(t, map[string]smapi.SimulationSlot{"Channel": {Value: "9 go"}}, sim.Slots)
+	assert.False(t, sim.Invoked)
+	assert.Empty(t, sim.Responses)
+}
+
+func TestSaySessionModes(t *testing.T) {
+	fake := smapitest.New(t, smapitest.Options{})
+	c := newClient(t, fake)
+	skillID := enabledSkill(t, c, "en-AU")
+
+	for _, inSession := range []bool{false, true} {
+		_, err := c.Say(t.Context(), skillID, "en-AU", "open encore", inSession)
+		require.NoError(t, err)
+	}
+
+	assert.Equal(t, []string{"FORCE_NEW_SESSION", "DEFAULT"}, fake.SessionModes())
+}
+
+func TestSayWaitsWhileTheSimulatorIsBusy(t *testing.T) {
+	fake := smapitest.New(t, smapitest.Options{BusySimulations: 2})
+	c := newClient(t, fake)
+	skillID := enabledSkill(t, c, "en-AU")
+
+	sim, err := c.Say(t.Context(), skillID, "en-AU", "open encore", false)
+	require.NoError(t, err)
+	assert.True(t, sim.Invoked)
+	assert.Equal(t, 3, fake.Calls("POST /v2/skills/{skillId}/stages/{stage}/simulations"))
+}
+
+func TestSayGivesUpWhenTheSimulatorStaysBusy(t *testing.T) {
+	fake := smapitest.New(t, smapitest.Options{BusySimulations: 100})
+	c := newClient(t, fake)
+	skillID := enabledSkill(t, c, "en-AU")
+
+	_, err := c.Say(t.Context(), skillID, "en-AU", "open encore", false)
+	require.Error(t, err)
+	assert.Equal(t, http.StatusConflict, smapi.StatusCode(err))
+	assert.Equal(t, 10, fake.Calls("POST /v2/skills/{skillId}/stages/{stage}/simulations"))
+}
+
+func TestSayErrors(t *testing.T) {
+	fake := smapitest.New(t, smapitest.Options{})
+	c := newClient(t, fake)
+	skillID := enabledSkill(t, c, "en-AU")
+
+	_, err := c.Say(t.Context(), skillID, "es-ES", "abre encore", false)
+	assert.Equal(t, http.StatusBadRequest, smapi.StatusCode(err), "a refusal isn't retried")
+
+	_, err = c.Say(t.Context(), skillID+"-gone", "en-AU", "open encore", false)
+	assert.Equal(t, http.StatusNotFound, smapi.StatusCode(err))
+
+	fake.InjectRoute("GET /v2/skills/{skillId}/stages/{stage}/simulations/{simId}", http.StatusForbidden)
+
+	_, err = c.Say(t.Context(), skillID, "en-AU", "open encore", false)
+	assert.Equal(t, http.StatusForbidden, smapi.StatusCode(err))
+}
+
+func TestSayStopsWithTheContext(t *testing.T) {
+	fake := smapitest.New(t, smapitest.Options{BusySimulations: 100})
+	c := newClient(t, fake)
+	skillID := enabledSkill(t, c, "en-AU")
+
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+
+	_, err := c.Say(ctx, skillID, "en-AU", "open encore", false)
+	require.ErrorIs(t, err, context.Canceled)
+}
