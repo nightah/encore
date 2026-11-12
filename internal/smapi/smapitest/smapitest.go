@@ -58,6 +58,7 @@ func New(t testing.TB, opts Options) *Server {
 		statusPolls: map[string]int{},
 		sims:        map[string]*simJob{},
 		reaches:     map[string]bool{},
+		answers:     map[string]Answer{},
 		profiles:    map[string][]NLUAnswer{},
 		profiled:    map[string]int{},
 	}

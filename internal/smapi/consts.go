@@ -24,3 +24,12 @@ const (
 	SimulationSuccessful = "SUCCESSFUL"
 	SimulationFailed     = "FAILED"
 )
+
+// resolutionMatch is the entity resolution status of a slot value that matched one of its type's values.
+const resolutionMatch = "ER_SUCCESS_MATCH"
+
+// busyMessage is in the simulator's answer to a simulation it turns down because another is being processed, and busyTries how many times Say asks before giving up.
+const (
+	busyMessage = "conflicts with another one currently being processed"
+	busyTries   = 10
+)

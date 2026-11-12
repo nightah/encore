@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pressly/goose/v3"
 	"modernc.org/sqlite"
 	sqlite3 "modernc.org/sqlite/lib"
 )
@@ -94,6 +95,44 @@ func Open(ctx context.Context, opts Options) (*DB, error) {
 	db.read.SetMaxIdleConns(readConns)
 
 	return db, nil
+}
+
+// OpenReadOnly opens the existing database at path for reading alone, as a tool beside a running server may: nothing is created or migrated, and every write fails. The database must be at the schema version this build carries (SchemaVersion), since a different version may not have the tables or columns it reads.
+func OpenReadOnly(ctx context.Context, path string) (*DB, error) {
+	path, err := filepath.Abs(path)
+	if err != nil {
+		return nil, fmt.Errorf("resolving database path: %w", err)
+	}
+
+	if _, err := os.Stat(path); err != nil {
+		return nil, fmt.Errorf("opening database: %w", err)
+	}
+
+	want, err := SchemaVersion()
+	if err != nil {
+		return nil, err
+	}
+
+	pool, err := sql.Open("sqlite", dsn(path, true))
+	if err != nil {
+		return nil, fmt.Errorf("opening database: %w", err)
+	}
+
+	var got sql.NullInt64
+	if err := pool.QueryRowContext(ctx, `SELECT MAX(version_id) FROM `+goose.DefaultTablename).Scan(&got); err != nil {
+		_ = pool.Close()
+
+		return nil, fmt.Errorf("reading the schema version of %s: %w", path, err)
+	}
+
+	if got.Int64 != want {
+		_ = pool.Close()
+
+		return nil, fmt.Errorf("%s is at schema version %d, but this build of Encore reads version %d: %w", path, got.Int64, want, ErrSchemaVersion)
+	}
+
+	// Both pools are the read-only one, so a write fails rather than reaching the file.
+	return &DB{path: path, write: pool, read: pool, log: slog.New(slog.DiscardHandler), now: time.Now}, nil
 }
 
 func dsn(path string, readOnly bool) string {

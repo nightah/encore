@@ -30,3 +30,6 @@ const ciEndpoint = "https://encore.invalid/api/v1/alexa"
 
 // defaultNLUFixtures is where gen nlu finds its fixtures when run from the repository root, as make nlu does.
 const defaultNLUFixtures = "testdata/nlu"
+
+// simulateLocale is the locale gen simulate says utterances in when neither --locale nor a cases file names one.
+const simulateLocale = "en-US"

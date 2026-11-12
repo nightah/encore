@@ -1201,3 +1201,13 @@ type statusEntry struct {
 	at     time.Time
 	infoAt time.Time
 }
+
+// SkillAccess is what ReadSkillAccess reads: a security profile, a refresh token it issued, and the skill Encore deploys with them.
+type SkillAccess struct {
+	ClientID     string
+	ClientSecret string
+	RefreshToken string
+	SkillID      string
+	// Locale is the default locale from Settings when the skill has it, else the skill's first; empty when neither is set.
+	Locale string
+}

@@ -426,3 +426,48 @@ func TestDSNPath(t *testing.T) {
 		assert.True(t, strings.HasPrefix(dsn(path, false), want), dsn(path, false))
 	}
 }
+
+func TestOpenReadOnly(t *testing.T) {
+	db, _ := openTest(t, Options{})
+	require.NoError(t, db.Settings().Set(t.Context(), "locale", map[string]string{"default_locale": "en-AU"}))
+
+	ro, err := OpenReadOnly(t.Context(), db.Path())
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = ro.Close() })
+
+	got, err := Setting(t.Context(), ro.Settings(), "locale", map[string]string{})
+	require.NoError(t, err)
+	assert.Equal(t, map[string]string{"default_locale": "en-AU"}, got, "it reads what a running server wrote")
+
+	require.Error(t, ro.Settings().Set(t.Context(), "locale", map[string]string{}), "it never writes")
+
+	got, err = Setting(t.Context(), db.Settings(), "locale", map[string]string{})
+	require.NoError(t, err)
+	assert.Equal(t, "en-AU", got["default_locale"])
+}
+
+func TestOpenReadOnlyRefuses(t *testing.T) {
+	dir := t.TempDir()
+
+	_, err := OpenReadOnly(t.Context(), filepath.Join(dir, FileName))
+	require.ErrorIs(t, err, os.ErrNotExist)
+
+	_, err = os.Stat(filepath.Join(dir, FileName))
+	require.ErrorIs(t, err, os.ErrNotExist, "a missing database isn't created")
+
+	db, _ := openTest(t, Options{})
+	want, err := SchemaVersion()
+	require.NoError(t, err)
+
+	_, err = db.write.ExecContext(t.Context(), `INSERT INTO goose_db_version (version_id, is_applied) VALUES (?, 1)`, want+1)
+	require.NoError(t, err)
+
+	_, err = OpenReadOnly(t.Context(), db.Path())
+	require.ErrorIs(t, err, ErrSchemaVersion, "a newer Encore's database may have changed what this build reads")
+
+	empty := filepath.Join(dir, "empty.db")
+	require.NoError(t, os.WriteFile(empty, nil, 0o600))
+
+	_, err = OpenReadOnly(t.Context(), empty)
+	require.ErrorContains(t, err, "reading the schema version", "a file Encore never migrated")
+}

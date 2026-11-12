@@ -158,6 +158,30 @@ type Simulation struct {
 	// Captions are Alexa's spoken responses.
 	Captions []string `json:"captions,omitempty"`
 	Error    string   `json:"error,omitempty"`
+	// Intent is the intent Alexa weighed first, with its slots. The simulator reports it even when the utterance resolved to none of the skill's intents, as a FAILED status with an Error; "<IntentForDifferentSkill>" is its name for another skill's intent.
+	Intent string                    `json:"intent,omitempty"`
+	Slots  map[string]SimulationSlot `json:"slots,omitempty"`
+	// Responses are the skill's answers, one for each request Alexa sent its endpoint.
+	Responses []SkillResponse `json:"responses,omitempty"`
+}
+
+// SimulationSlot is a slot Alexa filled in a simulation: the words it heard and, for a custom type, the value they resolved to.
+type SimulationSlot struct {
+	Value    string `json:"value"`
+	Resolved string `json:"resolved,omitempty"`
+}
+
+// SkillResponse is what a skill's endpoint answered a simulated request with.
+type SkillResponse struct {
+	// Request is the request's type, e.g. IntentRequest or LaunchRequest.
+	Request string `json:"request,omitempty"`
+	// Speech is the reply's text, or its SSML when it has no plain text.
+	Speech   string `json:"speech,omitempty"`
+	Reprompt string `json:"reprompt,omitempty"`
+	// EndSession is the reply's shouldEndSession, nil when it left it out.
+	EndSession *bool `json:"endSession,omitempty"`
+	// Directives are the types of the directives the reply sent.
+	Directives []string `json:"directives,omitempty"`
 }
 
 // Time is a timestamp in a SMAPI response. Amazon's spec documents RFC 3339 strings, but the live API also sends Unix milliseconds, as a JSON string or number (the skill upload URL's expiresAt is "1793002725519"), so both are accepted.
@@ -245,4 +269,55 @@ type NLUValue struct {
 		Name string `json:"name"`
 		ID   string `json:"id"`
 	} `json:"value,omitempty"`
+}
+
+// simIntent is an intent the simulator weighed.
+type simIntent struct {
+	Name  string `json:"name"`
+	Slots map[string]struct {
+		Value       string `json:"value"`
+		Resolutions *struct {
+			PerAuthority []struct {
+				Status struct {
+					Code string `json:"code"`
+				} `json:"status"`
+				Values []struct {
+					Value struct {
+						Name string `json:"name"`
+					} `json:"value"`
+				} `json:"values"`
+			} `json:"resolutionsPerAuthority"`
+		} `json:"resolutions"`
+	} `json:"slots"`
+}
+
+// simInvocation is one request the simulator sent the skill's endpoint, and the answer.
+type simInvocation struct {
+	InvocationRequest struct {
+		Body struct {
+			Request struct {
+				Type string `json:"type"`
+			} `json:"request"`
+		} `json:"body"`
+	} `json:"invocationRequest"`
+	InvocationResponse *struct {
+		Body struct {
+			Response struct {
+				OutputSpeech *simSpeech `json:"outputSpeech"`
+				Reprompt     *struct {
+					OutputSpeech *simSpeech `json:"outputSpeech"`
+				} `json:"reprompt"`
+				ShouldEndSession *bool `json:"shouldEndSession"`
+				Directives       []struct {
+					Type string `json:"type"`
+				} `json:"directives"`
+			} `json:"response"`
+		} `json:"body"`
+	} `json:"invocationResponse"`
+}
+
+// simSpeech is a reply's outputSpeech.
+type simSpeech struct {
+	Text string `json:"text"`
+	SSML string `json:"ssml"`
 }

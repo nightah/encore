@@ -43,7 +43,10 @@ type Server struct {
 	statusPolls map[string]int
 	sims        map[string]*simJob
 	unresolved  int
+	busy        int
 	reaches     map[string]bool
+	answers     map[string]Answer
+	modes       []string
 	profiles    map[string][]NLUAnswer
 	profiled    map[string]int
 }
@@ -67,6 +70,8 @@ type Options struct {
 	UnderscoreLocales bool
 	// UnresolvedSimulations is how many simulations fail as Amazon's do while a newly enabled model hasn't reached the simulator yet.
 	UnresolvedSimulations int
+	// BusySimulations is how many simulation requests are turned down with BusyMessage, as Amazon does while the skill's last simulation is still being processed.
+	BusySimulations int
 }
 
 // Vendor is a developer account the fake reports.
@@ -126,4 +131,19 @@ type simJob struct {
 	reached bool
 	caption string
 	failure string
+	answer  *Answer
+}
+
+// Answer is how the fake simulator answers a phrase Answer sets. Alexa says Speech, as the simulator captions what the skill said.
+type Answer struct {
+	// Intent and Slots are the intent Alexa weighed first; a slot's value is the words heard, and Resolved what a custom type resolved them to.
+	Intent   string
+	Slots    map[string]string
+	Resolved map[string]string
+	// Unresolved fails the simulation as one that resolved to none of the skill's intents, though Alexa weighed Intent.
+	Unresolved bool
+	Speech     string
+	Reprompt   string
+	EndSession *bool
+	Directives []string
 }

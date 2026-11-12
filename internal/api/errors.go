@@ -14,3 +14,6 @@ type invalidSettingsError struct{ err error }
 
 // errNoLWACredentials is returned until the Login with Amazon client ID and secret are saved.
 var errNoLWACredentials = huma.Error409Conflict("save the Login with Amazon client ID and secret first")
+
+// ErrNoSkillAccess is returned by ReadSkillAccess when Encore isn't connected to Amazon or hasn't deployed its skill.
+var ErrNoSkillAccess = errors.New("no skill to reach through SMAPI")
