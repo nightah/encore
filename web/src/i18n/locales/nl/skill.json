@@ -24,6 +24,8 @@
     "title": "Een automatische uitrol is mislukt en wordt opnieuw geprobeerd"
   },
   "content": {
+    "liveTV": "Live-tv",
+    "liveTVHint": "De tv-zenders en gids van Kodi; vereist een PVR-add-on",
     "movies": "Films",
     "music": "Muziek",
     "musicHint": "Inclusief muziekvideo's",
@@ -44,8 +46,8 @@
       "titles": "Bibliotheektitels"
     },
     "content": {
-      "hint": "Als je er een weglaat, verdwijnen de spraakopdrachten ervan uit de skill. Muziek omvat muziekvideo's.",
-      "keepOne": "Houd minstens één van films, tv-series of muziek aan.",
+      "hint": "Als je er een weglaat, verdwijnen de spraakopdrachten ervan uit de skill. Muziek omvat muziekvideo's. Live-tv vereist een PVR-add-on in Kodi.",
+      "keepOne": "Houd minstens één van films, tv-series, muziek of live-tv aan.",
       "legend": "Wat hij kan afspelen"
     },
     "degradedTitles": "{{kept}} van {{total}}",
