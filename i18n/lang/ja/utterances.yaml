@@ -151,6 +151,11 @@ Navigate:
 OpenFavourite:
   open_favourite: "お気に入りの{Favourite}を(開いて|表示して|起動して|再生して)[ください]"
   play_from_favourites: "お気に入りから{Favourite}を(再生して|開いて)[ください]"
+OpenTVGuide:
+  open_guide: "(番組表|テレビ番組表|番組ガイド|電子番組表)を(開いて|表示して|出して)[ください]"
+  open_tv_view: "テレビの{LiveView}を(開いて|表示して|出して)[ください]"
+  show_me_guide: "(番組表|テレビ番組表|番組ガイド|電子番組表)を見せて[ください]\nテレビの{LiveView}を見せて[ください]"
+  whats_on_tv: "[今|今夜|今日]テレビで(何|なに)(やってる|をやってる|をやっている|が放送されている)[の]"
 PartyMode:
   lets_party: "(パーティーしよう|パーティータイム|パーティーの時間だよ)"
   play_all_music: "[{Room}で](全部の|すべての|ランダムな|適当な)(曲|音楽)を(かけて|再生して|流して|シャッフルして)[ください]"
@@ -293,6 +298,15 @@ VolumeUp:
   raise_volume: "音量を(上げて|大きくして)[ください]"
   turn_up: "(音|ボリューム)を(上げて|大きくして)[ください]"
   volume_up: "(音量|ボリューム)アップ"
+WatchChannel:
+  change_channel: "[{Room}で]チャンネルを{Channel}に(変えて|替えて|切り替えて|合わせて)[ください]"
+  put_on_channel: "[{Room}で]{Channel}のチャンネルを(つけて|見せて)[ください]\n[{Room}で]チャンネル{Channel}を(つけて|見せて)[ください]"
+  switch_to: "[{Room}で]{Channel}に(変えて|替えて|切り替えて)[ください]"
+  tune_to: "[{Room}で]{Channel}に[チャンネルを]合わせて[ください]"
+  watch_channel: "[{Room}で]{Channel}のチャンネルが見たい[です]"
+WatchChannelNumber:
+  channel_number: "[{Room}で]チャンネル番号{ChannelNumber}[点{SubNumber}](にして|に変えて|に切り替えて)[ください]"
+  put_on_number: "[{Room}で]{ChannelNumber}[点{SubNumber}]チャンネル(にして|に変えて|に切り替えて|をつけて|を見せて)[ください]"
 WatchEpisode:
   play_episode_season: "[{Room}で]{Show}のシーズン{Season}のエピソード{Episode}を(再生して|見せて|かけて)[ください]"
   play_episode_season_2: "[{Room}で]{Show}のシーズン{Season}の第{Episode}話を(再生して|見せて)[ください]"
@@ -306,6 +320,8 @@ WatchLatestEpisode:
   play_latest: "[{Room}で]{Show}の(最新話|最新回)を(再生して|見せて)[ください]"
   play_latest_episode: "[{Room}で]{Show}の(最新の|一番新しい|最後の)エピソードを(再生して|見せて|かけて)[ください]"
   play_latest_episode_2: "[{Room}で]{Show}の最新エピソードを(再生して|見せて)[ください]"
+WatchLive:
+  watch_live: "{Programme}を(生中継|生放送|ライブ)で(見せて|つけて)[ください]\n{Programme}の(生中継|生放送)を(見せて|つけて)[ください]\nテレビで{Programme}を見せて[ください]"
 WatchMovie:
   i_want_watch: "[映画の]{Movie}が見たい[です]"
   lets_watch: "[映画の]{Movie}を見よう"
@@ -367,3 +383,5 @@ WhatsNew:
   whats_new: "(何か新しいものはある|新着は何|新着を教えて)"
   whats_new_2: "{Show}の新着は(何|ある)"
   whats_new_watch: "新しく(見られる|聴ける)ものはある"
+WhatsOn:
+  whats_on: "{Channel}で[今](何|なに)(やってる|をやってる|をやっている|が放送されている)[の]\n{Channel}は[今](何|なに)(やってる|をやってる|をやっている)[の]\n{Channel}の今の番組は(何|なに)"
