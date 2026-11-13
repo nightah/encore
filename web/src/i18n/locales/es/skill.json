@@ -24,6 +24,8 @@
     "title": "Un despliegue automático falló y se volverá a intentar"
   },
   "content": {
+    "liveTV": "TV en directo",
+    "liveTVHint": "Los canales y la guía de TV de Kodi; requiere un complemento PVR",
     "movies": "Películas",
     "music": "Música",
     "musicHint": "Incluye vídeos musicales",
@@ -44,8 +46,8 @@
       "titles": "Títulos de la biblioteca"
     },
     "content": {
-      "hint": "Si dejas uno fuera, sus comandos de voz se quitan de la skill. La música incluye vídeos musicales.",
-      "keepOne": "Deja activado al menos uno: películas, series o música.",
+      "hint": "Si dejas uno fuera, sus comandos de voz se quitan de la skill. La música incluye vídeos musicales. La TV en directo requiere un complemento PVR en Kodi.",
+      "keepOne": "Deja activado al menos uno: películas, series, música o TV en directo.",
       "legend": "Qué puede reproducir"
     },
     "degradedTitles": "{{kept}} de {{total}}",
