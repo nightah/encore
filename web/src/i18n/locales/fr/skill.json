@@ -24,6 +24,8 @@
     "title": "Un déploiement automatique a échoué et sera relancé"
   },
   "content": {
+    "liveTV": "TV en direct",
+    "liveTVHint": "Les chaînes et le guide TV de Kodi ; nécessite une extension PVR",
     "movies": "Films",
     "music": "Musique",
     "musicHint": "Clips musicaux compris",
@@ -44,8 +46,8 @@
       "titles": "Titres de la médiathèque"
     },
     "content": {
-      "hint": "En retirer un supprime ses commandes vocales de la skill. La musique inclut les clips musicaux.",
-      "keepOne": "Gardez au moins les films, les séries ou la musique.",
+      "hint": "En retirer un supprime ses commandes vocales de la skill. La musique inclut les clips musicaux. La TV en direct nécessite une extension PVR dans Kodi.",
+      "keepOne": "Gardez au moins les films, les séries, la musique ou la TV en direct.",
       "legend": "Ce qu'elle peut lire"
     },
     "degradedTitles": "{{kept}} sur {{total}}",
