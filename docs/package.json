@@ -12,13 +12,13 @@
   },
   "dependencies": {
     "@astrojs/starlight": "0.42.10",
-    "astro": "7.4.10",
+    "astro": "7.4.11",
     "sharp": "0.35.5",
     "starlight-links-validator": "0.27.0",
     "starlight-openapi": "0.27.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.6.6",
+    "@biomejs/biome": "2.6.7",
     "sort-package-json": "4.1.0"
   },
   "packageManager": "pnpm@12.18.0",
