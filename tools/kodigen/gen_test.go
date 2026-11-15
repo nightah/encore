@@ -31,7 +31,7 @@ func decodeSchemaMap(src string) (map[string]*Schema, error) {
 }
 
 // generateAll collapses whitespace so assertions are independent of gofmt alignment.
-func generateAll(t *testing.T, spec, compat *Spec) string {
+func generateAll(t *testing.T, spec *Spec, compat ...*Spec) string {
 	t.Helper()
 	files, err := generate(spec, compat, "kodirpc")
 	if err != nil {
@@ -57,7 +57,7 @@ func TestExtendsEmbedsSingleObjectParent(t *testing.T) {
 	src := generateAll(t, testSpec(t, `{
 		"Item.Details.Base": {"type": "object", "properties": {"label": {"type": "string", "required": true}}},
 		"Media.Details.Base": {"extends": "Item.Details.Base", "properties": {"fanart": {"type": "string"}}}
-	}`, `{}`), nil)
+	}`, `{}`))
 
 	assertContains(t, src,
 		"type MediaDetailsBase struct { ItemDetailsBase Fanart string `json:\"fanart,omitempty\"` }",
@@ -71,7 +71,7 @@ func TestExtendsFlattensMultipleParents(t *testing.T) {
 		"Video": {"extends": "Base", "properties": {"runtime": {"type": "integer"}}},
 		"Audio": {"extends": "Base", "properties": {"label": {"type": "string"}, "bpm": {"type": "integer"}}},
 		"Item": {"extends": ["Video", "Audio"], "properties": {"type": {"type": "string"}}}
-	}`, `{}`), nil)
+	}`, `{}`))
 
 	// The diamond on "label" must collapse to one field; later parents win.
 	assertContains(t, src,
@@ -84,7 +84,7 @@ func TestExtendsMergesNonObjectSchemas(t *testing.T) {
 	src := generateAll(t, testSpec(t, `{
 		"Item.Fields.Base": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
 		"Video.Fields.Movie": {"extends": "Item.Fields.Base", "items": {"type": "string", "enum": ["title", "year"]}}
-	}`, `{}`), nil)
+	}`, `{}`))
 
 	assertContains(t, src,
 		"type VideoFieldsMovie []VideoFieldsMovieItem",
@@ -101,7 +101,7 @@ func TestUnions(t *testing.T) {
 		"Global.Toggle": {"type": [{"type": "boolean", "required": true}, {"type": "string", "enum": ["toggle"], "required": true}]},
 		"Optional.String": {"type": ["null", "string"], "default": null},
 		"Item": {"type": ["null", {"$ref": "Library.Id"}, {"type": "object", "properties": {"path": {"type": "string", "required": true}}}]}
-	}`, `{}`), nil)
+	}`, `{}`))
 
 	assertContains(t, src,
 		"type GlobalToggle struct{ union }",
@@ -137,7 +137,7 @@ func TestFieldOptionality(t *testing.T) {
 				{"name": "tags", "type": "array", "items": {"type": "string"}}
 			],
 			"returns": {"$ref": "Sub"}}
-	}`), nil)
+	}`))
 
 	assertContains(t, src,
 		"ID int `json:\"id\"`",
@@ -175,6 +175,45 @@ func TestAvailability(t *testing.T) {
 		// Methods without parameters get a wrapper without a params argument.
 		"func (c Client) ANew(ctx context.Context) (ANewResult, error)",
 	)
+}
+
+func TestAvailabilityEarliestPinned(t *testing.T) {
+	omega := testSpec(t, `{}`, `{"A.Old": {"type": "method", "params": [], "returns": "string"}}`)
+	omega.Version = APIVersion{13, 5, 0}
+	rc1 := testSpec(t, `{}`, `{
+		"A.Old": {"type": "method", "params": [{"name": "x", "type": "integer"}], "returns": "string"},
+		"A.Mid": {"type": "method", "params": [{"name": "m", "type": "integer"}], "returns": "string"}
+	}`)
+	rc2 := testSpec(t, `{}`, `{
+		"A.Old": {"type": "method", "params": [{"name": "x", "type": "integer"}, {"name": "y", "type": "integer"}], "returns": "string"},
+		"A.Mid": {"type": "method", "params": [{"name": "m", "type": "integer"}], "returns": "string"},
+		"A.New": {"type": "method", "params": [], "returns": "string"}
+	}`)
+	rc2.Version = APIVersion{13, 2000, 0}
+
+	src := generateAll(t, rc2, omega, rc1)
+	assertContains(t, src,
+		"var SchemaVersion = APIVersion{13, 2000, 0}",
+		"var BaselineVersion = APIVersion{13, 5, 0}",
+		// A method and its parameters keep the first pinned version they appear in, so a newer schema only moves what it adds.
+		`MethodAMid: { Name: "A.Mid", Params: []string{"m"}, Since: APIVersion{13, 1000, 0}, },`,
+		`MethodANew: { Name: "A.New", Since: APIVersion{13, 2000, 0}, },`,
+		`MethodAOld: { Name: "A.Old", Params: []string{"x", "y"}, Since: APIVersion{13, 5, 0}, ParamsSince: map[string]APIVersion{ "x": {13, 1000, 0}, "y": {13, 2000, 0}, }, },`,
+	)
+}
+
+func TestCompatOrderIsChecked(t *testing.T) {
+	spec := testSpec(t, `{}`, `{}`)
+	older := testSpec(t, `{}`, `{}`)
+	older.Version = APIVersion{13, 5, 0}
+	for name, compat := range map[string][]*Spec{
+		"newest first":   {spec, older},
+		"same as schema": {spec},
+	} {
+		if _, err := generate(spec, compat, "kodirpc"); err == nil {
+			t.Errorf("%s: expected an ordering error", name)
+		}
+	}
 }
 
 func TestNameCollisionIsReported(t *testing.T) {

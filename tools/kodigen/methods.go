@@ -55,7 +55,7 @@ func (g *generator) genNotifications() {
 }
 
 // renderMethodTable also renders the typed Client wrappers.
-func (g *generator) renderMethodTable(compat *Spec) string {
+func (g *generator) renderMethodTable(compat []*Spec) string {
 	names := sortedKeys(g.spec.Methods)
 	var b strings.Builder
 
@@ -70,8 +70,8 @@ func (g *generator) renderMethodTable(compat *Spec) string {
 	fmt.Fprintf(&b, "// SchemaVersion is the API version of the schema this package was generated from.\n")
 	fmt.Fprintf(&b, "var SchemaVersion = %s\n\n", versionLit(g.spec.Version))
 	base := g.spec.Version
-	if compat != nil {
-		base = compat.Version
+	if len(compat) > 0 {
+		base = compat[0].Version
 	}
 	fmt.Fprintf(&b, "// BaselineVersion is the oldest API version the availability data covers.\n")
 	fmt.Fprintf(&b, "var BaselineVersion = %s\n\n", versionLit(base))
@@ -103,7 +103,7 @@ func (g *generator) renderMethodTable(compat *Spec) string {
 		if len(paramsSince) > 0 {
 			b.WriteString("\t\tParamsSince: map[string]APIVersion{\n")
 			for _, p := range paramsSince {
-				fmt.Fprintf(&b, "\t\t\t%q: %s,\n", p, strings.TrimPrefix(versionLit(g.spec.Version), "APIVersion"))
+				fmt.Fprintf(&b, "\t\t\t%q: %s,\n", p.name, strings.TrimPrefix(versionLit(p.since), "APIVersion"))
 			}
 			b.WriteString("\t\t},\n")
 		}
@@ -113,23 +113,27 @@ func (g *generator) renderMethodTable(compat *Spec) string {
 	return b.String()
 }
 
-// availability returns the version a method is known to exist since and the parameters that are newer than the method itself. With no compat schema everything is attributed to the main schema's version.
-func availability(name string, m *Schema, spec, compat *Spec) (APIVersion, []string) {
-	if compat == nil {
-		return spec.Version, nil
-	}
-	old, ok := compat.Methods[name]
-	if !ok {
-		return spec.Version, nil
-	}
-	var added []string
+// availability returns the first pinned version the method appears in and the parameters that appeared after the method, each with the first pinned version it appears in. compat is ordered oldest to newest, so a newer schema only moves what it adds; anything absent from every compat schema is attributed to spec's version.
+func availability(name string, m *Schema, spec *Spec, compat []*Spec) (APIVersion, []paramSince) {
+	chain := append(slices.Clone(compat), spec)
+	first := slices.IndexFunc(chain, func(s *Spec) bool {
+		_, ok := s.Methods[name]
+		return ok
+	})
+	var added []paramSince
 	for _, p := range m.Params {
-		if !slices.ContainsFunc(old.Params, func(q *Schema) bool { return q.Name == p.Name }) {
-			added = append(added, p.Name)
+		for _, s := range chain[first:] {
+			if !slices.ContainsFunc(s.Methods[name].Params, func(q *Schema) bool { return q.Name == p.Name }) {
+				continue
+			}
+			if s != chain[first] {
+				added = append(added, paramSince{name: p.Name, since: s.Version})
+			}
+			break
 		}
 	}
-	slices.Sort(added)
-	return compat.Version, added
+	slices.SortFunc(added, func(a, b paramSince) int { return strings.Compare(a.name, b.name) })
+	return chain[first].Version, added
 }
 
 func stringsLit(ss []string) string {

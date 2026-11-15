@@ -15,6 +15,12 @@ type APIVersion struct {
 	Major, Minor, Patch int
 }
 
+// paramSince is a method parameter added after the method itself, with the first pinned version it appears in.
+type paramSince struct {
+	name  string
+	since APIVersion
+}
+
 // Schema is a node of Kodi's JSON-RPC schema, a JSON Schema draft-03 dialect. Only the keywords the generator needs are decoded.
 type Schema struct {
 	Ref         string

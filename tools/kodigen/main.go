@@ -11,7 +11,11 @@ import (
 
 func main() {
 	schemaDir := flag.String("schema", "", "directory with the newest pinned schema (methods.json, types.json, notifications.json, version.txt)")
-	compatDir := flag.String("compat", "", "optional directory with an older schema used for availability data")
+	var compatDirs []string
+	flag.Func("compat", "directory with an older pinned schema used for availability data; repeat it for each, oldest first", func(dir string) error {
+		compatDirs = append(compatDirs, dir)
+		return nil
+	})
 	outDir := flag.String("out", "", "output directory")
 	pkg := flag.String("package", "kodirpc", "Go package name")
 	flag.Parse()
@@ -20,20 +24,20 @@ func main() {
 		flag.Usage()
 		os.Exit(2)
 	}
-	if err := run(*schemaDir, *compatDir, *outDir, *pkg); err != nil {
+	if err := run(*schemaDir, compatDirs, *outDir, *pkg); err != nil {
 		fmt.Fprintln(os.Stderr, "kodigen:", err)
 		os.Exit(1)
 	}
 }
 
-func run(schemaDir, compatDir, outDir, pkg string) error {
+func run(schemaDir string, compatDirs []string, outDir, pkg string) error {
 	spec, err := loadSpec(schemaDir)
 	if err != nil {
 		return err
 	}
-	var compat *Spec
-	if compatDir != "" {
-		if compat, err = loadSpec(compatDir); err != nil {
+	compat := make([]*Spec, len(compatDirs))
+	for i, dir := range compatDirs {
+		if compat[i], err = loadSpec(dir); err != nil {
 			return err
 		}
 	}
@@ -45,7 +49,18 @@ func run(schemaDir, compatDir, outDir, pkg string) error {
 	return writeFiles(outDir, files)
 }
 
-func generate(spec, compat *Spec, pkg string) (map[string][]byte, error) {
+// generate renders the package from spec, taking availability data from the compat schemas, which must be ordered oldest to newest and all be older than spec.
+func generate(spec *Spec, compat []*Spec, pkg string) (map[string][]byte, error) {
+	for i, s := range compat {
+		next := spec
+		if i+1 < len(compat) {
+			next = compat[i+1]
+		}
+		if !s.Version.less(next.Version) {
+			return nil, fmt.Errorf("compat schema %s is not older than %s: list -compat schemas oldest first, all older than -schema", s.Version, next.Version)
+		}
+	}
+
 	g := newGenerator(spec)
 
 	// Reserve every schema type name first so inline types never take a name that a schema id maps to.

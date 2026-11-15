@@ -11,15 +11,41 @@ import (
 
 const outputDir = "../../internal/backend/kodi/kodirpc"
 
-func generatePinned(t *testing.T) map[string][]byte {
+// pinnedArgs reads the -schema and -compat directories from the go:generate line in kodirpc, so the tests generate from the same chain as go generate.
+func pinnedArgs(t *testing.T) (schema string, compat []string) {
 	t.Helper()
-	spec, err := loadSpec("schema/piers")
+	src, err := os.ReadFile(filepath.Join(outputDir, "generate.go"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	compat, err := loadSpec("schema/omega")
+	fields := strings.Fields(string(src))
+	for i := 0; i+1 < len(fields); i++ {
+		dir := strings.TrimPrefix(strings.Trim(fields[i+1], `"`), "kodigen/")
+		switch fields[i] {
+		case "-schema":
+			schema = dir
+		case "-compat":
+			compat = append(compat, dir)
+		}
+	}
+	if schema == "" {
+		t.Fatal("generate.go has no -schema argument")
+	}
+	return schema, compat
+}
+
+func generatePinned(t *testing.T) map[string][]byte {
+	t.Helper()
+	schemaDir, compatDirs := pinnedArgs(t)
+	spec, err := loadSpec(schemaDir)
 	if err != nil {
 		t.Fatal(err)
+	}
+	compat := make([]*Spec, len(compatDirs))
+	for i, dir := range compatDirs {
+		if compat[i], err = loadSpec(dir); err != nil {
+			t.Fatal(err)
+		}
 	}
 	files, err := generate(spec, compat, "kodirpc")
 	if err != nil {

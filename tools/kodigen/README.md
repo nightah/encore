@@ -9,6 +9,8 @@ go run ./kodigen -schema kodigen/schema/piers -compat kodigen/schema/omega \
     -out ../internal/backend/kodi/kodirpc
 ```
 
+The tests read the `-schema` and `-compat` directories from that `go:generate` line, so it is the one place to change when a pin is added.
+
 `tools` is a separate Go module so generator dependencies never reach the main module. The pinned inputs and their checksums are in [`schema/SOURCES.md`](schema/SOURCES.md).
 
 ## Output
@@ -44,11 +46,13 @@ The schema is a JSON Schema draft-03 dialect with Kodi-specific quirks:
 
 ## Versions and availability
 
-The package is generated from the newest pinned schema (Piers, API 13.1000.0). The `-compat` schema (Omega, API 13.5.0) only feeds availability data into the `Methods` table:
+The package is generated from the newest pinned schema (`-schema`). Each `-compat` schema, listed oldest first and all older than `-schema`, only feeds availability data into the `Methods` table:
 
-- `MethodInfo.Since` is `BaselineVersion` (13.5.0) for methods present in Omega and `SchemaVersion` for Piers-only methods (`Player.GetChapters`, `GUI.TakeScreenshot`, `VideoLibrary.SetSourceContent`, ...). "Since" is the oldest *pinned* version; the method may be older.
-- `MethodInfo.ParamsSince` lists parameters added after the method existed (for example `trailer` on `VideoLibrary.SetTVShowDetails`).
+- `MethodInfo.Since` is the version of the first pinned schema the method appears in: `BaselineVersion` (the oldest `-compat` schema) for methods Omega already has, and the first Piers pin for methods Piers added (`Player.GetChapters`, `GUI.TakeScreenshot`, `VideoLibrary.SetSourceContent`, ...). "Since" is the oldest *pinned* version; the method may be older.
+- `MethodInfo.ParamsSince` lists parameters added after the method existed, each with the first pinned version it appears in (for example `trailer` on `VideoLibrary.SetTVShowDetails`).
 - `MethodInfo.AvailableIn(v)` / `ParamAvailableIn(p, v)` gate calls at runtime against the version reported by `JSONRPC.Version`.
+
+Pinning a newer schema therefore only moves what it adds: keep the previous pin as a `-compat` schema, or every method and parameter it introduced would be attributed to the new version and gated away from Kodi instances still running it.
 
 Types are not versioned: new fields and enum values simply never appear when talking to an older Kodi. Methods removed in Piers would not be generated (there are none between these two pins).
 

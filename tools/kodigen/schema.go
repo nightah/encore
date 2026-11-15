@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -197,6 +198,10 @@ func decodeOrdered(b []byte, fn func(key string, raw json.RawMessage) error) err
 	}
 	_, err = dec.Token()
 	return err
+}
+
+func (v APIVersion) less(o APIVersion) bool {
+	return cmp.Or(cmp.Compare(v.Major, o.Major), cmp.Compare(v.Minor, o.Minor), cmp.Compare(v.Patch, o.Patch)) < 0
 }
 
 func (v APIVersion) String() string {
