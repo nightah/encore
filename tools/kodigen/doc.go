@@ -2,7 +2,7 @@
 //
 // Usage:
 //
-//	kodigen -schema DIR [-compat DIR] -out DIR [-package NAME]
+//	kodigen -schemas DIR -matrix WORKFLOW -out DIR -releases FILE [-package NAME] [-releases-package NAME]
 //
 // See README.md for the schema handling rules.
 package main

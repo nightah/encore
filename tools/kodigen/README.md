@@ -5,9 +5,11 @@ Generates `internal/backend/kodi/kodirpc` from Kodi's JSON-RPC introspection sch
 ```sh
 go generate ./internal/backend/kodi/kodirpc/      # from the repo root
 # which runs, from tools/:
-go run ./kodigen -schema kodigen/schema/piers -compat kodigen/schema/omega \
-    -out ../internal/backend/kodi/kodirpc
+go run ./kodigen -schemas kodigen/schema -matrix ../.github/workflows/kodi-contract.yml \
+    -out ../internal/backend/kodi/kodirpc -releases ../internal/backend/kodi/contract_releases_gen_test.go
 ```
+
+The tests read kodigen's arguments from that `go:generate` line.
 
 `tools` is a separate Go module so generator dependencies never reach the main module. The pinned inputs and their checksums are in [`schema/SOURCES.md`](schema/SOURCES.md).
 
@@ -42,16 +44,28 @@ The schema is a JSON Schema draft-03 dialect with Kodi-specific quirks:
 - **Runtime enums**: `Addon.Types`, `GUI.Window`, `Input.Action`, `List.Filter.Operators` and `List.Filter.Fields.*` are registered by Kodi at startup from C++ tables and never appear in the files. They are generated as plain `string` types; list their values with `JSONRPC.Introspect`.
 - Validation keywords (`minimum`, `minLength`, `uniqueItems`, ...) are ignored. `any`, `null` and schema-less objects map to `any` / `map[string]any`.
 
+## Pins
+
+The Kodi images the contract tests run, in the job matrix of `.github/workflows/kodi-contract.yml`, decide which schemas are pinned. Each `matthuisman/kodi-headless:<Release>-<version>` image is built from the Kodi tag `<version>-<Release>`, and every run of kodigen:
+
+1. downloads the schema of a pinned tag that has no directory under `schema/` yet, recording the commit the tag points at in `commit.txt` (this needs `git` and network access; a run with every directory present needs neither);
+2. removes a schema no image pins whose `methods.json`, `types.json` and `notifications.json` are byte-identical to the schema before it, as it adds nothing to the availability data;
+3. rewrites `schema/SOURCES.md` and `internal/backend/kodi/contract_releases_gen_test.go`, which maps each release name to the API version the contract tests expect from its image.
+
+Renovate bumps the images on its `renovate/kodi-images` branch, where `renovate-generate.yml` runs `go generate` and commits the result, so a new Kodi release arrives with its schema and the contract tests check it before it merges. A new Kodi release line (a new codename) needs a matrix entry added by hand.
+
 ## Versions and availability
 
-The package is generated from the newest pinned schema (Piers, API 13.1000.0). The `-compat` schema (Omega, API 13.5.0) only feeds availability data into the `Methods` table:
+The schemas are ordered by API version. The package is generated from the newest; every older one only feeds availability data into the `Methods` table:
 
-- `MethodInfo.Since` is `BaselineVersion` (13.5.0) for methods present in Omega and `SchemaVersion` for Piers-only methods (`Player.GetChapters`, `GUI.TakeScreenshot`, `VideoLibrary.SetSourceContent`, ...). "Since" is the oldest *pinned* version; the method may be older.
-- `MethodInfo.ParamsSince` lists parameters added after the method existed (for example `trailer` on `VideoLibrary.SetTVShowDetails`).
+- `MethodInfo.Since` is the version of the first pinned schema the method appears in: `BaselineVersion` (the oldest schema) for methods Omega already has, and the first Piers pin for methods Piers added (`Player.GetChapters`, `GUI.TakeScreenshot`, `VideoLibrary.SetSourceContent`, ...). "Since" is the oldest *pinned* version; the method may be older.
+- `MethodInfo.ParamsSince` lists parameters added after the method existed, each with the first pinned version it appears in (for example `trailer` on `VideoLibrary.SetTVShowDetails`).
 - `MethodInfo.AvailableIn(v)` / `ParamAvailableIn(p, v)` gate calls at runtime against the version reported by `JSONRPC.Version`.
+
+Pinning a newer schema therefore only moves what it adds. A schema that introduced a method or parameter is never removed, or what it introduced would be attributed to the next version and gated away from Kodi instances still running it.
 
 Types are not versioned: new fields and enum values simply never appear when talking to an older Kodi. Methods removed in Piers would not be generated (there are none between these two pins).
 
 ## Tests
 
-`go test ./kodigen` (from `tools/`) covers the preprocessor (comments, `required`, `extends`, unions, naming), fails if the checked-in output is stale, and builds and vets the generated package together with the hand-written files in a scratch module. Round-trip tests for real payloads live in `internal/backend/kodi/kodirpc/kodirpc_test.go`.
+`go test ./kodigen` (from `tools/`) covers the preprocessor (comments, `required`, `extends`, unions, naming), the pins (matrix parsing, downloading from a local repository and server, ordering and removal), fails if the checked-in output, `SOURCES.md` or the contract releases are stale, and builds and vets the generated package together with the hand-written files in a scratch module. Round-trip tests for real payloads live in `internal/backend/kodi/kodirpc/kodirpc_test.go`.

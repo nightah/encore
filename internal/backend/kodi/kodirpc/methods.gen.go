@@ -5345,7 +5345,7 @@ const (
 )
 
 // SchemaVersion is the API version of the schema this package was generated from.
-var SchemaVersion = APIVersion{13, 1000, 0}
+var SchemaVersion = APIVersion{13, 2000, 0}
 
 // BaselineVersion is the oldest API version the availability data covers.
 var BaselineVersion = APIVersion{13, 5, 0}

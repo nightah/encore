@@ -4,6 +4,8 @@ import "encoding/json"
 
 // Spec is one version of the Kodi JSON-RPC schema.
 type Spec struct {
+	// Tag is the name of the schema's directory, the Kodi tag it was downloaded from, and Path the directory itself.
+	Tag, Path     string
 	Version       APIVersion
 	Types         map[string]*Schema
 	Methods       map[string]*Schema
@@ -13,6 +15,28 @@ type Spec struct {
 // APIVersion is a JSON-RPC API version as found in version.txt.
 type APIVersion struct {
 	Major, Minor, Patch int
+}
+
+// config is kodigen's command line.
+type config struct {
+	schemas, matrix, out, releases, pkg, releasesPkg string
+}
+
+// rendered holds every file kodigen generates: the package's files by name, SOURCES.md and the contract tests' releases.
+type rendered struct {
+	pkg               map[string][]byte
+	sources, releases []byte
+}
+
+// pin is a Kodi release the contract matrix runs: its name in the matrix (Piers) and the Kodi tag its image was built from (22.0rc2-Piers).
+type pin struct {
+	name, kodiTag string
+}
+
+// paramSince is a method parameter added after the method itself, with the first pinned version it appears in.
+type paramSince struct {
+	name  string
+	since APIVersion
 }
 
 // Schema is a node of Kodi's JSON-RPC schema, a JSON Schema draft-03 dialect. Only the keywords the generator needs are decoded.

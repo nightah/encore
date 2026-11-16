@@ -6,6 +6,7 @@ require (
 	github.com/getkin/kin-openapi v0.153.0
 	github.com/oapi-codegen/oapi-codegen/v2 v2.8.2
 	github.com/oapi-codegen/runtime v1.9.0
+	go.yaml.in/yaml/v4 v4.0.0
 )
 
 require (
@@ -49,7 +50,6 @@ require (
 	github.com/tdewolff/parse/v2 v2.8.12 // indirect
 	github.com/vmware-labs/yaml-jsonpath v0.3.2 // indirect
 	github.com/wlynxg/chardet v1.0.5 // indirect
-	go.yaml.in/yaml/v4 v4.0.0 // indirect
 	golang.org/x/mod v0.42.0 // indirect
 	golang.org/x/sync v0.24.0 // indirect
 	golang.org/x/sys v0.49.0 // indirect
