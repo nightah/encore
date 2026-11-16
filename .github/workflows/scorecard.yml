@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 15
     permissions:
-      contents: read # check out the code
+      contents: read
       id-token: write # sign the published results with an OIDC token
       security-events: write # upload the results to code scanning
     steps:

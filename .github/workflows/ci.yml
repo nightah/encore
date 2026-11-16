@@ -19,6 +19,6 @@ jobs:
     name: Pipeline
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
     permissions:
-      contents: read # check out the code
+      contents: read
       id-token: write # upload coverage to Codecov without a token (OIDC)
     uses: $/.github/workflows/ci-jobs.yml

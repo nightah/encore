@@ -1,11 +1,12 @@
 ---
-# Regenerates code on Renovate's codegen branch and commits it back. The hosted Renovate app can't run go generate or pnpm generate:api, so a bump that changes generated output would otherwise fail CI's stale-code checks until someone ran 'make generate' or 'pnpm -C web generate:api' by hand. The codegen group in .renovaterc.json lists the dependencies that change it; updates to the rest never reach this workflow.
+# Regenerates code on Renovate's codegen and kodi-images branches and commits it back. The hosted Renovate app can't run go generate or pnpm generate:api, so a bump that changes generated output would otherwise fail CI's stale-code checks until someone ran 'make generate' or 'pnpm -C web generate:api' by hand. The codegen group in .renovaterc.json lists the dependencies that change it; on kodi-images, go generate pins the JSON-RPC schema of each Kodi release the contract matrix names. Updates to the rest never reach this workflow.
 name: Renovate Generate
 
 on:
   push:
     branches:
       - renovate/codegen
+      - renovate/kodi-images
     # The commit this pushes back touches none of these, so it doesn't run the workflow again.
     paths:
       - go.mod
@@ -14,6 +15,7 @@ on:
       - tools/go.sum
       - web/package.json
       - web/pnpm-lock.yaml
+      - .github/workflows/kodi-contract.yml
 
 # A newer push from Renovate supersedes the run for the older one, whose commit would be refused anyway (expectedHeadOid).
 concurrency:
@@ -29,7 +31,7 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 10
     permissions:
-      contents: read # check out the code
+      contents: read
     outputs:
       changed: ${{ steps.diff.outputs.changed }}
     steps:
@@ -128,8 +130,20 @@ jobs:
             jq -n --arg path "$f" --rawfile contents "${RUNNER_TEMP}/contents" '{$path, $contents}'
           done > "${RUNNER_TEMP}/additions.json"
           jq -R '{path: .}' .deleted > "${RUNNER_TEMP}/deletions.json"
+          case "${GITHUB_REF_NAME}" in
+            renovate/kodi-images)
+              headline="build(kodi): pin the json-rpc schemas of the updated images"
+              body="Output of go generate ./... for the Kodi images bumped in .github/workflows/kodi-contract.yml: the new releases' schemas, SOURCES.md, the kodirpc package and the contract tests' API versions."
+              ;;
+            *)
+              headline="build(deps): regenerate code"
+              body="Output of go generate ./... and pnpm -C web generate:api for the updated dependencies."
+              ;;
+          esac
           jq -n \
             --arg repo "${GITHUB_REPOSITORY}" \
+            --arg headline "${headline}" \
+            --arg body "${body}" \
             --arg branch "${GITHUB_REF_NAME}" \
             --arg head "${GITHUB_SHA}" \
             --slurpfile additions "${RUNNER_TEMP}/additions.json" \
@@ -139,7 +153,7 @@ jobs:
               variables: {input: {
                 branch: {repositoryNameWithOwner: $repo, branchName: $branch},
                 expectedHeadOid: $head,
-                message: {headline: "build(deps): regenerate code", body: "Output of go generate ./... and pnpm -C web generate:api for the updated dependencies."},
+                message: {$headline, $body},
                 fileChanges: {additions: $additions, deletions: $deletions}
               }}
             }' > "${RUNNER_TEMP}/request.json"

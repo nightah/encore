@@ -19,7 +19,7 @@ jobs:
   go:
     name: Go
     permissions:
-      contents: read # check out the code
+      contents: read
       id-token: write # upload coverage to Codecov without a token (OIDC)
     uses: $/.github/workflows/ci-go.yml
 
@@ -215,7 +215,7 @@ jobs:
     runs-on: ubuntu-26.04
     timeout-minutes: 15
     permissions:
-      contents: read # check out the code
+      contents: read
       id-token: write # upload coverage to Codecov without a token (OIDC)
     steps:
       - name: Harden the runner (audit all outbound calls)
