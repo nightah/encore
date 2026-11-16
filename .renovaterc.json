@@ -252,6 +252,18 @@
       ],
       "groupName": "release tools",
       "semanticCommitType": "ci"
+    },
+    {
+      "description": "Kodi images the contract tests run against (kodi-contract.yml): one release line per matrix entry (Omega-21.x, Piers-22.x). renovate-generate.yml pins the new release's JSON-RPC schema on the branch, and the push runs the contract tests, which no required check covers, so Renovate merges itself once every check has passed instead of leaving it to GitHub",
+      "matchManagers": [
+        "custom.regex"
+      ],
+      "matchDepNames": [
+        "matthuisman/kodi-headless"
+      ],
+      "groupName": "kodi images",
+      "platformAutomerge": false,
+      "semanticCommitType": "ci"
     }
   ],
   "customManagers": [
@@ -386,6 +398,18 @@
         "docker run [^\\n]*?\\s(?<depName>(?:[a-z0-9.-]+/)+[a-z0-9._-]+):(?<currentValue>v?\\d+\\.\\d+\\.\\d+)\\b"
       ],
       "datasourceTemplate": "docker"
+    },
+    {
+      "description": "Kodi images in the contract matrix (image: matthuisman/kodi-headless:<Release>-<version>@sha256:...)",
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/kodi-contract\\.yml$/"
+      ],
+      "matchStrings": [
+        "image: (?<depName>matthuisman/kodi-headless):(?<currentValue>[A-Z][a-z]+-\\d+\\.\\d+(?:\\.\\d+)?(?:(?:a|b|rc)\\d+)?)@(?<currentDigest>sha256:[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "regex:^(?<compatibility>[A-Z][a-z]+)-(?<major>\\d+)\\.(?<minor>\\d+)(?:\\.(?<patch>\\d+))?(?<prerelease>(?:a|b|rc)\\d+)?$"
     }
   ]
 }

@@ -1,0 +1,125 @@
+name: Kodi contract
+
+# The contract tests against real Kodi, one job per release the matrix pins. The nightly calls this, and a pushed branch that changes the pins, the schemas generated from them or the Kodi backend runs it on its own, so a Renovate bump of a Kodi image is tested before it merges.
+on:
+  workflow_call:
+  push:
+    branches: ["**"]
+    paths:
+      - .github/workflows/kodi-contract.yml
+      - internal/backend/kodi/**
+      - tools/kodigen/**
+
+permissions: {}
+
+jobs:
+  contract:
+    name: Contract (${{ matrix.kodi }})
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    # A newer push to the branch supersedes the run for the older one. github.workflow is the caller's name when the nightly calls this, so its runs never cancel a branch's.
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}-kodi-contract-${{ matrix.kodi }}
+      cancel-in-progress: true
+    strategy:
+      fail-fast: false
+      matrix:
+        # Omega = Kodi 21, Piers = Kodi 22. Images are pinned to an exact release and digest, so a new Kodi build arrives as a Renovate pull request, where this workflow runs, rather than in a nightly run.
+        include:
+          - kodi: Omega
+            image: matthuisman/kodi-headless:Omega-21.3@sha256:2d597ffac732ad41860ed7384c5ceeee7efb0be789036349a04098e57652d03e
+          - kodi: Piers
+            image: matthuisman/kodi-headless:Piers-22.0rc2@sha256:c4606a0c502dbd3dcde8ceda1e36004489bb8c8a5136e426eda66096ee9a1dc2
+    env:
+      ENCORE_CONTRACT_KODI_URL: http://127.0.0.1:8080/jsonrpc
+      ENCORE_CONTRACT_KODI_WS_URL: ws://127.0.0.1:9090/jsonrpc
+      ENCORE_CONTRACT_KODI_VERSION: ${{ matrix.kodi }}
+    steps:
+      - name: Harden the runner (audit all outbound calls)
+        uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.mod
+          cache: false
+
+      # CI's test cache from main (ci-jobs.yml); nightly runs never save their own.
+      - name: Restore the Go cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: go-test-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('go.mod', 'go.sum', 'tools/go.mod', 'tools/go.sum') }}
+          restore-keys: go-test-${{ runner.os }}-${{ runner.arch }}-
+
+      # Started by hand rather than as a service container so the SQLite-only advancedsettings.xml and the test library from the checkout can be mounted.
+      - name: Start headless Kodi
+        env:
+          KODI_IMAGE: ${{ matrix.image }}
+        run: |
+          docker run -d --name kodi -p 8080:8080 -p 9090:9090 \
+            -v "${GITHUB_WORKSPACE}/internal/backend/kodi/testdata/kodi-headless/advancedsettings.xml:/config/.kodi/userdata/advancedsettings.xml:ro" \
+            -v "${GITHUB_WORKSPACE}/internal/backend/kodi/testdata/kodi-headless/library:/media:ro" \
+            "${KODI_IMAGE}"
+
+      - name: Wait for Kodi JSON-RPC
+        run: |
+          for _ in $(seq 1 90); do
+            if curl -fsS -H 'Content-Type: application/json' \
+                 -d '{"jsonrpc":"2.0","id":1,"method":"JSONRPC.Ping"}' \
+                 "${ENCORE_CONTRACT_KODI_URL}" | grep -q pong; then
+              echo "Kodi is up"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::Kodi JSON-RPC did not respond"
+          docker logs kodi || true
+          exit 1
+
+      - name: Contract tests (empty library)
+        run: go test -tags contract -count=1 -v ./internal/backend/kodi/...
+
+      # Kodi can't add a source over JSON-RPC, so the two library paths go straight into its video database, scraped by "Local information only" from the .nfo files, then a scan picks up the titles.
+      - name: Seed the library
+        run: |
+          docker exec kodi python3 -c '
+          import glob, sqlite3
+          db = sqlite3.connect(sorted(glob.glob("/config/.kodi/userdata/Database/MyVideos*.db"))[-1])
+          db.executemany("INSERT INTO path (strPath, strContent, strScraper, strHash, scanRecursive, useFolderNames, strSettings, noUpdate, exclude, allAudio) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+              ("/media/movies/", "movies", "metadata.local", "", 2147483647, 0, "", 0, 0, 0),
+              ("/media/tv/", "tvshows", "metadata.local", "", 0, 0, "", 0, 0, 0),
+          ])
+          db.commit()
+          '
+          rpc() { curl -fsS -H 'Content-Type: application/json' -d "$1" "${ENCORE_CONTRACT_KODI_URL}"; }
+          rpc '{"jsonrpc":"2.0","id":1,"method":"VideoLibrary.Scan"}'; echo
+          for _ in $(seq 1 60); do
+            movies=$(rpc '{"jsonrpc":"2.0","id":1,"method":"VideoLibrary.GetMovies"}' | jq '.result.limits.total')
+            episodes=$(rpc '{"jsonrpc":"2.0","id":1,"method":"VideoLibrary.GetEpisodes"}' | jq '.result.limits.total')
+            if [ "${movies}" = 5 ] && [ "${episodes}" = 2 ]; then
+              echo "Library seeded"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::Kodi listed ${movies} movies and ${episodes} episodes, expected 5 and 2"
+          exit 1
+
+      - name: Contract tests (seeded library)
+        env:
+          ENCORE_CONTRACT_KODI_LIBRARY: internal/backend/kodi/testdata/kodi-headless/library
+        run: go test -tags contract -count=1 -run TestContract -v ./internal/app/
+
+      - name: Kodi logs
+        if: failure()
+        run: docker logs kodi || true

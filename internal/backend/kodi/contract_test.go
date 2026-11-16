@@ -56,10 +56,10 @@ func TestContractPingAndVersion(t *testing.T) {
 	}
 }
 
-// releaseAPIVersions maps the Kodi release names CI passes in ENCORE_CONTRACT_KODI_VERSION to the JSON-RPC API version each speaks. A plain version number is compared as is.
+// releaseAPIVersions maps the Kodi release names CI passes in ENCORE_CONTRACT_KODI_VERSION to the JSON-RPC API version the pinned image of each speaks. A plain version number is compared as is.
 var releaseAPIVersions = map[string]string{
 	"Omega": "13.5.0",
-	"Piers": "13.1000.0",
+	"Piers": "13.2000.0",
 }
 
 func TestContractIntrospect(t *testing.T) {
