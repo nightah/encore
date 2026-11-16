@@ -200,8 +200,8 @@ func decodeOrdered(b []byte, fn func(key string, raw json.RawMessage) error) err
 	return err
 }
 
-func (v APIVersion) less(o APIVersion) bool {
-	return cmp.Or(cmp.Compare(v.Major, o.Major), cmp.Compare(v.Minor, o.Minor), cmp.Compare(v.Patch, o.Patch)) < 0
+func compareVersions(a, b APIVersion) int {
+	return cmp.Or(cmp.Compare(a.Major, b.Major), cmp.Compare(a.Minor, b.Minor), cmp.Compare(a.Patch, b.Patch))
 }
 
 func (v APIVersion) String() string {
@@ -210,7 +210,7 @@ func (v APIVersion) String() string {
 
 // loadSpec reads methods.json, types.json, notifications.json and version.txt from dir.
 func loadSpec(dir string) (*Spec, error) {
-	spec := &Spec{}
+	spec := &Spec{Tag: filepath.Base(dir), Path: dir}
 
 	files := []struct {
 		name string
@@ -228,7 +228,7 @@ func loadSpec(dir string) (*Spec, error) {
 		*f.dst = m
 	}
 
-	b, err := os.ReadFile(filepath.Join(dir, "version.txt")) //nolint:gosec // G304: path comes from the -schema flag of a dev tool.
+	b, err := os.ReadFile(filepath.Join(dir, versionFile)) //nolint:gosec // G304: path comes from the -schemas flag of a dev tool.
 	if err != nil {
 		return nil, err
 	}
@@ -273,7 +273,7 @@ func addRuntimeEnums(spec *Spec) {
 }
 
 func loadSchemaFile(path string) (map[string]*Schema, error) {
-	b, err := os.ReadFile(path) //nolint:gosec // G304: path comes from the -schema flag of a dev tool.
+	b, err := os.ReadFile(path) //nolint:gosec // G304: path comes from the -schemas flag of a dev tool.
 	if err != nil {
 		return nil, err
 	}

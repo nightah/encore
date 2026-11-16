@@ -206,13 +206,12 @@ func TestCompatOrderIsChecked(t *testing.T) {
 	spec := testSpec(t, `{}`, `{}`)
 	older := testSpec(t, `{}`, `{}`)
 	older.Version = APIVersion{13, 5, 0}
-	for name, compat := range map[string][]*Spec{
-		"newest first":   {spec, older},
-		"same as schema": {spec},
-	} {
-		if _, err := generate(spec, compat, "kodirpc"); err == nil {
-			t.Errorf("%s: expected an ordering error", name)
-		}
+	if _, err := generate(spec, []*Spec{spec, older}, "kodirpc"); err == nil {
+		t.Error("expected an ordering error for compat schemas listed newest first")
+	}
+	// Point releases often keep the API version, so equal versions are fine.
+	if _, err := generate(spec, []*Spec{older, older, spec}, "kodirpc"); err != nil {
+		t.Errorf("equal versions: %v", err)
 	}
 }
 

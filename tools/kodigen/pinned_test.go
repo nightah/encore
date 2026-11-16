@@ -9,56 +9,66 @@ import (
 	"testing"
 )
 
-const outputDir = "../../internal/backend/kodi/kodirpc"
-
-// pinnedArgs reads the -schema and -compat directories from the go:generate line in kodirpc, so the tests generate from the same chain as go generate.
-func pinnedArgs(t *testing.T) (schema string, compat []string) {
+// pinnedConfig reads kodigen's arguments from the go:generate line in kodirpc, relative to this package, so the tests check what go generate writes.
+func pinnedConfig(t *testing.T) config {
 	t.Helper()
-	src, err := os.ReadFile(filepath.Join(outputDir, "generate.go"))
+	src, err := os.ReadFile("../../internal/backend/kodi/kodirpc/generate.go")
 	if err != nil {
 		t.Fatal(err)
 	}
+	cfg := config{pkg: "kodirpc", releasesPkg: "kodi"}
 	fields := strings.Fields(string(src))
 	for i := 0; i+1 < len(fields); i++ {
-		dir := strings.TrimPrefix(strings.Trim(fields[i+1], `"`), "kodigen/")
+		// The paths are relative to tools/, the directory go generate runs kodigen from.
+		path := filepath.Join("..", strings.Trim(fields[i+1], `"`))
 		switch fields[i] {
-		case "-schema":
-			schema = dir
-		case "-compat":
-			compat = append(compat, dir)
+		case "-schemas":
+			cfg.schemas = path
+		case "-matrix":
+			cfg.matrix = path
+		case "-out":
+			cfg.out = path
+		case "-releases":
+			cfg.releases = path
 		}
 	}
-	if schema == "" {
-		t.Fatal("generate.go has no -schema argument")
+	if cfg.schemas == "" || cfg.matrix == "" || cfg.out == "" || cfg.releases == "" {
+		t.Fatalf("generate.go lacks one of -schemas, -matrix, -out and -releases: %+v", cfg)
 	}
-	return schema, compat
+	return cfg
 }
 
-func generatePinned(t *testing.T) map[string][]byte {
+// renderPinned renders every generated file from the checked-in schemas, without downloading or removing any.
+func renderPinned(t *testing.T) (config, *rendered) {
 	t.Helper()
-	schemaDir, compatDirs := pinnedArgs(t)
-	spec, err := loadSpec(schemaDir)
+	cfg := pinnedConfig(t)
+	pins, err := readMatrix(cfg.matrix)
 	if err != nil {
 		t.Fatal(err)
 	}
-	compat := make([]*Spec, len(compatDirs))
-	for i, dir := range compatDirs {
-		if compat[i], err = loadSpec(dir); err != nil {
-			t.Fatal(err)
-		}
-	}
-	files, err := generate(spec, compat, "kodirpc")
+	chain, err := loadChain(cfg.schemas)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return files
+	stale, err := prunable(chain, pins)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, s := range stale {
+		t.Errorf("schema %s adds nothing to the one before it and no image pins it; run go generate ./internal/backend/kodi/kodirpc", s.Tag)
+	}
+	out, err := renderAll(chain, pins, cfg)
+	if err != nil {
+		t.Fatalf("%v (run go generate ./internal/backend/kodi/kodirpc)", err)
+	}
+	return cfg, out
 }
 
-// TestPinnedOutputUpToDate fails when the checked-in generated files do not match what the generator produces from the pinned schema.
+// TestPinnedOutputUpToDate fails when the checked-in generated files, SOURCES.md and the contract tests' releases do not match what the generator produces from the pinned schemas.
 func TestPinnedOutputUpToDate(t *testing.T) {
-	files := generatePinned(t)
-	for name, want := range files {
-		got, err := os.ReadFile(filepath.Join(outputDir, name))
+	cfg, out := renderPinned(t)
+	for name, want := range out.pkg {
+		got, err := os.ReadFile(filepath.Join(cfg.out, name))
 		if err != nil {
 			t.Fatalf("%s: %v (run go generate ./internal/backend/kodi/kodirpc)", name, err)
 		}
@@ -66,10 +76,15 @@ func TestPinnedOutputUpToDate(t *testing.T) {
 			t.Errorf("%s is stale; run go generate ./internal/backend/kodi/kodirpc", name)
 		}
 	}
-	stale, _ := filepath.Glob(filepath.Join(outputDir, "*.gen.go"))
+	stale, _ := filepath.Glob(filepath.Join(cfg.out, "*.gen.go"))
 	for _, path := range stale {
-		if _, ok := files[filepath.Base(path)]; !ok {
+		if _, ok := out.pkg[filepath.Base(path)]; !ok {
 			t.Errorf("%s is not produced by the generator", path)
+		}
+	}
+	for path, want := range map[string][]byte{filepath.Join(cfg.schemas, "SOURCES.md"): out.sources, cfg.releases: out.releases} {
+		if got, err := os.ReadFile(path); err != nil || !bytes.Equal(got, want) {
+			t.Errorf("%s is stale; run go generate ./internal/backend/kodi/kodirpc", path)
 		}
 	}
 }
@@ -91,11 +106,12 @@ func TestPinnedOutputCompiles(t *testing.T) {
 		}
 	}
 	write("go.mod", []byte("module example.com/kodirpccheck\n\ngo 1.27\n"))
-	for name, data := range generatePinned(t) {
+	cfg, out := renderPinned(t)
+	for name, data := range out.pkg {
 		write(name, data)
 	}
 
-	handWritten, err := filepath.Glob(filepath.Join(outputDir, "*.go"))
+	handWritten, err := filepath.Glob(filepath.Join(cfg.out, "*.go"))
 	if err != nil {
 		t.Fatal(err)
 	}

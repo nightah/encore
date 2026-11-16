@@ -47,6 +47,7 @@ func TestContractPingAndVersion(t *testing.T) {
 	assert.Equal(t, kodirpc.BaselineVersion.Major, v.Major)
 	assert.False(t, v.Less(kodirpc.BaselineVersion), "encore needs API %s or newer, Kodi speaks %s", kodirpc.BaselineVersion, v)
 
+	// A release name maps to the API version of the image pinned for it (contract_releases_gen_test.go); a plain version number is compared as is.
 	if want := os.Getenv("ENCORE_CONTRACT_KODI_VERSION"); want != "" {
 		if api, ok := releaseAPIVersions[want]; ok {
 			want = api
@@ -54,12 +55,6 @@ func TestContractPingAndVersion(t *testing.T) {
 
 		assert.Equal(t, want, v.String())
 	}
-}
-
-// releaseAPIVersions maps the Kodi release names CI passes in ENCORE_CONTRACT_KODI_VERSION to the JSON-RPC API version the pinned image of each speaks. A plain version number is compared as is.
-var releaseAPIVersions = map[string]string{
-	"Omega": "13.5.0",
-	"Piers": "13.2000.0",
 }
 
 func TestContractIntrospect(t *testing.T) {
