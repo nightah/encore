@@ -537,17 +537,43 @@ func TestPrivacyAnswers(t *testing.T) {
 func TestInvocationChoice(t *testing.T) {
 	t.Parallel()
 
-	for stored, want := range map[string]string{"kodi": "kodi", "": "encore", "encore": "encore", "Kodi": "encore", "my kodi": "encore"} {
-		assert.Equal(t, want, invocationChoice(stored), stored)
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldChooseKodi", have: "kodi", expected: "kodi"},
+		{name: "ShouldChooseEncoreForNothingStored", expected: "encore"},
+		{name: "ShouldChooseEncore", have: "encore", expected: "encore"},
+		{name: "ShouldChooseEncoreForACapitalisedKodi", have: "Kodi", expected: "encore"},
+		{name: "ShouldChooseEncoreForAnythingElse", have: "my kodi", expected: "encore"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, invocationChoice(tc.have))
+		})
 	}
 }
 
 func TestOrderContent(t *testing.T) {
 	t.Parallel()
 
-	assert.Equal(t, []string{"movies", "tv", "music"}, orderContent([]string{"music", "tv", "movies", "tv"}), "in the order offered, without duplicates")
-	assert.Equal(t, []string{"tv"}, orderContent([]string{"podcasts", "tv", "TV"}), "unknown groups are dropped")
-	assert.Equal(t, []string{}, orderContent(nil), "an empty list, not nil")
+	testCases := []struct {
+		name     string
+		have     []string
+		expected []string
+	}{
+		{name: "ShouldOrderAsOfferedWithoutDuplicates", have: []string{"music", "tv", "movies", "tv"}, expected: []string{"movies", "tv", "music"}},
+		{name: "ShouldDropUnknownGroups", have: []string{"podcasts", "tv", "TV"}, expected: []string{"tv"}},
+		{name: "ShouldReturnAnEmptyListNotNil", expected: []string{}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, orderContent(tc.have))
+		})
+	}
 }
 
 func TestSmallHelpers(t *testing.T) {
@@ -566,41 +592,52 @@ func TestSmallHelpers(t *testing.T) {
 func TestLWAProblem(t *testing.T) {
 	h := newHarness(t, harnessOpts{noKodi: true})
 
-	status := func(err error) int {
-		var se huma.StatusError
+	require.NoError(t, h.api.lwaProblem(t.Context(), nil))
 
-		require.ErrorAs(t, h.api.lwaProblem(t.Context(), err), &se)
-
-		return se.GetStatus()
+	testCases := []struct {
+		name     string
+		have     error
+		expected int
+	}{
+		{name: "ShouldRejectAnInvalidClient", have: fmt.Errorf("exchanging: %w", lwa.ErrInvalidClient), expected: http.StatusUnprocessableEntity},
+		{name: "ShouldRejectAReauthorisation", have: fmt.Errorf("refreshing: %w", lwa.ErrReauthorise), expected: http.StatusUnprocessableEntity},
+		{name: "ShouldPassOnAProblemAlready", have: errNoLWACredentials, expected: http.StatusConflict},
+		{name: "ShouldRejectAnEmptyPastedURL", have: errors.New("lwa: pasted URL is empty"), expected: http.StatusUnprocessableEntity},
+		{name: "ShouldRejectAnAuthorisationNotStartedHere", have: errors.New("this authorisation was not started here or has expired; start again"), expected: http.StatusUnprocessableEntity},
+		{name: "ShouldReportAnythingElseAsInternal", have: errors.New("disk full"), expected: http.StatusInternalServerError},
+		{name: "ShouldReportNotFound", have: store.ErrNotFound, expected: http.StatusNotFound},
 	}
 
-	require.NoError(t, h.api.lwaProblem(t.Context(), nil))
-	assert.Equal(t, http.StatusUnprocessableEntity, status(fmt.Errorf("exchanging: %w", lwa.ErrInvalidClient)))
-	assert.Equal(t, http.StatusUnprocessableEntity, status(fmt.Errorf("refreshing: %w", lwa.ErrReauthorise)))
-	assert.Equal(t, http.StatusConflict, status(errNoLWACredentials), "a problem already is passed on")
-	assert.Equal(t, http.StatusUnprocessableEntity, status(errors.New("lwa: pasted URL is empty")))
-	assert.Equal(t, http.StatusUnprocessableEntity, status(errors.New("this authorisation was not started here or has expired; start again")))
-	assert.Equal(t, http.StatusInternalServerError, status(errors.New("disk full")))
-	assert.Equal(t, http.StatusNotFound, status(store.ErrNotFound))
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var se huma.StatusError
+
+			require.ErrorAs(t, h.api.lwaProblem(t.Context(), tc.have), &se)
+			assert.Equal(t, tc.expected, se.GetStatus())
+		})
+	}
 }
 
 func TestSkillSettingsValidation(t *testing.T) {
 	h := newHarness(t, harnessOpts{noKodi: true})
 	c := h.admin()
 
-	for name, tc := range map[string]struct {
+	testCases := []struct {
+		name     string
 		change   func(map[string]any)
 		location string
 	}{
-		"unknown locale": {func(s map[string]any) { s["locales_enabled"] = []string{"en-AU", "xx-XX"} }, "body.locales_enabled"},
-		"no locale":      {func(s map[string]any) { s["locales_enabled"] = []string{} }, "body.locales_enabled"},
-		"http endpoint": {func(s map[string]any) {
+		{name: "ShouldRejectAnUnknownLocale", change: func(s map[string]any) { s["locales_enabled"] = []string{"en-AU", "xx-XX"} }, location: "body.locales_enabled"},
+		{name: "ShouldRejectNoLocale", change: func(s map[string]any) { s["locales_enabled"] = []string{} }, location: "body.locales_enabled"},
+		{name: "ShouldRejectAnHTTPEndpoint", change: func(s map[string]any) {
 			s["endpoint"] = map[string]any{"url": "http://encore.example.net/api/v1/alexa"}
-		}, "body.endpoint.url"},
-		"endpoint no host": {func(s map[string]any) { s["endpoint"] = map[string]any{"url": "https:///api/v1/alexa"} }, "body.endpoint.url"},
-		"bad invocation":   {func(s map[string]any) { s["invocation"] = "alexa" }, "body.invocation"},
-	} {
-		t.Run(name, func(t *testing.T) {
+		}, location: "body.endpoint.url"},
+		{name: "ShouldRejectAnEndpointWithoutAHost", change: func(s map[string]any) { s["endpoint"] = map[string]any{"url": "https:///api/v1/alexa"} }, location: "body.endpoint.url"},
+		{name: "ShouldRejectABadInvocation", change: func(s map[string]any) { s["invocation"] = "alexa" }, location: "body.invocation"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			settings := deployableSettings()
 			tc.change(settings)
 
@@ -667,31 +704,36 @@ func TestInvocationNamePrefersTheLatinName(t *testing.T) {
 	require.Equal(t, "ar-SA", info.LocalesEnabled[0], "every locale is enabled, and the first writes the names in its own script")
 	assert.Equal(t, "encore", info.InvocationName)
 
-	for _, tc := range []struct {
+	testCases := []struct {
+		name       string
 		invocation string
 		locales    []string
-		want       string
+		expected   string
 	}{
-		{"kodi", nil, "kodi"},
-		{"encore", []string{"ar-SA", "en-AU"}, "encore"},
-		{"kodi", []string{"ja-JP", "en-AU"}, "kodi"},
-		{"encore", []string{"ar-SA"}, "انكور"},
-		{"kodi", []string{"ar-SA"}, "كودي"},
-		{"encore", []string{"ja-JP", "ar-SA"}, "アンコール"},
-		{"encore", []string{"fr-FR", "ar-SA"}, "kodi"},
-	} {
-		settings := deployableSettings()
-		settings["invocation"] = tc.invocation
-		settings["locales_enabled"] = tc.locales
+		{name: "ShouldPreferTheLatinKodiWithEveryLocale", invocation: "kodi", expected: "kodi"},
+		{name: "ShouldPreferTheLatinEncoreBesideArabic", invocation: "encore", locales: []string{"ar-SA", "en-AU"}, expected: "encore"},
+		{name: "ShouldPreferTheLatinKodiBesideJapanese", invocation: "kodi", locales: []string{"ja-JP", "en-AU"}, expected: "kodi"},
+		{name: "ShouldUseTheArabicEncoreForArabicAlone", invocation: "encore", locales: []string{"ar-SA"}, expected: "انكور"},
+		{name: "ShouldUseTheArabicKodiForArabicAlone", invocation: "kodi", locales: []string{"ar-SA"}, expected: "كودي"},
+		{name: "ShouldUseTheFirstLocalesScriptWithoutALatinName", invocation: "encore", locales: []string{"ja-JP", "ar-SA"}, expected: "アンコール"},
+		{name: "ShouldUseTheFrenchNameBesideArabic", invocation: "encore", locales: []string{"fr-FR", "ar-SA"}, expected: "kodi"},
+	}
 
-		if tc.locales == nil {
-			settings["locales_enabled"] = info.LocalesAvailable
-		}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			settings := deployableSettings()
+			settings["invocation"] = tc.invocation
+			settings["locales_enabled"] = tc.locales
 
-		var got SkillInfo
+			if tc.locales == nil {
+				settings["locales_enabled"] = info.LocalesAvailable
+			}
 
-		c.json(http.MethodPut, "/api/v1/skill/settings", settings, http.StatusOK, &got)
-		assert.Equal(t, tc.want, got.InvocationName, "%s in %v", tc.invocation, tc.locales)
+			var got SkillInfo
+
+			c.json(http.MethodPut, "/api/v1/skill/settings", settings, http.StatusOK, &got)
+			assert.Equal(t, tc.expected, got.InvocationName)
+		})
 	}
 }
 
@@ -848,19 +890,24 @@ func TestSkillStateOf(t *testing.T) {
 
 	s := &skillService{}
 
-	for name, tc := range map[string]struct {
-		state deploy.State
-		last  *deployRecord
-		want  string
+	testCases := []struct {
+		name     string
+		state    deploy.State
+		last     *deployRecord
+		expected string
 	}{
-		"never":                     {deploy.State{}, nil, "not_deployed"},
-		"failed":                    {deploy.State{Hash: "h"}, &deployRecord{State: "failed"}, "failed"},
-		"deployed":                  {deploy.State{Hash: "h"}, &deployRecord{State: "succeeded"}, "live"},
-		"deployed before a restart": {deploy.State{Hash: "h"}, nil, "live"},
-		"skill without a package":   {deploy.State{SkillID: "amzn1.ask.skill.1"}, nil, "not_deployed"},
-		"skill with a success":      {deploy.State{SkillID: "amzn1.ask.skill.1"}, &deployRecord{State: "succeeded"}, "live"},
-	} {
-		assert.Equal(t, tc.want, s.stateOf(tc.state, tc.last), name)
+		{name: "ShouldBeNotDeployedWhenNeverDeployed", expected: "not_deployed"},
+		{name: "ShouldBeFailed", state: deploy.State{Hash: "h"}, last: &deployRecord{State: "failed"}, expected: "failed"},
+		{name: "ShouldBeLiveWhenDeployed", state: deploy.State{Hash: "h"}, last: &deployRecord{State: "succeeded"}, expected: "live"},
+		{name: "ShouldBeLiveWhenDeployedBeforeARestart", state: deploy.State{Hash: "h"}, expected: "live"},
+		{name: "ShouldBeNotDeployedForASkillWithoutAPackage", state: deploy.State{SkillID: "amzn1.ask.skill.1"}, expected: "not_deployed"},
+		{name: "ShouldBeLiveForASkillWithASuccess", state: deploy.State{SkillID: "amzn1.ask.skill.1"}, last: &deployRecord{State: "succeeded"}, expected: "live"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, s.stateOf(tc.state, tc.last))
+		})
 	}
 
 	s.running = "d-1"
@@ -870,8 +917,20 @@ func TestSkillStateOf(t *testing.T) {
 func TestEndpointURL(t *testing.T) {
 	h := newHarness(t, harnessOpts{noKodi: true})
 
-	assert.Equal(t, "https://encore.example.net/api/v1/alexa", h.api.skill.endpointURL(t.Context(), skillSettings{Endpoint: SkillEndpoint{URL: "https://encore.example.net/api/v1/alexa"}}))
-	assert.Empty(t, h.api.skill.endpointURL(t.Context(), skillSettings{}), "outside a request there's nothing to derive it from")
+	testCases := []struct {
+		name     string
+		have     skillSettings
+		expected string
+	}{
+		{name: "ShouldUseTheConfiguredURL", have: skillSettings{Endpoint: SkillEndpoint{URL: "https://encore.example.net/api/v1/alexa"}}, expected: "https://encore.example.net/api/v1/alexa"},
+		{name: "ShouldHaveNothingToDeriveFromOutsideARequest"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, h.api.skill.endpointURL(t.Context(), tc.have))
+		})
+	}
 }
 
 func TestAmazonAuthorizeOverHTTPSReturnsToEncore(t *testing.T) {
@@ -978,19 +1037,18 @@ func TestAmazonAuthorisationNeedsTheClientID(t *testing.T) {
 }
 
 func TestAmazonCallbackFailures(t *testing.T) {
-	for name, tc := range map[string]struct {
+	testCases := []struct {
+		name   string
 		code   string
 		before func(t *testing.T, h *harness)
-		want   string
+		err    string
 	}{
-		"Amazon refuses the code": {code: "not-the-code", want: "invalid_grant"},
-		"the credentials were removed meanwhile": {
-			code:   smapitest.DefaultAuthCode,
-			before: func(t *testing.T, h *harness) { require.NoError(t, h.app.Secrets().Delete(t.Context(), lwaSecretRef)) },
-			want:   errNoLWACredentials.Error(),
-		},
-	} {
-		t.Run(name, func(t *testing.T) {
+		{name: "ShouldFailWhenAmazonRefusesTheCode", code: "not-the-code", err: "invalid_grant"},
+		{name: "ShouldFailWhenTheCredentialsWereRemovedMeanwhile", code: smapitest.DefaultAuthCode, before: func(t *testing.T, h *harness) { require.NoError(t, h.app.Secrets().Delete(t.Context(), lwaSecretRef)) }, err: errNoLWACredentials.Error()},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			h := newHarness(t, harnessOpts{noKodi: true})
 			c := h.admin()
 			o := h.smapi.Options()
@@ -1013,7 +1071,7 @@ func TestAmazonCallbackFailures(t *testing.T) {
 			loc, err := url.Parse(resp.header.Get("Location"))
 			require.NoError(t, err)
 			assert.Equal(t, "/setup", loc.Path, "back to the page that started it")
-			assert.Contains(t, loc.Query().Get("amazon_error"), tc.want)
+			assert.Contains(t, loc.Query().Get("amazon_error"), tc.err)
 
 			var info SkillInfo
 

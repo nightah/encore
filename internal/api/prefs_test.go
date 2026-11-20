@@ -100,65 +100,45 @@ func TestPrefsApplySavesAndSurvivesRestart(t *testing.T) {
 func TestPrefsApplyIsAllOrNothing(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
+	testCases := []struct {
 		name    string
 		changes []Change
 		check   func(t *testing.T, err error)
 	}{
-		{
-			name:    "an invalid value",
-			changes: []Change{{Key: "storage.backups.keep", Value: 9}, {Key: "storage.backups.schedule", Value: "fortnightly"}},
-			check: func(t *testing.T, err error) {
-				var invalid *invalidSettingsError
-				require.ErrorAs(t, err, &invalid)
-				assert.Contains(t, invalid.Error(), "storage.backups.schedule")
-				assert.Error(t, errors.Unwrap(invalid), "the validation error is kept")
-			},
-		},
-		{
-			name:    "a key the web interface cannot change",
-			changes: []Change{{Key: "storage.backups.keep", Value: 9}, {Key: "data_dir", Value: "/elsewhere"}},
-			check: func(t *testing.T, err error) {
-				require.ErrorIs(t, err, errNotOverridable)
-				assert.Contains(t, err.Error(), "data_dir")
-			},
-		},
-		{
-			name:    "a key managed by config",
-			changes: []Change{{Key: "storage.backups.keep", Value: 9}, {Key: "storage.backups.prefix", Value: "Elsewhere"}},
-			check: func(t *testing.T, err error) {
-				var managed *managedKeyError
-				require.ErrorAs(t, err, &managed)
-				assert.Equal(t, "storage.backups.prefix is managed by config", managed.Error())
-			},
-		},
-		{
-			name:    "a secret with an invalid value beside it",
-			changes: []Change{{Key: "storage.s3.secret_key", Value: "s3cret"}, {Key: "auth.session_hours", Value: 0}},
-			check: func(t *testing.T, err error) {
-				var invalid *invalidSettingsError
-				require.ErrorAs(t, err, &invalid)
-			},
-		},
-		{
-			name:    "a value of the wrong type",
-			changes: []Change{{Key: "storage.backups.keep", Value: "lots"}},
-			check: func(t *testing.T, err error) {
-				require.Error(t, err)
-				assert.Contains(t, err.Error(), "applying saved settings")
-			},
-		},
+		{name: "ShouldRejectAnInvalidValue", changes: []Change{{Key: "storage.backups.keep", Value: 9}, {Key: "storage.backups.schedule", Value: "fortnightly"}}, check: func(t *testing.T, err error) {
+			var invalid *invalidSettingsError
+			require.ErrorAs(t, err, &invalid)
+			assert.Contains(t, invalid.Error(), "storage.backups.schedule")
+			assert.Error(t, errors.Unwrap(invalid), "the validation error is kept")
+		}},
+		{name: "ShouldRejectAKeyTheWebInterfaceCannotChange", changes: []Change{{Key: "storage.backups.keep", Value: 9}, {Key: "data_dir", Value: "/elsewhere"}}, check: func(t *testing.T, err error) {
+			require.ErrorIs(t, err, errNotOverridable)
+			assert.Contains(t, err.Error(), "data_dir")
+		}},
+		{name: "ShouldRejectAKeyManagedByConfig", changes: []Change{{Key: "storage.backups.keep", Value: 9}, {Key: "storage.backups.prefix", Value: "Elsewhere"}}, check: func(t *testing.T, err error) {
+			var managed *managedKeyError
+			require.ErrorAs(t, err, &managed)
+			assert.Equal(t, "storage.backups.prefix is managed by config", managed.Error())
+		}},
+		{name: "ShouldRejectASecretWithAnInvalidValueBesideIt", changes: []Change{{Key: "storage.s3.secret_key", Value: "s3cret"}, {Key: "auth.session_hours", Value: 0}}, check: func(t *testing.T, err error) {
+			var invalid *invalidSettingsError
+			require.ErrorAs(t, err, &invalid)
+		}},
+		{name: "ShouldRejectAValueOfTheWrongType", changes: []Change{{Key: "storage.backups.keep", Value: "lots"}}, check: func(t *testing.T, err error) {
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), "applying saved settings")
+		}},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
 			f := newPrefs(t, "ENCORE_STORAGE_BACKUPS_PREFIX=Managed")
 			ctx := t.Context()
 
-			_, err := f.prefs.Apply(ctx, tt.changes)
-			tt.check(t, err)
+			_, err := f.prefs.Apply(ctx, tc.changes)
+			tc.check(t, err)
 
 			o, err := f.prefs.Overrides(ctx)
 			require.NoError(t, err)
@@ -290,27 +270,30 @@ func TestPrefsShorterListReplacesLonger(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, eff.Auth.OIDC.Scopes, 4)
 
-	tests := []struct {
-		key  string
-		want []string
-		got  func(*config.Config) []string
+	testCases := []struct {
+		name     string
+		key      string
+		expected []string
+		actual   func(*config.Config) []string
 	}{
-		{"auth.oidc.scopes", []string{"openid"}, func(c *config.Config) []string { return c.Auth.OIDC.Scopes }},
-		{"server.trusted_proxies", []string{"10.0.0.0/8"}, func(c *config.Config) []string { return c.Server.TrustedProxies }},
-		{"alexa.locales", []string{"en-AU"}, func(c *config.Config) []string { return c.Alexa.Locales }},
-		{"alexa.content", []string{"movies"}, func(c *config.Config) []string { return c.Alexa.Content }},
+		{name: "ShouldReplaceOIDCScopes", key: "auth.oidc.scopes", expected: []string{"openid"}, actual: func(c *config.Config) []string { return c.Auth.OIDC.Scopes }},
+		{name: "ShouldReplaceTrustedProxies", key: "server.trusted_proxies", expected: []string{"10.0.0.0/8"}, actual: func(c *config.Config) []string { return c.Server.TrustedProxies }},
+		{name: "ShouldReplaceAlexaLocales", key: "alexa.locales", expected: []string{"en-AU"}, actual: func(c *config.Config) []string { return c.Alexa.Locales }},
+		{name: "ShouldReplaceAlexaContent", key: "alexa.content", expected: []string{"movies"}, actual: func(c *config.Config) []string { return c.Alexa.Content }},
 	}
 
 	startup := map[string][]string{}
-	for _, tt := range tests {
-		startup[tt.key] = slices.Clone(tt.got(f.prefs.Config()))
+	for _, tc := range testCases {
+		startup[tc.key] = slices.Clone(tc.actual(f.prefs.Config()))
 	}
 
-	for _, tt := range tests {
-		eff, err := f.prefs.Apply(ctx, []Change{{Key: tt.key, Value: tt.want}})
-		require.NoError(t, err, tt.key)
-		assert.Equal(t, tt.want, tt.got(eff), tt.key)
-		assert.Equal(t, startup[tt.key], tt.got(f.prefs.Config()), "%s: the startup configuration's list is not written through", tt.key)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			eff, err := f.prefs.Apply(ctx, []Change{{Key: tc.key, Value: tc.expected}})
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, tc.actual(eff))
+			assert.Equal(t, startup[tc.key], tc.actual(f.prefs.Config()), "the startup configuration's list is not written through")
+		})
 	}
 }
 
@@ -417,42 +400,26 @@ func TestPrefsAuthSettingsDefaultsToLocal(t *testing.T) {
 func TestPrefsManagedList(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name string
-		env  []string
-		want []string
+	testCases := []struct {
+		name     string
+		env      []string
+		expected []string
 	}{
-		{name: "nothing managed", want: []string{}},
-		{
-			name: "keys shown under another path",
-			env:  []string{"ENCORE_AUTH_SESSION_HOURS=12", "ENCORE_ALEXA_DEEP_SEARCH=false", "ENCORE_LOG_LEVEL=warn", "ENCORE_BREAK_GLASS=true"},
-			want: []string{"auth.local.session_hours", "auth.oidc.break_glass", "features.deep_search", "logging.level"},
-		},
-		{
-			name: "auth and storage keys keep their path",
-			env:  []string{"ENCORE_AUTH_OIDC_ISSUER=https://auth.example.net", "ENCORE_STORAGE_S3_BUCKET=encore"},
-			want: []string{"auth.oidc.issuer", "storage.s3.bucket"},
-		},
-		{
-			name: "keys the document does not show are left out",
-			env:  []string{"ENCORE_SERVER_ADDRESS=:9000", "ENCORE_LOG_FORMAT=json"},
-			want: []string{},
-		},
-		{
-			name: "the secrets key shows as its source",
-			env:  []string{"ENCORE_SECRETS_KEY=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="},
-			want: []string{"secrets.key_source"},
-		},
+		{name: "ShouldListNothingWhenNothingIsManaged", expected: []string{}},
+		{name: "ShouldListKeysUnderTheirShownPath", env: []string{"ENCORE_AUTH_SESSION_HOURS=12", "ENCORE_ALEXA_DEEP_SEARCH=false", "ENCORE_LOG_LEVEL=warn", "ENCORE_BREAK_GLASS=true"}, expected: []string{"auth.local.session_hours", "auth.oidc.break_glass", "features.deep_search", "logging.level"}},
+		{name: "ShouldKeepThePathOfAuthAndStorageKeys", env: []string{"ENCORE_AUTH_OIDC_ISSUER=https://auth.example.net", "ENCORE_STORAGE_S3_BUCKET=encore"}, expected: []string{"auth.oidc.issuer", "storage.s3.bucket"}},
+		{name: "ShouldLeaveOutKeysTheDocumentDoesNotShow", env: []string{"ENCORE_SERVER_ADDRESS=:9000", "ENCORE_LOG_FORMAT=json"}, expected: []string{}},
+		{name: "ShouldShowTheSecretsKeyAsItsSource", env: []string{"ENCORE_SECRETS_KEY=AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="}, expected: []string{"secrets.key_source"}},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			f := newPrefs(t, tt.env...)
-			assert.Equal(t, tt.want, f.prefs.ManagedList())
+			f := newPrefs(t, tc.env...)
+			assert.Equal(t, tc.expected, f.prefs.ManagedList())
 
-			for _, path := range tt.want {
+			for _, path := range tc.expected {
 				assert.NotEmpty(t, path)
 			}
 		})

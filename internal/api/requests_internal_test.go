@@ -18,30 +18,44 @@ import (
 
 // An entry logged without an outcome is reported as ok, one of the documented outcomes.
 func TestSummaryOfEntryWithoutOutcome(t *testing.T) {
-	assert.Equal(t, "ok", toSummary(store.RequestLogEntry{Intent: "SessionEndedRequest"}, nil).Outcome)
-	assert.Equal(t, "played", toSummary(store.RequestLogEntry{Outcome: "played"}, nil).Outcome)
+	testCases := []struct {
+		name     string
+		have     store.RequestLogEntry
+		expected string
+	}{
+		{name: "ShouldReportOKWithoutAnOutcome", have: store.RequestLogEntry{Intent: "SessionEndedRequest"}, expected: "ok"},
+		{name: "ShouldKeepARecordedOutcome", have: store.RequestLogEntry{Outcome: "played"}, expected: "played"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, toSummary(tc.have, nil).Outcome)
+		})
+	}
 }
 
 func TestHeard(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		name  string
-		slots map[string]string
-		want  string
+	testCases := []struct {
+		name     string
+		have     map[string]string
+		expected string
 	}{
-		{"no slots", nil, ""},
-		{"empty slots", map[string]string{"Movie": "", "Room": ""}, ""},
-		{"a title slot", map[string]string{"Room": "lounge", "Movie": "hot fuzz"}, "hot fuzz"},
-		{"the preferred title slot", map[string]string{"Song": "bohemian rhapsody", "Artist": "queen", "Movie": "dune"}, "dune"},
-		{"an empty title slot is skipped", map[string]string{"Movie": "", "Show": "bluey"}, "bluey"},
-		{"no title slot falls back by name", map[string]string{"Room": "lounge", "Number": "3"}, "3"},
-		{"fallback skips empty values", map[string]string{"Amount": "", "Room": "den"}, "den"},
-		{"unicode", map[string]string{"Query": "amélie"}, "amélie"},
+		{name: "ShouldHearNothingWithoutSlots"},
+		{name: "ShouldHearNothingFromEmptySlots", have: map[string]string{"Movie": "", "Room": ""}},
+		{name: "ShouldHearATitleSlot", have: map[string]string{"Room": "lounge", "Movie": "hot fuzz"}, expected: "hot fuzz"},
+		{name: "ShouldHearThePreferredTitleSlot", have: map[string]string{"Song": "bohemian rhapsody", "Artist": "queen", "Movie": "dune"}, expected: "dune"},
+		{name: "ShouldSkipAnEmptyTitleSlot", have: map[string]string{"Movie": "", "Show": "bluey"}, expected: "bluey"},
+		{name: "ShouldFallBackByNameWithoutATitleSlot", have: map[string]string{"Room": "lounge", "Number": "3"}, expected: "3"},
+		{name: "ShouldSkipEmptyValuesWhenFallingBack", have: map[string]string{"Amount": "", "Room": "den"}, expected: "den"},
+		{name: "ShouldHearUnicode", have: map[string]string{"Query": "amélie"}, expected: "amélie"},
 	}
 
-	for _, tt := range tests {
-		assert.Equal(t, tt.want, heard(tt.slots), tt.name)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, heard(tc.have))
+		})
 	}
 }
 
@@ -51,66 +65,38 @@ func TestToSummary(t *testing.T) {
 	devs := map[string]store.EchoDevice{"amzn1.ask.device.LOUNGE": {ID: 4, AlexaDeviceID: "amzn1.ask.device.LOUNGE", DisplayName: "Lounge Echo"}}
 	unlinked := json.RawMessage(fmt.Sprintf(`{"error":"handling: %s"}`, alexa.ErrUnlinked.Error()))
 
-	tests := []struct {
+	testCases := []struct {
 		name  string
-		entry store.RequestLogEntry
+		have  store.RequestLogEntry
 		check func(t *testing.T, s RequestSummary)
 	}{
-		{
-			name:  "a known device",
-			entry: store.RequestLogEntry{ID: 9, DeviceID: "amzn1.ask.device.LOUNGE", Intent: "WatchMovie", Outcome: "played", Duration: 1500 * time.Microsecond, Slots: json.RawMessage(`{"Movie":"dune"}`), Match: json.RawMessage(`{"target":"Lounge"}`)},
-			check: func(t *testing.T, s RequestSummary) {
-				require.NotNil(t, s.DeviceID)
-				assert.Equal(t, int64(4), *s.DeviceID)
-				assert.Equal(t, "Lounge Echo", s.DeviceName)
-				assert.Equal(t, "dune", s.Heard)
-				assert.Equal(t, "Lounge", s.Target)
-				assert.Equal(t, int64(1), s.DurationMS)
-			},
-		},
-		{
-			name:  "an unknown device",
-			entry: store.RequestLogEntry{DeviceID: "amzn1.ask.device.NEW"},
-			check: func(t *testing.T, s RequestSummary) {
-				assert.Nil(t, s.DeviceID)
-				assert.Empty(t, s.DeviceName)
-			},
-		},
-		{
-			name:  "an error from an unlinked device",
-			entry: store.RequestLogEntry{Outcome: "error", Match: unlinked},
-			check: func(t *testing.T, s RequestSummary) { assert.Equal(t, "unlinked", s.Outcome) },
-		},
-		{
-			name:  "another error",
-			entry: store.RequestLogEntry{Outcome: "error", Match: json.RawMessage(`{"error":"kodi: connection refused"}`)},
-			check: func(t *testing.T, s RequestSummary) { assert.Equal(t, "error", s.Outcome) },
-		},
-		{
-			name:  "unlinked is only an error's reason",
-			entry: store.RequestLogEntry{Outcome: "asked", Match: unlinked},
-			check: func(t *testing.T, s RequestSummary) { assert.Equal(t, "asked", s.Outcome) },
-		},
-		{
-			name:  "malformed JSON is ignored",
-			entry: store.RequestLogEntry{Outcome: "error", Slots: json.RawMessage(`{"Movie":`), Match: json.RawMessage(`[1,2]`)},
-			check: func(t *testing.T, s RequestSummary) {
-				assert.Empty(t, s.Heard)
-				assert.Empty(t, s.Target)
-				assert.Equal(t, "error", s.Outcome)
-			},
-		},
-		{
-			name:  "a simulated request",
-			entry: store.RequestLogEntry{Simulated: true, Intent: "LaunchRequest"},
-			check: func(t *testing.T, s RequestSummary) { assert.True(t, s.Simulated) },
-		},
+		{name: "ShouldNameAKnownDevice", have: store.RequestLogEntry{ID: 9, DeviceID: "amzn1.ask.device.LOUNGE", Intent: "WatchMovie", Outcome: "played", Duration: 1500 * time.Microsecond, Slots: json.RawMessage(`{"Movie":"dune"}`), Match: json.RawMessage(`{"target":"Lounge"}`)}, check: func(t *testing.T, s RequestSummary) {
+			require.NotNil(t, s.DeviceID)
+			assert.Equal(t, int64(4), *s.DeviceID)
+			assert.Equal(t, "Lounge Echo", s.DeviceName)
+			assert.Equal(t, "dune", s.Heard)
+			assert.Equal(t, "Lounge", s.Target)
+			assert.Equal(t, int64(1), s.DurationMS)
+		}},
+		{name: "ShouldNotNameAnUnknownDevice", have: store.RequestLogEntry{DeviceID: "amzn1.ask.device.NEW"}, check: func(t *testing.T, s RequestSummary) {
+			assert.Nil(t, s.DeviceID)
+			assert.Empty(t, s.DeviceName)
+		}},
+		{name: "ShouldReportAnErrorFromAnUnlinkedDevice", have: store.RequestLogEntry{Outcome: "error", Match: unlinked}, check: func(t *testing.T, s RequestSummary) { assert.Equal(t, "unlinked", s.Outcome) }},
+		{name: "ShouldReportAnotherError", have: store.RequestLogEntry{Outcome: "error", Match: json.RawMessage(`{"error":"kodi: connection refused"}`)}, check: func(t *testing.T, s RequestSummary) { assert.Equal(t, "error", s.Outcome) }},
+		{name: "ShouldTreatUnlinkedOnlyAsAnErrorsReason", have: store.RequestLogEntry{Outcome: "asked", Match: unlinked}, check: func(t *testing.T, s RequestSummary) { assert.Equal(t, "asked", s.Outcome) }},
+		{name: "ShouldIgnoreMalformedJSON", have: store.RequestLogEntry{Outcome: "error", Slots: json.RawMessage(`{"Movie":`), Match: json.RawMessage(`[1,2]`)}, check: func(t *testing.T, s RequestSummary) {
+			assert.Empty(t, s.Heard)
+			assert.Empty(t, s.Target)
+			assert.Equal(t, "error", s.Outcome)
+		}},
+		{name: "ShouldMarkASimulatedRequest", have: store.RequestLogEntry{Simulated: true, Intent: "LaunchRequest"}, check: func(t *testing.T, s RequestSummary) { assert.True(t, s.Simulated) }},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			tt.check(t, toSummary(tt.entry, devs))
+			tc.check(t, toSummary(tc.have, devs))
 		})
 	}
 }

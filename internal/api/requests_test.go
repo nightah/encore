@@ -46,16 +46,6 @@ func TestRequestFilters(t *testing.T) {
 		return out
 	}
 
-	assert.Equal(t, []int64{entries[1].ID}, ids("?q=AMÉLIE"), "search ignores case")
-	assert.Equal(t, []int64{entries[1].ID}, ids("?q=+in+the+den+"), "and searches what Alexa said, trimmed")
-	assert.Equal(t, []int64{entries[3].ID, entries[2].ID}, ids("?q=watchshow"), "and the intent")
-	assert.Equal(t, []int64{entries[0].ID}, ids("?outcome=ok"), "an entry without an outcome counts as ok")
-	assert.Equal(t, []int64{entries[3].ID, entries[1].ID}, ids("?outcome=played"))
-	assert.Equal(t, []int64{entries[1].ID, entries[0].ID}, ids(fmt.Sprintf("?device=%d", den.ID)))
-	assert.Equal(t, []int64{}, ids("?device=999"))
-	assert.Equal(t, []int64{entries[1].ID}, ids(fmt.Sprintf("?device=%d&outcome=played", den.ID)), "filters combine")
-	assert.Equal(t, []int64{}, ids(fmt.Sprintf("?before=%d", entries[0].ID)), "nothing is older than the first")
-
 	var page RequestPage
 
 	c.json(http.MethodGet, "/api/v1/requests?outcome=played&limit=2", nil, http.StatusOK, &page)
@@ -66,8 +56,37 @@ func TestRequestFilters(t *testing.T) {
 	require.NotNil(t, page.NextBefore)
 	assert.Equal(t, entries[3].ID, *page.NextBefore, "the next page starts after the last one shown")
 
-	for _, q := range []string{"?limit=0", "?limit=201", "?outcome=bogus", "?before=x"} {
-		assert.Equal(t, http.StatusUnprocessableEntity, c.do(http.MethodGet, "/api/v1/requests"+q, nil).status, q)
+	testCases := []struct {
+		name     string
+		have     string
+		expected []int64
+		status   int
+	}{
+		{name: "ShouldSearchIgnoringCase", have: "?q=AMÉLIE", expected: []int64{entries[1].ID}},
+		{name: "ShouldSearchWhatAlexaSaidTrimmed", have: "?q=+in+the+den+", expected: []int64{entries[1].ID}},
+		{name: "ShouldSearchTheIntent", have: "?q=watchshow", expected: []int64{entries[3].ID, entries[2].ID}},
+		{name: "ShouldCountAnEntryWithoutAnOutcomeAsOK", have: "?outcome=ok", expected: []int64{entries[0].ID}},
+		{name: "ShouldFilterByOutcome", have: "?outcome=played", expected: []int64{entries[3].ID, entries[1].ID}},
+		{name: "ShouldFilterByDevice", have: fmt.Sprintf("?device=%d", den.ID), expected: []int64{entries[1].ID, entries[0].ID}},
+		{name: "ShouldFindNothingForAnUnknownDevice", have: "?device=999", expected: []int64{}},
+		{name: "ShouldCombineFilters", have: fmt.Sprintf("?device=%d&outcome=played", den.ID), expected: []int64{entries[1].ID}},
+		{name: "ShouldFindNothingOlderThanTheFirst", have: fmt.Sprintf("?before=%d", entries[0].ID), expected: []int64{}},
+		{name: "ShouldRejectALimitOfZero", have: "?limit=0", status: http.StatusUnprocessableEntity},
+		{name: "ShouldRejectALimitOver200", have: "?limit=201", status: http.StatusUnprocessableEntity},
+		{name: "ShouldRejectAnUnknownOutcome", have: "?outcome=bogus", status: http.StatusUnprocessableEntity},
+		{name: "ShouldRejectABeforeThatIsNotAnID", have: "?before=x", status: http.StatusUnprocessableEntity},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.status != 0 {
+				assert.Equal(t, tc.status, c.do(http.MethodGet, "/api/v1/requests"+tc.have, nil).status)
+
+				return
+			}
+
+			assert.Equal(t, tc.expected, ids(tc.have))
+		})
 	}
 }
 

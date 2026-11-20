@@ -52,10 +52,20 @@ func TestLibraryListsAreNeverNull(t *testing.T) {
 	h := newHarness(t, harnessOpts{noKodi: true, mutate: func(o *Options) { o.Libraries = &fakeLibraries{lib: Library{ID: 1}} }})
 	c := h.admin()
 
-	for _, path := range []string{"/api/v1/libraries", "/api/v1/libraries/1/recent"} {
-		resp := c.do(http.MethodGet, path, nil)
-		require.Equal(t, http.StatusOK, resp.status, path)
-		assert.JSONEq(t, `[]`, string(resp.body), path)
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldListNoLibrariesAsAnEmptyList", have: "/api/v1/libraries"},
+		{name: "ShouldListNoRecentTitlesAsAnEmptyList", have: "/api/v1/libraries/1/recent"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp := c.do(http.MethodGet, tc.have, nil)
+			require.Equal(t, http.StatusOK, resp.status)
+			assert.JSONEq(t, `[]`, string(resp.body))
+		})
 	}
 }
 
@@ -64,17 +74,23 @@ func TestLibraryGroupsManagedByConfig(t *testing.T) {
 	h := newHarness(t, harnessOpts{noKodi: true, mutate: func(o *Options) { o.Libraries = &fakeLibraries{lib: Library{ID: 1}, err: managed} }})
 	c := h.admin()
 
-	for _, req := range []struct {
-		method, path string
-		body         any
+	testCases := []struct {
+		name   string
+		method string
+		path   string
+		body   any
 	}{
-		{http.MethodPatch, "/api/v1/libraries/1", map[string]int64{"source_instance_id": 2}},
-		{http.MethodPost, "/api/v1/libraries/group", map[string][]int64{"instance_ids": {1, 2}}},
-		{http.MethodPost, "/api/v1/libraries/1/split", map[string]int64{"instance_id": 2}},
-	} {
-		p := c.do(req.method, req.path, req.body).problem(t)
-		assert.Equal(t, http.StatusConflict, p.Status, req.path)
-		assert.Contains(t, p.Detail, "kodi[].library_group", "the admin is told where to change it")
+		{name: "ShouldRefuseChangingTheSource", method: http.MethodPatch, path: "/api/v1/libraries/1", body: map[string]int64{"source_instance_id": 2}},
+		{name: "ShouldRefuseGrouping", method: http.MethodPost, path: "/api/v1/libraries/group", body: map[string][]int64{"instance_ids": {1, 2}}},
+		{name: "ShouldRefuseSplitting", method: http.MethodPost, path: "/api/v1/libraries/1/split", body: map[string]int64{"instance_id": 2}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			p := c.do(tc.method, tc.path, tc.body).problem(t)
+			assert.Equal(t, http.StatusConflict, p.Status)
+			assert.Contains(t, p.Detail, "kodi[].library_group", "the admin is told where to change it")
+		})
 	}
 }
 
@@ -120,8 +136,19 @@ func TestLibraryRequestValidation(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, c.do(http.MethodPost, "/api/v1/libraries/999/split", map[string]int64{"instance_id": lounge}).status)
 	assert.Equal(t, http.StatusNotFound, c.do(http.MethodPatch, "/api/v1/libraries/999", map[string]int64{"source_instance_id": lounge}).status)
 
-	for _, limit := range []string{"0", "201", "x"} {
-		assert.Equal(t, http.StatusUnprocessableEntity, c.do(http.MethodGet, fmt.Sprintf("/api/v1/libraries/%d/recent?limit=%s", lib, limit), nil).status, limit)
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldRejectALimitOfZero", have: "0"},
+		{name: "ShouldRejectALimitOver200", have: "201"},
+		{name: "ShouldRejectALimitThatIsNotANumber", have: "x"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, http.StatusUnprocessableEntity, c.do(http.MethodGet, fmt.Sprintf("/api/v1/libraries/%d/recent?limit=%s", lib, tc.have), nil).status)
+		})
 	}
 }
 
@@ -151,17 +178,22 @@ func TestRecentTitlesNewestFirst(t *testing.T) {
 func TestListedTitle(t *testing.T) {
 	t.Parallel()
 
-	for name, tc := range map[string]struct {
-		item media.Item
-		want string
+	testCases := []struct {
+		name     string
+		have     media.Item
+		expected string
 	}{
-		"a movie":                     {media.Item{Kind: media.KindMovie, Title: "Conclave"}, "Conclave"},
-		"a show":                      {media.Item{Kind: media.KindTVShow, Title: "Severance"}, "Severance"},
-		"an episode, after its show":  {media.Item{Kind: media.KindEpisode, Title: "Who Is Alive?", ShowTitle: "Severance"}, "Severance: Who Is Alive?"},
-		"an episode without its show": {media.Item{Kind: media.KindEpisode, Title: "Who Is Alive?"}, "Who Is Alive?"},
-		"a song keeps its own title":  {media.Item{Kind: media.KindSong, Title: "Clair de Lune", ShowTitle: "ignored"}, "Clair de Lune"},
-	} {
-		assert.Equal(t, tc.want, listedTitle(tc.item), name)
+		{name: "ShouldListAMovie", have: media.Item{Kind: media.KindMovie, Title: "Conclave"}, expected: "Conclave"},
+		{name: "ShouldListAShow", have: media.Item{Kind: media.KindTVShow, Title: "Severance"}, expected: "Severance"},
+		{name: "ShouldListAnEpisodeAfterItsShow", have: media.Item{Kind: media.KindEpisode, Title: "Who Is Alive?", ShowTitle: "Severance"}, expected: "Severance: Who Is Alive?"},
+		{name: "ShouldListAnEpisodeWithoutItsShow", have: media.Item{Kind: media.KindEpisode, Title: "Who Is Alive?"}, expected: "Who Is Alive?"},
+		{name: "ShouldListASongUnderItsOwnTitle", have: media.Item{Kind: media.KindSong, Title: "Clair de Lune", ShowTitle: "ignored"}, expected: "Clair de Lune"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, listedTitle(tc.have))
+		})
 	}
 }
 

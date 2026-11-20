@@ -5,7 +5,6 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"errors"
-	"fmt"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -37,25 +36,28 @@ func TestCertificateCheck(t *testing.T) {
 
 	urlErr := func(err error) error { return &url.Error{Op: "Post", URL: base.String(), Err: err} }
 
-	for name, tc := range map[string]struct {
+	testCases := []struct {
+		name   string
 		base   *url.URL
 		state  *tls.ConnectionState
 		err    error
 		level  string
 		detail string
 	}{
-		"plain http":         {base: &url.URL{Scheme: "http", Host: "encore.example.net"}, state: leaf("Let's Encrypt", now.AddDate(0, 2, 0)), level: "fail", detail: "Alexa only calls HTTPS endpoints"},
-		"self-signed":        {err: urlErr(x509.UnknownAuthorityError{}), level: "fail", detail: "not signed by a public certificate authority"},
-		"wrong host":         {err: urlErr(x509.HostnameError{Certificate: &x509.Certificate{}, Host: "encore.example.net"}), level: "fail", detail: "does not cover encore.example.net"},
-		"expired":            {err: urlErr(x509.CertificateInvalidError{Reason: x509.Expired, Detail: "it ran out"}), level: "fail", detail: "the certificate is invalid: x509: certificate has expired or is not yet valid: it ran out"},
-		"no connection":      {err: errors.New("connection refused"), level: "warn", detail: "could not read the certificate"},
-		"no certificates":    {state: &tls.ConnectionState{}, level: "warn", detail: "could not read the certificate"},
-		"issuer with org":    {state: leaf("Let's Encrypt", now.AddDate(0, 2, 0)), level: "ok", detail: "issued by Let's Encrypt (R11), expires 2026-12-28"},
-		"issuer without org": {state: leaf("", now.AddDate(0, 2, 0)), level: "ok", detail: "issued by R11, expires 2026-12-28"},
-		"expires soon":       {state: leaf("Let's Encrypt", now.Add(10*24*time.Hour+time.Hour)), level: "warn", detail: "issued by Let's Encrypt (R11), expires 2026-11-07 (in 10 days)"},
-		"warning boundary":   {state: leaf("", now.Add(certWarnWithin)), level: "ok", detail: "issued by R11, expires 2026-11-11"},
-	} {
-		t.Run(name, func(t *testing.T) {
+		{name: "ShouldFailPlainHTTP", base: &url.URL{Scheme: "http", Host: "encore.example.net"}, state: leaf("Let's Encrypt", now.AddDate(0, 2, 0)), level: "fail", detail: "Alexa only calls HTTPS endpoints"},
+		{name: "ShouldFailSelfSigned", err: urlErr(x509.UnknownAuthorityError{}), level: "fail", detail: "not signed by a public certificate authority"},
+		{name: "ShouldFailTheWrongHost", err: urlErr(x509.HostnameError{Certificate: &x509.Certificate{}, Host: "encore.example.net"}), level: "fail", detail: "does not cover encore.example.net"},
+		{name: "ShouldFailExpired", err: urlErr(x509.CertificateInvalidError{Reason: x509.Expired, Detail: "it ran out"}), level: "fail", detail: "the certificate is invalid: x509: certificate has expired or is not yet valid: it ran out"},
+		{name: "ShouldWarnWithNoConnection", err: errors.New("connection refused"), level: "warn", detail: "could not read the certificate"},
+		{name: "ShouldWarnWithNoCertificates", state: &tls.ConnectionState{}, level: "warn", detail: "could not read the certificate"},
+		{name: "ShouldNameTheIssuerWithItsOrganisation", state: leaf("Let's Encrypt", now.AddDate(0, 2, 0)), level: "ok", detail: "issued by Let's Encrypt (R11), expires 2026-12-28"},
+		{name: "ShouldNameTheIssuerWithoutAnOrganisation", state: leaf("", now.AddDate(0, 2, 0)), level: "ok", detail: "issued by R11, expires 2026-12-28"},
+		{name: "ShouldWarnWhenItExpiresSoon", state: leaf("Let's Encrypt", now.Add(10*24*time.Hour+time.Hour)), level: "warn", detail: "issued by Let's Encrypt (R11), expires 2026-11-07 (in 10 days)"},
+		{name: "ShouldPassAtTheWarningBoundary", state: leaf("", now.Add(certWarnWithin)), level: "ok", detail: "issued by R11, expires 2026-11-11"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
 			b := base
@@ -125,21 +127,24 @@ func reachabilityOf(t *testing.T, h *harness, target string) (Reachability, map[
 func TestReachabilityOutcomes(t *testing.T) {
 	h := newHarness(t, harnessOpts{noKodi: true})
 
-	for name, tc := range map[string]struct {
+	testCases := []struct {
+		name            string
 		alexa, settings int
 		alexaLevel      string
 		alexaDetail     string
 		adminDetail     string
 		adminNote       string
 	}{
-		"encore behind a proxy": {alexa: 400, settings: 401, alexaLevel: "ok", alexaDetail: "refused an unsigned request", adminDetail: "web interface and admin API are reachable", adminNote: "Every admin route needs a sign-in."},
-		"only alexa forwarded":  {alexa: 400, settings: 404, alexaLevel: "ok", adminDetail: "only the Alexa endpoint is reachable"},
-		"admin blocked":         {alexa: 400, settings: 403, alexaLevel: "ok", adminDetail: "only the Alexa endpoint is reachable"},
-		"proxy without backend": {alexa: 503, settings: 503, alexaLevel: "warn", alexaDetail: "answered 503", adminDetail: "other routes answered 503, not the admin API"},
-		"something else":        {alexa: 200, settings: 200, alexaLevel: "fail", alexaDetail: "expected Encore's 400 for an unsigned request but got 200", adminDetail: "other routes answered 200"},
-		"a redirect":            {alexa: 301, settings: 404, alexaLevel: "fail", alexaDetail: "got 301"},
-	} {
-		t.Run(name, func(t *testing.T) {
+		{name: "ShouldPassEncoreBehindAProxy", alexa: 400, settings: 401, alexaLevel: "ok", alexaDetail: "refused an unsigned request", adminDetail: "web interface and admin API are reachable", adminNote: "Every admin route needs a sign-in."},
+		{name: "ShouldPassWhenOnlyAlexaIsForwarded", alexa: 400, settings: 404, alexaLevel: "ok", adminDetail: "only the Alexa endpoint is reachable"},
+		{name: "ShouldPassWhenTheAdminAPIIsBlocked", alexa: 400, settings: 403, alexaLevel: "ok", adminDetail: "only the Alexa endpoint is reachable"},
+		{name: "ShouldWarnForAProxyWithoutABackend", alexa: 503, settings: 503, alexaLevel: "warn", alexaDetail: "answered 503", adminDetail: "other routes answered 503, not the admin API"},
+		{name: "ShouldFailForSomethingElse", alexa: 200, settings: 200, alexaLevel: "fail", alexaDetail: "expected Encore's 400 for an unsigned request but got 200", adminDetail: "other routes answered 200"},
+		{name: "ShouldFailForARedirect", alexa: 301, settings: 404, alexaLevel: "fail", alexaDetail: "got 301"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			p := &proxied{alexa: tc.alexa, settings: tc.settings}
 			srv := httptest.NewServer(p)
 			t.Cleanup(srv.Close)
@@ -209,11 +214,24 @@ func TestReachabilityRefusesBadURLs(t *testing.T) {
 	h := newHarness(t, harnessOpts{noKodi: true})
 	c := h.client()
 
-	for _, u := range []string{"ftp://encore.example.net", "https://", "https://user:pw@encore.example.net", "encore.example.net", "https://[::1"} {
-		p := c.do(http.MethodPost, "/api/v1/setup/reachability", map[string]string{"url": u, "setup_token": h.setupToken()}).problem(t)
-		require.Equal(t, http.StatusUnprocessableEntity, p.Status, u)
-		require.Len(t, p.Errors, 1, u)
-		assert.Equal(t, "body.url", p.Errors[0].Location, u)
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldRefuseAnFTPURL", have: "ftp://encore.example.net"},
+		{name: "ShouldRefuseAURLWithoutAHost", have: "https://"},
+		{name: "ShouldRefuseAURLWithCredentials", have: "https://user:pw@encore.example.net"},
+		{name: "ShouldRefuseAURLWithoutAScheme", have: "encore.example.net"},
+		{name: "ShouldRefuseAnUnparsableURL", have: "https://[::1"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			p := c.do(http.MethodPost, "/api/v1/setup/reachability", map[string]string{"url": tc.have, "setup_token": h.setupToken()}).problem(t)
+			require.Equal(t, http.StatusUnprocessableEntity, p.Status)
+			require.Len(t, p.Errors, 1)
+			assert.Equal(t, "body.url", p.Errors[0].Location)
+		})
 	}
 
 	assert.Equal(t, http.StatusUnprocessableEntity, c.do(http.MethodPost, "/api/v1/setup/reachability", map[string]string{"url": "", "setup_token": h.setupToken()}).status)
@@ -234,12 +252,19 @@ func TestTLS12CheckLeavesOtherChecksAlone(t *testing.T) {
 
 	want := ReachabilityCheck{Name: "certificate", Level: "ok", Detail: "issued by R11"}
 
-	for name, base := range map[string]*url.URL{
-		"plain http":            {Scheme: "http", Host: "127.0.0.1:" + port},
-		"nothing listens there": {Scheme: "https", Host: "encore.example.test:" + port},
-	} {
-		c := want
-		a.tls12Check(t.Context(), &c, base, endpointRoute{host: base.Hostname(), addrs: []string{"127.0.0.1"}})
-		assert.Equal(t, want, c, fmt.Sprint(name, ": a check that can't be made isn't a failure"))
+	testCases := []struct {
+		name string
+		have *url.URL
+	}{
+		{name: "ShouldLeavePlainHTTPAlone", have: &url.URL{Scheme: "http", Host: "127.0.0.1:" + port}},
+		{name: "ShouldLeaveAnEndpointNothingListensOnAlone", have: &url.URL{Scheme: "https", Host: "encore.example.test:" + port}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			c := want
+			a.tls12Check(t.Context(), &c, tc.have, endpointRoute{host: tc.have.Hostname(), addrs: []string{"127.0.0.1"}})
+			assert.Equal(t, want, c, "a check that can't be made isn't a failure")
+		})
 	}
 }

@@ -54,12 +54,12 @@ func TestKodiInstances(t *testing.T) {
 	assert.Nil(t, inst.NowPlaying.V)
 	assert.NotNil(t, inst.Status.LastSyncAt)
 
-	t.Run("config-managed instances are read-only", func(t *testing.T) {
+	t.Run("ShouldRefuseChangesToConfigManagedInstances", func(t *testing.T) {
 		assert.Equal(t, http.StatusConflict, c.do(http.MethodPatch, fmt.Sprintf("/api/v1/kodi/instances/%d", lounge), map[string]string{"name": "Den"}).problem(t).Status)
 		assert.Equal(t, http.StatusConflict, c.do(http.MethodDelete, fmt.Sprintf("/api/v1/kodi/instances/%d", lounge), nil).status)
 	})
 
-	t.Run("test checks", func(t *testing.T) {
+	t.Run("ShouldPassEveryTestCheck", func(t *testing.T) {
 		var res struct {
 			Checks []Check `json:"checks"`
 		}
@@ -74,7 +74,7 @@ func TestKodiInstances(t *testing.T) {
 		assert.Equal(t, "7 movies", res.Checks[3].Detail)
 	})
 
-	t.Run("sync and wake are accepted", func(t *testing.T) {
+	t.Run("ShouldAcceptSyncAndWake", func(t *testing.T) {
 		var acc Accepted
 
 		c.json(http.MethodPost, fmt.Sprintf("/api/v1/kodi/instances/%d/sync", lounge), nil, http.StatusAccepted, &acc)
@@ -159,10 +159,21 @@ func TestKodiInstanceLifecycle(t *testing.T) {
 	require.NotNil(t, tuned.Screen.V)
 	assert.Equal(t, Screen{Width: 3840, Height: 1600, Quality: "2160p"}, *tuned.Screen.V)
 
-	for field, value := range map[string]string{"language": "xx", "timezone": "Mars/Olympus"} {
-		p := c.do(http.MethodPatch, path, map[string]string{field: value}).problem(t)
-		assert.Equal(t, http.StatusUnprocessableEntity, p.Status, field)
-		assert.Equal(t, "body."+field, p.Errors[0].Location)
+	testCases := []struct {
+		name  string
+		field string
+		have  string
+	}{
+		{name: "ShouldRejectAnUnknownLanguage", field: "language", have: "xx"},
+		{name: "ShouldRejectAnUnknownTimezone", field: "timezone", have: "Mars/Olympus"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			p := c.do(http.MethodPatch, path, map[string]string{tc.field: tc.have}).problem(t)
+			assert.Equal(t, http.StatusUnprocessableEntity, p.Status)
+			assert.Equal(t, "body."+tc.field, p.Errors[0].Location)
+		})
 	}
 
 	c.json(http.MethodPatch, path, map[string]string{"timezone": "", "shutdown": "inherit", "preferred_quality": "inherit"}, http.StatusOK, &tuned)
@@ -331,34 +342,37 @@ func fieldLocation(t *testing.T, err error) (string, any) {
 func TestApplyInstanceInputRejects(t *testing.T) {
 	t.Parallel()
 
-	for name, tc := range map[string]struct {
-		in       InstanceInput
+	testCases := []struct {
+		name     string
+		have     InstanceInput
 		creating bool
 		location string
 	}{
-		"blank name":                  {in: InstanceInput{Name: new("   ")}, location: "body.name"},
-		"create without url":          {in: InstanceInput{Name: new("Den")}, creating: true, location: "body"},
-		"create without name":         {in: InstanceInput{URL: new("http://192.0.2.1:8080/jsonrpc")}, creating: true, location: "body"},
-		"ftp url":                     {in: InstanceInput{URL: new("ftp://192.0.2.1/jsonrpc")}, location: "body.url"},
-		"url without host":            {in: InstanceInput{URL: new("http:///jsonrpc")}, location: "body.url"},
-		"unparsable url":              {in: InstanceInput{URL: new("http://[::1")}, location: "body.url"},
-		"port overflows":              {in: InstanceInput{URL: new("http://192.0.2.1:99999999999999999999/jsonrpc")}, location: "body.url"},
-		"port out of range":           {in: InstanceInput{URL: new("http://192.0.2.1:65536/jsonrpc")}, location: "body.url"},
-		"websocket port out of range": {in: InstanceInput{WebSocketURL: new("ws://192.0.2.1:70000/jsonrpc")}, location: "body.websocket_url"},
-		"http websocket url":          {in: InstanceInput{WebSocketURL: new("http://192.0.2.1:9090/jsonrpc")}, location: "body.websocket_url"},
-		"websocket url without host":  {in: InstanceInput{WebSocketURL: new("ws:///jsonrpc")}, location: "body.websocket_url"},
-		"not a mac":                   {in: InstanceInput{MAC: new("dc:a6:32")}, location: "body.mac"},
-		"broadcast host name":         {in: InstanceInput{Broadcast: new("broadcast.lan")}, location: "body.broadcast"},
-		"unknown language":            {in: InstanceInput{Language: new("tlh")}, location: "body.language"},
-		"unknown time zone":           {in: InstanceInput{Timezone: new("Mars/Olympus")}, location: "body.timezone"},
-		"server-local time zone":      {in: InstanceInput{Timezone: new("Local")}, location: "body.timezone"},
-	} {
-		t.Run(name, func(t *testing.T) {
+		{name: "ShouldRejectABlankName", have: InstanceInput{Name: new("   ")}, location: "body.name"},
+		{name: "ShouldRejectCreatingWithoutAURL", have: InstanceInput{Name: new("Den")}, creating: true, location: "body"},
+		{name: "ShouldRejectCreatingWithoutAName", have: InstanceInput{URL: new("http://192.0.2.1:8080/jsonrpc")}, creating: true, location: "body"},
+		{name: "ShouldRejectAnFTPURL", have: InstanceInput{URL: new("ftp://192.0.2.1/jsonrpc")}, location: "body.url"},
+		{name: "ShouldRejectAURLWithoutAHost", have: InstanceInput{URL: new("http:///jsonrpc")}, location: "body.url"},
+		{name: "ShouldRejectAnUnparsableURL", have: InstanceInput{URL: new("http://[::1")}, location: "body.url"},
+		{name: "ShouldRejectAPortThatOverflows", have: InstanceInput{URL: new("http://192.0.2.1:99999999999999999999/jsonrpc")}, location: "body.url"},
+		{name: "ShouldRejectAPortOutOfRange", have: InstanceInput{URL: new("http://192.0.2.1:65536/jsonrpc")}, location: "body.url"},
+		{name: "ShouldRejectAWebSocketPortOutOfRange", have: InstanceInput{WebSocketURL: new("ws://192.0.2.1:70000/jsonrpc")}, location: "body.websocket_url"},
+		{name: "ShouldRejectAnHTTPWebSocketURL", have: InstanceInput{WebSocketURL: new("http://192.0.2.1:9090/jsonrpc")}, location: "body.websocket_url"},
+		{name: "ShouldRejectAWebSocketURLWithoutAHost", have: InstanceInput{WebSocketURL: new("ws:///jsonrpc")}, location: "body.websocket_url"},
+		{name: "ShouldRejectSomethingThatIsNotAMAC", have: InstanceInput{MAC: new("dc:a6:32")}, location: "body.mac"},
+		{name: "ShouldRejectABroadcastHostName", have: InstanceInput{Broadcast: new("broadcast.lan")}, location: "body.broadcast"},
+		{name: "ShouldRejectAnUnknownLanguage", have: InstanceInput{Language: new("tlh")}, location: "body.language"},
+		{name: "ShouldRejectAnUnknownTimeZone", have: InstanceInput{Timezone: new("Mars/Olympus")}, location: "body.timezone"},
+		{name: "ShouldRejectTheServerLocalTimeZone", have: InstanceInput{Timezone: new("Local")}, location: "body.timezone"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
 			rec := store.KodiInstance{Name: "Lounge", Scheme: "http", Host: "192.0.2.10", Port: 8080, Path: "/jsonrpc", WSPort: 9090}
 
-			_, err := applyInstanceInput(&rec, tc.in, tc.creating)
+			_, err := applyInstanceInput(&rec, tc.have, tc.creating)
 			loc, _ := fieldLocation(t, err)
 			assert.Equal(t, tc.location, loc)
 		})
@@ -384,23 +398,26 @@ func TestKodiInstancePortOutOfRange(t *testing.T) {
 func TestApplyInstanceInputPortRange(t *testing.T) {
 	t.Parallel()
 
-	for name, tc := range map[string]struct {
-		in       InstanceInput
+	testCases := []struct {
+		name     string
+		have     InstanceInput
 		location string
 		value    string
 	}{
-		"zero":                {in: InstanceInput{URL: new("http://kodi:s3cret@192.0.2.1:0/jsonrpc")}, location: "body.url", value: "http://kodi:xxxxx@192.0.2.1:0/jsonrpc"},                                             // trufflehog:ignore
-		"overflows":           {in: InstanceInput{URL: new("http://192.0.2.1:99999999999999999999/jsonrpc")}, location: "body.url", value: "http://192.0.2.1:99999999999999999999/jsonrpc"},                              // trufflehog:ignore
-		"websocket zero":      {in: InstanceInput{WebSocketURL: new("ws://kodi:s3cret@192.0.2.1:0/jsonrpc")}, location: "body.websocket_url", value: "ws://kodi:xxxxx@192.0.2.1:0/jsonrpc"},                              // trufflehog:ignore
-		"websocket overflows": {in: InstanceInput{WebSocketURL: new("ws://192.0.2.1:99999999999999999999/jsonrpc")}, location: "body.websocket_url", value: "ws://192.0.2.1:99999999999999999999/jsonrpc"},               // trufflehog:ignore
-		"websocket one over":  {in: InstanceInput{URL: new("http://192.0.2.1:65535/jsonrpc"), WebSocketURL: new("ws://192.0.2.1:65536/jsonrpc")}, location: "body.websocket_url", value: "ws://192.0.2.1:65536/jsonrpc"}, // trufflehog:ignore
-	} {
-		t.Run(name, func(t *testing.T) {
+		{name: "ShouldRejectPortZero", have: InstanceInput{URL: new("http://kodi:s3cret@192.0.2.1:0/jsonrpc")}, location: "body.url", value: "http://kodi:xxxxx@192.0.2.1:0/jsonrpc"},                                                          // trufflehog:ignore
+		{name: "ShouldRejectAPortThatOverflows", have: InstanceInput{URL: new("http://192.0.2.1:99999999999999999999/jsonrpc")}, location: "body.url", value: "http://192.0.2.1:99999999999999999999/jsonrpc"},                                 // trufflehog:ignore
+		{name: "ShouldRejectWebSocketPortZero", have: InstanceInput{WebSocketURL: new("ws://kodi:s3cret@192.0.2.1:0/jsonrpc")}, location: "body.websocket_url", value: "ws://kodi:xxxxx@192.0.2.1:0/jsonrpc"},                                  // trufflehog:ignore
+		{name: "ShouldRejectAWebSocketPortThatOverflows", have: InstanceInput{WebSocketURL: new("ws://192.0.2.1:99999999999999999999/jsonrpc")}, location: "body.websocket_url", value: "ws://192.0.2.1:99999999999999999999/jsonrpc"},         // trufflehog:ignore
+		{name: "ShouldRejectAWebSocketPortOneOver", have: InstanceInput{URL: new("http://192.0.2.1:65535/jsonrpc"), WebSocketURL: new("ws://192.0.2.1:65536/jsonrpc")}, location: "body.websocket_url", value: "ws://192.0.2.1:65536/jsonrpc"}, // trufflehog:ignore
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
 			rec := store.KodiInstance{Name: "Lounge", Scheme: "http", Host: "192.0.2.10", Port: 8080, Path: "/jsonrpc", WSPort: 9090}
 
-			_, err := applyInstanceInput(&rec, tc.in, false)
+			_, err := applyInstanceInput(&rec, tc.have, false)
 			loc, value := fieldLocation(t, err)
 			assert.Equal(t, tc.location, loc)
 			assert.Equal(t, tc.value, value)
@@ -423,24 +440,27 @@ func TestApplyInstanceInputPortRange(t *testing.T) {
 func TestApplyInstanceInputNeverEchoesURLPassword(t *testing.T) {
 	t.Parallel()
 
-	for name, tc := range map[string]struct {
-		in       InstanceInput
+	testCases := []struct {
+		name     string
+		have     InstanceInput
 		location string
 	}{
-		"ftp url":                     {in: InstanceInput{URL: new("ftp://kodi:s3cret@192.0.2.1/jsonrpc")}, location: "body.url"},                          // trufflehog:ignore
-		"unparsable port":             {in: InstanceInput{URL: new("http://kodi:s3cret@192.0.2.1:80a/jsonrpc")}, location: "body.url"},                     // trufflehog:ignore
-		"unparsable host":             {in: InstanceInput{URL: new("http://kodi:s3cret@[::1/jsonrpc")}, location: "body.url"},                              // trufflehog:ignore
-		"port out of range":           {in: InstanceInput{URL: new("http://kodi:s3cret@192.0.2.1:70000/jsonrpc")}, location: "body.url"},                   // trufflehog:ignore
-		"http websocket url":          {in: InstanceInput{WebSocketURL: new("http://kodi:s3cret@192.0.2.1:9090/jsonrpc")}, location: "body.websocket_url"}, // trufflehog:ignore
-		"unparsable websocket url":    {in: InstanceInput{WebSocketURL: new("ws://kodi:s3cret@[::1/jsonrpc")}, location: "body.websocket_url"},             // trufflehog:ignore
-		"websocket port out of range": {in: InstanceInput{WebSocketURL: new("ws://kodi:s3cret@192.0.2.1:70000/jsonrpc")}, location: "body.websocket_url"},  // trufflehog:ignore
-	} {
-		t.Run(name, func(t *testing.T) {
+		{name: "ShouldRedactAnFTPURL", have: InstanceInput{URL: new("ftp://kodi:s3cret@192.0.2.1/jsonrpc")}, location: "body.url"},                                         // trufflehog:ignore
+		{name: "ShouldRedactAnUnparsablePort", have: InstanceInput{URL: new("http://kodi:s3cret@192.0.2.1:80a/jsonrpc")}, location: "body.url"},                            // trufflehog:ignore
+		{name: "ShouldRedactAnUnparsableHost", have: InstanceInput{URL: new("http://kodi:s3cret@[::1/jsonrpc")}, location: "body.url"},                                     // trufflehog:ignore
+		{name: "ShouldRedactAPortOutOfRange", have: InstanceInput{URL: new("http://kodi:s3cret@192.0.2.1:70000/jsonrpc")}, location: "body.url"},                           // trufflehog:ignore
+		{name: "ShouldRedactAnHTTPWebSocketURL", have: InstanceInput{WebSocketURL: new("http://kodi:s3cret@192.0.2.1:9090/jsonrpc")}, location: "body.websocket_url"},      // trufflehog:ignore
+		{name: "ShouldRedactAnUnparsableWebSocketURL", have: InstanceInput{WebSocketURL: new("ws://kodi:s3cret@[::1/jsonrpc")}, location: "body.websocket_url"},            // trufflehog:ignore
+		{name: "ShouldRedactAWebSocketPortOutOfRange", have: InstanceInput{WebSocketURL: new("ws://kodi:s3cret@192.0.2.1:70000/jsonrpc")}, location: "body.websocket_url"}, // trufflehog:ignore
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
 			rec := store.KodiInstance{Name: "Lounge", Scheme: "http", Host: "192.0.2.10", Port: 8080, Path: "/jsonrpc", WSPort: 9090}
 
-			_, err := applyInstanceInput(&rec, tc.in, false)
+			_, err := applyInstanceInput(&rec, tc.have, false)
 			loc, value := fieldLocation(t, err)
 			assert.Equal(t, tc.location, loc)
 			assert.NotContains(t, fmt.Sprint(value), "s3cret")
@@ -457,7 +477,7 @@ func TestApplyInstanceInput(t *testing.T) {
 		return store.KodiInstance{Name: "Lounge", Scheme: "http", Host: "192.0.2.10", Port: 8080, Path: "/jsonrpc", WSPort: 9090, Username: "kodi", MAC: "DC:A6:32:4B:19:0E", BroadcastAddr: "192.0.2.255", Language: "de", Timezone: "Australia/Melbourne", ShutdownQuits: new(true)}
 	}
 
-	t.Run("credentials in the url move to their own fields", func(t *testing.T) {
+	t.Run("ShouldMoveCredentialsInTheURLToTheirOwnFields", func(t *testing.T) {
 		t.Parallel()
 
 		rec := existing()
@@ -470,7 +490,7 @@ func TestApplyInstanceInput(t *testing.T) {
 		assert.Equal(t, "wss://kodi.lan:9090/rpc", wsURL(rec), "the WebSocket URL keeps its port and follows the scheme")
 	})
 
-	t.Run("explicit credentials win over the url's", func(t *testing.T) {
+	t.Run("ShouldPreferExplicitCredentialsOverTheURLs", func(t *testing.T) {
 		t.Parallel()
 
 		rec := existing()
@@ -482,7 +502,7 @@ func TestApplyInstanceInput(t *testing.T) {
 		assert.Equal(t, 8080, rec.Port, "Kodi's default port")
 	})
 
-	t.Run("an empty websocket url turns live updates off", func(t *testing.T) {
+	t.Run("ShouldTurnLiveUpdatesOffForAnEmptyWebSocketURL", func(t *testing.T) {
 		t.Parallel()
 
 		rec := existing()
@@ -494,7 +514,7 @@ func TestApplyInstanceInput(t *testing.T) {
 		assert.Equal(t, "http://192.0.2.10:8080/jsonrpc", httpURL(rec), "the HTTP URL is kept")
 	})
 
-	t.Run("fields left out are kept", func(t *testing.T) {
+	t.Run("ShouldKeepFieldsLeftOut", func(t *testing.T) {
 		t.Parallel()
 
 		rec := existing()
@@ -504,7 +524,7 @@ func TestApplyInstanceInput(t *testing.T) {
 		assert.Equal(t, existing(), rec)
 	})
 
-	t.Run("normalises and clears", func(t *testing.T) {
+	t.Run("ShouldNormaliseAndClear", func(t *testing.T) {
 		t.Parallel()
 
 		rec := existing()
@@ -528,21 +548,41 @@ func TestApplyInstanceInput(t *testing.T) {
 func TestShutdownOf(t *testing.T) {
 	t.Parallel()
 
-	assert.Equal(t, shutdownInherit, shutdownOf(nil))
-	assert.Equal(t, shutdownQuit, shutdownOf(new(true)))
-	assert.Equal(t, shutdownPowerOff, shutdownOf(new(false)))
+	testCases := []struct {
+		name     string
+		have     *bool
+		expected string
+	}{
+		{name: "ShouldInheritWhenUnset", expected: shutdownInherit},
+		{name: "ShouldQuitWhenTrue", have: new(true), expected: shutdownQuit},
+		{name: "ShouldPowerOffWhenFalse", have: new(false), expected: shutdownPowerOff},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, shutdownOf(tc.have))
+		})
+	}
 }
 
 func TestStateOf(t *testing.T) {
 	t.Parallel()
 
-	for want, st := range map[string]app.InstanceStatus{
-		"connected": {Connected: true, Reachable: true, CanWake: true},
-		"http_only": {Reachable: true, CanWake: true},
-		"asleep":    {CanWake: true},
-		"offline":   {},
-	} {
-		assert.Equal(t, want, stateOf(st), "%+v", st)
+	testCases := []struct {
+		name     string
+		have     app.InstanceStatus
+		expected string
+	}{
+		{name: "ShouldReportConnected", have: app.InstanceStatus{Connected: true, Reachable: true, CanWake: true}, expected: "connected"},
+		{name: "ShouldReportHTTPOnly", have: app.InstanceStatus{Reachable: true, CanWake: true}, expected: "http_only"},
+		{name: "ShouldReportAsleep", have: app.InstanceStatus{CanWake: true}, expected: "asleep"},
+		{name: "ShouldReportOffline", expected: "offline"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, stateOf(tc.have))
+		})
 	}
 }
 
@@ -564,13 +604,25 @@ func TestTimePtr(t *testing.T) {
 func TestRedactURL(t *testing.T) {
 	t.Parallel()
 
-	assert.Equal(t, "http://kodi:xxxxx@192.0.2.1/jsonrpc", redactURL("http://kodi:s3cret@192.0.2.1/jsonrpc")) // trufflehog:ignore
-	assert.Equal(t, "http://192.0.2.1/jsonrpc", redactURL("http://192.0.2.1/jsonrpc"))
-	assert.Equal(t, "http://[::1", redactURL("http://[::1"), "an unparsable URL without credentials is kept")
-	assert.Equal(t, "http://kodi:xxxxx@[::1/jsonrpc", redactURL("http://kodi:s3cret@[::1/jsonrpc"), "an unparsable URL still hides its password") // trufflehog:ignore
-	assert.Equal(t, "ws://kodi:xxxxx@192.0.2.1:80a?x=@", redactURL("ws://kodi:s3cret@192.0.2.1:80a?x=@"), "only the authority's @ counts")        // trufflehog:ignore
-	assert.Equal(t, "http://kodi@[::1", redactURL("http://kodi@[::1"), "a user name alone isn't secret")
-	assert.Equal(t, "%zz kodi:s3cret", redactURL("%zz kodi:s3cret"), "an unparsable value without an authority has no credentials to hide")
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldHideThePassword", have: "http://kodi:s3cret@192.0.2.1/jsonrpc", expected: "http://kodi:xxxxx@192.0.2.1/jsonrpc"}, // trufflehog:ignore
+		{name: "ShouldKeepAURLWithoutCredentials", have: "http://192.0.2.1/jsonrpc", expected: "http://192.0.2.1/jsonrpc"},
+		{name: "ShouldKeepAnUnparsableURLWithoutCredentials", have: "http://[::1", expected: "http://[::1"},
+		{name: "ShouldHideThePasswordOfAnUnparsableURL", have: "http://kodi:s3cret@[::1/jsonrpc", expected: "http://kodi:xxxxx@[::1/jsonrpc"}, // trufflehog:ignore
+		{name: "ShouldCountOnlyTheAuthoritysAt", have: "ws://kodi:s3cret@192.0.2.1:80a?x=@", expected: "ws://kodi:xxxxx@192.0.2.1:80a?x=@"},   // trufflehog:ignore
+		{name: "ShouldKeepAUserNameAloneSinceItIsNotSecret", have: "http://kodi@[::1", expected: "http://kodi@[::1"},
+		{name: "ShouldKeepAnUnparsableValueWithoutAnAuthority", have: "%zz kodi:s3cret", expected: "%zz kodi:s3cret"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, redactURL(tc.have))
+		})
+	}
 }
 
 func TestDiscoverAsksKodiForItsVersion(t *testing.T) {
@@ -602,8 +654,20 @@ func TestDiscoverAsksKodiForItsVersion(t *testing.T) {
 func TestArtURL(t *testing.T) {
 	t.Parallel()
 
-	assert.Empty(t, artURL(3, ""), "no artwork, no URL")
-	assert.Equal(t, "/api/v1/kodi/instances/3/art?ref=image%3A%2F%2Fsmb%3A%2F%2Fnas%2Fposter+%C3%A9t%C3%A9.jpg%2F", artURL(3, "image://smb://nas/poster été.jpg/"))
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldGiveNoURLWithoutArtwork"},
+		{name: "ShouldEscapeTheReference", have: "image://smb://nas/poster été.jpg/", expected: "/api/v1/kodi/instances/3/art?ref=image%3A%2F%2Fsmb%3A%2F%2Fnas%2Fposter+%C3%A9t%C3%A9.jpg%2F"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, artURL(3, tc.have))
+		})
+	}
 }
 
 func TestJobIDsAreUnique(t *testing.T) {
@@ -665,20 +729,28 @@ func TestKodiInstanceErrors(t *testing.T) {
 	h := newHarness(t, harnessOpts{noKodi: true})
 	c := h.admin()
 
-	for _, tc := range []struct{ method, path string }{
-		{http.MethodGet, "/api/v1/kodi/instances/999"},
-		{http.MethodPatch, "/api/v1/kodi/instances/999"},
-		{http.MethodDelete, "/api/v1/kodi/instances/999"},
-		{http.MethodPost, "/api/v1/kodi/instances/999/test"},
-		{http.MethodPost, "/api/v1/kodi/instances/999/wake"},
-		{http.MethodPost, "/api/v1/kodi/instances/999/default"},
-	} {
-		var body any
-		if tc.method == http.MethodPatch {
-			body = map[string]string{"name": "Den"}
-		}
+	testCases := []struct {
+		name   string
+		method string
+		path   string
+	}{
+		{name: "ShouldNotFindAnUnknownInstance", method: http.MethodGet, path: "/api/v1/kodi/instances/999"},
+		{name: "ShouldNotPatchAnUnknownInstance", method: http.MethodPatch, path: "/api/v1/kodi/instances/999"},
+		{name: "ShouldNotDeleteAnUnknownInstance", method: http.MethodDelete, path: "/api/v1/kodi/instances/999"},
+		{name: "ShouldNotTestAnUnknownInstance", method: http.MethodPost, path: "/api/v1/kodi/instances/999/test"},
+		{name: "ShouldNotWakeAnUnknownInstance", method: http.MethodPost, path: "/api/v1/kodi/instances/999/wake"},
+		{name: "ShouldNotMakeAnUnknownInstanceTheDefault", method: http.MethodPost, path: "/api/v1/kodi/instances/999/default"},
+	}
 
-		assert.Equal(t, http.StatusNotFound, c.do(tc.method, tc.path, body).status, "%s %s", tc.method, tc.path)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var body any
+			if tc.method == http.MethodPatch {
+				body = map[string]string{"name": "Den"}
+			}
+
+			assert.Equal(t, http.StatusNotFound, c.do(tc.method, tc.path, body).status)
+		})
 	}
 
 	var list []Instance

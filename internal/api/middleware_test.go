@@ -43,42 +43,42 @@ func TestProblemFor(t *testing.T) {
 
 	teapot := huma.NewError(http.StatusTeapot, "short and stout")
 
-	tests := []struct {
+	testCases := []struct {
 		name   string
-		err    error
+		have   error
 		status int
 		detail string
 	}{
-		{name: "not found", err: fmt.Errorf("room 3: %w", store.ErrNotFound), status: http.StatusNotFound, detail: "not found"},
-		{name: "no runtime", err: fmt.Errorf("kodi 3: %w", app.ErrNoRuntime), status: http.StatusNotFound, detail: "not found"},
-		{name: "conflict with a reason", err: fmt.Errorf("%w: “den” is already used by room 3", store.ErrConflict), status: http.StatusConflict, detail: "“den” is already used by room 3"},
-		{name: "conflict from a constraint", err: fmt.Errorf("%w: constraint failed: UNIQUE constraint failed: rooms.name", store.ErrConflict), status: http.StatusConflict, detail: "already exists"},
-		{name: "bare conflict", err: store.ErrConflict, status: http.StatusConflict, detail: "already exists"},
-		{name: "invalid", err: fmt.Errorf("%w: kodi instance 99 does not exist", store.ErrInvalid), status: http.StatusUnprocessableEntity, detail: "invalid: kodi instance 99 does not exist"},
-		{name: "cancelled", err: fmt.Errorf("listing: %w", context.Canceled), status: 499, detail: "request cancelled"},
-		{name: "anything else", err: errors.New("database is locked: /var/lib/encore/encore.db"), status: http.StatusInternalServerError, detail: "internal error"},
+		{name: "ShouldReportNotFound", have: fmt.Errorf("room 3: %w", store.ErrNotFound), status: http.StatusNotFound, detail: "not found"},
+		{name: "ShouldReportNoRuntimeAsNotFound", have: fmt.Errorf("kodi 3: %w", app.ErrNoRuntime), status: http.StatusNotFound, detail: "not found"},
+		{name: "ShouldReportAConflictWithItsReason", have: fmt.Errorf("%w: “den” is already used by room 3", store.ErrConflict), status: http.StatusConflict, detail: "“den” is already used by room 3"},
+		{name: "ShouldHideAConflictFromAConstraint", have: fmt.Errorf("%w: constraint failed: UNIQUE constraint failed: rooms.name", store.ErrConflict), status: http.StatusConflict, detail: "already exists"},
+		{name: "ShouldReportABareConflict", have: store.ErrConflict, status: http.StatusConflict, detail: "already exists"},
+		{name: "ShouldReportInvalid", have: fmt.Errorf("%w: kodi instance 99 does not exist", store.ErrInvalid), status: http.StatusUnprocessableEntity, detail: "invalid: kodi instance 99 does not exist"},
+		{name: "ShouldReportCancelled", have: fmt.Errorf("listing: %w", context.Canceled), status: 499, detail: "request cancelled"},
+		{name: "ShouldHideAnythingElse", have: errors.New("database is locked: /var/lib/encore/encore.db"), status: http.StatusInternalServerError, detail: "internal error"},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
 			a, _ := testAPI()
 
-			m := errorModel(t, a.problemFor(t.Context(), tt.err))
-			assert.Equal(t, tt.status, m.Status)
-			assert.Equal(t, tt.detail, m.Detail)
+			m := errorModel(t, a.problemFor(t.Context(), tc.have))
+			assert.Equal(t, tc.status, m.Status)
+			assert.Equal(t, tc.detail, m.Detail)
 		})
 	}
 
-	t.Run("nil is nil", func(t *testing.T) {
+	t.Run("ShouldReturnNilForNil", func(t *testing.T) {
 		t.Parallel()
 
 		a, _ := testAPI()
 		assert.NoError(t, a.problemFor(t.Context(), nil))
 	})
 
-	t.Run("status errors pass through", func(t *testing.T) {
+	t.Run("ShouldPassStatusErrorsThrough", func(t *testing.T) {
 		t.Parallel()
 
 		a, _ := testAPI()
@@ -133,8 +133,19 @@ func TestResponsesAreNeverCached(t *testing.T) {
 	h := newHarness(t, harnessOpts{noKodi: true})
 	c := h.admin()
 
-	for _, path := range []string{"/api/v1/auth/state", "/api/v1/settings", "/api/v1/nope"} {
-		assert.Equal(t, "no-store", c.do(http.MethodGet, path, nil).header.Get("Cache-Control"), path)
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldNotCacheTheAuthState", have: "/api/v1/auth/state"},
+		{name: "ShouldNotCacheSettings", have: "/api/v1/settings"},
+		{name: "ShouldNotCacheAnUnknownRoute", have: "/api/v1/nope"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, "no-store", c.do(http.MethodGet, tc.have, nil).header.Get("Cache-Control"))
+		})
 	}
 
 	assert.Equal(t, "no-store", h.client().do(http.MethodGet, "/api/v1/settings", nil).header.Get("Cache-Control"), "refusals too")
@@ -145,9 +156,22 @@ func TestSafeMethodsNeedNoCSRFToken(t *testing.T) {
 	c := h.admin()
 	c.csrf = ""
 
-	assert.Equal(t, http.StatusOK, c.do(http.MethodGet, "/api/v1/rooms", nil).status)
-	assert.Equal(t, http.StatusOK, c.do(http.MethodHead, "/api/v1/rooms", nil).status)
-	assert.Equal(t, http.StatusForbidden, c.do(http.MethodDelete, "/api/v1/rooms/1", nil).status, "unsafe methods do")
+	testCases := []struct {
+		name     string
+		method   string
+		path     string
+		expected int
+	}{
+		{name: "ShouldAllowGETWithoutAToken", method: http.MethodGet, path: "/api/v1/rooms", expected: http.StatusOK},
+		{name: "ShouldAllowHEADWithoutAToken", method: http.MethodHead, path: "/api/v1/rooms", expected: http.StatusOK},
+		{name: "ShouldRefuseAnUnsafeMethodWithoutAToken", method: http.MethodDelete, path: "/api/v1/rooms/1", expected: http.StatusForbidden},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, c.do(tc.method, tc.path, nil).status)
+		})
+	}
 }
 
 // brokenStore is a harness signed in through a trusted proxy whose database then fails, so every handler's storage error path runs.
@@ -166,41 +190,42 @@ func brokenStore(t *testing.T) (*harness, *client) {
 func TestStoreFailuresAreInternalErrors(t *testing.T) {
 	h, c := brokenStore(t)
 
-	tests := []struct {
+	testCases := []struct {
+		name   string
 		method string
 		path   string
 		body   any
 	}{
-		{http.MethodGet, "/api/v1/auth/state", nil},
-		{http.MethodGet, "/api/v1/settings", nil},
-		{http.MethodPatch, "/api/v1/settings", map[string]any{"locale": map[string]any{"timezone": "Australia/Melbourne"}}},
-		{http.MethodPatch, "/api/v1/settings", map[string]any{"storage": map[string]any{"backups": map[string]any{"keep": 3}}}},
-		{http.MethodPost, "/api/v1/settings/secrets/rotate", nil},
-		{http.MethodGet, "/api/v1/devices", nil},
-		{http.MethodPatch, "/api/v1/devices/1", map[string]any{"name": "Kitchen Echo"}},
-		{http.MethodDelete, "/api/v1/devices/1", nil},
-		{http.MethodGet, "/api/v1/rooms", nil},
-		{http.MethodPost, "/api/v1/rooms", map[string]any{"name": "Kitchen"}},
-		{http.MethodPatch, "/api/v1/rooms/1", map[string]any{"name": "Kitchen"}},
-		{http.MethodDelete, "/api/v1/rooms/1", nil},
-		{http.MethodPost, "/api/v1/rooms/1/aliases", map[string]any{"alias": "cooking room"}},
-		{http.MethodDelete, "/api/v1/rooms/1/aliases/1", nil},
-		{http.MethodGet, "/api/v1/requests", nil},
-		{http.MethodGet, "/api/v1/requests/1", nil},
-		{http.MethodPost, "/api/v1/requests/1/replay", nil},
-		{http.MethodDelete, "/api/v1/aliases/1", nil},
-		{http.MethodGet, "/api/v1/config/export", nil},
-		{http.MethodPost, "/api/v1/config/import", []byte("storage:\n  backups:\n    keep: 3\n")},
+		{name: "ShouldFailGettingTheAuthState", method: http.MethodGet, path: "/api/v1/auth/state"},
+		{name: "ShouldFailGettingSettings", method: http.MethodGet, path: "/api/v1/settings"},
+		{name: "ShouldFailPatchingTheTimezone", method: http.MethodPatch, path: "/api/v1/settings", body: map[string]any{"locale": map[string]any{"timezone": "Australia/Melbourne"}}},
+		{name: "ShouldFailPatchingBackups", method: http.MethodPatch, path: "/api/v1/settings", body: map[string]any{"storage": map[string]any{"backups": map[string]any{"keep": 3}}}},
+		{name: "ShouldFailRotatingSecrets", method: http.MethodPost, path: "/api/v1/settings/secrets/rotate"},
+		{name: "ShouldFailListingDevices", method: http.MethodGet, path: "/api/v1/devices"},
+		{name: "ShouldFailPatchingADevice", method: http.MethodPatch, path: "/api/v1/devices/1", body: map[string]any{"name": "Kitchen Echo"}},
+		{name: "ShouldFailDeletingADevice", method: http.MethodDelete, path: "/api/v1/devices/1"},
+		{name: "ShouldFailListingRooms", method: http.MethodGet, path: "/api/v1/rooms"},
+		{name: "ShouldFailCreatingARoom", method: http.MethodPost, path: "/api/v1/rooms", body: map[string]any{"name": "Kitchen"}},
+		{name: "ShouldFailPatchingARoom", method: http.MethodPatch, path: "/api/v1/rooms/1", body: map[string]any{"name": "Kitchen"}},
+		{name: "ShouldFailDeletingARoom", method: http.MethodDelete, path: "/api/v1/rooms/1"},
+		{name: "ShouldFailAddingARoomAlias", method: http.MethodPost, path: "/api/v1/rooms/1/aliases", body: map[string]any{"alias": "cooking room"}},
+		{name: "ShouldFailDeletingARoomAlias", method: http.MethodDelete, path: "/api/v1/rooms/1/aliases/1"},
+		{name: "ShouldFailListingRequests", method: http.MethodGet, path: "/api/v1/requests"},
+		{name: "ShouldFailGettingARequest", method: http.MethodGet, path: "/api/v1/requests/1"},
+		{name: "ShouldFailReplayingARequest", method: http.MethodPost, path: "/api/v1/requests/1/replay"},
+		{name: "ShouldFailDeletingATitleAlias", method: http.MethodDelete, path: "/api/v1/aliases/1"},
+		{name: "ShouldFailExportingConfig", method: http.MethodGet, path: "/api/v1/config/export"},
+		{name: "ShouldFailImportingConfig", method: http.MethodPost, path: "/api/v1/config/import", body: []byte("storage:\n  backups:\n    keep: 3\n")},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.method+" "+tt.path, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			hdr := []string{"Remote-User", "admin"}
-			if _, ok := tt.body.([]byte); ok {
+			if _, ok := tc.body.([]byte); ok {
 				hdr = append(hdr, "Content-Type", "application/yaml")
 			}
 
-			resp := c.do(tt.method, tt.path, tt.body, hdr...)
+			resp := c.do(tc.method, tc.path, tc.body, hdr...)
 			require.Equal(t, http.StatusInternalServerError, resp.status, "a failing database never reads as empty or missing: %s", resp.body)
 
 			p := resp.problem(t)

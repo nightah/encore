@@ -38,9 +38,20 @@ func TestInstanceSearchMode(t *testing.T) {
 	assert.Equal(t, "skin", rec.SearchMode)
 	assert.Equal(t, "skin.arctic.fuse.2", rec.SkinProfile)
 
-	for field, value := range map[string]string{"skin_profile": "skin.estuary", "search_mode": "native"} {
-		resp := c.do(http.MethodPatch, path, map[string]string{field: value})
-		assert.Equal(t, http.StatusUnprocessableEntity, resp.status, field)
+	testCases := []struct {
+		name  string
+		field string
+		have  string
+	}{
+		{name: "ShouldRejectASkinWithoutAProfile", field: "skin_profile", have: "skin.estuary"},
+		{name: "ShouldRejectAnUnknownSearchMode", field: "search_mode", have: "native"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp := c.do(http.MethodPatch, path, map[string]string{tc.field: tc.have})
+			assert.Equal(t, http.StatusUnprocessableEntity, resp.status)
+		})
 	}
 
 	p := c.do(http.MethodPatch, path, map[string]string{"skin_profile": "skin.unknown"}).problem(t)

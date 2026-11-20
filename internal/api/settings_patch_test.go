@@ -19,22 +19,26 @@ import (
 func TestBasePath(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		in, want string
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
 	}{
-		{"", "/"},
-		{"/", "/"},
-		{"  ", "/"},
-		{"encore", "/encore"},
-		{"encore/", "/encore"},
-		{" /encore/ ", "/encore"},
-		{"//encore//", "/encore"},
-		{"/apps/encore", "/apps/encore"},
-		{"/música", "/música"},
+		{name: "ShouldTreatEmptyAsTheRoot", expected: "/"},
+		{name: "ShouldKeepTheRoot", have: "/", expected: "/"},
+		{name: "ShouldTreatBlankAsTheRoot", have: "  ", expected: "/"},
+		{name: "ShouldAddALeadingSlash", have: "encore", expected: "/encore"},
+		{name: "ShouldDropATrailingSlash", have: "encore/", expected: "/encore"},
+		{name: "ShouldTrimSpaces", have: " /encore/ ", expected: "/encore"},
+		{name: "ShouldCollapseRepeatedSlashes", have: "//encore//", expected: "/encore"},
+		{name: "ShouldKeepANestedPath", have: "/apps/encore", expected: "/apps/encore"},
+		{name: "ShouldKeepUnicode", have: "/música", expected: "/música"},
 	}
 
-	for _, tt := range tests {
-		assert.Equal(t, tt.want, basePath(tt.in), "%q", tt.in)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, basePath(tc.have))
+		})
 	}
 }
 
@@ -153,92 +157,78 @@ func TestBackupTarget(t *testing.T) {
 		Backups: config.Backups{Schedule: "daily@03:00", Keep: 7, Prefix: "Encore"},
 	}
 
-	tests := []struct {
-		name  string
-		edit  func(s *config.Storage)
-		moved bool
-	}{
-		{"nothing", func(*config.Storage) {}, false},
-		{"the schedule", func(s *config.Storage) { s.Backups.Schedule = "off" }, false},
-		{"how many to keep", func(s *config.Storage) { s.Backups.Keep = 3 }, false},
-		{"another backend's settings", func(s *config.Storage) { s.S3.Bucket = "other" }, false},
-		{"the local path", func(s *config.Storage) { s.Local.Path = "/mnt/backups" }, true},
-		{"the backups folder", func(s *config.Storage) { s.Backups.Prefix = "" }, true},
-		{"the backend", func(s *config.Storage) { s.Backend = config.BackendS3 }, true},
-	}
-
-	for _, tt := range tests {
-		s := base
-		tt.edit(&s)
-		assert.Equal(t, tt.moved, backupTarget(&s) != backupTarget(&base), tt.name)
-	}
-
 	s3 := base
 	s3.Backend = config.BackendS3
-
-	for name, edit := range map[string]func(s *config.Storage){
-		"endpoint": func(s *config.Storage) { s.S3.Endpoint = "https://other.example.net" },
-		"region":   func(s *config.Storage) { s.S3.Region = "us-east-1" },
-		"bucket":   func(s *config.Storage) { s.S3.Bucket = "other" },
-		"prefix":   func(s *config.Storage) { s.S3.Prefix = "other" },
-	} {
-		s := s3
-		edit(&s)
-		assert.NotEqual(t, backupTarget(&s3), backupTarget(&s), "s3 %s", name)
-	}
-
-	other := s3
-	other.Local.Path = "/elsewhere"
-	assert.Equal(t, backupTarget(&s3), backupTarget(&other), "the local path does not matter for s3")
 
 	dav := base
 	dav.Backend = config.BackendWebDAV
 
-	for name, edit := range map[string]func(s *config.Storage){
-		"url":    func(s *config.Storage) { s.WebDAV.URL = "https://other.example.net" },
-		"prefix": func(s *config.Storage) { s.WebDAV.Prefix = "other" },
-	} {
-		s := dav
-		edit(&s)
-		assert.NotEqual(t, backupTarget(&dav), backupTarget(&s), "webdav %s", name)
+	testCases := []struct {
+		name  string
+		base  config.Storage
+		edit  func(s *config.Storage)
+		moved bool
+	}{
+		{name: "ShouldNotMoveForNothing", base: base, edit: func(*config.Storage) {}},
+		{name: "ShouldNotMoveForTheSchedule", base: base, edit: func(s *config.Storage) { s.Backups.Schedule = "off" }},
+		{name: "ShouldNotMoveForHowManyToKeep", base: base, edit: func(s *config.Storage) { s.Backups.Keep = 3 }},
+		{name: "ShouldNotMoveForAnotherBackendsSettings", base: base, edit: func(s *config.Storage) { s.S3.Bucket = "other" }},
+		{name: "ShouldMoveForTheLocalPath", base: base, edit: func(s *config.Storage) { s.Local.Path = "/mnt/backups" }, moved: true},
+		{name: "ShouldMoveForTheBackupsFolder", base: base, edit: func(s *config.Storage) { s.Backups.Prefix = "" }, moved: true},
+		{name: "ShouldMoveForTheBackend", base: base, edit: func(s *config.Storage) { s.Backend = config.BackendS3 }, moved: true},
+		{name: "ShouldMoveForTheS3Endpoint", base: s3, edit: func(s *config.Storage) { s.S3.Endpoint = "https://other.example.net" }, moved: true},
+		{name: "ShouldMoveForTheS3Region", base: s3, edit: func(s *config.Storage) { s.S3.Region = "us-east-1" }, moved: true},
+		{name: "ShouldMoveForTheS3Bucket", base: s3, edit: func(s *config.Storage) { s.S3.Bucket = "other" }, moved: true},
+		{name: "ShouldMoveForTheS3Prefix", base: s3, edit: func(s *config.Storage) { s.S3.Prefix = "other" }, moved: true},
+		{name: "ShouldNotMoveForTheLocalPathOnS3", base: s3, edit: func(s *config.Storage) { s.Local.Path = "/elsewhere" }},
+		{name: "ShouldMoveForTheWebDAVURL", base: dav, edit: func(s *config.Storage) { s.WebDAV.URL = "https://other.example.net" }, moved: true},
+		{name: "ShouldMoveForTheWebDAVPrefix", base: dav, edit: func(s *config.Storage) { s.WebDAV.Prefix = "other" }, moved: true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := tc.base
+			tc.edit(&s)
+			assert.Equal(t, tc.moved, backupTarget(&s) != backupTarget(&tc.base))
+		})
 	}
 }
 
 func TestGuardAuthChange(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
+	testCases := []struct {
 		name    string
 		env     []string
 		peer    string
 		changes []Change
 		refused bool
 	}{
-		{name: "not header mode", peer: "192.0.2.10:5000", changes: []Change{{Key: "auth.mode", Value: "oidc"}}},
-		{name: "unrelated change", peer: "192.0.2.10:5000", changes: []Change{{Key: "storage.backups.keep", Value: 3}}},
-		{name: "header mode from a trusted proxy", peer: "127.0.0.1:5000", changes: []Change{{Key: "auth.mode", Value: "header"}}},
-		{name: "header mode from IPv6 loopback", peer: "[::1]:5000", changes: []Change{{Key: "auth.mode", Value: "header"}}},
-		{name: "header mode from elsewhere", peer: "192.0.2.10:5000", changes: []Change{{Key: "auth.mode", Value: "header"}}, refused: true},
-		{name: "header mode with the new proxy list", peer: "10.0.0.5:5000", changes: []Change{{Key: "auth.mode", Value: "header"}, {Key: "server.trusted_proxies", Value: []string{"10.0.0.0/8"}}}},
-		{name: "an IPv4-mapped peer", peer: "[::ffff:10.0.0.5]:5000", changes: []Change{{Key: "auth.mode", Value: "header"}, {Key: "server.trusted_proxies", Value: []string{"10.0.0.0/8"}}}},
-		{name: "invalid proxy entries match nothing", peer: "10.0.0.5:5000", changes: []Change{{Key: "auth.mode", Value: "header"}, {Key: "server.trusted_proxies", Value: []string{"10.0.0.0", "not a cidr"}}}, refused: true},
-		{name: "dropping the proxy in header mode", env: []string{"ENCORE_AUTH_MODE=header"}, peer: "127.0.0.1:5000", changes: []Change{{Key: "server.trusted_proxies", Value: []string{"10.0.0.0/8"}}}, refused: true},
-		{name: "leaving header mode", env: []string{"ENCORE_SERVER_TRUSTED_PROXIES=10.0.0.0/8"}, peer: "192.0.2.10:5000", changes: []Change{{Key: "auth.mode", Value: "local"}}},
-		{name: "a peer that is not an address", peer: "@", changes: []Change{{Key: "auth.mode", Value: "header"}}},
+		{name: "ShouldAllowAModeOtherThanHeader", peer: "192.0.2.10:5000", changes: []Change{{Key: "auth.mode", Value: "oidc"}}},
+		{name: "ShouldAllowAnUnrelatedChange", peer: "192.0.2.10:5000", changes: []Change{{Key: "storage.backups.keep", Value: 3}}},
+		{name: "ShouldAllowHeaderModeFromATrustedProxy", peer: "127.0.0.1:5000", changes: []Change{{Key: "auth.mode", Value: "header"}}},
+		{name: "ShouldAllowHeaderModeFromIPv6Loopback", peer: "[::1]:5000", changes: []Change{{Key: "auth.mode", Value: "header"}}},
+		{name: "ShouldRefuseHeaderModeFromElsewhere", peer: "192.0.2.10:5000", changes: []Change{{Key: "auth.mode", Value: "header"}}, refused: true},
+		{name: "ShouldAllowHeaderModeWithTheNewProxyList", peer: "10.0.0.5:5000", changes: []Change{{Key: "auth.mode", Value: "header"}, {Key: "server.trusted_proxies", Value: []string{"10.0.0.0/8"}}}},
+		{name: "ShouldAllowAnIPv4MappedPeer", peer: "[::ffff:10.0.0.5]:5000", changes: []Change{{Key: "auth.mode", Value: "header"}, {Key: "server.trusted_proxies", Value: []string{"10.0.0.0/8"}}}},
+		{name: "ShouldRefuseWhenInvalidProxyEntriesMatchNothing", peer: "10.0.0.5:5000", changes: []Change{{Key: "auth.mode", Value: "header"}, {Key: "server.trusted_proxies", Value: []string{"10.0.0.0", "not a cidr"}}}, refused: true},
+		{name: "ShouldRefuseDroppingTheProxyInHeaderMode", env: []string{"ENCORE_AUTH_MODE=header"}, peer: "127.0.0.1:5000", changes: []Change{{Key: "server.trusted_proxies", Value: []string{"10.0.0.0/8"}}}, refused: true},
+		{name: "ShouldAllowLeavingHeaderMode", env: []string{"ENCORE_SERVER_TRUSTED_PROXIES=10.0.0.0/8"}, peer: "192.0.2.10:5000", changes: []Change{{Key: "auth.mode", Value: "local"}}},
+		{name: "ShouldAllowAPeerThatIsNotAnAddress", peer: "@", changes: []Change{{Key: "auth.mode", Value: "header"}}},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			f := newPrefs(t, tt.env...)
+			f := newPrefs(t, tc.env...)
 			a := &API{prefs: f.prefs}
 
 			r := httptest.NewRequestWithContext(t.Context(), http.MethodPatch, "/api/v1/settings", http.NoBody)
-			r.RemoteAddr = tt.peer
+			r.RemoteAddr = tc.peer
 
-			err := a.guardAuthChange(context.WithValue(t.Context(), ctxKey{}, &reqInfo{r: r}), tt.changes)
-			if !tt.refused {
+			err := a.guardAuthChange(context.WithValue(t.Context(), ctxKey{}, &reqInfo{r: r}), tc.changes)
+			if !tc.refused {
 				require.NoError(t, err)
 
 				return
@@ -250,7 +240,7 @@ func TestGuardAuthChange(t *testing.T) {
 		})
 	}
 
-	t.Run("outside a request", func(t *testing.T) {
+	t.Run("ShouldAllowAnythingOutsideARequest", func(t *testing.T) {
 		t.Parallel()
 
 		a := &API{prefs: newPrefs(t).prefs}

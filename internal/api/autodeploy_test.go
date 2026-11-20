@@ -279,22 +279,27 @@ func TestAutoDeployPausesWhenADeployCantStart(t *testing.T) {
 }
 
 func TestAutoDeployWaitsForAmazon(t *testing.T) {
-	for name, lose := range map[string]func(*autoDeployHarness){
-		"reauthorise": func(ah *autoDeployHarness) {
+	testCases := []struct {
+		name string
+		lose func(*testing.T, *autoDeployHarness)
+	}{
+		{name: "ShouldWaitWhileAmazonNeedsReauthorising", lose: func(t *testing.T, ah *autoDeployHarness) {
 			require.NoError(t, ah.app.DB().Settings().Set(t.Context(), reauthKey, true))
-		},
-		"disconnected": func(ah *autoDeployHarness) {
+		}},
+		{name: "ShouldWaitWhileAmazonIsDisconnected", lose: func(_ *testing.T, ah *autoDeployHarness) {
 			ah.c.json(http.MethodDelete, "/api/v1/skill/amazon", nil, http.StatusNoContent, nil)
-		},
-	} {
-		t.Run(name, func(t *testing.T) {
+		}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			ah := newAutoDeployHarness(t)
 
 			first := ah.deployByHand(t)
 			require.Equal(t, "succeeded", first.State, first.Error)
 
 			ah.setAutoDeploy(t, true)
-			lose(ah)
+			tc.lose(t, ah)
 			ah.addTitle("movie/2", "Arrival")
 			ah.check(t)
 			ah.check(t)
@@ -467,8 +472,19 @@ func TestAutoDeployInterval(t *testing.T) {
 	assert.InDelta(t, 2.5, s.Features.AutoDeployMinutes, 0)
 	assert.Equal(t, 150*time.Second, h.api.skill.autoDeployInterval(t.Context()))
 
-	for _, n := range []float64{0, 0.5, 1441} {
-		assert.Equal(t, http.StatusUnprocessableEntity, c.do(http.MethodPatch, "/api/v1/settings", map[string]any{"features": map[string]any{"auto_deploy_minutes": n}}).status, n)
+	testCases := []struct {
+		name string
+		have float64
+	}{
+		{name: "ShouldRejectZero", have: 0},
+		{name: "ShouldRejectUnderAMinute", have: 0.5},
+		{name: "ShouldRejectOverADay", have: 1441},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, http.StatusUnprocessableEntity, c.do(http.MethodPatch, "/api/v1/settings", map[string]any{"features": map[string]any{"auto_deploy_minutes": tc.have}}).status)
+		})
 	}
 }
 

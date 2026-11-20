@@ -49,15 +49,23 @@ func TestNowPlayingArt(t *testing.T) {
 }
 
 func TestArtContentType(t *testing.T) {
-	for ct, want := range map[string]string{
-		"image/png":                "image/png",
-		"image/jpeg; charset=x":    "image/jpeg; charset=x",
-		"text/html; charset=utf-8": "application/octet-stream",
-		"application/javascript":   "application/octet-stream",
-		"":                         "application/octet-stream",
-		"image":                    "application/octet-stream",
-	} {
-		assert.Equal(t, want, artContentType(ct), ct)
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldKeepPNG", have: "image/png", expected: "image/png"},
+		{name: "ShouldKeepJPEGWithParameters", have: "image/jpeg; charset=x", expected: "image/jpeg; charset=x"},
+		{name: "ShouldNeutraliseHTML", have: "text/html; charset=utf-8", expected: "application/octet-stream"},
+		{name: "ShouldNeutraliseJavaScript", have: "application/javascript", expected: "application/octet-stream"},
+		{name: "ShouldNeutraliseEmpty", expected: "application/octet-stream"},
+		{name: "ShouldNeutraliseABareImageType", have: "image", expected: "application/octet-stream"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, artContentType(tc.have))
+		})
 	}
 }
 

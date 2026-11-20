@@ -40,16 +40,20 @@ func TestReadSkillAccess(t *testing.T) {
 }
 
 func TestReadSkillAccessLocale(t *testing.T) {
-	for name, tc := range map[string]struct {
+	testCases := []struct {
+		name     string
 		locales  []string
-		def, out string
+		def      string
+		expected string
 	}{
-		"the default":                   {locales: []string{"en-GB", "en-AU"}, def: "en-AU", out: "en-AU"},
-		"the skill's first":             {locales: []string{"en-AU", "en-GB"}, def: "de-DE", out: "en-AU"},
-		"the default with every locale": {def: "en-GB", out: "en-GB"},
-		"the first shipped locale":      {out: "ar-SA"},
-	} {
-		t.Run(name, func(t *testing.T) {
+		{name: "ShouldSpeakTheDefault", locales: []string{"en-GB", "en-AU"}, def: "en-AU", expected: "en-AU"},
+		{name: "ShouldSpeakTheSkillsFirstLocale", locales: []string{"en-AU", "en-GB"}, def: "de-DE", expected: "en-AU"},
+		{name: "ShouldSpeakTheDefaultWithEveryLocale", def: "en-GB", expected: "en-GB"},
+		{name: "ShouldSpeakTheFirstShippedLocale", expected: "ar-SA"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			h := newHarness(t, harnessOpts{noKodi: true})
 			connectSkill(t, h)
 
@@ -62,7 +66,7 @@ func TestReadSkillAccessLocale(t *testing.T) {
 
 			got, err := ReadSkillAccess(t.Context(), h.cfg, h.app.DB(), h.app.Secrets())
 			require.NoError(t, err)
-			assert.Equal(t, tc.out, got.Locale)
+			assert.Equal(t, tc.expected, got.Locale)
 		})
 	}
 }
@@ -79,42 +83,56 @@ func TestReadSkillAccessSkillIDFromItsSetting(t *testing.T) {
 }
 
 func TestReadSkillAccessNeedsAConnectedSkill(t *testing.T) {
-	for name, tc := range map[string]struct {
+	testCases := []struct {
+		name string
 		undo func(t *testing.T, h *harness)
-		want string
+		err  string
 	}{
-		"no skill": {func(t *testing.T, h *harness) {
+		{name: "ShouldNeedADeployedSkill", undo: func(t *testing.T, h *harness) {
 			require.NoError(t, h.app.DB().Settings().Delete(t.Context(), deployStateKey))
-		}, "no skill has been deployed"},
-		"no client ID": {func(t *testing.T, h *harness) {
+		}, err: "no skill has been deployed"},
+		{name: "ShouldNeedAClientID", undo: func(t *testing.T, h *harness) {
 			require.NoError(t, h.app.DB().Settings().Delete(t.Context(), lwaSettingsKey))
-		}, "no security profile"},
-		"no secret": {func(t *testing.T, h *harness) { require.NoError(t, h.app.Secrets().Delete(t.Context(), lwaSecretRef)) }, "no client secret"},
-		"no token": {func(t *testing.T, h *harness) {
+		}, err: "no security profile"},
+		{name: "ShouldNeedAClientSecret", undo: func(t *testing.T, h *harness) { require.NoError(t, h.app.Secrets().Delete(t.Context(), lwaSecretRef)) }, err: "no client secret"},
+		{name: "ShouldNeedAToken", undo: func(t *testing.T, h *harness) {
 			require.NoError(t, secretTokenStore{sec: h.app.Secrets()}.forget(t.Context()))
-		}, "not connected to Amazon"},
-		"no refresh token": {func(t *testing.T, h *harness) {
+		}, err: "not connected to Amazon"},
+		{name: "ShouldNeedARefreshToken", undo: func(t *testing.T, h *harness) {
 			require.NoError(t, secretTokenStore{sec: h.app.Secrets()}.Save(t.Context(), &oauth2.Token{AccessToken: "Atza|access"}))
-		}, "not connected to Amazon"},
-	} {
-		t.Run(name, func(t *testing.T) {
+		}, err: "not connected to Amazon"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			h := newHarness(t, harnessOpts{noKodi: true})
 			connectSkill(t, h)
 			tc.undo(t, h)
 
 			_, err := ReadSkillAccess(t.Context(), h.cfg, h.app.DB(), h.app.Secrets())
 			require.ErrorIs(t, err, ErrNoSkillAccess)
-			assert.ErrorContains(t, err, tc.want)
+			assert.ErrorContains(t, err, tc.err)
 		})
 	}
 }
 
 func TestReadSkillAccessReportsUnreadableSettings(t *testing.T) {
-	for _, key := range []string{overridesSetting, lwaSettingsKey, deployStateKey, skillIDKey, localeSetting} {
-		t.Run(key, func(t *testing.T) {
+	testCases := []struct {
+		name string
+		key  string
+	}{
+		{name: "ShouldReportUnreadableOverrides", key: overridesSetting},
+		{name: "ShouldReportUnreadableLWASettings", key: lwaSettingsKey},
+		{name: "ShouldReportAnUnreadableDeployState", key: deployStateKey},
+		{name: "ShouldReportAnUnreadableSkillID", key: skillIDKey},
+		{name: "ShouldReportUnreadableLocaleSettings", key: localeSetting},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			h := newHarness(t, harnessOpts{noKodi: true})
 			connectSkill(t, h)
-			require.NoError(t, h.app.DB().Settings().Set(t.Context(), key, []int{1}))
+			require.NoError(t, h.app.DB().Settings().Set(t.Context(), tc.key, []int{1}))
 
 			_, err := ReadSkillAccess(t.Context(), h.cfg, h.app.DB(), h.app.Secrets())
 			require.Error(t, err)

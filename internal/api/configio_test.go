@@ -33,22 +33,22 @@ func TestImportRefusesMalformedFiles(t *testing.T) {
 	h := newHarness(t, harnessOpts{noKodi: true})
 	c := h.admin()
 
-	tests := []struct {
+	testCases := []struct {
 		name     string
-		yml      string
+		have     string
 		location string
 	}{
-		{name: "not YAML", yml: "storage: [unclosed\n", location: "body"},
-		{name: "kodi is not a list", yml: "kodi: Lounge\n", location: "body.kodi"},
+		{name: "ShouldRefuseInvalidYAML", have: "storage: [unclosed\n", location: "body"},
+		{name: "ShouldRefuseKodiThatIsNotAList", have: "kodi: Lounge\n", location: "body.kodi"},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			_, resp := importYAML(t, c, tt.yml, http.StatusUnprocessableEntity)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, resp := importYAML(t, c, tc.have, http.StatusUnprocessableEntity)
 
 			p := resp.problem(t)
 			require.Len(t, p.Errors, 1)
-			assert.Equal(t, tt.location, p.Errors[0].Location)
+			assert.Equal(t, tc.location, p.Errors[0].Location)
 		})
 	}
 
@@ -254,15 +254,29 @@ func TestExportSecretsNeedASignInWithinFifteenMinutes(t *testing.T) {
 func TestImportErr(t *testing.T) {
 	t.Parallel()
 
-	plain := errors.New("disk full")
-	assert.Same(t, plain, importErr(plain), "other errors pass through")
+	testCases := []struct {
+		name string
+		have error
+		err  string
+	}{
+		{name: "ShouldPassOtherErrorsThrough", have: errors.New("disk full")},
+		{name: "ShouldJoinValidationDetails", have: huma.Error422UnprocessableEntity("validation failed", &huma.ErrorDetail{Location: "body.url", Message: "must be an http(s) URL"}, &huma.ErrorDetail{Location: "body.name", Message: "must not be empty"}), err: "validation failed; body.url must be an http(s) URL; body.name must not be empty"},
+		{name: "ShouldKeepAConflictMessage", have: huma.Error409Conflict(`a Kodi instance named "Lounge" is declared in config`), err: `a Kodi instance named "Lounge" is declared in config`},
+	}
 
-	err := importErr(huma.Error422UnprocessableEntity("validation failed",
-		&huma.ErrorDetail{Location: "body.url", Message: "must be an http(s) URL"},
-		&huma.ErrorDetail{Location: "body.name", Message: "must not be empty"}))
-	require.EqualError(t, err, "validation failed; body.url must be an http(s) URL; body.name must not be empty")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := importErr(tc.have)
 
-	require.EqualError(t, importErr(huma.Error409Conflict(`a Kodi instance named "Lounge" is declared in config`)), `a Kodi instance named "Lounge" is declared in config`)
+			if tc.err == "" {
+				assert.Same(t, tc.have, actual, "other errors pass through")
+
+				return
+			}
+
+			require.EqualError(t, actual, tc.err)
+		})
+	}
 }
 
 func TestFlatValuesAreOverridable(t *testing.T) {
@@ -270,15 +284,25 @@ func TestFlatValuesAreOverridable(t *testing.T) {
 
 	f := newPrefs(t)
 
-	for _, withSecrets := range []bool{false, true} {
-		keys := []string{}
+	testCases := []struct {
+		name        string
+		withSecrets bool
+	}{
+		{name: "ShouldOverrideEveryValueWithoutSecrets"},
+		{name: "ShouldOverrideEveryValueWithSecrets", withSecrets: true},
+	}
 
-		for k := range flatValues(f.prefs.Config(), withSecrets) {
-			assert.True(t, isOverridable(k), "%s is exported, so it must import", k)
-			keys = append(keys, k)
-		}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			keys := []string{}
 
-		hasSecret := slices.Contains(keys, "storage.s3.secret_key")
-		assert.Equal(t, withSecrets, hasSecret)
+			for k := range flatValues(f.prefs.Config(), tc.withSecrets) {
+				assert.True(t, isOverridable(k), "%s is exported, so it must import", k)
+				keys = append(keys, k)
+			}
+
+			hasSecret := slices.Contains(keys, "storage.s3.secret_key")
+			assert.Equal(t, tc.withSecrets, hasSecret)
+		})
 	}
 }
