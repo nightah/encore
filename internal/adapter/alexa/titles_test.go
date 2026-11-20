@@ -27,51 +27,58 @@ func shippedSpeech(t *testing.T) *Speech {
 func TestReinterpretFilmAndMusic(t *testing.T) {
 	speech := shippedSpeech(t)
 
-	for _, tc := range []struct {
-		locale, query, intent string
-		slots                 map[string]string
+	testCases := []struct {
+		name   string
+		locale string
+		have   string
+		intent string
+		slots  map[string]string
 	}{
-		{"en-AU", "the movie frozen", "WatchMovie", map[string]string{"Movie": "frozen"}},
-		{"en-AU", "music by pink floyd", "ListenToArtist", map[string]string{"Artist": "pink floyd"}},
-		{"en-AU", "something by pink floyd", "ListenToArtist", map[string]string{"Artist": "pink floyd"}},
-		{"en-AU", "the album the wall by pink floyd", "ListenToAlbum", map[string]string{"Album": "the wall", "Artist": "pink floyd"}},
-		{"en-AU", "frozen trailer", "WatchMovieTrailer", map[string]string{"Movie": "frozen"}},
-		{"en-AU", "all music", "PartyMode", map[string]string{}},
-		{"en-AU", "stand by me", "PlayMedia", map[string]string{"Query": "stand by me"}},
-		{"de-DE", "den film die eiskönigin", "WatchMovie", map[string]string{"Movie": "die eiskönigin"}},
-		{"de-DE", "etwas von pink floyd", "ListenToArtist", map[string]string{"Artist": "pink floyd"}},
-		{"de-DE", "ein bisschen frieden von nicole", "PlayMedia", map[string]string{"Query": "ein bisschen frieden von nicole"}},
-		{"fr-FR", "le film la reine des neiges", "WatchMovie", map[string]string{"Movie": "la reine des neiges"}},
-		{"fr-FR", "quelque chose de daft punk", "ListenToArtist", map[string]string{"Artist": "daft punk"}},
-		{"es-ES", "la película frozen", "WatchMovie", map[string]string{"Movie": "frozen"}},
-		{"es-ES", "algo de shakira", "ListenToArtist", map[string]string{"Artist": "shakira"}},
-		{"it-IT", "il film frozen", "WatchMovie", map[string]string{"Movie": "frozen"}},
-		{"it-IT", "qualcosa di vasco rossi", "ListenToArtist", map[string]string{"Artist": "vasco rossi"}},
-		{"pt-BR", "o filme cidade de deus", "WatchMovie", map[string]string{"Movie": "cidade de deus"}},
-		{"pt-BR", "alguma coisa do caetano veloso", "ListenToArtist", map[string]string{"Artist": "caetano veloso"}},
-		{"nl-NL", "de film flodder", "WatchMovie", map[string]string{"Movie": "flodder"}},
-		{"nl-NL", "iets van golden earring", "ListenToArtist", map[string]string{"Artist": "golden earring"}},
-		{"ar-SA", "فيلم الرسالة", "WatchMovie", map[string]string{"Movie": "الرسالة"}},
-		{"ar-SA", "موسيقى حق عمرو دياب", "ListenToArtist", map[string]string{"Artist": "عمرو دياب"}},
-		{"ar-SA", "شي من عمرو دياب", "ListenToArtist", map[string]string{"Artist": "عمرو دياب"}},
-		{"hi-IN", "शोले फ़िल्म", "WatchMovie", map[string]string{"Movie": "शोले"}},
-		{"hi-IN", "अरिजीत सिंह का कुछ", "ListenToArtist", map[string]string{"Artist": "अरिजीत सिंह"}},
-		{"hi-IN", "अरिजीत सिंह का तुम ही हो", "PlayMedia", map[string]string{"Query": "अरिजीत सिंह का तुम ही हो"}},
-		{"ja-JP", "映画の千と千尋の神隠し", "WatchMovie", map[string]string{"Movie": "千と千尋の神隠し"}},
-		{"ja-JP", "宇多田ヒカルが歌う曲", "ListenToArtist", map[string]string{"Artist": "宇多田ヒカル"}},
-		{"ja-JP", "宇多田ヒカルの何か", "ListenToArtist", map[string]string{"Artist": "宇多田ヒカル"}},
-		{"ja-JP", "宇多田ヒカルの曲のファーストラヴ", "PlayMedia", map[string]string{"Query": "宇多田ヒカルの曲のファーストラヴ"}},
-	} {
-		in := Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.query}}}
-		got := speech.Reinterpret(tc.locale, in)[0]
+		{name: "ShouldReadMovieInEnAU", locale: "en-AU", have: "the movie frozen", intent: "WatchMovie", slots: map[string]string{"Movie": "frozen"}},
+		{name: "ShouldReadMusicByArtistInEnAU", locale: "en-AU", have: "music by pink floyd", intent: "ListenToArtist", slots: map[string]string{"Artist": "pink floyd"}},
+		{name: "ShouldReadSomethingByArtistInEnAU", locale: "en-AU", have: "something by pink floyd", intent: "ListenToArtist", slots: map[string]string{"Artist": "pink floyd"}},
+		{name: "ShouldReadAlbumByArtistInEnAU", locale: "en-AU", have: "the album the wall by pink floyd", intent: "ListenToAlbum", slots: map[string]string{"Album": "the wall", "Artist": "pink floyd"}},
+		{name: "ShouldReadTrailerInEnAU", locale: "en-AU", have: "frozen trailer", intent: "WatchMovieTrailer", slots: map[string]string{"Movie": "frozen"}},
+		{name: "ShouldReadAllMusicAsPartyModeInEnAU", locale: "en-AU", have: "all music", intent: "PartyMode", slots: map[string]string{}},
+		{name: "ShouldKeepTitleWithByAsPlayMediaInEnAU", locale: "en-AU", have: "stand by me", intent: "PlayMedia", slots: map[string]string{"Query": "stand by me"}},
+		{name: "ShouldReadMovieInDeDE", locale: "de-DE", have: "den film die eiskönigin", intent: "WatchMovie", slots: map[string]string{"Movie": "die eiskönigin"}},
+		{name: "ShouldReadSomethingByArtistInDeDE", locale: "de-DE", have: "etwas von pink floyd", intent: "ListenToArtist", slots: map[string]string{"Artist": "pink floyd"}},
+		{name: "ShouldKeepTitleWithVonAsPlayMediaInDeDE", locale: "de-DE", have: "ein bisschen frieden von nicole", intent: "PlayMedia", slots: map[string]string{"Query": "ein bisschen frieden von nicole"}},
+		{name: "ShouldReadMovieInFrFR", locale: "fr-FR", have: "le film la reine des neiges", intent: "WatchMovie", slots: map[string]string{"Movie": "la reine des neiges"}},
+		{name: "ShouldReadSomethingByArtistInFrFR", locale: "fr-FR", have: "quelque chose de daft punk", intent: "ListenToArtist", slots: map[string]string{"Artist": "daft punk"}},
+		{name: "ShouldReadMovieInEsES", locale: "es-ES", have: "la película frozen", intent: "WatchMovie", slots: map[string]string{"Movie": "frozen"}},
+		{name: "ShouldReadSomethingByArtistInEsES", locale: "es-ES", have: "algo de shakira", intent: "ListenToArtist", slots: map[string]string{"Artist": "shakira"}},
+		{name: "ShouldReadMovieInItIT", locale: "it-IT", have: "il film frozen", intent: "WatchMovie", slots: map[string]string{"Movie": "frozen"}},
+		{name: "ShouldReadSomethingByArtistInItIT", locale: "it-IT", have: "qualcosa di vasco rossi", intent: "ListenToArtist", slots: map[string]string{"Artist": "vasco rossi"}},
+		{name: "ShouldReadMovieInPtBR", locale: "pt-BR", have: "o filme cidade de deus", intent: "WatchMovie", slots: map[string]string{"Movie": "cidade de deus"}},
+		{name: "ShouldReadSomethingByArtistInPtBR", locale: "pt-BR", have: "alguma coisa do caetano veloso", intent: "ListenToArtist", slots: map[string]string{"Artist": "caetano veloso"}},
+		{name: "ShouldReadMovieInNlNL", locale: "nl-NL", have: "de film flodder", intent: "WatchMovie", slots: map[string]string{"Movie": "flodder"}},
+		{name: "ShouldReadSomethingByArtistInNlNL", locale: "nl-NL", have: "iets van golden earring", intent: "ListenToArtist", slots: map[string]string{"Artist": "golden earring"}},
+		{name: "ShouldReadMovieInArSA", locale: "ar-SA", have: "فيلم الرسالة", intent: "WatchMovie", slots: map[string]string{"Movie": "الرسالة"}},
+		{name: "ShouldReadMusicByArtistInArSA", locale: "ar-SA", have: "موسيقى حق عمرو دياب", intent: "ListenToArtist", slots: map[string]string{"Artist": "عمرو دياب"}},
+		{name: "ShouldReadSomethingByArtistInArSA", locale: "ar-SA", have: "شي من عمرو دياب", intent: "ListenToArtist", slots: map[string]string{"Artist": "عمرو دياب"}},
+		{name: "ShouldReadMovieInHiIN", locale: "hi-IN", have: "शोले फ़िल्म", intent: "WatchMovie", slots: map[string]string{"Movie": "शोले"}},
+		{name: "ShouldReadSomethingByArtistInHiIN", locale: "hi-IN", have: "अरिजीत सिंह का कुछ", intent: "ListenToArtist", slots: map[string]string{"Artist": "अरिजीत सिंह"}},
+		{name: "ShouldKeepArtistAndSongAsPlayMediaInHiIN", locale: "hi-IN", have: "अरिजीत सिंह का तुम ही हो", intent: "PlayMedia", slots: map[string]string{"Query": "अरिजीत सिंह का तुम ही हो"}},
+		{name: "ShouldReadMovieInJaJP", locale: "ja-JP", have: "映画の千と千尋の神隠し", intent: "WatchMovie", slots: map[string]string{"Movie": "千と千尋の神隠し"}},
+		{name: "ShouldReadSongsSungByArtistInJaJP", locale: "ja-JP", have: "宇多田ヒカルが歌う曲", intent: "ListenToArtist", slots: map[string]string{"Artist": "宇多田ヒカル"}},
+		{name: "ShouldReadSomethingByArtistInJaJP", locale: "ja-JP", have: "宇多田ヒカルの何か", intent: "ListenToArtist", slots: map[string]string{"Artist": "宇多田ヒカル"}},
+		{name: "ShouldKeepArtistAndSongAsPlayMediaInJaJP", locale: "ja-JP", have: "宇多田ヒカルの曲のファーストラヴ", intent: "PlayMedia", slots: map[string]string{"Query": "宇多田ヒカルの曲のファーストラヴ"}},
+	}
 
-		values := map[string]string{}
-		for name, slot := range got.Slots {
-			values[name] = slot.Value
-		}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			in := Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.have}}}
+			actual := speech.Reinterpret(tc.locale, in)[0]
 
-		assert.Equal(t, tc.intent, got.Name, "%s %q", tc.locale, tc.query)
-		assert.Equal(t, tc.slots, values, "%s %q", tc.locale, tc.query)
+			values := map[string]string{}
+			for name, slot := range actual.Slots {
+				values[name] = slot.Value
+			}
+
+			assert.Equal(t, tc.intent, actual.Name)
+			assert.Equal(t, tc.slots, values)
+		})
 	}
 }
 
@@ -99,26 +106,32 @@ func TestReinterpretEndsWithTheQuery(t *testing.T) {
 func TestReinterpretSplitsTitleAndArtistLast(t *testing.T) {
 	speech := shippedSpeech(t)
 
-	tests := []struct {
-		locale, query, title, artist string
+	testCases := []struct {
+		name   string
+		locale string
+		have   string
+		title  string
+		artist string
 	}{
-		{"en-US", "bohemian rhapsody by queen", "bohemian rhapsody", "queen"},
-		{"en-AU", "stand by me", "stand", "me"},
-		{"es-US", "ojos asi de shakira", "ojos asi", "shakira"},
-		{"pt-BR", "envolver de anitta", "envolver", "anitta"},
-		{"nl-NL", "zij van marco borsato", "zij", "marco borsato"},
+		{name: "ShouldSplitByInEnUS", locale: "en-US", have: "bohemian rhapsody by queen", title: "bohemian rhapsody", artist: "queen"},
+		{name: "ShouldSplitTitleWithByAfterSearchingItInEnAU", locale: "en-AU", have: "stand by me", title: "stand", artist: "me"},
+		{name: "ShouldSplitDeInEsUS", locale: "es-US", have: "ojos asi de shakira", title: "ojos asi", artist: "shakira"},
+		{name: "ShouldSplitDeInPtBR", locale: "pt-BR", have: "envolver de anitta", title: "envolver", artist: "anitta"},
+		{name: "ShouldSplitVanInNlNL", locale: "nl-NL", have: "zij van marco borsato", title: "zij", artist: "marco borsato"},
 	}
 
-	for _, tc := range tests {
-		in := Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.query}}}
-		readings := speech.Reinterpret(tc.locale, in)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			in := Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.have}}}
+			readings := speech.Reinterpret(tc.locale, in)
 
-		require.Len(t, readings, 2, tc.query)
-		assert.Equal(t, in, readings[0], "%s: the query is searched first", tc.query)
-		assert.Equal(t, Intent{Name: "ListenToSongOrAlbum", Slots: map[string]Slot{
-			"Title":  {Name: "Title", Value: tc.title},
-			"Artist": {Name: "Artist", Value: tc.artist},
-		}}, readings[1], tc.query)
+			require.Len(t, readings, 2)
+			assert.Equal(t, in, readings[0], "the query is searched first")
+			assert.Equal(t, Intent{Name: "ListenToSongOrAlbum", Slots: map[string]Slot{
+				"Title":  {Name: "Title", Value: tc.title},
+				"Artist": {Name: "Artist", Value: tc.artist},
+			}}, readings[1])
+		})
 	}
 
 	only := Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: "frozen"}}}
@@ -129,16 +142,22 @@ func TestReinterpretSplitsTitleAndArtistLast(t *testing.T) {
 func TestReinterpretCommands(t *testing.T) {
 	speech := shippedSpeech(t)
 
-	for _, tc := range []struct {
-		locale, query string
-		want          Intent
+	testCases := []struct {
+		name     string
+		locale   string
+		have     string
+		expected Intent
 	}{
-		{"es-US", "el volumen a 30", Intent{Name: "VolumeSet", Slots: map[string]Slot{"Level": {Name: "Level", Value: "30"}}}},
-		{"it-IT", "in pausa la tv", Intent{Name: "AMAZON.PauseIntent", Slots: map[string]Slot{}}},
-		{"hi-IN", "नई फ़िल्में", Intent{Name: "UpdateLibrary", Slots: map[string]Slot{}}},
-	} {
-		in := Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.query}}}
-		assert.Equal(t, []Intent{tc.want, in}, speech.Reinterpret(tc.locale, in), tc.query)
+		{name: "ShouldReadVolumeCommandInEsUS", locale: "es-US", have: "el volumen a 30", expected: Intent{Name: "VolumeSet", Slots: map[string]Slot{"Level": {Name: "Level", Value: "30"}}}},
+		{name: "ShouldReadPauseCommandInItIT", locale: "it-IT", have: "in pausa la tv", expected: Intent{Name: "AMAZON.PauseIntent", Slots: map[string]Slot{}}},
+		{name: "ShouldReadUpdateLibraryCommandInHiIN", locale: "hi-IN", have: "नई फ़िल्में", expected: Intent{Name: "UpdateLibrary", Slots: map[string]Slot{}}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			in := Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.have}}}
+			assert.Equal(t, []Intent{tc.expected, in}, speech.Reinterpret(tc.locale, in))
+		})
 	}
 
 	bruges := Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: "in bruges"}}}
@@ -154,39 +173,45 @@ func TestStripKind(t *testing.T) {
 		ok    bool
 	}
 
-	for _, tc := range []struct {
-		locale, title string
-		want          want
+	testCases := []struct {
+		name     string
+		locale   string
+		have     string
+		expected want
 	}{
-		{"en-AU", "the movie frozen", want{"frozen", media.KindMovie, true}},
-		{"en-AU", "Frozen Movie", want{"Frozen", media.KindMovie, true}},
-		{"en-AU", "the movie the wall", want{"the wall", media.KindMovie, true}},
-		{"en-AU", "the wall album", want{"the wall", media.KindAlbum, true}},
-		{"en-AU", "bluey t. v. show", want{"bluey", media.KindTVShow, true}},
-		{"en-AU", "the band queen", want{"queen", media.KindArtist, true}},
-		{"en-AU", "thriller music video", want{"thriller", media.KindMusicVideo, true}},
-		{"en-AU", "movie", want{"", "", false}},
-		{"en-AU", "the movie", want{"", "", false}},
-		{"en-AU", "frozen", want{"", "", false}},
-		{"en-AU", "", want{"", "", false}},
-		{"de-DE", "der film die eiskönigin", want{"die eiskönigin", media.KindMovie, true}},
-		{"fr-FR", "la reine des neiges le film", want{"la reine des neiges", media.KindMovie, true}},
-		{"fr-FR", "le film la reine des neiges", want{"la reine des neiges", media.KindMovie, true}},
-		{"es-ES", "la canción despacito", want{"despacito", media.KindSong, true}},
-		{"it-IT", "la vita è bella il film", want{"la vita è bella", media.KindMovie, true}},
-		{"pt-BR", "o álbum tropicália", want{"tropicália", media.KindAlbum, true}},
-		{"nl-NL", "het programma flikken", want{"flikken", media.KindTVShow, true}},
-		{"ar-SA", "الفيلم الرسالة", want{"الرسالة", media.KindMovie, true}},
-		{"ar-SA", "مسلسل طاش ما طاش", want{"طاش ما طاش", media.KindTVShow, true}},
-		{"hi-IN", "शोले फ़िल्म", want{"शोले", media.KindMovie, true}},
-		{"hi-IN", "शोले फ़िल्म को", want{"शोले", media.KindMovie, true}},
-		{"hi-IN", "गाना तुम ही हो", want{"तुम ही हो", media.KindSong, true}},
-		{"ja-JP", "千と千尋の神隠しの映画", want{"千と千尋の神隠し", media.KindMovie, true}},
-		{"ja-JP", "アルバムのファーストラヴ", want{"ファーストラヴ", media.KindAlbum, true}},
-		{"xx-XX", "frozen movie", want{"frozen", media.KindMovie, true}},
-	} {
-		title, kind, ok := speech.StripKind(tc.locale, tc.title)
-		assert.Equal(t, tc.want, want{title, kind, ok}, "%s %q", tc.locale, tc.title)
+		{name: "ShouldStripLeadingMovie", locale: "en-AU", have: "the movie frozen", expected: want{"frozen", media.KindMovie, true}},
+		{name: "ShouldStripTrailingMovieInAnyCase", locale: "en-AU", have: "Frozen Movie", expected: want{"Frozen", media.KindMovie, true}},
+		{name: "ShouldKeepArticleInTitle", locale: "en-AU", have: "the movie the wall", expected: want{"the wall", media.KindMovie, true}},
+		{name: "ShouldStripTrailingAlbum", locale: "en-AU", have: "the wall album", expected: want{"the wall", media.KindAlbum, true}},
+		{name: "ShouldStripSpokenLettersTVShow", locale: "en-AU", have: "bluey t. v. show", expected: want{"bluey", media.KindTVShow, true}},
+		{name: "ShouldStripLeadingBand", locale: "en-AU", have: "the band queen", expected: want{"queen", media.KindArtist, true}},
+		{name: "ShouldStripTrailingMusicVideo", locale: "en-AU", have: "thriller music video", expected: want{"thriller", media.KindMusicVideo, true}},
+		{name: "ShouldNotStripKindWordAlone", locale: "en-AU", have: "movie"},
+		{name: "ShouldNotStripKindWordWithArticleAlone", locale: "en-AU", have: "the movie"},
+		{name: "ShouldNotStripTitleWithoutKind", locale: "en-AU", have: "frozen"},
+		{name: "ShouldNotStripEmptyTitle", locale: "en-AU"},
+		{name: "ShouldStripLeadingFilmInDeDE", locale: "de-DE", have: "der film die eiskönigin", expected: want{"die eiskönigin", media.KindMovie, true}},
+		{name: "ShouldStripTrailingFilmInFrFR", locale: "fr-FR", have: "la reine des neiges le film", expected: want{"la reine des neiges", media.KindMovie, true}},
+		{name: "ShouldStripLeadingFilmInFrFR", locale: "fr-FR", have: "le film la reine des neiges", expected: want{"la reine des neiges", media.KindMovie, true}},
+		{name: "ShouldStripLeadingSongInEsES", locale: "es-ES", have: "la canción despacito", expected: want{"despacito", media.KindSong, true}},
+		{name: "ShouldStripTrailingFilmInItIT", locale: "it-IT", have: "la vita è bella il film", expected: want{"la vita è bella", media.KindMovie, true}},
+		{name: "ShouldStripLeadingAlbumInPtBR", locale: "pt-BR", have: "o álbum tropicália", expected: want{"tropicália", media.KindAlbum, true}},
+		{name: "ShouldStripLeadingProgrammaInNlNL", locale: "nl-NL", have: "het programma flikken", expected: want{"flikken", media.KindTVShow, true}},
+		{name: "ShouldStripLeadingFilmInArSA", locale: "ar-SA", have: "الفيلم الرسالة", expected: want{"الرسالة", media.KindMovie, true}},
+		{name: "ShouldStripLeadingSeriesInArSA", locale: "ar-SA", have: "مسلسل طاش ما طاش", expected: want{"طاش ما طاش", media.KindTVShow, true}},
+		{name: "ShouldStripTrailingFilmInHiIN", locale: "hi-IN", have: "शोले फ़िल्म", expected: want{"शोले", media.KindMovie, true}},
+		{name: "ShouldStripTrailingFilmWithPostpositionInHiIN", locale: "hi-IN", have: "शोले फ़िल्म को", expected: want{"शोले", media.KindMovie, true}},
+		{name: "ShouldStripLeadingSongInHiIN", locale: "hi-IN", have: "गाना तुम ही हो", expected: want{"तुम ही हो", media.KindSong, true}},
+		{name: "ShouldStripTrailingMovieInJaJP", locale: "ja-JP", have: "千と千尋の神隠しの映画", expected: want{"千と千尋の神隠し", media.KindMovie, true}},
+		{name: "ShouldStripLeadingAlbumInJaJP", locale: "ja-JP", have: "アルバムのファーストラヴ", expected: want{"ファーストラヴ", media.KindAlbum, true}},
+		{name: "ShouldStripAsEnglishInUnknownLocale", locale: "xx-XX", have: "frozen movie", expected: want{"frozen", media.KindMovie, true}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			title, kind, ok := speech.StripKind(tc.locale, tc.have)
+			assert.Equal(t, tc.expected, want{title, kind, ok})
+		})
 	}
 }
 
@@ -195,31 +220,37 @@ func TestGeneric(t *testing.T) {
 
 	type want struct{ generic, bare bool }
 
-	for _, tc := range []struct {
-		locale, title string
-		want          want
+	testCases := []struct {
+		name     string
+		locale   string
+		have     string
+		expected want
 	}{
-		{"en-AU", "music", want{true, true}},
-		{"en-AU", "Some Songs", want{true, true}},
-		{"en-AU", "something", want{true, false}},
-		{"en-AU", "bohemian rhapsody", want{false, false}},
-		{"de-DE", "etwas musik", want{true, true}},
-		{"de-DE", "etwas", want{true, false}},
-		{"fr-FR", "des chansons", want{true, true}},
-		{"fr-CA", "des tounes", want{true, true}},
-		{"es-MX", "algo de música", want{true, true}},
-		{"it-IT", "un po' di musica", want{true, true}},
-		{"pt-BR", "umas músicas", want{true, true}},
-		{"nl-NL", "wat nummers", want{true, true}},
-		{"ar-SA", "اغاني", want{true, true}},
-		{"ar-SA", "شي", want{true, false}},
-		{"hi-IN", "संगीत", want{true, true}},
-		{"hi-IN", "कुछ", want{true, false}},
-		{"ja-JP", "歌", want{true, true}},
-		{"xx-XX", "music", want{true, true}},
-	} {
-		generic, bare := speech.Generic(tc.locale, tc.title)
-		assert.Equal(t, tc.want, want{generic, bare}, "%s %q", tc.locale, tc.title)
+		{name: "ShouldReadMusicAsBareGeneric", locale: "en-AU", have: "music", expected: want{true, true}},
+		{name: "ShouldReadSomeSongsAsBareGenericInAnyCase", locale: "en-AU", have: "Some Songs", expected: want{true, true}},
+		{name: "ShouldReadSomethingAsGenericButNotBare", locale: "en-AU", have: "something", expected: want{true, false}},
+		{name: "ShouldNotReadTitleAsGeneric", locale: "en-AU", have: "bohemian rhapsody", expected: want{false, false}},
+		{name: "ShouldReadEtwasMusikAsBareGenericInDeDE", locale: "de-DE", have: "etwas musik", expected: want{true, true}},
+		{name: "ShouldReadEtwasAsGenericButNotBareInDeDE", locale: "de-DE", have: "etwas", expected: want{true, false}},
+		{name: "ShouldReadDesChansonsAsBareGenericInFrFR", locale: "fr-FR", have: "des chansons", expected: want{true, true}},
+		{name: "ShouldReadDesTounesAsBareGenericInFrCA", locale: "fr-CA", have: "des tounes", expected: want{true, true}},
+		{name: "ShouldReadAlgoDeMusicaAsBareGenericInEsMX", locale: "es-MX", have: "algo de música", expected: want{true, true}},
+		{name: "ShouldReadUnPoDiMusicaAsBareGenericInItIT", locale: "it-IT", have: "un po' di musica", expected: want{true, true}},
+		{name: "ShouldReadUmasMusicasAsBareGenericInPtBR", locale: "pt-BR", have: "umas músicas", expected: want{true, true}},
+		{name: "ShouldReadWatNummersAsBareGenericInNlNL", locale: "nl-NL", have: "wat nummers", expected: want{true, true}},
+		{name: "ShouldReadSongsAsBareGenericInArSA", locale: "ar-SA", have: "اغاني", expected: want{true, true}},
+		{name: "ShouldReadSomethingAsGenericButNotBareInArSA", locale: "ar-SA", have: "شي", expected: want{true, false}},
+		{name: "ShouldReadMusicAsBareGenericInHiIN", locale: "hi-IN", have: "संगीत", expected: want{true, true}},
+		{name: "ShouldReadSomethingAsGenericButNotBareInHiIN", locale: "hi-IN", have: "कुछ", expected: want{true, false}},
+		{name: "ShouldReadSongAsBareGenericInJaJP", locale: "ja-JP", have: "歌", expected: want{true, true}},
+		{name: "ShouldReadAsEnglishInUnknownLocale", locale: "xx-XX", have: "music", expected: want{true, true}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			generic, bare := speech.Generic(tc.locale, tc.have)
+			assert.Equal(t, tc.expected, want{generic, bare})
+		})
 	}
 }
 
@@ -228,43 +259,23 @@ func TestReroute(t *testing.T) {
 
 	slot := func(name, value string) Slot { return Slot{Name: name, Value: value} }
 
-	for _, tc := range []struct {
-		name string
-		in   Intent
-		want Intent
+	testCases := []struct {
+		name     string
+		have     Intent
+		expected Intent
 	}{
-		{
-			"music by an artist",
-			Intent{Name: "ListenToSongOrAlbum", Slots: map[string]Slot{"Title": slot("Title", "music"), "Artist": slot("Artist", "queen"), "Room": slot("Room", "")}},
-			Intent{Name: "ListenToArtist", Slots: map[string]Slot{"Artist": slot("Artist", "queen"), "Room": slot("Room", "")}},
-		},
-		{
-			"a song called something",
-			Intent{Name: "ListenToSong", Slots: map[string]Slot{"Song": slot("Song", "something")}},
-			Intent{Name: "ListenToSong", Slots: map[string]Slot{"Song": slot("Song", "something")}},
-		},
-		{
-			"songs from an album",
-			Intent{Name: "ListenToSong", Slots: map[string]Slot{"Song": slot("Song", "songs"), "Album": slot("Album", "innuendo")}},
-			Intent{Name: "ListenToSong", Slots: map[string]Slot{"Song": slot("Song", "songs"), "Album": slot("Album", "innuendo")}},
-		},
-		{
-			"music in a room",
-			Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": slot("Query", "music")}},
-			Intent{Name: "PartyMode", Slots: map[string]Slot{}},
-		},
-		{
-			"a title",
-			Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": slot("Query", "hot fuzz")}},
-			Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": slot("Query", "hot fuzz")}},
-		},
-		{
-			"another intent",
-			Intent{Name: "ListenToArtist", Slots: map[string]Slot{"Artist": slot("Artist", "music")}},
-			Intent{Name: "ListenToArtist", Slots: map[string]Slot{"Artist": slot("Artist", "music")}},
-		},
-	} {
-		assert.Equal(t, tc.want, speech.Reroute("en-AU", tc.in), tc.name)
+		{name: "ShouldRerouteMusicByAnArtist", have: Intent{Name: "ListenToSongOrAlbum", Slots: map[string]Slot{"Title": slot("Title", "music"), "Artist": slot("Artist", "queen"), "Room": slot("Room", "")}}, expected: Intent{Name: "ListenToArtist", Slots: map[string]Slot{"Artist": slot("Artist", "queen"), "Room": slot("Room", "")}}},
+		{name: "ShouldKeepASongCalledSomething", have: Intent{Name: "ListenToSong", Slots: map[string]Slot{"Song": slot("Song", "something")}}, expected: Intent{Name: "ListenToSong", Slots: map[string]Slot{"Song": slot("Song", "something")}}},
+		{name: "ShouldKeepSongsFromAnAlbum", have: Intent{Name: "ListenToSong", Slots: map[string]Slot{"Song": slot("Song", "songs"), "Album": slot("Album", "innuendo")}}, expected: Intent{Name: "ListenToSong", Slots: map[string]Slot{"Song": slot("Song", "songs"), "Album": slot("Album", "innuendo")}}},
+		{name: "ShouldRerouteMusicInARoomToPartyMode", have: Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": slot("Query", "music")}}, expected: Intent{Name: "PartyMode", Slots: map[string]Slot{}}},
+		{name: "ShouldKeepATitle", have: Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": slot("Query", "hot fuzz")}}, expected: Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": slot("Query", "hot fuzz")}}},
+		{name: "ShouldKeepAnotherIntent", have: Intent{Name: "ListenToArtist", Slots: map[string]Slot{"Artist": slot("Artist", "music")}}, expected: Intent{Name: "ListenToArtist", Slots: map[string]Slot{"Artist": slot("Artist", "music")}}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, speech.Reroute("en-AU", tc.have))
+		})
 	}
 }
 
@@ -276,21 +287,27 @@ func TestRerouteReadsTheKindOffASearch(t *testing.T) {
 		return Intent{Name: intent, Slots: map[string]Slot{"Query": {Name: "Query", Value: query}}}
 	}
 
-	for _, tc := range []struct {
-		locale, query string
-		want          Intent
+	testCases := []struct {
+		name     string
+		locale   string
+		have     string
+		expected Intent
 	}{
-		{"ar-SA", "فيلم الرسالة", search("SearchMovies", "الرسالة")},
-		{"ar-SA", "مسلسل باب الحارة", search("SearchTVShows", "باب الحارة")},
-		{"en-AU", "the film dune", search("SearchMovies", "dune")},
-		{"en-AU", "the show bluey", search("SearchTVShows", "bluey")},
-		{"en-AU", "the band queen", search("SearchMusic", "queen")},
-		{"en-AU", "the album innuendo", search("SearchMusic", "innuendo")},
+		{name: "ShouldSearchMoviesForFilmInArSA", locale: "ar-SA", have: "فيلم الرسالة", expected: search("SearchMovies", "الرسالة")},
+		{name: "ShouldSearchTVShowsForSeriesInArSA", locale: "ar-SA", have: "مسلسل باب الحارة", expected: search("SearchTVShows", "باب الحارة")},
+		{name: "ShouldSearchMoviesForFilm", locale: "en-AU", have: "the film dune", expected: search("SearchMovies", "dune")},
+		{name: "ShouldSearchTVShowsForShow", locale: "en-AU", have: "the show bluey", expected: search("SearchTVShows", "bluey")},
+		{name: "ShouldSearchMusicForBand", locale: "en-AU", have: "the band queen", expected: search("SearchMusic", "queen")},
+		{name: "ShouldSearchMusicForAlbum", locale: "en-AU", have: "the album innuendo", expected: search("SearchMusic", "innuendo")},
 		// A title without a kind word, and a kind there is no search of its own for, are searched as they are.
-		{"en-AU", "dune", search("GlobalSearch", "dune")},
-		{"en-AU", "the song bohemian rhapsody", search("GlobalSearch", "the song bohemian rhapsody")},
-	} {
-		assert.Equal(t, tc.want, speech.Reroute(tc.locale, search("GlobalSearch", tc.query)), "%s %q", tc.locale, tc.query)
+		{name: "ShouldSearchTitleWithoutKindAsItIs", locale: "en-AU", have: "dune", expected: search("GlobalSearch", "dune")},
+		{name: "ShouldSearchKindWithoutItsOwnSearchAsItIs", locale: "en-AU", have: "the song bohemian rhapsody", expected: search("GlobalSearch", "the song bohemian rhapsody")},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, speech.Reroute(tc.locale, search("GlobalSearch", tc.have)))
+		})
 	}
 
 	empty := Intent{Name: "GlobalSearch"}
@@ -313,21 +330,27 @@ func TestRerouteReadsTheSeasonOffTheShow(t *testing.T) {
 		return Intent{Name: "WatchSeason", Slots: slots}
 	}
 
-	for _, tc := range []struct {
-		name, locale string
-		in, want     Intent
+	testCases := []struct {
+		name     string
+		locale   string
+		have     Intent
+		expected Intent
 	}{
-		{"es-US puts the season in the show", "es-US", season("2 de la casa de papel", "", ""), season("la casa de papel", "2", "")},
-		{"by each language's own join", "de-DE", season("2 von dark", "", ""), season("dark", "2", "")},
-		{"in English", "en-AU", season("3 of breaking bad", "", ""), season("breaking bad", "3", "")},
-		{"a locale without seasons of its own reads English's", "xx-XX", season("3 of breaking bad", "", ""), season("breaking bad", "3", "")},
-		{"a show that starts with a number and no join", "en-AU", season("24 hour party people", "", ""), season("24 hour party people", "", "")},
-		{"a season heard already", "es-US", season("2 de la casa de papel", "4", ""), season("2 de la casa de papel", "4", "")},
-		{"an ordinal heard already", "es-US", season("2 de la casa de papel", "", "tercera"), season("2 de la casa de papel", "", "tercera")},
-		{"too short to hold a show", "es-US", season("2 de", "", ""), season("2 de", "", "")},
-		{"a show that doesn't start with a number", "en-AU", season("the 3 of us", "", ""), season("the 3 of us", "", "")},
-	} {
-		assert.Equal(t, tc.want, speech.Reroute(tc.locale, tc.in), tc.name)
+		{name: "ShouldReadSeasonPutInTheShowInEsUS", locale: "es-US", have: season("2 de la casa de papel", "", ""), expected: season("la casa de papel", "2", "")},
+		{name: "ShouldReadSeasonByEachLanguagesOwnJoin", locale: "de-DE", have: season("2 von dark", "", ""), expected: season("dark", "2", "")},
+		{name: "ShouldReadSeasonInEnglish", locale: "en-AU", have: season("3 of breaking bad", "", ""), expected: season("breaking bad", "3", "")},
+		{name: "ShouldReadSeasonAsEnglishInLocaleWithoutSeasonsOfItsOwn", locale: "xx-XX", have: season("3 of breaking bad", "", ""), expected: season("breaking bad", "3", "")},
+		{name: "ShouldKeepShowThatStartsWithANumberAndNoJoin", locale: "en-AU", have: season("24 hour party people", "", ""), expected: season("24 hour party people", "", "")},
+		{name: "ShouldKeepShowWhenSeasonWasHeardAlready", locale: "es-US", have: season("2 de la casa de papel", "4", ""), expected: season("2 de la casa de papel", "4", "")},
+		{name: "ShouldKeepShowWhenOrdinalWasHeardAlready", locale: "es-US", have: season("2 de la casa de papel", "", "tercera"), expected: season("2 de la casa de papel", "", "tercera")},
+		{name: "ShouldKeepShowTooShortToHoldAShow", locale: "es-US", have: season("2 de", "", ""), expected: season("2 de", "", "")},
+		{name: "ShouldKeepShowThatDoesNotStartWithANumber", locale: "en-AU", have: season("the 3 of us", "", ""), expected: season("the 3 of us", "", "")},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, speech.Reroute(tc.locale, tc.have))
+		})
 	}
 }
 

@@ -199,7 +199,7 @@ func TestVerified(t *testing.T) {
 
 	h := Verified(v, testSkillID, log, next)
 
-	t.Run("authentic request reaches the handler with the original bytes", func(t *testing.T) {
+	t.Run("ShouldPassAnAuthenticRequestToTheHandlerWithTheOriginalBytes", func(t *testing.T) {
 		body := envelope(testSkillID, fixedNow)
 		rec := serve(t, h, body, pki.sign(t, body))
 
@@ -207,37 +207,55 @@ func TestVerified(t *testing.T) {
 		assert.Equal(t, body, got)
 	})
 
-	cases := map[string]func() (body []byte, sig string){
-		"tampered body": func() ([]byte, string) {
-			body := envelope(testSkillID, fixedNow)
-			sig := pki.sign(t, body)
+	testCases := []struct {
+		name  string
+		build func() (body []byte, sig string)
+	}{
+		{
+			name: "ShouldRejectATamperedBodyWithAUniform400",
+			build: func() ([]byte, string) {
+				body := envelope(testSkillID, fixedNow)
+				sig := pki.sign(t, body)
 
-			return bytes.Replace(body, []byte("LaunchRequest"), []byte("IntentRequest"), 1), sig
+				return bytes.Replace(body, []byte("LaunchRequest"), []byte("IntentRequest"), 1), sig
+			},
 		},
-		"stale timestamp": func() ([]byte, string) {
-			body := envelope(testSkillID, fixedNow.Add(-151*time.Second))
+		{
+			name: "ShouldRejectAStaleTimestampWithAUniform400",
+			build: func() ([]byte, string) {
+				body := envelope(testSkillID, fixedNow.Add(-151*time.Second))
 
-			return body, pki.sign(t, body)
+				return body, pki.sign(t, body)
+			},
 		},
-		"future timestamp": func() ([]byte, string) {
-			body := envelope(testSkillID, fixedNow.Add(151*time.Second))
+		{
+			name: "ShouldRejectAFutureTimestampWithAUniform400",
+			build: func() ([]byte, string) {
+				body := envelope(testSkillID, fixedNow.Add(151*time.Second))
 
-			return body, pki.sign(t, body)
+				return body, pki.sign(t, body)
+			},
 		},
-		"another skill": func() ([]byte, string) {
-			body := envelope("amzn1.ask.skill.someone-else", fixedNow)
+		{
+			name: "ShouldRejectAnotherSkillWithAUniform400",
+			build: func() ([]byte, string) {
+				body := envelope("amzn1.ask.skill.someone-else", fixedNow)
 
-			return body, pki.sign(t, body)
+				return body, pki.sign(t, body)
+			},
 		},
-		"missing signature": func() ([]byte, string) {
-			return envelope(testSkillID, fixedNow), ""
+		{
+			name: "ShouldRejectAMissingSignatureWithAUniform400",
+			build: func() ([]byte, string) {
+				return envelope(testSkillID, fixedNow), ""
+			},
 		},
 	}
 
-	for name, build := range cases {
-		t.Run(name+" is rejected with a uniform 400", func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			got = nil
-			body, sig := build()
+			body, sig := tc.build()
 			rec := serve(t, h, body, sig)
 
 			assert.Equal(t, http.StatusBadRequest, rec.Code)
@@ -349,49 +367,51 @@ func TestVerifiedRejectsForgeries(t *testing.T) {
 	body := envelope(testSkillID, fixedNow)
 	good := pki.sign(t, body)
 
-	tests := map[string]struct {
+	testCases := []struct {
+		name string
 		// chain returns the PKI whose certificate is served and signs, and the PKI whose root is trusted.
 		chain func(t *testing.T) (served, trusted testPKI)
 		fetch roundTripFunc
 		body  []byte
 		hdr   http.Header
-		want  error
+		err   error
 	}{
-		"certificate URL over http":         {hdr: signed(good, "http://s3.amazonaws.com/echo.api/echo-api-cert-12.pem"), want: alexaverify.ErrCertURLInvalid},
-		"certificate URL on another host":   {hdr: signed(good, "https://attacker.example.com/echo.api/echo-api-cert-12.pem"), want: alexaverify.ErrCertURLInvalid},
-		"certificate URL on a lookalike":    {hdr: signed(good, "https://s3.amazonaws.com.attacker.example/echo.api/echo-api-cert-12.pem"), want: alexaverify.ErrCertURLInvalid},
-		"certificate URL outside echo.api":  {hdr: signed(good, "https://s3.amazonaws.com/attacker/echo-api-cert-12.pem"), want: alexaverify.ErrCertURLInvalid},
-		"certificate URL escaping echo.api": {hdr: signed(good, "https://s3.amazonaws.com/echo.api/../attacker/cert.pem"), want: alexaverify.ErrCertURLTraversal},
-		"certificate URL on another port":   {hdr: signed(good, "https://s3.amazonaws.com:8443/echo.api/echo-api-cert-12.pem"), want: alexaverify.ErrCertURLInvalid},
-		"certificate URL with userinfo":     {hdr: signed(good, "https://attacker@s3.amazonaws.com/echo.api/echo-api-cert-12.pem"), want: alexaverify.ErrCertURLUserinfo},
-		"no certificate URL":                {hdr: signed(good, ""), want: alexaverify.ErrMissingHeader},
-		"no signature":                      {hdr: signed("", testCertURL), want: alexaverify.ErrMissingHeader},
-		"signature not base64":              {hdr: signed("%%%not-base64%%%", testCertURL), want: alexaverify.ErrBadSignature},
-		"signature by another key":          {hdr: signed(newTestPKI(t).sign(t, body), testCertURL), want: alexaverify.ErrBadSignature},
-		"signature of another body":         {hdr: signed(pki.sign(t, envelope(testSkillID, fixedNow.Add(time.Second))), testCertURL), want: alexaverify.ErrBadSignature},
-		"no body":                           {body: []byte{}, hdr: signed(good, testCertURL), want: alexaverify.ErrStaleTimestamp},
-		"chain from an untrusted root":      {chain: func(t *testing.T) (testPKI, testPKI) { return newTestPKI(t), pki }, want: alexaverify.ErrUntrustedChain},
-		"certificate for another host": {chain: func(t *testing.T) (testPKI, testPKI) {
+		{name: "ShouldRejectACertificateURLOverHTTP", hdr: signed(good, "http://s3.amazonaws.com/echo.api/echo-api-cert-12.pem"), err: alexaverify.ErrCertURLInvalid},
+		{name: "ShouldRejectACertificateURLOnAnotherHost", hdr: signed(good, "https://attacker.example.com/echo.api/echo-api-cert-12.pem"), err: alexaverify.ErrCertURLInvalid},
+		{name: "ShouldRejectACertificateURLOnALookalikeHost", hdr: signed(good, "https://s3.amazonaws.com.attacker.example/echo.api/echo-api-cert-12.pem"), err: alexaverify.ErrCertURLInvalid},
+		{name: "ShouldRejectACertificateURLOutsideEchoAPI", hdr: signed(good, "https://s3.amazonaws.com/attacker/echo-api-cert-12.pem"), err: alexaverify.ErrCertURLInvalid},
+		{name: "ShouldRejectACertificateURLEscapingEchoAPI", hdr: signed(good, "https://s3.amazonaws.com/echo.api/../attacker/cert.pem"), err: alexaverify.ErrCertURLTraversal},
+		{name: "ShouldRejectACertificateURLOnAnotherPort", hdr: signed(good, "https://s3.amazonaws.com:8443/echo.api/echo-api-cert-12.pem"), err: alexaverify.ErrCertURLInvalid},
+		{name: "ShouldRejectACertificateURLWithUserinfo", hdr: signed(good, "https://attacker@s3.amazonaws.com/echo.api/echo-api-cert-12.pem"), err: alexaverify.ErrCertURLUserinfo},
+		{name: "ShouldRejectAMissingCertificateURL", hdr: signed(good, ""), err: alexaverify.ErrMissingHeader},
+		{name: "ShouldRejectAMissingSignature", hdr: signed("", testCertURL), err: alexaverify.ErrMissingHeader},
+		{name: "ShouldRejectASignatureThatIsNotBase64", hdr: signed("%%%not-base64%%%", testCertURL), err: alexaverify.ErrBadSignature},
+		{name: "ShouldRejectASignatureByAnotherKey", hdr: signed(newTestPKI(t).sign(t, body), testCertURL), err: alexaverify.ErrBadSignature},
+		{name: "ShouldRejectASignatureOfAnotherBody", hdr: signed(pki.sign(t, envelope(testSkillID, fixedNow.Add(time.Second))), testCertURL), err: alexaverify.ErrBadSignature},
+		{name: "ShouldRejectAMissingBody", body: []byte{}, hdr: signed(good, testCertURL), err: alexaverify.ErrStaleTimestamp},
+		{name: "ShouldRejectAChainFromAnUntrustedRoot", chain: func(t *testing.T) (testPKI, testPKI) { return newTestPKI(t), pki }, err: alexaverify.ErrUntrustedChain},
+		{name: "ShouldRejectACertificateForAnotherHost", chain: func(t *testing.T) (testPKI, testPKI) {
 			wrong := newTestPKIWith(t, pkiOptions{host: "attacker.example.com"})
 
 			return wrong, wrong
-		}, want: alexaverify.ErrCertHostname},
-		"expired certificate": {chain: func(t *testing.T) (testPKI, testPKI) {
+		}, err: alexaverify.ErrCertHostname},
+		{name: "ShouldRejectAnExpiredCertificate", chain: func(t *testing.T) (testPKI, testPKI) {
 			expired := newTestPKIWith(t, pkiOptions{notAfter: fixedNow.Add(-time.Minute)})
 
 			return expired, expired
-		}, want: alexaverify.ErrUntrustedChain},
-		"certificate unavailable": {
+		}, err: alexaverify.ErrUntrustedChain},
+		{
+			name: "ShouldRejectWhenTheCertificateIsUnavailable",
 			fetch: func(*http.Request) (*http.Response, error) {
 				return &http.Response{StatusCode: http.StatusNotFound, Body: io.NopCloser(strings.NewReader("no such key"))}, nil
 			},
-			hdr: signed(good, testCertURL), want: alexaverify.ErrCertFetch,
+			hdr: signed(good, testCertURL), err: alexaverify.ErrCertFetch,
 		},
-		"certificate bundle is not PEM": {fetch: bundleFrom([]byte("<html>not a certificate</html>")), hdr: signed(good, testCertURL), want: alexaverify.ErrUntrustedChain},
+		{name: "ShouldRejectACertificateBundleThatIsNotPEM", fetch: bundleFrom([]byte("<html>not a certificate</html>")), hdr: signed(good, testCertURL), err: alexaverify.ErrUntrustedChain},
 	}
 
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			var inner RequestVerifier = pki.verifier(t)
 
 			reqBody, hdr := body, tc.hdr
@@ -418,7 +438,7 @@ func TestVerifiedRejectsForgeries(t *testing.T) {
 			assert.Equal(t, http.StatusBadRequest, rec.Code)
 			assert.Equal(t, "bad request", strings.TrimSpace(rec.Body.String()))
 			assert.False(t, called, "a forged request must never reach the skill")
-			require.ErrorIs(t, rv.err, tc.want)
+			require.ErrorIs(t, rv.err, tc.err)
 		})
 	}
 }
@@ -433,9 +453,19 @@ func TestVerifiedAcceptsTimestampWithinTolerance(t *testing.T) {
 	pki := newTestPKI(t)
 	h := Verified(pki.verifier(t), testSkillID, slog.New(slog.DiscardHandler), func(w http.ResponseWriter, _ *http.Request, _ []byte) { w.WriteHeader(http.StatusOK) })
 
-	for _, offset := range []time.Duration{-149 * time.Second, 149 * time.Second} {
-		body := envelope(testSkillID, fixedNow.Add(offset))
-		assert.Equal(t, http.StatusOK, serve(t, h, body, pki.sign(t, body)).Code, offset)
+	testCases := []struct {
+		name string
+		have time.Duration
+	}{
+		{name: "ShouldAcceptATimestampJustInThePast", have: -149 * time.Second},
+		{name: "ShouldAcceptATimestampJustInTheFuture", have: 149 * time.Second},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			body := envelope(testSkillID, fixedNow.Add(tc.have))
+			assert.Equal(t, http.StatusOK, serve(t, h, body, pki.sign(t, body)).Code)
+		})
 	}
 }
 
@@ -468,22 +498,23 @@ func TestVerifiedPassesExactBytesAndHeaders(t *testing.T) {
 }
 
 func TestVerifiedSkillIDChecks(t *testing.T) {
-	tests := map[string]struct {
+	testCases := []struct {
+		name string
 		body []byte
 		ok   bool
 	}{
-		"context names the skill":              {body: []byte(`{"context":{"System":{"application":{"applicationId":"` + testSkillID + `"}}}}`), ok: true},
-		"only the session names the skill":     {body: []byte(`{"session":{"application":{"applicationId":"` + testSkillID + `"}}}`), ok: true},
-		"context wins over the session":        {body: []byte(`{"context":{"System":{"application":{"applicationId":"amzn1.ask.skill.other"}}},"session":{"application":{"applicationId":"` + testSkillID + `"}}}`)},
-		"no application ID":                    {body: []byte(`{"request":{"type":"LaunchRequest"}}`)},
-		"application ID differs only in case":  {body: []byte(`{"context":{"System":{"application":{"applicationId":"` + strings.ToUpper(testSkillID) + `"}}}}`)},
-		"application ID with a trailing space": {body: []byte(`{"context":{"System":{"application":{"applicationId":"` + testSkillID + ` "}}}}`)},
-		"not JSON":                             {body: []byte(`not json`)},
-		"JSON but not an object":               {body: []byte(`["` + testSkillID + `"]`)},
+		{name: "ShouldAcceptWhenTheContextNamesTheSkill", body: []byte(`{"context":{"System":{"application":{"applicationId":"` + testSkillID + `"}}}}`), ok: true},
+		{name: "ShouldAcceptWhenOnlyTheSessionNamesTheSkill", body: []byte(`{"session":{"application":{"applicationId":"` + testSkillID + `"}}}`), ok: true},
+		{name: "ShouldRejectWhenTheContextNamesAnotherSkillOverTheSession", body: []byte(`{"context":{"System":{"application":{"applicationId":"amzn1.ask.skill.other"}}},"session":{"application":{"applicationId":"` + testSkillID + `"}}}`)},
+		{name: "ShouldRejectWithoutAnApplicationID", body: []byte(`{"request":{"type":"LaunchRequest"}}`)},
+		{name: "ShouldRejectAnApplicationIDThatDiffersOnlyInCase", body: []byte(`{"context":{"System":{"application":{"applicationId":"` + strings.ToUpper(testSkillID) + `"}}}}`)},
+		{name: "ShouldRejectAnApplicationIDWithATrailingSpace", body: []byte(`{"context":{"System":{"application":{"applicationId":"` + testSkillID + ` "}}}}`)},
+		{name: "ShouldRejectABodyThatIsNotJSON", body: []byte(`not json`)},
+		{name: "ShouldRejectJSONThatIsNotAnObject", body: []byte(`["` + testSkillID + `"]`)},
 	}
 
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			called := false
 			h := Verified(acceptAll{}, testSkillID, slog.New(slog.DiscardHandler), func(w http.ResponseWriter, _ *http.Request, _ []byte) {
 				called = true
@@ -512,24 +543,25 @@ func TestVerifiedRejectionsLookAlike(t *testing.T) {
 	log := slog.New(slog.NewJSONHandler(&logs, nil))
 	refuse := verifierFunc(func(context.Context, []byte, http.Header) error { return alexaverify.ErrBadSignature })
 
-	tests := map[string]struct {
+	testCases := []struct {
+		name     string
 		verifier RequestVerifier
 		body     io.Reader
 		stage    string
 		counted  RejectStage
 	}{
-		"unreadable body":     {verifier: acceptAll{}, body: errReader{io.ErrUnexpectedEOF}, stage: "reading body", counted: RejectBody},
-		"oversized body":      {verifier: acceptAll{}, body: bytes.NewReader(bytes.Repeat([]byte(" "), MaxRequestBytes+1)), stage: "reading body", counted: RejectBody},
-		"bad signature":       {verifier: refuse, body: bytes.NewReader(envelope(testSkillID, fixedNow)), stage: "signature verification", counted: RejectSignature},
-		"undecodable":         {verifier: acceptAll{}, body: strings.NewReader("{"), stage: "decoding envelope", counted: RejectBody},
-		"for another skill":   {verifier: acceptAll{}, body: bytes.NewReader(envelope("amzn1.ask.skill.other", fixedNow)), stage: "skill ID", counted: RejectSkillID},
-		"with no application": {verifier: acceptAll{}, body: strings.NewReader("{}"), stage: "skill ID", counted: RejectSkillID},
+		{name: "ShouldRejectAnUnreadableBody", verifier: acceptAll{}, body: errReader{io.ErrUnexpectedEOF}, stage: "reading body", counted: RejectBody},
+		{name: "ShouldRejectAnOversizedBody", verifier: acceptAll{}, body: bytes.NewReader(bytes.Repeat([]byte(" "), MaxRequestBytes+1)), stage: "reading body", counted: RejectBody},
+		{name: "ShouldRejectABadSignature", verifier: refuse, body: bytes.NewReader(envelope(testSkillID, fixedNow)), stage: "signature verification", counted: RejectSignature},
+		{name: "ShouldRejectAnUndecodableEnvelope", verifier: acceptAll{}, body: strings.NewReader("{"), stage: "decoding envelope", counted: RejectBody},
+		{name: "ShouldRejectARequestForAnotherSkill", verifier: acceptAll{}, body: bytes.NewReader(envelope("amzn1.ask.skill.other", fixedNow)), stage: "skill ID", counted: RejectSkillID},
+		{name: "ShouldRejectARequestWithNoApplication", verifier: acceptAll{}, body: strings.NewReader("{}"), stage: "skill ID", counted: RejectSkillID},
 	}
 
 	var first *httptest.ResponseRecorder
 
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			logs.Reset()
 
 			rejected := NewRejections(func() time.Time { return fixedNow })
@@ -563,19 +595,27 @@ func TestVerifiedRejectionsLookAlike(t *testing.T) {
 
 // TestVerifyStage sorts every failure the verifier reports into the check an operator would look at.
 func TestVerifyStage(t *testing.T) {
-	for err, want := range map[error]RejectStage{
-		alexaverify.ErrMissingHeader:    RejectUnsigned,
-		alexaverify.ErrStaleTimestamp:   RejectTimestamp,
-		alexaverify.ErrCertURLInvalid:   RejectUnsigned,
-		alexaverify.ErrCertURLUserinfo:  RejectUnsigned,
-		alexaverify.ErrCertURLTraversal: RejectUnsigned,
-		alexaverify.ErrCertFetch:        RejectSignature,
-		alexaverify.ErrUntrustedChain:   RejectSignature,
-		alexaverify.ErrCertHostname:     RejectSignature,
-		alexaverify.ErrUnsupportedKey:   RejectSignature,
-		alexaverify.ErrBadSignature:     RejectSignature,
-	} {
-		assert.Equal(t, want, verifyStage(fmt.Errorf("wrapped: %w", err)), err.Error())
+	testCases := []struct {
+		name     string
+		have     error
+		expected RejectStage
+	}{
+		{name: "ShouldSortAMissingHeaderAsUnsigned", have: alexaverify.ErrMissingHeader, expected: RejectUnsigned},
+		{name: "ShouldSortAStaleTimestampAsTimestamp", have: alexaverify.ErrStaleTimestamp, expected: RejectTimestamp},
+		{name: "ShouldSortAnInvalidCertURLAsUnsigned", have: alexaverify.ErrCertURLInvalid, expected: RejectUnsigned},
+		{name: "ShouldSortACertURLWithUserinfoAsUnsigned", have: alexaverify.ErrCertURLUserinfo, expected: RejectUnsigned},
+		{name: "ShouldSortACertURLTraversalAsUnsigned", have: alexaverify.ErrCertURLTraversal, expected: RejectUnsigned},
+		{name: "ShouldSortACertFetchAsSignature", have: alexaverify.ErrCertFetch, expected: RejectSignature},
+		{name: "ShouldSortAnUntrustedChainAsSignature", have: alexaverify.ErrUntrustedChain, expected: RejectSignature},
+		{name: "ShouldSortACertHostnameAsSignature", have: alexaverify.ErrCertHostname, expected: RejectSignature},
+		{name: "ShouldSortAnUnsupportedKeyAsSignature", have: alexaverify.ErrUnsupportedKey, expected: RejectSignature},
+		{name: "ShouldSortABadSignatureAsSignature", have: alexaverify.ErrBadSignature, expected: RejectSignature},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, verifyStage(fmt.Errorf("wrapped: %w", tc.have)))
+		})
 	}
 }
 
@@ -641,33 +681,34 @@ func TestVerifiedBlamesTheClockOnlyForAlexaRequests(t *testing.T) {
 
 	remembered := RememberCertURL(sent, testCertURL, func(context.Context, string) { t.Error("a refused request taught a certificate URL") })
 
-	tests := map[string]struct {
+	testCases := []struct {
+		name     string
 		verifier RequestVerifier
 		body     []byte
 		hdr      http.Header
-		want     RejectStage
+		expected RejectStage
 	}{
-		"a stale request Alexa signed":           {verifier: sent, body: stale, hdr: signed(pki.sign(t, stale), testCertURL), want: RejectTimestamp},
-		"through RememberCertURL":                {verifier: remembered, body: stale, hdr: signed(pki.sign(t, stale), testCertURL), want: RejectTimestamp},
-		"a stale request signed by anybody else": {verifier: sent, body: stale, hdr: signed(pki.sign(t, other), testCertURL), want: RejectSignature},
-		"a stale request from another chain":     {verifier: sent, body: stale, hdr: signed(newTestPKI(t).sign(t, stale), testCertURL), want: RejectSignature},
-		"an empty envelope":                      {verifier: sent, body: []byte(`{}`), hdr: signed("x", "x"), want: RejectBody},
-		"a body that isn't JSON":                 {verifier: sent, body: []byte(`garbage`), hdr: signed("x", "x"), want: RejectBody},
-		"a timestamp that doesn't parse":         {verifier: sent, body: undated, hdr: signed("x", testCertURL), want: RejectBody},
-		"a stale request with another URL":       {verifier: sent, body: stale, hdr: signed(pki.sign(t, stale), "https://attacker.example.com/echo.api/cert.pem"), want: RejectUnsigned},
-		"a fresh request with another URL":       {verifier: sent, body: fresh, hdr: signed(pki.sign(t, fresh), "x"), want: RejectUnsigned},
-		"a fresh request with a bad signature":   {verifier: sent, body: fresh, hdr: signed(pki.sign(t, other), testCertURL), want: RejectSignature},
-		"a verifier that can't check as sent":    {verifier: pki.verifier(t), body: stale, hdr: signed(pki.sign(t, stale), testCertURL), want: RejectSignature},
-		"or wraps one that can't":                {verifier: RememberCertURL(pki.verifier(t), testCertURL, nil), body: stale, hdr: signed(pki.sign(t, stale), testCertURL), want: RejectSignature},
+		{name: "ShouldBlameTheClockForAStaleRequestAlexaSigned", verifier: sent, body: stale, hdr: signed(pki.sign(t, stale), testCertURL), expected: RejectTimestamp},
+		{name: "ShouldBlameTheClockThroughRememberCertURL", verifier: remembered, body: stale, hdr: signed(pki.sign(t, stale), testCertURL), expected: RejectTimestamp},
+		{name: "ShouldBlameTheSignatureForAStaleRequestSignedByAnybodyElse", verifier: sent, body: stale, hdr: signed(pki.sign(t, other), testCertURL), expected: RejectSignature},
+		{name: "ShouldBlameTheSignatureForAStaleRequestFromAnotherChain", verifier: sent, body: stale, hdr: signed(newTestPKI(t).sign(t, stale), testCertURL), expected: RejectSignature},
+		{name: "ShouldBlameTheBodyForAnEmptyEnvelope", verifier: sent, body: []byte(`{}`), hdr: signed("x", "x"), expected: RejectBody},
+		{name: "ShouldBlameTheBodyForABodyThatIsNotJSON", verifier: sent, body: []byte(`garbage`), hdr: signed("x", "x"), expected: RejectBody},
+		{name: "ShouldBlameTheBodyForATimestampThatDoesNotParse", verifier: sent, body: undated, hdr: signed("x", testCertURL), expected: RejectBody},
+		{name: "ShouldCountAStaleRequestWithAnotherURLAsUnsigned", verifier: sent, body: stale, hdr: signed(pki.sign(t, stale), "https://attacker.example.com/echo.api/cert.pem"), expected: RejectUnsigned},
+		{name: "ShouldCountAFreshRequestWithAnotherURLAsUnsigned", verifier: sent, body: fresh, hdr: signed(pki.sign(t, fresh), "x"), expected: RejectUnsigned},
+		{name: "ShouldBlameTheSignatureForAFreshRequestWithABadSignature", verifier: sent, body: fresh, hdr: signed(pki.sign(t, other), testCertURL), expected: RejectSignature},
+		{name: "ShouldBlameTheSignatureWhenTheVerifierCannotCheckAsSent", verifier: pki.verifier(t), body: stale, hdr: signed(pki.sign(t, stale), testCertURL), expected: RejectSignature},
+		{name: "ShouldBlameTheSignatureWhenRememberCertURLWrapsAVerifierThatCannotCheckAsSent", verifier: RememberCertURL(pki.verifier(t), testCertURL, nil), body: stale, hdr: signed(pki.sign(t, stale), testCertURL), expected: RejectSignature},
 	}
 
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			rejected := NewRejections(func() time.Time { return fixedNow })
 			h := VerifiedFunc(tc.verifier, func() string { return testSkillID }, slog.New(slog.DiscardHandler), rejected, func(http.ResponseWriter, *http.Request, []byte) { t.Error("handler ran") })
 
 			assert.Equal(t, http.StatusBadRequest, post(t, h, tc.body, tc.hdr).Code)
-			assert.Equal(t, []Rejection{{Stage: tc.want, Count: 1, Recent: 1, Last: fixedNow}}, rejected.Counts(fixedNow))
+			assert.Equal(t, []Rejection{{Stage: tc.expected, Count: 1, Recent: 1, Last: fixedNow}}, rejected.Counts(fixedNow))
 		})
 	}
 }
@@ -724,9 +765,21 @@ func TestNewVerifierRefusesWithoutFetching(t *testing.T) {
 
 	body := envelope(testSkillID, time.Now())
 
-	require.ErrorIs(t, v.Verify(t.Context(), body, http.Header{}), alexaverify.ErrMissingHeader)
-	require.ErrorIs(t, v.Verify(t.Context(), body, signed("c2ln", "https://attacker.example.com/echo.api/cert.pem")), alexaverify.ErrCertURLInvalid)
-	require.ErrorIs(t, v.Verify(t.Context(), body, signed("c2ln", "file:///etc/passwd")), alexaverify.ErrCertURLInvalid)
+	testCases := []struct {
+		name string
+		hdr  http.Header
+		err  error
+	}{
+		{name: "ShouldRefuseAMissingHeader", hdr: http.Header{}, err: alexaverify.ErrMissingHeader},
+		{name: "ShouldRefuseACertificateURLOnAnotherHost", hdr: signed("c2ln", "https://attacker.example.com/echo.api/cert.pem"), err: alexaverify.ErrCertURLInvalid},
+		{name: "ShouldRefuseAFileCertificateURL", hdr: signed("c2ln", "file:///etc/passwd"), err: alexaverify.ErrCertURLInvalid},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			require.ErrorIs(t, v.Verify(t.Context(), body, tc.hdr), tc.err)
+		})
+	}
 }
 
 // TestVerifiedEnforcesSkillOnRealEnvelopes checks the skill ID on full-size envelopes of every request type, not just the minimal test envelope.
@@ -741,52 +794,59 @@ func TestVerifiedEnforcesSkillOnRealEnvelopes(t *testing.T) {
 	require.NotEmpty(t, requests)
 
 	for _, path := range requests {
-		body := mustRead(t, path)
+		t.Run(filepath.Base(filepath.Dir(path)), func(t *testing.T) {
+			body := mustRead(t, path)
 
-		// with re-encodes the envelope naming the given skills in its context and session.
-		with := func(contextID, sessionID string) []byte {
-			var env map[string]any
-			require.NoError(t, json.Unmarshal(body, &env), path)
+			// with re-encodes the envelope naming the given skills in its context and session.
+			with := func(contextID, sessionID string) []byte {
+				var env map[string]any
+				require.NoError(t, json.Unmarshal(body, &env))
 
-			app := func(parent map[string]any) map[string]any {
-				a, ok := parent["application"].(map[string]any)
-				require.True(t, ok, "%s has an application", path)
+				app := func(parent map[string]any) map[string]any {
+					a, ok := parent["application"].(map[string]any)
+					require.True(t, ok, "%s has an application", path)
 
-				return a
+					return a
+				}
+
+				app(env["context"].(map[string]any)["System"].(map[string]any))["applicationId"] = contextID
+				app(env["session"].(map[string]any))["applicationId"] = sessionID
+
+				b, err := json.Marshal(env)
+				require.NoError(t, err)
+
+				return b
 			}
 
-			app(env["context"].(map[string]any)["System"].(map[string]any))["applicationId"] = contextID
-			app(env["session"].(map[string]any))["applicationId"] = sessionID
-
-			b, err := json.Marshal(env)
-			require.NoError(t, err)
-
-			return b
-		}
-
-		for name, tc := range map[string]struct {
-			body []byte
-			ok   bool
-		}{
-			"own skill":                     {body: body, ok: true},
-			"another skill":                 {body: with(foreign, foreign)},
-			"another skill in the context":  {body: with(foreign, own)},
-			"another skill only in session": {body: with(own, foreign), ok: true},
-		} {
-			called := false
-			h := Verified(acceptAll{}, own, slog.New(slog.DiscardHandler), func(w http.ResponseWriter, _ *http.Request, _ []byte) {
-				called = true
-
-				w.WriteHeader(http.StatusOK)
-			})
-
-			rec := serve(t, h, tc.body, "sig")
-			assert.Equal(t, tc.ok, called, "%s: %s", path, name)
-
-			if !tc.ok {
-				assert.Equal(t, http.StatusBadRequest, rec.Code, "%s: %s", path, name)
+			testCases := []struct {
+				name string
+				body []byte
+				ok   bool
+			}{
+				{name: "ShouldAcceptTheOwnSkill", body: body, ok: true},
+				{name: "ShouldRejectAnotherSkill", body: with(foreign, foreign)},
+				{name: "ShouldRejectAnotherSkillInTheContext", body: with(foreign, own)},
+				{name: "ShouldAcceptAnotherSkillOnlyInTheSession", body: with(own, foreign), ok: true},
 			}
-		}
+
+			for _, tc := range testCases {
+				t.Run(tc.name, func(t *testing.T) {
+					called := false
+					h := Verified(acceptAll{}, own, slog.New(slog.DiscardHandler), func(w http.ResponseWriter, _ *http.Request, _ []byte) {
+						called = true
+
+						w.WriteHeader(http.StatusOK)
+					})
+
+					rec := serve(t, h, tc.body, "sig")
+					assert.Equal(t, tc.ok, called)
+
+					if !tc.ok {
+						assert.Equal(t, http.StatusBadRequest, rec.Code)
+					}
+				})
+			}
+		})
 	}
 }
 

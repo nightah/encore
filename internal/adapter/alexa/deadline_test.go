@@ -34,12 +34,14 @@ func (b *stalledBackend) Play(context.Context, media.Ref, media.PlayOptions) err
 }
 
 func TestRequestDeadline(t *testing.T) {
-	for name, tc := range map[string]struct {
+	testCases := []struct {
+		name   string
 		stall  func(t *testing.T, h *Handler)
 		speech string
 		target string
 	}{
-		"a Kodi instance that doesn't answer": {
+		{
+			name: "ShouldAnswerAtTheDeadlineWhenKodiInstanceDoesNotAnswer",
 			stall: func(t *testing.T, h *Handler) {
 				s := fakekodi.NewNetwork().New(t, fakekodi.Options{})
 				stalled := make(chan struct{})
@@ -63,7 +65,8 @@ func TestRequestDeadline(t *testing.T) {
 			speech: "Lounge isn't answering. Try again in a moment.",
 			target: "Lounge",
 		},
-		"a backend that ignores the deadline": {
+		{
+			name: "ShouldAnswerAtTheDeadlineWhenBackendIgnoresIt",
 			stall: func(t *testing.T, h *Handler) {
 				b := &stalledBackend{Backend: h.Targets.(fakeTargets).target.Backend, release: make(chan struct{})}
 				t.Cleanup(func() { close(b.release) })
@@ -75,7 +78,8 @@ func TestRequestDeadline(t *testing.T) {
 			speech: "Lounge isn't answering. Try again in a moment.",
 			target: "Lounge",
 		},
-		"a target lookup that doesn't answer": {
+		{
+			name: "ShouldAnswerAtTheDeadlineWhenTargetLookupDoesNotAnswer",
 			stall: func(t *testing.T, h *Handler) {
 				release := make(chan struct{})
 				t.Cleanup(func() { close(release) })
@@ -84,8 +88,10 @@ func TestRequestDeadline(t *testing.T) {
 			},
 			speech: "Sorry, that took too long. Try again in a moment.",
 		},
-	} {
-		t.Run(name, func(t *testing.T) {
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			synctest.Test(t, func(t *testing.T) {
 				h, _, rec := newHandler(t)
 				h.Now = time.Now
