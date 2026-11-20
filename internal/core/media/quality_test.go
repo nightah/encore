@@ -16,34 +16,54 @@ import (
 func TestQualityOf(t *testing.T) {
 	t.Parallel()
 
-	for _, tc := range []struct {
-		width, height int
-		want          media.Quality
+	testCases := []struct {
+		name     string
+		width    int
+		height   int
+		expected media.Quality
 	}{
-		{0, 0, ""},
-		{3840, 2160, media.Quality2160p},
-		{3840, 1600, media.Quality2160p},
-		{1920, 1080, media.Quality1080p},
-		{1920, 800, media.Quality1080p},
-		{1440, 1080, media.Quality1080p},
-		{1280, 720, media.Quality720p},
-		{1280, 536, media.Quality720p},
-		{720, 576, media.QualitySD},
-		{640, 0, media.QualitySD},
-	} {
-		assert.Equal(t, tc.want, media.QualityOf(tc.width, tc.height), "%dx%d", tc.width, tc.height)
+		{name: "ShouldBeUnknownWithoutASize"},
+		{name: "ShouldRate3840x2160As2160p", width: 3840, height: 2160, expected: media.Quality2160p},
+		{name: "ShouldRate3840x1600As2160p", width: 3840, height: 1600, expected: media.Quality2160p},
+		{name: "ShouldRate1920x1080As1080p", width: 1920, height: 1080, expected: media.Quality1080p},
+		{name: "ShouldRate1920x800As1080p", width: 1920, height: 800, expected: media.Quality1080p},
+		{name: "ShouldRate1440x1080As1080p", width: 1440, height: 1080, expected: media.Quality1080p},
+		{name: "ShouldRate1280x720As720p", width: 1280, height: 720, expected: media.Quality720p},
+		{name: "ShouldRate1280x536As720p", width: 1280, height: 536, expected: media.Quality720p},
+		{name: "ShouldRate720x576AsSD", width: 720, height: 576, expected: media.QualitySD},
+		{name: "ShouldRateWidthOnlyAsSD", width: 640, expected: media.QualitySD},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, media.QualityOf(tc.width, tc.height))
+		})
 	}
 }
 
 func TestIsPreference(t *testing.T) {
 	t.Parallel()
 
-	for _, q := range []media.Quality{"", media.QualityHighest, media.QualitySD, media.Quality720p, media.Quality1080p, media.Quality2160p} {
-		assert.True(t, q.IsPreference(), q)
+	testCases := []struct {
+		name     string
+		have     media.Quality
+		expected bool
+	}{
+		{name: "ShouldAcceptNoPreference", expected: true},
+		{name: "ShouldAcceptHighest", have: media.QualityHighest, expected: true},
+		{name: "ShouldAcceptSD", have: media.QualitySD, expected: true},
+		{name: "ShouldAccept720p", have: media.Quality720p, expected: true},
+		{name: "ShouldAccept1080p", have: media.Quality1080p, expected: true},
+		{name: "ShouldAccept2160p", have: media.Quality2160p, expected: true},
+		{name: "ShouldReject4k", have: "4k"},
+		{name: "ShouldRejectUppercaseHighest", have: "HIGHEST"},
+		{name: "ShouldReject480p", have: "480p"},
 	}
 
-	for _, q := range []media.Quality{"4k", "HIGHEST", "480p"} {
-		assert.False(t, q.IsPreference(), q)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, tc.have.IsPreference())
+		})
 	}
 }
 
@@ -52,26 +72,29 @@ func TestBestCopy(t *testing.T) {
 
 	sd, hd, fhd, uhd, unknown := media.Copy{Quality: media.QualitySD}, media.Copy{Quality: media.Quality720p}, media.Copy{Quality: media.Quality1080p}, media.Copy{Quality: media.Quality2160p}, media.Copy{}
 
-	for name, tc := range map[string]struct {
-		prefer media.Quality
-		copies []media.Copy
-		want   int
+	testCases := []struct {
+		name     string
+		prefer   media.Quality
+		copies   []media.Copy
+		expected int
 	}{
-		"none":                                  {media.QualityHighest, nil, -1},
-		"highest takes the best":                {media.QualityHighest, []media.Copy{fhd, uhd, hd}, 1},
-		"no preference takes the best":          {"", []media.Copy{fhd, uhd}, 1},
-		"the preferred quality":                 {media.Quality1080p, []media.Copy{uhd, fhd, hd}, 1},
-		"else the best below it":                {media.Quality1080p, []media.Copy{uhd, sd, hd}, 2},
-		"else the least above it":               {media.Quality720p, []media.Copy{uhd, fhd}, 1},
-		"unknown quality comes last":            {media.Quality2160p, []media.Copy{unknown, sd}, 1},
-		"ties go to the earliest":               {media.Quality1080p, []media.Copy{unknown, unknown}, 0},
-		"quality wins over a copy part watched": {media.Quality1080p, []media.Copy{{Quality: media.Quality2160p, Resume: time.Minute}, fhd}, 1},
-		"then a copy part watched":              {media.Quality1080p, []media.Copy{fhd, {Quality: media.Quality1080p, Resume: time.Minute}}, 1},
-	} {
-		t.Run(name, func(t *testing.T) {
+		{name: "ShouldFindNoneWithoutCopies", prefer: media.QualityHighest, expected: -1},
+		{name: "ShouldTakeTheBestForHighest", prefer: media.QualityHighest, copies: []media.Copy{fhd, uhd, hd}, expected: 1},
+		{name: "ShouldTakeTheBestWithoutAPreference", copies: []media.Copy{fhd, uhd}, expected: 1},
+		{name: "ShouldTakeThePreferredQuality", prefer: media.Quality1080p, copies: []media.Copy{uhd, fhd, hd}, expected: 1},
+		{name: "ShouldElseTakeTheBestBelowIt", prefer: media.Quality1080p, copies: []media.Copy{uhd, sd, hd}, expected: 2},
+		{name: "ShouldElseTakeTheLeastAboveIt", prefer: media.Quality720p, copies: []media.Copy{uhd, fhd}, expected: 1},
+		{name: "ShouldPutUnknownQualityLast", prefer: media.Quality2160p, copies: []media.Copy{unknown, sd}, expected: 1},
+		{name: "ShouldGiveTiesToTheEarliest", prefer: media.Quality1080p, copies: []media.Copy{unknown, unknown}},
+		{name: "ShouldPreferQualityOverACopyPartWatched", prefer: media.Quality1080p, copies: []media.Copy{{Quality: media.Quality2160p, Resume: time.Minute}, fhd}, expected: 1},
+		{name: "ShouldThenPreferACopyPartWatched", prefer: media.Quality1080p, copies: []media.Copy{fhd, {Quality: media.Quality1080p, Resume: time.Minute}}, expected: 1},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			assert.Equal(t, tc.want, media.BestCopy(tc.prefer, tc.copies))
+			assert.Equal(t, tc.expected, media.BestCopy(tc.prefer, tc.copies))
 		})
 	}
 }
@@ -83,14 +106,14 @@ func TestOneCopyEach(t *testing.T) {
 		return media.Item{Kind: media.KindEpisode, ID: id, ShowID: 7, Season: season, Episode: episode, Quality: q}
 	}
 
-	t.Run("without copies the list is unchanged", func(t *testing.T) {
+	t.Run("ShouldLeaveTheListUnchangedWithoutCopies", func(t *testing.T) {
 		t.Parallel()
 
 		eps := []media.Item{ep(1, 1, 1, media.Quality1080p), ep(2, 1, 2, media.Quality2160p)}
 		assert.Equal(t, eps, media.OneCopyEach(eps, media.Quality1080p))
 	})
 
-	t.Run("keeps the preferred copy where the first stood", func(t *testing.T) {
+	t.Run("ShouldKeepThePreferredCopyWhereTheFirstStood", func(t *testing.T) {
 		t.Parallel()
 
 		eps := []media.Item{ep(1, 1, 1, media.Quality1080p), ep(2, 1, 1, media.Quality2160p), ep(3, 1, 2, media.Quality2160p), ep(4, 1, 2, media.Quality1080p), ep(5, 1, 3, "")}
@@ -101,7 +124,7 @@ func TestOneCopyEach(t *testing.T) {
 		assert.Equal(t, []int{2, 3, 5}, ids(media.OneCopyEach(eps, media.QualityHighest)))
 	})
 
-	t.Run("an episode watched in any copy is watched", func(t *testing.T) {
+	t.Run("ShouldTreatAnEpisodeWatchedInAnyCopyAsWatched", func(t *testing.T) {
 		t.Parallel()
 
 		watched := ep(1, 1, 1, media.Quality1080p)
@@ -113,7 +136,7 @@ func TestOneCopyEach(t *testing.T) {
 		assert.Equal(t, 2, got[0].PlayCount)
 	})
 
-	t.Run("the preferred copy is kept, from where another copy stopped", func(t *testing.T) {
+	t.Run("ShouldKeepThePreferredCopyFromWhereAnotherCopyStopped", func(t *testing.T) {
 		t.Parallel()
 
 		started := ep(1, 1, 1, media.Quality1080p)
@@ -124,7 +147,7 @@ func TestOneCopyEach(t *testing.T) {
 		assert.Equal(t, 10*time.Minute, got[0].Resume)
 	})
 
-	t.Run("unnumbered episodes and other shows are not copies", func(t *testing.T) {
+	t.Run("ShouldNotTreatUnnumberedEpisodesOrOtherShowsAsCopies", func(t *testing.T) {
 		t.Parallel()
 
 		other := ep(3, 1, 1, media.Quality1080p)
@@ -148,8 +171,20 @@ func ids(items []media.Item) []int {
 func TestFurthestResume(t *testing.T) {
 	t.Parallel()
 
-	assert.Zero(t, media.FurthestResume(nil))
-	assert.Equal(t, 3*time.Minute, media.FurthestResume([]media.Copy{{Resume: time.Minute}, {Resume: 3 * time.Minute}, {}}))
+	testCases := []struct {
+		name     string
+		have     []media.Copy
+		expected time.Duration
+	}{
+		{name: "ShouldBeZeroWithoutCopies"},
+		{name: "ShouldTakeTheFurthestCopy", have: []media.Copy{{Resume: time.Minute}, {Resume: 3 * time.Minute}, {}}, expected: 3 * time.Minute},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, media.FurthestResume(tc.have))
+		})
+	}
 }
 
 func TestPreferCopies(t *testing.T) {
@@ -161,7 +196,7 @@ func TestPreferCopies(t *testing.T) {
 
 	assert.Nil(t, media.PreferCopies(nil, media.Quality1080p, nil))
 
-	t.Run("episodes", func(t *testing.T) {
+	t.Run("ShouldListOneCopyOfEachEpisode", func(t *testing.T) {
 		t.Parallel()
 
 		b := media.PreferCopies(testkit.NewBackend(ep(1, 1, 1, media.Quality1080p, 0), ep(2, 1, 1, media.Quality2160p, 0), ep(3, 1, 2, media.Quality1080p, 0)), media.Quality2160p, nil)
@@ -171,7 +206,7 @@ func TestPreferCopies(t *testing.T) {
 		assert.Equal(t, []int{2, 3}, ids(eps))
 	})
 
-	t.Run("the next episode is unwatched in every copy", func(t *testing.T) {
+	t.Run("ShouldPickANextEpisodeUnwatchedInEveryCopy", func(t *testing.T) {
 		t.Parallel()
 
 		// The 2160p copy of 1x01 was watched, so the backend's own next episode, its 1080p copy, isn't next.
@@ -182,7 +217,7 @@ func TestPreferCopies(t *testing.T) {
 		assert.Equal(t, 4, next.ID)
 	})
 
-	t.Run("an episode part watched comes first, in the preferred copy from where the other stopped", func(t *testing.T) {
+	t.Run("ShouldPutAnEpisodePartWatchedFirstInThePreferredCopyFromWhereTheOtherStopped", func(t *testing.T) {
 		t.Parallel()
 
 		started := ep(3, 1, 2, media.Quality1080p, 0)
@@ -200,7 +235,7 @@ func TestPreferCopies(t *testing.T) {
 		assert.Contains(t, kit.Calls(), "Play episode/4 resume from 1m0s 2160p", "the 2160p copy starts where the 1080p one stopped")
 	})
 
-	t.Run("a point the match index found starts the film there", func(t *testing.T) {
+	t.Run("ShouldStartTheFilmAtAPointTheMatchIndexFound", func(t *testing.T) {
 		t.Parallel()
 
 		kit := testkit.NewBackend(media.Item{Kind: media.KindMovie, ID: 3, Title: "Dune"})
@@ -214,7 +249,7 @@ func TestPreferCopies(t *testing.T) {
 		assert.Equal(t, []string{"Play movie/3 resume from 5m0s 1080p", "Play movie/3 1080p"}, kit.Calls(), "the furthest point, and only when resuming")
 	})
 
-	t.Run("specials once every episode is watched", func(t *testing.T) {
+	t.Run("ShouldPickSpecialsOnceEveryEpisodeIsWatched", func(t *testing.T) {
 		t.Parallel()
 
 		b := media.PreferCopies(testkit.NewBackend(ep(1, 0, 1, media.Quality1080p, 0), ep(2, 1, 1, media.Quality1080p, 1), ep(3, 1, 1, media.Quality2160p, 0)), media.Quality2160p, nil)
@@ -224,7 +259,7 @@ func TestPreferCopies(t *testing.T) {
 		assert.Equal(t, 1, next.ID)
 	})
 
-	t.Run("nothing left", func(t *testing.T) {
+	t.Run("ShouldFindNothingWhenEverythingIsWatched", func(t *testing.T) {
 		t.Parallel()
 
 		b := media.PreferCopies(testkit.NewBackend(ep(1, 1, 1, media.Quality1080p, 1), ep(2, 1, 1, media.Quality2160p, 0)), media.Quality2160p, nil)
@@ -233,7 +268,7 @@ func TestPreferCopies(t *testing.T) {
 		require.ErrorIs(t, err, media.ErrNotFound)
 	})
 
-	t.Run("a show without copies keeps the backend's answer", func(t *testing.T) {
+	t.Run("ShouldKeepTheBackendsAnswerForAShowWithoutCopies", func(t *testing.T) {
 		t.Parallel()
 
 		kit := testkit.NewBackend(ep(1, 1, 1, media.Quality1080p, 0))
@@ -243,7 +278,7 @@ func TestPreferCopies(t *testing.T) {
 		assert.Equal(t, 1, next.ID)
 	})
 
-	t.Run("a show whose episodes can't be listed keeps the backend's answer", func(t *testing.T) {
+	t.Run("ShouldKeepTheBackendsAnswerWhenEpisodesCannotBeListed", func(t *testing.T) {
 		t.Parallel()
 
 		kit := unlistedEpisodes{testkit.NewBackend(ep(1, 1, 1, media.Quality1080p, 0), ep(2, 1, 1, media.Quality2160p, 0))}
@@ -253,7 +288,7 @@ func TestPreferCopies(t *testing.T) {
 		assert.Equal(t, 1, next.ID)
 	})
 
-	t.Run("a failure is passed on", func(t *testing.T) {
+	t.Run("ShouldPassOnAFailure", func(t *testing.T) {
 		t.Parallel()
 
 		kit := testkit.NewBackend()
@@ -263,7 +298,7 @@ func TestPreferCopies(t *testing.T) {
 		require.EqualError(t, err, "offline")
 	})
 
-	t.Run("a shuffle carries the preference", func(t *testing.T) {
+	t.Run("ShouldCarryThePreferenceIntoAShuffle", func(t *testing.T) {
 		t.Parallel()
 
 		kit := testkit.NewBackend(media.Item{Kind: media.KindTVShow, ID: 7, Title: "Bluey"})

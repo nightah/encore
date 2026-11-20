@@ -110,31 +110,18 @@ func TestRunStopsWhileWaitingToResubscribe(t *testing.T) {
 }
 
 func TestRunWarnsAboutFailedUpdates(t *testing.T) {
-	for _, tc := range []struct {
-		name  string
-		fail  func(*fakeBackend)
-		event media.Event
-		warn  string
+	testCases := []struct {
+		name     string
+		fail     func(*fakeBackend)
+		event    media.Event
+		expected string
 	}{
-		{
-			name:  "resync",
-			fail:  func(b *fakeBackend) { b.mu.Lock(); b.fail[media.KindMovie] = errRefused; b.mu.Unlock() },
-			event: media.Event{Kind: media.EventConnected},
-			warn:  "library resync failed",
-		},
-		{
-			name:  "delta",
-			fail:  func(b *fakeBackend) { b.failOn("RecentlyAdded", errRefused) },
-			event: media.Event{Kind: media.EventLibraryScanned},
-			warn:  "library delta failed",
-		},
-		{
-			name:  "refresh",
-			fail:  func(b *fakeBackend) { b.failOn("Item", errRefused) },
-			event: media.Event{Kind: media.EventItemUpdated, Ref: media.Ref{Kind: media.KindMovie, ID: 1}},
-			warn:  "library item refresh failed",
-		},
-	} {
+		{name: "ShouldWarnAboutAFailedResync", fail: func(b *fakeBackend) { b.mu.Lock(); b.fail[media.KindMovie] = errRefused; b.mu.Unlock() }, event: media.Event{Kind: media.EventConnected}, expected: "library resync failed"},
+		{name: "ShouldWarnAboutAFailedDelta", fail: func(b *fakeBackend) { b.failOn("RecentlyAdded", errRefused) }, event: media.Event{Kind: media.EventLibraryScanned}, expected: "library delta failed"},
+		{name: "ShouldWarnAboutAFailedRefresh", fail: func(b *fakeBackend) { b.failOn("Item", errRefused) }, event: media.Event{Kind: media.EventItemUpdated, Ref: media.Ref{Kind: media.KindMovie, ID: 1}}, expected: "library item refresh failed"},
+	}
+
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			synctest.Test(t, func(t *testing.T) {
 				b := seed()
@@ -149,7 +136,7 @@ func TestRunWarnsAboutFailedUpdates(t *testing.T) {
 				time.Sleep(DefaultDebounce)
 				synctest.Wait()
 
-				assert.Contains(t, logs.String(), tc.warn)
+				assert.Contains(t, logs.String(), tc.expected)
 				assert.Contains(t, logs.String(), "refused", "the cause is logged")
 
 				_, ok := c.Get(media.Ref{Kind: media.KindMovie, ID: 1})
@@ -240,7 +227,7 @@ func TestRunFullResyncCoversTheRestOfTheBurst(t *testing.T) {
 func TestRunLastEventForAnItemWins(t *testing.T) {
 	ref := media.Ref{Kind: media.KindMovie, ID: 1}
 
-	t.Run("removed then updated is refreshed, not removed", func(t *testing.T) {
+	t.Run("ShouldRefreshAnItemRemovedThenUpdated", func(t *testing.T) {
 		synctest.Test(t, func(t *testing.T) {
 			b := seed()
 			c, _ := newLoggedCatalog(b, Options{RefreshInterval: -1})
@@ -262,7 +249,7 @@ func TestRunLastEventForAnItemWins(t *testing.T) {
 		})
 	})
 
-	t.Run("updated then removed is removed without a fetch", func(t *testing.T) {
+	t.Run("ShouldRemoveAnItemUpdatedThenRemovedWithoutAFetch", func(t *testing.T) {
 		synctest.Test(t, func(t *testing.T) {
 			b := seed()
 			c, _ := newLoggedCatalog(b, Options{RefreshInterval: -1})

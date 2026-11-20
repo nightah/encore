@@ -11,24 +11,32 @@ import (
 )
 
 func TestGenreKey(t *testing.T) {
-	for in, want := range map[string]string{
-		"Science Fiction": "sciencefiction",
-		"sci-fi":          "sciencefiction",
-		"SF":              "sciencefiction",
-		"comedies":        "comedy",
-		"Westerns":        "western",
-		"cartoons":        "animation",
-		"kids":            "children",
-		"docos":           "documentary",
-		"R&B":             "randb",
-		"Hip Hop":         "hiphop",
-		"glass":           "glass",
-		"bus":             "bus",
-		"pies":            "pie",
-		"ties":            "tie",
-		"":                "",
-	} {
-		assert.Equal(t, want, genreKey("en", in), in)
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldJoinWords", have: "Science Fiction", expected: "sciencefiction"},
+		{name: "ShouldExpandSciFi", have: "sci-fi", expected: "sciencefiction"},
+		{name: "ShouldExpandSF", have: "SF", expected: "sciencefiction"},
+		{name: "ShouldSingulariseIes", have: "comedies", expected: "comedy"},
+		{name: "ShouldSingulariseS", have: "Westerns", expected: "western"},
+		{name: "ShouldMapCartoonsToAnimation", have: "cartoons", expected: "animation"},
+		{name: "ShouldMapKidsToChildren", have: "kids", expected: "children"},
+		{name: "ShouldMapDocosToDocumentary", have: "docos", expected: "documentary"},
+		{name: "ShouldSpellOutAnAmpersand", have: "R&B", expected: "randb"},
+		{name: "ShouldJoinHipHop", have: "Hip Hop", expected: "hiphop"},
+		{name: "ShouldKeepADoubleS", have: "glass", expected: "glass"},
+		{name: "ShouldKeepAShortWordEndingInS", have: "bus", expected: "bus"},
+		{name: "ShouldSingularisePies", have: "pies", expected: "pie"},
+		{name: "ShouldSingulariseTies", have: "ties", expected: "tie"},
+		{name: "ShouldKeepEmpty"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, genreKey("en", tc.have))
+		})
 	}
 }
 
@@ -39,23 +47,28 @@ func TestFindGenre(t *testing.T) {
 		{Genres: []string{"Science"}},
 	}
 
-	for _, tc := range []struct {
-		spoken string
-		want   string
-		ok     bool
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+		ok       bool
 	}{
-		{"sci fi", "Science Fiction", true},
-		{"docos", "Documentary", true},
-		{"science", "Science", true},
-		{"scien", "Science Fiction", true},
-		{"act", "", false},
-		{"horror", "", false},
-		{"", "", false},
-		{"!!!", "", false},
-	} {
-		g, ok := findGenre("en", items, tc.spoken)
-		assert.Equal(t, tc.ok, ok, tc.spoken)
-		assert.Equal(t, tc.want, g, tc.spoken)
+		{name: "ShouldFindAnAlias", have: "sci fi", expected: "Science Fiction", ok: true},
+		{name: "ShouldFindASlangName", have: "docos", expected: "Documentary", ok: true},
+		{name: "ShouldPreferAnExactName", have: "science", expected: "Science", ok: true},
+		{name: "ShouldFindAPrefix", have: "scien", expected: "Science Fiction", ok: true},
+		{name: "ShouldNotFindAShortPrefix", have: "act"},
+		{name: "ShouldNotFindAMissingGenre", have: "horror"},
+		{name: "ShouldNotFindEmpty"},
+		{name: "ShouldNotFindPunctuation", have: "!!!"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual, ok := findGenre("en", items, tc.have)
+			assert.Equal(t, tc.ok, ok)
+			assert.Equal(t, tc.expected, actual)
+		})
 	}
 
 	_, ok := findGenre("en", nil, "action")
@@ -65,21 +78,54 @@ func TestFindGenre(t *testing.T) {
 func TestInGenre(t *testing.T) {
 	items := []media.Item{{ID: 1, Genres: []string{"Rock"}}, {ID: 2, Genres: []string{"Pop", "rock"}}, {ID: 3, Genres: []string{"Jazz"}}}
 
-	assert.Equal(t, items, inGenre(items, ""), "no genre keeps everything")
-	assert.Equal(t, items[:2], inGenre(items, "ROCK"), "genres compare without case")
-	assert.Empty(t, inGenre(items, "Rockabilly"), "a genre is a whole name, not a prefix")
+	testCases := []struct {
+		name     string
+		have     string
+		expected []media.Item
+	}{
+		{name: "ShouldKeepEverythingForNoGenre", expected: items},
+		{name: "ShouldCompareGenresWithoutCase", have: "ROCK", expected: items[:2]},
+		{name: "ShouldMatchAWholeNameNotAPrefix", have: "Rockabilly"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := inGenre(items, tc.have)
+
+			if tc.expected == nil {
+				assert.Empty(t, actual)
+
+				return
+			}
+
+			assert.Equal(t, tc.expected, actual)
+		})
+	}
 }
 
 func TestByArtist(t *testing.T) {
 	duet := media.Item{Artist: "Queen, David Bowie"}
 
-	assert.True(t, byArtist("en", duet, "queen"))
-	assert.True(t, byArtist("en", duet, "david bowie"))
-	assert.True(t, byArtist("en", media.Item{Artist: "AC/DC"}, "ac dc"), "the whole field is compared before it is split")
-	assert.True(t, byArtist("en", media.Item{Artist: "Simon & Garfunkel; Paul Simon"}, "paul simon"))
-	assert.True(t, byArtist("en", media.Item{Artist: "The Beatles"}, "beatles"), "articles are ignored")
-	assert.False(t, byArtist("en", duet, "bowie"), "a part must match whole")
-	assert.False(t, byArtist("en", media.Item{}, ""), "an empty artist matches nothing")
+	testCases := []struct {
+		name     string
+		have     media.Item
+		spoken   string
+		expected bool
+	}{
+		{name: "ShouldMatchTheFirstOfADuet", have: duet, spoken: "queen", expected: true},
+		{name: "ShouldMatchTheSecondOfADuet", have: duet, spoken: "david bowie", expected: true},
+		{name: "ShouldCompareTheWholeFieldBeforeSplittingIt", have: media.Item{Artist: "AC/DC"}, spoken: "ac dc", expected: true},
+		{name: "ShouldSplitOnASemicolon", have: media.Item{Artist: "Simon & Garfunkel; Paul Simon"}, spoken: "paul simon", expected: true},
+		{name: "ShouldIgnoreArticles", have: media.Item{Artist: "The Beatles"}, spoken: "beatles", expected: true},
+		{name: "ShouldNotMatchPartOfAName", have: duet, spoken: "bowie"},
+		{name: "ShouldNotMatchAnEmptyArtist"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, byArtist("en", tc.have, tc.spoken))
+		})
+	}
 }
 
 func TestFindIgnoresBlankNames(t *testing.T) {

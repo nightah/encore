@@ -19,7 +19,7 @@ func blueyEpisode(id, season, episode, plays int, resume time.Duration) media.It
 }
 
 func TestSeason(t *testing.T) {
-	t.Run("from the first unwatched episode to the end of the season", func(t *testing.T) {
+	t.Run("ShouldPlayFromTheFirstUnwatchedEpisodeToTheEndOfTheSeason", func(t *testing.T) {
 		target, backend, _ := newTarget(seasonLibrary(
 			blueyEpisode(101, 1, 1, 1, 0),
 			blueyEpisode(201, 2, 1, 1, 0),
@@ -37,7 +37,7 @@ func TestSeason(t *testing.T) {
 		assert.Equal(t, 202, o.Played.ID)
 	})
 
-	t.Run("an episode in progress comes before an unwatched one", func(t *testing.T) {
+	t.Run("ShouldPutAnEpisodeInProgressBeforeAnUnwatchedOne", func(t *testing.T) {
 		target, backend, _ := newTarget(seasonLibrary(
 			blueyEpisode(201, 2, 1, 0, 0),
 			blueyEpisode(202, 2, 2, 0, 3*time.Minute),
@@ -49,7 +49,7 @@ func TestSeason(t *testing.T) {
 		assert.Equal(t, "Queue episode/202", lastCall(backend.Calls()))
 	})
 
-	t.Run("a watched season plays again from its first episode", func(t *testing.T) {
+	t.Run("ShouldPlayAWatchedSeasonAgainFromItsFirstEpisode", func(t *testing.T) {
 		target, backend, _ := newTarget(seasonLibrary(
 			blueyEpisode(202, 2, 2, 1, 0),
 			blueyEpisode(201, 2, 1, 3, 0),
@@ -62,7 +62,7 @@ func TestSeason(t *testing.T) {
 		assert.Equal(t, "Queue episode/201,episode/202", lastCall(backend.Calls()))
 	})
 
-	t.Run("capped at the queue limit", func(t *testing.T) {
+	t.Run("ShouldCapAtTheQueueLimit", func(t *testing.T) {
 		target, backend, _ := newTarget(seasonLibrary(
 			blueyEpisode(201, 2, 1, 0, 0),
 			blueyEpisode(202, 2, 2, 0, 0),
@@ -75,7 +75,7 @@ func TestSeason(t *testing.T) {
 		assert.Equal(t, "Queue episode/201,episode/202", lastCall(backend.Calls()))
 	})
 
-	t.Run("a season the library doesn't have", func(t *testing.T) {
+	t.Run("ShouldSayASeasonTheLibraryDoesntHave", func(t *testing.T) {
 		target, backend, _ := newTarget(seasonLibrary(blueyEpisode(101, 1, 1, 0, 0))...)
 
 		o := newService().Season(t.Context(), target, "bluey", 4, nil)
@@ -86,7 +86,7 @@ func TestSeason(t *testing.T) {
 		assert.False(t, o.Missed(), "the show was found, so no other reading is tried")
 	})
 
-	t.Run("a show the library doesn't have", func(t *testing.T) {
+	t.Run("ShouldMissAShowTheLibraryDoesntHave", func(t *testing.T) {
 		target, backend, _ := newTarget()
 
 		o := newService().Season(t.Context(), target, "the bear", 2, nil)
@@ -96,18 +96,28 @@ func TestSeason(t *testing.T) {
 		assert.Empty(t, backend.Calls())
 	})
 
-	t.Run("a failing backend", func(t *testing.T) {
-		for _, method := range []string{"Episodes", "Queue"} {
-			target, backend, _ := newTarget(seasonLibrary(blueyEpisode(201, 2, 1, 0, 0))...)
-			target, _ = failing(target, backend, errBoom, method)
+	t.Run("ShouldReportAFailingBackend", func(t *testing.T) {
+		testCases := []struct {
+			name string
+			have string
+		}{
+			{name: "ShouldReportFailingEpisodes", have: "Episodes"},
+			{name: "ShouldReportAFailingQueue", have: "Queue"},
+		}
 
-			assert.ErrorIs(t, newService().Season(t.Context(), target, "bluey", 2, nil).Err, errBoom, method)
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				target, backend, _ := newTarget(seasonLibrary(blueyEpisode(201, 2, 1, 0, 0))...)
+				target, _ = failing(target, backend, errBoom, tc.have)
+
+				assert.ErrorIs(t, newService().Season(t.Context(), target, "bluey", 2, nil).Err, errBoom)
+			})
 		}
 	})
 }
 
 func TestSeasonOfThePlayingShow(t *testing.T) {
-	t.Run("the show playing now", func(t *testing.T) {
+	t.Run("ShouldPlayASeasonOfTheShowPlayingNow", func(t *testing.T) {
 		target, backend, _ := newTarget(seasonLibrary(blueyEpisode(101, 1, 1, 0, 0), blueyEpisode(301, 3, 1, 0, 0))...)
 		backend.SetPlaying(&media.NowPlaying{Item: blueyEpisode(101, 1, 1, 0, 0)})
 
@@ -118,7 +128,7 @@ func TestSeasonOfThePlayingShow(t *testing.T) {
 		assert.Equal(t, "Queue episode/301", lastCall(backend.Calls()))
 	})
 
-	t.Run("nothing playing", func(t *testing.T) {
+	t.Run("ShouldAskForAShowWhenNothingIsPlaying", func(t *testing.T) {
 		target, backend, _ := newTarget()
 
 		o := newService().Season(t.Context(), target, "", 3, nil)
@@ -128,14 +138,14 @@ func TestSeasonOfThePlayingShow(t *testing.T) {
 		assert.Equal(t, []string{"NowPlaying"}, backend.Calls())
 	})
 
-	t.Run("a film playing", func(t *testing.T) {
+	t.Run("ShouldAskForAShowWhenAFilmIsPlaying", func(t *testing.T) {
 		target, backend, _ := newTarget()
 		backend.SetPlaying(&media.NowPlaying{Item: media.Item{Kind: media.KindMovie, ID: 4, Title: "Hot Fuzz"}})
 
 		assert.Equal(t, "tv.season_needs_show", newService().Season(t.Context(), target, "", 3, nil).Say.ID)
 	})
 
-	t.Run("a failing backend", func(t *testing.T) {
+	t.Run("ShouldReportAFailingBackend", func(t *testing.T) {
 		target, backend, _ := newTarget()
 		target, _ = failing(target, backend, errBoom, "NowPlaying")
 

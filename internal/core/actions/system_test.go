@@ -91,23 +91,31 @@ func TestUpdateLibraryStopsAtTheFirstFailure(t *testing.T) {
 }
 
 func TestLibrarySearchShowsTheBestKind(t *testing.T) {
-	for query, view := range map[string]string{
-		"hot fuzz":          "ShowView movies title hot fuzz",
-		"severance":         "ShowView tvshows title severance",
-		"queen":             "ShowView artists title queen",
-		"innuendo":          "ShowView albums title innuendo",
-		"bohemian rhapsody": "ShowView musicvideos title bohemian rhapsody",
-		"fuzz":              "ShowView movies title fuzz",
-		"dune":              "ShowView movies title dune",
-	} {
-		target, backend, _ := newTarget()
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldShowAFilm", have: "hot fuzz", expected: "ShowView movies title hot fuzz"},
+		{name: "ShouldShowAShow", have: "severance", expected: "ShowView tvshows title severance"},
+		{name: "ShouldShowAnArtist", have: "queen", expected: "ShowView artists title queen"},
+		{name: "ShouldShowAnAlbum", have: "innuendo", expected: "ShowView albums title innuendo"},
+		{name: "ShouldShowAMusicVideo", have: "bohemian rhapsody", expected: "ShowView musicvideos title bohemian rhapsody"},
+		{name: "ShouldShowAFilmForPartOfItsTitle", have: "fuzz", expected: "ShowView movies title fuzz"},
+		{name: "ShouldShowAFilmInACollection", have: "dune", expected: "ShowView movies title dune"},
+	}
 
-		o := newService().GlobalSearch(t.Context(), target, query, nil)
-		assert.Equal(t, "addon.searching", o.Say.ID, query)
-		assert.Equal(t, query, o.Say.Params["query"])
-		assert.Empty(t, o.Note, "the library is the default, not a fallback")
-		require.NotNil(t, o.Match, "the match is logged")
-		assert.Equal(t, []string{view}, backend.Calls(), query)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			target, backend, _ := newTarget()
+
+			o := newService().GlobalSearch(t.Context(), target, tc.have, nil)
+			assert.Equal(t, "addon.searching", o.Say.ID)
+			assert.Equal(t, tc.have, o.Say.Params["query"])
+			assert.Empty(t, o.Note, "the library is the default, not a fallback")
+			require.NotNil(t, o.Match, "the match is logged")
+			assert.Equal(t, []string{tc.expected}, backend.Calls())
+		})
 	}
 }
 
@@ -116,24 +124,43 @@ func TestLibrarySearchTieBreaks(t *testing.T) {
 	theColony := media.Item{Kind: media.KindMovie, ID: 6, Title: "Colony"}
 	colony := media.Item{Kind: media.KindTVShow, ID: 21, Title: "Colony"}
 
-	target, backend, _ := newTarget(append(testkit.SampleLibrary(), soundtrack)...)
-	newService().GlobalSearch(t.Context(), target, "hot fuzz", nil)
-	assert.Equal(t, []string{"ShowView movies title hot fuzz"}, backend.Calls(), "a film beats its soundtrack")
+	testCases := []struct {
+		name     string
+		items    []media.Item
+		matcher  matcherFunc
+		have     string
+		kinds    []media.Kind
+		expected []string
+	}{
+		{name: "ShouldPreferAFilmToItsSoundtrack", items: append(testkit.SampleLibrary(), soundtrack), have: "hot fuzz", expected: []string{"ShowView movies title hot fuzz"}},
+		{name: "ShouldPreferTheSoundtrackWhenMusicWasAskedFor", items: []media.Item{soundtrack, testkit.SampleLibrary()[3]}, have: "hot fuzz", kinds: []media.Kind{media.KindAlbum}, expected: []string{"ShowView albums title hot fuzz"}},
+		// "The Colony" scores as "Colony" does in the real matcher; the exact title wins the tie.
+		{
+			name:  "ShouldPreferTheExactTitleInATie",
+			items: []media.Item{colony, theColony},
+			matcher: func(match.Query) match.Result {
+				return match.Result{Normalized: "colony", Decision: match.DecisionAsk, Candidates: []match.Candidate{
+					{Doc: match.Doc{ID: "movie/6", Kind: media.KindMovie, Ref: theColony.Ref(), Title: "The Colony"}, Score: 1},
+					{Doc: match.Doc{ID: "tvshow/21", Kind: media.KindTVShow, Ref: colony.Ref(), Title: "Colony"}, Score: 1},
+				}}
+			},
+			have:     "colony",
+			expected: []string{"ShowView tvshows title colony"},
+		},
+	}
 
-	target, backend, _ = newTarget(soundtrack, testkit.SampleLibrary()[3])
-	newService().GlobalSearch(t.Context(), target, "hot fuzz", []media.Kind{media.KindAlbum})
-	assert.Equal(t, []string{"ShowView albums title hot fuzz"}, backend.Calls(), "unless music was asked for")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			target, backend, _ := newTarget(tc.items...)
 
-	// "The Colony" scores as "Colony" does in the real matcher; the exact title wins the tie.
-	target, backend, _ = newTarget(colony, theColony)
-	target.Matcher = matcherFunc(func(match.Query) match.Result {
-		return match.Result{Normalized: "colony", Decision: match.DecisionAsk, Candidates: []match.Candidate{
-			{Doc: match.Doc{ID: "movie/6", Kind: media.KindMovie, Ref: theColony.Ref(), Title: "The Colony"}, Score: 1},
-			{Doc: match.Doc{ID: "tvshow/21", Kind: media.KindTVShow, Ref: colony.Ref(), Title: "Colony"}, Score: 1},
-		}}
-	})
-	newService().GlobalSearch(t.Context(), target, "colony", nil)
-	assert.Equal(t, []string{"ShowView tvshows title colony"}, backend.Calls())
+			if tc.matcher != nil {
+				target.Matcher = tc.matcher
+			}
+
+			newService().GlobalSearch(t.Context(), target, tc.have, tc.kinds)
+			assert.Equal(t, tc.expected, backend.Calls())
+		})
+	}
 }
 
 func TestLibrarySearchAsksBetweenAFilmAndAShow(t *testing.T) {
@@ -153,18 +180,37 @@ func TestLibrarySearchAsksBetweenAFilmAndAShow(t *testing.T) {
 	assert.Equal(t, &SearchRequest{Query: "severance"}, o.Followup.Search)
 	assert.Empty(t, backend.Calls(), "nothing opens until it's answered")
 
-	for which, view := range map[string]string{AnswerShow: "ShowView tvshows title severance", AnswerFilm: "ShowView movies title severance", AnswerFirst: "ShowView movies title severance"} {
-		target, backend, _ := newTarget(append(testkit.SampleLibrary(), film)...)
+	pending, search := o.Pending, *o.Followup.Search
 
-		o := svc.ChooseSearch(t.Context(), target, Answer{Which: which}, o.Pending, *o.Followup.Search)
-		assert.Equal(t, "addon.searching", o.Say.ID, which)
-		assert.Equal(t, []string{view}, backend.Calls(), which)
+	testCases := []struct {
+		name     string
+		have     Answer
+		expected []string
+	}{
+		{name: "ShouldShowTheShowWhenTheShowWasChosen", have: Answer{Which: AnswerShow}, expected: []string{"ShowView tvshows title severance"}},
+		{name: "ShouldShowTheFilmWhenTheFilmWasChosen", have: Answer{Which: AnswerFilm}, expected: []string{"ShowView movies title severance"}},
+		{name: "ShouldShowTheFilmWhenTheFirstWasChosen", have: Answer{Which: AnswerFirst}, expected: []string{"ShowView movies title severance"}},
+		{name: "ShouldAskAgainForATitleNamingNeither", have: Answer{Title: "severance"}},
+		{name: "ShouldAskAgainForNoAnswer"},
+		{name: "ShouldAskAgainForAnUnknownAnswer", have: Answer{Which: AnswerSecond + "x"}},
 	}
 
-	for _, a := range []Answer{{Title: "severance"}, {}, {Which: AnswerSecond + "x"}} {
-		o := svc.ChooseSearch(t.Context(), target, a, o.Pending, *o.Followup.Search)
-		assert.Equal(t, "match.which_one", o.Say.ID, "%+v names neither", a)
-		assert.True(t, o.AskAgain)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.expected == nil {
+				o := svc.ChooseSearch(t.Context(), target, tc.have, pending, search)
+				assert.Equal(t, "match.which_one", o.Say.ID, "names neither")
+				assert.True(t, o.AskAgain)
+
+				return
+			}
+
+			target, backend, _ := newTarget(append(testkit.SampleLibrary(), film)...)
+
+			o := svc.ChooseSearch(t.Context(), target, tc.have, pending, search)
+			assert.Equal(t, "addon.searching", o.Say.ID)
+			assert.Equal(t, tc.expected, backend.Calls())
+		})
 	}
 
 	target, backend, _ = newTarget(append(testkit.SampleLibrary(), film)...)
@@ -273,53 +319,38 @@ func TestSkinSearch(t *testing.T) {
 }
 
 func TestSkinSearchFallsBackToTheLibrary(t *testing.T) {
-	tests := []struct {
-		name string
-		skin media.Skin
-		err  error
-		fail bool
-		note string
+	testCases := []struct {
+		name     string
+		have     media.Skin
+		skinErr  error
+		fail     bool
+		expected string
 	}{
-		{
-			name: "no profile", skin: media.Skin{ID: "skin.copacetic", Search: media.SkinSearchNoProfile},
-			note: "skin search: skin.copacetic has no profile; showed the library",
-		},
-		{
-			name: "skins Global Search, which isn't installed", skin: media.Skin{ID: "skin.estuary", Profile: "skin.estuary", Search: media.SkinSearchNative},
-			note: "skin search: skin.estuary skins Global Search, but script.globalsearch isn't installed; showed the library",
-		},
-		{
-			name: "missing add-ons", skin: media.Skin{ID: "skin.arctic.fuse.3", Profile: "skin.arctic.fuse.3", Search: media.SkinSearchMissingAddons, Missing: []string{"script.skinvariables"}},
-			note: "skin search: skin.arctic.fuse.3 needs script.skinvariables; showed the library",
-		},
-		{
-			name: "step failed", skin: media.Skin{ID: "skin.arctic.fuse.3", Profile: "skin.arctic.fuse.3", Search: media.SkinSearchSupported}, err: fmt.Errorf("kodi: skin.arctic.fuse.3 search: %w", errBoom),
-			note: "skin search: skin.arctic.fuse.3 failed: kodi: skin.arctic.fuse.3 search: boom; showed the library",
-		},
-		{
-			name: "skin unreadable", fail: true,
-			note: "skin search: couldn't read the skin: boom; showed the library",
-		},
+		{name: "ShouldFallBackForASkinWithoutAProfile", have: media.Skin{ID: "skin.copacetic", Search: media.SkinSearchNoProfile}, expected: "skin search: skin.copacetic has no profile; showed the library"},
+		{name: "ShouldFallBackForASkinThatSkinsGlobalSearchWhichIsntInstalled", have: media.Skin{ID: "skin.estuary", Profile: "skin.estuary", Search: media.SkinSearchNative}, expected: "skin search: skin.estuary skins Global Search, but script.globalsearch isn't installed; showed the library"},
+		{name: "ShouldFallBackForMissingAddOns", have: media.Skin{ID: "skin.arctic.fuse.3", Profile: "skin.arctic.fuse.3", Search: media.SkinSearchMissingAddons, Missing: []string{"script.skinvariables"}}, expected: "skin search: skin.arctic.fuse.3 needs script.skinvariables; showed the library"},
+		{name: "ShouldFallBackWhenAStepFailed", have: media.Skin{ID: "skin.arctic.fuse.3", Profile: "skin.arctic.fuse.3", Search: media.SkinSearchSupported}, skinErr: fmt.Errorf("kodi: skin.arctic.fuse.3 search: %w", errBoom), expected: "skin search: skin.arctic.fuse.3 failed: kodi: skin.arctic.fuse.3 search: boom; showed the library"},
+		{name: "ShouldFallBackWhenTheSkinIsUnreadable", fail: true, expected: "skin search: couldn't read the skin: boom; showed the library"},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			target, backend, _ := newTarget()
-			if tt.skin.Search != media.SkinSearchNative {
+			if tc.have.Search != media.SkinSearchNative {
 				withAddons(backend)
 			}
 
-			backend.SetSkin(tt.skin, tt.err)
+			backend.SetSkin(tc.have, tc.skinErr)
 			target.SearchMode = media.SearchModeSkin
 
-			if tt.fail {
+			if tc.fail {
 				target, _ = failing(target, backend, errBoom, "SkinSearch")
 			}
 
 			o := newService().GlobalSearch(t.Context(), target, "hot fuzz", nil)
 			assert.Equal(t, "addon.searching", o.Say.ID)
 			require.NoError(t, o.Err)
-			assert.Equal(t, tt.note, o.Note)
+			assert.Equal(t, tc.expected, o.Note)
 
 			calls := backend.Calls()
 			assert.Equal(t, "ShowView movies title hot fuzz", calls[len(calls)-1], "the library is shown, not Global Search")
@@ -338,19 +369,29 @@ func TestAnswerByKind(t *testing.T) {
 	show := Choice{Ref: media.Ref{Kind: media.KindTVShow, ID: 10}, Title: "Dune: Prophecy"}
 	other := Choice{Ref: media.Ref{Kind: media.KindMovie, ID: 2}, Title: "Dune"}
 
-	c, ok := at(AnswerShow, []Choice{film, show})
-	assert.True(t, ok)
-	assert.Equal(t, show, c)
+	testCases := []struct {
+		name     string
+		which    string
+		have     []Choice
+		expected Choice
+		ok       bool
+	}{
+		{name: "ShouldPickTheShow", which: AnswerShow, have: []Choice{film, show}, expected: show, ok: true},
+		{name: "ShouldPickTheFilm", which: AnswerFilm, have: []Choice{show, film}, expected: film, ok: true},
+		{name: "ShouldNotPickAShowWhenNoneWasOffered", which: AnswerShow, have: []Choice{film, other}},
+		{name: "ShouldNotPickAFilmWhenTwoWereOffered", which: AnswerFilm, have: []Choice{film, other}},
+	}
 
-	c, ok = at(AnswerFilm, []Choice{show, film})
-	assert.True(t, ok)
-	assert.Equal(t, film, c)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual, ok := at(tc.which, tc.have)
+			assert.Equal(t, tc.ok, ok)
 
-	_, ok = at(AnswerShow, []Choice{film, other})
-	assert.False(t, ok, "no show was offered")
-
-	_, ok = at(AnswerFilm, []Choice{film, other})
-	assert.False(t, ok, "two films were offered")
+			if tc.ok {
+				assert.Equal(t, tc.expected, actual)
+			}
+		})
+	}
 }
 
 func TestSkinSearchOnASkinThatDrawsGlobalSearch(t *testing.T) {

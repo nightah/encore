@@ -132,21 +132,24 @@ func TestAlbumsByEdges(t *testing.T) {
 }
 
 func TestRecommendEachKind(t *testing.T) {
-	for _, tc := range []struct {
-		kind   media.Kind
-		id     string
-		params map[string]string
+	testCases := []struct {
+		name     string
+		kind     media.Kind
+		expected string
+		params   map[string]string
 	}{
-		{media.KindTVShow, "recommend.show", map[string]string{"title": "Severance"}},
-		{media.KindArtist, "recommend.artist", nil},
-		{media.KindSong, "recommend.song", nil},
-	} {
-		t.Run(string(tc.kind), func(t *testing.T) {
+		{name: "ShouldRecommendATVShow", kind: media.KindTVShow, expected: "recommend.show", params: map[string]string{"title": "Severance"}},
+		{name: "ShouldRecommendAnArtist", kind: media.KindArtist, expected: "recommend.artist"},
+		{name: "ShouldRecommendASong", kind: media.KindSong, expected: "recommend.song"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			target, backend, _ := newTarget()
 
 			o := seeded().Recommend(t.Context(), target, RecommendRequest{Kinds: []media.Kind{tc.kind}}, nil)
 
-			assert.Equal(t, tc.id, o.Say.ID)
+			assert.Equal(t, tc.expected, o.Say.ID)
 			require.Len(t, o.Pending, 1)
 			assert.Equal(t, tc.kind, o.Pending[0].Ref.Kind)
 			assert.Equal(t, o.Say.Params["title"], o.Pending[0].Title, "the question names the offered title")
@@ -201,7 +204,7 @@ func numbered(kind media.Kind, n int, added time.Time) []media.Item {
 func TestWhatsNewLists(t *testing.T) {
 	added := time.Date(2026, 10, 1, 9, 0, 0, 0, time.UTC)
 
-	t.Run("more than five movies", func(t *testing.T) {
+	t.Run("ShouldSayThereAreMoreThanFiveMovies", func(t *testing.T) {
 		target, _, _ := newTarget(numbered(media.KindMovie, 7, added)...)
 
 		o := newService().WhatsNew(t.Context(), target, WhatsNewRequest{})
@@ -210,7 +213,7 @@ func TestWhatsNewLists(t *testing.T) {
 		assert.Equal(t, []string{"movie 6", "movie 5", "movie 4", "movie 3", "movie 2"}, o.Say.Lists["titles"])
 	})
 
-	t.Run("exactly five movies", func(t *testing.T) {
+	t.Run("ShouldListExactlyFiveMovies", func(t *testing.T) {
 		target, _, _ := newTarget(numbered(media.KindMovie, 5, added)...)
 
 		o := newService().WhatsNew(t.Context(), target, WhatsNewRequest{})
@@ -219,7 +222,7 @@ func TestWhatsNewLists(t *testing.T) {
 		assert.Len(t, o.Say.Lists["titles"], 5)
 	})
 
-	t.Run("everything watched", func(t *testing.T) {
+	t.Run("ShouldSayNothingWhenEverythingIsWatched", func(t *testing.T) {
 		movies := numbered(media.KindMovie, 2, added)
 		for i := range movies {
 			movies[i].PlayCount = 1
@@ -233,7 +236,7 @@ func TestWhatsNewLists(t *testing.T) {
 		assert.Empty(t, o.Say.Lists)
 	})
 
-	t.Run("music videos", func(t *testing.T) {
+	t.Run("ShouldListMusicVideos", func(t *testing.T) {
 		target, _, _ := newTarget()
 
 		o := newService().WhatsNew(t.Context(), target, WhatsNewRequest{Kind: media.KindMusicVideo})
@@ -242,7 +245,7 @@ func TestWhatsNewLists(t *testing.T) {
 		assert.Equal(t, []string{"Bohemian Rhapsody"}, o.Say.Lists["titles"])
 	})
 
-	t.Run("unknown genre", func(t *testing.T) {
+	t.Run("ShouldSayAnUnknownGenre", func(t *testing.T) {
 		target, _, _ := newTarget()
 
 		o := newService().WhatsNew(t.Context(), target, WhatsNewRequest{Genre: "western"})
@@ -250,13 +253,13 @@ func TestWhatsNewLists(t *testing.T) {
 		assert.Equal(t, "library.no_genre", o.Say.ID)
 	})
 
-	t.Run("no albums", func(t *testing.T) {
+	t.Run("ShouldSayThereAreNoAlbums", func(t *testing.T) {
 		target, _, _ := newTarget(numbered(media.KindMovie, 1, added)...)
 
 		assert.Equal(t, "whatsnew.no_albums", newService().WhatsNew(t.Context(), target, WhatsNewRequest{Kind: media.KindSong}).Say.ID)
 	})
 
-	t.Run("more than five albums", func(t *testing.T) {
+	t.Run("ShouldSayThereAreMoreThanFiveAlbums", func(t *testing.T) {
 		target, _, _ := newTarget(numbered(media.KindAlbum, 6, added)...)
 
 		o := newService().WhatsNew(t.Context(), target, WhatsNewRequest{Kind: media.KindArtist})
@@ -274,30 +277,29 @@ func TestWhatsNewEpisodes(t *testing.T) {
 		return media.Item{Kind: media.KindEpisode, ID: id, ShowID: show, ShowTitle: title, PlayCount: playCount, DateAdded: added}
 	}
 
-	for _, tc := range []struct {
-		name   string
-		eps    []media.Item
-		id     string
-		params map[string]string
-		list   []string
+	testCases := []struct {
+		name     string
+		have     []media.Item
+		expected string
+		params   map[string]string
+		list     []string
 	}{
-		{"one new episode", []media.Item{episode(1, 1, "Slow Horses", 0, recent), episode(2, 1, "Slow Horses", 1, recent)}, "tv.one_new_episode", map[string]string{"show": "Slow Horses"}, nil},
-		{"several shows", []media.Item{episode(1, 1, "Slow Horses", 0, recent), episode(2, 2, "Bluey", 0, recent.Add(time.Hour)), episode(3, 1, "Slow Horses", 0, recent)}, "whatsnew.shows", nil, []string{"Bluey", "Slow Horses"}},
-		{"many shows", []media.Item{
-			episode(1, 1, "A", 0, recent), episode(2, 2, "B", 0, recent), episode(3, 3, "C", 0, recent),
-			episode(4, 4, "D", 0, recent), episode(5, 5, "E", 0, recent), episode(6, 6, "F", 0, recent),
-		}, "whatsnew.shows_more", nil, nil},
-		{"only old episodes", []media.Item{episode(1, 1, "Slow Horses", 0, now.Add(-31*24*time.Hour))}, "whatsnew.no_episodes", nil, nil},
-		{"only watched episodes", []media.Item{episode(1, 1, "Slow Horses", 3, recent)}, "whatsnew.no_episodes", nil, nil},
-	} {
+		{name: "ShouldSayOneNewEpisode", have: []media.Item{episode(1, 1, "Slow Horses", 0, recent), episode(2, 1, "Slow Horses", 1, recent)}, expected: "tv.one_new_episode", params: map[string]string{"show": "Slow Horses"}},
+		{name: "ShouldListSeveralShows", have: []media.Item{episode(1, 1, "Slow Horses", 0, recent), episode(2, 2, "Bluey", 0, recent.Add(time.Hour)), episode(3, 1, "Slow Horses", 0, recent)}, expected: "whatsnew.shows", list: []string{"Bluey", "Slow Horses"}},
+		{name: "ShouldSayThereAreMoreShows", have: []media.Item{episode(1, 1, "A", 0, recent), episode(2, 2, "B", 0, recent), episode(3, 3, "C", 0, recent), episode(4, 4, "D", 0, recent), episode(5, 5, "E", 0, recent), episode(6, 6, "F", 0, recent)}, expected: "whatsnew.shows_more"},
+		{name: "ShouldSayNoEpisodesWhenOnlyOldOnes", have: []media.Item{episode(1, 1, "Slow Horses", 0, now.Add(-31*24*time.Hour))}, expected: "whatsnew.no_episodes"},
+		{name: "ShouldSayNoEpisodesWhenOnlyWatchedOnes", have: []media.Item{episode(1, 1, "Slow Horses", 3, recent)}, expected: "whatsnew.no_episodes"},
+	}
+
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			target, _, _ := newTarget(tc.eps...)
+			target, _, _ := newTarget(tc.have...)
 			svc := newService()
 			svc.now = func() time.Time { return now }
 
 			o := svc.WhatsNew(t.Context(), target, WhatsNewRequest{Kind: media.KindEpisode})
 
-			assert.Equal(t, tc.id, o.Say.ID)
+			assert.Equal(t, tc.expected, o.Say.ID)
 
 			if tc.params != nil {
 				assert.Equal(t, tc.params, o.Say.Params)
@@ -307,7 +309,7 @@ func TestWhatsNewEpisodes(t *testing.T) {
 				assert.Equal(t, tc.list, o.Say.Lists["titles"], "newest first, each show once")
 			}
 
-			if tc.id == "whatsnew.shows_more" {
+			if tc.expected == "whatsnew.shows_more" {
 				assert.Len(t, o.Say.Lists["titles"], whatsNewMax)
 			}
 		})

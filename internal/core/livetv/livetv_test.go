@@ -123,41 +123,54 @@ func guideFor(t *testing.T, channels []media.Channel) (*Guide, *source, *clock) 
 }
 
 func TestFind(t *testing.T) {
-	for _, numbering := range []struct {
+	testCases := []struct {
 		name string
 		lcn  bool
-	}{{"Kodi's numbers", false}, {"Australian numbers", true}} {
-		t.Run(numbering.name, func(t *testing.T) {
-			g, _, _ := guideFor(t, misatonuc(t, numbering.lcn))
+	}{
+		{name: "ShouldFindChannelsByKodisNumbers"},
+		{name: "ShouldFindChannelsByAustralianNumbers", lcn: true},
+	}
 
-			for spoken, want := range map[string]string{
-				"seven":                    "Seven",
-				"Seven":                    "Seven",
-				"nine go":                  "9Go!",
-				"nine gem":                 "9Gem",
-				"seven two":                "7two",
-				"72":                       "7two",
-				"seven mate":               "7mate",
-				"ten":                      "10",
-				"ten drama":                "10 Drama",
-				"abc news":                 "ABC NEWS",
-				"a b c kids":               "ABC Kids",
-				"sbs":                      "SBS",
-				"sbs radio one":            "SBS Radio 1",
-				"fox sports five oh three": "Fox Sports 503",
-				"fox sports 503":           "Fox Sports 503",
-				"channel nine":             "Channel 9",
-				"nine":                     "Channel 9",
-				"thirty one":               "Channel 31",
-				"espn two":                 "ESPN2",
-				"fox footy":                "Fox Footy",
-				"al jazeera":               "Al Jazeera",
-				"seinfeld":                 "Seinfeld",
-			} {
-				found, err := g.Find(t.Context(), spoken)
-				require.NoError(t, err)
-				assert.Equal(t, match.DecisionPlay, found.Decision, spoken)
-				assert.Equal(t, want, found.Channel.Name, spoken)
+	spokenCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldFindSeven", have: "seven", expected: "Seven"},
+		{name: "ShouldFindSevenCapitalised", have: "Seven", expected: "Seven"},
+		{name: "ShouldFindNineGo", have: "nine go", expected: "9Go!"},
+		{name: "ShouldFindNineGem", have: "nine gem", expected: "9Gem"},
+		{name: "ShouldFindSevenTwoSpoken", have: "seven two", expected: "7two"},
+		{name: "ShouldFindSevenTwoInDigits", have: "72", expected: "7two"},
+		{name: "ShouldFindSevenMate", have: "seven mate", expected: "7mate"},
+		{name: "ShouldFindTen", have: "ten", expected: "10"},
+		{name: "ShouldFindTenDrama", have: "ten drama", expected: "10 Drama"},
+		{name: "ShouldFindABCNews", have: "abc news", expected: "ABC NEWS"},
+		{name: "ShouldFindABCKidsSpelledOut", have: "a b c kids", expected: "ABC Kids"},
+		{name: "ShouldFindSBS", have: "sbs", expected: "SBS"},
+		{name: "ShouldFindSBSRadioOne", have: "sbs radio one", expected: "SBS Radio 1"},
+		{name: "ShouldFindFoxSports503Spoken", have: "fox sports five oh three", expected: "Fox Sports 503"},
+		{name: "ShouldFindFoxSports503InDigits", have: "fox sports 503", expected: "Fox Sports 503"},
+		{name: "ShouldFindChannelNine", have: "channel nine", expected: "Channel 9"},
+		{name: "ShouldFindChannelNineByNumber", have: "nine", expected: "Channel 9"},
+		{name: "ShouldFindChannelThirtyOne", have: "thirty one", expected: "Channel 31"},
+		{name: "ShouldFindESPNTwo", have: "espn two", expected: "ESPN2"},
+		{name: "ShouldFindFoxFooty", have: "fox footy", expected: "Fox Footy"},
+		{name: "ShouldFindAlJazeera", have: "al jazeera", expected: "Al Jazeera"},
+		{name: "ShouldFindSeinfeld", have: "seinfeld", expected: "Seinfeld"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			g, _, _ := guideFor(t, misatonuc(t, tc.lcn))
+
+			for _, sc := range spokenCases {
+				t.Run(sc.name, func(t *testing.T) {
+					found, err := g.Find(t.Context(), sc.have)
+					require.NoError(t, err)
+					assert.Equal(t, match.DecisionPlay, found.Decision)
+					assert.Equal(t, sc.expected, found.Channel.Name)
+				})
 			}
 		})
 	}
@@ -174,10 +187,23 @@ func TestFindByNumberWhenNoName(t *testing.T) {
 
 	g, _, _ = guideFor(t, misatonuc(t, true))
 
-	for spoken, want := range map[string]string{"twenty four": "ABC NEWS", "seventy two": "7two", "twenty one": "ABC TV", "ninety one": "Channel 9"} {
-		found, err = g.Find(t.Context(), spoken)
-		require.NoError(t, err)
-		assert.Equal(t, want, found.Channel.Name, spoken)
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldFindTwentyFourAsABCNews", have: "twenty four", expected: "ABC NEWS"},
+		{name: "ShouldFindSeventyTwoAsSevenTwo", have: "seventy two", expected: "7two"},
+		{name: "ShouldFindTwentyOneAsABCTV", have: "twenty one", expected: "ABC TV"},
+		{name: "ShouldFindNinetyOneAsChannelNine", have: "ninety one", expected: "Channel 9"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			found, err := g.Find(t.Context(), tc.have)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, found.Channel.Name)
+		})
 	}
 }
 
@@ -210,11 +236,24 @@ func TestFindNotFound(t *testing.T) {
 func TestFindDuplicates(t *testing.T) {
 	g, _, _ := guideFor(t, misatonuc(t, false))
 
-	for spoken, want := range map[string]int{"bbc news": 73, "judge judy": 43, "racing dot com": 17, "ghost hunters": 29} {
-		found, err := g.Find(t.Context(), spoken)
-		require.NoError(t, err)
-		assert.Equal(t, match.DecisionPlay, found.Decision, spoken)
-		assert.Equal(t, want, found.Channel.Major, "%s: the lowest numbered of the channels with the name", spoken)
+	testCases := []struct {
+		name     string
+		have     string
+		expected int
+	}{
+		{name: "ShouldPickTheLowestNumberedBBCNews", have: "bbc news", expected: 73},
+		{name: "ShouldPickTheLowestNumberedJudgeJudy", have: "judge judy", expected: 43},
+		{name: "ShouldPickTheLowestNumberedRacingDotCom", have: "racing dot com", expected: 17},
+		{name: "ShouldPickTheLowestNumberedGhostHunters", have: "ghost hunters", expected: 29},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			found, err := g.Find(t.Context(), tc.have)
+			require.NoError(t, err)
+			assert.Equal(t, match.DecisionPlay, found.Decision)
+			assert.Equal(t, tc.expected, found.Channel.Major, "the lowest numbered of the channels with the name")
+		})
 	}
 }
 
@@ -247,15 +286,27 @@ func TestByNumberSubChannel(t *testing.T) {
 		{ID: 3, Name: "SBS Viceland", Major: 3, SubNumber: 2},
 	})
 
-	for _, tc := range []struct {
-		major, sub int
-		want       string
-		ok         bool
-	}{{3, -1, "SBS", true}, {3, 2, "SBS Viceland", true}, {3, 0, "SBS", true}, {3, 5, "", false}, {4, -1, "", false}} {
-		c, ok, err := g.ByNumber(t.Context(), tc.major, tc.sub)
-		require.NoError(t, err)
-		assert.Equal(t, tc.ok, ok)
-		assert.Equal(t, tc.want, c.Name)
+	testCases := []struct {
+		name       string
+		major      int
+		sub        int
+		expected   string
+		expectedOK bool
+	}{
+		{name: "ShouldFindTheMainChannelWithoutASubNumber", major: 3, sub: -1, expected: "SBS", expectedOK: true},
+		{name: "ShouldFindTheSubChannel", major: 3, sub: 2, expected: "SBS Viceland", expectedOK: true},
+		{name: "ShouldFindTheMainChannelForSubNumberZero", major: 3, expected: "SBS", expectedOK: true},
+		{name: "ShouldNotFindAMissingSubChannel", major: 3, sub: 5},
+		{name: "ShouldNotFindAMissingNumber", major: 4, sub: -1},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			c, ok, err := g.ByNumber(t.Context(), tc.major, tc.sub)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectedOK, ok)
+			assert.Equal(t, tc.expected, c.Name)
+		})
 	}
 
 	found, err := g.Find(t.Context(), "three two")
@@ -352,33 +403,39 @@ func TestFindProgramme(t *testing.T) {
 		{ID: 5, Name: "7mate", Major: 74, Next: slot("Austin", 30*time.Minute, time.Hour)},
 	})
 
-	p, ok, err := g.FindProgramme(t.Context(), "house of wellness")
-	require.NoError(t, err)
-	require.True(t, ok)
-	assert.Equal(t, "Seven", p.Channel.Name)
-	assert.True(t, p.OnNow)
+	testCases := []struct {
+		name          string
+		have          string
+		expected      string
+		expectedOK    bool
+		expectedNow   bool
+		expectedStart time.Time
+	}{
+		{name: "ShouldFindAProgrammeOnNow", have: "house of wellness", expected: "Seven", expectedOK: true, expectedNow: true},
+		{name: "ShouldFindAProgrammeOnNext", have: "gardening australia", expected: "ABC TV", expectedOK: true, expectedStart: now.Add(25 * time.Minute)},
+		{name: "ShouldPickTheLowestNumberedOfTwoChannels", have: "test cricket", expected: "Kayo Cricket", expectedOK: true, expectedNow: true},
+		{name: "ShouldPreferOnNowOverOnNextThoughTheNumberIsHigher", have: "austin", expected: "ABC TV", expectedOK: true, expectedNow: true},
+		{name: "ShouldNotFindAProgrammeNotOn", have: "neighbours"},
+	}
 
-	p, ok, err = g.FindProgramme(t.Context(), "gardening australia")
-	require.NoError(t, err)
-	require.True(t, ok)
-	assert.Equal(t, "ABC TV", p.Channel.Name)
-	assert.False(t, p.OnNow)
-	assert.Equal(t, now.Add(25*time.Minute), p.Broadcast.Start)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			p, ok, err := g.FindProgramme(t.Context(), tc.have)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedOK, ok)
 
-	p, ok, err = g.FindProgramme(t.Context(), "test cricket")
-	require.NoError(t, err)
-	require.True(t, ok)
-	assert.Equal(t, "Kayo Cricket", p.Channel.Name, "on two channels: the lowest numbered")
+			if !tc.expectedOK {
+				return
+			}
 
-	p, ok, err = g.FindProgramme(t.Context(), "austin")
-	require.NoError(t, err)
-	require.True(t, ok)
-	assert.Equal(t, "ABC TV", p.Channel.Name, "on now beats on next, though 7mate's number is lower")
-	assert.True(t, p.OnNow)
+			assert.Equal(t, tc.expected, p.Channel.Name)
+			assert.Equal(t, tc.expectedNow, p.OnNow)
 
-	_, ok, err = g.FindProgramme(t.Context(), "neighbours")
-	require.NoError(t, err)
-	assert.False(t, ok)
+			if !tc.expectedStart.IsZero() {
+				assert.Equal(t, tc.expectedStart, p.Broadcast.Start)
+			}
+		})
+	}
 }
 
 func TestNames(t *testing.T) {
@@ -391,34 +448,55 @@ func TestNames(t *testing.T) {
 }
 
 func TestJoinDigits(t *testing.T) {
-	for in, want := range map[string]string{
-		"fox sports 5 oh 3": "fox sports 503",
-		"7 2":               "72",
-		"24":                "24",
-		"24 7":              "24 7",
-		"sbs radio 1":       "sbs radio 1",
-		"oh 3":              "oh 3",
-		"1 o 1":             "101",
-	} {
-		assert.Equal(t, want, joinDigits("en", in), in)
+	testCases := []struct {
+		name     string
+		locale   string
+		have     string
+		expected string
+	}{
+		{name: "ShouldJoinDigitsWithOhAsZero", locale: "en", have: "fox sports 5 oh 3", expected: "fox sports 503"},
+		{name: "ShouldJoinTwoDigits", locale: "en", have: "7 2", expected: "72"},
+		{name: "ShouldKeepANumber", locale: "en", have: "24", expected: "24"},
+		{name: "ShouldKeepTwoDigitNumbersApart", locale: "en", have: "24 7", expected: "24 7"},
+		{name: "ShouldKeepADigitAfterAWord", locale: "en", have: "sbs radio 1", expected: "sbs radio 1"},
+		{name: "ShouldKeepALeadingOh", locale: "en", have: "oh 3", expected: "oh 3"},
+		{name: "ShouldJoinDigitsWithOAsZero", locale: "en", have: "1 o 1", expected: "101"},
+		{name: "ShouldReadOhAsZeroOnlyInEnglish", locale: "fr", have: "5 oh 3", expected: "5 oh 3"},
 	}
 
-	assert.Equal(t, "5 oh 3", joinDigits("fr", "5 oh 3"), "oh is a zero only in English")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, joinDigits(tc.locale, tc.have))
+		})
+	}
 }
 
 func TestAliases(t *testing.T) {
-	assert.Equal(t, []string{"9 Go!"}, Aliases("en", "9Go!"))
-	assert.Equal(t, []string{"ESPN 2"}, Aliases("en", "ESPN2"))
-	assert.Equal(t, []string{"7 two"}, Aliases("en", "7two"))
-	assert.Nil(t, Aliases("en", "ABC NEWS"))
-	assert.Nil(t, Aliases("en", "Fox Sports 503"))
-	assert.Equal(t, []string{"Racing dot com"}, Aliases("en", "Racing.com"))
-	assert.Nil(t, Aliases("en", "GOOD."))
-	assert.Equal(t, []string{"TF 1", "TF un"}, Aliases("fr-FR", "TF1"), "a 1 after a word, spoken")
-	assert.Equal(t, []string{"NPO een", "NPO één"}, Aliases("nl", "NPO 1"))
-	assert.Nil(t, Aliases("fr", "Canal 10"), "only a 1 on its own")
-	assert.Equal(t, []string{"1 Plus"}, Aliases("fr", "1Plus"), "nor a 1 the name starts with")
-	assert.Equal(t, []string{"ESPN 1"}, Aliases("en", "ESPN1"), "English reads one as a number already")
+	testCases := []struct {
+		name     string
+		locale   string
+		have     string
+		expected []string
+	}{
+		{name: "ShouldSplitADigitFromAWord", locale: "en", have: "9Go!", expected: []string{"9 Go!"}},
+		{name: "ShouldSplitAWordFromADigit", locale: "en", have: "ESPN2", expected: []string{"ESPN 2"}},
+		{name: "ShouldSplitADigitFromALowercaseWord", locale: "en", have: "7two", expected: []string{"7 two"}},
+		{name: "ShouldHaveNoAliasForPlainWords", locale: "en", have: "ABC NEWS"},
+		{name: "ShouldHaveNoAliasForANumberAlreadyApart", locale: "en", have: "Fox Sports 503"},
+		{name: "ShouldSpeakADot", locale: "en", have: "Racing.com", expected: []string{"Racing dot com"}},
+		{name: "ShouldNotSpeakATrailingDot", locale: "en", have: "GOOD."},
+		{name: "ShouldSpeakAOneAfterAWord", locale: "fr-FR", have: "TF1", expected: []string{"TF 1", "TF un"}},
+		{name: "ShouldSpeakAOneInDutch", locale: "nl", have: "NPO 1", expected: []string{"NPO een", "NPO één"}},
+		{name: "ShouldSpeakOnlyAOneOnItsOwn", locale: "fr", have: "Canal 10"},
+		{name: "ShouldNotSpeakAOneTheNameStartsWith", locale: "fr", have: "1Plus", expected: []string{"1 Plus"}},
+		{name: "ShouldNotSpeakAOneInEnglish", locale: "en", have: "ESPN1", expected: []string{"ESPN 1"}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, Aliases(tc.locale, tc.have))
+		})
+	}
 }
 
 func TestChannelNow(t *testing.T) {
@@ -427,14 +505,27 @@ func TestChannelNow(t *testing.T) {
 		{ID: 24, Name: "ABC NEWS", Major: 24, Now: &media.Broadcast{Title: "The World", Start: now.Add(-time.Minute), End: now.Add(time.Hour)}},
 	})
 
-	c, ok, err := g.ChannelNow(t.Context(), 24)
-	require.NoError(t, err)
-	require.True(t, ok)
-	assert.Equal(t, "The World", c.Now.Title)
+	testCases := []struct {
+		name       string
+		have       int
+		expected   string
+		expectedOK bool
+	}{
+		{name: "ShouldSayWhatIsOnNow", have: 24, expected: "The World", expectedOK: true},
+		{name: "ShouldNotFindAMissingNumber", have: 99},
+	}
 
-	_, ok, err = g.ChannelNow(t.Context(), 99)
-	require.NoError(t, err)
-	assert.False(t, ok)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			c, ok, err := g.ChannelNow(t.Context(), tc.have)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedOK, ok)
+
+			if tc.expectedOK {
+				assert.Equal(t, tc.expected, c.Now.Title)
+			}
+		})
+	}
 }
 
 func TestSourceErrors(t *testing.T) {
@@ -470,24 +561,29 @@ func TestNewDefaults(t *testing.T) {
 }
 
 func TestFindSpokenOne(t *testing.T) {
-	for lang, tc := range map[string]struct {
+	testCases := []struct {
+		name          string
+		locale        string
 		channels      []media.Channel
-		spoken, want  string
+		have          string
+		expected      string
 		notOneChannel string
 	}{
-		"fr": {[]media.Channel{{ID: 1, Name: "TF1", Major: 1}, {ID: 2, Name: "France 2", Major: 2}, {ID: 3, Name: "M6", Major: 6}}, "tf un", "TF1", "france un"},
-		"nl": {[]media.Channel{{ID: 1, Name: "NPO 1", Major: 1}, {ID: 2, Name: "NPO 2", Major: 2}, {ID: 3, Name: "RTL 4", Major: 4}}, "npo een", "NPO 1", "rtl een"},
-		"it": {[]media.Channel{{ID: 1, Name: "Rai 1", Major: 1}, {ID: 2, Name: "Rai 2", Major: 2}}, "rai uno", "Rai 1", ""},
-		"pt": {[]media.Channel{{ID: 1, Name: "SIC", Major: 3}, {ID: 2, Name: "RTP1", Major: 1}}, "rtp um", "RTP1", ""},
-	} {
-		t.Run(lang, func(t *testing.T) {
-			src := &source{channels: tc.channels, available: true}
-			g := New(src, lang, Options{Now: (&clock{t: time.Date(2026, 11, 11, 21, 26, 0, 0, melbourne(t))}).now})
+		{name: "ShouldFindASpokenOneInFR", locale: "fr", channels: []media.Channel{{ID: 1, Name: "TF1", Major: 1}, {ID: 2, Name: "France 2", Major: 2}, {ID: 3, Name: "M6", Major: 6}}, have: "tf un", expected: "TF1", notOneChannel: "france un"},
+		{name: "ShouldFindASpokenOneInNL", locale: "nl", channels: []media.Channel{{ID: 1, Name: "NPO 1", Major: 1}, {ID: 2, Name: "NPO 2", Major: 2}, {ID: 3, Name: "RTL 4", Major: 4}}, have: "npo een", expected: "NPO 1", notOneChannel: "rtl een"},
+		{name: "ShouldFindASpokenOneInIT", locale: "it", channels: []media.Channel{{ID: 1, Name: "Rai 1", Major: 1}, {ID: 2, Name: "Rai 2", Major: 2}}, have: "rai uno", expected: "Rai 1"},
+		{name: "ShouldFindASpokenOneInPT", locale: "pt", channels: []media.Channel{{ID: 1, Name: "SIC", Major: 3}, {ID: 2, Name: "RTP1", Major: 1}}, have: "rtp um", expected: "RTP1"},
+	}
 
-			found, err := g.Find(t.Context(), tc.spoken)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			src := &source{channels: tc.channels, available: true}
+			g := New(src, tc.locale, Options{Now: (&clock{t: time.Date(2026, 11, 11, 21, 26, 0, 0, melbourne(t))}).now})
+
+			found, err := g.Find(t.Context(), tc.have)
 			require.NoError(t, err)
-			assert.Equal(t, match.DecisionPlay, found.Decision, "Alexa writes a 1 after a name as the word, which %s also uses for “a”", lang)
-			assert.Equal(t, tc.want, found.Channel.Name)
+			assert.Equal(t, match.DecisionPlay, found.Decision, "Alexa writes a 1 after a name as the word, which %s also uses for “a”", tc.locale)
+			assert.Equal(t, tc.expected, found.Channel.Name)
 
 			if tc.notOneChannel != "" {
 				found, err = g.Find(t.Context(), tc.notOneChannel)
@@ -501,16 +597,23 @@ func TestFindSpokenOne(t *testing.T) {
 func TestFindWhatIsNoChannel(t *testing.T) {
 	g, _, _ := guideFor(t, misatonuc(t, true))
 
-	for spoken, why := range map[string]string{
-		"":                     "nothing said",
-		"?":                    "nothing but punctuation",
-		"5":                    "a number no channel has, too short to be 0.5",
-		"99999999999999999999": "a number too long to be a channel's",
-		"zzz 4 5":              "nothing like it, with its digits apart or joined",
-	} {
-		found, err := g.Find(t.Context(), spoken)
-		require.NoError(t, err, why)
-		assert.Equal(t, match.DecisionNotFound, found.Decision, why)
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldFindNothingWhenNothingIsSaid"},
+		{name: "ShouldFindNothingForOnlyPunctuation", have: "?"},
+		{name: "ShouldFindNothingForANumberNoChannelHasTooShortToBeASubChannel", have: "5"},
+		{name: "ShouldFindNothingForANumberTooLongToBeAChannels", have: "99999999999999999999"},
+		{name: "ShouldFindNothingLikeItWithItsDigitsApartOrJoined", have: "zzz 4 5"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			found, err := g.Find(t.Context(), tc.have)
+			require.NoError(t, err)
+			assert.Equal(t, match.DecisionNotFound, found.Decision)
+		})
 	}
 }
 
@@ -556,12 +659,17 @@ func TestPickPrefersOnNowWhicheverComesFirst(t *testing.T) {
 	now := time.Date(2026, 11, 11, 21, 26, 0, 0, melbourne(t))
 	on := &media.Broadcast{Title: "FOX SPORTS News", Start: now.Add(-time.Minute), End: now.Add(time.Hour)}
 
-	for name, channels := range map[string][]media.Channel{
-		"on now listed second": {{ID: 3159, Name: "DW English", Major: 173}, {ID: 3164, Name: "Fox Sports News", Major: 173, Now: on}},
-		"on now listed first":  {{ID: 3164, Name: "Fox Sports News", Major: 173, Now: on}, {ID: 3159, Name: "DW English", Major: 173}},
-	} {
-		t.Run(name, func(t *testing.T) {
-			g, _, _ := guideFor(t, channels)
+	testCases := []struct {
+		name string
+		have []media.Channel
+	}{
+		{name: "ShouldPickOnNowListedSecond", have: []media.Channel{{ID: 3159, Name: "DW English", Major: 173}, {ID: 3164, Name: "Fox Sports News", Major: 173, Now: on}}},
+		{name: "ShouldPickOnNowListedFirst", have: []media.Channel{{ID: 3164, Name: "Fox Sports News", Major: 173, Now: on}, {ID: 3159, Name: "DW English", Major: 173}}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			g, _, _ := guideFor(t, tc.have)
 
 			c, ok, err := g.ByNumber(t.Context(), 173, -1)
 			require.NoError(t, err)
@@ -583,14 +691,29 @@ func TestFindProgrammeAsked(t *testing.T) {
 		{ID: 4, Name: "Kayo Footy", Major: 404, Now: slot("AFL Live")},
 	})
 
-	_, ok, err := g.FindProgramme(t.Context(), "cricket")
-	require.NoError(t, err)
-	assert.False(t, ok, "two programmes might be meant, and a channel's name may yet be")
+	testCases := []struct {
+		name       string
+		have       string
+		expected   string
+		expectedOK bool
+	}{
+		// Two programmes might be meant, and a channel's name may yet be.
+		{name: "ShouldNotPickWhenTwoProgrammesMightBeMeant", have: "cricket"},
+		// One programme, written two ways: the lower numbered of the channels showing it.
+		{name: "ShouldPickTheLowerNumberedChannelForOneProgrammeWrittenTwoWays", have: "afl", expected: "Kayo Footy", expectedOK: true},
+	}
 
-	p, ok, err := g.FindProgramme(t.Context(), "afl")
-	require.NoError(t, err)
-	require.True(t, ok, "one programme, written two ways")
-	assert.Equal(t, "Kayo Footy", p.Channel.Name, "the lower numbered of the channels showing it")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			p, ok, err := g.FindProgramme(t.Context(), tc.have)
+			require.NoError(t, err)
+			require.Equal(t, tc.expectedOK, ok)
+
+			if tc.expectedOK {
+				assert.Equal(t, tc.expected, p.Channel.Name)
+			}
+		})
+	}
 }
 
 func TestOnNowKeptAFewSeconds(t *testing.T) {

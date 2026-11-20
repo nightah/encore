@@ -729,30 +729,37 @@ func TestItemEquality(t *testing.T) {
 	same.DateAdded = t0.In(time.FixedZone("AEDT", 11*60*60))
 	assert.True(t, equal(&base, &same), "a copy is equal, whatever the time zone")
 
-	for name, change := range map[string]func(*media.Item){
-		"kind":           func(i *media.Item) { i.Kind = media.KindMovie },
-		"id":             func(i *media.Item) { i.ID++ },
-		"title":          func(i *media.Item) { i.Title = "U" },
-		"sort title":     func(i *media.Item) { i.SortTitle = "U" },
-		"original title": func(i *media.Item) { i.OriginalTitle = "U" },
-		"year":           func(i *media.Item) { i.Year++ },
-		"genres":         func(i *media.Item) { i.Genres = []string{"Drama", "Crime"} },
-		"show":           func(i *media.Item) { i.ShowID++ },
-		"show title":     func(i *media.Item) { i.ShowTitle = "U" },
-		"season":         func(i *media.Item) { i.Season++ },
-		"episode":        func(i *media.Item) { i.Episode++ },
-		"artist":         func(i *media.Item) { i.Artist = "U" },
-		"album":          func(i *media.Item) { i.Album = "U" },
-		"play count":     func(i *media.Item) { i.PlayCount++ },
-		"resume":         func(i *media.Item) { i.Resume++ },
-		"runtime":        func(i *media.Item) { i.Runtime++ },
-		"date added":     func(i *media.Item) { i.DateAdded = i.DateAdded.Add(time.Second) },
-		"last played":    func(i *media.Item) { i.LastPlayed = time.Time{} },
-	} {
-		other := base
-		other.Genres = []string{"Drama"}
-		change(&other)
-		assert.False(t, equal(&base, &other), name)
+	testCases := []struct {
+		name   string
+		change func(*media.Item)
+	}{
+		{name: "ShouldDifferByKind", change: func(i *media.Item) { i.Kind = media.KindMovie }},
+		{name: "ShouldDifferByID", change: func(i *media.Item) { i.ID++ }},
+		{name: "ShouldDifferByTitle", change: func(i *media.Item) { i.Title = "U" }},
+		{name: "ShouldDifferBySortTitle", change: func(i *media.Item) { i.SortTitle = "U" }},
+		{name: "ShouldDifferByOriginalTitle", change: func(i *media.Item) { i.OriginalTitle = "U" }},
+		{name: "ShouldDifferByYear", change: func(i *media.Item) { i.Year++ }},
+		{name: "ShouldDifferByGenres", change: func(i *media.Item) { i.Genres = []string{"Drama", "Crime"} }},
+		{name: "ShouldDifferByShow", change: func(i *media.Item) { i.ShowID++ }},
+		{name: "ShouldDifferByShowTitle", change: func(i *media.Item) { i.ShowTitle = "U" }},
+		{name: "ShouldDifferBySeason", change: func(i *media.Item) { i.Season++ }},
+		{name: "ShouldDifferByEpisode", change: func(i *media.Item) { i.Episode++ }},
+		{name: "ShouldDifferByArtist", change: func(i *media.Item) { i.Artist = "U" }},
+		{name: "ShouldDifferByAlbum", change: func(i *media.Item) { i.Album = "U" }},
+		{name: "ShouldDifferByPlayCount", change: func(i *media.Item) { i.PlayCount++ }},
+		{name: "ShouldDifferByResume", change: func(i *media.Item) { i.Resume++ }},
+		{name: "ShouldDifferByRuntime", change: func(i *media.Item) { i.Runtime++ }},
+		{name: "ShouldDifferByDateAdded", change: func(i *media.Item) { i.DateAdded = i.DateAdded.Add(time.Second) }},
+		{name: "ShouldDifferByLastPlayed", change: func(i *media.Item) { i.LastPlayed = time.Time{} }},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			other := base
+			other.Genres = []string{"Drama"}
+			tc.change(&other)
+			assert.False(t, equal(&base, &other))
+		})
 	}
 }
 

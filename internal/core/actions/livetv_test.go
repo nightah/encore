@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
@@ -126,15 +127,28 @@ func TestWatchChannelUnreachable(t *testing.T) {
 func TestWatchChannelNumber(t *testing.T) {
 	target, backend := liveTarget(t)
 
-	o := newService().WatchChannelNumber(t.Context(), target, 71, -1, nil)
-	assert.Equal(t, say("livetv.switching", map[string]string{"channel": "Seven"}), o.Say)
-	assert.Contains(t, backend.Calls(), "PlayChannel 71")
+	testCases := []struct {
+		name     string
+		major    int
+		minor    int
+		expected Message
+		call     string
+	}{
+		{name: "ShouldTuneToTheChannelNumbered", major: 71, minor: -1, expected: say("livetv.switching", map[string]string{"channel": "Seven"}), call: "PlayChannel 71"},
+		{name: "ShouldNotTakeANumberForTheChannelNamedForIt", major: 7, minor: -1, expected: say("livetv.number_not_found", map[string]string{"number": "7"})},
+		{name: "ShouldSayAMissingSubchannel", major: 7, minor: 2, expected: say("livetv.number_not_found", map[string]string{"number": "7.2"})},
+	}
 
-	o = newService().WatchChannelNumber(t.Context(), target, 7, -1, nil)
-	assert.Equal(t, say("livetv.number_not_found", map[string]string{"number": "7"}), o.Say, "seven is the name Seven, but there's no channel numbered 7")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			o := newService().WatchChannelNumber(t.Context(), target, tc.major, tc.minor, nil)
+			assert.Equal(t, tc.expected, o.Say)
 
-	o = newService().WatchChannelNumber(t.Context(), target, 7, 2, nil)
-	assert.Equal(t, say("livetv.number_not_found", map[string]string{"number": "7.2"}), o.Say)
+			if tc.call != "" {
+				assert.Contains(t, backend.Calls(), tc.call)
+			}
+		})
+	}
 }
 
 func TestOpenTVGuide(t *testing.T) {
@@ -183,20 +197,31 @@ func TestWatchLive(t *testing.T) {
 	target, backend := liveTarget(t)
 	now := melbourneNow(t)
 
-	o := newService().WatchLive(t.Context(), target, "house of wellness", nil)
-	assert.Equal(t, say("livetv.switching_programme", map[string]string{"channel": "Seven", "title": "House Of Wellness"}), o.Say)
-	assert.Contains(t, backend.Calls(), "PlayChannel 71")
+	later := say("livetv.programme_later", map[string]string{"channel": "ABC TV", "title": "Gardening Australia"})
+	later.Times = map[string]time.Time{"start": now.Add(25 * time.Minute)}
 
-	o = newService().WatchLive(t.Context(), target, "gardening australia", nil)
-	want := say("livetv.programme_later", map[string]string{"channel": "ABC TV", "title": "Gardening Australia"})
-	want.Times = map[string]time.Time{"start": now.Add(25 * time.Minute)}
-	assert.Equal(t, want, o.Say)
+	testCases := []struct {
+		name     string
+		have     string
+		expected Message
+		call     string
+	}{
+		{name: "ShouldTuneToTheProgrammeOnNow", have: "house of wellness", expected: say("livetv.switching_programme", map[string]string{"channel": "Seven", "title": "House Of Wellness"}), call: "PlayChannel 71"},
+		{name: "ShouldSayWhenAProgrammeStartsLater", have: "gardening australia", expected: later},
+		{name: "ShouldTuneToAChannelsNameWhenNoProgrammeHasIt", have: "abc news", expected: say("livetv.switching", map[string]string{"channel": "ABC NEWS"})},
+		{name: "ShouldSayAProgrammeIsntOn", have: "neighbours", expected: say("livetv.programme_not_found", map[string]string{"title": "neighbours"})},
+	}
 
-	o = newService().WatchLive(t.Context(), target, "abc news", nil)
-	assert.Equal(t, say("livetv.switching", map[string]string{"channel": "ABC NEWS"}), o.Say, "a channel's name, when no programme has it")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			o := newService().WatchLive(t.Context(), target, tc.have, nil)
+			assert.Equal(t, tc.expected, o.Say)
 
-	o = newService().WatchLive(t.Context(), target, "neighbours", nil)
-	assert.Equal(t, say("livetv.programme_not_found", map[string]string{"title": "neighbours"}), o.Say)
+			if tc.call != "" {
+				assert.Contains(t, backend.Calls(), tc.call)
+			}
+		})
+	}
 }
 
 func TestTuneIfChannel(t *testing.T) {
@@ -229,33 +254,54 @@ func TestTuneStaleChannel(t *testing.T) {
 }
 
 func TestLibraryLimited(t *testing.T) {
-	assert.False(t, Target{}.LibraryLimited())
-	assert.False(t, Target{Disabled: []media.Content{media.ContentLiveTV}}.LibraryLimited(), "live TV isn't the library")
-	assert.True(t, Target{Disabled: []media.Content{media.ContentMusic, media.ContentLiveTV}}.LibraryLimited())
+	testCases := []struct {
+		name     string
+		have     Target
+		expected bool
+	}{
+		{name: "ShouldNotBeLimitedWithNothingDisabled"},
+		{name: "ShouldNotBeLimitedByLiveTVAsItIsntTheLibrary", have: Target{Disabled: []media.Content{media.ContentLiveTV}}},
+		{name: "ShouldBeLimitedByMusic", have: Target{Disabled: []media.Content{media.ContentMusic, media.ContentLiveTV}}, expected: true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, tc.have.LibraryLimited())
+		})
+	}
 }
 
 // TestLiveTVFailsPartWay has Kodi fail after the guide already knows what it was asked first, so each step's failure is the one met.
 func TestLiveTVFailsPartWay(t *testing.T) {
 	boom := errors.New("kodi said no")
 
-	for name, tc := range map[string]struct {
+	testCases := []struct {
+		name  string
 		known func(*testing.T, Target) // what the guide already holds
-		ask   func(*Service, Target) Outcome
+		ask   func(context.Context, *Service, Target) Outcome
 	}{
-		"tuning":                              {knowList, func(s *Service, tg Target) Outcome { return s.WatchChannel(t.Context(), tg, "abc news", nil) }},
-		"opening the guide":                   {knowLive, func(s *Service, tg Target) Outcome { return s.OpenTVGuide(t.Context(), tg, media.SectionTVGuide, nil) }},
-		"the channels, by number":             {knowLive, func(s *Service, tg Target) Outcome { return s.WatchChannelNumber(t.Context(), tg, 71, -1, nil) }},
-		"the channels, for what's on":         {knowLive, func(s *Service, tg Target) Outcome { return s.WhatsOn(t.Context(), tg, "abc news", nil) }},
-		"what's on, once the channel's known": {knowList, func(s *Service, tg Target) Outcome { return s.WhatsOn(t.Context(), tg, "abc news", nil) }},
-		"what's on, for a programme":          {knowLive, func(s *Service, tg Target) Outcome { return s.WatchLive(t.Context(), tg, "austin", nil) }},
-	} {
-		t.Run(name, func(t *testing.T) {
+		{name: "ShouldFailTuning", known: knowList, ask: func(ctx context.Context, s *Service, tg Target) Outcome {
+			return s.WatchChannel(ctx, tg, "abc news", nil)
+		}},
+		{name: "ShouldFailOpeningTheGuide", known: knowLive, ask: func(ctx context.Context, s *Service, tg Target) Outcome {
+			return s.OpenTVGuide(ctx, tg, media.SectionTVGuide, nil)
+		}},
+		{name: "ShouldFailListingTheChannelsByNumber", known: knowLive, ask: func(ctx context.Context, s *Service, tg Target) Outcome {
+			return s.WatchChannelNumber(ctx, tg, 71, -1, nil)
+		}},
+		{name: "ShouldFailListingTheChannelsForWhatsOn", known: knowLive, ask: func(ctx context.Context, s *Service, tg Target) Outcome { return s.WhatsOn(ctx, tg, "abc news", nil) }},
+		{name: "ShouldFailWhatsOnOnceTheChannelIsKnown", known: knowList, ask: func(ctx context.Context, s *Service, tg Target) Outcome { return s.WhatsOn(ctx, tg, "abc news", nil) }},
+		{name: "ShouldFailWhatsOnForAProgramme", known: knowLive, ask: func(ctx context.Context, s *Service, tg Target) Outcome { return s.WatchLive(ctx, tg, "austin", nil) }},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			target, backend := liveTarget(t)
 			tc.known(t, target)
 
 			backend.Err = boom
 
-			o := tc.ask(newService(), target)
+			o := tc.ask(t.Context(), newService(), target)
 			assert.Equal(t, "error.generic", o.Say.ID)
 			require.ErrorIs(t, o.Err, boom)
 		})
@@ -318,11 +364,21 @@ func TestWhatsOnChannelGoneFromTheGuide(t *testing.T) {
 func TestWatchChannelAsksWhichWhenNoneWasSaid(t *testing.T) {
 	target, backend := liveTarget(t)
 
-	for _, spoken := range []string{"", "?"} {
-		o := newService().WatchChannel(t.Context(), target, spoken, nil)
-		assert.Equal(t, say("livetv.which_channel_to_watch", nil), o.Say, "%q: Alexa heard no name, or a number it couldn't read", spoken)
-		assert.False(t, o.EndSession)
-		require.NotNil(t, o.Reprompt)
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldAskWhenAlexaHeardNoName"},
+		{name: "ShouldAskWhenAlexaHeardANumberItCouldntRead", have: "?"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			o := newService().WatchChannel(t.Context(), target, tc.have, nil)
+			assert.Equal(t, say("livetv.which_channel_to_watch", nil), o.Say)
+			assert.False(t, o.EndSession)
+			require.NotNil(t, o.Reprompt)
+		})
 	}
 
 	for _, call := range backend.Calls() {
