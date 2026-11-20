@@ -135,8 +135,10 @@ func TestIndexCandidates(t *testing.T) {
 }
 
 func TestExportedEditDistances(t *testing.T) {
-	for _, v := range similarityVectors {
-		assert.InDelta(t, v.jw, JaroWinkler(v.a, v.b), 0, "%q %q", v.a, v.b)
-		assert.Equal(t, v.osa, OSADistance(v.a, v.b), "%q %q", v.a, v.b)
+	for _, tc := range similarityVectors {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.InDelta(t, tc.jw, JaroWinkler(tc.a, tc.b), 0)
+			assert.Equal(t, tc.osa, OSADistance(tc.a, tc.b))
+		})
 	}
 }

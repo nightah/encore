@@ -7,19 +7,27 @@ import (
 )
 
 func TestNormalizeFrench(t *testing.T) {
-	for _, tc := range []struct{ in, want string }{
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
 		// Québec French says "trois" [tʁwe].
-		{"les boys troé", "boys 3"},
-		{"Les Trois Accords", "3 accords"},
+		{name: "ShouldNormalizeLesBoysTroe", have: "les boys troé", expected: "boys 3"},
+		{name: "ShouldNormalizeLesTroisAccords", have: "Les Trois Accords", expected: "3 accords"},
 		// Volumes are parts.
-		{"Harmonium volume 2", "harmonium 2"},
-		{"le volume deux", "2"},
-		{"le volume", "volume"},
+		{name: "ShouldNormalizeHarmoniumVolume2", have: "Harmonium volume 2", expected: "harmonium 2"},
+		{name: "ShouldReadVolumeAsPart", have: "le volume deux", expected: "2"},
+		{name: "ShouldKeepVolumeAlone", have: "le volume", expected: "volume"},
 		// "vol" is a flight or a theft in French, not only volume.
-		{"Vol 93", "vol 93"},
-		{"le vol 93", "vol 93"},
-		{"Vol 714 pour Sydney", "vol 714 pour sydney"},
-	} {
-		assert.Equal(t, tc.want, Normalize("fr-CA", tc.in), tc.in)
+		{name: "ShouldNormalizeVol93", have: "Vol 93", expected: "vol 93"},
+		{name: "ShouldNormalizeLeVol93", have: "le vol 93", expected: "vol 93"},
+		{name: "ShouldNormalizeVol714PourSydney", have: "Vol 714 pour Sydney", expected: "vol 714 pour sydney"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, Normalize("fr-CA", tc.have))
+		})
 	}
 }

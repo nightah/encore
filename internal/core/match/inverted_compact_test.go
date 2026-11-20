@@ -411,7 +411,7 @@ func TestInvertedReclaimsSlotsWhenFull(t *testing.T) {
 	l := languageFor("en")
 	docs := syntheticDocs(40, 41)
 
-	t.Run("starts a compaction", func(t *testing.T) {
+	t.Run("ShouldStartCompaction", func(t *testing.T) {
 		inv := newInvertedRetriever(l)
 		inv.maxSlots = 10
 		m := newInvModel()
@@ -434,7 +434,7 @@ func TestInvertedReclaimsSlotsWhenFull(t *testing.T) {
 		require.ErrorIs(t, inv.upsert(entriesOf(l, docs[15:17])), errIndexFull)
 	})
 
-	t.Run("joins a running compaction", func(t *testing.T) {
+	t.Run("ShouldJoinRunningCompaction", func(t *testing.T) {
 		inv := newInvertedRetriever(l)
 		inv.maxSlots = 10
 		m := newInvModel()

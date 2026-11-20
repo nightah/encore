@@ -8,98 +8,102 @@ import (
 )
 
 func TestNormalizeDutch(t *testing.T) {
-	tests := []struct{ in, want string }{
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
 		// Articles, including the elided "'t" and "'s" and the English "the" Dutch recognisers write.
-		{"De Luizenmoeder", "luizenmoeder"},
-		{"Het Schaep met de 5 Pooten", "schaep met de 5 pooten"},
-		{"'t Schaep met de 5 pooten", "schaep met de 5 pooten"},
-		{"Een vlucht regenwulpen", "vlucht regenwulpen"},
-		{"'s-Hertogenbosch", "hertogenbosch"},
-		{"The Godfather", "godfather"},
-		{"de", "de"},
+		{name: "ShouldNormalizeDeLuizenmoeder", have: "De Luizenmoeder", expected: "luizenmoeder"},
+		{name: "ShouldNormalizeHetSchaepMetDe5Pooten", have: "Het Schaep met de 5 Pooten", expected: "schaep met de 5 pooten"},
+		{name: "ShouldNormalizeElidedHetSchaepMetDe5Pooten", have: "'t Schaep met de 5 pooten", expected: "schaep met de 5 pooten"},
+		{name: "ShouldNormalizeEenVluchtRegenwulpen", have: "Een vlucht regenwulpen", expected: "vlucht regenwulpen"},
+		{name: "ShouldNormalizeSHertogenbosch", have: "'s-Hertogenbosch", expected: "hertogenbosch"},
+		{name: "ShouldNormalizeTheGodfather", have: "The Godfather", expected: "godfather"},
+		{name: "ShouldKeepLoneArticle", have: "de", expected: "de"},
 		// Apostrophes join a possessive or plural to its word; "'ns" stays a word.
-		{"Ocean's Eleven", "oceans 11"},
-		{"opa's", "opas"},
-		{"Zeg 'ns Aaa", "zeg ns aaa"},
+		{name: "ShouldNormalizeOceansEleven", have: "Ocean's Eleven", expected: "oceans 11"},
+		{name: "ShouldNormalizeOpas", have: "opa's", expected: "opas"},
+		{name: "ShouldNormalizeZegNsAaa", have: "Zeg 'ns Aaa", expected: "zeg ns aaa"},
 		// Diacritics, the ij ligature and the diaeresis.
-		{"Bløf", "blof"},
-		{"André Hazes", "andre hazes"},
-		{"ĳsselmeer", "ijsselmeer"},
-		{"Suzan & Freek", "suzan en freek"},
+		{name: "ShouldNormalizeBlof", have: "Bløf", expected: "blof"},
+		{name: "ShouldNormalizeAndreHazes", have: "André Hazes", expected: "andre hazes"},
+		{name: "ShouldNormalizeIjsselmeer", have: "ĳsselmeer", expected: "ijsselmeer"},
+		{name: "ShouldNormalizeSuzanAndFreek", have: "Suzan & Freek", expected: "suzan en freek"},
 		// Cardinals, units before tens, fused into one word.
-		{"flodder drie", "flodder 3"},
-		{"twaalf", "12"},
-		{"negentien", "19"},
-		{"eenentwintig jump street", "21 jump street"},
-		{"tweeëntwintig", "22"},
-		{"drieëndertig", "33"},
-		{"vierentachtig", "84"},
-		{"negenennegentig", "99"},
-		{"drie en twintig", "23"},
-		{"honderd", "100"},
-		{"honderdeen", "101"},
-		{"honderd en een", "101"},
-		{"zevenhonderd", "700"},
-		{"eenhonderd", "100"},
-		{"duizend", "1000"},
-		{"duizendeneen", "1001"},
-		{"tweeduizend", "2000"},
-		{"twee\u00adduizend", "2000"},
-		{"tweeduizendeen", "2001"},
-		{"drieduizend vijfhonderd", "3500"},
+		{name: "ShouldNormalizeFlodderDrie", have: "flodder drie", expected: "flodder 3"},
+		{name: "ShouldNormalizeTwaalf", have: "twaalf", expected: "12"},
+		{name: "ShouldNormalizeNegentien", have: "negentien", expected: "19"},
+		{name: "ShouldNormalizeEenentwintigJumpStreet", have: "eenentwintig jump street", expected: "21 jump street"},
+		{name: "ShouldNormalizeTweeentwintig", have: "tweeëntwintig", expected: "22"},
+		{name: "ShouldNormalizeDrieendertig", have: "drieëndertig", expected: "33"},
+		{name: "ShouldNormalizeVierentachtig", have: "vierentachtig", expected: "84"},
+		{name: "ShouldNormalizeNegenennegentig", have: "negenennegentig", expected: "99"},
+		{name: "ShouldNormalizeDrieEnTwintig", have: "drie en twintig", expected: "23"},
+		{name: "ShouldNormalizeHonderd", have: "honderd", expected: "100"},
+		{name: "ShouldNormalizeHonderdeen", have: "honderdeen", expected: "101"},
+		{name: "ShouldNormalizeHonderdEnEen", have: "honderd en een", expected: "101"},
+		{name: "ShouldNormalizeZevenhonderd", have: "zevenhonderd", expected: "700"},
+		{name: "ShouldNormalizeEenhonderd", have: "eenhonderd", expected: "100"},
+		{name: "ShouldNormalizeDuizend", have: "duizend", expected: "1000"},
+		{name: "ShouldNormalizeDuizendeneen", have: "duizendeneen", expected: "1001"},
+		{name: "ShouldNormalizeTweeduizend", have: "tweeduizend", expected: "2000"},
+		{name: "ShouldNormalizeTweeduizendWithSoftHyphen", have: "twee\u00adduizend", expected: "2000"},
+		{name: "ShouldNormalizeTweeduizendeen", have: "tweeduizendeen", expected: "2001"},
+		{name: "ShouldNormalizeDrieduizendVijfhonderd", have: "drieduizend vijfhonderd", expected: "3500"},
 		// "miljoen" stays a word, as "million" does in English: a recogniser writes the count before it as digits as often as words ("15 miljoen mensen").
-		{"vijftien miljoen mensen", "15 miljoen mensen"},
-		{"15 Miljoen Mensen", "15 miljoen mensen"},
-		{"negentienhonderdvierentachtig", "1984"},
-		{"negentien vierentachtig", "1984"},
-		{"nul nul zeven", "0 0 7"},
+		{name: "ShouldNormalizeVijftienMiljoenMensen", have: "vijftien miljoen mensen", expected: "15 miljoen mensen"},
+		{name: "ShouldNormalize15MiljoenMensenWithDigits", have: "15 Miljoen Mensen", expected: "15 miljoen mensen"},
+		{name: "ShouldNormalizeNegentienhonderdvierentachtig", have: "negentienhonderdvierentachtig", expected: "1984"},
+		{name: "ShouldNormalizeNegentienVierentachtig", have: "negentien vierentachtig", expected: "1984"},
+		{name: "ShouldNormalizeNulNulZeven", have: "nul nul zeven", expected: "0 0 7"},
 		// "een" is a number only inside one.
-		{"een vrouw", "vrouw"},
-		{"alles is een", "alles is een"},
-		{"suzan en freek", "suzan en freek"},
+		{name: "ShouldNormalizeEenVrouw", have: "een vrouw", expected: "vrouw"},
+		{name: "ShouldNormalizeAllesIsEen", have: "alles is een", expected: "alles is een"},
+		{name: "ShouldNormalizeSuzanEnFreekLowerCase", have: "suzan en freek", expected: "suzan en freek"},
 		// Words that start like numbers stay words.
-		{"De tweeling", "tweeling"},
-		{"tienen", "tienen"},
-		{"achten", "achten"},
-		{"vierkant", "vierkant"},
-		{"elfen", "elfen"},
+		{name: "ShouldNormalizeDeTweeling", have: "De tweeling", expected: "tweeling"},
+		{name: "ShouldNormalizeTienen", have: "tienen", expected: "tienen"},
+		{name: "ShouldNormalizeAchten", have: "achten", expected: "achten"},
+		{name: "ShouldNormalizeVierkant", have: "vierkant", expected: "vierkant"},
+		{name: "ShouldNormalizeElfen", have: "elfen", expected: "elfen"},
 		// English cardinals, for English titles in a Dutch library.
-		{"Ocean's Twelve", "oceans 12"},
-		{"oceans twaalf", "oceans 12"},
-		{"Apollo Thirteen", "apollo 13"},
-		{"twenty one pilots", "21 pilots"},
+		{name: "ShouldNormalizeOceansTwelve", have: "Ocean's Twelve", expected: "oceans 12"},
+		{name: "ShouldNormalizeOceansTwaalf", have: "oceans twaalf", expected: "oceans 12"},
+		{name: "ShouldNormalizeApolloThirteen", have: "Apollo Thirteen", expected: "apollo 13"},
+		{name: "ShouldNormalizeTwentyOnePilots", have: "twenty one pilots", expected: "21 pilots"},
 		// Ordinals, spelled out and with digits.
-		{"de eerste", "1"},
-		{"de vierde man", "4 man"},
-		{"het zesde zintuig", "6 zintuig"},
-		{"achtste", "8"},
-		{"twaalfde", "12"},
-		{"twintigste", "20"},
-		{"eenentwintigste eeuw", "21 eeuw"},
-		{"honderdste", "100"},
-		{"de 3de man", "3 man"},
-		{"het 2e seizoen", "2 seizoen"},
-		{"21ste eeuw", "21 eeuw"},
-		{"8ste", "8"},
-		{"The 6th Day", "6 day"},
-		{"the sixth day", "6 day"},
-		{"21st century", "21 century"},
-		{"second hand", "2 hand"},
+		{name: "ShouldNormalizeDeEerste", have: "de eerste", expected: "1"},
+		{name: "ShouldNormalizeDeVierdeMan", have: "de vierde man", expected: "4 man"},
+		{name: "ShouldNormalizeHetZesdeZintuig", have: "het zesde zintuig", expected: "6 zintuig"},
+		{name: "ShouldNormalizeAchtste", have: "achtste", expected: "8"},
+		{name: "ShouldNormalizeTwaalfde", have: "twaalfde", expected: "12"},
+		{name: "ShouldNormalizeTwintigste", have: "twintigste", expected: "20"},
+		{name: "ShouldNormalizeEenentwintigsteEeuw", have: "eenentwintigste eeuw", expected: "21 eeuw"},
+		{name: "ShouldNormalizeHonderdste", have: "honderdste", expected: "100"},
+		{name: "ShouldNormalizeDe3deMan", have: "de 3de man", expected: "3 man"},
+		{name: "ShouldNormalizeHet2eSeizoen", have: "het 2e seizoen", expected: "2 seizoen"},
+		{name: "ShouldNormalize21steEeuw", have: "21ste eeuw", expected: "21 eeuw"},
+		{name: "ShouldNormalize8ste", have: "8ste", expected: "8"},
+		{name: "ShouldNormalizeThe6thDay", have: "The 6th Day", expected: "6 day"},
+		{name: "ShouldNormalizeTheSixthDay", have: "the sixth day", expected: "6 day"},
+		{name: "ShouldNormalize21stCentury", have: "21st century", expected: "21 century"},
+		{name: "ShouldNormalizeSecondHand", have: "second hand", expected: "2 hand"},
 		// Parts before a number.
-		{"de godfather deel twee", "godfather 2"},
-		{"The Godfather Part II", "godfather 2"},
-		{"Kill Bill Volume 1", "kill bill 1"},
-		{"hoofdstuk drie", "3"},
-		{"flikken seizoen 2", "flikken 2"},
-		{"deel", "deel"},
+		{name: "ShouldNormalizeDeGodfatherDeelTwee", have: "de godfather deel twee", expected: "godfather 2"},
+		{name: "ShouldNormalizeTheGodfatherPartII", have: "The Godfather Part II", expected: "godfather 2"},
+		{name: "ShouldNormalizeKillBillVolume1", have: "Kill Bill Volume 1", expected: "kill bill 1"},
+		{name: "ShouldNormalizeHoofdstukDrie", have: "hoofdstuk drie", expected: "3"},
+		{name: "ShouldNormalizeFlikkenSeizoen2", have: "flikken seizoen 2", expected: "flikken 2"},
+		{name: "ShouldNormalizeDeel", have: "deel", expected: "deel"},
 		// ½ reads "en een half".
-		{"8½", "8 en een half"},
-		{"acht en een half", "8 en een half"},
+		{name: "ShouldNormalize8Half", have: "8½", expected: "8 en een half"},
+		{name: "ShouldNormalizeAchtEnEenHalf", have: "acht en een half", expected: "8 en een half"},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.in, func(t *testing.T) {
-			assert.Equal(t, tt.want, Normalize("nl", tt.in))
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, Normalize("nl", tc.have))
 		})
 	}
 
@@ -116,14 +120,24 @@ func TestDutchLanguage(t *testing.T) {
 	assert.True(t, l.unitsFirst)
 
 	// Every unit pairs with every tens as one word.
-	for _, tc := range []struct {
-		word string
-		want int
-	}{{"eenentwintig", 21}, {"negenentwintig", 29}, {"eenennegentig", 91}, {"negenennegentig", 99}} {
-		w, ok := l.nums[tc.word]
-		require.True(t, ok, tc.word)
-		assert.Equal(t, tc.want, w.val, tc.word)
-		assert.Equal(t, numCompound, w.kind, tc.word)
+	testCases := []struct {
+		name     string
+		have     string
+		expected int
+	}{
+		{name: "ShouldPairFirstUnitWithFirstTens", have: "eenentwintig", expected: 21},
+		{name: "ShouldPairLastUnitWithFirstTens", have: "negenentwintig", expected: 29},
+		{name: "ShouldPairFirstUnitWithLastTens", have: "eenennegentig", expected: 91},
+		{name: "ShouldPairLastUnitWithLastTens", have: "negenennegentig", expected: 99},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			w, ok := l.nums[tc.have]
+			require.True(t, ok)
+			assert.Equal(t, tc.expected, w.val)
+			assert.Equal(t, numCompound, w.kind)
+		})
 	}
 
 	assert.True(t, l.nums["een"].cont, "een doubles as the article")
@@ -144,19 +158,27 @@ func TestDutchMatches(t *testing.T) {
 		Doc{ID: "schaep", Title: "Het schaep met de 5 pooten"},
 	))
 
-	for heard, want := range map[string]string{
-		"oceans elf":                    "oceans11",
-		"oceans twaalf":                 "oceans12",
-		"eenentwintig jump street":      "jump",
-		"t schaep met de vijf pooten":   "schaep",
-		"het schaep met de vijf pooten": "schaep",
-	} {
-		res, err := ix.Search(t.Context(), Query{Text: heard})
-		require.NoError(t, err)
+	testCases := []struct {
+		name     string
+		heard    string
+		expected string
+	}{
+		{name: "ShouldFindElevenSpokenInDutch", heard: "oceans elf", expected: "oceans11"},
+		{name: "ShouldFindTwelveSpokenInDutch", heard: "oceans twaalf", expected: "oceans12"},
+		{name: "ShouldFindFusedNumberWord", heard: "eenentwintig jump street", expected: "jump"},
+		{name: "ShouldFindTitleWithElidedArticle", heard: "t schaep met de vijf pooten", expected: "schaep"},
+		{name: "ShouldFindTitleWithArticle", heard: "het schaep met de vijf pooten", expected: "schaep"},
+	}
 
-		best, ok := res.Best()
-		require.True(t, ok, heard)
-		assert.Equal(t, want, best.Doc.ID, heard)
-		assert.Equal(t, DecisionPlay, res.Decision, heard)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := ix.Search(t.Context(), Query{Text: tc.heard})
+			require.NoError(t, err)
+
+			best, ok := res.Best()
+			require.True(t, ok)
+			assert.Equal(t, tc.expected, best.Doc.ID)
+			assert.Equal(t, DecisionPlay, res.Decision)
+		})
 	}
 }

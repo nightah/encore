@@ -10,114 +10,118 @@ import (
 )
 
 func TestNormalizeArabic(t *testing.T) {
-	tests := []struct{ in, want string }{
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
 		// Arabic is compared in Latin letters: the emphatics as their plain pairs, ذ and ظ as th, a final ta marbuta as a.
-		{"وجدة", "wjda"},
-		{"وجده", "wjda"},
-		{"طاش ما طاش", "tash ma tash"},
-		{"تاش ما تاش", "tash ma tash"},
-		{"صعيدي", "saydi"},
-		{"كاظم الساهر", "kathm sahr"},
-		{"شيرين", "shirin"},
-		{"عمرو دياب", "amru diab"},
-		{"اولاد", "awlad"},
-		{"تايتانك", "taytank"},
-		{"يوم", "yum"},
+		{name: "ShouldReadWjdaWithTaMarbuta", have: "وجدة", expected: "wjda"},
+		{name: "ShouldReadWjdaWithFinalHa", have: "وجده", expected: "wjda"},
+		{name: "ShouldReadEmphaticTaAsT", have: "طاش ما طاش", expected: "tash ma tash"},
+		{name: "ShouldReadTashMaTash", have: "تاش ما تاش", expected: "tash ma tash"},
+		{name: "ShouldReadSaydi", have: "صعيدي", expected: "saydi"},
+		{name: "ShouldReadKathmSahr", have: "كاظم الساهر", expected: "kathm sahr"},
+		{name: "ShouldReadShirin", have: "شيرين", expected: "shirin"},
+		{name: "ShouldReadAmruDiab", have: "عمرو دياب", expected: "amru diab"},
+		{name: "ShouldReadAwlad", have: "اولاد", expected: "awlad"},
+		{name: "ShouldReadTaytank", have: "تايتانك", expected: "taytank"},
+		{name: "ShouldReadYum", have: "يوم", expected: "yum"},
 		// Hamza seats, a hamza on the line, alif maqsura, alef wasla, harakat and tatweel.
-		{"أم كلثوم", "am klthum"},
-		{"إسماعيلية", "asmaaylia"},
-		{"شيء", "shi"},
-		{"ذئب", "thib"},
-		{"البريء", "bri"},
-		{"ٵ", "a"},
-		{"aٴ", "a"},
-		{"اللمبى", "lmbi"},
-		{"ٱلرسالة", "rsala"},
-		{"مُحَمَّد", "mhmd"},
-		{"محـــمد", "mhmd"},
+		{name: "ShouldReadAmKlthum", have: "أم كلثوم", expected: "am klthum"},
+		{name: "ShouldReadAsmaaylia", have: "إسماعيلية", expected: "asmaaylia"},
+		{name: "ShouldReadShi", have: "شيء", expected: "shi"},
+		{name: "ShouldReadThib", have: "ذئب", expected: "thib"},
+		{name: "ShouldReadBri", have: "البريء", expected: "bri"},
+		{name: "ShouldReadHighHamzaAlefAsA", have: "ٵ", expected: "a"},
+		{name: "ShouldDropHighHamzaAfterLatin", have: "aٴ", expected: "a"},
+		{name: "ShouldReadLmbi", have: "اللمبى", expected: "lmbi"},
+		{name: "ShouldDropArticleWithAlefWasla", have: "ٱلرسالة", expected: "rsala"},
+		{name: "ShouldDropHarakat", have: "مُحَمَّد", expected: "mhmd"},
+		{name: "ShouldDropTatweel", have: "محـــمد", expected: "mhmd"},
 		// Persian and Gulf letters for sounds Arabic lacks.
-		{"ڤايكنقز", "fayknqz"},
-		{"پيكي", "biki"},
-		{"ناگة", "naqa"},
+		{name: "ShouldReadFayknqz", have: "ڤايكنقز", expected: "fayknqz"},
+		{name: "ShouldReadBiki", have: "پيكي", expected: "biki"},
+		{name: "ShouldReadNaqa", have: "ناگة", expected: "naqa"},
 		// The article, fused or said as its assimilation, and its clitic forms.
-		{"الإرهاب والكباب", "arhab kbab"},
-		{"بالبيت فالبيت كالبيت للبنات وللبنات", "bit bit bit bnat bnat"},
-		{"انناظر", "nathr"},
-		{"ار رسالة", "rsala"},
-		{"ال رسالة", "rsala"},
-		{"اتتغريبة الفلسطينية", "tghriba flstinia"},
-		{"الحب", "hb"},
-		{"الف", "1000"},
-		{"بالي", "bali"},
+		{name: "ShouldReadArhabKbab", have: "الإرهاب والكباب", expected: "arhab kbab"},
+		{name: "ShouldReadBitBitBitBnatBnat", have: "بالبيت فالبيت كالبيت للبنات وللبنات", expected: "bit bit bit bnat bnat"},
+		{name: "ShouldReadNathr", have: "انناظر", expected: "nathr"},
+		{name: "ShouldDropAssimilatedArticleSaidApart", have: "ار رسالة", expected: "rsala"},
+		{name: "ShouldDropArticleWrittenApart", have: "ال رسالة", expected: "rsala"},
+		{name: "ShouldReadTghribaFlstinia", have: "اتتغريبة الفلسطينية", expected: "tghriba flstinia"},
+		{name: "ShouldReadHb", have: "الحب", expected: "hb"},
+		{name: "ShouldReadAlfAsThousand", have: "الف", expected: "1000"},
+		{name: "ShouldReadBali", have: "بالي", expected: "bali"},
 		// An alef and a doubled letter only start the article said aloud in a word long enough to hold it, and "أن" stays a word.
-		{"اسس", "ass"},
-		{"إننا", "anna"},
-		{"اددم", "addm"},
-		{"قبل أن نشاهد", "qbl an nshahd"},
+		{name: "ShouldReadAss", have: "اسس", expected: "ass"},
+		{name: "ShouldReadAnna", have: "إننا", expected: "anna"},
+		{name: "ShouldReadAddm", have: "اددم", expected: "addm"},
+		{name: "ShouldReadQblAnNshahd", have: "قبل أن نشاهد", expected: "qbl an nshahd"},
 		// Names built on عبد, written as one word or two.
-		{"عبدالمجيد عبدالله", "abd mjid abd la"},
-		{"عبد المجيد عبد الله", "abd mjid abd la"},
-		{"عبدال", "abdal"},
+		{name: "ShouldSplitAbdNamesWrittenAsOneWord", have: "عبدالمجيد عبدالله", expected: "abd mjid abd la"},
+		{name: "ShouldReadAbdNamesWrittenAsTwoWords", have: "عبد المجيد عبد الله", expected: "abd mjid abd la"},
+		{name: "ShouldReadAbdal", have: "عبدال", expected: "abdal"},
 		// English "the" said ذا or زا, and English titles as they are.
-		{"ذا قودفاذر بارت تو", "qudfathr 2"},
-		{"زا جودفازر", "judfazr"},
-		{"The Godfather Part II", "godfather 2"},
-		{"Fast & Furious", "fast w furious"},
-		{"21st Century", "21 century"},
+		{name: "ShouldReadQudfathr2", have: "ذا قودفاذر بارت تو", expected: "qudfathr 2"},
+		{name: "ShouldReadJudfazr", have: "زا جودفازر", expected: "judfazr"},
+		{name: "ShouldReadGodfather2", have: "The Godfather Part II", expected: "godfather 2"},
+		{name: "ShouldReadFastWFurious", have: "Fast & Furious", expected: "fast w furious"},
+		{name: "ShouldRead21Century", have: "21st Century", expected: "21 century"},
 		// Numbers: digits in either script, number words standard and dialect, units before the tens, teens, hundreds and thousands.
-		{"الفيل الأزرق ٢", "fil azrq 2"},
-		{"الفيل الازرق اتنين", "fil azrq 2"},
-		{"الفيل الازرق الجزء الثاني", "fil azrq 2"},
-		{"الفيل الازرق التاني", "fil azrq 2"},
-		{"ولاد رزق تلاتة", "wlad rzq 3"},
-		{"الموسم الثالث", "3"},
-		{"واحد وعشرين", "21"},
-		{"خمسة و عشرين", "25"},
-		{"ثلاثة عشر", "13"},
-		{"احدى عشرة", "11"},
-		{"اتناشر", "12"},
-		{"مية وخمسة", "105"},
-		{"ميتين", "200"},
-		{"ثلاثمية", "300"},
-		{"ثلاث مية", "300"},
-		{"ألف ليلة وليلة", "1000 lila wlila"},
-		{"ألفين", "2000"},
-		{"الفين وعشرين", "2020"},
-		{"ثلاثة آلاف", "3000"},
-		{"مليون", "1000000"},
-		{"مليونين", "2000000"},
-		{"خمسة ملايين", "5000000"},
+		{name: "ShouldReadArabicIndicDigit", have: "الفيل الأزرق ٢", expected: "fil azrq 2"},
+		{name: "ShouldReadDialectNumberWord", have: "الفيل الازرق اتنين", expected: "fil azrq 2"},
+		{name: "ShouldReadPartOrdinal", have: "الفيل الازرق الجزء الثاني", expected: "fil azrq 2"},
+		{name: "ShouldReadDialectOrdinal", have: "الفيل الازرق التاني", expected: "fil azrq 2"},
+		{name: "ShouldReadDialectThree", have: "ولاد رزق تلاتة", expected: "wlad rzq 3"},
+		{name: "ShouldReadSeasonOrdinal", have: "الموسم الثالث", expected: "3"},
+		{name: "ShouldReadUnitsBeforeTens", have: "واحد وعشرين", expected: "21"},
+		{name: "ShouldReadUnitsBeforeTensWithSpacedWa", have: "خمسة و عشرين", expected: "25"},
+		{name: "ShouldReadTeen", have: "ثلاثة عشر", expected: "13"},
+		{name: "ShouldReadFeminineTeen", have: "احدى عشرة", expected: "11"},
+		{name: "ShouldReadDialectTeen", have: "اتناشر", expected: "12"},
+		{name: "ShouldReadHundredAndUnits", have: "مية وخمسة", expected: "105"},
+		{name: "ShouldReadDualHundred", have: "ميتين", expected: "200"},
+		{name: "ShouldReadHundredsAsOneWord", have: "ثلاثمية", expected: "300"},
+		{name: "ShouldReadHundredsAsTwoWords", have: "ثلاث مية", expected: "300"},
+		{name: "ShouldReadThousandAndOneNights", have: "ألف ليلة وليلة", expected: "1000 lila wlila"},
+		{name: "ShouldReadDualThousand", have: "ألفين", expected: "2000"},
+		{name: "ShouldReadDualThousandAndTens", have: "الفين وعشرين", expected: "2020"},
+		{name: "ShouldReadPluralThousands", have: "ثلاثة آلاف", expected: "3000"},
+		{name: "ShouldReadMillion", have: "مليون", expected: "1000000"},
+		{name: "ShouldReadDualMillion", have: "مليونين", expected: "2000000"},
+		{name: "ShouldReadPluralMillions", have: "خمسة ملايين", expected: "5000000"},
 		// Ordinals from the eleventh to the nineteenth, masculine and feminine, with and without the article.
-		{"الجزء الحادي عشر", "11"},
-		{"الحلقة الحادية عشرة", "hlqa 11"},
-		{"الموسم الثاني عشر", "12"},
-		{"التاسع عشر", "19"},
-		{"تاسعة عشرة", "19"},
-		{"والثالث عشر", "13"},
-		{"حادي", "hadi"},
-		{"فروزن تو", "fruzn 2"},
-		{"فيوريوس سفن", "fiwriws 7"},
-		{"Frozen Two", "frozen 2"},
+		{name: "ShouldReadEleventhPart", have: "الجزء الحادي عشر", expected: "11"},
+		{name: "ShouldReadFeminineEleventh", have: "الحلقة الحادية عشرة", expected: "hlqa 11"},
+		{name: "ShouldReadTwelfthSeason", have: "الموسم الثاني عشر", expected: "12"},
+		{name: "ShouldReadNineteenthWithArticle", have: "التاسع عشر", expected: "19"},
+		{name: "ShouldReadFeminineNineteenthWithoutArticle", have: "تاسعة عشرة", expected: "19"},
+		{name: "ShouldReadThirteenthAfterWa", have: "والثالث عشر", expected: "13"},
+		{name: "ShouldKeepHadiAloneAsWord", have: "حادي", expected: "hadi"},
+		{name: "ShouldReadEnglishTwoInArabicLetters", have: "فروزن تو", expected: "fruzn 2"},
+		{name: "ShouldReadEnglishSevenInArabicLetters", have: "فيوريوس سفن", expected: "fiwriws 7"},
+		{name: "ShouldReadFrozen2", have: "Frozen Two", expected: "frozen 2"},
 		// A و that only looks like one joined to a number stays.
-		{"وخمسة", "wkhmsa"},
-		{"عشر", "10"},
-		{"ثلاثة", "3"},
+		{name: "ShouldKeepWaJoinedToNumberAsWord", have: "وخمسة", expected: "wkhmsa"},
+		{name: "ShouldReadTen", have: "عشر", expected: "10"},
+		{name: "ShouldReadThree", have: "ثلاثة", expected: "3"},
 		// ½ is "ونص".
-		{"8½", "8 wns"},
-		{"ثمانية ونص", "8 wns"},
+		{name: "ShouldReadHalfAsWns", have: "8½", expected: "8 wns"},
+		{name: "ShouldReadSpokenHalf", have: "ثمانية ونص", expected: "8 wns"},
 		// A letter of the Arabic block without a Latin form, such as ػ, is a word of its own, as a second pass would make it; a leading a is then the article.
-		{"آػ", "ػ"},
-		{"ػآ", "ػ a"},
+		{name: "ShouldKeepLetterWithoutLatinFormAsWord", have: "آػ", expected: "ػ"},
+		{name: "ShouldReadLeadingAAfterLetterWithoutLatinFormAsArticle", have: "ػآ", expected: "ػ a"},
 		// Only an Arabic letter is set apart: a letter of another script keeps its marks.
-		{"ؠᛮ\u0300", "ؠ ᛮ\u0300"},
+		{name: "ShouldOnlySetArabicLetterApart", have: "ؠᛮ\u0300", expected: "ؠ ᛮ\u0300"},
 		// The locale is enough.
-		{"", ""},
+		{name: "ShouldNormalizeEmpty"},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.in, func(t *testing.T) {
-			got := Normalize("ar", tt.in)
-			assert.Equal(t, tt.want, got)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := Normalize("ar", tc.have)
+			assert.Equal(t, tc.expected, got)
 			assert.Equal(t, got, Normalize("ar", got), "normalising it again")
 		})
 	}
@@ -128,49 +132,65 @@ func TestNormalizeArabic(t *testing.T) {
 func TestArabicSplit(t *testing.T) {
 	split := languages["ar"].split
 
-	for _, tc := range []struct{ in, want []string }{
-		{[]string{"انناظر"}, []string{"الناظر"}},
-		{[]string{"اببيت"}, []string{"اببيت"}},
-		{[]string{"ار", "رساله"}, []string{"الرساله"}},
-		{[]string{"ار", "ساله"}, []string{"ار", "ساله"}},
-		{[]string{"ار"}, []string{"ار"}},
-		{[]string{"ان", "نشاهد"}, []string{"ان", "نشاهد"}},
-		{[]string{"اسس"}, []string{"اسس"}},
-		{[]string{"اننا"}, []string{"اننا"}},
-		{[]string{"الحادي", "عشر"}, []string{"الحاديعشر"}},
-		{[]string{"وال", "عشر"}, []string{"وال", "عشر"}},
-		{[]string{"الفين"}, []string{"اثنين", "الف"}},
-		{[]string{"ثلاثه", "الاف"}, []string{"ثلاثه", "الف"}},
-		{[]string{"ملايين"}, []string{"مليون"}},
-		{[]string{"ال", "بيت"}, []string{"البيت"}},
-		{[]string{"عبدالله"}, []string{"عبد", "الله"}},
-		{[]string{"عبدال"}, []string{"عبدال"}},
-		{[]string{"واحد", "وعشرين"}, []string{"واحد", "و", "عشرين"}},
-		{[]string{"ولد", "وعشرين"}, []string{"ولد", "وعشرين"}},
-		{[]string{"واحد", "وولد"}, []string{"واحد", "وولد"}},
-		{[]string{"ثلاثه", "عشر"}, []string{"ثلاثهعشر"}},
-		{[]string{"ثلاثه"}, []string{"ثلاثه"}},
-		{[]string{"ولد", "عشر"}, []string{"ولد", "عشر"}},
-		{nil, []string{}},
-	} {
-		assert.Equal(t, tc.want, split(tc.in), "%q", tc.in)
+	testCases := []struct {
+		name     string
+		have     []string
+		expected []string
+	}{
+		{name: "ShouldRestoreAssimilatedArticle", have: []string{"انناظر"}, expected: []string{"الناظر"}},
+		{name: "ShouldKeepDoubledLetterThatIsNoArticle", have: []string{"اببيت"}, expected: []string{"اببيت"}},
+		{name: "ShouldJoinArticleSaidApart", have: []string{"ار", "رساله"}, expected: []string{"الرساله"}},
+		{name: "ShouldNotJoinArticleBeforeOtherLetter", have: []string{"ار", "ساله"}, expected: []string{"ار", "ساله"}},
+		{name: "ShouldKeepArticleAlone", have: []string{"ار"}, expected: []string{"ار"}},
+		{name: "ShouldKeepAnBeforeVerb", have: []string{"ان", "نشاهد"}, expected: []string{"ان", "نشاهد"}},
+		{name: "ShouldKeepShortWordWithDoubledLetter", have: []string{"اسس"}, expected: []string{"اسس"}},
+		{name: "ShouldKeepAnnaAsWord", have: []string{"اننا"}, expected: []string{"اننا"}},
+		{name: "ShouldJoinCompoundOrdinal", have: []string{"الحادي", "عشر"}, expected: []string{"الحاديعشر"}},
+		{name: "ShouldNotJoinWaAlBeforeTen", have: []string{"وال", "عشر"}, expected: []string{"وال", "عشر"}},
+		{name: "ShouldSplitDualThousand", have: []string{"الفين"}, expected: []string{"اثنين", "الف"}},
+		{name: "ShouldSingulariseThousandsAfterNumber", have: []string{"ثلاثه", "الاف"}, expected: []string{"ثلاثه", "الف"}},
+		{name: "ShouldSingulariseMillions", have: []string{"ملايين"}, expected: []string{"مليون"}},
+		{name: "ShouldJoinArticleWrittenApart", have: []string{"ال", "بيت"}, expected: []string{"البيت"}},
+		{name: "ShouldSplitAbdName", have: []string{"عبدالله"}, expected: []string{"عبد", "الله"}},
+		{name: "ShouldKeepAbdalAsWord", have: []string{"عبدال"}, expected: []string{"عبدال"}},
+		{name: "ShouldSplitWaBeforeTensAfterNumber", have: []string{"واحد", "وعشرين"}, expected: []string{"واحد", "و", "عشرين"}},
+		{name: "ShouldKeepWaBeforeTensAfterWord", have: []string{"ولد", "وعشرين"}, expected: []string{"ولد", "وعشرين"}},
+		{name: "ShouldKeepWaBeforeWordAfterNumber", have: []string{"واحد", "وولد"}, expected: []string{"واحد", "وولد"}},
+		{name: "ShouldJoinTeen", have: []string{"ثلاثه", "عشر"}, expected: []string{"ثلاثهعشر"}},
+		{name: "ShouldKeepUnitAlone", have: []string{"ثلاثه"}, expected: []string{"ثلاثه"}},
+		{name: "ShouldNotJoinTenAfterWord", have: []string{"ولد", "عشر"}, expected: []string{"ولد", "عشر"}},
+		{name: "ShouldSplitNothing", expected: []string{}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, split(tc.have))
+		})
 	}
 }
 
 func TestRomanizeArabic(t *testing.T) {
-	for in, want := range map[string]string{
-		"ثذظ":     "ththth",
-		"صضطظ":    "sdtth",
-		"خغشچژ":   "khghshchzh",
-		"عين":     "ayn",
-		"ويوي":    "wiwi",
-		"ه":       "h",
-		"هه":      "ha",
-		"titanic": "titanic",
-		"٣":       "٣",
-		"ۓ":       "ۓ",
-	} {
-		assert.Equal(t, want, romanizeArabic(in), in)
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldWriteInterdentalsAsTh", have: "ثذظ", expected: "ththth"},
+		{name: "ShouldWriteEmphaticsAsPlainPairs", have: "صضطظ", expected: "sdtth"},
+		{name: "ShouldWriteDigraphs", have: "خغشچژ", expected: "khghshchzh"},
+		{name: "ShouldWriteAyn", have: "عين", expected: "ayn"},
+		{name: "ShouldWriteWawAndYaBetweenLetters", have: "ويوي", expected: "wiwi"},
+		{name: "ShouldWriteLoneHa", have: "ه", expected: "h"},
+		{name: "ShouldWriteFinalHaAsA", have: "هه", expected: "ha"},
+		{name: "ShouldKeepLatin", have: "titanic", expected: "titanic"},
+		{name: "ShouldKeepArabicIndicDigit", have: "٣", expected: "٣"},
+		{name: "ShouldKeepLetterWithoutLatinForm", have: "ۓ", expected: "ۓ"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, romanizeArabic(tc.have))
+		})
 	}
 }
 
@@ -209,13 +229,21 @@ func TestPropArabicNormalizeIsLatinOrScript(t *testing.T) {
 func TestArabicQueryTokensKeepAli(t *testing.T) {
 	l := languages["ar"]
 
-	for in, want := range map[string][]string{
-		"محمد علي":       {"mhmd", "ali"},
-		"علي بابا":       {"ali", "baba"},
-		"رحلة إلى القمر": {"rhla", "ali", "qmr"},
-		"بيت في المدينة": {"bit", "mdina"},
-	} {
-		qf := l.newForm(l.normalizeSpelled(in, false))
-		assert.Equal(t, want, l.queryTokens(&qf), in)
+	testCases := []struct {
+		name     string
+		have     string
+		expected []string
+	}{
+		{name: "ShouldKeepAliAfterName", have: "محمد علي", expected: []string{"mhmd", "ali"}},
+		{name: "ShouldKeepLeadingAli", have: "علي بابا", expected: []string{"ali", "baba"}},
+		{name: "ShouldKeepIla", have: "رحلة إلى القمر", expected: []string{"rhla", "ali", "qmr"}},
+		{name: "ShouldDropFi", have: "بيت في المدينة", expected: []string{"bit", "mdina"}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			qf := l.newForm(l.normalizeSpelled(tc.have, false))
+			assert.Equal(t, tc.expected, l.queryTokens(&qf))
+		})
 	}
 }

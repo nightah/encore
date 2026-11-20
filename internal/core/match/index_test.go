@@ -155,16 +155,24 @@ func TestDefaultRetrieverFindsUnsegmentedScripts(t *testing.T) {
 		movie("filler", "Inception", 2010),
 	))
 
-	for _, c := range [][2]string{
-		{"千と千尋の神隠", "spirited"},
-		{"สวัสดีชาวโล", "thai"},
-		{"ひらがなとカタカ", "kana"},
-	} {
-		res, err := ix.Search(t.Context(), Query{Text: c[0]})
-		require.NoError(t, err)
+	testCases := []struct {
+		name     string
+		heard    string
+		expected string
+	}{
+		{name: "ShouldFindKanjiAndKanaTitleMissingALetter", heard: "千と千尋の神隠", expected: "spirited"},
+		{name: "ShouldFindThaiTitleMissingALetter", heard: "สวัสดีชาวโล", expected: "thai"},
+		{name: "ShouldFindKanaTitleMissingALetter", heard: "ひらがなとカタカ", expected: "kana"},
+	}
 
-		best, _ := res.Best()
-		assert.Equal(t, c[1], best.Doc.ID, "%q", c[0])
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := ix.Search(t.Context(), Query{Text: tc.heard})
+			require.NoError(t, err)
+
+			best, _ := res.Best()
+			assert.Equal(t, tc.expected, best.Doc.ID)
+		})
 	}
 }
 
@@ -180,19 +188,27 @@ func TestSearchOtherScriptInEnglishLibrary(t *testing.T) {
 			movie("filler", "Inception", 2010),
 		)
 
-		for _, c := range [][2]string{
-			{"タイタニック", "titanic"},
-			{"दंगल", "dangal"},
-			{"धूम दो", "dhoom2"},
-			{"ذا ماتريكس", "matrix"},
-			{"千と千尋の神隠し", "spirited"},
-		} {
-			res, err := ix.Search(t.Context(), Query{Text: c[0]})
-			require.NoError(t, err)
+		testCases := []struct {
+			name     string
+			heard    string
+			expected string
+		}{
+			{name: "ShouldFindLatinTitleFromKatakana", heard: "タイタニック", expected: "titanic"},
+			{name: "ShouldFindLatinTitleFromDevanagari", heard: "दंगल", expected: "dangal"},
+			{name: "ShouldFindLatinSequelFromHindiNumberWord", heard: "धूम दो", expected: "dhoom2"},
+			{name: "ShouldFindLatinTitleFromArabicWithArticle", heard: "ذا ماتريكس", expected: "matrix"},
+			{name: "ShouldFindJapaneseTitleAsWritten", heard: "千と千尋の神隠し", expected: "spirited"},
+		}
 
-			best, _ := res.Best()
-			assert.Equal(t, DecisionPlay, res.Decision, "%q", c[0])
-			assert.Equal(t, c[1], best.Doc.ID, "%q", c[0])
+		for _, tc := range testCases {
+			t.Run(tc.name, func(t *testing.T) {
+				res, err := ix.Search(t.Context(), Query{Text: tc.heard})
+				require.NoError(t, err)
+
+				best, _ := res.Best()
+				assert.Equal(t, DecisionPlay, res.Decision)
+				assert.Equal(t, tc.expected, best.Doc.ID)
+			})
 		}
 	})
 }
@@ -295,13 +311,25 @@ func TestBoostsReorderOnlyNearTies(t *testing.T) {
 func TestSearchYear(t *testing.T) {
 	ix := newIndex(t, RetrieverInverted, movie("d84", "Dune", 1984), movie("d21", "Dune", 2021))
 
-	for q, want := range map[string]string{"dune 1984": "d84", "dune twenty twenty one": "d21", "dune (2021)": "d21"} {
-		res, err := ix.Search(t.Context(), Query{Text: q})
-		require.NoError(t, err)
+	testCases := []struct {
+		name     string
+		heard    string
+		expected string
+	}{
+		{name: "ShouldPlayYearInDigits", heard: "dune 1984", expected: "d84"},
+		{name: "ShouldPlayYearInWords", heard: "dune twenty twenty one", expected: "d21"},
+		{name: "ShouldPlayYearInParentheses", heard: "dune (2021)", expected: "d21"},
+	}
 
-		best, _ := res.Best()
-		assert.Equal(t, want, best.Doc.ID, q)
-		assert.Equal(t, DecisionPlay, res.Decision, q)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := ix.Search(t.Context(), Query{Text: tc.heard})
+			require.NoError(t, err)
+
+			best, _ := res.Best()
+			assert.Equal(t, tc.expected, best.Doc.ID)
+			assert.Equal(t, DecisionPlay, res.Decision)
+		})
 	}
 
 	res, err := ix.Search(t.Context(), Query{Text: "dune 1999"})
@@ -321,23 +349,33 @@ func TestSearchSpokenArticle(t *testing.T) {
 			movie("2001", "2001: A Space Odyssey", 1968),
 		)
 
-		for _, q := range []string{"the odyssey", "The Odyssey", "the odyssey 2026", "the odyssey from 2026", "odyssey 2026"} {
-			res, err := ix.Search(t.Context(), Query{Text: q})
-			require.NoError(t, err)
+		t.Run("ShouldPlayTitleNamedAsSaid", func(t *testing.T) {
+			testCases := []struct {
+				name     string
+				heard    string
+				expected string
+			}{
+				{name: "ShouldPlayTitleStartingWithSpokenArticle", heard: "the odyssey", expected: "the"},
+				{name: "ShouldPlayTitleStartingWithCapitalisedArticle", heard: "The Odyssey", expected: "the"},
+				{name: "ShouldPlayTitleWithArticleAndYear", heard: "the odyssey 2026", expected: "the"},
+				{name: "ShouldPlayTitleWithArticleAndFromYear", heard: "the odyssey from 2026", expected: "the"},
+				{name: "ShouldPlayTitleByYearWithoutArticle", heard: "odyssey 2026", expected: "the"},
+				{name: "ShouldPlaySongByYear", heard: "odyssey 2024", expected: "o24"},
+				{name: "ShouldPlayAlbumByFromYear", heard: "odyssey from 2005", expected: "o05"},
+				{name: "ShouldPlayAlbumByYearDespiteArticle", heard: "the odyssey 2005", expected: "o05"},
+			}
 
-			best, _ := res.Best()
-			assert.Equal(t, DecisionPlay, res.Decision, q)
-			assert.Equal(t, "the", best.Doc.ID, q)
-		}
+			for _, tc := range testCases {
+				t.Run(tc.name, func(t *testing.T) {
+					res, err := ix.Search(t.Context(), Query{Text: tc.heard})
+					require.NoError(t, err)
 
-		for q, want := range map[string]string{"odyssey 2024": "o24", "odyssey from 2005": "o05", "the odyssey 2005": "o05"} {
-			res, err := ix.Search(t.Context(), Query{Text: q})
-			require.NoError(t, err)
-
-			best, _ := res.Best()
-			assert.Equal(t, DecisionPlay, res.Decision, q)
-			assert.Equal(t, want, best.Doc.ID, q)
-		}
+					best, _ := res.Best()
+					assert.Equal(t, DecisionPlay, res.Decision)
+					assert.Equal(t, tc.expected, best.Doc.ID)
+				})
+			}
+		})
 
 		// Without an article nothing is named as said, since the recogniser may have missed one: all three exact titles are asked about.
 		res, err := ix.Search(t.Context(), Query{Text: "odyssey"})
@@ -347,26 +385,33 @@ func TestSearchSpokenArticle(t *testing.T) {
 		assert.ElementsMatch(t, []string{"o05", "o24", "the"}, []string{res.Candidates[0].Doc.ID, res.Candidates[1].Doc.ID, res.Candidates[2].Doc.ID})
 
 		// Articles are dropped so a request finds a title whether or not either says one, and that still holds: only a tie between exact titles is settled by the article.
-		for _, tc := range []struct {
-			q    string
-			docs []Doc
-			want string
-			dec  Decision
-		}{
-			{"matrix", []Doc{movie("m", "The Matrix", 1999), movie("r", "The Matrix Reloaded", 2003)}, "m", DecisionPlay},
-			{"the colony", []Doc{{ID: "show", Kind: media.KindTVShow, Title: "Colony", Year: 2016}}, "show", DecisionPlay},
-			{"a quiet place", []Doc{movie("qp", "Quiet Place", 2018)}, "qp", DecisionPlay},
-			{"the colony", []Doc{{ID: "show", Kind: media.KindTVShow, Title: "Colony", Year: 2016}, movie("film", "The Colony", 2013)}, "film", DecisionPlay},
-			{"colony", []Doc{{ID: "show", Kind: media.KindTVShow, Title: "Colony", Year: 2016}, movie("film", "The Colony", 2013)}, "show", DecisionAsk},
-			{"the odyssey", []Doc{{ID: "o05", Kind: media.KindAlbum, Title: "Odyssey", Year: 2005}, {ID: "o24", Kind: media.KindSong, Title: "Odyssey", Year: 2024}}, "o05", DecisionAsk},
-		} {
-			res, err := newIndex(t, retr, tc.docs...).Search(t.Context(), Query{Text: tc.q})
-			require.NoError(t, err)
+		t.Run("ShouldDropArticles", func(t *testing.T) {
+			testCases := []struct {
+				name     string
+				heard    string
+				docs     []Doc
+				expected string
+				decision Decision
+			}{
+				{name: "ShouldPlayTitleWithDroppedArticle", heard: "matrix", docs: []Doc{movie("m", "The Matrix", 1999), movie("r", "The Matrix Reloaded", 2003)}, expected: "m", decision: DecisionPlay},
+				{name: "ShouldPlayTitleWhenRequestSaysArticleItLacks", heard: "the colony", docs: []Doc{{ID: "show", Kind: media.KindTVShow, Title: "Colony", Year: 2016}}, expected: "show", decision: DecisionPlay},
+				{name: "ShouldPlayTitleWithDroppedIndefiniteArticle", heard: "a quiet place", docs: []Doc{movie("qp", "Quiet Place", 2018)}, expected: "qp", decision: DecisionPlay},
+				{name: "ShouldSettleTieBetweenExactTitlesBySpokenArticle", heard: "the colony", docs: []Doc{{ID: "show", Kind: media.KindTVShow, Title: "Colony", Year: 2016}, movie("film", "The Colony", 2013)}, expected: "film", decision: DecisionPlay},
+				{name: "ShouldAskBetweenExactTitlesWithoutSpokenArticle", heard: "colony", docs: []Doc{{ID: "show", Kind: media.KindTVShow, Title: "Colony", Year: 2016}, movie("film", "The Colony", 2013)}, expected: "show", decision: DecisionAsk},
+				{name: "ShouldAskWhenArticleNamesNeitherTitle", heard: "the odyssey", docs: []Doc{{ID: "o05", Kind: media.KindAlbum, Title: "Odyssey", Year: 2005}, {ID: "o24", Kind: media.KindSong, Title: "Odyssey", Year: 2024}}, expected: "o05", decision: DecisionAsk},
+			}
 
-			best, _ := res.Best()
-			assert.Equal(t, tc.dec, res.Decision, tc.q)
-			assert.Equal(t, tc.want, best.Doc.ID, tc.q)
-		}
+			for _, tc := range testCases {
+				t.Run(tc.name, func(t *testing.T) {
+					res, err := newIndex(t, retr, tc.docs...).Search(t.Context(), Query{Text: tc.heard})
+					require.NoError(t, err)
+
+					best, _ := res.Best()
+					assert.Equal(t, tc.decision, res.Decision)
+					assert.Equal(t, tc.expected, best.Doc.ID)
+				})
+			}
+		})
 
 		// An article that is the whole title stays: "The" is not "A".
 		ix = newIndex(t, retr, movie("a", "A", 2001), movie("the1", "The", 2002))
@@ -383,23 +428,31 @@ func TestSearchAsksForMissingSequel(t *testing.T) {
 	retrievers(t, func(t *testing.T, retr string) {
 		ix := newIndex(t, retr, movie("dundee", "Crocodile Dundee", 1986), movie("babe", "Babe", 1995), movie("bullitt", "Bullitt", 1968))
 
-		for _, q := range []string{"crocodile dundee two", "crocodile dundee 3", "crocodile dundee part two"} {
-			res, err := ix.Search(t.Context(), Query{Text: q})
-			require.NoError(t, err)
+		t.Run("ShouldAskForNumberTitleLacks", func(t *testing.T) {
+			testCases := []struct {
+				name     string
+				heard    string
+				expected Decision
+			}{
+				{name: "ShouldAskForSequelNumberInWords", heard: "crocodile dundee two", expected: DecisionAsk},
+				{name: "ShouldAskForSequelNumberInDigits", heard: "crocodile dundee 3", expected: DecisionAsk},
+				{name: "ShouldAskForSequelPart", heard: "crocodile dundee part two", expected: DecisionAsk},
+				{name: "ShouldPlayTitleWithoutNumber", heard: "crocodile dundee", expected: DecisionPlay},
+				{name: "ShouldPlayTitleWithItsYear", heard: "crocodile dundee 1986", expected: DecisionPlay},
+				{name: "ShouldPlayTitleWithOne", heard: "crocodile dundee one", expected: DecisionPlay},
+			}
 
-			best, _ := res.Best()
-			assert.Equal(t, DecisionAsk, res.Decision, q)
-			assert.Equal(t, "dundee", best.Doc.ID, q)
-		}
+			for _, tc := range testCases {
+				t.Run(tc.name, func(t *testing.T) {
+					res, err := ix.Search(t.Context(), Query{Text: tc.heard})
+					require.NoError(t, err)
 
-		for _, q := range []string{"crocodile dundee", "crocodile dundee 1986", "crocodile dundee one"} {
-			res, err := ix.Search(t.Context(), Query{Text: q})
-			require.NoError(t, err)
-
-			best, _ := res.Best()
-			assert.Equal(t, DecisionPlay, res.Decision, q)
-			assert.Equal(t, "dundee", best.Doc.ID, q)
-		}
+					best, _ := res.Best()
+					assert.Equal(t, tc.expected, res.Decision)
+					assert.Equal(t, "dundee", best.Doc.ID)
+				})
+			}
+		})
 
 		// A title that spells its number ("uno") still lacks the sequel's: matching as spelled out does not make "uno dos" agree with "uno".
 		es, err := New("es", Config{Retriever: retr})
@@ -407,29 +460,55 @@ func TestSearchAsksForMissingSequel(t *testing.T) {
 		t.Cleanup(func() { _ = es.Close() })
 		require.NoError(t, es.Upsert(movie("padre", "Padre no hay más que uno", 2019), movie("tesis", "Tesis", 1996)))
 
-		for q, want := range map[string]Decision{"padre no hay más que uno dos": DecisionAsk, "padre no hay más que uno 2": DecisionAsk, "padre no hay más que uno": DecisionPlay} {
-			res, err := es.Search(t.Context(), Query{Text: q})
-			require.NoError(t, err)
+		t.Run("ShouldAskForSequelOfTitleThatSpellsItsNumber", func(t *testing.T) {
+			testCases := []struct {
+				name     string
+				heard    string
+				expected Decision
+			}{
+				{name: "ShouldAskForSequelNumberInWords", heard: "padre no hay más que uno dos", expected: DecisionAsk},
+				{name: "ShouldAskForSequelNumberInDigits", heard: "padre no hay más que uno 2", expected: DecisionAsk},
+				{name: "ShouldPlayTitleWithItsSpelledNumber", heard: "padre no hay más que uno", expected: DecisionPlay},
+			}
 
-			best, _ := res.Best()
-			assert.Equal(t, want, res.Decision, q)
-			assert.Equal(t, "padre", best.Doc.ID, q)
-		}
+			for _, tc := range testCases {
+				t.Run(tc.name, func(t *testing.T) {
+					res, err := es.Search(t.Context(), Query{Text: tc.heard})
+					require.NoError(t, err)
+
+					best, _ := res.Best()
+					assert.Equal(t, tc.expected, res.Decision)
+					assert.Equal(t, "padre", best.Doc.ID)
+				})
+			}
+		})
 
 		// Not missing sequels: a spoken number that sounds like a title word ("four" for "for"), and a query number the title carries among others.
 		ix = newIndex(t, retr, Doc{ID: "tff", Kind: media.KindArtist, Title: "Tears for Fears"}, movie("babe", "Babe", 1995))
 		require.NoError(t, es.Upsert(movie("padre2", "Padre no hay más que uno 2: La llegada de la suegra", 2020)))
 
-		for idx, cases := range map[*Index]map[string]string{ix: {"tears four fears": "tff"}, es: {"padre no hay más que uno la llegada de la suegra": "padre2"}} {
-			for q, want := range cases {
-				res, err := idx.Search(t.Context(), Query{Text: q})
-				require.NoError(t, err)
-
-				best, _ := res.Best()
-				assert.Equal(t, DecisionPlay, res.Decision, q)
-				assert.Equal(t, want, best.Doc.ID, q)
+		t.Run("ShouldNotTreatAsMissingSequel", func(t *testing.T) {
+			testCases := []struct {
+				name     string
+				index    *Index
+				heard    string
+				expected string
+			}{
+				{name: "ShouldPlayTitleWordThatSoundsLikeNumber", index: ix, heard: "tears four fears", expected: "tff"},
+				{name: "ShouldPlayTitleCarryingNumberAmongOthers", index: es, heard: "padre no hay más que uno la llegada de la suegra", expected: "padre2"},
 			}
-		}
+
+			for _, tc := range testCases {
+				t.Run(tc.name, func(t *testing.T) {
+					res, err := tc.index.Search(t.Context(), Query{Text: tc.heard})
+					require.NoError(t, err)
+
+					best, _ := res.Best()
+					assert.Equal(t, DecisionPlay, res.Decision)
+					assert.Equal(t, tc.expected, best.Doc.ID)
+				})
+			}
+		})
 	})
 }
 
@@ -541,19 +620,48 @@ func TestDefaultPoolFindsSplitTitlesAtScale(t *testing.T) {
 }
 
 func TestScriptLanguage(t *testing.T) {
-	for in, want := range map[string]string{
-		"千と千尋の神隠し": "ja", "クイーン": "ja", "दंगल": "hi", "تملي معاك": "ar", "Titanic": "", "2001": "", "": "", "Live 東京": "ja", "Москва": "",
-	} {
-		assert.Equal(t, want, ScriptLanguage(in), in)
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldReadKanjiAndKanaAsJapanese", have: "千と千尋の神隠し", expected: "ja"},
+		{name: "ShouldReadKatakanaAsJapanese", have: "クイーン", expected: "ja"},
+		{name: "ShouldReadDevanagariAsHindi", have: "दंगल", expected: "hi"},
+		{name: "ShouldReadArabicScriptAsArabic", have: "تملي معاك", expected: "ar"},
+		{name: "ShouldReadNoLanguageFromLatin", have: "Titanic"},
+		{name: "ShouldReadNoLanguageFromDigits", have: "2001"},
+		{name: "ShouldReadNoLanguageFromEmpty"},
+		{name: "ShouldReadJapaneseAfterLatin", have: "Live 東京", expected: "ja"},
+		{name: "ShouldReadNoLanguageFromCyrillic", have: "Москва"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, ScriptLanguage(tc.have))
+		})
 	}
 }
 
 func TestIndexLanguage(t *testing.T) {
-	for code, want := range map[string]string{"ja-JP": "ja", "de": "de", "xx": "en", "": "en"} {
-		ix, err := New(code, Config{})
-		require.NoError(t, err)
-		assert.Equal(t, want, ix.Language(), code)
-		require.NoError(t, ix.Close())
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldReduceLocaleToLanguage", have: "ja-JP", expected: "ja"},
+		{name: "ShouldKeepLanguage", have: "de", expected: "de"},
+		{name: "ShouldFallBackToEnglishForUnknownLanguage", have: "xx", expected: "en"},
+		{name: "ShouldFallBackToEnglishForEmpty", expected: "en"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ix, err := New(tc.have, Config{})
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, ix.Language())
+			require.NoError(t, ix.Close())
+		})
 	}
 }
 

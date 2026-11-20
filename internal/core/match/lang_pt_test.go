@@ -11,77 +11,85 @@ import (
 )
 
 func TestNormalizePortuguese(t *testing.T) {
-	for _, tc := range []struct{ in, want string }{
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
 		// Accents, tildes, articles and ç, which is "ss".
-		{"O Auto da Compadecida", "auto da compadecida"},
-		{"A Grande Família", "grande familia"},
-		{"Os Normais", "normais"},
-		{"Uma Noite em 67", "noite em 67"},
-		{"Umas e Outras", "e outras"},
-		{"O", "o"},
-		{"Sessão de Terapia", "sessao de terapia"},
-		{"O Palhaço", "palhasso"},
-		{"Ç", "ss"},
+		{name: "ShouldNormalizeOAutoDaCompadecida", have: "O Auto da Compadecida", expected: "auto da compadecida"},
+		{name: "ShouldNormalizeAGrandeFamilia", have: "A Grande Família", expected: "grande familia"},
+		{name: "ShouldNormalizeOsNormais", have: "Os Normais", expected: "normais"},
+		{name: "ShouldNormalizeUmaNoiteEm67", have: "Uma Noite em 67", expected: "noite em 67"},
+		{name: "ShouldNormalizeUmasEOutras", have: "Umas e Outras", expected: "e outras"},
+		{name: "ShouldKeepLoneArticle", have: "O", expected: "o"},
+		{name: "ShouldNormalizeSessaoDeTerapia", have: "Sessão de Terapia", expected: "sessao de terapia"},
+		{name: "ShouldNormalizeCedillaAsDoubleS", have: "O Palhaço", expected: "palhasso"},
+		{name: "ShouldNormalizeCedillaAlone", have: "Ç", expected: "ss"},
 		// A decomposed ç (c and a combining cedilla), as NFD filenames store it.
-		{"O Palhac\u0327o", "palhasso"},
-		{"C\u0327", "ss"},
-		{"Minha Mãe É uma Peça", "minha mae e uma pessa"},
-		{"Copo d'Água", "copo dagua"},
-		{"Chitãozinho & Xororó", "chitaozinho e xororo"},
-		{"3%", "3 por 100"},
-		{"três por cento", "3 por 100"},
-		{"8½", "8 e meio"},
+		{name: "ShouldNormalizeDecomposedCedilla", have: "O Palhac\u0327o", expected: "palhasso"},
+		{name: "ShouldNormalizeDecomposedCedillaAlone", have: "C\u0327", expected: "ss"},
+		{name: "ShouldNormalizeMinhaMaeEUmaPeca", have: "Minha Mãe É uma Peça", expected: "minha mae e uma pessa"},
+		{name: "ShouldNormalizeCopoDAgua", have: "Copo d'Água", expected: "copo dagua"},
+		{name: "ShouldNormalizeChitaozinhoAndXororo", have: "Chitãozinho & Xororó", expected: "chitaozinho e xororo"},
+		{name: "ShouldNormalizePercentSign", have: "3%", expected: "3 por 100"},
+		{name: "ShouldNormalizeTresPorCento", have: "três por cento", expected: "3 por 100"},
+		{name: "ShouldNormalize8Half", have: "8½", expected: "8 e meio"},
 		// Units, the feminine forms and the other spellings.
-		{"Dois Filhos de Francisco", "2 filhos de francisco"},
-		{"Duas Caras", "2 caras"},
-		{"Os Dez Mandamentos", "10 mandamentos"},
-		{"Trem das Onze", "trem das 11"},
-		{"catorze ou quatorze", "14 ou 14"},
-		{"dezesseis ou dezasseis", "16 ou 16"},
-		{"dezessete ou dezassete", "17 ou 17"},
-		{"dezenove ou dezanove", "19 ou 19"},
-		{"zero", "0"},
+		{name: "ShouldNormalizeDoisFilhosDeFrancisco", have: "Dois Filhos de Francisco", expected: "2 filhos de francisco"},
+		{name: "ShouldNormalizeDuasCaras", have: "Duas Caras", expected: "2 caras"},
+		{name: "ShouldNormalizeOsDezMandamentos", have: "Os Dez Mandamentos", expected: "10 mandamentos"},
+		{name: "ShouldNormalizeTremDasOnze", have: "Trem das Onze", expected: "trem das 11"},
+		{name: "ShouldNormalizeCatorzeOuQuatorze", have: "catorze ou quatorze", expected: "14 ou 14"},
+		{name: "ShouldNormalizeDezesseisOuDezasseis", have: "dezesseis ou dezasseis", expected: "16 ou 16"},
+		{name: "ShouldNormalizeDezesseteOuDezassete", have: "dezessete ou dezassete", expected: "17 ou 17"},
+		{name: "ShouldNormalizeDezenoveOuDezanove", have: "dezenove ou dezanove", expected: "19 ou 19"},
+		{name: "ShouldNormalizeZero", have: "zero", expected: "0"},
 		// Tens and hundreds joined with "e", including the feminine hundreds.
-		{"vinte e um", "21"},
-		{"trinta e duas", "32"},
-		{"cem", "100"},
-		{"cento e um", "101"},
-		{"cento e vinte e três", "123"},
-		{"duzentos", "200"},
-		{"duzentas e uma", "201"},
-		{"quinhentos e cinquenta", "550"},
-		{"novecentas", "900"},
+		{name: "ShouldNormalizeVinteEUm", have: "vinte e um", expected: "21"},
+		{name: "ShouldNormalizeTrintaEDuas", have: "trinta e duas", expected: "32"},
+		{name: "ShouldNormalizeCem", have: "cem", expected: "100"},
+		{name: "ShouldNormalizeCentoEUm", have: "cento e um", expected: "101"},
+		{name: "ShouldNormalizeCentoEVinteETres", have: "cento e vinte e três", expected: "123"},
+		{name: "ShouldNormalizeDuzentos", have: "duzentos", expected: "200"},
+		{name: "ShouldNormalizeDuzentasEUma", have: "duzentas e uma", expected: "201"},
+		{name: "ShouldNormalizeQuinhentosECinquenta", have: "quinhentos e cinquenta", expected: "550"},
+		{name: "ShouldNormalizeNovecentas", have: "novecentas", expected: "900"},
 		// Thousands and millions, which join hundreds with "e" too.
-		{"mil", "1000"},
-		{"mil e quinhentos", "1500"},
-		{"dois mil e cem", "2100"},
-		{"dois mil e vinte e quatro", "2024"},
-		{"mil novecentos e oitenta e quatro", "1984"},
-		{"cem mil", "100000"},
-		{"um milhão", "1000000"},
-		{"dois milhões e duzentos mil", "2200000"},
+		{name: "ShouldNormalizeMil", have: "mil", expected: "1000"},
+		{name: "ShouldNormalizeMilEQuinhentos", have: "mil e quinhentos", expected: "1500"},
+		{name: "ShouldNormalizeDoisMilECem", have: "dois mil e cem", expected: "2100"},
+		{name: "ShouldNormalizeDoisMilEVinteEQuatro", have: "dois mil e vinte e quatro", expected: "2024"},
+		{name: "ShouldNormalizeMilNovecentosEOitentaEQuatro", have: "mil novecentos e oitenta e quatro", expected: "1984"},
+		{name: "ShouldNormalizeCemMil", have: "cem mil", expected: "100000"},
+		{name: "ShouldNormalizeUmMilhao", have: "um milhão", expected: "1000000"},
+		{name: "ShouldNormalizeDoisMilhoesEDuzentosMil", have: "dois milhões e duzentos mil", expected: "2200000"},
 		// "um" and "uma" are only numbers inside one.
-		{"Minha Mãe É 1 Peça", "minha mae e 1 pessa"},
-		{"o poderoso chefão parte dois", "poderoso chefao 2"},
+		{name: "ShouldNormalizeMinhaMaeE1PecaWithDigit", have: "Minha Mãe É 1 Peça", expected: "minha mae e 1 pessa"},
+		{name: "ShouldNormalizeOPoderosoChefaoParteDoisSpoken", have: "o poderoso chefão parte dois", expected: "poderoso chefao 2"},
 		// Ordinals, spelt out or written with digits and º or ª, and parts.
-		{"O Poderoso Chefão: Parte II", "poderoso chefao 2"},
-		{"primeiro", "1"},
-		{"Segunda Chamada", "2 chamada"},
-		{"terceiros", "3"},
-		{"quartas", "4"},
-		{"sétimo selo", "7 selo"},
-		{"nona", "9"},
-		{"décimo", "10"},
-		{"vigésima", "20"},
-		{"2ª temporada", "2 temporada"},
-		{"1º episódio", "1 episodio"},
-		{"3os", "3"},
-		{"Cidade Invisível: Temporada 2", "cidade invisivel 2"},
-		{"Capítulo 3", "3"},
-		{"Volume 1", "1"},
-		{"Tropa de Elite 2: O Inimigo Agora É Outro", "tropa de elite 2 o inimigo agora e outro"},
-	} {
-		assert.Equal(t, tc.want, Normalize("pt-BR", tc.in), tc.in)
+		{name: "ShouldNormalizeOPoderosoChefaoParteII", have: "O Poderoso Chefão: Parte II", expected: "poderoso chefao 2"},
+		{name: "ShouldNormalizePrimeiro", have: "primeiro", expected: "1"},
+		{name: "ShouldNormalizeSegundaChamada", have: "Segunda Chamada", expected: "2 chamada"},
+		{name: "ShouldNormalizeTerceiros", have: "terceiros", expected: "3"},
+		{name: "ShouldNormalizeQuartas", have: "quartas", expected: "4"},
+		{name: "ShouldNormalizeSetimoSelo", have: "sétimo selo", expected: "7 selo"},
+		{name: "ShouldNormalizeNona", have: "nona", expected: "9"},
+		{name: "ShouldNormalizeDecimo", have: "décimo", expected: "10"},
+		{name: "ShouldNormalizeVigesima", have: "vigésima", expected: "20"},
+		{name: "ShouldNormalize2aTemporada", have: "2ª temporada", expected: "2 temporada"},
+		{name: "ShouldNormalize1oEpisodio", have: "1º episódio", expected: "1 episodio"},
+		{name: "ShouldNormalize3os", have: "3os", expected: "3"},
+		{name: "ShouldNormalizeCidadeInvisivelTemporada2", have: "Cidade Invisível: Temporada 2", expected: "cidade invisivel 2"},
+		{name: "ShouldNormalizeCapitulo3", have: "Capítulo 3", expected: "3"},
+		{name: "ShouldNormalizeVolume1", have: "Volume 1", expected: "1"},
+		{name: "ShouldNormalizeTropaDeElite2OInimigoAgoraEOutro", have: "Tropa de Elite 2: O Inimigo Agora É Outro", expected: "tropa de elite 2 o inimigo agora e outro"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, Normalize("pt-BR", tc.have))
+		})
 	}
 }
 
@@ -118,27 +126,35 @@ func TestPortugueseMatches(t *testing.T) {
 		Doc{ID: "tropa", Kind: "movie", Title: "Tropa de Elite"},
 	))
 
-	for heard, want := range map[string]string{
-		"o palhasso":       "palhaco",
-		"xuxa":             "xuxa",
-		"chim maia":        "timmaia",
-		"três por cento":   "tres",
-		"tropa di eliti":   "tropa",
-		"o palhaço":        "palhaco",
-		"tim maia na sala": "",
-	} {
-		res, err := ix.Search(t.Context(), Query{Text: heard})
-		require.NoError(t, err)
+	testCases := []struct {
+		name     string
+		heard    string
+		expected string
+	}{
+		{name: "ShouldFindCedillaHeardAsDoubleS", heard: "o palhasso", expected: "palhaco"},
+		{name: "ShouldFindArtist", heard: "xuxa", expected: "xuxa"},
+		{name: "ShouldFindAffricateHeardAsCh", heard: "chim maia", expected: "timmaia"},
+		{name: "ShouldFindPercentSpokenAsWords", heard: "três por cento", expected: "tres"},
+		{name: "ShouldFindEpentheticVowelsHeard", heard: "tropa di eliti", expected: "tropa"},
+		{name: "ShouldFindTitleAsWritten", heard: "o palhaço", expected: "palhaco"},
+		{name: "ShouldNotPlayTitleWithExtraWords", heard: "tim maia na sala"},
+	}
 
-		if want == "" {
-			assert.NotEqual(t, DecisionPlay, res.Decision, "%q", heard)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := ix.Search(t.Context(), Query{Text: tc.heard})
+			require.NoError(t, err)
 
-			continue
-		}
+			if tc.expected == "" {
+				assert.NotEqual(t, DecisionPlay, res.Decision)
 
-		best, ok := res.Best()
-		assert.True(t, ok, "%q", heard)
-		assert.Equal(t, DecisionPlay, res.Decision, "%q: %s", heard, describe(res))
-		assert.Equal(t, want, best.Doc.ID, "%q", heard)
+				return
+			}
+
+			best, ok := res.Best()
+			assert.True(t, ok)
+			assert.Equal(t, DecisionPlay, res.Decision, describe(res))
+			assert.Equal(t, tc.expected, best.Doc.ID)
+		})
 	}
 }
