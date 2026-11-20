@@ -66,21 +66,23 @@ func TestObserveOnlyWatchesSharedDetectedGroups(t *testing.T) {
 	manual.group = &group{members: []*Instance{manual, lounge}}
 	manual.group.rec.Manual = true
 
-	for _, c := range []struct {
+	testCases := []struct {
 		name string
 		inst *Instance
-		n    kodi.Notification
+		have kodi.Notification
 	}{
-		{"other method", lounge, notification(kodirpc.NotificationPlayerOnPlay, `{"item":{"type":"movie","id":6}}`)},
-		{"bad params", lounge, kodi.Notification{Method: kodirpc.NotificationVideoLibraryOnUpdate, Params: []byte(`not json`)}},
-		{"song", lounge, notification(kodirpc.NotificationVideoLibraryOnUpdate, `{"type":"song","id":6}`)},
-		{"no id", lounge, notification(kodirpc.NotificationVideoLibraryOnUpdate, `{"type":"movie"}`)},
-		{"solo", solo, notification(kodirpc.NotificationVideoLibraryOnUpdate, `{"type":"movie","id":6}`)},
-		{"manual", manual, notification(kodirpc.NotificationVideoLibraryOnUpdate, `{"type":"movie","id":6}`)},
-		{"no group", &Instance{id: 5}, notification(kodirpc.NotificationVideoLibraryOnUpdate, `{"type":"movie","id":6}`)},
-	} {
-		t.Run(c.name, func(t *testing.T) {
-			_, ok := a.observe(c.inst, c.n)
+		{name: "ShouldIgnoreAnotherMethod", inst: lounge, have: notification(kodirpc.NotificationPlayerOnPlay, `{"item":{"type":"movie","id":6}}`)},
+		{name: "ShouldIgnoreBadParams", inst: lounge, have: kodi.Notification{Method: kodirpc.NotificationVideoLibraryOnUpdate, Params: []byte(`not json`)}},
+		{name: "ShouldIgnoreASong", inst: lounge, have: notification(kodirpc.NotificationVideoLibraryOnUpdate, `{"type":"song","id":6}`)},
+		{name: "ShouldIgnoreAnItemWithoutAnID", inst: lounge, have: notification(kodirpc.NotificationVideoLibraryOnUpdate, `{"type":"movie"}`)},
+		{name: "ShouldIgnoreASoloGroup", inst: solo, have: notification(kodirpc.NotificationVideoLibraryOnUpdate, `{"type":"movie","id":6}`)},
+		{name: "ShouldIgnoreAManualGroup", inst: manual, have: notification(kodirpc.NotificationVideoLibraryOnUpdate, `{"type":"movie","id":6}`)},
+		{name: "ShouldIgnoreAnInstanceWithoutAGroup", inst: &Instance{id: 5}, have: notification(kodirpc.NotificationVideoLibraryOnUpdate, `{"type":"movie","id":6}`)},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, ok := a.observe(tc.inst, tc.have)
 			assert.False(t, ok)
 		})
 	}
@@ -89,16 +91,26 @@ func TestObserveOnlyWatchesSharedDetectedGroups(t *testing.T) {
 func TestVetoed(t *testing.T) {
 	lounge, bedroom, study := &Instance{id: 1}, &Instance{id: 2}, &Instance{id: 3}
 
-	g := &group{members: []*Instance{lounge}}
-	h := &group{members: []*Instance{bedroom, study}}
-	assert.False(t, vetoed(lounge, g, h))
+	testCases := []struct {
+		name     string
+		gVetoed  []int64
+		hVetoed  []int64
+		expected bool
+	}{
+		{name: "ShouldNotVetoWithoutEarlierSplits"},
+		{name: "ShouldVetoWhenHWasSplitFromLoungeBefore", hVetoed: []int64{lounge.id}, expected: true},
+		{name: "ShouldVetoWhenLoungeWasSplitFromOneOfHsMembersBefore", gVetoed: []int64{study.id}, expected: true},
+	}
 
-	h.ev.Vetoed = []int64{lounge.id}
-	assert.True(t, vetoed(lounge, g, h), "h was split from lounge before")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			g := &group{members: []*Instance{lounge}}
+			h := &group{members: []*Instance{bedroom, study}}
+			g.ev.Vetoed, h.ev.Vetoed = tc.gVetoed, tc.hVetoed
 
-	h.ev.Vetoed = nil
-	g.ev.Vetoed = []int64{study.id}
-	assert.True(t, vetoed(lounge, g, h), "lounge was split from one of h's members before")
+			assert.Equal(t, tc.expected, vetoed(lounge, g, h))
+		})
+	}
 }
 
 func TestObservationMerge(t *testing.T) {
@@ -123,43 +135,48 @@ func TestObservationMerge(t *testing.T) {
 }
 
 func TestASampleTooSmallToTellKeepsAMemberInItsGroup(t *testing.T) {
-	inBubble(t, func(t *testing.T) {
-		lib := testLibrary(30, 0, "2024-01-01 10:00:00")
-		lounge, bedroom := newKodi(t, fakekodi.Options{Library: lib}), newKodi(t, fakekodi.Options{Library: lib})
-		a, _ := runApp(t, t.TempDir(), fastTuning(), kodiConfig("Lounge", lounge, ""), kodiConfig("Bedroom", bedroom, ""))
+	small := func(id int) *kodi.LibraryFingerprint {
+		return &kodi.LibraryFingerprint{Movies: []kodi.FingerprintItem{{ID: id, File: fmt.Sprintf("nfs://nas/movies/%d.mkv", id), DateAdded: "2026-01-01 10:00:00"}}}
+	}
 
-		settled(t, func() bool {
-			g, _ := a.groupOf("Lounge")
-			return len(g.Members) == 2 && a.fingerprintedAll("Lounge", "Bedroom")
+	testCases := []struct {
+		name   string
+		lounge *kodi.LibraryFingerprint
+		mine   *kodi.LibraryFingerprint
+	}{
+		{name: "ShouldKeepTheMemberForAnEmptySampleAsWhileKodiRebuildsItsLibrary", mine: &kodi.LibraryFingerprint{}},
+		{name: "ShouldKeepTheMemberWhenBothLibrariesAreTooSmallToCompare", lounge: small(1), mine: small(2)},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			inBubble(t, func(t *testing.T) {
+				lib := testLibrary(30, 0, "2024-01-01 10:00:00")
+				lounge, bedroom := newKodi(t, fakekodi.Options{Library: lib}), newKodi(t, fakekodi.Options{Library: lib})
+				a, _ := runApp(t, t.TempDir(), fastTuning(), kodiConfig("Lounge", lounge, ""), kodiConfig("Bedroom", bedroom, ""))
+
+				settled(t, func() bool {
+					g, _ := a.groupOf("Lounge")
+					return len(g.Members) == 2 && a.fingerprintedAll("Lounge", "Bedroom")
+				})
+
+				loungeID, inst := a.instanceNamed(t, "Lounge").id, a.instanceNamed(t, "Bedroom")
+
+				a.planMu.Lock()
+
+				if tc.lounge != nil {
+					a.mu.Lock()
+					a.prints[loungeID] = tc.lounge
+					a.mu.Unlock()
+				}
+
+				a.fingerprinted(t.Context(), inst, tc.mine)
+				a.planMu.Unlock()
+
+				g, _ := a.groupOf("Bedroom")
+				assert.ElementsMatch(t, []string{"Lounge", "Bedroom"}, memberNames(g))
+				assert.Empty(t, g.Reason)
+			})
 		})
-
-		loungeID, inst := a.instanceNamed(t, "Lounge").id, a.instanceNamed(t, "Bedroom")
-
-		small := func(id int) *kodi.LibraryFingerprint {
-			return &kodi.LibraryFingerprint{Movies: []kodi.FingerprintItem{{ID: id, File: fmt.Sprintf("nfs://nas/movies/%d.mkv", id), DateAdded: "2026-01-01 10:00:00"}}}
-		}
-
-		for _, c := range []struct {
-			name         string
-			lounge, mine *kodi.LibraryFingerprint
-		}{
-			{"an empty sample, as while Kodi rebuilds its library", nil, &kodi.LibraryFingerprint{}},
-			{"two libraries too small to compare", small(1), small(2)},
-		} {
-			a.planMu.Lock()
-
-			if c.lounge != nil {
-				a.mu.Lock()
-				a.prints[loungeID] = c.lounge
-				a.mu.Unlock()
-			}
-
-			a.fingerprinted(t.Context(), inst, c.mine)
-			a.planMu.Unlock()
-
-			g, _ := a.groupOf("Bedroom")
-			assert.ElementsMatch(t, []string{"Lounge", "Bedroom"}, memberNames(g), c.name)
-			assert.Empty(t, g.Reason, c.name)
-		}
-	})
+	}
 }

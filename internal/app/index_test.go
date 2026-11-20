@@ -50,53 +50,27 @@ func TestReloadAliasesUpdatesTheIndex(t *testing.T) {
 func TestDocFor(t *testing.T) {
 	now := time.Date(2026, 10, 28, 9, 0, 0, 0, time.UTC)
 
-	cases := []struct {
-		name    string
-		item    media.Item
-		aliases []string
-		ok      bool
-		want    match.Doc
+	testCases := []struct {
+		name     string
+		item     media.Item
+		aliases  []string
+		ok       bool
+		expected match.Doc
 	}{
-		{name: "untitled", item: media.Item{Kind: media.KindMovie, ID: 1}},
-		{name: "episode", item: media.Item{Kind: media.KindEpisode, ID: 1, Title: "Rain"}},
-		{
-			name:    "aliases deduplicated",
-			item:    media.Item{Kind: media.KindMovie, ID: 5, Title: "Amélie", SortTitle: "Amelie", OriginalTitle: "Amélie", Year: 2001},
-			aliases: []string{"Amelie", "amelie the film"},
-			ok:      true,
-			want:    match.Doc{ID: "movie/5", Kind: media.KindMovie, Ref: media.Ref{Kind: media.KindMovie, ID: 5}, Title: "Amélie", Year: 2001, Aliases: []string{"Amelie", "amelie the film"}},
-		},
-		{
-			name: "in progress",
-			item: media.Item{Kind: media.KindMovie, ID: 3, Title: "Dune: Part Two", Resume: time.Hour, DateAdded: now.Add(-time.Hour)},
-			ok:   true,
-			want: match.Doc{ID: "movie/3", Kind: media.KindMovie, Ref: media.Ref{Kind: media.KindMovie, ID: 3}, Title: "Dune: Part Two", Boost: inProgressBoost, Copy: media.Copy{Resume: time.Hour}},
-		},
-		{
-			name: "recently added",
-			item: media.Item{Kind: media.KindTVShow, ID: 7, Title: "Bluey", DateAdded: now.Add(-recentlyAddedFor + time.Minute)},
-			ok:   true,
-			want: match.Doc{ID: "tvshow/7", Kind: media.KindTVShow, Ref: media.Ref{Kind: media.KindTVShow, ID: 7}, Title: "Bluey", Boost: recentlyAddedBoost},
-		},
-		{
-			name: "added a while ago",
-			item: media.Item{Kind: media.KindMovie, ID: 8, Title: "Rocky II", DateAdded: now.Add(-recentlyAddedFor)},
-			ok:   true,
-			want: match.Doc{ID: "movie/8", Kind: media.KindMovie, Ref: media.Ref{Kind: media.KindMovie, ID: 8}, Title: "Rocky II"},
-		},
-		{
-			name: "a copy in 2160p",
-			item: media.Item{Kind: media.KindMovie, ID: 9, Title: "Rocky II", Quality: media.Quality2160p},
-			ok:   true,
-			want: match.Doc{ID: "movie/9", Kind: media.KindMovie, Ref: media.Ref{Kind: media.KindMovie, ID: 9}, Title: "Rocky II", Copy: media.Copy{Quality: media.Quality2160p}},
-		},
+		{name: "ShouldSkipAnUntitledItem", item: media.Item{Kind: media.KindMovie, ID: 1}},
+		{name: "ShouldSkipAnEpisode", item: media.Item{Kind: media.KindEpisode, ID: 1, Title: "Rain"}},
+		{name: "ShouldDeduplicateAliases", item: media.Item{Kind: media.KindMovie, ID: 5, Title: "Amélie", SortTitle: "Amelie", OriginalTitle: "Amélie", Year: 2001}, aliases: []string{"Amelie", "amelie the film"}, ok: true, expected: match.Doc{ID: "movie/5", Kind: media.KindMovie, Ref: media.Ref{Kind: media.KindMovie, ID: 5}, Title: "Amélie", Year: 2001, Aliases: []string{"Amelie", "amelie the film"}}},
+		{name: "ShouldBoostAnItemInProgress", item: media.Item{Kind: media.KindMovie, ID: 3, Title: "Dune: Part Two", Resume: time.Hour, DateAdded: now.Add(-time.Hour)}, ok: true, expected: match.Doc{ID: "movie/3", Kind: media.KindMovie, Ref: media.Ref{Kind: media.KindMovie, ID: 3}, Title: "Dune: Part Two", Boost: inProgressBoost, Copy: media.Copy{Resume: time.Hour}}},
+		{name: "ShouldBoostAnItemRecentlyAdded", item: media.Item{Kind: media.KindTVShow, ID: 7, Title: "Bluey", DateAdded: now.Add(-recentlyAddedFor + time.Minute)}, ok: true, expected: match.Doc{ID: "tvshow/7", Kind: media.KindTVShow, Ref: media.Ref{Kind: media.KindTVShow, ID: 7}, Title: "Bluey", Boost: recentlyAddedBoost}},
+		{name: "ShouldNotBoostAnItemAddedAWhileAgo", item: media.Item{Kind: media.KindMovie, ID: 8, Title: "Rocky II", DateAdded: now.Add(-recentlyAddedFor)}, ok: true, expected: match.Doc{ID: "movie/8", Kind: media.KindMovie, Ref: media.Ref{Kind: media.KindMovie, ID: 8}, Title: "Rocky II"}},
+		{name: "ShouldCarryTheCopyQuality", item: media.Item{Kind: media.KindMovie, ID: 9, Title: "Rocky II", Quality: media.Quality2160p}, ok: true, expected: match.Doc{ID: "movie/9", Kind: media.KindMovie, Ref: media.Ref{Kind: media.KindMovie, ID: 9}, Title: "Rocky II", Copy: media.Copy{Quality: media.Quality2160p}}},
 	}
 
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
-			doc, ok := docFor(&c.item, c.aliases, now)
-			assert.Equal(t, c.ok, ok)
-			assert.Equal(t, c.want, doc)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			doc, ok := docFor(&tc.item, tc.aliases, now)
+			assert.Equal(t, tc.ok, ok)
+			assert.Equal(t, tc.expected, doc)
 		})
 	}
 }

@@ -82,35 +82,35 @@ func TestDryBackendRecordsSkinSearches(t *testing.T) {
 func TestDryBackendRecordsWhatWouldBeSent(t *testing.T) {
 	to, set, mute := 90*time.Second, 40, true
 
-	cases := []struct {
+	testCases := []struct {
 		name   string
 		call   func(b dryBackend) error
 		method string
 		params map[string]any
 	}{
-		{"seek to", func(b dryBackend) error { return b.Seek(t.Context(), media.Seek{To: &to}) }, "Player.Seek", map[string]any{"to_s": 90.0}},
-		{"seek step", func(b dryBackend) error { return b.Seek(t.Context(), media.Seek{Step: "bigforward"}) }, "Player.Seek", map[string]any{"step": media.SeekStep("bigforward")}},
-		{"seek by", func(b dryBackend) error { return b.Seek(t.Context(), media.Seek{By: -30 * time.Second}) }, "Player.Seek", map[string]any{"by_s": -30.0}},
-		{"volume set", func(b dryBackend) error { _, err := b.Volume(t.Context(), media.VolumeChange{Set: &set}); return err }, "Application.SetVolume", map[string]any{"set": 40}},
-		{"volume mute", func(b dryBackend) error { _, err := b.Volume(t.Context(), media.VolumeChange{Mute: &mute}); return err }, "Application.SetVolume", map[string]any{"mute": true}},
-		{"volume toggle", func(b dryBackend) error {
+		{name: "ShouldRecordASeekTo", call: func(b dryBackend) error { return b.Seek(t.Context(), media.Seek{To: &to}) }, method: "Player.Seek", params: map[string]any{"to_s": 90.0}},
+		{name: "ShouldRecordASeekStep", call: func(b dryBackend) error { return b.Seek(t.Context(), media.Seek{Step: "bigforward"}) }, method: "Player.Seek", params: map[string]any{"step": media.SeekStep("bigforward")}},
+		{name: "ShouldRecordASeekBy", call: func(b dryBackend) error { return b.Seek(t.Context(), media.Seek{By: -30 * time.Second}) }, method: "Player.Seek", params: map[string]any{"by_s": -30.0}},
+		{name: "ShouldRecordAVolumeSet", call: func(b dryBackend) error { _, err := b.Volume(t.Context(), media.VolumeChange{Set: &set}); return err }, method: "Application.SetVolume", params: map[string]any{"set": 40}},
+		{name: "ShouldRecordAVolumeMute", call: func(b dryBackend) error { _, err := b.Volume(t.Context(), media.VolumeChange{Mute: &mute}); return err }, method: "Application.SetVolume", params: map[string]any{"mute": true}},
+		{name: "ShouldRecordAVolumeToggle", call: func(b dryBackend) error {
 			_, err := b.Volume(t.Context(), media.VolumeChange{ToggleMute: true})
 			return err
-		}, "Application.SetVolume", map[string]any{"toggle_mute": true}},
-		{"volume step", func(b dryBackend) error { _, err := b.Volume(t.Context(), media.VolumeChange{Step: -10}); return err }, "Application.SetVolume", map[string]any{"step": -10}},
-		{"play", func(b dryBackend) error {
+		}, method: "Application.SetVolume", params: map[string]any{"toggle_mute": true}},
+		{name: "ShouldRecordAVolumeStep", call: func(b dryBackend) error { _, err := b.Volume(t.Context(), media.VolumeChange{Step: -10}); return err }, method: "Application.SetVolume", params: map[string]any{"step": -10}},
+		{name: "ShouldRecordAPlay", call: func(b dryBackend) error {
 			return b.Play(t.Context(), media.Ref{Kind: media.KindMovie, ID: 6}, media.PlayOptions{Resume: true})
-		}, "Player.Open", map[string]any{"kind": media.KindMovie, "id": 6, "resume": true, "shuffle": false}},
-		{"play file", func(b dryBackend) error { return b.PlayFile(t.Context(), "/media/a.mkv") }, "Player.Open", map[string]any{"file": "/media/a.mkv"}},
-		{"party mode", func(b dryBackend) error { return b.PartyMode(t.Context()) }, "Player.Open", map[string]any{"partymode": true}},
-		{"channel", func(b dryBackend) error { return b.PlayChannel(t.Context(), 24) }, "Player.Open", map[string]any{"channelid": 24}},
+		}, method: "Player.Open", params: map[string]any{"kind": media.KindMovie, "id": 6, "resume": true, "shuffle": false}},
+		{name: "ShouldRecordAPlayFile", call: func(b dryBackend) error { return b.PlayFile(t.Context(), "/media/a.mkv") }, method: "Player.Open", params: map[string]any{"file": "/media/a.mkv"}},
+		{name: "ShouldRecordPartyMode", call: func(b dryBackend) error { return b.PartyMode(t.Context()) }, method: "Player.Open", params: map[string]any{"partymode": true}},
+		{name: "ShouldRecordAChannel", call: func(b dryBackend) error { return b.PlayChannel(t.Context(), 24) }, method: "Player.Open", params: map[string]any{"channelid": 24}},
 	}
 
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			run := &DryRun{}
-			require.NoError(t, c.call(dryBackend{Backend: testkit.NewBackend(), run: run}))
-			assert.Equal(t, []Call{{Method: c.method, Params: c.params}}, run.Calls())
+			require.NoError(t, tc.call(dryBackend{Backend: testkit.NewBackend(), run: run}))
+			assert.Equal(t, []Call{{Method: tc.method, Params: tc.params}}, run.Calls())
 		})
 	}
 }
@@ -208,10 +208,21 @@ func TestDryRunTargetsFollowLinksAndRooms(t *testing.T) {
 	require.NoError(t, db.Rooms().Create(ctx, &store.Room{Name: "Bedroom", KodiInstanceID: inst.id}))
 	require.NoError(t, db.Rooms().Create(ctx, &store.Room{Name: "Kitchen"}))
 
-	for _, spoken := range []string{"bedroom", "the bedroom", "The Bedroom"} {
-		target, err = targets.TargetForRoom(ctx, testDevice, spoken)
-		require.NoError(t, err, spoken)
-		assert.Equal(t, "Lounge", target.Name, spoken)
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldFollowTheRoomName", have: "bedroom"},
+		{name: "ShouldFollowTheRoomNameAfterAnArticle", have: "the bedroom"},
+		{name: "ShouldFollowTheRoomNameInAnyCase", have: "The Bedroom"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			target, err := targets.TargetForRoom(t.Context(), testDevice, tc.have)
+			require.NoError(t, err)
+			assert.Equal(t, "Lounge", target.Name)
+		})
 	}
 
 	_, err = targets.TargetForRoom(ctx, testDevice, "the attic")
@@ -244,19 +255,35 @@ func TestTargetForRoomSaysHowTheRoomWasNamed(t *testing.T) {
 	_, err = db.Rooms().AddAlias(ctx, lounge.ID, "lounge room", store.SpokenRoom)
 	require.NoError(t, err)
 
-	cases := map[string]actions.Via{
-		"TV":          {Spoken: "TV", Kind: "device", Room: "Lounge"},
-		"the tv":      {Spoken: "tv", Kind: "device", Room: "Lounge"},
-		"lounge room": {Spoken: "lounge room", Kind: "room", Room: "Lounge"},
-		"the lounge":  {Spoken: "Lounge", Kind: "room", Room: "Lounge"},
+	testCases := []struct {
+		name    string
+		targets alexa.Targets
+	}{
+		{name: "ShouldSayHowTheRoomWasNamedToTheApp", targets: h.app},
+		{name: "ShouldSayHowTheRoomWasNamedToADryRun", targets: DryRunTargets{App: h.app, Run: &DryRun{}}},
 	}
 
-	for _, targets := range []alexa.Targets{h.app, DryRunTargets{App: h.app, Run: &DryRun{}}} {
-		for spoken, want := range cases {
-			target, err := targets.TargetForRoom(ctx, testDevice, spoken)
-			require.NoError(t, err, spoken)
-			assert.Equal(t, want, target.Via, "%T %s", targets, spoken)
-		}
+	spokenCases := []struct {
+		name     string
+		have     string
+		expected actions.Via
+	}{
+		{name: "ShouldNameADeviceAlias", have: "TV", expected: actions.Via{Spoken: "TV", Kind: "device", Room: "Lounge"}},
+		{name: "ShouldNameADeviceAliasAfterAnArticle", have: "the tv", expected: actions.Via{Spoken: "tv", Kind: "device", Room: "Lounge"}},
+		{name: "ShouldNameARoomAlias", have: "lounge room", expected: actions.Via{Spoken: "lounge room", Kind: "room", Room: "Lounge"}},
+		{name: "ShouldNameTheRoomAfterAnArticle", have: "the lounge", expected: actions.Via{Spoken: "Lounge", Kind: "room", Room: "Lounge"}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			for _, sc := range spokenCases {
+				t.Run(sc.name, func(t *testing.T) {
+					target, err := tc.targets.TargetForRoom(t.Context(), testDevice, sc.have)
+					require.NoError(t, err)
+					assert.Equal(t, sc.expected, target.Via)
+				})
+			}
+		})
 	}
 
 	target, err := h.app.Target(ctx, testDevice)

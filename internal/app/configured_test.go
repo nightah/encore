@@ -122,24 +122,16 @@ func TestApplyConfiguredRoomsAndDevicesReportsDatabaseFailures(t *testing.T) {
 		name  string
 		setup func(t *testing.T, db *store.DB)
 		fault testkit.Fault
-		want  string
+		err   string
 		// after checks what the failure left behind.
 		after func(t *testing.T, db *store.DB)
 	}{
+		{name: "ShouldReportListingTheKodiInstances", fault: testkit.Fault{Op: testkit.Read, Table: "kodi_instances"}, err: "listing kodi instances: querying"},
+		{name: "ShouldReportListingTheRooms", fault: testkit.Fault{Op: testkit.Read, Table: "rooms"}, err: "listing rooms: querying"},
 		{
-			name:  "listing the Kodi instances",
-			fault: testkit.Fault{Op: testkit.Read, Table: "kodi_instances"},
-			want:  "listing kodi instances: querying",
-		},
-		{
-			name:  "listing the rooms",
-			fault: testkit.Fault{Op: testkit.Read, Table: "rooms"},
-			want:  "listing rooms: querying",
-		},
-		{
-			name:  "creating a room",
+			name:  "ShouldReportCreatingARoom",
 			fault: testkit.Fault{Op: testkit.Insert, Table: "rooms"},
-			want:  `room "Lounge": creating room`,
+			err:   `room "Lounge": creating room`,
 			after: func(t *testing.T, db *store.DB) {
 				rooms, err := db.Rooms().List(t.Context())
 				require.NoError(t, err)
@@ -147,21 +139,17 @@ func TestApplyConfiguredRoomsAndDevicesReportsDatabaseFailures(t *testing.T) {
 			},
 		},
 		{
-			name: "updating a room",
+			name: "ShouldReportUpdatingARoom",
 			setup: func(t *testing.T, db *store.DB) {
 				require.NoError(t, db.Rooms().Create(t.Context(), &store.Room{Name: "Lounge"}))
 			},
 			fault: testkit.Fault{Op: testkit.Update, Table: "rooms"},
-			want:  `room "Lounge": updating room`,
+			err:   `room "Lounge": updating room`,
 		},
+		// Creating the room checks its name against every alias first.
+		{name: "ShouldReportReadingARoomsAliases", fault: testkit.Fault{Op: testkit.Read, Table: "room_aliases", Nth: 2}, err: `room "Lounge": querying`},
 		{
-			name: "reading a room's aliases",
-			// Creating the room checks its name against every alias first.
-			fault: testkit.Fault{Op: testkit.Read, Table: "room_aliases", Nth: 2},
-			want:  `room "Lounge": querying`,
-		},
-		{
-			name: "removing an alias no longer declared",
+			name: "ShouldReportRemovingAnAliasNoLongerDeclared",
 			setup: func(t *testing.T, db *store.DB) {
 				room := store.Room{Name: "Lounge"}
 				require.NoError(t, db.Rooms().Create(t.Context(), &room))
@@ -170,12 +158,12 @@ func TestApplyConfiguredRoomsAndDevicesReportsDatabaseFailures(t *testing.T) {
 				require.NoError(t, err)
 			},
 			fault: testkit.Fault{Op: testkit.Delete, Table: "room_aliases"},
-			want:  `room "Lounge": removing room alias`,
+			err:   `room "Lounge": removing room alias`,
 		},
 		{
-			name:  "adding the second alias",
+			name:  "ShouldReportAddingTheSecondAlias",
 			fault: testkit.Fault{Op: testkit.Insert, Table: "room_aliases", Nth: 2},
-			want:  `room "Lounge": alias "big tv": adding alias`,
+			err:   `room "Lounge": alias "big tv": adding alias`,
 			after: func(t *testing.T, db *store.DB) {
 				room, _, err := db.Rooms().Resolve(t.Context(), "living room")
 				require.NoError(t, err, "the room and the aliases before the failure are kept")
@@ -185,15 +173,11 @@ func TestApplyConfiguredRoomsAndDevicesReportsDatabaseFailures(t *testing.T) {
 				require.ErrorIs(t, err, store.ErrNotFound, "devices are applied after rooms")
 			},
 		},
+		{name: "ShouldReportDeclaringADevice", fault: testkit.Fault{Op: testkit.Insert, Table: "echo_devices"}, err: `device "` + device + `": declaring echo device`},
 		{
-			name:  "declaring a device",
-			fault: testkit.Fault{Op: testkit.Insert, Table: "echo_devices"},
-			want:  `device "` + device + `": declaring echo device`,
-		},
-		{
-			name:  "linking a device",
+			name:  "ShouldReportLinkingADevice",
 			fault: testkit.Fault{Op: testkit.Update, Table: "echo_devices"},
-			want:  `device "` + device + `": updating echo device`,
+			err:   `device "` + device + `": updating echo device`,
 			after: func(t *testing.T, db *store.DB) {
 				dev, err := db.EchoDevices().GetByAlexaID(t.Context(), device)
 				require.NoError(t, err, "the device is declared")
@@ -220,7 +204,7 @@ func TestApplyConfiguredRoomsAndDevicesReportsDatabaseFailures(t *testing.T) {
 			faults.Inject(tc.fault)
 
 			err = a.ApplyConfiguredRoomsAndDevices(t.Context())
-			require.ErrorContains(t, err, tc.want)
+			require.ErrorContains(t, err, tc.err)
 
 			if tc.fault.Op == testkit.Read {
 				require.ErrorContains(t, err, testkit.ReadFaultMessage)

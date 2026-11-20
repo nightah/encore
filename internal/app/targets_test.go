@@ -261,20 +261,26 @@ func TestTargetForRoom(t *testing.T) {
 }
 
 func TestCutArticle(t *testing.T) {
-	for spoken, want := range map[string]struct {
-		rest string
-		ok   bool
+	testCases := []struct {
+		name       string
+		have       string
+		expected   string
+		expectedOK bool
 	}{
-		"the bedroom":       {"bedroom", true},
-		"The  Main Bedroom": {"Main Bedroom", true},
-		"the":               {"", false},
-		"bedroom":           {"", false},
-		"theatre room":      {"", false},
-		"":                  {"", false},
-	} {
-		rest, ok := cutArticle(spoken)
-		assert.Equal(t, want.rest, rest, spoken)
-		assert.Equal(t, want.ok, ok, spoken)
+		{name: "ShouldCutTheArticle", have: "the bedroom", expected: "bedroom", expectedOK: true},
+		{name: "ShouldCutACapitalisedArticleAndExtraSpaces", have: "The  Main Bedroom", expected: "Main Bedroom", expectedOK: true},
+		{name: "ShouldNotCutAnArticleAlone", have: "the"},
+		{name: "ShouldNotCutWithoutAnArticle", have: "bedroom"},
+		{name: "ShouldNotCutAWordStartingWithThe", have: "theatre room"},
+		{name: "ShouldNotCutNothing"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			rest, ok := cutArticle(tc.have)
+			assert.Equal(t, tc.expected, rest)
+			assert.Equal(t, tc.expectedOK, ok)
+		})
 	}
 }
 

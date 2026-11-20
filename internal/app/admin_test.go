@@ -212,13 +212,18 @@ func TestInstanceStatusChecksAcceptedCredentialsOverHTTPOnlyNowAndThen(t *testin
 func TestConfiguredCredentialsReachKodi(t *testing.T) {
 	srv := newKodi(t, fakekodi.Options{Username: "kodi", Password: "s3cret"})
 
-	for name, kc := range map[string]config.KodiInstance{
-		"fields":     {Name: "Lounge", URL: srv.URL(), Username: "kodi", Password: "s3cret"},
-		"url":        {Name: "Lounge", URL: "http://kodi:s3cret@" + strings.TrimPrefix(srv.URL(), "http://")},
-		"field wins": {Name: "Lounge", URL: "http://kodi:wrong@" + strings.TrimPrefix(srv.URL(), "http://"), Password: "s3cret"},
-	} {
-		t.Run(name, func(t *testing.T) {
-			h := startHarness(t, onFakes(defaultTuning()), kc)
+	testCases := []struct {
+		name string
+		have config.KodiInstance
+	}{
+		{name: "ShouldUseTheCredentialFields", have: config.KodiInstance{Name: "Lounge", URL: srv.URL(), Username: "kodi", Password: "s3cret"}},
+		{name: "ShouldUseTheCredentialsInTheURL", have: config.KodiInstance{Name: "Lounge", URL: "http://kodi:s3cret@" + strings.TrimPrefix(srv.URL(), "http://")}},
+		{name: "ShouldPreferTheFieldOverTheURL", have: config.KodiInstance{Name: "Lounge", URL: "http://kodi:wrong@" + strings.TrimPrefix(srv.URL(), "http://"), Password: "s3cret"}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			h := startHarness(t, onFakes(defaultTuning()), tc.have)
 			inst := h.instance(t)
 
 			assert.Equal(t, passwordRef("Lounge"), inst.Record.PasswordSecretRef, "the password is kept in the secret store, not the row")
@@ -362,9 +367,22 @@ func TestLatest(t *testing.T) {
 	early := time.Date(2026, 10, 1, 9, 0, 0, 0, time.UTC)
 	later := early.Add(time.Hour)
 
-	assert.Equal(t, later, latest(early, later))
-	assert.Equal(t, later, latest(later, early))
-	assert.Equal(t, early, latest(early, early))
-	assert.Equal(t, early, latest(time.Time{}, early))
-	assert.True(t, latest(time.Time{}, time.Time{}).IsZero())
+	testCases := []struct {
+		name     string
+		a        time.Time
+		b        time.Time
+		expected time.Time
+	}{
+		{name: "ShouldTakeTheSecondWhenLater", a: early, b: later, expected: later},
+		{name: "ShouldTakeTheFirstWhenLater", a: later, b: early, expected: later},
+		{name: "ShouldTakeEitherWhenEqual", a: early, b: early, expected: early},
+		{name: "ShouldTakeTheOnlyTimeSet", b: early, expected: early},
+		{name: "ShouldBeZeroWhenNeitherIsSet"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, latest(tc.a, tc.b))
+		})
+	}
 }

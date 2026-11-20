@@ -36,7 +36,7 @@ func TestMirrors(t *testing.T) {
 
 	hotFuzz := media.Ref{Kind: media.KindMovie, ID: 6}
 
-	cases := []struct {
+	testCases := []struct {
 		name  string
 		other *fakekodi.Library
 		// stale makes the change m reported differ from what m shows now, as when a later write landed between the reads.
@@ -45,44 +45,44 @@ func TestMirrors(t *testing.T) {
 		closeP bool
 		// immediate means the verdict needs no grace period.
 		immediate bool
-		want      verdict
+		expected  verdict
 	}{
-		{name: "shared database shows the change", other: shared, immediate: true, want: mirrored},
-		{name: "item missing from the other library", other: without, immediate: true, want: missed},
-		{name: "other library disagrees after the grace period", other: separate, want: missed},
-		{name: "a later write settles within the grace period", other: shared, stale: true, want: mirrored},
-		{name: "other Kodi unreachable", other: shared, closeP: true, immediate: true, want: inconclusive},
-		{name: "changed Kodi unreachable after the grace period", other: shared, stale: true, closeM: true, want: inconclusive},
+		{name: "ShouldMirrorWhenASharedDatabaseShowsTheChange", other: shared, immediate: true, expected: mirrored},
+		{name: "ShouldMissAnItemMissingFromTheOtherLibrary", other: without, immediate: true, expected: missed},
+		{name: "ShouldMissWhenTheOtherLibraryDisagreesAfterTheGracePeriod", other: separate, expected: missed},
+		{name: "ShouldMirrorWhenALaterWriteSettlesWithinTheGracePeriod", other: shared, stale: true, expected: mirrored},
+		{name: "ShouldBeInconclusiveWhenTheOtherKodiIsUnreachable", other: shared, closeP: true, immediate: true, expected: inconclusive},
+		{name: "ShouldBeInconclusiveWhenTheChangedKodiIsUnreachableAfterTheGracePeriod", other: shared, stale: true, closeM: true, expected: inconclusive},
 	}
 
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			inBubble(t, func(t *testing.T) {
 				a := newBareApp(t)
 				grace := a.tune.confirmGrace
 
-				msrv, psrv := newKodi(t, fakekodi.Options{Library: shared}), newKodi(t, fakekodi.Options{Library: c.other})
+				msrv, psrv := newKodi(t, fakekodi.Options{Library: shared}), newKodi(t, fakekodi.Options{Library: tc.other})
 				m, p := detachedInstance(t, a, "Lounge", msrv), detachedInstance(t, a, "Bedroom", psrv)
 
 				after, err := m.Backend.Item(t.Context(), hotFuzz)
 				require.NoError(t, err)
 
-				if c.stale {
+				if tc.stale {
 					after.PlayCount++
 				}
 
-				if c.closeM {
+				if tc.closeM {
 					msrv.Close()
 				}
 
-				if c.closeP {
+				if tc.closeP {
 					psrv.Close()
 				}
 
 				start := time.Now()
-				assert.Equal(t, c.want, a.mirrors(t.Context(), m, p, hotFuzz, &after))
+				assert.Equal(t, tc.expected, a.mirrors(t.Context(), m, p, hotFuzz, &after))
 
-				if c.immediate {
+				if tc.immediate {
 					assert.Zero(t, time.Since(start), "the verdict needs no grace period")
 				} else {
 					assert.Equal(t, grace, time.Since(start), "the other member gets the grace period")
@@ -95,15 +95,17 @@ func TestMirrors(t *testing.T) {
 func TestMirrorsRereadsTheOtherMemberAfterTheGracePeriod(t *testing.T) {
 	hotFuzz := media.Ref{Kind: media.KindMovie, ID: 6}
 
-	for _, c := range []struct {
-		name  string
-		again *fakekodi.Error
-		want  verdict
+	testCases := []struct {
+		name     string
+		again    *fakekodi.Error
+		expected verdict
 	}{
-		{"deleted meanwhile", &fakekodi.Error{Code: fakekodi.CodeNotFound, Message: "Not found."}, missed},
-		{"unreachable meanwhile", &fakekodi.Error{Code: fakekodi.CodeUnavailable, Message: "busy"}, inconclusive},
-	} {
-		t.Run(c.name, func(t *testing.T) {
+		{name: "ShouldMissAnItemDeletedMeanwhile", again: &fakekodi.Error{Code: fakekodi.CodeNotFound, Message: "Not found."}, expected: missed},
+		{name: "ShouldBeInconclusiveWhenUnreachableMeanwhile", again: &fakekodi.Error{Code: fakekodi.CodeUnavailable, Message: "busy"}, expected: inconclusive},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			inBubble(t, func(t *testing.T) {
 				a := newBareApp(t)
 
@@ -116,7 +118,7 @@ func TestMirrorsRereadsTheOtherMemberAfterTheGracePeriod(t *testing.T) {
 				psrv.Handle("VideoLibrary.GetMovieDetails", func(json.RawMessage) (any, *fakekodi.Error) {
 					reads = append(reads, time.Now())
 					if len(reads) > 1 {
-						return nil, c.again
+						return nil, tc.again
 					}
 
 					return map[string]any{"moviedetails": map[string]any{"movieid": 6, "label": "Hot Fuzz", "title": "Hot Fuzz", "playcount": 7}}, nil
@@ -125,7 +127,7 @@ func TestMirrorsRereadsTheOtherMemberAfterTheGracePeriod(t *testing.T) {
 				after, err := m.Backend.Item(t.Context(), hotFuzz)
 				require.NoError(t, err)
 
-				assert.Equal(t, c.want, a.mirrors(t.Context(), m, p, hotFuzz, &after))
+				assert.Equal(t, tc.expected, a.mirrors(t.Context(), m, p, hotFuzz, &after))
 				require.Len(t, reads, 2)
 				assert.Equal(t, a.tune.confirmGrace, reads[1].Sub(reads[0]), "the second read comes after the grace period")
 			})
@@ -162,18 +164,18 @@ func TestConfirmIgnoresChangesThatProveNothing(t *testing.T) {
 	hotFuzz := media.Ref{Kind: media.KindMovie, ID: 6}
 	one := 1
 
-	cases := []struct {
+	testCases := []struct {
 		name   string
 		o      func(now media.Item) observation
 		closeM bool
 	}{
-		{name: "the changed Kodi can't be read", o: func(media.Item) observation { return observation{ref: hotFuzz, playCount: &one} }, closeM: true},
-		{name: "no play count and nothing known before", o: func(media.Item) observation { return observation{ref: hotFuzz} }},
-		{name: "no play count and nothing changed", o: func(now media.Item) observation { return observation{ref: hotFuzz, prior: now, havePrior: true} }},
+		{name: "ShouldIgnoreAChangedKodiThatCannotBeRead", o: func(media.Item) observation { return observation{ref: hotFuzz, playCount: &one} }, closeM: true},
+		{name: "ShouldIgnoreNoPlayCountAndNothingKnownBefore", o: func(media.Item) observation { return observation{ref: hotFuzz} }},
+		{name: "ShouldIgnoreNoPlayCountAndNothingChanged", o: func(now media.Item) observation { return observation{ref: hotFuzz, prior: now, havePrior: true} }},
 	}
 
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			a := newBareApp(t)
 			msrv, psrv := newKodi(t, fakekodi.Options{Library: lib}), newKodi(t, fakekodi.Options{Library: lib})
 			m, p := detachedInstance(t, a, "Lounge", msrv), detachedInstance(t, a, "Bedroom", psrv)
@@ -182,11 +184,11 @@ func TestConfirmIgnoresChangesThatProveNothing(t *testing.T) {
 			now, err := m.Backend.Item(t.Context(), hotFuzz)
 			require.NoError(t, err)
 
-			if c.closeM {
+			if tc.closeM {
 				msrv.Close()
 			}
 
-			o := c.o(now)
+			o := tc.o(now)
 			a.confirm(t.Context(), m, &o)
 
 			assert.Empty(t, psrv.CallsTo("VideoLibrary.GetMovieDetails"), "the other members aren't asked")
@@ -216,20 +218,20 @@ func TestConfirmRecordsOnlyAVerdictStillWanted(t *testing.T) {
 	hotFuzz := media.Ref{Kind: media.KindMovie, ID: 6}
 	one := 1
 
-	cases := []struct {
+	testCases := []struct {
 		name string
 		// closeP leaves the other member without a verdict.
-		closeP bool
-		locked bool
-		want   bool
+		closeP   bool
+		locked   bool
+		expected bool
 	}{
-		{name: "a verdict is recorded", want: true},
-		{name: "no member gives a verdict", closeP: true},
-		{name: "cancelled while waiting to record", locked: true},
+		{name: "ShouldRecordAVerdict", expected: true},
+		{name: "ShouldRecordNothingWhenNoMemberGivesAVerdict", closeP: true},
+		{name: "ShouldRecordNothingWhenCancelledWhileWaitingToRecord", locked: true},
 	}
 
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			a := newBareApp(t)
 			psrv := newKodi(t, fakekodi.Options{Library: lib})
 			m, p := detachedInstance(t, a, "Lounge", newKodi(t, fakekodi.Options{Library: lib})), detachedInstance(t, a, "Bedroom", psrv)
@@ -239,12 +241,12 @@ func TestConfirmRecordsOnlyAVerdictStillWanted(t *testing.T) {
 			// The group has no index for Close to close.
 			t.Cleanup(func() { delete(a.groups, g.id) })
 
-			if c.closeP {
+			if tc.closeP {
 				psrv.Close()
 			}
 
 			ctx := t.Context()
-			if c.locked {
+			if tc.locked {
 				ctx = lockedCtx{Context: ctx, a: a}
 			}
 
@@ -253,7 +255,7 @@ func TestConfirmRecordsOnlyAVerdictStillWanted(t *testing.T) {
 			groups, err := a.DB().LibraryGroups().List(t.Context())
 			require.NoError(t, err)
 
-			if c.want {
+			if tc.expected {
 				assert.Len(t, groups, 1)
 				assert.Equal(t, "a change to “Hot Fuzz” on Lounge was seen on Bedroom", g.ev.Confirmation)
 			} else {
@@ -286,14 +288,21 @@ func TestSamePlayState(t *testing.T) {
 	same.LastPlayed = played.In(time.FixedZone("AEDT", 11*60*60))
 	assert.True(t, samePlayState(&base, &same), "the same instant in another zone")
 
-	for name, change := range map[string]func(*media.Item){
-		"play count":  func(it *media.Item) { it.PlayCount++ },
-		"resume":      func(it *media.Item) { it.Resume = 0 },
-		"last played": func(it *media.Item) { it.LastPlayed = played.Add(time.Second) },
-	} {
-		other := base
-		change(&other)
-		assert.False(t, samePlayState(&base, &other), name)
+	testCases := []struct {
+		name   string
+		change func(*media.Item)
+	}{
+		{name: "ShouldDifferByPlayCount", change: func(it *media.Item) { it.PlayCount++ }},
+		{name: "ShouldDifferByResume", change: func(it *media.Item) { it.Resume = 0 }},
+		{name: "ShouldDifferByLastPlayed", change: func(it *media.Item) { it.LastPlayed = played.Add(time.Second) }},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			other := base
+			tc.change(&other)
+			assert.False(t, samePlayState(&base, &other))
+		})
 	}
 }
 

@@ -250,27 +250,12 @@ func TestASplitThatFailsPartWayRunsTheGroupsItSaved(t *testing.T) {
 		name    string
 		leaving []string
 		faults  []testkit.Fault
-		want    []string
+		errs    []string
 		// stored is the members of each group left in the database, by name.
 		stored map[string][]string
 	}{
-		{
-			name:    "saving the second member's own group",
-			leaving: []string{"Bedroom", "Kitchen"},
-			faults:  []testkit.Fault{{Op: testkit.Insert, Table: "library_groups", Nth: 2}},
-			want:    []string{testkit.FaultMessage + " on INSERT library_groups"},
-			stored:  map[string][]string{"Lounge": {"Lounge", "Kitchen"}, "Bedroom": {"Bedroom"}},
-		},
-		{
-			name:    "recording the reason and then rebuilding the groups",
-			leaving: []string{"Bedroom"},
-			faults: []testkit.Fault{
-				{Op: testkit.Update, Table: "library_groups", When: "NEW.name = 'Lounge'"},
-				{Op: testkit.Read, Table: "kodi_instances"},
-			},
-			want:   []string{testkit.FaultMessage + " on UPDATE library_groups", "reconciling library groups: querying: " + testkit.ReadFaultMessage},
-			stored: map[string][]string{"Lounge": {"Lounge", "Kitchen"}, "Bedroom": {"Bedroom"}},
-		},
+		{name: "ShouldRunTheGroupsSavedBeforeSavingTheSecondMembersOwnGroupFailed", leaving: []string{"Bedroom", "Kitchen"}, faults: []testkit.Fault{{Op: testkit.Insert, Table: "library_groups", Nth: 2}}, errs: []string{testkit.FaultMessage + " on INSERT library_groups"}, stored: map[string][]string{"Lounge": {"Lounge", "Kitchen"}, "Bedroom": {"Bedroom"}}},
+		{name: "ShouldRunTheGroupsSavedWhenRecordingTheReasonAndRebuildingTheGroupsFail", leaving: []string{"Bedroom"}, faults: []testkit.Fault{{Op: testkit.Update, Table: "library_groups", When: "NEW.name = 'Lounge'"}, {Op: testkit.Read, Table: "kodi_instances"}}, errs: []string{testkit.FaultMessage + " on UPDATE library_groups", "reconciling library groups: querying: " + testkit.ReadFaultMessage}, stored: map[string][]string{"Lounge": {"Lounge", "Kitchen"}, "Bedroom": {"Bedroom"}}},
 	}
 
 	for _, tc := range testCases {
@@ -314,8 +299,8 @@ func TestASplitThatFailsPartWayRunsTheGroupsItSaved(t *testing.T) {
 			faults.Inject(tc.faults...)
 
 			err = a.split(ctx, g, leaving, "the libraries differ")
-			for _, want := range tc.want {
-				require.ErrorContains(t, err, want)
+			for _, expected := range tc.errs {
+				require.ErrorContains(t, err, expected)
 			}
 
 			faults.Clear()
@@ -329,7 +314,7 @@ func TestASplitThatFailsPartWayRunsTheGroupsItSaved(t *testing.T) {
 
 			assert.Equal(t, want, storedMembers(t, a), "the members saved before the failure left in the database")
 
-			if len(tc.want) == 1 {
+			if len(tc.errs) == 1 {
 				assert.Equal(t, want, runtimeMembers(a), "and run in the groups they were saved in")
 			}
 
