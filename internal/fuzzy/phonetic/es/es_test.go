@@ -13,44 +13,49 @@ import (
 )
 
 func TestKeys(t *testing.T) {
-	for _, tc := range []struct {
-		word string
-		want []string
+	testCases := []struct {
+		name     string
+		have     string
+		expected []string
 	}{
 		// Betacism, silent h, yeísmo, seseo.
-		{"volver", []string{"BLBR"}},
-		{"hola", []string{"AL", "JL"}},
-		{"ella", []string{"AY"}},
-		{"llamas", []string{"YM", "YMS"}},
-		{"celda", []string{"SLT"}},
-		{"zapato", []string{"SPT"}},
+		{name: "ShouldKeyVolver", have: "volver", expected: []string{"BLBR"}},
+		{name: "ShouldKeyHola", have: "hola", expected: []string{"AL", "JL"}},
+		{name: "ShouldKeyElla", have: "ella", expected: []string{"AY"}},
+		{name: "ShouldKeyLlamas", have: "llamas", expected: []string{"YM", "YMS"}},
+		{name: "ShouldKeyCelda", have: "celda", expected: []string{"SLT"}},
+		{name: "ShouldKeyZapato", have: "zapato", expected: []string{"SPT"}},
 		// Digraphs, soft g, assimilated n.
-		{"chico", []string{"XK"}},
-		{"quevedo", []string{"KBT"}},
-		{"guerra", []string{"GR"}},
-		{"gente", []string{"JNT"}},
-		{"accion", []string{"AKSN"}},
-		{"bunbury", []string{"BMBR"}},
-		{"xavier", []string{"SBR"}},
+		{name: "ShouldKeyChico", have: "chico", expected: []string{"XK"}},
+		{name: "ShouldKeyQuevedo", have: "quevedo", expected: []string{"KBT"}},
+		{name: "ShouldKeyGuerra", have: "guerra", expected: []string{"GR"}},
+		{name: "ShouldKeyGente", have: "gente", expected: []string{"JNT"}},
+		{name: "ShouldKeyAccion", have: "accion", expected: []string{"AKSN"}},
+		{name: "ShouldKeyBunbury", have: "bunbury", expected: []string{"BMBR"}},
+		{name: "ShouldKeyXavier", have: "xavier", expected: []string{"SBR"}},
 		// Final s and d dropped in the primary key, except in short words; y as a vowel.
-		{"iglesias", []string{"AGLS", "AGLSS"}},
-		{"madrid", []string{"MTR", "MTRT"}},
-		{"bis", []string{"BS"}},
-		{"hay", []string{"A", "J"}},
-		{"yo", []string{"Y"}},
+		{name: "ShouldKeyIglesias", have: "iglesias", expected: []string{"AGLS", "AGLSS"}},
+		{name: "ShouldKeyMadrid", have: "madrid", expected: []string{"MTR", "MTRT"}},
+		{name: "ShouldKeyBis", have: "bis", expected: []string{"BS"}},
+		{name: "ShouldKeyHay", have: "hay", expected: []string{"A", "J"}},
+		{name: "ShouldKeyYo", have: "yo", expected: []string{"Y"}},
 		// An h or w onset also keyed as the jota or gu a recogniser may have written that way.
-		{"hose", []string{"AS", "JS"}},
-		{"huan", []string{"AN", "JN"}},
-		{"weros", []string{"BR", "BRS", "GR"}},
-		{"jose", []string{"JS"}},
-		{"hjalmar", []string{"JLMR"}},
-		{"hh", []string{"hh"}},
+		{name: "ShouldKeyHose", have: "hose", expected: []string{"AS", "JS"}},
+		{name: "ShouldKeyHuan", have: "huan", expected: []string{"AN", "JN"}},
+		{name: "ShouldKeyWeros", have: "weros", expected: []string{"BR", "BRS", "GR"}},
+		{name: "ShouldKeyJose", have: "jose", expected: []string{"JS"}},
+		{name: "ShouldKeyHjalmar", have: "hjalmar", expected: []string{"JLMR"}},
+		{name: "ShouldFallBackToWordForDoubleH", have: "hh", expected: []string{"hh"}},
 		// Pass-through and fallback.
-		{"211", []string{"211"}},
-		{"h", []string{"h"}},
-		{"", []string{""}},
-	} {
-		assert.Equal(t, tc.want, Encoder{}.Keys(nil, tc.word), tc.word)
+		{name: "ShouldPassDigitsThrough", have: "211", expected: []string{"211"}},
+		{name: "ShouldFallBackToWordForLoneH", have: "h", expected: []string{"h"}},
+		{name: "ShouldFallBackToEmptyWord", expected: []string{""}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, Encoder{}.Keys(nil, tc.have))
+		})
 	}
 
 	assert.Equal(t, []string{"x", "BNN"}, Encoder{}.Keys([]string{"x"}, "veneno"), "Keys appends to dst")
@@ -59,31 +64,52 @@ func TestKeys(t *testing.T) {
 
 // TestHomophones pins the Spanish spellings of one sound that English Double Metaphone keeps apart.
 func TestKeysAppendsToDst(t *testing.T) {
-	assert.Equal(t, []string{"JL", "AL", "JL"}, Encoder{}.Keys([]string{"JL"}, "hola"), "a key already in dst from another word doesn't hide this word's")
-	assert.Equal(t, []string{"BR", "BR", "BRS", "GR"}, Encoder{}.Keys([]string{"BR"}, "weros"))
+	testCases := []struct {
+		name     string
+		dst      []string
+		have     string
+		expected []string
+	}{
+		{name: "ShouldNotHideKeyAlreadyInDstFromAnotherWord", dst: []string{"JL"}, have: "hola", expected: []string{"JL", "AL", "JL"}},
+		{name: "ShouldAppendEveryKeyAfterDst", dst: []string{"BR"}, have: "weros", expected: []string{"BR", "BR", "BRS", "GR"}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, Encoder{}.Keys(tc.dst, tc.have))
+		})
+	}
 }
 
 func TestHomophones(t *testing.T) {
-	for _, pair := range [][2]string{
-		{"vis", "bis"},
-		{"veneno", "beneno"},
-		{"velvet", "belbet"},
-		{"isabel", "isavel"},
-		{"ella", "eya"},
-		{"hable", "able"},
-		{"gogh", "gog"},
-		{"iglesias", "iglesia"},
-		{"bunbury", "bumbury"},
-		{"llamas", "yamas"},
-		{"celda", "selda"},
-		{"jose", "hose"},
-		{"jefe", "hefe"},
-		{"japon", "hapon"},
-		{"gueros", "weros"},
-		{"gueros", "wueros"},
-	} {
-		a, b := Encoder{}.Keys(nil, pair[0]), Encoder{}.Keys(nil, pair[1])
-		assert.True(t, shareKey(a, b), "%s %q and %s %q should share a key", pair[0], a, pair[1], b)
+	testCases := []struct {
+		name  string
+		word  string
+		other string
+	}{
+		{name: "ShouldShareKeyBetweenVisAndBis", word: "vis", other: "bis"},
+		{name: "ShouldShareKeyBetweenVenenoAndBeneno", word: "veneno", other: "beneno"},
+		{name: "ShouldShareKeyBetweenVelvetAndBelbet", word: "velvet", other: "belbet"},
+		{name: "ShouldShareKeyBetweenIsabelAndIsavel", word: "isabel", other: "isavel"},
+		{name: "ShouldShareKeyBetweenEllaAndEya", word: "ella", other: "eya"},
+		{name: "ShouldShareKeyBetweenHableAndAble", word: "hable", other: "able"},
+		{name: "ShouldShareKeyBetweenGoghAndGog", word: "gogh", other: "gog"},
+		{name: "ShouldShareKeyBetweenIglesiasAndIglesia", word: "iglesias", other: "iglesia"},
+		{name: "ShouldShareKeyBetweenBunburyAndBumbury", word: "bunbury", other: "bumbury"},
+		{name: "ShouldShareKeyBetweenLlamasAndYamas", word: "llamas", other: "yamas"},
+		{name: "ShouldShareKeyBetweenCeldaAndSelda", word: "celda", other: "selda"},
+		{name: "ShouldShareKeyBetweenJoseAndHose", word: "jose", other: "hose"},
+		{name: "ShouldShareKeyBetweenJefeAndHefe", word: "jefe", other: "hefe"},
+		{name: "ShouldShareKeyBetweenJaponAndHapon", word: "japon", other: "hapon"},
+		{name: "ShouldShareKeyBetweenGuerosAndWeros", word: "gueros", other: "weros"},
+		{name: "ShouldShareKeyBetweenGuerosAndWueros", word: "gueros", other: "wueros"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			a, b := Encoder{}.Keys(nil, tc.word), Encoder{}.Keys(nil, tc.other)
+			assert.True(t, shareKey(a, b), "%s %q and %s %q should share a key", tc.word, a, tc.other, b)
+		})
 	}
 }
 
@@ -123,9 +149,23 @@ func TestPropKeysContract(t *testing.T) {
 func TestKeysAllocations(t *testing.T) {
 	dst := make([]string, 0, 3)
 
-	for word, want := range map[string]float64{"iglesias": 2, "volver": 1, "211": 0, "hola": 2, "hay": 0} {
-		got := testing.AllocsPerRun(100, func() { dst = Encoder{}.Keys(dst[:0], word) })
-		assert.InDelta(t, want, got, 0, "%s: only the returned keys allocate", word)
+	testCases := []struct {
+		name     string
+		have     string
+		expected float64
+	}{
+		{name: "ShouldAllocateTwiceForIglesias", have: "iglesias", expected: 2},
+		{name: "ShouldAllocateOnceForVolver", have: "volver", expected: 1},
+		{name: "ShouldNotAllocateForDigits", have: "211"},
+		{name: "ShouldAllocateTwiceForHola", have: "hola", expected: 2},
+		{name: "ShouldNotAllocateForHay", have: "hay"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := testing.AllocsPerRun(100, func() { dst = Encoder{}.Keys(dst[:0], tc.have) })
+			assert.InDelta(t, tc.expected, got, 0, "only the returned keys allocate")
+		})
 	}
 }
 

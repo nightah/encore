@@ -21,17 +21,45 @@ func TestRegistry(t *testing.T) {
 	Register("en", fixed("EN"))
 	Register("fr", fixed("FR"))
 
-	for code, want := range map[string]Encoder{
-		"fr": fixed("FR"), "fr-FR": fixed("FR"), "FR_ca": fixed("FR"), "en-AU": fixed("EN"), "de": fixed("EN"), "": fixed("EN"),
-	} {
-		assert.Equal(t, want, For(code), code)
+	testCases := []struct {
+		name     string
+		have     string
+		expected Encoder
+	}{
+		{name: "ShouldFindLanguage", have: "fr", expected: fixed("FR")},
+		{name: "ShouldFindLanguageForRegion", have: "fr-FR", expected: fixed("FR")},
+		{name: "ShouldFindLanguageIgnoringCaseAndUnderscore", have: "FR_ca", expected: fixed("FR")},
+		{name: "ShouldFindEnglishForRegion", have: "en-AU", expected: fixed("EN")},
+		{name: "ShouldFallBackToEnglishForUnregisteredLanguage", have: "de", expected: fixed("EN")},
+		{name: "ShouldFallBackToEnglishForEmpty", expected: fixed("EN")},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, For(tc.have))
+		})
 	}
 
 	assert.PanicsWithValue(t, `phonetic: encoder for "fr" registered twice`, func() { Register("fr", fixed("again")) })
 }
 
 func TestIsDigits(t *testing.T) {
-	for word, want := range map[string]bool{"": false, "0": true, "2049": true, "20a": false, "²": false, "-1": false} {
-		assert.Equal(t, want, IsDigits(word), word)
+	testCases := []struct {
+		name     string
+		have     string
+		expected bool
+	}{
+		{name: "ShouldRejectEmpty"},
+		{name: "ShouldAcceptZero", have: "0", expected: true},
+		{name: "ShouldAcceptNumber", have: "2049", expected: true},
+		{name: "ShouldRejectTrailingLetter", have: "20a"},
+		{name: "ShouldRejectSuperscriptDigit", have: "²"},
+		{name: "ShouldRejectSign", have: "-1"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, IsDigits(tc.have))
+		})
 	}
 }
