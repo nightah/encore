@@ -20,15 +20,26 @@ func TestOpenPhraseJapaneseSkill(t *testing.T) {
 	no, yes := false, true
 	privacy := skillpkg.Privacy{AllowsPurchases: &no, UsesPersonalInfo: &no, IsChildDirected: &no, IsExportCompliant: &yes, ContainsAds: &no}
 
-	for invocation, want := range map[string]string{"": "アンコールを開いて", skillmodel.InvocationKodi: "コディを開いて"} {
-		pkg, err := skillpkg.Build(src, skillpkg.Options{
-			Locales:    []string{"ja-JP"},
-			Invocation: invocation,
-			Endpoint:   skillpkg.Endpoint{URI: "https://encore.example.com/api/v1/alexa"},
-			Privacy:    privacy,
-		})
-		require.NoError(t, err)
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldOpenEncoreInvocation", expected: "アンコールを開いて"},
+		{name: "ShouldOpenKodiInvocation", have: skillmodel.InvocationKodi, expected: "コディを開いて"},
+	}
 
-		assert.Equal(t, want, deploy.OpenPhrase(src, "ja-JP", pkg.Invocation("ja-JP")), invocation)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			pkg, err := skillpkg.Build(src, skillpkg.Options{
+				Locales:    []string{"ja-JP"},
+				Invocation: tc.have,
+				Endpoint:   skillpkg.Endpoint{URI: "https://encore.example.com/api/v1/alexa"},
+				Privacy:    privacy,
+			})
+			require.NoError(t, err)
+
+			assert.Equal(t, tc.expected, deploy.OpenPhrase(src, "ja-JP", pkg.Invocation("ja-JP")))
+		})
 	}
 }

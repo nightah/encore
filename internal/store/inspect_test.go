@@ -141,34 +141,22 @@ func sqliteFile(t *testing.T, path string, stmts ...string) {
 
 func TestInspectFileReportsTablesItCannotRead(t *testing.T) {
 	testCases := []struct {
-		name  string
-		stmts []string
-		want  string
+		name string
+		have []string
+		err  string
 	}{
-		{
-			name:  "a schema version table without versions",
-			stmts: []string{`CREATE TABLE goose_db_version (id INTEGER PRIMARY KEY)`},
-			want:  "reading schema version: ",
-		},
-		{
-			name:  "a secrets table without Encore's columns",
-			stmts: []string{`CREATE TABLE goose_db_version (version_id INTEGER)`, `INSERT INTO goose_db_version VALUES (1)`, `CREATE TABLE secrets (id TEXT)`},
-			want:  "reading secrets: ",
-		},
-		{
-			name:  "secrets with columns of the wrong type",
-			stmts: []string{`CREATE TABLE secrets (id TEXT, key_id TEXT, nonce BLOB, ciphertext BLOB, created_at TEXT, updated_at INTEGER)`, `INSERT INTO secrets VALUES ('a', 'k', x'00', x'00', 'yesterday', 0)`},
-			want:  "reading secrets: ",
-		},
+		{name: "ShouldReportASchemaVersionTableWithoutVersions", have: []string{`CREATE TABLE goose_db_version (id INTEGER PRIMARY KEY)`}, err: "reading schema version: "},
+		{name: "ShouldReportASecretsTableWithoutEncoresColumns", have: []string{`CREATE TABLE goose_db_version (version_id INTEGER)`, `INSERT INTO goose_db_version VALUES (1)`, `CREATE TABLE secrets (id TEXT)`}, err: "reading secrets: "},
+		{name: "ShouldReportSecretsWithColumnsOfTheWrongType", have: []string{`CREATE TABLE secrets (id TEXT, key_id TEXT, nonce BLOB, ciphertext BLOB, created_at TEXT, updated_at INTEGER)`, `INSERT INTO secrets VALUES ('a', 'k', x'00', x'00', 'yesterday', 0)`}, err: "reading secrets: "},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			path := filepath.Join(t.TempDir(), "crafted.db")
-			sqliteFile(t, path, tc.stmts...)
+			sqliteFile(t, path, tc.have...)
 
 			_, err := InspectFile(t.Context(), path)
-			require.ErrorContains(t, err, tc.want)
+			require.ErrorContains(t, err, tc.err)
 		})
 	}
 }
@@ -179,10 +167,18 @@ func TestInspectFileReportsSchemaReadFailures(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "copy.db")
 	require.NoError(t, db.BackupTo(t.Context(), path))
 
-	for nth := 1; nth <= 2; nth++ {
-		t.Run(fmt.Sprintf("read %d", nth), func(t *testing.T) {
+	testCases := []struct {
+		name string
+		have int
+	}{
+		{name: "ShouldReportTheFirstSchemaReadFailing", have: 1},
+		{name: "ShouldReportTheSecondSchemaReadFailing", have: 2},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			faults := testkit.NewFaults(t, path)
-			faults.Inject(testkit.Fault{Op: testkit.Read, Table: "sqlite_master", Nth: nth})
+			faults.Inject(testkit.Fault{Op: testkit.Read, Table: "sqlite_master", Nth: tc.have})
 
 			_, err := InspectFile(t.Context(), path)
 			require.ErrorContains(t, err, "reading schema: "+testkit.ReadFaultMessage)

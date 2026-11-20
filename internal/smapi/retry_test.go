@@ -16,19 +16,27 @@ import (
 )
 
 func TestRetryAfter(t *testing.T) {
-	d, ok := retryAfter("7")
-	assert.True(t, ok)
-	assert.Equal(t, 7*time.Second, d)
+	testCases := []struct {
+		name     string
+		have     string
+		expected time.Duration
+		delta    time.Duration
+		ok       bool
+	}{
+		{name: "ShouldParseSeconds", have: "7", expected: 7 * time.Second, ok: true},
+		{name: "ShouldParseHTTPDate", have: time.Now().Add(time.Hour).UTC().Format(http.TimeFormat), expected: time.Hour, delta: 2 * time.Second, ok: true},
+		{name: "ShouldRejectEmpty"},
+		{name: "ShouldRejectText", have: "soon"},
+	}
 
-	d, ok = retryAfter(time.Now().Add(time.Hour).UTC().Format(http.TimeFormat))
-	assert.True(t, ok)
-	assert.InDelta(t, time.Hour.Seconds(), d.Seconds(), 2)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual, ok := retryAfter(tc.have)
 
-	_, ok = retryAfter("")
-	assert.False(t, ok)
-
-	_, ok = retryAfter("soon")
-	assert.False(t, ok)
+			assert.Equal(t, tc.ok, ok)
+			assert.InDelta(t, tc.expected.Seconds(), actual.Seconds(), tc.delta.Seconds())
+		})
+	}
 }
 
 func TestBackoffBounds(t *testing.T) {
@@ -45,28 +53,49 @@ func TestBackoffBounds(t *testing.T) {
 
 func TestDecide(t *testing.T) {
 	p := RetryPolicy{MaxRetryAfter: 10 * time.Second}.withDefaults()
-	get := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/", nil)
-	post := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/", strings.NewReader("{}"))
 
-	wait, ok := p.decide(get, http.StatusTooManyRequests, http.Header{"Retry-After": {"60"}}, nil, 1)
-	assert.True(t, ok)
-	assert.Equal(t, 10*time.Second, wait, "Retry-After is capped")
+	testCases := []struct {
+		name       string
+		method     string
+		noGetBody  bool
+		status     int
+		header     http.Header
+		haveErr    error
+		attempt    int
+		expected   time.Duration
+		expectedOK bool
+	}{
+		{name: "ShouldCapRetryAfter", method: http.MethodGet, status: http.StatusTooManyRequests, header: http.Header{"Retry-After": {"60"}}, attempt: 1, expected: 10 * time.Second, expectedOK: true},
+		{name: "ShouldNotRetryBadRequest", method: http.MethodGet, status: http.StatusBadRequest, attempt: 1},
+		{name: "ShouldNotRetryWhenAttemptsExhausted", method: http.MethodGet, status: http.StatusServiceUnavailable, attempt: p.MaxAttempts},
+		{name: "ShouldRetryIdempotentTransportError", method: http.MethodGet, haveErr: errors.New("connection reset"), attempt: 1, expectedOK: true},
+		{name: "ShouldNotRetryPOSTTransportError", method: http.MethodPost, haveErr: errors.New("connection reset"), attempt: 1},
+		{name: "ShouldNotRetryBodyThatCannotBeRewound", method: http.MethodPost, noGetBody: true, status: http.StatusTooManyRequests, attempt: 1},
+	}
 
-	_, ok = p.decide(get, http.StatusBadRequest, nil, nil, 1)
-	assert.False(t, ok)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var body io.Reader
 
-	_, ok = p.decide(get, http.StatusServiceUnavailable, nil, nil, p.MaxAttempts)
-	assert.False(t, ok, "attempts exhausted")
+			if tc.method == http.MethodPost {
+				body = strings.NewReader("{}")
+			}
 
-	_, ok = p.decide(get, 0, nil, errors.New("connection reset"), 1)
-	assert.True(t, ok, "idempotent requests retry transport errors")
+			req := httptest.NewRequestWithContext(t.Context(), tc.method, "/", body)
 
-	_, ok = p.decide(post, 0, nil, errors.New("connection reset"), 1)
-	assert.False(t, ok, "a POST may have been processed")
+			if tc.noGetBody {
+				req.GetBody = nil
+			}
 
-	post.GetBody = nil
-	_, ok = p.decide(post, http.StatusTooManyRequests, nil, nil, 1)
-	assert.False(t, ok, "a body that cannot be rewound cannot be resent")
+			actual, ok := p.decide(req, tc.status, tc.header, tc.haveErr, tc.attempt)
+
+			assert.Equal(t, tc.expectedOK, ok)
+
+			if tc.expected != 0 {
+				assert.Equal(t, tc.expected, actual)
+			}
+		})
+	}
 }
 
 func TestPollDefaults(t *testing.T) {
@@ -79,15 +108,23 @@ func TestPollDefaults(t *testing.T) {
 }
 
 func TestIdempotent(t *testing.T) {
-	for method, want := range map[string]bool{
-		http.MethodGet:    true,
-		http.MethodHead:   true,
-		http.MethodPut:    true,
-		http.MethodDelete: true,
-		http.MethodPost:   false,
-		http.MethodPatch:  false,
-	} {
-		assert.Equal(t, want, idempotent(method), method)
+	testCases := []struct {
+		name     string
+		have     string
+		expected bool
+	}{
+		{name: "ShouldTreatGETAsIdempotent", have: http.MethodGet, expected: true},
+		{name: "ShouldTreatHEADAsIdempotent", have: http.MethodHead, expected: true},
+		{name: "ShouldTreatPUTAsIdempotent", have: http.MethodPut, expected: true},
+		{name: "ShouldTreatDELETEAsIdempotent", have: http.MethodDelete, expected: true},
+		{name: "ShouldNotTreatPOSTAsIdempotent", have: http.MethodPost},
+		{name: "ShouldNotTreatPATCHAsIdempotent", have: http.MethodPatch},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, idempotent(tc.have))
+		})
 	}
 }
 
@@ -160,10 +197,22 @@ func TestBackoffNeverOverflowsToZero(t *testing.T) {
 	// Three hours doubled twenty times overflows time.Duration, which must still mean the longest wait, not none.
 	p := RetryPolicy{Base: 3 * time.Hour, Max: 24 * time.Hour}.withDefaults()
 
-	for _, attempt := range []int{21, 30, 64} {
-		d := p.backoff(attempt)
-		assert.GreaterOrEqual(t, d, p.Max/2, attempt)
-		assert.LessOrEqual(t, d, p.Max, attempt)
+	testCases := []struct {
+		name string
+		have int
+	}{
+		{name: "ShouldCapAttempt21", have: 21},
+		{name: "ShouldCapAttempt30", have: 30},
+		{name: "ShouldCapAttempt64", have: 64},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := p.backoff(tc.have)
+
+			assert.GreaterOrEqual(t, actual, p.Max/2)
+			assert.LessOrEqual(t, actual, p.Max)
+		})
 	}
 }
 
@@ -186,14 +235,36 @@ func TestPollBacksOffUpToMaxInterval(t *testing.T) {
 }
 
 func TestSleep(t *testing.T) {
-	require.NoError(t, sleep(t.Context(), 0))
-	require.NoError(t, sleep(t.Context(), time.Millisecond))
+	testCases := []struct {
+		name     string
+		canceled bool
+		have     time.Duration
+		err      error
+	}{
+		{name: "ShouldReturnImmediatelyForZero"},
+		{name: "ShouldWait", have: time.Millisecond},
+		{name: "ShouldReportEndedContextForZero", canceled: true, err: context.Canceled},
+		{name: "ShouldReportEndedContext", canceled: true, have: time.Hour, err: context.Canceled},
+	}
 
-	ctx, cancel := context.WithCancel(t.Context())
-	cancel()
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(t.Context())
+			defer cancel()
 
-	require.ErrorIs(t, sleep(ctx, 0), context.Canceled, "a zero wait still reports an ended context")
-	require.ErrorIs(t, sleep(ctx, time.Hour), context.Canceled)
+			if tc.canceled {
+				cancel()
+			}
+
+			err := sleep(ctx, tc.have)
+
+			if tc.err == nil {
+				require.NoError(t, err)
+			} else {
+				require.ErrorIs(t, err, tc.err)
+			}
+		})
+	}
 }
 
 type failingTransport struct{ left int }

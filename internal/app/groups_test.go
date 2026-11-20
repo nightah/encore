@@ -959,67 +959,72 @@ func TestJoiningKeepsEarlierSplitsFromBothSides(t *testing.T) {
 func TestPlanRestoresGroupInvariants(t *testing.T) {
 	fp := &fingerprintEvidence{Matched: 60, Compared: 60}
 
-	cases := []struct {
-		name       string
-		group      func(lounge, bedroom int64) (store.LibraryGroup, []int64)
-		wantState  store.LibraryGroupState
-		wantSource string
-		wantEv     evidence
+	testCases := []struct {
+		name             string
+		group            func(lounge, bedroom int64) (store.LibraryGroup, []int64)
+		expectedState    store.LibraryGroupState
+		expectedSource   string
+		expectedEvidence evidence
 	}{
 		{
-			name: "a detected group left with one member is solo and forgets what showed it shared",
+			name: "ShouldMakeADetectedGroupLeftWithOneMemberSoloAndForgetWhatShowedItShared",
 			group: func(lounge, bedroom int64) (store.LibraryGroup, []int64) {
 				ev := evidence{Origin: originDetected, Fingerprint: fp, Confirmed: []int64{lounge, bedroom}, Confirmation: "seen", Reason: "split", Vetoed: []int64{99}}
 				return store.LibraryGroup{Name: "Lounge", State: store.GroupConfirmedShared, SourceInstanceID: lounge, Evidence: ev.encode()}, []int64{lounge}
 			},
-			wantState: store.GroupSolo, wantSource: "Lounge",
-			wantEv: evidence{Origin: originDetected, Reason: "split", Vetoed: []int64{99}},
+			expectedState:    store.GroupSolo,
+			expectedSource:   "Lounge",
+			expectedEvidence: evidence{Origin: originDetected, Reason: "split", Vetoed: []int64{99}},
 		},
 		{
-			name: "a detected solo group with two members is likely shared",
+			name: "ShouldMakeADetectedSoloGroupWithTwoMembersLikelyShared",
 			group: func(lounge, bedroom int64) (store.LibraryGroup, []int64) {
 				ev := evidence{Origin: originDetected, Fingerprint: fp}
 				return store.LibraryGroup{Name: "Lounge", State: store.GroupSolo, SourceInstanceID: lounge, Evidence: ev.encode()}, []int64{lounge, bedroom}
 			},
-			wantState: store.GroupLikelyShared, wantSource: "Lounge",
-			wantEv: evidence{Origin: originDetected, Fingerprint: fp},
+			expectedState:    store.GroupLikelyShared,
+			expectedSource:   "Lounge",
+			expectedEvidence: evidence{Origin: originDetected, Fingerprint: fp},
 		},
 		{
-			name: "a manual group with two members is manual",
+			name: "ShouldKeepAManualGroupWithTwoMembersManual",
 			group: func(lounge, bedroom int64) (store.LibraryGroup, []int64) {
 				ev := evidence{Origin: originUser}
 				return store.LibraryGroup{Name: "Upstairs", State: store.GroupSolo, Manual: true, SourceInstanceID: bedroom, Evidence: ev.encode()}, []int64{lounge, bedroom}
 			},
-			wantState: store.GroupManual, wantSource: "Bedroom",
-			wantEv: evidence{Origin: originUser},
+			expectedState:    store.GroupManual,
+			expectedSource:   "Bedroom",
+			expectedEvidence: evidence{Origin: originUser},
 		},
 		{
-			name: "a manual group with one member is solo",
+			name: "ShouldMakeAManualGroupWithOneMemberSolo",
 			group: func(_, bedroom int64) (store.LibraryGroup, []int64) {
 				ev := evidence{Origin: originUser}
 				return store.LibraryGroup{Name: "Upstairs", State: store.GroupManual, Manual: true, SourceInstanceID: bedroom, Evidence: ev.encode()}, []int64{bedroom}
 			},
-			wantState: store.GroupSolo, wantSource: "Bedroom",
-			wantEv: evidence{Origin: originUser},
+			expectedState:    store.GroupSolo,
+			expectedSource:   "Bedroom",
+			expectedEvidence: evidence{Origin: originUser},
 		},
 		{
-			name: "a group whose source isn't a member is led by its first member",
+			name: "ShouldLeadAGroupWhoseSourceIsNotAMemberByItsFirstMember",
 			group: func(lounge, bedroom int64) (store.LibraryGroup, []int64) {
 				ev := evidence{Origin: originUser}
 				return store.LibraryGroup{Name: "Upstairs", State: store.GroupManual, Manual: true, Evidence: ev.encode()}, []int64{bedroom, lounge}
 			},
-			wantState: store.GroupManual, wantSource: "Lounge",
-			wantEv: evidence{Origin: originUser},
+			expectedState:    store.GroupManual,
+			expectedSource:   "Lounge",
+			expectedEvidence: evidence{Origin: originUser},
 		},
 	}
 
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			a := plannedApp(t, "Lounge", "Bedroom")
 			ctx := t.Context()
 			lounge, bedroom := a.instanceNamed(t, "Lounge").id, a.instanceNamed(t, "Bedroom").id
 
-			rec, members := c.group(lounge, bedroom)
+			rec, members := tc.group(lounge, bedroom)
 			require.NoError(t, a.DB().LibraryGroups().Save(ctx, &rec, members))
 
 			a.planMu.Lock()
@@ -1029,15 +1034,15 @@ func TestPlanRestoresGroupInvariants(t *testing.T) {
 
 			got, err := a.DB().LibraryGroups().Get(ctx, rec.ID)
 			require.NoError(t, err)
-			assert.Equal(t, c.wantState, got.State)
-			assert.Equal(t, a.instanceNamed(t, c.wantSource).id, got.SourceInstanceID)
+			assert.Equal(t, tc.expectedState, got.State)
+			assert.Equal(t, a.instanceNamed(t, tc.expectedSource).id, got.SourceInstanceID)
 
 			ev := decodeEvidence(got.Evidence)
 			if ev.Fingerprint != nil {
 				ev.Fingerprint.At = fp.At
 			}
 
-			assert.Equal(t, c.wantEv, ev)
+			assert.Equal(t, tc.expectedEvidence, ev)
 
 			groups := a.Groups()
 			for _, g := range groups {

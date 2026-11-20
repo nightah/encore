@@ -13,26 +13,26 @@ import (
 func TestEvidenceSummary(t *testing.T) {
 	fp := &fingerprintEvidence{Matched: 190, Compared: 200}
 
-	cases := []struct {
-		name    string
-		ev      evidence
-		members int
-		want    string
+	testCases := []struct {
+		name     string
+		have     evidence
+		members  int
+		expected string
 	}{
-		{"config none", evidence{Origin: originConfig, None: true}, 1, "kept separate by the config file"},
-		{"config group", evidence{Origin: originConfig}, 2, "grouped by the config file"},
-		{"config group of one", evidence{Origin: originConfig}, 1, "grouped by the config file"},
-		{"user split", evidence{Origin: originUser}, 1, "kept separate by the user"},
-		{"user group", evidence{Origin: originUser, Fingerprint: fp}, 3, "grouped by the user"},
-		{"detected solo", evidence{Origin: originDetected, Fingerprint: fp, Confirmation: "seen"}, 1, ""},
-		{"confirmed beats fingerprint", evidence{Origin: originDetected, Fingerprint: fp, Confirmation: "a change was seen"}, 2, "a change was seen"},
-		{"fingerprint", evidence{Origin: originDetected, Fingerprint: fp}, 2, "190 of 200 sampled items match"},
-		{"nothing", evidence{}, 2, ""},
+		{name: "ShouldSummariseAConfigSeparation", have: evidence{Origin: originConfig, None: true}, members: 1, expected: "kept separate by the config file"},
+		{name: "ShouldSummariseAConfigGroup", have: evidence{Origin: originConfig}, members: 2, expected: "grouped by the config file"},
+		{name: "ShouldSummariseAConfigGroupOfOne", have: evidence{Origin: originConfig}, members: 1, expected: "grouped by the config file"},
+		{name: "ShouldSummariseAUserSplit", have: evidence{Origin: originUser}, members: 1, expected: "kept separate by the user"},
+		{name: "ShouldSummariseAUserGroup", have: evidence{Origin: originUser, Fingerprint: fp}, members: 3, expected: "grouped by the user"},
+		{name: "ShouldSummariseNothingForADetectedSolo", have: evidence{Origin: originDetected, Fingerprint: fp, Confirmation: "seen"}, members: 1},
+		{name: "ShouldPreferTheConfirmationOverTheFingerprint", have: evidence{Origin: originDetected, Fingerprint: fp, Confirmation: "a change was seen"}, members: 2, expected: "a change was seen"},
+		{name: "ShouldSummariseTheFingerprint", have: evidence{Origin: originDetected, Fingerprint: fp}, members: 2, expected: "190 of 200 sampled items match"},
+		{name: "ShouldSummariseNothingWithoutEvidence", have: evidence{}, members: 2},
 	}
 
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
-			assert.Equal(t, c.want, c.ev.summary(c.members))
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, tc.have.summary(tc.members))
 		})
 	}
 }
@@ -93,9 +93,21 @@ func TestLibrariesNameTheirSourceAndLanguage(t *testing.T) {
 func TestEvidenceRoundTrip(t *testing.T) {
 	ev := evidence{Origin: originDetected, Confirmed: []int64{1, 2}, Vetoed: []int64{3}, Reason: "a change to “Dune” wasn't seen"}
 
-	assert.Equal(t, ev, decodeEvidence(ev.encode()))
-	assert.Equal(t, evidence{}, decodeEvidence(nil))
-	assert.Equal(t, evidence{}, decodeEvidence([]byte(`{"origin":`)), "damaged evidence starts over")
+	testCases := []struct {
+		name     string
+		have     []byte
+		expected evidence
+	}{
+		{name: "ShouldRoundTrip", have: ev.encode(), expected: ev},
+		{name: "ShouldDecodeNothingAsEmpty"},
+		{name: "ShouldStartDamagedEvidenceOver", have: []byte(`{"origin":`)},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, decodeEvidence(tc.have))
+		})
+	}
 
 	c := ev.clone()
 	c.Confirmed[0], c.Vetoed[0] = 9, 9

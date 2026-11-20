@@ -169,24 +169,43 @@ func TestMDNSAnswersIgnoresQueriesAndGoodbyes(t *testing.T) {
 }
 
 func TestInstanceName(t *testing.T) {
-	cases := map[string]string{
-		`Kodi\ \(lounge\)._xbmc-jsonrpc._tcp.local.`: "Kodi (lounge)",
-		`Kodi\032\(den\)._xbmc-jsonrpc._tcp.local.`:  "Kodi (den)",
-		`Lounge\ 2\.0._xbmc-jsonrpc._tcp.local.`:     "Lounge 2.0",
-		`LibreELEC._xbmc-jsonrpc._tcp.local.`:        "LibreELEC",
-		`odd\`:                                       `odd\`,
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldUnescapeEscapedSpacesAndParentheses", have: `Kodi\ \(lounge\)._xbmc-jsonrpc._tcp.local.`, expected: "Kodi (lounge)"},
+		{name: "ShouldUnescapeDecimalEscapes", have: `Kodi\032\(den\)._xbmc-jsonrpc._tcp.local.`, expected: "Kodi (den)"},
+		{name: "ShouldUnescapeEscapedDots", have: `Lounge\ 2\.0._xbmc-jsonrpc._tcp.local.`, expected: "Lounge 2.0"},
+		{name: "ShouldKeepPlainName", have: `LibreELEC._xbmc-jsonrpc._tcp.local.`, expected: "LibreELEC"},
+		{name: "ShouldKeepTrailingBackslash", have: `odd\`, expected: `odd\`},
 	}
 
-	for in, want := range cases {
-		assert.Equal(t, want, instanceName(in, ServiceJSONRPC), in)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, instanceName(tc.have, ServiceJSONRPC))
+		})
 	}
 }
 
 func TestIsService(t *testing.T) {
-	assert.True(t, isService(`Kodi\ \(lounge\)._xbmc-jsonrpc._tcp.local.`, ServiceJSONRPC))
-	assert.True(t, isService(`HikariNUC\ jsonrpc-http._xbmc-jsonrpc-h._tcp.local.`, ServiceJSONRPCHTTP))
-	assert.False(t, isService(`HikariNUC\ jsonrpc-http._xbmc-jsonrpc-h._tcp.local.`, ServiceJSONRPC))
-	assert.False(t, isService(`BRAVIA-2015-d4377b._googlecast._tcp.local.`, ServiceJSONRPC))
+	testCases := []struct {
+		name     string
+		have     string
+		service  string
+		expected bool
+	}{
+		{name: "ShouldMatchJSONRPCService", have: `Kodi\ \(lounge\)._xbmc-jsonrpc._tcp.local.`, service: ServiceJSONRPC, expected: true},
+		{name: "ShouldMatchJSONRPCHTTPService", have: `HikariNUC\ jsonrpc-http._xbmc-jsonrpc-h._tcp.local.`, service: ServiceJSONRPCHTTP, expected: true},
+		{name: "ShouldNotMatchJSONRPCHTTPAsJSONRPC", have: `HikariNUC\ jsonrpc-http._xbmc-jsonrpc-h._tcp.local.`, service: ServiceJSONRPC},
+		{name: "ShouldNotMatchOtherService", have: `BRAVIA-2015-d4377b._googlecast._tcp.local.`, service: ServiceJSONRPC},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, isService(tc.have, tc.service))
+		})
+	}
 }
 
 // TestMDNSBrowserLoopback browses the loopback interface, where a fake responder answers with the repeated packets.

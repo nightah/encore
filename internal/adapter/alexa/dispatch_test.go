@@ -56,77 +56,80 @@ func playMovie(b *testkit.Backend) {
 }
 
 func TestDispatchControlIntents(t *testing.T) {
-	tests := map[string]struct {
-		intent string
-		slots  map[string]slotSpec
-		want   string
+	testCases := []struct {
+		name     string
+		intent   string
+		slots    map[string]slotSpec
+		expected string
 	}{
-		"pause":                         {intent: "AMAZON.PauseIntent", want: "Transport pause"},
-		"resume":                        {intent: "AMAZON.ResumeIntent", want: "Transport resume"},
-		"stop":                          {intent: "AMAZON.StopIntent", want: "Transport stop"},
-		"next":                          {intent: "AMAZON.NextIntent", want: "Transport next"},
-		"previous":                      {intent: "AMAZON.PreviousIntent", want: "Transport previous"},
-		"start over":                    {intent: "AMAZON.StartOverIntent", want: "Transport startover"},
-		"room control by resolved ID":   {intent: "RoomControl", slots: map[string]slotSpec{"Command": {"halt", "stop"}}, want: "Transport stop"},
-		"room control by synonym":       {intent: "RoomControl", slots: map[string]slotSpec{"Command": {value: "resume"}}, want: "Transport resume"},
-		"go home":                       {intent: "AMAZON.NavigateHomeIntent", want: "Input home"},
-		"room control next":             {intent: "RoomControl", slots: map[string]slotSpec{"Command": {"next", "next"}}, want: "Transport next"},
-		"shuffle off":                   {intent: "AMAZON.ShuffleOffIntent", want: "SetShuffle false"},
-		"loop off":                      {intent: "AMAZON.LoopOffIntent", want: "SetRepeat off"},
-		"repeat one":                    {intent: "Repeat", slots: map[string]slotSpec{"RepeatMode": {"this", "one"}}, want: "SetRepeat one"},
-		"repeat off":                    {intent: "Repeat", slots: map[string]slotSpec{"RepeatMode": {"off", "off"}}, want: "SetRepeat off"},
-		"repeat unknown mode cycles":    {intent: "Repeat", slots: map[string]slotSpec{"RepeatMode": {"sideways", "sideways"}}, want: "SetRepeat cycle"},
-		"repeat without a mode cycles":  {intent: "Repeat", want: "SetRepeat cycle"},
-		"seek forward a small step":     {intent: "PlayerSeek", want: "Seek smallforward"},
-		"seek forward a big step":       {intent: "PlayerSeek", slots: map[string]slotSpec{"Size": {"a lot", "big"}}, want: "Seek bigforward"},
-		"seek back a small step":        {intent: "PlayerSeek", slots: map[string]slotSpec{"SeekDirection": {"back", "back"}}, want: "Seek smallbackward"},
-		"rewind a small step":           {intent: "PlayerRewind", want: "Seek smallbackward"},
-		"rewind by a duration":          {intent: "PlayerRewind", slots: map[string]slotSpec{"Duration": {value: "PT2M"}}, want: "Seek by -2m0s"},
-		"seek to a position":            {intent: "PlayerSeekTo", slots: map[string]slotSpec{"Position": {value: "PT1H5M"}}, want: "Seek to 1h5m0s"},
-		"seek to a minute":              {intent: "PlayerSeekTo", slots: map[string]slotSpec{"Minute": {value: "42"}}, want: "Seek to 42m0s"},
-		"zoom out":                      {intent: "PlayerZoom", slots: map[string]slotSpec{"Zoom": {"out", "out"}}, want: "Picture zoomout"},
-		"zoom without an action zooms":  {intent: "PlayerZoom", want: "Picture zoomin"},
-		"zoom in and move":              {intent: "PlayerZoom", slots: map[string]slotSpec{"Zoom": {"in", "in"}, "Direction": {"left", "left"}}, want: "Picture moveleft"},
-		"rotate clockwise":              {intent: "PlayerRotate", slots: map[string]slotSpec{"Rotation": {"right", "clockwise"}}, want: "Picture rotateclockwise"},
-		"rotate without a direction":    {intent: "PlayerRotate", want: "Picture rotateclockwise"},
-		"move the picture":              {intent: "PlayerMove", slots: map[string]slotSpec{"Direction": {"down", "down"}}, want: "Picture movedown"},
-		"stereoscopic mode":             {intent: "StereoscopicMode", want: "Input stereoscopic"},
-		"volume up":                     {intent: "VolumeUp", want: "Volume step +"},
-		"volume down":                   {intent: "VolumeDown", want: "Volume step -"},
-		"mute":                          {intent: "Mute", want: "Volume toggle mute"},
-		"what's playing":                {intent: "CurrentPlayItemEnquiry", want: "NowPlaying"},
-		"audio stream back":             {intent: "AudioStream", slots: map[string]slotSpec{"Step": {"previous", "previous"}}, want: "SetAudioStream previous"},
-		"subtitles off":                 {intent: "Subtitles", slots: map[string]slotSpec{"SubtitleAction": {"off", "off"}}, want: "SetSubtitle off"},
-		"subtitles off, despite a lang": {intent: "Subtitles", slots: map[string]slotSpec{"SubtitleAction": {"off", "off"}, "Language": {value: "german"}}, want: "SetSubtitle off"},
-		"subtitles next":                {intent: "Subtitles", slots: map[string]slotSpec{"SubtitleAction": {"next", "next"}}, want: "SetSubtitle next"},
-		"subtitles alone turn them on":  {intent: "Subtitles", want: "SetSubtitle on"},
-		"view library default":          {intent: "ViewLibrary", want: "ShowView"},
-		"update the music library":      {intent: "UpdateLibrary", slots: map[string]slotSpec{"Library": {"music", "music"}}, want: "ScanLibrary music"},
-		"update every library":          {intent: "UpdateLibrary", want: "ScanLibrary"},
+		{name: "ShouldPause", intent: "AMAZON.PauseIntent", expected: "Transport pause"},
+		{name: "ShouldResume", intent: "AMAZON.ResumeIntent", expected: "Transport resume"},
+		{name: "ShouldStop", intent: "AMAZON.StopIntent", expected: "Transport stop"},
+		{name: "ShouldSkipToNext", intent: "AMAZON.NextIntent", expected: "Transport next"},
+		{name: "ShouldGoToPrevious", intent: "AMAZON.PreviousIntent", expected: "Transport previous"},
+		{name: "ShouldStartOver", intent: "AMAZON.StartOverIntent", expected: "Transport startover"},
+		{name: "ShouldRunRoomControlByResolvedID", intent: "RoomControl", slots: map[string]slotSpec{"Command": {"halt", "stop"}}, expected: "Transport stop"},
+		{name: "ShouldRunRoomControlBySynonym", intent: "RoomControl", slots: map[string]slotSpec{"Command": {value: "resume"}}, expected: "Transport resume"},
+		{name: "ShouldGoHome", intent: "AMAZON.NavigateHomeIntent", expected: "Input home"},
+		{name: "ShouldRunRoomControlNext", intent: "RoomControl", slots: map[string]slotSpec{"Command": {"next", "next"}}, expected: "Transport next"},
+		{name: "ShouldTurnShuffleOff", intent: "AMAZON.ShuffleOffIntent", expected: "SetShuffle false"},
+		{name: "ShouldTurnLoopOff", intent: "AMAZON.LoopOffIntent", expected: "SetRepeat off"},
+		{name: "ShouldRepeatOne", intent: "Repeat", slots: map[string]slotSpec{"RepeatMode": {"this", "one"}}, expected: "SetRepeat one"},
+		{name: "ShouldTurnRepeatOff", intent: "Repeat", slots: map[string]slotSpec{"RepeatMode": {"off", "off"}}, expected: "SetRepeat off"},
+		{name: "ShouldCycleRepeatForUnknownMode", intent: "Repeat", slots: map[string]slotSpec{"RepeatMode": {"sideways", "sideways"}}, expected: "SetRepeat cycle"},
+		{name: "ShouldCycleRepeatWithoutAMode", intent: "Repeat", expected: "SetRepeat cycle"},
+		{name: "ShouldSeekForwardASmallStep", intent: "PlayerSeek", expected: "Seek smallforward"},
+		{name: "ShouldSeekForwardABigStep", intent: "PlayerSeek", slots: map[string]slotSpec{"Size": {"a lot", "big"}}, expected: "Seek bigforward"},
+		{name: "ShouldSeekBackASmallStep", intent: "PlayerSeek", slots: map[string]slotSpec{"SeekDirection": {"back", "back"}}, expected: "Seek smallbackward"},
+		{name: "ShouldRewindASmallStep", intent: "PlayerRewind", expected: "Seek smallbackward"},
+		{name: "ShouldRewindByADuration", intent: "PlayerRewind", slots: map[string]slotSpec{"Duration": {value: "PT2M"}}, expected: "Seek by -2m0s"},
+		{name: "ShouldSeekToAPosition", intent: "PlayerSeekTo", slots: map[string]slotSpec{"Position": {value: "PT1H5M"}}, expected: "Seek to 1h5m0s"},
+		{name: "ShouldSeekToAMinute", intent: "PlayerSeekTo", slots: map[string]slotSpec{"Minute": {value: "42"}}, expected: "Seek to 42m0s"},
+		{name: "ShouldZoomOut", intent: "PlayerZoom", slots: map[string]slotSpec{"Zoom": {"out", "out"}}, expected: "Picture zoomout"},
+		{name: "ShouldZoomInWithoutAnAction", intent: "PlayerZoom", expected: "Picture zoomin"},
+		{name: "ShouldZoomInAndMove", intent: "PlayerZoom", slots: map[string]slotSpec{"Zoom": {"in", "in"}, "Direction": {"left", "left"}}, expected: "Picture moveleft"},
+		{name: "ShouldRotateClockwise", intent: "PlayerRotate", slots: map[string]slotSpec{"Rotation": {"right", "clockwise"}}, expected: "Picture rotateclockwise"},
+		{name: "ShouldRotateClockwiseWithoutADirection", intent: "PlayerRotate", expected: "Picture rotateclockwise"},
+		{name: "ShouldMoveThePicture", intent: "PlayerMove", slots: map[string]slotSpec{"Direction": {"down", "down"}}, expected: "Picture movedown"},
+		{name: "ShouldToggleStereoscopicMode", intent: "StereoscopicMode", expected: "Input stereoscopic"},
+		{name: "ShouldTurnVolumeUp", intent: "VolumeUp", expected: "Volume step +"},
+		{name: "ShouldTurnVolumeDown", intent: "VolumeDown", expected: "Volume step -"},
+		{name: "ShouldToggleMute", intent: "Mute", expected: "Volume toggle mute"},
+		{name: "ShouldSayWhatIsPlaying", intent: "CurrentPlayItemEnquiry", expected: "NowPlaying"},
+		{name: "ShouldSwitchToPreviousAudioStream", intent: "AudioStream", slots: map[string]slotSpec{"Step": {"previous", "previous"}}, expected: "SetAudioStream previous"},
+		{name: "ShouldTurnSubtitlesOff", intent: "Subtitles", slots: map[string]slotSpec{"SubtitleAction": {"off", "off"}}, expected: "SetSubtitle off"},
+		{name: "ShouldTurnSubtitlesOffDespiteALanguage", intent: "Subtitles", slots: map[string]slotSpec{"SubtitleAction": {"off", "off"}, "Language": {value: "german"}}, expected: "SetSubtitle off"},
+		{name: "ShouldSwitchToNextSubtitle", intent: "Subtitles", slots: map[string]slotSpec{"SubtitleAction": {"next", "next"}}, expected: "SetSubtitle next"},
+		{name: "ShouldTurnSubtitlesOnWhenAskedAlone", intent: "Subtitles", expected: "SetSubtitle on"},
+		{name: "ShouldShowDefaultLibraryView", intent: "ViewLibrary", expected: "ShowView"},
+		{name: "ShouldUpdateTheMusicLibrary", intent: "UpdateLibrary", slots: map[string]slotSpec{"Library": {"music", "music"}}, expected: "ScanLibrary music"},
+		{name: "ShouldUpdateEveryLibrary", intent: "UpdateLibrary", expected: "ScanLibrary"},
 	}
 
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			h, backend, _ := newHandler(t)
 			playMovie(backend)
 
 			res := serveBody(t, h, intentRequest(t, tc.intent, tc.slots))
 
 			calls := backend.Calls()
-			assert.True(t, containsPrefix(calls, tc.want), "want a call starting %q, got %q; response %s", tc.want, calls, res)
+			assert.True(t, containsPrefix(calls, tc.expected), "want a call starting %q, got %q; response %s", tc.expected, calls, res)
 		})
 	}
 }
 
 func TestDispatchNextFollowsAnEpisodeWithTheNextOne(t *testing.T) {
-	for _, tc := range []struct {
+	testCases := []struct {
 		name   string
 		intent string
 		slots  map[string]slotSpec
 	}{
-		{"next", "AMAZON.NextIntent", nil},
-		{"next on the TV", "RoomControl", map[string]slotSpec{"Command": {"next", "next"}}},
-	} {
+		{name: "ShouldPlayNextEpisodeOnNext", intent: "AMAZON.NextIntent"},
+		{name: "ShouldPlayNextEpisodeOnNextOnTheTV", intent: "RoomControl", slots: map[string]slotSpec{"Command": {"next", "next"}}},
+	}
+
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			h, backend, _ := newHandler(t)
 			backend.SetPlaying(&media.NowPlaying{Item: media.Item{Kind: media.KindEpisode, ID: 102, ShowID: 10, ShowTitle: "Severance", Season: 2, Episode: 4}})
@@ -157,28 +160,29 @@ func TestDispatchSeekToMinuteIsExact(t *testing.T) {
 }
 
 func TestDispatchUnrecognisedSlotsAskAgain(t *testing.T) {
-	tests := map[string]struct {
+	testCases := []struct {
+		name   string
 		intent string
 		slots  map[string]slotSpec
 	}{
-		"room control without a command":  {intent: "RoomControl", slots: map[string]slotSpec{"Command": {value: "dance"}}},
-		"seek to without a position":      {intent: "PlayerSeekTo"},
-		"seek to an unreadable minute":    {intent: "PlayerSeekTo", slots: map[string]slotSpec{"Minute": {value: "forty two"}}},
-		"move without a direction":        {intent: "PlayerMove", slots: map[string]slotSpec{"Direction": {value: "diagonally"}}},
-		"volume without a level":          {intent: "VolumeSet", slots: map[string]slotSpec{"Level": {value: "loud"}}},
-		"navigate without an action":      {intent: "Navigate", slots: map[string]slotSpec{"NavAction": {value: "sideways"}}},
-		"power without an action":         {intent: "Power", slots: map[string]slotSpec{"PowerAction": {value: "explode"}}},
-		"episode without a season":        {intent: "WatchEpisode", slots: map[string]slotSpec{"Show": {value: "bluey"}, "Episode": {value: "3"}}},
-		"episode with a non-number":       {intent: "WatchEpisode", slots: map[string]slotSpec{"Show": {value: "bluey"}, "Season": {value: "one"}, "Episode": {value: "3"}}},
-		"season without a number":         {intent: "WatchSeason", slots: map[string]slotSpec{"Show": {value: "bluey"}}},
-		"season with an unknown ordinal":  {intent: "WatchSeason", slots: map[string]slotSpec{"Show": {value: "bluey"}, "Ordinal": {value: "endless"}}},
-		"an intent Encore does not know":  {intent: "OrderPizza"},
-		"fallback intent":                 {intent: "AMAZON.FallbackIntent"},
-		"seek to a negative zero minutes": {intent: "PlayerSeekTo", slots: map[string]slotSpec{"Position": {value: "PT0S"}}},
+		{name: "ShouldAskAgainForRoomControlWithoutACommand", intent: "RoomControl", slots: map[string]slotSpec{"Command": {value: "dance"}}},
+		{name: "ShouldAskAgainForSeekToWithoutAPosition", intent: "PlayerSeekTo"},
+		{name: "ShouldAskAgainForSeekToAnUnreadableMinute", intent: "PlayerSeekTo", slots: map[string]slotSpec{"Minute": {value: "forty two"}}},
+		{name: "ShouldAskAgainForMoveWithoutADirection", intent: "PlayerMove", slots: map[string]slotSpec{"Direction": {value: "diagonally"}}},
+		{name: "ShouldAskAgainForVolumeWithoutALevel", intent: "VolumeSet", slots: map[string]slotSpec{"Level": {value: "loud"}}},
+		{name: "ShouldAskAgainForNavigateWithoutAnAction", intent: "Navigate", slots: map[string]slotSpec{"NavAction": {value: "sideways"}}},
+		{name: "ShouldAskAgainForPowerWithoutAnAction", intent: "Power", slots: map[string]slotSpec{"PowerAction": {value: "explode"}}},
+		{name: "ShouldAskAgainForEpisodeWithoutASeason", intent: "WatchEpisode", slots: map[string]slotSpec{"Show": {value: "bluey"}, "Episode": {value: "3"}}},
+		{name: "ShouldAskAgainForEpisodeWithANonNumber", intent: "WatchEpisode", slots: map[string]slotSpec{"Show": {value: "bluey"}, "Season": {value: "one"}, "Episode": {value: "3"}}},
+		{name: "ShouldAskAgainForSeasonWithoutANumber", intent: "WatchSeason", slots: map[string]slotSpec{"Show": {value: "bluey"}}},
+		{name: "ShouldAskAgainForSeasonWithAnUnknownOrdinal", intent: "WatchSeason", slots: map[string]slotSpec{"Show": {value: "bluey"}, "Ordinal": {value: "endless"}}},
+		{name: "ShouldAskAgainForAnIntentEncoreDoesNotKnow", intent: "OrderPizza"},
+		{name: "ShouldAskAgainForFallbackIntent", intent: "AMAZON.FallbackIntent"},
+		{name: "ShouldAskAgainForSeekToNegativeZeroMinutes", intent: "PlayerSeekTo", slots: map[string]slotSpec{"Position": {value: "PT0S"}}},
 	}
 
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			h, backend, rec := newHandler(t)
 			playMovie(backend)
 
@@ -253,28 +257,26 @@ func TestBlankRoomMeansThisEcho(t *testing.T) {
 func TestWhatsNewRespectsContentGroups(t *testing.T) {
 	const declined = "This skill is set up without that kind of title."
 
-	tests := map[string]struct {
+	testCases := []struct {
+		name     string
 		disabled []media.Content
 		slots    map[string]slotSpec
-		want     string
+		expected string
 	}{
-		"films by default":                      {want: "Library movie"},
-		"episodes without films":                {disabled: []media.Content{media.ContentMovies}, want: "RecentlyAdded episode"},
-		"albums with only music":                {disabled: []media.Content{media.ContentMovies, media.ContentTV}, want: "Library album"},
-		"nothing with every group switched off": {disabled: media.Contents},
-		"an asked-for type that is switched off": {
-			disabled: []media.Content{media.ContentTV},
-			slots:    map[string]slotSpec{"MediaType": {"shows", "tvshow"}},
-		},
+		{name: "ShouldListFilmsByDefault", expected: "Library movie"},
+		{name: "ShouldListEpisodesWithoutFilms", disabled: []media.Content{media.ContentMovies}, expected: "RecentlyAdded episode"},
+		{name: "ShouldListAlbumsWithOnlyMusic", disabled: []media.Content{media.ContentMovies, media.ContentTV}, expected: "Library album"},
+		{name: "ShouldDeclineWithEveryGroupSwitchedOff", disabled: media.Contents},
+		{name: "ShouldDeclineAnAskedForTypeThatIsSwitchedOff", disabled: []media.Content{media.ContentTV}, slots: map[string]slotSpec{"MediaType": {"shows", "tvshow"}}},
 	}
 
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			h, backend := withDisabled(t, false, tc.disabled...)
 
 			res := serveBody(t, h, intentRequest(t, "WhatsNew", tc.slots))
 
-			if tc.want == "" {
+			if tc.expected == "" {
 				assert.Contains(t, string(res), declined)
 				assert.Empty(t, backend.Calls())
 
@@ -282,7 +284,7 @@ func TestWhatsNewRespectsContentGroups(t *testing.T) {
 			}
 
 			assert.NotContains(t, string(res), declined)
-			assert.True(t, containsPrefix(backend.Calls(), tc.want), "want %q, got %q", tc.want, backend.Calls())
+			assert.True(t, containsPrefix(backend.Calls(), tc.expected), "want %q, got %q", tc.expected, backend.Calls())
 		})
 	}
 }
@@ -308,20 +310,26 @@ func TestRewindWithoutAnAmountGoesBackWhenNothingPlays(t *testing.T) {
 func TestNonsenseHeardAsATitlePlaysNothing(t *testing.T) {
 	const nonsense = "purple elephants dancing on the moon"
 
-	for intent, slot := range map[string]string{
-		"ShuffleAlbum":     "Album",
-		"ShuffleShow":      "Show",
-		"ListenToAlbum":    "Album",
-		"ListenToArtist":   "Artist",
-		"WatchNextEpisode": "Show",
-		"WatchMovie":       "Movie",
-		"WhatAlbums":       "Artist",
-		"PlayMedia":        "Query",
-	} {
-		t.Run(intent, func(t *testing.T) {
+	testCases := []struct {
+		name   string
+		intent string
+		slot   string
+	}{
+		{name: "ShouldPlayNothingForShuffleAlbum", intent: "ShuffleAlbum", slot: "Album"},
+		{name: "ShouldPlayNothingForShuffleShow", intent: "ShuffleShow", slot: "Show"},
+		{name: "ShouldPlayNothingForListenToAlbum", intent: "ListenToAlbum", slot: "Album"},
+		{name: "ShouldPlayNothingForListenToArtist", intent: "ListenToArtist", slot: "Artist"},
+		{name: "ShouldPlayNothingForWatchNextEpisode", intent: "WatchNextEpisode", slot: "Show"},
+		{name: "ShouldPlayNothingForWatchMovie", intent: "WatchMovie", slot: "Movie"},
+		{name: "ShouldPlayNothingForWhatAlbums", intent: "WhatAlbums", slot: "Artist"},
+		{name: "ShouldPlayNothingForPlayMedia", intent: "PlayMedia", slot: "Query"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			h, backend, _ := newHandler(t)
 
-			res := string(serveBody(t, h, intentRequest(t, intent, map[string]slotSpec{slot: {value: nonsense}})))
+			res := string(serveBody(t, h, intentRequest(t, tc.intent, map[string]slotSpec{tc.slot: {value: nonsense}})))
 
 			assert.False(t, containsPrefix(backend.Calls(), "Play"), "nothing plays: %q", backend.Calls())
 			assert.Contains(t, res, `"outputSpeech"`, "and Encore says why: %s", res)
@@ -331,14 +339,22 @@ func TestNonsenseHeardAsATitlePlaysNothing(t *testing.T) {
 
 // TestSearchWithTheKindInTheQuery checks that a plain search Amazon heard with the kind of title in its query searches that kind for the title alone, as the search of that kind would.
 func TestSearchWithTheKindInTheQuery(t *testing.T) {
-	for query, want := range map[string]string{
-		"the film hot fuzz": "ShowView movies title hot fuzz",
-		"the show bluey":    "ShowView tvshows title bluey",
-	} {
-		h, backend, _ := newHandler(t)
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldSearchMoviesForTheFilm", have: "the film hot fuzz", expected: "ShowView movies title hot fuzz"},
+		{name: "ShouldSearchTVShowsForTheShow", have: "the show bluey", expected: "ShowView tvshows title bluey"},
+	}
 
-		serveBody(t, h, intentRequest(t, "GlobalSearch", map[string]slotSpec{"Query": {value: query}}))
-		assert.Equal(t, []string{want}, backend.Calls(), query)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			h, backend, _ := newHandler(t)
+
+			serveBody(t, h, intentRequest(t, "GlobalSearch", map[string]slotSpec{"Query": {value: tc.have}}))
+			assert.Equal(t, []string{tc.expected}, backend.Calls())
+		})
 	}
 }
 
@@ -365,30 +381,33 @@ func TestNextEpisodeOfAFilmPlaysTheFilm(t *testing.T) {
 func TestAnswerHeardAsAnotherIntent(t *testing.T) {
 	const film, album = "Play movie/82 resume", "Play album/80"
 
-	for name, tc := range map[string]struct {
-		intent string
-		slots  map[string]slotSpec
-		want   string
+	testCases := []struct {
+		name     string
+		intent   string
+		slots    map[string]slotSpec
+		expected string
 	}{
-		"next episode":            {"WatchNextEpisode", map[string]slotSpec{"Show": {value: "the odyssey from 2026"}}, film},
-		"movie":                   {"WatchMovie", map[string]slotSpec{"Movie": {value: "the odyssey from 2026"}}, film},
-		"play":                    {"PlayMedia", map[string]slotSpec{"Query": {value: "the odyssey from 2026"}}, film},
-		"answer with from":        {chooseIntent, map[string]slotSpec{"Answer": {value: "the odyssey from 2026"}}, film},
-		"answer with an article":  {chooseIntent, map[string]slotSpec{"Answer": {value: "the odyssey"}}, film},
-		"next episode of offered": {"WatchNextEpisode", map[string]slotSpec{"Show": {value: "odyssey from 2005"}}, album},
-		"answer and year":         {chooseIntent, map[string]slotSpec{"Answer": {value: "odyssey"}, "Year": {value: "2005"}}, album},
-		"year alone":              {chooseIntent, map[string]slotSpec{"Year": {value: "2026"}}, film},
-		"seek to the year":        {"PlayerSeekTo", map[string]slotSpec{"Minute": {value: "2005"}}, album},
+		{name: "ShouldAnswerWithNextEpisode", intent: "WatchNextEpisode", slots: map[string]slotSpec{"Show": {value: "the odyssey from 2026"}}, expected: film},
+		{name: "ShouldAnswerWithMovie", intent: "WatchMovie", slots: map[string]slotSpec{"Movie": {value: "the odyssey from 2026"}}, expected: film},
+		{name: "ShouldAnswerWithPlay", intent: "PlayMedia", slots: map[string]slotSpec{"Query": {value: "the odyssey from 2026"}}, expected: film},
+		{name: "ShouldAnswerWithFrom", intent: chooseIntent, slots: map[string]slotSpec{"Answer": {value: "the odyssey from 2026"}}, expected: film},
+		{name: "ShouldAnswerWithAnArticle", intent: chooseIntent, slots: map[string]slotSpec{"Answer": {value: "the odyssey"}}, expected: film},
+		{name: "ShouldAnswerWithNextEpisodeOfOfferedChoice", intent: "WatchNextEpisode", slots: map[string]slotSpec{"Show": {value: "odyssey from 2005"}}, expected: album},
+		{name: "ShouldAnswerWithAnswerAndYear", intent: chooseIntent, slots: map[string]slotSpec{"Answer": {value: "odyssey"}, "Year": {value: "2005"}}, expected: album},
+		{name: "ShouldAnswerWithYearAlone", intent: chooseIntent, slots: map[string]slotSpec{"Year": {value: "2026"}}, expected: film},
+		{name: "ShouldAnswerWithSeekToTheYear", intent: "PlayerSeekTo", slots: map[string]slotSpec{"Minute": {value: "2005"}}, expected: album},
 		// Any title slot answers: "la de 1984" came as WatchNextInCollection and "die uit 1984" as WatchMovie, with the year as the title.
-		"collection's year":    {"WatchNextInCollection", map[string]slotSpec{"Movie": {value: "2005"}}, album},
-		"movie's year":         {"WatchMovie", map[string]slotSpec{"Movie": {value: "2026"}}, film},
-		"answer that's a year": {chooseIntent, map[string]slotSpec{"Answer": {value: "2005"}}, album},
-	} {
-		t.Run(name, func(t *testing.T) {
+		{name: "ShouldAnswerWithCollectionsYear", intent: "WatchNextInCollection", slots: map[string]slotSpec{"Movie": {value: "2005"}}, expected: album},
+		{name: "ShouldAnswerWithMoviesYear", intent: "WatchMovie", slots: map[string]slotSpec{"Movie": {value: "2026"}}, expected: film},
+		{name: "ShouldAnswerWithAnswerThatIsAYear", intent: chooseIntent, slots: map[string]slotSpec{"Answer": {value: "2005"}}, expected: album},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			h, backend, resp := askOdyssey(t)
 
 			serveAnswer(t, h, resp, tc.intent, tc.slots)
-			assert.True(t, containsPrefix(backend.Calls(), tc.want), "want %q, got %q", tc.want, backend.Calls())
+			assert.True(t, containsPrefix(backend.Calls(), tc.expected), "want %q, got %q", tc.expected, backend.Calls())
 		})
 	}
 }
@@ -403,12 +422,22 @@ func TestNewRequestWhileAsking(t *testing.T) {
 
 // TestSearchWhileAsking checks that a search heard while a question waits searches, as it would at any other time, rather than answering the question with a title it names.
 func TestSearchWhileAsking(t *testing.T) {
-	for _, intent := range []string{"GlobalSearch", "SearchMovies"} {
-		h, backend, resp := askOdyssey(t)
+	testCases := []struct {
+		name   string
+		intent string
+	}{
+		{name: "ShouldSearchWithGlobalSearch", intent: "GlobalSearch"},
+		{name: "ShouldSearchWithSearchMovies", intent: "SearchMovies"},
+	}
 
-		serveAnswer(t, h, resp, intent, map[string]slotSpec{"Query": {value: "the odyssey from 2026"}})
-		assert.False(t, containsPrefix(backend.Calls(), "Play"), "%s plays nothing: %q", intent, backend.Calls())
-		assert.True(t, containsPrefix(backend.Calls(), "ShowView"), "%s shows the search: %q", intent, backend.Calls())
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			h, backend, resp := askOdyssey(t)
+
+			serveAnswer(t, h, resp, tc.intent, map[string]slotSpec{"Query": {value: "the odyssey from 2026"}})
+			assert.False(t, containsPrefix(backend.Calls(), "Play"), "plays nothing: %q", backend.Calls())
+			assert.True(t, containsPrefix(backend.Calls(), "ShowView"), "shows the search: %q", backend.Calls())
+		})
 	}
 }
 

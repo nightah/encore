@@ -19,35 +19,48 @@ func searchConversation(t *testing.T, locale string) *conversation {
 }
 
 func TestSearchIntents(t *testing.T) {
-	tests := []struct {
-		intent, query, view string
+	testCases := []struct {
+		name     string
+		intent   string
+		have     string
+		expected string
 	}{
-		{"GlobalSearch", "hot fuzz", "ShowView movies title hot fuzz"},
-		{"SearchMovies", "dune", "ShowView movies title dune"},
-		{"SearchTVShows", "severance", "ShowView tvshows title severance"},
-		{"SearchMusic", "queen", "ShowView artists title queen"},
-		{"SearchMusic", "innuendo", "ShowView albums title innuendo"},
-		{"SearchMovies", "severance", "ShowView movies title severance"},
+		{name: "ShouldSearchEverythingInMovies", intent: "GlobalSearch", have: "hot fuzz", expected: "ShowView movies title hot fuzz"},
+		{name: "ShouldSearchMovies", intent: "SearchMovies", have: "dune", expected: "ShowView movies title dune"},
+		{name: "ShouldSearchTVShows", intent: "SearchTVShows", have: "severance", expected: "ShowView tvshows title severance"},
+		{name: "ShouldSearchMusicForArtist", intent: "SearchMusic", have: "queen", expected: "ShowView artists title queen"},
+		{name: "ShouldSearchMusicForAlbum", intent: "SearchMusic", have: "innuendo", expected: "ShowView albums title innuendo"},
+		{name: "ShouldSearchMoviesForTitleThatIsAlsoAShow", intent: "SearchMovies", have: "severance", expected: "ShowView movies title severance"},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.intent+" "+tt.query, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			c := searchConversation(t, "en-AU")
 
-			resp := c.say(tt.intent, map[string]slotSpec{"Query": {value: tt.query}})
-			assert.Equal(t, "Searching for "+tt.query+".", speechOf(resp))
-			assert.Equal(t, []string{tt.view}, c.backend.Calls())
+			resp := c.say(tc.intent, map[string]slotSpec{"Query": {value: tc.have}})
+			assert.Equal(t, "Searching for "+tc.have+".", speechOf(resp))
+			assert.Equal(t, []string{tc.expected}, c.backend.Calls())
 		})
 	}
 }
 
 func TestSearchAsksForTheFilmOrTheShow(t *testing.T) {
-	for locale, answers := range map[string][2]string{"en-AU": {"show", "film"}, "de-DE": {"sendung", "film"}} {
-		t.Run(locale, func(t *testing.T) {
-			c := searchConversation(t, locale)
+	testCases := []struct {
+		name   string
+		locale string
+		show   string
+		film   string
+	}{
+		{name: "ShouldAskInEnAU", locale: "en-AU", show: "show", film: "film"},
+		{name: "ShouldAskInDeDE", locale: "de-DE", show: "sendung", film: "film"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			c := searchConversation(t, tc.locale)
 
 			resp := c.say("GlobalSearch", map[string]slotSpec{"Query": {value: "severance"}})
-			if locale == "en-AU" {
+			if tc.locale == "en-AU" {
 				assert.Equal(t, "Do you want the film or the TV show Severance?", speechOf(resp))
 			}
 
@@ -55,12 +68,12 @@ func TestSearchAsksForTheFilmOrTheShow(t *testing.T) {
 			assert.False(t, *resp.Response.ShouldEndSession)
 			assert.Empty(t, c.backend.Calls(), "nothing opens before the answer")
 
-			c.say("ChooseMatch", map[string]slotSpec{"Which": {value: answers[0]}})
+			c.say("ChooseMatch", map[string]slotSpec{"Which": {value: tc.show}})
 			assert.Equal(t, []string{"ShowView tvshows title severance"}, c.backend.Calls(), "the show")
 
-			c = searchConversation(t, locale)
+			c = searchConversation(t, tc.locale)
 			c.say("GlobalSearch", map[string]slotSpec{"Query": {value: "severance"}})
-			c.say("ChooseMatch", map[string]slotSpec{"Which": {value: answers[1]}})
+			c.say("ChooseMatch", map[string]slotSpec{"Which": {value: tc.film}})
 			assert.Equal(t, []string{"ShowView movies title severance"}, c.backend.Calls(), "the film")
 		})
 	}

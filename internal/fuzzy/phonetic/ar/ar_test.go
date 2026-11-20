@@ -13,35 +13,40 @@ import (
 )
 
 func TestKeys(t *testing.T) {
-	for _, tc := range []struct {
-		word string
-		want []string
+	testCases := []struct {
+		name     string
+		have     string
+		expected []string
 	}{
 		// Double Metaphone alone: the merged key is the same.
-		{"titanic", []string{"TTNK"}},
-		{"taytank", []string{"TTNK"}},
-		{"klsum", []string{"KLSM"}},
+		{name: "ShouldKeyTitanic", have: "titanic", expected: []string{"TTNK"}},
+		{name: "ShouldKeyTaytank", have: "taytank", expected: []string{"TTNK"}},
+		{name: "ShouldKeyKlsum", have: "klsum", expected: []string{"KLSM"}},
 		// j as k, after Double Metaphone's primary key and before its others.
-		{"jim", []string{"JM", "KM", "AM"}},
-		{"yjabl", []string{"AJPL", "AKPL", "AHPL"}},
+		{name: "ShouldKeyJim", have: "jim", expected: []string{"JM", "KM", "AM"}},
+		{name: "ShouldKeyYjabl", have: "yjabl", expected: []string{"AJPL", "AKPL", "AHPL"}},
 		// th as s, with Double Metaphone's t reading kept while there is room.
-		{"klthum", []string{"KL0M", "KLSM", "KLTM"}},
-		{"thib", []string{"0P", "SP", "TP"}},
+		{name: "ShouldKeyKlthum", have: "klthum", expected: []string{"KL0M", "KLSM", "KLTM"}},
+		{name: "ShouldKeyThib", have: "thib", expected: []string{"0P", "SP", "TP"}},
 		// kh as h.
-		{"akhtiar", []string{"AKXR", "AXR", "AKX"}},
-		{"khaled", []string{"KLT", "HLT"}},
+		{name: "ShouldKeyAkhtiar", have: "akhtiar", expected: []string{"AKXR", "AXR", "AKX"}},
+		{name: "ShouldKeyKhaled", have: "khaled", expected: []string{"KLT", "HLT"}},
 		// q as a glottal stop.
-		{"qsr", []string{"KSR", "ASR"}},
-		{"qlbi", []string{"KLP", "ALP"}},
-		{"yqabl", []string{"AKPL", "APL"}},
+		{name: "ShouldKeyQsr", have: "qsr", expected: []string{"KSR", "ASR"}},
+		{name: "ShouldKeyQlbi", have: "qlbi", expected: []string{"KLP", "ALP"}},
+		{name: "ShouldKeyYqabl", have: "yqabl", expected: []string{"AKPL", "APL"}},
 		// Pass-through and fallback.
-		{"211", []string{"211"}},
-		{"h", []string{"h"}},
-		{"", []string{""}},
+		{name: "ShouldPassDigitsThrough", have: "211", expected: []string{"211"}},
+		{name: "ShouldFallBackToWordForLoneH", have: "h", expected: []string{"h"}},
+		{name: "ShouldFallBackToEmptyWord", expected: []string{""}},
 		// A merged reading with nothing to key adds no key.
-		{"kh", []string{"K"}},
-	} {
-		assert.Equal(t, tc.want, Encoder{}.Keys(nil, tc.word), tc.word)
+		{name: "ShouldAddNoKeyForMergedReadingWithNothingToKey", have: "kh", expected: []string{"K"}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, Encoder{}.Keys(nil, tc.have))
+		})
 	}
 
 	assert.Equal(t, []string{"x", "TTNK"}, Encoder{}.Keys([]string{"x"}, "titanic"), "Keys appends to dst")
@@ -50,43 +55,59 @@ func TestKeys(t *testing.T) {
 
 // TestHomophones pins the Arabic pronunciations of one word, as the matcher writes them in Latin letters, and the English titles asked for in Arabic letters, that share a key.
 func TestHomophones(t *testing.T) {
-	for _, pair := range [][2]string{
+	testCases := []struct {
+		name  string
+		word  string
+		other string
+	}{
 		// ق as g and ج as g.
-		{"yqabl", "yjabl"},
-		{"qim", "jim"},
-		{"jim", "game"},
-		{"judfazr", "godfather"},
+		{name: "ShouldShareKeyBetweenYqablAndYjabl", word: "yqabl", other: "yjabl"},
+		{name: "ShouldShareKeyBetweenQimAndJim", word: "qim", other: "jim"},
+		{name: "ShouldShareKeyBetweenJimAndGame", word: "jim", other: "game"},
+		{name: "ShouldShareKeyBetweenJudfazrAndGodfather", word: "judfazr", other: "godfather"},
 		// Interdentals as stops and as sibilants.
-		{"klthum", "kltum"},
-		{"klthum", "klsum"},
-		{"kathm", "kazm"},
-		{"thib", "dib"},
+		{name: "ShouldShareKeyBetweenKlthumAndKltum", word: "klthum", other: "kltum"},
+		{name: "ShouldShareKeyBetweenKlthumAndKlsum", word: "klthum", other: "klsum"},
+		{name: "ShouldShareKeyBetweenKathmAndKazm", word: "kathm", other: "kazm"},
+		{name: "ShouldShareKeyBetweenThibAndDib", word: "thib", other: "dib"},
 		// خ heard as ح.
-		{"akhtiar", "ahtiar"},
+		{name: "ShouldShareKeyBetweenAkhtiarAndAhtiar", word: "akhtiar", other: "ahtiar"},
 		// ق as a glottal stop.
-		{"qsr", "asr"},
-		{"qlbi", "albi"},
+		{name: "ShouldShareKeyBetweenQsrAndAsr", word: "qsr", other: "asr"},
+		{name: "ShouldShareKeyBetweenQlbiAndAlbi", word: "qlbi", other: "albi"},
 		// English titles in Arabic letters: no p, v, e or o.
-		{"taytank", "titanic"},
-		{"babil", "papel"},
-		{"afnjrz", "avengers"},
-		{"ansbshn", "inception"},
-		{"fruzn", "frozen"},
-	} {
-		a, b := Encoder{}.Keys(nil, pair[0]), Encoder{}.Keys(nil, pair[1])
-		assert.True(t, shareKey(a, b), "%s %q and %s %q should share a key", pair[0], a, pair[1], b)
+		{name: "ShouldShareKeyBetweenTaytankAndTitanic", word: "taytank", other: "titanic"},
+		{name: "ShouldShareKeyBetweenBabilAndPapel", word: "babil", other: "papel"},
+		{name: "ShouldShareKeyBetweenAfnjrzAndAvengers", word: "afnjrz", other: "avengers"},
+		{name: "ShouldShareKeyBetweenAnsbshnAndInception", word: "ansbshn", other: "inception"},
+		{name: "ShouldShareKeyBetweenFruznAndFrozen", word: "fruzn", other: "frozen"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			a, b := Encoder{}.Keys(nil, tc.word), Encoder{}.Keys(nil, tc.other)
+			assert.True(t, shareKey(a, b), "%s %q and %s %q should share a key", tc.word, a, tc.other, b)
+		})
 	}
 }
 
 // TestDistinct pins words the mergers must keep apart.
 func TestDistinct(t *testing.T) {
-	for _, pair := range [][2]string{
-		{"sam", "tam"},
-		{"jml", "hml"},
-		{"bayt", "zayt"},
-	} {
-		a, b := Encoder{}.Keys(nil, pair[0]), Encoder{}.Keys(nil, pair[1])
-		assert.False(t, shareKey(a, b), "%s %q and %s %q should not share a key", pair[0], a, pair[1], b)
+	testCases := []struct {
+		name  string
+		word  string
+		other string
+	}{
+		{name: "ShouldKeepSamAndTamApart", word: "sam", other: "tam"},
+		{name: "ShouldKeepJmlAndHmlApart", word: "jml", other: "hml"},
+		{name: "ShouldKeepBaytAndZaytApart", word: "bayt", other: "zayt"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			a, b := Encoder{}.Keys(nil, tc.word), Encoder{}.Keys(nil, tc.other)
+			assert.False(t, shareKey(a, b), "%s %q and %s %q should not share a key", tc.word, a, tc.other, b)
+		})
 	}
 }
 
@@ -129,9 +150,20 @@ func TestPropKeysContract(t *testing.T) {
 func TestKeysAllocations(t *testing.T) {
 	dst := make([]string, 0, maxKeys)
 
-	for word, want := range map[string]float64{"titanic": 1, "211": 0} {
-		got := testing.AllocsPerRun(100, func() { dst = Encoder{}.Keys(dst[:0], word) })
-		assert.InDelta(t, want, got, 0, "%s: only the returned keys allocate", word)
+	testCases := []struct {
+		name     string
+		have     string
+		expected float64
+	}{
+		{name: "ShouldAllocateOnceForTitanic", have: "titanic", expected: 1},
+		{name: "ShouldNotAllocateForDigits", have: "211"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := testing.AllocsPerRun(100, func() { dst = Encoder{}.Keys(dst[:0], tc.have) })
+			assert.InDelta(t, tc.expected, got, 0, "only the returned keys allocate")
+		})
 	}
 }
 

@@ -12,55 +12,50 @@ import (
 )
 
 func TestExpand(t *testing.T) {
-	tests := []struct {
-		pattern string
-		want    []string
+	testCases := []struct {
+		name     string
+		have     string
+		expected []string
 	}{
-		{"pause", []string{"pause"}},
-		{"(play|watch) {Movie}", []string{"play {Movie}", "watch {Movie}"}},
-		{"play [the] movie {Movie}", []string{"play the movie {Movie}", "play movie {Movie}"}},
-		{"[please] (play|put on) [the (movie|film)] {Movie}", []string{
-			"please play the movie {Movie}", "please play the film {Movie}", "please play {Movie}",
-			"please put on the movie {Movie}", "please put on the film {Movie}", "please put on {Movie}",
-			"play the movie {Movie}", "play the film {Movie}", "play {Movie}",
-			"put on the movie {Movie}", "put on the film {Movie}", "put on {Movie}",
-		}},
-		{"(turn|switch) [the] volume (up|down)", []string{
-			"turn the volume up", "turn the volume down", "turn volume up", "turn volume down",
-			"switch the volume up", "switch the volume down", "switch volume up", "switch volume down",
-		}},
-		{"what's   playing", []string{"what's playing"}},
-		{"(a|a) b", []string{"a b"}},
+		{name: "ShouldKeepPlainWord", have: "pause", expected: []string{"pause"}},
+		{name: "ShouldExpandAlternatives", have: "(play|watch) {Movie}", expected: []string{"play {Movie}", "watch {Movie}"}},
+		{name: "ShouldExpandOptionalWord", have: "play [the] movie {Movie}", expected: []string{"play the movie {Movie}", "play movie {Movie}"}},
+		{name: "ShouldExpandNestedGroups", have: "[please] (play|put on) [the (movie|film)] {Movie}", expected: []string{"please play the movie {Movie}", "please play the film {Movie}", "please play {Movie}", "please put on the movie {Movie}", "please put on the film {Movie}", "please put on {Movie}", "play the movie {Movie}", "play the film {Movie}", "play {Movie}", "put on the movie {Movie}", "put on the film {Movie}", "put on {Movie}"}},
+		{name: "ShouldExpandEveryCombination", have: "(turn|switch) [the] volume (up|down)", expected: []string{"turn the volume up", "turn the volume down", "turn volume up", "turn volume down", "switch the volume up", "switch the volume down", "switch volume up", "switch volume down"}},
+		{name: "ShouldCollapseSpaces", have: "what's   playing", expected: []string{"what's playing"}},
+		{name: "ShouldDropDuplicateExpansions", have: "(a|a) b", expected: []string{"a b"}},
 		// Japanese is written without spaces, around groups too.
-		{"[{Room}で]{Movie}を(再生|上映)して[ください]", []string{
-			"{Room}で{Movie}を再生してください", "{Room}で{Movie}を再生して", "{Room}で{Movie}を上映してください", "{Room}で{Movie}を上映して",
-			"{Movie}を再生してください", "{Movie}を再生して", "{Movie}を上映してください", "{Movie}を上映して",
-		}},
-		{"{Movie}[ください]", []string{"{Movie}ください", "{Movie}"}},
-		{"アルバム[の]{Album} (by|from) x", []string{"アルバムの{Album} by x", "アルバムの{Album} from x", "アルバム{Album} by x", "アルバム{Album} from x"}},
+		{name: "ShouldNotAddSpacesAroundJapaneseGroups", have: "[{Room}で]{Movie}を(再生|上映)して[ください]", expected: []string{"{Room}で{Movie}を再生してください", "{Room}で{Movie}を再生して", "{Room}で{Movie}を上映してください", "{Room}で{Movie}を上映して", "{Movie}を再生してください", "{Movie}を再生して", "{Movie}を上映してください", "{Movie}を上映して"}},
+		{name: "ShouldNotAddSpaceBeforeJapaneseOptional", have: "{Movie}[ください]", expected: []string{"{Movie}ください", "{Movie}"}},
+		{name: "ShouldKeepSpacesBetweenMixedScripts", have: "アルバム[の]{Album} (by|from) x", expected: []string{"アルバムの{Album} by x", "アルバムの{Album} from x", "アルバム{Album} by x", "アルバム{Album} from x"}},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.pattern, func(t *testing.T) {
-			got, err := Expand(tt.pattern)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual, err := Expand(tc.have)
 			require.NoError(t, err)
-			assert.Equal(t, tt.want, got)
+			assert.Equal(t, tc.expected, actual)
 		})
 	}
 }
 
 func TestExpandErrors(t *testing.T) {
-	for _, pattern := range []string{
-		"(play|watch {Movie}",
-		"play [the movie {Movie}",
-		"play {Movie",
-		"play | watch",
-		"play)",
-		"[]",
-		strings.Repeat("(a|b|c|d|e) ", 6),
-	} {
-		t.Run(pattern, func(t *testing.T) {
-			_, err := Expand(pattern)
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldRejectUnclosedGroup", have: "(play|watch {Movie}"},
+		{name: "ShouldRejectUnclosedOptional", have: "play [the movie {Movie}"},
+		{name: "ShouldRejectUnclosedSlot", have: "play {Movie"},
+		{name: "ShouldRejectAlternativesOutsideGroup", have: "play | watch"},
+		{name: "ShouldRejectStrayCloser", have: "play)"},
+		{name: "ShouldRejectEmptyOptional", have: "[]"},
+		{name: "ShouldRejectTooManyExpansions", have: strings.Repeat("(a|b|c|d|e) ", 6)},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := Expand(tc.have)
 			assert.Error(t, err)
 		})
 	}
@@ -72,41 +67,57 @@ func TestExpandMoreErrors(t *testing.T) {
 		words[i] = fmt.Sprintf("w%d", i)
 	}
 
-	for name, tc := range map[string]struct{ pattern, want string }{
-		"too many alternatives in one group": {"(" + strings.Join(words, "|") + ")", "more than 2000 expansions"},
-		"only whitespace":                    {"   ", "expands to nothing"},
-		"only an optional group":             {"[ ]", "expands to nothing"},
-		"unclosed slot":                      {"play {Movie", "unclosed slot reference"},
-		"stray closer":                       {"play]", `unexpected ']'`},
-		"mismatched closer":                  {"(play]", `missing ')'`},
-	} {
-		t.Run(name, func(t *testing.T) {
-			got, err := Expand(tc.pattern)
-			require.ErrorContains(t, err, tc.want)
-			assert.Nil(t, got)
-		})
+	testCases := []struct {
+		name     string
+		have     string
+		expected int
+		err      string
+	}{
+		{name: "ShouldRejectTooManyAlternativesInOneGroup", have: "(" + strings.Join(words, "|") + ")", err: "more than 2000 expansions"},
+		{name: "ShouldRejectOnlyWhitespace", have: "   ", err: "expands to nothing"},
+		{name: "ShouldRejectOnlyAnOptionalGroup", have: "[ ]", err: "expands to nothing"},
+		{name: "ShouldRejectUnclosedSlot", have: "play {Movie", err: "unclosed slot reference"},
+		{name: "ShouldRejectStrayCloser", have: "play]", err: `unexpected ']'`},
+		{name: "ShouldRejectMismatchedCloser", have: "(play]", err: `missing ')'`},
+		{name: "ShouldAllowExactlyTheLimit", have: "(" + strings.Join(words[:MaxExpansions], "|") + ")", expected: MaxExpansions},
+		{name: "ShouldAllowAProductOfExactlyTheLimit", have: "(a|b) (" + strings.Join(words[:MaxExpansions/2], "|") + ")", expected: MaxExpansions},
+		{name: "ShouldRejectAProductOneOverTheLimit", have: "(a|b|c) (" + strings.Join(words[:667], "|") + ")", err: "more than 2000 expansions"},
 	}
 
-	got, err := Expand("(" + strings.Join(words[:MaxExpansions], "|") + ")")
-	require.NoError(t, err)
-	assert.Len(t, got, MaxExpansions, "exactly the limit is allowed")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual, err := Expand(tc.have)
 
-	got, err = Expand("(a|b) (" + strings.Join(words[:MaxExpansions/2], "|") + ")")
-	require.NoError(t, err)
-	assert.Len(t, got, MaxExpansions, "a product of exactly the limit is allowed")
+			if tc.err != "" {
+				require.ErrorContains(t, err, tc.err)
+				assert.Nil(t, actual)
 
-	_, err = Expand("(a|b|c) (" + strings.Join(words[:667], "|") + ")")
-	require.ErrorContains(t, err, "more than 2000 expansions", "3 × 667 is one over")
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Len(t, actual, tc.expected)
+		})
+	}
 }
 
 func TestExpandKeepsSlotReferencesVerbatim(t *testing.T) {
-	got, err := Expand("play {Movie} in the {Room}")
-	require.NoError(t, err)
-	assert.Equal(t, []string{"play {Movie} in the {Room}"}, got)
+	testCases := []struct {
+		name     string
+		have     string
+		expected []string
+	}{
+		{name: "ShouldKeepSlotReferencesVerbatim", have: "play {Movie} in the {Room}", expected: []string{"play {Movie} in the {Room}"}},
+		{name: "ShouldTreatEmptyAlternativeAsOptional", have: "(a|) b", expected: []string{"a b", "b"}},
+	}
 
-	got, err = Expand("(a|) b")
-	require.NoError(t, err)
-	assert.Equal(t, []string{"a b", "b"}, got, "an empty alternative makes the group optional")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual, err := Expand(tc.have)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, actual)
+		})
+	}
 }
 
 // TestPropExpandCountsEveryCombination checks that a pattern of groups with distinct words expands to exactly one sample per combination of choices.

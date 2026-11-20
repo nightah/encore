@@ -7,20 +7,23 @@ import (
 )
 
 func TestStripComments(t *testing.T) {
-	tests := []struct {
-		name, in, want string
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
 	}{
-		{"line comment", "{\"a\": 1} // trailing\n", "{\"a\": 1}            \n"},
-		{"full line", "// head\n{}", "       \n{}"},
-		{"block", "{/* x */\"a\":1}", "{       \"a\":1}"},
-		{"multi-line block keeps newlines", "/*a\nb*/{}", "   \n   {}"},
-		{"slashes in string", `{"u": "http://kodi.wiki"}`, `{"u": "http://kodi.wiki"}`},
-		{"escaped quote in string", `{"u": "a\"//b"} //c`, `{"u": "a\"//b"}    `},
+		{name: "ShouldBlankLineComment", have: "{\"a\": 1} // trailing\n", expected: "{\"a\": 1}            \n"},
+		{name: "ShouldBlankFullLineComment", have: "// head\n{}", expected: "       \n{}"},
+		{name: "ShouldBlankBlockComment", have: "{/* x */\"a\":1}", expected: "{       \"a\":1}"},
+		{name: "ShouldKeepNewlinesInMultiLineBlockComment", have: "/*a\nb*/{}", expected: "   \n   {}"},
+		{name: "ShouldKeepSlashesInString", have: `{"u": "http://kodi.wiki"}`, expected: `{"u": "http://kodi.wiki"}`},
+		{name: "ShouldKeepEscapedQuoteInString", have: `{"u": "a\"//b"} //c`, expected: `{"u": "a\"//b"}    `},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := string(stripComments([]byte(tt.in))); got != tt.want {
-				t.Errorf("stripComments(%q) = %q, want %q", tt.in, got, tt.want)
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if actual := string(stripComments([]byte(tc.have))); actual != tc.expected {
+				t.Errorf("stripComments(%q) = %q, want %q", tc.have, actual, tc.expected)
 			}
 		})
 	}
@@ -109,27 +112,32 @@ func TestHoistInlineIDs(t *testing.T) {
 }
 
 func TestNaming(t *testing.T) {
-	tests := []struct {
+	testCases := []struct {
+		name     string
 		fn       func(string) string
-		in, want string
+		have     string
+		expected string
 	}{
-		{typeName, "Video.Fields.Movie", "VideoFieldsMovie"},
-		{typeName, "Library.Id", "LibraryID"},
-		{typeName, "PVR.Details.ChannelGroup", "PVRDetailsChannelGroup"},
-		{typeName, "JSONRPC.Ping", "JSONRPCPing"},
-		{fieldName, "movieid", "MovieID"},
-		{fieldName, "id", "ID"},
-		{fieldName, "channeluid", "ChannelUID"},
-		{fieldName, "top250", "Top250"},
-		{fieldName, "minimumItems", "MinimumItems"},
-		{constPart, "-16", "Minus16"},
-		{constPart, "anaglyph_cyan_red", "AnaglyphCyanRed"},
-		{constPart, "", "Empty"},
-		{constPart, "4", "4"},
+		{name: "ShouldNameTypeVideoFieldsMovie", fn: typeName, have: "Video.Fields.Movie", expected: "VideoFieldsMovie"},
+		{name: "ShouldNameTypeWithIDInitialism", fn: typeName, have: "Library.Id", expected: "LibraryID"},
+		{name: "ShouldNameTypeWithPVRInitialism", fn: typeName, have: "PVR.Details.ChannelGroup", expected: "PVRDetailsChannelGroup"},
+		{name: "ShouldNameTypeWithJSONRPCInitialism", fn: typeName, have: "JSONRPC.Ping", expected: "JSONRPCPing"},
+		{name: "ShouldNameFieldWithIDSuffix", fn: fieldName, have: "movieid", expected: "MovieID"},
+		{name: "ShouldNameFieldID", fn: fieldName, have: "id", expected: "ID"},
+		{name: "ShouldNameFieldWithUIDSuffix", fn: fieldName, have: "channeluid", expected: "ChannelUID"},
+		{name: "ShouldNameFieldWithDigits", fn: fieldName, have: "top250", expected: "Top250"},
+		{name: "ShouldNameCamelCaseField", fn: fieldName, have: "minimumItems", expected: "MinimumItems"},
+		{name: "ShouldNameNegativeConstant", fn: constPart, have: "-16", expected: "Minus16"},
+		{name: "ShouldNameSnakeCaseConstant", fn: constPart, have: "anaglyph_cyan_red", expected: "AnaglyphCyanRed"},
+		{name: "ShouldNameEmptyConstant", fn: constPart, have: "", expected: "Empty"},
+		{name: "ShouldNameNumericConstant", fn: constPart, have: "4", expected: "4"},
 	}
-	for _, tt := range tests {
-		if got := tt.fn(tt.in); got != tt.want {
-			t.Errorf("%q -> %q, want %q", tt.in, got, tt.want)
-		}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if actual := tc.fn(tc.have); actual != tc.expected {
+				t.Errorf("%q -> %q, want %q", tc.have, actual, tc.expected)
+			}
+		})
 	}
 }

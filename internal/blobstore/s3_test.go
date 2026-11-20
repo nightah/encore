@@ -277,12 +277,20 @@ func memS3Store(t *testing.T, srv *httptest.Server, bucket, prefix string) *blob
 }
 
 func TestS3ContractInMemory(t *testing.T) {
-	for _, prefix := range []string{"", "encore/prod"} {
-		t.Run("prefix="+prefix, func(t *testing.T) {
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldPassWithoutAPrefix", have: ""},
+		{name: "ShouldPassWithAPrefix", have: "encore/prod"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			blobstoretest.Run(t, func(t *testing.T) blobstore.Store {
 				_, srv := newMemS3(t, "encore")
 
-				return memS3Store(t, srv, "encore", prefix)
+				return memS3Store(t, srv, "encore", tc.have)
 			})
 		})
 	}
@@ -476,16 +484,21 @@ func TestS3InsecureSkipVerify(t *testing.T) {
 func TestS3ConfigErrors(t *testing.T) {
 	base := config.StorageS3{Endpoint: "http://minio:9000", Bucket: "b", AccessKey: "a", SecretKey: "s"}
 
-	for name, mutate := range map[string]func(*config.StorageS3){
-		"scheme":    func(c *config.StorageS3) { c.Endpoint = "minio:9000" },
-		"path":      func(c *config.StorageS3) { c.Endpoint = "http://minio:9000/bucket" },
-		"bucket":    func(c *config.StorageS3) { c.Bucket = "" },
-		"prefix":    func(c *config.StorageS3) { c.Prefix = "a/../b" },
-		"ca bundle": func(c *config.StorageS3) { c.Endpoint = "https://minio:9000"; c.CABundle = "/nonexistent.pem" },
-	} {
-		t.Run(name, func(t *testing.T) {
+	testCases := []struct {
+		name   string
+		mutate func(*config.StorageS3)
+	}{
+		{name: "ShouldRejectAnEndpointWithoutAScheme", mutate: func(c *config.StorageS3) { c.Endpoint = "minio:9000" }},
+		{name: "ShouldRejectAnEndpointWithAPath", mutate: func(c *config.StorageS3) { c.Endpoint = "http://minio:9000/bucket" }},
+		{name: "ShouldRejectAnEmptyBucket", mutate: func(c *config.StorageS3) { c.Bucket = "" }},
+		{name: "ShouldRejectAnInvalidPrefix", mutate: func(c *config.StorageS3) { c.Prefix = "a/../b" }},
+		{name: "ShouldRejectAMissingCABundle", mutate: func(c *config.StorageS3) { c.Endpoint = "https://minio:9000"; c.CABundle = "/nonexistent.pem" }},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			cfg := base
-			mutate(&cfg)
+			tc.mutate(&cfg)
 
 			_, err := blobstore.NewS3(cfg)
 			require.Error(t, err)
@@ -494,14 +507,19 @@ func TestS3ConfigErrors(t *testing.T) {
 }
 
 func TestS3ServerSideEncryption(t *testing.T) {
-	for name, tt := range map[string]struct {
-		sse, wantAlgorithm, wantKeyID string
+	testCases := []struct {
+		name              string
+		have              string
+		expectedAlgorithm string
+		expectedKeyID     string
 	}{
-		"none":    {"", "", ""},
-		"SSE-S3":  {config.SSES3, "AES256", ""},
-		"SSE-KMS": {config.SSEKMS, "aws:kms", "key-1"},
-	} {
-		t.Run(name, func(t *testing.T) {
+		{name: "ShouldAskForNoEncryption"},
+		{name: "ShouldAskForSSES3", have: config.SSES3, expectedAlgorithm: "AES256"},
+		{name: "ShouldAskForSSEKMS", have: config.SSEKMS, expectedAlgorithm: "aws:kms", expectedKeyID: "key-1"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			m := &memS3{buckets: map[string]map[string]memObject{"encore": {}}, uploads: map[string]map[int][]byte{}, failures: map[string]s3Failure{}}
 
 			var (
@@ -522,7 +540,7 @@ func TestS3ServerSideEncryption(t *testing.T) {
 
 			s, err := blobstore.NewS3(config.StorageS3{
 				Endpoint: srv.URL, Region: "us-east-1", Bucket: "encore", Addressing: config.AddressingPath,
-				AccessKey: "AKIA", SecretKey: "s3cr3t-value", SSE: tt.sse, SSEKMSKeyID: "key-1",
+				AccessKey: "AKIA", SecretKey: "s3cr3t-value", SSE: tc.have, SSEKMSKeyID: "key-1",
 			})
 			require.NoError(t, err)
 			require.NoError(t, s.Put(t.Context(), "state/db", strings.NewReader("v"), 1))
@@ -531,8 +549,8 @@ func TestS3ServerSideEncryption(t *testing.T) {
 			defer mu.Unlock()
 
 			require.Len(t, headers, 1)
-			assert.Equal(t, tt.wantAlgorithm, headers[0].Get("X-Amz-Server-Side-Encryption"), "every upload asks for the configured encryption")
-			assert.Equal(t, tt.wantKeyID, headers[0].Get("X-Amz-Server-Side-Encryption-Aws-Kms-Key-Id"))
+			assert.Equal(t, tc.expectedAlgorithm, headers[0].Get("X-Amz-Server-Side-Encryption"), "every upload asks for the configured encryption")
+			assert.Equal(t, tc.expectedKeyID, headers[0].Get("X-Amz-Server-Side-Encryption-Aws-Kms-Key-Id"))
 		})
 	}
 }

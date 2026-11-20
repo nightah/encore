@@ -9,69 +9,70 @@ import (
 
 // TestNativeAliases checks that a Latin title is found by a request written in the language's script as a recogniser writes it, and that the request in Latin letters still finds it.
 func TestNativeAliases(t *testing.T) {
-	for _, tc := range []struct {
-		lang  string
-		docs  []Doc
-		heard map[string]string
-	}{
-		{"ja", []Doc{
-			{ID: "superfly", Kind: "artist", Title: "Superfly"},
-			{ID: "glay", Kind: "artist", Title: "GLAY"},
-			{ID: "beatles", Kind: "artist", Title: "The Beatles"},
-			{ID: "starwars", Kind: "movie", Title: "Star Wars"},
-			{ID: "ghost", Kind: "movie", Title: "GHOST IN THE SHELL / 攻殻機動隊"},
-			{ID: "akb", Kind: "artist", Title: "AKB48"},
-			{ID: "vivant", Kind: "tvshow", Title: "VIVANT"},
-		}, map[string]string{
-			"スーパーフライ":  "superfly",
-			"グレー":      "glay",
-			"ビートルズ":    "beatles",
-			"スターウォーズ":  "starwars",
-			"エーケービー48": "akb",
-			"superfly": "superfly",
-		}},
-		{"hi", []Doc{
-			{ID: "frozen", Kind: "movie", Title: "Frozen"},
-			{ID: "mrindia", Kind: "movie", Title: "Mr. India"},
-			{ID: "deewaar", Kind: "movie", Title: "Deewaar"},
-			{ID: "zanjeer", Kind: "movie", Title: "Zanjeer"},
-			{ID: "kgf", Kind: "movie", Title: "K.G.F: Chapter 1"},
-		}, map[string]string{
-			"फ्रोजन":          "frozen",
-			"मिस्टर इंडिया":   "mrindia",
-			"दीवार":           "deewaar",
-			"जंजीर":           "zanjeer",
-			"केजीएफ चैप्टर 1": "kgf",
-			"frozen": "frozen",
-		}},
-		{"ar", []Doc{
-			{ID: "homealone", Kind: "movie", Title: "Home Alone"},
-			{ID: "braveheart", Kind: "movie", Title: "Braveheart"},
-			{ID: "avatar", Kind: "movie", Title: "Avatar"},
-			{ID: "believer", Kind: "song", Title: "Believer"},
-		}, map[string]string{
-			"هوم الون":  "homealone",
-			"بريف هارت": "braveheart",
-			"افتار":     "avatar",
-			"بيليفر":    "believer",
-			"avatar":    "avatar",
-		}},
-	} {
-		ix, err := New(tc.lang, Config{})
-		require.NoError(t, err)
-		require.NoError(t, ix.Upsert(tc.docs...))
+	ja := []Doc{
+		{ID: "superfly", Kind: "artist", Title: "Superfly"},
+		{ID: "glay", Kind: "artist", Title: "GLAY"},
+		{ID: "beatles", Kind: "artist", Title: "The Beatles"},
+		{ID: "starwars", Kind: "movie", Title: "Star Wars"},
+		{ID: "ghost", Kind: "movie", Title: "GHOST IN THE SHELL / 攻殻機動隊"},
+		{ID: "akb", Kind: "artist", Title: "AKB48"},
+		{ID: "vivant", Kind: "tvshow", Title: "VIVANT"},
+	}
+	hi := []Doc{
+		{ID: "frozen", Kind: "movie", Title: "Frozen"},
+		{ID: "mrindia", Kind: "movie", Title: "Mr. India"},
+		{ID: "deewaar", Kind: "movie", Title: "Deewaar"},
+		{ID: "zanjeer", Kind: "movie", Title: "Zanjeer"},
+		{ID: "kgf", Kind: "movie", Title: "K.G.F: Chapter 1"},
+	}
+	ar := []Doc{
+		{ID: "homealone", Kind: "movie", Title: "Home Alone"},
+		{ID: "braveheart", Kind: "movie", Title: "Braveheart"},
+		{ID: "avatar", Kind: "movie", Title: "Avatar"},
+		{ID: "believer", Kind: "song", Title: "Believer"},
+	}
 
-		for heard, want := range tc.heard {
-			res, err := ix.Search(t.Context(), Query{Text: heard})
+	testCases := []struct {
+		name     string
+		lang     string
+		docs     []Doc
+		heard    string
+		expected string
+	}{
+		{name: "ShouldFindSuperflyInKatakana", lang: "ja", docs: ja, heard: "スーパーフライ", expected: "superfly"},
+		{name: "ShouldFindGLAYInKatakana", lang: "ja", docs: ja, heard: "グレー", expected: "glay"},
+		{name: "ShouldFindTheBeatlesWithoutArticleInKatakana", lang: "ja", docs: ja, heard: "ビートルズ", expected: "beatles"},
+		{name: "ShouldFindStarWarsInKatakana", lang: "ja", docs: ja, heard: "スターウォーズ", expected: "starwars"},
+		{name: "ShouldFindAKB48InKatakana", lang: "ja", docs: ja, heard: "エーケービー48", expected: "akb"},
+		{name: "ShouldFindSuperflyInLatin", lang: "ja", docs: ja, heard: "superfly", expected: "superfly"},
+		{name: "ShouldFindFrozenInDevanagari", lang: "hi", docs: hi, heard: "फ्रोजन", expected: "frozen"},
+		{name: "ShouldFindMrIndiaInDevanagari", lang: "hi", docs: hi, heard: "मिस्टर इंडिया", expected: "mrindia"},
+		{name: "ShouldFindDeewaarInDevanagari", lang: "hi", docs: hi, heard: "दीवार", expected: "deewaar"},
+		{name: "ShouldFindZanjeerInDevanagari", lang: "hi", docs: hi, heard: "जंजीर", expected: "zanjeer"},
+		{name: "ShouldFindKGFChapter1InDevanagari", lang: "hi", docs: hi, heard: "केजीएफ चैप्टर 1", expected: "kgf"},
+		{name: "ShouldFindFrozenInLatin", lang: "hi", docs: hi, heard: "frozen", expected: "frozen"},
+		{name: "ShouldFindHomeAloneInArabic", lang: "ar", docs: ar, heard: "هوم الون", expected: "homealone"},
+		{name: "ShouldFindBraveheartSplitInArabic", lang: "ar", docs: ar, heard: "بريف هارت", expected: "braveheart"},
+		{name: "ShouldFindAvatarInArabic", lang: "ar", docs: ar, heard: "افتار", expected: "avatar"},
+		{name: "ShouldFindBelieverInArabic", lang: "ar", docs: ar, heard: "بيليفر", expected: "believer"},
+		{name: "ShouldFindAvatarInLatin", lang: "ar", docs: ar, heard: "avatar", expected: "avatar"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ix, err := New(tc.lang, Config{})
 			require.NoError(t, err)
+			require.NoError(t, ix.Upsert(tc.docs...))
+
+			res, err := ix.Search(t.Context(), Query{Text: tc.heard})
+			require.NoError(t, err)
+			require.NoError(t, ix.Close())
 
 			best, ok := res.Best()
-			require.True(t, ok, "%s %q", tc.lang, heard)
-			assert.Equal(t, DecisionPlay, res.Decision, "%s %q", tc.lang, heard)
-			assert.Equal(t, want, best.Doc.ID, "%s %q", tc.lang, heard)
-		}
-
-		require.NoError(t, ix.Close())
+			require.True(t, ok)
+			assert.Equal(t, DecisionPlay, res.Decision)
+			assert.Equal(t, tc.expected, best.Doc.ID)
+		})
 	}
 }
 
@@ -86,19 +87,6 @@ func TestNativeAliasesOnlyAdd(t *testing.T) {
 		Doc{ID: "avatar", Kind: "movie", Title: "Avatar"},
 	))
 
-	decide := func(heard string) (Decision, string) {
-		res, err := ix.Search(t.Context(), Query{Text: heard})
-		require.NoError(t, err)
-
-		best, _ := res.Best()
-
-		return res.Decision, best.Doc.ID
-	}
-
-	d, id := decide("افنجرز")
-	assert.Equal(t, DecisionAsk, d, "two Avengers films a native alias barely separates")
-	assert.Equal(t, "avengers", id)
-
 	res, err := ix.Search(t.Context(), Query{Text: "افنجرز"})
 	require.NoError(t, err)
 	assert.InDelta(t, nativeAskScore, res.AskScore, 1e-9, "the question reports the higher bar a native alias winner is asked about from")
@@ -107,16 +95,31 @@ func TestNativeAliasesOnlyAdd(t *testing.T) {
 	require.NoError(t, err)
 	assert.InDelta(t, ix.cfg.AskScore, res.AskScore, 1e-9, "a title's own name keeps the configured bar")
 
-	d, _ = decide("ذا دارك نايت رايزز")
-	assert.Equal(t, DecisionNotFound, d, "an absent sequel close to a native alias is not asked about")
+	testCases := []struct {
+		name     string
+		heard    string
+		expected Decision
+		id       string
+	}{
+		{name: "ShouldAskAboutTwoFilmsNativeAliasBarelySeparates", heard: "افنجرز", expected: DecisionAsk, id: "avengers"},
+		{name: "ShouldNotAskAboutAbsentSequelCloseToNativeAlias", heard: "ذا دارك نايت رايزز", expected: DecisionNotFound},
+		{name: "ShouldPlayTitlesOwnName", heard: "avatar", expected: DecisionPlay, id: "avatar"},
+		{name: "ShouldPlayRequestWrittenExactlyAsNativeAlias", heard: "افاتار", expected: DecisionPlay, id: "avatar"},
+	}
 
-	d, id = decide("avatar")
-	assert.Equal(t, DecisionPlay, d, "the title's own name plays")
-	assert.Equal(t, "avatar", id)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := ix.Search(t.Context(), Query{Text: tc.heard})
+			require.NoError(t, err)
 
-	d, id = decide("افاتار")
-	assert.Equal(t, DecisionPlay, d, "a request written exactly as the native alias plays")
-	assert.Equal(t, "avatar", id)
+			best, _ := res.Best()
+			assert.Equal(t, tc.expected, res.Decision)
+
+			if tc.id != "" {
+				assert.Equal(t, tc.id, best.Doc.ID)
+			}
+		})
+	}
 
 	// Whatever a title's own names would play still plays when a native alias puts it on top by less than PlayMargin.
 	hi, err := New("hi", Config{})

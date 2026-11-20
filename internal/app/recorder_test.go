@@ -92,7 +92,7 @@ func TestRecorderKeepsGoingWhenTheDatabaseFails(t *testing.T) {
 func TestRecorderRow(t *testing.T) {
 	failed := errors.New("kodi went away")
 
-	t.Run("a launch has no intent, so its type stands in", func(t *testing.T) {
+	t.Run("ShouldUseTheTypeForALaunchWithoutAnIntent", func(t *testing.T) {
 		row := toRow(alexa.LogEntry{Type: "LaunchRequest"})
 		assert.Equal(t, "LaunchRequest", row.Intent)
 		assert.Nil(t, row.Match, "nothing was matched")
@@ -101,7 +101,7 @@ func TestRecorderRow(t *testing.T) {
 		assert.JSONEq(t, `{"verify_ms":0,"match_ms":0,"kodi_ms":0}`, string(row.Timing))
 	})
 
-	t.Run("slots are kept as heard", func(t *testing.T) {
+	t.Run("ShouldKeepSlotsAsHeard", func(t *testing.T) {
 		row := toRow(alexa.LogEntry{Intent: "WatchMovie", Slots: map[string]string{"Movie": "hot fuzz"}})
 
 		var slots map[string]string
@@ -109,17 +109,17 @@ func TestRecorderRow(t *testing.T) {
 		assert.Equal(t, map[string]string{"Movie": "hot fuzz"}, slots)
 	})
 
-	t.Run("an error without a match is still logged", func(t *testing.T) {
+	t.Run("ShouldLogAnErrorWithoutAMatch", func(t *testing.T) {
 		row := toRow(alexa.LogEntry{Intent: "Pause", Target: "Lounge", Err: failed})
 		assert.JSONEq(t, `{"target":"Lounge","error":"kodi went away"}`, string(row.Match))
 	})
 
-	t.Run("the room name that picked the target is logged with it", func(t *testing.T) {
+	t.Run("ShouldLogTheRoomNameThatPickedTheTarget", func(t *testing.T) {
 		row := toRow(alexa.LogEntry{Intent: "RoomControl", Target: "Lounge", Via: actions.Via{Spoken: "TV", Kind: "device", Room: "Lounge"}})
 		assert.JSONEq(t, `{"target":"Lounge","via":{"spoken":"TV","kind":"device","room":"Lounge"}}`, string(row.Match))
 	})
 
-	t.Run("a note on what the action chose is logged with the target", func(t *testing.T) {
+	t.Run("ShouldLogANoteOnWhatTheActionChoseWithTheTarget", func(t *testing.T) {
 		row := toRow(alexa.LogEntry{Intent: "GlobalSearch", Target: "Lounge", Note: "skin search: skin.copacetic has no profile; showed the library"})
 		assert.JSONEq(t, `{"target":"Lounge","note":"skin search: skin.copacetic has no profile; showed the library"}`, string(row.Match))
 
@@ -127,17 +127,17 @@ func TestRecorderRow(t *testing.T) {
 		assert.JSONEq(t, `{"note":"skin search: opened skin.arctic.fuse.3's search"}`, string(row.Match), "even without a target")
 	})
 
-	t.Run("matching that took longer than the request leaves Kodi nothing", func(t *testing.T) {
+	t.Run("ShouldLeaveKodiNothingWhenMatchingTookLongerThanTheRequest", func(t *testing.T) {
 		row := toRow(alexa.LogEntry{Duration: 10 * time.Millisecond, MatchTime: 20 * time.Millisecond, KodiCalls: []media.Call{{Method: "Player.Open", Duration: 5 * time.Millisecond}}})
 		assert.JSONEq(t, `{"verify_ms":0,"match_ms":20,"kodi_ms":0}`, string(row.Timing))
 	})
 
-	t.Run("verifying is not time Kodi could have had", func(t *testing.T) {
+	t.Run("ShouldNotCountVerifyingAsKodiTime", func(t *testing.T) {
 		row := toRow(alexa.LogEntry{Duration: 900 * time.Millisecond, Verify: 650 * time.Millisecond, KodiCalls: []media.Call{{Method: "Player.Open", Duration: 400 * time.Millisecond}}})
 		assert.JSONEq(t, `{"verify_ms":650,"match_ms":0,"kodi_ms":250}`, string(row.Timing))
 	})
 
-	t.Run("only the top candidates are logged", func(t *testing.T) {
+	t.Run("ShouldLogOnlyTheTopCandidates", func(t *testing.T) {
 		res := &match.Result{Normalized: "dune", Decision: match.DecisionAsk, Margin: 0.01}
 		for i := range maxLoggedCandidates + 3 {
 			res.Candidates = append(res.Candidates, match.Candidate{Doc: match.Doc{Title: fmt.Sprintf("Dune %d", i), Ref: media.Ref{Kind: media.KindMovie, ID: i + 1}}, Score: 0.9})

@@ -26,12 +26,19 @@ func TestMatchValidation(t *testing.T) {
 	c := h.admin()
 	lib := h.libraryID(t)
 
-	for name, body := range map[string]map[string]any{
-		"empty query":    {"library_id": lib, "query": ""},
-		"query too long": {"library_id": lib, "query": strings.Repeat("a", 501)},
-		"unknown kind":   {"library_id": lib, "query": "dune", "kinds": []string{"film"}},
-	} {
-		assert.Equal(t, http.StatusUnprocessableEntity, c.do(http.MethodPost, "/api/v1/match", body).status, name)
+	testCases := []struct {
+		name string
+		have map[string]any
+	}{
+		{name: "ShouldRejectAnEmptyQuery", have: map[string]any{"library_id": lib, "query": ""}},
+		{name: "ShouldRejectAQueryTooLong", have: map[string]any{"library_id": lib, "query": strings.Repeat("a", 501)}},
+		{name: "ShouldRejectAnUnknownKind", have: map[string]any{"library_id": lib, "query": "dune", "kinds": []string{"film"}}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, http.StatusUnprocessableEntity, c.do(http.MethodPost, "/api/v1/match", tc.have).status)
+		})
 	}
 
 	var res MatchResult
@@ -62,12 +69,19 @@ func TestAliasValidation(t *testing.T) {
 	assert.Equal(t, http.StatusUnprocessableEntity, p.Status, "the kind is part of the title's identity")
 	assert.Equal(t, "body.media_id", p.Errors[0].Location)
 
-	for name, body := range map[string]map[string]any{
-		"no media":       {"library_id": lib, "kind": "movie", "media_id": 0, "alias": "x"},
-		"unknown kind":   {"library_id": lib, "kind": "film", "media_id": 6, "alias": "x"},
-		"alias too long": {"library_id": lib, "kind": "movie", "media_id": 6, "alias": strings.Repeat("a", 141)},
-	} {
-		assert.Equal(t, http.StatusUnprocessableEntity, c.do(http.MethodPost, "/api/v1/aliases", body).status, name)
+	testCases := []struct {
+		name string
+		have map[string]any
+	}{
+		{name: "ShouldRejectNoMedia", have: map[string]any{"library_id": lib, "kind": "movie", "media_id": 0, "alias": "x"}},
+		{name: "ShouldRejectAnUnknownKind", have: map[string]any{"library_id": lib, "kind": "film", "media_id": 6, "alias": "x"}},
+		{name: "ShouldRejectAnAliasTooLong", have: map[string]any{"library_id": lib, "kind": "movie", "media_id": 6, "alias": strings.Repeat("a", 141)}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, http.StatusUnprocessableEntity, c.do(http.MethodPost, "/api/v1/aliases", tc.have).status)
+		})
 	}
 
 	var alias TitleAlias

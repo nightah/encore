@@ -14,18 +14,18 @@ func TestFailedWritesChangeNothing(t *testing.T) {
 	testCases := []struct {
 		name  string
 		fault testkit.Fault
-		// write fails part way through, with an error containing want; check then shows the database is as it was.
+		// write fails part way through, with an error containing err; check then shows the database is as it was.
 		write func(t *testing.T, db *DB) error
-		want  string
+		err   string
 		check func(t *testing.T, db *DB)
 	}{
 		{
-			name:  "creating the new default Kodi instance",
+			name:  "ShouldUndoCreatingTheNewDefaultKodiInstance",
 			fault: testkit.Fault{Op: testkit.Update, Table: "kodi_instances", When: "NEW.is_default_for_unlinked = 0"},
 			write: func(t *testing.T, db *DB) error {
 				return db.KodiInstances().Create(t.Context(), &KodiInstance{Name: "Bedroom", Scheme: "http", Host: "bedroom", Port: 8080, IsDefaultForUnlinked: true})
 			},
-			want: "clearing default kodi instance: ",
+			err: "clearing default kodi instance: ",
 			check: func(t *testing.T, db *DB) {
 				list, err := db.KodiInstances().List(t.Context())
 				require.NoError(t, err)
@@ -34,7 +34,7 @@ func TestFailedWritesChangeNothing(t *testing.T) {
 			},
 		},
 		{
-			name:  "making an updated Kodi instance the default",
+			name:  "ShouldUndoMakingAnUpdatedKodiInstanceTheDefault",
 			fault: testkit.Fault{Op: testkit.Update, Table: "kodi_instances", When: "NEW.is_default_for_unlinked = 0"},
 			write: func(t *testing.T, db *DB) error {
 				other := KodiInstance{Name: "Bedroom", Scheme: "http", Host: "bedroom", Port: 8080}
@@ -44,7 +44,7 @@ func TestFailedWritesChangeNothing(t *testing.T) {
 
 				return db.KodiInstances().Update(t.Context(), &other)
 			},
-			want: "clearing default kodi instance: ",
+			err: "clearing default kodi instance: ",
 			check: func(t *testing.T, db *DB) {
 				def, err := db.KodiInstances().Default(t.Context())
 				require.NoError(t, err)
@@ -56,7 +56,7 @@ func TestFailedWritesChangeNothing(t *testing.T) {
 			},
 		},
 		{
-			name:  "changing the default Kodi instance",
+			name:  "ShouldUndoChangingTheDefaultKodiInstance",
 			fault: testkit.Fault{Op: testkit.Update, Table: "kodi_instances", When: "NEW.is_default_for_unlinked = 0"},
 			write: func(t *testing.T, db *DB) error {
 				other := KodiInstance{Name: "Bedroom", Scheme: "http", Host: "bedroom", Port: 8080}
@@ -64,7 +64,7 @@ func TestFailedWritesChangeNothing(t *testing.T) {
 
 				return db.KodiInstances().SetDefault(t.Context(), other.ID)
 			},
-			want: "clearing default kodi instance: ",
+			err: "clearing default kodi instance: ",
 			check: func(t *testing.T, db *DB) {
 				def, err := db.KodiInstances().Default(t.Context())
 				require.NoError(t, err)
@@ -72,7 +72,7 @@ func TestFailedWritesChangeNothing(t *testing.T) {
 			},
 		},
 		{
-			name:  "renaming a library group and replacing its members",
+			name:  "ShouldUndoRenamingALibraryGroupAndReplacingItsMembers",
 			fault: testkit.Fault{Op: testkit.Update, Table: "kodi_instances", When: "NEW.library_group_id IS NULL"},
 			write: func(t *testing.T, db *DB) error {
 				lounge, err := db.KodiInstances().Default(t.Context())
@@ -86,7 +86,7 @@ func TestFailedWritesChangeNothing(t *testing.T) {
 
 				return db.LibraryGroups().Save(t.Context(), &g, []int64{lounge.ID})
 			},
-			want: "clearing members of library group 1: ",
+			err: "clearing members of library group 1: ",
 			check: func(t *testing.T, db *DB) {
 				g, err := db.LibraryGroups().Get(t.Context(), 1)
 				require.NoError(t, err)
@@ -98,12 +98,12 @@ func TestFailedWritesChangeNothing(t *testing.T) {
 			},
 		},
 		{
-			name:  "creating a room whose name can't be checked",
+			name:  "ShouldUndoCreatingARoomWhoseNameCannotBeChecked",
 			fault: testkit.Fault{Op: testkit.Read, Table: "room_aliases"},
 			write: func(t *testing.T, db *DB) error {
 				return db.Rooms().Create(t.Context(), &Room{Name: "Kitchen"})
 			},
-			want: "checking room name: ",
+			err: "checking room name: ",
 			check: func(t *testing.T, db *DB) {
 				rooms, err := db.Rooms().List(t.Context())
 				require.NoError(t, err)
@@ -111,7 +111,7 @@ func TestFailedWritesChangeNothing(t *testing.T) {
 			},
 		},
 		{
-			name:  "re-encrypting secrets that can't be read",
+			name:  "ShouldUndoReEncryptingSecretsThatCannotBeRead",
 			fault: testkit.Fault{Op: testkit.Read, Table: "secrets"},
 			write: func(t *testing.T, db *DB) error {
 				require.NoError(t, db.SecretRows().Put(t.Context(), SecretRow{ID: "a", KeyID: "old", Nonce: []byte{1}, Ciphertext: []byte{2}}))
@@ -122,7 +122,7 @@ func TestFailedWritesChangeNothing(t *testing.T) {
 					return nil
 				})
 			},
-			want: "querying: ",
+			err: "querying: ",
 			check: func(t *testing.T, db *DB) {
 				ids, err := db.SecretRows().KeyIDs(t.Context())
 				require.NoError(t, err)
@@ -130,7 +130,7 @@ func TestFailedWritesChangeNothing(t *testing.T) {
 			},
 		},
 		{
-			name:  "re-encrypting the second secret",
+			name:  "ShouldUndoReEncryptingTheSecondSecret",
 			fault: testkit.Fault{Op: testkit.Update, Table: "secrets", Nth: 2},
 			write: func(t *testing.T, db *DB) error {
 				for _, id := range []string{"a", "b"} {
@@ -143,7 +143,7 @@ func TestFailedWritesChangeNothing(t *testing.T) {
 					return nil
 				})
 			},
-			want: `rewriting secret "b": `,
+			err: `rewriting secret "b": `,
 			check: func(t *testing.T, db *DB) {
 				ids, err := db.SecretRows().KeyIDs(t.Context())
 				require.NoError(t, err)
@@ -155,7 +155,7 @@ func TestFailedWritesChangeNothing(t *testing.T) {
 			},
 		},
 		{
-			name:  "logging a request that can't be pruned",
+			name:  "ShouldUndoLoggingARequestThatCannotBePruned",
 			fault: testkit.Fault{Op: testkit.Delete, Table: "request_log"},
 			write: func(t *testing.T, db *DB) error {
 				db.retention.MaxEntries = 1
@@ -163,7 +163,7 @@ func TestFailedWritesChangeNothing(t *testing.T) {
 
 				return db.RequestLog().Insert(t.Context(), &RequestLogEntry{RequestID: "second"})
 			},
-			want: "logging request: pruning request log: ",
+			err: "logging request: pruning request log: ",
 			check: func(t *testing.T, db *DB) {
 				entries, err := db.RequestLog().List(t.Context(), RequestLogQuery{})
 				require.NoError(t, err)
@@ -182,7 +182,7 @@ func TestFailedWritesChangeNothing(t *testing.T) {
 			faults.Inject(tc.fault)
 
 			err := tc.write(t, db)
-			require.ErrorContains(t, err, tc.want)
+			require.ErrorContains(t, err, tc.err)
 
 			if tc.fault.Op == testkit.Read {
 				require.ErrorContains(t, err, testkit.ReadFaultMessage)

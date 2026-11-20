@@ -22,27 +22,27 @@ import (
 func TestSettingsProblem(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
+	testCases := []struct {
 		name   string
-		err    error
+		have   error
 		status int
 		detail string
 	}{
-		{name: "managed", err: fmt.Errorf("applying: %w", &managedKeyError{key: "storage.backups.keep"}), status: http.StatusConflict, detail: "storage.backups.keep is managed by config"},
-		{name: "invalid", err: &invalidSettingsError{err: errors.New("storage.backups.keep 0 must be at least 1")}, status: http.StatusUnprocessableEntity, detail: "storage.backups.keep 0 must be at least 1"},
-		{name: "not overridable", err: fmt.Errorf("%w: data_dir", errNotOverridable), status: http.StatusUnprocessableEntity, detail: "data_dir"},
-		{name: "anything else", err: errors.New("disk full"), status: http.StatusInternalServerError, detail: "internal error"},
+		{name: "ShouldReportAManagedKey", have: fmt.Errorf("applying: %w", &managedKeyError{key: "storage.backups.keep"}), status: http.StatusConflict, detail: "storage.backups.keep is managed by config"},
+		{name: "ShouldReportAnInvalidValue", have: &invalidSettingsError{err: errors.New("storage.backups.keep 0 must be at least 1")}, status: http.StatusUnprocessableEntity, detail: "storage.backups.keep 0 must be at least 1"},
+		{name: "ShouldReportAKeyThatIsNotOverridable", have: fmt.Errorf("%w: data_dir", errNotOverridable), status: http.StatusUnprocessableEntity, detail: "data_dir"},
+		{name: "ShouldHideAnythingElse", have: errors.New("disk full"), status: http.StatusInternalServerError, detail: "internal error"},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
 			a, _ := testAPI()
 
-			m := errorModel(t, a.settingsProblem(t.Context(), tt.err))
-			assert.Equal(t, tt.status, m.Status)
-			assert.Contains(t, m.Detail, tt.detail)
+			m := errorModel(t, a.settingsProblem(t.Context(), tc.have))
+			assert.Equal(t, tc.status, m.Status)
+			assert.Contains(t, m.Detail, tc.detail)
 		})
 	}
 }
@@ -50,9 +50,21 @@ func TestSettingsProblem(t *testing.T) {
 func TestKeySource(t *testing.T) {
 	t.Parallel()
 
-	assert.Equal(t, "generated", keySource(&config.Config{}))
-	assert.Equal(t, "file", keySource(&config.Config{Secrets: config.Secrets{KeyFile: "/run/secrets/encore"}}))
-	assert.Equal(t, "config", keySource(&config.Config{Secrets: config.Secrets{Key: "AAAA", KeyFile: "/run/secrets/encore"}}), "a key in config wins over a file")
+	testCases := []struct {
+		name     string
+		have     config.Secrets
+		expected string
+	}{
+		{name: "ShouldReportAGeneratedKey", expected: "generated"},
+		{name: "ShouldReportAKeyFile", have: config.Secrets{KeyFile: "/run/secrets/encore"}, expected: "file"},
+		{name: "ShouldPreferAKeyInConfigOverAFile", have: config.Secrets{Key: "AAAA", KeyFile: "/run/secrets/encore"}, expected: "config"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, keySource(&config.Config{Secrets: tc.have}))
+		})
+	}
 }
 
 func TestLocalStoragePath(t *testing.T) {

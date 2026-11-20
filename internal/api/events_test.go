@@ -283,22 +283,37 @@ func TestHubUnsubscribeIsIdempotent(t *testing.T) {
 func TestHubReplaysOnlyNewerEvents(t *testing.T) {
 	t.Parallel()
 
-	hub := newHub()
-
-	for i := range 3 {
-		hub.publish("request", i)
+	testCases := []struct {
+		name     string
+		have     uint64
+		expected int
+	}{
+		{name: "ShouldReplayNothingToAClientThatSawTheLatestEvent", have: 3},
+		{name: "ShouldReplayNothingForAnIDFromBeforeARestart", have: 99},
+		{name: "ShouldReplayOnlyNewerEvents", have: 1, expected: 2},
 	}
 
-	_, backlog := hub.subscribe(3)
-	assert.Empty(t, backlog, "a client that saw the latest event is up to date")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			hub := newHub()
 
-	_, backlog = hub.subscribe(99)
-	assert.Empty(t, backlog, "an ID from before a restart replays nothing")
+			for i := range 3 {
+				hub.publish("request", i)
+			}
 
-	_, backlog = hub.subscribe(1)
-	require.Len(t, backlog, 2)
-	assert.EqualValues(t, 2, backlog[0].ID)
-	assert.Equal(t, "1", string(backlog[0].Data))
+			_, backlog := hub.subscribe(tc.have)
+
+			if tc.expected == 0 {
+				assert.Empty(t, backlog)
+
+				return
+			}
+
+			require.Len(t, backlog, tc.expected)
+			assert.EqualValues(t, 2, backlog[0].ID)
+			assert.Equal(t, "1", string(backlog[0].Data))
+		})
+	}
 }
 
 // failingWriter accepts the headers but refuses the body after limit bytes, as a closed connection does.
@@ -325,18 +340,21 @@ func TestStreamEndsWhenAWriteFails(t *testing.T) {
 
 	retry := len("retry: 3000\n\n")
 
-	for name, tc := range map[string]struct {
+	testCases := []struct {
+		name      string
 		limit     int
 		heartbeat time.Duration
 		lastID    string
 		live      bool
 	}{
-		"the retry hint": {limit: 0, heartbeat: time.Hour},
-		"the backlog":    {limit: retry + 1, heartbeat: time.Hour, lastID: "1"},
-		"a live event":   {limit: retry + 1, heartbeat: time.Hour, live: true},
-		"the heartbeat":  {limit: retry + 1, heartbeat: time.Millisecond},
-	} {
-		t.Run(name, func(t *testing.T) {
+		{name: "ShouldEndWhenTheRetryHintFails", heartbeat: time.Hour},
+		{name: "ShouldEndWhenTheBacklogFails", limit: retry + 1, heartbeat: time.Hour, lastID: "1"},
+		{name: "ShouldEndWhenALiveEventFails", limit: retry + 1, heartbeat: time.Hour, live: true},
+		{name: "ShouldEndWhenTheHeartbeatFails", limit: retry + 1, heartbeat: time.Millisecond},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
 			synctest.Test(t, func(t *testing.T) {

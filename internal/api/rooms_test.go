@@ -53,16 +53,23 @@ func TestRoomValidation(t *testing.T) {
 	require.Equal(t, http.StatusOK, resp.status)
 	assert.JSONEq(t, `[]`, string(resp.body), "an empty list, not null")
 
-	for name, body := range map[string]map[string]any{
-		"no name":         {},
-		"empty name":      {"name": ""},
-		"name too long":   {"name": strings.Repeat("x", 65)},
-		"name not text":   {"name": 7},
-		"blank name":      {"name": "   "},
-		"punctuation":     {"name": "!!"},
-		"instance not id": {"name": "Den", "kodi_instance_id": "lounge"},
-	} {
-		assert.Equal(t, http.StatusUnprocessableEntity, c.do(http.MethodPost, "/api/v1/rooms", body).status, name)
+	testCases := []struct {
+		name string
+		have map[string]any
+	}{
+		{name: "ShouldRejectNoName", have: map[string]any{}},
+		{name: "ShouldRejectAnEmptyName", have: map[string]any{"name": ""}},
+		{name: "ShouldRejectANameTooLong", have: map[string]any{"name": strings.Repeat("x", 65)}},
+		{name: "ShouldRejectANameThatIsNotText", have: map[string]any{"name": 7}},
+		{name: "ShouldRejectABlankName", have: map[string]any{"name": "   "}},
+		{name: "ShouldRejectPunctuation", have: map[string]any{"name": "!!"}},
+		{name: "ShouldRejectAnInstanceThatIsNotAnID", have: map[string]any{"name": "Den", "kodi_instance_id": "lounge"}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, http.StatusUnprocessableEntity, c.do(http.MethodPost, "/api/v1/rooms", tc.have).status)
+		})
 	}
 
 	var room Room

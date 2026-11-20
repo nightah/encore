@@ -167,10 +167,23 @@ func TestSlotValuesOverTheCapKeepTheMostRecentlyAddedOrPlayed(t *testing.T) {
 		return out
 	}
 
-	assert.Equal(t, []string{"Zodiac"}, titles(b.values(1)), "a title played recently counts as recent though added long ago")
-	assert.Equal(t, []string{"Contact", "Zodiac"}, titles(b.values(2)), "kept by recency, listed by title")
-	assert.Equal(t, []string{"Blade Runner", "Contact", "Zodiac"}, titles(b.values(3)))
-	assert.Equal(t, []string{"Arrival", "Blade Runner", "Contact", "Zodiac"}, titles(b.values(4)), "a cap of exactly the number of titles keeps them all")
+	testCases := []struct {
+		name     string
+		have     int
+		expected []string
+	}{
+		{name: "ShouldCountATitlePlayedRecentlyAsRecentThoughAddedLongAgo", have: 1, expected: []string{"Zodiac"}},
+		{name: "ShouldKeepByRecencyAndListByTitle", have: 2, expected: []string{"Contact", "Zodiac"}},
+		{name: "ShouldKeepTheThreeMostRecent", have: 3, expected: []string{"Blade Runner", "Contact", "Zodiac"}},
+		{name: "ShouldKeepThemAllWithACapOfExactlyTheNumberOfTitles", have: 4, expected: []string{"Arrival", "Blade Runner", "Contact", "Zodiac"}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, titles(b.values(tc.have)))
+		})
+	}
+
 	assert.Equal(t, titles(b.values(0)), titles(b.values(10)))
 }
 

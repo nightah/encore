@@ -22,10 +22,25 @@ func TestProtectedRoutesNeedAnAdmin(t *testing.T) {
 	h := newHarness(t, harnessOpts{noKodi: true})
 	c := h.client()
 
-	for _, path := range []string{"/api/v1/overview", "/api/v1/kodi/instances", "/api/v1/settings", "/api/v1/skill", "/api/v1/requests", "/api/v1/events", "/api/v1/devices"} {
-		resp := c.do(http.MethodGet, path, nil)
-		require.Equal(t, http.StatusUnauthorized, resp.status, path)
-		assert.Equal(t, http.StatusUnauthorized, resp.problem(t).Status)
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldProtectOverview", have: "/api/v1/overview"},
+		{name: "ShouldProtectKodiInstances", have: "/api/v1/kodi/instances"},
+		{name: "ShouldProtectSettings", have: "/api/v1/settings"},
+		{name: "ShouldProtectSkill", have: "/api/v1/skill"},
+		{name: "ShouldProtectRequests", have: "/api/v1/requests"},
+		{name: "ShouldProtectEvents", have: "/api/v1/events"},
+		{name: "ShouldProtectDevices", have: "/api/v1/devices"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp := c.do(http.MethodGet, tc.have, nil)
+			require.Equal(t, http.StatusUnauthorized, resp.status)
+			assert.Equal(t, http.StatusUnauthorized, resp.problem(t).Status)
+		})
 	}
 
 	assert.Equal(t, http.StatusNotFound, c.do(http.MethodGet, "/api/v1/nope", nil).problem(t).Status, "unknown routes are problem documents too")
@@ -222,49 +237,49 @@ func TestTOTPAndPasswordChange(t *testing.T) {
 func TestAuthProblem(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
+	testCases := []struct {
 		name       string
-		err        error
+		have       error
 		status     int
 		detail     string
 		location   string
 		retryAfter string
 	}{
-		{name: "locked out", err: &auth.LockedError{RetryAfter: 90*time.Second + 200*time.Millisecond}, status: http.StatusTooManyRequests, retryAfter: "91"},
-		{name: "locked for under a second", err: &auth.LockedError{RetryAfter: time.Millisecond}, status: http.StatusTooManyRequests, retryAfter: "1"},
-		{name: "invalid input", err: &auth.InputError{Field: "password", Err: errors.New("must be at least 12 characters")}, status: http.StatusUnprocessableEntity, detail: "validation failed", location: "body.password"},
-		{name: "bad credentials", err: fmt.Errorf("login: %w", auth.ErrBadCredentials), status: http.StatusUnauthorized, detail: "login: " + auth.ErrBadCredentials.Error()},
-		{name: "bad one-time code", err: auth.ErrBadTOTP, status: http.StatusUnauthorized, detail: auth.ErrBadTOTP.Error()},
-		{name: "one-time code required", err: auth.ErrTOTPRequired, status: http.StatusUnauthorized, detail: auth.ErrTOTPRequired.Error(), location: "body.totp"},
-		{name: "admin exists", err: auth.ErrAdminExists, status: http.StatusConflict, detail: auth.ErrAdminExists.Error()},
-		{name: "bad setup token", err: auth.ErrBadSetupToken, status: http.StatusForbidden, detail: auth.ErrBadSetupToken.Error()},
-		{name: "password sign-in off", err: auth.ErrLocalDisabled, status: http.StatusForbidden, detail: auth.ErrLocalDisabled.Error()},
-		{name: "anything else", err: errors.New("hashing: out of memory"), status: http.StatusInternalServerError, detail: "internal error"},
+		{name: "ShouldReportLockedOut", have: &auth.LockedError{RetryAfter: 90*time.Second + 200*time.Millisecond}, status: http.StatusTooManyRequests, retryAfter: "91"},
+		{name: "ShouldReportLockedForUnderASecond", have: &auth.LockedError{RetryAfter: time.Millisecond}, status: http.StatusTooManyRequests, retryAfter: "1"},
+		{name: "ShouldReportInvalidInput", have: &auth.InputError{Field: "password", Err: errors.New("must be at least 12 characters")}, status: http.StatusUnprocessableEntity, detail: "validation failed", location: "body.password"},
+		{name: "ShouldReportBadCredentials", have: fmt.Errorf("login: %w", auth.ErrBadCredentials), status: http.StatusUnauthorized, detail: "login: " + auth.ErrBadCredentials.Error()},
+		{name: "ShouldReportBadOneTimeCode", have: auth.ErrBadTOTP, status: http.StatusUnauthorized, detail: auth.ErrBadTOTP.Error()},
+		{name: "ShouldReportOneTimeCodeRequired", have: auth.ErrTOTPRequired, status: http.StatusUnauthorized, detail: auth.ErrTOTPRequired.Error(), location: "body.totp"},
+		{name: "ShouldReportAdminExists", have: auth.ErrAdminExists, status: http.StatusConflict, detail: auth.ErrAdminExists.Error()},
+		{name: "ShouldReportBadSetupToken", have: auth.ErrBadSetupToken, status: http.StatusForbidden, detail: auth.ErrBadSetupToken.Error()},
+		{name: "ShouldReportPasswordSignInOff", have: auth.ErrLocalDisabled, status: http.StatusForbidden, detail: auth.ErrLocalDisabled.Error()},
+		{name: "ShouldHideAnythingElse", have: errors.New("hashing: out of memory"), status: http.StatusInternalServerError, detail: "internal error"},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
 			a, _ := testAPI()
-			err := a.authProblem(t.Context(), tt.err)
+			err := a.authProblem(t.Context(), tc.have)
 
 			m := errorModel(t, err)
-			assert.Equal(t, tt.status, m.Status)
+			assert.Equal(t, tc.status, m.Status)
 
-			if tt.detail != "" {
-				assert.Equal(t, tt.detail, m.Detail)
+			if tc.detail != "" {
+				assert.Equal(t, tc.detail, m.Detail)
 			}
 
-			if tt.location != "" {
+			if tc.location != "" {
 				require.Len(t, m.Errors, 1)
-				assert.Equal(t, tt.location, m.Errors[0].Location)
+				assert.Equal(t, tc.location, m.Errors[0].Location)
 			}
 
-			if tt.retryAfter != "" {
+			if tc.retryAfter != "" {
 				var hdr huma.HeadersError
 				require.ErrorAs(t, err, &hdr)
-				assert.Equal(t, tt.retryAfter, hdr.GetHeaders().Get("Retry-After"), "whole seconds, rounded up")
+				assert.Equal(t, tc.retryAfter, hdr.GetHeaders().Get("Retry-After"), "whole seconds, rounded up")
 			}
 		})
 	}
@@ -276,24 +291,27 @@ func TestAuthProblem(t *testing.T) {
 func TestLoginErrorRedirect(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		err  error
-		want string
+	testCases := []struct {
+		name     string
+		have     error
+		expected string
 	}{
-		{auth.ErrNotAdmin, auth.ErrNotAdmin.Error()},
-		{fmt.Errorf("finishing: %w", auth.ErrOIDCDisabled), "finishing: " + auth.ErrOIDCDisabled.Error()},
-		{errors.New("oidc: id token signed by unknown key kid=abc"), "Sign-in failed. Check the server log for details."},
+		{name: "ShouldShowNotAnAdmin", have: auth.ErrNotAdmin, expected: auth.ErrNotAdmin.Error()},
+		{name: "ShouldShowWrappedOIDCDisabled", have: fmt.Errorf("finishing: %w", auth.ErrOIDCDisabled), expected: "finishing: " + auth.ErrOIDCDisabled.Error()},
+		{name: "ShouldHideInternalErrors", have: errors.New("oidc: id token signed by unknown key kid=abc"), expected: "Sign-in failed. Check the server log for details."},
 	}
 
-	for _, tt := range tests {
-		a, _ := testAPI()
-		r := a.loginError(t.Context(), tt.err)
-		assert.Equal(t, http.StatusFound, r.Status)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			a, _ := testAPI()
+			r := a.loginError(t.Context(), tc.have)
+			assert.Equal(t, http.StatusFound, r.Status)
 
-		loc, err := url.Parse(r.Location)
-		require.NoError(t, err)
-		assert.Equal(t, "/login", loc.Path)
-		assert.Equal(t, tt.want, loc.Query().Get("error"), "only messages meant for the user are shown")
+			loc, err := url.Parse(r.Location)
+			require.NoError(t, err)
+			assert.Equal(t, "/login", loc.Path)
+			assert.Equal(t, tc.expected, loc.Query().Get("error"), "only messages meant for the user are shown")
+		})
 	}
 }
 
@@ -301,14 +319,24 @@ func TestOIDCLoginWhenNotConfigured(t *testing.T) {
 	h := newHarness(t, harnessOpts{noKodi: true})
 	c := h.client()
 
-	for _, path := range []string{"/api/v1/auth/oidc/login", "/api/v1/auth/oidc/callback?code=x&state=y"} {
-		resp := c.do(http.MethodGet, path, nil)
-		require.Equal(t, http.StatusFound, resp.status, path)
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldRedirectLogin", have: "/api/v1/auth/oidc/login"},
+		{name: "ShouldRedirectCallback", have: "/api/v1/auth/oidc/callback?code=x&state=y"},
+	}
 
-		loc, err := url.Parse(resp.header.Get("Location"))
-		require.NoError(t, err)
-		assert.Equal(t, "/login", loc.Path, path)
-		assert.Equal(t, auth.ErrOIDCDisabled.Error(), loc.Query().Get("error"), path)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp := c.do(http.MethodGet, tc.have, nil)
+			require.Equal(t, http.StatusFound, resp.status)
+
+			loc, err := url.Parse(resp.header.Get("Location"))
+			require.NoError(t, err)
+			assert.Equal(t, "/login", loc.Path)
+			assert.Equal(t, auth.ErrOIDCDisabled.Error(), loc.Query().Get("error"))
+		})
 	}
 
 	assert.Contains(t, h.logs.String(), "OpenID Connect sign-in could not start")
@@ -343,18 +371,18 @@ func oidcSignIn(t *testing.T, c *client) *url.URL {
 }
 
 func TestOIDCSignInFailures(t *testing.T) {
-	tests := []struct {
-		name string
-		opts oidctest.Options
-		want string
+	testCases := []struct {
+		name     string
+		opts     oidctest.Options
+		expected string
 	}{
-		{name: "not in the admin group", opts: oidctest.Options{Username: "guest", Groups: []string{"users"}}, want: auth.ErrNotAdmin.Error()},
-		{name: "a token for another sign-in", opts: oidctest.Options{Username: "household-admin", Groups: []string{"encore-admins"}, WrongNonce: true}, want: "Sign-in failed. Check the server log for details."},
+		{name: "ShouldRefuseUserOutsideTheAdminGroup", opts: oidctest.Options{Username: "guest", Groups: []string{"users"}}, expected: auth.ErrNotAdmin.Error()},
+		{name: "ShouldRefuseATokenForAnotherSignIn", opts: oidctest.Options{Username: "household-admin", Groups: []string{"encore-admins"}, WrongNonce: true}, expected: "Sign-in failed. Check the server log for details."},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			idp := oidctest.New(t, tt.opts)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			idp := oidctest.New(t, tc.opts)
 
 			h := newHarness(t, harnessOpts{noKodi: true, env: []string{
 				"ENCORE_AUTH_MODE=oidc",
@@ -367,7 +395,7 @@ func TestOIDCSignInFailures(t *testing.T) {
 
 			loc := oidcSignIn(t, c)
 			assert.Equal(t, "/login", loc.Path)
-			assert.Equal(t, tt.want, loc.Query().Get("error"))
+			assert.Equal(t, tc.expected, loc.Query().Get("error"))
 
 			var st AuthState
 
@@ -401,8 +429,19 @@ func TestTOTPRoutesNeedASignedInAdmin(t *testing.T) {
 
 	c := h.client()
 
-	for _, path := range []string{"/api/v1/auth/totp/enroll", "/api/v1/auth/totp/confirm", "/api/v1/auth/totp/disable"} {
-		assert.Equal(t, http.StatusUnauthorized, c.do(http.MethodPost, path, map[string]string{"code": "123456"}).status, path)
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldProtectEnroll", have: "/api/v1/auth/totp/enroll"},
+		{name: "ShouldProtectConfirm", have: "/api/v1/auth/totp/confirm"},
+		{name: "ShouldProtectDisable", have: "/api/v1/auth/totp/disable"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, http.StatusUnauthorized, c.do(http.MethodPost, tc.have, map[string]string{"code": "123456"}).status)
+		})
 	}
 
 	admin := h.admin()

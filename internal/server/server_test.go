@@ -65,8 +65,20 @@ func TestAlexaHandlerMounted(t *testing.T) {
 	alexa := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusTeapot) })
 	h := newTestServer(t, config.Server{BasePath: "/"}, Deps{Alexa: alexa})
 
-	assert.Equal(t, http.StatusTeapot, do(t, h, http.MethodPost, PathAlexa).Code)
-	assert.Equal(t, http.StatusMethodNotAllowed, do(t, h, http.MethodGet, PathAlexa).Code)
+	testCases := []struct {
+		name     string
+		method   string
+		expected int
+	}{
+		{name: "ShouldPassPOSTToTheAlexaHandler", method: http.MethodPost, expected: http.StatusTeapot},
+		{name: "ShouldRejectGET", method: http.MethodGet, expected: http.StatusMethodNotAllowed},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, do(t, h, tc.method, PathAlexa).Code)
+		})
+	}
 }
 
 func TestAdminAPIMounted(t *testing.T) {
@@ -74,10 +86,23 @@ func TestAdminAPIMounted(t *testing.T) {
 	alexa := http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusAccepted) })
 	h := newTestServer(t, config.Server{BasePath: "/encore/"}, Deps{Alexa: alexa, API: api})
 
-	assert.Equal(t, http.StatusTeapot, do(t, h, http.MethodGet, "/encore/api/v1/overview").Code)
-	assert.Equal(t, http.StatusAccepted, do(t, h, http.MethodPost, "/encore"+PathAlexa).Code, "the Alexa route stays outside the API")
-	assert.Equal(t, http.StatusOK, do(t, h, http.MethodGet, "/encore"+PathHealthz).Code, "and so does the health check")
-	assert.Equal(t, http.StatusNotFound, do(t, h, http.MethodGet, "/encore/api/v2/x").Code)
+	testCases := []struct {
+		name     string
+		method   string
+		have     string
+		expected int
+	}{
+		{name: "ShouldServeTheAPI", method: http.MethodGet, have: "/encore/api/v1/overview", expected: http.StatusTeapot},
+		{name: "ShouldKeepTheAlexaRouteOutsideTheAPI", method: http.MethodPost, have: "/encore" + PathAlexa, expected: http.StatusAccepted},
+		{name: "ShouldKeepTheHealthCheckOutsideTheAPI", method: http.MethodGet, have: "/encore" + PathHealthz, expected: http.StatusOK},
+		{name: "ShouldNotFindAnUnknownAPIVersion", method: http.MethodGet, have: "/encore/api/v2/x", expected: http.StatusNotFound},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, do(t, h, tc.method, tc.have).Code)
+		})
+	}
 }
 
 func TestUnknownAPIRouteIsJSON404(t *testing.T) {
@@ -127,14 +152,14 @@ func TestSPA(t *testing.T) {
 	spa, err := newSPAHandler(fsys, slog.New(slog.DiscardHandler))
 	require.NoError(t, err)
 
-	t.Run("index carries the base href the request used", func(t *testing.T) {
+	t.Run("ShouldCarryTheBaseHrefTheRequestUsedInIndex", func(t *testing.T) {
 		h := withBasePath(func() string { return "/encore" })(spa)
 
 		assert.Contains(t, do(t, h, http.MethodGet, "/encore/kodi/lounge").Body.String(), `<head><base href="/encore/">`)
 		assert.Contains(t, do(t, h, http.MethodGet, "/kodi/lounge").Body.String(), `<head><base href="/">`)
 	})
 
-	t.Run("client route falls back to index with a nonce", func(t *testing.T) {
+	t.Run("ShouldFallBackToIndexWithANonceForAClientRoute", func(t *testing.T) {
 		rec := do(t, spa, http.MethodGet, "/kodi/instances")
 		require.Equal(t, http.StatusOK, rec.Code)
 
@@ -146,29 +171,29 @@ func TestSPA(t *testing.T) {
 		assert.Equal(t, "no-cache", rec.Header().Get("Cache-Control"))
 	})
 
-	t.Run("nonce differs per request", func(t *testing.T) {
+	t.Run("ShouldUseADifferentNoncePerRequest", func(t *testing.T) {
 		a := do(t, spa, http.MethodGet, "/").Header().Get("Content-Security-Policy")
 		b := do(t, spa, http.MethodGet, "/").Header().Get("Content-Security-Policy")
 		assert.NotEqual(t, a, b)
 	})
 
-	t.Run("hashed assets are immutable", func(t *testing.T) {
+	t.Run("ShouldServeHashedAssetsAsImmutable", func(t *testing.T) {
 		rec := do(t, spa, http.MethodGet, "/static/app-abc123.js")
 		require.Equal(t, http.StatusOK, rec.Code)
 		assert.Contains(t, rec.Header().Get("Cache-Control"), "immutable")
 	})
 
-	t.Run("other files revalidate", func(t *testing.T) {
+	t.Run("ShouldRevalidateOtherFiles", func(t *testing.T) {
 		rec := do(t, spa, http.MethodGet, "/favicon.svg")
 		require.Equal(t, http.StatusOK, rec.Code)
 		assert.Equal(t, "no-cache", rec.Header().Get("Cache-Control"))
 	})
 
-	t.Run("missing asset is 404 not the shell", func(t *testing.T) {
+	t.Run("ShouldNotFindAMissingAssetRatherThanServeTheShell", func(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, do(t, spa, http.MethodGet, "/static/missing.js").Code)
 	})
 
-	t.Run("non-GET is rejected", func(t *testing.T) {
+	t.Run("ShouldRejectNonGET", func(t *testing.T) {
 		assert.Equal(t, http.StatusMethodNotAllowed, do(t, spa, http.MethodPost, "/").Code)
 	})
 }
@@ -210,8 +235,16 @@ func TestServeShutsDownOnCancel(t *testing.T) {
 
 // TestServeEndsEventStreamsOnShutdown checks that shutting down ends the web interface's event streams, which last until their request ends, while an ordinary request in flight still finishes. A graceful shutdown that waited for the streams ran out its whole timeout whenever a browser was open, and air, which waits five seconds, started the next Encore before this one let go of the data directory. A browser's EventSource asks for the stream alone; other clients may list it among other types.
 func TestServeEndsEventStreamsOnShutdown(t *testing.T) {
-	for _, accept := range []string{"text/event-stream", "text/html;q=0.9, text/event-stream"} {
-		t.Run(accept, func(t *testing.T) { testServeEndsEventStreams(t, accept) })
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldEndAStreamAskedForAlone", have: "text/event-stream"},
+		{name: "ShouldEndAStreamListedAmongOtherTypes", have: "text/html;q=0.9, text/event-stream"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) { testServeEndsEventStreams(t, tc.have) })
 	}
 }
 
@@ -311,14 +344,25 @@ func TestAPIDocs(t *testing.T) {
 	assert.Contains(t, rec.Header().Get("Content-Security-Policy"), "script-src 'self'")
 	assert.Contains(t, rec.Body.String(), `<script src="docs/swagger-ui-bundle.js">`)
 
-	for _, asset := range []string{"swagger-ui-bundle.js", "swagger-ui.css", "init.js"} {
-		assert.Equal(t, http.StatusOK, do(t, h, http.MethodGet, "/api/docs/"+asset).Code, asset)
+	testCases := []struct {
+		name     string
+		have     string
+		expected int
+	}{
+		{name: "ShouldServeTheSwaggerUIBundle", have: "/api/docs/swagger-ui-bundle.js", expected: http.StatusOK},
+		{name: "ShouldServeTheSwaggerUIStylesheet", have: "/api/docs/swagger-ui.css", expected: http.StatusOK},
+		{name: "ShouldServeTheInitScript", have: "/api/docs/init.js", expected: http.StatusOK},
+		{name: "ShouldRedirectAPIToTheDocs", have: "/api", expected: http.StatusTemporaryRedirect},
+		{name: "ShouldServeOnlyThePagesAssets", have: "/api/docs/LICENSE", expected: http.StatusNotFound},
+		{name: "ShouldNotFindOtherAPIPaths", have: "/api/elsewhere", expected: http.StatusNotFound},
+		{name: "ShouldLeaveTheSPAAnsweringOutsideAPI", have: "/encore-is-not-mounted-here", expected: http.StatusOK},
 	}
 
-	assert.Equal(t, http.StatusTemporaryRedirect, do(t, h, http.MethodGet, "/api").Code, "/api redirects to the docs")
-	assert.Equal(t, http.StatusNotFound, do(t, h, http.MethodGet, "/api/docs/LICENSE").Code, "only the page's assets are served")
-	assert.Equal(t, http.StatusNotFound, do(t, h, http.MethodGet, "/api/elsewhere").Code)
-	assert.Equal(t, http.StatusOK, do(t, h, http.MethodGet, "/encore-is-not-mounted-here").Code, "the SPA still answers outside /api/")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, do(t, h, http.MethodGet, tc.have).Code)
+		})
+	}
 }
 
 func TestHealthzReportsTheVersionUncached(t *testing.T) {
@@ -335,37 +379,79 @@ func TestHealthzReportsTheVersionUncached(t *testing.T) {
 func TestHealthzAnswersOnlyReads(t *testing.T) {
 	h := newTestServer(t, config.Server{BasePath: "/"}, Deps{})
 
-	assert.Equal(t, http.StatusOK, do(t, h, http.MethodHead, PathHealthz).Code, "HEAD is a GET without the body")
+	testCases := []struct {
+		name     string
+		method   string
+		expected int
+	}{
+		{name: "ShouldAnswerHEADAsAGETWithoutTheBody", method: http.MethodHead, expected: http.StatusOK},
+		{name: "ShouldNotAnswerPOST", method: http.MethodPost, expected: http.StatusNotFound},
+		{name: "ShouldNotAnswerPUT", method: http.MethodPut, expected: http.StatusNotFound},
+		{name: "ShouldNotAnswerDELETE", method: http.MethodDelete, expected: http.StatusNotFound},
+	}
 
-	for _, method := range []string{http.MethodPost, http.MethodPut, http.MethodDelete} {
-		rec := do(t, h, method, PathHealthz)
-		assert.Equal(t, http.StatusNotFound, rec.Code, "%s falls through to the API's JSON not found", method)
-		assert.NotContains(t, rec.Body.String(), `"status"`, method)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			rec := do(t, h, tc.method, PathHealthz)
+
+			if tc.expected == http.StatusOK {
+				assert.Equal(t, tc.expected, rec.Code)
+
+				return
+			}
+
+			assert.Equal(t, tc.expected, rec.Code, "falls through to the API's JSON not found")
+			assert.NotContains(t, rec.Body.String(), `"status"`)
+		})
 	}
 }
 
 func TestSecurityHeadersOnEveryResponse(t *testing.T) {
 	h := newTestServer(t, config.Server{BasePath: "/"}, Deps{})
 
-	for _, target := range []string{PathHealthz, "/api/v1/nope", "/", "/api/"} {
-		rec := do(t, h, http.MethodGet, target)
-		assert.Equal(t, "nosniff", rec.Header().Get("X-Content-Type-Options"), target)
-		assert.Equal(t, "same-origin", rec.Header().Get("Referrer-Policy"), target)
-		assert.Equal(t, "DENY", rec.Header().Get("X-Frame-Options"), target)
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldSetThemOnTheHealthCheck", have: PathHealthz},
+		{name: "ShouldSetThemOnAnAPINotFound", have: "/api/v1/nope"},
+		{name: "ShouldSetThemOnTheSPA", have: "/"},
+		{name: "ShouldSetThemOnTheAPIDocs", have: "/api/"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			rec := do(t, h, http.MethodGet, tc.have)
+			assert.Equal(t, "nosniff", rec.Header().Get("X-Content-Type-Options"))
+			assert.Equal(t, "same-origin", rec.Header().Get("Referrer-Policy"))
+			assert.Equal(t, "DENY", rec.Header().Get("X-Frame-Options"))
+		})
 	}
 }
 
 func TestAlexaErrorsAreJSON(t *testing.T) {
 	h := newTestServer(t, config.Server{BasePath: "/"}, Deps{})
 
-	for method, want := range map[string]int{http.MethodPost: http.StatusServiceUnavailable, http.MethodGet: http.StatusMethodNotAllowed, http.MethodPut: http.StatusMethodNotAllowed} {
-		rec := do(t, h, method, PathAlexa)
-		assert.Equal(t, want, rec.Code, method)
-		assert.Equal(t, "application/json", rec.Header().Get("Content-Type"), method)
+	testCases := []struct {
+		name     string
+		method   string
+		expected int
+	}{
+		{name: "ShouldReportUnavailableAsJSON", method: http.MethodPost, expected: http.StatusServiceUnavailable},
+		{name: "ShouldReportGETNotAllowedAsJSON", method: http.MethodGet, expected: http.StatusMethodNotAllowed},
+		{name: "ShouldReportPUTNotAllowedAsJSON", method: http.MethodPut, expected: http.StatusMethodNotAllowed},
+	}
 
-		var body map[string]string
-		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body), method)
-		assert.NotEmpty(t, body["error"], method)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			rec := do(t, h, tc.method, PathAlexa)
+			assert.Equal(t, tc.expected, rec.Code)
+			assert.Equal(t, "application/json", rec.Header().Get("Content-Type"))
+
+			var body map[string]string
+			require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body))
+			assert.NotEmpty(t, body["error"])
+		})
 	}
 
 	assert.Equal(t, http.MethodPost, do(t, h, http.MethodGet, PathAlexa).Header().Get("Allow"))
@@ -378,18 +464,34 @@ func TestSPAServesIndexOnlyAsTheShell(t *testing.T) {
 	}, slog.New(slog.DiscardHandler))
 	require.NoError(t, err)
 
-	for _, target := range []string{"/", "/static", "/./kodi/../settings"} {
-		rec := do(t, spa, http.MethodGet, target)
-		require.Equal(t, http.StatusOK, rec.Code, target)
-		assert.NotContains(t, rec.Body.String(), nonceMarker, target)
-		assert.Contains(t, rec.Body.String(), `<base href="/">`, target)
-		assert.NotEmpty(t, rec.Header().Get("Content-Security-Policy"), target)
+	testCases := []struct {
+		name     string
+		have     string
+		expected int
+	}{
+		{name: "ShouldServeTheShellAtTheRoot", have: "/", expected: http.StatusOK},
+		{name: "ShouldServeTheShellForTheStaticDirectory", have: "/static", expected: http.StatusOK},
+		{name: "ShouldServeTheShellForAnUncleanPath", have: "/./kodi/../settings", expected: http.StatusOK},
+		{name: "ShouldNotServeIndexRaw", have: "/index.html", expected: http.StatusNotFound},
+		{name: "ShouldNotServeIndexRawThroughAnUncleanPath", have: "/kodi/../index.html", expected: http.StatusNotFound},
 	}
 
-	for _, target := range []string{"/index.html", "/kodi/../index.html"} {
-		rec := do(t, spa, http.MethodGet, target)
-		assert.Equal(t, http.StatusNotFound, rec.Code, target)
-		assert.NotContains(t, rec.Body.String(), nonceMarker, "%s: index.html is never served raw, without its nonce", target)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			rec := do(t, spa, http.MethodGet, tc.have)
+
+			if tc.expected != http.StatusOK {
+				assert.Equal(t, tc.expected, rec.Code)
+				assert.NotContains(t, rec.Body.String(), nonceMarker, "index.html is never served raw, without its nonce")
+
+				return
+			}
+
+			require.Equal(t, tc.expected, rec.Code)
+			assert.NotContains(t, rec.Body.String(), nonceMarker)
+			assert.Contains(t, rec.Body.String(), `<base href="/">`)
+			assert.NotEmpty(t, rec.Header().Get("Content-Security-Policy"))
+		})
 	}
 }
 
@@ -419,10 +521,20 @@ func TestSPAWithoutAUI(t *testing.T) {
 	spa, err := newSPAHandler(nil, slog.New(slog.DiscardHandler))
 	require.NoError(t, err)
 
-	for _, target := range []string{"/", "/settings"} {
-		rec := do(t, spa, http.MethodGet, target)
-		require.Equal(t, http.StatusOK, rec.Code, target)
-		assert.Equal(t, placeholderIndex, rec.Body.String(), "%s: the placeholder is served as is, without a base href", target)
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldServeThePlaceholderAtTheRoot", have: "/"},
+		{name: "ShouldServeThePlaceholderForAClientRoute", have: "/settings"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			rec := do(t, spa, http.MethodGet, tc.have)
+			require.Equal(t, http.StatusOK, rec.Code)
+			assert.Equal(t, placeholderIndex, rec.Body.String(), "the placeholder is served as is, without a base href")
+		})
 	}
 
 	assert.Equal(t, http.StatusNotFound, do(t, spa, http.MethodGet, "/static/app.js").Code)
@@ -445,28 +557,33 @@ func TestSPARejectsAnUnreadableIndex(t *testing.T) {
 func TestWithBaseHref(t *testing.T) {
 	t.Parallel()
 
-	for _, tc := range []struct {
-		name, index, href, want string
+	testCases := []struct {
+		name     string
+		have     string
+		href     string
+		expected string
 	}{
-		{"first in head", `<html><head><title>x</title></head></html>`, "/encore/", `<html><head><base href="/encore/"><title>x</title></head></html>`},
-		{"upper case head", `<HTML><HEAD></HEAD></HTML>`, "/", `<HTML><HEAD><base href="/"></HEAD></HTML>`},
-		{"escaped", `<head></head>`, `/a"b<c>/`, `<head><base href="/a&#34;b&lt;c&gt;/"></head>`},
-		{"no head", `<html><body></body></html>`, "/encore/", `<html><body></body></html>`},
-		{"head with an attribute", `<head lang="en"></head>`, "/", `<head lang="en"><base href="/"></head>`},
-		{"head with a bare attribute", `<head data-x></head>`, "/", `<head data-x><base href="/"></head>`},
-		{"upper case head with attributes", `<HEAD LANG="en" data-x></HEAD>`, "/", `<HEAD LANG="en" data-x><base href="/"></HEAD>`},
-		{"head with a > in an attribute", `<head data-x="a>b" data-y='c>d'></head>`, "/", `<head data-x="a>b" data-y='c>d'><base href="/"></head>`},
-		{"head with a newline before the attributes", "<head\n\tlang=\"en\">", "/", "<head\n\tlang=\"en\"><base href=\"/\">"},
-		{"self-closing head", `<head/><title>x</title>`, "/", `<head/><base href="/"><title>x</title>`},
-		{"header before head", `<header class="x"></header><head lang="en"></head>`, "/", `<header class="x"></header><head lang="en"><base href="/"></head>`},
-		{"header only", `<html><body><header></header><HEADER id="h"></HEADER></body></html>`, "/", `<html><body><header></header><HEADER id="h"></HEADER></body></html>`},
-		{"unclosed head tag", `<head lang="en`, "/", `<head lang="en`},
-		{"head at the end", `<head`, "/", `<head`},
-		{"non-ASCII that lowers to another length before head", "<!-- \u212a\u0130 --><HEAD>", "/", "<!-- \u212a\u0130 --><HEAD><base href=\"/\">"},
-		{"empty", ``, "/", ``},
-	} {
+		{name: "ShouldPutTheBaseFirstInHead", have: `<html><head><title>x</title></head></html>`, href: "/encore/", expected: `<html><head><base href="/encore/"><title>x</title></head></html>`},
+		{name: "ShouldFindAnUpperCaseHead", have: `<HTML><HEAD></HEAD></HTML>`, href: "/", expected: `<HTML><HEAD><base href="/"></HEAD></HTML>`},
+		{name: "ShouldEscapeTheHref", have: `<head></head>`, href: `/a"b<c>/`, expected: `<head><base href="/a&#34;b&lt;c&gt;/"></head>`},
+		{name: "ShouldLeaveADocumentWithoutAHeadAlone", have: `<html><body></body></html>`, href: "/encore/", expected: `<html><body></body></html>`},
+		{name: "ShouldFindAHeadWithAnAttribute", have: `<head lang="en"></head>`, href: "/", expected: `<head lang="en"><base href="/"></head>`},
+		{name: "ShouldFindAHeadWithABareAttribute", have: `<head data-x></head>`, href: "/", expected: `<head data-x><base href="/"></head>`},
+		{name: "ShouldFindAnUpperCaseHeadWithAttributes", have: `<HEAD LANG="en" data-x></HEAD>`, href: "/", expected: `<HEAD LANG="en" data-x><base href="/"></HEAD>`},
+		{name: "ShouldFindAHeadWithAGreaterThanInAnAttribute", have: `<head data-x="a>b" data-y='c>d'></head>`, href: "/", expected: `<head data-x="a>b" data-y='c>d'><base href="/"></head>`},
+		{name: "ShouldFindAHeadWithANewlineBeforeTheAttributes", have: "<head\n\tlang=\"en\">", href: "/", expected: "<head\n\tlang=\"en\"><base href=\"/\">"},
+		{name: "ShouldFindASelfClosingHead", have: `<head/><title>x</title>`, href: "/", expected: `<head/><base href="/"><title>x</title>`},
+		{name: "ShouldSkipAHeaderBeforeTheHead", have: `<header class="x"></header><head lang="en"></head>`, href: "/", expected: `<header class="x"></header><head lang="en"><base href="/"></head>`},
+		{name: "ShouldNotMistakeAHeaderForTheHead", have: `<html><body><header></header><HEADER id="h"></HEADER></body></html>`, href: "/", expected: `<html><body><header></header><HEADER id="h"></HEADER></body></html>`},
+		{name: "ShouldLeaveAnUnclosedHeadTagAlone", have: `<head lang="en`, href: "/", expected: `<head lang="en`},
+		{name: "ShouldLeaveAHeadAtTheEndAlone", have: `<head`, href: "/", expected: `<head`},
+		{name: "ShouldHandleNonASCIIThatLowersToAnotherLengthBeforeHead", have: "<!-- \u212a\u0130 --><HEAD>", href: "/", expected: "<!-- \u212a\u0130 --><HEAD><base href=\"/\">"},
+		{name: "ShouldLeaveAnEmptyDocumentAlone", href: "/"},
+	}
+
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.want, string(withBaseHref([]byte(tc.index), tc.href)))
+			assert.Equal(t, tc.expected, string(withBaseHref([]byte(tc.have), tc.href)))
 		})
 	}
 }
@@ -508,11 +625,21 @@ func cspDirectives(t *testing.T, csp string) map[string]string {
 func TestAPIDocsAssetsKeepTheirPolicy(t *testing.T) {
 	h := newTestServer(t, config.Server{BasePath: "/"}, Deps{})
 
-	for _, target := range []string{"/api/", "/api/docs/init.js"} {
-		rec := do(t, h, http.MethodGet, target)
-		require.Equal(t, http.StatusOK, rec.Code, target)
-		assert.Equal(t, apiDocsCSP, rec.Header().Get("Content-Security-Policy"), target)
-		assert.Equal(t, "nosniff", rec.Header().Get("X-Content-Type-Options"), target)
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldKeepThePolicyOnThePage", have: "/api/"},
+		{name: "ShouldKeepThePolicyOnAnAsset", have: "/api/docs/init.js"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			rec := do(t, h, http.MethodGet, tc.have)
+			require.Equal(t, http.StatusOK, rec.Code)
+			assert.Equal(t, apiDocsCSP, rec.Header().Get("Content-Security-Policy"))
+			assert.Equal(t, "nosniff", rec.Header().Get("X-Content-Type-Options"))
+		})
 	}
 
 	assert.Equal(t, "public, max-age=86400", do(t, h, http.MethodGet, "/api/docs/swagger-ui.css").Header().Get("Cache-Control"), "the assets change only with Encore")
@@ -529,14 +656,22 @@ func TestSPAOnlyCachesTheAssetsDirectoryForever(t *testing.T) {
 	}, slog.New(slog.DiscardHandler))
 	require.NoError(t, err)
 
-	for target, want := range map[string]string{
-		"/static/app-abc123.js":      "public, max-age=31536000, immutable",
-		"/static.webmanifest":        "no-cache",
-		"/staticfiles/logo-1234.svg": "no-cache",
-	} {
-		rec := do(t, spa, http.MethodGet, target)
-		require.Equal(t, http.StatusOK, rec.Code, target)
-		assert.Equal(t, want, rec.Header().Get("Cache-Control"), "%s: only files inside static/ carry content hashes", target)
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldCacheAnAssetForever", have: "/static/app-abc123.js", expected: "public, max-age=31536000, immutable"},
+		{name: "ShouldRevalidateAFileNamedLikeTheDirectory", have: "/static.webmanifest", expected: "no-cache"},
+		{name: "ShouldRevalidateAFileInADirectoryStartingWithStatic", have: "/staticfiles/logo-1234.svg", expected: "no-cache"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			rec := do(t, spa, http.MethodGet, tc.have)
+			require.Equal(t, http.StatusOK, rec.Code)
+			assert.Equal(t, tc.expected, rec.Header().Get("Cache-Control"), "only files inside static/ carry content hashes")
+		})
 	}
 }
 
@@ -547,10 +682,20 @@ func TestSPAServesTheWebManifestAsManifestJSON(t *testing.T) {
 	}, slog.New(slog.DiscardHandler))
 	require.NoError(t, err)
 
-	for _, method := range []string{http.MethodGet, http.MethodHead} {
-		rec := do(t, spa, method, "/manifest.webmanifest")
-		require.Equal(t, http.StatusOK, rec.Code, method)
-		assert.Equal(t, "application/manifest+json", rec.Header().Get("Content-Type"), "%s: the type must not depend on the host's mime.types", method)
+	testCases := []struct {
+		name   string
+		method string
+	}{
+		{name: "ShouldServeItForGET", method: http.MethodGet},
+		{name: "ShouldServeItForHEAD", method: http.MethodHead},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			rec := do(t, spa, tc.method, "/manifest.webmanifest")
+			require.Equal(t, http.StatusOK, rec.Code)
+			assert.Equal(t, "application/manifest+json", rec.Header().Get("Content-Type"), "the type must not depend on the host's mime.types")
+		})
 	}
 }
 
@@ -560,15 +705,23 @@ func TestBasePathMatchesWholeSegmentsOnly(t *testing.T) {
 	})
 	h := withBasePath(func() string { return "/encore/" })(echo)
 
-	for target, want := range map[string]string{
-		"/encore/kodi":  "/kodi /encore/",
-		"/encore/":      "/ /encore/",
-		"/encorex/kodi": "/encorex/kodi /",
-		"/encorex":      "/encorex /",
-		"/kodi/encore":  "/kodi/encore /",
-		"/":             "/ /",
-	} {
-		assert.Equal(t, want, do(t, h, http.MethodGet, target).Body.String(), target)
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldStripTheBasePath", have: "/encore/kodi", expected: "/kodi /encore/"},
+		{name: "ShouldStripTheBasePathAlone", have: "/encore/", expected: "/ /encore/"},
+		{name: "ShouldNotStripAPrefixOfASegment", have: "/encorex/kodi", expected: "/encorex/kodi /"},
+		{name: "ShouldNotStripAPrefixOfTheOnlySegment", have: "/encorex", expected: "/encorex /"},
+		{name: "ShouldNotStripTheBasePathLaterInThePath", have: "/kodi/encore", expected: "/kodi/encore /"},
+		{name: "ShouldServeTheRootAtTheRoot", have: "/", expected: "/ /"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, do(t, h, http.MethodGet, tc.have).Body.String())
+		})
 	}
 }
 

@@ -31,66 +31,91 @@ func hindiSpeech(t *testing.T) *Speech {
 func TestHindiSpeech(t *testing.T) {
 	speech := hindiSpeech(t)
 
-	msg := actions.Message{
-		ID:        "player.remaining_until",
-		Durations: map[string]time.Duration{"remaining": 72 * time.Minute},
-		Times:     map[string]time.Time{"end": time.Date(1, 1, 1, 21, 30, 0, 0, time.UTC)},
+	testCases := []struct {
+		name     string
+		have     actions.Message
+		expected string
+	}{
+		{name: "ShouldSayTimeRemainingAndEndTime", have: actions.Message{ID: "player.remaining_until", Durations: map[string]time.Duration{"remaining": 72 * time.Minute}, Times: map[string]time.Time{"end": time.Date(1, 1, 1, 21, 30, 0, 0, time.UTC)}}, expected: "अभी 1 घंटा 12 मिनट बाकी है। यह रात 9:30 बजे तक ख़त्म होगा।"},
+		{name: "ShouldListNewMovies", have: actions.Message{ID: "whatsnew.movies", Lists: map[string][]string{"titles": {"Dangal", "Sholay", "Lagaan"}}}, expected: "आपके पास देखने के लिए ये हैं: Dangal, Sholay और Lagaan।"},
+		{name: "ShouldNameSubtitleLanguage", have: actions.Message{ID: "streams.subtitles_language", Languages: map[string]string{"language": "eng"}}, expected: "सबटाइटल: अंग्रेज़ी।"},
 	}
-	assert.Equal(t, "अभी 1 घंटा 12 मिनट बाकी है। यह रात 9:30 बजे तक ख़त्म होगा।", speech.Render("hi-IN", msg))
 
-	list := actions.Message{ID: "whatsnew.movies", Lists: map[string][]string{"titles": {"Dangal", "Sholay", "Lagaan"}}}
-	assert.Equal(t, "आपके पास देखने के लिए ये हैं: Dangal, Sholay और Lagaan।", speech.Render("hi-IN", list))
-
-	sub := actions.Message{ID: "streams.subtitles_language", Languages: map[string]string{"language": "eng"}}
-	assert.Equal(t, "सबटाइटल: अंग्रेज़ी।", speech.Render("hi-IN", sub))
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, speech.Render("hi-IN", tc.have))
+		})
+	}
 }
 
 func TestHindiDurations(t *testing.T) {
-	for d, want := range map[time.Duration]string{
-		20 * time.Second:  "एक मिनट से कम",
-		time.Minute:       "1 मिनट",
-		45 * time.Minute:  "45 मिनट",
-		time.Hour:         "1 घंटा",
-		150 * time.Minute: "2 घंटे 30 मिनट",
-	} {
-		assert.Equal(t, want, spokenDuration("hi", d), d)
+	testCases := []struct {
+		name     string
+		have     time.Duration
+		expected string
+	}{
+		{name: "ShouldSayLessThanAMinuteFor20Seconds", have: 20 * time.Second, expected: "एक मिनट से कम"},
+		{name: "ShouldSayOneMinute", have: time.Minute, expected: "1 मिनट"},
+		{name: "ShouldSay45Minutes", have: 45 * time.Minute, expected: "45 मिनट"},
+		{name: "ShouldSayOneHour", have: time.Hour, expected: "1 घंटा"},
+		{name: "ShouldSayTwoHoursAnd30Minutes", have: 150 * time.Minute, expected: "2 घंटे 30 मिनट"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, spokenDuration("hi", tc.have))
+		})
 	}
 }
 
 func TestHindiTimes(t *testing.T) {
-	for hour, want := range map[int]string{
-		0:  "रात 12:05 बजे",
-		3:  "रात 3:05 बजे",
-		4:  "सुबह 4:05 बजे",
-		11: "सुबह 11:05 बजे",
-		12: "दोपहर 12:05 बजे",
-		15: "दोपहर 3:05 बजे",
-		16: "शाम 4:05 बजे",
-		19: "शाम 7:05 बजे",
-		20: "रात 8:05 बजे",
-		23: "रात 11:05 बजे",
-	} {
-		assert.Equal(t, want, spokenTime("hi-IN", "hi", time.Date(1, 1, 1, hour, 5, 0, 0, time.UTC)), hour)
+	testCases := []struct {
+		name     string
+		have     int
+		expected string
+	}{
+		{name: "ShouldSayNightAtMidnight", have: 0, expected: "रात 12:05 बजे"},
+		{name: "ShouldSayNightAt3", have: 3, expected: "रात 3:05 बजे"},
+		{name: "ShouldSayMorningAt4", have: 4, expected: "सुबह 4:05 बजे"},
+		{name: "ShouldSayMorningAt11", have: 11, expected: "सुबह 11:05 बजे"},
+		{name: "ShouldSayAfternoonAtNoon", have: 12, expected: "दोपहर 12:05 बजे"},
+		{name: "ShouldSayAfternoonAt15", have: 15, expected: "दोपहर 3:05 बजे"},
+		{name: "ShouldSayEveningAt16", have: 16, expected: "शाम 4:05 बजे"},
+		{name: "ShouldSayEveningAt19", have: 19, expected: "शाम 7:05 बजे"},
+		{name: "ShouldSayNightAt20", have: 20, expected: "रात 8:05 बजे"},
+		{name: "ShouldSayNightAt23", have: 23, expected: "रात 11:05 बजे"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, spokenTime("hi-IN", "hi", time.Date(1, 1, 1, tc.have, 5, 0, 0, time.UTC)))
+		})
 	}
 }
 
 func TestRoomPostposition(t *testing.T) {
-	for _, tc := range []struct {
-		pattern, want string
-		ok            bool
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+		ok       bool
 	}{
-		{"[{Room} में] फ़िल्म {Movie} चलाओ", "में", true},
-		{"[{Room} (में|पर)] {Movie} चलाओ", "(में|पर)", true},
-		{"[{Room} [वाले] टीवी पर] {Movie} चलाओ", "[वाले] टीवी पर", true},
-		{"[{Room} ] {Movie} चलाओ", "", false},
-		{"[{Room} में {Movie} चलाओ", "", false},
-		{"{Room} में {Command}", "", false},
-		{"play {Movie} [(in|on) the {Room}]", "", false},
-	} {
-		_, after, place := roomAround(tc.pattern)
-		got := strings.TrimSpace(after)
-		assert.Equal(t, tc.ok, place != roomNone && got != "", tc.pattern)
-		assert.Equal(t, tc.want, got, tc.pattern)
+		{name: "ShouldReadMeinAfterRoom", have: "[{Room} में] फ़िल्म {Movie} चलाओ", expected: "में", ok: true},
+		{name: "ShouldReadAlternativesAfterRoom", have: "[{Room} (में|पर)] {Movie} चलाओ", expected: "(में|पर)", ok: true},
+		{name: "ShouldReadOptionalWordsAfterRoom", have: "[{Room} [वाले] टीवी पर] {Movie} चलाओ", expected: "[वाले] टीवी पर", ok: true},
+		{name: "ShouldRejectRoomWithNothingAfter", have: "[{Room} ] {Movie} चलाओ"},
+		{name: "ShouldRejectUnclosedBracket", have: "[{Room} में {Movie} चलाओ"},
+		{name: "ShouldRejectRoomOutsideOptionalPart", have: "{Room} में {Command}"},
+		{name: "ShouldRejectRoomLast", have: "play {Movie} [(in|on) the {Room}]"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, after, place := roomAround(tc.have)
+			actual := strings.TrimSpace(after)
+			assert.Equal(t, tc.ok, place != roomNone && actual != "")
+			assert.Equal(t, tc.expected, actual)
+		})
 	}
 }
 
@@ -104,50 +129,56 @@ func TestNewSpeechRejectsBrokenRoomPostposition(t *testing.T) {
 func TestHindiRoomSplits(t *testing.T) {
 	speech := hindiSpeech(t)
 
-	for _, tc := range []struct {
-		query string
-		want  []RoomSplit
+	testCases := []struct {
+		name     string
+		have     string
+		expected []RoomSplit
 	}{
-		{"बेडरूम में दंगल", []RoomSplit{{"दंगल", "बेडरूम"}}},
-		{"दंगल बेडरूम में", []RoomSplit{{"दंगल", "बेडरूम"}}},
-		{"लिविंग रूम में शोले", []RoomSplit{{"शोले", "लिविंग रूम"}}},
-		{"तारे ज़मीन पर लिविंग रूम में", []RoomSplit{
-			{"तारे", "ज़मीन पर लिविंग रूम"},
-			{"तारे ज़मीन", "पर लिविंग रूम"},
-			{"तारे ज़मीन पर", "लिविंग रूम"},
-			{"तारे ज़मीन पर लिविंग", "रूम"},
-		}},
-		{"दंगल", nil},
-		{"बेडरूम में", nil},
-		{"में दंगल", nil},
-	} {
-		assert.Equal(t, tc.want, speech.RoomSplits("hi-IN", tc.query), tc.query)
+		{name: "ShouldSplitRoomBeforeTitle", have: "बेडरूम में दंगल", expected: []RoomSplit{{"दंगल", "बेडरूम"}}},
+		{name: "ShouldSplitRoomAfterTitle", have: "दंगल बेडरूम में", expected: []RoomSplit{{"दंगल", "बेडरूम"}}},
+		{name: "ShouldSplitMultiWordRoom", have: "लिविंग रूम में शोले", expected: []RoomSplit{{"शोले", "लिविंग रूम"}}},
+		{name: "ShouldOfferEverySplitWhenTitleHasPar", have: "तारे ज़मीन पर लिविंग रूम में", expected: []RoomSplit{{"तारे", "ज़मीन पर लिविंग रूम"}, {"तारे ज़मीन", "पर लिविंग रूम"}, {"तारे ज़मीन पर", "लिविंग रूम"}, {"तारे ज़मीन पर लिविंग", "रूम"}}},
+		{name: "ShouldNotSplitTitleWithoutRoom", have: "दंगल"},
+		{name: "ShouldNotSplitRoomWithoutTitle", have: "बेडरूम में"},
+		{name: "ShouldNotSplitPostpositionWithoutRoom", have: "में दंगल"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, speech.RoomSplits("hi-IN", tc.have))
+		})
 	}
 }
 
 func TestHindiReinterpret(t *testing.T) {
 	speech := hindiSpeech(t)
 
-	for _, tc := range []struct {
-		query, intent string
-		slots         map[string]string
+	testCases := []struct {
+		name   string
+		have   string
+		intent string
+		slots  map[string]string
 	}{
-		{"पंचायत का अगला एपिसोड", "WatchNextEpisode", map[string]string{"Show": "पंचायत"}},
-		{"बेडरूम में पंचायत का अगला एपिसोड", "WatchNextEpisode", map[string]string{"Show": "बेडरूम में पंचायत"}},
-		{"पंचायत का पहला एपिसोड", "WatchFirstEpisode", map[string]string{"Show": "पंचायत"}},
-		{"पंचायत का कोई रैंडम एपिसोड", "WatchRandomEpisode", map[string]string{"Show": "पंचायत"}},
-		{"पंचायत सीज़न 2 एपिसोड 4", "WatchEpisode", map[string]string{"Show": "पंचायत", "Season": "2", "Episode": "4"}},
-		{"पंचायत", "PlayMedia", map[string]string{"Query": "पंचायत"}},
-	} {
-		got := speech.Reinterpret("hi-IN", Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.query}}})[0]
+		{name: "ShouldReadNextEpisode", have: "पंचायत का अगला एपिसोड", intent: "WatchNextEpisode", slots: map[string]string{"Show": "पंचायत"}},
+		{name: "ShouldKeepRoomInShow", have: "बेडरूम में पंचायत का अगला एपिसोड", intent: "WatchNextEpisode", slots: map[string]string{"Show": "बेडरूम में पंचायत"}},
+		{name: "ShouldReadFirstEpisode", have: "पंचायत का पहला एपिसोड", intent: "WatchFirstEpisode", slots: map[string]string{"Show": "पंचायत"}},
+		{name: "ShouldReadRandomEpisode", have: "पंचायत का कोई रैंडम एपिसोड", intent: "WatchRandomEpisode", slots: map[string]string{"Show": "पंचायत"}},
+		{name: "ShouldReadSeasonAndEpisode", have: "पंचायत सीज़न 2 एपिसोड 4", intent: "WatchEpisode", slots: map[string]string{"Show": "पंचायत", "Season": "2", "Episode": "4"}},
+		{name: "ShouldKeepPlainTitleAsPlayMedia", have: "पंचायत", intent: "PlayMedia", slots: map[string]string{"Query": "पंचायत"}},
+	}
 
-		values := map[string]string{}
-		for name, slot := range got.Slots {
-			values[name] = slot.Value
-		}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := speech.Reinterpret("hi-IN", Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.have}}})[0]
 
-		assert.Equal(t, tc.intent, got.Name, tc.query)
-		assert.Equal(t, tc.slots, values, tc.query)
+			values := map[string]string{}
+			for name, slot := range actual.Slots {
+				values[name] = slot.Value
+			}
+
+			assert.Equal(t, tc.intent, actual.Name)
+			assert.Equal(t, tc.slots, values)
+		})
 	}
 }
 
@@ -173,8 +204,20 @@ func TestTrailingCarrierLeavesGermanFormsAlone(t *testing.T) {
 
 	speech := hindiSpeech(t)
 
-	for query, intent := range map[string]string{"die nächste folge von dark": "WatchNextEpisode", "dark": "PlayMedia", "dark abspielen": "PlayMedia"} {
-		got := speech.Reinterpret("de-DE", Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: query}}})[0]
-		assert.Equal(t, intent, got.Name, query)
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldReadGermanNextEpisode", have: "die nächste folge von dark", expected: "WatchNextEpisode"},
+		{name: "ShouldKeepGermanTitleAsPlayMedia", have: "dark", expected: "PlayMedia"},
+		{name: "ShouldKeepTrailingAbspielenAsPlayMedia", have: "dark abspielen", expected: "PlayMedia"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := speech.Reinterpret("de-DE", Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.have}}})[0]
+			assert.Equal(t, tc.expected, actual.Name)
+		})
 	}
 }

@@ -19,18 +19,26 @@ func TestOpenPhraseLanguages(t *testing.T) {
 	src, err := skillmodel.Load(i18n.FS)
 	require.NoError(t, err)
 
-	for locale, want := range map[string]string{
-		"en-AU": "open lounge remote",
-		"en-IN": "open lounge remote",
-		"fr-FR": "ouvre lounge remote",
-		"fr-CA": "ouvre lounge remote",
-		"de-DE": "öffne lounge remote",
-		"es-MX": "abre lounge remote",
-		"hi-IN": "lounge remote शुरू करो",
-		"de":    "",
-		"":      "",
-	} {
-		assert.Equal(t, want, deploy.OpenPhrase(src, locale, "lounge remote"), locale)
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldOpenInEnAU", have: "en-AU", expected: "open lounge remote"},
+		{name: "ShouldOpenInEnIN", have: "en-IN", expected: "open lounge remote"},
+		{name: "ShouldOpenInFrFR", have: "fr-FR", expected: "ouvre lounge remote"},
+		{name: "ShouldOpenInFrCA", have: "fr-CA", expected: "ouvre lounge remote"},
+		{name: "ShouldOpenInDeDE", have: "de-DE", expected: "öffne lounge remote"},
+		{name: "ShouldOpenInEsMX", have: "es-MX", expected: "abre lounge remote"},
+		{name: "ShouldOpenInHiIN", have: "hi-IN", expected: "lounge remote शुरू करो"},
+		{name: "ShouldHaveNoPhraseForBareLanguage", have: "de"},
+		{name: "ShouldHaveNoPhraseForEmptyLocale"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, deploy.OpenPhrase(src, tc.have, "lounge remote"))
+		})
 	}
 }
 

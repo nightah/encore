@@ -89,18 +89,23 @@ func TestCLIReferenceCoversEncoresCommands(t *testing.T) {
 func TestParagraphs(t *testing.T) {
 	t.Parallel()
 
-	for _, tc := range []struct {
-		in   string
-		want []string
+	testCases := []struct {
+		name     string
+		have     string
+		expected []string
 	}{
-		{"", nil},
-		{"   \n\n  ", nil},
-		{"one", []string{"one"}},
-		{"one\ntwo", []string{"one two"}},
-		{"  one  \n   two\n\nthree  four", []string{"one two", "three four"}},
-		{"one\n\n\n\ntwo", []string{"one", "two"}},
-	} {
-		assert.Equal(t, tc.want, paragraphs(tc.in), "%q", tc.in)
+		{name: "ShouldReturnNoneForEmptyText"},
+		{name: "ShouldReturnNoneForWhitespace", have: "   \n\n  "},
+		{name: "ShouldReturnOneParagraph", have: "one", expected: []string{"one"}},
+		{name: "ShouldJoinLines", have: "one\ntwo", expected: []string{"one two"}},
+		{name: "ShouldCollapseSpacesAndSplitOnBlankLines", have: "  one  \n   two\n\nthree  four", expected: []string{"one two", "three four"}},
+		{name: "ShouldTreatSeveralBlankLinesAsOne", have: "one\n\n\n\ntwo", expected: []string{"one", "two"}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, paragraphs(tc.have))
+		})
 	}
 }
 

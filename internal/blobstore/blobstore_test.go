@@ -36,15 +36,35 @@ func TestJoinAndCleanPrefix(t *testing.T) {
 	assert.Equal(t, "k", joinPrefix("", "k"))
 	assert.Equal(t, "p/k", joinPrefix("p", "k"))
 
-	for in, want := range map[string]string{"": "", "/": "", "prod": "prod", "/prod/": "prod", "a/b/": "a/b"} {
-		got, err := cleanPrefix(in)
-		require.NoError(t, err, in)
-		assert.Equal(t, want, got, in)
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+		err      error
+	}{
+		{name: "ShouldKeepEmpty", have: "", expected: ""},
+		{name: "ShouldCleanTheRootToEmpty", have: "/", expected: ""},
+		{name: "ShouldKeepAPlainPrefix", have: "prod", expected: "prod"},
+		{name: "ShouldTrimSlashes", have: "/prod/", expected: "prod"},
+		{name: "ShouldTrimATrailingSlashFromANestedPrefix", have: "a/b/", expected: "a/b"},
+		{name: "ShouldRejectAnEmptySegment", have: "a//b", err: ErrInvalidKey},
+		{name: "ShouldRejectAParentSegment", have: "a/../b", err: ErrInvalidKey},
+		{name: "ShouldRejectACurrentSegment", have: "./a", err: ErrInvalidKey},
 	}
 
-	for _, bad := range []string{"a//b", "a/../b", "./a"} {
-		_, err := cleanPrefix(bad)
-		require.ErrorIs(t, err, ErrInvalidKey, bad)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual, err := cleanPrefix(tc.have)
+
+			if tc.err != nil {
+				require.ErrorIs(t, err, tc.err)
+
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, actual)
+		})
 	}
 }
 
@@ -89,30 +109,33 @@ func (p *probeStore) Delete(ctx context.Context, key string) error {
 }
 
 func TestProbeReportsTheFailingStep(t *testing.T) {
-	for name, tt := range map[string]struct {
+	testCases := []struct {
+		name        string
 		store       probeStore
-		want        string
+		err         string
 		cleansUp    bool
 		leavesProbe bool
 	}{
-		"write":   {store: probeStore{putErr: assert.AnError}, want: "cannot write"},
-		"read":    {store: probeStore{getErr: assert.AnError}, want: "cannot read it back", cleansUp: true},
-		"stream":  {store: probeStore{readErr: assert.AnError}, want: "probe: reading", cleansUp: true},
-		"corrupt": {store: probeStore{corrupt: true}, want: "differ from the", cleansUp: true},
-		"delete":  {store: probeStore{deleteErr: assert.AnError}, want: "cannot delete it", cleansUp: true, leavesProbe: true},
-	} {
-		t.Run(name, func(t *testing.T) {
+		{name: "ShouldReportAFailedWrite", store: probeStore{putErr: assert.AnError}, err: "cannot write"},
+		{name: "ShouldReportAFailedRead", store: probeStore{getErr: assert.AnError}, err: "cannot read it back", cleansUp: true},
+		{name: "ShouldReportAFailedStream", store: probeStore{readErr: assert.AnError}, err: "probe: reading", cleansUp: true},
+		{name: "ShouldReportACorruptReadBack", store: probeStore{corrupt: true}, err: "differ from the", cleansUp: true},
+		{name: "ShouldReportAFailedDelete", store: probeStore{deleteErr: assert.AnError}, err: "cannot delete it", cleansUp: true, leavesProbe: true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			local, err := NewLocal(t.TempDir())
 			require.NoError(t, err)
 
-			s := tt.store
+			s := tc.store
 			s.Local = local
 
 			err = probe(t.Context(), &s)
-			require.ErrorContains(t, err, tt.want)
+			require.ErrorContains(t, err, tc.err)
 			assert.True(t, strings.HasPrefix(err.Error(), "probe: "), err)
 
-			if tt.cleansUp {
+			if tc.cleansUp {
 				require.Len(t, s.deleted, 1, "the probe object is deleted after a failure")
 				assert.True(t, strings.HasPrefix(s.deleted[0], probeKeyPrefix))
 			} else {
@@ -126,7 +149,7 @@ func TestProbeReportsTheFailingStep(t *testing.T) {
 			objs, err := local.List(t.Context(), "")
 			require.NoError(t, err)
 
-			if tt.leavesProbe {
+			if tc.leavesProbe {
 				assert.Len(t, objs, 1)
 			} else {
 				assert.Empty(t, objs, "no probe object is left behind")

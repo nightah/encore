@@ -31,24 +31,27 @@ func TestSummariseToday(t *testing.T) {
 		return store.RequestLogEntry{Duration: time.Duration(ms) * time.Millisecond, Outcome: outcome, Simulated: simulated}
 	}
 
-	for name, tc := range map[string]struct {
-		in   []store.RequestLogEntry
-		want RequestsToday
+	testCases := []struct {
+		name     string
+		have     []store.RequestLogEntry
+		expected RequestsToday
 	}{
-		"none":            {nil, RequestsToday{}},
-		"one":             {[]store.RequestLogEntry{entry(120, "played", false)}, RequestsToday{Total: 1, MedianMS: 120}},
-		"odd count":       {[]store.RequestLogEntry{entry(300, "played", false), entry(100, "error", false), entry(200, "played", false)}, RequestsToday{Total: 3, Failed: 1, MedianMS: 200}},
-		"even count":      {[]store.RequestLogEntry{entry(40, "played", false), entry(10, "error", false), entry(30, "error", false), entry(20, "played", false)}, RequestsToday{Total: 4, Failed: 2, MedianMS: 30}},
-		"only simulator":  {[]store.RequestLogEntry{entry(500, "error", true)}, RequestsToday{}},
-		"simulator mixed": {[]store.RequestLogEntry{entry(9000, "error", true), entry(80, "played", false)}, RequestsToday{Total: 1, MedianMS: 80}},
-	} {
-		t.Run(name, func(t *testing.T) {
+		{name: "ShouldSummariseNone"},
+		{name: "ShouldSummariseOne", have: []store.RequestLogEntry{entry(120, "played", false)}, expected: RequestsToday{Total: 1, MedianMS: 120}},
+		{name: "ShouldTakeTheMiddleOfAnOddCount", have: []store.RequestLogEntry{entry(300, "played", false), entry(100, "error", false), entry(200, "played", false)}, expected: RequestsToday{Total: 3, Failed: 1, MedianMS: 200}},
+		{name: "ShouldTakeTheUpperMiddleOfAnEvenCount", have: []store.RequestLogEntry{entry(40, "played", false), entry(10, "error", false), entry(30, "error", false), entry(20, "played", false)}, expected: RequestsToday{Total: 4, Failed: 2, MedianMS: 30}},
+		{name: "ShouldIgnoreOnlySimulatorRequests", have: []store.RequestLogEntry{entry(500, "error", true)}},
+		{name: "ShouldIgnoreSimulatorRequestsAmongOthers", have: []store.RequestLogEntry{entry(9000, "error", true), entry(80, "played", false)}, expected: RequestsToday{Total: 1, MedianMS: 80}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			before := append([]store.RequestLogEntry(nil), tc.in...)
+			before := append([]store.RequestLogEntry(nil), tc.have...)
 
-			assert.Equal(t, tc.want, summariseToday(tc.in))
-			assert.Equal(t, before, tc.in, "the entries are left as they were")
+			assert.Equal(t, tc.expected, summariseToday(tc.have))
+			assert.Equal(t, before, tc.have, "the entries are left as they were")
 		})
 	}
 }
@@ -333,27 +336,34 @@ func TestDatabaseErrorsArePassedOn(t *testing.T) {
 
 	require.NoError(t, h.app.DB().Close())
 
-	for name, call := range map[string]func() error{
-		"overview":       func() error { _, err := h.api.overview(ctx, &endpointCache{}); return err },
-		"skill overview": func() error { _, err := s.overview(ctx); return err },
-		"skill info":     func() error { _, err := s.info(ctx); return err },
-		"attention":      func() error { _, err := h.api.attention(ctx); return err },
-		"instances":      func() error { _, err := h.api.instances(ctx); return err },
-		"instance":       func() error { _, err := h.api.instance(ctx, 1); return err },
-		"discover":       func() error { _, err := h.api.discover(ctx); return err },
-		"create": func() error {
+	testCases := []struct {
+		name string
+		call func() error
+	}{
+		{name: "ShouldPassOnOverviewErrors", call: func() error { _, err := h.api.overview(ctx, &endpointCache{}); return err }},
+		{name: "ShouldPassOnSkillOverviewErrors", call: func() error { _, err := s.overview(ctx); return err }},
+		{name: "ShouldPassOnSkillInfoErrors", call: func() error { _, err := s.info(ctx); return err }},
+		{name: "ShouldPassOnAttentionErrors", call: func() error { _, err := h.api.attention(ctx); return err }},
+		{name: "ShouldPassOnInstancesErrors", call: func() error { _, err := h.api.instances(ctx); return err }},
+		{name: "ShouldPassOnInstanceErrors", call: func() error { _, err := h.api.instance(ctx, 1); return err }},
+		{name: "ShouldPassOnDiscoverErrors", call: func() error { _, err := h.api.discover(ctx); return err }},
+		{name: "ShouldPassOnCreateErrors", call: func() error {
 			_, err := h.api.createInstance(ctx, InstanceInput{Name: new("Den"), URL: new("http://192.0.2.1:8080/jsonrpc")})
 			return err
-		},
-		"update":       func() error { _, err := h.api.updateInstance(ctx, 1, InstanceInput{}); return err },
-		"delete":       func() error { return h.api.deleteInstance(ctx, 1) },
-		"test":         func() error { _, err := h.api.testInstance(ctx, 1); return err },
-		"start deploy": func() error { _, err := s.startDeploy(ctx, false, false); return err },
-		"export":       func() error { _, err := s.exportPackage(ctx); return err },
-		"credentials":  func() error { return s.saveCredentials(ctx, "client", "secret") },
-		"settings":     func() error { return s.saveSettings(ctx, SkillSettingsInput{LocalesEnabled: []string{"en-AU"}}) },
-	} {
-		require.ErrorContains(t, call(), "database is closed", name)
+		}},
+		{name: "ShouldPassOnUpdateErrors", call: func() error { _, err := h.api.updateInstance(ctx, 1, InstanceInput{}); return err }},
+		{name: "ShouldPassOnDeleteErrors", call: func() error { return h.api.deleteInstance(ctx, 1) }},
+		{name: "ShouldPassOnTestErrors", call: func() error { _, err := h.api.testInstance(ctx, 1); return err }},
+		{name: "ShouldPassOnStartDeployErrors", call: func() error { _, err := s.startDeploy(ctx, false, false); return err }},
+		{name: "ShouldPassOnExportErrors", call: func() error { _, err := s.exportPackage(ctx); return err }},
+		{name: "ShouldPassOnCredentialsErrors", call: func() error { return s.saveCredentials(ctx, "client", "secret") }},
+		{name: "ShouldPassOnSettingsErrors", call: func() error { return s.saveSettings(ctx, SkillSettingsInput{LocalesEnabled: []string{"en-AU"}}) }},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			require.ErrorContains(t, tc.call(), "database is closed")
+		})
 	}
 
 	assert.Nil(t, s.lastDeploy(ctx), "no last deploy can be read")

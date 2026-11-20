@@ -94,39 +94,57 @@ func TestOpenFavourite(t *testing.T) {
 func TestBestName(t *testing.T) {
 	names := []string{"YouTube", "Global Search", "Netflix", "The Movie Database"}
 
-	for spoken, want := range map[string]int{"youtube": 0, "you tube": 0, "global": 1, "movie database": 3, "the netflix app": 2} {
-		i, ok := bestName("en", names, spoken)
-		assert.True(t, ok, spoken)
-		assert.Equal(t, want, i, spoken)
+	testCases := []struct {
+		name     string
+		have     string
+		expected int
+		ok       bool
+	}{
+		{name: "ShouldFindAnExactName", have: "youtube", ok: true},
+		{name: "ShouldFindANameSpokenWithASpace", have: "you tube", ok: true},
+		{name: "ShouldFindAPrefix", have: "global", expected: 1, ok: true},
+		{name: "ShouldFindANameWithoutItsArticle", have: "movie database", expected: 3, ok: true},
+		{name: "ShouldFindANameWithinTheSpokenWords", have: "the netflix app", expected: 2, ok: true},
+		{name: "ShouldNotFindAMissingName", have: "spotify"},
 	}
 
-	_, ok := bestName("en", names, "spotify")
-	assert.False(t, ok)
-}
-
-func TestBestNameRanks(t *testing.T) {
-	for _, tc := range []struct {
-		name   string
-		names  []string
-		spoken string
-		want   int
-		ok     bool
-	}{
-		{"exact beats an earlier prefix", []string{"Radio National News", "Radio National"}, "radio national", 1, true},
-		{"spacing beats a prefix", []string{"YouTube Music", "You Tube"}, "youtube", 1, true},
-		{"prefix beats contains", []string{"Classic Radio", "Radio Classics"}, "radio", 1, true},
-		{"contains beats contained", []string{"ABC", "Kids ABC Shows"}, "abc shows", 1, true},
-		{"the first of equals wins", []string{"Radio One", "Radio Two"}, "radio", 0, true},
-		{"unnamed entries are skipped", []string{"", "???", "Radio"}, "radio", 2, true},
-		{"blank spoken name", []string{"Radio"}, "  ", 0, false},
-		{"no names", nil, "radio", 0, false},
-	} {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			i, ok := bestName("en", tc.names, tc.spoken)
+			actual, ok := bestName("en", names, tc.have)
 			assert.Equal(t, tc.ok, ok)
 
 			if tc.ok {
-				assert.Equal(t, tc.want, i)
+				assert.Equal(t, tc.expected, actual)
+			}
+		})
+	}
+}
+
+func TestBestNameRanks(t *testing.T) {
+	testCases := []struct {
+		name     string
+		names    []string
+		have     string
+		expected int
+		ok       bool
+	}{
+		{name: "ShouldRankExactAboveAnEarlierPrefix", names: []string{"Radio National News", "Radio National"}, have: "radio national", expected: 1, ok: true},
+		{name: "ShouldRankSpacingAboveAPrefix", names: []string{"YouTube Music", "You Tube"}, have: "youtube", expected: 1, ok: true},
+		{name: "ShouldRankPrefixAboveContains", names: []string{"Classic Radio", "Radio Classics"}, have: "radio", expected: 1, ok: true},
+		{name: "ShouldRankContainsAboveContained", names: []string{"ABC", "Kids ABC Shows"}, have: "abc shows", expected: 1, ok: true},
+		{name: "ShouldPickTheFirstOfEquals", names: []string{"Radio One", "Radio Two"}, have: "radio", ok: true},
+		{name: "ShouldSkipUnnamedEntries", names: []string{"", "???", "Radio"}, have: "radio", expected: 2, ok: true},
+		{name: "ShouldNotFindABlankSpokenName", names: []string{"Radio"}, have: "  "},
+		{name: "ShouldNotFindWithoutNames", have: "radio"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual, ok := bestName("en", tc.names, tc.have)
+			assert.Equal(t, tc.ok, ok)
+
+			if tc.ok {
+				assert.Equal(t, tc.expected, actual)
 			}
 		})
 	}

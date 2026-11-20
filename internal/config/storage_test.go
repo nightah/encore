@@ -66,48 +66,68 @@ func TestStorageWebDAVFromFile(t *testing.T) {
 }
 
 func TestStorageValidation(t *testing.T) {
-	tests := []struct {
-		name   string
-		mutate func(*Config)
-		want   []string
+	testCases := []struct {
+		name     string
+		mutate   func(*Config)
+		expected []string
 	}{
-		{"unknown backend", func(c *Config) { c.Storage.Backend = "ftp" }, []string{"storage.backend"}},
-		{"s3 incomplete", func(c *Config) {
-			c.Storage.Backend = BackendS3
-			c.Storage.S3.Endpoint = "minio:9000"
-			c.Storage.S3.Addressing = "dns"
-			c.Storage.S3.SSE = "aes"
-		}, []string{"storage.s3.endpoint", "storage.s3.bucket", "storage.s3.access_key", "storage.s3.addressing", "storage.s3.sse"}},
-		{"s3 kms without key", func(c *Config) {
-			c.Storage.Backend = BackendS3
-			c.Storage.S3 = StorageS3{Endpoint: "http://minio:9000", Bucket: "b", AccessKey: "a", SecretKey: "s", Addressing: AddressingAuto, SSE: SSEKMS}
-		}, []string{"sse_kms_key_id"}},
-		{"webdav no url", func(c *Config) { c.Storage.Backend = BackendWebDAV }, []string{"storage.webdav.url"}},
-		{"webdav bad scheme", func(c *Config) {
-			c.Storage.Backend = BackendWebDAV
-			c.Storage.WebDAV.URL = "ftp://user:hunter2@host/dav" // trufflehog:ignore
-		}, []string{"storage.webdav.url"}},
-		{"backups", func(c *Config) {
-			c.Storage.Backups.Schedule = "fortnightly"
-			c.Storage.Backups.Keep = 0
-		}, []string{"storage.backups.schedule", "storage.backups.keep"}},
-		{"secrets both", func(c *Config) {
-			c.Secrets.Key = testKey
-			c.Secrets.KeyFile = "/run/secrets/key"
-		}, []string{"mutually exclusive"}},
-		{"secrets short key", func(c *Config) { c.Secrets.Key = "c2hvcnQ=" }, []string{"secrets.key"}},
+		{name: "ShouldRejectAnUnknownBackend", mutate: func(c *Config) { c.Storage.Backend = "ftp" }, expected: []string{"storage.backend"}},
+		{
+			name: "ShouldRejectAnIncompleteS3Backend",
+			mutate: func(c *Config) {
+				c.Storage.Backend = BackendS3
+				c.Storage.S3.Endpoint = "minio:9000"
+				c.Storage.S3.Addressing = "dns"
+				c.Storage.S3.SSE = "aes"
+			},
+			expected: []string{"storage.s3.endpoint", "storage.s3.bucket", "storage.s3.access_key", "storage.s3.addressing", "storage.s3.sse"},
+		},
+		{
+			name: "ShouldRejectS3KMSWithoutAKey",
+			mutate: func(c *Config) {
+				c.Storage.Backend = BackendS3
+				c.Storage.S3 = StorageS3{Endpoint: "http://minio:9000", Bucket: "b", AccessKey: "a", SecretKey: "s", Addressing: AddressingAuto, SSE: SSEKMS}
+			},
+			expected: []string{"sse_kms_key_id"},
+		},
+		{name: "ShouldRejectWebDAVWithoutAURL", mutate: func(c *Config) { c.Storage.Backend = BackendWebDAV }, expected: []string{"storage.webdav.url"}},
+		{
+			name: "ShouldRejectAWebDAVURLWithABadScheme",
+			mutate: func(c *Config) {
+				c.Storage.Backend = BackendWebDAV
+				c.Storage.WebDAV.URL = "ftp://user:hunter2@host/dav" // trufflehog:ignore
+			},
+			expected: []string{"storage.webdav.url"},
+		},
+		{
+			name: "ShouldRejectBadBackupSettings",
+			mutate: func(c *Config) {
+				c.Storage.Backups.Schedule = "fortnightly"
+				c.Storage.Backups.Keep = 0
+			},
+			expected: []string{"storage.backups.schedule", "storage.backups.keep"},
+		},
+		{
+			name: "ShouldRejectBothASecretsKeyAndKeyFile",
+			mutate: func(c *Config) {
+				c.Secrets.Key = testKey
+				c.Secrets.KeyFile = "/run/secrets/key"
+			},
+			expected: []string{"mutually exclusive"},
+		},
+		{name: "ShouldRejectAShortSecretsKey", mutate: func(c *Config) { c.Secrets.Key = "c2hvcnQ=" }, expected: []string{"secrets.key"}},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			cfg := Defaults()
-			tt.mutate(&cfg)
+			tc.mutate(&cfg)
 
 			err := cfg.Validate()
 			require.Error(t, err)
 
-			for _, want := range tt.want {
-				assert.Contains(t, err.Error(), want)
+			for _, expected := range tc.expected {
+				assert.Contains(t, err.Error(), expected)
 			}
 
 			assert.NotContains(t, err.Error(), "hunter2", "credentials in URLs must be redacted")

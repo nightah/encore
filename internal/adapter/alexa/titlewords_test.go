@@ -100,113 +100,121 @@ const (
 
 // TestWordsLeftInTitleSlots plays what was meant when Alexa leaves a kind of title ("the movie"), or words that name no title at all ("music", "something"), in a title slot, in every language the skill speaks.
 func TestWordsLeftInTitleSlots(t *testing.T) {
-	for _, tc := range []struct {
-		name, locale, intent string
-		slots                map[string]string
-		want                 string
+	testCases := []struct {
+		name     string
+		locale   string
+		intent   string
+		slots    map[string]string
+		expected string
 	}{
 		// A film, album or artist's sample heard as "play X".
-		{"en film sample", "en-AU", "PlayMedia", map[string]string{"Query": "the movie hot fuzz"}, playHotFuzz},
-		{"en album sample", "en-AU", "PlayMedia", map[string]string{"Query": "the album innuendo"}, playInnuendo},
-		{"en music by", "en-AU", "PlayMedia", map[string]string{"Query": "music by queen"}, playQueen},
-		{"en put on music by", "en-GB", "PlayMedia", map[string]string{"Query": "some songs by the beatles"}, playBeatles},
-		{"de film sample", "de-DE", "PlayMedia", map[string]string{"Query": "den film hot fuzz"}, playHotFuzz},
-		{"de music by", "de-DE", "PlayMedia", map[string]string{"Query": "musik von queen"}, playQueen},
-		{"fr film sample", "fr-FR", "PlayMedia", map[string]string{"Query": "le film hot fuzz"}, playHotFuzz},
-		{"fr music by", "fr-CA", "PlayMedia", map[string]string{"Query": "de la musique de queen"}, playQueen},
-		{"es film sample", "es-MX", "PlayMedia", map[string]string{"Query": "la película hot fuzz"}, playHotFuzz},
-		{"es music by", "es-ES", "PlayMedia", map[string]string{"Query": "música de queen"}, playQueen},
-		{"it film sample", "it-IT", "PlayMedia", map[string]string{"Query": "il film hot fuzz"}, playHotFuzz},
-		{"it music by", "it-IT", "PlayMedia", map[string]string{"Query": "un po' di musica dei queen"}, playQueen},
-		{"pt film sample", "pt-BR", "PlayMedia", map[string]string{"Query": "o filme hot fuzz"}, playHotFuzz},
-		{"pt music by", "pt-BR", "PlayMedia", map[string]string{"Query": "músicas do queen"}, playQueen},
-		{"nl film sample", "nl-NL", "PlayMedia", map[string]string{"Query": "de film hot fuzz"}, playHotFuzz},
-		{"nl music by", "nl-NL", "PlayMedia", map[string]string{"Query": "wat muziek van queen"}, playQueen},
-		{"ar film sample", "ar-SA", "PlayMedia", map[string]string{"Query": "فيلم الرسالة"}, playRisala},
-		{"ar music by", "ar-SA", "PlayMedia", map[string]string{"Query": "أغاني عمرو دياب"}, playAmrDiab},
-		{"hi film sample", "hi-IN", "PlayMedia", map[string]string{"Query": "फ़िल्म शोले"}, playSholay},
-		{"hi film sample after the title", "hi-IN", "PlayMedia", map[string]string{"Query": "शोले मूवी"}, playSholay},
-		{"hi music by", "hi-IN", "PlayMedia", map[string]string{"Query": "अरिजीत सिंह के गाने"}, playArijit},
-		{"ja film sample", "ja-JP", "PlayMedia", map[string]string{"Query": "映画の千と千尋の神隠し"}, playSpirited},
-		{"ja music by", "ja-JP", "PlayMedia", map[string]string{"Query": "宇多田ヒカルの曲"}, playUtada},
+		{name: "ShouldPlayFilmSampleInEnAU", locale: "en-AU", intent: "PlayMedia", slots: map[string]string{"Query": "the movie hot fuzz"}, expected: playHotFuzz},
+		{name: "ShouldPlayAlbumSampleInEnAU", locale: "en-AU", intent: "PlayMedia", slots: map[string]string{"Query": "the album innuendo"}, expected: playInnuendo},
+		{name: "ShouldPlayMusicByInEnAU", locale: "en-AU", intent: "PlayMedia", slots: map[string]string{"Query": "music by queen"}, expected: playQueen},
+		{name: "ShouldPlayPutOnMusicByInEnGB", locale: "en-GB", intent: "PlayMedia", slots: map[string]string{"Query": "some songs by the beatles"}, expected: playBeatles},
+		{name: "ShouldPlayFilmSampleInDeDE", locale: "de-DE", intent: "PlayMedia", slots: map[string]string{"Query": "den film hot fuzz"}, expected: playHotFuzz},
+		{name: "ShouldPlayMusicByInDeDE", locale: "de-DE", intent: "PlayMedia", slots: map[string]string{"Query": "musik von queen"}, expected: playQueen},
+		{name: "ShouldPlayFilmSampleInFrFR", locale: "fr-FR", intent: "PlayMedia", slots: map[string]string{"Query": "le film hot fuzz"}, expected: playHotFuzz},
+		{name: "ShouldPlayMusicByInFrCA", locale: "fr-CA", intent: "PlayMedia", slots: map[string]string{"Query": "de la musique de queen"}, expected: playQueen},
+		{name: "ShouldPlayFilmSampleInEsMX", locale: "es-MX", intent: "PlayMedia", slots: map[string]string{"Query": "la película hot fuzz"}, expected: playHotFuzz},
+		{name: "ShouldPlayMusicByInEsES", locale: "es-ES", intent: "PlayMedia", slots: map[string]string{"Query": "música de queen"}, expected: playQueen},
+		{name: "ShouldPlayFilmSampleInItIT", locale: "it-IT", intent: "PlayMedia", slots: map[string]string{"Query": "il film hot fuzz"}, expected: playHotFuzz},
+		{name: "ShouldPlayMusicByInItIT", locale: "it-IT", intent: "PlayMedia", slots: map[string]string{"Query": "un po' di musica dei queen"}, expected: playQueen},
+		{name: "ShouldPlayFilmSampleInPtBR", locale: "pt-BR", intent: "PlayMedia", slots: map[string]string{"Query": "o filme hot fuzz"}, expected: playHotFuzz},
+		{name: "ShouldPlayMusicByInPtBR", locale: "pt-BR", intent: "PlayMedia", slots: map[string]string{"Query": "músicas do queen"}, expected: playQueen},
+		{name: "ShouldPlayFilmSampleInNlNL", locale: "nl-NL", intent: "PlayMedia", slots: map[string]string{"Query": "de film hot fuzz"}, expected: playHotFuzz},
+		{name: "ShouldPlayMusicByInNlNL", locale: "nl-NL", intent: "PlayMedia", slots: map[string]string{"Query": "wat muziek van queen"}, expected: playQueen},
+		{name: "ShouldPlayFilmSampleInArSA", locale: "ar-SA", intent: "PlayMedia", slots: map[string]string{"Query": "فيلم الرسالة"}, expected: playRisala},
+		{name: "ShouldPlayMusicByInArSA", locale: "ar-SA", intent: "PlayMedia", slots: map[string]string{"Query": "أغاني عمرو دياب"}, expected: playAmrDiab},
+		{name: "ShouldPlayFilmSampleInHiIN", locale: "hi-IN", intent: "PlayMedia", slots: map[string]string{"Query": "फ़िल्म शोले"}, expected: playSholay},
+		{name: "ShouldPlayFilmSampleAfterTheTitleInHiIN", locale: "hi-IN", intent: "PlayMedia", slots: map[string]string{"Query": "शोले मूवी"}, expected: playSholay},
+		{name: "ShouldPlayMusicByInHiIN", locale: "hi-IN", intent: "PlayMedia", slots: map[string]string{"Query": "अरिजीत सिंह के गाने"}, expected: playArijit},
+		{name: "ShouldPlayFilmSampleInJaJP", locale: "ja-JP", intent: "PlayMedia", slots: map[string]string{"Query": "映画の千と千尋の神隠し"}, expected: playSpirited},
+		{name: "ShouldPlayMusicByInJaJP", locale: "ja-JP", intent: "PlayMedia", slots: map[string]string{"Query": "宇多田ヒカルの曲"}, expected: playUtada},
 
 		// A song and its artist with only the word between them: split once the whole query finds nothing.
-		{"en song by artist", "en-US", "PlayMedia", map[string]string{"Query": "bohemian rhapsody by queen"}, playBohemian},
-		{"es song by artist", "es-US", "PlayMedia", map[string]string{"Query": "bohemian rhapsody de queen"}, playBohemian},
-		{"pt song by artist", "pt-BR", "PlayMedia", map[string]string{"Query": "bohemian rhapsody do queen"}, playBohemian},
-		{"nl song by artist", "nl-NL", "PlayMedia", map[string]string{"Query": "bohemian rhapsody van queen"}, playBohemian},
+		{name: "ShouldPlaySongByArtistInEnUS", locale: "en-US", intent: "PlayMedia", slots: map[string]string{"Query": "bohemian rhapsody by queen"}, expected: playBohemian},
+		{name: "ShouldPlaySongByArtistInEsUS", locale: "es-US", intent: "PlayMedia", slots: map[string]string{"Query": "bohemian rhapsody de queen"}, expected: playBohemian},
+		{name: "ShouldPlaySongByArtistInPtBR", locale: "pt-BR", intent: "PlayMedia", slots: map[string]string{"Query": "bohemian rhapsody do queen"}, expected: playBohemian},
+		{name: "ShouldPlaySongByArtistInNlNL", locale: "nl-NL", intent: "PlayMedia", slots: map[string]string{"Query": "bohemian rhapsody van queen"}, expected: playBohemian},
 
 		// A command heard as a search.
-		{"es volume heard as a search", "es-US", "PlayMedia", map[string]string{"Query": "el volumen a 30"}, "Volume set 30"},
+		{name: "ShouldReadVolumeHeardAsASearchInEsUS", locale: "es-US", intent: "PlayMedia", slots: map[string]string{"Query": "el volumen a 30"}, expected: "Volume set 30"},
 
 		// A kind of title said where no sample has it: taken off once the whole title finds nothing.
-		{"en kind after the title", "en-AU", "PlayMedia", map[string]string{"Query": "hot fuzz movie"}, playHotFuzz},
-		{"en kind in the movie slot", "en-US", "WatchMovie", map[string]string{"Movie": "hot fuzz film"}, playHotFuzz},
-		{"en album after the title", "en-CA", "PlayMedia", map[string]string{"Query": "innuendo album"}, playAsTitle},
-		{"de kind after the title", "de-DE", "PlayMedia", map[string]string{"Query": "hot fuzz film"}, playHotFuzz},
-		{"fr kind after the title", "fr-FR", "PlayMedia", map[string]string{"Query": "hot fuzz le film"}, playHotFuzz},
-		{"es kind in the movie slot", "es-US", "WatchMovie", map[string]string{"Movie": "la peli hot fuzz"}, playHotFuzz},
-		{"it kind after the title", "it-IT", "PlayMedia", map[string]string{"Query": "hot fuzz il film"}, playHotFuzz},
-		{"pt kind in the movie slot", "pt-BR", "WatchMovie", map[string]string{"Movie": "filme hot fuzz"}, playHotFuzz},
-		{"nl kind after the title", "nl-NL", "PlayMedia", map[string]string{"Query": "hot fuzz film"}, playHotFuzz},
-		{"ar kind in the movie slot", "ar-SA", "WatchMovie", map[string]string{"Movie": "فيلم الرسالة"}, playRisala},
-		{"ar kind with its article", "ar-SA", "PlayMedia", map[string]string{"Query": "الرسالة الفيلم"}, playRisala},
-		{"hi kind after the title", "hi-IN", "PlayMedia", map[string]string{"Query": "शोले पिक्चर"}, playSholay},
-		{"hi kind in the movie slot", "hi-IN", "WatchMovie", map[string]string{"Movie": "फ़िल्म शोले"}, playSholay},
-		{"ja kind after the title", "ja-JP", "PlayMedia", map[string]string{"Query": "千と千尋の神隠しの映画"}, playSpirited},
-		{"ja kind in the movie slot", "ja-JP", "WatchMovie", map[string]string{"Movie": "ムービーの千と千尋の神隠し"}, playSpirited},
+		{name: "ShouldPlayKindAfterTheTitleInEnAU", locale: "en-AU", intent: "PlayMedia", slots: map[string]string{"Query": "hot fuzz movie"}, expected: playHotFuzz},
+		{name: "ShouldPlayKindInTheMovieSlotInEnUS", locale: "en-US", intent: "WatchMovie", slots: map[string]string{"Movie": "hot fuzz film"}, expected: playHotFuzz},
+		{name: "ShouldPlayAlbumAfterTheTitleInEnCA", locale: "en-CA", intent: "PlayMedia", slots: map[string]string{"Query": "innuendo album"}, expected: playAsTitle},
+		{name: "ShouldPlayKindAfterTheTitleInDeDE", locale: "de-DE", intent: "PlayMedia", slots: map[string]string{"Query": "hot fuzz film"}, expected: playHotFuzz},
+		{name: "ShouldPlayKindAfterTheTitleInFrFR", locale: "fr-FR", intent: "PlayMedia", slots: map[string]string{"Query": "hot fuzz le film"}, expected: playHotFuzz},
+		{name: "ShouldPlayKindInTheMovieSlotInEsUS", locale: "es-US", intent: "WatchMovie", slots: map[string]string{"Movie": "la peli hot fuzz"}, expected: playHotFuzz},
+		{name: "ShouldPlayKindAfterTheTitleInItIT", locale: "it-IT", intent: "PlayMedia", slots: map[string]string{"Query": "hot fuzz il film"}, expected: playHotFuzz},
+		{name: "ShouldPlayKindInTheMovieSlotInPtBR", locale: "pt-BR", intent: "WatchMovie", slots: map[string]string{"Movie": "filme hot fuzz"}, expected: playHotFuzz},
+		{name: "ShouldPlayKindAfterTheTitleInNlNL", locale: "nl-NL", intent: "PlayMedia", slots: map[string]string{"Query": "hot fuzz film"}, expected: playHotFuzz},
+		{name: "ShouldPlayKindInTheMovieSlotInArSA", locale: "ar-SA", intent: "WatchMovie", slots: map[string]string{"Movie": "فيلم الرسالة"}, expected: playRisala},
+		{name: "ShouldPlayKindWithItsArticleInArSA", locale: "ar-SA", intent: "PlayMedia", slots: map[string]string{"Query": "الرسالة الفيلم"}, expected: playRisala},
+		{name: "ShouldPlayKindAfterTheTitleInHiIN", locale: "hi-IN", intent: "PlayMedia", slots: map[string]string{"Query": "शोले पिक्चर"}, expected: playSholay},
+		{name: "ShouldPlayKindInTheMovieSlotInHiIN", locale: "hi-IN", intent: "WatchMovie", slots: map[string]string{"Movie": "फ़िल्म शोले"}, expected: playSholay},
+		{name: "ShouldPlayKindAfterTheTitleInJaJP", locale: "ja-JP", intent: "PlayMedia", slots: map[string]string{"Query": "千と千尋の神隠しの映画"}, expected: playSpirited},
+		{name: "ShouldPlayKindInTheMovieSlotInJaJP", locale: "ja-JP", intent: "WatchMovie", slots: map[string]string{"Movie": "ムービーの千と千尋の神隠し"}, expected: playSpirited},
 
 		// Words that name no title, with an artist: the artist's music.
-		{"en music", "en-AU", "ListenToSongOrAlbum", map[string]string{"Title": "music", "Artist": "queen"}, playQueen},
-		{"en something", "en-IN", "ListenToSongOrAlbum", map[string]string{"Title": "something", "Artist": "queen"}, playQueen},
-		{"en some songs as a song", "en-AU", "ListenToSong", map[string]string{"Song": "some songs", "Artist": "the beatles"}, playBeatles},
-		{"de etwas", "de-DE", "ListenToSongOrAlbum", map[string]string{"Title": "etwas", "Artist": "queen"}, playQueen},
-		{"fr quelque chose", "fr-FR", "ListenToSongOrAlbum", map[string]string{"Title": "quelque chose", "Artist": "queen"}, playQueen},
-		{"es algo", "es-ES", "ListenToSongOrAlbum", map[string]string{"Title": "algo", "Artist": "queen"}, playQueen},
-		{"it qualcosa", "it-IT", "ListenToSongOrAlbum", map[string]string{"Title": "qualcosa", "Artist": "queen"}, playQueen},
-		{"pt alguma coisa", "pt-BR", "ListenToSongOrAlbum", map[string]string{"Title": "alguma coisa", "Artist": "queen"}, playQueen},
-		{"nl iets", "nl-NL", "ListenToSongOrAlbum", map[string]string{"Title": "iets", "Artist": "queen"}, playQueen},
-		{"ar shi", "ar-SA", "ListenToSongOrAlbum", map[string]string{"Title": "شي", "Artist": "عمرو دياب"}, playAmrDiab},
-		{"ar aghani", "ar-SA", "ListenToSongOrAlbum", map[string]string{"Title": "أغاني", "Artist": "عمرو دياب"}, playAmrDiab},
-		{"hi kuchh", "hi-IN", "ListenToSongOrAlbum", map[string]string{"Title": "कुछ", "Artist": "अरिजीत सिंह"}, playArijit},
-		{"hi music", "hi-IN", "ListenToSongOrAlbum", map[string]string{"Title": "म्यूज़िक", "Artist": "अरिजीत सिंह"}, playArijit},
-		{"ja kyoku", "ja-JP", "ListenToSongOrAlbum", map[string]string{"Title": "曲", "Artist": "宇多田ヒカル"}, playUtada},
+		{name: "ShouldPlayArtistForMusicInEnAU", locale: "en-AU", intent: "ListenToSongOrAlbum", slots: map[string]string{"Title": "music", "Artist": "queen"}, expected: playQueen},
+		{name: "ShouldPlayArtistForSomethingInEnIN", locale: "en-IN", intent: "ListenToSongOrAlbum", slots: map[string]string{"Title": "something", "Artist": "queen"}, expected: playQueen},
+		{name: "ShouldPlayArtistForSomeSongsAsASongInEnAU", locale: "en-AU", intent: "ListenToSong", slots: map[string]string{"Song": "some songs", "Artist": "the beatles"}, expected: playBeatles},
+		{name: "ShouldPlayArtistForEtwasInDeDE", locale: "de-DE", intent: "ListenToSongOrAlbum", slots: map[string]string{"Title": "etwas", "Artist": "queen"}, expected: playQueen},
+		{name: "ShouldPlayArtistForQuelqueChoseInFrFR", locale: "fr-FR", intent: "ListenToSongOrAlbum", slots: map[string]string{"Title": "quelque chose", "Artist": "queen"}, expected: playQueen},
+		{name: "ShouldPlayArtistForAlgoInEsES", locale: "es-ES", intent: "ListenToSongOrAlbum", slots: map[string]string{"Title": "algo", "Artist": "queen"}, expected: playQueen},
+		{name: "ShouldPlayArtistForQualcosaInItIT", locale: "it-IT", intent: "ListenToSongOrAlbum", slots: map[string]string{"Title": "qualcosa", "Artist": "queen"}, expected: playQueen},
+		{name: "ShouldPlayArtistForAlgumaCoisaInPtBR", locale: "pt-BR", intent: "ListenToSongOrAlbum", slots: map[string]string{"Title": "alguma coisa", "Artist": "queen"}, expected: playQueen},
+		{name: "ShouldPlayArtistForIetsInNlNL", locale: "nl-NL", intent: "ListenToSongOrAlbum", slots: map[string]string{"Title": "iets", "Artist": "queen"}, expected: playQueen},
+		{name: "ShouldPlayArtistForShiInArSA", locale: "ar-SA", intent: "ListenToSongOrAlbum", slots: map[string]string{"Title": "شي", "Artist": "عمرو دياب"}, expected: playAmrDiab},
+		{name: "ShouldPlayArtistForAghaniInArSA", locale: "ar-SA", intent: "ListenToSongOrAlbum", slots: map[string]string{"Title": "أغاني", "Artist": "عمرو دياب"}, expected: playAmrDiab},
+		{name: "ShouldPlayArtistForKuchhInHiIN", locale: "hi-IN", intent: "ListenToSongOrAlbum", slots: map[string]string{"Title": "कुछ", "Artist": "अरिजीत सिंह"}, expected: playArijit},
+		{name: "ShouldPlayArtistForMusicInHiIN", locale: "hi-IN", intent: "ListenToSongOrAlbum", slots: map[string]string{"Title": "म्यूज़िक", "Artist": "अरिजीत सिंह"}, expected: playArijit},
+		{name: "ShouldPlayArtistForKyokuInJaJP", locale: "ja-JP", intent: "ListenToSongOrAlbum", slots: map[string]string{"Title": "曲", "Artist": "宇多田ヒカル"}, expected: playUtada},
 
 		// Music in general on its own: any music.
-		{"en some songs", "en-AU", "PlayMedia", map[string]string{"Query": "some songs"}, playParty},
-		{"de musik", "de-DE", "PlayMedia", map[string]string{"Query": "musik"}, playParty},
-		{"fr de la musique", "fr-FR", "PlayMedia", map[string]string{"Query": "de la musique"}, playParty},
-		{"es música", "es-ES", "PlayMedia", map[string]string{"Query": "música"}, playParty},
-		{"it musica", "it-IT", "PlayMedia", map[string]string{"Query": "musica"}, playParty},
-		{"pt músicas", "pt-BR", "PlayMedia", map[string]string{"Query": "músicas"}, playParty},
-		{"nl muziek", "nl-NL", "PlayMedia", map[string]string{"Query": "muziek"}, playParty},
-		{"ar aghani alone", "ar-SA", "PlayMedia", map[string]string{"Query": "أغاني"}, playParty},
-		{"hi music alone", "hi-IN", "PlayMedia", map[string]string{"Query": "म्यूज़िक"}, playParty},
-		{"ja kyoku alone", "ja-JP", "PlayMedia", map[string]string{"Query": "曲"}, playParty},
-		{"en a song by no one", "en-AU", "ListenToSong", map[string]string{"Song": "songs"}, playParty},
+		{name: "ShouldPlayAnyMusicForSomeSongsInEnAU", locale: "en-AU", intent: "PlayMedia", slots: map[string]string{"Query": "some songs"}, expected: playParty},
+		{name: "ShouldPlayAnyMusicForMusikInDeDE", locale: "de-DE", intent: "PlayMedia", slots: map[string]string{"Query": "musik"}, expected: playParty},
+		{name: "ShouldPlayAnyMusicForDeLaMusiqueInFrFR", locale: "fr-FR", intent: "PlayMedia", slots: map[string]string{"Query": "de la musique"}, expected: playParty},
+		{name: "ShouldPlayAnyMusicForMusicaInEsES", locale: "es-ES", intent: "PlayMedia", slots: map[string]string{"Query": "música"}, expected: playParty},
+		{name: "ShouldPlayAnyMusicForMusicaInItIT", locale: "it-IT", intent: "PlayMedia", slots: map[string]string{"Query": "musica"}, expected: playParty},
+		{name: "ShouldPlayAnyMusicForMusicasInPtBR", locale: "pt-BR", intent: "PlayMedia", slots: map[string]string{"Query": "músicas"}, expected: playParty},
+		{name: "ShouldPlayAnyMusicForMuziekInNlNL", locale: "nl-NL", intent: "PlayMedia", slots: map[string]string{"Query": "muziek"}, expected: playParty},
+		{name: "ShouldPlayAnyMusicForAghaniAloneInArSA", locale: "ar-SA", intent: "PlayMedia", slots: map[string]string{"Query": "أغاني"}, expected: playParty},
+		{name: "ShouldPlayAnyMusicForMusicAloneInHiIN", locale: "hi-IN", intent: "PlayMedia", slots: map[string]string{"Query": "म्यूज़िक"}, expected: playParty},
+		{name: "ShouldPlayAnyMusicForKyokuAloneInJaJP", locale: "ja-JP", intent: "PlayMedia", slots: map[string]string{"Query": "曲"}, expected: playParty},
+		{name: "ShouldPlayAnyMusicForASongByNoOneInEnAU", locale: "en-AU", intent: "ListenToSong", slots: map[string]string{"Song": "songs"}, expected: playParty},
 
 		// A reading that finds nothing gives way to the title itself.
-		{"en a title that reads as a genre", "en-AU", "PlayMedia", map[string]string{"Query": "the sound of music"}, playSoundOfIt},
-	} {
+		{name: "ShouldPlayATitleThatReadsAsAGenreInEnAU", locale: "en-AU", intent: "PlayMedia", slots: map[string]string{"Query": "the sound of music"}, expected: playSoundOfIt},
+	}
+
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			h, lounge, _ := newWorldHandler(t)
 			serveBody(t, h, localeRequest(t, tc.locale, tc.intent, tc.slots))
-			assert.Contains(t, lounge.Calls(), tc.want)
+			assert.Contains(t, lounge.Calls(), tc.expected)
 		})
 	}
 }
 
 func TestWordsLeftInTitleSlotsPlayNothingElse(t *testing.T) {
-	for _, tc := range []struct {
-		name, locale, intent string
-		slots                map[string]string
+	testCases := []struct {
+		name   string
+		locale string
+		intent string
+		slots  map[string]string
 	}{
-		{"something alone is no music", "en-AU", "PlayMedia", map[string]string{"Query": "something"}},
-		{"a kind word alone is no title", "en-AU", "PlayMedia", map[string]string{"Query": "the movie"}},
-		{"a kind the request rules out", "en-AU", "WatchMovie", map[string]string{"Movie": "innuendo album"}},
-		{"an artist nobody has", "en-AU", "ListenToSongOrAlbum", map[string]string{"Title": "music", "Artist": "abba"}},
-		{"a film nobody has", "en-AU", "PlayMedia", map[string]string{"Query": "conclave movie"}},
-	} {
+		{name: "ShouldPlayNoMusicForSomethingAlone", locale: "en-AU", intent: "PlayMedia", slots: map[string]string{"Query": "something"}},
+		{name: "ShouldPlayNoTitleForAKindWordAlone", locale: "en-AU", intent: "PlayMedia", slots: map[string]string{"Query": "the movie"}},
+		{name: "ShouldPlayNothingForAKindTheRequestRulesOut", locale: "en-AU", intent: "WatchMovie", slots: map[string]string{"Movie": "innuendo album"}},
+		{name: "ShouldPlayNothingForAnArtistNobodyHas", locale: "en-AU", intent: "ListenToSongOrAlbum", slots: map[string]string{"Title": "music", "Artist": "abba"}},
+		{name: "ShouldPlayNothingForAFilmNobodyHas", locale: "en-AU", intent: "PlayMedia", slots: map[string]string{"Query": "conclave movie"}},
+	}
+
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			h, lounge, _ := newWorldHandler(t)
 			res := serveBody(t, h, localeRequest(t, tc.locale, tc.intent, tc.slots))
@@ -217,15 +225,23 @@ func TestWordsLeftInTitleSlotsPlayNothingElse(t *testing.T) {
 }
 
 func TestWordsLeftInTitleSlotsKeepTheRoom(t *testing.T) {
-	h, lounge, bedroom := newWorldHandler(t)
-	serveBody(t, h, localeRequest(t, "en-AU", "PlayMedia", map[string]string{"Query": "music by queen in the bedroom"}))
-	assert.Empty(t, lounge.Calls())
-	assert.Equal(t, []string{playQueen}, bedroom.Calls())
+	testCases := []struct {
+		name   string
+		intent string
+		slots  map[string]string
+	}{
+		{name: "ShouldKeepRoomNamedInTheQuery", intent: "PlayMedia", slots: map[string]string{"Query": "music by queen in the bedroom"}},
+		{name: "ShouldKeepRoomSlot", intent: "ListenToSongOrAlbum", slots: map[string]string{"Title": "something", "Artist": "queen", "Room": "bedroom"}},
+	}
 
-	h, lounge, bedroom = newWorldHandler(t)
-	serveBody(t, h, localeRequest(t, "en-AU", "ListenToSongOrAlbum", map[string]string{"Title": "something", "Artist": "queen", "Room": "bedroom"}))
-	assert.Empty(t, lounge.Calls())
-	assert.Equal(t, []string{playQueen}, bedroom.Calls())
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			h, lounge, bedroom := newWorldHandler(t)
+			serveBody(t, h, localeRequest(t, "en-AU", tc.intent, tc.slots))
+			assert.Empty(t, lounge.Calls())
+			assert.Equal(t, []string{playQueen}, bedroom.Calls())
+		})
+	}
 }
 
 func TestWordsLeftInTitleSlotsRespectContentGroups(t *testing.T) {

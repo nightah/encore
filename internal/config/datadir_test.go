@@ -19,10 +19,24 @@ func TestDefaultDataDir(t *testing.T) {
 	home := func() (string, error) { return homeDir, nil }
 	noHome := func() (string, error) { return "", errors.New("no home") }
 
-	assert.Equal(t, filepath.Join(homeDir, ".local", "share", "encore"), defaultDataDir("linux", env(nil), home))
-	assert.Equal(t, filepath.Join(xdg, "encore"), defaultDataDir("linux", env(map[string]string{"XDG_DATA_HOME": xdg}), home))
-	assert.Equal(t, filepath.Join(homeDir, ".local", "share", "encore"), defaultDataDir("freebsd", env(map[string]string{"XDG_DATA_HOME": "relative"}), home), "a relative XDG_DATA_HOME is ignored")
-	assert.Equal(t, filepath.Join(homeDir, "Library", "Application Support", "encore"), defaultDataDir("darwin", env(nil), home))
-	assert.Equal(t, filepath.Join(local, "encore"), defaultDataDir("windows", env(map[string]string{"LocalAppData": local}), home))
-	assert.Equal(t, fallbackDataDir, defaultDataDir("linux", env(nil), noHome))
+	testCases := []struct {
+		name     string
+		goos     string
+		env      map[string]string
+		home     func() (string, error)
+		expected string
+	}{
+		{name: "ShouldUseLocalShareOnLinux", goos: "linux", home: home, expected: filepath.Join(homeDir, ".local", "share", "encore")},
+		{name: "ShouldUseXDGDataHomeOnLinux", goos: "linux", env: map[string]string{"XDG_DATA_HOME": xdg}, home: home, expected: filepath.Join(xdg, "encore")},
+		{name: "ShouldIgnoreARelativeXDGDataHome", goos: "freebsd", env: map[string]string{"XDG_DATA_HOME": "relative"}, home: home, expected: filepath.Join(homeDir, ".local", "share", "encore")},
+		{name: "ShouldUseApplicationSupportOnDarwin", goos: "darwin", home: home, expected: filepath.Join(homeDir, "Library", "Application Support", "encore")},
+		{name: "ShouldUseLocalAppDataOnWindows", goos: "windows", env: map[string]string{"LocalAppData": local}, home: home, expected: filepath.Join(local, "encore")},
+		{name: "ShouldFallBackWithoutAHome", goos: "linux", home: noHome, expected: fallbackDataDir},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, defaultDataDir(tc.goos, env(tc.env), tc.home))
+		})
+	}
 }

@@ -127,33 +127,65 @@ func TestConfigSectionsCoverEveryKey(t *testing.T) {
 func TestCode(t *testing.T) {
 	t.Parallel()
 
-	for in, want := range map[string]string{
-		"":                 "``",
-		"server.address":   "`server.address`",
-		"a`b":              "``a`b``",
-		"a``b":             "```a``b```",
-		"`start":           "`` `start ``",
-		"end`":             "`` end` ``",
-		"{Movie} [please]": "`{Movie} [please]`",
-	} {
-		assert.Equal(t, want, code(in), "%q", in)
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldWrapEmptyText", expected: "``"},
+		{name: "ShouldWrapText", have: "server.address", expected: "`server.address`"},
+		{name: "ShouldFenceSingleBacktickWithTwo", have: "a`b", expected: "``a`b``"},
+		{name: "ShouldFenceDoubleBacktickWithThree", have: "a``b", expected: "```a``b```"},
+		{name: "ShouldPadLeadingBacktick", have: "`start", expected: "`` `start ``"},
+		{name: "ShouldPadTrailingBacktick", have: "end`", expected: "`` end` ``"},
+		{name: "ShouldKeepGrammarSyntax", have: "{Movie} [please]", expected: "`{Movie} [please]`"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, code(tc.have))
+		})
 	}
 }
 
 func TestCell(t *testing.T) {
 	t.Parallel()
 
-	assert.Equal(t, `a \| b`, cell("a | b"))
-	assert.Equal(t, "one two", cell("one\ntwo"))
-	assert.Equal(t, `\|\| x`, cell("||\nx"))
-	assert.Empty(t, cell(""))
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldEscapePipe", have: "a | b", expected: `a \| b`},
+		{name: "ShouldJoinLines", have: "one\ntwo", expected: "one two"},
+		{name: "ShouldEscapePipesAndJoinLines", have: "||\nx", expected: `\|\| x`},
+		{name: "ShouldKeepEmpty"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, cell(tc.have))
+		})
+	}
 }
 
 func TestProse(t *testing.T) {
 	t.Parallel()
 
-	assert.Equal(t, "play &lt;title&gt; now", prose("play <title> now"))
-	assert.Equal(t, "a & b", prose("a & b"), "only angle brackets start tags")
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldEscapeAngleBrackets", have: "play <title> now", expected: "play &lt;title&gt; now"},
+		{name: "ShouldKeepAmpersandAsOnlyAngleBracketsStartTags", have: "a & b", expected: "a & b"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, prose(tc.have))
+		})
+	}
 }
 
 func TestGenerateWritesEveryPageUnderTheContentDir(t *testing.T) {

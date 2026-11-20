@@ -9,64 +9,76 @@ import (
 
 // Expected values are RapidFuzz 3.14 results divided by 100.
 func TestRatio(t *testing.T) {
-	tests := []struct {
-		a, b string
-		want float64
+	testCases := []struct {
+		name     string
+		a        string
+		b        string
+		expected float64
 	}{
-		{"this is a test", "this is a test!", 0.9655172413793104},
-		{"NEW YORK METS", "NEW YORK YANKEES", 0.7586206896551724},
-		{"lewenstein", "levenshtein", 0.8571428571428571},
-		{"", "", 1},
-		{"abc", "", 0},
-		{"same", "same", 1},
-		{"brücke", "brucke", 0.8333333333333334},
+		{name: "ShouldScoreTrailingPunctuation", a: "this is a test", b: "this is a test!", expected: 0.9655172413793104},
+		{name: "ShouldScoreDifferentLastWord", a: "NEW YORK METS", b: "NEW YORK YANKEES", expected: 0.7586206896551724},
+		{name: "ShouldScoreMisspelling", a: "lewenstein", b: "levenshtein", expected: 0.8571428571428571},
+		{name: "ShouldScoreTwoEmptyStringsAsEqual", expected: 1},
+		{name: "ShouldScoreTextAgainstEmptyAsZero", a: "abc"},
+		{name: "ShouldScoreEqualStringsAsOne", a: "same", b: "same", expected: 1},
+		{name: "ShouldScoreUmlautByRune", a: "brücke", b: "brucke", expected: 0.8333333333333334},
 		// Longer than 64 bytes takes the rune DP path.
-		{strings.Repeat("ab", 40), strings.Repeat("ab", 40) + "c", 0.9937888198757764},
+		{name: "ShouldTakeRuneDPPathPast64Bytes", a: strings.Repeat("ab", 40), b: strings.Repeat("ab", 40) + "c", expected: 0.9937888198757764},
 	}
 
-	for _, tt := range tests {
-		assert.InDelta(t, tt.want, ratio(tt.a, tt.b), 1e-9, "%q vs %q", tt.a, tt.b)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.InDelta(t, tc.expected, ratio(tc.a, tc.b), 1e-9)
+		})
 	}
 }
 
 func TestPartialRatio(t *testing.T) {
-	tests := []struct {
-		a, b string
-		want float64
+	testCases := []struct {
+		name     string
+		a        string
+		b        string
+		expected float64
 	}{
-		{"this is a test", "this is a test!", 1},
-		{"YANKEES", "NEW YORK YANKEES", 1},
-		{"NEW YORK YANKEES", "YANKEES", 1},
-		{"fuzzy was a bear", "wuzzy fuzzy was a bear", 1},
-		{"abcd", "xbcdy", 0.75},
-		{"", "", 1},
-		{"", "abc", 0},
-		{"xyz", "abc", 0},
-		{"fellowship of the rung", "lord of the rings the fellowship of the ring", 0.9545454545454546},
-		{"ümlaut", "das ümlaut ist", 1},
+		{name: "ShouldScoreTrailingPunctuationAsSubstring", a: "this is a test", b: "this is a test!", expected: 1},
+		{name: "ShouldScoreShorterInsideLonger", a: "YANKEES", b: "NEW YORK YANKEES", expected: 1},
+		{name: "ShouldScoreLongerAroundShorter", a: "NEW YORK YANKEES", b: "YANKEES", expected: 1},
+		{name: "ShouldScoreSubstringAfterOtherWord", a: "fuzzy was a bear", b: "wuzzy fuzzy was a bear", expected: 1},
+		{name: "ShouldScoreBestWindow", a: "abcd", b: "xbcdy", expected: 0.75},
+		{name: "ShouldScoreTwoEmptyStringsAsEqual", expected: 1},
+		{name: "ShouldScoreEmptyAgainstTextAsZero", b: "abc"},
+		{name: "ShouldScoreDisjointStringsAsZero", a: "xyz", b: "abc"},
+		{name: "ShouldScoreTypoInsideLongerTitle", a: "fellowship of the rung", b: "lord of the rings the fellowship of the ring", expected: 0.9545454545454546},
+		{name: "ShouldScoreUmlautSubstring", a: "ümlaut", b: "das ümlaut ist", expected: 1},
 	}
 
-	for _, tt := range tests {
-		assert.InDelta(t, tt.want, partialRatio(tt.a, tt.b), 1e-9, "%q vs %q", tt.a, tt.b)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.InDelta(t, tc.expected, partialRatio(tc.a, tc.b), 1e-9)
+		})
 	}
 }
 
 func TestTokenSetRatio(t *testing.T) {
-	tests := []struct {
-		a, b string
-		want float64
+	testCases := []struct {
+		name     string
+		a        string
+		b        string
+		expected float64
 	}{
-		{"fuzzy was a bear", "fuzzy fuzzy was a bear", 1},
-		{"new york mets vs atlanta braves", "atlanta braves vs new york mets", 1},
-		{"mariners vs angels", "los angeles angels of anaheim at seattle mariners", 0.9090909090909091},
-		{"abc xyz", "abd uvw", 0.42857142857142855},
-		{"rocky 3", "rocky 2", 0.8571428571428571},
-		{"dune 2 alpha", "dune 3 beta", 0.6086956521739131},
-		{"", "abc", 0},
+		{name: "ShouldIgnoreRepeatedWord", a: "fuzzy was a bear", b: "fuzzy fuzzy was a bear", expected: 1},
+		{name: "ShouldIgnoreWordOrder", a: "new york mets vs atlanta braves", b: "atlanta braves vs new york mets", expected: 1},
+		{name: "ShouldScoreSharedWordsInLongerTitle", a: "mariners vs angels", b: "los angeles angels of anaheim at seattle mariners", expected: 0.9090909090909091},
+		{name: "ShouldScoreDisjointWords", a: "abc xyz", b: "abd uvw", expected: 0.42857142857142855},
+		{name: "ShouldScoreDifferentSequelNumber", a: "rocky 3", b: "rocky 2", expected: 0.8571428571428571},
+		{name: "ShouldScoreDifferentNumberAndWord", a: "dune 2 alpha", b: "dune 3 beta", expected: 0.6086956521739131},
+		{name: "ShouldScoreEmptyAgainstTextAsZero", b: "abc"},
 	}
 
-	for _, tt := range tests {
-		assert.InDelta(t, tt.want, tokenSetRatio(strings.Fields(tt.a), strings.Fields(tt.b)), 1e-9, "%q vs %q", tt.a, tt.b)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.InDelta(t, tc.expected, tokenSetRatio(strings.Fields(tc.a), strings.Fields(tc.b)), 1e-9)
+		})
 	}
 }
 
@@ -77,14 +89,20 @@ func TestTokenSetRatioDoesNotModifyInput(t *testing.T) {
 }
 
 func TestLCSPathsAgree(t *testing.T) {
-	pairs := [][2]string{
-		{"seinfeld", "seinfield"},
-		{"the lord of the rings", "lord of the rings fellowship"},
-		{"", "abc"},
-		{strings.Repeat("x", 64), strings.Repeat("x", 70)},
+	testCases := []struct {
+		name string
+		a    string
+		b    string
+	}{
+		{name: "ShouldAgreeOnTypo", a: "seinfeld", b: "seinfield"},
+		{name: "ShouldAgreeOnSharedWords", a: "the lord of the rings", b: "lord of the rings fellowship"},
+		{name: "ShouldAgreeOnEmpty", b: "abc"},
+		{name: "ShouldAgreePast64Bytes", a: strings.Repeat("x", 64), b: strings.Repeat("x", 70)},
 	}
 
-	for _, p := range pairs {
-		assert.Equal(t, lcsRunes([]rune(p[0]), []rune(p[1])), lcsLen(p[0], p[1]), "%q vs %q", p[0], p[1])
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, lcsRunes([]rune(tc.a), []rune(tc.b)), lcsLen(tc.a, tc.b))
+		})
 	}
 }

@@ -29,45 +29,56 @@ func japaneseSpeech(t *testing.T) *Speech {
 func TestJapaneseRoomSplits(t *testing.T) {
 	speech := japaneseSpeech(t)
 
-	for _, tc := range []struct {
-		query string
-		want  []RoomSplit
+	testCases := []struct {
+		name     string
+		have     string
+		expected []RoomSplit
 	}{
-		{"リビングで千と千尋の神隠し", []RoomSplit{{"千と千尋の神隠し", "リビング"}}},
-		{"千と千尋の神隠しをリビングで", []RoomSplit{{"千と千尋の神隠し", "リビング"}}},
-		{"寝室でテレビで見るドラマ", []RoomSplit{{"見るドラマ", "寝室でテレビ"}, {"テレビで見るドラマ", "寝室"}}},
-		{"千と千尋の神隠し", nil},
-		{"リビングで", nil},
-		{"でトトロ", nil},
-	} {
-		assert.Equal(t, tc.want, speech.RoomSplits("ja-JP", tc.query), tc.query)
+		{name: "ShouldSplitRoomBeforeTitle", have: "リビングで千と千尋の神隠し", expected: []RoomSplit{{"千と千尋の神隠し", "リビング"}}},
+		{name: "ShouldSplitRoomAfterTitle", have: "千と千尋の神隠しをリビングで", expected: []RoomSplit{{"千と千尋の神隠し", "リビング"}}},
+		{name: "ShouldOfferEverySplitWhenTitleHasDe", have: "寝室でテレビで見るドラマ", expected: []RoomSplit{{"見るドラマ", "寝室でテレビ"}, {"テレビで見るドラマ", "寝室"}}},
+		{name: "ShouldNotSplitTitleWithoutRoom", have: "千と千尋の神隠し"},
+		{name: "ShouldNotSplitRoomWithoutTitle", have: "リビングで"},
+		{name: "ShouldNotSplitParticleWithoutRoom", have: "でトトロ"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, speech.RoomSplits("ja-JP", tc.have))
+		})
 	}
 }
 
 func TestJapaneseReinterpret(t *testing.T) {
 	speech := japaneseSpeech(t)
 
-	for _, tc := range []struct {
-		query, intent string
-		slots         map[string]string
+	testCases := []struct {
+		name   string
+		have   string
+		intent string
+		slots  map[string]string
 	}{
-		{"ブルーイの次のエピソード", "WatchNextEpisode", map[string]string{"Show": "ブルーイ"}},
-		{"リビングでブルーイの次のエピソード", "WatchNextEpisode", map[string]string{"Show": "リビングでブルーイ"}},
-		{"ブルーイの最新話", "WatchLatestEpisode", map[string]string{"Show": "ブルーイ"}},
-		{"ブルーイのシーズン2のエピソード12", "WatchEpisode", map[string]string{"Show": "ブルーイ", "Season": "2", "Episode": "12"}},
-		{"ブルーイ", "PlayMedia", map[string]string{"Query": "ブルーイ"}},
-		{"千と千尋の神隠し", "PlayMedia", map[string]string{"Query": "千と千尋の神隠し"}},
-	} {
-		in := Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.query}}}
-		got := speech.Reinterpret("ja-JP", in)[0]
+		{name: "ShouldReadNextEpisode", have: "ブルーイの次のエピソード", intent: "WatchNextEpisode", slots: map[string]string{"Show": "ブルーイ"}},
+		{name: "ShouldKeepRoomInShow", have: "リビングでブルーイの次のエピソード", intent: "WatchNextEpisode", slots: map[string]string{"Show": "リビングでブルーイ"}},
+		{name: "ShouldReadLatestEpisode", have: "ブルーイの最新話", intent: "WatchLatestEpisode", slots: map[string]string{"Show": "ブルーイ"}},
+		{name: "ShouldReadSeasonAndEpisode", have: "ブルーイのシーズン2のエピソード12", intent: "WatchEpisode", slots: map[string]string{"Show": "ブルーイ", "Season": "2", "Episode": "12"}},
+		{name: "ShouldKeepPlainTitleAsPlayMedia", have: "ブルーイ", intent: "PlayMedia", slots: map[string]string{"Query": "ブルーイ"}},
+		{name: "ShouldKeepTitleWithNoAsPlayMedia", have: "千と千尋の神隠し", intent: "PlayMedia", slots: map[string]string{"Query": "千と千尋の神隠し"}},
+	}
 
-		values := map[string]string{}
-		for name, slot := range got.Slots {
-			values[name] = slot.Value
-		}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			in := Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.have}}}
+			actual := speech.Reinterpret("ja-JP", in)[0]
 
-		assert.Equal(t, tc.intent, got.Name, tc.query)
-		assert.Equal(t, tc.slots, values, tc.query)
+			values := map[string]string{}
+			for name, slot := range actual.Slots {
+				values[name] = slot.Value
+			}
+
+			assert.Equal(t, tc.intent, actual.Name)
+			assert.Equal(t, tc.slots, values)
+		})
 	}
 }
 
@@ -84,20 +95,28 @@ func TestJapaneseSpeech(t *testing.T) {
 	list := actions.Message{ID: "whatsnew.movies", Lists: map[string][]string{"titles": {"デューン", "エイリアン", "ヒート"}}}
 	assert.Equal(t, "見られる作品はデューン、エイリアンとヒートです。", speech.Render("ja-JP", list))
 
-	for d, want := range map[time.Duration]string{
-		20 * time.Second: "1分未満",
-		time.Minute:      "1分",
-		12 * time.Minute: "12分",
-		time.Hour:        "1時間",
-		2 * time.Hour:    "2時間",
-		72 * time.Minute: "1時間12分",
-	} {
-		assert.Equal(t, want, spokenDuration("ja", d), d)
-	}
-
 	assert.Equal(t, "AとB", spokenList("ja", []string{"A", "B"}))
 	assert.Equal(t, "15時", spokenTime("ja-JP", "ja", time.Date(1, 1, 1, 15, 0, 0, 0, time.UTC)))
 	assert.Equal(t, "9時30分", spokenTime("ja-JP", "ja", time.Date(1, 1, 1, 9, 30, 0, 0, time.UTC)))
+
+	testCases := []struct {
+		name     string
+		have     time.Duration
+		expected string
+	}{
+		{name: "ShouldSayLessThanAMinuteFor20Seconds", have: 20 * time.Second, expected: "1分未満"},
+		{name: "ShouldSayOneMinute", have: time.Minute, expected: "1分"},
+		{name: "ShouldSay12Minutes", have: 12 * time.Minute, expected: "12分"},
+		{name: "ShouldSayOneHour", have: time.Hour, expected: "1時間"},
+		{name: "ShouldSayTwoHours", have: 2 * time.Hour, expected: "2時間"},
+		{name: "ShouldSayOneHourAnd12Minutes", have: 72 * time.Minute, expected: "1時間12分"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, spokenDuration("ja", tc.have))
+		})
+	}
 }
 
 func TestUnits(t *testing.T) {
@@ -109,23 +128,30 @@ func TestUnits(t *testing.T) {
 }
 
 func TestRoomAround(t *testing.T) {
-	for _, tc := range []struct {
-		pattern, before, after string
-		place                  roomPlace
+	testCases := []struct {
+		name   string
+		have   string
+		before string
+		after  string
+		place  roomPlace
 	}{
-		{"play {Movie} [(in|on) the {Room}]", "(in|on) the ", "", roomLast},
-		{"[{Room}で]映画{Movie}を再生して", "", "で", roomFirst},
-		{"映画{Movie}を[{Room}で]再生して", "を", "で", roomMiddle},
-		{"[{Room}[の]テレビで]{Movie}を再生して", "", "[の]テレビで", roomFirst},
-		{"映画を[{Room}で]再生して", "", "", roomNone},
-		{"{Room}で{Command}", "", "", roomNone},
-		{"[{Room}で", "", "", roomNone},
-		{"{Movie}を再生して", "", "", roomNone},
-	} {
-		before, after, place := roomAround(tc.pattern)
-		assert.Equal(t, tc.place, place, tc.pattern)
-		assert.Equal(t, tc.before, before, tc.pattern)
-		assert.Equal(t, tc.after, after, tc.pattern)
+		{name: "ShouldFindRoomLast", have: "play {Movie} [(in|on) the {Room}]", before: "(in|on) the ", place: roomLast},
+		{name: "ShouldFindRoomFirst", have: "[{Room}で]映画{Movie}を再生して", after: "で", place: roomFirst},
+		{name: "ShouldFindRoomInTheMiddle", have: "映画{Movie}を[{Room}で]再生して", before: "を", after: "で", place: roomMiddle},
+		{name: "ShouldKeepOptionalWordsAfterRoom", have: "[{Room}[の]テレビで]{Movie}を再生して", after: "[の]テレビで", place: roomFirst},
+		{name: "ShouldIgnoreRoomWithoutASlotBeside", have: "映画を[{Room}で]再生して", place: roomNone},
+		{name: "ShouldIgnoreRoomOutsideOptionalPart", have: "{Room}で{Command}", place: roomNone},
+		{name: "ShouldIgnoreUnclosedBracket", have: "[{Room}で", place: roomNone},
+		{name: "ShouldIgnorePatternWithoutRoom", have: "{Movie}を再生して", place: roomNone},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			before, after, place := roomAround(tc.have)
+			assert.Equal(t, tc.place, place)
+			assert.Equal(t, tc.before, before)
+			assert.Equal(t, tc.after, after)
+		})
 	}
 }
 
@@ -154,18 +180,28 @@ func TestRoomPhrasesFromEveryPlace(t *testing.T) {
 
 // TestJapaneseRoomInSearchQuery checks that a room named before the title, as Japanese puts it, or between the title and the verb, picks that room's Kodi instance and leaves the title.
 func TestJapaneseRoomInSearchQuery(t *testing.T) {
-	for _, query := range []string{"bedroomでhot fuzz", "hot fuzzをbedroomで"} {
-		h, lounge, bedroom, rec := newRoomHandler(t)
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldPickRoomNamedBeforeTitle", have: "bedroomでhot fuzz"},
+		{name: "ShouldPickRoomNamedBetweenTitleAndVerb", have: "hot fuzzをbedroomで"},
+	}
 
-		req := mustRead(t, "testdata/golden/play-media-in-bedroom/request.json")
-		req = bytes.Replace(req, []byte(`"locale": "en-AU"`), []byte(`"locale": "ja-JP"`), 1)
-		req = bytes.Replace(req, []byte(`"value": "hot fuzz in the bedroom"`), []byte(`"value": "`+query+`"`), 1)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			h, lounge, bedroom, rec := newRoomHandler(t)
 
-		serveBody(t, h, req)
-		assert.Empty(t, lounge.Calls(), query)
-		assert.Equal(t, []string{"Play movie/4 resume"}, bedroom.Calls(), query)
+			req := mustRead(t, "testdata/golden/play-media-in-bedroom/request.json")
+			req = bytes.Replace(req, []byte(`"locale": "en-AU"`), []byte(`"locale": "ja-JP"`), 1)
+			req = bytes.Replace(req, []byte(`"value": "hot fuzz in the bedroom"`), []byte(`"value": "`+tc.have+`"`), 1)
 
-		require.Len(t, rec.entries, 1)
-		assert.Equal(t, "Bedroom", rec.entries[0].Target, query)
+			serveBody(t, h, req)
+			assert.Empty(t, lounge.Calls())
+			assert.Equal(t, []string{"Play movie/4 resume"}, bedroom.Calls())
+
+			require.Len(t, rec.entries, 1)
+			assert.Equal(t, "Bedroom", rec.entries[0].Target)
+		})
 	}
 }

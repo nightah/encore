@@ -14,26 +14,34 @@ import (
 )
 
 func TestSpokenDurationArabic(t *testing.T) {
-	for d, want := range map[time.Duration]string{
-		20 * time.Second:               "أقل من دقيقة",
-		time.Minute:                    "دقيقة",
-		2 * time.Minute:                "دقيقتان",
-		3 * time.Minute:                "3 دقائق",
-		10 * time.Minute:               "10 دقائق",
-		11 * time.Minute:               "11 دقيقة",
-		59 * time.Minute:               "59 دقيقة",
-		time.Hour:                      "ساعة",
-		2 * time.Hour:                  "ساعتان",
-		61 * time.Minute:               "ساعة ودقيقة",
-		122 * time.Minute:              "ساعتان ودقيقتان",
-		72 * time.Minute:               "ساعة و12 دقيقة",
-		3*time.Hour + 5*time.Minute:    "3 ساعات و5 دقائق",
-		100 * time.Hour:                "100 ساعة",
-		103 * time.Hour:                "103 ساعات",
-		111*time.Hour + 30*time.Minute: "111 ساعة و30 دقيقة",
-		102*time.Hour + 10*time.Minute: "102 ساعة و10 دقائق",
-	} {
-		assert.Equal(t, want, spokenDuration("ar", d), "%s", d)
+	testCases := []struct {
+		name     string
+		have     time.Duration
+		expected string
+	}{
+		{name: "ShouldSayLessThanAMinuteFor20Seconds", have: 20 * time.Second, expected: "أقل من دقيقة"},
+		{name: "ShouldSayOneMinute", have: time.Minute, expected: "دقيقة"},
+		{name: "ShouldUseDualForTwoMinutes", have: 2 * time.Minute, expected: "دقيقتان"},
+		{name: "ShouldUsePluralForThreeMinutes", have: 3 * time.Minute, expected: "3 دقائق"},
+		{name: "ShouldUsePluralForTenMinutes", have: 10 * time.Minute, expected: "10 دقائق"},
+		{name: "ShouldUseSingularForElevenMinutes", have: 11 * time.Minute, expected: "11 دقيقة"},
+		{name: "ShouldUseSingularFor59Minutes", have: 59 * time.Minute, expected: "59 دقيقة"},
+		{name: "ShouldSayOneHour", have: time.Hour, expected: "ساعة"},
+		{name: "ShouldUseDualForTwoHours", have: 2 * time.Hour, expected: "ساعتان"},
+		{name: "ShouldSayOneHourAndOneMinute", have: 61 * time.Minute, expected: "ساعة ودقيقة"},
+		{name: "ShouldUseDualForTwoHoursAndTwoMinutes", have: 122 * time.Minute, expected: "ساعتان ودقيقتان"},
+		{name: "ShouldSayOneHourAnd12Minutes", have: 72 * time.Minute, expected: "ساعة و12 دقيقة"},
+		{name: "ShouldUsePluralFor3HoursAnd5Minutes", have: 3*time.Hour + 5*time.Minute, expected: "3 ساعات و5 دقائق"},
+		{name: "ShouldUseSingularFor100Hours", have: 100 * time.Hour, expected: "100 ساعة"},
+		{name: "ShouldUsePluralFor103Hours", have: 103 * time.Hour, expected: "103 ساعات"},
+		{name: "ShouldSay111HoursAnd30Minutes", have: 111*time.Hour + 30*time.Minute, expected: "111 ساعة و30 دقيقة"},
+		{name: "ShouldSay102HoursAnd10Minutes", have: 102*time.Hour + 10*time.Minute, expected: "102 ساعة و10 دقائق"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, spokenDuration("ar", tc.have))
+		})
 	}
 }
 
@@ -42,11 +50,23 @@ func TestArabicCountWithoutDual(t *testing.T) {
 }
 
 func TestSpokenListArabic(t *testing.T) {
-	assert.Equal(t, "ذيب ووجدة", spokenList("ar", []string{"ذيب", "وجدة"}), "و joins an Arabic word")
-	assert.Equal(t, "ذيب، وجدة وباب الحديد", spokenList("ar", []string{"ذيب", "وجدة", "باب الحديد"}))
-	assert.Equal(t, "ذيب، Alien و Dune", spokenList("ar", []string{"ذيب", "Alien", "Dune"}), "و stands apart before a Latin title")
-	assert.Equal(t, "Dune و 1917", spokenList("ar", []string{"Dune", "1917"}), "and before a number")
-	assert.Equal(t, "Dune", spokenList("ar", []string{"Dune"}))
+	testCases := []struct {
+		name     string
+		have     []string
+		expected string
+	}{
+		{name: "ShouldJoinAnArabicWordWithWaw", have: []string{"ذيب", "وجدة"}, expected: "ذيب ووجدة"},
+		{name: "ShouldSeparateThreeArabicTitles", have: []string{"ذيب", "وجدة", "باب الحديد"}, expected: "ذيب، وجدة وباب الحديد"},
+		{name: "ShouldStandWawApartBeforeALatinTitle", have: []string{"ذيب", "Alien", "Dune"}, expected: "ذيب، Alien و Dune"},
+		{name: "ShouldStandWawApartBeforeANumber", have: []string{"Dune", "1917"}, expected: "Dune و 1917"},
+		{name: "ShouldSayASingleTitle", have: []string{"Dune"}, expected: "Dune"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, spokenList("ar", tc.have))
+		})
+	}
 }
 
 func TestRenderArabic(t *testing.T) {
@@ -56,16 +76,21 @@ func TestRenderArabic(t *testing.T) {
 	speech, err := NewSpeech(src, slog.New(slog.DiscardHandler))
 	require.NoError(t, err)
 
-	assert.Equal(t, "يعرض الآن ذيب. المتبقي ساعة و12 دقيقة.", speech.Render("ar-SA", actions.Message{
-		ID:        "playback.now_movie",
-		Params:    map[string]string{"title": "ذيب"},
-		Durations: map[string]time.Duration{"remaining": 72 * time.Minute},
-	}))
-	assert.Equal(t, "أحدث ألبوماتك: Thriller، تملي معاك والأماكن.", speech.Render("ar-SA", actions.Message{
-		ID:    "whatsnew.albums",
-		Lists: map[string][]string{"titles": {"Thriller", "تملي معاك", "الأماكن"}},
-	}))
-	assert.Equal(t, "الترجمة: الفرنسية.", speech.Render("ar-SA", actions.Message{ID: "streams.subtitles_language", Languages: map[string]string{"language": "fre"}}))
+	testCases := []struct {
+		name     string
+		have     actions.Message
+		expected string
+	}{
+		{name: "ShouldSayWhatIsPlayingAndTimeRemaining", have: actions.Message{ID: "playback.now_movie", Params: map[string]string{"title": "ذيب"}, Durations: map[string]time.Duration{"remaining": 72 * time.Minute}}, expected: "يعرض الآن ذيب. المتبقي ساعة و12 دقيقة."},
+		{name: "ShouldListLatestAlbums", have: actions.Message{ID: "whatsnew.albums", Lists: map[string][]string{"titles": {"Thriller", "تملي معاك", "الأماكن"}}}, expected: "أحدث ألبوماتك: Thriller، تملي معاك والأماكن."},
+		{name: "ShouldNameSubtitleLanguage", have: actions.Message{ID: "streams.subtitles_language", Languages: map[string]string{"language": "fre"}}, expected: "الترجمة: الفرنسية."},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, speech.Render("ar-SA", tc.have))
+		})
+	}
 }
 
 func TestRoomSplitsArabic(t *testing.T) {
@@ -75,20 +100,22 @@ func TestRoomSplitsArabic(t *testing.T) {
 	speech, err := NewSpeech(src, slog.New(slog.DiscardHandler))
 	require.NoError(t, err)
 
-	for _, tc := range []struct {
-		query string
-		want  []RoomSplit
+	testCases := []struct {
+		name     string
+		have     string
+		expected []RoomSplit
 	}{
-		{"ذيب في الصالة", []RoomSplit{{"ذيب", "الصالة"}}},
-		{"وجدة في غرفة النوم", []RoomSplit{{"وجدة", "غرفة النوم"}}},
-		{"صعيدي في الجامعة الأمريكية في المجلس", []RoomSplit{
-			{"صعيدي", "الجامعة الأمريكية في المجلس"},
-			{"صعيدي في الجامعة الأمريكية", "المجلس"},
-		}},
-		{"ذيب", nil},
-		{"في الصالة", nil},
-	} {
-		assert.Equal(t, tc.want, speech.RoomSplits("ar-SA", tc.query), tc.query)
+		{name: "ShouldSplitRoomAfterFi", have: "ذيب في الصالة", expected: []RoomSplit{{"ذيب", "الصالة"}}},
+		{name: "ShouldSplitMultiWordRoom", have: "وجدة في غرفة النوم", expected: []RoomSplit{{"وجدة", "غرفة النوم"}}},
+		{name: "ShouldOfferEverySplitWhenTitleHasFi", have: "صعيدي في الجامعة الأمريكية في المجلس", expected: []RoomSplit{{"صعيدي", "الجامعة الأمريكية في المجلس"}, {"صعيدي في الجامعة الأمريكية", "المجلس"}}},
+		{name: "ShouldNotSplitTitleWithoutRoom", have: "ذيب"},
+		{name: "ShouldNotSplitRoomWithoutTitle", have: "في الصالة"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, speech.RoomSplits("ar-SA", tc.have))
+		})
 	}
 }
 
@@ -104,27 +131,32 @@ func TestReinterpretArabic(t *testing.T) {
 		slots  map[string]string
 	}
 
-	for _, tc := range []struct {
-		query string
-		want  want
+	testCases := []struct {
+		name     string
+		have     string
+		expected want
 	}{
-		{"الحلقة الجاية من طاش ما طاش", want{"WatchNextEpisode", map[string]string{"Show": "طاش ما طاش"}}},
-		{"الحلقة الجاية من مسلسل طاش ما طاش في الصالة", want{"WatchNextEpisode", map[string]string{"Show": "طاش ما طاش في الصالة"}}},
-		{"آخر حلقة من العاصوف", want{"WatchLatestEpisode", map[string]string{"Show": "العاصوف"}}},
-		{"أول حلقة من العاصوف", want{"WatchFirstEpisode", map[string]string{"Show": "العاصوف"}}},
-		{"حلقة عشوائية من مسلسل جن", want{"WatchRandomEpisode", map[string]string{"Show": "جن"}}},
-		{"الموسم 2 الحلقة 4 من باب الحارة", want{"WatchEpisode", map[string]string{"Show": "باب الحارة", "Season": "2", "Episode": "4"}}},
-		{"طاش ما طاش", want{"PlayMedia", map[string]string{"Query": "طاش ما طاش"}}},
-	} {
-		in := Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.query}}}
-		got := speech.Reinterpret("ar-SA", in)[0]
+		{name: "ShouldReadNextEpisode", have: "الحلقة الجاية من طاش ما طاش", expected: want{"WatchNextEpisode", map[string]string{"Show": "طاش ما طاش"}}},
+		{name: "ShouldKeepRoomInShowAfterMusalsal", have: "الحلقة الجاية من مسلسل طاش ما طاش في الصالة", expected: want{"WatchNextEpisode", map[string]string{"Show": "طاش ما طاش في الصالة"}}},
+		{name: "ShouldReadLatestEpisode", have: "آخر حلقة من العاصوف", expected: want{"WatchLatestEpisode", map[string]string{"Show": "العاصوف"}}},
+		{name: "ShouldReadFirstEpisode", have: "أول حلقة من العاصوف", expected: want{"WatchFirstEpisode", map[string]string{"Show": "العاصوف"}}},
+		{name: "ShouldReadRandomEpisode", have: "حلقة عشوائية من مسلسل جن", expected: want{"WatchRandomEpisode", map[string]string{"Show": "جن"}}},
+		{name: "ShouldReadSeasonAndEpisode", have: "الموسم 2 الحلقة 4 من باب الحارة", expected: want{"WatchEpisode", map[string]string{"Show": "باب الحارة", "Season": "2", "Episode": "4"}}},
+		{name: "ShouldKeepPlainTitleAsPlayMedia", have: "طاش ما طاش", expected: want{"PlayMedia", map[string]string{"Query": "طاش ما طاش"}}},
+	}
 
-		values := map[string]string{}
-		for name, slot := range got.Slots {
-			values[name] = slot.Value
-		}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			in := Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.have}}}
+			actual := speech.Reinterpret("ar-SA", in)[0]
 
-		assert.Equal(t, tc.want, want{got.Name, values}, tc.query)
+			values := map[string]string{}
+			for name, slot := range actual.Slots {
+				values[name] = slot.Value
+			}
+
+			assert.Equal(t, tc.expected, want{actual.Name, values})
+		})
 	}
 }
 

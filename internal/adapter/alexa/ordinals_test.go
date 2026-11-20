@@ -22,29 +22,36 @@ func reading(speech *Speech, locale, query string) (string, map[string]string) {
 func TestReinterpretFirstWrittenAsDigits(t *testing.T) {
 	speech := shippedSpeech(t)
 
-	for _, tc := range []struct {
-		locale, query, show string
+	testCases := []struct {
+		name     string
+		locale   string
+		have     string
+		expected string
 	}{
-		{"en-AU", "the 1st episode of bluey", "bluey"},
-		{"nl-NL", "de 1e aflevering van flikken maastricht", "flikken maastricht"},
-		{"nl-NL", "de 1ste aflevering van flikken maastricht", "flikken maastricht"},
-		{"pt-BR", "o 1º episódio de irmandade", "irmandade"},
-		{"pt-BR", "o 1° episódio de irmandade", "irmandade"},
-		{"fr-FR", "le 1er épisode de kaamelott", "kaamelott"},
-		{"fr-CA", "le 1er épisode de district 31", "district 31"},
-		{"es-ES", "el 1er capítulo de la casa de papel", "la casa de papel"},
-		{"es-MX", "el 1º episodio de club de cuervos", "club de cuervos"},
-		{"es-US", "el 1.er episodio de club de cuervos", "club de cuervos"},
-		{"it-IT", "il 1º episodio di gomorra", "gomorra"},
-		{"it-IT", "il 1° episodio di gomorra", "gomorra"},
-		{"de-DE", "die 1. folge von dark", "dark"},
-		{"hi-IN", "पंचायत का 1ला एपिसोड", "पंचायत"},
-		{"ja-JP", "ブルーイの第1話", "ブルーイ"},
-		{"ja-JP", "ブルーイの1話目", "ブルーイ"},
-	} {
-		intent, slots := reading(speech, tc.locale, tc.query)
-		assert.Equal(t, "WatchFirstEpisode", intent, "%s %q", tc.locale, tc.query)
-		assert.Equal(t, map[string]string{"Show": tc.show}, slots, "%s %q", tc.locale, tc.query)
+		{name: "ShouldRead1stInEnAU", locale: "en-AU", have: "the 1st episode of bluey", expected: "bluey"},
+		{name: "ShouldRead1eInNlNL", locale: "nl-NL", have: "de 1e aflevering van flikken maastricht", expected: "flikken maastricht"},
+		{name: "ShouldRead1steInNlNL", locale: "nl-NL", have: "de 1ste aflevering van flikken maastricht", expected: "flikken maastricht"},
+		{name: "ShouldRead1WithOrdinalIndicatorInPtBR", locale: "pt-BR", have: "o 1º episódio de irmandade", expected: "irmandade"},
+		{name: "ShouldRead1WithDegreeSignInPtBR", locale: "pt-BR", have: "o 1° episódio de irmandade", expected: "irmandade"},
+		{name: "ShouldRead1erInFrFR", locale: "fr-FR", have: "le 1er épisode de kaamelott", expected: "kaamelott"},
+		{name: "ShouldRead1erInFrCA", locale: "fr-CA", have: "le 1er épisode de district 31", expected: "district 31"},
+		{name: "ShouldRead1erInEsES", locale: "es-ES", have: "el 1er capítulo de la casa de papel", expected: "la casa de papel"},
+		{name: "ShouldRead1WithOrdinalIndicatorInEsMX", locale: "es-MX", have: "el 1º episodio de club de cuervos", expected: "club de cuervos"},
+		{name: "ShouldRead1DotErInEsUS", locale: "es-US", have: "el 1.er episodio de club de cuervos", expected: "club de cuervos"},
+		{name: "ShouldRead1WithOrdinalIndicatorInItIT", locale: "it-IT", have: "il 1º episodio di gomorra", expected: "gomorra"},
+		{name: "ShouldRead1WithDegreeSignInItIT", locale: "it-IT", have: "il 1° episodio di gomorra", expected: "gomorra"},
+		{name: "ShouldRead1DotInDeDE", locale: "de-DE", have: "die 1. folge von dark", expected: "dark"},
+		{name: "ShouldRead1laInHiIN", locale: "hi-IN", have: "पंचायत का 1ला एपिसोड", expected: "पंचायत"},
+		{name: "ShouldReadDai1waInJaJP", locale: "ja-JP", have: "ブルーイの第1話", expected: "ブルーイ"},
+		{name: "ShouldRead1wameInJaJP", locale: "ja-JP", have: "ブルーイの1話目", expected: "ブルーイ"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			intent, slots := reading(speech, tc.locale, tc.have)
+			assert.Equal(t, "WatchFirstEpisode", intent)
+			assert.Equal(t, map[string]string{"Show": tc.expected}, slots)
+		})
 	}
 }
 
@@ -61,44 +68,50 @@ func TestReinterpretKeepsNumberSlots(t *testing.T) {
 func TestReinterpretSeason(t *testing.T) {
 	speech := shippedSpeech(t)
 
-	for _, tc := range []struct {
-		locale, query string
-		slots         map[string]string
+	testCases := []struct {
+		name     string
+		locale   string
+		have     string
+		expected map[string]string
 	}{
-		{"en-AU", "season 2 of bluey", map[string]string{"Show": "bluey", "Season": "2"}},
-		{"en-GB", "series 2 of bluey", map[string]string{"Show": "bluey", "Season": "2"}},
-		{"en-US", "bluey season 2", map[string]string{"Show": "bluey", "Season": "2"}},
-		{"en-AU", "the second season of bluey", map[string]string{"Show": "bluey", "Ordinal": "second"}},
-		{"en-AU", "the 2nd season of bluey", map[string]string{"Show": "bluey", "Ordinal": "2nd"}},
-		{"en-AU", "all of season 3 of bluey", map[string]string{"Show": "bluey", "Season": "3"}},
-		{"en-AU", "season 2", map[string]string{"Season": "2"}},
-		{"de-DE", "staffel 2 von dark", map[string]string{"Show": "dark", "Season": "2"}},
-		{"de-DE", "die zweite staffel von dark", map[string]string{"Show": "dark", "Ordinal": "zweite"}},
-		{"de-DE", "die 2. staffel von dark", map[string]string{"Show": "dark", "Ordinal": "2."}},
-		{"fr-FR", "la saison 2 de kaamelott", map[string]string{"Show": "kaamelott", "Season": "2"}},
-		{"fr-FR", "la deuxième saison de kaamelott", map[string]string{"Show": "kaamelott", "Ordinal": "deuxième"}},
-		{"fr-CA", "la 2e saison de district 31", map[string]string{"Show": "district 31", "Ordinal": "2e"}},
-		{"es-ES", "la temporada 2 de la casa de papel", map[string]string{"Show": "la casa de papel", "Season": "2"}},
-		{"es-ES", "la segunda temporada de la casa de papel", map[string]string{"Show": "la casa de papel", "Ordinal": "segunda"}},
-		{"es-MX", "la 2da temporada de club de cuervos", map[string]string{"Show": "club de cuervos", "Ordinal": "2da"}},
-		{"es-US", "la 2ª temporada de club de cuervos", map[string]string{"Show": "club de cuervos", "Ordinal": "2ª"}},
-		{"it-IT", "la seconda stagione di gomorra", map[string]string{"Show": "gomorra", "Ordinal": "seconda"}},
-		{"it-IT", "la stagione 2 di gomorra", map[string]string{"Show": "gomorra", "Season": "2"}},
-		{"pt-BR", "a segunda temporada de sintonia", map[string]string{"Show": "sintonia", "Ordinal": "segunda"}},
-		{"pt-BR", "a 2ª temporada de sintonia", map[string]string{"Show": "sintonia", "Ordinal": "2ª"}},
-		{"nl-NL", "seizoen 2 van flikken maastricht", map[string]string{"Show": "flikken maastricht", "Season": "2"}},
-		{"nl-NL", "het 2e seizoen van flikken maastricht", map[string]string{"Show": "flikken maastricht", "Ordinal": "2e"}},
-		{"ar-SA", "الموسم الثاني من بلوي", map[string]string{"Show": "بلوي", "Ordinal": "الثاني"}},
-		{"ar-SA", "الموسم 2 من بلوي", map[string]string{"Show": "بلوي", "Season": "2"}},
-		{"hi-IN", "ब्लूई का दूसरा सीज़न", map[string]string{"Show": "ब्लूई", "Ordinal": "दूसरा"}},
-		{"hi-IN", "ब्लूई का सीज़न 2", map[string]string{"Show": "ब्लूई", "Season": "2"}},
-		{"ja-JP", "ブルーイのシーズン2", map[string]string{"Show": "ブルーイ", "Season": "2"}},
-		{"ja-JP", "ブルーイのセカンドシーズン", map[string]string{"Show": "ブルーイ", "Ordinal": "セカンド"}},
-		{"ja-JP", "ブルーイの第2期", map[string]string{"Show": "ブルーイ", "Season": "2"}},
-	} {
-		intent, slots := reading(speech, tc.locale, tc.query)
-		assert.Equal(t, "WatchSeason", intent, "%s %q", tc.locale, tc.query)
-		assert.Equal(t, tc.slots, slots, "%s %q", tc.locale, tc.query)
+		{name: "ShouldReadSeasonNumberInEnAU", locale: "en-AU", have: "season 2 of bluey", expected: map[string]string{"Show": "bluey", "Season": "2"}},
+		{name: "ShouldReadSeriesNumberInEnGB", locale: "en-GB", have: "series 2 of bluey", expected: map[string]string{"Show": "bluey", "Season": "2"}},
+		{name: "ShouldReadSeasonNumberAfterShowInEnUS", locale: "en-US", have: "bluey season 2", expected: map[string]string{"Show": "bluey", "Season": "2"}},
+		{name: "ShouldReadOrdinalWordInEnAU", locale: "en-AU", have: "the second season of bluey", expected: map[string]string{"Show": "bluey", "Ordinal": "second"}},
+		{name: "ShouldReadWrittenOrdinalInEnAU", locale: "en-AU", have: "the 2nd season of bluey", expected: map[string]string{"Show": "bluey", "Ordinal": "2nd"}},
+		{name: "ShouldReadAllOfSeasonInEnAU", locale: "en-AU", have: "all of season 3 of bluey", expected: map[string]string{"Show": "bluey", "Season": "3"}},
+		{name: "ShouldReadSeasonWithoutShowInEnAU", locale: "en-AU", have: "season 2", expected: map[string]string{"Season": "2"}},
+		{name: "ShouldReadSeasonNumberInDeDE", locale: "de-DE", have: "staffel 2 von dark", expected: map[string]string{"Show": "dark", "Season": "2"}},
+		{name: "ShouldReadOrdinalWordInDeDE", locale: "de-DE", have: "die zweite staffel von dark", expected: map[string]string{"Show": "dark", "Ordinal": "zweite"}},
+		{name: "ShouldReadWrittenOrdinalInDeDE", locale: "de-DE", have: "die 2. staffel von dark", expected: map[string]string{"Show": "dark", "Ordinal": "2."}},
+		{name: "ShouldReadSeasonNumberInFrFR", locale: "fr-FR", have: "la saison 2 de kaamelott", expected: map[string]string{"Show": "kaamelott", "Season": "2"}},
+		{name: "ShouldReadOrdinalWordInFrFR", locale: "fr-FR", have: "la deuxième saison de kaamelott", expected: map[string]string{"Show": "kaamelott", "Ordinal": "deuxième"}},
+		{name: "ShouldReadWrittenOrdinalInFrCA", locale: "fr-CA", have: "la 2e saison de district 31", expected: map[string]string{"Show": "district 31", "Ordinal": "2e"}},
+		{name: "ShouldReadSeasonNumberInEsES", locale: "es-ES", have: "la temporada 2 de la casa de papel", expected: map[string]string{"Show": "la casa de papel", "Season": "2"}},
+		{name: "ShouldReadOrdinalWordInEsES", locale: "es-ES", have: "la segunda temporada de la casa de papel", expected: map[string]string{"Show": "la casa de papel", "Ordinal": "segunda"}},
+		{name: "ShouldReadWrittenOrdinalInEsMX", locale: "es-MX", have: "la 2da temporada de club de cuervos", expected: map[string]string{"Show": "club de cuervos", "Ordinal": "2da"}},
+		{name: "ShouldReadWrittenOrdinalInEsUS", locale: "es-US", have: "la 2ª temporada de club de cuervos", expected: map[string]string{"Show": "club de cuervos", "Ordinal": "2ª"}},
+		{name: "ShouldReadOrdinalWordInItIT", locale: "it-IT", have: "la seconda stagione di gomorra", expected: map[string]string{"Show": "gomorra", "Ordinal": "seconda"}},
+		{name: "ShouldReadSeasonNumberInItIT", locale: "it-IT", have: "la stagione 2 di gomorra", expected: map[string]string{"Show": "gomorra", "Season": "2"}},
+		{name: "ShouldReadOrdinalWordInPtBR", locale: "pt-BR", have: "a segunda temporada de sintonia", expected: map[string]string{"Show": "sintonia", "Ordinal": "segunda"}},
+		{name: "ShouldReadWrittenOrdinalInPtBR", locale: "pt-BR", have: "a 2ª temporada de sintonia", expected: map[string]string{"Show": "sintonia", "Ordinal": "2ª"}},
+		{name: "ShouldReadSeasonNumberInNlNL", locale: "nl-NL", have: "seizoen 2 van flikken maastricht", expected: map[string]string{"Show": "flikken maastricht", "Season": "2"}},
+		{name: "ShouldReadWrittenOrdinalInNlNL", locale: "nl-NL", have: "het 2e seizoen van flikken maastricht", expected: map[string]string{"Show": "flikken maastricht", "Ordinal": "2e"}},
+		{name: "ShouldReadOrdinalWordInArSA", locale: "ar-SA", have: "الموسم الثاني من بلوي", expected: map[string]string{"Show": "بلوي", "Ordinal": "الثاني"}},
+		{name: "ShouldReadSeasonNumberInArSA", locale: "ar-SA", have: "الموسم 2 من بلوي", expected: map[string]string{"Show": "بلوي", "Season": "2"}},
+		{name: "ShouldReadOrdinalWordInHiIN", locale: "hi-IN", have: "ब्लूई का दूसरा सीज़न", expected: map[string]string{"Show": "ब्लूई", "Ordinal": "दूसरा"}},
+		{name: "ShouldReadSeasonNumberInHiIN", locale: "hi-IN", have: "ब्लूई का सीज़न 2", expected: map[string]string{"Show": "ब्लूई", "Season": "2"}},
+		{name: "ShouldReadSeasonNumberInJaJP", locale: "ja-JP", have: "ブルーイのシーズン2", expected: map[string]string{"Show": "ブルーイ", "Season": "2"}},
+		{name: "ShouldReadOrdinalWordInJaJP", locale: "ja-JP", have: "ブルーイのセカンドシーズン", expected: map[string]string{"Show": "ブルーイ", "Ordinal": "セカンド"}},
+		{name: "ShouldReadDaiNKiInJaJP", locale: "ja-JP", have: "ブルーイの第2期", expected: map[string]string{"Show": "ブルーイ", "Season": "2"}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			intent, slots := reading(speech, tc.locale, tc.have)
+			assert.Equal(t, "WatchSeason", intent)
+			assert.Equal(t, tc.expected, slots)
+		})
 	}
 }
 
@@ -114,22 +127,29 @@ func TestReinterpretSeasonNeedsAnOrdinal(t *testing.T) {
 func TestReinterpretEpisodeCode(t *testing.T) {
 	speech := shippedSpeech(t)
 
-	for _, tc := range []struct {
-		locale, query, intent string
-		slots                 map[string]string
+	testCases := []struct {
+		name   string
+		locale string
+		have   string
+		intent string
+		slots  map[string]string
 	}{
-		{"en-AU", "bluey s2e3", "WatchEpisode", map[string]string{"Show": "bluey", "Season": "2", "Episode": "3"}},
-		{"en-AU", "Bluey S02E03", "WatchEpisode", map[string]string{"Show": "Bluey", "Season": "2", "Episode": "3"}},
-		{"en-US", "bluey s. 2 e. 3", "WatchEpisode", map[string]string{"Show": "bluey", "Season": "2", "Episode": "3"}},
-		{"en-GB", "bluey s2 ep3", "WatchEpisode", map[string]string{"Show": "bluey", "Season": "2", "Episode": "3"}},
-		{"de-DE", "dark s1e4", "WatchEpisode", map[string]string{"Show": "dark", "Season": "1", "Episode": "4"}},
-		{"en-AU", "bluey s2", "WatchSeason", map[string]string{"Show": "bluey", "Season": "2"}},
-		{"en-AU", "ocean's 12", "PlayMedia", map[string]string{"Query": "ocean's 12"}},
-		{"en-AU", "s2e3", "PlayMedia", map[string]string{"Query": "s2e3"}},
-	} {
-		intent, slots := reading(speech, tc.locale, tc.query)
-		assert.Equal(t, tc.intent, intent, "%s %q", tc.locale, tc.query)
-		assert.Equal(t, tc.slots, slots, "%s %q", tc.locale, tc.query)
+		{name: "ShouldReadLowercaseCode", locale: "en-AU", have: "bluey s2e3", intent: "WatchEpisode", slots: map[string]string{"Show": "bluey", "Season": "2", "Episode": "3"}},
+		{name: "ShouldReadUppercasePaddedCode", locale: "en-AU", have: "Bluey S02E03", intent: "WatchEpisode", slots: map[string]string{"Show": "Bluey", "Season": "2", "Episode": "3"}},
+		{name: "ShouldReadSpokenLettersCode", locale: "en-US", have: "bluey s. 2 e. 3", intent: "WatchEpisode", slots: map[string]string{"Show": "bluey", "Season": "2", "Episode": "3"}},
+		{name: "ShouldReadEpCode", locale: "en-GB", have: "bluey s2 ep3", intent: "WatchEpisode", slots: map[string]string{"Show": "bluey", "Season": "2", "Episode": "3"}},
+		{name: "ShouldReadCodeInDeDE", locale: "de-DE", have: "dark s1e4", intent: "WatchEpisode", slots: map[string]string{"Show": "dark", "Season": "1", "Episode": "4"}},
+		{name: "ShouldReadSeasonOnlyCodeAsSeason", locale: "en-AU", have: "bluey s2", intent: "WatchSeason", slots: map[string]string{"Show": "bluey", "Season": "2"}},
+		{name: "ShouldKeepTitleEndingInNumberAsPlayMedia", locale: "en-AU", have: "ocean's 12", intent: "PlayMedia", slots: map[string]string{"Query": "ocean's 12"}},
+		{name: "ShouldKeepCodeWithoutShowAsPlayMedia", locale: "en-AU", have: "s2e3", intent: "PlayMedia", slots: map[string]string{"Query": "s2e3"}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			intent, slots := reading(speech, tc.locale, tc.have)
+			assert.Equal(t, tc.intent, intent)
+			assert.Equal(t, tc.slots, slots)
+		})
 	}
 }
 
@@ -137,73 +157,91 @@ func TestReinterpretEpisodeCode(t *testing.T) {
 func TestSpeechOrdinal(t *testing.T) {
 	speech := shippedSpeech(t)
 
-	for _, tc := range []struct {
-		locale, heard string
-		want          int
+	testCases := []struct {
+		name     string
+		locale   string
+		have     string
+		expected int
+		ok       bool
 	}{
-		{"en-AU", "second", 2},
-		{"en-AU", "2nd", 2},
-		{"en-AU", "3rd", 3},
-		{"en-AU", "21st", 21},
-		{"en-AU", "4", 4},
-		{"de-DE", "zweite", 2},
-		{"de-DE", "zweiten", 2},
-		{"de-DE", "3.", 3},
-		{"fr-FR", "première", 1},
-		{"fr-FR", "1re", 1},
-		{"fr-FR", "1er", 1},
-		{"fr-FR", "2e", 2},
-		{"fr-CA", "2ème", 2},
-		{"fr-FR", "seconde", 2},
-		{"es-ES", "tercera", 3},
-		{"es-ES", "3ª", 3},
-		{"es-ES", "1.º", 1},
-		{"es-MX", "3ra", 3},
-		{"es-US", "2do", 2},
-		{"it-IT", "terza", 3},
-		{"it-IT", "3º", 3},
-		{"it-IT", "3°", 3},
-		{"pt-BR", "terceira", 3},
-		{"pt-BR", "3ª", 3},
-		{"nl-NL", "derde", 3},
-		{"nl-NL", "3e", 3},
-		{"nl-NL", "8ste", 8},
-		{"ar-SA", "الثالث", 3},
-		{"ar-SA", "الاول", 1},
-		{"hi-IN", "तीसरा", 3},
-		{"hi-IN", "पांचवां", 5},
-		{"hi-IN", "3रा", 3},
-		{"ja-JP", "サード", 3},
-		{"ja-JP", "第三", 3},
-		{"ja-JP", "第3", 3},
-		{"xx-XX", "third", 3},
-		{"xx-XX", "21st", 21},
-	} {
-		got, ok := speech.Ordinal(tc.locale, tc.heard)
-		assert.True(t, ok, "%s %q", tc.locale, tc.heard)
-		assert.Equal(t, tc.want, got, "%s %q", tc.locale, tc.heard)
+		{name: "ShouldReadSecondInEnAU", locale: "en-AU", have: "second", expected: 2, ok: true},
+		{name: "ShouldRead2ndInEnAU", locale: "en-AU", have: "2nd", expected: 2, ok: true},
+		{name: "ShouldRead3rdInEnAU", locale: "en-AU", have: "3rd", expected: 3, ok: true},
+		{name: "ShouldRead21stInEnAU", locale: "en-AU", have: "21st", expected: 21, ok: true},
+		{name: "ShouldReadPlainNumberInEnAU", locale: "en-AU", have: "4", expected: 4, ok: true},
+		{name: "ShouldReadZweiteInDeDE", locale: "de-DE", have: "zweite", expected: 2, ok: true},
+		{name: "ShouldReadInflectedZweitenInDeDE", locale: "de-DE", have: "zweiten", expected: 2, ok: true},
+		{name: "ShouldReadNumberWithDotInDeDE", locale: "de-DE", have: "3.", expected: 3, ok: true},
+		{name: "ShouldReadPremiereInFrFR", locale: "fr-FR", have: "première", expected: 1, ok: true},
+		{name: "ShouldRead1reInFrFR", locale: "fr-FR", have: "1re", expected: 1, ok: true},
+		{name: "ShouldRead1erInFrFR", locale: "fr-FR", have: "1er", expected: 1, ok: true},
+		{name: "ShouldRead2eInFrFR", locale: "fr-FR", have: "2e", expected: 2, ok: true},
+		{name: "ShouldRead2emeInFrCA", locale: "fr-CA", have: "2ème", expected: 2, ok: true},
+		{name: "ShouldReadSecondeInFrFR", locale: "fr-FR", have: "seconde", expected: 2, ok: true},
+		{name: "ShouldReadTerceraInEsES", locale: "es-ES", have: "tercera", expected: 3, ok: true},
+		{name: "ShouldRead3WithFeminineIndicatorInEsES", locale: "es-ES", have: "3ª", expected: 3, ok: true},
+		{name: "ShouldRead1DotWithMasculineIndicatorInEsES", locale: "es-ES", have: "1.º", expected: 1, ok: true},
+		{name: "ShouldRead3raInEsMX", locale: "es-MX", have: "3ra", expected: 3, ok: true},
+		{name: "ShouldRead2doInEsUS", locale: "es-US", have: "2do", expected: 2, ok: true},
+		{name: "ShouldReadTerzaInItIT", locale: "it-IT", have: "terza", expected: 3, ok: true},
+		{name: "ShouldRead3WithOrdinalIndicatorInItIT", locale: "it-IT", have: "3º", expected: 3, ok: true},
+		{name: "ShouldRead3WithDegreeSignInItIT", locale: "it-IT", have: "3°", expected: 3, ok: true},
+		{name: "ShouldReadTerceiraInPtBR", locale: "pt-BR", have: "terceira", expected: 3, ok: true},
+		{name: "ShouldRead3WithFeminineIndicatorInPtBR", locale: "pt-BR", have: "3ª", expected: 3, ok: true},
+		{name: "ShouldReadDerdeInNlNL", locale: "nl-NL", have: "derde", expected: 3, ok: true},
+		{name: "ShouldRead3eInNlNL", locale: "nl-NL", have: "3e", expected: 3, ok: true},
+		{name: "ShouldRead8steInNlNL", locale: "nl-NL", have: "8ste", expected: 8, ok: true},
+		{name: "ShouldReadThirdInArSA", locale: "ar-SA", have: "الثالث", expected: 3, ok: true},
+		{name: "ShouldReadFirstWithoutHamzaInArSA", locale: "ar-SA", have: "الاول", expected: 1, ok: true},
+		{name: "ShouldReadTisraInHiIN", locale: "hi-IN", have: "तीसरा", expected: 3, ok: true},
+		{name: "ShouldReadPanchvanInHiIN", locale: "hi-IN", have: "पांचवां", expected: 5, ok: true},
+		{name: "ShouldRead3raInHiIN", locale: "hi-IN", have: "3रा", expected: 3, ok: true},
+		{name: "ShouldReadSaadoInJaJP", locale: "ja-JP", have: "サード", expected: 3, ok: true},
+		{name: "ShouldReadDaiSanInJaJP", locale: "ja-JP", have: "第三", expected: 3, ok: true},
+		{name: "ShouldReadDai3InJaJP", locale: "ja-JP", have: "第3", expected: 3, ok: true},
+		{name: "ShouldReadThirdInUnknownLocale", locale: "xx-XX", have: "third", expected: 3, ok: true},
+		{name: "ShouldRead21stInUnknownLocale", locale: "xx-XX", have: "21st", expected: 21, ok: true},
+		{name: "ShouldRejectEmpty", locale: "en-AU"},
+		{name: "ShouldRejectWordThatIsNotAnOrdinal", locale: "en-AU", have: "endless"},
+		{name: "ShouldRejectFrenchSuffixInEnAU", locale: "en-AU", have: "2e"},
+		{name: "ShouldRejectEnglishSuffixInDeDE", locale: "de-DE", have: "2nd"},
 	}
 
-	for _, tc := range []struct{ locale, heard string }{
-		{"en-AU", ""},
-		{"en-AU", "endless"},
-		{"en-AU", "2e"},
-		{"de-DE", "2nd"},
-	} {
-		_, ok := speech.Ordinal(tc.locale, tc.heard)
-		assert.False(t, ok, "%s %q", tc.locale, tc.heard)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual, ok := speech.Ordinal(tc.locale, tc.have)
+
+			if !tc.ok {
+				assert.False(t, ok)
+
+				return
+			}
+
+			assert.True(t, ok)
+			assert.Equal(t, tc.expected, actual)
+		})
 	}
 }
 
 // TestWrittenOrdinalPlainNumber reads a plain number as itself in any language, and never a negative one.
 func TestWrittenOrdinalPlainNumber(t *testing.T) {
-	for _, lang := range []string{"en", "ar"} {
-		n, ok := writtenOrdinal(lang, "4")
-		assert.True(t, ok, lang)
-		assert.Equal(t, 4, n, lang)
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldReadPlainNumberInEnglish", have: "en"},
+		{name: "ShouldReadPlainNumberInArabic", have: "ar"},
+	}
 
-		_, ok = writtenOrdinal(lang, "-1")
-		assert.False(t, ok, lang)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			n, ok := writtenOrdinal(tc.have, "4")
+			assert.True(t, ok)
+			assert.Equal(t, 4, n)
+
+			_, ok = writtenOrdinal(tc.have, "-1")
+			assert.False(t, ok)
+		})
 	}
 }
 

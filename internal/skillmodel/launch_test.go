@@ -31,22 +31,31 @@ func TestShippedOpenPhrases(t *testing.T) {
 	src, err := Load(i18n.FS)
 	require.NoError(t, err)
 
-	for locale, want := range map[string][2]string{
-		"en-AU": {"open encore", "open kodi"},
-		"en-GB": {"open encore", "open kodi"},
-		"de-DE": {"öffne encore", "öffne kodi"},
-		"es-MX": {"abre encore", "abre kodi"},
-		"fr-FR": {"ouvre kodi", "ouvre kodi"},
-		"fr-CA": {"ouvre kodi", "ouvre kodi"},
-		"it-IT": {"apri encore", "apri kodi"},
-		"ar-SA": {"افتحي انكور", "افتحي كودي"},
-		"hi-IN": {"encore शुरू करो", "kodi शुरू करो"},
-		"ja-JP": {"アンコールを開いて", "コディを開いて"},
-		"nl-NL": {"open encore", "open kodi"},
-		"pt-BR": {"abrir kodi", "abrir kodi"},
-	} {
-		assert.Equal(t, want[0], src.OpenPhrase(locale, ""), locale)
-		assert.Equal(t, want[1], src.OpenPhrase(locale, InvocationKodi), locale)
+	testCases := []struct {
+		name           string
+		locale         string
+		expectedEncore string
+		expectedKodi   string
+	}{
+		{name: "ShouldOpenInEnAU", locale: "en-AU", expectedEncore: "open encore", expectedKodi: "open kodi"},
+		{name: "ShouldOpenInEnGB", locale: "en-GB", expectedEncore: "open encore", expectedKodi: "open kodi"},
+		{name: "ShouldOpenInDeDE", locale: "de-DE", expectedEncore: "öffne encore", expectedKodi: "öffne kodi"},
+		{name: "ShouldOpenInEsMX", locale: "es-MX", expectedEncore: "abre encore", expectedKodi: "abre kodi"},
+		{name: "ShouldOpenInFrFR", locale: "fr-FR", expectedEncore: "ouvre kodi", expectedKodi: "ouvre kodi"},
+		{name: "ShouldOpenInFrCA", locale: "fr-CA", expectedEncore: "ouvre kodi", expectedKodi: "ouvre kodi"},
+		{name: "ShouldOpenInItIT", locale: "it-IT", expectedEncore: "apri encore", expectedKodi: "apri kodi"},
+		{name: "ShouldOpenInArSA", locale: "ar-SA", expectedEncore: "افتحي انكور", expectedKodi: "افتحي كودي"},
+		{name: "ShouldOpenInHiIN", locale: "hi-IN", expectedEncore: "encore शुरू करो", expectedKodi: "kodi शुरू करो"},
+		{name: "ShouldOpenInJaJP", locale: "ja-JP", expectedEncore: "アンコールを開いて", expectedKodi: "コディを開いて"},
+		{name: "ShouldOpenInNlNL", locale: "nl-NL", expectedEncore: "open encore", expectedKodi: "open kodi"},
+		{name: "ShouldOpenInPtBR", locale: "pt-BR", expectedEncore: "abrir kodi", expectedKodi: "abrir kodi"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expectedEncore, src.OpenPhrase(tc.locale, ""))
+			assert.Equal(t, tc.expectedKodi, src.OpenPhrase(tc.locale, InvocationKodi))
+		})
 	}
 
 	for _, locale := range src.LocaleNames() {

@@ -68,37 +68,41 @@ func logged(t *testing.T, h *harness, n int) (string, loggedMatch) {
 func TestContractVoiceAgainstKodi(t *testing.T) {
 	h := contractHarness(t)
 
-	cases := []struct {
-		intent, slot, heard string
-		outcome, speech     string
-		title               string
-		year                int
+	testCases := []struct {
+		name            string
+		intent          string
+		slot            string
+		heard           string
+		expectedOutcome string
+		expectedSpeech  string
+		expectedTitle   string
+		expectedYear    int
 	}{
-		{"WatchMovie", "Movie", "dune two thousand and twenty one", "played", "Playing Dune.", "Dune", 2021},
-		{"WatchMovie", "Movie", "dune part two", "played", "Playing Dune: Part Two.", "Dune: Part Two", 2024},
-		{"WatchMovie", "Movie", "rocky two", "played", "Playing Rocky II.", "Rocky II", 1979},
-		{"WatchMovie", "Movie", "toy story three", "played", "Playing Toy Story 3.", "Toy Story 3", 2010},
-		{"WatchNextEpisode", "Show", "severance", "played", "Playing Severance, season 1, episode 1, Good News About Hell.", "Severance", 2022},
+		{name: "ShouldPlayDuneByItsYear", intent: "WatchMovie", slot: "Movie", heard: "dune two thousand and twenty one", expectedOutcome: "played", expectedSpeech: "Playing Dune.", expectedTitle: "Dune", expectedYear: 2021},
+		{name: "ShouldPlayDunePartTwo", intent: "WatchMovie", slot: "Movie", heard: "dune part two", expectedOutcome: "played", expectedSpeech: "Playing Dune: Part Two.", expectedTitle: "Dune: Part Two", expectedYear: 2024},
+		{name: "ShouldPlayRockyIIFromASpokenNumber", intent: "WatchMovie", slot: "Movie", heard: "rocky two", expectedOutcome: "played", expectedSpeech: "Playing Rocky II.", expectedTitle: "Rocky II", expectedYear: 1979},
+		{name: "ShouldPlayToyStory3FromASpokenNumber", intent: "WatchMovie", slot: "Movie", heard: "toy story three", expectedOutcome: "played", expectedSpeech: "Playing Toy Story 3.", expectedTitle: "Toy Story 3", expectedYear: 2010},
+		{name: "ShouldPlayTheNextEpisodeOfSeverance", intent: "WatchNextEpisode", slot: "Show", heard: "severance", expectedOutcome: "played", expectedSpeech: "Playing Severance, season 1, episode 1, Good News About Hell.", expectedTitle: "Severance", expectedYear: 2022},
 	}
 
-	for i, c := range cases {
-		t.Run(c.heard, func(t *testing.T) {
-			resp := h.say(t, c.intent, c.slot, c.heard)
-			assert.Equal(t, c.speech, speech(resp))
+	for i, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp := h.say(t, tc.intent, tc.slot, tc.heard)
+			assert.Equal(t, tc.expectedSpeech, speech(resp))
 
 			outcome, m := logged(t, h, i+1)
-			assert.Equal(t, c.outcome, outcome)
+			assert.Equal(t, tc.expectedOutcome, outcome)
 			require.NotEmpty(t, m.Candidates, "%+v", m)
-			assert.Equal(t, c.title, m.Candidates[0].Title)
-			assert.Equal(t, c.year, m.Candidates[0].Year)
+			assert.Equal(t, tc.expectedTitle, m.Candidates[0].Title)
+			assert.Equal(t, tc.expectedYear, m.Candidates[0].Year)
 		})
 	}
 
-	t.Run("an ambiguous title asks", func(t *testing.T) {
+	t.Run("ShouldAskAboutAnAmbiguousTitle", func(t *testing.T) {
 		resp := h.say(t, "WatchMovie", "Movie", "dune")
 		assert.Contains(t, speech(resp), "Did you mean")
 
-		outcome, m := logged(t, h, len(cases)+1)
+		outcome, m := logged(t, h, len(testCases)+1)
 		assert.Equal(t, "asked", outcome)
 		assert.Equal(t, "ask", m.Decision)
 	})

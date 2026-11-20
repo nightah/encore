@@ -31,16 +31,23 @@ func TestSeek(t *testing.T) {
 	target, backend := playingTarget(t)
 	to := 42 * time.Minute
 
-	for _, req := range []SeekRequest{
-		{By: 90 * time.Second},
-		{By: -10 * time.Minute},
-		{Step: media.SeekBigBackward},
-		{},
-		{To: &to},
-	} {
-		o = svc.Seek(t.Context(), target, req)
-		assert.Empty(t, o.Say.ID, "seeking is silent")
-		assert.True(t, o.EndSession)
+	testCases := []struct {
+		name string
+		have SeekRequest
+	}{
+		{name: "ShouldSeekForward", have: SeekRequest{By: 90 * time.Second}},
+		{name: "ShouldSeekBackward", have: SeekRequest{By: -10 * time.Minute}},
+		{name: "ShouldSeekAStep", have: SeekRequest{Step: media.SeekBigBackward}},
+		{name: "ShouldSeekASmallStepForwardByDefault"},
+		{name: "ShouldSeekToATime", have: SeekRequest{To: &to}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			o := svc.Seek(t.Context(), target, tc.have)
+			assert.Empty(t, o.Say.ID, "seeking is silent")
+			assert.True(t, o.EndSession)
+		})
 	}
 
 	assert.Equal(t, []string{"Play movie/4", "Seek by 1m30s", "Seek by -10m0s", "Seek bigbackward", "Seek smallforward", "Seek to 42m0s"}, backend.Calls())

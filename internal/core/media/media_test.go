@@ -14,22 +14,27 @@ import (
 func TestContentOf(t *testing.T) {
 	t.Parallel()
 
-	for _, tc := range []struct {
-		kind Kind
-		want Content
+	testCases := []struct {
+		name     string
+		have     Kind
+		expected Content
 	}{
-		{KindMovie, ContentMovies},
-		{KindTVShow, ContentTV},
-		{KindEpisode, ContentTV},
-		{KindArtist, ContentMusic},
-		{KindAlbum, ContentMusic},
-		{KindSong, ContentMusic},
-		{KindMusicVideo, ContentMusic},
-		{KindPlaylist, ""},
-		{"", ""},
-		{"Movie", ""},
-	} {
-		assert.Equal(t, tc.want, ContentOf(tc.kind), "kind %q", tc.kind)
+		{name: "ShouldMapMovieToMovies", have: KindMovie, expected: ContentMovies},
+		{name: "ShouldMapTVShowToTV", have: KindTVShow, expected: ContentTV},
+		{name: "ShouldMapEpisodeToTV", have: KindEpisode, expected: ContentTV},
+		{name: "ShouldMapArtistToMusic", have: KindArtist, expected: ContentMusic},
+		{name: "ShouldMapAlbumToMusic", have: KindAlbum, expected: ContentMusic},
+		{name: "ShouldMapSongToMusic", have: KindSong, expected: ContentMusic},
+		{name: "ShouldMapMusicVideoToMusic", have: KindMusicVideo, expected: ContentMusic},
+		{name: "ShouldMapPlaylistToNothing", have: KindPlaylist},
+		{name: "ShouldMapEmptyKindToNothing"},
+		{name: "ShouldMapWrongCaseKindToNothing", have: "Movie"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, ContentOf(tc.have))
+		})
 	}
 }
 
@@ -53,18 +58,20 @@ func TestContentsAreEachReachableFromAKind(t *testing.T) {
 func TestArtworkCoverPrefersThePoster(t *testing.T) {
 	t.Parallel()
 
-	for _, tc := range []struct {
-		name string
-		art  Artwork
-		want string
+	testCases := []struct {
+		name     string
+		have     Artwork
+		expected string
 	}{
-		{"poster and thumb", Artwork{Poster: "image://poster", Thumb: "image://thumb", Fanart: "image://fanart"}, "image://poster"},
-		{"thumb only", Artwork{Thumb: "image://thumb", Fanart: "image://fanart"}, "image://thumb"},
-		{"fanart is never the cover", Artwork{Fanart: "image://fanart"}, ""},
-		{"none", Artwork{}, ""},
-	} {
+		{name: "ShouldPreferThePosterOverTheThumb", have: Artwork{Poster: "image://poster", Thumb: "image://thumb", Fanart: "image://fanart"}, expected: "image://poster"},
+		{name: "ShouldUseTheThumbWithoutAPoster", have: Artwork{Thumb: "image://thumb", Fanart: "image://fanart"}, expected: "image://thumb"},
+		{name: "ShouldNeverUseTheFanart", have: Artwork{Fanart: "image://fanart"}},
+		{name: "ShouldHaveNoCoverWithoutArtwork", have: Artwork{}},
+	}
+
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.want, tc.art.Cover())
+			assert.Equal(t, tc.expected, tc.have.Cover())
 		})
 	}
 }
@@ -72,35 +79,62 @@ func TestArtworkCoverPrefersThePoster(t *testing.T) {
 func TestItemRef(t *testing.T) {
 	t.Parallel()
 
-	assert.Equal(t, Ref{Kind: KindEpisode, ID: 42}, Item{Kind: KindEpisode, ID: 42, ShowID: 7, Title: "Pilot"}.Ref())
-	assert.Equal(t, Ref{}, Item{}.Ref())
+	testCases := []struct {
+		name     string
+		have     Item
+		expected Ref
+	}{
+		{name: "ShouldKeepOnlyTheKindAndID", have: Item{Kind: KindEpisode, ID: 42, ShowID: 7, Title: "Pilot"}, expected: Ref{Kind: KindEpisode, ID: 42}},
+		{name: "ShouldBeEmptyForAnEmptyItem", have: Item{}, expected: Ref{}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, tc.have.Ref())
+		})
+	}
 }
 
 func TestItemInProgress(t *testing.T) {
 	t.Parallel()
 
-	assert.False(t, Item{}.InProgress(), "never started")
-	assert.False(t, Item{Resume: 0, PlayCount: 3}.InProgress(), "watched to the end")
-	assert.True(t, Item{Resume: time.Nanosecond}.InProgress(), "stopped just after starting")
-	assert.True(t, Item{Resume: 20 * time.Minute, Runtime: time.Hour}.InProgress())
+	testCases := []struct {
+		name     string
+		have     Item
+		expected bool
+	}{
+		{name: "ShouldNotBeInProgressWhenNeverStarted", have: Item{}},
+		{name: "ShouldNotBeInProgressWhenWatchedToTheEnd", have: Item{Resume: 0, PlayCount: 3}},
+		{name: "ShouldBeInProgressWhenStoppedJustAfterStarting", have: Item{Resume: time.Nanosecond}, expected: true},
+		{name: "ShouldBeInProgressWhenPartWatched", have: Item{Resume: 20 * time.Minute, Runtime: time.Hour}, expected: true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, tc.have.InProgress())
+		})
+	}
 }
 
 func TestNowPlayingRemaining(t *testing.T) {
 	t.Parallel()
 
-	for _, tc := range []struct {
-		name               string
-		position, duration time.Duration
-		want               time.Duration
+	testCases := []struct {
+		name     string
+		position time.Duration
+		duration time.Duration
+		expected time.Duration
 	}{
-		{"part way", 10 * time.Minute, time.Hour, 50 * time.Minute},
-		{"at the start", 0, time.Hour, time.Hour},
-		{"at the end", time.Hour, time.Hour, 0},
-		{"past the end clamps to zero", time.Hour + time.Second, time.Hour, 0},
-		{"unknown duration", 5 * time.Minute, 0, 0},
-	} {
+		{name: "ShouldLeaveTheRestPartWay", position: 10 * time.Minute, duration: time.Hour, expected: 50 * time.Minute},
+		{name: "ShouldLeaveAllAtTheStart", duration: time.Hour, expected: time.Hour},
+		{name: "ShouldLeaveNothingAtTheEnd", position: time.Hour, duration: time.Hour},
+		{name: "ShouldClampToZeroPastTheEnd", position: time.Hour + time.Second, duration: time.Hour},
+		{name: "ShouldLeaveNothingWithUnknownDuration", position: 5 * time.Minute},
+	}
+
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.want, NowPlaying{Position: tc.position, Duration: tc.duration}.Remaining())
+			assert.Equal(t, tc.expected, NowPlaying{Position: tc.position, Duration: tc.duration}.Remaining())
 		})
 	}
 }
@@ -181,9 +215,20 @@ func TestReportCallFromSeveralGoroutines(t *testing.T) {
 func TestSearchModeIsValid(t *testing.T) {
 	t.Parallel()
 
-	for _, m := range []SearchMode{"", SearchModeGlobal, SearchModeSkin} {
-		assert.True(t, m.IsValid(), m)
+	testCases := []struct {
+		name     string
+		have     SearchMode
+		expected bool
+	}{
+		{name: "ShouldAcceptEmpty", expected: true},
+		{name: "ShouldAcceptGlobal", have: SearchModeGlobal, expected: true},
+		{name: "ShouldAcceptSkin", have: SearchModeSkin, expected: true},
+		{name: "ShouldRejectNative", have: "native"},
 	}
 
-	assert.False(t, SearchMode("native").IsValid())
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, tc.have.IsValid())
+		})
+	}
 }

@@ -78,27 +78,43 @@ func TestDeployRecordClone(t *testing.T) {
 func TestStepState(t *testing.T) {
 	t.Parallel()
 
-	for in, want := range map[deploy.StepState]string{
-		deploy.StateRunning: "started",
-		deploy.StateDone:    "succeeded",
-		deploy.StateSkipped: "skipped",
-		deploy.StateFailed:  "failed",
-		"":                  "failed",
-	} {
-		assert.Equal(t, want, stepState(in), in)
+	testCases := []struct {
+		name     string
+		have     deploy.StepState
+		expected string
+	}{
+		{name: "ShouldReportRunningAsStarted", have: deploy.StateRunning, expected: "started"},
+		{name: "ShouldReportDoneAsSucceeded", have: deploy.StateDone, expected: "succeeded"},
+		{name: "ShouldReportSkipped", have: deploy.StateSkipped, expected: "skipped"},
+		{name: "ShouldReportFailed", have: deploy.StateFailed, expected: "failed"},
+		{name: "ShouldReportUnknownAsFailed", have: "", expected: "failed"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, stepState(tc.have))
+		})
 	}
 }
 
 func TestLocaleStatuses(t *testing.T) {
 	t.Parallel()
 
-	for in, want := range map[smapi.Status]string{
-		smapi.StatusSucceeded:  "succeeded",
-		smapi.StatusFailed:     "failed",
-		smapi.StatusInProgress: "in_progress",
-		smapi.StatusSkipped:    "in_progress",
-	} {
-		assert.Equal(t, want, localeStatus(in), in)
+	testCases := []struct {
+		name     string
+		have     smapi.Status
+		expected string
+	}{
+		{name: "ShouldReportSucceeded", have: smapi.StatusSucceeded, expected: "succeeded"},
+		{name: "ShouldReportFailed", have: smapi.StatusFailed, expected: "failed"},
+		{name: "ShouldReportInProgress", have: smapi.StatusInProgress, expected: "in_progress"},
+		{name: "ShouldReportSkippedAsInProgress", have: smapi.StatusSkipped, expected: "in_progress"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, localeStatus(tc.have))
+		})
 	}
 
 	got := localeStatuses(map[string]deploy.LocaleStatus{
@@ -129,7 +145,7 @@ func TestLocaleResults(t *testing.T) {
 		SlotValues: map[string][]skillmodel.SlotValue{"AMAZON.Movie": {{ID: "movie/1"}, {ID: "movie/2"}}, "AMAZON.TVSeries": {{ID: "tvshow/1"}}},
 	}
 
-	t.Run("built", func(t *testing.T) {
+	t.Run("ShouldReportEachBuiltLocale", func(t *testing.T) {
 		t.Parallel()
 
 		res := &deploy.Result{Locales: map[string]deploy.LocaleStatus{
@@ -143,7 +159,7 @@ func TestLocaleResults(t *testing.T) {
 		}, s.localeResults(res, pkg, nil, opts))
 	})
 
-	t.Run("degraded", func(t *testing.T) {
+	t.Run("ShouldReportDegradedLocales", func(t *testing.T) {
 		t.Parallel()
 
 		res := &deploy.Result{
@@ -164,7 +180,7 @@ func TestLocaleResults(t *testing.T) {
 		}, got[1])
 	})
 
-	t.Run("skipped", func(t *testing.T) {
+	t.Run("ShouldReportSkippedDeployAsSucceeded", func(t *testing.T) {
 		t.Parallel()
 
 		got := s.localeResults(&deploy.Result{Skipped: true}, pkg, nil, opts)
@@ -175,7 +191,7 @@ func TestLocaleResults(t *testing.T) {
 		assert.Equal(t, []string{"en-GB", "en-AU"}, opts.Locales, "the options are left as they were")
 	})
 
-	t.Run("skipped with locales from the last deploy", func(t *testing.T) {
+	t.Run("ShouldReportEveryLocaleWhenSkippedWithLocalesFromTheLastDeploy", func(t *testing.T) {
 		t.Parallel()
 
 		got := s.localeResults(&deploy.Result{Skipped: true, Locales: map[string]deploy.LocaleStatus{"en-GB": {Status: smapi.StatusFailed}}}, pkg, nil, opts)
@@ -184,7 +200,7 @@ func TestLocaleResults(t *testing.T) {
 		assert.Equal(t, "succeeded", got[0].Status)
 	})
 
-	t.Run("package didn't build", func(t *testing.T) {
+	t.Run("ShouldReportNoSizeWhenThePackageDidNotBuild", func(t *testing.T) {
 		t.Parallel()
 
 		got := s.localeResults(&deploy.Result{}, nil, errors.New("too big"), opts)
@@ -367,15 +383,18 @@ func TestSkillModelSizeUnit(t *testing.T) {
 	}}
 	values := map[string][]skillmodel.SlotValue{"AMAZON.Movie": {{ID: "movie/1"}, {ID: "movie/2"}, {ID: "movie/3"}}}
 
-	for name, tc := range map[string]struct {
+	testCases := []struct {
+		name       string
 		libs       Libraries
 		serverOnly int
 	}{
-		"more titles than the model holds":  {stubLibraries{list: []Library{{Counts: LibraryCounts{Movies: 4, Shows: 2, Songs: 9}}}}, 3},
-		"fewer titles than the model holds": {stubLibraries{list: []Library{{Counts: LibraryCounts{Movies: 1}}}}, 0},
-		"libraries can't be listed":         {stubLibraries{err: errors.New("catalog locked")}, 0},
-	} {
-		t.Run(name, func(t *testing.T) {
+		{name: "ShouldCountTitlesBeyondTheModelAsServerOnly", libs: stubLibraries{list: []Library{{Counts: LibraryCounts{Movies: 4, Shows: 2, Songs: 9}}}}, serverOnly: 3},
+		{name: "ShouldCountNoServerOnlyTitlesWhenFewerThanTheModelHolds", libs: stubLibraries{list: []Library{{Counts: LibraryCounts{Movies: 1}}}}},
+		{name: "ShouldCountNoServerOnlyTitlesWhenLibrariesCannotBeListed", libs: stubLibraries{err: errors.New("catalog locked")}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
 			s := &skillService{a: &API{libraries: tc.libs}}

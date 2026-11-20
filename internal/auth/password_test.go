@@ -22,25 +22,30 @@ func TestVerifyPasswordRejectsMalformedHashes(t *testing.T) {
 		return strings.Join(p, "$")
 	}
 
-	for name, hash := range map[string]string{
-		"empty":            "",
-		"bcrypt":           "$2a$10$abcdefghijklmnopqrstuv",
-		"too few parts":    strings.Join(parts[:5], "$"),
-		"too many parts":   good + "$extra",
-		"argon2i":          with(1, "argon2i"),
-		"version missing":  with(2, "x=19"),
-		"old version":      with(2, "v=16"),
-		"params garbled":   with(3, "m=19456;t=2;p=1"),
-		"zero passes":      with(3, "m=19456,t=0,p=1"),
-		"zero threads":     with(3, "m=19456,t=2,p=0"),
-		"salt not base64":  with(4, "!!!"),
-		"hash not base64":  with(5, "!!!"),
-		"hash empty":       with(5, ""),
-		"padded salt":      with(4, parts[4]+"=="),
-		"negative threads": with(3, "m=19456,t=2,p=-1"),
-	} {
-		t.Run(name, func(t *testing.T) {
-			ok, err := VerifyPassword(hash, "correct horse battery")
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldRejectEmpty", have: ""},
+		{name: "ShouldRejectBcrypt", have: "$2a$10$abcdefghijklmnopqrstuv"},
+		{name: "ShouldRejectTooFewParts", have: strings.Join(parts[:5], "$")},
+		{name: "ShouldRejectTooManyParts", have: good + "$extra"},
+		{name: "ShouldRejectArgon2i", have: with(1, "argon2i")},
+		{name: "ShouldRejectAMissingVersion", have: with(2, "x=19")},
+		{name: "ShouldRejectAnOldVersion", have: with(2, "v=16")},
+		{name: "ShouldRejectGarbledParameters", have: with(3, "m=19456;t=2;p=1")},
+		{name: "ShouldRejectZeroPasses", have: with(3, "m=19456,t=0,p=1")},
+		{name: "ShouldRejectZeroThreads", have: with(3, "m=19456,t=2,p=0")},
+		{name: "ShouldRejectASaltThatIsNotBase64", have: with(4, "!!!")},
+		{name: "ShouldRejectAHashThatIsNotBase64", have: with(5, "!!!")},
+		{name: "ShouldRejectAnEmptyHash", have: with(5, "")},
+		{name: "ShouldRejectAPaddedSalt", have: with(4, parts[4]+"==")},
+		{name: "ShouldRejectNegativeThreads", have: with(3, "m=19456,t=2,p=-1")},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ok, err := VerifyPassword(tc.have, "correct horse battery")
 			require.ErrorIs(t, err, errMalformedHash)
 			assert.False(t, ok)
 		})
@@ -53,33 +58,45 @@ func TestVerifyPasswordHonoursStoredParameters(t *testing.T) {
 	key := argon2.IDKey([]byte("hunter2hunter2"), salt, 1, 1024, 2, 16)
 	hash := fmt.Sprintf("$argon2id$v=19$m=1024,t=1,p=2$%s$%s", base64.RawStdEncoding.EncodeToString(salt), base64.RawStdEncoding.EncodeToString(key))
 
-	ok, err := VerifyPassword(hash, "hunter2hunter2")
-	require.NoError(t, err)
-	assert.True(t, ok)
+	testCases := []struct {
+		name     string
+		have     string
+		expected bool
+	}{
+		{name: "ShouldVerifyTheRightPassword", have: "hunter2hunter2", expected: true},
+		{name: "ShouldRejectAWrongPassword", have: "hunter2hunter3"},
+	}
 
-	ok, err = VerifyPassword(hash, "hunter2hunter3")
-	require.NoError(t, err)
-	assert.False(t, ok)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ok, err := VerifyPassword(hash, tc.have)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, ok)
+		})
+	}
 }
 
 func TestValidatePasswordLimits(t *testing.T) {
-	for name, tt := range map[string]struct {
-		password string
-		ok       bool
+	testCases := []struct {
+		name string
+		have string
+		ok   bool
 	}{
-		"empty":                      {"", false},
-		"nine characters":            {"123456789", false},
-		"ten characters":             {"1234567890", true},
-		"ten multi-byte characters":  {strings.Repeat("ü", 10), true},
-		"nine multi-byte characters": {strings.Repeat("ü", 9), false},
-		"spaces count":               {"          ", true},
-		"1024 bytes":                 {strings.Repeat("a", 1024), true},
-		"1025 bytes":                 {strings.Repeat("a", 1025), false},
-		"600 two-byte characters":    {strings.Repeat("ü", 600), false},
-	} {
-		t.Run(name, func(t *testing.T) {
-			err := ValidatePassword(tt.password)
-			if tt.ok {
+		{name: "ShouldRejectEmpty", have: ""},
+		{name: "ShouldRejectNineCharacters", have: "123456789"},
+		{name: "ShouldAcceptTenCharacters", have: "1234567890", ok: true},
+		{name: "ShouldAcceptTenMultiByteCharacters", have: strings.Repeat("ü", 10), ok: true},
+		{name: "ShouldRejectNineMultiByteCharacters", have: strings.Repeat("ü", 9)},
+		{name: "ShouldCountSpaces", have: "          ", ok: true},
+		{name: "ShouldAccept1024Bytes", have: strings.Repeat("a", 1024), ok: true},
+		{name: "ShouldReject1025Bytes", have: strings.Repeat("a", 1025)},
+		{name: "ShouldReject600TwoByteCharacters", have: strings.Repeat("ü", 600)},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := ValidatePassword(tc.have)
+			if tc.ok {
 				require.NoError(t, err)
 			} else {
 				require.Error(t, err)

@@ -722,20 +722,23 @@ func reject(w http.ResponseWriter, _ *http.Request) {
 func TestDeployStopsAtFailingStep(t *testing.T) {
 	existing := deploy.State{VendorID: smapitest.DefaultVendorID}
 
-	for name, tc := range map[string]struct {
-		pattern string
-		state   bool
-		want    deploy.Step
+	testCases := []struct {
+		name     string
+		pattern  string
+		state    bool
+		expected deploy.Step
 	}{
-		"vendors":         {pattern: "GET /v1/vendors", want: deploy.StepVendor},
-		"list skills":     {pattern: "GET /v1/skills", want: deploy.StepSkill},
-		"upload URL":      {pattern: "POST /v1/skills/uploads", want: deploy.StepUpload},
-		"new import":      {pattern: "POST /v1/skills/imports", want: deploy.StepImport},
-		"existing import": {pattern: "POST /v1/skills/{id}/imports", state: true, want: deploy.StepImport},
-		"import status":   {pattern: "GET /v1/skills/imports/{id}", want: deploy.StepImport},
-		"enable":          {pattern: "PUT /v1/skills/{id}/stages/{stage}/enablement", want: deploy.StepEnable},
-	} {
-		t.Run(name, func(t *testing.T) {
+		{name: "ShouldStopAtVendors", pattern: "GET /v1/vendors", expected: deploy.StepVendor},
+		{name: "ShouldStopAtListSkills", pattern: "GET /v1/skills", expected: deploy.StepSkill},
+		{name: "ShouldStopAtUploadURL", pattern: "POST /v1/skills/uploads", expected: deploy.StepUpload},
+		{name: "ShouldStopAtNewImport", pattern: "POST /v1/skills/imports", expected: deploy.StepImport},
+		{name: "ShouldStopAtExistingImport", pattern: "POST /v1/skills/{id}/imports", state: true, expected: deploy.StepImport},
+		{name: "ShouldStopAtImportStatus", pattern: "GET /v1/skills/imports/{id}", expected: deploy.StepImport},
+		{name: "ShouldStopAtEnable", pattern: "PUT /v1/skills/{id}/stages/{stage}/enablement", expected: deploy.StepEnable},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			h := newHarness(t, smapitest.Options{})
 
 			state := deploy.State{}
@@ -749,7 +752,7 @@ func TestDeployStopsAtFailingStep(t *testing.T) {
 			res, err := h.deployer.Deploy(t.Context(), h.request(state))
 			assert.Equal(t, http.StatusBadRequest, smapi.StatusCode(err))
 			assert.Contains(t, err.Error(), "rejected by test")
-			assert.Equal(t, string(tc.want)+":failed", h.timeline()[len(h.timeline())-1], "the failing step is the last one reported")
+			assert.Equal(t, string(tc.expected)+":failed", h.timeline()[len(h.timeline())-1], "the failing step is the last one reported")
 			assert.Empty(t, res.State.Hash, "a failed deploy never records a hash")
 
 			if tc.state {
@@ -960,20 +963,20 @@ func TestDeployWithoutProgressCallback(t *testing.T) {
 }
 
 func TestErrorMessage(t *testing.T) {
-	for name, tc := range map[string]struct {
-		err  *deploy.Error
-		want string
+	testCases := []struct {
+		name     string
+		have     *deploy.Error
+		expected string
 	}{
-		"no details": {err: &deploy.Error{Step: deploy.StepImport}, want: "deploy: import failed: no details reported"},
-		"problems":   {err: &deploy.Error{Step: deploy.StepImport, Problems: []smapi.Problem{{Code: "A", Message: "a"}, {Message: "b"}}}, want: "deploy: import failed: A: a; b"},
-		"locales sorted": {
-			err:  &deploy.Error{Step: deploy.StepBuild, Locales: map[string][]smapi.Problem{"en-US": {{Message: "x"}, {Message: "y"}}, "de-DE": {{Message: "z"}}}},
-			want: "deploy: build failed: de-DE: z; en-US: x; y",
-		},
-	} {
-		t.Run(name, func(t *testing.T) {
-			assert.Equal(t, tc.want, tc.err.Error())
-			assert.Equal(t, len(tc.err.Locales) > 0, errors.Is(tc.err, deploy.ErrBuildFailed))
+		{name: "ShouldSayNoDetailsReported", have: &deploy.Error{Step: deploy.StepImport}, expected: "deploy: import failed: no details reported"},
+		{name: "ShouldListProblems", have: &deploy.Error{Step: deploy.StepImport, Problems: []smapi.Problem{{Code: "A", Message: "a"}, {Message: "b"}}}, expected: "deploy: import failed: A: a; b"},
+		{name: "ShouldSortLocales", have: &deploy.Error{Step: deploy.StepBuild, Locales: map[string][]smapi.Problem{"en-US": {{Message: "x"}, {Message: "y"}}, "de-DE": {{Message: "z"}}}}, expected: "deploy: build failed: de-DE: z; en-US: x; y"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, tc.have.Error())
+			assert.Equal(t, len(tc.have.Locales) > 0, errors.Is(tc.have, deploy.ErrBuildFailed))
 		})
 	}
 }
@@ -1070,20 +1073,29 @@ func TestDeployDoesntImportAgainWhenTold(t *testing.T) {
 
 // A deploy stopped while it waits to import again says so, without importing. With no wait set, it waits five minutes.
 func TestDeployStoppedWhileWaitingToImportAgain(t *testing.T) {
-	for wait, says := range map[time.Duration]string{time.Hour: "1h0m0s", 0: "5m0s"} {
-		t.Run(says, func(t *testing.T) {
+	testCases := []struct {
+		name string
+		wait time.Duration
+		says string
+	}{
+		{name: "ShouldSayTheWaitSet", wait: time.Hour, says: "1h0m0s"},
+		{name: "ShouldWaitFiveMinutesByDefault", says: "5m0s"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			h := newHarness(t, smapitest.Options{})
 			h.fake.FailImportsWithoutDetails(1)
 
 			req := h.request(deploy.State{})
-			req.SilentRetryWait = wait
+			req.SilentRetryWait = tc.wait
 
 			ctx, cancel := context.WithCancel(t.Context())
 
 			var waited bool
 
 			req.Progress = func(ev deploy.Event) {
-				if strings.Contains(ev.Message, "importing again in "+says) {
+				if strings.Contains(ev.Message, "importing again in "+tc.says) {
 					waited = true
 
 					cancel()

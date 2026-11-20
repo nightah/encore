@@ -27,12 +27,17 @@ func withStreams(t *testing.T, english, german, french string) (Target, func() [
 }
 
 func TestSubtitles(t *testing.T) {
-	for name, codes := range map[string][3]string{
-		"omega ISO 639-2": {"eng", "ger", "fre"},
-		"piers BCP 47":    {"en-AU", "de", "fr"},
-	} {
-		t.Run(name, func(t *testing.T) {
-			target, calls := withStreams(t, codes[0], codes[1], codes[2])
+	testCases := []struct {
+		name string
+		have [3]string
+	}{
+		{name: "ShouldReadOmegaISO6392Codes", have: [3]string{"eng", "ger", "fre"}},
+		{name: "ShouldReadPiersBCP47Tags", have: [3]string{"en-AU", "de", "fr"}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			target, calls := withStreams(t, tc.have[0], tc.have[1], tc.have[2])
 			svc := newService()
 			ctx := t.Context()
 
@@ -104,34 +109,53 @@ func TestDownloadSubtitles(t *testing.T) {
 }
 
 func TestLanguageTag(t *testing.T) {
-	for in, want := range map[string]string{"eng": "en", "fre": "fr", "fra": "fr", "ger": "de", "pt-BR": "pt", "en-AU": "en", "": "", "xx": "", "und": "", "not a code": ""} {
-		assert.Equal(t, want, languageTag(in), in)
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldReadISO6392English", have: "eng", expected: "en"},
+		{name: "ShouldReadISO6392BibliographicFrench", have: "fre", expected: "fr"},
+		{name: "ShouldReadISO6392TerminologicFrench", have: "fra", expected: "fr"},
+		{name: "ShouldReadISO6392German", have: "ger", expected: "de"},
+		{name: "ShouldDropTheRegionOfPortuguese", have: "pt-BR", expected: "pt"},
+		{name: "ShouldDropTheRegionOfEnglish", have: "en-AU", expected: "en"},
+		{name: "ShouldReadEmptyAsNoLanguage"},
+		{name: "ShouldReadAnUnknownCodeAsNoLanguage", have: "xx"},
+		{name: "ShouldReadUndeterminedAsNoLanguage", have: "und"},
+		{name: "ShouldReadTextAsNoLanguage", have: "not a code"},
+		// Tags that parse but name no language: a private-use tag, and an undetermined one whose region (Antarctica) suggests none.
+		{name: "ShouldReadAPrivateUseTagAsNoLanguage", have: "x-dub"},
+		{name: "ShouldReadAnUndeterminedTagWithARegionAsNoLanguage", have: "und-AQ"},
 	}
 
-	// Tags that parse but name no language: a private-use tag, and an undetermined one whose region (Antarctica) suggests none.
-	for _, in := range []string{"x-dub", "und-AQ"} {
-		assert.Empty(t, languageTag(in), in)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, languageTag(tc.have))
+		})
 	}
 }
 
 func TestStreamMessage(t *testing.T) {
-	for _, tc := range []struct {
+	testCases := []struct {
 		name      string
-		cur       *media.Stream
-		id        string
+		have      *media.Stream
+		expected  string
 		params    map[string]string
 		languages map[string]string
 	}{
-		{"unknown stream", nil, "streams.audio_unknown", nil, nil},
-		{"language", &media.Stream{Language: "fre", Name: "Dub"}, "streams.audio_language", nil, map[string]string{"language": "fr"}},
-		{"name only", &media.Stream{Name: "Commentary"}, "streams.audio_named", map[string]string{"name": "Commentary"}, nil},
-		{"unknown language and name", &media.Stream{Language: "xx"}, "streams.audio_unknown", nil, nil},
-		{"nothing at all", &media.Stream{}, "streams.audio_unknown", nil, nil},
-	} {
-		t.Run(tc.name, func(t *testing.T) {
-			msg := streamMessage("streams.audio", tc.cur)
+		{name: "ShouldSayAnUnknownStream", expected: "streams.audio_unknown"},
+		{name: "ShouldSayTheLanguage", have: &media.Stream{Language: "fre", Name: "Dub"}, expected: "streams.audio_language", languages: map[string]string{"language": "fr"}},
+		{name: "ShouldSayTheNameWithoutALanguage", have: &media.Stream{Name: "Commentary"}, expected: "streams.audio_named", params: map[string]string{"name": "Commentary"}},
+		{name: "ShouldSayUnknownForAnUnknownLanguageWithoutAName", have: &media.Stream{Language: "xx"}, expected: "streams.audio_unknown"},
+		{name: "ShouldSayUnknownForNothingAtAll", have: &media.Stream{}, expected: "streams.audio_unknown"},
+	}
 
-			assert.Equal(t, tc.id, msg.ID)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			msg := streamMessage("streams.audio", tc.have)
+
+			assert.Equal(t, tc.expected, msg.ID)
 			assert.Equal(t, tc.params, msg.Params)
 			assert.Equal(t, tc.languages, msg.Languages)
 		})
@@ -141,30 +165,36 @@ func TestStreamMessage(t *testing.T) {
 func TestStreamIn(t *testing.T) {
 	streams := []media.Stream{{Index: 3, Language: ""}, {Index: 4, Language: "ger"}, {Index: 5, Language: "fre"}, {Index: 6, Language: "fra"}, {Index: 7, Language: "eng"}}
 
-	for _, tc := range []struct {
-		spoken, listener string
-		want             int
-		ok               bool
+	testCases := []struct {
+		name     string
+		have     string
+		listener string
+		expected int
+		ok       bool
 	}{
-		{"french", "en-AU", 5, true},
-		{"Französisch", "de-DE", 5, true},
-		{"allemand", "fr", 4, true},
-		{"deutsch", "", 4, true},
-		{"German", "not a language", 4, true},
-		{"fr", "en", 5, true},
+		{name: "ShouldFindFrenchInEnglish", have: "french", listener: "en-AU", expected: 5, ok: true},
+		{name: "ShouldFindFrenchInGerman", have: "Französisch", listener: "de-DE", expected: 5, ok: true},
+		{name: "ShouldFindGermanInFrench", have: "allemand", listener: "fr", expected: 4, ok: true},
+		{name: "ShouldFindGermanByItsOwnNameWithoutAListener", have: "deutsch", expected: 4, ok: true},
+		{name: "ShouldFindGermanWithAnUnknownListener", have: "German", listener: "not a language", expected: 4, ok: true},
+		{name: "ShouldFindALanguageCode", have: "fr", listener: "en", expected: 5, ok: true},
 		// Hindi with and without the nukta, which recognisers write either way.
-		{"फ़्रेंच", "hi-IN", 5, true},
-		{"फ्रेंच", "hi-IN", 5, true},
-		{"अंग्रेजी", "hi-IN", 7, true},
-		{"अंग्रेज़ी", "hi-IN", 7, true},
-		{"الفرنسية", "ar-SA", 5, true},
-		{"フランス語", "ja-JP", 5, true},
-		{"", "en", 0, false},
-		{"klingon", "en", 0, false},
-	} {
-		i, ok := streamIn(streams, tc.spoken, tc.listener)
-		assert.Equal(t, tc.ok, ok, tc.spoken)
-		assert.Equal(t, tc.want, i, tc.spoken)
+		{name: "ShouldFindFrenchInHindiWithTheNukta", have: "फ़्रेंच", listener: "hi-IN", expected: 5, ok: true},
+		{name: "ShouldFindFrenchInHindiWithoutTheNukta", have: "फ्रेंच", listener: "hi-IN", expected: 5, ok: true},
+		{name: "ShouldFindEnglishInHindiWithoutTheNukta", have: "अंग्रेजी", listener: "hi-IN", expected: 7, ok: true},
+		{name: "ShouldFindEnglishInHindiWithTheNukta", have: "अंग्रेज़ी", listener: "hi-IN", expected: 7, ok: true},
+		{name: "ShouldFindFrenchInArabic", have: "الفرنسية", listener: "ar-SA", expected: 5, ok: true},
+		{name: "ShouldFindFrenchInJapanese", have: "フランス語", listener: "ja-JP", expected: 5, ok: true},
+		{name: "ShouldNotFindEmpty", listener: "en"},
+		{name: "ShouldNotFindAnUnknownLanguage", have: "klingon", listener: "en"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual, ok := streamIn(streams, tc.have, tc.listener)
+			assert.Equal(t, tc.ok, ok)
+			assert.Equal(t, tc.expected, actual)
+		})
 	}
 
 	_, ok := streamIn(nil, "french", "en")

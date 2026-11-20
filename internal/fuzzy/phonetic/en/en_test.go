@@ -12,88 +12,100 @@ import (
 	"github.com/nightah/encore/internal/fuzzy/phonetic"
 )
 
-// metaphoneVectors were captured from github.com/PhonoGrams/double_metaphone v0.1.0 EncodeUncapped. Most match Philips's published examples (Smith, Schmidt, Caesar, Chianti, Michael, Thumb, Sugar, Edge); "Jose" codes JS/HS rather than Philips's HS because the library's San/Jose rule tests for a space that letters-only input never has.
-var metaphoneVectors = []struct{ word, primary, alternate string }{
-	{"thompson", "TMPSN", ""},
-	{"smith", "SM0", "XMT"},
-	{"schmidt", "XMT", "SMT"},
-	{"xavier", "SF", "SFR"},
-	{"caesar", "SSR", ""},
-	{"chianti", "KNT", ""},
-	{"michael", "MKL", "MXL"},
-	{"thumb", "0M", "TM"},
-	{"jose", "JS", "HS"},
-	{"sugar", "XKR", "SKR"},
-	{"edge", "AJ", ""},
-	{"gnocchi", "NX", ""},
-	{"tagliaro", "TKLR", "TLR"},
-	{"bellocchio", "PLX", ""},
-	{"pepper", "PPR", ""},
-	{"peppa", "PP", ""},
-	{"cabrillo", "KPRL", ""},
-	{"gallegos", "KLKS", ""},
-	{"dumb", "TM", ""},
-	{"knight", "NT", ""},
-	{"wright", "RT", ""},
-	{"psychology", "SXLJ", "SKLK"},
-	{"witz", "ATS", "FFX"},
-	{"filipowicz", "FLPTS", "FLPFX"},
-	{"aggie", "AJ", "AK"},
-	{"danger", "TNJR", "TNKR"},
-	{"ghislane", "JLN", ""},
-	{"laugh", "LF", ""},
-	{"tough", "TF", ""},
-	{"hugh", "H", ""},
-	{"bacher", "PKR", ""},
-	{"orchestra", "ARKSTR", ""},
-	{"mcclellan", "MKLLN", ""},
-	{"succeed", "SKST", ""},
-	{"bacci", "PX", ""},
-	{"accident", "AKSTNT", ""},
-	{"czerny", "SRN", "XRN"},
-	{"zhao", "J", ""},
-	{"zola", "SL", ""},
-	{"island", "ALNT", ""},
-	{"school", "SKL", ""},
-	{"schenker", "XNKR", "SKNKR"},
-	{"schooner", "SKNR", ""},
-	{"sian", "SN", "XN"},
-	{"snider", "SNTR", "XNTR"},
-	{"tichner", "TXNR", "TKNR"},
-	{"thomas", "TMS", ""},
-	{"kaiser", "KSR", ""},
-	{"harry", "HR", ""},
-	{"ocean", "ASN", ""},
-	{"rogier", "RJ", "RJR"},
-	{"rosheim", "RSM", ""},
-	{"mosholm", "MSLM", ""},
-	{"x", "S", ""},
-	{"", "", ""},
-}
-
+// TestDoubleMetaphoneVectors pins vectors captured from github.com/PhonoGrams/double_metaphone v0.1.0 EncodeUncapped. Most match Philips's published examples (Smith, Schmidt, Caesar, Chianti, Michael, Thumb, Sugar, Edge); "Jose" codes JS/HS rather than Philips's HS because the library's San/Jose rule tests for a space that letters-only input never has.
 func TestDoubleMetaphoneVectors(t *testing.T) {
-	for _, v := range metaphoneVectors {
-		p, a := doubleMetaphone(v.word)
-		assert.Equal(t, v.primary, p, v.word)
-		assert.Equal(t, v.alternate, a, v.word)
+	testCases := []struct {
+		name      string
+		have      string
+		primary   string
+		alternate string
+	}{
+		{name: "ShouldEncodeThompson", have: "thompson", primary: "TMPSN"},
+		{name: "ShouldEncodeSmith", have: "smith", primary: "SM0", alternate: "XMT"},
+		{name: "ShouldEncodeSchmidt", have: "schmidt", primary: "XMT", alternate: "SMT"},
+		{name: "ShouldEncodeXavier", have: "xavier", primary: "SF", alternate: "SFR"},
+		{name: "ShouldEncodeCaesar", have: "caesar", primary: "SSR"},
+		{name: "ShouldEncodeChianti", have: "chianti", primary: "KNT"},
+		{name: "ShouldEncodeMichael", have: "michael", primary: "MKL", alternate: "MXL"},
+		{name: "ShouldEncodeThumb", have: "thumb", primary: "0M", alternate: "TM"},
+		{name: "ShouldEncodeJose", have: "jose", primary: "JS", alternate: "HS"},
+		{name: "ShouldEncodeSugar", have: "sugar", primary: "XKR", alternate: "SKR"},
+		{name: "ShouldEncodeEdge", have: "edge", primary: "AJ"},
+		{name: "ShouldEncodeGnocchi", have: "gnocchi", primary: "NX"},
+		{name: "ShouldEncodeTagliaro", have: "tagliaro", primary: "TKLR", alternate: "TLR"},
+		{name: "ShouldEncodeBellocchio", have: "bellocchio", primary: "PLX"},
+		{name: "ShouldEncodePepper", have: "pepper", primary: "PPR"},
+		{name: "ShouldEncodePeppa", have: "peppa", primary: "PP"},
+		{name: "ShouldEncodeCabrillo", have: "cabrillo", primary: "KPRL"},
+		{name: "ShouldEncodeGallegos", have: "gallegos", primary: "KLKS"},
+		{name: "ShouldEncodeDumb", have: "dumb", primary: "TM"},
+		{name: "ShouldEncodeKnight", have: "knight", primary: "NT"},
+		{name: "ShouldEncodeWright", have: "wright", primary: "RT"},
+		{name: "ShouldEncodePsychology", have: "psychology", primary: "SXLJ", alternate: "SKLK"},
+		{name: "ShouldEncodeWitz", have: "witz", primary: "ATS", alternate: "FFX"},
+		{name: "ShouldEncodeFilipowicz", have: "filipowicz", primary: "FLPTS", alternate: "FLPFX"},
+		{name: "ShouldEncodeAggie", have: "aggie", primary: "AJ", alternate: "AK"},
+		{name: "ShouldEncodeDanger", have: "danger", primary: "TNJR", alternate: "TNKR"},
+		{name: "ShouldEncodeGhislane", have: "ghislane", primary: "JLN"},
+		{name: "ShouldEncodeLaugh", have: "laugh", primary: "LF"},
+		{name: "ShouldEncodeTough", have: "tough", primary: "TF"},
+		{name: "ShouldEncodeHugh", have: "hugh", primary: "H"},
+		{name: "ShouldEncodeBacher", have: "bacher", primary: "PKR"},
+		{name: "ShouldEncodeOrchestra", have: "orchestra", primary: "ARKSTR"},
+		{name: "ShouldEncodeMcclellan", have: "mcclellan", primary: "MKLLN"},
+		{name: "ShouldEncodeSucceed", have: "succeed", primary: "SKST"},
+		{name: "ShouldEncodeBacci", have: "bacci", primary: "PX"},
+		{name: "ShouldEncodeAccident", have: "accident", primary: "AKSTNT"},
+		{name: "ShouldEncodeCzerny", have: "czerny", primary: "SRN", alternate: "XRN"},
+		{name: "ShouldEncodeZhao", have: "zhao", primary: "J"},
+		{name: "ShouldEncodeZola", have: "zola", primary: "SL"},
+		{name: "ShouldEncodeIsland", have: "island", primary: "ALNT"},
+		{name: "ShouldEncodeSchool", have: "school", primary: "SKL"},
+		{name: "ShouldEncodeSchenker", have: "schenker", primary: "XNKR", alternate: "SKNKR"},
+		{name: "ShouldEncodeSchooner", have: "schooner", primary: "SKNR"},
+		{name: "ShouldEncodeSian", have: "sian", primary: "SN", alternate: "XN"},
+		{name: "ShouldEncodeSnider", have: "snider", primary: "SNTR", alternate: "XNTR"},
+		{name: "ShouldEncodeTichner", have: "tichner", primary: "TXNR", alternate: "TKNR"},
+		{name: "ShouldEncodeThomas", have: "thomas", primary: "TMS"},
+		{name: "ShouldEncodeKaiser", have: "kaiser", primary: "KSR"},
+		{name: "ShouldEncodeHarry", have: "harry", primary: "HR"},
+		{name: "ShouldEncodeOcean", have: "ocean", primary: "ASN"},
+		{name: "ShouldEncodeRogier", have: "rogier", primary: "RJ", alternate: "RJR"},
+		{name: "ShouldEncodeRosheim", have: "rosheim", primary: "RSM"},
+		{name: "ShouldEncodeMosholm", have: "mosholm", primary: "MSLM"},
+		{name: "ShouldEncodeLoneX", have: "x", primary: "S"},
+		{name: "ShouldEncodeEmpty"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			p, a := doubleMetaphone(tc.have)
+			assert.Equal(t, tc.primary, p)
+			assert.Equal(t, tc.alternate, a)
+		})
 	}
 }
 
 func TestKeys(t *testing.T) {
-	for _, tc := range []struct {
-		word string
-		want []string
+	testCases := []struct {
+		name     string
+		have     string
+		expected []string
 	}{
-		{"smith", []string{"SM0", "XMT"}},
-		{"pepper", []string{"PPR", "PP"}},
-		{"peppa", []string{"PP"}},
-		{"2049", []string{"2049"}},
-		{"123abc", []string{"APK"}},
-		{"é", []string{"é"}},
-		{"", []string{""}},
-		{"snider", []string{"SNTR", "XNTR", "SNT"}},
-	} {
-		assert.Equal(t, tc.want, Encoder{}.Keys(nil, tc.word), tc.word)
+		{name: "ShouldKeySmith", have: "smith", expected: []string{"SM0", "XMT"}},
+		{name: "ShouldKeyPepper", have: "pepper", expected: []string{"PPR", "PP"}},
+		{name: "ShouldKeyPeppa", have: "peppa", expected: []string{"PP"}},
+		{name: "ShouldPassDigitsThrough", have: "2049", expected: []string{"2049"}},
+		{name: "ShouldSkipLeadingDigits", have: "123abc", expected: []string{"APK"}},
+		{name: "ShouldFallBackToWordForAccentedLetter", have: "é", expected: []string{"é"}},
+		{name: "ShouldFallBackToEmptyWord", expected: []string{""}},
+		{name: "ShouldKeySnider", have: "snider", expected: []string{"SNTR", "XNTR", "SNT"}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, Encoder{}.Keys(nil, tc.have))
+		})
 	}
 
 	assert.Equal(t, []string{"x", "SM0", "XMT"}, Encoder{}.Keys([]string{"x"}, "smith"), "Keys appends to dst")
@@ -146,9 +158,21 @@ func TestPropKeysContract(t *testing.T) {
 func TestKeysAllocations(t *testing.T) {
 	dst := make([]string, 0, 3)
 
-	for word, want := range map[string]float64{"pepper": 1, "smith": 2, "2049": 0} {
-		got := testing.AllocsPerRun(100, func() { dst = Encoder{}.Keys(dst[:0], word) })
-		assert.InDelta(t, want, got, 0, "%s: only the returned keys allocate", word)
+	testCases := []struct {
+		name     string
+		have     string
+		expected float64
+	}{
+		{name: "ShouldAllocateOnceForPepper", have: "pepper", expected: 1},
+		{name: "ShouldAllocateTwiceForSmith", have: "smith", expected: 2},
+		{name: "ShouldNotAllocateForDigits", have: "2049"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := testing.AllocsPerRun(100, func() { dst = Encoder{}.Keys(dst[:0], tc.have) })
+			assert.InDelta(t, tc.expected, got, 0, "only the returned keys allocate")
+		})
 	}
 }
 

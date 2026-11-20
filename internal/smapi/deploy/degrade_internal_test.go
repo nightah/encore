@@ -17,24 +17,27 @@ func TestWithoutNamed(t *testing.T) {
 		"KODI_ROOM":    {{Value: "Lounge"}},
 	}
 
-	for name, tc := range map[string]struct {
-		message string
-		dropped []string
+	testCases := []struct {
+		name     string
+		have     string
+		expected []string
 	}{
-		"double quotes":    {message: `Slot value "ocean's eleven" is invalid`, dropped: []string{"Ocean's Eleven"}},
-		"single quotes":    {message: `Invalid value 'Dune' in slot type 'AMAZON.Movie'`, dropped: []string{"Dune"}},
-		"curly quotes":     {message: "Invalid value “Lounge”", dropped: []string{"Lounge"}},
-		"synonym":          {message: "Synonym «heat 1995» is invalid", dropped: []string{"Heat"}},
-		"japanese":         {message: "スロット値「Dune」は無効です", dropped: []string{"Dune"}},
-		"unquoted mention": {message: "Dune is too long"},
-		"nothing named":    {message: "The interaction model is too large"},
-	} {
-		t.Run(name, func(t *testing.T) {
+		{name: "ShouldDropValueInDoubleQuotes", have: `Slot value "ocean's eleven" is invalid`, expected: []string{"Ocean's Eleven"}},
+		{name: "ShouldDropValueInSingleQuotes", have: `Invalid value 'Dune' in slot type 'AMAZON.Movie'`, expected: []string{"Dune"}},
+		{name: "ShouldDropValueInCurlyQuotes", have: "Invalid value “Lounge”", expected: []string{"Lounge"}},
+		{name: "ShouldDropValueOfQuotedSynonym", have: "Synonym «heat 1995» is invalid", expected: []string{"Heat"}},
+		{name: "ShouldDropValueInJapaneseQuotes", have: "スロット値「Dune」は無効です", expected: []string{"Dune"}},
+		{name: "ShouldIgnoreUnquotedMention", have: "Dune is too long"},
+		{name: "ShouldDropNothingWhenNothingIsNamed", have: "The interaction model is too large"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 
-			out, dropped := withoutNamed(values, nil, []smapi.Problem{{Code: "INVALID", Message: tc.message}})
-			assert.Equal(t, tc.dropped, dropped)
-			assert.Equal(t, countValues(values)-len(tc.dropped), countValues(out))
+			out, dropped := withoutNamed(values, nil, []smapi.Problem{{Code: "INVALID", Message: tc.have}})
+			assert.Equal(t, tc.expected, dropped)
+			assert.Equal(t, countValues(values)-len(tc.expected), countValues(out))
 		})
 	}
 }

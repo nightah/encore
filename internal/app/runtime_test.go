@@ -134,20 +134,23 @@ func TestNothingConnectsBeforeRun(t *testing.T) {
 }
 
 func TestNewRejectsUnusableInstances(t *testing.T) {
-	for name, c := range map[string]struct {
-		kodi config.KodiInstance
+	testCases := []struct {
+		name string
+		have config.KodiInstance
 		err  string
 	}{
-		"bad url": {config.KodiInstance{Name: "Lounge", URL: "http://[::1"}, `kodi instance "Lounge"`},
-		"bad mac": {config.KodiInstance{Name: "Lounge", URL: "http://127.0.0.1:1/jsonrpc", MAC: "not-a-mac"}, `parsing MAC "not-a-mac"`},
-	} {
-		t.Run(name, func(t *testing.T) {
+		{name: "ShouldRejectABadURL", have: config.KodiInstance{Name: "Lounge", URL: "http://[::1"}, err: `kodi instance "Lounge"`},
+		{name: "ShouldRejectABadMAC", have: config.KodiInstance{Name: "Lounge", URL: "http://127.0.0.1:1/jsonrpc", MAC: "not-a-mac"}, err: `parsing MAC "not-a-mac"`},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			cfg := config.Defaults()
 			cfg.DataDir = t.TempDir()
-			cfg.Kodi = []config.KodiInstance{c.kodi}
+			cfg.Kodi = []config.KodiInstance{tc.have}
 
 			_, err := New(t.Context(), &cfg, slog.New(slog.DiscardHandler))
-			require.ErrorContains(t, err, c.err)
+			require.ErrorContains(t, err, tc.err)
 		})
 	}
 }
@@ -269,24 +272,66 @@ func macAsks(srv *fakekodi.Server) int {
 }
 
 func TestTimezone(t *testing.T) {
-	assert.Nil(t, timezone(""), "no zone means learn the offset from Kodi")
-	assert.Nil(t, timezone("Mars/Olympus_Mons"), "an unknown zone does too")
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldLearnTheOffsetFromKodiWithoutAZone"},
+		{name: "ShouldLearnTheOffsetFromKodiForAnUnknownZone", have: "Mars/Olympus_Mons"},
+		{name: "ShouldLoadAKnownZone", have: "Australia/Melbourne", expected: "Australia/Melbourne"},
+	}
 
-	loc := timezone("Australia/Melbourne")
-	require.NotNil(t, loc)
-	assert.Equal(t, "Australia/Melbourne", loc.String())
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			loc := timezone(tc.have)
+
+			if tc.expected == "" {
+				assert.Nil(t, loc)
+
+				return
+			}
+
+			require.NotNil(t, loc)
+			assert.Equal(t, tc.expected, loc.String())
+		})
+	}
 }
 
 func TestFirstNonEmpty(t *testing.T) {
-	assert.Equal(t, "a", firstNonEmpty("", "a", "b"))
-	assert.Equal(t, "a", firstNonEmpty("a", ""))
-	assert.Empty(t, firstNonEmpty("", ""))
-	assert.Empty(t, firstNonEmpty())
+	testCases := []struct {
+		name     string
+		have     []string
+		expected string
+	}{
+		{name: "ShouldSkipAnEmptyFirst", have: []string{"", "a", "b"}, expected: "a"},
+		{name: "ShouldTakeTheFirst", have: []string{"a", ""}, expected: "a"},
+		{name: "ShouldBeEmptyWhenAllAreEmpty", have: []string{"", ""}},
+		{name: "ShouldBeEmptyWithoutAny"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, firstNonEmpty(tc.have...))
+		})
+	}
 }
 
 func TestInstanceLanguageDefaultsToEnglish(t *testing.T) {
-	assert.Equal(t, "en", (&Instance{}).language())
-	assert.Equal(t, "de", (&Instance{Record: store.KodiInstance{Language: "de"}}).language())
+	testCases := []struct {
+		name     string
+		have     *Instance
+		expected string
+	}{
+		{name: "ShouldDefaultToEnglish", have: &Instance{}, expected: "en"},
+		{name: "ShouldUseTheInstanceLanguage", have: &Instance{Record: store.KodiInstance{Language: "de"}}, expected: "de"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, tc.have.language())
+		})
+	}
 }
 
 func TestTheScreenIsLearnedAndRechecked(t *testing.T) {

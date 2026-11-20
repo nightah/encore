@@ -55,27 +55,32 @@ func TestCopiesFollowThePreferredQuality(t *testing.T) {
 		Doc{ID: "movie/4", Kind: "movie", Title: "Hot Fuzz", Year: 2007, Copy: media.Copy{Quality: media.Quality1080p, Resume: 10 * time.Minute}},
 	))
 
-	for _, tc := range []struct {
-		query   string
-		quality media.Quality
-		want    string
-		from    time.Duration
+	testCases := []struct {
+		name     string
+		query    string
+		quality  media.Quality
+		expected string
+		from     time.Duration
 	}{
-		{"dune part two", "", "movie/2", 0},
-		{"dune part two", media.QualityHighest, "movie/2", 0},
-		{"dune part two", media.Quality1080p, "movie/1", 0},
-		{"dune part two", media.Quality720p, "movie/1", 0},
-		{"hot fuzz", media.Quality2160p, "movie/3", 10 * time.Minute},
-		{"hot fuzz", media.Quality1080p, "movie/4", 0},
-	} {
-		res, err := ix.Search(t.Context(), Query{Text: tc.query, Quality: tc.quality})
-		require.NoError(t, err)
-		require.Equal(t, DecisionPlay, res.Decision, tc.query)
+		{name: "ShouldPlayHighestQualityWithoutPreference", query: "dune part two", expected: "movie/2"},
+		{name: "ShouldPlayHighestQualityWhenPreferred", query: "dune part two", quality: media.QualityHighest, expected: "movie/2"},
+		{name: "ShouldPlayPreferredQuality", query: "dune part two", quality: media.Quality1080p, expected: "movie/1"},
+		{name: "ShouldPlayNextQualityBelowPreferredWhenMissing", query: "dune part two", quality: media.Quality720p, expected: "movie/1"},
+		{name: "ShouldStartWhereOtherCopyStopped", query: "hot fuzz", quality: media.Quality2160p, expected: "movie/3", from: 10 * time.Minute},
+		{name: "ShouldPlayPreferredCopyThatStopped", query: "hot fuzz", quality: media.Quality1080p, expected: "movie/4"},
+	}
 
-		best, ok := res.Best()
-		require.True(t, ok)
-		assert.Equal(t, tc.want, best.Doc.ID, "%s preferring %q", tc.query, tc.quality)
-		assert.Equal(t, tc.from, best.From, "%s preferring %q starts where the other copy stopped", tc.query, tc.quality)
-		assert.Len(t, res.Candidates, 1, "copies are one choice")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := ix.Search(t.Context(), Query{Text: tc.query, Quality: tc.quality})
+			require.NoError(t, err)
+			require.Equal(t, DecisionPlay, res.Decision)
+
+			best, ok := res.Best()
+			require.True(t, ok)
+			assert.Equal(t, tc.expected, best.Doc.ID)
+			assert.Equal(t, tc.from, best.From, "starts where the other copy stopped")
+			assert.Len(t, res.Candidates, 1, "copies are one choice")
+		})
 	}
 }

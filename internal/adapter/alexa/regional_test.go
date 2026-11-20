@@ -36,113 +36,146 @@ func ends(hour, minute int) actions.Message {
 func TestRegionalRoomSplits(t *testing.T) {
 	speech := regionalSpeech(t)
 
-	for _, tc := range []struct {
-		locale, query string
-		want          []RoomSplit
+	testCases := []struct {
+		name     string
+		locale   string
+		have     string
+		expected []RoomSplit
 	}{
-		{"es-MX", "coco en la recámara", []RoomSplit{{"coco", "recámara"}}},
-		{"es-MX", "coco en mi cuarto", []RoomSplit{{"coco", "cuarto"}}},
-		{"es-US", "coco en mi cuarto", []RoomSplit{{"coco", "cuarto"}}},
-		{"es-ES", "coco en mi cuarto", nil},
-		{"fr-CA", "les boys au sous-sol", []RoomSplit{{"les boys", "sous-sol"}}},
-		{"fr-CA", "les boys dans le salon", []RoomSplit{{"les boys", "salon"}}},
-	} {
-		assert.Equal(t, tc.want, speech.RoomSplits(tc.locale, tc.query), "%s %q", tc.locale, tc.query)
+		{name: "ShouldSplitRecamaraInEsMX", locale: "es-MX", have: "coco en la recámara", expected: []RoomSplit{{"coco", "recámara"}}},
+		{name: "ShouldSplitEnMiInEsMX", locale: "es-MX", have: "coco en mi cuarto", expected: []RoomSplit{{"coco", "cuarto"}}},
+		{name: "ShouldSplitEnMiInEsUS", locale: "es-US", have: "coco en mi cuarto", expected: []RoomSplit{{"coco", "cuarto"}}},
+		{name: "ShouldNotSplitEnMiInEsES", locale: "es-ES", have: "coco en mi cuarto"},
+		{name: "ShouldSplitAuInFrCA", locale: "fr-CA", have: "les boys au sous-sol", expected: []RoomSplit{{"les boys", "sous-sol"}}},
+		{name: "ShouldSplitDansLeInFrCA", locale: "fr-CA", have: "les boys dans le salon", expected: []RoomSplit{{"les boys", "salon"}}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, speech.RoomSplits(tc.locale, tc.have))
+		})
 	}
 }
 
 func TestRegionalReinterpret(t *testing.T) {
 	speech := regionalSpeech(t)
 
-	for _, tc := range []struct {
-		locale, query, intent string
-		slots                 map[string]string
+	testCases := []struct {
+		name   string
+		locale string
+		have   string
+		intent string
+		slots  map[string]string
 	}{
-		{"es-MX", "el capítulo nuevo de club de cuervos", "WatchLatestEpisode", map[string]string{"Show": "club de cuervos"}},
-		{"es-US", "el capítulo nuevo de club de cuervos", "WatchLatestEpisode", map[string]string{"Show": "club de cuervos"}},
-		{"es-ES", "el capítulo nuevo de club de cuervos", "PlayMedia", map[string]string{"Query": "el capítulo nuevo de club de cuervos"}},
-		{"fr-CA", "le prochain épisode de district 31", "WatchNextEpisode", map[string]string{"Show": "district 31"}},
-		{"fr-CA", "l'émission district 31", "WatchNextEpisode", map[string]string{"Show": "district 31"}},
-		{"fr-CA", "le téléroman les belles histoires des pays d'en haut", "WatchNextEpisode", map[string]string{"Show": "les belles histoires des pays d'en haut"}},
-		{"fr-FR", "le téléroman district 31", "PlayMedia", map[string]string{"Query": "le téléroman district 31"}},
-	} {
-		got := speech.Reinterpret(tc.locale, Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.query}}})[0]
+		{name: "ShouldReadCapituloNuevoAsLatestEpisodeInEsMX", locale: "es-MX", have: "el capítulo nuevo de club de cuervos", intent: "WatchLatestEpisode", slots: map[string]string{"Show": "club de cuervos"}},
+		{name: "ShouldReadCapituloNuevoAsLatestEpisodeInEsUS", locale: "es-US", have: "el capítulo nuevo de club de cuervos", intent: "WatchLatestEpisode", slots: map[string]string{"Show": "club de cuervos"}},
+		{name: "ShouldKeepCapituloNuevoAsPlayMediaInEsES", locale: "es-ES", have: "el capítulo nuevo de club de cuervos", intent: "PlayMedia", slots: map[string]string{"Query": "el capítulo nuevo de club de cuervos"}},
+		{name: "ShouldReadNextEpisodeInFrCA", locale: "fr-CA", have: "le prochain épisode de district 31", intent: "WatchNextEpisode", slots: map[string]string{"Show": "district 31"}},
+		{name: "ShouldReadEmissionAsNextEpisodeInFrCA", locale: "fr-CA", have: "l'émission district 31", intent: "WatchNextEpisode", slots: map[string]string{"Show": "district 31"}},
+		{name: "ShouldReadTeleromanAsNextEpisodeInFrCA", locale: "fr-CA", have: "le téléroman les belles histoires des pays d'en haut", intent: "WatchNextEpisode", slots: map[string]string{"Show": "les belles histoires des pays d'en haut"}},
+		{name: "ShouldKeepTeleromanAsPlayMediaInFrFR", locale: "fr-FR", have: "le téléroman district 31", intent: "PlayMedia", slots: map[string]string{"Query": "le téléroman district 31"}},
+	}
 
-		values := map[string]string{}
-		for name, slot := range got.Slots {
-			values[name] = slot.Value
-		}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := speech.Reinterpret(tc.locale, Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.have}}})[0]
 
-		assert.Equal(t, tc.intent, got.Name, "%s %q", tc.locale, tc.query)
-		assert.Equal(t, tc.slots, values, "%s %q", tc.locale, tc.query)
+			values := map[string]string{}
+			for name, slot := range actual.Slots {
+				values[name] = slot.Value
+			}
+
+			assert.Equal(t, tc.intent, actual.Name)
+			assert.Equal(t, tc.slots, values)
+		})
 	}
 }
 
 func TestRegionalSlotIDs(t *testing.T) {
 	speech := regionalSpeech(t)
 
-	for _, tc := range []struct {
-		locale, typ, heard, want string
+	testCases := []struct {
+		name     string
+		locale   string
+		typ      string
+		have     string
+		expected string
 	}{
-		{"es-MX", "MEDIA_TYPE", "rola", "song"},
-		{"es-US", "MEDIA_TYPE", "rolas", "song"},
-		{"es-MX", "NAV_ACTION", "okey", "select"},
-		{"es-MX", "SEEK_SIZE", "un tantito", "small"},
-		{"es-MX", "MEDIA_TYPE", "canción", "song"},
-		{"es-ES", "MEDIA_TYPE", "rola", ""},
-		{"fr-CA", "MEDIA_TYPE", "toune", "song"},
-		{"fr-CA", "MEDIA_TYPE", "téléroman", "tvshow"},
-		{"fr-CA", "LIBRARY_SECTION", "nouveaux vidéoclips", "recentmusicvideos"},
-		{"fr-CA", "LIBRARY_SECTION", "vidéoclips récents", "recentmusicvideos"},
-		{"fr-CA", "LIBRARY_SECTION", "vidéoclips", "musicvideos"},
-		{"fr-FR", "LIBRARY_SECTION", "nouveaux vidéoclips", ""},
-		{"fr-CA", "SUBTITLE_ACTION", "ferme", "off"},
-		{"fr-CA", "SUBTITLE_ACTION", "ouvre", "on"},
-		{"fr-FR", "MEDIA_TYPE", "toune", ""},
-	} {
-		assert.Equal(t, tc.want, speech.SlotID(tc.locale, tc.typ, tc.heard), "%s %s %q", tc.locale, tc.typ, tc.heard)
+		{name: "ShouldResolveRolaAsSongInEsMX", locale: "es-MX", typ: "MEDIA_TYPE", have: "rola", expected: "song"},
+		{name: "ShouldResolveRolasAsSongInEsUS", locale: "es-US", typ: "MEDIA_TYPE", have: "rolas", expected: "song"},
+		{name: "ShouldResolveOkeyAsSelectInEsMX", locale: "es-MX", typ: "NAV_ACTION", have: "okey", expected: "select"},
+		{name: "ShouldResolveUnTantitoAsSmallInEsMX", locale: "es-MX", typ: "SEEK_SIZE", have: "un tantito", expected: "small"},
+		{name: "ShouldResolveCancionAsSongInEsMX", locale: "es-MX", typ: "MEDIA_TYPE", have: "canción", expected: "song"},
+		{name: "ShouldNotResolveRolaInEsES", locale: "es-ES", typ: "MEDIA_TYPE", have: "rola"},
+		{name: "ShouldResolveTouneAsSongInFrCA", locale: "fr-CA", typ: "MEDIA_TYPE", have: "toune", expected: "song"},
+		{name: "ShouldResolveTeleromanAsTVShowInFrCA", locale: "fr-CA", typ: "MEDIA_TYPE", have: "téléroman", expected: "tvshow"},
+		{name: "ShouldResolveNouveauxVideoclipsInFrCA", locale: "fr-CA", typ: "LIBRARY_SECTION", have: "nouveaux vidéoclips", expected: "recentmusicvideos"},
+		{name: "ShouldResolveVideoclipsRecentsInFrCA", locale: "fr-CA", typ: "LIBRARY_SECTION", have: "vidéoclips récents", expected: "recentmusicvideos"},
+		{name: "ShouldResolveVideoclipsInFrCA", locale: "fr-CA", typ: "LIBRARY_SECTION", have: "vidéoclips", expected: "musicvideos"},
+		{name: "ShouldNotResolveNouveauxVideoclipsInFrFR", locale: "fr-FR", typ: "LIBRARY_SECTION", have: "nouveaux vidéoclips"},
+		{name: "ShouldResolveFermeAsOffInFrCA", locale: "fr-CA", typ: "SUBTITLE_ACTION", have: "ferme", expected: "off"},
+		{name: "ShouldResolveOuvreAsOnInFrCA", locale: "fr-CA", typ: "SUBTITLE_ACTION", have: "ouvre", expected: "on"},
+		{name: "ShouldNotResolveTouneInFrFR", locale: "fr-FR", typ: "MEDIA_TYPE", have: "toune"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, speech.SlotID(tc.locale, tc.typ, tc.have))
+		})
 	}
 }
 
 func TestRegionalResponses(t *testing.T) {
 	speech := regionalSpeech(t)
 
-	for _, tc := range []struct {
-		locale string
-		msg    actions.Message
-		want   string
+	testCases := []struct {
+		name     string
+		locale   string
+		have     actions.Message
+		expected string
 	}{
-		{"es-ES", actions.Message{ID: "goodbye"}, "Vale."},
-		{"es-MX", actions.Message{ID: "goodbye"}, "Está bien."},
-		{"es-US", actions.Message{ID: "match.not_found", Params: map[string]string{"query": "Coco"}}, "No encontré Coco en tu biblioteca."},
-		{"es-MX", actions.Message{ID: "player.remaining", Durations: map[string]time.Duration{"remaining": 72 * time.Minute}}, "Termina en 1 hora 12 minutos."},
-		{"es-MX", actions.Message{ID: "whatsnew.shows", Lists: map[string][]string{"titles": {"Rebelde", "Narcos"}}}, "Hay episodios nuevos de Rebelde y Narcos."},
-		{"fr-FR", actions.Message{ID: "playlist.playing", Params: map[string]string{"playlist": "Party"}}, "Je lance la playlist Party."},
-		{"fr-CA", actions.Message{ID: "playlist.playing", Params: map[string]string{"playlist": "Party"}}, "Je lance la liste de lecture Party."},
-		{"fr-CA", actions.Message{ID: "music.playing_video", Params: map[string]string{"title": "Dégénérations", "artist": "Mes Aïeux"}}, "Je lance le vidéoclip Dégénérations de Mes Aïeux."},
-		{"fr-CA", actions.Message{ID: "streams.audio_language", Languages: map[string]string{"language": "fre"}}, "Audio : français."},
-		{"es-MX", ends(15, 4), "Hora de término: 3:04 p. m.; termina en 5 minutos."},
-		{"es-US", ends(9, 30), "Hora de término: 9:30 a. m.; termina en 5 minutos."},
-		{"es-MX", ends(0, 5), "Hora de término: 12:05 a. m.; termina en 5 minutos."},
-		{"es-ES", ends(15, 4), "Termina en 5 minutos, a las 15:04."},
-	} {
-		assert.Equal(t, tc.want, speech.Render(tc.locale, tc.msg), "%s %s", tc.locale, tc.msg.ID)
+		{name: "ShouldSayValeInEsES", locale: "es-ES", have: actions.Message{ID: "goodbye"}, expected: "Vale."},
+		{name: "ShouldSayEstaBienInEsMX", locale: "es-MX", have: actions.Message{ID: "goodbye"}, expected: "Está bien."},
+		{name: "ShouldSayNotFoundInEsUS", locale: "es-US", have: actions.Message{ID: "match.not_found", Params: map[string]string{"query": "Coco"}}, expected: "No encontré Coco en tu biblioteca."},
+		{name: "ShouldSayTimeRemainingInEsMX", locale: "es-MX", have: actions.Message{ID: "player.remaining", Durations: map[string]time.Duration{"remaining": 72 * time.Minute}}, expected: "Termina en 1 hora 12 minutos."},
+		{name: "ShouldListNewShowsInEsMX", locale: "es-MX", have: actions.Message{ID: "whatsnew.shows", Lists: map[string][]string{"titles": {"Rebelde", "Narcos"}}}, expected: "Hay episodios nuevos de Rebelde y Narcos."},
+		{name: "ShouldSayPlaylistInFrFR", locale: "fr-FR", have: actions.Message{ID: "playlist.playing", Params: map[string]string{"playlist": "Party"}}, expected: "Je lance la playlist Party."},
+		{name: "ShouldSayListeDeLectureInFrCA", locale: "fr-CA", have: actions.Message{ID: "playlist.playing", Params: map[string]string{"playlist": "Party"}}, expected: "Je lance la liste de lecture Party."},
+		{name: "ShouldSayVideoclipInFrCA", locale: "fr-CA", have: actions.Message{ID: "music.playing_video", Params: map[string]string{"title": "Dégénérations", "artist": "Mes Aïeux"}}, expected: "Je lance le vidéoclip Dégénérations de Mes Aïeux."},
+		{name: "ShouldNameAudioLanguageInFrCA", locale: "fr-CA", have: actions.Message{ID: "streams.audio_language", Languages: map[string]string{"language": "fre"}}, expected: "Audio : français."},
+		{name: "ShouldSayAfternoonEndTimeInEsMX", locale: "es-MX", have: ends(15, 4), expected: "Hora de término: 3:04 p. m.; termina en 5 minutos."},
+		{name: "ShouldSayMorningEndTimeInEsUS", locale: "es-US", have: ends(9, 30), expected: "Hora de término: 9:30 a. m.; termina en 5 minutos."},
+		{name: "ShouldSayMidnightEndTimeInEsMX", locale: "es-MX", have: ends(0, 5), expected: "Hora de término: 12:05 a. m.; termina en 5 minutos."},
+		{name: "ShouldSay24HourEndTimeInEsES", locale: "es-ES", have: ends(15, 4), expected: "Termina en 5 minutos, a las 15:04."},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, speech.Render(tc.locale, tc.have))
+		})
 	}
 }
 
 func TestRegionalSpokenTime(t *testing.T) {
 	afternoon := time.Date(1, 1, 1, 15, 4, 0, 0, time.UTC)
 
-	for _, tc := range []struct {
-		locale, lang, want string
+	testCases := []struct {
+		name     string
+		locale   string
+		lang     string
+		expected string
 	}{
-		{"es-MX", "es", "3:04 p. m."},
-		{"es-US", "es", "3:04 p. m."},
-		{"es-ES", "es", "15:04"},
-		{"fr-CA", "fr", "15:04"},
-		{"fr-FR", "fr", "15:04"},
-		{"en-AU", "en", "3:04 pm"},
-	} {
-		assert.Equal(t, tc.want, spokenTime(tc.locale, tc.lang, afternoon), tc.locale)
+		{name: "ShouldSpeakTwelveHourTimeInEsMX", locale: "es-MX", lang: "es", expected: "3:04 p. m."},
+		{name: "ShouldSpeakTwelveHourTimeInEsUS", locale: "es-US", lang: "es", expected: "3:04 p. m."},
+		{name: "ShouldSpeak24HourTimeInEsES", locale: "es-ES", lang: "es", expected: "15:04"},
+		{name: "ShouldSpeak24HourTimeInFrCA", locale: "fr-CA", lang: "fr", expected: "15:04"},
+		{name: "ShouldSpeak24HourTimeInFrFR", locale: "fr-FR", lang: "fr", expected: "15:04"},
+		{name: "ShouldSpeakTwelveHourTimeInEnAU", locale: "en-AU", lang: "en", expected: "3:04 pm"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, spokenTime(tc.locale, tc.lang, afternoon))
+		})
 	}
 }

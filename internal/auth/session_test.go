@@ -89,22 +89,30 @@ func TestSessionTouchIsThrottled(t *testing.T) {
 func TestAuthenticateWithoutASession(t *testing.T) {
 	f := newFixture(t, nil)
 
-	for name, r := range map[string]*http.Request{
-		"no cookie":    request(http.MethodGet, "/"),
-		"empty cookie": request(http.MethodGet, "/", &http.Cookie{Name: SessionCookie, Value: ""}),
-	} {
-		rec := httptest.NewRecorder()
-		p, err := f.svc.Authenticate(rec, r)
-		require.NoError(t, err, name)
-		assert.Nil(t, p, name)
-		assert.Nil(t, cookie(rec, SessionCookie), "%s: nothing to clear", name)
+	testCases := []struct {
+		name    string
+		have    *http.Request
+		cleared bool
+	}{
+		{name: "ShouldHaveNothingToClearWithoutACookie", have: request(http.MethodGet, "/")},
+		{name: "ShouldHaveNothingToClearWithAnEmptyCookie", have: request(http.MethodGet, "/", &http.Cookie{Name: SessionCookie, Value: ""})},
+		{name: "ShouldClearAnUnknownToken", have: request(http.MethodGet, "/", &http.Cookie{Name: SessionCookie, Value: "forged"}), cleared: true},
 	}
 
-	rec := httptest.NewRecorder()
-	p, err := f.svc.Authenticate(rec, request(http.MethodGet, "/", &http.Cookie{Name: SessionCookie, Value: "forged"}))
-	require.NoError(t, err)
-	assert.Nil(t, p)
-	assert.Equal(t, -1, cookie(rec, SessionCookie).MaxAge, "an unknown token is cleared")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			rec := httptest.NewRecorder()
+			p, err := f.svc.Authenticate(rec, tc.have)
+			require.NoError(t, err)
+			assert.Nil(t, p)
+
+			if tc.cleared {
+				assert.Equal(t, -1, cookie(rec, SessionCookie).MaxAge)
+			} else {
+				assert.Nil(t, cookie(rec, SessionCookie))
+			}
+		})
+	}
 }
 
 func TestSessionStorageErrors(t *testing.T) {

@@ -39,19 +39,22 @@ func TestEncodeModelLimits(t *testing.T) {
 	maxIntents := modelWithValue("lounge")
 	maxIntents.InteractionModel.LanguageModel.Intents = make([]skillmodel.ModelIntent, MaxIntents)
 
-	for name, tc := range map[string]struct {
-		model *skillmodel.InteractionModel
-		err   string
+	testCases := []struct {
+		name string
+		have *skillmodel.InteractionModel
+		err  string
 	}{
-		"within limits":                     {model: modelWithValue("lounge", "living room")},
-		"value at the limit, in characters": {model: modelWithValue(atLimit, atLimit)},
-		"value too long":                    {model: modelWithValue(overLimit), err: "slot type ROOM value"},
-		"synonym too long":                  {model: modelWithValue("lounge", "den", overLimit), err: "slot type ROOM synonym"},
-		"intents at the limit":              {model: maxIntents},
-		"too many intents":                  {model: tooManyIntents, err: "251 intents exceeds Amazon's limit of 250"},
-	} {
-		t.Run(name, func(t *testing.T) {
-			data, warnings, err := encodeModel("en-AU", tc.model)
+		{name: "ShouldEncodeWithinLimits", have: modelWithValue("lounge", "living room")},
+		{name: "ShouldEncodeValueAtTheLimitInCharacters", have: modelWithValue(atLimit, atLimit)},
+		{name: "ShouldRejectValueTooLong", have: modelWithValue(overLimit), err: "slot type ROOM value"},
+		{name: "ShouldRejectSynonymTooLong", have: modelWithValue("lounge", "den", overLimit), err: "slot type ROOM synonym"},
+		{name: "ShouldEncodeIntentsAtTheLimit", have: maxIntents},
+		{name: "ShouldRejectTooManyIntents", have: tooManyIntents, err: "251 intents exceeds Amazon's limit of 250"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			data, warnings, err := encodeModel("en-AU", tc.have)
 			if tc.err != "" {
 				require.ErrorContains(t, err, tc.err)
 				assert.Contains(t, err.Error(), "locale en-AU")
@@ -85,32 +88,37 @@ func modelOfSize(t *testing.T, size int) *skillmodel.InteractionModel {
 }
 
 func TestEncodeModelSizeBoundaries(t *testing.T) {
-	for _, tc := range []struct {
+	testCases := []struct {
+		name    string
 		size    int
 		warning bool
 		err     bool
 	}{
-		{size: WarnModelBytes},
-		{size: WarnModelBytes + 1, warning: true},
-		{size: MaxModelBytes, warning: true},
-		{size: MaxModelBytes + 1, err: true},
-	} {
-		data, warnings, err := encodeModel("en-AU", modelOfSize(t, tc.size))
-		if tc.err {
-			require.ErrorContains(t, err, fmt.Sprintf("interaction model is %d bytes, over Amazon's %d byte limit", tc.size, MaxModelBytes))
-			assert.Nil(t, data)
+		{name: "ShouldNotWarnAtTheWarningSize", size: WarnModelBytes},
+		{name: "ShouldWarnJustOverTheWarningSize", size: WarnModelBytes + 1, warning: true},
+		{name: "ShouldWarnAtTheLimit", size: MaxModelBytes, warning: true},
+		{name: "ShouldRejectJustOverTheLimit", size: MaxModelBytes + 1, err: true},
+	}
 
-			continue
-		}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			data, warnings, err := encodeModel("en-AU", modelOfSize(t, tc.size))
+			if tc.err {
+				require.ErrorContains(t, err, fmt.Sprintf("interaction model is %d bytes, over Amazon's %d byte limit", tc.size, MaxModelBytes))
+				assert.Nil(t, data)
 
-		require.NoError(t, err, tc.size)
-		assert.Len(t, data, tc.size)
+				return
+			}
 
-		if tc.warning {
-			assert.Equal(t, []string{fmt.Sprintf("locale en-AU: interaction model is %d bytes, close to Amazon's %d byte limit", tc.size, MaxModelBytes)}, warnings)
-		} else {
-			assert.Empty(t, warnings, tc.size)
-		}
+			require.NoError(t, err)
+			assert.Len(t, data, tc.size)
+
+			if tc.warning {
+				assert.Equal(t, []string{fmt.Sprintf("locale en-AU: interaction model is %d bytes, close to Amazon's %d byte limit", tc.size, MaxModelBytes)}, warnings)
+			} else {
+				assert.Empty(t, warnings)
+			}
+		})
 	}
 }
 
@@ -121,15 +129,23 @@ func TestEncodeModelTruncatesLongValueInError(t *testing.T) {
 }
 
 func TestCountry(t *testing.T) {
-	for locale, want := range map[string]string{
-		"en-AU":  "AU",
-		"fr-ca":  "CA",
-		"de":     "",
-		"es-419": "",
-		"":       "",
-		"en-":    "",
-	} {
-		assert.Equal(t, want, country(locale), locale)
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldReadCountry", have: "en-AU", expected: "AU"},
+		{name: "ShouldUpperCaseCountry", have: "fr-ca", expected: "CA"},
+		{name: "ShouldHaveNoCountryForBareLanguage", have: "de"},
+		{name: "ShouldHaveNoCountryForNumericRegion", have: "es-419"},
+		{name: "ShouldHaveNoCountryForEmptyLocale"},
+		{name: "ShouldHaveNoCountryForEmptyRegion", have: "en-"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, country(tc.have))
+		})
 	}
 }
 
@@ -151,17 +167,25 @@ func TestPrivacyValidateListsEveryMissingAnswer(t *testing.T) {
 }
 
 func TestEndpointValidate(t *testing.T) {
-	for uri, ok := range map[string]bool{
-		"https://encore.example.com/api/v1/alexa": true,
-		"https://encore.example.com":              true,
-		"http://encore.example.com/api/v1/alexa":  false,
-		"https:///api/v1/alexa":                   false,
-		"encore.example.com/api/v1/alexa":         false,
-		"https://exa mple.com/":                   false,
-		"":                                        false,
-	} {
-		err := Endpoint{URI: uri}.validate()
-		assert.Equal(t, ok, err == nil, "%q: %v", uri, err)
+	testCases := []struct {
+		name     string
+		have     string
+		expected bool
+	}{
+		{name: "ShouldAcceptHTTPSWithPath", have: "https://encore.example.com/api/v1/alexa", expected: true},
+		{name: "ShouldAcceptHTTPSWithoutPath", have: "https://encore.example.com", expected: true},
+		{name: "ShouldRejectHTTP", have: "http://encore.example.com/api/v1/alexa"},
+		{name: "ShouldRejectMissingHost", have: "https:///api/v1/alexa"},
+		{name: "ShouldRejectMissingScheme", have: "encore.example.com/api/v1/alexa"},
+		{name: "ShouldRejectInvalidHost", have: "https://exa mple.com/"},
+		{name: "ShouldRejectEmpty"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := Endpoint{URI: tc.have}.validate()
+			assert.Equal(t, tc.expected, err == nil, "%v", err)
+		})
 	}
 }
 
@@ -182,18 +206,21 @@ func TestWriteZipReportsWriterErrors(t *testing.T) {
 		many[i] = File{Name: fmt.Sprintf("models/locale-%03d-with-a-long-enough-name.json", i), Data: []byte("{}")}
 	}
 
-	for name, tc := range map[string]struct {
-		files []File
-		want  string
+	testCases := []struct {
+		name     string
+		have     []File
+		expected string
 	}{
-		"while finishing":       {[]File{{Name: "a.json", Data: []byte(strings.Repeat("x", 1<<16))}}, "skillpkg: finishing zip: "},
-		"while writing a file":  {[]File{{Name: "a.json", Data: noise}}, "skillpkg: writing a.json: "},
-		"while adding a header": {many, "skillpkg: adding models/locale-"},
-	} {
-		t.Run(name, func(t *testing.T) {
-			err := writeZip(failingWriter{}, tc.files)
+		{name: "ShouldReportErrorWhileFinishing", have: []File{{Name: "a.json", Data: []byte(strings.Repeat("x", 1<<16))}}, expected: "skillpkg: finishing zip: "},
+		{name: "ShouldReportErrorWhileWritingAFile", have: []File{{Name: "a.json", Data: noise}}, expected: "skillpkg: writing a.json: "},
+		{name: "ShouldReportErrorWhileAddingAHeader", have: many, expected: "skillpkg: adding models/locale-"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := writeZip(failingWriter{}, tc.have)
 			require.ErrorIs(t, err, errWrite)
-			assert.True(t, strings.HasPrefix(err.Error(), tc.want), err.Error())
+			assert.True(t, strings.HasPrefix(err.Error(), tc.expected), err.Error())
 		})
 	}
 }
@@ -212,25 +239,33 @@ func TestHashFilesSeparatesNamesFromData(t *testing.T) {
 }
 
 func TestCleanSlotText(t *testing.T) {
-	for in, want := range map[string]string{
-		"Heat":        "Heat",
-		"*NSYNC":      "NSYNC",
-		"M*A*S*H":     "MASH",
-		"[B]Dune[/B]": "Dune",
-		"[COLOR red]Alien[/COLOR] [I]Director's Cut[/i]": "Alien Director's Cut",
-		"[color=FFFF0000]Up[/color]":                     "Up",
-		"Line one[CR]Line two":                           "Line one Line two",
-		"[UPPERCASE]loud[/UPPERCASE] [LIGHT]x[/LIGHT] [TABS]y [CAPITALIZE]z[/CAPITALIZE] [LOWERCASE]w[/LOWERCASE]": "loud x y z w",
-		"Toy\tStory\n2":       "Toy Story 2",
-		"Bell\x07e\u200b":     "Belle",
-		"  Up   ":             "Up",
-		"🎄 Christmas 🎅🏽 Hits": "Christmas Hits",
-		"まどか☆マギカ":             "まどかマギカ",
-		"[B]***[/B] 🎵":        "",
-		"[Rec]":               "[Rec]",
-		"Amélie":              "Amélie",
-	} {
-		assert.Equal(t, want, CleanSlotText(in), "%q", in)
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldKeepPlainText", have: "Heat", expected: "Heat"},
+		{name: "ShouldDropLeadingAsterisk", have: "*NSYNC", expected: "NSYNC"},
+		{name: "ShouldDropInnerAsterisks", have: "M*A*S*H", expected: "MASH"},
+		{name: "ShouldDropBoldTags", have: "[B]Dune[/B]", expected: "Dune"},
+		{name: "ShouldDropColourAndItalicTags", have: "[COLOR red]Alien[/COLOR] [I]Director's Cut[/i]", expected: "Alien Director's Cut"},
+		{name: "ShouldDropLowerCaseColourTags", have: "[color=FFFF0000]Up[/color]", expected: "Up"},
+		{name: "ShouldReplaceLineBreakTagWithSpace", have: "Line one[CR]Line two", expected: "Line one Line two"},
+		{name: "ShouldDropFormattingTags", have: "[UPPERCASE]loud[/UPPERCASE] [LIGHT]x[/LIGHT] [TABS]y [CAPITALIZE]z[/CAPITALIZE] [LOWERCASE]w[/LOWERCASE]", expected: "loud x y z w"},
+		{name: "ShouldReplaceWhitespaceControlsWithSpaces", have: "Toy\tStory\n2", expected: "Toy Story 2"},
+		{name: "ShouldDropInvisibleCharacters", have: "Bell\x07e\u200b", expected: "Belle"},
+		{name: "ShouldTrimAndCollapseSpaces", have: "  Up   ", expected: "Up"},
+		{name: "ShouldDropEmoji", have: "🎄 Christmas 🎅🏽 Hits", expected: "Christmas Hits"},
+		{name: "ShouldDropSymbols", have: "まどか☆マギカ", expected: "まどかマギカ"},
+		{name: "ShouldCleanToEmpty", have: "[B]***[/B] 🎵"},
+		{name: "ShouldKeepUnknownTags", have: "[Rec]", expected: "[Rec]"},
+		{name: "ShouldKeepAccents", have: "Amélie", expected: "Amélie"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, CleanSlotText(tc.have))
+		})
 	}
 }
 

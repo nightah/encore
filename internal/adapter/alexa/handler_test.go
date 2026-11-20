@@ -298,11 +298,24 @@ func TestRecorderCapturesMatch(t *testing.T) {
 }
 
 func TestSpeechDurations(t *testing.T) {
-	assert.Equal(t, "1 hour 12 minutes", spokenDuration("en", 72*time.Minute))
-	assert.Equal(t, "2 hours", spokenDuration("en", 2*time.Hour))
-	assert.Equal(t, "less than a minute", spokenDuration("en", 20*time.Second))
-	assert.Equal(t, "1 Stunde 1 Minute", spokenDuration("de", 61*time.Minute))
-	assert.Equal(t, "18 minutes", spokenDuration("xx", 18*time.Minute), "unknown languages fall back to English")
+	testCases := []struct {
+		name     string
+		lang     string
+		have     time.Duration
+		expected string
+	}{
+		{name: "ShouldSayHoursAndMinutes", lang: "en", have: 72 * time.Minute, expected: "1 hour 12 minutes"},
+		{name: "ShouldSayWholeHours", lang: "en", have: 2 * time.Hour, expected: "2 hours"},
+		{name: "ShouldSayLessThanAMinute", lang: "en", have: 20 * time.Second, expected: "less than a minute"},
+		{name: "ShouldSaySingularsInGerman", lang: "de", have: 61 * time.Minute, expected: "1 Stunde 1 Minute"},
+		{name: "ShouldFallBackToEnglishForUnknownLanguage", lang: "xx", have: 18 * time.Minute, expected: "18 minutes"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, spokenDuration(tc.lang, tc.have))
+		})
+	}
 }
 
 func TestSpeechUnknownLocaleFallsBack(t *testing.T) {
@@ -472,35 +485,35 @@ func withDisabled(t *testing.T, deep bool, groups ...media.Content) (*Handler, *
 func TestContentDisabled(t *testing.T) {
 	const declined = "This skill is set up without that kind of title."
 
-	t.Run("a music intent is declined without music", func(t *testing.T) {
+	t.Run("ShouldDeclineAMusicIntentWithoutMusic", func(t *testing.T) {
 		h, backend := withDisabled(t, true, media.ContentMusic)
 		res := serveBody(t, h, mustRead(t, "testdata/golden/listen-artist/request.json"))
 		assert.Contains(t, string(res), declined)
 		assert.Empty(t, backend.Calls())
 	})
 
-	t.Run("play X leaves out music even with deep search", func(t *testing.T) {
+	t.Run("ShouldLeaveMusicOutOfPlayEvenWithDeepSearch", func(t *testing.T) {
 		req := bytes.Replace(mustRead(t, "testdata/golden/play-media-not-found/request.json"), []byte(`"value": "conclave"`), []byte(`"value": "innuendo"`), 1)
 		h, backend := withDisabled(t, true, media.ContentMusic)
 		serveBody(t, h, req)
 		assert.NotContains(t, backend.Calls(), "Play album/41 resume")
 	})
 
-	t.Run("play X with only music finds music", func(t *testing.T) {
+	t.Run("ShouldFindMusicForPlayWithOnlyMusic", func(t *testing.T) {
 		req := bytes.Replace(mustRead(t, "testdata/golden/play-media-not-found/request.json"), []byte(`"value": "conclave"`), []byte(`"value": "innuendo"`), 1)
 		h, backend := withDisabled(t, true, media.ContentMovies, media.ContentTV)
 		serveBody(t, h, req)
 		assert.Contains(t, backend.Calls(), "Play album/41 resume")
 	})
 
-	t.Run("play X is declined with neither films nor shows", func(t *testing.T) {
+	t.Run("ShouldDeclinePlayWithNeitherFilmsNorShows", func(t *testing.T) {
 		h, backend := withDisabled(t, false, media.ContentMovies, media.ContentTV)
 		res := serveBody(t, h, mustRead(t, "testdata/golden/play-media-not-found/request.json"))
 		assert.Contains(t, string(res), declined, "without deep search, play X looks only for films and shows")
 		assert.Empty(t, backend.Calls())
 	})
 
-	t.Run("a recommendation of an unknown type is any video", func(t *testing.T) {
+	t.Run("ShouldRecommendAnyVideoForAnUnknownType", func(t *testing.T) {
 		h, _ := withDisabled(t, false, media.ContentMovies, media.ContentTV)
 		res := serveBody(t, h, intentRequest(t, "Recommend", map[string]slotSpec{"MediaType": {"podcasts", "podcast"}}))
 
@@ -511,19 +524,19 @@ func TestContentDisabled(t *testing.T) {
 		assert.JSONEq(t, `{"recommend":{"kinds":["musicvideo"]}}`, string(followup), "a music video is the video left")
 	})
 
-	t.Run("a movie recommendation is declined without movies", func(t *testing.T) {
+	t.Run("ShouldDeclineAMovieRecommendationWithoutMovies", func(t *testing.T) {
 		h, _ := withDisabled(t, false, media.ContentMovies)
 		res := serveBody(t, h, mustRead(t, "testdata/golden/recommend-movie/request.json"))
 		assert.Contains(t, string(res), declined)
 	})
 
-	t.Run("what's new falls back to what is left", func(t *testing.T) {
+	t.Run("ShouldFallBackToWhatIsLeftForWhatsNew", func(t *testing.T) {
 		h, _ := withDisabled(t, false, media.ContentMovies)
 		res := serveBody(t, h, mustRead(t, "testdata/golden/whats-new-shows/request.json"))
 		assert.NotContains(t, string(res), declined)
 	})
 
-	t.Run("everything allowed by default", func(t *testing.T) {
+	t.Run("ShouldAllowEverythingByDefault", func(t *testing.T) {
 		h, backend := withDisabled(t, false)
 		serveBody(t, h, mustRead(t, "testdata/golden/listen-artist/request.json"))
 		assert.NotEmpty(t, backend.Calls())
@@ -627,11 +640,23 @@ func TestConfirmSound(t *testing.T) {
 func TestServeBodyRejectsUndecodableEnvelope(t *testing.T) {
 	h, backend, rec := newHandler(t)
 
-	for _, body := range []string{"", "{", `{"request":"IntentRequest"}`, `[]`} {
-		w := httptest.NewRecorder()
-		h.ServeBody(w, httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/api/v1/alexa", nil), []byte(body))
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldRejectEmptyBody"},
+		{name: "ShouldRejectTruncatedJSON", have: "{"},
+		{name: "ShouldRejectRequestThatIsNotAnObject", have: `{"request":"IntentRequest"}`},
+		{name: "ShouldRejectJSONArray", have: `[]`},
+	}
 
-		assert.Equal(t, http.StatusBadRequest, w.Code, body)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			h.ServeBody(w, httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/api/v1/alexa", nil), []byte(tc.have))
+
+			assert.Equal(t, http.StatusBadRequest, w.Code)
+		})
 	}
 
 	assert.Empty(t, backend.Calls())
@@ -677,15 +702,23 @@ func TestIdentifyEchoReportsLookupFailure(t *testing.T) {
 }
 
 func TestSpokenIDSuffix(t *testing.T) {
-	for in, want := range map[string]string{
-		"amzn1.ask.device.AMAXYZSJY": "S J Y",
-		"AB":                         "A B",
-		"":                           "",
-		"device-äöü":                 "ä ö ü",
-		"ABCD":                       "B C D",
-		"ABC":                        "A B C",
-	} {
-		assert.Equal(t, want, spokenIDSuffix(in), in)
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldSpellTheLastThreeLetters", have: "amzn1.ask.device.AMAXYZSJY", expected: "S J Y"},
+		{name: "ShouldSpellAShortID", have: "AB", expected: "A B"},
+		{name: "ShouldSayNothingForAnEmptyID"},
+		{name: "ShouldSpellNonASCIILetters", have: "device-äöü", expected: "ä ö ü"},
+		{name: "ShouldSpellOnlyTheLastThreeOfFour", have: "ABCD", expected: "B C D"},
+		{name: "ShouldSpellAllOfThree", have: "ABC", expected: "A B C"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, spokenIDSuffix(tc.have))
+		})
 	}
 }
 
@@ -739,8 +772,16 @@ func (b *sleepyBackend) wake(context.Context) error {
 }
 
 func TestProgressiveResponseWhileWaking(t *testing.T) {
-	for name, status := range map[string]int{"delivered": http.StatusNoContent, "refused": http.StatusForbidden} {
-		t.Run(name, func(t *testing.T) {
+	testCases := []struct {
+		name   string
+		status int
+	}{
+		{name: "ShouldRetryOnceAwakeWhenInterimSpeechIsDelivered", status: http.StatusNoContent},
+		{name: "ShouldRetryOnceAwakeWhenInterimSpeechIsRefused", status: http.StatusForbidden},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			var (
 				mu     sync.Mutex
 				speech []string
@@ -757,7 +798,7 @@ func TestProgressiveResponseWhileWaking(t *testing.T) {
 					mu.Unlock()
 				}
 
-				w.WriteHeader(status)
+				w.WriteHeader(tc.status)
 			}))
 			t.Cleanup(srv.Close)
 
@@ -788,7 +829,7 @@ func TestProgressiveResponseWhileWaking(t *testing.T) {
 		})
 	}
 
-	t.Run("without progressive responses", func(t *testing.T) {
+	t.Run("ShouldWakeWithoutProgressiveResponses", func(t *testing.T) {
 		h, backend, _ := newHandler(t)
 		sleepy := &sleepyBackend{Backend: backend}
 		ft := h.Targets.(fakeTargets)
@@ -873,17 +914,24 @@ func TestProgressiveSendGivesUpQuickly(t *testing.T) {
 func TestDescribeOutcome(t *testing.T) {
 	msg := actions.Message{ID: "x"}
 
-	for want, o := range map[string]actions.Outcome{
-		"error":     {Err: errors.New("x"), Played: &media.Item{}},
-		"played":    {Played: &media.Item{}},
-		"asked":     {Pending: []actions.Choice{{}}},
-		"not_found": {Say: actions.Message{ID: "match.not_found"}},
-		"ok":        {Say: msg},
-	} {
-		assert.Equal(t, want, describeOutcome(o))
+	testCases := []struct {
+		name     string
+		have     actions.Outcome
+		expected string
+	}{
+		{name: "ShouldDescribeAnErrorEvenIfSomethingPlayed", have: actions.Outcome{Err: errors.New("x"), Played: &media.Item{}}, expected: "error"},
+		{name: "ShouldDescribePlayed", have: actions.Outcome{Played: &media.Item{}}, expected: "played"},
+		{name: "ShouldDescribePendingChoicesAsAsked", have: actions.Outcome{Pending: []actions.Choice{{}}}, expected: "asked"},
+		{name: "ShouldDescribeNotFound", have: actions.Outcome{Say: actions.Message{ID: "match.not_found"}}, expected: "not_found"},
+		{name: "ShouldDescribeOtherSpeechAsOK", have: actions.Outcome{Say: msg}, expected: "ok"},
+		{name: "ShouldDescribeAFollowupAsAsked", have: actions.Outcome{Followup: &actions.Followup{}}, expected: "asked"},
 	}
 
-	assert.Equal(t, "asked", describeOutcome(actions.Outcome{Followup: &actions.Followup{}}))
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, describeOutcome(tc.have))
+		})
+	}
 }
 
 func TestSessionValueIgnoresMalformedAttributes(t *testing.T) {
@@ -900,24 +948,29 @@ func TestSlotValues(t *testing.T) {
 
 // TestAnswerPlaysInTheRoomAskedAbout checks that answering a question about a title asked for in another room plays it there, not on the Echo's own Kodi instance: the answer names no room, so the session has to remember it.
 func TestAnswerPlaysInTheRoomAskedAbout(t *testing.T) {
-	for name, tc := range map[string]struct {
+	testCases := []struct {
+		name   string
 		ask    []byte
 		answer func(t *testing.T) RequestEnvelope
 	}{
-		"a room slot, answered yes": {
-			ask: intentRequest(t, "WatchMovie", map[string]slotSpec{"Movie": {value: "fuzz"}, "Room": {value: "bedroom"}}),
+		{
+			name: "ShouldPlayInTheRoomSlotWhenAnsweredYes",
+			ask:  intentRequest(t, "WatchMovie", map[string]slotSpec{"Movie": {value: "fuzz"}, "Room": {value: "bedroom"}}),
 			answer: func(t *testing.T) RequestEnvelope {
 				return requestOf(t, mustRead(t, "testdata/golden/yes-after-question/request.json"))
 			},
 		},
-		"a room in the search query, answered by position": {
-			ask: intentRequest(t, "PlayMedia", map[string]slotSpec{"Query": {value: "fuzz in the bedroom"}}),
+		{
+			name: "ShouldPlayInTheRoomFromTheSearchQueryWhenAnsweredByPosition",
+			ask:  intentRequest(t, "PlayMedia", map[string]slotSpec{"Query": {value: "fuzz in the bedroom"}}),
 			answer: func(t *testing.T) RequestEnvelope {
 				return requestOf(t, intentRequest(t, chooseIntent, map[string]slotSpec{whichSlot: {value: "first"}}))
 			},
 		},
-	} {
-		t.Run(name, func(t *testing.T) {
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			h, lounge, bedroom, rec := newRoomHandler(t)
 
 			var resp ResponseEnvelope

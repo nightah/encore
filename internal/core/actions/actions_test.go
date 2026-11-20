@@ -189,32 +189,34 @@ func TestNextPlaysTheFollowingEpisodeWhenNothingIsQueued(t *testing.T) {
 	movie := media.Item{Kind: media.KindMovie, ID: 4, Title: "Hot Fuzz"}
 	stranger := ep(99, 1, 3)
 
-	for _, tc := range []struct {
-		name    string
-		playing *media.NowPlaying
-		say     string
-		calls   []string
+	testCases := []struct {
+		name     string
+		have     *media.NowPlaying
+		expected string
+		calls    []string
 	}{
-		{"nothing playing", nil, "playback.nothing_playing", []string{"NowPlaying", "Transport next"}},
-		{"a movie skips in the queue", &media.NowPlaying{Item: movie}, "", []string{"NowPlaying", "Transport next"}},
-		{"a queued episode skips in the queue", &media.NowPlaying{Item: s1e1, Queued: true}, "", []string{"NowPlaying", "Transport next"}},
-		{"the next episode", &media.NowPlaying{Item: s1e1}, "playback.playing_episode", []string{"NowPlaying", "Episodes 7", "Play episode/72 resume"}},
-		{"into the next season", &media.NowPlaying{Item: s1e2}, "playback.playing_episode", []string{"NowPlaying", "Episodes 7", "Play episode/73 resume"}},
-		{"from a special to the first episode", &media.NowPlaying{Item: special}, "playback.playing_episode", []string{"NowPlaying", "Episodes 7", "Play episode/71 resume"}},
-		{"the last episode says so", &media.NowPlaying{Item: s2e1}, "tv.last_episode", []string{"NowPlaying", "Episodes 7"}},
-		{"an episode outside the library skips in the queue", &media.NowPlaying{Item: stranger}, "", []string{"NowPlaying", "Episodes 7", "Transport next"}},
-	} {
+		{name: "ShouldSayNothingIsPlaying", expected: "playback.nothing_playing", calls: []string{"NowPlaying", "Transport next"}},
+		{name: "ShouldSkipInTheQueueForAMovie", have: &media.NowPlaying{Item: movie}, calls: []string{"NowPlaying", "Transport next"}},
+		{name: "ShouldSkipInTheQueueForAQueuedEpisode", have: &media.NowPlaying{Item: s1e1, Queued: true}, calls: []string{"NowPlaying", "Transport next"}},
+		{name: "ShouldPlayTheNextEpisode", have: &media.NowPlaying{Item: s1e1}, expected: "playback.playing_episode", calls: []string{"NowPlaying", "Episodes 7", "Play episode/72 resume"}},
+		{name: "ShouldPlayIntoTheNextSeason", have: &media.NowPlaying{Item: s1e2}, expected: "playback.playing_episode", calls: []string{"NowPlaying", "Episodes 7", "Play episode/73 resume"}},
+		{name: "ShouldPlayFromASpecialToTheFirstEpisode", have: &media.NowPlaying{Item: special}, expected: "playback.playing_episode", calls: []string{"NowPlaying", "Episodes 7", "Play episode/71 resume"}},
+		{name: "ShouldSaySoAfterTheLastEpisode", have: &media.NowPlaying{Item: s2e1}, expected: "tv.last_episode", calls: []string{"NowPlaying", "Episodes 7"}},
+		{name: "ShouldSkipInTheQueueForAnEpisodeOutsideTheLibrary", have: &media.NowPlaying{Item: stranger}, calls: []string{"NowPlaying", "Episodes 7", "Transport next"}},
+	}
+
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			target, backend, _ := newTarget(movie, s2e1, s1e2, special, s1e1)
-			backend.SetPlaying(tc.playing)
+			backend.SetPlaying(tc.have)
 
 			o := newService().Next(t.Context(), target)
 
 			require.NoError(t, o.Err)
-			assert.Equal(t, tc.say, o.Say.ID)
+			assert.Equal(t, tc.expected, o.Say.ID)
 			assert.Equal(t, tc.calls, backend.Calls())
 
-			if tc.say == "tv.last_episode" {
+			if tc.expected == "tv.last_episode" {
 				assert.Equal(t, "Severance", o.Say.Params["show"])
 			}
 		})
@@ -241,11 +243,19 @@ func TestNextFromACopyTheListDidNotKeep(t *testing.T) {
 func TestNextFailures(t *testing.T) {
 	playing := &media.NowPlaying{Item: media.Item{Kind: media.KindEpisode, ID: 71, ShowID: 7, Season: 1, Episode: 1}}
 
-	for _, method := range []string{"NowPlaying", "Episodes"} {
-		t.Run(method, func(t *testing.T) {
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldReportAFailingNowPlaying", have: "NowPlaying"},
+		{name: "ShouldReportFailingEpisodes", have: "Episodes"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			target, backend, _ := newTarget()
 			backend.SetPlaying(playing)
-			target, _ = failing(target, backend, errBoom, method)
+			target, _ = failing(target, backend, errBoom, tc.have)
 
 			o := newService().Next(t.Context(), target)
 
@@ -269,26 +279,28 @@ func TestVolume(t *testing.T) {
 }
 
 func TestSetVolumeScaleBoundaries(t *testing.T) {
-	for _, tc := range []struct {
-		name  string
-		level int
-		set   string
+	testCases := []struct {
+		name     string
+		have     int
+		expected string
 	}{
-		{"zero is silent", 0, "Volume set 0"},
-		{"ten is the top of the 0–10 scale", 10, "Volume set 100"},
-		{"eleven is a percentage", 11, "Volume set 11"},
-		{"a negative level is clamped to zero", -3, "Volume set 0"},
-		{"a large negative level is clamped to zero", -40, "Volume set 0"},
-		{"just over a hundred is clamped", 101, "Volume set 100"},
-	} {
+		{name: "ShouldTakeZeroAsSilent", expected: "Volume set 0"},
+		{name: "ShouldTakeTenAsTheTopOfTheZeroToTenScale", have: 10, expected: "Volume set 100"},
+		{name: "ShouldTakeElevenAsAPercentage", have: 11, expected: "Volume set 11"},
+		{name: "ShouldClampANegativeLevelToZero", have: -3, expected: "Volume set 0"},
+		{name: "ShouldClampALargeNegativeLevelToZero", have: -40, expected: "Volume set 0"},
+		{name: "ShouldClampJustOverAHundred", have: 101, expected: "Volume set 100"},
+	}
+
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			target, backend, _ := newTarget()
 
-			o := newService().SetVolume(t.Context(), target, tc.level)
+			o := newService().SetVolume(t.Context(), target, tc.have)
 
 			require.NoError(t, o.Err)
 			assert.Equal(t, "volume.set", o.Say.ID)
-			assert.Equal(t, []string{tc.set}, backend.Calls())
+			assert.Equal(t, []string{tc.expected}, backend.Calls())
 		})
 	}
 }
@@ -406,7 +418,7 @@ func TestPlayTitleAskWithoutCandidatesIsNotFound(t *testing.T) {
 }
 
 func TestPlayTitleLiveLookup(t *testing.T) {
-	t.Run("searches films and TV when no kind was asked for", func(t *testing.T) {
+	t.Run("ShouldSearchFilmsAndTVWhenNoKindWasAskedFor", func(t *testing.T) {
 		target, _, _ := newTarget()
 		lib := &lookupLibrary{}
 		target.Library = lib
@@ -417,7 +429,7 @@ func TestPlayTitleLiveLookup(t *testing.T) {
 		assert.Equal(t, []media.Kind{media.KindMovie, media.KindTVShow}, lib.kinds)
 	})
 
-	t.Run("searches only the kinds asked for", func(t *testing.T) {
+	t.Run("ShouldSearchOnlyTheKindsAskedFor", func(t *testing.T) {
 		target, _, _ := newTarget()
 		lib := &lookupLibrary{}
 		target.Library = lib
@@ -427,7 +439,7 @@ func TestPlayTitleLiveLookup(t *testing.T) {
 		assert.Equal(t, []media.Kind{media.KindSong}, lib.kinds)
 	})
 
-	t.Run("a failed lookup is a miss", func(t *testing.T) {
+	t.Run("ShouldMissWhenTheLookupFails", func(t *testing.T) {
 		target, _, _ := newTarget()
 		m := &brokenMatcher{ok: 1}
 		target.Matcher = m
@@ -442,37 +454,40 @@ func TestPlayTitleLiveLookup(t *testing.T) {
 }
 
 func TestChooseFirstSaysWhatPlays(t *testing.T) {
-	for _, tc := range []struct {
-		ref    media.Ref
-		id     string
-		params map[string]string
-		call   string
+	testCases := []struct {
+		name     string
+		have     media.Ref
+		expected string
+		params   map[string]string
+		call     string
 	}{
-		{media.Ref{Kind: media.KindAlbum, ID: 42}, "music.playing_album", map[string]string{"title": "Abbey Road", "artist": "The Beatles"}, "Play album/42 resume"},
-		{media.Ref{Kind: media.KindSong, ID: 52}, "music.playing_song", map[string]string{"title": "Come Together", "artist": "The Beatles"}, "Play song/52 resume"},
-		{media.Ref{Kind: media.KindMusicVideo, ID: 60}, "music.playing_video", map[string]string{"title": "Bohemian Rhapsody", "artist": "Queen"}, "Play musicvideo/60 resume"},
-		{media.Ref{Kind: media.KindArtist, ID: 30}, "music.playing_artist", map[string]string{"title": "Queen"}, "Play artist/30 shuffle limit 100"},
-		{media.Ref{Kind: media.KindPlaylist, ID: 70}, "playlist.playing", map[string]string{"playlist": "Road Trip"}, "Play playlist/70 resume"},
-		{media.Ref{Kind: media.KindEpisode, ID: 102}, "playback.playing_episode", map[string]string{"show": "Severance", "season": "2", "episode": "4", "title": "Woe's Hollow"}, "Play episode/102 resume"},
-	} {
-		t.Run(string(tc.ref.Kind), func(t *testing.T) {
+		{name: "ShouldSayAnAlbumPlays", have: media.Ref{Kind: media.KindAlbum, ID: 42}, expected: "music.playing_album", params: map[string]string{"title": "Abbey Road", "artist": "The Beatles"}, call: "Play album/42 resume"},
+		{name: "ShouldSayASongPlays", have: media.Ref{Kind: media.KindSong, ID: 52}, expected: "music.playing_song", params: map[string]string{"title": "Come Together", "artist": "The Beatles"}, call: "Play song/52 resume"},
+		{name: "ShouldSayAMusicVideoPlays", have: media.Ref{Kind: media.KindMusicVideo, ID: 60}, expected: "music.playing_video", params: map[string]string{"title": "Bohemian Rhapsody", "artist": "Queen"}, call: "Play musicvideo/60 resume"},
+		{name: "ShouldSayAnArtistPlays", have: media.Ref{Kind: media.KindArtist, ID: 30}, expected: "music.playing_artist", params: map[string]string{"title": "Queen"}, call: "Play artist/30 shuffle limit 100"},
+		{name: "ShouldSayAPlaylistPlays", have: media.Ref{Kind: media.KindPlaylist, ID: 70}, expected: "playlist.playing", params: map[string]string{"playlist": "Road Trip"}, call: "Play playlist/70 resume"},
+		{name: "ShouldSayAnEpisodePlays", have: media.Ref{Kind: media.KindEpisode, ID: 102}, expected: "playback.playing_episode", params: map[string]string{"show": "Severance", "season": "2", "episode": "4", "title": "Woe's Hollow"}, call: "Play episode/102 resume"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			target, backend, _ := newTarget()
 			title := ""
 
 			for _, it := range testkit.SampleLibrary() {
-				if it.Ref() == tc.ref {
+				if it.Ref() == tc.have {
 					title = it.Title
 				}
 			}
 
-			o := newService().ChooseFirst(t.Context(), target, []Choice{{DocID: "x", Ref: tc.ref, Title: title}}, nil)
+			o := newService().ChooseFirst(t.Context(), target, []Choice{{DocID: "x", Ref: tc.have, Title: title}}, nil)
 
 			require.NoError(t, o.Err)
-			assert.Equal(t, tc.id, o.Say.ID)
+			assert.Equal(t, tc.expected, o.Say.ID)
 			assert.Equal(t, tc.params, o.Say.Params)
 			assert.Equal(t, tc.call, lastCall(backend.Calls()))
 			require.NotNil(t, o.Played)
-			assert.Equal(t, tc.ref, o.Played.Ref())
+			assert.Equal(t, tc.have, o.Played.Ref())
 		})
 	}
 }
@@ -482,20 +497,30 @@ func TestSilentSuccessesAskForConfirmation(t *testing.T) {
 	backend.SetPlaying(&media.NowPlaying{Item: media.Item{Kind: media.KindMovie, ID: 1, Title: "Dune"}})
 	svc := NewService(slog.New(slog.DiscardHandler))
 
-	for name, o := range map[string]Outcome{
-		"pause":       svc.Transport(t.Context(), target, media.TransportPause),
-		"volume up":   svc.StepVolume(t.Context(), target, true),
-		"mute":        svc.ToggleMute(t.Context(), target),
-		"volume to 5": svc.SetVolume(t.Context(), target, 5),
-	} {
-		if name == "volume to 5" {
-			assert.False(t, o.Confirm, "%s says the level, so needs no sound", name)
+	testCases := []struct {
+		name     string
+		expected bool
+		call     func(ctx context.Context) Outcome
+	}{
+		{name: "ShouldConfirmPause", expected: true, call: func(ctx context.Context) Outcome { return svc.Transport(ctx, target, media.TransportPause) }},
+		{name: "ShouldConfirmVolumeUp", expected: true, call: func(ctx context.Context) Outcome { return svc.StepVolume(ctx, target, true) }},
+		{name: "ShouldConfirmMute", expected: true, call: func(ctx context.Context) Outcome { return svc.ToggleMute(ctx, target) }},
+		{name: "ShouldNotConfirmASetVolumeAsItSaysTheLevel", call: func(ctx context.Context) Outcome { return svc.SetVolume(ctx, target, 5) }},
+	}
 
-			continue
-		}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			o := tc.call(t.Context())
 
-		assert.True(t, o.Confirm, name)
-		assert.Empty(t, o.Say.ID, name)
+			if !tc.expected {
+				assert.False(t, o.Confirm, "says the level, so needs no sound")
+
+				return
+			}
+
+			assert.True(t, o.Confirm)
+			assert.Empty(t, o.Say.ID)
+		})
 	}
 
 	backend.SetPlaying(nil)
@@ -507,15 +532,30 @@ func TestTargetAllows(t *testing.T) {
 	noMovies := Target{Disabled: []media.Content{media.ContentMovies}}
 	onlyMovies := Target{Disabled: []media.Content{media.ContentTV, media.ContentMusic}}
 
-	for _, k := range []media.Kind{media.KindMovie, media.KindTVShow, media.KindEpisode, media.KindSong, media.KindMusicVideo, media.KindPlaylist} {
-		assert.True(t, all.Allows(k), "the zero value allows %s", k)
+	testCases := []struct {
+		name     string
+		target   Target
+		have     media.Kind
+		expected bool
+	}{
+		{name: "ShouldAllowMoviesByDefault", target: all, have: media.KindMovie, expected: true},
+		{name: "ShouldAllowTVShowsByDefault", target: all, have: media.KindTVShow, expected: true},
+		{name: "ShouldAllowEpisodesByDefault", target: all, have: media.KindEpisode, expected: true},
+		{name: "ShouldAllowSongsByDefault", target: all, have: media.KindSong, expected: true},
+		{name: "ShouldAllowMusicVideosByDefault", target: all, have: media.KindMusicVideo, expected: true},
+		{name: "ShouldAllowPlaylistsByDefault", target: all, have: media.KindPlaylist, expected: true},
+		{name: "ShouldNotAllowDisabledMovies", target: noMovies, have: media.KindMovie},
+		{name: "ShouldAllowEpisodesWhenMoviesAreDisabled", target: noMovies, have: media.KindEpisode, expected: true},
+		{name: "ShouldNotAllowEpisodesAsTheyBelongToTV", target: onlyMovies, have: media.KindEpisode},
+		{name: "ShouldNotAllowMusicVideosAsTheyBelongToMusic", target: onlyMovies, have: media.KindMusicVideo},
+		{name: "ShouldAllowPlaylistsAsTheyBelongToNoGroup", target: onlyMovies, have: media.KindPlaylist, expected: true},
 	}
 
-	assert.False(t, noMovies.Allows(media.KindMovie))
-	assert.True(t, noMovies.Allows(media.KindEpisode))
-	assert.False(t, onlyMovies.Allows(media.KindEpisode), "episodes belong to TV")
-	assert.False(t, onlyMovies.Allows(media.KindMusicVideo), "music videos belong to music")
-	assert.True(t, onlyMovies.Allows(media.KindPlaylist), "playlists belong to no group, so are never disabled")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, tc.target.Allows(tc.have))
+		})
+	}
 
 	kinds := []media.Kind{media.KindSong, media.KindMovie, media.KindTVShow, media.KindPlaylist, media.KindMovie}
 	assert.Equal(t, []media.Kind{media.KindMovie, media.KindPlaylist, media.KindMovie}, onlyMovies.Allowed(kinds), "order and duplicates are kept")
@@ -603,188 +643,176 @@ func TestWakeRetriesOnceWithoutProgress(t *testing.T) {
 func TestBackendFailuresAreReported(t *testing.T) {
 	type call func(context.Context, *Service, Target) Outcome
 
-	for _, tc := range []struct {
+	testCases := []struct {
 		name    string
 		methods []string
 		playing bool
 		setup   func(*testkit.Backend)
 		call    call
 	}{
-		{"transport", []string{"Transport"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInTransport", methods: []string{"Transport"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.Transport(ctx, t, media.TransportPause)
 		}},
-		{"step volume", []string{"Volume"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome { return s.StepVolume(ctx, t, true) }},
-		{"toggle mute", []string{"Volume"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome { return s.ToggleMute(ctx, t) }},
-		{"now playing", []string{"NowPlaying"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome { return s.NowPlaying(ctx, t) }},
-		{"seek", []string{"Seek"}, true, nil, func(ctx context.Context, s *Service, t Target) Outcome { return s.Seek(ctx, t, SeekRequest{}) }},
-		{"picture", []string{"Picture"}, true, nil, func(ctx context.Context, s *Service, t Target) Outcome {
-			return s.Picture(ctx, t, media.PictureZoomIn)
-		}},
-		{"toggle", []string{"Input"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInStepVolume", methods: []string{"Volume"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.StepVolume(ctx, t, true) }},
+		{name: "ShouldReportFailureInToggleMute", methods: []string{"Volume"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.ToggleMute(ctx, t) }},
+		{name: "ShouldReportFailureInNowPlaying", methods: []string{"NowPlaying"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.NowPlaying(ctx, t) }},
+		{name: "ShouldReportFailureInSeek", methods: []string{"Seek"}, playing: true, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.Seek(ctx, t, SeekRequest{}) }},
+		{name: "ShouldReportFailureInPicture", methods: []string{"Picture"}, playing: true, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.Picture(ctx, t, media.PictureZoomIn) }},
+		{name: "ShouldReportFailureInToggle", methods: []string{"Input"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.Toggle(ctx, t, media.InputFullscreen)
 		}},
-		{"time remaining", []string{"NowPlaying"}, true, nil, func(ctx context.Context, s *Service, t Target) Outcome { return s.TimeRemaining(ctx, t) }},
-		{"navigate", []string{"Input"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome { return s.Navigate(ctx, t, media.InputDown, 3) }},
-		{"send text", []string{"SendText"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome { return s.SendText(ctx, t, "dune") }},
-		{"section genres", []string{"Library"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInTimeRemaining", methods: []string{"NowPlaying"}, playing: true, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.TimeRemaining(ctx, t) }},
+		{name: "ShouldReportFailureInNavigate", methods: []string{"Input"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.Navigate(ctx, t, media.InputDown, 3) }},
+		{name: "ShouldReportFailureInSendText", methods: []string{"SendText"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.SendText(ctx, t, "dune") }},
+		{name: "ShouldReportFailureInSectionGenres", methods: []string{"Library"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.ShowSection(ctx, t, media.SectionMovies, "comedy")
 		}},
-		{"section view", []string{"ShowView"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInSectionView", methods: []string{"ShowView"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.ShowSection(ctx, t, media.SectionMovies, "")
 		}},
-		{"playlist view", []string{"ShowView"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome { return s.ShowPlaylist(ctx, t, "road trip") }},
-		{"favourites", []string{"Favourites"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome { return s.OpenFavourite(ctx, t, "radio") }},
-		{"subtitle streams", []string{"Streams"}, true, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInPlaylistView", methods: []string{"ShowView"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.ShowPlaylist(ctx, t, "road trip") }},
+		{name: "ShouldReportFailureInFavourites", methods: []string{"Favourites"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.OpenFavourite(ctx, t, "radio") }},
+		{name: "ShouldReportFailureInSubtitleStreams", methods: []string{"Streams"}, playing: true, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.Subtitles(ctx, t, StreamRequest{Language: "french"})
 		}},
-		{"subtitle streams after the change", []string{"Streams"}, true, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInSubtitleStreamsAfterTheChange", methods: []string{"Streams"}, playing: true, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.Subtitles(ctx, t, StreamRequest{Step: media.StreamNext})
 		}},
-		{"set subtitle", []string{"SetSubtitle"}, true, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInSetSubtitle", methods: []string{"SetSubtitle"}, playing: true, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.Subtitles(ctx, t, StreamRequest{Step: media.StreamOff})
 		}},
-		{"audio streams", []string{"Streams"}, true, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInAudioStreams", methods: []string{"Streams"}, playing: true, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.AudioStream(ctx, t, StreamRequest{Language: "french"})
 		}},
-		{"audio streams after the change", []string{"Streams"}, true, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInAudioStreamsAfterTheChange", methods: []string{"Streams"}, playing: true, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.AudioStream(ctx, t, StreamRequest{Step: media.StreamNext})
 		}},
-		{"set audio stream", []string{"SetAudioStream"}, true, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInSetAudioStream", methods: []string{"SetAudioStream"}, playing: true, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.AudioStream(ctx, t, StreamRequest{Step: media.StreamNext})
 		}},
-		{"subtitle search", []string{"ShowView"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome { return s.DownloadSubtitles(ctx, t) }},
-		{"power", []string{"System"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInSubtitleSearch", methods: []string{"ShowView"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.DownloadSubtitles(ctx, t) }},
+		{name: "ShouldReportFailureInPower", methods: []string{"System"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.ConfirmPower(ctx, t, media.SystemReboot)
 		}},
-		{"eject", []string{"System"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome { return s.Eject(ctx, t) }},
-		{"scan", []string{"ScanLibrary"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome { return s.UpdateLibrary(ctx, t, false) }},
-		{"clean", []string{"CleanLibrary"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome { return s.UpdateLibrary(ctx, t, true) }},
-		{"addons", []string{"Addons"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome { return s.LaunchAddon(ctx, t, "youtube") }},
-		{"launch addon", []string{"ExecuteAddon"}, false, withAddons, func(ctx context.Context, s *Service, t Target) Outcome {
-			return s.LaunchAddon(ctx, t, "youtube")
-		}},
-		{"global search addons", []string{"Addons"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
-			t.SearchMode = media.SearchModeGlobal
+		{name: "ShouldReportFailureInEject", methods: []string{"System"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.Eject(ctx, t) }},
+		{name: "ShouldReportFailureInScan", methods: []string{"ScanLibrary"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.UpdateLibrary(ctx, t, false) }},
+		{name: "ShouldReportFailureInClean", methods: []string{"CleanLibrary"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.UpdateLibrary(ctx, t, true) }},
+		{name: "ShouldReportFailureInAddOns", methods: []string{"Addons"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.LaunchAddon(ctx, t, "youtube") }},
+		{name: "ShouldReportFailureInLaunchAddOn", methods: []string{"ExecuteAddon"}, setup: withAddons, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.LaunchAddon(ctx, t, "youtube") }},
+		{
+			name:    "ShouldReportFailureInGlobalSearchAddOns",
+			methods: []string{"Addons"},
+			call: func(ctx context.Context, s *Service, t Target) Outcome {
+				t.SearchMode = media.SearchModeGlobal
 
-			return s.GlobalSearch(ctx, t, "dune", nil)
-		}},
-		{"library search", []string{"ShowView"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+				return s.GlobalSearch(ctx, t, "dune", nil)
+			},
+		},
+		{name: "ShouldReportFailureInLibrarySearch", methods: []string{"ShowView"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.GlobalSearch(ctx, t, "hot fuzz", nil)
 		}},
-		{"play title", []string{"Play"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInPlayTitle", methods: []string{"Play"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.PlayTitle(ctx, t, TitleRequest{Query: "hot fuzz"}, nil)
 		}},
-		{"next episode", []string{"NextEpisode"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInNextEpisode", methods: []string{"NextEpisode"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.NextEpisode(ctx, t, "severance", nil, nil)
 		}},
-		{"album details", []string{"Item"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInAlbumDetails", methods: []string{"Item"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.PlayTitle(ctx, t, TitleRequest{Query: "abbey road", Kinds: []media.Kind{media.KindAlbum}}, nil)
 		}},
-		{"artist", []string{"Play"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInArtist", methods: []string{"Play"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.Artist(ctx, t, MusicRequest{Artist: "queen"}, nil)
 		}},
-		{"artist genre", []string{"Library"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInArtistGenre", methods: []string{"Library"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.Artist(ctx, t, MusicRequest{Artist: "queen", Genre: "rock"}, nil)
 		}},
-		{"artist genre queue", []string{"Queue"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInArtistGenreQueue", methods: []string{"Queue"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.Artist(ctx, t, MusicRequest{Artist: "queen", Genre: "rock"}, nil)
 		}},
-		{"album lookup", []string{"Library"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInAlbumLookup", methods: []string{"Library"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.Album(ctx, t, MusicRequest{Album: "innuendo"}, nil)
 		}},
-		{"album", []string{"Play"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInAlbum", methods: []string{"Play"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.Album(ctx, t, MusicRequest{Album: "innuendo"}, nil)
 		}},
-		{"latest album", []string{"Library"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInLatestAlbum", methods: []string{"Library"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.LatestAlbum(ctx, t, MusicRequest{Artist: "queen"}, nil)
 		}},
-		{"song lookup", []string{"Library"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInSongLookup", methods: []string{"Library"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.Song(ctx, t, MusicRequest{Title: "come together"}, nil)
 		}},
-		{"song", []string{"Play"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInSong", methods: []string{"Play"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.Song(ctx, t, MusicRequest{Title: "come together"}, nil)
 		}},
-		{"song or album", []string{"Library"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInSongOrAlbum", methods: []string{"Library"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.SongOrAlbum(ctx, t, MusicRequest{Title: "come together"}, nil)
 		}},
-		{"genre", []string{"Library"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome { return s.Genre(ctx, t, "rock", nil) }},
-		{"recent songs", []string{"Library"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome { return s.RecentSongs(ctx, t, nil) }},
-		{"party mode", []string{"PartyMode"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome { return s.PartyMode(ctx, t, nil) }},
-		{"music video lookup", []string{"Library"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInGenre", methods: []string{"Library"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.Genre(ctx, t, "rock", nil) }},
+		{name: "ShouldReportFailureInRecentSongs", methods: []string{"Library"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.RecentSongs(ctx, t, nil) }},
+		{name: "ShouldReportFailureInPartyMode", methods: []string{"PartyMode"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.PartyMode(ctx, t, nil) }},
+		{name: "ShouldReportFailureInMusicVideoLookup", methods: []string{"Library"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.MusicVideo(ctx, t, MusicRequest{Title: "bohemian rhapsody"}, nil)
 		}},
-		{"random music video", []string{"Library"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInRandomMusicVideo", methods: []string{"Library"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.RandomMusicVideo(ctx, t, MusicRequest{}, nil)
 		}},
-		{"shuffle music videos", []string{"Queue"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInShuffleMusicVideos", methods: []string{"Queue"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.ShuffleMusicVideos(ctx, t, MusicRequest{}, nil)
 		}},
-		{"playlist", []string{"Play"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInPlaylist", methods: []string{"Play"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.Playlist(ctx, t, "road trip", true, nil)
 		}},
-		{"recommend", []string{"Library"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInRecommend", methods: []string{"Library"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.Recommend(ctx, t, RecommendRequest{Kinds: []media.Kind{media.KindMovie}}, nil)
 		}},
-		{"recommend episode", []string{"NextEpisode"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInRecommendEpisode", methods: []string{"NextEpisode"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.Recommend(ctx, t, RecommendRequest{Kinds: []media.Kind{media.KindEpisode}}, nil)
 		}},
-		{"new albums", []string{"Library"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInNewAlbums", methods: []string{"Library"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.WhatsNew(ctx, t, WhatsNewRequest{Kind: media.KindAlbum})
 		}},
-		{"new movies", []string{"Library"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
-			return s.WhatsNew(ctx, t, WhatsNewRequest{})
-		}},
-		{"unwatched episodes", []string{"Episodes"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInNewMovies", methods: []string{"Library"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.WhatsNew(ctx, t, WhatsNewRequest{}) }},
+		{name: "ShouldReportFailureInUnwatchedEpisodes", methods: []string{"Episodes"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.WhatsNew(ctx, t, WhatsNewRequest{Show: "severance"})
 		}},
-		{"new episodes", []string{"RecentlyAdded"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInNewEpisodes", methods: []string{"RecentlyAdded"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.WhatsNew(ctx, t, WhatsNewRequest{Kind: media.KindEpisode})
 		}},
-		{"albums by", []string{"Library"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome { return s.AlbumsBy(ctx, t, "queen") }},
-		{"random movie", []string{"Play"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome { return s.RandomMovie(ctx, t, "", nil) }},
-		{"random movie pool", []string{"Library"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome { return s.RandomMovie(ctx, t, "", nil) }},
-		{"trailer details", []string{"Item"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome { return s.Trailer(ctx, t, "hot fuzz", nil) }},
-		{"trailer", []string{"PlayFile"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome { return s.Trailer(ctx, t, "hot fuzz", nil) }},
-		{"collection details", []string{"Item"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInAlbumsBy", methods: []string{"Library"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.AlbumsBy(ctx, t, "queen") }},
+		{name: "ShouldReportFailureInRandomMovie", methods: []string{"Play"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.RandomMovie(ctx, t, "", nil) }},
+		{name: "ShouldReportFailureInRandomMoviePool", methods: []string{"Library"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.RandomMovie(ctx, t, "", nil) }},
+		{name: "ShouldReportFailureInTrailerDetails", methods: []string{"Item"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.Trailer(ctx, t, "hot fuzz", nil) }},
+		{name: "ShouldReportFailureInTrailer", methods: []string{"PlayFile"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.Trailer(ctx, t, "hot fuzz", nil) }},
+		{name: "ShouldReportFailureInCollectionDetails", methods: []string{"Item"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.NextInCollection(ctx, t, "dune", nil)
 		}},
-		{"collection", []string{"Library"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInCollection", methods: []string{"Library"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.NextInCollection(ctx, t, "dune", nil)
 		}},
-		{"episode", []string{"Episodes"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInEpisode", methods: []string{"Episodes"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.Episode(ctx, t, "severance", 2, 3, nil)
 		}},
-		{"first episode", []string{"Episodes"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInFirstEpisode", methods: []string{"Episodes"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.FirstEpisode(ctx, t, "severance", nil)
 		}},
-		{"latest episode", []string{"Episodes"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInLatestEpisode", methods: []string{"Episodes"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.LatestEpisode(ctx, t, "severance", nil)
 		}},
-		{"continue watching shows", []string{"Library"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
-			return s.ContinueWatching(ctx, t, nil)
-		}},
-		{"continue watching", []string{"NextEpisode"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
-			return s.ContinueWatching(ctx, t, nil)
-		}},
-		{"random episode list", []string{"Episodes"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
-			return s.RandomEpisode(ctx, t, "bluey", nil)
-		}},
-		{"random episode", []string{"Play"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
-			return s.RandomEpisode(ctx, t, "bluey", nil)
-		}},
-		{"random show", []string{"NextEpisode"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
-			return s.RandomShow(ctx, t, "", nil)
-		}},
-		{"random show pool", []string{"Library"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
-			return s.RandomShow(ctx, t, "", nil)
-		}},
-		{"shuffle show", []string{"Play"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome {
+		{name: "ShouldReportFailureInContinueWatchingShows", methods: []string{"Library"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.ContinueWatching(ctx, t, nil) }},
+		{name: "ShouldReportFailureInContinueWatching", methods: []string{"NextEpisode"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.ContinueWatching(ctx, t, nil) }},
+		{name: "ShouldReportFailureInRandomEpisodeList", methods: []string{"Episodes"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.RandomEpisode(ctx, t, "bluey", nil) }},
+		{name: "ShouldReportFailureInRandomEpisode", methods: []string{"Play"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.RandomEpisode(ctx, t, "bluey", nil) }},
+		{name: "ShouldReportFailureInRandomShow", methods: []string{"NextEpisode"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.RandomShow(ctx, t, "", nil) }},
+		{name: "ShouldReportFailureInRandomShowPool", methods: []string{"Library"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.RandomShow(ctx, t, "", nil) }},
+		{name: "ShouldReportFailureInShuffleShow", methods: []string{"Play"}, call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.ShuffleShow(ctx, t, "severance", nil)
 		}},
-		{"binge next", []string{"NextEpisode"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome { return s.Binge(ctx, t, "severance", nil) }},
-		{"binge episodes", []string{"Episodes"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome { return s.Binge(ctx, t, "severance", nil) }},
-		{"binge queue", []string{"Queue"}, false, nil, func(ctx context.Context, s *Service, t Target) Outcome { return s.Binge(ctx, t, "severance", nil) }},
-	} {
+		{name: "ShouldReportFailureInBingeNext", methods: []string{"NextEpisode"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.Binge(ctx, t, "severance", nil) }},
+		{name: "ShouldReportFailureInBingeEpisodes", methods: []string{"Episodes"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.Binge(ctx, t, "severance", nil) }},
+		{name: "ShouldReportFailureInBingeQueue", methods: []string{"Queue"}, call: func(ctx context.Context, s *Service, t Target) Outcome { return s.Binge(ctx, t, "severance", nil) }},
+	}
+
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			target, backend, _ := newTarget()
 			if tc.playing {
@@ -818,73 +846,88 @@ func TestUnreachableBackendNamesTheInstance(t *testing.T) {
 	backend.SetFavourites(media.Favourite{Title: "Radio National"})
 	svc := newService()
 
-	for name, o := range map[string]Outcome{
-		"seek":      svc.Seek(t.Context(), target, SeekRequest{By: time.Minute}),
-		"volume":    svc.SetVolume(t.Context(), target, 3),
-		"favourite": svc.OpenFavourite(t.Context(), target, "radio national"),
-	} {
-		assert.Equal(t, "error.kodi_unreachable", o.Say.ID, name)
-		assert.Equal(t, "Lounge", o.Say.Params["kodi"], name)
-		require.ErrorIs(t, o.Err, media.ErrUnreachable, name)
+	testCases := []struct {
+		name string
+		call func(ctx context.Context) Outcome
+	}{
+		{name: "ShouldNameTheInstanceWhenSeeking", call: func(ctx context.Context) Outcome { return svc.Seek(ctx, target, SeekRequest{By: time.Minute}) }},
+		{name: "ShouldNameTheInstanceWhenSettingTheVolume", call: func(ctx context.Context) Outcome { return svc.SetVolume(ctx, target, 3) }},
+		{name: "ShouldNameTheInstanceWhenOpeningAFavourite", call: func(ctx context.Context) Outcome { return svc.OpenFavourite(ctx, target, "radio national") }},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			o := tc.call(t.Context())
+			assert.Equal(t, "error.kodi_unreachable", o.Say.ID)
+			assert.Equal(t, "Lounge", o.Say.Params["kodi"])
+			require.ErrorIs(t, o.Err, media.ErrUnreachable)
+		})
 	}
 }
 
 func TestMatcherFailuresAreReported(t *testing.T) {
-	for name, call := range map[string]func(context.Context, *Service, Target) Outcome{
-		"play title": func(ctx context.Context, s *Service, t Target) Outcome {
+	testCases := []struct {
+		name string
+		call func(context.Context, *Service, Target) Outcome
+	}{
+		{name: "ShouldReportFailureInPlayTitle", call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.PlayTitle(ctx, t, TitleRequest{Query: "dune"}, nil)
-		},
-		"artist": func(ctx context.Context, s *Service, t Target) Outcome {
+		}},
+		{name: "ShouldReportFailureInArtist", call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.Artist(ctx, t, MusicRequest{Artist: "queen"}, nil)
-		},
-		"album": func(ctx context.Context, s *Service, t Target) Outcome {
+		}},
+		{name: "ShouldReportFailureInAlbum", call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.Album(ctx, t, MusicRequest{Album: "innuendo"}, nil)
-		},
-		"song": func(ctx context.Context, s *Service, t Target) Outcome {
+		}},
+		{name: "ShouldReportFailureInSong", call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.Song(ctx, t, MusicRequest{Title: "x"}, nil)
-		},
-		"song or album": func(ctx context.Context, s *Service, t Target) Outcome {
+		}},
+		{name: "ShouldReportFailureInSongOrAlbum", call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.SongOrAlbum(ctx, t, MusicRequest{Title: "x"}, nil)
-		},
-		"music video": func(ctx context.Context, s *Service, t Target) Outcome {
+		}},
+		{name: "ShouldReportFailureInMusicVideo", call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.MusicVideo(ctx, t, MusicRequest{Title: "x"}, nil)
-		},
-		"latest album": func(ctx context.Context, s *Service, t Target) Outcome {
+		}},
+		{name: "ShouldReportFailureInLatestAlbum", call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.LatestAlbum(ctx, t, MusicRequest{Artist: "queen"}, nil)
-		},
-		"albums by": func(ctx context.Context, s *Service, t Target) Outcome { return s.AlbumsBy(ctx, t, "queen") },
-		"playlist": func(ctx context.Context, s *Service, t Target) Outcome {
+		}},
+		{name: "ShouldReportFailureInAlbumsBy", call: func(ctx context.Context, s *Service, t Target) Outcome { return s.AlbumsBy(ctx, t, "queen") }},
+		{name: "ShouldReportFailureInPlaylist", call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.Playlist(ctx, t, "road trip", false, nil)
-		},
-		"show playlist": func(ctx context.Context, s *Service, t Target) Outcome { return s.ShowPlaylist(ctx, t, "road trip") },
-		"trailer":       func(ctx context.Context, s *Service, t Target) Outcome { return s.Trailer(ctx, t, "hot fuzz", nil) },
-		"collection": func(ctx context.Context, s *Service, t Target) Outcome {
+		}},
+		{name: "ShouldReportFailureInShowPlaylist", call: func(ctx context.Context, s *Service, t Target) Outcome { return s.ShowPlaylist(ctx, t, "road trip") }},
+		{name: "ShouldReportFailureInTrailer", call: func(ctx context.Context, s *Service, t Target) Outcome { return s.Trailer(ctx, t, "hot fuzz", nil) }},
+		{name: "ShouldReportFailureInCollection", call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.NextInCollection(ctx, t, "dune", nil)
-		},
-		"episode": func(ctx context.Context, s *Service, t Target) Outcome {
+		}},
+		{name: "ShouldReportFailureInEpisode", call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.Episode(ctx, t, "severance", 1, 1, nil)
-		},
-		"binge": func(ctx context.Context, s *Service, t Target) Outcome { return s.Binge(ctx, t, "severance", nil) },
-		"unwatched": func(ctx context.Context, s *Service, t Target) Outcome {
+		}},
+		{name: "ShouldReportFailureInBinge", call: func(ctx context.Context, s *Service, t Target) Outcome { return s.Binge(ctx, t, "severance", nil) }},
+		{name: "ShouldReportFailureInUnwatched", call: func(ctx context.Context, s *Service, t Target) Outcome {
 			return s.WhatsNew(ctx, t, WhatsNewRequest{Show: "severance"})
-		},
-	} {
-		t.Run(name, func(t *testing.T) {
-			target, backend, _ := newTarget()
-			target.Matcher = &brokenMatcher{}
+		}},
+	}
 
-			assertFailed(t, call(t.Context(), newService(), target))
-			assert.Empty(t, backend.Calls(), "nothing is sent to Kodi")
-		})
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Run("ShouldSendNothingToKodi", func(t *testing.T) {
+				target, backend, _ := newTarget()
+				target.Matcher = &brokenMatcher{}
 
-		t.Run(name+" after a live lookup", func(t *testing.T) {
-			target, _, _ := newTarget()
-			m := &brokenMatcher{ok: 1}
-			target.Matcher = m
-			target.Library = &lookupLibrary{found: []media.Item{{Kind: media.KindMovie, ID: 9, Title: "New"}}}
+				assertFailed(t, tc.call(t.Context(), newService(), target))
+				assert.Empty(t, backend.Calls(), "nothing is sent to Kodi")
+			})
 
-			assertFailed(t, call(t.Context(), newService(), target))
-			assert.Equal(t, 2, m.searches, "the index is searched again after the lookup found something")
+			t.Run("ShouldSearchTheIndexAgainAfterALiveLookup", func(t *testing.T) {
+				target, _, _ := newTarget()
+				m := &brokenMatcher{ok: 1}
+				target.Matcher = m
+				target.Library = &lookupLibrary{found: []media.Item{{Kind: media.KindMovie, ID: 9, Title: "New"}}}
+
+				assertFailed(t, tc.call(t.Context(), newService(), target))
+				assert.Equal(t, 2, m.searches, "the index is searched again after the lookup found something")
+			})
 		})
 	}
 }
@@ -952,55 +995,56 @@ func TestChoose(t *testing.T) {
 	orwell := Choice{DocID: "movie/83", Ref: media.Ref{Kind: media.KindMovie, ID: 83}, Title: "1984", Year: 1956}
 	brazil := Choice{DocID: "movie/84", Ref: media.Ref{Kind: media.KindMovie, ID: 84}, Title: "Brazil", Year: 1984}
 
-	tests := map[string]struct {
-		answer  Answer
-		pending []Choice
-		more    []Choice
-		play    string
-		again   bool
+	testCases := []struct {
+		name     string
+		have     Answer
+		pending  []Choice
+		more     []Choice
+		expected string
+		again    bool
 	}{
-		"first":                {answer: Answer{Which: AnswerFirst}, pending: []Choice{old, remake}, play: "movie/1"},
-		"second":               {answer: Answer{Which: AnswerSecond}, pending: []Choice{old, remake}, play: "movie/2"},
-		"second of one":        {answer: Answer{Which: AnswerSecond}, pending: []Choice{old}, again: true},
-		"last":                 {answer: Answer{Which: AnswerLast}, pending: []Choice{old, remake}, play: "movie/2"},
-		"newer":                {answer: Answer{Which: AnswerNewer}, pending: []Choice{remake, old}, play: "movie/2"},
-		"older":                {answer: Answer{Which: AnswerOlder}, pending: []Choice{remake, old}, play: "movie/1"},
-		"newer of one":         {answer: Answer{Which: AnswerNewer}, pending: []Choice{old}, again: true},
-		"newer of the same":    {answer: Answer{Which: AnswerNewer}, pending: []Choice{remake, sameYear}, again: true},
-		"older without a year": {answer: Answer{Which: AnswerOlder}, pending: []Choice{old, undated}, again: true},
-		"unknown position":     {answer: Answer{Which: "third"}, pending: []Choice{old, remake}, again: true},
-		"position wins":        {answer: Answer{Which: AnswerFirst, Title: "hot fuzz"}, pending: []Choice{old, remake}, play: "movie/1"},
-		"nothing":              {pending: []Choice{old, remake}, again: true},
-		"no choices":           {answer: Answer{Which: AnswerFirst}, again: true},
-		"title with year":      {answer: Answer{Title: "Dune 1984"}, pending: []Choice{old, remake}, play: "movie/1"},
-		"title kept back":      {answer: Answer{Title: "dune part two"}, pending: []Choice{old, remake}, more: []Choice{sequel}, play: "movie/3"},
-		"title shared":         {answer: Answer{Title: "dune"}, pending: []Choice{old, remake}, again: true},
-		"another title":        {answer: Answer{Title: "hot fuzz"}, pending: []Choice{old, remake}, play: "movie/4"},
+		{name: "ShouldPlayTheFirst", have: Answer{Which: AnswerFirst}, pending: []Choice{old, remake}, expected: "movie/1"},
+		{name: "ShouldPlayTheSecond", have: Answer{Which: AnswerSecond}, pending: []Choice{old, remake}, expected: "movie/2"},
+		{name: "ShouldAskAgainForTheSecondOfOne", have: Answer{Which: AnswerSecond}, pending: []Choice{old}, again: true},
+		{name: "ShouldPlayTheLast", have: Answer{Which: AnswerLast}, pending: []Choice{old, remake}, expected: "movie/2"},
+		{name: "ShouldPlayTheNewer", have: Answer{Which: AnswerNewer}, pending: []Choice{remake, old}, expected: "movie/2"},
+		{name: "ShouldPlayTheOlder", have: Answer{Which: AnswerOlder}, pending: []Choice{remake, old}, expected: "movie/1"},
+		{name: "ShouldAskAgainForTheNewerOfOne", have: Answer{Which: AnswerNewer}, pending: []Choice{old}, again: true},
+		{name: "ShouldAskAgainForTheNewerOfTheSameYear", have: Answer{Which: AnswerNewer}, pending: []Choice{remake, sameYear}, again: true},
+		{name: "ShouldAskAgainForTheOlderWithoutAYear", have: Answer{Which: AnswerOlder}, pending: []Choice{old, undated}, again: true},
+		{name: "ShouldAskAgainForAnUnknownPosition", have: Answer{Which: "third"}, pending: []Choice{old, remake}, again: true},
+		{name: "ShouldPreferThePositionToTheTitle", have: Answer{Which: AnswerFirst, Title: "hot fuzz"}, pending: []Choice{old, remake}, expected: "movie/1"},
+		{name: "ShouldAskAgainForNothing", pending: []Choice{old, remake}, again: true},
+		{name: "ShouldAskAgainWithoutChoices", have: Answer{Which: AnswerFirst}, again: true},
+		{name: "ShouldPlayATitleWithItsYear", have: Answer{Title: "Dune 1984"}, pending: []Choice{old, remake}, expected: "movie/1"},
+		{name: "ShouldPlayATitleKeptBack", have: Answer{Title: "dune part two"}, pending: []Choice{old, remake}, more: []Choice{sequel}, expected: "movie/3"},
+		{name: "ShouldAskAgainForASharedTitle", have: Answer{Title: "dune"}, pending: []Choice{old, remake}, again: true},
+		{name: "ShouldPlayAnotherTitle", have: Answer{Title: "hot fuzz"}, pending: []Choice{old, remake}, expected: "movie/4"},
 		// An article said picks the title that starts with it, and a year may follow "from", as the matcher reads them.
-		"article kept back":       {answer: Answer{Title: "the odyssey"}, pending: []Choice{album, song}, more: []Choice{film}, play: "movie/82"},
-		"year after from":         {answer: Answer{Title: "the odyssey from 2026"}, pending: []Choice{album, song}, more: []Choice{film}, play: "movie/82"},
-		"year after from offered": {answer: Answer{Title: "dune from 1984"}, pending: []Choice{old, remake}, play: "movie/1"},
-		"no article shared":       {answer: Answer{Title: "odyssey"}, pending: []Choice{album, song}, more: []Choice{film}, again: true},
-		"kind kept back":          {answer: Answer{Title: "hot fuzz"}, pending: []Choice{album, song}, more: []Choice{film}, play: "movie/4"},
+		{name: "ShouldPlayATitleKeptBackStartingWithTheArticle", have: Answer{Title: "the odyssey"}, pending: []Choice{album, song}, more: []Choice{film}, expected: "movie/82"},
+		{name: "ShouldPlayATitleKeptBackWithAYearAfterFrom", have: Answer{Title: "the odyssey from 2026"}, pending: []Choice{album, song}, more: []Choice{film}, expected: "movie/82"},
+		{name: "ShouldPlayATitleOfferedWithAYearAfterFrom", have: Answer{Title: "dune from 1984"}, pending: []Choice{old, remake}, expected: "movie/1"},
+		{name: "ShouldAskAgainForATitleSharedWithoutTheArticle", have: Answer{Title: "odyssey"}, pending: []Choice{album, song}, more: []Choice{film}, again: true},
+		{name: "ShouldPlayAKindKeptBack", have: Answer{Title: "hot fuzz"}, pending: []Choice{album, song}, more: []Choice{film}, expected: "movie/4"},
 		// A year said with the answer ("dune from 2021", "the one from 1984") picks the choice from that year.
-		"title and year":     {answer: Answer{Title: "dune", Year: 2021}, pending: []Choice{old, remake}, play: "movie/2"},
-		"year alone":         {answer: Answer{Year: 1984}, pending: []Choice{old, remake}, play: "movie/1"},
-		"year kept back":     {answer: Answer{Year: 2026}, pending: []Choice{album, song}, more: []Choice{film}, play: "movie/82"},
-		"article and year":   {answer: Answer{Title: "the odyssey", Year: 2026}, pending: []Choice{album, song}, more: []Choice{film}, play: "movie/82"},
-		"article left out":   {answer: Answer{Title: "odyssey", Year: 2026}, pending: []Choice{album, song}, more: []Choice{film}, play: "movie/82"},
-		"year shared":        {answer: Answer{Year: 2021}, pending: []Choice{remake, sameYear}, again: true},
-		"year of none":       {answer: Answer{Year: 1999}, pending: []Choice{old, remake}, again: true},
-		"position over year": {answer: Answer{Which: AnswerSecond, Year: 1984}, pending: []Choice{old, remake}, play: "movie/2"},
+		{name: "ShouldPlayTheTitleFromTheYear", have: Answer{Title: "dune", Year: 2021}, pending: []Choice{old, remake}, expected: "movie/2"},
+		{name: "ShouldPlayTheChoiceFromTheYear", have: Answer{Year: 1984}, pending: []Choice{old, remake}, expected: "movie/1"},
+		{name: "ShouldPlayTheChoiceKeptBackFromTheYear", have: Answer{Year: 2026}, pending: []Choice{album, song}, more: []Choice{film}, expected: "movie/82"},
+		{name: "ShouldPlayTheTitleWithItsArticleFromTheYear", have: Answer{Title: "the odyssey", Year: 2026}, pending: []Choice{album, song}, more: []Choice{film}, expected: "movie/82"},
+		{name: "ShouldPlayTheTitleWithoutItsArticleFromTheYear", have: Answer{Title: "odyssey", Year: 2026}, pending: []Choice{album, song}, more: []Choice{film}, expected: "movie/82"},
+		{name: "ShouldAskAgainForASharedYear", have: Answer{Year: 2021}, pending: []Choice{remake, sameYear}, again: true},
+		{name: "ShouldAskAgainForTheYearOfNone", have: Answer{Year: 1999}, pending: []Choice{old, remake}, again: true},
+		{name: "ShouldPreferThePositionToTheYear", have: Answer{Which: AnswerSecond, Year: 1984}, pending: []Choice{old, remake}, expected: "movie/2"},
 		// A year heard as the title ("die uit 1984" as the answer "1984") picks the choice from that year, unless a choice is called that.
-		"year as the title":   {answer: Answer{Title: "1984"}, pending: []Choice{old, remake}, play: "movie/1"},
-		"title that's a year": {answer: Answer{Title: "1984"}, pending: []Choice{orwell, brazil}, play: "movie/83"},
+		{name: "ShouldTakeAYearHeardAsTheTitleAsTheYear", have: Answer{Title: "1984"}, pending: []Choice{old, remake}, expected: "movie/1"},
+		{name: "ShouldPlayATitleThatIsAYear", have: Answer{Title: "1984"}, pending: []Choice{orwell, brazil}, expected: "movie/83"},
 	}
 
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			target, backend, _ := newTarget()
 
-			o := newService().Choose(t.Context(), target, tc.answer, tc.pending, tc.more, nil)
+			o := newService().Choose(t.Context(), target, tc.have, tc.pending, tc.more, nil)
 
 			assert.Equal(t, tc.again, o.AskAgain)
 
@@ -1011,7 +1055,7 @@ func TestChoose(t *testing.T) {
 				return
 			}
 
-			assert.Equal(t, []string{"Play " + tc.play + " resume"}, backend.Calls())
+			assert.Equal(t, []string{"Play " + tc.expected + " resume"}, backend.Calls())
 		})
 	}
 }
@@ -1021,26 +1065,29 @@ func TestAnswerTitle(t *testing.T) {
 	remake := Choice{DocID: "movie/2", Ref: media.Ref{Kind: media.KindMovie, ID: 2}, Title: "Dune", Year: 2021}
 	sequel := Choice{DocID: "movie/3", Ref: media.Ref{Kind: media.KindMovie, ID: 3}, Title: "Dune: Part Two", Year: 2024}
 
-	for name, tc := range map[string]struct {
-		title   string
-		pending []Choice
-		more    []Choice
-		play    string
+	testCases := []struct {
+		name     string
+		have     string
+		pending  []Choice
+		more     []Choice
+		expected string
 	}{
-		"no question":            {title: "dune 1984"},
-		"no title":               {pending: []Choice{old, remake}},
-		"a choice with its year": {title: "dune from 2021", pending: []Choice{old, remake}, play: "movie/2"},
-		"a choice kept back":     {title: "dune part two", pending: []Choice{old, remake}, more: []Choice{sequel}, play: "movie/3"},
-		"only its year":          {title: "1984", pending: []Choice{old, remake}, play: "movie/1"},
-		"a title several share":  {title: "dune", pending: []Choice{old, remake}},
-		"another title":          {title: "hot fuzz", pending: []Choice{old, remake}},
-	} {
-		t.Run(name, func(t *testing.T) {
+		{name: "ShouldNotAnswerWithoutAQuestion", have: "dune 1984"},
+		{name: "ShouldNotAnswerWithoutATitle", pending: []Choice{old, remake}},
+		{name: "ShouldPlayAChoiceWithItsYear", have: "dune from 2021", pending: []Choice{old, remake}, expected: "movie/2"},
+		{name: "ShouldPlayAChoiceKeptBack", have: "dune part two", pending: []Choice{old, remake}, more: []Choice{sequel}, expected: "movie/3"},
+		{name: "ShouldPlayAChoiceByOnlyItsYear", have: "1984", pending: []Choice{old, remake}, expected: "movie/1"},
+		{name: "ShouldNotAnswerWithATitleSeveralShare", have: "dune", pending: []Choice{old, remake}},
+		{name: "ShouldNotAnswerWithAnotherTitle", have: "hot fuzz", pending: []Choice{old, remake}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			target, backend, _ := newTarget()
 
-			o, ok := newService().AnswerTitle(t.Context(), target, tc.title, tc.pending, tc.more, nil)
+			o, ok := newService().AnswerTitle(t.Context(), target, tc.have, tc.pending, tc.more, nil)
 
-			if tc.play == "" {
+			if tc.expected == "" {
 				assert.False(t, ok, "not an answer: the intent searches as it would")
 				assert.Empty(t, backend.Calls())
 
@@ -1049,7 +1096,7 @@ func TestAnswerTitle(t *testing.T) {
 
 			require.True(t, ok)
 			assert.Equal(t, "playback.playing_movie", o.Say.ID)
-			assert.Equal(t, []string{"Play " + tc.play + " resume"}, backend.Calls())
+			assert.Equal(t, []string{"Play " + tc.expected + " resume"}, backend.Calls())
 		})
 	}
 }
@@ -1069,12 +1116,24 @@ func TestOutcomeMissed(t *testing.T) {
 	tgt, _, _ := newTarget()
 	ctx := context.Background()
 
-	assert.True(t, svc.PlayTitle(ctx, tgt, TitleRequest{Query: "conclave"}, nil).Missed(), "no title by that name")
-	assert.True(t, svc.Song(ctx, tgt, MusicRequest{Title: "come together", Artist: "queen"}, nil).Missed(), "not by that artist")
-	assert.True(t, svc.Artist(ctx, tgt, MusicRequest{Artist: "queen", Genre: "jazz"}, nil).Missed(), "no such genre by the artist")
-	assert.True(t, ContentDisabled().Missed())
-	assert.False(t, svc.PlayTitle(ctx, tgt, TitleRequest{Query: "hot fuzz"}, nil).Missed())
-	assert.False(t, svc.PlayTitle(ctx, tgt, TitleRequest{Query: "dune"}, nil).Missed(), "a question is an answer")
+	testCases := []struct {
+		name     string
+		expected bool
+		call     func() Outcome
+	}{
+		{name: "ShouldMissNoTitleByThatName", expected: true, call: func() Outcome { return svc.PlayTitle(ctx, tgt, TitleRequest{Query: "conclave"}, nil) }},
+		{name: "ShouldMissASongNotByThatArtist", expected: true, call: func() Outcome { return svc.Song(ctx, tgt, MusicRequest{Title: "come together", Artist: "queen"}, nil) }},
+		{name: "ShouldMissNoSuchGenreByTheArtist", expected: true, call: func() Outcome { return svc.Artist(ctx, tgt, MusicRequest{Artist: "queen", Genre: "jazz"}, nil) }},
+		{name: "ShouldMissDisabledContent", expected: true, call: ContentDisabled},
+		{name: "ShouldNotMissATitleThatPlays", call: func() Outcome { return svc.PlayTitle(ctx, tgt, TitleRequest{Query: "hot fuzz"}, nil) }},
+		{name: "ShouldNotMissAQuestionAsItIsAnAnswer", call: func() Outcome { return svc.PlayTitle(ctx, tgt, TitleRequest{Query: "dune"}, nil) }},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, tc.call().Missed())
+		})
+	}
 }
 
 func TestRewindOrBackWhenKodiIsUnreachable(t *testing.T) {

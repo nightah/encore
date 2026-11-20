@@ -22,10 +22,23 @@ func key(codes string) *Key {
 }
 
 func TestKey(t *testing.T) {
-	assert.Equal(t, "A", string(key("_").Bytes()), "a leading vowel is A")
-	assert.Equal(t, "APT", string(key("_P_T").Bytes()), "later vowels only separate")
-	assert.Equal(t, "PT", string(key("PPT").Bytes()), "repeats collapse")
-	assert.Equal(t, "PP", string(key("P_P").Bytes()), "a vowel keeps repeats apart")
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldWriteLeadingVowelAsA", have: "_", expected: "A"},
+		{name: "ShouldOnlySeparateWithLaterVowels", have: "_P_T", expected: "APT"},
+		{name: "ShouldCollapseRepeats", have: "PPT", expected: "PT"},
+		{name: "ShouldKeepRepeatsApartAcrossVowel", have: "P_P", expected: "PP"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, string(key(tc.have).Bytes()))
+		})
+	}
+
 	assert.Len(t, key(strings.Repeat("PT", MaxLen)).Bytes(), MaxLen, "keys stop at MaxLen")
 
 	var k Key
@@ -35,15 +48,41 @@ func TestKey(t *testing.T) {
 }
 
 func TestAppend(t *testing.T) {
-	assert.Equal(t, []string{"w"}, Append(nil, "w", key(""), key("")), "no key falls back to the word")
-	assert.Equal(t, []string{"PT"}, Append(nil, "w", key(""), key("PT")))
-	assert.Equal(t, []string{"P"}, Append(nil, "w", key("P"), key("")))
-	assert.Equal(t, []string{"P"}, Append(nil, "w", key("P"), key("P")), "an equal full key is not repeated")
-	assert.Equal(t, []string{"x", "P", "PT"}, Append([]string{"x"}, "w", key("P"), key("PT")))
+	testCases := []struct {
+		name     string
+		dst      []string
+		primary  string
+		full     string
+		expected []string
+	}{
+		{name: "ShouldFallBackToWordWithoutKey", expected: []string{"w"}},
+		{name: "ShouldAppendFullKeyAlone", full: "PT", expected: []string{"PT"}},
+		{name: "ShouldAppendShortKeyAlone", primary: "P", expected: []string{"P"}},
+		{name: "ShouldNotRepeatEqualFullKey", primary: "P", full: "P", expected: []string{"P"}},
+		{name: "ShouldAppendBothKeysToDst", dst: []string{"x"}, primary: "P", full: "PT", expected: []string{"x", "P", "PT"}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, Append(tc.dst, "w", key(tc.primary), key(tc.full)))
+		})
+	}
 }
 
 func TestAt(t *testing.T) {
-	assert.Equal(t, byte('b'), At("ab", 1))
-	assert.Equal(t, byte(0), At("ab", 2))
-	assert.Equal(t, byte(0), At("ab", -1))
+	testCases := []struct {
+		name     string
+		have     int
+		expected byte
+	}{
+		{name: "ShouldReturnByteInRange", have: 1, expected: 'b'},
+		{name: "ShouldReturnZeroPastEnd", have: 2},
+		{name: "ShouldReturnZeroBeforeStart", have: -1},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, At("ab", tc.have))
+		})
+	}
 }

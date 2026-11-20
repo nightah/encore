@@ -9,12 +9,20 @@ import (
 )
 
 func TestCatalogKinds(t *testing.T) {
-	assert.Equal(t, []media.Kind{
-		media.KindMovie, media.KindTVShow,
-		media.KindMusicVideo, media.KindArtist, media.KindAlbum, media.KindSong,
-		media.KindPlaylist,
-	}, catalogKinds([]string{"movies", "tv", "music"}))
+	testCases := []struct {
+		name     string
+		have     []string
+		expected []media.Kind
+	}{
+		{name: "ShouldFetchEveryKindOfEachContent", have: []string{"movies", "tv", "music"}, expected: []media.Kind{media.KindMovie, media.KindTVShow, media.KindMusicVideo, media.KindArtist, media.KindAlbum, media.KindSong, media.KindPlaylist}},
+		{name: "ShouldFetchNothingOfMusicWithoutIt", have: []string{"tv", "movies"}, expected: []media.Kind{media.KindMovie, media.KindTVShow, media.KindPlaylist}},
+		// Playlists can hold anything, so they stay.
+		{name: "ShouldKeepPlaylistsWithoutContent", expected: []media.Kind{media.KindPlaylist}},
+	}
 
-	assert.Equal(t, []media.Kind{media.KindMovie, media.KindTVShow, media.KindPlaylist}, catalogKinds([]string{"tv", "movies"}), "without music, nothing of it is fetched")
-	assert.Equal(t, []media.Kind{media.KindPlaylist}, catalogKinds(nil), "playlists can hold anything, so they stay")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, catalogKinds(tc.have))
+		})
+	}
 }

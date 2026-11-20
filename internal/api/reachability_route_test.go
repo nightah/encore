@@ -154,34 +154,51 @@ func TestRouteNotesSplitDNS(t *testing.T) {
 func TestSameAddrs(t *testing.T) {
 	t.Parallel()
 
-	a := []string{"203.0.113.7", "2001:db8::7"}
-	b := []string{"2001:db8::7", "203.0.113.7"}
+	testCases := []struct {
+		name     string
+		have     []string
+		other    []string
+		expected bool
+	}{
+		{name: "ShouldIgnoreOrder", have: []string{"203.0.113.7", "2001:db8::7"}, other: []string{"2001:db8::7", "203.0.113.7"}, expected: true},
+		{name: "ShouldTreatNilAndEmptyAsTheSame", other: []string{}, expected: true},
+		{name: "ShouldTellAShorterListApart", have: []string{"203.0.113.7", "2001:db8::7"}, other: []string{"203.0.113.7"}},
+		{name: "ShouldCompareDuplicates", have: []string{"203.0.113.7", "203.0.113.7"}, other: []string{"203.0.113.7", "203.0.113.8"}},
+	}
 
-	assert.True(t, sameAddrs(a, b), "order doesn't matter")
-	assert.Equal(t, []string{"203.0.113.7", "2001:db8::7"}, a, "the inputs aren't sorted in place")
-	assert.True(t, sameAddrs(nil, []string{}))
-	assert.False(t, sameAddrs(a, a[:1]))
-	assert.False(t, sameAddrs([]string{"203.0.113.7", "203.0.113.7"}, []string{"203.0.113.7", "203.0.113.8"}))
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			before := slices.Clone(tc.have)
+
+			assert.Equal(t, tc.expected, sameAddrs(tc.have, tc.other))
+			assert.Equal(t, before, tc.have, "the inputs aren't sorted in place")
+		})
+	}
 }
 
 func TestRoutePrivate(t *testing.T) {
 	t.Parallel()
 
-	for name, tc := range map[string]struct {
-		addrs []string
-		want  bool
+	testCases := []struct {
+		name     string
+		have     []string
+		expected bool
 	}{
-		"no answer":       {nil, false},
-		"lan":             {[]string{"192.168.1.20", "10.0.0.5", "172.16.0.1"}, true},
-		"loopback":        {[]string{"127.0.0.1", "::1"}, true},
-		"link-local":      {[]string{"169.254.10.1", "fe80::1"}, true},
-		"unique local v6": {[]string{"fd12:3456::1"}, true},
-		"unspecified":     {[]string{"0.0.0.0"}, true},
-		"public":          {[]string{"203.0.113.7"}, false},
-		"one public":      {[]string{"192.168.1.20", "2606:4700::1111"}, false},
-		"not an address":  {[]string{"192.168.1.20", "encore.example.net"}, false},
-	} {
-		assert.Equal(t, tc.want, endpointRoute{addrs: tc.addrs}.private(), name)
+		{name: "ShouldNotBePrivateWithNoAnswer"},
+		{name: "ShouldBePrivateOnTheLAN", have: []string{"192.168.1.20", "10.0.0.5", "172.16.0.1"}, expected: true},
+		{name: "ShouldBePrivateOnLoopback", have: []string{"127.0.0.1", "::1"}, expected: true},
+		{name: "ShouldBePrivateWhenLinkLocal", have: []string{"169.254.10.1", "fe80::1"}, expected: true},
+		{name: "ShouldBePrivateWhenUniqueLocalV6", have: []string{"fd12:3456::1"}, expected: true},
+		{name: "ShouldBePrivateWhenUnspecified", have: []string{"0.0.0.0"}, expected: true},
+		{name: "ShouldNotBePrivateWhenPublic", have: []string{"203.0.113.7"}},
+		{name: "ShouldNotBePrivateWithOnePublicAddress", have: []string{"192.168.1.20", "2606:4700::1111"}},
+		{name: "ShouldNotBePrivateWithSomethingNotAnAddress", have: []string{"192.168.1.20", "encore.example.net"}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, endpointRoute{addrs: tc.have}.private())
+		})
 	}
 }
 
@@ -198,7 +215,7 @@ func TestPublicRoute(t *testing.T) {
 		}}}
 	}
 
-	t.Run("an address needs no lookup", func(t *testing.T) {
+	t.Run("ShouldNotLookUpAnAddress", func(t *testing.T) {
 		t.Parallel()
 
 		a := &API{opts: Options{PublicLookup: func(context.Context, string) ([]string, error) {
@@ -210,7 +227,7 @@ func TestPublicRoute(t *testing.T) {
 		assert.Equal(t, endpointRoute{host: "2001:db8::1"}, a.publicRoute(t.Context(), "2001:db8::1"))
 	})
 
-	t.Run("lookup fails", func(t *testing.T) {
+	t.Run("ShouldKeepTheErrorWhenTheLookupFails", func(t *testing.T) {
 		t.Parallel()
 
 		r := lookups(nil, errors.New("i/o timeout")).publicRoute(t.Context(), "encore.example.test")
@@ -218,7 +235,7 @@ func TestPublicRoute(t *testing.T) {
 		assert.Empty(t, r.addrs, "the transport resolves the host itself")
 	})
 
-	t.Run("no addresses", func(t *testing.T) {
+	t.Run("ShouldReportNoAddresses", func(t *testing.T) {
 		t.Parallel()
 
 		r := lookups([]string{}, nil).publicRoute(t.Context(), "encore.example.test")
@@ -229,7 +246,7 @@ func TestPublicRoute(t *testing.T) {
 	local, err := net.DefaultResolver.LookupHost(t.Context(), "localhost")
 	require.NoError(t, err)
 
-	t.Run("split dns", func(t *testing.T) {
+	t.Run("ShouldNoteSplitDNS", func(t *testing.T) {
 		t.Parallel()
 
 		r := lookups([]string{"203.0.113.7"}, nil).publicRoute(t.Context(), "localhost")
@@ -238,7 +255,7 @@ func TestPublicRoute(t *testing.T) {
 		assert.ElementsMatch(t, local, r.local, "what this server sees is noted when it differs")
 	})
 
-	t.Run("same answer", func(t *testing.T) {
+	t.Run("ShouldNoteNothingForTheSameAnswer", func(t *testing.T) {
 		t.Parallel()
 
 		reversed := slices.Clone(local)
@@ -355,7 +372,7 @@ func TestRouteDial(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, closed.Close())
 
-	t.Run("public addresses replace the host and keep the port", func(t *testing.T) {
+	t.Run("ShouldReplaceTheHostWithPublicAddressesAndKeepThePort", func(t *testing.T) {
 		t.Parallel()
 
 		r := endpointRoute{host: "encore.example.test", addrs: []string{"127.0.0.2", "127.0.0.1"}}
@@ -367,7 +384,7 @@ func TestRouteDial(t *testing.T) {
 		require.NoError(t, conn.Close())
 	})
 
-	t.Run("without public addresses the host is dialled", func(t *testing.T) {
+	t.Run("ShouldDialTheHostWithoutPublicAddresses", func(t *testing.T) {
 		t.Parallel()
 
 		conn, err := endpointRoute{}.dial(t.Context(), "tcp", ln.Addr().String())
@@ -375,7 +392,7 @@ func TestRouteDial(t *testing.T) {
 		require.NoError(t, conn.Close())
 	})
 
-	t.Run("every address fails", func(t *testing.T) {
+	t.Run("ShouldKeepEachErrorWhenEveryAddressFails", func(t *testing.T) {
 		t.Parallel()
 
 		_, err := endpointRoute{addrs: []string{"127.0.0.1", "127.0.0.1"}}.dial(t.Context(), "tcp", "encore.example.test:"+closedPort)
@@ -383,7 +400,7 @@ func TestRouteDial(t *testing.T) {
 		assert.Len(t, strings.Split(err.Error(), "\n"), 2, "each address's error is kept")
 	})
 
-	t.Run("an address without a port", func(t *testing.T) {
+	t.Run("ShouldFailForAnAddressWithoutAPort", func(t *testing.T) {
 		t.Parallel()
 
 		_, err := endpointRoute{addrs: []string{"127.0.0.1"}}.dial(t.Context(), "tcp", "encore.example.test")
@@ -411,12 +428,23 @@ func TestRouteTransport(t *testing.T) {
 	assert.NotNil(t, base.Proxy, "the original is untouched")
 	assert.Nil(t, base.DialContext)
 
-	for name, other := range map[string]http.RoundTripper{"nil": nil, "not a transport": roundTripperFunc(nil), "nil transport": (*http.Transport)(nil)} {
-		got, ok := r.transport(other).(*http.Transport)
-		require.True(t, ok, name)
-		assert.NotSame(t, http.DefaultTransport, got, name)
-		assert.Nil(t, got.Proxy, name)
-		assert.NotNil(t, got.DialContext, name)
+	testCases := []struct {
+		name string
+		have http.RoundTripper
+	}{
+		{name: "ShouldCopyTheDefaultForNil"},
+		{name: "ShouldCopyTheDefaultForSomethingNotATransport", have: roundTripperFunc(nil)},
+		{name: "ShouldCopyTheDefaultForANilTransport", have: (*http.Transport)(nil)},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, ok := r.transport(tc.have).(*http.Transport)
+			require.True(t, ok)
+			assert.NotSame(t, http.DefaultTransport, got)
+			assert.Nil(t, got.Proxy)
+			assert.NotNil(t, got.DialContext)
+		})
 	}
 
 	assert.NotNil(t, http.DefaultTransport.(*http.Transport).Proxy, "the default transport is untouched") //nolint:forcetypeassert // the standard library's

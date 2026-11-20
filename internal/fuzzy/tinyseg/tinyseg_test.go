@@ -31,17 +31,22 @@ func TestSegmentMatchesReference(t *testing.T) {
 }
 
 func TestSegment(t *testing.T) {
-	for _, tc := range []struct {
-		in   string
-		want []string
+	testCases := []struct {
+		name     string
+		have     string
+		expected []string
 	}{
-		{"", nil},
-		{"猫", []string{"猫"}},
-		{"私の名前は中野です", []string{"私", "の", "名前", "は", "中野", "です"}},
-		{"第二部", []string{"第", "二", "部"}},
-		{"abc", []string{"abc"}},
-	} {
-		assert.Equal(t, tc.want, Segment(tc.in), tc.in)
+		{name: "ShouldReturnNothingForEmpty"},
+		{name: "ShouldKeepSingleKanji", have: "猫", expected: []string{"猫"}},
+		{name: "ShouldSplitSentence", have: "私の名前は中野です", expected: []string{"私", "の", "名前", "は", "中野", "です"}},
+		{name: "ShouldSplitNumeralPrefixAndCounter", have: "第二部", expected: []string{"第", "二", "部"}},
+		{name: "ShouldKeepLatinWord", have: "abc", expected: []string{"abc"}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, Segment(tc.have))
+		})
 	}
 
 	long := strings.Repeat("東京都に住んでいます", 10)
@@ -50,18 +55,52 @@ func TestSegment(t *testing.T) {
 }
 
 func TestCharType(t *testing.T) {
-	for r, want := range map[rune]byte{
-		'三': 'M', '万': 'M', '猫': 'H', '々': 'H', 'ヶ': 'H', 'の': 'I', 'ア': 'K', 'ー': 'K', 'ｱ': 'K',
-		'a': 'A', 'Z': 'A', 'ａ': 'A', '7': 'N', '７': 'N', '、': 'O', ' ': 'O',
-	} {
-		assert.Equal(t, string(want), string(charType(r)), string(r))
+	testCases := []struct {
+		name     string
+		have     rune
+		expected byte
+	}{
+		{name: "ShouldTypeKanjiThreeAsNumeral", have: '三', expected: 'M'},
+		{name: "ShouldTypeKanjiTenThousandAsNumeral", have: '万', expected: 'M'},
+		{name: "ShouldTypeKanjiAsHan", have: '猫', expected: 'H'},
+		{name: "ShouldTypeIterationMarkAsHan", have: '々', expected: 'H'},
+		{name: "ShouldTypeSmallKeAsHan", have: 'ヶ', expected: 'H'},
+		{name: "ShouldTypeHiragana", have: 'の', expected: 'I'},
+		{name: "ShouldTypeKatakana", have: 'ア', expected: 'K'},
+		{name: "ShouldTypeLongVowelMarkAsKatakana", have: 'ー', expected: 'K'},
+		{name: "ShouldTypeHalfWidthKatakana", have: 'ｱ', expected: 'K'},
+		{name: "ShouldTypeLowerLatin", have: 'a', expected: 'A'},
+		{name: "ShouldTypeUpperLatin", have: 'Z', expected: 'A'},
+		{name: "ShouldTypeFullWidthLatin", have: 'ａ', expected: 'A'},
+		{name: "ShouldTypeDigit", have: '7', expected: 'N'},
+		{name: "ShouldTypeFullWidthDigit", have: '７', expected: 'N'},
+		{name: "ShouldTypeIdeographicCommaAsOther", have: '、', expected: 'O'},
+		{name: "ShouldTypeSpaceAsOther", have: ' ', expected: 'O'},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, string(tc.expected), string(charType(tc.have)))
+		})
 	}
 }
 
 func TestKeyChars(t *testing.T) {
-	assert.Equal(t, []rune{tagB1, 'あ'}, keyChars("B1あ"))
-	assert.Equal(t, []rune{tagB3, tagB2, tagE1}, keyChars("B3B2E1"))
-	assert.Equal(t, []rune{'B', 'x', tagE3}, keyChars("BxE3"))
+	testCases := []struct {
+		name     string
+		have     string
+		expected []rune
+	}{
+		{name: "ShouldTagBoundaryBeforeCharacter", have: "B1あ", expected: []rune{tagB1, 'あ'}},
+		{name: "ShouldTagConsecutiveBoundaries", have: "B3B2E1", expected: []rune{tagB3, tagB2, tagE1}},
+		{name: "ShouldKeepLoneBAsCharacter", have: "BxE3", expected: []rune{'B', 'x', tagE3}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, keyChars(tc.have))
+		})
+	}
 }
 
 func TestPropSegmentRejoins(t *testing.T) {

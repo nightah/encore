@@ -17,26 +17,39 @@ import (
 func TestHealthURL(t *testing.T) {
 	t.Parallel()
 
-	for _, tc := range []struct {
-		address, want string
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+		err      string
 	}{
-		{":8080", "http://127.0.0.1:8080/api/v1/healthz"},
-		{"0.0.0.0:8080", "http://127.0.0.1:8080/api/v1/healthz"},
-		{"[::]:9000", "http://127.0.0.1:9000/api/v1/healthz"},
-		{"127.0.0.1:8080", "http://127.0.0.1:8080/api/v1/healthz"},
-		{"192.0.2.10:80", "http://192.0.2.10:80/api/v1/healthz"},
-		{"[::1]:8080", "http://[::1]:8080/api/v1/healthz"},
-		{"encore.local:8443", "http://encore.local:8443/api/v1/healthz"},
-	} {
-		got, err := healthURL(tc.address)
-		require.NoError(t, err, tc.address)
-		assert.Equal(t, tc.want, got, tc.address)
+		{name: "ShouldUseLoopbackForAnEmptyHost", have: ":8080", expected: "http://127.0.0.1:8080/api/v1/healthz"},
+		{name: "ShouldUseLoopbackForTheIPv4Wildcard", have: "0.0.0.0:8080", expected: "http://127.0.0.1:8080/api/v1/healthz"},
+		{name: "ShouldUseLoopbackForTheIPv6Wildcard", have: "[::]:9000", expected: "http://127.0.0.1:9000/api/v1/healthz"},
+		{name: "ShouldKeepIPv4Loopback", have: "127.0.0.1:8080", expected: "http://127.0.0.1:8080/api/v1/healthz"},
+		{name: "ShouldKeepAnIPv4Address", have: "192.0.2.10:80", expected: "http://192.0.2.10:80/api/v1/healthz"},
+		{name: "ShouldKeepIPv6Loopback", have: "[::1]:8080", expected: "http://[::1]:8080/api/v1/healthz"},
+		{name: "ShouldKeepAHostName", have: "encore.local:8443", expected: "http://encore.local:8443/api/v1/healthz"},
+		{name: "ShouldRejectAnEmptyAddress", have: "", err: "parsing server.address"},
+		{name: "ShouldRejectAPortWithoutAColon", have: "8080", err: "parsing server.address"},
+		{name: "ShouldRejectAHostWithoutAPort", have: "localhost", err: "parsing server.address"},
+		{name: "ShouldRejectAnUnclosedIPv6Address", have: "[::1", err: "parsing server.address"},
 	}
 
-	for _, bad := range []string{"", "8080", "localhost", "[::1"} {
-		_, err := healthURL(bad)
-		require.Error(t, err, bad)
-		assert.Contains(t, err.Error(), "parsing server.address", bad)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual, err := healthURL(tc.have)
+
+			if tc.err != "" {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), tc.err)
+
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, actual)
+		})
 	}
 }
 
@@ -64,12 +77,25 @@ func TestHealthcheckHealthy(t *testing.T) {
 }
 
 func TestHealthcheckUnhealthy(t *testing.T) {
-	for _, status := range []int{http.StatusNoContent, http.StatusFound, http.StatusNotFound, http.StatusInternalServerError, http.StatusServiceUnavailable} {
-		address, _ := healthServer(t, status)
+	testCases := []struct {
+		name string
+		have int
+	}{
+		{name: "ShouldFailOnNoContent", have: http.StatusNoContent},
+		{name: "ShouldFailOnFound", have: http.StatusFound},
+		{name: "ShouldFailOnNotFound", have: http.StatusNotFound},
+		{name: "ShouldFailOnInternalServerError", have: http.StatusInternalServerError},
+		{name: "ShouldFailOnServiceUnavailable", have: http.StatusServiceUnavailable},
+	}
 
-		_, _, err := runCLI(t, "healthcheck", "--server.address", address)
-		require.Error(t, err, "only 200 is healthy, not %d", status)
-		assert.Contains(t, err.Error(), fmt.Sprintf("status %d", status))
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			address, _ := healthServer(t, tc.have)
+
+			_, _, err := runCLI(t, "healthcheck", "--server.address", address)
+			require.Error(t, err, "only 200 is healthy")
+			assert.Contains(t, err.Error(), fmt.Sprintf("status %d", tc.have))
+		})
 	}
 }
 

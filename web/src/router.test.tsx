@@ -64,18 +64,24 @@ describe("readCspNonce", () => {
 describe("createQueryClient", () => {
   const retry = createQueryClient().getDefaultOptions().queries?.retry as (count: number, error: unknown) => boolean;
 
-  it("retries server errors and lost connections twice", () => {
-    for (const error of [new ApiError("down", 503), new ApiError("offline", 0), new TypeError("Failed to fetch")]) {
-      expect(retry(0, error)).toBe(true);
-      expect(retry(1, error)).toBe(true);
-      expect(retry(2, error)).toBe(false);
-    }
+  it.each([
+    ["a server error", new ApiError("down", 503)],
+    ["a lost connection", new ApiError("offline", 0)],
+    ["a failed fetch", new TypeError("Failed to fetch")],
+  ])("retries %s twice", (_, error) => {
+    expect(retry(0, error)).toBe(true);
+    expect(retry(1, error)).toBe(true);
+    expect(retry(2, error)).toBe(false);
   });
 
-  it("never retries a client error, which would fail the same way", () => {
-    for (const status of [400, 401, 403, 404, 409, 422, 429, 499]) {
+  it.each([400, 401, 403, 404, 409, 422, 429, 499])(
+    "never retries a client error (%i), which would fail the same way",
+    (status) => {
       expect(retry(0, new ApiError("no", status))).toBe(false);
-    }
+    },
+  );
+
+  it("retries the lowest server error status, 500", () => {
     expect(retry(0, new ApiError("server", 500))).toBe(true);
   });
 

@@ -82,32 +82,70 @@ func TestNewSpeechRejectsLocaleWithoutLanguage(t *testing.T) {
 }
 
 func TestLanguageName(t *testing.T) {
-	for _, tc := range []struct{ locale, code, want string }{
-		{"en-AU", "fre", "French"},
-		{"en-AU", "fr", "French"},
-		{"de-DE", "fre", "Französisch"},
-		{"en-AU", "pt-BR", "Portuguese"},
-		{"not a locale", "ger", "German"},
-		{"en-AU", "", ""},
-		{"en-AU", "!!", "!!"},
-		{"en-AU", "qaa", "qaa"},
-	} {
-		assert.Equal(t, tc.want, languageName(tc.locale, tc.code), "%s in %s", tc.code, tc.locale)
+	testCases := []struct {
+		name     string
+		locale   string
+		have     string
+		expected string
+	}{
+		{name: "ShouldNameISO6392Code", locale: "en-AU", have: "fre", expected: "French"},
+		{name: "ShouldNameISO6391Code", locale: "en-AU", have: "fr", expected: "French"},
+		{name: "ShouldNameInTheLocaleLanguage", locale: "de-DE", have: "fre", expected: "Französisch"},
+		{name: "ShouldNameRegionalCode", locale: "en-AU", have: "pt-BR", expected: "Portuguese"},
+		{name: "ShouldFallBackForInvalidLocale", locale: "not a locale", have: "ger", expected: "German"},
+		{name: "ShouldSayNothingForEmptyCode", locale: "en-AU"},
+		{name: "ShouldSayInvalidCodeAsItIs", locale: "en-AU", have: "!!", expected: "!!"},
+		{name: "ShouldSayReservedCodeAsItIs", locale: "en-AU", have: "qaa", expected: "qaa"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, languageName(tc.locale, tc.have))
+		})
 	}
 }
 
 func TestSpokenList(t *testing.T) {
-	assert.Empty(t, spokenList("en", nil))
-	assert.Equal(t, "Dune", spokenList("en", []string{"Dune"}))
-	assert.Equal(t, "Dune and Alien", spokenList("en", []string{"Dune", "Alien"}))
-	assert.Equal(t, "Dune, Alien und Heat", spokenList("de", []string{"Dune", "Alien", "Heat"}))
-	assert.Equal(t, "Dune and Alien", spokenList("xx", []string{"Dune", "Alien"}), "a language without its own word uses English")
+	testCases := []struct {
+		name     string
+		lang     string
+		have     []string
+		expected string
+	}{
+		{name: "ShouldSayNothingForNoTitles", lang: "en"},
+		{name: "ShouldSayASingleTitle", lang: "en", have: []string{"Dune"}, expected: "Dune"},
+		{name: "ShouldJoinTwoTitlesWithAnd", lang: "en", have: []string{"Dune", "Alien"}, expected: "Dune and Alien"},
+		{name: "ShouldJoinThreeTitlesInGerman", lang: "de", have: []string{"Dune", "Alien", "Heat"}, expected: "Dune, Alien und Heat"},
+		{name: "ShouldUseEnglishForLanguageWithoutItsOwnWord", lang: "xx", have: []string{"Dune", "Alien"}, expected: "Dune and Alien"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, spokenList(tc.lang, tc.have))
+		})
+	}
 }
 
 func TestParseDurationRejectsUnitsInTheWrongPart(t *testing.T) {
-	for _, bad := range []string{"P1H", "P1S", "PT1D", "PT1W", "PT1Y", "P-1D", "PT1.5.5M", "PTM"} {
-		_, ok := parseDuration(bad)
-		assert.False(t, ok, bad)
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldRejectHoursBeforeT", have: "P1H"},
+		{name: "ShouldRejectSecondsBeforeT", have: "P1S"},
+		{name: "ShouldRejectDaysAfterT", have: "PT1D"},
+		{name: "ShouldRejectWeeksAfterT", have: "PT1W"},
+		{name: "ShouldRejectYearsAfterT", have: "PT1Y"},
+		{name: "ShouldRejectNegative", have: "P-1D"},
+		{name: "ShouldRejectTwoDecimalPoints", have: "PT1.5.5M"},
+		{name: "ShouldRejectUnitWithoutNumber", have: "PTM"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, ok := parseDuration(tc.have)
+			assert.False(t, ok)
+		})
 	}
 }
 
@@ -167,14 +205,20 @@ func TestBareCommandInAnUnknownLocale(t *testing.T) {
 }
 
 func TestNewSpeechRejectsBrokenAnswerAndContinueSamples(t *testing.T) {
-	for intent, pattern := range map[string]string{
-		"AMAZON.YesIntent": "(yes|yeah",
-		continueIntent:     "continue (watching|playing",
-		nextEpisodeIntent:  "continue (watching|playing {Show}",
-	} {
-		t.Run(intent, func(t *testing.T) {
+	testCases := []struct {
+		name    string
+		intent  string
+		pattern string
+	}{
+		{name: "ShouldRejectBrokenYesSample", intent: "AMAZON.YesIntent", pattern: "(yes|yeah"},
+		{name: "ShouldRejectBrokenContinueSample", intent: continueIntent, pattern: "continue (watching|playing"},
+		{name: "ShouldRejectBrokenNextEpisodeSample", intent: nextEpisodeIntent, pattern: "continue (watching|playing {Show}"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			_, err := NewSpeech(speechSources(t, map[string]string{
-				"en-US": fmt.Sprintf("language: en\nutterances:\n  %s:\n    - %q\n", intent, pattern),
+				"en-US": fmt.Sprintf("language: en\nutterances:\n  %s:\n    - %q\n", tc.intent, tc.pattern),
 			}), slog.New(slog.DiscardHandler))
 			require.ErrorContains(t, err, "locale en-US")
 		})
@@ -208,12 +252,25 @@ func TestRenderDropsAStopAfterANameEndingInOne(t *testing.T) {
 		return actions.Message{ID: "livetv.switching", Params: map[string]string{"channel": channel}}
 	}
 
-	assert.Equal(t, "Switching to 9Go!", s.Render("en-AU", switching("9Go!")), "not 9Go!.")
-	assert.Equal(t, "Switching to Who's Line?", s.Render("en-AU", switching("Who's Line?")))
-	assert.Equal(t, "Switching to Seven.", s.Render("en-AU", switching("Seven")))
-	assert.Equal(t, "Switching to Racing.com.", s.Render("en-AU", switching("Racing.com")), "a dot inside a name isn't the end of it")
-	assert.Equal(t, "9Go!に切り替えます。", s.Render("ja-JP", switching("9Go!")), "only a stop straight after the name goes")
-	assert.Equal(t, "Switching to 9Go! for Hot Seat!", s.Render("en-AU", actions.Message{ID: "livetv.switching_programme", Params: map[string]string{"channel": "9Go!", "title": "Hot Seat!"}}))
+	testCases := []struct {
+		name     string
+		locale   string
+		have     actions.Message
+		expected string
+	}{
+		{name: "ShouldDropStopAfterExclamationMark", locale: "en-AU", have: switching("9Go!"), expected: "Switching to 9Go!"},
+		{name: "ShouldDropStopAfterQuestionMark", locale: "en-AU", have: switching("Who's Line?"), expected: "Switching to Who's Line?"},
+		{name: "ShouldKeepStopAfterPlainName", locale: "en-AU", have: switching("Seven"), expected: "Switching to Seven."},
+		{name: "ShouldKeepStopAfterDotInsideName", locale: "en-AU", have: switching("Racing.com"), expected: "Switching to Racing.com."},
+		{name: "ShouldDropOnlyStopStraightAfterName", locale: "ja-JP", have: switching("9Go!"), expected: "9Go!に切り替えます。"},
+		{name: "ShouldDropStopAfterTitleEndingInOne", locale: "en-AU", have: actions.Message{ID: "livetv.switching_programme", Params: map[string]string{"channel": "9Go!", "title": "Hot Seat!"}}, expected: "Switching to 9Go! for Hot Seat!"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, s.Render(tc.locale, tc.have))
+		})
+	}
 }
 
 func TestWithoutLeadIn(t *testing.T) {
@@ -232,13 +289,35 @@ func TestWithoutLeadIn(t *testing.T) {
 		return Intent{Name: name, Slots: slots}
 	}
 
-	assert.Equal(t, []Intent{movie("WatchMovie", "الرسالة")}, s.WithoutLeadIn("ar-SA", movie("WatchMovie", "اشوف فيلم الرسالة")), "the end of ابغى اشوف فيلم {Movie}")
-	assert.Equal(t, []Intent{movie("WatchMovie", "dune")}, s.WithoutLeadIn("en-AU", movie("WatchMovie", "The Movie dune")), "ignoring case")
-	assert.Equal(t, []Intent{movie("WatchMovie", "dune", Slot{Name: "Room", Value: "lounge"})}, s.WithoutLeadIn("en-AU", movie("WatchMovie", "movie dune", Slot{Name: "Room", Value: "lounge"})), "other slots are kept")
-	assert.Empty(t, s.WithoutLeadIn("en-AU", movie("WatchMovie", "dune")), "a title without a lead-in has no other reading")
-	assert.Empty(t, s.WithoutLeadIn("en-AU", movie("WatchMovie", "the movie")), "nor one that is all lead-in")
-	assert.Empty(t, s.WithoutLeadIn("en-AU", movie("WatchMovie", "")))
 	assert.Equal(t, s.WithoutLeadIn("en-US", movie("WatchMovie", "movie dune")), s.WithoutLeadIn("xx-XX", movie("WatchMovie", "movie dune")), "an unknown locale reads as the fallback")
+
+	testCases := []struct {
+		name     string
+		locale   string
+		have     Intent
+		expected []Intent
+	}{
+		{name: "ShouldDropTheEndOfAnArabicLeadIn", locale: "ar-SA", have: movie("WatchMovie", "اشوف فيلم الرسالة"), expected: []Intent{movie("WatchMovie", "الرسالة")}},
+		{name: "ShouldDropLeadInIgnoringCase", locale: "en-AU", have: movie("WatchMovie", "The Movie dune"), expected: []Intent{movie("WatchMovie", "dune")}},
+		{name: "ShouldKeepOtherSlots", locale: "en-AU", have: movie("WatchMovie", "movie dune", Slot{Name: "Room", Value: "lounge"}), expected: []Intent{movie("WatchMovie", "dune", Slot{Name: "Room", Value: "lounge"})}},
+		{name: "ShouldGiveNoOtherReadingWithoutLeadIn", locale: "en-AU", have: movie("WatchMovie", "dune")},
+		{name: "ShouldGiveNoReadingForTitleThatIsAllLeadIn", locale: "en-AU", have: movie("WatchMovie", "the movie")},
+		{name: "ShouldGiveNoReadingForEmptyTitle", locale: "en-AU", have: movie("WatchMovie", "")},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := s.WithoutLeadIn(tc.locale, tc.have)
+
+			if tc.expected == nil {
+				assert.Empty(t, actual)
+
+				return
+			}
+
+			assert.Equal(t, tc.expected, actual)
+		})
+	}
 }
 
 func TestLeadInsRejectsABrokenPattern(t *testing.T) {

@@ -130,7 +130,7 @@ func TestOIDCPendingSignInsAreBounded(t *testing.T) {
 }
 
 func TestFinishOIDCRefusals(t *testing.T) {
-	t.Run("provider error", func(t *testing.T) {
+	t.Run("ShouldRefuseAProviderError", func(t *testing.T) {
 		f, _ := oidcFixture(t, oidctest.Options{Username: "admin"}, "")
 		_, state := beginOIDC(t, f)
 
@@ -138,7 +138,7 @@ func TestFinishOIDCRefusals(t *testing.T) {
 		require.ErrorContains(t, err, "access_denied user cancelled")
 	})
 
-	t.Run("missing state", func(t *testing.T) {
+	t.Run("ShouldRefuseAMissingState", func(t *testing.T) {
 		f, _ := oidcFixture(t, oidctest.Options{Username: "admin"}, "")
 		_, state := beginOIDC(t, f)
 
@@ -149,7 +149,7 @@ func TestFinishOIDCRefusals(t *testing.T) {
 		require.ErrorContains(t, err, "did not start in this browser", "the state must match the cookie")
 	})
 
-	t.Run("expired", func(t *testing.T) {
+	t.Run("ShouldRefuseAnExpiredSignIn", func(t *testing.T) {
 		f, _ := oidcFixture(t, oidctest.Options{Username: "admin"}, "")
 		_, state := beginOIDC(t, f)
 
@@ -161,7 +161,7 @@ func TestFinishOIDCRefusals(t *testing.T) {
 		assert.Equal(t, -1, cookie(rec, oidcCookie).MaxAge, "the state cookie is cleared")
 	})
 
-	t.Run("unknown state", func(t *testing.T) {
+	t.Run("ShouldRefuseAnUnknownState", func(t *testing.T) {
 		f, _ := oidcFixture(t, oidctest.Options{Username: "admin"}, "")
 		forged := &http.Cookie{Name: oidcCookie, Value: "forged"}
 
@@ -169,7 +169,7 @@ func TestFinishOIDCRefusals(t *testing.T) {
 		require.ErrorContains(t, err, "expired")
 	})
 
-	t.Run("bad code", func(t *testing.T) {
+	t.Run("ShouldRefuseABadCode", func(t *testing.T) {
 		f, idp := oidcFixture(t, oidctest.Options{Username: "admin"}, "")
 		_, state := beginOIDC(t, f)
 
@@ -178,7 +178,7 @@ func TestFinishOIDCRefusals(t *testing.T) {
 		assert.Equal(t, []string{"client_secret_post"}, idp.TokenAuths(), "a bad code is not retried with another client authentication")
 	})
 
-	t.Run("wrong client secret", func(t *testing.T) {
+	t.Run("ShouldRefuseAWrongClientSecret", func(t *testing.T) {
 		f, idp := oidcFixture(t, oidctest.Options{Username: "admin"}, "")
 		f.update(func(s *Settings) { s.OIDC.ClientSecret = "wrong" })
 
@@ -193,7 +193,7 @@ func TestFinishOIDCRefusals(t *testing.T) {
 		assert.Equal(t, []string{"client_secret_post", "client_secret_basic", "client_secret_post"}, idp.TokenAuths(), "a failed exchange teaches nothing about the provider")
 	})
 
-	t.Run("replayed callback", func(t *testing.T) {
+	t.Run("ShouldRefuseAReplayedCallback", func(t *testing.T) {
 		f, _ := oidcFixture(t, oidctest.Options{Username: "admin"}, "")
 		u, state := beginOIDC(t, f)
 
@@ -213,7 +213,7 @@ func TestFinishOIDCRefusals(t *testing.T) {
 		require.ErrorContains(t, err, "expired", "a callback works once")
 	})
 
-	t.Run("disabled", func(t *testing.T) {
+	t.Run("ShouldRefuseWhenDisabled", func(t *testing.T) {
 		f := newFixture(t, nil)
 		require.ErrorIs(t, f.svc.FinishOIDC(t.Context(), httptest.NewRecorder(), request(http.MethodGet, "/cb")), ErrOIDCDisabled)
 	})
@@ -233,46 +233,85 @@ func TestOIDCSubjectWhenNoUsernameClaim(t *testing.T) {
 
 func TestOIDCEnabled(t *testing.T) {
 	full := Settings{Mode: ModeOIDC, OIDC: OIDCSettings{Issuer: "https://id.example.net", ClientID: "encore"}}
-	assert.True(t, full.OIDCEnabled())
 
-	for name, mutate := range map[string]func(*Settings){
-		"local mode":   func(s *Settings) { s.Mode = ModeLocal },
-		"no issuer":    func(s *Settings) { s.OIDC.Issuer = "" },
-		"no client ID": func(s *Settings) { s.OIDC.ClientID = "" },
-	} {
-		s := full
-		mutate(&s)
-		assert.False(t, s.OIDCEnabled(), name)
+	testCases := []struct {
+		name     string
+		mutate   func(*Settings)
+		expected bool
+	}{
+		{name: "ShouldBeEnabledWhenFullyConfigured", mutate: func(*Settings) {}, expected: true},
+		{name: "ShouldBeDisabledInLocalMode", mutate: func(s *Settings) { s.Mode = ModeLocal }},
+		{name: "ShouldBeDisabledWithoutAnIssuer", mutate: func(s *Settings) { s.OIDC.Issuer = "" }},
+		{name: "ShouldBeDisabledWithoutAClientID", mutate: func(s *Settings) { s.OIDC.ClientID = "" }},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := full
+			tc.mutate(&s)
+			assert.Equal(t, tc.expected, s.OIDCEnabled())
+		})
 	}
 }
 
 func TestClaimStrings(t *testing.T) {
-	for name, tt := range map[string]struct {
-		in   any
-		want []string
+	testCases := []struct {
+		name     string
+		have     any
+		expected []string
 	}{
-		"comma string": {"admins, users,,", []string{"admins", "users"}},
-		"array":        {[]any{"admins", 7, "users", nil}, []string{"admins", "users"}},
-		"empty array":  {[]any{}, []string{}},
-		"missing":      {nil, nil},
-		"number":       {42.0, nil},
-		"object":       {map[string]any{"admins": true}, nil},
-	} {
-		assert.Equal(t, tt.want, claimStrings(tt.in), name)
+		{name: "ShouldSplitACommaString", have: "admins, users,,", expected: []string{"admins", "users"}},
+		{name: "ShouldKeepTheStringsOfAnArray", have: []any{"admins", 7, "users", nil}, expected: []string{"admins", "users"}},
+		{name: "ShouldKeepAnEmptyArrayEmpty", have: []any{}, expected: []string{}},
+		{name: "ShouldReturnNilWhenMissing", have: nil},
+		{name: "ShouldReturnNilForANumber", have: 42.0},
+		{name: "ShouldReturnNilForAnObject", have: map[string]any{"admins": true}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, claimStrings(tc.have))
+		})
 	}
 }
 
 func TestFirstString(t *testing.T) {
 	claims := map[string]any{"preferred_username": "  ", "email": 7, "name": "Household Admin"}
-	assert.Equal(t, "Household Admin", firstString(claims, userClaims...), "blank and non-string claims are skipped")
-	assert.Empty(t, firstString(claims, "missing"))
-	assert.Empty(t, firstString(nil, userClaims...))
+
+	testCases := []struct {
+		name     string
+		claims   map[string]any
+		keys     []string
+		expected string
+	}{
+		{name: "ShouldSkipBlankAndNonStringClaims", claims: claims, keys: userClaims, expected: "Household Admin"},
+		{name: "ShouldReturnEmptyForAMissingClaim", claims: claims, keys: []string{"missing"}},
+		{name: "ShouldReturnEmptyWithoutClaims", keys: userClaims},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, firstString(tc.claims, tc.keys...))
+		})
+	}
 }
 
 func TestInvalidClient(t *testing.T) {
-	assert.False(t, invalidClient(errors.New("network down")))
-	assert.True(t, invalidClient(&oauth2.RetrieveError{ErrorCode: "invalid_client", Response: &http.Response{StatusCode: http.StatusBadRequest}}))
-	assert.True(t, invalidClient(&oauth2.RetrieveError{Response: &http.Response{StatusCode: http.StatusUnauthorized}}))
-	assert.False(t, invalidClient(&oauth2.RetrieveError{ErrorCode: "invalid_grant", Response: &http.Response{StatusCode: http.StatusBadRequest}}))
-	assert.False(t, invalidClient(&oauth2.RetrieveError{ErrorCode: "invalid_grant"}))
+	testCases := []struct {
+		name     string
+		have     error
+		expected bool
+	}{
+		{name: "ShouldIgnoreANetworkError", have: errors.New("network down")},
+		{name: "ShouldDetectAnInvalidClientCode", have: &oauth2.RetrieveError{ErrorCode: "invalid_client", Response: &http.Response{StatusCode: http.StatusBadRequest}}, expected: true},
+		{name: "ShouldDetectAnUnauthorisedStatus", have: &oauth2.RetrieveError{Response: &http.Response{StatusCode: http.StatusUnauthorized}}, expected: true},
+		{name: "ShouldIgnoreAnInvalidGrant", have: &oauth2.RetrieveError{ErrorCode: "invalid_grant", Response: &http.Response{StatusCode: http.StatusBadRequest}}},
+		{name: "ShouldIgnoreAnInvalidGrantWithoutAResponse", have: &oauth2.RetrieveError{ErrorCode: "invalid_grant"}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, invalidClient(tc.have))
+		})
+	}
 }

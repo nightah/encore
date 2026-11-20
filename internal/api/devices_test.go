@@ -23,26 +23,35 @@ func TestOptionalID(t *testing.T) {
 		RoomID OptionalID `json:"room_id"`
 	}
 
-	tests := []struct {
-		body string
-		want OptionalID
+	testCases := []struct {
+		name     string
+		have     string
+		expected OptionalID
+		err      bool
 	}{
-		{`{}`, OptionalID{}},
-		{`{"room_id":null}`, OptionalID{Set: true}},
-		{`{"room_id":7}`, OptionalID{Set: true, ID: 7}},
-		{`{"room_id":0}`, OptionalID{Set: true}},
-		{`{"room_id":9007199254740993}`, OptionalID{Set: true, ID: 9007199254740993}},
+		{name: "ShouldLeaveAbsentUnset", have: `{}`},
+		{name: "ShouldSetNull", have: `{"room_id":null}`, expected: OptionalID{Set: true}},
+		{name: "ShouldSetAValue", have: `{"room_id":7}`, expected: OptionalID{Set: true, ID: 7}},
+		{name: "ShouldSetZero", have: `{"room_id":0}`, expected: OptionalID{Set: true}},
+		{name: "ShouldKeepAnIDBeyondFloatPrecision", have: `{"room_id":9007199254740993}`, expected: OptionalID{Set: true, ID: 9007199254740993}},
+		{name: "ShouldRejectAString", have: `{"room_id":"7"}`, err: true},
+		{name: "ShouldRejectAFraction", have: `{"room_id":1.5}`, err: true},
+		{name: "ShouldRejectAnObject", have: `{"room_id":{}}`, err: true},
 	}
 
-	for _, tt := range tests {
-		var p patch
-		require.NoError(t, json.Unmarshal([]byte(tt.body), &p), tt.body)
-		assert.Equal(t, tt.want, p.RoomID, "absent, null and a value are told apart: %s", tt.body)
-	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var p patch
 
-	for _, body := range []string{`{"room_id":"7"}`, `{"room_id":1.5}`, `{"room_id":{}}`} {
-		var p patch
-		require.Error(t, json.Unmarshal([]byte(body), &p), body)
+			if tc.err {
+				require.Error(t, json.Unmarshal([]byte(tc.have), &p))
+
+				return
+			}
+
+			require.NoError(t, json.Unmarshal([]byte(tc.have), &p))
+			assert.Equal(t, tc.expected, p.RoomID, "absent, null and a value are told apart")
+		})
 	}
 
 	s := OptionalID{}.Schema(huma.NewMapRegistry("#/components/schemas/", huma.DefaultSchemaNamer))

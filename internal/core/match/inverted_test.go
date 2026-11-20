@@ -494,12 +494,6 @@ func TestInvertedKeepsUnsegmentedScripts(t *testing.T) {
 		{ID: "filler", Kind: media.KindMovie, Title: "Inception"},
 	}
 
-	cases := map[string]string{
-		"千と千尋の神隠":     "spirited",
-		"สวัสดีชาวโล": "thai",
-		"ひらがなとカタカ":    "kana",
-	}
-
 	l := languageFor("en")
 	inv := newInvertedRetriever(l)
 
@@ -510,11 +504,23 @@ func TestInvertedKeepsUnsegmentedScripts(t *testing.T) {
 
 	require.NoError(t, inv.upsert(entries))
 
-	for text, want := range cases {
-		qf := l.newForm(l.normalizeSpelled(text, false))
-		ids, err := inv.candidates(t.Context(), &qf, nil, 10)
-		require.NoError(t, err)
-		assert.Contains(t, ids, want, text)
+	testCases := []struct {
+		name     string
+		heard    string
+		expected string
+	}{
+		{name: "ShouldFindKanjiAndKanaTitleMissingALetter", heard: "千と千尋の神隠", expected: "spirited"},
+		{name: "ShouldFindThaiTitleMissingALetter", heard: "สวัสดีชาวโล", expected: "thai"},
+		{name: "ShouldFindKanaTitleMissingALetter", heard: "ひらがなとカタカ", expected: "kana"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			qf := l.newForm(l.normalizeSpelled(tc.heard, false))
+			ids, err := inv.candidates(t.Context(), &qf, nil, 10)
+			require.NoError(t, err)
+			assert.Contains(t, ids, tc.expected)
+		})
 	}
 }
 

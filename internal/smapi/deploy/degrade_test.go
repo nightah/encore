@@ -178,11 +178,17 @@ func TestDeployDoesNotThinAnUnexplainedFailure(t *testing.T) {
 
 // Amazon quotes the model it was given, whose values are cleaned for it, so a value it names is found by its cleaned text.
 func TestDeployLeavesOutANamedValueAsCleaned(t *testing.T) {
-	for name, tc := range map[string]struct{ stored, quoted string }{
-		"kodi tags": {stored: "[B]Frozen[/B]", quoted: "Frozen"},
-		"asterisks": {stored: "M*A*S*H", quoted: "MASH"},
-	} {
-		t.Run(name, func(t *testing.T) {
+	testCases := []struct {
+		name   string
+		stored string
+		quoted string
+	}{
+		{name: "ShouldMatchValueWithKodiTags", stored: "[B]Frozen[/B]", quoted: "Frozen"},
+		{name: "ShouldMatchValueWithAsterisks", stored: "M*A*S*H", quoted: "MASH"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			h := newHarness(t, smapitest.Options{})
 			h.fake.RejectSlotValue(tc.quoted)
 

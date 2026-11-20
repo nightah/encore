@@ -8,15 +8,26 @@ import (
 )
 
 func TestSkillResponseSkipsInvocationsWithoutAResponse(t *testing.T) {
-	for name, raw := range map[string]string{
-		"no response":   `{"invocationRequest": {"body": {"request": {"type": "IntentRequest"}}}}`,
-		"not an object": `"the endpoint timed out"`,
-	} {
-		_, ok := skillResponse(json.RawMessage(raw))
-		assert.False(t, ok, name)
+	testCases := []struct {
+		name     string
+		have     string
+		expected SkillResponse
+		ok       bool
+	}{
+		{name: "ShouldSkipInvocationWithoutResponse", have: `{"invocationRequest": {"body": {"request": {"type": "IntentRequest"}}}}`},
+		{name: "ShouldSkipInvocationThatIsNotAnObject", have: `"the endpoint timed out"`},
+		{name: "ShouldUseSSMLWhenTextIsMissing", have: `{"invocationResponse": {"body": {"response": {"outputSpeech": {"type": "SSML", "ssml": "<speak>Hi</speak>"}}}}}`, expected: SkillResponse{Speech: "<speak>Hi</speak>"}, ok: true},
 	}
 
-	r, ok := skillResponse(json.RawMessage(`{"invocationResponse": {"body": {"response": {"outputSpeech": {"type": "SSML", "ssml": "<speak>Hi</speak>"}}}}}`))
-	assert.True(t, ok)
-	assert.Equal(t, SkillResponse{Speech: "<speak>Hi</speak>"}, r, "SSML stands in for missing text")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual, ok := skillResponse(json.RawMessage(tc.have))
+
+			assert.Equal(t, tc.ok, ok)
+
+			if tc.ok {
+				assert.Equal(t, tc.expected, actual)
+			}
+		})
+	}
 }

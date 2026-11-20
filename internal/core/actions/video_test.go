@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"sync"
@@ -150,7 +151,7 @@ func TestNextInCollectionOrder(t *testing.T) {
 		return media.Item{Kind: media.KindMovie, ID: id, Title: fmt.Sprintf("Alien %d", id), Year: year, SetID: 7, SetTitle: "Alien Collection", PlayCount: plays, Resume: resume}
 	}
 
-	t.Run("a film in progress comes before an unwatched one", func(t *testing.T) {
+	t.Run("ShouldPutAFilmInProgressBeforeAnUnwatchedOne", func(t *testing.T) {
 		target, backend, _ := newTarget(alien(1, 1979, 1, 0), alien(2, 1986, 0, 0), alien(3, 1992, 1, 20*time.Minute))
 
 		o := newService().NextInCollection(t.Context(), target, "alien 1", nil)
@@ -159,7 +160,7 @@ func TestNextInCollectionOrder(t *testing.T) {
 		assert.Equal(t, "Play movie/3 resume", lastCall(backend.Calls()))
 	})
 
-	t.Run("release order, then ID", func(t *testing.T) {
+	t.Run("ShouldOrderByReleaseThenID", func(t *testing.T) {
 		target, _, _ := newTarget(alien(9, 1997, 0, 0), alien(1, 1979, 1, 0), alien(8, 1997, 0, 0))
 
 		o := newService().NextInCollection(t.Context(), target, "alien 1", nil)
@@ -167,7 +168,7 @@ func TestNextInCollectionOrder(t *testing.T) {
 		assert.Equal(t, "Alien 8", o.Say.Params["title"])
 	})
 
-	t.Run("all watched", func(t *testing.T) {
+	t.Run("ShouldSayTheCollectionIsWatched", func(t *testing.T) {
 		target, backend, _ := newTarget(alien(1, 1979, 1, 0), alien(2, 1986, 2, 0))
 
 		o := newService().NextInCollection(t.Context(), target, "alien 2", nil)
@@ -177,7 +178,7 @@ func TestNextInCollectionOrder(t *testing.T) {
 		assert.NotContains(t, strings.Join(backend.Calls(), "\n"), "Play", "nothing plays")
 	})
 
-	t.Run("unknown film", func(t *testing.T) {
+	t.Run("ShouldNotFindAnUnknownFilm", func(t *testing.T) {
 		target, _, _ := newTarget()
 
 		o := newService().NextInCollection(t.Context(), target, "alien", nil)
@@ -198,15 +199,23 @@ func TestShowsNotFound(t *testing.T) {
 	target, backend, _ := newTarget()
 	svc := seeded()
 
-	for name, o := range map[string]Outcome{
-		"first episode":  svc.FirstEpisode(t.Context(), target, "the bear", nil),
-		"latest episode": svc.LatestEpisode(t.Context(), target, "the bear", nil),
-		"random episode": svc.RandomEpisode(t.Context(), target, "the bear", nil),
-		"shuffle show":   svc.ShuffleShow(t.Context(), target, "the bear", nil),
-		"binge":          svc.Binge(t.Context(), target, "the bear", nil),
-	} {
-		assert.Equal(t, "match.not_found", o.Say.ID, name)
-		assert.Equal(t, "the bear", o.Say.Params["query"], name)
+	testCases := []struct {
+		name string
+		call func(ctx context.Context) Outcome
+	}{
+		{name: "ShouldNotFindTheFirstEpisode", call: func(ctx context.Context) Outcome { return svc.FirstEpisode(ctx, target, "the bear", nil) }},
+		{name: "ShouldNotFindTheLatestEpisode", call: func(ctx context.Context) Outcome { return svc.LatestEpisode(ctx, target, "the bear", nil) }},
+		{name: "ShouldNotFindARandomEpisode", call: func(ctx context.Context) Outcome { return svc.RandomEpisode(ctx, target, "the bear", nil) }},
+		{name: "ShouldNotFindAShowToShuffle", call: func(ctx context.Context) Outcome { return svc.ShuffleShow(ctx, target, "the bear", nil) }},
+		{name: "ShouldNotFindAShowToBinge", call: func(ctx context.Context) Outcome { return svc.Binge(ctx, target, "the bear", nil) }},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			o := tc.call(t.Context())
+			assert.Equal(t, "match.not_found", o.Say.ID)
+			assert.Equal(t, "the bear", o.Say.Params["query"])
+		})
 	}
 
 	assert.Empty(t, backend.Calls())
@@ -261,7 +270,7 @@ func TestFirstEpisodeIgnoresSpecials(t *testing.T) {
 }
 
 func TestContinueWatchingEdges(t *testing.T) {
-	t.Run("nothing watched yet", func(t *testing.T) {
+	t.Run("ShouldSayNothingToContinueWhenNothingIsWatchedYet", func(t *testing.T) {
 		target, backend, _ := newTarget(media.Item{Kind: media.KindTVShow, ID: 30, Title: "Andor"})
 
 		o := newService().ContinueWatching(t.Context(), target, nil)
@@ -270,7 +279,7 @@ func TestContinueWatchingEdges(t *testing.T) {
 		assert.Equal(t, []string{"Library tvshow"}, backend.Calls())
 	})
 
-	t.Run("everything finished", func(t *testing.T) {
+	t.Run("ShouldSayAllWatchedWhenEverythingIsFinished", func(t *testing.T) {
 		var items []media.Item
 
 		day := time.Date(2026, 10, 1, 20, 0, 0, 0, time.UTC)

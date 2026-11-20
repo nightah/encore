@@ -37,22 +37,25 @@ func withLiveTV(t *testing.T, disabled ...media.Content) (*Handler, *testkit.Bac
 }
 
 func TestLiveTVIntents(t *testing.T) {
-	for name, tc := range map[string]struct {
+	testCases := []struct {
+		name   string
 		intent string
 		slots  map[string]slotSpec
 		call   string
 		say    string
 	}{
-		"channel by name":         {intent: "WatchChannel", slots: map[string]slotSpec{"Channel": {value: "abc news"}}, call: "PlayChannel 24", say: "Switching to ABC NEWS."},
-		"channel by number":       {intent: "WatchChannelNumber", slots: map[string]slotSpec{"ChannelNumber": {value: "71"}}, call: "PlayChannel 71", say: "Switching to Seven."},
-		"channel and sub-channel": {intent: "WatchChannelNumber", slots: map[string]slotSpec{"ChannelNumber": {value: "32"}, "SubNumber": {value: "1"}}, call: "PlayChannel 32", say: "Switching to SBS World Movies."},
-		"the guide":               {intent: "OpenTVGuide", slots: map[string]slotSpec{"LiveView": {"tv guide", "guide"}}, call: "ShowView tvguide"},
-		"the guide by default":    {intent: "OpenTVGuide", call: "ShowView tvguide"},
-		"the channel list":        {intent: "OpenTVGuide", slots: map[string]slotSpec{"LiveView": {value: "channel list"}}, call: "ShowView tvchannels"},
-		"a programme on now":      {intent: "WatchLive", slots: map[string]slotSpec{"Programme": {value: "austin"}}, call: "PlayChannel 21", say: "Switching to ABC TV for Austin."},
-		"put on a channel":        {intent: "PlayMedia", slots: map[string]slotSpec{"Query": {value: "abc news"}}, call: "PlayChannel 24", say: "Switching to ABC NEWS."},
-	} {
-		t.Run(name, func(t *testing.T) {
+		{name: "ShouldSwitchToChannelByName", intent: "WatchChannel", slots: map[string]slotSpec{"Channel": {value: "abc news"}}, call: "PlayChannel 24", say: "Switching to ABC NEWS."},
+		{name: "ShouldSwitchToChannelByNumber", intent: "WatchChannelNumber", slots: map[string]slotSpec{"ChannelNumber": {value: "71"}}, call: "PlayChannel 71", say: "Switching to Seven."},
+		{name: "ShouldSwitchToChannelAndSubChannel", intent: "WatchChannelNumber", slots: map[string]slotSpec{"ChannelNumber": {value: "32"}, "SubNumber": {value: "1"}}, call: "PlayChannel 32", say: "Switching to SBS World Movies."},
+		{name: "ShouldOpenTheGuide", intent: "OpenTVGuide", slots: map[string]slotSpec{"LiveView": {"tv guide", "guide"}}, call: "ShowView tvguide"},
+		{name: "ShouldOpenTheGuideByDefault", intent: "OpenTVGuide", call: "ShowView tvguide"},
+		{name: "ShouldOpenTheChannelList", intent: "OpenTVGuide", slots: map[string]slotSpec{"LiveView": {value: "channel list"}}, call: "ShowView tvchannels"},
+		{name: "ShouldSwitchToAProgrammeOnNow", intent: "WatchLive", slots: map[string]slotSpec{"Programme": {value: "austin"}}, call: "PlayChannel 21", say: "Switching to ABC TV for Austin."},
+		{name: "ShouldPutOnAChannel", intent: "PlayMedia", slots: map[string]slotSpec{"Query": {value: "abc news"}}, call: "PlayChannel 24", say: "Switching to ABC NEWS."},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			h, backend := withLiveTV(t)
 
 			res := string(serveBody(t, h, intentRequest(t, tc.intent, tc.slots)))

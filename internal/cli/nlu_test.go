@@ -87,28 +87,31 @@ func TestGenNLURefuses(t *testing.T) {
 	_, flags := liveFake(t)
 	dir := fixtureDir(t, map[string]string{"en-GB.yaml": enGBFixture})
 
-	_, _, err := runCLI(t, append([]string{"gen", "nlu", "--fixtures", dir}, flags...)...)
-	require.ErrorContains(t, err, "name the skill with --skill or SMAPI_SKILL_ID")
+	testCases := []struct {
+		name           string
+		have           []string
+		noRefreshToken bool
+		err            string
+	}{
+		{name: "ShouldRefuseWithoutASkill", have: append([]string{"gen", "nlu", "--fixtures", dir}, flags...), err: "name the skill with --skill or SMAPI_SKILL_ID"},
+		{name: "ShouldRefuseALocaleWithoutAFixture", have: append([]string{"gen", "nlu", "--fixtures", dir, "--skill", "s", "--locale", "fr-FR"}, flags...), err: "no NLU fixture for fr-FR"},
+		{name: "ShouldRefuseAnIntentTheModelLacks", have: []string{"gen", "nlu", "--fixtures", fixtureDir(t, map[string]string{"en-GB.yaml": "locale: en-GB\ncases:\n  - {utterance: louder, intent: Louder}\n"})}, err: `no intent "Louder" in the model`},
+		{name: "ShouldRefuseAFixtureNamedForAnotherLocale", have: []string{"gen", "nlu", "--fixtures", fixtureDir(t, map[string]string{"en-GB.yaml": "locale: en-AU\n"})}, err: "named for"},
+		{name: "ShouldRefuseADirectoryWithoutFixtures", have: []string{"gen", "nlu", "--fixtures", t.TempDir()}, err: "no NLU fixtures in"},
+		{name: "ShouldRefuseNLUWithoutCredentials", have: []string{"gen", "nlu", "--fixtures", dir, "--skill", "s"}, noRefreshToken: true, err: "set SMAPI_CLIENT_ID, SMAPI_CLIENT_SECRET and SMAPI_REFRESH_TOKEN"},
+		{name: "ShouldRefuseOpenWithoutCredentials", have: []string{"gen", "open", "--skill", "s"}, noRefreshToken: true, err: "set SMAPI_CLIENT_ID"},
+	}
 
-	_, _, err = runCLI(t, append([]string{"gen", "nlu", "--fixtures", dir, "--skill", "s", "--locale", "fr-FR"}, flags...)...)
-	require.ErrorContains(t, err, "no NLU fixture for fr-FR")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.noRefreshToken {
+				t.Setenv(envRefreshToken, "")
+			}
 
-	_, _, err = runCLI(t, "gen", "nlu", "--fixtures", fixtureDir(t, map[string]string{"en-GB.yaml": "locale: en-GB\ncases:\n  - {utterance: louder, intent: Louder}\n"}))
-	require.ErrorContains(t, err, `no intent "Louder" in the model`)
-
-	_, _, err = runCLI(t, "gen", "nlu", "--fixtures", fixtureDir(t, map[string]string{"en-GB.yaml": "locale: en-AU\n"}))
-	require.ErrorContains(t, err, "named for")
-
-	_, _, err = runCLI(t, "gen", "nlu", "--fixtures", t.TempDir())
-	require.ErrorContains(t, err, "no NLU fixtures in")
-
-	t.Setenv(envRefreshToken, "")
-
-	_, _, err = runCLI(t, "gen", "nlu", "--fixtures", dir, "--skill", "s")
-	require.ErrorContains(t, err, "set SMAPI_CLIENT_ID, SMAPI_CLIENT_SECRET and SMAPI_REFRESH_TOKEN")
-
-	_, _, err = runCLI(t, "gen", "open", "--skill", "s")
-	require.ErrorContains(t, err, "set SMAPI_CLIENT_ID")
+			_, _, err := runCLI(t, tc.have...)
+			require.ErrorContains(t, err, tc.err)
+		})
+	}
 }
 
 func TestGenOpen(t *testing.T) {
@@ -152,15 +155,20 @@ func TestGenOpenLeavesAnEnabledSkillEnabled(t *testing.T) {
 }
 
 func TestGenOpenEnablementFailures(t *testing.T) {
-	for name, call := range map[string]string{
-		"status":  "GET /v1/skills/{skillId}/stages/{stage}/enablement",
-		"enable":  "PUT /v1/skills/{skillId}/stages/{stage}/enablement",
-		"disable": "DELETE /v1/skills/{skillId}/stages/{stage}/enablement",
-	} {
-		t.Run(name, func(t *testing.T) {
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldFailWhenTheStatusIsForbidden", have: "GET /v1/skills/{skillId}/stages/{stage}/enablement"},
+		{name: "ShouldFailWhenEnablingIsForbidden", have: "PUT /v1/skills/{skillId}/stages/{stage}/enablement"},
+		{name: "ShouldFailWhenDisablingIsForbidden", have: "DELETE /v1/skills/{skillId}/stages/{stage}/enablement"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			fake, flags := liveFake(t)
 			skill := fake.AddSkill(smapitest.DefaultVendorID, nil)
-			fake.InjectRoute(call, http.StatusForbidden)
+			fake.InjectRoute(tc.have, http.StatusForbidden)
 
 			out, _, err := runCLI(t, append([]string{"gen", "open", "--skill", skill, "--locale", "en-GB"}, flags...)...)
 			require.ErrorContains(t, err, "403")
@@ -253,12 +261,29 @@ func TestGenNLUFailsWhenStoppedOrUnwritable(t *testing.T) {
 	skill := fake.AddSkill(smapitest.DefaultVendorID, nil)
 	args := append([]string{"gen", "nlu", "--fixtures", fixtureDir(t, map[string]string{"en-GB.yaml": enGBFixture}), "--skill", skill}, flags...)
 
-	ctx, cancel := context.WithCancel(t.Context())
-	cancel()
+	testCases := []struct {
+		name     string
+		canceled bool
+		out      io.Writer
+		err      error
+	}{
+		{name: "ShouldFailWhenStopped", canceled: true, out: io.Discard, err: context.Canceled},
+		{name: "ShouldFailWhenTheReportCantBeWritten", out: &failAfter{}, err: assert.AnError},
+		{name: "ShouldFailWhenTheRetriesCantBeWritten", out: failOn("smapi retried"), err: assert.AnError},
+	}
 
-	require.ErrorIs(t, runCLIWith(ctx, t, io.Discard, args...), context.Canceled)
-	require.ErrorIs(t, runCLIWith(t.Context(), t, &failAfter{}, args...), assert.AnError)
-	require.ErrorIs(t, runCLIWith(t.Context(), t, failOn("smapi retried"), args...), assert.AnError, "nor the retries")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(t.Context())
+			defer cancel()
+
+			if tc.canceled {
+				cancel()
+			}
+
+			require.ErrorIs(t, runCLIWith(ctx, t, tc.out, args...), tc.err)
+		})
+	}
 }
 
 // failOn fails the write that starts with prefix.
@@ -338,25 +363,33 @@ func TestGenDeployRefuses(t *testing.T) {
 	mixed := fake.AddSkill(smapitest.DefaultVendorID, map[string]string{"en-GB": ciSkillName, "en-US": "Encore"})
 	unnamed := fake.AddSkill(smapitest.DefaultVendorID, nil)
 
-	deployTo := func(skill string, extra ...string) error {
-		_, _, err := runCLI(t, append(append([]string{"gen", "deploy", "--skill", skill, "--invocation", "encore"}, flags...), extra...)...)
-
-		return err
-	}
-
-	require.ErrorContains(t, deployTo(own), "is named “Encore” in en-US, not “Encore NLU CI”")
-	require.ErrorContains(t, deployTo(mixed), "is named “Encore” in en-US")
-	require.ErrorContains(t, deployTo(unnamed), "has no name")
-	require.ErrorContains(t, deployTo("amzn1.ask.skill.missing"), "has no skill amzn1.ask.skill.missing")
-	require.ErrorContains(t, deployTo(own, "--vendor", "OTHER"), "vendor OTHER has no skill")
-	require.ErrorContains(t, deployTo(own, "--locale", "xx-XX"), "unknown locale xx-XX")
-	require.ErrorContains(t, deployTo(own, "--invocation", "alexa"), `--invocation is encore or kodi, not "alexa"`)
-	require.ErrorContains(t, deployTo(""), "name the skill with --skill")
-	require.ErrorContains(t, deployTo(own, "--fixtures", fixtureDir(t, map[string]string{"en-GB.yaml": "locale: en-AU\n"})), "named for")
-
 	unreadable := fixtureDir(t, map[string]string{"en-GB.yaml": enGBFixture})
 	require.NoError(t, os.MkdirAll(filepath.Join(unreadable, "channels", "en.txt"), 0o750))
-	require.ErrorContains(t, deployTo(own, "--fixtures", unreadable), "en.txt", "a channel list that can't be read")
+
+	testCases := []struct {
+		name  string
+		skill string
+		extra []string
+		err   string
+	}{
+		{name: "ShouldRefuseASkillNamedOtherwise", skill: own, err: "is named “Encore” in en-US, not “Encore NLU CI”"},
+		{name: "ShouldRefuseASkillNamedOtherwiseInOneLocale", skill: mixed, err: "is named “Encore” in en-US"},
+		{name: "ShouldRefuseAnUnnamedSkill", skill: unnamed, err: "has no name"},
+		{name: "ShouldRefuseAMissingSkill", skill: "amzn1.ask.skill.missing", err: "has no skill amzn1.ask.skill.missing"},
+		{name: "ShouldRefuseAVendorWithoutTheSkill", skill: own, extra: []string{"--vendor", "OTHER"}, err: "vendor OTHER has no skill"},
+		{name: "ShouldRefuseAnUnknownLocale", skill: own, extra: []string{"--locale", "xx-XX"}, err: "unknown locale xx-XX"},
+		{name: "ShouldRefuseAnUnknownInvocation", skill: own, extra: []string{"--invocation", "alexa"}, err: `--invocation is encore or kodi, not "alexa"`},
+		{name: "ShouldRefuseNoSkill", err: "name the skill with --skill"},
+		{name: "ShouldRefuseAFixtureNamedForAnotherLocale", skill: own, extra: []string{"--fixtures", fixtureDir(t, map[string]string{"en-GB.yaml": "locale: en-AU\n"})}, err: "named for"},
+		{name: "ShouldRefuseAChannelListThatCantBeRead", skill: own, extra: []string{"--fixtures", unreadable}, err: "en.txt"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, _, err := runCLI(t, append(append([]string{"gen", "deploy", "--skill", tc.skill, "--invocation", "encore"}, flags...), tc.extra...)...)
+			require.ErrorContains(t, err, tc.err)
+		})
+	}
 
 	_, _, err := runCLI(t, append([]string{"gen", "deploy", "--skill", own}, flags...)...)
 	require.ErrorContains(t, err, `required flag(s) "invocation" not set`)
@@ -367,18 +400,30 @@ func TestGenDeployRefuses(t *testing.T) {
 }
 
 func TestGenDeployNeedsOneVendor(t *testing.T) {
-	for _, vendors := range [][]smapitest.Vendor{{}, {{ID: "A"}, {ID: "B"}}} {
-		fake := smapitest.New(t, smapitest.Options{Vendors: vendors})
-		o := fake.Options()
-
-		t.Setenv(envClientID, o.ClientID)
-		t.Setenv(envClientSecret, o.ClientSecret)
-		t.Setenv(envRefreshToken, o.RefreshToken)
-		t.Setenv(envVendorID, "")
-
-		_, _, err := runCLI(t, "gen", "deploy", "--skill", "s", "--invocation", "encore", "--smapi-url", fake.URL, "--token-url", fake.Endpoint().TokenURL)
-		require.ErrorContains(t, err, fmt.Sprintf("the account has %d developer accounts", len(vendors)))
+	testCases := []struct {
+		name string
+		have []smapitest.Vendor
+	}{
+		{name: "ShouldRefuseNoVendor", have: []smapitest.Vendor{}},
+		{name: "ShouldRefuseTwoVendors", have: []smapitest.Vendor{{ID: "A"}, {ID: "B"}}},
 	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			fake := smapitest.New(t, smapitest.Options{Vendors: tc.have})
+			o := fake.Options()
+
+			t.Setenv(envClientID, o.ClientID)
+			t.Setenv(envClientSecret, o.ClientSecret)
+			t.Setenv(envRefreshToken, o.RefreshToken)
+			t.Setenv(envVendorID, "")
+
+			_, _, err := runCLI(t, "gen", "deploy", "--skill", "s", "--invocation", "encore", "--smapi-url", fake.URL, "--token-url", fake.Endpoint().TokenURL)
+			require.ErrorContains(t, err, fmt.Sprintf("the account has %d developer accounts", len(tc.have)))
+		})
+	}
+
+	t.Setenv(envVendorID, "")
 
 	fake, flags := liveFake(t)
 	fake.Inject(http.StatusForbidden, 1)
@@ -534,13 +579,22 @@ func TestRereaderReadsQueriesAsTheHandlerDoes(t *testing.T) {
 	require.NoError(t, err)
 
 	reread := rereader(speech)
-	read := func(locale, query string) []nlu.Reading {
-		return reread(locale, nlu.Reading{Intent: "PlayMedia", Slots: map[string]string{"Query": query}})
+
+	testCases := []struct {
+		name     string
+		have     string
+		expected nlu.Reading
+	}{
+		{name: "ShouldReadASong", have: "the song bohemian rhapsody", expected: nlu.Reading{Intent: "ListenToSong", Slots: map[string]string{"Song": "bohemian rhapsody"}}},
+		{name: "ShouldTakeOffAndKeepARoomPhrase", have: "the movie dune in the living room", expected: nlu.Reading{Intent: "WatchMovie", Slots: map[string]string{"Movie": "dune", "Room": "living room"}}},
+		{name: "ShouldKeepTheQueryAsItStands", have: "dune", expected: nlu.Reading{Intent: "PlayMedia", Slots: map[string]string{"Query": "dune"}}},
 	}
 
-	assert.Contains(t, read("en-GB", "the song bohemian rhapsody"), nlu.Reading{Intent: "ListenToSong", Slots: map[string]string{"Song": "bohemian rhapsody"}})
-	assert.Contains(t, read("en-GB", "the movie dune in the living room"), nlu.Reading{Intent: "WatchMovie", Slots: map[string]string{"Movie": "dune", "Room": "living room"}}, "a room phrase is taken off and kept")
-	assert.Contains(t, read("en-GB", "dune"), nlu.Reading{Intent: "PlayMedia", Slots: map[string]string{"Query": "dune"}}, "and the query as it stands")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Contains(t, reread("en-GB", nlu.Reading{Intent: "PlayMedia", Slots: map[string]string{"Query": tc.have}}), tc.expected)
+		})
+	}
 }
 
 func TestRereaderTakesALeadInOffATitle(t *testing.T) {
@@ -558,9 +612,21 @@ func TestRereaderRewritesAsTheHandlerDoes(t *testing.T) {
 
 	read := rereader(speech)
 
-	assert.Equal(t, []nlu.Reading{{Intent: "ContinueWatching", Slots: map[string]string{"Room": "bedroom"}}}, read("en-AU", nlu.Reading{Intent: "WatchNextEpisode", Slots: map[string]string{"Show": "the last show", "Room": "bedroom"}}), "the last show continues watching")
-	assert.Equal(t, []nlu.Reading{{Intent: "ListenToArtist", Slots: map[string]string{"Artist": "queen"}}}, read("en-AU", nlu.Reading{Intent: "ListenToSongOrAlbum", Slots: map[string]string{"Title": "music", "Artist": "queen"}}), "music by an artist is the artist's")
-	assert.Equal(t, []nlu.Reading{{Intent: "WatchMovie", Slots: map[string]string{"Movie": "dune"}}}, read("en-AU", nlu.Reading{Intent: "WatchMovie", Slots: map[string]string{"Movie": "dune"}}), "anything else stands")
+	testCases := []struct {
+		name     string
+		have     nlu.Reading
+		expected []nlu.Reading
+	}{
+		{name: "ShouldContinueWatchingForTheLastShow", have: nlu.Reading{Intent: "WatchNextEpisode", Slots: map[string]string{"Show": "the last show", "Room": "bedroom"}}, expected: []nlu.Reading{{Intent: "ContinueWatching", Slots: map[string]string{"Room": "bedroom"}}}},
+		{name: "ShouldReadMusicByAnArtistAsTheArtists", have: nlu.Reading{Intent: "ListenToSongOrAlbum", Slots: map[string]string{"Title": "music", "Artist": "queen"}}, expected: []nlu.Reading{{Intent: "ListenToArtist", Slots: map[string]string{"Artist": "queen"}}}},
+		{name: "ShouldLeaveAnythingElseStanding", have: nlu.Reading{Intent: "WatchMovie", Slots: map[string]string{"Movie": "dune"}}, expected: []nlu.Reading{{Intent: "WatchMovie", Slots: map[string]string{"Movie": "dune"}}}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, read("en-AU", tc.have))
+		})
+	}
 }
 
 func countFold(names []string, want string) int {

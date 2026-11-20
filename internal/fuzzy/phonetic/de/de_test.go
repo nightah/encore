@@ -10,56 +10,67 @@ import (
 	"github.com/nightah/encore/internal/fuzzy/phonetic"
 )
 
-// cologneVectors were captured from github.com/f1monkey/phonetic v1.4.2. The first three are the published examples for Kölner Phonetik (Müller-Lüdenscheidt, Wikipedia, Breschnew); the rest pin the reference's edge cases.
-var cologneVectors = []struct{ word, code string }{
-	{"müller-lüdenscheidt", "65752682"},
-	{"wikipedia", "3412"},
-	{"breschnew", "17863"},
-	{"heinz", "068"},
-	{"kühn", "46"},
-	{"dreissig", "2784"},
-	{"ßtraße", "8278"},
-	{"c", "4"},
-	{"cäsar", "487"},
-	{"xaver", "4837"},
-	{"acht", "042"},
-	{"chor", "47"},
-	{"christ", "4782"},
-	{"sachs", "848"},
-	{"philipp", "3513"},
-	{"hannover", "0637"},
-	{"p", "3"},
-	{"app", "013"},
-	{"tatort", "2272"},
-	{"rammstein", "76826"},
-	{"grönemeyer", "47667"},
-	{"zweiohrküken", "837446"},
-	{"é", ""},
-	{"1a2b", "01"},
-	{"", ""},
-	{"aachen", "046"},
-	{"matsch", "68"},
-	{"schwarz", "8378"},
-	{"rechtsanwalt", "7486352"},
-}
-
+// TestCologneVectors pins vectors captured from github.com/f1monkey/phonetic v1.4.2. The first three are the published examples for Kölner Phonetik (Müller-Lüdenscheidt, Wikipedia, Breschnew); the rest pin the reference's edge cases.
 func TestCologneVectors(t *testing.T) {
-	for _, v := range cologneVectors {
-		assert.Equal(t, v.code, string(cologne(nil, v.word)), v.word)
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldEncodeMuellerLuedenscheidt", have: "müller-lüdenscheidt", expected: "65752682"},
+		{name: "ShouldEncodeWikipedia", have: "wikipedia", expected: "3412"},
+		{name: "ShouldEncodeBreschnew", have: "breschnew", expected: "17863"},
+		{name: "ShouldEncodeHeinz", have: "heinz", expected: "068"},
+		{name: "ShouldEncodeKuehn", have: "kühn", expected: "46"},
+		{name: "ShouldEncodeDreissig", have: "dreissig", expected: "2784"},
+		{name: "ShouldEncodeEszett", have: "ßtraße", expected: "8278"},
+		{name: "ShouldEncodeLoneC", have: "c", expected: "4"},
+		{name: "ShouldEncodeCaesarWithUmlaut", have: "cäsar", expected: "487"},
+		{name: "ShouldEncodeXaver", have: "xaver", expected: "4837"},
+		{name: "ShouldEncodeAcht", have: "acht", expected: "042"},
+		{name: "ShouldEncodeChor", have: "chor", expected: "47"},
+		{name: "ShouldEncodeChrist", have: "christ", expected: "4782"},
+		{name: "ShouldEncodeSachs", have: "sachs", expected: "848"},
+		{name: "ShouldEncodePhilipp", have: "philipp", expected: "3513"},
+		{name: "ShouldEncodeHannover", have: "hannover", expected: "0637"},
+		{name: "ShouldEncodeLoneP", have: "p", expected: "3"},
+		{name: "ShouldEncodeApp", have: "app", expected: "013"},
+		{name: "ShouldEncodeTatort", have: "tatort", expected: "2272"},
+		{name: "ShouldEncodeRammstein", have: "rammstein", expected: "76826"},
+		{name: "ShouldEncodeGroenemeyer", have: "grönemeyer", expected: "47667"},
+		{name: "ShouldEncodeZweiohrkueken", have: "zweiohrküken", expected: "837446"},
+		{name: "ShouldEncodeNothingForAccentedVowel", have: "é"},
+		{name: "ShouldEncodeSkippingDigits", have: "1a2b", expected: "01"},
+		{name: "ShouldEncodeEmpty"},
+		{name: "ShouldEncodeAachen", have: "aachen", expected: "046"},
+		{name: "ShouldEncodeMatsch", have: "matsch", expected: "68"},
+		{name: "ShouldEncodeSchwarz", have: "schwarz", expected: "8378"},
+		{name: "ShouldEncodeRechtsanwalt", have: "rechtsanwalt", expected: "7486352"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, string(cologne(nil, tc.have)))
+		})
 	}
 }
 
 func TestKeys(t *testing.T) {
-	for _, tc := range []struct {
-		word string
-		want []string
+	testCases := []struct {
+		name     string
+		have     string
+		expected []string
 	}{
-		{"tatort", []string{"2272"}},
-		{"2049", []string{"2049"}},
-		{"é", []string{"é"}},
-		{"", []string{""}},
-	} {
-		assert.Equal(t, tc.want, Encoder{}.Keys(nil, tc.word), tc.word)
+		{name: "ShouldKeyTatort", have: "tatort", expected: []string{"2272"}},
+		{name: "ShouldPassDigitsThrough", have: "2049", expected: []string{"2049"}},
+		{name: "ShouldFallBackToWordForAccentedLetter", have: "é", expected: []string{"é"}},
+		{name: "ShouldFallBackToEmptyWord", expected: []string{""}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, Encoder{}.Keys(nil, tc.have))
+		})
 	}
 
 	assert.Equal(t, []string{"x", "2272"}, Encoder{}.Keys([]string{"x"}, "tatort"), "Keys appends to dst")
@@ -101,9 +112,20 @@ func TestPropKeysContract(t *testing.T) {
 func TestKeysAllocations(t *testing.T) {
 	dst := make([]string, 0, 3)
 
-	for word, want := range map[string]float64{"tatort": 1, "2049": 0} {
-		got := testing.AllocsPerRun(100, func() { dst = Encoder{}.Keys(dst[:0], word) })
-		assert.InDelta(t, want, got, 0, "%s: only the returned key allocates", word)
+	testCases := []struct {
+		name     string
+		have     string
+		expected float64
+	}{
+		{name: "ShouldAllocateOnceForTatort", have: "tatort", expected: 1},
+		{name: "ShouldNotAllocateForDigits", have: "2049"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := testing.AllocsPerRun(100, func() { dst = Encoder{}.Keys(dst[:0], tc.have) })
+			assert.InDelta(t, tc.expected, got, 0, "only the returned key allocates")
+		})
 	}
 }
 

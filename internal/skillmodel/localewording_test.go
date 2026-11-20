@@ -32,12 +32,21 @@ func TestDutchPowerTermsFollowKodi(t *testing.T) {
 	r, err := src.Responses("nl-NL")
 	require.NoError(t, err)
 
-	for _, id := range []string{"power.confirm_hibernate", "power.hibernate"} {
-		assert.Contains(t, r[id], "sluimerstand", id)
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldConfirmHibernateWithSluimerstand", have: "power.confirm_hibernate", expected: "sluimerstand"},
+		{name: "ShouldHibernateWithSluimerstand", have: "power.hibernate", expected: "sluimerstand"},
+		{name: "ShouldConfirmSuspendWithSlaapstand", have: "power.confirm_suspend", expected: "slaapstand"},
+		{name: "ShouldSuspendWithSlaapstand", have: "power.suspend", expected: "slaapstand"},
 	}
 
-	for _, id := range []string{"power.confirm_suspend", "power.suspend"} {
-		assert.Contains(t, r[id], "slaapstand", id)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Contains(t, r[tc.have], tc.expected)
+		})
 	}
 }
 
@@ -65,17 +74,24 @@ func TestLatinAmericanSpanishUsesPreterite(t *testing.T) {
 	src, err := Load(i18n.FS)
 	require.NoError(t, err)
 
-	want := map[string]string{
-		"movie.collection_watched": "Ya viste todas las películas de {collection}.",
-		"playback.all_watched":     "Ya viste todos los episodios de {show}.",
+	testCases := []struct {
+		name     string
+		locale   string
+		have     string
+		expected string
+	}{
+		{name: "ShouldSayCollectionWatchedInEsMX", locale: "es-MX", have: "movie.collection_watched", expected: "Ya viste todas las películas de {collection}."},
+		{name: "ShouldSayAllWatchedInEsMX", locale: "es-MX", have: "playback.all_watched", expected: "Ya viste todos los episodios de {show}."},
+		{name: "ShouldSayCollectionWatchedInEsUS", locale: "es-US", have: "movie.collection_watched", expected: "Ya viste todas las películas de {collection}."},
+		{name: "ShouldSayAllWatchedInEsUS", locale: "es-US", have: "playback.all_watched", expected: "Ya viste todos los episodios de {show}."},
 	}
 
-	for _, locale := range []string{"es-MX", "es-US"} {
-		r, err := src.Responses(locale)
-		require.NoError(t, err)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			r, err := src.Responses(tc.locale)
+			require.NoError(t, err)
 
-		for id, text := range want {
-			assert.Equal(t, text, r[id], "%s %s", locale, id)
-		}
+			assert.Equal(t, tc.expected, r[tc.have])
+		})
 	}
 }

@@ -30,28 +30,29 @@ func files(overrides map[string]string, remove ...string) map[string]string {
 }
 
 func TestLoadErrors(t *testing.T) {
-	tests := map[string]struct {
+	testCases := []struct {
+		name  string
 		files map[string]string
-		want  string
+		err   string
 	}{
-		"no model":               {files: files(nil, "model.yaml"), want: "reading model.yaml"},
-		"malformed model":        {files: files(map[string]string{"model.yaml": "intents: [\n"}), want: "decoding model.yaml"},
-		"no utterances":          {files: files(nil, "lang/en/utterances.yaml"), want: "reading lang/en/utterances.yaml"},
-		"malformed utterances":   {files: files(map[string]string{"lang/en/utterances.yaml": "WatchMovie: {\n"}), want: "decoding lang/en/utterances.yaml"},
-		"utterances not a map":   {files: files(map[string]string{"lang/en/utterances.yaml": "- play\n"}), want: "expected a mapping of names to keyed entries"},
-		"utterance not text":     {files: files(map[string]string{"lang/en/utterances.yaml": "WatchMovie:\n  play:\n    - one\n"}), want: "WatchMovie.play must be text"},
-		"no responses":           {files: files(nil, "lang/en/responses.yaml"), want: "reading lang/en/responses.yaml"},
-		"malformed types":        {files: files(map[string]string{"lang/en/types.yaml": "KODI_ROOM:\n  - lounge\n"}), want: "lang/en/types.yaml"},
-		"malformed examples":     {files: files(map[string]string{"lang/en/examples.yaml": "KODI_ROOM: lounge\n"}), want: "decoding lang/en/examples.yaml"},
-		"unknown example fields": {files: files(map[string]string{"lang/en/examples.yaml": "KODI_ROOM:\n  - {label: lounge}\n"}), want: "label"},
-		"no locales":             {files: files(nil, "locales/en-AU.yaml", "locales/en-US.yaml"), want: "no locales found"},
-		"malformed locale":       {files: files(map[string]string{"locales/en-US.yaml": "language: [en\n"}), want: "decoding locales/en-US.yaml"},
+		{name: "ShouldRejectNoModel", files: files(nil, "model.yaml"), err: "reading model.yaml"},
+		{name: "ShouldRejectMalformedModel", files: files(map[string]string{"model.yaml": "intents: [\n"}), err: "decoding model.yaml"},
+		{name: "ShouldRejectNoUtterances", files: files(nil, "lang/en/utterances.yaml"), err: "reading lang/en/utterances.yaml"},
+		{name: "ShouldRejectMalformedUtterances", files: files(map[string]string{"lang/en/utterances.yaml": "WatchMovie: {\n"}), err: "decoding lang/en/utterances.yaml"},
+		{name: "ShouldRejectUtterancesNotAMap", files: files(map[string]string{"lang/en/utterances.yaml": "- play\n"}), err: "expected a mapping of names to keyed entries"},
+		{name: "ShouldRejectUtteranceNotText", files: files(map[string]string{"lang/en/utterances.yaml": "WatchMovie:\n  play:\n    - one\n"}), err: "WatchMovie.play must be text"},
+		{name: "ShouldRejectNoResponses", files: files(nil, "lang/en/responses.yaml"), err: "reading lang/en/responses.yaml"},
+		{name: "ShouldRejectMalformedTypes", files: files(map[string]string{"lang/en/types.yaml": "KODI_ROOM:\n  - lounge\n"}), err: "lang/en/types.yaml"},
+		{name: "ShouldRejectMalformedExamples", files: files(map[string]string{"lang/en/examples.yaml": "KODI_ROOM: lounge\n"}), err: "decoding lang/en/examples.yaml"},
+		{name: "ShouldRejectUnknownExampleFields", files: files(map[string]string{"lang/en/examples.yaml": "KODI_ROOM:\n  - {label: lounge}\n"}), err: "label"},
+		{name: "ShouldRejectNoLocales", files: files(nil, "locales/en-AU.yaml", "locales/en-US.yaml"), err: "no locales found"},
+		{name: "ShouldRejectMalformedLocale", files: files(map[string]string{"locales/en-US.yaml": "language: [en\n"}), err: "decoding locales/en-US.yaml"},
 	}
 
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			src, err := Load(testFS(tt.files))
-			require.ErrorContains(t, err, tt.want)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			src, err := Load(testFS(tc.files))
+			require.ErrorContains(t, err, tc.err)
 			assert.Nil(t, src)
 		})
 	}
@@ -133,33 +134,26 @@ func TestTypesLocaleSynonymsByValueWithoutID(t *testing.T) {
 }
 
 func TestTypesLocaleSynonymsErrors(t *testing.T) {
-	tests := map[string]struct {
-		model, types, want string
+	testCases := []struct {
+		name  string
+		model string
+		types string
+		err   string
 	}{
-		"undeclared type": {
-			types: "  KODI_ZONE:\n    upstairs: [up]\n",
-			want:  "locale en-AU: synonyms given for slot type KODI_ZONE, which model.yaml doesn't declare",
-		},
-		"dynamic type": {
-			model: strings.Replace(baseFiles["model.yaml"], "  - name: KODI_ROOM\n", "  - name: KODI_ROOM\n    dynamic: true\n", 1),
-			types: "  KODI_ROOM:\n    lounge: [front room]\n",
-			want:  "locale en-AU: synonyms given for dynamic slot type KODI_ROOM, whose values come from Encore at build time",
-		},
-		"unknown value": {
-			types: "  KODI_ROOM:\n    attic: [loft]\n",
-			want:  "locale en-AU: synonyms given for value attic of slot type KODI_ROOM, which has no value with that ID",
-		},
+		{name: "ShouldRejectSynonymsForUndeclaredType", types: "  KODI_ZONE:\n    upstairs: [up]\n", err: "locale en-AU: synonyms given for slot type KODI_ZONE, which model.yaml doesn't declare"},
+		{name: "ShouldRejectSynonymsForDynamicType", model: strings.Replace(baseFiles["model.yaml"], "  - name: KODI_ROOM\n", "  - name: KODI_ROOM\n    dynamic: true\n", 1), types: "  KODI_ROOM:\n    lounge: [front room]\n", err: "locale en-AU: synonyms given for dynamic slot type KODI_ROOM, whose values come from Encore at build time"},
+		{name: "ShouldRejectSynonymsForUnknownValue", types: "  KODI_ROOM:\n    attic: [loft]\n", err: "locale en-AU: synonyms given for value attic of slot type KODI_ROOM, which has no value with that ID"},
 	}
 
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			overrides := map[string]string{"locales/en-AU.yaml": baseFiles["locales/en-AU.yaml"] + "types:\n" + tt.types}
-			if tt.model != "" {
-				overrides["model.yaml"] = tt.model
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			overrides := map[string]string{"locales/en-AU.yaml": baseFiles["locales/en-AU.yaml"] + "types:\n" + tc.types}
+			if tc.model != "" {
+				overrides["model.yaml"] = tc.model
 			}
 
 			_, err := load(t, overrides).Types("en-AU")
-			require.EqualError(t, err, tt.want)
+			require.EqualError(t, err, tc.err)
 		})
 	}
 }
@@ -202,14 +196,19 @@ func TestResponses(t *testing.T) {
 func TestResolveErrors(t *testing.T) {
 	src := load(t, map[string]string{"locales/en-GB.yaml": "language: xx\nskill_name: Encore\ninvocation: encore test\n"})
 
-	for name, call := range map[string]func(string) error{
-		"utterances": func(l string) error { _, err := src.Utterances(l); return err },
-		"types":      func(l string) error { _, err := src.Types(l); return err },
-		"responses":  func(l string) error { _, err := src.Responses(l); return err },
-	} {
-		t.Run(name, func(t *testing.T) {
-			require.EqualError(t, call("fr-FR"), `unknown locale "fr-FR"`)
-			require.EqualError(t, call("en-GB"), `locale en-GB: unknown language "xx"`)
+	testCases := []struct {
+		name string
+		call func(string) error
+	}{
+		{name: "ShouldRejectUtterancesForUnknownLocaleOrLanguage", call: func(l string) error { _, err := src.Utterances(l); return err }},
+		{name: "ShouldRejectTypesForUnknownLocaleOrLanguage", call: func(l string) error { _, err := src.Types(l); return err }},
+		{name: "ShouldRejectResponsesForUnknownLocaleOrLanguage", call: func(l string) error { _, err := src.Responses(l); return err }},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			require.EqualError(t, tc.call("fr-FR"), `unknown locale "fr-FR"`)
+			require.EqualError(t, tc.call("en-GB"), `locale en-GB: unknown language "xx"`)
 		})
 	}
 
@@ -236,11 +235,23 @@ func TestModelLookups(t *testing.T) {
 }
 
 func TestIsBuiltin(t *testing.T) {
-	assert.True(t, IsBuiltin("AMAZON.StopIntent"))
-	assert.True(t, IsBuiltin("AMAZON.Movie"))
-	assert.False(t, IsBuiltin("KODI_ROOM"))
-	assert.False(t, IsBuiltin("amazon.Movie"))
-	assert.False(t, IsBuiltin("AMAZON"))
+	testCases := []struct {
+		name     string
+		have     string
+		expected bool
+	}{
+		{name: "ShouldTreatAmazonIntentAsBuiltin", have: "AMAZON.StopIntent", expected: true},
+		{name: "ShouldTreatAmazonTypeAsBuiltin", have: "AMAZON.Movie", expected: true},
+		{name: "ShouldNotTreatCustomTypeAsBuiltin", have: "KODI_ROOM"},
+		{name: "ShouldNotTreatLowerCasePrefixAsBuiltin", have: "amazon.Movie"},
+		{name: "ShouldNotTreatBarePrefixAsBuiltin", have: "AMAZON"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, IsBuiltin(tc.have))
+		})
+	}
 }
 
 func TestIntentContent(t *testing.T) {

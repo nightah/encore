@@ -18,53 +18,100 @@ import (
 )
 
 func TestParseDuration(t *testing.T) {
-	for in, want := range map[string]time.Duration{
-		"PT90S":     90 * time.Second,
-		"PT10M":     10 * time.Minute,
-		"PT1H30M":   90 * time.Minute,
-		"pt2m":      2 * time.Minute,
-		"PT1.5M":    90 * time.Second,
-		"P1D":       24 * time.Hour,
-		"P1DT2H":    26 * time.Hour,
-		"P1W":       7 * 24 * time.Hour,
-		"P1M":       30 * 24 * time.Hour,
-		"P1MT1M":    30*24*time.Hour + time.Minute,
-		"PT1H0M30S": time.Hour + 30*time.Second,
-	} {
-		got, ok := parseDuration(in)
-		assert.True(t, ok, in)
-		assert.Equal(t, want, got, in)
+	testCases := []struct {
+		name     string
+		have     string
+		expected time.Duration
+		ok       bool
+	}{
+		{name: "ShouldParseSeconds", have: "PT90S", expected: 90 * time.Second, ok: true},
+		{name: "ShouldParseMinutes", have: "PT10M", expected: 10 * time.Minute, ok: true},
+		{name: "ShouldParseHoursAndMinutes", have: "PT1H30M", expected: 90 * time.Minute, ok: true},
+		{name: "ShouldParseLowercase", have: "pt2m", expected: 2 * time.Minute, ok: true},
+		{name: "ShouldParseFractionalMinutes", have: "PT1.5M", expected: 90 * time.Second, ok: true},
+		{name: "ShouldParseDays", have: "P1D", expected: 24 * time.Hour, ok: true},
+		{name: "ShouldParseDaysAndHours", have: "P1DT2H", expected: 26 * time.Hour, ok: true},
+		{name: "ShouldParseWeeks", have: "P1W", expected: 7 * 24 * time.Hour, ok: true},
+		{name: "ShouldParseMonthsAsThirtyDays", have: "P1M", expected: 30 * 24 * time.Hour, ok: true},
+		{name: "ShouldTellMonthsFromMinutes", have: "P1MT1M", expected: 30*24*time.Hour + time.Minute, ok: true},
+		{name: "ShouldParseZeroPart", have: "PT1H0M30S", expected: time.Hour + 30*time.Second, ok: true},
+		{name: "ShouldRejectEmpty", have: ""},
+		{name: "ShouldRejectBareP", have: "P"},
+		{name: "ShouldRejectBarePT", have: "PT"},
+		{name: "ShouldRejectWords", have: "10 minutes"},
+		{name: "ShouldRejectUnknownUnit", have: "PT10X"},
+		{name: "ShouldRejectMissingP", have: "T10M"},
+		{name: "ShouldRejectZero", have: "PT0S"},
+		{name: "ShouldRejectQuestionMark", have: "?"},
 	}
 
-	for _, bad := range []string{"", "P", "PT", "10 minutes", "PT10X", "T10M", "PT0S", "?"} {
-		_, ok := parseDuration(bad)
-		assert.False(t, ok, bad)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual, ok := parseDuration(tc.have)
+
+			if !tc.ok {
+				assert.False(t, ok)
+
+				return
+			}
+
+			assert.True(t, ok)
+			assert.Equal(t, tc.expected, actual)
+		})
 	}
 }
 
 // A duration too long for time.Duration is unreadable, not a wrapped or platform-dependent value.
 func TestParseDurationRejectsOverflow(t *testing.T) {
-	for _, in := range []string{"P7000Y", "P300Y", "P250Y250Y250Y", "PT9999999999999H", "P1" + strings.Repeat("0", 400) + "D", "PT9223372036.854775808S"} {
-		d, ok := parseDuration(in)
-		assert.False(t, ok, in)
-		assert.Zero(t, d, in)
+	testCases := []struct {
+		name     string
+		have     string
+		expected time.Duration
+		ok       bool
+	}{
+		{name: "ShouldReject7000Years", have: "P7000Y"},
+		{name: "ShouldReject300Years", have: "P300Y"},
+		{name: "ShouldRejectRepeatedYearsThatOverflowTogether", have: "P250Y250Y250Y"},
+		{name: "ShouldRejectTooManyHours", have: "PT9999999999999H"},
+		{name: "ShouldRejectNumberTooLongToParse", have: "P1" + strings.Repeat("0", 400) + "D"},
+		{name: "ShouldRejectSecondsJustPastTheLimit", have: "PT9223372036.854775808S"},
+		{name: "ShouldReadTheLongestDurationsThatFit", have: "P290Y", expected: 290 * 8766 * time.Hour, ok: true},
 	}
 
-	d, ok := parseDuration("P290Y")
-	assert.True(t, ok, "the longest durations that fit are still read")
-	assert.Equal(t, 290*8766*time.Hour, d)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual, ok := parseDuration(tc.have)
+
+			assert.Equal(t, tc.ok, ok)
+			assert.Equal(t, tc.expected, actual)
+		})
+	}
 }
 
 func TestSlotIDsResolveLocally(t *testing.T) {
 	h, _, _ := newHandler(t)
 
-	assert.Equal(t, "menu", h.Speech.SlotID("en-AU", "NAV_ACTION", "Context Menu"))
-	assert.Equal(t, "pagedown", h.Speech.SlotID("en-AU", "NAV_ACTION", "show more"))
-	assert.Equal(t, "recentepisodes", h.Speech.SlotID("en-GB", "LIBRARY_SECTION", "new episodes"))
-	assert.Equal(t, "counterclockwise", h.Speech.SlotID("en-US", "ROTATE_DIRECTION", "anti clockwise"))
-	assert.Equal(t, "bedroom", h.Speech.SlotID("en-AU", "KODI_ROOM", "bedroom"), "values without an ID are their own ID")
-	assert.Equal(t, "up", h.Speech.SlotID("xx-XX", "NAV_DIRECTION", "up"), "unknown locales fall back")
-	assert.Empty(t, h.Speech.SlotID("en-AU", "NAV_ACTION", "sideways"))
+	testCases := []struct {
+		name     string
+		locale   string
+		typ      string
+		have     string
+		expected string
+	}{
+		{name: "ShouldResolveSynonymToID", locale: "en-AU", typ: "NAV_ACTION", have: "Context Menu", expected: "menu"},
+		{name: "ShouldResolvePhraseToID", locale: "en-AU", typ: "NAV_ACTION", have: "show more", expected: "pagedown"},
+		{name: "ShouldResolveInEnGB", locale: "en-GB", typ: "LIBRARY_SECTION", have: "new episodes", expected: "recentepisodes"},
+		{name: "ShouldResolveInEnUS", locale: "en-US", typ: "ROTATE_DIRECTION", have: "anti clockwise", expected: "counterclockwise"},
+		{name: "ShouldUseValueWithoutAnIDAsItsOwnID", locale: "en-AU", typ: "KODI_ROOM", have: "bedroom", expected: "bedroom"},
+		{name: "ShouldFallBackForUnknownLocale", locale: "xx-XX", typ: "NAV_DIRECTION", have: "up", expected: "up"},
+		{name: "ShouldNotResolveUnknownValue", locale: "en-AU", typ: "NAV_ACTION", have: "sideways"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, h.Speech.SlotID(tc.locale, tc.typ, tc.have))
+		})
+	}
 }
 
 func TestSlotIDPrefersEntityResolution(t *testing.T) {
@@ -170,21 +217,27 @@ func TestRoomInSearchQueryLookupFails(t *testing.T) {
 }
 
 func TestRoomGroup(t *testing.T) {
-	for _, tc := range []struct {
-		pattern, want string
-		ok            bool
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+		ok       bool
 	}{
-		{"play {Movie} [(in|on) the {Room}]", "(in|on) the", true},
-		{"play {Movie} [(in|on) [the] {Room}]", "(in|on) [the]", true},
-		{"play [the] {Movie} [(im|in der) {Room}]", "(im|in der)", true},
-		{"play {Movie} [{Room}]", "", false},
-		{"{Command} (in|on) the {Room}", "", false},
-		{"play {Movie} [in the {Room}] please", "", false},
-		{"play {Movie} in the {Room}]", "", false},
-	} {
-		got, ok := roomGroup(tc.pattern)
-		assert.Equal(t, tc.ok, ok, tc.pattern)
-		assert.Equal(t, tc.want, got, tc.pattern)
+		{name: "ShouldReadAlternativesAndArticle", have: "play {Movie} [(in|on) the {Room}]", expected: "(in|on) the", ok: true},
+		{name: "ShouldReadOptionalArticle", have: "play {Movie} [(in|on) [the] {Room}]", expected: "(in|on) [the]", ok: true},
+		{name: "ShouldReadGermanAlternatives", have: "play [the] {Movie} [(im|in der) {Room}]", expected: "(im|in der)", ok: true},
+		{name: "ShouldRejectRoomWithoutPhrase", have: "play {Movie} [{Room}]"},
+		{name: "ShouldRejectRoomOutsideOptionalPart", have: "{Command} (in|on) the {Room}"},
+		{name: "ShouldRejectRoomNotAtTheEnd", have: "play {Movie} [in the {Room}] please"},
+		{name: "ShouldRejectUnopenedBracket", have: "play {Movie} in the {Room}]"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual, ok := roomGroup(tc.have)
+			assert.Equal(t, tc.ok, ok)
+			assert.Equal(t, tc.expected, actual)
+		})
 	}
 }
 
@@ -195,33 +248,34 @@ func TestRoomSplits(t *testing.T) {
 	speech, err := NewSpeech(src, slog.New(slog.DiscardHandler))
 	require.NoError(t, err)
 
-	for _, tc := range []struct {
-		locale, query string
-		want          []RoomSplit
+	testCases := []struct {
+		name     string
+		locale   string
+		have     string
+		expected []RoomSplit
 	}{
 		// The bare "in" and "on" also read the article as part of the room; no room is called "the lounge room", so the caller moves on.
-		{"en-AU", "frozen in the lounge room", []RoomSplit{{"frozen", "lounge room"}, {"frozen", "the lounge room"}}},
-		{"en-AU", "frozen on the TV", []RoomSplit{{"frozen", "TV"}, {"frozen", "the TV"}}},
-		{"en-AU", "the martian on TV", []RoomSplit{{"the martian", "TV"}}},
+		{name: "ShouldSplitWithAndWithoutArticleAfterIn", locale: "en-AU", have: "frozen in the lounge room", expected: []RoomSplit{{"frozen", "lounge room"}, {"frozen", "the lounge room"}}},
+		{name: "ShouldSplitWithAndWithoutArticleAfterOn", locale: "en-AU", have: "frozen on the TV", expected: []RoomSplit{{"frozen", "TV"}, {"frozen", "the TV"}}},
+		{name: "ShouldSplitRoomWithoutArticle", locale: "en-AU", have: "the martian on TV", expected: []RoomSplit{{"the martian", "TV"}}},
 		// Without a room called Paris, the caller searches the whole query.
-		{"en-AU", "murder in paris", []RoomSplit{{"murder", "paris"}}},
-		{"en-AU", "the man in the iron mask in the lounge", []RoomSplit{
-			{"the man", "iron mask in the lounge"},
-			{"the man", "the iron mask in the lounge"},
-			{"the man in the iron mask", "lounge"},
-			{"the man in the iron mask", "the lounge"},
-		}},
-		{"en-AU", "frozen", nil},
-		{"en-AU", "in the lounge", nil},
-		{"en-AU", "frozen in the", []RoomSplit{{"frozen", "the"}}},
-		{"de-DE", "die eiskönigin im wohnzimmer", []RoomSplit{{"die eiskönigin", "wohnzimmer"}}},
-		{"de-DE", "die eiskönigin in der küche", []RoomSplit{{"die eiskönigin", "küche"}}},
-		{"fr-FR", "la reine des neiges au salon", []RoomSplit{{"la reine des neiges", "salon"}}},
-		{"es-ES", "frozen en el salón", []RoomSplit{{"frozen", "salón"}}},
-		{"it-IT", "frozen nel salotto", []RoomSplit{{"frozen", "salotto"}}},
-		{"xx-XX", "frozen in the lounge", []RoomSplit{{"frozen", "lounge"}, {"frozen", "the lounge"}}},
-	} {
-		assert.Equal(t, tc.want, speech.RoomSplits(tc.locale, tc.query), "%s %q", tc.locale, tc.query)
+		{name: "ShouldSplitPlaceInTitle", locale: "en-AU", have: "murder in paris", expected: []RoomSplit{{"murder", "paris"}}},
+		{name: "ShouldOfferEverySplitWhenTitleHasIn", locale: "en-AU", have: "the man in the iron mask in the lounge", expected: []RoomSplit{{"the man", "iron mask in the lounge"}, {"the man", "the iron mask in the lounge"}, {"the man in the iron mask", "lounge"}, {"the man in the iron mask", "the lounge"}}},
+		{name: "ShouldNotSplitTitleWithoutRoom", locale: "en-AU", have: "frozen"},
+		{name: "ShouldNotSplitRoomWithoutTitle", locale: "en-AU", have: "in the lounge"},
+		{name: "ShouldSplitArticleAloneAsRoom", locale: "en-AU", have: "frozen in the", expected: []RoomSplit{{"frozen", "the"}}},
+		{name: "ShouldSplitImInDeDE", locale: "de-DE", have: "die eiskönigin im wohnzimmer", expected: []RoomSplit{{"die eiskönigin", "wohnzimmer"}}},
+		{name: "ShouldSplitInDerInDeDE", locale: "de-DE", have: "die eiskönigin in der küche", expected: []RoomSplit{{"die eiskönigin", "küche"}}},
+		{name: "ShouldSplitAuInFrFR", locale: "fr-FR", have: "la reine des neiges au salon", expected: []RoomSplit{{"la reine des neiges", "salon"}}},
+		{name: "ShouldSplitEnElInEsES", locale: "es-ES", have: "frozen en el salón", expected: []RoomSplit{{"frozen", "salón"}}},
+		{name: "ShouldSplitNelInItIT", locale: "it-IT", have: "frozen nel salotto", expected: []RoomSplit{{"frozen", "salotto"}}},
+		{name: "ShouldSplitAsEnglishInUnknownLocale", locale: "xx-XX", have: "frozen in the lounge", expected: []RoomSplit{{"frozen", "lounge"}, {"frozen", "the lounge"}}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, speech.RoomSplits(tc.locale, tc.have))
+		})
 	}
 }
 
@@ -237,51 +291,57 @@ func TestReinterpret(t *testing.T) {
 		slots  map[string]string
 	}
 
-	for _, tc := range []struct {
-		locale, query string
-		want          want
+	testCases := []struct {
+		name     string
+		locale   string
+		have     string
+		expected want
 	}{
-		{"en-AU", "the next episode of bluey", want{"WatchNextEpisode", map[string]string{"Show": "bluey"}}},
-		{"en-AU", "next episode of bluey in the lounge", want{"WatchNextEpisode", map[string]string{"Show": "bluey in the lounge"}}},
-		{"en-AU", "bluey from where I left off", want{"WatchNextEpisode", map[string]string{"Show": "bluey"}}},
-		{"en-AU", "The Latest Episode of Bluey", want{"WatchLatestEpisode", map[string]string{"Show": "Bluey"}}},
-		{"en-AU", "the 1st episode of bluey", want{"WatchFirstEpisode", map[string]string{"Show": "bluey"}}},
-		{"en-AU", "the first episode of bluey", want{"WatchFirstEpisode", map[string]string{"Show": "bluey"}}},
-		{"en-AU", "a random episode of bluey", want{"WatchRandomEpisode", map[string]string{"Show": "bluey"}}},
-		{"en-AU", "season 2 episode 4 of severance", want{"WatchEpisode", map[string]string{"Show": "severance", "Season": "2", "Episode": "4"}}},
-		{"en-AU", "season two episode four of severance", want{"PlayMedia", map[string]string{"Query": "season two episode four of severance"}}},
-		{"en-AU", "bluey", want{"PlayMedia", map[string]string{"Query": "bluey"}}},
-		{"en-AU", "the next episode of", want{"PlayMedia", map[string]string{"Query": "the next episode of"}}},
-		{"en-AU", "the man in the iron mask", want{"PlayMedia", map[string]string{"Query": "the man in the iron mask"}}},
-		{"de-DE", "die nächste folge von bluey", want{"WatchNextEpisode", map[string]string{"Show": "bluey"}}},
+		{name: "ShouldReadNextEpisode", locale: "en-AU", have: "the next episode of bluey", expected: want{"WatchNextEpisode", map[string]string{"Show": "bluey"}}},
+		{name: "ShouldKeepRoomInShow", locale: "en-AU", have: "next episode of bluey in the lounge", expected: want{"WatchNextEpisode", map[string]string{"Show": "bluey in the lounge"}}},
+		{name: "ShouldReadWhereILeftOffAsNextEpisode", locale: "en-AU", have: "bluey from where I left off", expected: want{"WatchNextEpisode", map[string]string{"Show": "bluey"}}},
+		{name: "ShouldReadLatestEpisodeInAnyCase", locale: "en-AU", have: "The Latest Episode of Bluey", expected: want{"WatchLatestEpisode", map[string]string{"Show": "Bluey"}}},
+		{name: "ShouldReadFirstEpisodeFrom1st", locale: "en-AU", have: "the 1st episode of bluey", expected: want{"WatchFirstEpisode", map[string]string{"Show": "bluey"}}},
+		{name: "ShouldReadFirstEpisodeFromFirst", locale: "en-AU", have: "the first episode of bluey", expected: want{"WatchFirstEpisode", map[string]string{"Show": "bluey"}}},
+		{name: "ShouldReadRandomEpisode", locale: "en-AU", have: "a random episode of bluey", expected: want{"WatchRandomEpisode", map[string]string{"Show": "bluey"}}},
+		{name: "ShouldReadSeasonAndEpisode", locale: "en-AU", have: "season 2 episode 4 of severance", expected: want{"WatchEpisode", map[string]string{"Show": "severance", "Season": "2", "Episode": "4"}}},
+		{name: "ShouldKeepSeasonAndEpisodeInWordsAsPlayMedia", locale: "en-AU", have: "season two episode four of severance", expected: want{"PlayMedia", map[string]string{"Query": "season two episode four of severance"}}},
+		{name: "ShouldKeepPlainTitleAsPlayMedia", locale: "en-AU", have: "bluey", expected: want{"PlayMedia", map[string]string{"Query": "bluey"}}},
+		{name: "ShouldKeepPhraseWithoutShowAsPlayMedia", locale: "en-AU", have: "the next episode of", expected: want{"PlayMedia", map[string]string{"Query": "the next episode of"}}},
+		{name: "ShouldKeepTitleWithInAsPlayMedia", locale: "en-AU", have: "the man in the iron mask", expected: want{"PlayMedia", map[string]string{"Query": "the man in the iron mask"}}},
+		{name: "ShouldReadNextEpisodeInDeDE", locale: "de-DE", have: "die nächste folge von bluey", expected: want{"WatchNextEpisode", map[string]string{"Show": "bluey"}}},
 		// Amazon's es-US model takes the accents off what it heard, so "álbum", "capítulo" and "tráiler" arrive bare.
-		{"es-US", "el album pies descalzos", want{"ListenToAlbum", map[string]string{"Album": "pies descalzos"}}},
-		{"es-US", "la casa de papel capitulo 3 de la temporada 2", want{"WatchEpisode", map[string]string{"Show": "la casa de papel", "Episode": "3", "Season": "2"}}}, //nolint:misspell // Spanish "capítulo" as es-US hears it.
-		{"de-DE", "die nachste folge von bluey", want{"WatchNextEpisode", map[string]string{"Show": "bluey"}}},
+		{name: "ShouldReadAlbumWithoutAccentInEsUS", locale: "es-US", have: "el album pies descalzos", expected: want{"ListenToAlbum", map[string]string{"Album": "pies descalzos"}}},
+		{name: "ShouldReadCapituloWithoutAccentInEsUS", locale: "es-US", have: "la casa de papel capitulo 3 de la temporada 2", expected: want{"WatchEpisode", map[string]string{"Show": "la casa de papel", "Episode": "3", "Season": "2"}}}, //nolint:misspell // Spanish "capítulo" as es-US hears it.
+		{name: "ShouldReadNachsteWithoutUmlautInDeDE", locale: "de-DE", have: "die nachste folge von bluey", expected: want{"WatchNextEpisode", map[string]string{"Show": "bluey"}}},
 		// As Amazon wrote them: numbers as digits, German compounds split, a word hyphenated, and playlists.
-		{"es-US", "1 capitulo de la casa de papel", want{"WatchRandomEpisode", map[string]string{"Show": "la casa de papel"}}},      //nolint:misspell // Spanish "capítulo" as es-US hears it.
-		{"es-US", "el 1.ᵉʳ capitulo de la casa de papel", want{"WatchFirstEpisode", map[string]string{"Show": "la casa de papel"}}}, //nolint:misspell // Spanish "capítulo" as es-US hears it.
-		{"ar-SA", "1 حلقة من مسلسل باب الحارة", want{"WatchFirstEpisode", map[string]string{"Show": "باب الحارة"}}},
-		{"de-DE", "mir das musik video zu bohemian rhapsody", want{"WatchMusicVideo", map[string]string{"MusicVideo": "bohemian rhapsody"}}},
-		{"es-US", "to-dos mis videoclips en aleatorio", want{"ShuffleMusicVideos", map[string]string{}}},
-		{"es-US", "la lista de musica viaje", want{"PlayPlaylist", map[string]string{"Playlist": "viaje"}}},
-		{"hi-IN", "म्यूज़िक प्लेलिस्ट सफ़र", want{"PlayPlaylist", map[string]string{"Playlist": "सफ़र"}}},
-		{"xx-XX", "the next episode of bluey", want{"WatchNextEpisode", map[string]string{"Show": "bluey"}}},
-	} {
-		in := Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.query}}}
-		got := speech.Reinterpret(tc.locale, in)[0]
+		{name: "ShouldReadDigitOneAsRandomEpisodeInEsUS", locale: "es-US", have: "1 capitulo de la casa de papel", expected: want{"WatchRandomEpisode", map[string]string{"Show": "la casa de papel"}}},               //nolint:misspell // Spanish "capítulo" as es-US hears it.
+		{name: "ShouldReadSuperscriptOrdinalAsFirstEpisodeInEsUS", locale: "es-US", have: "el 1.ᵉʳ capitulo de la casa de papel", expected: want{"WatchFirstEpisode", map[string]string{"Show": "la casa de papel"}}}, //nolint:misspell // Spanish "capítulo" as es-US hears it.
+		{name: "ShouldReadDigitOneAsFirstEpisodeInArSA", locale: "ar-SA", have: "1 حلقة من مسلسل باب الحارة", expected: want{"WatchFirstEpisode", map[string]string{"Show": "باب الحارة"}}},
+		{name: "ShouldReadSplitCompoundInDeDE", locale: "de-DE", have: "mir das musik video zu bohemian rhapsody", expected: want{"WatchMusicVideo", map[string]string{"MusicVideo": "bohemian rhapsody"}}},
+		{name: "ShouldReadHyphenatedWordInEsUS", locale: "es-US", have: "to-dos mis videoclips en aleatorio", expected: want{"ShuffleMusicVideos", map[string]string{}}},
+		{name: "ShouldReadPlaylistInEsUS", locale: "es-US", have: "la lista de musica viaje", expected: want{"PlayPlaylist", map[string]string{"Playlist": "viaje"}}},
+		{name: "ShouldReadPlaylistInHiIN", locale: "hi-IN", have: "म्यूज़िक प्लेलिस्ट सफ़र", expected: want{"PlayPlaylist", map[string]string{"Playlist": "सफ़र"}}},
+		{name: "ShouldReadAsEnglishInUnknownLocale", locale: "xx-XX", have: "the next episode of bluey", expected: want{"WatchNextEpisode", map[string]string{"Show": "bluey"}}},
+	}
 
-		values := map[string]string{}
-		for name, slot := range got.Slots {
-			values[name] = slot.Value
-		}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			in := Intent{Name: "PlayMedia", Slots: map[string]Slot{"Query": {Name: "Query", Value: tc.have}}}
+			actual := speech.Reinterpret(tc.locale, in)[0]
 
-		assert.Equal(t, tc.want, want{got.Name, values}, "%s %q", tc.locale, tc.query)
+			values := map[string]string{}
+			for name, slot := range actual.Slots {
+				values[name] = slot.Value
+			}
+
+			assert.Equal(t, tc.expected, want{actual.Name, values})
+		})
 	}
 }
 
 func TestEpisodeInSearchQuery(t *testing.T) {
-	t.Run("an unknown room stays part of the show", func(t *testing.T) {
+	t.Run("ShouldKeepUnknownRoomAsPartOfShow", func(t *testing.T) {
 		h, lounge, bedroom, rec := newRoomHandler(t)
 
 		req := mustRead(t, "testdata/golden/play-media-latest-episode-in-bedroom/request.json")
@@ -296,7 +356,7 @@ func TestEpisodeInSearchQuery(t *testing.T) {
 		assert.Equal(t, "the latest episode of severance in the attic", rec.entries[0].Slots["Query"], "the log keeps what was heard")
 	})
 
-	t.Run("declined without TV", func(t *testing.T) {
+	t.Run("ShouldDeclineWithoutTV", func(t *testing.T) {
 		h, backend := withDisabled(t, false, media.ContentTV)
 		res := serveBody(t, h, mustRead(t, "testdata/golden/play-media-next-episode/request.json"))
 		assert.Contains(t, string(res), "This skill is set up without that kind of title.")
@@ -329,17 +389,25 @@ func TestFollowupRoundTrip(t *testing.T) {
 }
 
 func TestFoldLatin(t *testing.T) {
-	for in, want := range map[string]string{
-		"Álbum":    "album",
-		"capítulo": "capitulo", //nolint:misspell // Spanish "capítulo" without its accent.
-		"nächste":  "nachste",
-		"が":        "が",
-		"ज़िंदगी":  "ज़िंदगी",
-		"Ça va":    "ca va",
-		"تريلر":    "تريلر",
-		"Ṭrailer":  "trailer",
-	} {
-		assert.Equal(t, want, foldLatin(in), in)
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldFoldAccentAndCase", have: "Álbum", expected: "album"},
+		{name: "ShouldFoldAcuteAccent", have: "capítulo", expected: "capitulo"}, //nolint:misspell // Spanish "capítulo" without its accent.
+		{name: "ShouldFoldUmlaut", have: "nächste", expected: "nachste"},
+		{name: "ShouldLeaveJapaneseAlone", have: "が", expected: "が"},
+		{name: "ShouldLeaveDevanagariAlone", have: "ज़िंदगी", expected: "ज़िंदगी"},
+		{name: "ShouldFoldCedilla", have: "Ça va", expected: "ca va"},
+		{name: "ShouldLeaveArabicAlone", have: "تريلر", expected: "تريلر"},
+		{name: "ShouldFoldDotBelow", have: "Ṭrailer", expected: "trailer"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, foldLatin(tc.have))
+		})
 	}
 }
 
@@ -347,29 +415,21 @@ func TestUnknownRoomIsReadAsTheEndOfTheTitle(t *testing.T) {
 	murder := media.Item{Kind: media.KindMovie, ID: 50, Title: "Murder in Paris", Year: 2023}
 	live := media.Item{Kind: media.KindMovie, ID: 51, Title: "Live on Broadway", Year: 2019}
 
-	for name, tc := range map[string]struct {
+	testCases := []struct {
+		name   string
 		intent string
 		slots  map[string]slotSpec
 		played []string
 		said   string
 	}{
-		"in, cut off as a room": {
-			intent: "WatchMovie", slots: map[string]slotSpec{"Movie": {value: "murder"}, "Room": {value: "paris"}},
-			played: []string{"Play movie/50 resume"},
-		},
-		"on, cut off as a room": {
-			intent: "WatchMovie", slots: map[string]slotSpec{"Movie": {value: "live"}, "Room": {value: "broadway"}},
-			played: []string{"Play movie/51 resume"},
-		},
-		"a room that isn't known and no title either": {
-			intent: "WatchMovie", slots: map[string]slotSpec{"Movie": {value: "dune"}, "Room": {value: "den"}},
-			said: "error.unknown_room",
-		},
-		"a known room still plays there": {
-			intent: "WatchMovie", slots: map[string]slotSpec{"Movie": {value: "hot fuzz"}, "Room": {value: "bedroom"}},
-		},
-	} {
-		t.Run(name, func(t *testing.T) {
+		{name: "ShouldReadRoomCutOffAfterInAsPartOfTitle", intent: "WatchMovie", slots: map[string]slotSpec{"Movie": {value: "murder"}, "Room": {value: "paris"}}, played: []string{"Play movie/50 resume"}},
+		{name: "ShouldReadRoomCutOffAfterOnAsPartOfTitle", intent: "WatchMovie", slots: map[string]slotSpec{"Movie": {value: "live"}, "Room": {value: "broadway"}}, played: []string{"Play movie/51 resume"}},
+		{name: "ShouldSayUnknownRoomWhenNoTitleMatchesEither", intent: "WatchMovie", slots: map[string]slotSpec{"Movie": {value: "dune"}, "Room": {value: "den"}}, said: "error.unknown_room"},
+		{name: "ShouldStillPlayInKnownRoom", intent: "WatchMovie", slots: map[string]slotSpec{"Movie": {value: "hot fuzz"}, "Room": {value: "bedroom"}}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			h, lounge, bedroom, rec := newRoomHandlerWith(t, murder, live)
 
 			serveBody(t, h, intentRequest(t, tc.intent, tc.slots))

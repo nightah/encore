@@ -37,11 +37,19 @@ func TestS3Contract(t *testing.T) {
 
 	createBucket(t, cfg)
 
-	for _, addressing := range []string{config.AddressingPath, config.AddressingAuto} {
-		t.Run(addressing, func(t *testing.T) {
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldPassWithPathAddressing", have: config.AddressingPath},
+		{name: "ShouldPassWithAutoAddressing", have: config.AddressingAuto},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			blobstoretest.Run(t, func(t *testing.T) blobstore.Store {
 				c := cfg
-				c.Addressing = addressing
+				c.Addressing = tc.have
 				// A fresh prefix per subtest keeps them independent within one bucket.
 				c.Prefix = "contract/" + randomName(t)
 
@@ -55,7 +63,7 @@ func TestS3Contract(t *testing.T) {
 		})
 	}
 
-	t.Run("missing bucket", func(t *testing.T) {
+	t.Run("ShouldReportAMissingBucket", func(t *testing.T) {
 		c := cfg
 		c.Bucket = "encore-missing-" + randomName(t)
 
@@ -64,7 +72,7 @@ func TestS3Contract(t *testing.T) {
 		require.ErrorContains(t, s.Probe(t.Context()), "does not exist")
 	})
 
-	t.Run("bad credentials", func(t *testing.T) {
+	t.Run("ShouldRejectBadCredentials", func(t *testing.T) {
 		c := cfg
 		c.SecretKey = "wrong-secret"
 

@@ -45,38 +45,58 @@ func TestAuthFromEnv(t *testing.T) {
 }
 
 func TestAuthValidation(t *testing.T) {
-	for name, env := range map[string][]string{
-		"unknown mode":              {"ENCORE_AUTH_MODE=ldap"},
-		"oidc without client":       {"ENCORE_AUTH_MODE=oidc", "ENCORE_AUTH_OIDC_ISSUER=https://auth.example.net"},
-		"header without proxies":    {"ENCORE_AUTH_MODE=header", "ENCORE_SERVER_TRUSTED_PROXIES="},
-		"bad header name":           {"ENCORE_AUTH_HEADER_USER_HEADER=Remote User"},
-		"zero session":              {"ENCORE_AUTH_SESSION_HOURS=0"},
-		"issuer not a URL":          {"ENCORE_AUTH_OIDC_ISSUER=auth.example.net"},
-		"redirect not a URL":        {"ENCORE_AUTH_OIDC_REDIRECT_URI=/cb"},
-		"lockout attempts disabled": {"ENCORE_AUTH_LOCKOUT_ATTEMPTS=0"},
-	} {
-		t.Run(name, func(t *testing.T) {
-			_, err := Load(Options{Environ: environ(env...)})
-			require.Error(t, err)
-		})
+	testCases := []struct {
+		name string
+		have []string
+		err  bool
+	}{
+		{name: "ShouldRejectAnUnknownMode", have: []string{"ENCORE_AUTH_MODE=ldap"}, err: true},
+		{name: "ShouldRejectOIDCWithoutAClient", have: []string{"ENCORE_AUTH_MODE=oidc", "ENCORE_AUTH_OIDC_ISSUER=https://auth.example.net"}, err: true},
+		{name: "ShouldRejectHeaderModeWithoutProxies", have: []string{"ENCORE_AUTH_MODE=header", "ENCORE_SERVER_TRUSTED_PROXIES="}, err: true},
+		{name: "ShouldRejectABadHeaderName", have: []string{"ENCORE_AUTH_HEADER_USER_HEADER=Remote User"}, err: true},
+		{name: "ShouldRejectAZeroSession", have: []string{"ENCORE_AUTH_SESSION_HOURS=0"}, err: true},
+		{name: "ShouldRejectAnIssuerThatIsNotAURL", have: []string{"ENCORE_AUTH_OIDC_ISSUER=auth.example.net"}, err: true},
+		{name: "ShouldRejectARedirectThatIsNotAURL", have: []string{"ENCORE_AUTH_OIDC_REDIRECT_URI=/cb"}, err: true},
+		{name: "ShouldRejectDisabledLockoutAttempts", have: []string{"ENCORE_AUTH_LOCKOUT_ATTEMPTS=0"}, err: true},
+		{name: "ShouldAcceptHeaderModeWithProxies", have: []string{"ENCORE_AUTH_MODE=header", "ENCORE_SERVER_TRUSTED_PROXIES=172.20.0.0/16"}},
 	}
 
-	_, err := Load(Options{Environ: environ("ENCORE_AUTH_MODE=header", "ENCORE_SERVER_TRUSTED_PROXIES=172.20.0.0/16")})
-	require.NoError(t, err)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := Load(Options{Environ: environ(tc.have...)})
+
+			if tc.err {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
 }
 
 func TestAuthValidationMessages(t *testing.T) {
-	for env, want := range map[string]string{
-		"ENCORE_AUTH_HEADER_GROUPS_HEADER=Remote: Groups": `auth.header.groups_header "Remote: Groups" is not a header name`,
-		"ENCORE_AUTH_OIDC_ISSUER=https://[::1":            "auth.oidc.issuer: is not a valid URL",
-		"ENCORE_AUTH_OIDC_REDIRECT_URI=ftp://encore/cb":   `auth.oidc.redirect_uri: "ftp://encore/cb" must be an http or https URL`,
-	} {
-		_, err := Load(Options{Environ: environ(env)})
-		require.ErrorContains(t, err, want, env)
+	testCases := []struct {
+		name string
+		have string
+		err  string
+	}{
+		{name: "ShouldRejectAGroupsHeaderThatIsNotAHeaderName", have: "ENCORE_AUTH_HEADER_GROUPS_HEADER=Remote: Groups", err: `auth.header.groups_header "Remote: Groups" is not a header name`},
+		{name: "ShouldRejectAnInvalidIssuerURL", have: "ENCORE_AUTH_OIDC_ISSUER=https://[::1", err: "auth.oidc.issuer: is not a valid URL"},
+		{name: "ShouldRejectARedirectURIThatIsNotHTTP", have: "ENCORE_AUTH_OIDC_REDIRECT_URI=ftp://encore/cb", err: `auth.oidc.redirect_uri: "ftp://encore/cb" must be an http or https URL`},
+		{name: "ShouldAcceptAValidGroupsHeader", have: "ENCORE_AUTH_HEADER_GROUPS_HEADER=Remote-Groups"},
 	}
 
-	_, err := Load(Options{Environ: environ("ENCORE_AUTH_HEADER_GROUPS_HEADER=Remote-Groups")})
-	require.NoError(t, err, "a valid groups header")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := Load(Options{Environ: environ(tc.have)})
+
+			if tc.err == "" {
+				require.NoError(t, err)
+			} else {
+				require.ErrorContains(t, err, tc.err)
+			}
+		})
+	}
 }
 
 func TestManagedKeys(t *testing.T) {

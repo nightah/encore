@@ -124,39 +124,45 @@ func TestPicture(t *testing.T) {
 	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
 	playing(t, b)
 
-	cases := []struct {
-		cmd    media.PictureCommand
-		method string
-		params string
+	testCases := []struct {
+		name     string
+		have     media.PictureCommand
+		method   string
+		expected string
 	}{
-		{media.PictureZoomIn, "Player.Zoom", `{"playerid":1,"zoom":"in"}`},
-		{media.PictureZoomOut, "Player.Zoom", `{"playerid":1,"zoom":"out"}`},
-		{media.PictureZoomReset, "Player.Zoom", `{"playerid":1,"zoom":1}`},
-		{media.PictureRotateClockwise, "Player.Rotate", `{"playerid":1,"value":"clockwise"}`},
-		{media.PictureRotateCounterClockwise, "Player.Rotate", `{"playerid":1,"value":"counterclockwise"}`},
-		{media.PictureMoveUp, "Player.Move", `{"playerid":1,"direction":"up"}`},
-		{media.PictureMoveDown, "Player.Move", `{"playerid":1,"direction":"down"}`},
-		{media.PictureMoveLeft, "Player.Move", `{"playerid":1,"direction":"left"}`},
-		{media.PictureMoveRight, "Player.Move", `{"playerid":1,"direction":"right"}`},
+		{name: "ShouldZoomIn", have: media.PictureZoomIn, method: "Player.Zoom", expected: `{"playerid":1,"zoom":"in"}`},
+		{name: "ShouldZoomOut", have: media.PictureZoomOut, method: "Player.Zoom", expected: `{"playerid":1,"zoom":"out"}`},
+		{name: "ShouldResetZoom", have: media.PictureZoomReset, method: "Player.Zoom", expected: `{"playerid":1,"zoom":1}`},
+		{name: "ShouldRotateClockwise", have: media.PictureRotateClockwise, method: "Player.Rotate", expected: `{"playerid":1,"value":"clockwise"}`},
+		{name: "ShouldRotateCounterClockwise", have: media.PictureRotateCounterClockwise, method: "Player.Rotate", expected: `{"playerid":1,"value":"counterclockwise"}`},
+		{name: "ShouldMoveUp", have: media.PictureMoveUp, method: "Player.Move", expected: `{"playerid":1,"direction":"up"}`},
+		{name: "ShouldMoveDown", have: media.PictureMoveDown, method: "Player.Move", expected: `{"playerid":1,"direction":"down"}`},
+		{name: "ShouldMoveLeft", have: media.PictureMoveLeft, method: "Player.Move", expected: `{"playerid":1,"direction":"left"}`},
+		{name: "ShouldMoveRight", have: media.PictureMoveRight, method: "Player.Move", expected: `{"playerid":1,"direction":"right"}`},
 	}
 
-	for _, tc := range cases {
-		require.NoError(t, b.Picture(t.Context(), tc.cmd), tc.cmd)
-		assert.JSONEq(t, tc.params, lastParams(t, s, tc.method), tc.cmd)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			require.NoError(t, b.Picture(t.Context(), tc.have))
+			assert.JSONEq(t, tc.expected, lastParams(t, s, tc.method))
+		})
 	}
 
 	require.Error(t, b.Picture(t.Context(), "spin"))
 }
 
 func TestStreams(t *testing.T) {
-	for name, tc := range map[string]struct {
+	testCases := []struct {
+		name    string
 		version [3]int
 		english string
 	}{
-		"omega reports ISO 639-2": {[3]int{13, 5, 0}, "eng"},
-		"piers reports BCP 47":    {[3]int{13, 1000, 0}, "en"},
-	} {
-		t.Run(name, func(t *testing.T) {
+		{name: "ShouldReportISO6392OnOmega", version: [3]int{13, 5, 0}, english: "eng"},
+		{name: "ShouldReportBCP47OnPiers", version: [3]int{13, 1000, 0}, english: "en"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			b, s := newBackend(t, fakekodi.Options{Version: tc.version}, BackendOptions{})
 			playing(t, b)
 
@@ -191,22 +197,25 @@ func TestSetStreams(t *testing.T) {
 	ctx := t.Context()
 	playing(t, b)
 
-	cases := []struct {
-		set    func() error
-		method string
-		params string
+	testCases := []struct {
+		name     string
+		set      func() error
+		method   string
+		expected string
 	}{
-		{func() error { return b.SetSubtitle(ctx, media.StreamChange{Step: media.StreamOn}) }, "Player.SetSubtitle", `{"playerid":1,"subtitle":"on"}`},
-		{func() error { return b.SetSubtitle(ctx, media.StreamChange{Step: media.StreamOff}) }, "Player.SetSubtitle", `{"playerid":1,"subtitle":"off"}`},
-		{func() error { return b.SetSubtitle(ctx, media.StreamChange{Step: media.StreamNext}) }, "Player.SetSubtitle", `{"playerid":1,"subtitle":"next","enable":true}`},
-		{func() error { return b.SetSubtitle(ctx, media.StreamChange{Index: 1}) }, "Player.SetSubtitle", `{"playerid":1,"subtitle":1,"enable":true}`},
-		{func() error { return b.SetAudioStream(ctx, media.StreamChange{Step: media.StreamPrevious}) }, "Player.SetAudioStream", `{"playerid":1,"stream":"previous"}`},
-		{func() error { return b.SetAudioStream(ctx, media.StreamChange{Index: 2}) }, "Player.SetAudioStream", `{"playerid":1,"stream":2}`},
+		{name: "ShouldTurnSubtitlesOn", set: func() error { return b.SetSubtitle(ctx, media.StreamChange{Step: media.StreamOn}) }, method: "Player.SetSubtitle", expected: `{"playerid":1,"subtitle":"on"}`},
+		{name: "ShouldTurnSubtitlesOff", set: func() error { return b.SetSubtitle(ctx, media.StreamChange{Step: media.StreamOff}) }, method: "Player.SetSubtitle", expected: `{"playerid":1,"subtitle":"off"}`},
+		{name: "ShouldEnableNextSubtitle", set: func() error { return b.SetSubtitle(ctx, media.StreamChange{Step: media.StreamNext}) }, method: "Player.SetSubtitle", expected: `{"playerid":1,"subtitle":"next","enable":true}`},
+		{name: "ShouldEnableSubtitleByIndex", set: func() error { return b.SetSubtitle(ctx, media.StreamChange{Index: 1}) }, method: "Player.SetSubtitle", expected: `{"playerid":1,"subtitle":1,"enable":true}`},
+		{name: "ShouldSelectPreviousAudioStream", set: func() error { return b.SetAudioStream(ctx, media.StreamChange{Step: media.StreamPrevious}) }, method: "Player.SetAudioStream", expected: `{"playerid":1,"stream":"previous"}`},
+		{name: "ShouldSelectAudioStreamByIndex", set: func() error { return b.SetAudioStream(ctx, media.StreamChange{Index: 2}) }, method: "Player.SetAudioStream", expected: `{"playerid":1,"stream":2}`},
 	}
 
-	for _, tc := range cases {
-		require.NoError(t, tc.set())
-		assert.JSONEq(t, tc.params, lastParams(t, s, tc.method))
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			require.NoError(t, tc.set())
+			assert.JSONEq(t, tc.expected, lastParams(t, s, tc.method))
+		})
 	}
 
 	st, err := b.Streams(ctx)
@@ -221,36 +230,39 @@ func TestSetStreams(t *testing.T) {
 func TestInput(t *testing.T) {
 	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
 
-	cases := []struct {
-		action media.InputAction
-		method string
-		params string
+	testCases := []struct {
+		name     string
+		have     media.InputAction
+		method   string
+		expected string
 	}{
-		{media.InputUp, "Input.Up", ``},
-		{media.InputDown, "Input.Down", ``},
-		{media.InputLeft, "Input.Left", ``},
-		{media.InputRight, "Input.Right", ``},
-		{media.InputSelect, "Input.Select", ``},
-		{media.InputBack, "Input.Back", ``},
-		{media.InputHome, "Input.Home", ``},
-		{media.InputInfo, "Input.Info", ``},
-		{media.InputContextMenu, "Input.ContextMenu", ``},
-		{media.InputOSD, "Input.ShowOSD", ``},
-		{media.InputFullscreen, "GUI.SetFullscreen", `{"fullscreen":"toggle"}`},
-		{media.InputPageUp, "Input.ExecuteAction", `{"action":"pageup"}`},
-		{media.InputPageDown, "Input.ExecuteAction", `{"action":"pagedown"}`},
-		{media.InputStereoscopic, "Input.ExecuteAction", `{"action":"togglestereomode"}`},
-		{media.InputPassthrough, "Input.ExecuteAction", `{"action":"audiotoggledigital"}`},
+		{name: "ShouldSendUp", have: media.InputUp, method: "Input.Up"},
+		{name: "ShouldSendDown", have: media.InputDown, method: "Input.Down"},
+		{name: "ShouldSendLeft", have: media.InputLeft, method: "Input.Left"},
+		{name: "ShouldSendRight", have: media.InputRight, method: "Input.Right"},
+		{name: "ShouldSendSelect", have: media.InputSelect, method: "Input.Select"},
+		{name: "ShouldSendBack", have: media.InputBack, method: "Input.Back"},
+		{name: "ShouldSendHome", have: media.InputHome, method: "Input.Home"},
+		{name: "ShouldSendInfo", have: media.InputInfo, method: "Input.Info"},
+		{name: "ShouldSendContextMenu", have: media.InputContextMenu, method: "Input.ContextMenu"},
+		{name: "ShouldShowOSD", have: media.InputOSD, method: "Input.ShowOSD"},
+		{name: "ShouldToggleFullscreen", have: media.InputFullscreen, method: "GUI.SetFullscreen", expected: `{"fullscreen":"toggle"}`},
+		{name: "ShouldPageUp", have: media.InputPageUp, method: "Input.ExecuteAction", expected: `{"action":"pageup"}`},
+		{name: "ShouldPageDown", have: media.InputPageDown, method: "Input.ExecuteAction", expected: `{"action":"pagedown"}`},
+		{name: "ShouldToggleStereoMode", have: media.InputStereoscopic, method: "Input.ExecuteAction", expected: `{"action":"togglestereomode"}`},
+		{name: "ShouldTogglePassthrough", have: media.InputPassthrough, method: "Input.ExecuteAction", expected: `{"action":"audiotoggledigital"}`},
 	}
 
-	for _, tc := range cases {
-		require.NoError(t, b.Input(t.Context(), tc.action), tc.action)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			require.NoError(t, b.Input(t.Context(), tc.have))
 
-		if tc.params != "" {
-			assert.JSONEq(t, tc.params, lastParams(t, s, tc.method), tc.action)
-		} else {
-			assert.NotEmpty(t, s.CallsTo(tc.method), tc.action)
-		}
+			if tc.expected != "" {
+				assert.JSONEq(t, tc.expected, lastParams(t, s, tc.method))
+			} else {
+				assert.NotEmpty(t, s.CallsTo(tc.method))
+			}
+		})
 	}
 
 	require.Error(t, b.Input(t.Context(), "jump"))
@@ -263,48 +275,33 @@ func TestShowView(t *testing.T) {
 	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
 	ctx := t.Context()
 
-	cases := []struct {
-		view   media.View
-		params string
+	testCases := []struct {
+		name     string
+		have     media.View
+		expected string
 	}{
-		{media.View{Section: media.SectionMovies}, `{"window":"videos","parameters":["videodb://movies/titles/","return"]}`},
-		{media.View{Section: media.SectionAlbums}, `{"window":"music","parameters":["musicdb://albums/","return"]}`},
-		{media.View{Section: media.SectionRecentEpisodes}, `{"window":"videos","parameters":["videodb://recentlyaddedepisodes/","return"]}`},
-		{media.View{Section: media.SectionRecentMusic}, `{"window":"music","parameters":["musicdb://recentlyaddedalbums/","return"]}`},
-		{media.View{Section: media.SectionMovies, Genre: "comedy"}, `{"window":"videos","parameters":["videodb://movies/genres/1/","return"]}`},
-		{media.View{Section: media.SectionTVShows, Genre: "Mystery"}, `{"window":"videos","parameters":["videodb://tvshows/genres/5/","return"]}`},
-		{media.View{Section: media.SectionMusic, Genre: "Rock"}, `{"window":"music","parameters":["musicdb://genres/1/","return"]}`},
-		{media.View{Section: media.SectionFavourites}, `{"window":"favouritesbrowser"}`},
-		{media.View{Section: media.SectionSubtitleSearch}, `{"window":"subtitlesearch"}`},
-		{
-			media.View{Section: media.SectionMovies, Title: "the matrix"},
-			`{"window":"videos","parameters":["videodb://movies/titles/?xsp=%7B%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22title%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B%22the%20matrix%22%5D%7D%5D%7D%2C%22type%22%3A%22movies%22%7D","return"]}`,
-		},
-		{
-			media.View{Section: media.SectionTVShows, Title: "star"},
-			`{"window":"videos","parameters":["videodb://tvshows/titles/?xsp=%7B%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22title%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B%22star%22%5D%7D%5D%7D%2C%22type%22%3A%22tvshows%22%7D","return"]}`,
-		},
-		{
-			media.View{Section: media.SectionArtists, Title: "daft & punk"},
-			`{"window":"music","parameters":["musicdb://artists/?xsp=%7B%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22artist%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B%22daft%20%26%20punk%22%5D%7D%5D%7D%2C%22type%22%3A%22artists%22%7D","return"]}`,
-		},
-		{
-			media.View{Section: media.SectionAlbums, Title: "discovery"},
-			`{"window":"music","parameters":["musicdb://albums/?xsp=%7B%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22album%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B%22discovery%22%5D%7D%5D%7D%2C%22type%22%3A%22albums%22%7D","return"]}`,
-		},
-		{
-			media.View{Section: media.SectionMusicVideos, Title: "thriller"},
-			`{"window":"videos","parameters":["videodb://musicvideos/titles/?xsp=%7B%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22title%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B%22thriller%22%5D%7D%5D%7D%2C%22type%22%3A%22musicvideos%22%7D","return"]}`,
-		},
-		{
-			media.View{Section: media.SectionPlaylist, Playlist: media.Ref{Kind: media.KindPlaylist, ID: playlistID("special://profile/playlists/music/Road Trip.m3u")}},
-			`{"window":"music","parameters":["special://profile/playlists/music/Road Trip.m3u","return"]}`,
-		},
+		{name: "ShouldOpenMovies", have: media.View{Section: media.SectionMovies}, expected: `{"window":"videos","parameters":["videodb://movies/titles/","return"]}`},
+		{name: "ShouldOpenAlbums", have: media.View{Section: media.SectionAlbums}, expected: `{"window":"music","parameters":["musicdb://albums/","return"]}`},
+		{name: "ShouldOpenRecentEpisodes", have: media.View{Section: media.SectionRecentEpisodes}, expected: `{"window":"videos","parameters":["videodb://recentlyaddedepisodes/","return"]}`},
+		{name: "ShouldOpenRecentMusic", have: media.View{Section: media.SectionRecentMusic}, expected: `{"window":"music","parameters":["musicdb://recentlyaddedalbums/","return"]}`},
+		{name: "ShouldOpenMovieGenre", have: media.View{Section: media.SectionMovies, Genre: "comedy"}, expected: `{"window":"videos","parameters":["videodb://movies/genres/1/","return"]}`},
+		{name: "ShouldOpenTVShowGenre", have: media.View{Section: media.SectionTVShows, Genre: "Mystery"}, expected: `{"window":"videos","parameters":["videodb://tvshows/genres/5/","return"]}`},
+		{name: "ShouldOpenMusicGenre", have: media.View{Section: media.SectionMusic, Genre: "Rock"}, expected: `{"window":"music","parameters":["musicdb://genres/1/","return"]}`},
+		{name: "ShouldOpenFavourites", have: media.View{Section: media.SectionFavourites}, expected: `{"window":"favouritesbrowser"}`},
+		{name: "ShouldOpenSubtitleSearch", have: media.View{Section: media.SectionSubtitleSearch}, expected: `{"window":"subtitlesearch"}`},
+		{name: "ShouldFilterMoviesByTitle", have: media.View{Section: media.SectionMovies, Title: "the matrix"}, expected: `{"window":"videos","parameters":["videodb://movies/titles/?xsp=%7B%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22title%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B%22the%20matrix%22%5D%7D%5D%7D%2C%22type%22%3A%22movies%22%7D","return"]}`},
+		{name: "ShouldFilterTVShowsByTitle", have: media.View{Section: media.SectionTVShows, Title: "star"}, expected: `{"window":"videos","parameters":["videodb://tvshows/titles/?xsp=%7B%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22title%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B%22star%22%5D%7D%5D%7D%2C%22type%22%3A%22tvshows%22%7D","return"]}`},
+		{name: "ShouldFilterArtistsByName", have: media.View{Section: media.SectionArtists, Title: "daft & punk"}, expected: `{"window":"music","parameters":["musicdb://artists/?xsp=%7B%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22artist%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B%22daft%20%26%20punk%22%5D%7D%5D%7D%2C%22type%22%3A%22artists%22%7D","return"]}`},
+		{name: "ShouldFilterAlbumsByName", have: media.View{Section: media.SectionAlbums, Title: "discovery"}, expected: `{"window":"music","parameters":["musicdb://albums/?xsp=%7B%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22album%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B%22discovery%22%5D%7D%5D%7D%2C%22type%22%3A%22albums%22%7D","return"]}`},
+		{name: "ShouldFilterMusicVideosByTitle", have: media.View{Section: media.SectionMusicVideos, Title: "thriller"}, expected: `{"window":"videos","parameters":["videodb://musicvideos/titles/?xsp=%7B%22rules%22%3A%7B%22and%22%3A%5B%7B%22field%22%3A%22title%22%2C%22operator%22%3A%22contains%22%2C%22value%22%3A%5B%22thriller%22%5D%7D%5D%7D%2C%22type%22%3A%22musicvideos%22%7D","return"]}`},
+		{name: "ShouldOpenPlaylist", have: media.View{Section: media.SectionPlaylist, Playlist: media.Ref{Kind: media.KindPlaylist, ID: playlistID("special://profile/playlists/music/Road Trip.m3u")}}, expected: `{"window":"music","parameters":["special://profile/playlists/music/Road Trip.m3u","return"]}`},
 	}
 
-	for _, tc := range cases {
-		require.NoError(t, b.ShowView(ctx, tc.view), "%+v", tc.view)
-		assert.JSONEq(t, tc.params, lastParams(t, s, "GUI.ActivateWindow"), "%+v", tc.view)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			require.NoError(t, b.ShowView(ctx, tc.have))
+			assert.JSONEq(t, tc.expected, lastParams(t, s, "GUI.ActivateWindow"))
+		})
 	}
 
 	assert.JSONEq(t, `{"type":"tvshow"}`, lastParams(t, s, "VideoLibrary.GetGenres"))
@@ -371,21 +368,36 @@ func TestClock(t *testing.T) {
 }
 
 func TestParseClock(t *testing.T) {
-	for in, want := range map[string]string{
-		"09:42:17 PM": "21:42:17",
-		"12:05:00 AM": "00:05:00",
-		"12:30:00 pm": "12:30:00",
-		"21:42:17":    "21:42:17",
-		"7:05 AM":     "07:05:00",
-	} {
-		got, err := parseClock(in)
-		require.NoError(t, err, in)
-		assert.Equal(t, want, got.Format(time.TimeOnly), in)
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+		err      bool
+	}{
+		{name: "ShouldParseTwelveHourPM", have: "09:42:17 PM", expected: "21:42:17"},
+		{name: "ShouldParseMidnightHourAM", have: "12:05:00 AM", expected: "00:05:00"},
+		{name: "ShouldParseNoonHourLowercasePM", have: "12:30:00 pm", expected: "12:30:00"},
+		{name: "ShouldParseTwentyFourHour", have: "21:42:17", expected: "21:42:17"},
+		{name: "ShouldParseWithoutSeconds", have: "7:05 AM", expected: "07:05:00"},
+		{name: "ShouldRejectEmpty", err: true},
+		{name: "ShouldRejectWord", have: "noon", err: true},
+		{name: "ShouldRejectHourOutOfRange", have: "25:00:00", err: true},
+		{name: "ShouldRejectMinuteOutOfRange", have: "10:75", err: true},
 	}
 
-	for _, bad := range []string{"", "noon", "25:00:00", "10:75"} {
-		_, err := parseClock(bad)
-		require.Error(t, err, bad)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual, err := parseClock(tc.have)
+
+			if tc.err {
+				require.Error(t, err)
+
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, actual.Format(time.TimeOnly))
+		})
 	}
 }
 
@@ -393,16 +405,24 @@ func TestSystemAndLibrary(t *testing.T) {
 	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
 	ctx := t.Context()
 
-	for cmd, method := range map[media.SystemCommand]string{
-		media.SystemShutdown:  "System.Shutdown",
-		media.SystemReboot:    "System.Reboot",
-		media.SystemHibernate: "System.Hibernate",
-		media.SystemSuspend:   "System.Suspend",
-		media.SystemQuit:      "Application.Quit",
-		media.SystemEject:     "System.EjectOpticalDrive",
-	} {
-		require.NoError(t, b.System(ctx, cmd), cmd)
-		assert.Len(t, s.CallsTo(method), 1, cmd)
+	testCases := []struct {
+		name   string
+		have   media.SystemCommand
+		method string
+	}{
+		{name: "ShouldShutdown", have: media.SystemShutdown, method: "System.Shutdown"},
+		{name: "ShouldReboot", have: media.SystemReboot, method: "System.Reboot"},
+		{name: "ShouldHibernate", have: media.SystemHibernate, method: "System.Hibernate"},
+		{name: "ShouldSuspend", have: media.SystemSuspend, method: "System.Suspend"},
+		{name: "ShouldQuit", have: media.SystemQuit, method: "Application.Quit"},
+		{name: "ShouldEject", have: media.SystemEject, method: "System.EjectOpticalDrive"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			require.NoError(t, b.System(ctx, tc.have))
+			assert.Len(t, s.CallsTo(tc.method), 1)
+		})
 	}
 
 	require.Error(t, b.System(ctx, "explode"))

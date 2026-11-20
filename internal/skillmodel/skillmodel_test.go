@@ -177,99 +177,37 @@ func TestLintClean(t *testing.T) {
 }
 
 func TestLintRules(t *testing.T) {
-	tests := map[string]struct {
+	testCases := []struct {
+		name      string
 		overrides map[string]string
-		want      string
+		expected  string
 		sev       Severity
 	}{
-		"undeclared slot": {
-			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie:\n    - \"watch {Film}\"\n"},
-			want:      "undeclared slot {Film}", sev: Error,
-		},
-		"digits": {
-			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie:\n    - \"watch 2 {Movie}\"\n"},
-			want:      "spell out numbers", sev: Error,
-		},
-		"duplicate across intents": {
-			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  ViewRoom:\n    - \"put on {Movie}\"\n"},
-			want:      "is also a sample of", sev: Error,
-		},
-		"same carrier across intents": {
-			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  ViewRoom:\n    - \"put on {Room}\"\n"},
-			want:      "same wording", sev: Warning,
-		},
-		"slot joined to other text": {
-			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie:\n    - \"watch {Movie}'s sequel\"\n"},
-			want:      "joins slot {Movie} to other text", sev: Error,
-		},
-		"slot name with two types": {
-			overrides: map[string]string{"model.yaml": strings.Replace(baseFiles["model.yaml"], "      - {name: Room, type: KODI_ROOM}\n", "      - {name: Room, type: KODI_ROOM}\n      - {name: Movie, type: KODI_ROOM}\n", 1)},
-			want:      "slot Movie has type KODI_ROOM here but AMAZON.Movie in WatchMovie", sev: Error,
-		},
-		"built-in slot alone": {
-			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie:\n    - \"{Movie}\"\n"},
-			want:      "is a AMAZON.Movie slot alone", sev: Error,
-		},
-		"slot samples for a slot the intent lacks": {
-			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie.Film:\n    - \"{Movie}\"\n"},
-			want:      "samples given for slot Film, which the intent doesn't have", sev: Error,
-		},
-		"slot sample naming no slot": {
-			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie.Movie:\n    - \"that one\"\n"},
-			want:      "names no slot", sev: Error,
-		},
-		"slot sample naming an undeclared slot": {
-			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie.Movie:\n    - \"{Film}\"\n"},
-			want:      "references undeclared slot {Film}", sev: Error,
-		},
-		"bad slot sample pattern": {
-			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie.Movie:\n    - \"({Movie}\"\n"},
-			want:      "slot Movie:", sev: Error,
-		},
-		"slot samples for an unknown intent": {
-			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  Rewind.Duration:\n    - \"{Duration}\"\n"},
-			want:      "not in model.yaml", sev: Error,
-		},
-		"unknown intent": {
-			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  Rewind:\n    - \"rewind\"\n"},
-			want:      "not in model.yaml", sev: Error,
-		},
-		"bad pattern": {
-			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie:\n    - \"(watch {Movie}\"\n"},
-			want:      "missing", sev: Error,
-		},
-		"reserved invocation word": {
-			overrides: map[string]string{"locales/en-US.yaml": "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: alexa remote\n"},
-			want:      "reserved word", sev: Error,
-		},
-		"one word invocation": {
-			overrides: map[string]string{"locales/en-US.yaml": "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: encore\n"},
-			want:      "one-word invocation", sev: Warning,
-		},
-		"response placeholder mismatch": {
-			overrides: map[string]string{
-				"lang/de/utterances.yaml": "{}",
-				"lang/de/responses.yaml":  "playback.playing: \"Spiele {titel}.\"\n",
-			},
-			want: "placeholders [titel], expected [title]", sev: Error,
-		},
-		"missing translation": {
-			overrides: map[string]string{
-				"lang/de/utterances.yaml": "{}",
-				"lang/de/responses.yaml":  "{}",
-			},
-			want: "response playback.playing is not translated yet", sev: Warning,
-		},
-		"override of unknown response": {
-			overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "responses:\n  nope: \"x\"\n"},
-			want:      "does not exist", sev: Error,
-		},
+		{name: "ShouldRejectUndeclaredSlot", overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie:\n    - \"watch {Film}\"\n"}, expected: "undeclared slot {Film}", sev: Error},
+		{name: "ShouldRejectDigits", overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie:\n    - \"watch 2 {Movie}\"\n"}, expected: "spell out numbers", sev: Error},
+		{name: "ShouldRejectDuplicateAcrossIntents", overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  ViewRoom:\n    - \"put on {Movie}\"\n"}, expected: "is also a sample of", sev: Error},
+		{name: "ShouldWarnSameCarrierAcrossIntents", overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  ViewRoom:\n    - \"put on {Room}\"\n"}, expected: "same wording", sev: Warning},
+		{name: "ShouldRejectSlotJoinedToOtherText", overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie:\n    - \"watch {Movie}'s sequel\"\n"}, expected: "joins slot {Movie} to other text", sev: Error},
+		{name: "ShouldRejectSlotNameWithTwoTypes", overrides: map[string]string{"model.yaml": strings.Replace(baseFiles["model.yaml"], "      - {name: Room, type: KODI_ROOM}\n", "      - {name: Room, type: KODI_ROOM}\n      - {name: Movie, type: KODI_ROOM}\n", 1)}, expected: "slot Movie has type KODI_ROOM here but AMAZON.Movie in WatchMovie", sev: Error},
+		{name: "ShouldRejectBuiltInSlotAlone", overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie:\n    - \"{Movie}\"\n"}, expected: "is a AMAZON.Movie slot alone", sev: Error},
+		{name: "ShouldRejectSlotSamplesForASlotTheIntentLacks", overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie.Film:\n    - \"{Movie}\"\n"}, expected: "samples given for slot Film, which the intent doesn't have", sev: Error},
+		{name: "ShouldRejectSlotSampleNamingNoSlot", overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie.Movie:\n    - \"that one\"\n"}, expected: "names no slot", sev: Error},
+		{name: "ShouldRejectSlotSampleNamingAnUndeclaredSlot", overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie.Movie:\n    - \"{Film}\"\n"}, expected: "references undeclared slot {Film}", sev: Error},
+		{name: "ShouldRejectBadSlotSamplePattern", overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie.Movie:\n    - \"({Movie}\"\n"}, expected: "slot Movie:", sev: Error},
+		{name: "ShouldRejectSlotSamplesForAnUnknownIntent", overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  Rewind.Duration:\n    - \"{Duration}\"\n"}, expected: "not in model.yaml", sev: Error},
+		{name: "ShouldRejectUnknownIntent", overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  Rewind:\n    - \"rewind\"\n"}, expected: "not in model.yaml", sev: Error},
+		{name: "ShouldRejectBadPattern", overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "utterances:\n  WatchMovie:\n    - \"(watch {Movie}\"\n"}, expected: "missing", sev: Error},
+		{name: "ShouldRejectReservedInvocationWord", overrides: map[string]string{"locales/en-US.yaml": "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: alexa remote\n"}, expected: "reserved word", sev: Error},
+		{name: "ShouldWarnOneWordInvocation", overrides: map[string]string{"locales/en-US.yaml": "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: encore\n"}, expected: "one-word invocation", sev: Warning},
+		{name: "ShouldRejectResponsePlaceholderMismatch", overrides: map[string]string{"lang/de/utterances.yaml": "{}", "lang/de/responses.yaml": "playback.playing: \"Spiele {titel}.\"\n"}, expected: "placeholders [titel], expected [title]", sev: Error},
+		{name: "ShouldWarnMissingTranslation", overrides: map[string]string{"lang/de/utterances.yaml": "{}", "lang/de/responses.yaml": "{}"}, expected: "response playback.playing is not translated yet", sev: Warning},
+		{name: "ShouldRejectOverrideOfUnknownResponse", overrides: map[string]string{"locales/en-US.yaml": baseFiles["locales/en-US.yaml"] + "responses:\n  nope: \"x\"\n"}, expected: "does not exist", sev: Error},
 	}
 
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			got := messages(Lint(load(t, tt.overrides)), tt.sev)
-			assert.True(t, containsSubstring(got, tt.want), "want a %s containing %q, got %q", tt.sev, tt.want, got)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := messages(Lint(load(t, tc.overrides)), tc.sev)
+			assert.True(t, containsSubstring(actual, tc.expected), "want a %s containing %q, got %q", tc.sev, tc.expected, actual)
 		})
 	}
 }
@@ -330,19 +268,27 @@ func TestShippedSamplesSpaceTheirSlots(t *testing.T) {
 }
 
 func TestSpaceSlots(t *testing.T) {
-	for in, want := range map[string]string{
-		"[映画の]{Movie}が見たい":       "[映画の] {Movie} が見たい",
-		"{Room}で映画の{Movie}をつけて":  "{Room} で映画の {Movie} をつけて",
-		"{Show}{Season}":         "{Show} {Season}",
-		"play {Movie} in {Room}": "play {Movie} in {Room}",
-		"pause":                  "pause",
-		"{{Movie}":               "{ {Movie}",
-		"a{b":                    "a{b",
-		"}{Movie}{":              "} {Movie} {",
-		"{}x":                    "{} x",
-		"  play  {Movie} ":       "play {Movie}",
-	} {
-		assert.Equal(t, want, spaceSlots(in), in)
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldSpaceSlotInJapanese", have: "[映画の]{Movie}が見たい", expected: "[映画の] {Movie} が見たい"},
+		{name: "ShouldSpaceEverySlotInJapanese", have: "{Room}で映画の{Movie}をつけて", expected: "{Room} で映画の {Movie} をつけて"},
+		{name: "ShouldSpaceAdjacentSlots", have: "{Show}{Season}", expected: "{Show} {Season}"},
+		{name: "ShouldKeepSpacedSlots", have: "play {Movie} in {Room}", expected: "play {Movie} in {Room}"},
+		{name: "ShouldKeepSampleWithoutSlots", have: "pause", expected: "pause"},
+		{name: "ShouldSpaceSlotAfterStrayOpener", have: "{{Movie}", expected: "{ {Movie}"},
+		{name: "ShouldKeepUnclosedBrace", have: "a{b", expected: "a{b"},
+		{name: "ShouldSpaceSlotBetweenStrayBraces", have: "}{Movie}{", expected: "} {Movie} {"},
+		{name: "ShouldSpaceEmptyBraces", have: "{}x", expected: "{} x"},
+		{name: "ShouldTrimAndCollapseSpaces", have: "  play  {Movie} ", expected: "play {Movie}"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, spaceSlots(tc.have))
+		})
 	}
 }
 
@@ -468,17 +414,24 @@ func TestBuildKodiInvocationUsesTheLocaleSpelling(t *testing.T) {
 		"locales/en-GB.yaml": "language: en\nlaunch:\n  open: open {invocation}\n  skill: open the {invocation} skill\nskill_name: Encore\ninvocation: encore test\nkodi_invocation: kodi player\n",
 	})
 
-	for _, tt := range []struct {
-		locale, choice, want string
+	testCases := []struct {
+		name     string
+		locale   string
+		have     string
+		expected string
 	}{
-		{"en-GB", InvocationKodi, "kodi player"},
-		{"en-GB", "", "encore test"},
-		{"en-GB", "telly", "telly"},
-		{"en-US", InvocationKodi, "kodi"},
-	} {
-		m, err := Build(src, tt.locale, BuildOptions{Invocation: tt.choice})
-		require.NoError(t, err)
-		assert.Equal(t, tt.want, m.InteractionModel.LanguageModel.InvocationName, "%s with %q", tt.locale, tt.choice)
+		{name: "ShouldUseTheLocaleKodiSpelling", locale: "en-GB", have: InvocationKodi, expected: "kodi player"},
+		{name: "ShouldUseTheLocaleInvocationByDefault", locale: "en-GB", expected: "encore test"},
+		{name: "ShouldUseACustomInvocation", locale: "en-GB", have: "telly", expected: "telly"},
+		{name: "ShouldUseKodiWithoutALocaleSpelling", locale: "en-US", have: InvocationKodi, expected: "kodi"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			m, err := Build(src, tc.locale, BuildOptions{Invocation: tc.have})
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, m.InteractionModel.LanguageModel.InvocationName)
+		})
 	}
 }
 

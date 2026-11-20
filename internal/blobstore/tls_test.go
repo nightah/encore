@@ -37,7 +37,7 @@ func TestTLSConfig(t *testing.T) {
 		return err
 	}
 
-	t.Run("system pool only", func(t *testing.T) {
+	t.Run("ShouldTrustOnlyTheSystemPoolByDefault", func(t *testing.T) {
 		cfg, err := tlsConfig("", false)
 		require.NoError(t, err)
 		assert.Equal(t, uint16(tls.VersionTLS12), cfg.MinVersion)
@@ -45,19 +45,19 @@ func TestTLSConfig(t *testing.T) {
 		require.Error(t, get(t, cfg), "a private CA is not trusted by default")
 	})
 
-	t.Run("bundle", func(t *testing.T) {
+	t.Run("ShouldTrustACABundle", func(t *testing.T) {
 		cfg, err := tlsConfig(bundle, false)
 		require.NoError(t, err)
 		require.NoError(t, get(t, cfg))
 	})
 
-	t.Run("insecure", func(t *testing.T) {
+	t.Run("ShouldSkipVerificationWhenInsecure", func(t *testing.T) {
 		cfg, err := tlsConfig("", true)
 		require.NoError(t, err)
 		require.NoError(t, get(t, cfg))
 	})
 
-	t.Run("bundle without certificates", func(t *testing.T) {
+	t.Run("ShouldRejectABundleWithoutCertificates", func(t *testing.T) {
 		empty := filepath.Join(dir, "empty.pem")
 		require.NoError(t, os.WriteFile(empty, []byte("not a certificate"), 0o600))
 
@@ -65,7 +65,7 @@ func TestTLSConfig(t *testing.T) {
 		require.ErrorContains(t, err, "no PEM certificates")
 	})
 
-	t.Run("missing bundle", func(t *testing.T) {
+	t.Run("ShouldReportAMissingBundle", func(t *testing.T) {
 		_, err := tlsConfig(filepath.Join(dir, "missing.pem"), false)
 		require.ErrorIs(t, err, os.ErrNotExist)
 	})

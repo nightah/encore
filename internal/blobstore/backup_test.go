@@ -219,12 +219,12 @@ func newFailingStore(t *testing.T) *failingStore {
 func TestBackupFailures(t *testing.T) {
 	ctx := t.Context()
 
-	t.Run("staging directory", func(t *testing.T) {
+	t.Run("ShouldReportAMissingStagingDirectory", func(t *testing.T) {
 		_, err := blobstore.Backup(ctx, fileDB{dir: filepath.Join(t.TempDir(), "missing")}, newFailingStore(t), "backups", 3)
 		require.ErrorContains(t, err, "staging directory")
 	})
 
-	t.Run("database copy", func(t *testing.T) {
+	t.Run("ShouldReportAFailedDatabaseCopy", func(t *testing.T) {
 		dir := t.TempDir()
 
 		_, err := blobstore.Backup(ctx, fileDB{dir: dir, err: assert.AnError}, newFailingStore(t), "backups", 3)
@@ -235,7 +235,7 @@ func TestBackupFailures(t *testing.T) {
 		assert.Empty(t, entries, "the staging directory is removed")
 	})
 
-	t.Run("upload", func(t *testing.T) {
+	t.Run("ShouldReportAFailedUpload", func(t *testing.T) {
 		s := newFailingStore(t)
 		s.putErr = assert.AnError
 
@@ -245,7 +245,7 @@ func TestBackupFailures(t *testing.T) {
 		assert.Empty(t, key)
 	})
 
-	t.Run("listing for pruning", func(t *testing.T) {
+	t.Run("ShouldReportAFailedListingForPruning", func(t *testing.T) {
 		s := newFailingStore(t)
 		s.listErr = assert.AnError
 
@@ -257,7 +257,7 @@ func TestBackupFailures(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("pruning", func(t *testing.T) {
+	t.Run("ShouldReportAFailedPrune", func(t *testing.T) {
 		s := newFailingStore(t)
 
 		for _, k := range []string{"backups/encore-20260101T030000.000Z.db.gz", "backups/encore-20260102T030000.000Z.db.gz"} {
@@ -286,28 +286,36 @@ func TestListBackupsReportsStorageErrors(t *testing.T) {
 }
 
 func TestBackupTime(t *testing.T) {
-	want := time.Date(2026, 10, 26, 3, 0, 0, 0, time.UTC)
+	expected := time.Date(2026, 10, 26, 3, 0, 0, 0, time.UTC)
 
-	for key, ok := range map[string]bool{
-		"encore-20261026T030000.000Z.db.gz":           true,
-		"backups/encore-20261026T030000.000Z.db.gz":   true,
-		"a/b/c/encore-20261026T030000.000Z.db.gz":     true,
-		"backups/encore-20261026T030000.000Z.db":      false,
-		"backups/encore-20261026T030000.000Z":         false,
-		"backups/other-20261026T030000.000Z.db.gz":    false,
-		"backups/encore-2026-10-26.db.gz":             false,
-		"encore-20261026T030000.000Z.db.gz/notes.txt": false,
-		"backups/encore-20261326T030000.000Z.db.gz":   false,
-		"backups/xencore-20261026T030000.000Z.db.gz":  false,
-		"": false,
-		"backups/encore-20261026T030000.000Z.db.gz.backup": false,
-	} {
-		got, gotOK := blobstore.BackupTime(key)
-		assert.Equal(t, ok, gotOK, key)
+	testCases := []struct {
+		name string
+		have string
+		ok   bool
+	}{
+		{name: "ShouldParseAKeyAtTheRoot", have: "encore-20261026T030000.000Z.db.gz", ok: true},
+		{name: "ShouldParseAKeyUnderAPrefix", have: "backups/encore-20261026T030000.000Z.db.gz", ok: true},
+		{name: "ShouldParseAKeyUnderANestedPrefix", have: "a/b/c/encore-20261026T030000.000Z.db.gz", ok: true},
+		{name: "ShouldRejectAKeyWithoutGz", have: "backups/encore-20261026T030000.000Z.db"},
+		{name: "ShouldRejectAKeyWithoutAnExtension", have: "backups/encore-20261026T030000.000Z"},
+		{name: "ShouldRejectAnotherName", have: "backups/other-20261026T030000.000Z.db.gz"},
+		{name: "ShouldRejectAnotherTimeFormat", have: "backups/encore-2026-10-26.db.gz"},
+		{name: "ShouldRejectAnObjectInsideABackupName", have: "encore-20261026T030000.000Z.db.gz/notes.txt"},
+		{name: "ShouldRejectAnImpossibleDate", have: "backups/encore-20261326T030000.000Z.db.gz"},
+		{name: "ShouldRejectANameWithAPrefix", have: "backups/xencore-20261026T030000.000Z.db.gz"},
+		{name: "ShouldRejectEmpty", have: ""},
+		{name: "ShouldRejectANameWithASuffix", have: "backups/encore-20261026T030000.000Z.db.gz.backup"},
+	}
 
-		if ok {
-			assert.True(t, got.Equal(want), key)
-		}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual, ok := blobstore.BackupTime(tc.have)
+			assert.Equal(t, tc.ok, ok)
+
+			if tc.ok {
+				assert.True(t, actual.Equal(expected))
+			}
+		})
 	}
 }
 

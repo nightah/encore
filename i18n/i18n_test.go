@@ -177,7 +177,7 @@ func TestUSSpanishFollowsMexicanSpanish(t *testing.T) {
 
 // es-MX and es-US replace the responses lang/es words with the Peninsular perfect ("no he encontrado") by the preterite Latin American speakers use ("no encontré"), as their headers say. With "todavía no" the perfect is usual in the Americas too.
 func TestAmericanSpanishSaysThePreterite(t *testing.T) {
-	read := func(name string, v any) {
+	read := func(t *testing.T, name string, v any) {
 		b, err := fs.ReadFile(FS, name)
 		require.NoError(t, err)
 		require.NoError(t, yaml.Unmarshal(b, v), name)
@@ -185,28 +185,38 @@ func TestAmericanSpanishSaysThePreterite(t *testing.T) {
 
 	var spain map[string]string
 
-	read("lang/es/responses.yaml", &spain)
+	read(t, "lang/es/responses.yaml", &spain)
 
 	perfect := regexp.MustCompile(`(?i)\b(he|has|ha|hemos|han) \p{L}+(ado|ido)\b`)
 
-	for _, locale := range []string{"es-MX", "es-US"} {
-		var overlay struct {
-			Responses map[string]string `yaml:"responses"`
-		}
+	testCases := []struct {
+		name   string
+		locale string
+	}{
+		{name: "ShouldSayThePreteriteInEsMX", locale: "es-MX"},
+		{name: "ShouldSayThePreteriteInEsUS", locale: "es-US"},
+	}
 
-		read("locales/"+locale+".yaml", &overlay)
-
-		for key, text := range spain {
-			if own, ok := overlay.Responses[key]; ok {
-				text = own
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var overlay struct {
+				Responses map[string]string `yaml:"responses"`
 			}
 
-			if strings.HasPrefix(text, "Todavía no") {
-				continue
-			}
+			read(t, "locales/"+tc.locale+".yaml", &overlay)
 
-			assert.NotRegexp(t, perfect, text, "%s %s", locale, key)
-		}
+			for key, text := range spain {
+				if own, ok := overlay.Responses[key]; ok {
+					text = own
+				}
+
+				if strings.HasPrefix(text, "Todavía no") {
+					continue
+				}
+
+				assert.NotRegexp(t, perfect, text, key)
+			}
+		})
 	}
 }
 

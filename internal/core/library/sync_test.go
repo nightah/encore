@@ -56,15 +56,16 @@ func TestDeltaRetriesAFailedFullListing(t *testing.T) {
 }
 
 func TestDeltaStoppedIsOneError(t *testing.T) {
-	for name, fail := range map[string]func(*fakeBackend, error){
-		"full listing": func(b *fakeBackend, err error) {
-			b.mu.Lock()
-			b.fail[media.KindPlaylist] = err
-			b.mu.Unlock()
-		},
-		"recently added": func(b *fakeBackend, err error) { b.failOn("RecentlyAdded", err) },
-	} {
-		t.Run(name, func(t *testing.T) {
+	testCases := []struct {
+		name string
+		fail func(*fakeBackend, error)
+	}{
+		{name: "ShouldStopAsOneErrorDuringAFullListing", fail: func(b *fakeBackend, err error) { b.mu.Lock(); b.fail[media.KindPlaylist] = err; b.mu.Unlock() }},
+		{name: "ShouldStopAsOneErrorDuringRecentlyAdded", fail: func(b *fakeBackend, err error) { b.failOn("RecentlyAdded", err) }},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			b := seed()
 			c, rec := newCatalog(b, newClock(), Options{Kinds: []media.Kind{media.KindPlaylist, media.KindMovie, media.KindTVShow}})
 			require.NoError(t, c.Sync(t.Context()))
@@ -72,7 +73,7 @@ func TestDeltaStoppedIsOneError(t *testing.T) {
 
 			ctx, cancel := context.WithCancel(t.Context())
 			cancel()
-			fail(b, ctx.Err())
+			tc.fail(b, ctx.Err())
 
 			err := c.Delta(ctx)
 
@@ -171,16 +172,21 @@ func TestRefreshFailureKeepsTheItem(t *testing.T) {
 }
 
 func TestLookupFailure(t *testing.T) {
-	for name, b := range map[string]media.Source{
-		"listing":   seed(),
-		"searching": searchingBackend{seed()},
-	} {
-		t.Run(name, func(t *testing.T) {
-			c, rec := newCatalog(b, newClock(), Options{})
+	testCases := []struct {
+		name string
+		have media.Source
+	}{
+		{name: "ShouldFailWhenListing", have: seed()},
+		{name: "ShouldFailWhenSearching", have: searchingBackend{seed()}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			c, rec := newCatalog(tc.have, newClock(), Options{})
 
 			var fake *fakeBackend
 
-			switch b := b.(type) {
+			switch b := tc.have.(type) {
 			case *fakeBackend:
 				fake = b
 			case searchingBackend:

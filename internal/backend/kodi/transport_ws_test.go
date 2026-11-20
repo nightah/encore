@@ -194,41 +194,51 @@ func TestWebSocketCallerGivesUpWhileWaiting(t *testing.T) {
 }
 
 func TestUnencodableParams(t *testing.T) {
-	synctest.Test(t, func(t *testing.T) {
-		k := &scriptedKodi{ws: ignore}
-		cfg := k.start(t)
+	testCases := []struct {
+		name string
+		ws   bool
+	}{
+		{name: "ShouldRejectOverHTTP"},
+		{name: "ShouldRejectOverWebSocket", ws: true},
+	}
 
-		for _, ws := range []bool{false, true} {
-			cfg.DisableWebSocket = !ws
-			tr := NewTransport(cfg, nil)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			synctest.Test(t, func(t *testing.T) {
+				k := &scriptedKodi{ws: ignore}
+				cfg := k.start(t)
+				cfg.DisableWebSocket = !tc.ws
+				tr := NewTransport(cfg, nil)
 
-			if ws {
-				runTransport(t, tr)
-			}
+				if tc.ws {
+					runTransport(t, tr)
+				}
 
-			err := tr.Call(t.Context(), "Input.SendText", map[string]any{"text": make(chan int)}, nil)
+				err := tr.Call(t.Context(), "Input.SendText", map[string]any{"text": make(chan int)}, nil)
 
-			require.ErrorContains(t, err, "encoding params", "websocket=%v", ws)
-			require.NotErrorIs(t, err, media.ErrUnreachable, "a bug here is not Kodi's absence")
-		}
-
-		assert.Zero(t, k.posts.Load())
-	})
+				require.ErrorContains(t, err, "encoding params")
+				require.NotErrorIs(t, err, media.ErrUnreachable, "a bug here is not Kodi's absence")
+				assert.Zero(t, k.posts.Load())
+			})
+		})
+	}
 }
 
 func TestHTTPReplies(t *testing.T) {
-	for _, tc := range []struct {
+	testCases := []struct {
 		name        string
 		status      int
 		body        string
 		unreachable bool
-		contains    string
+		err         string
 	}{
-		{"server error", http.StatusInternalServerError, "", true, "HTTP 500"},
-		{"unauthorised", http.StatusUnauthorized, "", true, "unauthorized"},
-		{"not JSON", http.StatusOK, "<html>", true, "decoding response"},
-		{"wrong result shape", http.StatusOK, `{"jsonrpc":"2.0","id":1,"result":{"not":"a string"}}`, false, "decoding result"},
-	} {
+		{name: "ShouldTreatServerErrorAsUnreachable", status: http.StatusInternalServerError, unreachable: true, err: "HTTP 500"},
+		{name: "ShouldTreatUnauthorisedAsUnreachable", status: http.StatusUnauthorized, unreachable: true, err: "unauthorized"},
+		{name: "ShouldTreatNonJSONAsUnreachable", status: http.StatusOK, body: "<html>", unreachable: true, err: "decoding response"},
+		{name: "ShouldReportWrongResultShape", status: http.StatusOK, body: `{"jsonrpc":"2.0","id":1,"result":{"not":"a string"}}`, err: "decoding result"},
+	}
+
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			k := &scriptedKodi{post: func(w http.ResponseWriter, _ *http.Request) {
 				w.WriteHeader(tc.status)
@@ -239,7 +249,7 @@ func TestHTTPReplies(t *testing.T) {
 
 			err := ping(t.Context(), NewTransport(cfg, nil))
 
-			require.ErrorContains(t, err, tc.contains)
+			require.ErrorContains(t, err, tc.err)
 			assert.Equal(t, tc.unreachable, errors.Is(err, media.ErrUnreachable))
 
 			if tc.status == http.StatusUnauthorized {
