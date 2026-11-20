@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 env:
-  GORELEASER_VERSION: v2.20.2
+  GORELEASER_VERSION: v2.20.3
   SYFT_VERSION: v1.57.2
 
 jobs:
