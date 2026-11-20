@@ -532,19 +532,24 @@ func TestRestoreStopsWhenTheAnswerCannotBeRead(t *testing.T) {
 }
 
 func TestRestoreCommandValidatesItsArguments(t *testing.T) {
-	for _, tc := range []struct {
-		args []string
-		want string
+	testCases := []struct {
+		name string
+		have []string
+		err  string
 	}{
-		{[]string{"restore"}, "name a backup key, or pass --latest or --list"},
-		{[]string{"restore", "--latest", "Encore/encore-1.db.gz"}, "name a backup key, or pass --latest or --list"},
-		{[]string{"restore", "--list", "Encore/encore-1.db.gz"}, "--list takes no backup key"},
-		{[]string{"restore", "--list", "--latest"}, "--list takes no backup key"},
-		{[]string{"restore", "one", "two"}, "accepts at most 1 arg"},
-	} {
-		_, _, err := runCLI(t, tc.args...)
-		require.Error(t, err, tc.args)
-		assert.Contains(t, err.Error(), tc.want, tc.args)
+		{name: "ShouldRefuseNoBackup", have: []string{"restore"}, err: "name a backup key, or pass --latest or --list"},
+		{name: "ShouldRefuseLatestWithAKey", have: []string{"restore", "--latest", "Encore/encore-1.db.gz"}, err: "name a backup key, or pass --latest or --list"},
+		{name: "ShouldRefuseListWithAKey", have: []string{"restore", "--list", "Encore/encore-1.db.gz"}, err: "--list takes no backup key"},
+		{name: "ShouldRefuseListWithLatest", have: []string{"restore", "--list", "--latest"}, err: "--list takes no backup key"},
+		{name: "ShouldRefuseTwoKeys", have: []string{"restore", "one", "two"}, err: "accepts at most 1 arg"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, _, err := runCLI(t, tc.have...)
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), tc.err)
+		})
 	}
 }
 
@@ -603,14 +608,14 @@ func TestRestoreLatestWithNoBackups(t *testing.T) {
 }
 
 func TestRestoreOpenFailures(t *testing.T) {
-	t.Run("invalid secrets key", func(t *testing.T) {
+	t.Run("ShouldFailWithAnInvalidSecretsKey", func(t *testing.T) {
 		r := emptyRestorer(t)
 		r.cfg.Secrets.Key = "not a key"
 
 		require.Error(t, r.list(t.Context()))
 	})
 
-	t.Run("data directory can't be created", func(t *testing.T) {
+	t.Run("ShouldFailWhenTheDataDirectoryCantBeCreated", func(t *testing.T) {
 		r := emptyRestorer(t)
 		file := filepath.Join(r.cfg.DataDir, "file")
 		require.NoError(t, os.WriteFile(file, nil, 0o600))
@@ -624,7 +629,7 @@ func TestRestoreOpenFailures(t *testing.T) {
 		assert.Contains(t, err.Error(), "creating data directory")
 	})
 
-	t.Run("unreadable current database", func(t *testing.T) {
+	t.Run("ShouldFailWithAnUnreadableCurrentDatabase", func(t *testing.T) {
 		r := emptyRestorer(t)
 		require.NoError(t, os.WriteFile(store.DefaultPath(r.cfg.DataDir), bytes.Repeat([]byte("junk "), 1024), 0o600))
 
@@ -633,7 +638,7 @@ func TestRestoreOpenFailures(t *testing.T) {
 		assert.Contains(t, err.Error(), "opening the current database for its storage settings")
 	})
 
-	t.Run("unknown storage backend", func(t *testing.T) {
+	t.Run("ShouldFailWithAnUnknownStorageBackend", func(t *testing.T) {
 		r := emptyRestorer(t)
 		r.cfg.Storage.Backend = "floppy"
 
@@ -646,7 +651,7 @@ func TestRestoreOpenFailures(t *testing.T) {
 		require.NoError(t, lock.Close())
 	})
 
-	t.Run("unknown state storage backend", func(t *testing.T) {
+	t.Run("ShouldFailWithAnUnknownStateStorageBackend", func(t *testing.T) {
 		r := emptyRestorer(t)
 		r.cfg.Stateless = true
 		r.cfg.Storage.Backend = "floppy"
@@ -764,30 +769,35 @@ func TestRestoreStatelessChecksTheOwnerAgainBeforeUploading(t *testing.T) {
 }
 
 func TestRestoreConfirm(t *testing.T) {
-	for _, tc := range []struct {
-		input string
-		want  bool
+	testCases := []struct {
+		name     string
+		have     string
+		expected bool
 	}{
-		{"y\n", true},
-		{"Y\n", true},
-		{"yes\n", true},
-		{"  YES  \r\n", true},
-		{"y", true},
-		{"n\n", false},
-		{"no\n", false},
-		{"\n", false},
-		{"", false},
-		{"yeah\n", false},
-		{"ja\n", false},
-		{"n\ny\n", false},
-	} {
-		var out bytes.Buffer
+		{name: "ShouldConfirmY", have: "y\n", expected: true},
+		{name: "ShouldConfirmUpperCaseY", have: "Y\n", expected: true},
+		{name: "ShouldConfirmYes", have: "yes\n", expected: true},
+		{name: "ShouldConfirmYesInUpperCaseSurroundedBySpace", have: "  YES  \r\n", expected: true},
+		{name: "ShouldConfirmYWithoutANewline", have: "y", expected: true},
+		{name: "ShouldNotConfirmN", have: "n\n"},
+		{name: "ShouldNotConfirmNo", have: "no\n"},
+		{name: "ShouldNotConfirmAnEmptyLine", have: "\n"},
+		{name: "ShouldNotConfirmNoInput"},
+		{name: "ShouldNotConfirmYeah", have: "yeah\n"},
+		{name: "ShouldNotConfirmJa", have: "ja\n"},
+		{name: "ShouldReadOnlyTheFirstLine", have: "n\ny\n"},
+	}
 
-		r := &restorer{in: strings.NewReader(tc.input), out: &out}
-		ok, err := r.confirm("Replace? [y/N] ")
-		require.NoError(t, err, "%q", tc.input)
-		assert.Equal(t, tc.want, ok, "%q", tc.input)
-		assert.Equal(t, "Replace? [y/N] ", out.String())
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var out bytes.Buffer
+
+			r := &restorer{in: strings.NewReader(tc.have), out: &out}
+			ok, err := r.confirm("Replace? [y/N] ")
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, ok)
+			assert.Equal(t, "Replace? [y/N] ", out.String())
+		})
 	}
 }
 
@@ -799,11 +809,21 @@ func (f failingIO) Write([]byte) (int, error) { return 0, f.err }
 func TestRestoreConfirmFailures(t *testing.T) {
 	errBroken := errors.New("broken pipe")
 
-	_, err := (&restorer{in: failingIO{errBroken}, out: io.Discard}).confirm("?")
-	require.ErrorIs(t, err, errBroken, "a failed read is not a no")
+	testCases := []struct {
+		name string
+		in   io.Reader
+		out  io.Writer
+	}{
+		{name: "ShouldNotTreatAFailedReadAsNo", in: failingIO{errBroken}, out: io.Discard},
+		{name: "ShouldFailWhenThePromptCantBeShownBeforeReadingAnAnswer", in: strings.NewReader("y\n"), out: failingIO{errBroken}},
+	}
 
-	_, err = (&restorer{in: strings.NewReader("y\n"), out: failingIO{errBroken}}).confirm("?")
-	require.ErrorIs(t, err, errBroken, "the prompt must be shown before reading an answer")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := (&restorer{in: tc.in, out: tc.out}).confirm("?")
+			require.ErrorIs(t, err, errBroken)
+		})
+	}
 }
 
 func TestVerifyBackupRejectsAForeignDatabase(t *testing.T) {
@@ -887,39 +907,55 @@ func TestRemoveDBRemovesItsCompanionFiles(t *testing.T) {
 }
 
 func TestIsTerminal(t *testing.T) {
-	assert.False(t, isTerminal(strings.NewReader("y\n")), "a reader that isn't a file")
-
 	f, err := os.CreateTemp(t.TempDir(), "in")
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = f.Close() })
-	assert.False(t, isTerminal(f), "a regular file")
 
 	r, w, err := os.Pipe()
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = r.Close(); _ = w.Close() })
-	assert.False(t, isTerminal(r), "a pipe")
+
+	testCases := []struct {
+		name string
+		have io.Reader
+	}{
+		{name: "ShouldNotTreatAReaderThatIsntAFileAsATerminal", have: strings.NewReader("y\n")},
+		{name: "ShouldNotTreatARegularFileAsATerminal", have: f},
+		{name: "ShouldNotTreatAPipeAsATerminal", have: r},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.False(t, isTerminal(tc.have))
+		})
+	}
 }
 
 func TestFormatSize(t *testing.T) {
 	t.Parallel()
 
-	for _, tc := range []struct {
-		n    int64
-		want string
+	testCases := []struct {
+		name     string
+		have     int64
+		expected string
 	}{
-		{0, "0 B"},
-		{1, "1 B"},
-		{1023, "1023 B"},
-		{1024, "1.0 KiB"},
-		{1536, "1.5 KiB"},
-		{1 << 20, "1.0 MiB"},
-		{3*1<<20 + 1<<19, "3.5 MiB"},
-		{5 << 30, "5.0 GiB"},
-		{1 << 40, "1.0 TiB"},
-		{1 << 50, "1.0 PiB"},
-		{1 << 60, "1.0 EiB"},
-		{1<<63 - 1, "8.0 EiB"},
-	} {
-		assert.Equal(t, tc.want, formatSize(tc.n), "%d", tc.n)
+		{name: "ShouldFormatZeroBytes", expected: "0 B"},
+		{name: "ShouldFormatOneByte", have: 1, expected: "1 B"},
+		{name: "ShouldFormatBytesBelowAKibibyte", have: 1023, expected: "1023 B"},
+		{name: "ShouldFormatAKibibyte", have: 1024, expected: "1.0 KiB"},
+		{name: "ShouldFormatAFractionalKibibyte", have: 1536, expected: "1.5 KiB"},
+		{name: "ShouldFormatAMebibyte", have: 1 << 20, expected: "1.0 MiB"},
+		{name: "ShouldFormatAFractionalMebibyte", have: 3*1<<20 + 1<<19, expected: "3.5 MiB"},
+		{name: "ShouldFormatGibibytes", have: 5 << 30, expected: "5.0 GiB"},
+		{name: "ShouldFormatATebibyte", have: 1 << 40, expected: "1.0 TiB"},
+		{name: "ShouldFormatAPebibyte", have: 1 << 50, expected: "1.0 PiB"},
+		{name: "ShouldFormatAnExbibyte", have: 1 << 60, expected: "1.0 EiB"},
+		{name: "ShouldFormatTheLargestSize", have: 1<<63 - 1, expected: "8.0 EiB"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, formatSize(tc.have))
+		})
 	}
 }

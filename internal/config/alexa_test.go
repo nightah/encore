@@ -24,12 +24,22 @@ func TestAlexaVoiceOptions(t *testing.T) {
 	assert.False(t, cfg.Alexa.AutoDeploy)
 	assert.InDelta(t, 2.5, cfg.Alexa.AutoDeployMinutes, 0)
 
-	_, err = Load(Options{Environ: environ("ENCORE_ALEXA_QUEUE_LIMIT=0")})
-	require.ErrorContains(t, err, "alexa.queue_limit")
+	testCases := []struct {
+		name string
+		have string
+		err  string
+	}{
+		{name: "ShouldRejectAZeroQueueLimit", have: "ENCORE_ALEXA_QUEUE_LIMIT=0", err: "alexa.queue_limit"},
+		{name: "ShouldRejectZeroAutoDeployMinutes", have: "ENCORE_ALEXA_AUTO_DEPLOY_MINUTES=0", err: "alexa.auto_deploy_minutes"},
+		{name: "ShouldRejectAutoDeployMinutesUnderOne", have: "ENCORE_ALEXA_AUTO_DEPLOY_MINUTES=0.5", err: "alexa.auto_deploy_minutes"},
+		{name: "ShouldRejectAutoDeployMinutesOverADay", have: "ENCORE_ALEXA_AUTO_DEPLOY_MINUTES=1441", err: "alexa.auto_deploy_minutes"},
+	}
 
-	for _, n := range []string{"0", "0.5", "1441"} {
-		_, err = Load(Options{Environ: environ("ENCORE_ALEXA_AUTO_DEPLOY_MINUTES=" + n)})
-		require.ErrorContains(t, err, "alexa.auto_deploy_minutes", n)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := Load(Options{Environ: environ(tc.have)})
+			require.ErrorContains(t, err, tc.err)
+		})
 	}
 }
 

@@ -55,18 +55,34 @@ func TestConfigSectionsRequireADocCommentForEveryKey(t *testing.T) {
 }
 
 func TestConfigSectionsMissingSource(t *testing.T) {
-	_, err := ConfigSections(filepath.Join(t.TempDir(), "missing"))
-	require.Error(t, err)
+	testCases := []struct {
+		name string
+		dir  func(t *testing.T) string
+		err  string
+	}{
+		{name: "ShouldRejectMissingDirectory", dir: func(t *testing.T) string { return filepath.Join(t.TempDir(), "missing") }},
+		{name: "ShouldRejectDirectoryWithoutGoFiles", dir: func(t *testing.T) string { return t.TempDir() }, err: "no Go files"},
+		{
+			name: "ShouldRejectFileThatDoesNotParse",
+			dir: func(t *testing.T) string {
+				dir := t.TempDir()
+				require.NoError(t, os.WriteFile(filepath.Join(dir, "broken.go"), []byte("package config\n\ntype {"), 0o600))
 
-	_, err = ConfigSections(t.TempDir())
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "no Go files")
+				return dir
+			},
+		},
+	}
 
-	dir := t.TempDir()
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "broken.go"), []byte("package config\n\ntype {"), 0o600))
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := ConfigSections(tc.dir(t))
+			require.Error(t, err)
 
-	_, err = ConfigSections(dir)
-	require.Error(t, err, "a file that doesn't parse")
+			if tc.err != "" {
+				assert.Contains(t, err.Error(), tc.err)
+			}
+		})
+	}
 }
 
 func TestGenerateFailsWithoutTheConfigSource(t *testing.T) {
@@ -157,18 +173,22 @@ func TestRewrite(t *testing.T) {
 	w := &walker{}
 	siblings := map[string]string{"GroupsClaim": "groups_claim", "SSEKMSKeyID": "sse_kms_key_id"}
 
-	for _, tc := range []struct {
-		name, doc, want string
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
 	}{
-		{"leading name becomes the key", "AdminGroup is the group.", "`auth.oidc.admin_group` is the group."},
-		{"leading name before a comma", "AdminGroup, when set, is required.", "`auth.oidc.admin_group`, when set, is required."},
-		{"siblings become keys", "Read from GroupsClaim; see also SSEKMSKeyID.", "Read from `auth.oidc.groups_claim`; see also `auth.oidc.sse_kms_key_id`."},
-		{"unknown identifiers stay", "Unlike OtherThing, it works.", "Unlike OtherThing, it works."},
-		{"Go asides are dropped", "The mode (AuthModeLocal) applies; see ParseMode", "The mode applies"},
-		{"name elsewhere is untouched", "Use AdminGroup.", "Use AdminGroup."},
-	} {
+		{name: "ShouldTurnLeadingNameIntoTheKey", have: "AdminGroup is the group.", expected: "`auth.oidc.admin_group` is the group."},
+		{name: "ShouldTurnLeadingNameBeforeACommaIntoTheKey", have: "AdminGroup, when set, is required.", expected: "`auth.oidc.admin_group`, when set, is required."},
+		{name: "ShouldTurnSiblingsIntoKeys", have: "Read from GroupsClaim; see also SSEKMSKeyID.", expected: "Read from `auth.oidc.groups_claim`; see also `auth.oidc.sse_kms_key_id`."},
+		{name: "ShouldKeepUnknownIdentifiers", have: "Unlike OtherThing, it works.", expected: "Unlike OtherThing, it works."},
+		{name: "ShouldDropGoAsides", have: "The mode (AuthModeLocal) applies; see ParseMode", expected: "The mode applies"},
+		{name: "ShouldNotTouchNameElsewhere", have: "Use AdminGroup.", expected: "Use AdminGroup."},
+	}
+
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.want, w.rewrite(tc.doc, "AdminGroup", "auth.oidc.admin_group", "auth.oidc.", siblings))
+			assert.Equal(t, tc.expected, w.rewrite(tc.have, "AdminGroup", "auth.oidc.admin_group", "auth.oidc.", siblings))
 		})
 	}
 }
@@ -176,19 +196,24 @@ func TestRewrite(t *testing.T) {
 func TestTypeName(t *testing.T) {
 	t.Parallel()
 
-	for _, tc := range []struct {
-		v    any
-		want string
+	testCases := []struct {
+		name     string
+		have     any
+		expected string
 	}{
-		{"", "string"},
-		{0, "integer"},
-		{false, "bool"},
-		{[]string{}, "list of strings"},
-		{[]int{}, "list of integers"},
-		{new(bool), "bool"},
-		{int64(0), "int64"},
-	} {
-		assert.Equal(t, tc.want, typeName(reflect.TypeOf(tc.v)), "%T", tc.v)
+		{name: "ShouldNameString", have: "", expected: "string"},
+		{name: "ShouldNameIntAsInteger", have: 0, expected: "integer"},
+		{name: "ShouldNameBool", have: false, expected: "bool"},
+		{name: "ShouldNameListOfStrings", have: []string{}, expected: "list of strings"},
+		{name: "ShouldNameListOfIntegers", have: []int{}, expected: "list of integers"},
+		{name: "ShouldNamePointerByItsElement", have: new(bool), expected: "bool"},
+		{name: "ShouldNameOtherKindsByGoName", have: int64(0), expected: "int64"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, typeName(reflect.TypeOf(tc.have)))
+		})
 	}
 }
 
@@ -198,20 +223,25 @@ func TestFormatDefault(t *testing.T) {
 	yes := true
 	n := 3
 
-	for _, tc := range []struct {
-		v    any
-		want string
+	testCases := []struct {
+		name     string
+		have     any
+		expected string
 	}{
-		{"", `""`},
-		{`say "hi"`, `"say \"hi\""`},
-		{14, "14"},
-		{true, "true"},
-		{[]string{}, "[]"},
-		{[]string{"openid", "email"}, "[openid, email]"},
-		{(*bool)(nil), "unset"},
-		{&yes, "true"},
-		{&n, "3"},
-	} {
-		assert.Equal(t, tc.want, formatDefault(reflect.ValueOf(tc.v)), "%#v", tc.v)
+		{name: "ShouldQuoteEmptyString", have: "", expected: `""`},
+		{name: "ShouldQuoteAndEscapeString", have: `say "hi"`, expected: `"say \"hi\""`},
+		{name: "ShouldFormatInteger", have: 14, expected: "14"},
+		{name: "ShouldFormatBool", have: true, expected: "true"},
+		{name: "ShouldFormatEmptyList", have: []string{}, expected: "[]"},
+		{name: "ShouldFormatList", have: []string{"openid", "email"}, expected: "[openid, email]"},
+		{name: "ShouldFormatNilPointerAsUnset", have: (*bool)(nil), expected: "unset"},
+		{name: "ShouldFormatBoolPointer", have: &yes, expected: "true"},
+		{name: "ShouldFormatIntPointer", have: &n, expected: "3"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, formatDefault(reflect.ValueOf(tc.have)))
+		})
 	}
 }

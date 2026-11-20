@@ -139,12 +139,24 @@ func TestParityInvalidUTF8(t *testing.T) {
 }
 
 func TestParityLong(t *testing.T) {
-	for _, w := range []string{strings.Repeat("schwarzenegger", 8), strings.Repeat("thompson", 20), strings.Repeat("a", 200), strings.Repeat("ç", 60)} {
-		sameEnglish(t, w)
+	testCases := []struct {
+		name string
+		same func(t fataler, word string)
+		have string
+	}{
+		{name: "ShouldMatchRepeatedSchwarzeneggerInEnglish", same: sameEnglish, have: strings.Repeat("schwarzenegger", 8)},
+		{name: "ShouldMatchRepeatedThompsonInEnglish", same: sameEnglish, have: strings.Repeat("thompson", 20)},
+		{name: "ShouldMatchRepeatedAInEnglish", same: sameEnglish, have: strings.Repeat("a", 200)},
+		{name: "ShouldMatchRepeatedCCedillaInEnglish", same: sameEnglish, have: strings.Repeat("ç", 60)},
+		{name: "ShouldMatchRepeatedRechtsanwaltInGerman", same: sameGerman, have: strings.Repeat("rechtsanwalt", 10)},
+		{name: "ShouldMatchRepeatedEszettInGerman", same: sameGerman, have: strings.Repeat("ß", 40)},
+		{name: "ShouldMatchRepeatedAbInGerman", same: sameGerman, have: strings.Repeat("ab", 100)},
 	}
 
-	for _, w := range []string{strings.Repeat("rechtsanwalt", 10), strings.Repeat("ß", 40), strings.Repeat("ab", 100)} {
-		sameGerman(t, w)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.same(t, tc.have)
+		})
 	}
 }
 

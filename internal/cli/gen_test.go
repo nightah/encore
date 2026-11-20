@@ -84,14 +84,21 @@ func TestGenModelUsesTheLocaleInvocationByDefault(t *testing.T) {
 }
 
 func TestGenModelNeedsOneLocaleWithoutOut(t *testing.T) {
-	for _, args := range [][]string{
-		{"gen", "model"},
-		{"gen", "model", "--locale", "en-AU,en-GB"},
-	} {
-		_, _, err := runCLI(t, args...)
-		require.Error(t, err, args)
-		assert.Contains(t, err.Error(), "choose one --locale", args)
-		assert.Contains(t, err.Error(), "en-AU", "the error lists the locales")
+	testCases := []struct {
+		name string
+		have []string
+	}{
+		{name: "ShouldRefuseNoLocale", have: []string{"gen", "model"}},
+		{name: "ShouldRefuseTwoLocales", have: []string{"gen", "model", "--locale", "en-AU,en-GB"}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, _, err := runCLI(t, tc.have...)
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), "choose one --locale")
+			assert.Contains(t, err.Error(), "en-AU", "the error lists the locales")
+		})
 	}
 }
 

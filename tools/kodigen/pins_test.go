@@ -62,18 +62,26 @@ func TestReadMatrix(t *testing.T) {
 }
 
 func TestReadMatrixErrors(t *testing.T) {
-	for name, src := range map[string]string{
-		"invalid YAML":   "jobs: [",
-		"no Kodi images": `jobs: {a: {strategy: {matrix: {include: [{kodi: X, image: "example/other:1"}]}}}}`,
-		"pinned twice": `jobs: {a: {strategy: {matrix: {include: [
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldRejectInvalidYAML", have: "jobs: ["},
+		{name: "ShouldRejectMatrixWithoutKodiImages", have: `jobs: {a: {strategy: {matrix: {include: [{kodi: X, image: "example/other:1"}]}}}}`},
+		{
+			name: "ShouldRejectReleasePinnedTwice",
+			have: `jobs: {a: {strategy: {matrix: {include: [
 			{kodi: Piers, image: "matthuisman/kodi-headless:Piers-22.0@sha256:a"},
 			{kodi: Piers, image: "matthuisman/kodi-headless:Piers-22.1@sha256:b"}]}}}}`,
-		"no release name":     `jobs: {a: {strategy: {matrix: {include: [{image: "matthuisman/kodi-headless:Piers-22.0@sha256:a"}]}}}}`,
-		"tag without version": `jobs: {a: {strategy: {matrix: {include: [{kodi: Piers, image: "matthuisman/kodi-headless:Piers@sha256:a"}]}}}}`,
-	} {
-		t.Run(name, func(t *testing.T) {
+		},
+		{name: "ShouldRejectImageWithoutReleaseName", have: `jobs: {a: {strategy: {matrix: {include: [{image: "matthuisman/kodi-headless:Piers-22.0@sha256:a"}]}}}}`},
+		{name: "ShouldRejectTagWithoutVersion", have: `jobs: {a: {strategy: {matrix: {include: [{kodi: Piers, image: "matthuisman/kodi-headless:Piers@sha256:a"}]}}}}`},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			path := filepath.Join(t.TempDir(), "m.yml")
-			writeFile(t, path, src)
+			writeFile(t, path, tc.have)
 			if _, err := readMatrix(path); err == nil {
 				t.Error("expected an error")
 			}
@@ -390,17 +398,26 @@ func TestRunOutputErrors(t *testing.T) {
 		writeSchema(t, filepath.Join(cfg.schemas, "21.3-Omega"), "13.5.0", `{}`)
 		return cfg
 	}
-	for name, breakIt := range map[string]func(t *testing.T, cfg *config){
-		"incomplete schema": func(t *testing.T, cfg *config) {
-			writeFile(t, filepath.Join(cfg.schemas, "21.2-Omega", "methods.json"), `{}`)
+
+	testCases := []struct {
+		name    string
+		breakIt func(t *testing.T, cfg *config)
+	}{
+		{
+			name: "ShouldFailOnIncompleteSchema",
+			breakIt: func(t *testing.T, cfg *config) {
+				writeFile(t, filepath.Join(cfg.schemas, "21.2-Omega", "methods.json"), `{}`)
+			},
 		},
-		"no commit.txt":       func(_ *testing.T, cfg *config) { _ = os.Remove(filepath.Join(cfg.schemas, "21.3-Omega", commitFile)) },
-		"out is a file":       func(t *testing.T, cfg *config) { writeFile(t, cfg.out, "") },
-		"releases unwritable": func(_ *testing.T, cfg *config) { cfg.releases = filepath.Join(cfg.releases, "missing", "r_test.go") },
-	} {
-		t.Run(name, func(t *testing.T) {
+		{name: "ShouldFailWithoutCommitTxt", breakIt: func(_ *testing.T, cfg *config) { _ = os.Remove(filepath.Join(cfg.schemas, "21.3-Omega", commitFile)) }},
+		{name: "ShouldFailWhenOutIsAFile", breakIt: func(t *testing.T, cfg *config) { writeFile(t, cfg.out, "") }},
+		{name: "ShouldFailWhenReleasesIsUnwritable", breakIt: func(_ *testing.T, cfg *config) { cfg.releases = filepath.Join(cfg.releases, "missing", "r_test.go") }},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			cfg := setup(t)
-			breakIt(t, &cfg)
+			tc.breakIt(t, &cfg)
 			if err := run(t.Context(), cfg); err == nil {
 				t.Error("expected an error")
 			}

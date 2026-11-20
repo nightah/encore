@@ -24,26 +24,31 @@ const rfcSecret = "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ"
 
 // TestRFC6238 checks both implementations against the SHA1 rows of RFC 6238 Appendix B, truncated to six digits.
 func TestRFC6238(t *testing.T) {
-	for _, tc := range []struct {
-		unix int64
-		code string
+	testCases := []struct {
+		name     string
+		have     int64
+		expected string
 	}{
-		{59, "287082"},
-		{1111111109, "081804"},
-		{1111111111, "050471"},
-		{1234567890, "005924"},
-		{2000000000, "279037"},
-		{20000000000, "353130"},
-	} {
-		at := time.Unix(tc.unix, 0)
+		{name: "ShouldMatchAtT59", have: 59, expected: "287082"},
+		{name: "ShouldMatchAtT1111111109", have: 1111111109, expected: "081804"},
+		{name: "ShouldMatchAtT1111111111", have: 1111111111, expected: "050471"},
+		{name: "ShouldMatchAtT1234567890", have: 1234567890, expected: "005924"},
+		{name: "ShouldMatchAtT2000000000", have: 2000000000, expected: "279037"},
+		{name: "ShouldMatchAtT20000000000", have: 20000000000, expected: "353130"},
+	}
 
-		got, err := auth.TOTPCode(rfcSecret, at)
-		require.NoError(t, err)
-		assert.Equal(t, tc.code, got, "in-tree, T=%d", tc.unix)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			at := time.Unix(tc.have, 0)
 
-		lib, err := totp.GenerateCodeCustom(rfcSecret, at, opts)
-		require.NoError(t, err)
-		assert.Equal(t, tc.code, lib, "pquerna/otp, T=%d", tc.unix)
+			actual, err := auth.TOTPCode(rfcSecret, at)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, actual, "in-tree")
+
+			lib, err := totp.GenerateCodeCustom(rfcSecret, at, opts)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, lib, "pquerna/otp")
+		})
 	}
 }
 

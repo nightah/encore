@@ -579,12 +579,12 @@ func TestOIDCUserInfoFillsGaps(t *testing.T) {
 		return p.Name
 	}
 
-	t.Run("username without an admin group", func(t *testing.T) {
+	t.Run("ShouldAskUserInfoForAUsernameWithoutAnAdminGroup", func(t *testing.T) {
 		f, _ := oidcFixture(t, oidctest.Options{Subject: "c0ffee", Username: "household-admin", ClaimsInUserInfoOnly: true}, "")
 		assert.Equal(t, "household-admin", name(t, f), "userinfo is asked for a username even when no group is needed")
 	})
 
-	t.Run("ID token claims win", func(t *testing.T) {
+	t.Run("ShouldPreferIDTokenClaims", func(t *testing.T) {
 		f, _ := oidcFixture(t, oidctest.Options{Subject: "c0ffee", Username: "from-id-token", UserInfoUsername: "from-userinfo", Groups: []string{"encore-admins"}, GroupsInUserInfoOnly: true}, "encore-admins")
 		assert.Equal(t, "from-id-token", name(t, f), "userinfo only adds claims the ID token left out")
 	})
@@ -610,21 +610,21 @@ func TestOIDCIgnoresUserInfoForAnotherSubject(t *testing.T) {
 }
 
 func TestOIDCRefusals(t *testing.T) {
-	t.Run("not in admin group", func(t *testing.T) {
+	t.Run("ShouldRefuseAUserNotInTheAdminGroup", func(t *testing.T) {
 		f, _ := oidcFixture(t, oidctest.Options{Username: "household-member", Groups: []string{"users"}}, "encore-admins")
 
 		_, err := signIn(t, f)
 		require.ErrorIs(t, err, ErrNotAdmin)
 	})
 
-	t.Run("wrong nonce", func(t *testing.T) {
+	t.Run("ShouldRefuseAWrongNonce", func(t *testing.T) {
 		f, _ := oidcFixture(t, oidctest.Options{Username: "household-admin", WrongNonce: true}, "")
 
 		_, err := signIn(t, f)
 		require.ErrorContains(t, err, "nonce")
 	})
 
-	t.Run("an ID token issued to another client", func(t *testing.T) {
+	t.Run("ShouldRefuseAnIDTokenIssuedToAnotherClient", func(t *testing.T) {
 		f, _ := oidcFixture(t, oidctest.Options{Username: "household-admin", Audience: "someone-else"}, "")
 
 		rec, err := signIn(t, f)
@@ -633,7 +633,7 @@ func TestOIDCRefusals(t *testing.T) {
 		assert.Nil(t, cookie(rec, SessionCookie), "no session")
 	})
 
-	t.Run("no ID token at all", func(t *testing.T) {
+	t.Run("ShouldRefuseNoIDTokenAtAll", func(t *testing.T) {
 		f, _ := oidcFixture(t, oidctest.Options{Username: "household-admin", NoIDToken: true}, "")
 
 		rec, err := signIn(t, f)
@@ -641,7 +641,7 @@ func TestOIDCRefusals(t *testing.T) {
 		assert.Nil(t, cookie(rec, SessionCookie), "no session")
 	})
 
-	t.Run("state from another browser", func(t *testing.T) {
+	t.Run("ShouldRefuseStateFromAnotherBrowser", func(t *testing.T) {
 		f, _ := oidcFixture(t, oidctest.Options{Username: "household-admin"}, "")
 
 		rec := httptest.NewRecorder()
@@ -653,7 +653,7 @@ func TestOIDCRefusals(t *testing.T) {
 		require.ErrorContains(t, err, "did not start in this browser")
 	})
 
-	t.Run("disabled", func(t *testing.T) {
+	t.Run("ShouldRefuseWhenDisabled", func(t *testing.T) {
 		f := newFixture(t, nil)
 
 		_, err := f.svc.BeginOIDC(t.Context(), httptest.NewRecorder(), request(http.MethodGet, "/"))
@@ -687,14 +687,21 @@ func TestNewRequiresDependencies(t *testing.T) {
 	f := newFixture(t, nil)
 	settings := func(context.Context) (Settings, error) { return Settings{}, nil }
 
-	for name, opts := range map[string]Options{
-		"nothing":     {},
-		"no DB":       {Secrets: f.sec, Settings: settings},
-		"no secrets":  {DB: f.db, Settings: settings},
-		"no settings": {DB: f.db, Secrets: f.sec},
-	} {
-		_, err := New(t.Context(), opts)
-		require.Error(t, err, name)
+	testCases := []struct {
+		name string
+		have Options
+	}{
+		{name: "ShouldRequireSomething", have: Options{}},
+		{name: "ShouldRequireADB", have: Options{Secrets: f.sec, Settings: settings}},
+		{name: "ShouldRequireSecrets", have: Options{DB: f.db, Settings: settings}},
+		{name: "ShouldRequireSettings", have: Options{DB: f.db, Secrets: f.sec}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := New(t.Context(), tc.have)
+			require.Error(t, err)
+		})
 	}
 
 	svc, err := New(t.Context(), Options{DB: f.db, Secrets: f.sec, Settings: settings})
@@ -726,15 +733,20 @@ func TestRestartKeepsCSRFTokensAndAccounts(t *testing.T) {
 }
 
 func TestNewReplacesAMalformedCSRFKey(t *testing.T) {
-	for name, stored := range map[string][]byte{
-		"too short": []byte("too short"),
-		"16 bytes":  bytes.Repeat([]byte{1}, 16),
-		"31 bytes":  bytes.Repeat([]byte{1}, 31),
-		"33 bytes":  bytes.Repeat([]byte{1}, 33),
-	} {
-		t.Run(name, func(t *testing.T) {
+	testCases := []struct {
+		name string
+		have []byte
+	}{
+		{name: "ShouldReplaceAKeyFarTooShort", have: []byte("too short")},
+		{name: "ShouldReplaceA16ByteKey", have: bytes.Repeat([]byte{1}, 16)},
+		{name: "ShouldReplaceA31ByteKey", have: bytes.Repeat([]byte{1}, 31)},
+		{name: "ShouldReplaceA33ByteKey", have: bytes.Repeat([]byte{1}, 33)},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			f := newFixture(t, nil)
-			require.NoError(t, f.sec.Put(t.Context(), csrfKeyRef, stored))
+			require.NoError(t, f.sec.Put(t.Context(), csrfKeyRef, tc.have))
 
 			svc, _ := f.restart(t)
 			assert.Len(t, svc.csrfKey, 32, "the service only signs with a full-size key")
@@ -809,19 +821,27 @@ func TestPeerAddresses(t *testing.T) {
 		s.TrustedProxies = []netip.Prefix{netip.MustParsePrefix("10.0.0.0/8"), netip.MustParsePrefix("fd00::/8")}
 	})
 
-	for remote, trusted := range map[string]bool{
-		"10.1.2.3:443":          true,
-		"10.1.2.3":              true,
-		"[::ffff:10.1.2.3]:443": true,
-		"[fd00::1]:443":         true,
-		"192.0.2.10:443":        false,
-		"[2001:db8::1]:443":     false,
-		"@unix-socket":          false,
-		"":                      false,
-	} {
-		r := request(http.MethodGet, "/")
-		r.RemoteAddr = remote
-		assert.Equal(t, trusted, f.svc.FromTrustedProxy(r), remote)
+	testCases := []struct {
+		name     string
+		have     string
+		expected bool
+	}{
+		{name: "ShouldTrustAnIPv4PeerWithAPort", have: "10.1.2.3:443", expected: true},
+		{name: "ShouldTrustAnIPv4PeerWithoutAPort", have: "10.1.2.3", expected: true},
+		{name: "ShouldTrustAnIPv4MappedPeer", have: "[::ffff:10.1.2.3]:443", expected: true},
+		{name: "ShouldTrustAnIPv6Peer", have: "[fd00::1]:443", expected: true},
+		{name: "ShouldNotTrustAnIPv4PeerOutsideTheRange", have: "192.0.2.10:443"},
+		{name: "ShouldNotTrustAnIPv6PeerOutsideTheRange", have: "[2001:db8::1]:443"},
+		{name: "ShouldNotTrustAUnixSocket", have: "@unix-socket"},
+		{name: "ShouldNotTrustAnEmptyPeer", have: ""},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			r := request(http.MethodGet, "/")
+			r.RemoteAddr = tc.have
+			assert.Equal(t, tc.expected, f.svc.FromTrustedProxy(r))
+		})
 	}
 
 	r := request(http.MethodGet, "/")
@@ -835,28 +855,31 @@ func TestPeerAddresses(t *testing.T) {
 func TestClientIPWalksForwardedFor(t *testing.T) {
 	f := newFixture(t, func(s *Settings) { s.TrustedProxies = []netip.Prefix{netip.MustParsePrefix("10.0.0.0/8")} })
 
-	for name, tt := range map[string]struct {
-		xff  string
-		want string
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
 	}{
-		"no header":              {"", "10.1.2.3"},
-		"one client":             {"203.0.113.9", "203.0.113.9"},
-		"chain of proxies":       {"203.0.113.9, 10.0.0.7, 10.0.0.8", "203.0.113.9"},
-		"spoofed left-most hop":  {"198.51.100.1, 203.0.113.9, 10.0.0.7", "203.0.113.9"},
-		"only trusted hops":      {"10.0.0.7, 10.0.0.8", "10.1.2.3"},
-		"garbage right-most hop": {"203.0.113.9, nonsense", "10.1.2.3"},
-		"mapped client":          {"::ffff:203.0.113.9", "203.0.113.9"},
-		"ipv6 client":            {"2001:db8::1", "2001:db8::1"},
-	} {
-		t.Run(name, func(t *testing.T) {
+		{name: "ShouldUseThePeerWithoutAHeader", have: "", expected: "10.1.2.3"},
+		{name: "ShouldUseASingleClient", have: "203.0.113.9", expected: "203.0.113.9"},
+		{name: "ShouldWalkAChainOfProxies", have: "203.0.113.9, 10.0.0.7, 10.0.0.8", expected: "203.0.113.9"},
+		{name: "ShouldIgnoreASpoofedLeftMostHop", have: "198.51.100.1, 203.0.113.9, 10.0.0.7", expected: "203.0.113.9"},
+		{name: "ShouldUseThePeerWhenEveryHopIsTrusted", have: "10.0.0.7, 10.0.0.8", expected: "10.1.2.3"},
+		{name: "ShouldUseThePeerWhenTheRightMostHopIsGarbage", have: "203.0.113.9, nonsense", expected: "10.1.2.3"},
+		{name: "ShouldUnmapAMappedClient", have: "::ffff:203.0.113.9", expected: "203.0.113.9"},
+		{name: "ShouldUseAnIPv6Client", have: "2001:db8::1", expected: "2001:db8::1"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			r := request(http.MethodGet, "/")
 			r.RemoteAddr = "10.1.2.3:443"
 
-			if tt.xff != "" {
-				r.Header.Set("X-Forwarded-For", tt.xff)
+			if tc.have != "" {
+				r.Header.Set("X-Forwarded-For", tc.have)
 			}
 
-			assert.Equal(t, tt.want, f.svc.ClientIP(r))
+			assert.Equal(t, tc.expected, f.svc.ClientIP(r))
 		})
 	}
 }

@@ -15,61 +15,84 @@ func TestShippedChoiceAnswers(t *testing.T) {
 	src, err := Load(i18n.FS)
 	require.NoError(t, err)
 
-	for locale, answers := range map[string]map[string]string{
-		"en-US": {"the older one": "older", "i meant the second one": "second"},
-		"fr-FR": {"l'autre": "second", "je veux dire l'autre": "second", "l'ancien": "older", "l'original": "older", "le plus ancien": "older"},
-		"fr-CA": {"l'autre": "second", "je voulais dire l'ancienne": "older"},
-		"it-IT": {"l'altro": "second", "l'ultimo": "last", "intendevo l'altro": "second", "l'originale": "older", "il più vecchio": "older"},
-		"hi-IN": {"सबसे नया वाला": "newer", "सबसे पुराना वाला": "older", "मेरा मतलब सबसे नई वाली था": "newer", "पुराना वाला": "older"},
-		"ja-JP": {"一番古い方": "older", "一番新しい方です": "newer", "一番新しいので": "newer", "古い方": "older"},
-	} {
-		m, err := Build(src, locale, BuildOptions{})
-		require.NoError(t, err, locale)
+	testCases := []struct {
+		name     string
+		locale   string
+		have     string
+		expected string
+	}{
+		{name: "ShouldResolveTheOlderOneInEnUS", locale: "en-US", have: "the older one", expected: "older"},
+		{name: "ShouldResolveIMeantTheSecondOneInEnUS", locale: "en-US", have: "i meant the second one", expected: "second"},
+		{name: "ShouldResolveTheOtherInFrFR", locale: "fr-FR", have: "l'autre", expected: "second"},
+		{name: "ShouldResolveIMeanTheOtherInFrFR", locale: "fr-FR", have: "je veux dire l'autre", expected: "second"},
+		{name: "ShouldResolveTheOldOneInFrFR", locale: "fr-FR", have: "l'ancien", expected: "older"},
+		{name: "ShouldResolveTheOriginalInFrFR", locale: "fr-FR", have: "l'original", expected: "older"},
+		{name: "ShouldResolveTheOldestInFrFR", locale: "fr-FR", have: "le plus ancien", expected: "older"},
+		{name: "ShouldResolveTheOtherInFrCA", locale: "fr-CA", have: "l'autre", expected: "second"},
+		{name: "ShouldResolveIMeantTheOldOneInFrCA", locale: "fr-CA", have: "je voulais dire l'ancienne", expected: "older"},
+		{name: "ShouldResolveTheOtherInItIT", locale: "it-IT", have: "l'altro", expected: "second"},
+		{name: "ShouldResolveTheLastInItIT", locale: "it-IT", have: "l'ultimo", expected: "last"},
+		{name: "ShouldResolveIMeantTheOtherInItIT", locale: "it-IT", have: "intendevo l'altro", expected: "second"},
+		{name: "ShouldResolveTheOriginalInItIT", locale: "it-IT", have: "l'originale", expected: "older"},
+		{name: "ShouldResolveTheOldestInItIT", locale: "it-IT", have: "il più vecchio", expected: "older"},
+		{name: "ShouldResolveTheNewestOneInHiIN", locale: "hi-IN", have: "सबसे नया वाला", expected: "newer"},
+		{name: "ShouldResolveTheOldestOneInHiIN", locale: "hi-IN", have: "सबसे पुराना वाला", expected: "older"},
+		{name: "ShouldResolveIMeantTheNewestOneInHiIN", locale: "hi-IN", have: "मेरा मतलब सबसे नई वाली था", expected: "newer"},
+		{name: "ShouldResolveTheOldOneInHiIN", locale: "hi-IN", have: "पुराना वाला", expected: "older"},
+		{name: "ShouldResolveTheOldestOneInJaJP", locale: "ja-JP", have: "一番古い方", expected: "older"},
+		{name: "ShouldResolveItIsTheNewestOneInJaJP", locale: "ja-JP", have: "一番新しい方です", expected: "newer"},
+		{name: "ShouldResolveTheNewestOneSoInJaJP", locale: "ja-JP", have: "一番新しいので", expected: "newer"},
+		{name: "ShouldResolveTheOlderOneInJaJP", locale: "ja-JP", have: "古い方", expected: "older"},
+	}
 
-		join := " "
-		if locale == "ja-JP" {
-			join = ""
-		}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			m, err := Build(src, tc.locale, BuildOptions{})
+			require.NoError(t, err)
 
-		var samples []string
-
-		for _, in := range m.InteractionModel.LanguageModel.Intents {
-			if in.Name == "ChooseMatch" {
-				samples = in.Samples
-
-				// An answer said on its own is a sample of the slot a question elicits.
-				for _, slot := range in.Slots {
-					samples = append(samples, slot.Samples...)
-				}
+			join := " "
+			if tc.locale == "ja-JP" {
+				join = ""
 			}
-		}
 
-		ids := map[string]string{}
+			var samples []string
 
-		for _, typ := range m.InteractionModel.LanguageModel.Types {
-			if typ.Name == "MATCH_CHOICE" {
-				for _, v := range typ.Values {
-					for _, word := range append([]string{v.Name.Value}, v.Name.Synonyms...) {
-						ids[strings.ToLower(word)] = v.ID
+			for _, in := range m.InteractionModel.LanguageModel.Intents {
+				if in.Name == "ChooseMatch" {
+					samples = in.Samples
+
+					// An answer said on its own is a sample of the slot a question elicits.
+					for _, slot := range in.Slots {
+						samples = append(samples, slot.Samples...)
 					}
 				}
 			}
-		}
 
-		said := func(s string) string { return strings.Join(strings.Fields(strings.ToLower(s)), join) }
+			ids := map[string]string{}
 
-		for answer, want := range answers {
-			got := ""
+			for _, typ := range m.InteractionModel.LanguageModel.Types {
+				if typ.Name == "MATCH_CHOICE" {
+					for _, v := range typ.Values {
+						for _, word := range append([]string{v.Name.Value}, v.Name.Synonyms...) {
+							ids[strings.ToLower(word)] = v.ID
+						}
+					}
+				}
+			}
+
+			said := func(s string) string { return strings.Join(strings.Fields(strings.ToLower(s)), join) }
+
+			actual := ""
 
 			for _, s := range samples {
 				for word, id := range ids {
-					if strings.Contains(s, "{Which}") && said(strings.ReplaceAll(s, "{Which}", word)) == said(answer) {
-						got = id
+					if strings.Contains(s, "{Which}") && said(strings.ReplaceAll(s, "{Which}", word)) == said(tc.have) {
+						actual = id
 					}
 				}
 			}
 
-			assert.Equal(t, want, got, "%s %q", locale, answer)
-		}
+			assert.Equal(t, tc.expected, actual)
+		})
 	}
 }

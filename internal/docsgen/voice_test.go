@@ -148,46 +148,77 @@ types: []
 }
 
 func TestSectionTitlesErrors(t *testing.T) {
-	for name, model := range map[string]string{
-		"not YAML":         "intents: [",
-		"not a mapping":    "- one\n- two\n",
-		"empty":            "",
-		"no intents":       "types: []\n",
-		"undecodable item": "intents:\n  # Movies.\n  - name: [nested]\n",
-	} {
-		_, err := sectionTitles(fstest.MapFS{"model.yaml": {Data: []byte(model)}})
-		require.Error(t, err, name)
+	testCases := []struct {
+		name    string
+		have    string
+		missing bool
+	}{
+		{name: "ShouldRejectNotYAML", have: "intents: ["},
+		{name: "ShouldRejectNotAMapping", have: "- one\n- two\n"},
+		{name: "ShouldRejectEmpty"},
+		{name: "ShouldRejectNoIntents", have: "types: []\n"},
+		{name: "ShouldRejectUndecodableItem", have: "intents:\n  # Movies.\n  - name: [nested]\n"},
+		{name: "ShouldRejectMissingModelYAML", missing: true},
 	}
 
-	_, err := sectionTitles(fstest.MapFS{})
-	require.Error(t, err, "no model.yaml")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			fsys := fstest.MapFS{}
+			if !tc.missing {
+				fsys["model.yaml"] = &fstest.MapFile{Data: []byte(tc.have)}
+			}
 
-	_, err = VoiceCommands(loadSources(t), fstest.MapFS{})
+			_, err := sectionTitles(fsys)
+			require.Error(t, err)
+		})
+	}
+
+	_, err := VoiceCommands(loadSources(t), fstest.MapFS{})
 	require.Error(t, err)
 }
 
 func TestSectionTitle(t *testing.T) {
 	t.Parallel()
 
-	for in, want := range map[string]string{
-		"# Movies.":               "Movies",
-		"# Movies":                "Movies",
-		"#   Movies.  ":           "Movies",
-		"# Line one\n# line two.": "Line one line two",
-		"# Ignored.\n\n# Kept.":   "Kept",
-	} {
-		assert.Equal(t, want, sectionTitle(in), "%q", in)
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldDropTrailingPeriod", have: "# Movies.", expected: "Movies"},
+		{name: "ShouldReadTitleWithoutPeriod", have: "# Movies", expected: "Movies"},
+		{name: "ShouldTrimSpaces", have: "#   Movies.  ", expected: "Movies"},
+		{name: "ShouldJoinLines", have: "# Line one\n# line two.", expected: "Line one line two"},
+		{name: "ShouldKeepOnlyTheLastParagraph", have: "# Ignored.\n\n# Kept.", expected: "Kept"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, sectionTitle(tc.have))
+		})
 	}
 }
 
 func TestEditURL(t *testing.T) {
 	t.Parallel()
 
-	assert.Equal(t, SourceEditURL, editURL("en"))
-	assert.Equal(t, CrowdinProject+"/de", editURL("de"))
-	assert.Equal(t, CrowdinProject+"/es-ES", editURL("es"), "Crowdin names Spanish by its regional variant")
-	assert.Equal(t, CrowdinProject+"/fr", editURL("fr"))
-	assert.Equal(t, CrowdinProject+"/pt-BR", editURL("pt"), "Crowdin names Portuguese by its regional variant")
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldEditEnglishInTheRepository", have: "en", expected: SourceEditURL},
+		{name: "ShouldEditGermanOnCrowdin", have: "de", expected: CrowdinProject + "/de"},
+		{name: "ShouldNameSpanishByItsRegionalVariant", have: "es", expected: CrowdinProject + "/es-ES"},
+		{name: "ShouldEditFrenchOnCrowdin", have: "fr", expected: CrowdinProject + "/fr"},
+		{name: "ShouldNamePortugueseByItsRegionalVariant", have: "pt", expected: CrowdinProject + "/pt-BR"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, editURL(tc.have))
+		})
+	}
 }
 
 // TestCrowdinLanguageMatchesCrowdinConfig keeps crowdinLanguage the reverse of every file's languages_mapping in .crowdin.yml.
@@ -229,11 +260,30 @@ func TestVoiceCommandsShowLaunchPhrases(t *testing.T) {
 	assert.Contains(t, string(pages["ja"]), "| `ja-JP` | \"Alexa, アンコールを開いて\" |")
 	assert.Contains(t, string(pages["fr"]), "| `fr-CA` | \"Alexa, ouvre kodi\" | \"lance kodi\", \"démarre kodi\" | \"Alexa, ouvre la compétence kodi\" |\n")
 
-	for lang, locale := range map[string]string{"nl": "nl-NL", "pt": "pt-BR", "hi": "hi-IN", "ar": "ar-SA"} {
-		assert.Contains(t, string(pages[lang]), ":::caution[A plain open phrase may not start the skill]\nIn `"+locale+"`, ", lang)
+	testCases := []struct {
+		name   string
+		lang   string
+		locale string
+	}{
+		{name: "ShouldCautionInDutch", lang: "nl", locale: "nl-NL"},
+		{name: "ShouldCautionInPortuguese", lang: "pt", locale: "pt-BR"},
+		{name: "ShouldCautionInHindi", lang: "hi", locale: "hi-IN"},
+		{name: "ShouldCautionInArabic", lang: "ar", locale: "ar-SA"},
+		{name: "ShouldNotCautionInEnglish", lang: "en"},
+		{name: "ShouldNotCautionInGerman", lang: "de"},
+		{name: "ShouldNotCautionInSpanish", lang: "es"},
+		{name: "ShouldNotCautionInFrench", lang: "fr"},
+		{name: "ShouldNotCautionInItalian", lang: "it"},
+		{name: "ShouldNotCautionInJapanese", lang: "ja"},
 	}
 
-	for _, lang := range []string{"en", "de", "es", "fr", "it", "ja"} {
-		assert.NotContains(t, string(pages[lang]), "A plain open phrase may not start the skill", lang)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.locale != "" {
+				assert.Contains(t, string(pages[tc.lang]), ":::caution[A plain open phrase may not start the skill]\nIn `"+tc.locale+"`, ")
+			} else {
+				assert.NotContains(t, string(pages[tc.lang]), "A plain open phrase may not start the skill")
+			}
+		})
 	}
 }

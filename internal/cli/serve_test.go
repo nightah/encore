@@ -183,27 +183,40 @@ func TestServeReportsAListenFailureOnce(t *testing.T) {
 }
 
 func TestServeRejectsInvalidFlags(t *testing.T) {
-	for _, tc := range []struct {
-		args []string
-		want string
+	testCases := []struct {
+		name string
+		have []string
+		err  string
 	}{
-		{[]string{"serve", "--log.level", "loud"}, `log.level "loud" must be debug, info, warn or error`},
-		{[]string{"serve", "--log.format", "fancy"}, `log.format "fancy" must be auto, pretty, text or json`},
-		{[]string{"serve", "--server.address", ""}, "server.address must not be empty"},
-		{[]string{"serve", "extra"}, `unknown command "extra"`},
-	} {
-		dataDir := t.TempDir()
-		t.Setenv("ENCORE_DATA_DIR", dataDir)
+		{name: "ShouldRejectAnUnknownLogLevel", have: []string{"serve", "--log.level", "loud"}, err: `log.level "loud" must be debug, info, warn or error`},
+		{name: "ShouldRejectAnUnknownLogFormat", have: []string{"serve", "--log.format", "fancy"}, err: `log.format "fancy" must be auto, pretty, text or json`},
+		{name: "ShouldRejectAnEmptyServerAddress", have: []string{"serve", "--server.address", ""}, err: "server.address must not be empty"},
+		{name: "ShouldRejectAnArgument", have: []string{"serve", "extra"}, err: `unknown command "extra"`},
+	}
 
-		_, _, err := runCLI(t, tc.args...)
-		require.ErrorContains(t, err, tc.want, tc.args)
-		assert.NoFileExists(t, store.DefaultPath(dataDir), "%v: nothing starts on invalid flags", tc.args)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			dataDir := t.TempDir()
+			t.Setenv("ENCORE_DATA_DIR", dataDir)
+
+			_, _, err := runCLI(t, tc.have...)
+			require.ErrorContains(t, err, tc.err)
+			assert.NoFileExists(t, store.DefaultPath(dataDir), "nothing starts on invalid flags")
+		})
 	}
 }
 
 func TestRunAllWaitsForEveryTaskToStop(t *testing.T) {
-	for name, served := range map[string]error{"serve stops cleanly": nil, "serve fails": errors.New("listen tcp: address in use")} {
-		t.Run(name, func(t *testing.T) {
+	testCases := []struct {
+		name string
+		have error
+	}{
+		{name: "ShouldWaitWhenServeStopsCleanly"},
+		{name: "ShouldWaitWhenServeFails", have: errors.New("listen tcp: address in use")},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			synctest.Test(t, func(t *testing.T) {
 				ctx, cancel := context.WithCancel(t.Context())
 				defer cancel()
@@ -212,7 +225,7 @@ func TestRunAllWaitsForEveryTaskToStop(t *testing.T) {
 				serve := func(context.Context) error {
 					<-stopServe
 
-					return served
+					return tc.have
 				}
 
 				// Each task takes its time to wind down after its context is done, as the app and the admin API do.
@@ -257,7 +270,7 @@ func TestRunAllWaitsForEveryTaskToStop(t *testing.T) {
 				close(release[1])
 				synctest.Wait()
 				require.True(t, done.Load())
-				assert.Equal(t, served, err, "serve's result is returned")
+				assert.Equal(t, tc.have, err, "serve's result is returned")
 			})
 		})
 	}
@@ -266,18 +279,16 @@ func TestRunAllWaitsForEveryTaskToStop(t *testing.T) {
 func TestServeStopsWhenStartupFails(t *testing.T) {
 	missing := t.TempDir() + "/missing"
 
-	for name, tc := range map[string]struct {
+	testCases := []struct {
+		name  string
 		setup func(t *testing.T, dataDir string)
-		want  string
+		err   string
 		// Stateless mode works in a temporary directory and never locks the data directory.
 		locks bool
 	}{
-		"the database can't be opened": {
-			setup: func(t *testing.T, dataDir string) { require.NoError(t, os.Mkdir(store.DefaultPath(dataDir), 0o700)) },
-			want:  "opening database",
-			locks: true,
-		},
-		"stateless mode has nowhere to restore to": {
+		{name: "ShouldStopWhenTheDatabaseCantBeOpened", setup: func(t *testing.T, dataDir string) { require.NoError(t, os.Mkdir(store.DefaultPath(dataDir), 0o700)) }, err: "opening database", locks: true},
+		{
+			name: "ShouldStopWhenStatelessModeHasNowhereToRestoreTo",
 			setup: func(t *testing.T, _ string) {
 				t.Setenv("ENCORE_STATELESS", "true")
 				t.Setenv("ENCORE_SECRETS_KEY", "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=")
@@ -289,9 +300,10 @@ func TestServeStopsWhenStartupFails(t *testing.T) {
 				t.Setenv("ENCORE_STORAGE_S3_SECRET_KEY", "not-a-real-secret")
 				t.Setenv("TMPDIR", missing)
 			},
-			want: "stat " + missing + ": no such file or directory",
+			err: "stat " + missing + ": no such file or directory",
 		},
-		"a configured room takes a name another room answers to": {
+		{
+			name: "ShouldStopWhenAConfiguredRoomTakesANameAnotherRoomAnswersTo",
 			setup: func(t *testing.T, dataDir string) {
 				db := openStore(t, store.DefaultPath(dataDir))
 				study := store.Room{Name: "Study"}
@@ -302,17 +314,19 @@ func TestServeStopsWhenStartupFails(t *testing.T) {
 
 				require.NoError(t, os.WriteFile(filepath.Join(dataDir, "encore.yml"), []byte("rooms:\n  - name: Den\n"), 0o600))
 			},
-			want:  `room "Den": `,
+			err:   `room "Den": `,
 			locks: true,
 		},
-	} {
-		t.Run(name, func(t *testing.T) {
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			dataDir := t.TempDir()
 			t.Setenv("ENCORE_DATA_DIR", dataDir)
 			tc.setup(t, dataDir)
 
 			_, stderr, err := runCLI(t, "serve", "--server.address", freeAddress(t), "--log.format", "text")
-			require.ErrorContains(t, err, tc.want)
+			require.ErrorContains(t, err, tc.err)
 			assert.NotContains(t, stderr, "listening on", "the server never starts")
 
 			if !tc.locks {

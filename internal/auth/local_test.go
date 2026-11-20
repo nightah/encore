@@ -12,12 +12,37 @@ import (
 )
 
 func TestValidateUsername(t *testing.T) {
-	for _, ok := range []string{"admin", "a", "household.admin@example.com", "Zoë", strings.Repeat("a", 64), strings.Repeat("ü", 64), strings.Repeat("管理", 20)} {
-		require.NoError(t, ValidateUsername(ok), ok)
+	testCases := []struct {
+		name string
+		have string
+		err  bool
+	}{
+		{name: "ShouldAcceptAPlainName", have: "admin"},
+		{name: "ShouldAcceptOneCharacter", have: "a"},
+		{name: "ShouldAcceptAnEmailAddress", have: "household.admin@example.com"},
+		{name: "ShouldAcceptAccents", have: "Zoë"},
+		{name: "ShouldAccept64Characters", have: strings.Repeat("a", 64)},
+		{name: "ShouldAccept64MultiByteCharacters", have: strings.Repeat("ü", 64)},
+		{name: "ShouldAcceptCJKCharacters", have: strings.Repeat("管理", 20)},
+		{name: "ShouldRejectEmpty", have: "", err: true},
+		{name: "ShouldReject65Characters", have: strings.Repeat("a", 65), err: true},
+		{name: "ShouldReject65MultiByteCharacters", have: strings.Repeat("ü", 65), err: true},
+		{name: "ShouldRejectASpace", have: "house hold", err: true},
+		{name: "ShouldRejectATrailingTab", have: "admin\t", err: true},
+		{name: "ShouldRejectALeadingNewline", have: "\nadmin", err: true},
+		{name: "ShouldRejectANulByte", have: "ad\x00min", err: true},
+		{name: "ShouldRejectANonBreakingSpace", have: "ad min", err: true},
+		{name: "ShouldRejectATrailingLineSeparator", have: "admin ", err: true},
 	}
 
-	for _, bad := range []string{"", strings.Repeat("a", 65), strings.Repeat("ü", 65), "house hold", "admin\t", "\nadmin", "ad\x00min", "ad min", "admin "} {
-		require.Error(t, ValidateUsername(bad), "%q", bad)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.err {
+				require.Error(t, ValidateUsername(tc.have))
+			} else {
+				require.NoError(t, ValidateUsername(tc.have))
+			}
+		})
 	}
 }
 
@@ -128,11 +153,23 @@ func TestLoginUsernameIsExact(t *testing.T) {
 	f := newFixture(t, nil)
 	f.setup(t)
 
-	for _, name := range []string{"Admin", "admin ", "adm", "admin2"} {
-		err := f.svc.Login(t.Context(), httptest.NewRecorder(), request(http.MethodPost, "/"), name, "correct horse battery", "")
-		require.ErrorIs(t, err, ErrBadCredentials, "%q", name)
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldRejectADifferentCase", have: "Admin"},
+		{name: "ShouldRejectATrailingSpace", have: "admin "},
+		{name: "ShouldRejectAPrefix", have: "adm"},
+		{name: "ShouldRejectALongerName", have: "admin2"},
+	}
 
-		f.advance(16 * time.Minute)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := f.svc.Login(t.Context(), httptest.NewRecorder(), request(http.MethodPost, "/"), tc.have, "correct horse battery", "")
+			require.ErrorIs(t, err, ErrBadCredentials)
+
+			f.advance(16 * time.Minute)
+		})
 	}
 }
 

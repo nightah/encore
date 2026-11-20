@@ -49,27 +49,22 @@ func TestLintTypeRules(t *testing.T) {
 	noValues := strings.Replace(baseFiles["model.yaml"], roomValues, "", 1)
 	dynamic := strings.Replace(noValues, "  - name: KODI_ROOM\n", "  - name: KODI_ROOM\n    dynamic: true\n", 1)
 
-	tests := map[string]struct {
+	testCases := []struct {
+		name      string
 		overrides map[string]string
-		want      string
+		expected  string
 	}{
-		"empty type":               {map[string]string{"model.yaml": noValues}, "slot type KODI_ROOM has no values"},
-		"dynamic without examples": {map[string]string{"model.yaml": dynamic}, "needs example values"},
-		"undeclared type":          {map[string]string{"lang/en/types.yaml": "COLOUR:\n  red: red\n"}, "doesn't declare"},
-		"dynamic values in types.yaml": {
-			map[string]string{"model.yaml": dynamic, "lang/en/types.yaml": "KODI_ROOM:\n  lounge: lounge\n"},
-			"belong in examples.yaml",
-		},
-		"static values in examples.yaml": {
-			map[string]string{"model.yaml": noValues, "lang/en/examples.yaml": "KODI_ROOM:\n  - {value: lounge}\n"},
-			"belong in types.yaml",
-		},
+		{name: "ShouldRejectEmptyType", overrides: map[string]string{"model.yaml": noValues}, expected: "slot type KODI_ROOM has no values"},
+		{name: "ShouldRejectDynamicTypeWithoutExamples", overrides: map[string]string{"model.yaml": dynamic}, expected: "needs example values"},
+		{name: "ShouldRejectUndeclaredType", overrides: map[string]string{"lang/en/types.yaml": "COLOUR:\n  red: red\n"}, expected: "doesn't declare"},
+		{name: "ShouldRejectDynamicValuesInTypesYAML", overrides: map[string]string{"model.yaml": dynamic, "lang/en/types.yaml": "KODI_ROOM:\n  lounge: lounge\n"}, expected: "belong in examples.yaml"},
+		{name: "ShouldRejectStaticValuesInExamplesYAML", overrides: map[string]string{"model.yaml": noValues, "lang/en/examples.yaml": "KODI_ROOM:\n  - {value: lounge}\n"}, expected: "belong in types.yaml"},
 	}
 
-	for name, tt := range tests {
-		t.Run(name, func(t *testing.T) {
-			got := messages(Lint(load(t, tt.overrides)), Error)
-			assert.True(t, containsSubstring(got, tt.want), "want an error containing %q, got %q", tt.want, got)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := messages(Lint(load(t, tc.overrides)), Error)
+			assert.True(t, containsSubstring(actual, tc.expected), "want an error containing %q, got %q", tc.expected, actual)
 		})
 	}
 }
@@ -91,20 +86,26 @@ func TestKeyedFiles(t *testing.T) {
 	assert.Equal(t, []string{"(show|open) the {Room}", "go to the {Room}", "switch to the {Room}"}, src.Languages["en"].Utterances["ViewRoom"], "every line of every entry, in file order")
 	assert.Equal(t, []string{"show", "switch"}, src.Languages["en"].UtteranceKeys["ViewRoom"])
 
-	for name, tt := range map[string]struct{ file, want string }{
-		"duplicate key": {"WatchMovie:\n  play: \"watch {Movie}\"\n  play: \"play {Movie}\"\n", "defined twice"},
-		"empty entry":   {"WatchMovie:\n  play: \"  \"\n", "is empty"},
-		"list":          {"WatchMovie:\n  - \"watch {Movie}\"\n", "must map keys to text"},
-	} {
-		t.Run(name, func(t *testing.T) {
+	testCases := []struct {
+		name string
+		have string
+		err  string
+	}{
+		{name: "ShouldRejectDuplicateKey", have: "WatchMovie:\n  play: \"watch {Movie}\"\n  play: \"play {Movie}\"\n", err: "defined twice"},
+		{name: "ShouldRejectEmptyEntry", have: "WatchMovie:\n  play: \"  \"\n", err: "is empty"},
+		{name: "ShouldRejectList", have: "WatchMovie:\n  - \"watch {Movie}\"\n", err: "must map keys to text"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			files := map[string]string{}
 			for k, v := range baseFiles {
 				files[k] = v
 			}
 
-			files["lang/en/utterances.yaml"] = tt.file
+			files["lang/en/utterances.yaml"] = tc.have
 			_, err := Load(testFS(files))
-			assert.ErrorContains(t, err, tt.want)
+			assert.ErrorContains(t, err, tc.err)
 		})
 	}
 }

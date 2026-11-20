@@ -12,26 +12,27 @@ func TestParseScheduleNext(t *testing.T) {
 	// Monday 26 October 2026, 10:30 UTC.
 	now := time.Date(2026, 10, 26, 10, 30, 0, 0, time.UTC)
 
-	tests := []struct {
-		in   string
-		want time.Time
+	testCases := []struct {
+		name     string
+		have     string
+		expected time.Time
 	}{
-		{"hourly", time.Date(2026, 10, 26, 11, 0, 0, 0, time.UTC)},
-		{"daily@03:00", time.Date(2026, 10, 27, 3, 0, 0, 0, time.UTC)},
-		{"Daily@23:15", time.Date(2026, 10, 26, 23, 15, 0, 0, time.UTC)},
-		{"daily@10:30", time.Date(2026, 10, 27, 10, 30, 0, 0, time.UTC)},
-		{"weekly@sun@03:00", time.Date(2026, 11, 1, 3, 0, 0, 0, time.UTC)},
-		{"weekly@mon@11:00", time.Date(2026, 10, 26, 11, 0, 0, 0, time.UTC)},
-		{"weekly@mon@09:00", time.Date(2026, 11, 2, 9, 0, 0, 0, time.UTC)},
-		{"every@6h", now.Add(6 * time.Hour)},
+		{name: "ShouldRunHourlyOnTheNextHour", have: "hourly", expected: time.Date(2026, 10, 26, 11, 0, 0, 0, time.UTC)},
+		{name: "ShouldRunDailyTomorrowWhenTheTimeHasPassed", have: "daily@03:00", expected: time.Date(2026, 10, 27, 3, 0, 0, 0, time.UTC)},
+		{name: "ShouldRunDailyTodayIgnoringCase", have: "Daily@23:15", expected: time.Date(2026, 10, 26, 23, 15, 0, 0, time.UTC)},
+		{name: "ShouldRunDailyTomorrowWhenTheTimeIsNow", have: "daily@10:30", expected: time.Date(2026, 10, 27, 10, 30, 0, 0, time.UTC)},
+		{name: "ShouldRunWeeklyOnTheNextSunday", have: "weekly@sun@03:00", expected: time.Date(2026, 11, 1, 3, 0, 0, 0, time.UTC)},
+		{name: "ShouldRunWeeklyLaterToday", have: "weekly@mon@11:00", expected: time.Date(2026, 10, 26, 11, 0, 0, 0, time.UTC)},
+		{name: "ShouldRunWeeklyNextWeekWhenTodaysTimeHasPassed", have: "weekly@mon@09:00", expected: time.Date(2026, 11, 2, 9, 0, 0, 0, time.UTC)},
+		{name: "ShouldRunEveryIntervalFromNow", have: "every@6h", expected: now.Add(6 * time.Hour)},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.in, func(t *testing.T) {
-			s, err := ParseSchedule(tt.in)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			s, err := ParseSchedule(tc.have)
 			require.NoError(t, err)
 			assert.True(t, s.Enabled())
-			assert.Equal(t, tt.want, s.Next(now))
+			assert.Equal(t, tc.expected, s.Next(now))
 		})
 	}
 }
@@ -45,31 +46,69 @@ func TestParseScheduleHourlyHalfHourZone(t *testing.T) {
 }
 
 func TestParseScheduleOff(t *testing.T) {
-	for _, in := range []string{"", "off", " OFF "} {
-		s, err := ParseSchedule(in)
-		require.NoError(t, err)
-		assert.False(t, s.Enabled())
-		assert.True(t, s.Next(time.Now()).IsZero())
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldTurnOffWhenEmpty", have: ""},
+		{name: "ShouldTurnOffForOff", have: "off"},
+		{name: "ShouldTurnOffForOffInAnyCaseWithSpaces", have: " OFF "},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			s, err := ParseSchedule(tc.have)
+			require.NoError(t, err)
+			assert.False(t, s.Enabled())
+			assert.True(t, s.Next(time.Now()).IsZero())
+		})
 	}
 }
 
 func TestParseScheduleInvalid(t *testing.T) {
-	for _, in := range []string{"daily", "daily@25:00", "daily@3am", "weekly@funday@03:00", "weekly@mon", "every@1s", "every@soon", "monthly@01", "0 3 * * *"} {
-		_, err := ParseSchedule(in)
-		assert.Error(t, err, in)
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldRejectDailyWithoutATime", have: "daily"},
+		{name: "ShouldRejectAnHourOutOfRange", have: "daily@25:00"},
+		{name: "ShouldRejectATwelveHourTime", have: "daily@3am"},
+		{name: "ShouldRejectAnUnknownDay", have: "weekly@funday@03:00"},
+		{name: "ShouldRejectWeeklyWithoutATime", have: "weekly@mon"},
+		{name: "ShouldRejectAnIntervalTooShort", have: "every@1s"},
+		{name: "ShouldRejectAnIntervalThatIsNotADuration", have: "every@soon"},
+		{name: "ShouldRejectAnUnknownPeriod", have: "monthly@01"},
+		{name: "ShouldRejectCronSyntax", have: "0 3 * * *"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := ParseSchedule(tc.have)
+			assert.Error(t, err)
+		})
 	}
 }
 
 func TestScheduleDue(t *testing.T) {
 	now := time.Date(2026, 10, 26, 12, 0, 0, 0, time.UTC)
 
-	every, err := ParseSchedule("every@6h")
-	require.NoError(t, err)
-	assert.Equal(t, now.Add(6*time.Hour), every.Due(time.Time{}, now), "first run an interval from now")
-	assert.Equal(t, now.Add(2*time.Hour), every.Due(now.Add(-4*time.Hour), now), "counted from the last run, across restarts")
-	assert.Equal(t, now, every.Due(now.Add(-8*time.Hour), now), "overdue runs straight away")
+	testCases := []struct {
+		name     string
+		schedule string
+		last     time.Time
+		expected time.Time
+	}{
+		{name: "ShouldFirstRunAnIntervalFromNow", schedule: "every@6h", expected: now.Add(6 * time.Hour)},
+		{name: "ShouldCountFromTheLastRunAcrossRestarts", schedule: "every@6h", last: now.Add(-4 * time.Hour), expected: now.Add(2 * time.Hour)},
+		{name: "ShouldRunOverdueRunsStraightAway", schedule: "every@6h", last: now.Add(-8 * time.Hour), expected: now},
+		{name: "ShouldIgnoreTheLastRunForClockSchedules", schedule: "daily@03:00", last: now.Add(-time.Hour), expected: time.Date(2026, 10, 27, 3, 0, 0, 0, time.UTC)},
+	}
 
-	daily, err := ParseSchedule("daily@03:00")
-	require.NoError(t, err)
-	assert.Equal(t, time.Date(2026, 10, 27, 3, 0, 0, 0, time.UTC), daily.Due(now.Add(-time.Hour), now), "clock schedules ignore the last run")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			s, err := ParseSchedule(tc.schedule)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, s.Due(tc.last, now))
+		})
+	}
 }

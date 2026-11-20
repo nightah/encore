@@ -132,33 +132,41 @@ func TestReleaseKeepsAnotherOwnersMarker(t *testing.T) {
 }
 
 func TestActiveOwner(t *testing.T) {
-	bs := newBlobStore(t)
 	now := time.Date(2026, 10, 26, 9, 0, 0, 0, time.UTC)
 
-	_, _, active, err := ActiveOwner(t.Context(), bs, now)
-	require.NoError(t, err)
-	assert.False(t, active, "no marker")
+	testCases := []struct {
+		name         string
+		heartbeat    bool
+		have         time.Time
+		expected     bool
+		expectedName string
+	}{
+		{name: "ShouldReportNoOwnerWithoutAMarker", have: now},
+		{name: "ShouldReportAFreshHeartbeat", heartbeat: true, have: now.Add(time.Minute), expected: true, expectedName: "pod-1"},
+		{name: "ShouldTreatAHeartbeatAsFreshUntilItIsOwnerStaleOld", heartbeat: true, have: now.Add(ownerStale - time.Millisecond), expected: true},
+		{name: "ShouldTreatAHeartbeatExactlyOwnerStaleOldAsStale", heartbeat: true, have: now.Add(ownerStale)},
+		{name: "ShouldIgnoreAStaleHeartbeat", heartbeat: true, have: now.Add(time.Hour)},
+	}
 
-	s := &Saver{Store: bs, Log: slog.New(slog.DiscardHandler), Owner: "pod-1", Now: func() time.Time { return now }}
-	s.heartbeat(t.Context())
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			bs := newBlobStore(t)
 
-	name, seen, active, err := ActiveOwner(t.Context(), bs, now.Add(time.Minute))
-	require.NoError(t, err)
-	assert.True(t, active)
-	assert.Equal(t, "pod-1", name)
-	assert.True(t, seen.Equal(now))
+			if tc.heartbeat {
+				s := &Saver{Store: bs, Log: slog.New(slog.DiscardHandler), Owner: "pod-1", Now: func() time.Time { return now }}
+				s.heartbeat(t.Context())
+			}
 
-	_, _, active, err = ActiveOwner(t.Context(), bs, now.Add(ownerStale-time.Millisecond))
-	require.NoError(t, err)
-	assert.True(t, active, "a heartbeat is fresh until it is ownerStale old")
+			name, seen, active, err := ActiveOwner(t.Context(), bs, tc.have)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, active)
 
-	_, _, active, err = ActiveOwner(t.Context(), bs, now.Add(ownerStale))
-	require.NoError(t, err)
-	assert.False(t, active, "a heartbeat exactly ownerStale old is stale")
-
-	_, _, active, err = ActiveOwner(t.Context(), bs, now.Add(time.Hour))
-	require.NoError(t, err)
-	assert.False(t, active, "a stale heartbeat")
+			if tc.expectedName != "" {
+				assert.Equal(t, tc.expectedName, name)
+				assert.True(t, seen.Equal(now))
+			}
+		})
+	}
 }
 
 func TestUploadKeepsPrevious(t *testing.T) {
@@ -362,33 +370,27 @@ func gzipped(t *testing.T, s string) []byte {
 func TestRestoreFailuresLeaveTheExistingFile(t *testing.T) {
 	whole := gzipped(t, strings.Repeat("database page ", 1000))
 
-	for name, tt := range map[string]struct {
+	testCases := []struct {
+		name    string
 		prepare func(t *testing.T, s *faultyStore)
-		want    string
+		err     string
 	}{
-		"storage error": {
-			prepare: func(_ *testing.T, s *faultyStore) { s.fail(s.getErr, KeyDatabase, assert.AnError) },
-			want:    "fetching saved database",
-		},
-		"not gzip": {
-			prepare: func(t *testing.T, s *faultyStore) { putRaw(t, s, KeyDatabase, []byte("SQLite format 3\x00")) },
-			want:    "reading saved database",
-		},
-		"truncated": {
-			prepare: func(t *testing.T, s *faultyStore) { putRaw(t, s, KeyDatabase, whole[:len(whole)/2]) },
-			want:    "restoring saved database",
-		},
-	} {
-		t.Run(name, func(t *testing.T) {
+		{name: "ShouldKeepTheFileOnAStorageError", prepare: func(_ *testing.T, s *faultyStore) { s.fail(s.getErr, KeyDatabase, assert.AnError) }, err: "fetching saved database"},
+		{name: "ShouldKeepTheFileWhenTheCopyIsNotGzip", prepare: func(t *testing.T, s *faultyStore) { putRaw(t, s, KeyDatabase, []byte("SQLite format 3\x00")) }, err: "reading saved database"},
+		{name: "ShouldKeepTheFileWhenTheCopyIsTruncated", prepare: func(t *testing.T, s *faultyStore) { putRaw(t, s, KeyDatabase, whole[:len(whole)/2]) }, err: "restoring saved database"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			s := newFaultyStore(t)
-			tt.prepare(t, s)
+			tc.prepare(t, s)
 
 			dir := t.TempDir()
 			path := filepath.Join(dir, "encore.db")
 			require.NoError(t, os.WriteFile(path, []byte("current"), 0o600))
 
 			ok, err := Restore(t.Context(), s, path)
-			require.ErrorContains(t, err, tt.want)
+			require.ErrorContains(t, err, tc.err)
 			assert.False(t, ok)
 
 			got, err := os.ReadFile(path)
@@ -484,19 +486,24 @@ func TestSaveUploadsEvenWhenThePreviousCopyCannotBeKept(t *testing.T) {
 		clear(s.readErr)
 	}
 
-	for name, fail := range map[string]func(){
-		"reading":  func() { s.fail(s.readErr, KeyDatabase, assert.AnError) },
-		"writing":  func() { s.fail(s.putErr, KeyPrevious, assert.AnError) },
-		"fetching": func() { s.fail(s.getErr, KeyDatabase, assert.AnError) },
-	} {
-		t.Run(name, func(t *testing.T) {
+	testCases := []struct {
+		name string
+		fail func()
+	}{
+		{name: "ShouldUploadWhenReadingThePreviousCopyFails", fail: func() { s.fail(s.readErr, KeyDatabase, assert.AnError) }},
+		{name: "ShouldUploadWhenWritingThePreviousCopyFails", fail: func() { s.fail(s.putErr, KeyPrevious, assert.AnError) }},
+		{name: "ShouldUploadWhenFetchingThePreviousCopyFails", fail: func() { s.fail(s.getErr, KeyDatabase, assert.AnError) }},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			heal()
 			putRaw(t, s, KeyDatabase, gzipped(t, "v1"))
 
 			saver.last = [32]byte{}
 
 			logs.Reset()
-			fail()
+			tc.fail()
 
 			uploaded, err := saver.Save(t.Context())
 			require.NoError(t, err)

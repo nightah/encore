@@ -301,7 +301,7 @@ func TestRecoverInterruptedRotation(t *testing.T) {
 		return dir, db, s
 	}
 
-	t.Run("committed", func(t *testing.T) {
+	t.Run("ShouldCompleteACommittedRotation", func(t *testing.T) {
 		dir, db, s := setup(t)
 
 		// Simulate a crash after the database commit but before the rename.
@@ -325,7 +325,7 @@ func TestRecoverInterruptedRotation(t *testing.T) {
 		assert.Equal(t, "alpha", string(got))
 	})
 
-	t.Run("uncommitted", func(t *testing.T) {
+	t.Run("ShouldDiscardAnUncommittedRotation", func(t *testing.T) {
 		dir, db, s := setup(t)
 
 		keyFile := filepath.Join(dir, KeyFileName)
@@ -359,13 +359,32 @@ func TestCloseClearsKeys(t *testing.T) {
 func TestParseKey(t *testing.T) {
 	k := testKey(t)
 
-	got, err := ParseKey("  " + EncodeKey(k) + "\n")
-	require.NoError(t, err)
-	assert.Equal(t, k, got)
+	testCases := []struct {
+		name     string
+		have     string
+		expected []byte
+		err      bool
+	}{
+		{name: "ShouldParseAKeySurroundedByWhitespace", have: "  " + EncodeKey(k) + "\n", expected: k},
+		{name: "ShouldRejectEmpty", have: "", err: true},
+		{name: "ShouldRejectInvalidBase64", have: "not base64!", err: true},
+		{name: "ShouldRejectAShortKey", have: EncodeKey(k[:16]), err: true},
+		{name: "ShouldRejectALongKey", have: strings.Repeat("A", 100), err: true},
+	}
 
-	for _, bad := range []string{"", "not base64!", EncodeKey(k[:16]), strings.Repeat("A", 100)} {
-		_, err := ParseKey(bad)
-		require.Error(t, err, bad)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual, err := ParseKey(tc.have)
+
+			if tc.err {
+				require.Error(t, err)
+
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, actual)
+		})
 	}
 
 	assert.True(t, strings.HasPrefix(KeyID(k), "v1-"))
@@ -498,19 +517,22 @@ func TestOpenOptionErrors(t *testing.T) {
 	notADir := filepath.Join(t.TempDir(), "file")
 	require.NoError(t, os.WriteFile(notADir, nil, 0o600))
 
-	for name, tt := range map[string]struct {
-		opts Options
-		want string
+	testCases := []struct {
+		name string
+		have Options
+		err  string
 	}{
-		"nothing configured": {Options{}, "no key configured"},
-		"invalid key":        {Options{Key: "hunter2"}, "secrets.key:"},
-		"invalid key file":   {Options{KeyFile: badFile}, "secrets.key_file:"},
-		"missing key file":   {Options{KeyFile: filepath.Join(t.TempDir(), "missing")}, "secrets.key_file:"},
-		"data dir is a file": {Options{DataDir: notADir}, "checking key file"},
-	} {
-		t.Run(name, func(t *testing.T) {
-			_, err := Open(t.Context(), db.SecretRows(), tt.opts)
-			require.ErrorContains(t, err, tt.want)
+		{name: "ShouldRefuseNothingConfigured", have: Options{}, err: "no key configured"},
+		{name: "ShouldRefuseAnInvalidKey", have: Options{Key: "hunter2"}, err: "secrets.key:"},
+		{name: "ShouldRefuseAnInvalidKeyFile", have: Options{KeyFile: badFile}, err: "secrets.key_file:"},
+		{name: "ShouldRefuseAMissingKeyFile", have: Options{KeyFile: filepath.Join(t.TempDir(), "missing")}, err: "secrets.key_file:"},
+		{name: "ShouldRefuseADataDirThatIsAFile", have: Options{DataDir: notADir}, err: "checking key file"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := Open(t.Context(), db.SecretRows(), tc.have)
+			require.ErrorContains(t, err, tc.err)
 			assert.NotContains(t, err.Error(), "hunter2")
 		})
 	}
@@ -565,7 +587,7 @@ func TestOpenWithUnwritableDataDir(t *testing.T) {
 func TestOpenReportsRepositoryErrors(t *testing.T) {
 	ctx := t.Context()
 
-	t.Run("generating a key", func(t *testing.T) {
+	t.Run("ShouldReportErrorsWhenGeneratingAKey", func(t *testing.T) {
 		dir := t.TempDir()
 		repo := &faultyRepo{Repo: openDB(t, dir).SecretRows(), keyIDsErr: assert.AnError}
 
@@ -574,14 +596,14 @@ func TestOpenReportsRepositoryErrors(t *testing.T) {
 		assert.NoFileExists(t, filepath.Join(dir, KeyFileName), "no key is generated when existing secrets cannot be checked")
 	})
 
-	t.Run("checking key usage", func(t *testing.T) {
+	t.Run("ShouldReportErrorsWhenCheckingKeyUsage", func(t *testing.T) {
 		repo := &faultyRepo{Repo: openDB(t, t.TempDir()).SecretRows(), keyIDsErr: assert.AnError}
 
 		_, err := Open(ctx, repo, Options{Key: EncodeKey(testKey(t))})
 		require.ErrorIs(t, err, assert.AnError)
 	})
 
-	t.Run("recovering a rotation", func(t *testing.T) {
+	t.Run("ShouldReportErrorsWhenRecoveringARotation", func(t *testing.T) {
 		dir := t.TempDir()
 		db := openDB(t, dir)
 
@@ -797,18 +819,36 @@ func TestReadKeyErrors(t *testing.T) {
 	notADir := filepath.Join(t.TempDir(), "file")
 	require.NoError(t, os.WriteFile(notADir, nil, 0o600))
 
-	_, err := ReadKey(Options{DataDir: notADir})
-	require.ErrorContains(t, err, "checking key file")
+	damaged := t.TempDir()
+	require.NoError(t, os.WriteFile(filepath.Join(damaged, KeyFileName), []byte("garbage"), 0o600))
 
-	_, err = ReadKey(Options{})
-	require.ErrorIs(t, err, ErrNoKey)
+	testCases := []struct {
+		name  string
+		have  Options
+		err   string
+		noKey bool
+	}{
+		{name: "ShouldReportADataDirThatIsAFile", have: Options{DataDir: notADir}, err: "checking key file"},
+		{name: "ShouldReportNoKeyWhenNothingIsConfigured", have: Options{}, noKey: true},
+		{name: "ShouldNotTreatADamagedKeyFileAsMissing", have: Options{DataDir: damaged}},
+	}
 
-	dir := t.TempDir()
-	require.NoError(t, os.WriteFile(filepath.Join(dir, KeyFileName), []byte("garbage"), 0o600))
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := ReadKey(tc.have)
+			require.Error(t, err)
 
-	_, err = ReadKey(Options{DataDir: dir})
-	require.Error(t, err)
-	require.NotErrorIs(t, err, ErrNoKey, "a damaged key file is not a missing one")
+			if tc.err != "" {
+				require.ErrorContains(t, err, tc.err)
+			}
+
+			if tc.noKey {
+				require.ErrorIs(t, err, ErrNoKey)
+			} else {
+				require.NotErrorIs(t, err, ErrNoKey, "a damaged key file is not a missing one")
+			}
+		})
+	}
 }
 
 func TestReadKeyWithoutADataDirIgnoresTheWorkingDirectory(t *testing.T) {

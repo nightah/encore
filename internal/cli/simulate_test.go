@@ -164,22 +164,25 @@ func TestGenSimulateRefuses(t *testing.T) {
 		"badregex.yaml": "cases:\n  - {utterance: hi, says: \"(\"}\n",
 	})
 
-	for name, tc := range map[string]struct {
-		args []string
-		want string
+	testCases := []struct {
+		name string
+		have []string
+		err  string
 	}{
-		"nothing":   {nil, "give an utterance to say, or --file"},
-		"both":      {[]string{"-f", filepath.Join(dir, "empty.yaml"), "hi"}, "give utterances or --file, not both"},
-		"missing":   {[]string{"-f", filepath.Join(dir, "none.yaml")}, "no such file"},
-		"empty":     {[]string{"-f", filepath.Join(dir, "empty.yaml")}, "no cases"},
-		"unknown":   {[]string{"-f", filepath.Join(dir, "unknown.yaml")}, "field expect not found"},
-		"blank":     {[]string{"-f", filepath.Join(dir, "blank.yaml")}, "case 1 has no utterance"},
-		"bad regex": {[]string{"-f", filepath.Join(dir, "badregex.yaml")}, "says: error parsing regexp"},
-		"locale":    {[]string{"-l", "es-ES", "abre encore"}, "HTTP 400"},
-	} {
-		t.Run(name, func(t *testing.T) {
-			out, _, err := runCLI(t, append(append([]string{"gen", "simulate", "--skill", skill}, tc.args...), flags...)...)
-			require.ErrorContains(t, err, tc.want)
+		{name: "ShouldRefuseNothingToSay", err: "give an utterance to say, or --file"},
+		{name: "ShouldRefuseUtterancesAndAFile", have: []string{"-f", filepath.Join(dir, "empty.yaml"), "hi"}, err: "give utterances or --file, not both"},
+		{name: "ShouldRefuseAMissingFile", have: []string{"-f", filepath.Join(dir, "none.yaml")}, err: "no such file"},
+		{name: "ShouldRefuseAFileWithoutCases", have: []string{"-f", filepath.Join(dir, "empty.yaml")}, err: "no cases"},
+		{name: "ShouldRefuseAnUnknownField", have: []string{"-f", filepath.Join(dir, "unknown.yaml")}, err: "field expect not found"},
+		{name: "ShouldRefuseABlankUtterance", have: []string{"-f", filepath.Join(dir, "blank.yaml")}, err: "case 1 has no utterance"},
+		{name: "ShouldRefuseABadRegex", have: []string{"-f", filepath.Join(dir, "badregex.yaml")}, err: "says: error parsing regexp"},
+		{name: "ShouldRefuseALocaleTheSimulatorRejects", have: []string{"-l", "es-ES", "abre encore"}, err: "HTTP 400"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			out, _, err := runCLI(t, append(append([]string{"gen", "simulate", "--skill", skill}, tc.have...), flags...)...)
+			require.ErrorContains(t, err, tc.err)
 			assert.Empty(t, out)
 		})
 	}
@@ -211,28 +214,38 @@ func TestGenSimulateFailsWhenStoppedOrUnwritable(t *testing.T) {
 	fake, flags := liveFake(t)
 	skill := simulatedSkill(t, fake)
 
-	ctx, cancel := context.WithCancel(t.Context())
-	cancel()
-
-	require.ErrorIs(t, runCLIWith(ctx, t, io.Discard, append([]string{"gen", "simulate", "--skill", skill, "-l", "en-AU", "ask encore what's on seven"}, flags...)...), context.Canceled)
-
 	file := filepath.Join(fixtureDir(t, map[string]string{"cases.yaml": simulateCases}), "cases.yaml")
 
-	for _, args := range [][]string{
-		{"-l", "en-AU", "ask encore what's on seven"},
-		{"--json", "-l", "en-AU", "ask encore what's on seven"},
-		{"-f", file},
-	} {
-		err := runCLIWith(t.Context(), t, &failAfter{}, append(append([]string{"gen", "simulate", "--skill", skill}, args...), flags...)...)
-		require.ErrorIs(t, err, assert.AnError, args)
+	testCases := []struct {
+		name     string
+		have     []string
+		canceled bool
+		out      io.Writer
+		err      error
+	}{
+		{name: "ShouldFailWhenStopped", have: []string{"-l", "en-AU", "ask encore what's on seven"}, canceled: true, out: io.Discard, err: context.Canceled},
+		{name: "ShouldFailWhenTheReportCantBeWritten", have: []string{"-l", "en-AU", "ask encore what's on seven"}, out: &failAfter{}, err: assert.AnError},
+		{name: "ShouldFailWhenTheJSONCantBeWritten", have: []string{"--json", "-l", "en-AU", "ask encore what's on seven"}, out: &failAfter{}, err: assert.AnError},
+		{name: "ShouldFailWhenTheFileReportCantBeWritten", have: []string{"-f", file}, out: &failAfter{}, err: assert.AnError},
+		{name: "ShouldFailWhenTheTallyCantBeWritten", have: []string{"-f", file}, out: failOn("3 passed"), err: assert.AnError},
 	}
 
-	err := runCLIWith(t.Context(), t, failOn("3 passed"), append([]string{"gen", "simulate", "--skill", skill, "-f", file}, flags...)...)
-	require.ErrorIs(t, err, assert.AnError, "nor the tally")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(t.Context())
+			defer cancel()
+
+			if tc.canceled {
+				cancel()
+			}
+
+			require.ErrorIs(t, runCLIWith(ctx, t, tc.out, append(append([]string{"gen", "simulate", "--skill", skill}, tc.have...), flags...)...), tc.err)
+		})
+	}
 
 	disabled := fake.AddSkill(smapitest.DefaultVendorID, nil)
 
-	err = runCLIWith(t.Context(), t, &failAfter{}, append([]string{"gen", "simulate", "--skill", disabled, "open encore"}, flags...)...)
+	err := runCLIWith(t.Context(), t, &failAfter{}, append([]string{"gen", "simulate", "--skill", disabled, "open encore"}, flags...)...)
 	require.ErrorIs(t, err, assert.AnError)
 
 	sk, _ := fake.Skill(disabled)
@@ -240,11 +253,22 @@ func TestGenSimulateFailsWhenStoppedOrUnwritable(t *testing.T) {
 }
 
 func TestReplyFallsBackToTheSkillsSpeech(t *testing.T) {
-	sim := &smapi.Simulation{Responses: []smapi.SkillResponse{{Speech: "Switching to Seven."}, {}, {Speech: "Done."}}}
-	assert.Equal(t, "Switching to Seven. Done.", reply(sim), "Alexa captioned nothing, so the skill's own speech is the reply")
+	responses := []smapi.SkillResponse{{Speech: "Switching to Seven."}, {}, {Speech: "Done."}}
 
-	sim.Captions = []string{"Switching", "to Seven."}
-	assert.Equal(t, "Switching to Seven.", reply(sim))
+	testCases := []struct {
+		name     string
+		have     *smapi.Simulation
+		expected string
+	}{
+		{name: "ShouldReplyWithTheSkillsSpeechWhenAlexaCaptionedNothing", have: &smapi.Simulation{Responses: responses}, expected: "Switching to Seven. Done."},
+		{name: "ShouldReplyWithTheCaptions", have: &smapi.Simulation{Responses: responses, Captions: []string{"Switching", "to Seven."}}, expected: "Switching to Seven."},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, reply(tc.have))
+		})
+	}
 }
 
 // encoreDataDir makes a data directory as an Encore connected to the fake and deployed as skill leaves it, in en-AU only, and points the CLI at it. The SMAPI_* variables are cleared, so only the data directory can name the skill.
@@ -301,19 +325,27 @@ func TestGenSimulateFallsBackToTheEnvironment(t *testing.T) {
 	skill := simulatedSkill(t, fake)
 	o := fake.Options()
 
-	for name, setup := range map[string]func(t *testing.T){
-		"no data directory": func(*testing.T) {},
-		"not connected": func(t *testing.T) {
-			dir := encoreDataDir(t, fake, skill)
-			db, err := store.Open(t.Context(), store.Options{Path: store.DefaultPath(dir)})
-			require.NoError(t, err)
-			require.NoError(t, db.Settings().Delete(t.Context(), "skill.deploy_state"))
-			require.NoError(t, db.Close())
+	testCases := []struct {
+		name  string
+		setup func(t *testing.T)
+	}{
+		{name: "ShouldUseTheEnvironmentWithoutADataDirectory", setup: func(*testing.T) {}},
+		{
+			name: "ShouldUseTheEnvironmentWhenNotConnected",
+			setup: func(t *testing.T) {
+				dir := encoreDataDir(t, fake, skill)
+				db, err := store.Open(t.Context(), store.Options{Path: store.DefaultPath(dir)})
+				require.NoError(t, err)
+				require.NoError(t, db.Settings().Delete(t.Context(), "skill.deploy_state"))
+				require.NoError(t, db.Close())
+			},
 		},
-	} {
-		t.Run(name, func(t *testing.T) {
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Setenv("ENCORE_DATA_DIR", t.TempDir())
-			setup(t)
+			tc.setup(t)
 			t.Setenv(envClientID, o.ClientID)
 			t.Setenv(envClientSecret, o.ClientSecret)
 			t.Setenv(envRefreshToken, o.RefreshToken)
@@ -329,35 +361,52 @@ func TestGenSimulateFallsBackToTheEnvironment(t *testing.T) {
 func TestGenSimulateNeedsASkill(t *testing.T) {
 	_, flags := liveFake(t)
 
-	for name, setup := range map[string]func(t *testing.T) string{
-		"nothing": func(t *testing.T) string {
-			t.Setenv(envClientID, "")
+	testCases := []struct {
+		name  string
+		setup func(t *testing.T) string
+	}{
+		{
+			name: "ShouldRefuseWithNothingToNameTheSkill",
+			setup: func(t *testing.T) string {
+				t.Setenv(envClientID, "")
 
-			return "no such file"
+				return "no such file"
+			},
 		},
-		"a stateless Encore": func(t *testing.T) string {
-			t.Setenv("ENCORE_STATELESS", "true")
-			t.Setenv("ENCORE_STORAGE_BACKEND", "webdav")
-			t.Setenv("ENCORE_STORAGE_WEBDAV_URL", "https://dav.example.com/encore")
-			t.Setenv("ENCORE_SECRETS_KEY", "a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s=")
+		{
+			name: "ShouldRefuseAStatelessEncore",
+			setup: func(t *testing.T) string {
+				t.Setenv("ENCORE_STATELESS", "true")
+				t.Setenv("ENCORE_STORAGE_BACKEND", "webdav")
+				t.Setenv("ENCORE_STORAGE_WEBDAV_URL", "https://dav.example.com/encore")
+				t.Setenv("ENCORE_SECRETS_KEY", "a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s=")
 
-			return "stateless Encore keeps no data directory"
+				return "stateless Encore keeps no data directory"
+			},
 		},
-		"no secrets key": func(t *testing.T) string {
-			fake, _ := liveFake(t)
-			dir := encoreDataDir(t, fake, "amzn1.ask.skill.x")
-			require.NoError(t, os.Remove(filepath.Join(dir, secrets.KeyFileName)))
+		{
+			name: "ShouldRefuseWithoutASecretsKey",
+			setup: func(t *testing.T) string {
+				fake, _ := liveFake(t)
+				dir := encoreDataDir(t, fake, "amzn1.ask.skill.x")
+				require.NoError(t, os.Remove(filepath.Join(dir, secrets.KeyFileName)))
 
-			return "key"
+				return "key"
+			},
 		},
-		"a bad config": func(t *testing.T) string {
-			t.Setenv("ENCORE_LOG_LEVEL", "shouting")
+		{
+			name: "ShouldRefuseABadConfig",
+			setup: func(t *testing.T) string {
+				t.Setenv("ENCORE_LOG_LEVEL", "shouting")
 
-			return "shouting"
+				return "shouting"
+			},
 		},
-	} {
-		t.Run(name, func(t *testing.T) {
-			want := setup(t)
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			want := tc.setup(t)
 
 			_, _, err := runCLI(t, append([]string{"gen", "simulate", "hi"}, flags...)...)
 			require.Error(t, err)
@@ -377,12 +426,21 @@ func TestGenSimulateAnotherSkillTakesNoStoredLocale(t *testing.T) {
 }
 
 func TestWriteSimulationReachedWithoutAResponse(t *testing.T) {
-	var b strings.Builder
+	testCases := []struct {
+		name     string
+		have     *smapi.Simulation
+		expected string
+	}{
+		{name: "ShouldSayReachedWhenTheSimulatorReachedTheEndpointWhateverCameBack", have: &smapi.Simulation{Status: smapi.SimulationSuccessful, Invoked: true}, expected: "  intent:  no intent\n  skill:   reached, but its response couldn't be read\n"},
+		{name: "ShouldSayNotReached", have: &smapi.Simulation{Status: smapi.SimulationSuccessful}, expected: "  intent:  no intent\n  skill:   not reached\n"},
+	}
 
-	writeSimulation(&b, &smapi.Simulation{Status: smapi.SimulationSuccessful, Invoked: true})
-	assert.Equal(t, "  intent:  no intent\n  skill:   reached, but its response couldn't be read\n", b.String(), "the simulator says it reached the endpoint, whatever came back")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var b strings.Builder
 
-	b.Reset()
-	writeSimulation(&b, &smapi.Simulation{Status: smapi.SimulationSuccessful})
-	assert.Equal(t, "  intent:  no intent\n  skill:   not reached\n", b.String())
+			writeSimulation(&b, tc.have)
+			assert.Equal(t, tc.expected, b.String())
+		})
+	}
 }

@@ -134,13 +134,19 @@ func folderServer(t *testing.T, folder folderHandler) *httptest.Server {
 	return srv
 }
 
-var folderServers = map[string]folderHandler{"Nextcloud": nextcloudFolder, "mod_dav": modDAVFolder}
+var folderServers = []struct {
+	name   string
+	folder folderHandler
+}{
+	{name: "ShouldHandleNextcloudFolders", folder: nextcloudFolder},
+	{name: "ShouldHandleModDAVFolders", folder: modDAVFolder},
+}
 
 func TestWebDAVContractFolderGET(t *testing.T) {
-	for name, folder := range folderServers {
-		t.Run(name, func(t *testing.T) {
+	for _, tc := range folderServers {
+		t.Run(tc.name, func(t *testing.T) {
 			blobstoretest.Run(t, func(t *testing.T) blobstore.Store {
-				return newDAV(t, config.StorageWebDAV{URL: folderServer(t, folder).URL, Prefix: "encore"})
+				return newDAV(t, config.StorageWebDAV{URL: folderServer(t, tc.folder).URL, Prefix: "encore"})
 			})
 		})
 	}
@@ -148,9 +154,9 @@ func TestWebDAVContractFolderGET(t *testing.T) {
 
 // TestWebDAVGetFolderIsNotFound pins that a key naming a folder is not an object, whatever the server answers to a GET on it: Nextcloud sends a 200 with an HTML notice, which would otherwise be returned as the object's body, and mod_dav a 403, which would otherwise be reported as a permissions problem.
 func TestWebDAVGetFolderIsNotFound(t *testing.T) {
-	for name, folder := range folderServers {
-		t.Run(name, func(t *testing.T) {
-			s := newDAV(t, config.StorageWebDAV{URL: folderServer(t, folder).URL})
+	for _, tc := range folderServers {
+		t.Run(tc.name, func(t *testing.T) {
+			s := newDAV(t, config.StorageWebDAV{URL: folderServer(t, tc.folder).URL})
 
 			require.NoError(t, s.Put(t.Context(), "backups/encore-1.db.gz", strings.NewReader("db"), 2))
 
@@ -335,15 +341,22 @@ func TestWebDAVCustomCA(t *testing.T) {
 }
 
 func TestWebDAVConfigErrors(t *testing.T) {
-	for _, cfg := range []config.StorageWebDAV{
-		{URL: "ftp://host/dav"},
-		{URL: "https://user:pass@host/dav"}, // trufflehog:ignore
-		{URL: "https://host/dav", Prefix: "../up"},
-		{URL: "https://host/dav", CABundle: "/nonexistent/ca.pem"},
-	} {
-		_, err := blobstore.NewWebDAV(cfg)
-		require.Error(t, err, cfg.URL)
-		assert.NotContains(t, err.Error(), "pass@")
+	testCases := []struct {
+		name string
+		have config.StorageWebDAV
+	}{
+		{name: "ShouldRejectANonHTTPScheme", have: config.StorageWebDAV{URL: "ftp://host/dav"}},
+		{name: "ShouldRejectCredentialsInTheURL", have: config.StorageWebDAV{URL: "https://user:pass@host/dav"}}, // trufflehog:ignore
+		{name: "ShouldRejectAnInvalidPrefix", have: config.StorageWebDAV{URL: "https://host/dav", Prefix: "../up"}},
+		{name: "ShouldRejectAMissingCABundle", have: config.StorageWebDAV{URL: "https://host/dav", CABundle: "/nonexistent/ca.pem"}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := blobstore.NewWebDAV(tc.have)
+			require.Error(t, err)
+			assert.NotContains(t, err.Error(), "pass@")
+		})
 	}
 }
 

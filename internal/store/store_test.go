@@ -204,19 +204,25 @@ func TestBackupHonoursContext(t *testing.T) {
 }
 
 func TestNormalise(t *testing.T) {
-	tests := map[string]string{
-		"Kid's  Room":      "kids room",
-		"KIDS-ROOM":        "kids room",
-		"  the Lounge!  ":  "the lounge",
-		"Café":             "cafe",
-		"Wohnzimmer Ünten": "wohnzimmer unten",
-		"Bedroom’s 2":      "bedrooms 2",
-		"!!!":              "",
-		"ｆｕｌｌ ｗｉｄｔｈ":       "full width",
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldDropApostrophesAndCollapseSpaces", have: "Kid's  Room", expected: "kids room"},
+		{name: "ShouldLowercaseAndTurnHyphensIntoSpaces", have: "KIDS-ROOM", expected: "kids room"},
+		{name: "ShouldTrimSpacesAndPunctuation", have: "  the Lounge!  ", expected: "the lounge"},
+		{name: "ShouldStripAccents", have: "Café", expected: "cafe"},
+		{name: "ShouldStripUmlauts", have: "Wohnzimmer Ünten", expected: "wohnzimmer unten"},
+		{name: "ShouldDropTypographicApostrophes", have: "Bedroom’s 2", expected: "bedrooms 2"},
+		{name: "ShouldReduceOnlyPunctuationToEmpty", have: "!!!", expected: ""},
+		{name: "ShouldFoldFullWidthCharacters", have: "ｆｕｌｌ ｗｉｄｔｈ", expected: "full width"},
 	}
 
-	for in, want := range tests {
-		assert.Equal(t, want, Normalise(in), in)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, Normalise(tc.have))
+		})
 	}
 }
 
@@ -239,13 +245,18 @@ func TestOpenFailures(t *testing.T) {
 	junk := filepath.Join(dir, "junk.db")
 	require.NoError(t, os.WriteFile(junk, bytes.Repeat([]byte("not a database "), 512), 0o600))
 
-	for name, path := range map[string]string{
-		"parent is a file":  filepath.Join(file, FileName),
-		"path is a dir":     dir,
-		"not a sqlite file": junk,
-	} {
-		t.Run(name, func(t *testing.T) {
-			_, err := Open(t.Context(), Options{Path: path})
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldFailWhenTheParentIsAFile", have: filepath.Join(file, FileName)},
+		{name: "ShouldFailWhenThePathIsADirectory", have: dir},
+		{name: "ShouldFailWhenTheFileIsNotSQLite", have: junk},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := Open(t.Context(), Options{Path: tc.have})
 			require.Error(t, err)
 		})
 	}
@@ -351,79 +362,95 @@ func TestClosedDatabaseErrors(t *testing.T) {
 
 	ignore := func(_ any, err error) error { return err }
 
-	for name, call := range map[string]func() error{
-		"BackupTo":                  func() error { return db.BackupTo(ctx, filepath.Join(t.TempDir(), "b.db")) },
-		"Settings.Set":              func() error { return db.Settings().Set(ctx, "k", "v") },
-		"Settings.Delete":           func() error { return db.Settings().Delete(ctx, "k") },
-		"Settings.Get":              func() error { return db.Settings().Get(ctx, "k", new(string)) },
-		"Settings.All":              func() error { return ignore(db.Settings().All(ctx)) },
-		"Setting":                   func() error { return ignore(Setting(ctx, db.Settings(), "k", 0)) },
-		"Sessions.Create":           func() error { return db.Sessions().Create(ctx, &Session{IDHash: []byte{1}}) },
-		"Sessions.Get":              func() error { return ignore(db.Sessions().Get(ctx, []byte{1})) },
-		"Sessions.Touch":            func() error { return db.Sessions().Touch(ctx, []byte{1}, time.Now()) },
-		"Sessions.Delete":           func() error { return db.Sessions().Delete(ctx, []byte{1}) },
-		"Sessions.DeleteUser":       func() error { return ignore(db.Sessions().DeleteUser(ctx, "admin")) },
-		"Sessions.DeleteAllExcept":  func() error { return ignore(db.Sessions().DeleteAllExcept(ctx, nil)) },
-		"Sessions.DeleteExpired":    func() error { return ignore(db.Sessions().DeleteExpired(ctx)) },
-		"SecretRows.Put":            func() error { return db.SecretRows().Put(ctx, SecretRow{ID: "a"}) },
-		"SecretRows.Get":            func() error { return ignore(db.SecretRows().Get(ctx, "a")) },
-		"SecretRows.Delete":         func() error { return db.SecretRows().Delete(ctx, "a") },
-		"SecretRows.KeyIDs":         func() error { return ignore(db.SecretRows().KeyIDs(ctx)) },
-		"SecretRows.Rewrite":        func() error { return db.SecretRows().Rewrite(ctx, func(*SecretRow) error { return nil }) },
-		"KodiInstances.Create":      func() error { return db.KodiInstances().Create(ctx, newKodi("x")) },
-		"KodiInstances.Update":      func() error { return db.KodiInstances().Update(ctx, k) },
-		"KodiInstances.SetDefault":  func() error { return db.KodiInstances().SetDefault(ctx, 1) },
-		"KodiInstances.Get":         func() error { return ignore(db.KodiInstances().Get(ctx, 1)) },
-		"KodiInstances.Default":     func() error { return ignore(db.KodiInstances().Default(ctx)) },
-		"KodiInstances.List":        func() error { return ignore(db.KodiInstances().List(ctx)) },
-		"KodiInstances.Delete":      func() error { return db.KodiInstances().Delete(ctx, 1) },
-		"Rooms.Create":              func() error { return db.Rooms().Create(ctx, &Room{Name: "Lounge"}) },
-		"Rooms.Update":              func() error { return db.Rooms().Update(ctx, &Room{ID: 1, Name: "Lounge"}) },
-		"Rooms.Get":                 func() error { return ignore(db.Rooms().Get(ctx, 1)) },
-		"Rooms.List":                func() error { return ignore(db.Rooms().List(ctx)) },
-		"Rooms.Resolve":             func() error { _, _, err := db.Rooms().Resolve(ctx, "lounge"); return err },
-		"Rooms.Delete":              func() error { return db.Rooms().Delete(ctx, 1) },
-		"Rooms.AddAlias":            func() error { return ignore(db.Rooms().AddAlias(ctx, 1, "front room", SpokenRoom)) },
-		"Rooms.RemoveAlias":         func() error { return db.Rooms().RemoveAlias(ctx, 1) },
-		"Rooms.Aliases":             func() error { return ignore(db.Rooms().Aliases(ctx, 1)) },
-		"Aliases.Add":               func() error { return db.Aliases().Add(ctx, &TitleAlias{Alias: "x"}) },
-		"Aliases.Delete":            func() error { return db.Aliases().Delete(ctx, 1) },
-		"Aliases.List":              func() error { return ignore(db.Aliases().List(ctx, 1)) },
-		"Aliases.ForMedia":          func() error { return ignore(db.Aliases().ForMedia(ctx, 1, media.Ref{Kind: media.KindMovie, ID: 1})) },
-		"Aliases.Lookup":            func() error { return ignore(db.Aliases().Lookup(ctx, 1, "x")) },
-		"EchoDevices.Seen":          func() error { return ignore(db.EchoDevices().Seen(ctx, "dev")) },
-		"EchoDevices.Declare":       func() error { return ignore(db.EchoDevices().Declare(ctx, "dev")) },
-		"EchoDevices.Update":        func() error { return db.EchoDevices().Update(ctx, &EchoDevice{ID: 1}) },
-		"EchoDevices.Get":           func() error { return ignore(db.EchoDevices().Get(ctx, 1)) },
-		"EchoDevices.GetByAlexaID":  func() error { return ignore(db.EchoDevices().GetByAlexaID(ctx, "dev")) },
-		"EchoDevices.List":          func() error { return ignore(db.EchoDevices().List(ctx)) },
-		"EchoDevices.Delete":        func() error { return db.EchoDevices().Delete(ctx, 1) },
-		"LibraryGroups.Save":        func() error { return db.LibraryGroups().Save(ctx, &LibraryGroup{}, nil) },
-		"LibraryGroups.Assign":      func() error { return db.LibraryGroups().Assign(ctx, 1, 1) },
-		"LibraryGroups.Get":         func() error { return ignore(db.LibraryGroups().Get(ctx, 1)) },
-		"LibraryGroups.List":        func() error { return ignore(db.LibraryGroups().List(ctx)) },
-		"LibraryGroups.Members":     func() error { return ignore(db.LibraryGroups().Members(ctx, 1)) },
-		"LibraryGroups.Delete":      func() error { return db.LibraryGroups().Delete(ctx, 1) },
-		"LibraryGroups.DeleteEmpty": func() error { return ignore(db.LibraryGroups().DeleteEmpty(ctx)) },
-		"RequestLog.Insert":         func() error { return db.RequestLog().Insert(ctx, &RequestLogEntry{}) },
-		"RequestLog.Prune":          func() error { return db.RequestLog().Prune(ctx) },
-		"RequestLog.List":           func() error { return ignore(db.RequestLog().List(ctx, RequestLogQuery{})) },
-		"RequestLog.Get":            func() error { return ignore(db.RequestLog().Get(ctx, 1)) },
-	} {
-		err := call()
-		require.Error(t, err, name)
-		assert.NotErrorIs(t, err, ErrNotFound, "%s: a broken database is not an empty one", name)
+	testCases := []struct {
+		name string
+		have func() error
+	}{
+		{name: "ShouldFailBackupTo", have: func() error { return db.BackupTo(ctx, filepath.Join(t.TempDir(), "b.db")) }},
+		{name: "ShouldFailSettingsSet", have: func() error { return db.Settings().Set(ctx, "k", "v") }},
+		{name: "ShouldFailSettingsDelete", have: func() error { return db.Settings().Delete(ctx, "k") }},
+		{name: "ShouldFailSettingsGet", have: func() error { return db.Settings().Get(ctx, "k", new(string)) }},
+		{name: "ShouldFailSettingsAll", have: func() error { return ignore(db.Settings().All(ctx)) }},
+		{name: "ShouldFailSetting", have: func() error { return ignore(Setting(ctx, db.Settings(), "k", 0)) }},
+		{name: "ShouldFailSessionsCreate", have: func() error { return db.Sessions().Create(ctx, &Session{IDHash: []byte{1}}) }},
+		{name: "ShouldFailSessionsGet", have: func() error { return ignore(db.Sessions().Get(ctx, []byte{1})) }},
+		{name: "ShouldFailSessionsTouch", have: func() error { return db.Sessions().Touch(ctx, []byte{1}, time.Now()) }},
+		{name: "ShouldFailSessionsDelete", have: func() error { return db.Sessions().Delete(ctx, []byte{1}) }},
+		{name: "ShouldFailSessionsDeleteUser", have: func() error { return ignore(db.Sessions().DeleteUser(ctx, "admin")) }},
+		{name: "ShouldFailSessionsDeleteAllExcept", have: func() error { return ignore(db.Sessions().DeleteAllExcept(ctx, nil)) }},
+		{name: "ShouldFailSessionsDeleteExpired", have: func() error { return ignore(db.Sessions().DeleteExpired(ctx)) }},
+		{name: "ShouldFailSecretRowsPut", have: func() error { return db.SecretRows().Put(ctx, SecretRow{ID: "a"}) }},
+		{name: "ShouldFailSecretRowsGet", have: func() error { return ignore(db.SecretRows().Get(ctx, "a")) }},
+		{name: "ShouldFailSecretRowsDelete", have: func() error { return db.SecretRows().Delete(ctx, "a") }},
+		{name: "ShouldFailSecretRowsKeyIDs", have: func() error { return ignore(db.SecretRows().KeyIDs(ctx)) }},
+		{name: "ShouldFailSecretRowsRewrite", have: func() error { return db.SecretRows().Rewrite(ctx, func(*SecretRow) error { return nil }) }},
+		{name: "ShouldFailKodiInstancesCreate", have: func() error { return db.KodiInstances().Create(ctx, newKodi("x")) }},
+		{name: "ShouldFailKodiInstancesUpdate", have: func() error { return db.KodiInstances().Update(ctx, k) }},
+		{name: "ShouldFailKodiInstancesSetDefault", have: func() error { return db.KodiInstances().SetDefault(ctx, 1) }},
+		{name: "ShouldFailKodiInstancesGet", have: func() error { return ignore(db.KodiInstances().Get(ctx, 1)) }},
+		{name: "ShouldFailKodiInstancesDefault", have: func() error { return ignore(db.KodiInstances().Default(ctx)) }},
+		{name: "ShouldFailKodiInstancesList", have: func() error { return ignore(db.KodiInstances().List(ctx)) }},
+		{name: "ShouldFailKodiInstancesDelete", have: func() error { return db.KodiInstances().Delete(ctx, 1) }},
+		{name: "ShouldFailRoomsCreate", have: func() error { return db.Rooms().Create(ctx, &Room{Name: "Lounge"}) }},
+		{name: "ShouldFailRoomsUpdate", have: func() error { return db.Rooms().Update(ctx, &Room{ID: 1, Name: "Lounge"}) }},
+		{name: "ShouldFailRoomsGet", have: func() error { return ignore(db.Rooms().Get(ctx, 1)) }},
+		{name: "ShouldFailRoomsList", have: func() error { return ignore(db.Rooms().List(ctx)) }},
+		{name: "ShouldFailRoomsResolve", have: func() error { _, _, err := db.Rooms().Resolve(ctx, "lounge"); return err }},
+		{name: "ShouldFailRoomsDelete", have: func() error { return db.Rooms().Delete(ctx, 1) }},
+		{name: "ShouldFailRoomsAddAlias", have: func() error { return ignore(db.Rooms().AddAlias(ctx, 1, "front room", SpokenRoom)) }},
+		{name: "ShouldFailRoomsRemoveAlias", have: func() error { return db.Rooms().RemoveAlias(ctx, 1) }},
+		{name: "ShouldFailRoomsAliases", have: func() error { return ignore(db.Rooms().Aliases(ctx, 1)) }},
+		{name: "ShouldFailAliasesAdd", have: func() error { return db.Aliases().Add(ctx, &TitleAlias{Alias: "x"}) }},
+		{name: "ShouldFailAliasesDelete", have: func() error { return db.Aliases().Delete(ctx, 1) }},
+		{name: "ShouldFailAliasesList", have: func() error { return ignore(db.Aliases().List(ctx, 1)) }},
+		{name: "ShouldFailAliasesForMedia", have: func() error { return ignore(db.Aliases().ForMedia(ctx, 1, media.Ref{Kind: media.KindMovie, ID: 1})) }},
+		{name: "ShouldFailAliasesLookup", have: func() error { return ignore(db.Aliases().Lookup(ctx, 1, "x")) }},
+		{name: "ShouldFailEchoDevicesSeen", have: func() error { return ignore(db.EchoDevices().Seen(ctx, "dev")) }},
+		{name: "ShouldFailEchoDevicesDeclare", have: func() error { return ignore(db.EchoDevices().Declare(ctx, "dev")) }},
+		{name: "ShouldFailEchoDevicesUpdate", have: func() error { return db.EchoDevices().Update(ctx, &EchoDevice{ID: 1}) }},
+		{name: "ShouldFailEchoDevicesGet", have: func() error { return ignore(db.EchoDevices().Get(ctx, 1)) }},
+		{name: "ShouldFailEchoDevicesGetByAlexaID", have: func() error { return ignore(db.EchoDevices().GetByAlexaID(ctx, "dev")) }},
+		{name: "ShouldFailEchoDevicesList", have: func() error { return ignore(db.EchoDevices().List(ctx)) }},
+		{name: "ShouldFailEchoDevicesDelete", have: func() error { return db.EchoDevices().Delete(ctx, 1) }},
+		{name: "ShouldFailLibraryGroupsSave", have: func() error { return db.LibraryGroups().Save(ctx, &LibraryGroup{}, nil) }},
+		{name: "ShouldFailLibraryGroupsAssign", have: func() error { return db.LibraryGroups().Assign(ctx, 1, 1) }},
+		{name: "ShouldFailLibraryGroupsGet", have: func() error { return ignore(db.LibraryGroups().Get(ctx, 1)) }},
+		{name: "ShouldFailLibraryGroupsList", have: func() error { return ignore(db.LibraryGroups().List(ctx)) }},
+		{name: "ShouldFailLibraryGroupsMembers", have: func() error { return ignore(db.LibraryGroups().Members(ctx, 1)) }},
+		{name: "ShouldFailLibraryGroupsDelete", have: func() error { return db.LibraryGroups().Delete(ctx, 1) }},
+		{name: "ShouldFailLibraryGroupsDeleteEmpty", have: func() error { return ignore(db.LibraryGroups().DeleteEmpty(ctx)) }},
+		{name: "ShouldFailRequestLogInsert", have: func() error { return db.RequestLog().Insert(ctx, &RequestLogEntry{}) }},
+		{name: "ShouldFailRequestLogPrune", have: func() error { return db.RequestLog().Prune(ctx) }},
+		{name: "ShouldFailRequestLogList", have: func() error { return ignore(db.RequestLog().List(ctx, RequestLogQuery{})) }},
+		{name: "ShouldFailRequestLogGet", have: func() error { return ignore(db.RequestLog().Get(ctx, 1)) }},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.have()
+			require.Error(t, err)
+			assert.NotErrorIs(t, err, ErrNotFound, "a broken database is not an empty one")
+		})
 	}
 }
 
 func TestDSNPath(t *testing.T) {
 	t.Parallel()
 
-	for path, want := range map[string]string{
-		"/var/lib/encore/encore.db":            "file:///var/lib/encore/encore.db?",
-		"C:/Users/Some User/AppData/encore.db": "file:///C:/Users/Some%20User/AppData/encore.db?",
-	} {
-		assert.True(t, strings.HasPrefix(dsn(path, false), want), dsn(path, false))
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldBuildAFileURLFromAUnixPath", have: "/var/lib/encore/encore.db", expected: "file:///var/lib/encore/encore.db?"},
+		{name: "ShouldBuildAFileURLFromAWindowsPathWithSpaces", have: "C:/Users/Some User/AppData/encore.db", expected: "file:///C:/Users/Some%20User/AppData/encore.db?"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := dsn(tc.have, false)
+			assert.True(t, strings.HasPrefix(actual, tc.expected), actual)
+		})
 	}
 }
 

@@ -134,50 +134,84 @@ func TestRootVersionFlag(t *testing.T) {
 }
 
 func TestRootRejectsUnknownCommandsAndFlags(t *testing.T) {
-	_, _, err := runCLI(t, "frobnicate")
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), `unknown command "frobnicate"`)
+	testCases := []struct {
+		name string
+		have []string
+		err  string
+	}{
+		{name: "ShouldRejectAnUnknownCommand", have: []string{"frobnicate"}, err: `unknown command "frobnicate"`},
+		{name: "ShouldRejectAnUnknownFlag", have: []string{"version", "--nope"}, err: "unknown flag: --nope"},
+	}
 
-	_, _, err = runCLI(t, "version", "--nope")
-	require.Error(t, err)
-	assert.Contains(t, err.Error(), "unknown flag: --nope")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, _, err := runCLI(t, tc.have...)
+			require.Error(t, err)
+			assert.Contains(t, err.Error(), tc.err)
+		})
+	}
 }
 
 func TestLogFormats(t *testing.T) {
-	logLine := func(format string) string {
-		t.Helper()
-
-		var buf bytes.Buffer
-
-		log, _, err := newLogger(&buf, config.Log{Level: "info", Format: format})
-		require.NoError(t, err)
-		log.Info("library synced", "instance", "Lounge", "error", errors.New("boom"))
-
-		return buf.String()
+	testCases := []struct {
+		name       string
+		have       string
+		noColor    bool
+		expected   []string
+		unexpected string
+	}{
+		{name: "ShouldWriteText", have: "text", expected: []string{`msg="library synced" instance=Lounge error=boom`}},
+		{name: "ShouldWriteJSON", have: "json", expected: []string{`"msg":"library synced","instance":"Lounge","error":"boom"`}},
+		{name: "ShouldColourPretty", have: "pretty", expected: []string{"\x1b[", "library synced"}},
+		{name: "ShouldTurnColourOffForNO_COLOR", have: "pretty", noColor: true, unexpected: "\x1b["},
+		{name: "ShouldWritePlainTextForAutoWhenNotOnATerminal", have: "auto", noColor: true, expected: []string{`msg="library synced"`}},
 	}
 
-	assert.Contains(t, logLine("text"), `msg="library synced" instance=Lounge error=boom`)
-	assert.Contains(t, logLine("json"), `"msg":"library synced","instance":"Lounge","error":"boom"`)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.noColor {
+				t.Setenv("NO_COLOR", "1")
+			}
 
-	pretty := logLine("pretty")
-	assert.Contains(t, pretty, "\x1b[", "pretty is coloured")
-	assert.Contains(t, pretty, "library synced")
+			var buf bytes.Buffer
 
-	t.Setenv("NO_COLOR", "1")
-	assert.NotContains(t, logLine("pretty"), "\x1b[", "NO_COLOR turns colour off")
+			log, _, err := newLogger(&buf, config.Log{Level: "info", Format: tc.have})
+			require.NoError(t, err)
+			log.Info("library synced", "instance", "Lounge", "error", errors.New("boom"))
 
-	assert.Contains(t, logLine("auto"), `msg="library synced"`, "auto writes plain text when not on a terminal")
+			for _, s := range tc.expected {
+				assert.Contains(t, buf.String(), s)
+			}
+
+			if tc.unexpected != "" {
+				assert.NotContains(t, buf.String(), tc.unexpected)
+			}
+		})
+	}
 }
 
 func TestLogFormatResolvesAuto(t *testing.T) {
-	assert.Equal(t, "text", logFormat("auto", &bytes.Buffer{}))
-	assert.Equal(t, "json", logFormat("json", &bytes.Buffer{}))
-	assert.Equal(t, "pretty", logFormat("pretty", &bytes.Buffer{}), "pretty when asked, even off a terminal")
-
 	f, err := os.CreateTemp(t.TempDir(), "log")
 	require.NoError(t, err)
 	t.Cleanup(func() { _ = f.Close() })
-	assert.Equal(t, "text", logFormat("auto", f), "a file isn't a terminal")
+
+	testCases := []struct {
+		name     string
+		have     string
+		out      io.Writer
+		expected string
+	}{
+		{name: "ShouldResolveAutoToTextOffATerminal", have: "auto", out: &bytes.Buffer{}, expected: "text"},
+		{name: "ShouldKeepJSON", have: "json", out: &bytes.Buffer{}, expected: "json"},
+		{name: "ShouldKeepPrettyEvenOffATerminal", have: "pretty", out: &bytes.Buffer{}, expected: "pretty"},
+		{name: "ShouldResolveAutoToTextForAFileAsItIsntATerminal", have: "auto", out: f, expected: "text"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, logFormat(tc.have, tc.out))
+		})
+	}
 }
 
 func TestNewLoggerLevels(t *testing.T) {
@@ -253,7 +287,7 @@ func contents(t *testing.T, f *os.File) string {
 }
 
 func TestExecuteExitCodes(t *testing.T) {
-	t.Run("success", func(t *testing.T) {
+	t.Run("ShouldExitZeroOnSuccess", func(t *testing.T) {
 		stdout, stderr := withProcessIO(t, "version")
 
 		assert.Equal(t, 0, Execute())
@@ -261,14 +295,14 @@ func TestExecuteExitCodes(t *testing.T) {
 		assert.Empty(t, contents(t, stderr))
 	})
 
-	t.Run("a failure is reported", func(t *testing.T) {
+	t.Run("ShouldReportAFailure", func(t *testing.T) {
 		_, stderr := withProcessIO(t, "frobnicate")
 
 		assert.Equal(t, 1, Execute())
 		assert.Contains(t, contents(t, stderr), `error: unknown command "frobnicate"`)
 	})
 
-	t.Run("a silent failure is not reported twice", func(t *testing.T) {
+	t.Run("ShouldNotReportASilentFailureTwice", func(t *testing.T) {
 		src, err := skillmodel.Load(i18n.FS)
 		require.NoError(t, err)
 

@@ -70,32 +70,62 @@ func TestLocalSymlinkEscape(t *testing.T) {
 func TestOpen(t *testing.T) {
 	dataDir := t.TempDir()
 
-	s, err := blobstore.Open(config.Storage{Backend: config.BackendLocal}, dataDir)
-	require.NoError(t, err)
+	testCases := []struct {
+		name        string
+		have        config.Storage
+		expectedDir string
+		err         bool
+	}{
+		{name: "ShouldOpenLocalStorageInTheDataDir", have: config.Storage{Backend: config.BackendLocal}, expectedDir: filepath.Join(dataDir, blobstore.LocalDirName)},
+		{name: "ShouldOpenS3", have: config.Storage{Backend: config.BackendS3, S3: config.StorageS3{Endpoint: "http://minio:9000", Bucket: "b", AccessKey: "a", SecretKey: "s", Addressing: config.AddressingPath}}},
+		{name: "ShouldOpenWebDAV", have: config.Storage{Backend: config.BackendWebDAV, WebDAV: config.StorageWebDAV{URL: "https://cloud.example.com/remote.php/dav/files/a"}}},
+		{name: "ShouldRejectAnUnknownBackend", have: config.Storage{Backend: "tape"}, err: true},
+	}
 
-	local, ok := s.(*blobstore.Local)
-	require.True(t, ok)
-	assert.Equal(t, filepath.Join(dataDir, blobstore.LocalDirName), local.Dir())
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			s, err := blobstore.Open(tc.have, dataDir)
 
-	_, err = blobstore.Open(config.Storage{Backend: config.BackendS3, S3: config.StorageS3{Endpoint: "http://minio:9000", Bucket: "b", AccessKey: "a", SecretKey: "s", Addressing: config.AddressingPath}}, dataDir)
-	require.NoError(t, err)
+			if tc.err {
+				require.Error(t, err)
 
-	_, err = blobstore.Open(config.Storage{Backend: config.BackendWebDAV, WebDAV: config.StorageWebDAV{URL: "https://cloud.example.com/remote.php/dav/files/a"}}, dataDir)
-	require.NoError(t, err)
+				return
+			}
 
-	_, err = blobstore.Open(config.Storage{Backend: "tape"}, dataDir)
-	require.Error(t, err)
+			require.NoError(t, err)
+
+			if tc.expectedDir != "" {
+				local, ok := s.(*blobstore.Local)
+				require.True(t, ok)
+				assert.Equal(t, tc.expectedDir, local.Dir())
+			}
+		})
+	}
 }
 
 func TestNewLocalErrors(t *testing.T) {
-	_, err := blobstore.NewLocal("")
-	require.Error(t, err)
-
 	file := filepath.Join(t.TempDir(), "file")
 	require.NoError(t, os.WriteFile(file, nil, 0o600))
 
-	_, err = blobstore.NewLocal(filepath.Join(file, "blobs"))
-	require.ErrorContains(t, err, "creating storage directory")
+	testCases := []struct {
+		name string
+		have string
+		err  string
+	}{
+		{name: "ShouldRejectAnEmptyDirectory", have: ""},
+		{name: "ShouldReportADirectoryItCannotCreate", have: filepath.Join(file, "blobs"), err: "creating storage directory"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := blobstore.NewLocal(tc.have)
+			require.Error(t, err)
+
+			if tc.err != "" {
+				require.ErrorContains(t, err, tc.err)
+			}
+		})
+	}
 }
 
 func TestLocalRootRemoved(t *testing.T) {
@@ -213,11 +243,38 @@ func TestLocalUnreadableObject(t *testing.T) {
 }
 
 func TestValidateKey(t *testing.T) {
-	for _, k := range []string{"a", "a/b", "a/b.c", "backups/encore-20261026T030000.000Z.db.gz", "with space/ü", strings.Repeat("a", 1024)} {
-		require.NoError(t, blobstore.ValidateKey(k), k)
+	testCases := []struct {
+		name string
+		have string
+		err  error
+	}{
+		{name: "ShouldAcceptASingleSegment", have: "a"},
+		{name: "ShouldAcceptSeveralSegments", have: "a/b"},
+		{name: "ShouldAcceptADotInAName", have: "a/b.c"},
+		{name: "ShouldAcceptABackupKey", have: "backups/encore-20261026T030000.000Z.db.gz"},
+		{name: "ShouldAcceptSpacesAndUnicode", have: "with space/ü"},
+		{name: "ShouldAcceptTheLongestKey", have: strings.Repeat("a", 1024)},
+		{name: "ShouldRejectEmpty", have: "", err: blobstore.ErrInvalidKey},
+		{name: "ShouldRejectALeadingSlash", have: "/a", err: blobstore.ErrInvalidKey},
+		{name: "ShouldRejectATrailingSlash", have: "a/", err: blobstore.ErrInvalidKey},
+		{name: "ShouldRejectAnEmptySegment", have: "a//b", err: blobstore.ErrInvalidKey},
+		{name: "ShouldRejectTheCurrentDirectory", have: ".", err: blobstore.ErrInvalidKey},
+		{name: "ShouldRejectTheParentDirectory", have: "..", err: blobstore.ErrInvalidKey},
+		{name: "ShouldRejectATrailingParentSegment", have: "a/..", err: blobstore.ErrInvalidKey},
+		{name: "ShouldRejectALeadingCurrentSegment", have: "./a", err: blobstore.ErrInvalidKey},
+		{name: "ShouldRejectABackslash", have: "a\\b", err: blobstore.ErrInvalidKey},
+		{name: "ShouldRejectANulByte", have: "a\x00b", err: blobstore.ErrInvalidKey},
+		{name: "ShouldRejectInvalidUTF8", have: "\xff", err: blobstore.ErrInvalidKey},
+		{name: "ShouldRejectAKeyTooLong", have: strings.Repeat("a", 1025), err: blobstore.ErrInvalidKey},
 	}
 
-	for _, k := range []string{"", "/a", "a/", "a//b", ".", "..", "a/..", "./a", "a\\b", "a\x00b", "\xff", strings.Repeat("a", 1025)} {
-		require.ErrorIs(t, blobstore.ValidateKey(k), blobstore.ErrInvalidKey, "%q", k)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.err == nil {
+				require.NoError(t, blobstore.ValidateKey(tc.have))
+			} else {
+				require.ErrorIs(t, blobstore.ValidateKey(tc.have), tc.err)
+			}
+		})
 	}
 }
