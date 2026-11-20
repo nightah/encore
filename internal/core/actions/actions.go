@@ -86,6 +86,11 @@ func (s *Service) SetSeed(seed uint64) {
 	s.rand = rand.New(rand.NewPCG(seed, seed)) //nolint:gosec // see NewService
 }
 
+// SetNow replaces the clock used for time windows such as "what's new", for tests.
+func (s *Service) SetNow(now func() time.Time) {
+	s.now = now
+}
+
 func (s *Service) intN(n int) int {
 	s.randMu.Lock()
 	defer s.randMu.Unlock()

@@ -132,8 +132,10 @@ func newRoomHandlerWith(t *testing.T, more ...media.Item) (*Handler, *testkit.Ba
 	matcher := &testkit.Matcher{Docs: testkit.Docs(items...)}
 	rec := &memRecorder{}
 
+	now := func() time.Time { return time.Date(2026, 10, 26, 9, 0, 0, 0, time.UTC) }
 	svc := actions.NewService(log)
 	svc.SetSeed(1)
+	svc.SetNow(now)
 
 	h := &Handler{
 		Service: svc,
@@ -144,7 +146,7 @@ func newRoomHandlerWith(t *testing.T, more ...media.Item) (*Handler, *testkit.Ba
 		},
 		Recorder: rec,
 		Log:      log,
-		Now:      func() time.Time { return time.Date(2026, 10, 26, 9, 0, 0, 0, time.UTC) },
+		Now:      now,
 	}
 
 	return h, backend, bedroom, rec
