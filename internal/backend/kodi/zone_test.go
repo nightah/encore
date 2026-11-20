@@ -14,18 +14,37 @@ func TestUTCOffset(t *testing.T) {
 	tod := func(h, m, s int) time.Time { return time.Date(1, 1, 1, h, m, s, 0, time.UTC) }
 	at := func(h, m int) time.Time { return time.Date(2026, 10, 26, h, m, 0, 0, time.UTC) }
 
-	assert.Equal(t, 11*time.Hour, utcOffset(tod(15, 30, 2), at(4, 30)), "Melbourne in daylight saving")
-	assert.Equal(t, -7*time.Hour, utcOffset(tod(21, 30, 0), at(4, 30)), "across midnight backwards")
-	assert.Equal(t, -11*time.Hour, utcOffset(tod(9, 0, 0), at(20, 0)), "the time of day alone can't tell UTC−11 from UTC+13")
-	assert.Equal(t, 13*time.Hour, dateOffset(time.Date(2026, 10, 27, 9, 0, 0, 0, time.UTC), at(20, 0)), "the date can: Tonga is a day ahead")
-	assert.Equal(t, -11*time.Hour, dateOffset(time.Date(2026, 10, 26, 9, 0, 0, 0, time.UTC), at(20, 0)), "Niue is the same day")
-	assert.Equal(t, 5*time.Hour+30*time.Minute, utcOffset(tod(10, 0, 4), at(4, 30)), "India")
-	assert.Equal(t, 5*time.Hour+45*time.Minute, utcOffset(tod(10, 14, 50), at(4, 30)), "Nepal, with a slow reply")
-	assert.Zero(t, utcOffset(tod(4, 29, 58), at(4, 30)))
-	assert.Equal(t, 13*time.Hour, utcOffset(tod(17, 30, 0), at(4, 30)), "Tonga, on the same UTC day")
-	assert.Equal(t, 14*time.Hour, utcOffset(tod(18, 0, 0), at(4, 0)), "Kiribati is the furthest ahead")
-	assert.Equal(t, -12*time.Hour, utcOffset(tod(8, 0, 0), at(20, 0)), "Baker Island is the furthest behind")
-	assert.Equal(t, 11*time.Hour, utcOffset(tod(10, 0, 0), at(23, 0)), "thirteen hours behind is read as eleven ahead")
+	testCases := []struct {
+		name     string
+		have     time.Time
+		now      time.Time
+		date     bool
+		expected time.Duration
+	}{
+		{name: "ShouldReadMelbourneInDaylightSaving", have: tod(15, 30, 2), now: at(4, 30), expected: 11 * time.Hour},
+		{name: "ShouldReadAcrossMidnightBackwards", have: tod(21, 30, 0), now: at(4, 30), expected: -7 * time.Hour},
+		{name: "ShouldReadUTCMinus11FromTimeOfDayAlone", have: tod(9, 0, 0), now: at(20, 0), expected: -11 * time.Hour},
+		{name: "ShouldTellTongaADayAheadFromTheDate", have: time.Date(2026, 10, 27, 9, 0, 0, 0, time.UTC), now: at(20, 0), date: true, expected: 13 * time.Hour},
+		{name: "ShouldTellNiueOnTheSameDayFromTheDate", have: time.Date(2026, 10, 26, 9, 0, 0, 0, time.UTC), now: at(20, 0), date: true, expected: -11 * time.Hour},
+		{name: "ShouldReadIndia", have: tod(10, 0, 4), now: at(4, 30), expected: 5*time.Hour + 30*time.Minute},
+		{name: "ShouldReadNepalWithASlowReply", have: tod(10, 14, 50), now: at(4, 30), expected: 5*time.Hour + 45*time.Minute},
+		{name: "ShouldReadUTC", have: tod(4, 29, 58), now: at(4, 30)},
+		{name: "ShouldReadTongaOnTheSameUTCDay", have: tod(17, 30, 0), now: at(4, 30), expected: 13 * time.Hour},
+		{name: "ShouldReadKiribatiAsTheFurthestAhead", have: tod(18, 0, 0), now: at(4, 0), expected: 14 * time.Hour},
+		{name: "ShouldReadBakerIslandAsTheFurthestBehind", have: tod(8, 0, 0), now: at(20, 0), expected: -12 * time.Hour},
+		{name: "ShouldReadThirteenHoursBehindAsElevenAhead", have: tod(10, 0, 0), now: at(23, 0), expected: 11 * time.Hour},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			offset := utcOffset
+			if tc.date {
+				offset = dateOffset
+			}
+
+			assert.Equal(t, tc.expected, offset(tc.have, tc.now))
+		})
+	}
 }
 
 func TestZoneRelearnsWhenDue(t *testing.T) {

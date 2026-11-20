@@ -175,16 +175,22 @@ func TestSendUDPBadAddress(t *testing.T) {
 }
 
 func TestMACAddressReplies(t *testing.T) {
-	for _, tc := range []struct {
+	testCases := []struct {
 		name  string
 		reply func(json.RawMessage) (any, *fakekodi.Error)
 		err   string
 	}{
-		{"too long", macReply("00:00:00:00:fe:80:00:00"), "instead of a MAC address"},
-		{"failing", func(json.RawMessage) (any, *fakekodi.Error) {
-			return nil, &fakekodi.Error{Code: CodeInternalError, Message: "x"}
-		}, "XBMC.GetInfoLabels"},
-	} {
+		{name: "ShouldRejectAddressTooLong", reply: macReply("00:00:00:00:fe:80:00:00"), err: "instead of a MAC address"},
+		{
+			name: "ShouldReportFailingLookup",
+			reply: func(json.RawMessage) (any, *fakekodi.Error) {
+				return nil, &fakekodi.Error{Code: CodeInternalError, Message: "x"}
+			},
+			err: "XBMC.GetInfoLabels",
+		},
+	}
+
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			s := newFake(t, fakekodi.Options{})
 			s.Handle("XBMC.GetInfoLabels", tc.reply)
@@ -254,13 +260,13 @@ func TestWakeAndWaitStops(t *testing.T) {
 	cfg := testConfig(t, s)
 	cfg.DisableWebSocket = true
 
-	t.Run("without a MAC", func(t *testing.T) {
+	t.Run("ShouldStopWithoutAMAC", func(t *testing.T) {
 		w := &Waker{Client: NewClient(cfg, nil), PollInterval: time.Millisecond}
 
 		require.ErrorContains(t, w.WakeAndWait(t.Context(), time.Second), "MAC address unknown")
 	})
 
-	t.Run("when the caller gives up", func(t *testing.T) {
+	t.Run("ShouldStopWhenTheCallerGivesUp", func(t *testing.T) {
 		log := &packetLog{}
 		w := &Waker{Client: NewClient(cfg, nil), Send: log.send, PollInterval: 5 * time.Millisecond}
 		w.SetMAC(net.HardwareAddr{1, 2, 3, 4, 5, 6})

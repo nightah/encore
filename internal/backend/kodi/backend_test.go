@@ -233,29 +233,42 @@ func TestRecentlyAdded(t *testing.T) {
 }
 
 func TestItem(t *testing.T) {
-	refs := []media.Ref{
-		{Kind: media.KindMovie, ID: 5},
-		{Kind: media.KindTVShow, ID: 2},
-		{Kind: media.KindEpisode, ID: 201},
-		{Kind: media.KindMusicVideo, ID: 1},
-		{Kind: media.KindArtist, ID: 2},
-		{Kind: media.KindAlbum, ID: 2},
-		{Kind: media.KindSong, ID: 3},
+	items := []struct {
+		name     string
+		have     media.Ref
+		expected string
+	}{
+		{name: "ShouldFindMovie", have: media.Ref{Kind: media.KindMovie, ID: 5}, expected: "Amélie"},
+		{name: "ShouldFindTVShow", have: media.Ref{Kind: media.KindTVShow, ID: 2}, expected: "Bluey"},
+		{name: "ShouldFindEpisode", have: media.Ref{Kind: media.KindEpisode, ID: 201}, expected: "Rain"},
+		{name: "ShouldFindMusicVideo", have: media.Ref{Kind: media.KindMusicVideo, ID: 1}, expected: "Bohemian Rhapsody"},
+		{name: "ShouldFindArtist", have: media.Ref{Kind: media.KindArtist, ID: 2}, expected: "The Beatles"},
+		{name: "ShouldFindAlbum", have: media.Ref{Kind: media.KindAlbum, ID: 2}, expected: "Abbey Road"},
+		{name: "ShouldFindSong", have: media.Ref{Kind: media.KindSong, ID: 3}, expected: "Come Together"},
 	}
-	want := []string{"Amélie", "Bluey", "Rain", "Bohemian Rhapsody", "The Beatles", "Abbey Road", "Come Together"}
 
-	for name, v := range map[string][3]int{"omega": {13, 5, 0}, "piers": {13, 1000, 0}} {
-		t.Run(name, func(t *testing.T) {
-			b, _ := newBackend(t, fakekodi.Options{Version: v}, BackendOptions{})
+	testCases := []struct {
+		name    string
+		version [3]int
+	}{
+		{name: "ShouldFindItemsOnOmega", version: [3]int{13, 5, 0}},
+		{name: "ShouldFindItemsOnPiers", version: [3]int{13, 1000, 0}},
+	}
 
-			for i, ref := range refs {
-				it, err := b.Item(t.Context(), ref)
-				require.NoError(t, err)
-				assert.Equal(t, ref, it.Ref())
-				assert.Equal(t, want[i], it.Title)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			b, _ := newBackend(t, fakekodi.Options{Version: tc.version}, BackendOptions{})
 
-				_, err = b.Item(t.Context(), media.Ref{Kind: ref.Kind, ID: 9999})
-				require.ErrorIs(t, err, media.ErrNotFound, "%s", ref.Kind)
+			for _, item := range items {
+				t.Run(item.name, func(t *testing.T) {
+					it, err := b.Item(t.Context(), item.have)
+					require.NoError(t, err)
+					assert.Equal(t, item.have, it.Ref())
+					assert.Equal(t, item.expected, it.Title)
+
+					_, err = b.Item(t.Context(), media.Ref{Kind: item.have.Kind, ID: 9999})
+					require.ErrorIs(t, err, media.ErrNotFound)
+				})
 			}
 
 			playlists, err := b.Library(t.Context(), media.KindPlaylist)
@@ -289,25 +302,28 @@ func TestPlay(t *testing.T) {
 	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
 	ctx := t.Context()
 
-	cases := []struct {
-		ref    media.Ref
-		opts   media.PlayOptions
-		params string
+	testCases := []struct {
+		name     string
+		have     media.Ref
+		opts     media.PlayOptions
+		expected string
 	}{
-		{media.Ref{Kind: media.KindMovie, ID: 3}, media.PlayOptions{Resume: true}, `{"item":{"movieid":3},"options":{"resume":true}}`},
-		{media.Ref{Kind: media.KindMovie, ID: 3}, media.PlayOptions{}, `{"item":{"movieid":3},"options":{"resume":false}}`},
-		{media.Ref{Kind: media.KindEpisode, ID: 102}, media.PlayOptions{}, `{"item":{"episodeid":102},"options":{"resume":false}}`},
-		{media.Ref{Kind: media.KindMusicVideo, ID: 1}, media.PlayOptions{}, `{"item":{"musicvideoid":1},"options":{"resume":false}}`},
-		{media.Ref{Kind: media.KindSong, ID: 2}, media.PlayOptions{}, `{"item":{"songid":2}}`},
-		{media.Ref{Kind: media.KindAlbum, ID: 1}, media.PlayOptions{}, `{"item":{"albumid":1}}`},
-		{media.Ref{Kind: media.KindArtist, ID: 1}, media.PlayOptions{}, `{"item":{"artistid":1}}`},
-		{media.Ref{Kind: media.KindPlaylist, ID: playlistID("special://profile/playlists/video/Kids.xsp")}, media.PlayOptions{}, `{"item":{"file":"special://profile/playlists/video/Kids.xsp"}}`},
-		{media.Ref{Kind: media.KindTVShow, ID: 1}, media.PlayOptions{Resume: true}, `{"item":{"episodeid":102},"options":{"resume":true}}`},
+		{name: "ShouldResumeMovie", have: media.Ref{Kind: media.KindMovie, ID: 3}, opts: media.PlayOptions{Resume: true}, expected: `{"item":{"movieid":3},"options":{"resume":true}}`},
+		{name: "ShouldPlayMovieFromStart", have: media.Ref{Kind: media.KindMovie, ID: 3}, expected: `{"item":{"movieid":3},"options":{"resume":false}}`},
+		{name: "ShouldPlayEpisode", have: media.Ref{Kind: media.KindEpisode, ID: 102}, expected: `{"item":{"episodeid":102},"options":{"resume":false}}`},
+		{name: "ShouldPlayMusicVideo", have: media.Ref{Kind: media.KindMusicVideo, ID: 1}, expected: `{"item":{"musicvideoid":1},"options":{"resume":false}}`},
+		{name: "ShouldPlaySong", have: media.Ref{Kind: media.KindSong, ID: 2}, expected: `{"item":{"songid":2}}`},
+		{name: "ShouldPlayAlbum", have: media.Ref{Kind: media.KindAlbum, ID: 1}, expected: `{"item":{"albumid":1}}`},
+		{name: "ShouldPlayArtist", have: media.Ref{Kind: media.KindArtist, ID: 1}, expected: `{"item":{"artistid":1}}`},
+		{name: "ShouldPlayPlaylistByFile", have: media.Ref{Kind: media.KindPlaylist, ID: playlistID("special://profile/playlists/video/Kids.xsp")}, expected: `{"item":{"file":"special://profile/playlists/video/Kids.xsp"}}`},
+		{name: "ShouldResumeTVShowAtNextEpisode", have: media.Ref{Kind: media.KindTVShow, ID: 1}, opts: media.PlayOptions{Resume: true}, expected: `{"item":{"episodeid":102},"options":{"resume":true}}`},
 	}
 
-	for _, tc := range cases {
-		require.NoError(t, b.Play(ctx, tc.ref, tc.opts), "%v", tc.ref)
-		assert.JSONEq(t, tc.params, lastParams(t, s, "Player.Open"), "%v", tc.ref)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			require.NoError(t, b.Play(ctx, tc.have, tc.opts))
+			assert.JSONEq(t, tc.expected, lastParams(t, s, "Player.Open"))
+		})
 	}
 
 	np, err := b.NowPlaying(ctx)
@@ -345,9 +361,17 @@ func TestPlayShuffledShow(t *testing.T) {
 }
 
 func TestPlayMissing(t *testing.T) {
-	for name, v := range map[string][3]int{"omega": {13, 5, 0}, "piers": {13, 1000, 0}} {
-		t.Run(name, func(t *testing.T) {
-			b, _ := newBackend(t, fakekodi.Options{Version: v}, BackendOptions{})
+	testCases := []struct {
+		name    string
+		version [3]int
+	}{
+		{name: "ShouldReportNotFoundOnOmega", version: [3]int{13, 5, 0}},
+		{name: "ShouldReportNotFoundOnPiers", version: [3]int{13, 1000, 0}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			b, _ := newBackend(t, fakekodi.Options{Version: tc.version}, BackendOptions{})
 
 			err := b.Play(t.Context(), media.Ref{Kind: media.KindMovie, ID: 404}, media.PlayOptions{})
 			require.ErrorIs(t, err, media.ErrNotFound)
@@ -418,25 +442,28 @@ func TestSeek(t *testing.T) {
 
 	to := time.Hour + 2*time.Minute + 3*time.Second + 400*time.Millisecond
 
-	cases := []struct {
-		seek   media.Seek
-		params string
-		want   time.Duration
+	testCases := []struct {
+		name     string
+		have     media.Seek
+		params   string
+		expected time.Duration
 	}{
-		{media.Seek{By: 90 * time.Second}, `{"seconds":90}`, 90 * time.Second},
-		{media.Seek{By: -30 * time.Second}, `{"seconds":-30}`, 60 * time.Second},
-		{media.Seek{To: &to}, `{"time":{"hours":1,"minutes":2,"seconds":3,"milliseconds":400}}`, to},
-		{media.Seek{Step: media.SeekBigBackward}, `{"step":"bigbackward"}`, to - 10*time.Minute},
-		{media.Seek{Step: media.SeekSmallForward}, `{"step":"smallforward"}`, to - 10*time.Minute + 30*time.Second},
+		{name: "ShouldSeekForwardBy", have: media.Seek{By: 90 * time.Second}, params: `{"seconds":90}`, expected: 90 * time.Second},
+		{name: "ShouldSeekBackwardBy", have: media.Seek{By: -30 * time.Second}, params: `{"seconds":-30}`, expected: 60 * time.Second},
+		{name: "ShouldSeekToPosition", have: media.Seek{To: &to}, params: `{"time":{"hours":1,"minutes":2,"seconds":3,"milliseconds":400}}`, expected: to},
+		{name: "ShouldStepBigBackward", have: media.Seek{Step: media.SeekBigBackward}, params: `{"step":"bigbackward"}`, expected: to - 10*time.Minute},
+		{name: "ShouldStepSmallForward", have: media.Seek{Step: media.SeekSmallForward}, params: `{"step":"smallforward"}`, expected: to - 10*time.Minute + 30*time.Second},
 	}
 
-	for _, tc := range cases {
-		require.NoError(t, b.Seek(ctx, tc.seek))
-		assert.JSONEq(t, `{"playerid":1,"value":`+tc.params+`}`, lastParams(t, s, "Player.Seek"))
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			require.NoError(t, b.Seek(ctx, tc.have))
+			assert.JSONEq(t, `{"playerid":1,"value":`+tc.params+`}`, lastParams(t, s, "Player.Seek"))
 
-		np, err := b.NowPlaying(ctx)
-		require.NoError(t, err)
-		assert.Equal(t, tc.want, np.Position)
+			np, err := b.NowPlaying(ctx)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, np.Position)
+		})
 	}
 
 	require.Error(t, b.Seek(ctx, media.Seek{Step: "sideways"}))
@@ -457,23 +484,26 @@ func TestVolume(t *testing.T) {
 	set := func(n int) *int { return &n }
 	mute := func(m bool) *bool { return &m }
 
-	steps := []struct {
-		change media.VolumeChange
-		want   media.VolumeState
+	testCases := []struct {
+		name     string
+		have     media.VolumeChange
+		expected media.VolumeState
 	}{
-		{media.VolumeChange{Set: set(30)}, media.VolumeState{Level: 30}},
-		{media.VolumeChange{Step: 15}, media.VolumeState{Level: 45}},
-		{media.VolumeChange{Step: -50}, media.VolumeState{Level: 0}},
-		{media.VolumeChange{Set: set(140)}, media.VolumeState{Level: 100}},
-		{media.VolumeChange{Mute: mute(true)}, media.VolumeState{Level: 100, Muted: true}},
-		{media.VolumeChange{ToggleMute: true}, media.VolumeState{Level: 100}},
-		{media.VolumeChange{}, media.VolumeState{Level: 100}},
+		{name: "ShouldSetLevel", have: media.VolumeChange{Set: set(30)}, expected: media.VolumeState{Level: 30}},
+		{name: "ShouldStepUp", have: media.VolumeChange{Step: 15}, expected: media.VolumeState{Level: 45}},
+		{name: "ShouldStepDownToZero", have: media.VolumeChange{Step: -50}},
+		{name: "ShouldCapLevelAtHundred", have: media.VolumeChange{Set: set(140)}, expected: media.VolumeState{Level: 100}},
+		{name: "ShouldMute", have: media.VolumeChange{Mute: mute(true)}, expected: media.VolumeState{Level: 100, Muted: true}},
+		{name: "ShouldToggleMute", have: media.VolumeChange{ToggleMute: true}, expected: media.VolumeState{Level: 100}},
+		{name: "ShouldReportVolumeWithoutChange", expected: media.VolumeState{Level: 100}},
 	}
 
-	for _, st := range steps {
-		got, err := b.Volume(ctx, st.change)
-		require.NoError(t, err)
-		assert.Equal(t, st.want, got, "%+v", st.change)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual, err := b.Volume(ctx, tc.have)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, actual)
+		})
 	}
 }
 
@@ -482,19 +512,23 @@ func TestVolumeSendsOnlyLevelsKodiAccepts(t *testing.T) {
 	ctx := t.Context()
 	level := func(n int) *int { return &n }
 
-	for _, tc := range []struct {
-		name   string
-		change media.VolumeChange
-		sent   string
+	testCases := []struct {
+		name     string
+		have     media.VolumeChange
+		expected string
 	}{
-		{"a step below zero", media.VolumeChange{Step: -150}, `{"volume":0}`},
-		{"a negative level", media.VolumeChange{Set: level(-5)}, `{"volume":0}`},
-		{"a step past the top", media.VolumeChange{Step: 150}, `{"volume":100}`},
-		{"a level past the top", media.VolumeChange{Set: level(101)}, `{"volume":100}`},
-	} {
-		_, err := b.Volume(ctx, tc.change)
-		require.NoError(t, err, tc.name)
-		assert.JSONEq(t, tc.sent, lastParams(t, s, "Application.SetVolume"), tc.name)
+		{name: "ShouldSendZeroForStepBelowZero", have: media.VolumeChange{Step: -150}, expected: `{"volume":0}`},
+		{name: "ShouldSendZeroForNegativeLevel", have: media.VolumeChange{Set: level(-5)}, expected: `{"volume":0}`},
+		{name: "ShouldSendHundredForStepPastTheTop", have: media.VolumeChange{Step: 150}, expected: `{"volume":100}`},
+		{name: "ShouldSendHundredForLevelPastTheTop", have: media.VolumeChange{Set: level(101)}, expected: `{"volume":100}`},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := b.Volume(ctx, tc.have)
+			require.NoError(t, err)
+			assert.JSONEq(t, tc.expected, lastParams(t, s, "Application.SetVolume"))
+		})
 	}
 }
 
@@ -580,33 +614,36 @@ func TestSubscribe(t *testing.T) {
 }
 
 func TestTranslate(t *testing.T) {
-	cases := []struct {
-		method string
-		params string
-		want   media.Event
-		ok     bool
+	testCases := []struct {
+		name       string
+		method     string
+		params     string
+		expected   media.Event
+		expectedOK bool
 	}{
-		{"VideoLibrary.OnUpdate", `{"data":{"id":4,"type":"tvshow"}}`, media.Event{Kind: media.EventItemUpdated, Ref: media.Ref{Kind: media.KindTVShow, ID: 4}}, true},
-		{"VideoLibrary.OnUpdate", `{"data":{"item":{"id":9,"type":"musicvideo"},"playcount":1}}`, media.Event{Kind: media.EventItemUpdated, Ref: media.Ref{Kind: media.KindMusicVideo, ID: 9}}, true},
-		{"VideoLibrary.OnUpdate", `{"data":{"id":2,"type":"set"}}`, media.Event{}, false},
-		{"VideoLibrary.OnUpdate", `not json`, media.Event{}, false},
-		{"VideoLibrary.OnUpdate", `{"data":{"id":0,"type":"movie"}}`, media.Event{}, false},
-		{"VideoLibrary.OnRemove", `{"data":{"item":{"type":"episode"}}}`, media.Event{}, false},
-		{"VideoLibrary.OnScanFinished", `{}`, media.Event{Kind: media.EventLibraryScanned}, true},
-		{"Player.OnPlay", `{"data":{"item":{"type":"movie","id":0}}}`, media.Event{Kind: media.EventPlaybackStarted}, true},
-		{"Player.OnPlay", `{"data":{"item":{"type":"episode","id":7}}}`, media.Event{Kind: media.EventPlaybackStarted, Ref: media.Ref{Kind: media.KindEpisode, ID: 7}}, true},
-		{"System.OnWake", `{}`, media.Event{Kind: media.EventConnected}, true},
-		{"AudioLibrary.OnRemove", `{"data":{"id":5,"type":"album"}}`, media.Event{Kind: media.EventItemRemoved, Ref: media.Ref{Kind: media.KindAlbum, ID: 5}}, true},
-		{"Player.OnPlay", `{"data":{"item":{"type":"channel","id":3},"player":{"playerid":1}}}`, media.Event{Kind: media.EventPlaybackStarted}, true},
-		{"Player.OnStop", `{"data":{"end":true}}`, media.Event{Kind: media.EventPlaybackStopped}, true},
-		{"System.OnRestart", `{}`, media.Event{Kind: media.EventDisconnected}, true},
-		{"Application.OnVolumeChanged", `{"data":{"volume":3}}`, media.Event{}, false},
+		{name: "ShouldTranslateTVShowUpdate", method: "VideoLibrary.OnUpdate", params: `{"data":{"id":4,"type":"tvshow"}}`, expected: media.Event{Kind: media.EventItemUpdated, Ref: media.Ref{Kind: media.KindTVShow, ID: 4}}, expectedOK: true},
+		{name: "ShouldTranslateNestedItemUpdate", method: "VideoLibrary.OnUpdate", params: `{"data":{"item":{"id":9,"type":"musicvideo"},"playcount":1}}`, expected: media.Event{Kind: media.EventItemUpdated, Ref: media.Ref{Kind: media.KindMusicVideo, ID: 9}}, expectedOK: true},
+		{name: "ShouldIgnoreSetUpdate", method: "VideoLibrary.OnUpdate", params: `{"data":{"id":2,"type":"set"}}`},
+		{name: "ShouldIgnoreMalformedParams", method: "VideoLibrary.OnUpdate", params: `not json`},
+		{name: "ShouldIgnoreUpdateWithoutID", method: "VideoLibrary.OnUpdate", params: `{"data":{"id":0,"type":"movie"}}`},
+		{name: "ShouldIgnoreRemoveWithoutID", method: "VideoLibrary.OnRemove", params: `{"data":{"item":{"type":"episode"}}}`},
+		{name: "ShouldTranslateScanFinished", method: "VideoLibrary.OnScanFinished", params: `{}`, expected: media.Event{Kind: media.EventLibraryScanned}, expectedOK: true},
+		{name: "ShouldTranslatePlayOutsideTheLibrary", method: "Player.OnPlay", params: `{"data":{"item":{"type":"movie","id":0}}}`, expected: media.Event{Kind: media.EventPlaybackStarted}, expectedOK: true},
+		{name: "ShouldTranslatePlayOfEpisode", method: "Player.OnPlay", params: `{"data":{"item":{"type":"episode","id":7}}}`, expected: media.Event{Kind: media.EventPlaybackStarted, Ref: media.Ref{Kind: media.KindEpisode, ID: 7}}, expectedOK: true},
+		{name: "ShouldTranslateWakeAsConnected", method: "System.OnWake", params: `{}`, expected: media.Event{Kind: media.EventConnected}, expectedOK: true},
+		{name: "ShouldTranslateAlbumRemove", method: "AudioLibrary.OnRemove", params: `{"data":{"id":5,"type":"album"}}`, expected: media.Event{Kind: media.EventItemRemoved, Ref: media.Ref{Kind: media.KindAlbum, ID: 5}}, expectedOK: true},
+		{name: "ShouldTranslatePlayOfChannelWithoutRef", method: "Player.OnPlay", params: `{"data":{"item":{"type":"channel","id":3},"player":{"playerid":1}}}`, expected: media.Event{Kind: media.EventPlaybackStarted}, expectedOK: true},
+		{name: "ShouldTranslateStop", method: "Player.OnStop", params: `{"data":{"end":true}}`, expected: media.Event{Kind: media.EventPlaybackStopped}, expectedOK: true},
+		{name: "ShouldTranslateRestartAsDisconnected", method: "System.OnRestart", params: `{}`, expected: media.Event{Kind: media.EventDisconnected}, expectedOK: true},
+		{name: "ShouldIgnoreVolumeChanged", method: "Application.OnVolumeChanged", params: `{"data":{"volume":3}}`},
 	}
 
-	for _, tc := range cases {
-		got, ok := translate(Notification{Method: kodirpc.NotificationName(tc.method), Params: json.RawMessage(tc.params)})
-		assert.Equal(t, tc.ok, ok, "%s %s", tc.method, tc.params)
-		assert.Equal(t, tc.want, got, "%s %s", tc.method, tc.params)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual, ok := translate(Notification{Method: kodirpc.NotificationName(tc.method), Params: json.RawMessage(tc.params)})
+			assert.Equal(t, tc.expectedOK, ok)
+			assert.Equal(t, tc.expected, actual)
+		})
 	}
 }
 
@@ -638,22 +675,24 @@ func TestNowPlayingArtAndImage(t *testing.T) {
 }
 
 func TestActivePlayerPrefersVideoThenAudio(t *testing.T) {
-	for _, tc := range []struct {
-		name    string
-		players string
-		want    string
+	testCases := []struct {
+		name     string
+		players  string
+		expected string
 	}{
-		{"video first", `[{"playerid":2,"type":"picture"},{"playerid":0,"type":"audio"},{"playerid":1,"type":"video"}]`, `{"playerid":1,"shuffle":true}`},
-		{"then audio", `[{"playerid":2,"type":"picture"},{"playerid":0,"type":"audio"}]`, `{"playerid":0,"shuffle":true}`},
-		{"then anything", `[{"playerid":2,"type":"picture"}]`, `{"playerid":2,"shuffle":true}`},
-	} {
+		{name: "ShouldPreferVideo", players: `[{"playerid":2,"type":"picture"},{"playerid":0,"type":"audio"},{"playerid":1,"type":"video"}]`, expected: `{"playerid":1,"shuffle":true}`},
+		{name: "ShouldThenPreferAudio", players: `[{"playerid":2,"type":"picture"},{"playerid":0,"type":"audio"}]`, expected: `{"playerid":0,"shuffle":true}`},
+		{name: "ShouldThenTakeAnyPlayer", players: `[{"playerid":2,"type":"picture"}]`, expected: `{"playerid":2,"shuffle":true}`},
+	}
+
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
 			s.Handle("Player.GetActivePlayers", func(json.RawMessage) (any, *fakekodi.Error) { return json.RawMessage(tc.players), nil })
 			s.Handle("Player.SetShuffle", func(json.RawMessage) (any, *fakekodi.Error) { return "OK", nil })
 
 			require.NoError(t, b.SetShuffle(t.Context(), true))
-			assert.JSONEq(t, tc.want, lastParams(t, s, "Player.SetShuffle"))
+			assert.JSONEq(t, tc.expected, lastParams(t, s, "Player.SetShuffle"))
 		})
 	}
 }
@@ -742,13 +781,26 @@ func TestNowPlayingQueued(t *testing.T) {
 }
 
 func TestNowPlayingKinds(t *testing.T) {
-	for typ, kind := range map[string]media.Kind{"movie": media.KindMovie, "episode": media.KindEpisode, "musicvideo": media.KindMusicVideo, "song": media.KindSong} {
-		m := mapper{zone: newZone(aest)}
+	testCases := []struct {
+		name     string
+		have     string
+		expected media.Kind
+	}{
+		{name: "ShouldMapMovie", have: "movie", expected: media.KindMovie},
+		{name: "ShouldMapEpisode", have: "episode", expected: media.KindEpisode},
+		{name: "ShouldMapMusicVideo", have: "musicvideo", expected: media.KindMusicVideo},
+		{name: "ShouldMapSong", have: "song", expected: media.KindSong},
+	}
 
-		it := m.playing(&kodirpc.ListItemAll{ListItemBase: kodirpc.ListItemBase{ID: 7, Type: kodirpc.ListItemBaseType(typ), Title: "T"}})
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			m := mapper{zone: newZone(aest)}
 
-		assert.Equal(t, kind, it.Kind, typ)
-		assert.Equal(t, 7, it.ID, typ)
+			it := m.playing(&kodirpc.ListItemAll{ListItemBase: kodirpc.ListItemBase{ID: 7, Type: kodirpc.ListItemBaseType(tc.have), Title: "T"}})
+
+			assert.Equal(t, tc.expected, it.Kind)
+			assert.Equal(t, 7, it.ID)
+		})
 	}
 }
 
@@ -765,23 +817,28 @@ func TestParseTime(t *testing.T) {
 func TestSearchEachKind(t *testing.T) {
 	b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
 
-	for _, tc := range []struct {
-		kind   media.Kind
-		title  string
-		method string
-		field  string
-		want   []string
+	testCases := []struct {
+		name     string
+		kind     media.Kind
+		have     string
+		method   string
+		field    string
+		expected []string
 	}{
-		{media.KindTVShow, "office", "VideoLibrary.GetTVShows", "title", []string{"The Office (US)", "The Office (UK)"}},
-		{media.KindMusicVideo, "rhapsody", "VideoLibrary.GetMusicVideos", "title", []string{"Bohemian Rhapsody"}},
-		{media.KindAlbum, "abbey", "AudioLibrary.GetAlbums", "album", []string{"Abbey Road"}},
-		{media.KindSong, "love", "AudioLibrary.GetSongs", "title", []string{"Love of My Life"}},
-		{media.KindSong, "zzz", "AudioLibrary.GetSongs", "title", []string{}},
-	} {
-		items, err := b.Search(t.Context(), tc.kind, tc.title)
-		require.NoError(t, err, tc.kind)
-		assert.ElementsMatch(t, tc.want, titles(items), tc.kind)
-		assert.Contains(t, lastParams(t, s, tc.method), `"filter":{"operator":"contains","value":"`+tc.title+`","field":"`+tc.field+`"}`, tc.kind)
+		{name: "ShouldSearchTVShowsByTitle", kind: media.KindTVShow, have: "office", method: "VideoLibrary.GetTVShows", field: "title", expected: []string{"The Office (US)", "The Office (UK)"}},
+		{name: "ShouldSearchMusicVideosByTitle", kind: media.KindMusicVideo, have: "rhapsody", method: "VideoLibrary.GetMusicVideos", field: "title", expected: []string{"Bohemian Rhapsody"}},
+		{name: "ShouldSearchAlbumsByAlbum", kind: media.KindAlbum, have: "abbey", method: "AudioLibrary.GetAlbums", field: "album", expected: []string{"Abbey Road"}},
+		{name: "ShouldSearchSongsByTitle", kind: media.KindSong, have: "love", method: "AudioLibrary.GetSongs", field: "title", expected: []string{"Love of My Life"}},
+		{name: "ShouldFindNoSongs", kind: media.KindSong, have: "zzz", method: "AudioLibrary.GetSongs", field: "title", expected: []string{}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			items, err := b.Search(t.Context(), tc.kind, tc.have)
+			require.NoError(t, err)
+			assert.ElementsMatch(t, tc.expected, titles(items))
+			assert.Contains(t, lastParams(t, s, tc.method), `"filter":{"operator":"contains","value":"`+tc.have+`","field":"`+tc.field+`"}`)
+		})
 	}
 }
 
@@ -881,21 +938,31 @@ func TestShuffleEmptyContainer(t *testing.T) {
 }
 
 func TestZoneIsLearnedFromKodi(t *testing.T) {
-	for _, tc := range []struct {
+	testCases := []struct {
 		name   string
 		labels func(now time.Time) map[string]string
 		offset int
 	}{
-		{"date and time", func(now time.Time) map[string]string {
-			local := now.In(time.FixedZone("", 11*3600))
+		{
+			name: "ShouldLearnZoneFromDateAndTime",
+			labels: func(now time.Time) map[string]string {
+				local := now.In(time.FixedZone("", 11*3600))
 
-			return map[string]string{clockLabel: local.Format("03:04:05 PM"), dateLabel: local.Format(time.DateOnly)}
-		}, 11 * 3600},
-		{"time only", func(now time.Time) map[string]string {
-			return map[string]string{clockLabel: now.In(time.FixedZone("", 10*3600)).Format("15:04:05"), dateLabel: ""}
-		}, 10 * 3600},
-		{"unreadable clock", func(time.Time) map[string]string { return map[string]string{clockLabel: "soon"} }, -1},
-	} {
+				return map[string]string{clockLabel: local.Format("03:04:05 PM"), dateLabel: local.Format(time.DateOnly)}
+			},
+			offset: 11 * 3600,
+		},
+		{
+			name: "ShouldLearnZoneFromTimeOnly",
+			labels: func(now time.Time) map[string]string {
+				return map[string]string{clockLabel: now.In(time.FixedZone("", 10*3600)).Format("15:04:05"), dateLabel: ""}
+			},
+			offset: 10 * 3600,
+		},
+		{name: "ShouldKeepServerZoneForUnreadableClock", labels: func(time.Time) map[string]string { return map[string]string{clockLabel: "soon"} }, offset: -1},
+	}
+
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			s := fakekodi.New(t, fakekodi.Options{})
 			b := NewBackend(NewClient(testConfig(t, s), nil), BackendOptions{})

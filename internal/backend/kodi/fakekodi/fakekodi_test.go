@@ -103,15 +103,23 @@ func TestLibraryQueries(t *testing.T) {
 }
 
 func TestNotFoundErrorDependsOnVersion(t *testing.T) {
-	omega := New(t, Options{})
-	_, resp := post(t, omega, "", "", "Player.Open", map[string]any{"item": map[string]int{"movieid": 999}})
-	require.NotNil(t, resp.Error)
-	assert.Equal(t, CodeInvalidParams, resp.Error.Code)
+	testCases := []struct {
+		name     string
+		version  [3]int
+		expected int
+	}{
+		{name: "ShouldReportInvalidParamsOnOmega", expected: CodeInvalidParams},
+		{name: "ShouldReportNotFoundOnPiers", version: [3]int{13, 1000, 0}, expected: CodeNotFound},
+	}
 
-	piers := New(t, Options{Version: [3]int{13, 1000, 0}})
-	_, resp = post(t, piers, "", "", "Player.Open", map[string]any{"item": map[string]int{"movieid": 999}})
-	require.NotNil(t, resp.Error)
-	assert.Equal(t, CodeNotFound, resp.Error.Code)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := New(t, Options{Version: tc.version})
+			_, resp := post(t, s, "", "", "Player.Open", map[string]any{"item": map[string]int{"movieid": 999}})
+			require.NotNil(t, resp.Error)
+			assert.Equal(t, tc.expected, resp.Error.Code)
+		})
+	}
 }
 
 func TestHandleOverride(t *testing.T) {

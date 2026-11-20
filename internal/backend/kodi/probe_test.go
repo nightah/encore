@@ -73,21 +73,27 @@ func probeServer(t *testing.T, replies ...string) (string, int) {
 }
 
 func TestProbeVersionReplies(t *testing.T) {
-	for _, tc := range []struct {
-		name    string
-		replies []string
-		want    string
-		err     string
+	testCases := []struct {
+		name     string
+		replies  []string
+		expected string
+		err      string
 	}{
-		{"skips notifications and noise", []string{
-			`{"jsonrpc":"2.0","method":"Player.OnPlay","params":{}}`,
-			`garbage`,
-			`{"jsonrpc":"2.0","id":2,"result":{"version":{"major":1,"minor":0}}}`,
-			`{"jsonrpc":"2.0","id":1,"result":{"version":{"major":22,"minor":0,"tag":"beta","tagversion":"3"}}}`,
-		}, "22.0-beta3", ""},
-		{"no version", []string{`{"jsonrpc":"2.0","id":1,"result":{}}`}, "", "no version in the reply"},
-		{"closes without replying", nil, "", "kodi:"},
-	} {
+		{
+			name: "ShouldSkipNotificationsAndNoise",
+			replies: []string{
+				`{"jsonrpc":"2.0","method":"Player.OnPlay","params":{}}`,
+				`garbage`,
+				`{"jsonrpc":"2.0","id":2,"result":{"version":{"major":1,"minor":0}}}`,
+				`{"jsonrpc":"2.0","id":1,"result":{"version":{"major":22,"minor":0,"tag":"beta","tagversion":"3"}}}`,
+			},
+			expected: "22.0-beta3",
+		},
+		{name: "ShouldRejectReplyWithoutVersion", replies: []string{`{"jsonrpc":"2.0","id":1,"result":{}}`}, err: "no version in the reply"},
+		{name: "ShouldFailWhenClosedWithoutReplying", err: "kodi:"},
+	}
+
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			host, port := probeServer(t, tc.replies...)
 
@@ -100,7 +106,7 @@ func TestProbeVersionReplies(t *testing.T) {
 			}
 
 			require.NoError(t, err)
-			assert.Equal(t, tc.want, v)
+			assert.Equal(t, tc.expected, v)
 		})
 	}
 }

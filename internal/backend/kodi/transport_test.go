@@ -319,7 +319,7 @@ func TestReconnectBackoff(t *testing.T) {
 		return out
 	}
 
-	t.Run("a refused WebSocket is retried after a doubling, capped wait", func(t *testing.T) {
+	t.Run("ShouldRetryRefusedWebSocketAfterDoublingCappedWait", func(t *testing.T) {
 		synctest.Test(t, func(t *testing.T) {
 			_, tr, dials := setup(t, math.MaxInt)
 
@@ -360,7 +360,7 @@ func TestReconnectBackoff(t *testing.T) {
 		})
 	})
 
-	t.Run("only a connection that lasted resets the backoff", func(t *testing.T) {
+	t.Run("ShouldResetBackoffOnlyAfterConnectionThatLasted", func(t *testing.T) {
 		synctest.Test(t, func(t *testing.T) {
 			// Five refusals raise the backoff to its maximum.
 			const refused = 5
@@ -623,12 +623,18 @@ func TestRunRestartKeepsNewConnection(t *testing.T) {
 }
 
 func TestErrorMapping(t *testing.T) {
-	versions := map[string][3]int{"omega": {13, 5, 0}, "piers": {13, 1000, 0}}
+	testCases := []struct {
+		name    string
+		version [3]int
+	}{
+		{name: "ShouldMapErrorsOnOmega", version: [3]int{13, 5, 0}},
+		{name: "ShouldMapErrorsOnPiers", version: [3]int{13, 1000, 0}},
+	}
 
-	for name, v := range versions {
-		t.Run(name, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			synctest.Test(t, func(t *testing.T) {
-				s := newFake(t, fakekodi.Options{Version: v})
+				s := newFake(t, fakekodi.Options{Version: tc.version})
 				tr := NewTransport(testConfig(t, s), nil)
 				runTransport(t, tr)
 
@@ -639,7 +645,7 @@ func TestErrorMapping(t *testing.T) {
 				require.ErrorAs(t, err, &rpcErr)
 				assert.Equal(t, kodirpc.MethodPlayerOpen, rpcErr.Method)
 
-				if v[1] >= 1000 {
+				if tc.version[1] >= 1000 {
 					assert.Equal(t, CodeNotFound, rpcErr.Code)
 				} else {
 					assert.Equal(t, CodeInvalidParams, rpcErr.Code)
@@ -681,8 +687,16 @@ func TestErrorMapping(t *testing.T) {
 }
 
 func TestTimeoutIsUnreachable(t *testing.T) {
-	for _, ws := range []bool{false, true} {
-		t.Run(fmt.Sprintf("websocket=%v", ws), func(t *testing.T) {
+	testCases := []struct {
+		name string
+		ws   bool
+	}{
+		{name: "ShouldTimeOutOverHTTP"},
+		{name: "ShouldTimeOutOverWebSocket", ws: true},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			synctest.Test(t, func(t *testing.T) {
 				const timeout = 50 * time.Millisecond
 
@@ -695,10 +709,10 @@ func TestTimeoutIsUnreachable(t *testing.T) {
 
 				cfg := testConfig(t, s)
 				cfg.Timeout = timeout
-				cfg.DisableWebSocket = !ws
+				cfg.DisableWebSocket = !tc.ws
 				tr := NewTransport(cfg, nil)
 
-				if ws {
+				if tc.ws {
 					runTransport(t, tr)
 				}
 

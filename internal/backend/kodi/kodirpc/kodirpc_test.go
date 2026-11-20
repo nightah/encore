@@ -56,28 +56,31 @@ func TestGetMoviesResultRoundTrip(t *testing.T) {
 	}
 	m := res.Movies[0]
 	// Fields promoted through the embedded Video.Details.* hierarchy.
-	checks := []struct {
-		name      string
-		got, want any
+	testCases := []struct {
+		name     string
+		actual   any
+		expected any
 	}{
-		{"movieid", m.MovieID, LibraryID(12)},
-		{"label", m.Label, "Blade Runner 2049"},
-		{"title", m.Title, "Blade Runner 2049"},
-		{"year", m.Year, 2017},
-		{"runtime", m.Runtime, 9840},
-		{"playcount", m.Playcount, 1},
-		{"poster", m.Art.Poster, GlobalStringNotEmpty("image://%2fmedia%2fmovies%2fBlade%20Runner%202049%20(2017)%2fposter.jpg/")},
-		{"resume", m.Resume.Position, 3605.5},
-		{"rating", m.Ratings["themoviedb"].Rating, 7.5},
-		{"imdb", m.UniqueID["imdb"], GlobalStringNotEmpty("tt1856101")},
-		{"cast", m.Cast[1].Role, "Rick Deckard"},
-		{"codec", m.Streamdetails.Video[0].Codec, "hevc"},
-		{"genre", []string(m.Genre), []string{"Science Fiction", "Drama"}},
+		{name: "ShouldDecodeMovieID", actual: m.MovieID, expected: LibraryID(12)},
+		{name: "ShouldDecodeLabel", actual: m.Label, expected: "Blade Runner 2049"},
+		{name: "ShouldDecodeTitle", actual: m.Title, expected: "Blade Runner 2049"},
+		{name: "ShouldDecodeYear", actual: m.Year, expected: 2017},
+		{name: "ShouldDecodeRuntime", actual: m.Runtime, expected: 9840},
+		{name: "ShouldDecodePlaycount", actual: m.Playcount, expected: 1},
+		{name: "ShouldDecodePoster", actual: m.Art.Poster, expected: GlobalStringNotEmpty("image://%2fmedia%2fmovies%2fBlade%20Runner%202049%20(2017)%2fposter.jpg/")},
+		{name: "ShouldDecodeResume", actual: m.Resume.Position, expected: 3605.5},
+		{name: "ShouldDecodeRating", actual: m.Ratings["themoviedb"].Rating, expected: 7.5},
+		{name: "ShouldDecodeIMDbID", actual: m.UniqueID["imdb"], expected: GlobalStringNotEmpty("tt1856101")},
+		{name: "ShouldDecodeCast", actual: m.Cast[1].Role, expected: "Rick Deckard"},
+		{name: "ShouldDecodeCodec", actual: m.Streamdetails.Video[0].Codec, expected: "hevc"},
+		{name: "ShouldDecodeGenre", actual: []string(m.Genre), expected: []string{"Science Fiction", "Drama"}},
 	}
-	for _, c := range checks {
-		if !reflect.DeepEqual(c.got, c.want) {
-			t.Errorf("%s = %#v, want %#v", c.name, c.got, c.want)
-		}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if !reflect.DeepEqual(tc.actual, tc.expected) {
+				t.Errorf("got %#v, want %#v", tc.actual, tc.expected)
+			}
+		})
 	}
 	if res.Movies[1].Resume != nil || res.Movies[1].Art != nil {
 		t.Error("absent optional structs must decode as nil")
@@ -96,23 +99,23 @@ func TestGetMoviesResultRoundTrip(t *testing.T) {
 }
 
 func TestPlayerOpenParams(t *testing.T) {
-	tests := []struct {
-		name   string
-		params PlayerOpenParams
-		want   string
+	testCases := []struct {
+		name     string
+		params   PlayerOpenParams
+		expected string
 	}{
 		{
-			name: "movie with resume",
+			name: "ShouldMarshalMovieWithResume",
 			params: PlayerOpenParams{
 				Item: NewPlayerOpenItemFromPlaylistItem(
 					NewPlaylistItemFromMovieID(PlaylistItemMovieID{MovieID: 12}),
 				),
 				Options: &PlayerOpenOptions{Resume: NewPlayerOpenOptionsResumeFromBool(true)},
 			},
-			want: `{"item":{"movieid":12},"options":{"resume":true}}`,
+			expected: `{"item":{"movieid":12},"options":{"resume":true}}`,
 		},
 		{
-			name: "playlist position resuming at a time",
+			name: "ShouldMarshalPlaylistPositionResumingAtATime",
 			params: PlayerOpenParams{
 				Item: NewPlayerOpenItemFromPlaylistID(PlayerOpenItemPlaylistID{PlaylistID: 1, Position: 3}),
 				Options: &PlayerOpenOptions{
@@ -121,29 +124,25 @@ func TestPlayerOpenParams(t *testing.T) {
 					),
 				},
 			},
-			want: `{"item":{"playlistid":1,"position":3},"options":{"resume":{"hours":1,"minutes":2,"seconds":3}}}`,
+			expected: `{"item":{"playlistid":1,"position":3},"options":{"resume":{"hours":1,"minutes":2,"seconds":3}}}`,
 		},
-		{
-			name:   "no item",
-			params: PlayerOpenParams{},
-			want:   `{}`,
-		},
+		{name: "ShouldMarshalNoItem", expected: `{}`},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := json.Marshal(tt.params)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := json.Marshal(tc.params)
 			if err != nil {
 				t.Fatal(err)
 			}
-			if string(got) != tt.want {
-				t.Errorf("marshal = %s, want %s", got, tt.want)
+			if string(got) != tc.expected {
+				t.Errorf("marshal = %s, want %s", got, tc.expected)
 			}
 		})
 	}
 
 	// Decoding keeps the raw union so the receiver picks the alternative.
 	var p PlayerOpenParams
-	if err := json.Unmarshal([]byte(tests[0].want), &p); err != nil {
+	if err := json.Unmarshal([]byte(testCases[0].expected), &p); err != nil {
 		t.Fatal(err)
 	}
 	item, err := p.Item.AsPlaylistItem()
@@ -158,8 +157,8 @@ func TestPlayerOpenParams(t *testing.T) {
 	if err != nil || !resume {
 		t.Errorf("AsBool = %v, %v", resume, err)
 	}
-	if again, _ := json.Marshal(p); string(again) != tests[0].want {
-		t.Errorf("re-marshal = %s, want %s", again, tests[0].want)
+	if again, _ := json.Marshal(p); string(again) != testCases[0].expected {
+		t.Errorf("re-marshal = %s, want %s", again, testCases[0].expected)
 	}
 }
 

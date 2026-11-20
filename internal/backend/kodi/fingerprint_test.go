@@ -53,14 +53,24 @@ func TestFingerprintDatabaseName(t *testing.T) {
 }
 
 func TestFingerprintFailures(t *testing.T) {
-	for _, method := range []string{"VideoLibrary.GetMovies", "VideoLibrary.GetEpisodes"} {
-		b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
-		failWith(s, method)
+	testCases := []struct {
+		name   string
+		method string
+	}{
+		{name: "ShouldFailWhenMoviesFail", method: "VideoLibrary.GetMovies"},
+		{name: "ShouldFailWhenEpisodesFail", method: "VideoLibrary.GetEpisodes"},
+	}
 
-		fp, err := b.Fingerprint(t.Context(), 5)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
+			failWith(s, tc.method)
 
-		require.ErrorContains(t, err, "sampling", method)
-		assert.True(t, fp.Empty(), "no partial sample: %s", method)
+			fp, err := b.Fingerprint(t.Context(), 5)
+
+			require.ErrorContains(t, err, "sampling")
+			assert.True(t, fp.Empty(), "no partial sample")
+		})
 	}
 
 	b, s := newBackend(t, fakekodi.Options{Version: [3]int{13, 1000, 0}, DatabaseName: "MyVideos149"}, BackendOptions{})

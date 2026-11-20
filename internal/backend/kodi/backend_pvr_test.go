@@ -84,18 +84,24 @@ func TestChannelsGuide(t *testing.T) {
 }
 
 func TestBroadcastGenre(t *testing.T) {
-	for name, tc := range map[string]struct{ json, want string }{
-		"list, as Kodi sends it":   {`{"title":"NCIS","genre":["Drama","Crime"],"starttime":"2026-11-11 10:00:00","endtime":"2026-11-11 11:00:00"}`, "Drama / Crime"},
-		"string, as schema has it": {`{"title":"NCIS","genre":"Drama","starttime":"2026-11-11 10:00:00","endtime":"2026-11-11 11:00:00"}`, "Drama"},
-		"absent":                   {`{"title":"NCIS","starttime":"2026-11-11 10:00:00","endtime":"2026-11-11 11:00:00"}`, ""},
-	} {
-		t.Run(name, func(t *testing.T) {
-			var p pvrBroadcast
-			require.NoError(t, json.Unmarshal([]byte(tc.json), &p))
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldJoinGenreListAsKodiSendsIt", have: `{"title":"NCIS","genre":["Drama","Crime"],"starttime":"2026-11-11 10:00:00","endtime":"2026-11-11 11:00:00"}`, expected: "Drama / Crime"},
+		{name: "ShouldReadGenreStringAsSchemaHasIt", have: `{"title":"NCIS","genre":"Drama","starttime":"2026-11-11 10:00:00","endtime":"2026-11-11 11:00:00"}`, expected: "Drama"},
+		{name: "ShouldLeaveAbsentGenreEmpty", have: `{"title":"NCIS","starttime":"2026-11-11 10:00:00","endtime":"2026-11-11 11:00:00"}`},
+	}
 
-			got := p.broadcast(time.UTC)
-			require.NotNil(t, got)
-			assert.Equal(t, tc.want, got.Genre)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var p pvrBroadcast
+			require.NoError(t, json.Unmarshal([]byte(tc.have), &p))
+
+			actual := p.broadcast(time.UTC)
+			require.NotNil(t, actual)
+			assert.Equal(t, tc.expected, actual.Genre)
 		})
 	}
 
@@ -165,10 +171,18 @@ func TestChannelsHiddenByKodi(t *testing.T) {
 }
 
 func TestBroadcastGenreMalformed(t *testing.T) {
-	for name, genre := range map[string]string{"a list of numbers": `[1, 2]`, "a number": `5`} {
-		t.Run(name, func(t *testing.T) {
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldRejectListOfNumbers", have: `[1, 2]`},
+		{name: "ShouldRejectNumber", have: `5`},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			var p pvrBroadcast
-			require.Error(t, json.Unmarshal([]byte(`{"title":"NCIS","genre":`+genre+`}`), &p))
+			require.Error(t, json.Unmarshal([]byte(`{"title":"NCIS","genre":`+tc.have+`}`), &p))
 		})
 	}
 }

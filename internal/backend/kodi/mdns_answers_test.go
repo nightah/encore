@@ -123,26 +123,33 @@ func TestMDNSAnswersCase(t *testing.T) {
 
 // Instance names are arbitrary UTF-8 (RFC 6763 §4.3) and come back byte for byte, whatever DNS presentation format would escape.
 func TestMDNSAnswersInstanceNames(t *testing.T) {
-	for _, name := range []string{
-		"Kodi (lounge)",
-		`Kodi "quoted"; @home`,
-		`back\slash`,
-		`trailing\`,
-		"tab\there",
-		"Wohnzimmer Küche 📺",
-		"Lounge 2.0",
-	} {
-		label := strings.NewReplacer(`\`, `\\`, ".", `\.`).Replace(name)
-		full := label + "._xbmc-jsonrpc._tcp.local."
-		p := newPacket(flagResponse).
-			answer("_xbmc-jsonrpc._tcp.local.", typePTR, 4500, ptrData(full)).
-			answer(full, typeSRV, 120, srvData(9090, "kodi.local.")).
-			bytes()
+	testCases := []struct {
+		name string
+		have string
+	}{
+		{name: "ShouldKeepParentheses", have: "Kodi (lounge)"},
+		{name: "ShouldKeepQuotesAndPunctuation", have: `Kodi "quoted"; @home`},
+		{name: "ShouldKeepBackslash", have: `back\slash`},
+		{name: "ShouldKeepTrailingBackslash", have: `trailing\`},
+		{name: "ShouldKeepTab", have: "tab\there"},
+		{name: "ShouldKeepNonASCII", have: "Wohnzimmer Küche 📺"},
+		{name: "ShouldKeepDot", have: "Lounge 2.0"},
+	}
 
-		got := addAll([][]byte{p}).entries(bothServices)
-		if assert.Len(t, got, 1, name) {
-			assert.Equal(t, name, got[0].Instance)
-		}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			label := strings.NewReplacer(`\`, `\\`, ".", `\.`).Replace(tc.have)
+			full := label + "._xbmc-jsonrpc._tcp.local."
+			p := newPacket(flagResponse).
+				answer("_xbmc-jsonrpc._tcp.local.", typePTR, 4500, ptrData(full)).
+				answer(full, typeSRV, 120, srvData(9090, "kodi.local.")).
+				bytes()
+
+			actual := addAll([][]byte{p}).entries(bothServices)
+			if assert.Len(t, actual, 1) {
+				assert.Equal(t, tc.have, actual[0].Instance)
+			}
+		})
 	}
 }
 
@@ -166,7 +173,10 @@ func TestMDNSAnswersDottedTarget(t *testing.T) {
 }
 
 // mdnsMalformed are packets that are wrong in one way each. Every one would otherwise add the instance Bad on port 9999.
-func mdnsMalformed() map[string][]byte {
+func mdnsMalformed() []struct {
+	name string
+	have []byte
+} {
 	const owner = "Bad._xbmc-jsonrpc._tcp.local."
 
 	srv := func() *mdnsPacket {
@@ -185,39 +195,49 @@ func mdnsMalformed() map[string][]byte {
 		return srv().answer(name, typ, 120, data).bytes()
 	}
 
-	return map[string][]byte{
-		"short header": srv().bytes()[:11],
-		"pointer loop": newPacket(flagResponse).answer(owner, typeSRV, 120, func(p *mdnsPacket) {
-			p.b = append(p.b, 0, 0, 0, 0, 0x27, 0x0F)
-			p.b = binary.BigEndian.AppendUint16(p.b, 0xC000|uint16(len(p.b)))
-		}).bytes(),
-		"pointer past end": newPacket(flagResponse).answer(owner, typeSRV, 120, rawData(0, 0, 0, 0, 0x27, 0x0F, 0xC0, 0xFF)).bytes(),
-		"label type 0x40":  newPacket(flagResponse).answer(owner, typeSRV, 120, rawData(0, 0, 0, 0, 0x27, 0x0F, 0x41, 'x', 0)).bytes(),
-		"label type 0x80":  newPacket(flagResponse).answer(owner, typeSRV, 120, rawData(0, 0, 0, 0, 0x27, 0x0F, 0x81, 'x', 0)).bytes(),
-		"name too long": newPacket(flagResponse).answer(owner, typeSRV, 120,
-			srvData(9999, strings.Repeat(strings.Repeat("x", 63)+".", 4)+"local.")).bytes(),
-		"rdlength past end":             rdlen(1),
-		"SRV rdata short of its target": rdlen(-1),
-		"SRV rdata past its target": func() []byte {
-			p := srv()
-			p.b = append(p.b, 0xDE, 0xAD)
-			binary.BigEndian.PutUint16(p.b[p.rdlen:], uint16(len(p.b)-p.rdlen-2))
+	return []struct {
+		name string
+		have []byte
+	}{
+		{name: "ShouldDropShortHeader", have: srv().bytes()[:11]},
+		{
+			name: "ShouldDropPointerLoop",
+			have: newPacket(flagResponse).answer(owner, typeSRV, 120, func(p *mdnsPacket) {
+				p.b = append(p.b, 0, 0, 0, 0, 0x27, 0x0F)
+				p.b = binary.BigEndian.AppendUint16(p.b, 0xC000|uint16(len(p.b)))
+			}).bytes(),
+		},
+		{name: "ShouldDropPointerPastEnd", have: newPacket(flagResponse).answer(owner, typeSRV, 120, rawData(0, 0, 0, 0, 0x27, 0x0F, 0xC0, 0xFF)).bytes()},
+		{name: "ShouldDropLabelType0x40", have: newPacket(flagResponse).answer(owner, typeSRV, 120, rawData(0, 0, 0, 0, 0x27, 0x0F, 0x41, 'x', 0)).bytes()},
+		{name: "ShouldDropLabelType0x80", have: newPacket(flagResponse).answer(owner, typeSRV, 120, rawData(0, 0, 0, 0, 0x27, 0x0F, 0x81, 'x', 0)).bytes()},
+		{name: "ShouldDropNameTooLong", have: newPacket(flagResponse).answer(owner, typeSRV, 120, srvData(9999, strings.Repeat(strings.Repeat("x", 63)+".", 4)+"local.")).bytes()},
+		{name: "ShouldDropRDLengthPastEnd", have: rdlen(1)},
+		{name: "ShouldDropSRVRDataShortOfItsTarget", have: rdlen(-1)},
+		{
+			name: "ShouldDropSRVRDataPastItsTarget",
+			have: func() []byte {
+				p := srv()
+				p.b = append(p.b, 0xDE, 0xAD)
+				binary.BigEndian.PutUint16(p.b[p.rdlen:], uint16(len(p.b)-p.rdlen-2))
 
-			return p.bytes()
-		}(),
-		"A rdata of 3 bytes":    withSRV("bad.local.", typeA, rawData(192, 168, 1)),
-		"A rdata of 5 bytes":    withSRV("bad.local.", typeA, rawData(192, 168, 1, 99, 0)),
-		"AAAA rdata of 4 bytes": withSRV("bad.local.", typeAAAA, ipData("192.168.1.99")),
-		"TXT string overruns":   withSRV(owner, typeTXT, rawData(5, 'a', 'b')),
+				return p.bytes()
+			}(),
+		},
+		{name: "ShouldDropARDataOf3Bytes", have: withSRV("bad.local.", typeA, rawData(192, 168, 1))},
+		{name: "ShouldDropARDataOf5Bytes", have: withSRV("bad.local.", typeA, rawData(192, 168, 1, 99, 0))},
+		{name: "ShouldDropAAAARDataOf4Bytes", have: withSRV("bad.local.", typeAAAA, ipData("192.168.1.99"))},
+		{name: "ShouldDropTXTStringOverrun", have: withSRV(owner, typeTXT, rawData(5, 'a', 'b'))},
 	}
 }
 
 // A malformed packet is dropped whole, keeping what earlier packets said.
 func TestMDNSAnswersMalformed(t *testing.T) {
-	for name, packet := range mdnsMalformed() {
-		t.Run(name, func(t *testing.T) {
+	testCases := mdnsMalformed()
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			answers := addAll(avahiAnswers())
-			answers.add(packet)
+			answers.add(tc.have)
 			assert.Equal(t, libreELEC, answers.entries(bothServices))
 		})
 	}
@@ -294,8 +314,8 @@ func FuzzMDNSAnswers(f *testing.F) {
 		f.Add(p)
 	}
 
-	for _, p := range mdnsMalformed() {
-		f.Add(p)
+	for _, tc := range mdnsMalformed() {
+		f.Add(tc.have)
 	}
 
 	f.Fuzz(func(t *testing.T, packet []byte) {

@@ -10,61 +10,84 @@ import (
 )
 
 func TestConfigFromURLsRejects(t *testing.T) {
-	for name, urls := range map[string][2]string{
-		"bad HTTP URL":       {"http://kodi:8080/%zz", ""},
-		"bad HTTP port":      {"http://kodi:eighty/", ""},
-		"bad WebSocket URL":  {"http://kodi/", "ws://kodi:9090/%zz"},
-		"bad WebSocket port": {"http://kodi/", "ws://kodi:ninety/"},
-		"colons for a host":  {"//::", "0"},
-		"no host":            {"http://", ""},
-		"port but no host":   {"http://:8080/jsonrpc", ""},
-		"path but no host":   {"http:///jsonrpc", ""},
-		"opaque":             {"http:media.lan", ""},
-		"no scheme":          {"media.lan", ""},
-		"scheme typo":        {"media.lan:8080", ""},
-		"unbracketed IPv6":   {"http://fe80::1/jsonrpc", ""},
-		"bracketed nonsense": {"http://[kodi]/", ""},
-		"WebSocket no host":  {"http://kodi/", "0"},
-		"WebSocket colons":   {"http://kodi/", "ws://::"},
-		"WebSocket port":     {"http://kodi/", "ws://:9090/jsonrpc"},
-	} {
-		_, err := ConfigFromURLs(urls[0], urls[1])
-		assert.Error(t, err, name)
+	testCases := []struct {
+		name    string
+		httpURL string
+		wsURL   string
+	}{
+		{name: "ShouldRejectBadHTTPURL", httpURL: "http://kodi:8080/%zz"},
+		{name: "ShouldRejectBadHTTPPort", httpURL: "http://kodi:eighty/"},
+		{name: "ShouldRejectBadWebSocketURL", httpURL: "http://kodi/", wsURL: "ws://kodi:9090/%zz"},
+		{name: "ShouldRejectBadWebSocketPort", httpURL: "http://kodi/", wsURL: "ws://kodi:ninety/"},
+		{name: "ShouldRejectColonsForAHost", httpURL: "//::", wsURL: "0"},
+		{name: "ShouldRejectNoHost", httpURL: "http://"},
+		{name: "ShouldRejectPortButNoHost", httpURL: "http://:8080/jsonrpc"},
+		{name: "ShouldRejectPathButNoHost", httpURL: "http:///jsonrpc"},
+		{name: "ShouldRejectOpaqueURL", httpURL: "http:media.lan"},
+		{name: "ShouldRejectNoScheme", httpURL: "media.lan"},
+		{name: "ShouldRejectSchemeTypo", httpURL: "media.lan:8080"},
+		{name: "ShouldRejectUnbracketedIPv6", httpURL: "http://fe80::1/jsonrpc"},
+		{name: "ShouldRejectBracketedNonsense", httpURL: "http://[kodi]/"},
+		{name: "ShouldRejectWebSocketWithoutHost", httpURL: "http://kodi/", wsURL: "0"},
+		{name: "ShouldRejectWebSocketColons", httpURL: "http://kodi/", wsURL: "ws://::"},
+		{name: "ShouldRejectWebSocketPortWithoutHost", httpURL: "http://kodi/", wsURL: "ws://:9090/jsonrpc"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := ConfigFromURLs(tc.httpURL, tc.wsURL)
+			assert.Error(t, err)
+		})
 	}
 }
 
 func TestConfigFromURLsAccepts(t *testing.T) {
-	for _, tt := range []struct {
-		httpURL, wsURL, host string
+	testCases := []struct {
+		name     string
+		httpURL  string
+		wsURL    string
+		expected string
 	}{
-		{"http://kodi/", "", "kodi"},
-		{"https://media.lan:8443/jsonrpc", "wss://media.lan:9443/jsonrpc", "media.lan"},
-		{"http://192.168.1.20:8080/jsonrpc", "ws://192.168.1.20:9090/jsonrpc", "192.168.1.20"},
-		{"http://[fe80::1]:8080/jsonrpc", "ws://[fe80::1]:9090/jsonrpc", "fe80::1"},
-		{"http://[fe80::1%25eth0]/jsonrpc", "", "fe80::1%eth0"},
-		{"http://[::1]/", "", "::1"},
-		{"//kodi:8080/jsonrpc", "", "kodi"},
-		{"http://kodi:secret@media.lan/", "", "media.lan"}, // trufflehog:ignore
-	} {
-		cfg, err := ConfigFromURLs(tt.httpURL, tt.wsURL)
-		require.NoError(t, err, tt.httpURL)
-		assert.Equal(t, tt.host, cfg.Host, tt.httpURL)
+		{name: "ShouldAcceptHostOnly", httpURL: "http://kodi/", expected: "kodi"},
+		{name: "ShouldAcceptHTTPSAndWSS", httpURL: "https://media.lan:8443/jsonrpc", wsURL: "wss://media.lan:9443/jsonrpc", expected: "media.lan"},
+		{name: "ShouldAcceptIPv4", httpURL: "http://192.168.1.20:8080/jsonrpc", wsURL: "ws://192.168.1.20:9090/jsonrpc", expected: "192.168.1.20"},
+		{name: "ShouldAcceptBracketedIPv6", httpURL: "http://[fe80::1]:8080/jsonrpc", wsURL: "ws://[fe80::1]:9090/jsonrpc", expected: "fe80::1"},
+		{name: "ShouldAcceptIPv6Zone", httpURL: "http://[fe80::1%25eth0]/jsonrpc", expected: "fe80::1%eth0"},
+		{name: "ShouldAcceptIPv6Loopback", httpURL: "http://[::1]/", expected: "::1"},
+		{name: "ShouldAcceptSchemeRelativeURL", httpURL: "//kodi:8080/jsonrpc", expected: "kodi"},
+		{name: "ShouldAcceptCredentials", httpURL: "http://kodi:secret@media.lan/", expected: "media.lan"}, // trufflehog:ignore
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg, err := ConfigFromURLs(tc.httpURL, tc.wsURL)
+			require.NoError(t, err)
+			assert.Equal(t, tc.expected, cfg.Host)
+		})
 	}
 }
 
 func TestConfigFromURLsDoesNotLeakPasswords(t *testing.T) {
-	for name, urls := range map[string][2]string{
-		"HTTP URL":            {"http://kodi:hunter2@media.lan:port/", ""},            // trufflehog:ignore
-		"WebSocket URL":       {"http://media.lan/", "ws://kodi:hunter2@media.lan:%"}, // trufflehog:ignore
-		"HTTP URL no host":    {"http://kodi:hunter2@:8080/", ""},                     // trufflehog:ignore
-		"HTTP URL colons":     {"http://kodi:hunter2@::/", ""},                        // trufflehog:ignore
-		"WebSocket URL colon": {"http://media.lan/", "ws://kodi:hunter2@::/"},         // trufflehog:ignore
-	} {
-		_, err := ConfigFromURLs(urls[0], urls[1])
+	testCases := []struct {
+		name    string
+		httpURL string
+		wsURL   string
+	}{
+		{name: "ShouldHidePasswordInHTTPURL", httpURL: "http://kodi:hunter2@media.lan:port/"},                              // trufflehog:ignore
+		{name: "ShouldHidePasswordInWebSocketURL", httpURL: "http://media.lan/", wsURL: "ws://kodi:hunter2@media.lan:%"},   // trufflehog:ignore
+		{name: "ShouldHidePasswordInHTTPURLWithoutHost", httpURL: "http://kodi:hunter2@:8080/"},                            // trufflehog:ignore
+		{name: "ShouldHidePasswordInHTTPURLWithColons", httpURL: "http://kodi:hunter2@::/"},                                // trufflehog:ignore
+		{name: "ShouldHidePasswordInWebSocketURLWithColons", httpURL: "http://media.lan/", wsURL: "ws://kodi:hunter2@::/"}, // trufflehog:ignore
+	}
 
-		if assert.Error(t, err, name) {
-			assert.NotContains(t, err.Error(), "hunter2", "%s: the error is logged, so it mustn't carry the password", name)
-		}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := ConfigFromURLs(tc.httpURL, tc.wsURL)
+
+			if assert.Error(t, err) {
+				assert.NotContains(t, err.Error(), "hunter2", "the error is logged, so it mustn't carry the password")
+			}
+		})
 	}
 }
 
@@ -85,42 +108,58 @@ func TestConfigDefaults(t *testing.T) {
 }
 
 func TestRedactURL(t *testing.T) {
-	withPassword := (&url.URL{Scheme: "http", User: url.UserPassword("kodi", "hunter2"), Host: "kodi", Path: "/jsonrpc"}).String()
-	got := RedactURL(withPassword)
-	assert.NotContains(t, got, "hunter2")
-	assert.Equal(t, (&url.URL{Scheme: "http", User: url.UserPassword("kodi", "xxxxx"), Host: "kodi", Path: "/jsonrpc"}).String(), got)
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldHidePassword", have: (&url.URL{Scheme: "http", User: url.UserPassword("kodi", "hunter2"), Host: "kodi", Path: "/jsonrpc"}).String(), expected: (&url.URL{Scheme: "http", User: url.UserPassword("kodi", "xxxxx"), Host: "kodi", Path: "/jsonrpc"}).String()},
+		{name: "ShouldKeepURLWithoutCredentials", have: "http://kodi/jsonrpc", expected: "http://kodi/jsonrpc"},
+		{name: "ShouldShowUnparsableURLWithoutCredentialsAsGiven", have: "http://%zz", expected: "http://%zz"},
+		{name: "ShouldShowURLWithoutAuthorityAsGiven", have: ":8080", expected: ":8080"},
+		{name: "ShouldHidePasswordInUnparsableURL", have: "http://kodi:hunter2@[::1/jsonrpc", expected: "http://kodi:xxxxx@[::1/jsonrpc"},   // trufflehog:ignore
+		{name: "ShouldOnlyCountTheAuthorityAt", have: "ws://kodi:hunter2@media.lan:80a?x=@", expected: "ws://kodi:xxxxx@media.lan:80a?x=@"}, // trufflehog:ignore
+		{name: "ShouldKeepUserNameAlone", have: "http://kodi@[::1", expected: "http://kodi@[::1"},
+	}
 
-	assert.Equal(t, "http://kodi/jsonrpc", RedactURL("http://kodi/jsonrpc"))
-	assert.Equal(t, "http://%zz", RedactURL("http://%zz"), "an unparsable URL without credentials is shown as given")
-	assert.Equal(t, ":8080", RedactURL(":8080"), "nor is one without an authority")
-	assert.Equal(t, "http://kodi:xxxxx@[::1/jsonrpc", RedactURL("http://kodi:hunter2@[::1/jsonrpc"), "an unparsable URL still hides its password") // trufflehog:ignore
-	assert.Equal(t, "ws://kodi:xxxxx@media.lan:80a?x=@", RedactURL("ws://kodi:hunter2@media.lan:80a?x=@"), "only the authority's @ counts")        // trufflehog:ignore
-	assert.Equal(t, "http://kodi@[::1", RedactURL("http://kodi@[::1"), "a user name alone isn't secret")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := RedactURL(tc.have)
+
+			assert.NotContains(t, actual, "hunter2")
+			assert.Equal(t, tc.expected, actual)
+		})
+	}
 }
 
 func TestConfigFromURLsPortRange(t *testing.T) {
-	for name, tc := range map[string]struct {
-		port       string
-		want       int
+	testCases := []struct {
+		name       string
+		have       string
+		expected   int
 		outOfRange bool
 	}{
-		"lowest":      {port: "1", want: 1},
-		"highest":     {port: "65535", want: 65535},
-		"one over":    {port: "65536", outOfRange: true},
-		"far over":    {port: "99999", outOfRange: true},
-		"overflows":   {port: "99999999999999999999", outOfRange: true},
-		"zero":        {port: "0", outOfRange: true},
-		"negative":    {port: "-1"},
-		"non-numeric": {port: "http"},
-	} {
-		t.Run(name+"/HTTP URL", func(t *testing.T) {
-			cfg, err := ConfigFromURLs("http://kodi:hunter2@media.lan:"+tc.port+"/jsonrpc", "") // trufflehog:ignore
-			assertPort(t, tc.want, tc.outOfRange, cfg.Port, err, ErrHTTPPort, "Kodi URL")
-		})
+		{name: "ShouldAcceptLowestPort", have: "1", expected: 1},
+		{name: "ShouldAcceptHighestPort", have: "65535", expected: 65535},
+		{name: "ShouldRejectPortOneOver", have: "65536", outOfRange: true},
+		{name: "ShouldRejectPortFarOver", have: "99999", outOfRange: true},
+		{name: "ShouldRejectPortThatOverflows", have: "99999999999999999999", outOfRange: true},
+		{name: "ShouldRejectPortZero", have: "0", outOfRange: true},
+		{name: "ShouldRejectNegativePort", have: "-1"},
+		{name: "ShouldRejectNonNumericPort", have: "http"},
+	}
 
-		t.Run(name+"/WebSocket URL", func(t *testing.T) {
-			cfg, err := ConfigFromURLs("http://media.lan/jsonrpc", "ws://kodi:hunter2@media.lan:"+tc.port+"/jsonrpc") // trufflehog:ignore
-			assertPort(t, tc.want, tc.outOfRange, cfg.WebSocketPort, err, ErrWebSocketPort, "Kodi WebSocket URL")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Run("ShouldApplyToHTTPURL", func(t *testing.T) {
+				cfg, err := ConfigFromURLs("http://kodi:hunter2@media.lan:"+tc.have+"/jsonrpc", "") // trufflehog:ignore
+				assertPort(t, tc.expected, tc.outOfRange, cfg.Port, err, ErrHTTPPort, "Kodi URL")
+			})
+
+			t.Run("ShouldApplyToWebSocketURL", func(t *testing.T) {
+				cfg, err := ConfigFromURLs("http://media.lan/jsonrpc", "ws://kodi:hunter2@media.lan:"+tc.have+"/jsonrpc") // trufflehog:ignore
+				assertPort(t, tc.expected, tc.outOfRange, cfg.WebSocketPort, err, ErrWebSocketPort, "Kodi WebSocket URL")
+			})
 		})
 	}
 }

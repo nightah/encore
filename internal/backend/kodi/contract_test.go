@@ -100,9 +100,24 @@ func TestContractBackend(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotEmpty(t, info.Version)
 
-	for _, kind := range []media.Kind{media.KindMovie, media.KindTVShow, media.KindMusicVideo, media.KindArtist, media.KindAlbum, media.KindSong, media.KindPlaylist} {
-		_, err := b.Library(ctx, kind)
-		require.NoError(t, err, "listing %ss", kind)
+	testCases := []struct {
+		name string
+		have media.Kind
+	}{
+		{name: "ShouldListMovies", have: media.KindMovie},
+		{name: "ShouldListTVShows", have: media.KindTVShow},
+		{name: "ShouldListMusicVideos", have: media.KindMusicVideo},
+		{name: "ShouldListArtists", have: media.KindArtist},
+		{name: "ShouldListAlbums", have: media.KindAlbum},
+		{name: "ShouldListSongs", have: media.KindSong},
+		{name: "ShouldListPlaylists", have: media.KindPlaylist},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := b.Library(ctx, tc.have)
+			require.NoError(t, err)
+		})
 	}
 
 	_, err = b.Item(ctx, media.Ref{Kind: media.KindMovie, ID: 987654})

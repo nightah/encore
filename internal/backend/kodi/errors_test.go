@@ -143,12 +143,20 @@ func backendOps() []backendOp {
 		ops = append(ops, backendOp{name: "library " + string(kind), run: func(ctx context.Context, b *Backend) error { _, err := b.Library(ctx, kind); return err }})
 	}
 
-	for kind, id := range map[media.Kind]int{
-		media.KindMovie: 1, media.KindTVShow: 1, media.KindEpisode: 101, media.KindMusicVideo: 1, media.KindArtist: 1, media.KindAlbum: 1, media.KindSong: 1,
+	for _, item := range []struct {
+		kind media.Kind
+		id   int
+	}{
+		{kind: media.KindMovie, id: 1}, {kind: media.KindTVShow, id: 1}, {kind: media.KindEpisode, id: 101}, {kind: media.KindMusicVideo, id: 1}, {kind: media.KindArtist, id: 1}, {kind: media.KindAlbum, id: 1}, {kind: media.KindSong, id: 1},
 	} {
 		ops = append(ops,
-			backendOp{name: "item " + string(kind), run: func(ctx context.Context, b *Backend) error { _, err := b.Item(ctx, ref(kind, id)); return err }},
-			backendOp{name: "play " + string(kind), run: func(ctx context.Context, b *Backend) error { return b.Play(ctx, ref(kind, id), media.PlayOptions{}) }},
+			backendOp{name: "item " + string(item.kind), run: func(ctx context.Context, b *Backend) error {
+				_, err := b.Item(ctx, ref(item.kind, item.id))
+				return err
+			}},
+			backendOp{name: "play " + string(item.kind), run: func(ctx context.Context, b *Backend) error {
+				return b.Play(ctx, ref(item.kind, item.id), media.PlayOptions{})
+			}},
 		)
 	}
 
@@ -264,41 +272,56 @@ func TestUnknownRequestsAreRejectedLocally(t *testing.T) {
 	sent := len(s.Calls())
 	ref := func(kind media.Kind) media.Ref { return media.Ref{Kind: kind, ID: 1} }
 
-	for name, err := range map[string]error{
-		"repeat":        second(b.SetRepeat(ctx, "sometimes")),
-		"subtitle":      b.SetSubtitle(ctx, media.StreamChange{Step: "sideways"}),
-		"audio stream":  b.SetAudioStream(ctx, media.StreamChange{Step: media.StreamOn}),
-		"transport":     b.Transport(ctx, "rewind"),
-		"seek":          b.Seek(ctx, media.Seek{Step: "leap"}),
-		"picture":       b.Picture(ctx, "spin"),
-		"input":         b.Input(ctx, "jump"),
-		"system":        b.System(ctx, "explode"),
-		"scan":          b.ScanLibrary(ctx, "pictures"),
-		"clean":         b.CleanLibrary(ctx, "pictures"),
-		"section":       b.ShowView(ctx, media.View{Section: "garden"}),
-		"genre section": b.ShowView(ctx, media.View{Section: media.SectionArtists, Genre: "rock"}),
-	} {
-		require.Error(t, err, name)
-		require.NotErrorIs(t, err, media.ErrUnreachable, name)
+	invalid := []struct {
+		name string
+		have error
+	}{
+		{name: "ShouldRejectUnknownRepeatMode", have: second(b.SetRepeat(ctx, "sometimes"))},
+		{name: "ShouldRejectUnknownSubtitleStep", have: b.SetSubtitle(ctx, media.StreamChange{Step: "sideways"})},
+		{name: "ShouldRejectAudioStreamOn", have: b.SetAudioStream(ctx, media.StreamChange{Step: media.StreamOn})},
+		{name: "ShouldRejectUnknownTransport", have: b.Transport(ctx, "rewind")},
+		{name: "ShouldRejectUnknownSeekStep", have: b.Seek(ctx, media.Seek{Step: "leap"})},
+		{name: "ShouldRejectUnknownPictureCommand", have: b.Picture(ctx, "spin")},
+		{name: "ShouldRejectUnknownInput", have: b.Input(ctx, "jump")},
+		{name: "ShouldRejectUnknownSystemCommand", have: b.System(ctx, "explode")},
+		{name: "ShouldRejectUnknownScanDatabase", have: b.ScanLibrary(ctx, "pictures")},
+		{name: "ShouldRejectUnknownCleanDatabase", have: b.CleanLibrary(ctx, "pictures")},
+		{name: "ShouldRejectUnknownSection", have: b.ShowView(ctx, media.View{Section: "garden"})},
+		{name: "ShouldRejectSectionWithoutGenres", have: b.ShowView(ctx, media.View{Section: media.SectionArtists, Genre: "rock"})},
 	}
 
-	for name, err := range map[string]error{
-		"item":          second(b.Item(ctx, ref("channel"))),
-		"play":          b.Play(ctx, ref("channel"), media.PlayOptions{}),
-		"shuffle movie": b.Play(ctx, ref(media.KindMovie), media.PlayOptions{Shuffle: true}),
-		"queue album":   b.Queue(ctx, []media.Ref{ref(media.KindAlbum)}),
-		"queue later":   b.Queue(ctx, []media.Ref{ref(media.KindSong), ref(media.KindPlaylist)}),
-		"library":       second(b.Library(ctx, media.KindEpisode)),
-		"search":        second(b.Search(ctx, "channel", "news")),
-		"recent":        second(b.RecentlyAdded(ctx, "channel", time.Time{})),
-	} {
-		if name == "shuffle movie" {
-			require.NoError(t, err, "a movie has nothing to shuffle, so it just plays")
+	for _, tc := range invalid {
+		t.Run(tc.name, func(t *testing.T) {
+			require.Error(t, tc.have)
+			require.NotErrorIs(t, tc.have, media.ErrUnreachable)
+		})
+	}
 
-			continue
-		}
+	testCases := []struct {
+		name   string
+		have   error
+		played bool
+	}{
+		{name: "ShouldRejectItemOfUnsupportedKind", have: second(b.Item(ctx, ref("channel")))},
+		{name: "ShouldRejectPlayOfUnsupportedKind", have: b.Play(ctx, ref("channel"), media.PlayOptions{})},
+		{name: "ShouldPlayShuffledMovie", have: b.Play(ctx, ref(media.KindMovie), media.PlayOptions{Shuffle: true}), played: true},
+		{name: "ShouldRejectQueueOfAlbum", have: b.Queue(ctx, []media.Ref{ref(media.KindAlbum)})},
+		{name: "ShouldRejectQueueWithLaterUnsupportedKind", have: b.Queue(ctx, []media.Ref{ref(media.KindSong), ref(media.KindPlaylist)})},
+		{name: "ShouldRejectLibraryOfUnsupportedKind", have: second(b.Library(ctx, media.KindEpisode))},
+		{name: "ShouldRejectSearchOfUnsupportedKind", have: second(b.Search(ctx, "channel", "news"))},
+		{name: "ShouldRejectRecentOfUnsupportedKind", have: second(b.RecentlyAdded(ctx, "channel", time.Time{}))},
+	}
 
-		require.ErrorIs(t, err, errUnsupportedKind, name)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.played {
+				require.NoError(t, tc.have, "a movie has nothing to shuffle, so it just plays")
+
+				return
+			}
+
+			require.ErrorIs(t, tc.have, errUnsupportedKind)
+		})
 	}
 
 	for _, c := range s.Calls()[sent:] {
@@ -326,22 +349,30 @@ func TestInfoNeedsTheAPIVersion(t *testing.T) {
 }
 
 func TestInfoFallsBackToTheApplicationName(t *testing.T) {
-	for name, labels := range map[string]fakekodi.HandlerFunc{
-		"labels fail": func(json.RawMessage) (any, *fakekodi.Error) {
-			return nil, &fakekodi.Error{Code: CodeInternalError, Message: "x"}
+	testCases := []struct {
+		name   string
+		labels fakekodi.HandlerFunc
+	}{
+		{
+			name: "ShouldFallBackWhenLabelsFail",
+			labels: func(json.RawMessage) (any, *fakekodi.Error) {
+				return nil, &fakekodi.Error{Code: CodeInternalError, Message: "x"}
+			},
 		},
-		"name is blank": func(json.RawMessage) (any, *fakekodi.Error) { return map[string]string{"System.FriendlyName": ""}, nil },
-	} {
-		t.Run(name, func(t *testing.T) {
+		{name: "ShouldFallBackWhenNameIsBlank", labels: func(json.RawMessage) (any, *fakekodi.Error) { return map[string]string{"System.FriendlyName": ""}, nil }},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			b, s := newBackend(t, fakekodi.Options{}, BackendOptions{})
-			s.Handle(kodirpc.MethodXBMCGetInfoLabels, labels)
+			s.Handle(kodirpc.MethodXBMCGetInfoLabels, tc.labels)
 
 			info, err := b.Info(t.Context())
 			require.NoError(t, err)
 			assert.Equal(t, "Kodi", info.Name, "the application's own name")
 
 			b, s = newBackend(t, fakekodi.Options{}, BackendOptions{Name: "Lounge"})
-			s.Handle(kodirpc.MethodXBMCGetInfoLabels, labels)
+			s.Handle(kodirpc.MethodXBMCGetInfoLabels, tc.labels)
 
 			info, err = b.Info(t.Context())
 			require.NoError(t, err)
@@ -351,22 +382,27 @@ func TestInfoFallsBackToTheApplicationName(t *testing.T) {
 }
 
 func TestRPCErrorIs(t *testing.T) {
-	for _, tc := range []struct {
-		err         RPCError
+	testCases := []struct {
+		name        string
+		have        RPCError
 		notFound    bool
 		unavailable bool
 	}{
-		{RPCError{Code: CodeNotFound, Method: kodirpc.MethodPlayerStop}, true, false},
-		{RPCError{Code: CodeInvalidParams, Method: kodirpc.MethodVideoLibraryGetMovieDetails}, true, false},
-		{RPCError{Code: CodeInvalidParams, Method: kodirpc.MethodPlayerOpen}, true, false},
-		{RPCError{Code: CodeInvalidParams, Method: kodirpc.MethodPlayerSeek}, false, false},
-		{RPCError{Code: CodeUnavailable, Method: kodirpc.MethodPlayerOpen}, false, true},
-		{RPCError{Code: CodeInternalError, Method: kodirpc.MethodPlayerOpen}, false, false},
-	} {
-		err := &tc.err
-		assert.Equal(t, tc.notFound, err.Is(media.ErrNotFound), "%d %s", tc.err.Code, tc.err.Method)
-		assert.Equal(t, tc.unavailable, err.Is(media.ErrUnavailable), "%d %s", tc.err.Code, tc.err.Method)
-		assert.False(t, err.Is(media.ErrUnreachable), "a reply is never unreachable")
+		{name: "ShouldTreatNotFoundAsNotFound", have: RPCError{Code: CodeNotFound, Method: kodirpc.MethodPlayerStop}, notFound: true},
+		{name: "ShouldTreatInvalidParamsOfDetailsAsNotFound", have: RPCError{Code: CodeInvalidParams, Method: kodirpc.MethodVideoLibraryGetMovieDetails}, notFound: true},
+		{name: "ShouldTreatInvalidParamsOfOpenAsNotFound", have: RPCError{Code: CodeInvalidParams, Method: kodirpc.MethodPlayerOpen}, notFound: true},
+		{name: "ShouldNotTreatInvalidParamsOfSeekAsNotFound", have: RPCError{Code: CodeInvalidParams, Method: kodirpc.MethodPlayerSeek}},
+		{name: "ShouldTreatUnavailableAsUnavailable", have: RPCError{Code: CodeUnavailable, Method: kodirpc.MethodPlayerOpen}, unavailable: true},
+		{name: "ShouldTreatInternalErrorAsNeither", have: RPCError{Code: CodeInternalError, Method: kodirpc.MethodPlayerOpen}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := &tc.have
+			assert.Equal(t, tc.notFound, err.Is(media.ErrNotFound))
+			assert.Equal(t, tc.unavailable, err.Is(media.ErrUnavailable))
+			assert.False(t, err.Is(media.ErrUnreachable), "a reply is never unreachable")
+		})
 	}
 
 	assert.Equal(t, "kodi: Player.Open: error -32603: Internal error.", (&RPCError{Code: CodeInternalError, Message: "Internal error.", Method: "Player.Open"}).Error())

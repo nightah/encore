@@ -13,8 +13,20 @@ func TestFormatVersion(t *testing.T) {
 		return &kodirpc.ApplicationPropertyValueVersion{Major: major, Minor: minor, Tag: kodirpc.ApplicationPropertyValueVersionTag(tag), Tagversion: n}
 	}
 
-	assert.Equal(t, "21.3", formatVersion(v(21, 3, "stable", "")))
-	assert.Equal(t, "22.0-rc1", formatVersion(v(22, 0, "releasecandidate", "1")))
-	assert.Equal(t, "22.0-beta2", formatVersion(v(22, 0, "beta", "2")))
-	assert.Empty(t, formatVersion(nil))
+	testCases := []struct {
+		name     string
+		have     *kodirpc.ApplicationPropertyValueVersion
+		expected string
+	}{
+		{name: "ShouldFormatStable", have: v(21, 3, "stable", ""), expected: "21.3"},
+		{name: "ShouldFormatReleaseCandidate", have: v(22, 0, "releasecandidate", "1"), expected: "22.0-rc1"},
+		{name: "ShouldFormatBeta", have: v(22, 0, "beta", "2"), expected: "22.0-beta2"},
+		{name: "ShouldFormatNilAsEmpty"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, formatVersion(tc.have))
+		})
+	}
 }

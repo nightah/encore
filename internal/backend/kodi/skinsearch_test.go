@@ -104,38 +104,39 @@ func TestSkinVariablesRunsThroughItsPlugin(t *testing.T) {
 }
 
 func TestSkinSearchProfiles(t *testing.T) {
-	tests := []struct {
-		skin    string
-		addons  []string
-		windows map[string]int
-		want    []string
+	testCases := []struct {
+		name     string
+		skin     string
+		addons   []string
+		windows  map[string]int
+		expected []string
 	}{
 		{
-			skin: "skin.arctic.fuse.3", addons: []string{addonSkinVariables}, windows: map[string]int{"1105": 2},
-			want: []string{
+			name: "ShouldSearchArcticFuse3", skin: "skin.arctic.fuse.3", addons: []string{addonSkinVariables}, windows: map[string]int{"1105": 2},
+			expected: []string{
 				`builtin ReplaceWindow(1105)`,
 				`builtin SetFocus(3000)`,
 				`Input.SendText {"done":true,"text":"dune, part \"two\""}`,
 			},
 		},
 		{
-			skin: "skin.arctic.fuse.2", addons: []string{addonSkinVariables}, windows: map[string]int{"1185": 1},
-			want: []string{
+			name: "ShouldSearchArcticFuse2", skin: "skin.arctic.fuse.2", addons: []string{addonSkinVariables}, windows: map[string]int{"1185": 1},
+			expected: []string{
 				`builtin ActivateWindow(1185)`,
 				`builtin SetFocus(9099)`,
 				`Input.SendText {"done":true,"text":"dune, part \"two\""}`,
 			},
 		},
 		{
-			skin: "skin.arctic.zephyr.2.resurrection.mod", addons: []string{addonSkinVariables}, windows: map[string]int{"1138": 0},
-			want: []string{
+			name: "ShouldSearchArcticZephyr2ResurrectionMod", skin: "skin.arctic.zephyr.2.resurrection.mod", addons: []string{addonSkinVariables}, windows: map[string]int{"1138": 0},
+			expected: []string{
 				`builtin Skin.SetString(SearchTerm,"dune, part \"two\"")`,
 				`builtin ActivateWindow(1138)`,
 			},
 		},
 		{
-			skin: "skin.nimbus", addons: []string{addonNimbusHelper}, windows: map[string]int{"home": 0, "1121": 3, "virtualkeyboard": 1},
-			want: []string{
+			name: "ShouldSearchNimbus", skin: "skin.nimbus", addons: []string{addonNimbusHelper}, windows: map[string]int{"home": 0, "1121": 3, "virtualkeyboard": 1},
+			expected: []string{
 				`GUI.ActivateWindow {"window":"home"}`,
 				`Addons.ExecuteAddon {"addonid":"script.nimbus.helper","params":["mode=open_search_window"]}`,
 				`Addons.ExecuteAddon {"addonid":"script.nimbus.helper","params":["mode=search_input"]}`,
@@ -144,8 +145,8 @@ func TestSkinSearchProfiles(t *testing.T) {
 		},
 		{
 			// FENtastic's helper may reload the skin before its window opens, which takes longer than other windows get.
-			skin: "skin.fentastic", addons: []string{addonFENtasticHelper}, windows: map[string]int{"home": 0, "1121": int(5 * time.Second / windowPollInterval), "virtualkeyboard": 0},
-			want: []string{
+			name: "ShouldSearchFENtastic", skin: "skin.fentastic", addons: []string{addonFENtasticHelper}, windows: map[string]int{"home": 0, "1121": int(5 * time.Second / windowPollInterval), "virtualkeyboard": 0},
+			expected: []string{
 				`GUI.ActivateWindow {"window":"home"}`,
 				`Addons.ExecuteAddon {"addonid":"script.fentastic.helper","params":["mode=open_search_window"]}`,
 				`Addons.ExecuteAddon {"addonid":"script.fentastic.helper","params":["mode=search_input"]}`,
@@ -154,20 +155,20 @@ func TestSkinSearchProfiles(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.skin, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			synctest.Test(t, func(t *testing.T) {
-				b, s := skinBackend(t, tt.skin, tt.addons...)
-				for w, n := range tt.windows {
+				b, s := skinBackend(t, tc.skin, tc.addons...)
+				for w, n := range tc.windows {
 					s.ShowWindow(w, n)
 				}
 
 				skin, err := b.SkinSearch(t.Context(), "dune,  part \"two\"", "")
 				require.NoError(t, err)
 				assert.Equal(t, media.SkinSearchSupported, skin.Search)
-				assert.Equal(t, tt.skin, skin.ID)
-				assert.Equal(t, tt.skin, skin.Profile)
-				assert.Equal(t, tt.want, uiCalls(t, s))
+				assert.Equal(t, tc.skin, skin.ID)
+				assert.Equal(t, tc.skin, skin.Profile)
+				assert.Equal(t, tc.expected, uiCalls(t, s))
 			})
 		})
 	}
@@ -198,45 +199,29 @@ func TestSkinSearchWaitsForTheWindowBeforeTyping(t *testing.T) {
 }
 
 func TestSkinSearchLeavesOtherSkinsAlone(t *testing.T) {
-	tests := []struct {
-		name, skin, profile string
-		addons              []string
-		want                media.Skin
+	testCases := []struct {
+		name     string
+		skin     string
+		profile  string
+		addons   []string
+		expected media.Skin
 	}{
-		{
-			name: "unknown skin", skin: "skin.copacetic",
-			want: media.Skin{ID: "skin.copacetic", Search: media.SkinSearchNoProfile},
-		},
-		{
-			name: "skin that draws Global Search", skin: "skin.aeon.nox.silvo",
-			want: media.Skin{ID: "skin.aeon.nox.silvo", Name: "Aeon Nox: SiLVO", Profile: "skin.aeon.nox.silvo", Search: media.SkinSearchNative},
-		},
-		{
-			name: "required add-on missing", skin: "skin.arctic.fuse.3", addons: []string{"script.globalsearch"},
-			want: media.Skin{ID: "skin.arctic.fuse.3", Name: "Arctic Fuse 3", Profile: "skin.arctic.fuse.3", Search: media.SkinSearchMissingAddons, Missing: []string{addonSkinVariables}},
-		},
-		{
-			name: "a profile that runs Global Search can't stand in", skin: "skin.ciro", profile: "skin.estuary",
-			want: media.Skin{ID: "skin.ciro", Search: media.SkinSearchNoProfile},
-		},
-		{
-			name: "unknown profile", skin: "skin.ciro", profile: "skin.nope",
-			want: media.Skin{ID: "skin.ciro", Search: media.SkinSearchNoProfile},
-		},
-		{
-			name: "a skin's own profile wins over the one chosen", skin: "skin.aeon.tajo", profile: "skin.arctic.fuse.2", addons: []string{addonSkinVariables},
-			want: media.Skin{ID: "skin.aeon.tajo", Name: "Aeon Tajo", Profile: "skin.aeon.tajo", Search: media.SkinSearchNative},
-		},
+		{name: "ShouldReportUnknownSkin", skin: "skin.copacetic", expected: media.Skin{ID: "skin.copacetic", Search: media.SkinSearchNoProfile}},
+		{name: "ShouldLeaveSkinThatDrawsGlobalSearch", skin: "skin.aeon.nox.silvo", expected: media.Skin{ID: "skin.aeon.nox.silvo", Name: "Aeon Nox: SiLVO", Profile: "skin.aeon.nox.silvo", Search: media.SkinSearchNative}},
+		{name: "ShouldReportMissingRequiredAddon", skin: "skin.arctic.fuse.3", addons: []string{"script.globalsearch"}, expected: media.Skin{ID: "skin.arctic.fuse.3", Name: "Arctic Fuse 3", Profile: "skin.arctic.fuse.3", Search: media.SkinSearchMissingAddons, Missing: []string{addonSkinVariables}}},
+		{name: "ShouldNotLetGlobalSearchProfileStandIn", skin: "skin.ciro", profile: "skin.estuary", expected: media.Skin{ID: "skin.ciro", Search: media.SkinSearchNoProfile}},
+		{name: "ShouldIgnoreUnknownProfile", skin: "skin.ciro", profile: "skin.nope", expected: media.Skin{ID: "skin.ciro", Search: media.SkinSearchNoProfile}},
+		{name: "ShouldPreferSkinsOwnProfileOverChosenOne", skin: "skin.aeon.tajo", profile: "skin.arctic.fuse.2", addons: []string{addonSkinVariables}, expected: media.Skin{ID: "skin.aeon.tajo", Name: "Aeon Tajo", Profile: "skin.aeon.tajo", Search: media.SkinSearchNative}},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			synctest.Test(t, func(t *testing.T) {
-				b, s := skinBackend(t, tt.skin, tt.addons...)
+				b, s := skinBackend(t, tc.skin, tc.addons...)
 
-				skin, err := b.SkinSearch(t.Context(), "dune", tt.profile)
+				skin, err := b.SkinSearch(t.Context(), "dune", tc.profile)
 				require.NoError(t, err)
-				assert.Equal(t, tt.want, skin)
+				assert.Equal(t, tc.expected, skin)
 				assert.Empty(t, uiCalls(t, s), "nothing is opened")
 			})
 		})
@@ -260,7 +245,7 @@ func TestSkinSearchWithAChosenProfile(t *testing.T) {
 }
 
 func TestSkinSearchFailures(t *testing.T) {
-	t.Run("window never opens", func(t *testing.T) {
+	t.Run("ShouldGiveUpWhenWindowNeverOpens", func(t *testing.T) {
 		synctest.Test(t, func(t *testing.T) {
 			b, s := skinBackend(t, "skin.arctic.fuse.3", addonSkinVariables)
 			s.ShowWindow("1105", -1)
@@ -275,7 +260,7 @@ func TestSkinSearchFailures(t *testing.T) {
 		})
 	})
 
-	t.Run("search window never opens", func(t *testing.T) {
+	t.Run("ShouldGiveUpWhenSearchWindowNeverOpens", func(t *testing.T) {
 		synctest.Test(t, func(t *testing.T) {
 			b, s := skinBackend(t, "skin.nimbus", addonNimbusHelper)
 			s.ShowWindow("home", 0)
@@ -287,7 +272,7 @@ func TestSkinSearchFailures(t *testing.T) {
 		})
 	})
 
-	t.Run("keyboard never opens", func(t *testing.T) {
+	t.Run("ShouldGiveUpWhenKeyboardNeverOpens", func(t *testing.T) {
 		synctest.Test(t, func(t *testing.T) {
 			b, s := skinBackend(t, "skin.nimbus", addonNimbusHelper)
 			s.ShowWindow("home", 0)
@@ -299,15 +284,25 @@ func TestSkinSearchFailures(t *testing.T) {
 		})
 	})
 
-	for _, method := range []string{"Addons.ExecuteAddon", "XBMC.GetInfoBooleans", "GUI.ActivateWindow", "Input.SendText"} {
-		t.Run(method+" fails", func(t *testing.T) {
+	testCases := []struct {
+		name   string
+		method string
+	}{
+		{name: "ShouldFailWhenExecuteAddonFails", method: "Addons.ExecuteAddon"},
+		{name: "ShouldFailWhenGetInfoBooleansFails", method: "XBMC.GetInfoBooleans"},
+		{name: "ShouldFailWhenActivateWindowFails", method: "GUI.ActivateWindow"},
+		{name: "ShouldFailWhenSendTextFails", method: "Input.SendText"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			synctest.Test(t, func(t *testing.T) {
 				b, s := skinBackend(t, "skin.nimbus", addonNimbusHelper)
 				for _, w := range []string{"home", "1121", "virtualkeyboard"} {
 					s.ShowWindow(w, 0)
 				}
 
-				s.Handle(method, func(json.RawMessage) (any, *fakekodi.Error) {
+				s.Handle(tc.method, func(json.RawMessage) (any, *fakekodi.Error) {
 					return nil, &fakekodi.Error{Code: CodeInternalError, Message: "Internal error."}
 				})
 
@@ -317,29 +312,39 @@ func TestSkinSearchFailures(t *testing.T) {
 		})
 	}
 
-	t.Run("each helper step fails", func(t *testing.T) {
-		for _, fail := range []string{"mode=open_search_window", "mode=search_input"} {
-			synctest.Test(t, func(t *testing.T) {
-				b, s := skinBackend(t, "skin.nimbus", addonNimbusHelper)
-				for _, w := range []string{"home", "1121", "virtualkeyboard"} {
-					s.ShowWindow(w, 0)
-				}
+	t.Run("ShouldFailWhenEachHelperStepFails", func(t *testing.T) {
+		steps := []struct {
+			name string
+			fail string
+		}{
+			{name: "ShouldFailWhenOpenSearchWindowFails", fail: "mode=open_search_window"},
+			{name: "ShouldFailWhenSearchInputFails", fail: "mode=search_input"},
+		}
 
-				s.Handle("Addons.ExecuteAddon", func(p json.RawMessage) (any, *fakekodi.Error) {
-					if strings.Contains(string(p), fail) {
-						return nil, &fakekodi.Error{Code: CodeInvalidParams, Message: "Invalid params."}
+		for _, step := range steps {
+			t.Run(step.name, func(t *testing.T) {
+				synctest.Test(t, func(t *testing.T) {
+					b, s := skinBackend(t, "skin.nimbus", addonNimbusHelper)
+					for _, w := range []string{"home", "1121", "virtualkeyboard"} {
+						s.ShowWindow(w, 0)
 					}
 
-					return "OK", nil
-				})
+					s.Handle("Addons.ExecuteAddon", func(p json.RawMessage) (any, *fakekodi.Error) {
+						if strings.Contains(string(p), step.fail) {
+							return nil, &fakekodi.Error{Code: CodeInvalidParams, Message: "Invalid params."}
+						}
 
-				_, err := b.SkinSearch(t.Context(), "dune", "")
-				require.Error(t, err, fail)
+						return "OK", nil
+					})
+
+					_, err := b.SkinSearch(t.Context(), "dune", "")
+					require.Error(t, err)
+				})
 			})
 		}
 	})
 
-	t.Run("home never shows", func(t *testing.T) {
+	t.Run("ShouldGiveUpWhenHomeNeverShows", func(t *testing.T) {
 		synctest.Test(t, func(t *testing.T) {
 			b, s := skinBackend(t, "skin.fentastic", addonFENtasticHelper)
 
@@ -349,7 +354,7 @@ func TestSkinSearchFailures(t *testing.T) {
 		})
 	})
 
-	t.Run("the window opening step fails", func(t *testing.T) {
+	t.Run("ShouldFailWhenWindowOpeningStepFails", func(t *testing.T) {
 		synctest.Test(t, func(t *testing.T) {
 			b, s := skinBackend(t, "skin.arctic.fuse.3", addonSkinVariables)
 			s.Handle("Files.GetDirectory", func(json.RawMessage) (any, *fakekodi.Error) {
@@ -362,7 +367,7 @@ func TestSkinSearchFailures(t *testing.T) {
 		})
 	})
 
-	t.Run("cancelled while waiting", func(t *testing.T) {
+	t.Run("ShouldStopWhenCancelledWhileWaiting", func(t *testing.T) {
 		synctest.Test(t, func(t *testing.T) {
 			b, s := skinBackend(t, "skin.arctic.fuse.3", addonSkinVariables)
 			s.ShowWindow("1105", -1)
@@ -472,40 +477,46 @@ func TestSkinProfiles(t *testing.T) {
 func TestBuiltinParam(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct{ query, want string }{
-		{"dune", `"dune"`},
-		{"dune, part two", `"dune, part two"`},
-		{`say "hello"`, `"say \"hello\""`},
-		{`back\slash`, `"back\\slash"`},
-		{`ends with \`, `"ends with \\"`},
-		{`\"`, `"\\\""`},
-		{"it's", `"it's"`},
-		{"'quoted'", `"'quoted'"`},
-		{"(500) days of summer", `"(500) days of summer"`},
-		{"closing) paren", `"closing) paren"`},
-		{"tom & jerry", `"tom & jerry"`},
-		{"x = y", `"x = y"`},
-		{"a||b", `"a b"`},
-		{"a|||b", `"a |b"`},
-		{"a | b", `"a | b"`},
-		{"$INFO[System.Time]", `"$INFO[System.Time]"`},
-		{"  lots\tof \n space  ", `"lots of space"`},
-		{"bell\x07and\x00nul", `"bell and nul"`},
-		{"千と千尋の神隠し", `"千と千尋の神隠し"`},
-		{"الرسالة", `"الرسالة"`},
-		{"दिलवाले दुल्हनिया", `"दिलवाले दुल्हनिया"`},
-		{"🎬 movie", `"🎬 movie"`},
-		{"", `""`},
+	testCases := []struct {
+		name     string
+		have     string
+		expected string
+	}{
+		{name: "ShouldQuotePlainWord", have: "dune", expected: `"dune"`},
+		{name: "ShouldKeepComma", have: "dune, part two", expected: `"dune, part two"`},
+		{name: "ShouldEscapeDoubleQuotes", have: `say "hello"`, expected: `"say \"hello\""`},
+		{name: "ShouldEscapeBackslash", have: `back\slash`, expected: `"back\\slash"`},
+		{name: "ShouldEscapeTrailingBackslash", have: `ends with \`, expected: `"ends with \\"`},
+		{name: "ShouldEscapeBackslashBeforeQuote", have: `\"`, expected: `"\\\""`},
+		{name: "ShouldKeepApostrophe", have: "it's", expected: `"it's"`},
+		{name: "ShouldKeepSingleQuotes", have: "'quoted'", expected: `"'quoted'"`},
+		{name: "ShouldKeepParentheses", have: "(500) days of summer", expected: `"(500) days of summer"`},
+		{name: "ShouldKeepUnbalancedClosingParenthesis", have: "closing) paren", expected: `"closing) paren"`},
+		{name: "ShouldKeepAmpersand", have: "tom & jerry", expected: `"tom & jerry"`},
+		{name: "ShouldKeepEquals", have: "x = y", expected: `"x = y"`},
+		{name: "ShouldBreakDoublePipe", have: "a||b", expected: `"a b"`},
+		{name: "ShouldBreakDoublePipeInTriplePipe", have: "a|||b", expected: `"a |b"`},
+		{name: "ShouldKeepSpacedPipe", have: "a | b", expected: `"a | b"`},
+		{name: "ShouldKeepInfoLabel", have: "$INFO[System.Time]", expected: `"$INFO[System.Time]"`},
+		{name: "ShouldCollapseWhitespace", have: "  lots\tof \n space  ", expected: `"lots of space"`},
+		{name: "ShouldReplaceControlCharacters", have: "bell\x07and\x00nul", expected: `"bell and nul"`},
+		{name: "ShouldKeepJapanese", have: "千と千尋の神隠し", expected: `"千と千尋の神隠し"`},
+		{name: "ShouldKeepArabic", have: "الرسالة", expected: `"الرسالة"`},
+		{name: "ShouldKeepDevanagari", have: "दिलवाले दुल्हनिया", expected: `"दिलवाले दुल्हनिया"`},
+		{name: "ShouldKeepEmoji", have: "🎬 movie", expected: `"🎬 movie"`},
+		{name: "ShouldQuoteEmpty", expected: `""`},
 	}
 
-	for _, tt := range tests {
-		got := builtinParam(tt.query)
-		assert.Equal(t, tt.want, got, "%q", tt.query)
-		assert.Equal(t, []string{"x", cleanQuery(tt.query), "y"}, splitParams("x,"+got+",y"), "Kodi reads %q back as one parameter", tt.query)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := builtinParam(tc.have)
+			assert.Equal(t, tc.expected, actual)
+			assert.Equal(t, []string{"x", cleanQuery(tc.have), "y"}, splitParams("x,"+actual+",y"), "Kodi reads it back as one parameter")
 
-		// Addons.ExecuteAddon quotes each argument of an array as Kodi's StringUtils::Paramify does, then RunAddon splits them again.
-		args := []string{"run_executebuiltin=SetProperty(CustomSearchTerm," + got + ",Home)||ActivateWindow(1114)", "text=" + cleanQuery(tt.query)}
-		assert.Equal(t, args, splitParams(paramify(args[0])+","+paramify(args[1])), "%q reaches the add-on as sent", tt.query)
+			// Addons.ExecuteAddon quotes each argument of an array as Kodi's StringUtils::Paramify does, then RunAddon splits them again.
+			args := []string{"run_executebuiltin=SetProperty(CustomSearchTerm," + actual + ",Home)||ActivateWindow(1114)", "text=" + cleanQuery(tc.have)}
+			assert.Equal(t, args, splitParams(paramify(args[0])+","+paramify(args[1])), "it reaches the add-on as sent")
+		})
 	}
 }
 
@@ -593,19 +604,24 @@ func splitParams(s string) []string {
 }
 
 func TestSkinCommandFailures(t *testing.T) {
-	for _, tt := range []struct {
-		skin, window, fail string
+	testCases := []struct {
+		name   string
+		skin   string
+		window string
+		fail   string
 	}{
-		{"skin.arctic.fuse.3", "1105", "SetFocus"},
-		{"skin.arctic.zephyr.2.resurrection.mod", "1138", "Skin.SetString"},
-		{"skin.arctic.zephyr.2.resurrection.mod", "1138", "ActivateWindow"},
-	} {
-		t.Run(tt.skin+" "+tt.fail, func(t *testing.T) {
+		{name: "ShouldFailWhenArcticFuse3SetFocusFails", skin: "skin.arctic.fuse.3", window: "1105", fail: "SetFocus"},
+		{name: "ShouldFailWhenArcticZephyrSkinSetStringFails", skin: "skin.arctic.zephyr.2.resurrection.mod", window: "1138", fail: "Skin.SetString"},
+		{name: "ShouldFailWhenArcticZephyrActivateWindowFails", skin: "skin.arctic.zephyr.2.resurrection.mod", window: "1138", fail: "ActivateWindow"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			synctest.Test(t, func(t *testing.T) {
-				b, s := skinBackend(t, tt.skin, addonSkinVariables)
-				s.ShowWindow(tt.window, 0)
+				b, s := skinBackend(t, tc.skin, addonSkinVariables)
+				s.ShowWindow(tc.window, 0)
 				s.Handle("Files.GetDirectory", func(p json.RawMessage) (any, *fakekodi.Error) {
-					if strings.Contains(string(p), tt.fail) {
+					if strings.Contains(string(p), tc.fail) {
 						return nil, &fakekodi.Error{Code: CodeInvalidParams, Message: "Invalid params."}
 					}
 
