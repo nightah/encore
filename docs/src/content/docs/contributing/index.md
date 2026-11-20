@@ -137,6 +137,29 @@ Signing off your commits with `git commit -s` ([Developer Certificate of Origin]
 
 **Web.** Biome and `tsc` must pass. Import through the per-folder aliases (`@api/…`, `@components/…`, `@features/…` and so on), never relative paths.
 
+**Table tests.** A table of cases runs each case as its own subtest, so `go test -v` nests the cases under their test and a failure names the case that broke. The table is a `testCases` slice, never a map, so the cases run and print in source order. Each case is keyed and on one line, with zero values left out, and is run with `t.Run(tc.name, …)`. Case names are PascalCase and start with `Should`. Name the input `have`, the expected value `expected` and an expected error `err`, or use more specific names when a case has several. A table nested inside another is named for what it holds (`spokenCases`, ranged as `sc`). A scenario that carries state from one step to the next stays one test, not a table. In the web tests, use `it.each` rather than a loop inside one `it()`.
+
+```go
+testCases := []struct {
+	name     string
+	have     string
+	expected time.Duration
+	ok       bool
+}{
+	{name: "ShouldParseSeconds", have: "7", expected: 7 * time.Second, ok: true},
+	{name: "ShouldRejectText", have: "soon"},
+}
+
+for _, tc := range testCases {
+	t.Run(tc.name, func(t *testing.T) {
+		actual, ok := retryAfter(tc.have)
+
+		assert.Equal(t, tc.ok, ok)
+		assert.Equal(t, tc.expected, actual)
+	})
+}
+```
+
 **Generated code** (the Kodi and SMAPI clients, the OpenAPI document and the web client) is committed: run `make generate`, and `pnpm generate:api` in `web/` after an API change, and commit the result. The docs' reference pages are generated at build time instead.
 
 ## Database migrations

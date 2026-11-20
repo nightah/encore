@@ -12,7 +12,7 @@ Open a [bug report](https://github.com/nightah/encore/issues/new?template=bug_re
 
 Fork the repository and open a pull request. [Development setup](https://nightah.github.io/encore/contributing/development/) covers running Encore locally, the Git hooks (installed by `pnpm install` in `web/`), the make targets and the tests, and [Contributing](https://nightah.github.io/encore/contributing/) covers the conventions.
 
-For anything larger than a small fix, open an issue first so we can agree on what to change and how. Add or update tests with each change; pull requests are merged once every check passes (`make lint`, `make test` and generated code with no diff).
+For anything larger than a small fix, open an issue first so we can agree on what to change and how. Add or update tests with each change; pull requests are merged once every check passes (`make lint`, `make test` and generated code with no diff). Table tests run each case as a subtest: a `testCases` slice of keyed one-line cases named `Should…`, run with `t.Run(tc.name, …)`, as [Conventions](https://nightah.github.io/encore/contributing/#conventions) describes.
 
 Encore is an AI-assisted project, and AI-assisted contributions are welcome on the same terms as any other: you must understand every line you submit and be able to explain it in review, and you're responsible for it as its author. [How Encore is built](https://nightah.github.io/encore/contributing/#how-encore-is-built) describes how the project itself uses AI.
 
