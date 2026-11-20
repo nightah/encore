@@ -75,30 +75,42 @@ func TestStateAndPKCEAreUnique(t *testing.T) {
 }
 
 func TestParseRedirectURL(t *testing.T) {
-	code, state, err := lwa.ParseRedirectURL("  http://127.0.0.1:9090/cb?code=ANabc&scope=alexa%3A%3Aask%3Askills%3Areadwrite&state=xyz \n")
-	require.NoError(t, err)
-	assert.Equal(t, "ANabc", code)
-	assert.Equal(t, "xyz", state)
-
-	code, state, err = lwa.ParseRedirectURL("code=c1&state=s1")
-	require.NoError(t, err)
-	assert.Equal(t, "c1", code)
-	assert.Equal(t, "s1", state)
-
-	for name, in := range map[string]string{
-		"empty":    "",
-		"no code":  "http://127.0.0.1:9090/cb?state=xyz",
-		"no state": "http://127.0.0.1:9090/cb?code=abc",
-		"denied":   "http://127.0.0.1:9090/cb?error=access_denied&error_description=User+denied&state=xyz",
-	} {
-		t.Run(name, func(t *testing.T) {
-			_, _, err := lwa.ParseRedirectURL(in)
-			require.Error(t, err)
-		})
+	testCases := []struct {
+		name    string
+		have    string
+		code    string
+		state   string
+		invalid bool
+		err     string
+	}{
+		{name: "ShouldParseURLWithSurroundingWhitespace", have: "  http://127.0.0.1:9090/cb?code=ANabc&scope=alexa%3A%3Aask%3Askills%3Areadwrite&state=xyz \n", code: "ANabc", state: "xyz"},
+		{name: "ShouldParseBareQuery", have: "code=c1&state=s1", code: "c1", state: "s1"},
+		{name: "ShouldRejectEmpty", invalid: true},
+		{name: "ShouldRejectMissingCode", have: "http://127.0.0.1:9090/cb?state=xyz", invalid: true},
+		{name: "ShouldRejectMissingState", have: "http://127.0.0.1:9090/cb?code=abc", invalid: true},
+		{name: "ShouldRejectDenied", have: "http://127.0.0.1:9090/cb?error=access_denied&error_description=User+denied&state=xyz", invalid: true},
+		{name: "ShouldReportAccessDenied", have: "http://127.0.0.1:9090/cb?error=access_denied&state=xyz", invalid: true, err: "access_denied"},
 	}
 
-	_, _, err = lwa.ParseRedirectURL("http://127.0.0.1:9090/cb?error=access_denied&state=xyz")
-	require.ErrorContains(t, err, "access_denied")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			code, state, err := lwa.ParseRedirectURL(tc.have)
+
+			if tc.invalid {
+				if tc.err != "" {
+					require.ErrorContains(t, err, tc.err)
+				} else {
+					require.Error(t, err)
+				}
+
+				return
+			}
+
+			require.NoError(t, err)
+			assert.Equal(t, tc.code, code)
+			assert.Equal(t, tc.state, state)
+		})
+	}
 }
 
 func TestExchange(t *testing.T) {
@@ -263,19 +275,22 @@ func TestExchangeRequiresVerifier(t *testing.T) {
 }
 
 func TestTokenErrorMapping(t *testing.T) {
-	for name, tc := range map[string]struct {
+	testCases := []struct {
+		name     string
 		status   int
 		body     string
 		sentinel error
-		contains string
+		err      string
 	}{
-		"invalid grant":       {status: http.StatusBadRequest, body: `{"error":"invalid_grant","error_description":"revoked"}`, sentinel: lwa.ErrReauthorise, contains: "invalid_grant: revoked"},
-		"invalid client":      {status: http.StatusUnauthorized, body: `{"error":"invalid_client"}`, sentinel: lwa.ErrInvalidClient, contains: "(invalid_client)"},
-		"unauthorized client": {status: http.StatusBadRequest, body: `{"error":"unauthorized_client","error_description":"not allowed"}`, sentinel: lwa.ErrInvalidClient, contains: "unauthorized_client: not allowed"},
-		"other OAuth error":   {status: http.StatusBadRequest, body: `{"error":"invalid_scope","error_description":"bad scope"}`, contains: "lwa: refreshing access token: invalid_scope: bad scope"},
-		"no OAuth error code": {status: http.StatusBadGateway, body: `<html>bad gateway</html>`, contains: "lwa: refreshing access token: HTTP 502"},
-	} {
-		t.Run(name, func(t *testing.T) {
+		{name: "ShouldMapInvalidGrantToReauthorise", status: http.StatusBadRequest, body: `{"error":"invalid_grant","error_description":"revoked"}`, sentinel: lwa.ErrReauthorise, err: "invalid_grant: revoked"},
+		{name: "ShouldMapInvalidClient", status: http.StatusUnauthorized, body: `{"error":"invalid_client"}`, sentinel: lwa.ErrInvalidClient, err: "(invalid_client)"},
+		{name: "ShouldMapUnauthorizedClientToInvalidClient", status: http.StatusBadRequest, body: `{"error":"unauthorized_client","error_description":"not allowed"}`, sentinel: lwa.ErrInvalidClient, err: "unauthorized_client: not allowed"},
+		{name: "ShouldReportOtherOAuthError", status: http.StatusBadRequest, body: `{"error":"invalid_scope","error_description":"bad scope"}`, err: "lwa: refreshing access token: invalid_scope: bad scope"},
+		{name: "ShouldReportStatusWithoutOAuthErrorCode", status: http.StatusBadGateway, body: `<html>bad gateway</html>`, err: "lwa: refreshing access token: HTTP 502"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			_, err := stubToken(t, tc.status, tc.body).FromRefreshToken(t.Context(), "Atzr|secret-refresh")
 			require.Error(t, err)
 
@@ -286,7 +301,7 @@ func TestTokenErrorMapping(t *testing.T) {
 				require.NotErrorIs(t, err, lwa.ErrInvalidClient)
 			}
 
-			assert.Contains(t, err.Error(), tc.contains)
+			assert.Contains(t, err.Error(), tc.err)
 			assert.NotContains(t, err.Error(), "secret-refresh", "the token request is never quoted")
 			assert.NotContains(t, err.Error(), "client-secret")
 		})
@@ -333,22 +348,33 @@ func TestConfiguredHTTPClientIsUsed(t *testing.T) {
 }
 
 func TestParseRedirectURLMalformed(t *testing.T) {
-	for name, in := range map[string]string{
-		"bad URL":          "http://[::1/cb?code=a&state=b",
-		"bad query":        "code=%zz&state=b",
-		"denied, no state": "?error=access_denied",
-		"whitespace only":  " \t\n",
-	} {
-		t.Run(name, func(t *testing.T) {
-			code, state, err := lwa.ParseRedirectURL(in)
+	testCases := []struct {
+		name string
+		have string
+		err  string
+	}{
+		{name: "ShouldRejectBadURL", have: "http://[::1/cb?code=a&state=b"},
+		{name: "ShouldRejectBadQuery", have: "code=%zz&state=b"},
+		{name: "ShouldRejectDeniedWithoutState", have: "?error=access_denied"},
+		{name: "ShouldRejectWhitespaceOnly", have: " \t\n"},
+		{name: "ShouldReportDenialDescription", have: "?error=access_denied&error_description=User+denied", err: "access_denied: User denied"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			code, state, err := lwa.ParseRedirectURL(tc.have)
+
+			if tc.err != "" {
+				require.ErrorContains(t, err, tc.err)
+
+				return
+			}
+
 			require.Error(t, err)
 			assert.Empty(t, code)
 			assert.Empty(t, state)
 		})
 	}
-
-	_, _, err := lwa.ParseRedirectURL("?error=access_denied&error_description=User+denied")
-	require.ErrorContains(t, err, "access_denied: User denied")
 }
 
 func TestParseRedirectURLIgnoresFragment(t *testing.T) {

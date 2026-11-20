@@ -71,19 +71,25 @@ func TestLoad(t *testing.T) {
 }
 
 func TestLoadRejects(t *testing.T) {
-	for name, data := range map[string]string{
-		"a file named for another locale": "locale: en-AU\ncases: []\n",
-		"an unknown field":                "locale: en-GB\ncases:\n  - utterance: volume up\n    intnet: VolumeUp\n",
-		"broken yaml":                     "locale: [\n",
-	} {
-		_, err := nlu.Load(fstest.MapFS{"en-GB.yaml": {Data: []byte(data)}})
-		require.Error(t, err, name)
+	testCases := []struct {
+		name string
+		file string
+		have string
+	}{
+		{name: "ShouldRejectFileNamedForAnotherLocale", file: "en-GB.yaml", have: "locale: en-AU\ncases: []\n"},
+		{name: "ShouldRejectUnknownField", file: "en-GB.yaml", have: "locale: en-GB\ncases:\n  - utterance: volume up\n    intnet: VolumeUp\n"},
+		{name: "ShouldRejectBrokenYAML", file: "en-GB.yaml", have: "locale: [\n"},
+		{name: "ShouldRejectBadFileName", file: "[.yaml", have: "locale: x\n"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := nlu.Load(fstest.MapFS{tc.file: {Data: []byte(tc.have)}})
+			require.Error(t, err)
+		})
 	}
 
 	_, err := nlu.LoadFile(fstest.MapFS{}, "en-GB.yaml")
-	require.Error(t, err)
-
-	_, err = nlu.Load(fstest.MapFS{"[.yaml": {Data: []byte("locale: x\n")}})
 	require.Error(t, err)
 }
 
@@ -492,10 +498,18 @@ func (p *throttledProfiler) ProfileNLU(_ context.Context, _, _, utterance string
 
 // TestRunAsksThrottledRowsAgainAfterCoolingDown checks that a row the client gave up on because Amazon throttled or failed it is asked once more after the rest of the run and a cool-down, rather than failing the run, and that a second give-up still fails.
 func TestRunAsksThrottledRowsAgainAfterCoolingDown(t *testing.T) {
-	for _, status := range []int{http.StatusTooManyRequests, http.StatusServiceUnavailable} {
-		t.Run(http.StatusText(status), func(t *testing.T) {
+	testCases := []struct {
+		name   string
+		status int
+	}{
+		{name: "ShouldAskAgainAfterTooManyRequests", status: http.StatusTooManyRequests},
+		{name: "ShouldAskAgainAfterServiceUnavailable", status: http.StatusServiceUnavailable},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			synctest.Test(t, func(t *testing.T) {
-				p := &throttledProfiler{start: time.Now(), throttles: map[string]int{"b": 1, "c": 2}, asked: map[string][]time.Duration{}, intent: "Mute", status: status}
+				p := &throttledProfiler{start: time.Now(), throttles: map[string]int{"b": 1, "c": 2}, asked: map[string][]time.Duration{}, intent: "Mute", status: tc.status}
 				r := &nlu.Runner{Client: p, SkillID: "s", Rate: 2, Cooldown: time.Minute}
 
 				res, err := r.Run(t.Context(), nlu.Fixture{Locale: "en-GB", Cases: []nlu.Case{{Utterance: "a", Intent: "Mute"}, {Utterance: "b", Intent: "Mute"}, {Utterance: "c", Intent: "Mute"}}})
@@ -514,7 +528,7 @@ func TestRunAsksThrottledRowsAgainAfterCoolingDown(t *testing.T) {
 				assert.Equal(t, nlu.OutcomePass, res[1].Outcome())
 				assert.Equal(t, 2, res[1].Probes, "probes count both passes")
 				assert.Equal(t, nlu.OutcomeFail, res[2].Outcome())
-				assert.Equal(t, status, smapi.StatusCode(res[2].Err))
+				assert.Equal(t, tc.status, smapi.StatusCode(res[2].Err))
 				assert.Equal(t, nlu.Summary{Pass: 2, Fail: 1}, nlu.Summarise(res))
 			})
 		})

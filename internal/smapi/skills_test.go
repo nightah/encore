@@ -125,27 +125,30 @@ func TestImportExistingUpdatesSkill(t *testing.T) {
 }
 
 func TestImportExistingSendsIfMatchOnlyWithETag(t *testing.T) {
-	for name, tc := range map[string]struct {
-		eTag string
-		want []string
+	testCases := []struct {
+		name     string
+		have     string
+		expected []string
 	}{
-		"with an eTag":    {eTag: "abc", want: []string{"abc"}},
-		"without an eTag": {eTag: "", want: nil},
-	} {
-		t.Run(name, func(t *testing.T) {
-			var got []string
+		{name: "ShouldSendIfMatchWithETag", have: "abc", expected: []string{"abc"}},
+		{name: "ShouldNotSendIfMatchWithoutETag"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual []string
 
 			c := stubClient(t, func(w http.ResponseWriter, r *http.Request) {
-				got = r.Header.Values("If-Match")
+				actual = r.Header.Values("If-Match")
 
 				w.Header().Set("Location", "/v1/skills/imports/imp-1")
 				w.WriteHeader(http.StatusAccepted)
 			})
 
-			id, err := c.ImportExisting(t.Context(), "skill", "https://s3.example/x", tc.eTag)
+			id, err := c.ImportExisting(t.Context(), "skill", "https://s3.example/x", tc.have)
 			require.NoError(t, err)
 			assert.Equal(t, "imp-1", id)
-			assert.Equal(t, tc.want, got)
+			assert.Equal(t, tc.expected, actual)
 		})
 	}
 }
@@ -236,20 +239,23 @@ func TestImportStatusErrors(t *testing.T) {
 func TestBuildStatusProblems(t *testing.T) {
 	a, b, c := smapi.Problem{Code: "A", Message: "a"}, smapi.Problem{Code: "B", Message: "b"}, smapi.Problem{Message: "c"}
 
-	for name, tc := range map[string]struct {
-		status smapi.BuildStatus
-		want   []smapi.Problem
+	testCases := []struct {
+		name     string
+		have     smapi.BuildStatus
+		expected []smapi.Problem
 	}{
-		"none":                  {status: smapi.BuildStatus{}, want: []smapi.Problem{}},
-		"top level only":        {status: smapi.BuildStatus{Errors: []smapi.Problem{a}}, want: []smapi.Problem{a}},
-		"steps only":            {status: buildWithSteps(nil, []smapi.Problem{b}, []smapi.Problem{c}), want: []smapi.Problem{b, c}},
-		"duplicates collapse":   {status: buildWithSteps([]smapi.Problem{a}, []smapi.Problem{a, b}, []smapi.Problem{b}), want: []smapi.Problem{a, b}},
-		"same code, other text": {status: buildWithSteps([]smapi.Problem{a}, []smapi.Problem{{Code: "A", Message: "other"}}), want: []smapi.Problem{a, {Code: "A", Message: "other"}}},
-	} {
-		t.Run(name, func(t *testing.T) {
-			got := tc.status.Problems()
-			assert.ElementsMatch(t, tc.want, got)
-			assert.Len(t, got, len(tc.want))
+		{name: "ShouldReportNone", have: smapi.BuildStatus{}, expected: []smapi.Problem{}},
+		{name: "ShouldReportTopLevelOnly", have: smapi.BuildStatus{Errors: []smapi.Problem{a}}, expected: []smapi.Problem{a}},
+		{name: "ShouldReportStepsOnly", have: buildWithSteps(nil, []smapi.Problem{b}, []smapi.Problem{c}), expected: []smapi.Problem{b, c}},
+		{name: "ShouldCollapseDuplicates", have: buildWithSteps([]smapi.Problem{a}, []smapi.Problem{a, b}, []smapi.Problem{b}), expected: []smapi.Problem{a, b}},
+		{name: "ShouldKeepSameCodeWithOtherText", have: buildWithSteps([]smapi.Problem{a}, []smapi.Problem{{Code: "A", Message: "other"}}), expected: []smapi.Problem{a, {Code: "A", Message: "other"}}},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := tc.have.Problems()
+			assert.ElementsMatch(t, tc.expected, actual)
+			assert.Len(t, actual, len(tc.expected))
 		})
 	}
 
@@ -554,17 +560,37 @@ func TestCancelledContextStopsRetrying(t *testing.T) {
 }
 
 func TestOnlySuccessStatusesSucceed(t *testing.T) {
-	for _, status := range []int{http.StatusOK, http.StatusAccepted, http.StatusNoContent, 299} {
-		c := stubClient(t, func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(status) })
-		require.NoError(t, c.EnableDevelopment(t.Context(), "amzn1.ask.skill.1"), status)
+	testCases := []struct {
+		name string
+		have int
+		err  bool
+	}{
+		{name: "ShouldSucceedOnOK", have: http.StatusOK},
+		{name: "ShouldSucceedOnAccepted", have: http.StatusAccepted},
+		{name: "ShouldSucceedOnNoContent", have: http.StatusNoContent},
+		{name: "ShouldSucceedOn299", have: 299},
+		{name: "ShouldFailOnMultipleChoices", have: http.StatusMultipleChoices, err: true},
+		{name: "ShouldFailOnNotModified", have: http.StatusNotModified, err: true},
+		{name: "ShouldFailOnBadRequest", have: http.StatusBadRequest, err: true},
+		{name: "ShouldFailOnForbidden", have: http.StatusForbidden, err: true},
+		{name: "ShouldFailOnConflict", have: http.StatusConflict, err: true},
 	}
 
-	for _, status := range []int{http.StatusMultipleChoices, http.StatusNotModified, http.StatusBadRequest, http.StatusForbidden, http.StatusConflict} {
-		c := stubClient(t, func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(status) })
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			c := stubClient(t, func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(tc.have) })
 
-		err := c.EnableDevelopment(t.Context(), "amzn1.ask.skill.1")
-		require.Error(t, err, status)
-		assert.Equal(t, status, smapi.StatusCode(err))
+			err := c.EnableDevelopment(t.Context(), "amzn1.ask.skill.1")
+
+			if !tc.err {
+				require.NoError(t, err)
+
+				return
+			}
+
+			require.Error(t, err)
+			assert.Equal(t, tc.have, smapi.StatusCode(err))
+		})
 	}
 }
 

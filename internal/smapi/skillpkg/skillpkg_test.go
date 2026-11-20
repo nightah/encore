@@ -192,32 +192,46 @@ func TestDeterministic(t *testing.T) {
 }
 
 func TestPrivacyRequired(t *testing.T) {
-	opts := options()
-	opts.Privacy = skillpkg.Privacy{}
+	noAds := answered()
+	noAds.ContainsAds = nil
 
-	_, err := skillpkg.Build(sources(t), opts)
-	require.ErrorIs(t, err, skillpkg.ErrPrivacyUnanswered)
-	assert.Contains(t, err.Error(), "allowsPurchases, containsAds, isChildDirected, isExportCompliant, usesPersonalInfo")
+	testCases := []struct {
+		name string
+		have skillpkg.Privacy
+		err  string
+	}{
+		{name: "ShouldListEveryUnansweredQuestion", have: skillpkg.Privacy{}, err: "allowsPurchases, containsAds, isChildDirected, isExportCompliant, usesPersonalInfo"},
+		{name: "ShouldNameTheOneUnansweredQuestion", have: noAds, err: "containsAds"},
+	}
 
-	opts.Privacy = answered()
-	opts.Privacy.ContainsAds = nil
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			opts := options()
+			opts.Privacy = tc.have
 
-	_, err = skillpkg.Build(sources(t), opts)
-	require.ErrorIs(t, err, skillpkg.ErrPrivacyUnanswered)
-	assert.Contains(t, err.Error(), "containsAds")
+			_, err := skillpkg.Build(sources(t), opts)
+			require.ErrorIs(t, err, skillpkg.ErrPrivacyUnanswered)
+			assert.Contains(t, err.Error(), tc.err)
+		})
+	}
 }
 
 func TestInvalidOptions(t *testing.T) {
-	for name, mutate := range map[string]func(*skillpkg.Options){
-		"no locales":     func(o *skillpkg.Options) { o.Locales = nil },
-		"unknown locale": func(o *skillpkg.Options) { o.Locales = []string{"xx-XX"} },
-		"http endpoint":  func(o *skillpkg.Options) { o.Endpoint.URI = "http://encore.example.com/api/v1/alexa" },
-		"no endpoint":    func(o *skillpkg.Options) { o.Endpoint.URI = "" },
-		"short name":     func(o *skillpkg.Options) { o.SkillName = "E" },
-	} {
-		t.Run(name, func(t *testing.T) {
+	testCases := []struct {
+		name   string
+		mutate func(*skillpkg.Options)
+	}{
+		{name: "ShouldRejectNoLocales", mutate: func(o *skillpkg.Options) { o.Locales = nil }},
+		{name: "ShouldRejectUnknownLocale", mutate: func(o *skillpkg.Options) { o.Locales = []string{"xx-XX"} }},
+		{name: "ShouldRejectHTTPEndpoint", mutate: func(o *skillpkg.Options) { o.Endpoint.URI = "http://encore.example.com/api/v1/alexa" }},
+		{name: "ShouldRejectNoEndpoint", mutate: func(o *skillpkg.Options) { o.Endpoint.URI = "" }},
+		{name: "ShouldRejectShortName", mutate: func(o *skillpkg.Options) { o.SkillName = "E" }},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
 			opts := options()
-			mutate(&opts)
+			tc.mutate(&opts)
 
 			_, err := skillpkg.Build(sources(t), opts)
 			require.Error(t, err)

@@ -10,29 +10,39 @@ import (
 )
 
 func TestTimeUnmarshal(t *testing.T) {
-	want := time.Date(2026, 10, 26, 7, 38, 45, 519_000_000, time.UTC)
+	expected := time.Date(2026, 10, 26, 7, 38, 45, 519_000_000, time.UTC)
 
-	for name, raw := range map[string]string{
-		"milliseconds as a string, as the live API sends expiresAt": `"1793000325519"`,
-		"milliseconds as a number":                                  `1793000325519`,
-		"RFC 3339, as the spec documents":                           `"2026-10-26T07:38:45.519Z"`,
-		"RFC 3339 with an offset":                                   `"2026-10-26T18:38:45.519+11:00"`,
-	} {
-		t.Run(name, func(t *testing.T) {
-			var got Time
-			require.NoError(t, json.Unmarshal([]byte(raw), &got))
-			assert.True(t, want.Equal(got.Time), "got %s", got.Time)
+	testCases := []struct {
+		name     string
+		have     string
+		expected time.Time
+		err      string
+	}{
+		{name: "ShouldUnmarshalMillisecondsStringAsTheLiveAPISendsExpiresAt", have: `"1793000325519"`, expected: expected},
+		{name: "ShouldUnmarshalMillisecondsNumber", have: `1793000325519`, expected: expected},
+		{name: "ShouldUnmarshalRFC3339AsTheSpecDocuments", have: `"2026-10-26T07:38:45.519Z"`, expected: expected},
+		{name: "ShouldUnmarshalRFC3339WithOffset", have: `"2026-10-26T18:38:45.519+11:00"`, expected: expected},
+		{name: "ShouldUnmarshalNullAsZero", have: `null`},
+		{name: "ShouldUnmarshalEmptyStringAsZero", have: `""`},
+		{name: "ShouldRejectUnknownFormat", have: `"next tuesday"`, err: "neither RFC 3339 nor Unix milliseconds"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			var actual Time
+
+			err := json.Unmarshal([]byte(tc.have), &actual)
+
+			if tc.err != "" {
+				assert.ErrorContains(t, err, tc.err)
+
+				return
+			}
+
+			require.NoError(t, err)
+			assert.True(t, tc.expected.Equal(actual.Time), "got %s", actual.Time)
 		})
 	}
-
-	for _, raw := range []string{`null`, `""`} {
-		var got Time
-		require.NoError(t, json.Unmarshal([]byte(raw), &got))
-		assert.True(t, got.IsZero(), raw)
-	}
-
-	var bad Time
-	assert.ErrorContains(t, json.Unmarshal([]byte(`"next tuesday"`), &bad), "neither RFC 3339 nor Unix milliseconds")
 }
 
 func TestUploadDecodesLiveResponse(t *testing.T) {

@@ -13,16 +13,24 @@ import (
 )
 
 func TestCanSimulate(t *testing.T) {
-	for locale, want := range map[string]bool{
-		"en-AU": true,
-		"en-US": true,
-		"ja-JP": true,
-		"es-ES": false,
-		"en-au": false,
-		"en_AU": false,
-		"":      false,
-	} {
-		assert.Equal(t, want, smapi.CanSimulate(locale), locale)
+	testCases := []struct {
+		name     string
+		have     string
+		expected bool
+	}{
+		{name: "ShouldSimulateEnAU", have: "en-AU", expected: true},
+		{name: "ShouldSimulateEnUS", have: "en-US", expected: true},
+		{name: "ShouldSimulateJaJP", have: "ja-JP", expected: true},
+		{name: "ShouldNotSimulateEsES", have: "es-ES"},
+		{name: "ShouldNotSimulateLowerCaseRegion", have: "en-au"},
+		{name: "ShouldNotSimulateUnderscoreSeparator", have: "en_AU"},
+		{name: "ShouldNotSimulateEmptyLocale"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.expected, smapi.CanSimulate(tc.have))
+		})
 	}
 
 	assert.ElementsMatch(t, smapitest.SimulationLocales, smapi.SimulationLocales, "the fake and the client agree on the supported locales")
@@ -229,20 +237,33 @@ func TestSayGivesUpWhenTheSimulatorStaysBusy(t *testing.T) {
 }
 
 func TestSayErrors(t *testing.T) {
-	fake := smapitest.New(t, smapitest.Options{})
-	c := newClient(t, fake)
-	skillID := enabledSkill(t, c, "en-AU")
+	testCases := []struct {
+		name      string
+		suffix    string
+		locale    string
+		utterance string
+		inject    string
+		expected  int
+	}{
+		{name: "ShouldNotRetryRefusal", locale: "es-ES", utterance: "abre encore", expected: http.StatusBadRequest},
+		{name: "ShouldReportMissingSkill", suffix: "-gone", locale: "en-AU", utterance: "open encore", expected: http.StatusNotFound},
+		{name: "ShouldReportForbiddenSimulation", locale: "en-AU", utterance: "open encore", inject: "GET /v2/skills/{skillId}/stages/{stage}/simulations/{simId}", expected: http.StatusForbidden},
+	}
 
-	_, err := c.Say(t.Context(), skillID, "es-ES", "abre encore", false)
-	assert.Equal(t, http.StatusBadRequest, smapi.StatusCode(err), "a refusal isn't retried")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			fake := smapitest.New(t, smapitest.Options{})
+			c := newClient(t, fake)
+			skillID := enabledSkill(t, c, "en-AU")
 
-	_, err = c.Say(t.Context(), skillID+"-gone", "en-AU", "open encore", false)
-	assert.Equal(t, http.StatusNotFound, smapi.StatusCode(err))
+			if tc.inject != "" {
+				fake.InjectRoute(tc.inject, http.StatusForbidden)
+			}
 
-	fake.InjectRoute("GET /v2/skills/{skillId}/stages/{stage}/simulations/{simId}", http.StatusForbidden)
-
-	_, err = c.Say(t.Context(), skillID, "en-AU", "open encore", false)
-	assert.Equal(t, http.StatusForbidden, smapi.StatusCode(err))
+			_, err := c.Say(t.Context(), skillID+tc.suffix, tc.locale, tc.utterance, false)
+			assert.Equal(t, tc.expected, smapi.StatusCode(err))
+		})
+	}
 }
 
 func TestSayStopsWithTheContext(t *testing.T) {

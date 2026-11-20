@@ -65,23 +65,46 @@ func TestProfileNLURetriesServerErrors(t *testing.T) {
 }
 
 func TestProfileNLUErrors(t *testing.T) {
-	fake := smapitest.New(t, smapitest.Options{})
-	c := newClient(t, fake)
+	testCases := []struct {
+		name     string
+		missing  bool
+		have     string
+		answer   *smapitest.NLUAnswer
+		expected int
+		err      string
+	}{
+		{name: "ShouldReportMissingSkill", missing: true, have: "volume up", expected: http.StatusNotFound, err: "profile utterance"},
+		{name: "ShouldRejectEmptyUtterance", expected: http.StatusBadRequest},
+		{name: "ShouldReportForbiddenProfile", have: "mute", answer: &smapitest.NLUAnswer{Status: http.StatusForbidden}, expected: http.StatusForbidden},
+	}
 
-	_, err := c.ProfileNLU(t.Context(), "amzn1.ask.skill.missing", "en-GB", "volume up")
-	require.Error(t, err)
-	assert.Equal(t, http.StatusNotFound, smapi.StatusCode(err))
-	assert.Contains(t, err.Error(), "profile utterance")
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			fake := smapitest.New(t, smapitest.Options{})
+			c := newClient(t, fake)
+			skillID := "amzn1.ask.skill.missing"
 
-	skillID := fake.AddSkill(smapitest.DefaultVendorID, nil)
+			if !tc.missing {
+				skillID = fake.AddSkill(smapitest.DefaultVendorID, nil)
+			}
 
-	_, err = c.ProfileNLU(t.Context(), skillID, "en-GB", "")
-	assert.Equal(t, http.StatusBadRequest, smapi.StatusCode(err))
+			if tc.answer != nil {
+				fake.Profile("en-GB", tc.have, *tc.answer)
+			}
 
-	fake.Profile("en-GB", "mute", smapitest.NLUAnswer{Status: http.StatusForbidden})
+			_, err := c.ProfileNLU(t.Context(), skillID, "en-GB", tc.have)
 
-	_, err = c.ProfileNLU(t.Context(), skillID, "en-GB", "mute")
-	assert.Equal(t, http.StatusForbidden, smapi.StatusCode(err))
+			if tc.err != "" {
+				require.Error(t, err)
+			}
+
+			assert.Equal(t, tc.expected, smapi.StatusCode(err))
+
+			if tc.err != "" {
+				assert.Contains(t, err.Error(), tc.err)
+			}
+		})
+	}
 }
 
 // TestNLUSlotResolvedFlat reads resolved values laid out as Amazon's spec documents them, name and id straight on the item.
