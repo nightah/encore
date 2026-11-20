@@ -71,12 +71,18 @@ describe("problemErrorsOf and fieldErrorsOf", () => {
     expect(fieldErrorsOf(new ApiError("down", 502, "Bad Gateway"))).toEqual({});
   });
 
-  it("find none in anything that isn't an API error", () => {
-    const lookalike = Object.assign(new Error("boom"), { fieldErrors: { name: "x" }, problem: { errors: [{}] } });
-    for (const error of [lookalike, new TypeError("x is undefined"), "boom", undefined, null]) {
-      expect(problemErrorsOf(error)).toEqual([]);
-      expect(fieldErrorsOf(error)).toEqual({});
-    }
+  it.each([
+    [
+      "an Error with an API error's fields",
+      Object.assign(new Error("boom"), { fieldErrors: { name: "x" }, problem: { errors: [{}] } }),
+    ],
+    ["a TypeError", new TypeError("x is undefined")],
+    ["a string", "boom"],
+    ["undefined", undefined],
+    ["null", null],
+  ])("find none in %s, which isn't an API error", (_, error) => {
+    expect(problemErrorsOf(error)).toEqual([]);
+    expect(fieldErrorsOf(error)).toEqual({});
   });
 });
 

@@ -15,11 +15,9 @@ describe("OpenID Connect presets", () => {
     expect(client.protocolMappers[0].config["claim.name"]).toBe("groups");
   });
 
-  it("puts the redirect URI and client ID in every snippet", () => {
-    for (const preset of Object.values(OIDC_PRESETS)) {
-      expect(preset.snippet(v)).toContain(v.redirectUri);
-      expect(preset.snippet({ ...v, clientId: "kodi-admin" })).toContain("kodi-admin");
-    }
+  it.each(Object.entries(OIDC_PRESETS))("puts the redirect URI and client ID in the %s snippet", (_, preset) => {
+    expect(preset.snippet(v)).toContain(v.redirectUri);
+    expect(preset.snippet({ ...v, clientId: "kodi-admin" })).toContain("kodi-admin");
   });
 
   it("guesses the provider from the issuer", () => {
