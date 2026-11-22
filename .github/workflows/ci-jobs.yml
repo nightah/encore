@@ -98,7 +98,7 @@ jobs:
         run: pipx run yamllint==1.38.0 --strict --format github .
 
       - name: zizmor
-        run: pipx run zizmor==1.32.0 --no-progress --format github .github/workflows
+        run: pipx run zizmor==1.33.1 --no-progress --format github .github/workflows
 
       - name: Image scripts
         run: |
