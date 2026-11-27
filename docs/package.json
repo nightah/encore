@@ -18,7 +18,7 @@
     "starlight-openapi": "0.27.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.6.8",
+    "@biomejs/biome": "2.6.9",
     "sort-package-json": "4.1.0"
   },
   "packageManager": "pnpm@12.23.0",
