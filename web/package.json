@@ -46,13 +46,13 @@
     "@testing-library/jest-dom": "8.0.0",
     "@testing-library/react": "16.3.3",
     "@testing-library/user-event": "14.6.13",
-    "@types/node": "26.6.9",
-    "@types/react": "19.3.1",
+    "@types/node": "26.6.10",
+    "@types/react": "19.3.2",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.3.0",
-    "@vitest/browser-playwright": "5.1.1",
-    "@vitest/coverage-v8": "5.1.1",
-    "lefthook": "2.2.2",
+    "@vitest/browser-playwright": "5.1.2",
+    "@vitest/coverage-v8": "5.1.2",
+    "lefthook": "2.2.3",
     "msw": "3.0.7",
     "orval": "8.49.0",
     "playwright": "1.65.1",
@@ -60,7 +60,7 @@
     "tailwindcss": "4.3.5",
     "typescript": "7.0.2",
     "vite": "8.3.8",
-    "vitest": "5.1.1"
+    "vitest": "5.1.2"
   },
   "packageManager": "pnpm@12.23.0",
   "engines": {
