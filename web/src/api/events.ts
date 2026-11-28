@@ -101,6 +101,11 @@ function applyEvent<E extends EventName>(queryClient: QueryClient, name: E, payl
       queryClient.setQueryData<Overview>(keys.overview, (overview) =>
         overview ? { ...overview, instances: upsert(overview.instances, item) } : overview,
       );
+      // A load still on its way may have been answered before this change, and would put the instance back as it was. The server sends an event only when something changes, so it won't send this one again; load it again instead.
+      for (const queryKey of [keys.instances, keys.overview]) {
+        if (queryClient.isFetching({ exact: true, queryKey }))
+          void queryClient.invalidateQueries({ exact: true, queryKey });
+      }
       break;
     }
     case "library": {

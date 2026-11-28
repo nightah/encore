@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
-import { type InfiniteData, QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { act, renderHook } from "@testing-library/react";
+import { type InfiniteData, QueryClient, QueryClientProvider, QueryObserver } from "@tanstack/react-query";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { RECENT_REQUESTS, eventStream, useEventStream, useServerEvent } from "@api/events";
@@ -165,6 +165,44 @@ describe("instance, library and device events", () => {
     expect(queryClient.getQueryData<Instance[]>(keys.instances)?.map((i) => i.name)).toEqual(names);
     expect(queryClient.getQueryData<Overview>(keys.overview)?.instances.map((i) => i.name)).toEqual(names);
   });
+
+  it.each([
+    ["the instance list", keys.instances, (list: Instance[]) => list, (data: Instance[]) => data],
+    [
+      "the overview",
+      keys.overview,
+      (list: Instance[]) => overview({ instances: list }),
+      (data: Overview) => data.instances,
+    ],
+  ] as const)(
+    "loads %s again when an instance event arrives while a load is on its way",
+    async (_, key, wrap, pick) => {
+      const lounge = (state: string) => ({ id: 1, name: "Lounge", status: { state } }) as Instance;
+      let server = "http_only";
+      const answers: (() => void)[] = [];
+      // The server answers with what it knows when the request arrives; the test decides when the answer lands.
+      const queryFn = () => {
+        const answer = wrap([lounge(server)]);
+        return new Promise<typeof answer>((resolve) => answers.push(() => resolve(answer)));
+      };
+      queryClient.setQueryData(key, wrap([lounge("http_only")]));
+      const observer = new QueryObserver(queryClient, { queryFn, queryKey: key });
+      const unsubscribe = observer.subscribe(() => {});
+      expect(answers).toHaveLength(1);
+
+      server = "connected";
+      emit("instance", lounge("connected"));
+      await act(async () => {
+        for (const answer of answers.splice(0)) answer();
+      });
+
+      await waitFor(() => {
+        for (const answer of answers.splice(0)) answer();
+        expect(pick(queryClient.getQueryData(key) as never)[0]?.status.state).toBe("connected");
+      });
+      unsubscribe();
+    },
+  );
 
   it("doesn't create an instance list that wasn't loaded", () => {
     emit("instance", { id: 1, name: "Lounge" });
