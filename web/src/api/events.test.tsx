@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
-import { type InfiniteData, QueryClient, QueryClientProvider, QueryObserver } from "@tanstack/react-query";
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { type InfiniteData, QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
+import { act, render, renderHook, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { RECENT_REQUESTS, eventStream, useEventStream, useServerEvent } from "@api/events";
@@ -42,6 +42,16 @@ const overview = (patch: Partial<Overview> = {}) =>
     requests_today: { failed: 0, median_ms: 0, total: 0 },
     ...patch,
   }) as unknown as Overview;
+
+/** Shows the first instance's connection state from one query, as a page does. */
+function InstanceState(props: {
+  pick: (data: never) => readonly Instance[];
+  queryFn: () => Promise<unknown>;
+  queryKey: readonly unknown[];
+}) {
+  const { data } = useQuery({ queryFn: props.queryFn, queryKey: props.queryKey });
+  return <p>{data === undefined ? "loading" : props.pick(data as never)[0]?.status.state}</p>;
+}
 
 let queryClient: QueryClient;
 let release: () => void;
@@ -167,16 +177,25 @@ describe("instance, library and device events", () => {
   });
 
   it.each([
-    ["the instance list", keys.instances, (list: Instance[]) => list, (data: Instance[]) => data],
+    ["instance list already loaded", keys.instances, (list: Instance[]) => list, (data: Instance[]) => data, true],
+    ["instance list on its first load", keys.instances, (list: Instance[]) => list, (data: Instance[]) => data, false],
     [
-      "the overview",
+      "overview already loaded",
       keys.overview,
       (list: Instance[]) => overview({ instances: list }),
       (data: Overview) => data.instances,
+      true,
+    ],
+    [
+      "overview on its first load",
+      keys.overview,
+      (list: Instance[]) => overview({ instances: list }),
+      (data: Overview) => data.instances,
+      false,
     ],
   ] as const)(
-    "loads %s again when an instance event arrives while a load is on its way",
-    async (_, key, wrap, pick) => {
+    "%s: loads it again when an instance event arrives while a load is on its way",
+    async (_, key, wrap, pick, seeded) => {
       const lounge = (state: string) => ({ id: 1, name: "Lounge", status: { state } }) as Instance;
       let server = "http_only";
       const answers: (() => void)[] = [];
@@ -185,9 +204,12 @@ describe("instance, library and device events", () => {
         const answer = wrap([lounge(server)]);
         return new Promise<typeof answer>((resolve) => answers.push(() => resolve(answer)));
       };
-      queryClient.setQueryData(key, wrap([lounge("http_only")]));
-      const observer = new QueryObserver(queryClient, { queryFn, queryKey: key });
-      const unsubscribe = observer.subscribe(() => {});
+      if (seeded) queryClient.setQueryData(key, wrap([lounge("http_only")]));
+      render(
+        <QueryClientProvider client={queryClient}>
+          <InstanceState pick={pick} queryFn={queryFn} queryKey={key} />
+        </QueryClientProvider>,
+      );
       expect(answers).toHaveLength(1);
 
       server = "connected";
@@ -196,11 +218,7 @@ describe("instance, library and device events", () => {
         for (const answer of answers.splice(0)) answer();
       });
 
-      await waitFor(() => {
-        for (const answer of answers.splice(0)) answer();
-        expect(pick(queryClient.getQueryData(key) as never)[0]?.status.state).toBe("connected");
-      });
-      unsubscribe();
+      expect(await screen.findByText("connected")).toBeInTheDocument();
     },
   );
 
